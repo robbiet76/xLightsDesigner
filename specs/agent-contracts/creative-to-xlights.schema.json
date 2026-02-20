@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/schemas/creative-to-xlights-v1.json",
+  "title": "Creative Director to xLights Execution Contract",
+  "description": "Handoff contract from creative design agent to xLights execution agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "show",
+    "song",
+    "global_style",
+    "sections",
+    "timing",
+    "render_variants",
+    "guardrails"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "show": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["holiday", "creative_intent", "target_audience"],
+      "properties": {
+        "holiday": {
+          "type": "string",
+          "enum": [
+            "christmas",
+            "halloween",
+            "valentine",
+            "independence_day",
+            "easter_spring",
+            "thanksgiving_fall",
+            "new_year"
+          ]
+        },
+        "creative_intent": {
+          "type": "string",
+          "minLength": 8
+        },
+        "target_audience": {
+          "type": "string",
+          "enum": ["family", "general_public", "enthusiast", "mature"]
+        },
+        "style_track": {
+          "type": "string",
+          "description": "Named style direction, e.g. sacred-cinematic, bauhaus-geometric.",
+          "default": "classic"
+        }
+      }
+    },
+    "song": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "artist", "duration_ms", "bpm", "time_signature"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "artist": { "type": "string", "minLength": 1 },
+        "duration_ms": { "type": "integer", "minimum": 1000 },
+        "bpm": { "type": "number", "minimum": 40, "maximum": 260 },
+        "time_signature": {
+          "type": "string",
+          "pattern": "^[0-9]+/[0-9]+$"
+        },
+        "key_center": {
+          "type": "string",
+          "description": "Optional musical key estimate, e.g. C major, F# minor."
+        },
+        "energy_curve": {
+          "type": "array",
+          "description": "Normalized section-level energy waypoints from 0.0 to 1.0.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["time_ms", "energy"],
+            "properties": {
+              "time_ms": { "type": "integer", "minimum": 0 },
+              "energy": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "global_style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "palette",
+        "motion_profile",
+        "design_principles",
+        "innovation_operators"
+      ],
+      "properties": {
+        "palette": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["primary", "accents", "neutrals"],
+          "properties": {
+            "primary": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/colorHex" }
+            },
+            "accents": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/colorHex" }
+            },
+            "neutrals": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/colorHex" }
+            },
+            "temperature_bias": {
+              "type": "string",
+              "enum": ["warm", "cool", "mixed"]
+            }
+          }
+        },
+        "motion_profile": {
+          "type": "string",
+          "enum": ["calm", "moderate", "energetic", "chaotic_limited"]
+        },
+        "design_principles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "application"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "chiaroscuro",
+                  "focal_hierarchy",
+                  "negative_space",
+                  "rhythmic_repetition",
+                  "contrast_zoning",
+                  "asymmetric_balance",
+                  "golden_ratio",
+                  "rule_of_thirds"
+                ]
+              },
+              "application": { "type": "string", "minLength": 8 }
+            }
+          }
+        },
+        "innovation_operators": {
+          "type": "array",
+          "description": "Optional boundary-pushing transformations with bounded intensity.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "strength"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "palette_tension",
+                  "rhythmic_counterpoint",
+                  "narrative_reveal",
+                  "scale_shift",
+                  "focal_inversion"
+                ]
+              },
+              "strength": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "start_ms",
+          "end_ms",
+          "musical_role",
+          "mood",
+          "energy_target",
+          "focus_targets",
+          "allowed_effect_families",
+          "cue_intent"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+$"
+          },
+          "label": { "type": "string", "minLength": 1 },
+          "start_ms": { "type": "integer", "minimum": 0 },
+          "end_ms": { "type": "integer", "minimum": 1 },
+          "musical_role": {
+            "type": "string",
+            "enum": [
+              "intro",
+              "verse",
+              "pre_chorus",
+              "chorus",
+              "bridge",
+              "breakdown",
+              "solo",
+              "outro",
+              "drop"
+            ]
+          },
+          "mood": {
+            "type": "string",
+            "enum": [
+              "wonder",
+              "warmth",
+              "joy",
+              "tension",
+              "fear",
+              "mystery",
+              "triumph",
+              "playful",
+              "reverent"
+            ]
+          },
+          "energy_target": { "type": "number", "minimum": 0, "maximum": 1 },
+          "focus_targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "allowed_effect_families": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "on_off",
+                "dim_curve",
+                "twinkle",
+                "shimmer",
+                "wipe",
+                "chase",
+                "spin",
+                "bars",
+                "color_wash",
+                "sparkle",
+                "strobe_limited",
+                "texture_projection",
+                "pixel_wave",
+                "meteor",
+                "snow",
+                "flicker"
+              ]
+            }
+          },
+          "cue_intent": { "type": "string", "minLength": 8 },
+          "transition_in": { "$ref": "#/$defs/transitionRule" },
+          "transition_out": { "$ref": "#/$defs/transitionRule" }
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["beat_grid", "phrase_grid", "sync_priority"],
+      "properties": {
+        "beat_grid": {
+          "type": "string",
+          "enum": ["quarter", "eighth", "mixed", "none"]
+        },
+        "phrase_grid": {
+          "type": "integer",
+          "description": "Preferred phrase length in bars.",
+          "enum": [2, 4, 8, 16]
+        },
+        "sync_priority": {
+          "type": "string",
+          "enum": ["beat_locked", "phrase_locked", "hybrid"]
+        },
+        "hit_points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["time_ms", "importance", "reason"],
+            "properties": {
+              "time_ms": { "type": "integer", "minimum": 0 },
+              "importance": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "render_variants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["experimental", "safe"],
+      "properties": {
+        "experimental": { "$ref": "#/$defs/variantSettings" },
+        "safe": { "$ref": "#/$defs/variantSettings" }
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_concurrent_motion_layers",
+        "max_palette_size_active",
+        "max_strobe_events_per_minute",
+        "require_focal_hierarchy"
+      ],
+      "properties": {
+        "max_concurrent_motion_layers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "max_palette_size_active": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "max_strobe_events_per_minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "require_focal_hierarchy": { "type": "boolean" },
+        "neighborhood_mode": { "type": "boolean", "default": true },
+        "quiet_hours_end_time_local": {
+          "type": "string",
+          "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+        }
+      }
+    },
+    "notes_for_executor": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "colorHex": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "transitionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["hard_cut", "fade", "wipe", "blackout_then_reveal"]
+        },
+        "duration_ms": { "type": "integer", "minimum": 0, "maximum": 5000 }
+      }
+    },
+    "variantSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complexity", "motion_intensity", "color_tension"],
+      "properties": {
+        "complexity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "motion_intensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "color_tension": { "type": "number", "minimum": 0, "maximum": 1 },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
