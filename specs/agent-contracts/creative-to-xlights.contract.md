@@ -1,4 +1,4 @@
-# Creative Director -> xLights Executor Contract (v1)
+# Creative Director -> xLights Executor Contract (v2)
 
 This contract lets the creative agent stay focused on design while the executor agent stays focused on xLights implementation.
 
@@ -7,6 +7,8 @@ This contract lets the creative agent stay focused on design while the executor 
 - Creative agent must output valid JSON matching `creative-to-xlights.schema.json`.
 - Executor agent must not reinterpret high-level intent unless guardrails would be violated.
 - Executor agent may choose exact xLights effects/parameters only from `allowed_effect_families` and section goals.
+- Creative agent must use conceptual roles only (foreground, midground, background, focal intent) and must not name concrete props/models.
+- Executor agent is solely responsible for mapping conceptual roles to actual xLights models.
 - Both agents must support two outputs: `experimental` and `safe`.
 
 ## Workflow
@@ -22,16 +24,24 @@ This contract lets the creative agent stay focused on design while the executor 
 - `show`: holiday context and audience safety envelope.
 - `song`: technical music metadata for alignment.
 - `global_style`: palette, principle stack, and innovation operators.
-- `sections`: core composition map by musical form.
+- `sections`: core composition map by musical form plus conceptual spatial-role intent.
 - `timing`: beat/phrase sync strategy and critical hit points.
 - `render_variants`: creative stretch level and safe fallback.
 - `guardrails`: hard limits to avoid visual clutter.
+
+## Spatial role terminology
+
+- `primary_focus`: `focal_point`, `focal_pair`, or `distributed_focus`.
+- `foreground`: closest/highest-salience visual layer (usually detail and accents).
+- `midground`: support layer for rhythm and movement continuity.
+- `background`: atmospheric base layer for depth and mood.
+- Role tags: `subject`, `support`, `texture`, `rhythm_anchor`, `contrast_driver`, `silhouette`, `ambient_bed`, `accent_punctuator`, `transition_bridge`.
 
 ## Example skeleton
 
 ```json
 {
-  "contract_version": "1.0.0",
+  "contract_version": "2.0.0",
   "show": {
     "holiday": "christmas",
     "creative_intent": "Warm nostalgic narrative that expands into triumphant choruses.",
@@ -56,7 +66,7 @@ This contract lets the creative agent stay focused on design while the executor 
     "design_principles": [
       {
         "name": "focal_hierarchy",
-        "application": "Prioritize mega-tree during choruses, roofline during verses."
+        "application": "Use strongest contrast at the focal layer during choruses, with support layers in verses."
       }
     ],
     "innovation_operators": [
@@ -72,7 +82,13 @@ This contract lets the creative agent stay focused on design while the executor 
       "musical_role": "intro",
       "mood": "wonder",
       "energy_target": 0.25,
-      "focus_targets": ["roofline", "left-window-group"],
+      "spatial_roles": {
+        "primary_focus": "focal_point",
+        "foreground": ["subject", "accent_punctuator"],
+        "midground": ["support", "rhythm_anchor"],
+        "background": ["ambient_bed", "texture"],
+        "negative_space": "moderate"
+      },
       "allowed_effect_families": ["dim_curve", "twinkle", "color_wash"],
       "cue_intent": "Slow reveal with restrained sparkle and warm gradients."
     }
@@ -105,7 +121,7 @@ This contract lets the creative agent stay focused on design while the executor 
   },
   "notes_for_executor": [
     "Preserve phrase-level breathing room after every chorus.",
-    "Do not use strobe_limited on window props."
+    "Map foreground roles to the most legible near-field models available."
   ]
 }
 ```

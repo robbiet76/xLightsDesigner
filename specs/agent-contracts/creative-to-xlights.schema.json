@@ -18,7 +18,7 @@
   "properties": {
     "contract_version": {
       "type": "string",
-      "const": "1.0.0"
+      "const": "2.0.0"
     },
     "show": {
       "type": "object",
@@ -185,7 +185,7 @@
           "musical_role",
           "mood",
           "energy_target",
-          "focus_targets",
+          "spatial_roles",
           "allowed_effect_families",
           "cue_intent"
         ],
@@ -226,10 +226,36 @@
             ]
           },
           "energy_target": { "type": "number", "minimum": 0, "maximum": 1 },
-          "focus_targets": {
-            "type": "array",
-            "minItems": 1,
-            "items": { "type": "string", "minLength": 1 }
+          "spatial_roles": {
+            "type": "object",
+            "description": "Conceptual composition targets only. Do not reference physical xLights model names.",
+            "additionalProperties": false,
+            "required": ["primary_focus", "foreground", "midground", "background"],
+            "properties": {
+              "primary_focus": {
+                "type": "string",
+                "enum": ["focal_point", "focal_pair", "distributed_focus"]
+              },
+              "foreground": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/lightingRole" }
+              },
+              "midground": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/lightingRole" }
+              },
+              "background": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/lightingRole" }
+              },
+              "negative_space": {
+                "type": "string",
+                "enum": ["none", "light", "moderate", "strong"]
+              }
+            }
           },
           "allowed_effect_families": {
             "type": "array",
@@ -367,6 +393,20 @@
         "color_tension": { "type": "number", "minimum": 0, "maximum": 1 },
         "notes": { "type": "string" }
       }
+    },
+    "lightingRole": {
+      "type": "string",
+      "enum": [
+        "subject",
+        "support",
+        "texture",
+        "rhythm_anchor",
+        "contrast_driver",
+        "silhouette",
+        "ambient_bed",
+        "accent_punctuator",
+        "transition_bridge"
+      ]
     }
   }
 }
