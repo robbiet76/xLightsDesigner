@@ -83,7 +83,7 @@ Acceptance:
 ## Test Plan (PR-1)
 
 ### Envelope tests
-- `apiVersion` missing on v2-style payload -> `400 BAD_REQUEST` or legacy fallback (choose and document).
+- `apiVersion` missing -> legacy behavior path (do not force v2 validation).
 - `apiVersion != 2` -> `400 UNSUPPORTED_API_VERSION`.
 - missing `cmd` -> `400 BAD_REQUEST`.
 - unknown v2 command -> `404 UNKNOWN_COMMAND`.

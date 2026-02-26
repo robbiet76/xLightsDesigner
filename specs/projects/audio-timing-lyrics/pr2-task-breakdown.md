@@ -166,7 +166,7 @@ Acceptance:
 - Generated tracks are deterministic and machine-readable.
 - Backward compatibility with legacy automation is preserved.
 
-## Open Decisions to Lock Before Coding
-- Whether plugin parameter overrides are supported in PR-2 or deferred.
-- Exact energy confidence semantics (real score vs omitted in alpha).
-- Preferred behavior when source beat track has sparse/irregular marks.
+## Locked Decisions (from decision-log.md)
+- Plugin parameter overrides are deferred; PR-2 uses plugin default parameters only.
+- Energy response includes `confidence`; use deterministic heuristic score in `0.0..1.0` (or `0.0` with warning when unavailable).
+- On sparse/irregular beat sources, ignore invalid/non-monotonic duplicates; if insufficient valid marks remain, return `422 VALIDATION_ERROR`.

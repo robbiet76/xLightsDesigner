@@ -140,9 +140,10 @@ Acceptance:
 - Existing UI lyric workflows are unchanged.
 - Validation and error responses match v2 contract.
 
-## Open Decisions to Lock Before Coding
-- Exact replace semantics:
-  - replace all layers on target track vs replace only generated layers.
-- Unknown-word reporting shape:
-  - unique list vs frequency map.
-- Whether phoneme breakdown in `lyrics.importSrt` is enabled by default in PR-3.
+## Locked Decisions (from decision-log.md)
+- `replaceExistingLayers=true`: replace generated lyric layers (phrase/word/phoneme) only; do not modify unrelated timing data.
+- `replaceExistingLayers=false`: if generated lyric layers already exist, return `409 TRACK_ALREADY_EXISTS`.
+- Unknown-word reporting returns both:
+  - `unknownWords` (unique sorted array)
+  - `unknownWordCount` (total unknown token occurrences)
+- `lyrics.importSrt` defaults `breakdownPhonemes=true`.
