@@ -25,7 +25,9 @@ Sequencers spend significant manual time creating timing marks and lyric scaffol
 
 ### 2.1 In Scope
 - Audio timing analysis command(s).
+- Bar/downbeat track derivation from timing analysis.
 - Song structure section detection (e.g., Intro, Verse, Chorus, Bridge, Outro).
+- Energy section detection (e.g., low/medium/high intensity segments).
 - Timing track creation/update commands.
 - Lyric track creation from plain text.
 - Lyric track creation/import from SRT.
@@ -155,7 +157,38 @@ Returns:
 - sections with `label`, `startMs`, `endMs`,
 - confidence summary.
 
-### 4.2.6 `lyrics.createTrackFromText`
+### 4.2.6 `timing.createBarsFromBeats`
+Purpose: create bar/downbeat marks from an existing beat track (or compatible timing source).
+
+Params:
+- `sourceTrackName` (string, required; usually beat track)
+- `trackName` (string, required; e.g., `Bars`)
+- `beatsPerBar` (int, default `4`)
+- `replaceIfExists` (bool, default false)
+
+Returns:
+- track name,
+- bar mark count,
+- start/end range,
+- derivation metadata.
+
+### 4.2.7 `timing.createEnergySections`
+Purpose: generate intensity segments and write to a dedicated energy timing track.
+
+Params:
+- `trackName` (string, required; e.g., `Energy`)
+- `mediaFile` (string|null, optional; default active sequence media)
+- `replaceIfExists` (bool, default false)
+- `levels` (array/string, optional; default `[\"low\",\"medium\",\"high\"]`)
+- `smoothingMs` (int, optional)
+
+Returns:
+- track name,
+- section count,
+- sections with `label`, `startMs`, `endMs`,
+- confidence summary.
+
+### 4.2.8 `lyrics.createTrackFromText`
 Purpose: create/update lyric timing layers from input text.
 
 Params:
@@ -174,7 +207,7 @@ Returns:
 - phonemes count,
 - warnings for unknown words/phonemes.
 
-### 4.2.7 `lyrics.importSrt`
+### 4.2.9 `lyrics.importSrt`
 Purpose: import SRT subtitles into lyric/timing scaffolding.
 
 Params:
@@ -209,6 +242,12 @@ All project commands return stable JSON structure, suitable for scripting and CI
 ### FR-6 Song Structure Output
 Song structure detection must output ordered, non-overlapping sections and write them as timing track labels suitable for manual review/editing.
 
+### FR-7 Bars/Downbeats Output
+Bars/downbeats generation must produce ordered, non-overlapping marks aligned to the source beat/timing track.
+
+### FR-8 Energy Output
+Energy section generation must produce ordered, non-overlapping low/medium/high (or configured) segments suitable for sequencing intensity changes.
+
 ## 6. Non-Functional Requirements
 
 - Backward compatibility with current automation commands.
@@ -229,6 +268,8 @@ Song structure detection must output ordered, non-overlapping sections and write
 - run `lyrics.createTrackFromText` and verify layer counts.
 - run `lyrics.importSrt` with valid/invalid SRT.
 - run `timing.detectSongStructure` and verify section ordering, coverage, and labels.
+- run `timing.createBarsFromBeats` and verify downbeat/bar consistency.
+- run `timing.createEnergySections` and verify section ordering, coverage, and labels.
 - verify `timing.getTrackSummary` consistency.
 
 ### 7.3 Compatibility Coverage
@@ -243,7 +284,9 @@ Song structure detection must output ordered, non-overlapping sections and write
 ### Milestone B: Audio Timing
 - Implement `timing.createFromAudio`.
 - Implement `timing.getTrackSummary`.
+- Implement `timing.createBarsFromBeats`.
 - Implement `timing.detectSongStructure`.
+- Implement `timing.createEnergySections`.
 
 ### Milestone C: Lyrics
 - Implement `lyrics.createTrackFromText`.
@@ -257,6 +300,7 @@ Project is complete when:
 3. Existing automation command behavior remains unchanged.
 4. Sequencer can generate timing + lyric scaffolding from an MP3 workflow without manual UI editing steps.
 5. Song structure sections (Verse/Chorus/etc.) can be generated as a timing track for downstream sequencing workflows.
+6. Bars/downbeats and energy section tracks can be generated for downstream sequencing workflows.
 
 ## 10. Open Decisions
 

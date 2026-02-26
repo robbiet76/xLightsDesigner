@@ -13,8 +13,9 @@ This should be easier to socialize and merge than a broad “agent sequencing”
 ## Phase 1 Outcome
 Given an MP3/media-backed sequence, automation can:
 1. analyze audio and generate one or more timing tracks,
-2. create lyric tracks (phrases/words/phonemes) from provided text or subtitle input,
-3. return deterministic metadata so an external agent can continue with effect authoring later.
+2. derive bars/downbeats and energy sections from analyzed audio,
+3. create lyric tracks (phrases/words/phonemes) from provided text or subtitle input,
+4. return deterministic metadata so an external agent can continue with effect authoring later.
 
 ## Existing Capabilities We Can Reuse
 - VAMP plugin discovery/processing for timing marks:
@@ -79,7 +80,56 @@ Notes
 - `mediaFile` optional; defaults to currently open sequence media.
 - `createIfMissing` optionally creates/open sequence preconditions (or fail fast, depending on maintainer preference).
 
-### 4) `lyrics.createTrackFromText`
+### 4) `timing.createBarsFromBeats`
+Creates a dedicated bars/downbeats timing track from an existing beat track.
+
+Request
+```json
+{
+  "apiVersion": 2,
+  "cmd": "timing.createBarsFromBeats",
+  "params": {
+    "sourceTrackName": "Beats",
+    "trackName": "Bars",
+    "beatsPerBar": 4,
+    "replaceIfExists": false
+  }
+}
+```
+
+### 5) `timing.createEnergySections`
+Creates a low/medium/high energy section timing track from analyzed audio.
+
+Request
+```json
+{
+  "apiVersion": 2,
+  "cmd": "timing.createEnergySections",
+  "params": {
+    "trackName": "Energy",
+    "mediaFile": null,
+    "replaceIfExists": false
+  }
+}
+```
+
+### 6) `timing.detectSongStructure`
+Creates a high-level section timing track (Intro/Verse/Chorus/Bridge/Outro).
+
+Request
+```json
+{
+  "apiVersion": 2,
+  "cmd": "timing.detectSongStructure",
+  "params": {
+    "trackName": "Song Structure",
+    "mediaFile": null,
+    "replaceIfExists": false
+  }
+}
+```
+
+### 7) `lyrics.createTrackFromText`
 Creates/uses a timing track and populates phrase/word/phoneme layers from provided lyrics text and a time range.
 
 Request
@@ -99,7 +149,7 @@ Request
 }
 ```
 
-### 5) `lyrics.importSrt`
+### 8) `lyrics.importSrt`
 Imports an SRT file to timing/lyric structure.
 
 Request
@@ -115,7 +165,7 @@ Request
 }
 ```
 
-### 6) `timing.getTrackSummary`
+### 9) `timing.getTrackSummary`
 Returns generated timing track stats for agent follow-up.
 
 Request
@@ -161,6 +211,8 @@ Response should include mark count, start/end, avg interval, and lyric layer pre
 ### PR-2: Audio Timing Generation
 - Add `timing.createFromAudio`.
 - Add `timing.getTrackSummary`.
+- Add `timing.createBarsFromBeats`.
+- Add `timing.createEnergySections`.
 - Include tests for plugin-not-found, no-media, duplicate-track handling.
 
 ### PR-3: Lyrics Tracks
@@ -170,9 +222,10 @@ Response should include mark count, start/end, avg interval, and lyric layer pre
 
 ## Acceptance Criteria (Phase 1)
 - A script can open/create sequence, run timing analysis, and produce a named timing track without UI interactions.
+- A script can derive bars/downbeats and energy sections into separate timing tracks.
 - A script can create lyric timing layers from text and/or SRT.
 - Result summaries are machine-readable and stable.
 - Existing automation commands behave unchanged.
 
 ## Success Metric
-A sequencer can run one automation flow and get timing + lyric scaffolding in under 2 minutes for a typical song, reducing manual pre-effect prep time.
+A sequencer can run one automation flow and get timing, bars/downbeats, energy, structure, and lyric scaffolding in under 2 minutes for a typical song, reducing manual pre-effect prep time.
