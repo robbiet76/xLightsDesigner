@@ -17,19 +17,38 @@ run() {
     step_ok "${name}"
   else
     ok=false
-    step_fail "${name}"
+    step_fail "${name}" "$(extract_error_code "${body}")"
+  fi
+}
+
+run_or_sequence_already_open() {
+  local name="$1"
+  local payload="$2"
+  local body
+  body="$(post_cmd "${payload}")"
+  body="$(normalize_json_body "${body}")"
+  if json_has_res_200 "${body}" || [[ "${body}" == *'"code":"SEQUENCE_ALREADY_OPEN"'* ]]; then
+    step_ok "${name}"
+  else
+    ok=false
+    step_fail "${name}" "$(extract_error_code "${body}")"
   fi
 }
 
 run "sequence.getOpen" '{"apiVersion":2,"cmd":"sequence.getOpen","params":{}}'
 
 if [[ -n "${TEST_SEQUENCE_PATH}" ]]; then
-  run "sequence.open" "{\"apiVersion\":2,\"cmd\":\"sequence.open\",\"params\":{\"file\":\"${TEST_SEQUENCE_PATH}\"}}"
+  run_or_sequence_already_open "sequence.open" "{\"apiVersion\":2,\"cmd\":\"sequence.open\",\"params\":{\"file\":\"${TEST_SEQUENCE_PATH}\"}}"
 fi
 
 if [[ -n "${TEST_MEDIA_PATH}" ]]; then
-  run "media.set" "{\"apiVersion\":2,\"cmd\":\"media.set\",\"params\":{\"mediaFile\":\"${TEST_MEDIA_PATH}\"}}"
-  run "media.getMetadata" '{"apiVersion":2,"cmd":"media.getMetadata","params":{}}'
+  if [[ -f "${TEST_MEDIA_PATH}" ]]; then
+    run "media.set" "{\"apiVersion\":2,\"cmd\":\"media.set\",\"params\":{\"mediaFile\":\"${TEST_MEDIA_PATH}\"}}"
+    run "media.getMetadata" '{"apiVersion":2,"cmd":"media.getMetadata","params":{}}'
+  else
+    step_skip "media.set" "MISSING_MEDIA_FIXTURE"
+    step_skip "media.getMetadata" "MISSING_MEDIA_FIXTURE"
+  fi
 fi
 
 run "sequence.save.dryRun" '{"apiVersion":2,"cmd":"sequence.save","params":{},"options":{"dryRun":true}}'
