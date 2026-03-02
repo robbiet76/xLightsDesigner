@@ -6,7 +6,9 @@ source "${SCRIPT_DIR}/lib.sh"
 
 TEST_SEQUENCE_PATH="${TEST_SEQUENCE_PATH:-}"
 CURL_MAX_TIME="${CURL_MAX_TIME:-20}"
+LEGACY_ENABLE_SAVE_SEQUENCE="${LEGACY_ENABLE_SAVE_SEQUENCE:-false}"
 ok=true
+LEGACY_TEST_SEQUENCE_PATH=""
 
 LEGACY_BODY=""
 LEGACY_CODE=""
@@ -62,9 +64,18 @@ run_expect_http_200 "legacy.closeSequence.quiet" '{"cmd":"closeSequence","quiet"
 run_expect_code_with_substring "legacy.getOpenSequence.no-open" '{"cmd":"getOpenSequence"}' 503 'Sequence not open.'
 
 if [[ -n "${TEST_SEQUENCE_PATH}" ]]; then
-  run_expect_http_200 "legacy.openSequence" "{\"cmd\":\"openSequence\",\"seq\":\"${TEST_SEQUENCE_PATH}\",\"promptIssues\":\"false\"}"
+  LEGACY_TEST_SEQUENCE_PATH="${TEST_SEQUENCE_PATH}"
+  if [[ "${LEGACY_ENABLE_SAVE_SEQUENCE}" == "true" ]]; then
+    tmp_dir="$(mktemp -d /tmp/xlights-legacy-seq.XXXXXX)"
+    tmp_seq="${tmp_dir}/$(basename "${TEST_SEQUENCE_PATH}")"
+    cp "${TEST_SEQUENCE_PATH}" "${tmp_seq}"
+    LEGACY_TEST_SEQUENCE_PATH="${tmp_seq}"
+  fi
+  run_expect_http_200 "legacy.openSequence" "{\"cmd\":\"openSequence\",\"seq\":\"${LEGACY_TEST_SEQUENCE_PATH}\",\"promptIssues\":\"false\"}"
   run_expect_http_200 "legacy.getViews" '{"cmd":"getViews"}'
-  run_expect_http_200 "legacy.saveSequence" '{"cmd":"saveSequence"}'
+  if [[ "${LEGACY_ENABLE_SAVE_SEQUENCE}" == "true" ]]; then
+    run_expect_http_200 "legacy.saveSequence" '{"cmd":"saveSequence"}'
+  fi
   run_expect_http_200 "legacy.closeSequence.after-open" '{"cmd":"closeSequence","quiet":"true","force":"true"}'
 fi
 
