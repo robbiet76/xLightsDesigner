@@ -40,8 +40,8 @@ Outputs:
 WP-9 planned suite additions:
 - `<OUT_DIR>/06-effects-definition-smoke.json`
 - `<OUT_DIR>/07-transactions-smoke.json`
-- `<OUT_DIR>/08-async-jobs-smoke.json`
-- `<OUT_DIR>/09-revision-conflict-smoke.json`
+- `<OUT_DIR>/09-async-jobs-smoke.json`
+- `<OUT_DIR>/10-revision-conflict-smoke.json`
 
 Summary contract additions:
 - `packId`
@@ -139,13 +139,13 @@ Assertions:
 - begin/commit applies atomically.
 - conflict paths return deterministic transaction error codes.
 
-### `scripts/xlights-control/08-async-jobs-smoke.sh`
+### `scripts/xlights-control/09-async-jobs-smoke.sh`
 Assertions:
 - long-running operations return `jobId`.
 - `jobs.get` polling reaches terminal status.
 - `jobs.cancel` behaves deterministically for cancellable operations.
 
-### `scripts/xlights-control/09-revision-conflict-smoke.sh`
+### `scripts/xlights-control/10-revision-conflict-smoke.sh`
 Assertions:
 - stale `revisionToken`/`expectedRevision` is rejected with conflict semantics.
 - current revision token mutation succeeds.

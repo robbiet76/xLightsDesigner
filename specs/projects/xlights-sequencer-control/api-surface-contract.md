@@ -577,7 +577,7 @@ Params:
 
 Response `data`:
 - `jobId`
-- `status` (`queued|running|completed|failed|cancelled`)
+- `status` (`queued|running|succeeded|failed|cancelled`)
 - `progressPct`
 - `result`
 - `error`

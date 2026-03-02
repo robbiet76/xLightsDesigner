@@ -179,6 +179,19 @@
           { "name": "transactions.commit.state", "passed": true }
         ]
       }
+    },
+    {
+      "id": "09-async-jobs-smoke",
+      "script": "scripts/xlights-control/09-async-jobs-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "timing.createBarsFromBeats.async", "passed": true },
+          { "name": "jobs.get", "passed": true },
+          { "name": "jobs.cancel", "passed": true }
+        ]
+      }
     }
   ],
   "aggregateExpectedOutput": {
