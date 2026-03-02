@@ -1,0 +1,61 @@
+name: xLights Control Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute_smoke:
+        description: "Run full smoke suites against a reachable xLights automation endpoint."
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [ "master" ]
+    paths:
+      - "scripts/xlights-control/**"
+      - "specs/projects/xlights-sequencer-control/**"
+      - ".github/workflows/xlights-control-runner.yml"
+
+jobs:
+  lint-harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell scripts
+        run: |
+          bash -n scripts/xlights-control/lib.sh
+          bash -n scripts/xlights-control/run-all.sh
+          bash -n scripts/xlights-control/01-discovery-smoke.sh
+          bash -n scripts/xlights-control/02-sequence-lifecycle-smoke.sh
+          bash -n scripts/xlights-control/03-sequencer-mutation-smoke.sh
+          bash -n scripts/xlights-control/04-validation-gate-smoke.sh
+      - name: Validate fixture manifest JSON
+        run: jq empty specs/projects/xlights-sequencer-control/test-fixtures.manifest.json
+
+  smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.execute_smoke == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure scripts are executable
+        run: chmod +x scripts/xlights-control/*.sh
+      - name: Run xLights control suites
+        env:
+          OUT_DIR: ${{ runner.temp }}/xlights-control-reports
+        run: |
+          set +e
+          scripts/xlights-control/run-all.sh
+          rc=$?
+          echo "run_all_rc=${rc}" >> "$GITHUB_ENV"
+          set -e
+          test -f "${OUT_DIR}/run-all-summary.json"
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: xlights-control-reports
+          path: ${{ runner.temp }}/xlights-control-reports
+      - name: Fail if suites failed
+        run: |
+          if [ "${run_all_rc}" != "0" ]; then
+            echo "Smoke suites reported failures."
+            exit 1
+          fi

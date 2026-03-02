@@ -72,6 +72,19 @@
           }
         ]
       }
+    },
+    {
+      "id": "04-validation-gate-smoke",
+      "script": "scripts/xlights-control/04-validation-gate-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "system.validateCommands.response", "passed": true },
+          { "name": "system.validateCommands.results", "passed": true },
+          { "name": "system.validateCommands.invalid-detection", "passed": true }
+        ]
+      }
     }
   ],
   "aggregateExpectedOutput": {

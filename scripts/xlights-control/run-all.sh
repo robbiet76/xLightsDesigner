@@ -19,6 +19,7 @@ SUITES=(
   "01-discovery-smoke.sh"
   "02-sequence-lifecycle-smoke.sh"
   "03-sequencer-mutation-smoke.sh"
+  "04-validation-gate-smoke.sh"
 )
 
 overall_ok=true

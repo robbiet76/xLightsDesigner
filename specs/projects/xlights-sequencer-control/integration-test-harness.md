@@ -30,6 +30,7 @@ Outputs:
 - `<OUT_DIR>/01-discovery-smoke.json`
 - `<OUT_DIR>/02-sequence-lifecycle-smoke.json`
 - `<OUT_DIR>/03-sequencer-mutation-smoke.json`
+- `<OUT_DIR>/04-validation-gate-smoke.json`
 - `<OUT_DIR>/run-all-summary.json`
 
 ### `scripts/xlights-control/01-discovery-smoke.sh`
@@ -69,6 +70,18 @@ Assertions:
 - effect create/list/update/delete and shift/align commands are functional.
 - display element ordering commands are functional.
 - readback verifies mutations deterministically.
+
+Exit:
+- `0` on pass.
+- non-zero on first failed assertion.
+
+### `scripts/xlights-control/04-validation-gate-smoke.sh`
+Inputs:
+- `XLIGHTS_BASE_URL` (default `http://127.0.0.1:49914`)
+
+Assertions:
+- `system.validateCommands` returns parseable per-command `results`.
+- Invalid candidate commands are flagged with `valid=false` and an error object.
 
 Exit:
 - `0` on pass.
