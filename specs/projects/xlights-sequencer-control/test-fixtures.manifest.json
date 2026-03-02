@@ -50,6 +50,7 @@
         "passed": true,
         "steps": [
           { "name": "system.getCapabilities", "passed": true },
+          { "name": "system.getCapabilities.wp9-surface", "passed": true },
           { "name": "layout.getModels", "passed": true },
           { "name": "layout.getViews", "passed": true },
           { "name": "layout.getDisplayElements", "passed": true }
