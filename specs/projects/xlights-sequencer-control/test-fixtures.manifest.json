@@ -150,6 +150,35 @@
           }
         ]
       }
+    },
+    {
+      "id": "06-effects-definition-smoke",
+      "script": "scripts/xlights-control/06-effects-definition-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "effects.listDefinitions", "passed": true },
+          { "name": "effects.getDefinition", "passed": true },
+          { "name": "effects.getDefinition.validation", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "07-transactions-smoke",
+      "script": "scripts/xlights-control/07-transactions-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "transactions.begin", "passed": true },
+          { "name": "transactions.stage.mutations", "passed": true },
+          { "name": "transactions.rollback", "passed": true },
+          { "name": "transactions.rollback.state", "passed": true },
+          { "name": "transactions.commit", "passed": true },
+          { "name": "transactions.commit.state", "passed": true }
+        ]
+      }
     }
   ],
   "aggregateExpectedOutput": {

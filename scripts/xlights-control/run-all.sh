@@ -39,6 +39,8 @@ SUITES=(
   "03-sequencer-mutation-smoke.sh"
   "04-validation-gate-smoke.sh"
   "05-legacy-regression-smoke.sh"
+  "06-effects-definition-smoke.sh"
+  "07-transactions-smoke.sh"
 )
 
 overall_ok="${bootstrap_ok}"

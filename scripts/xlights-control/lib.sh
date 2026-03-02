@@ -12,6 +12,11 @@ post_cmd() {
   curl --max-time "${CURL_MAX_TIME}" -sS -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}"
 }
 
+normalize_json_body() {
+  local body="$1"
+  printf "%s" "${body}" | sed -n 's/^[^{]*//;p'
+}
+
 step_ok() {
   local name="$1"
   TMP_REPORT_STEPS+=("{\"name\":\"${name}\",\"passed\":true}")
