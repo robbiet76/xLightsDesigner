@@ -7,6 +7,7 @@ Files:
 - `system-and-sequence.schema.json`: `system.*` and `sequence.*` params schemas.
 - `layout-media-timing.schema.json`: `layout.*`, `media.*`, and timing-track/mark command params schemas.
 - `sequencer-effects.schema.json`: display element ordering and effects/layer command params schemas.
+- `fixture-pack-manifest.schema.json`: fixture pack metadata and checksum contract for harness portability.
 
 Notes:
 - These schemas validate request payload structure and required fields.

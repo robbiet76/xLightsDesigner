@@ -1,6 +1,39 @@
 {
   "version": "2026-03-02",
   "description": "Fixture manifest and expected baseline outputs for xLights sequencer control smoke suites.",
+  "fixturePack": {
+    "packId": "xlights-sequencer-control-baseline",
+    "packVersion": "2026.03.02",
+    "source": {
+      "type": "local",
+      "uri": "file:///Users/robterry/Projects/xLightsDesigner/specs/projects/xlights-sequencer-control",
+      "description": "Baseline local fixture contract for smoke harness execution."
+    },
+    "assets": [
+      {
+        "id": "sequence-primary",
+        "type": "sequence",
+        "envVar": "TEST_SEQUENCE_PATH",
+        "required": true,
+        "pathHint": "/abs/path/to/test-sequence.xsq",
+        "checksum": {
+          "algo": "sha256",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      {
+        "id": "media-primary",
+        "type": "media",
+        "envVar": "TEST_MEDIA_PATH",
+        "required": false,
+        "pathHint": "/abs/path/to/test-song.mp3",
+        "checksum": {
+          "algo": "sha256",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    ]
+  },
   "environment": {
     "XLIGHTS_BASE_URL": "http://127.0.0.1:49914",
     "TEST_SEQUENCE_PATH": "/abs/path/to/test-sequence.xsq",
@@ -123,7 +156,10 @@
     "summaryFile": "run-all-summary.json",
     "requiredKeys": [
       "manifest",
+      "packId",
+      "packVersion",
       "outDir",
+      "bootstrap",
       "passed",
       "suites"
     ]

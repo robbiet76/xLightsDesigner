@@ -58,3 +58,13 @@ Exit criteria:
 - Specs accurately describe implementation reality.
 - Autonomous harness is repeatable and actionable in local + CI contexts.
 - No unresolved high-impact contract ambiguity before further API expansion.
+
+## Phase 6: Fixture Pack Portability (WP-8)
+- Introduce fixture pack versioning metadata and validation rules.
+- Add non-interactive bootstrap workflow for fixture preparation.
+- Embed fixture pack identity in harness summary outputs.
+- Add CI checks for fixture pack/bootstrap consistency.
+
+Exit criteria:
+- Fixture setup is reproducible and portable across local + CI runs.
+- Agent loops can detect fixture mismatch conditions deterministically.

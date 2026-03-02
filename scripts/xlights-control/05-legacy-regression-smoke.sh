@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
 TEST_SEQUENCE_PATH="${TEST_SEQUENCE_PATH:-}"
+CURL_MAX_TIME="${CURL_MAX_TIME:-20}"
 ok=true
 
 LEGACY_BODY=""
@@ -15,7 +16,7 @@ call_legacy() {
   local payload="$1"
   local raw
   set +e
-  raw="$(curl -sS -w $'\n%{http_code}' -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}")"
+  raw="$(curl --max-time "${CURL_MAX_TIME}" -sS -w $'\n%{http_code}' -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}")"
   LEGACY_RC=$?
   set -e
 

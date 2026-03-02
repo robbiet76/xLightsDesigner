@@ -3,12 +3,13 @@ set -euo pipefail
 
 XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
+CURL_MAX_TIME="${CURL_MAX_TIME:-20}"
 
 TMP_REPORT_STEPS=()
 
 post_cmd() {
   local payload="$1"
-  curl -sS -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}"
+  curl --max-time "${CURL_MAX_TIME}" -sS -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}"
 }
 
 step_ok() {

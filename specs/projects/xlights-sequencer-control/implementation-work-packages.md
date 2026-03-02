@@ -66,3 +66,34 @@ Progress:
 ## WP-7 Closeout Note
 - WP-7 scope has been executed and documented.
 - Remaining improvements should be tracked as new work packages, not WP-7 extensions.
+
+## WP-8: Fixture Pack Versioning + Bootstrap Portability
+Status: In progress
+
+Goal:
+- Eliminate fixture setup ambiguity by introducing a versioned fixture-pack contract and non-interactive bootstrap flow for local + CI runs.
+
+Scope:
+- Add fixture pack metadata/versioning and integrity fields.
+- Add bootstrap script and machine-readable bootstrap report.
+- Integrate fixture pack identity into harness summary outputs.
+- Add CI/schema checks for fixture pack artifacts.
+
+Out of scope:
+- New xLights API endpoint families.
+- UI/manual fixture preparation workflows.
+
+Initial success criteria:
+- Harness can run with an explicitly selected fixture pack.
+- Reports include fixture pack id/version.
+- Fixture bootstrap succeeds non-interactively in clean environments.
+
+Progress:
+- Added fixture-pack metadata/checksum contract to `test-fixtures.manifest.json`.
+- Added fixture-pack schema artifact (`schemas/fixture-pack-manifest.schema.json`).
+- Added CI/local manifest validation script (`scripts/xlights-control/validate-fixture-manifest.sh`) and wired it into workflow lint.
+- Added fixture bootstrap script (`scripts/xlights-control/bootstrap-fixtures.sh`) with machine-readable pass/fail report.
+- Updated `run-all.sh` summary contract to include `packId`, `packVersion`, and optional bootstrap report metadata.
+- Added request timeout guardrails (`CURL_MAX_TIME`) to harness HTTP calls to prevent indefinite hangs.
+- Completed end-to-end harness run with explicit fixture-pack metadata emitted in summary:
+  - `/tmp/xlights-control-reports/wp8-live-timeboxed-20260301-220608/run-all-summary.json`

@@ -7,12 +7,30 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ENV_FILE="${ENV_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.example.env}"
 MANIFEST_FILE="${MANIFEST_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.manifest.json}"
 OUT_DIR="${OUT_DIR:-/tmp/xlights-control-reports/$(date +%Y%m%d-%H%M%S)}"
+BOOTSTRAP_FIXTURES="${BOOTSTRAP_FIXTURES:-false}"
 
 mkdir -p "${OUT_DIR}"
 
 if [[ -f "${ENV_FILE}" ]]; then
   # shellcheck disable=SC1090
   source "${ENV_FILE}"
+fi
+
+pack_id="$(jq -r '.fixturePack.packId // "unknown"' "${MANIFEST_FILE}" 2>/dev/null || echo "unknown")"
+pack_version="$(jq -r '.fixturePack.packVersion // "unknown"' "${MANIFEST_FILE}" 2>/dev/null || echo "unknown")"
+
+bootstrap_ok=true
+bootstrap_report_path=""
+if [[ "${BOOTSTRAP_FIXTURES}" == "true" ]]; then
+  bootstrap_report_path="${OUT_DIR}/bootstrap-report.json"
+  set +e
+  MANIFEST_FILE="${MANIFEST_FILE}" ENV_FILE="${ENV_FILE}" OUT_FILE="${bootstrap_report_path}" \
+    bash "${SCRIPT_DIR}/bootstrap-fixtures.sh"
+  bootstrap_rc=$?
+  set -e
+  if [[ ${bootstrap_rc} -ne 0 ]]; then
+    bootstrap_ok=false
+  fi
 fi
 
 SUITES=(
@@ -23,7 +41,7 @@ SUITES=(
   "05-legacy-regression-smoke.sh"
 )
 
-overall_ok=true
+overall_ok="${bootstrap_ok}"
 summary_steps=()
 
 for suite in "${SUITES[@]}"; do
@@ -47,8 +65,10 @@ for suite in "${SUITES[@]}"; do
 done
 
 joined="$(IFS=,; echo "${summary_steps[*]}")"
-printf '{"manifest":"%s","outDir":"%s","passed":%s,"suites":[%s]}\n' \
-  "${MANIFEST_FILE}" "${OUT_DIR}" "${overall_ok}" "${joined}" | tee "${OUT_DIR}/run-all-summary.json"
+printf '{"manifest":"%s","packId":"%s","packVersion":"%s","outDir":"%s","bootstrap":{"enabled":%s,"passed":%s,"report":%s},"passed":%s,"suites":[%s]}\n' \
+  "${MANIFEST_FILE}" "${pack_id}" "${pack_version}" "${OUT_DIR}" "${BOOTSTRAP_FIXTURES}" "${bootstrap_ok}" \
+  "$(if [[ -n "${bootstrap_report_path}" ]]; then printf '"%s"' "${bootstrap_report_path}"; else printf 'null'; fi)" \
+  "${overall_ok}" "${joined}" | tee "${OUT_DIR}/run-all-summary.json"
 
 if [[ "${overall_ok}" == "true" ]]; then
   exit 0

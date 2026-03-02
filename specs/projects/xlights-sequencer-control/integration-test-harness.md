@@ -25,14 +25,33 @@ Inputs:
 - `ENV_FILE` (optional): defaults to `specs/projects/xlights-sequencer-control/test-fixtures.example.env`
 - `MANIFEST_FILE` (optional): defaults to `specs/projects/xlights-sequencer-control/test-fixtures.manifest.json`
 - `OUT_DIR` (optional): defaults under `/tmp/xlights-control-reports/<timestamp>`
+- `BOOTSTRAP_FIXTURES` (optional): when `true`, runs fixture bootstrap preflight and writes `bootstrap-report.json`
+- `CURL_MAX_TIME` (optional): max seconds per request to avoid indefinite hangs (default `20`)
 
 Outputs:
+- `<OUT_DIR>/bootstrap-report.json` (when `BOOTSTRAP_FIXTURES=true`)
 - `<OUT_DIR>/01-discovery-smoke.json`
 - `<OUT_DIR>/02-sequence-lifecycle-smoke.json`
 - `<OUT_DIR>/03-sequencer-mutation-smoke.json`
 - `<OUT_DIR>/04-validation-gate-smoke.json`
 - `<OUT_DIR>/05-legacy-regression-smoke.json`
 - `<OUT_DIR>/run-all-summary.json`
+
+Summary contract additions:
+- `packId`
+- `packVersion`
+- `bootstrap.enabled`
+- `bootstrap.passed`
+- `bootstrap.report`
+
+### `scripts/xlights-control/bootstrap-fixtures.sh`
+Purpose:
+- Validate fixture-pack asset resolution/readability against manifest + env.
+- Emit machine-readable bootstrap report for harness/agent preflight logic.
+
+Exit:
+- `0` when required assets resolve/read successfully.
+- non-zero when required assets are missing/unreadable or checksums fail.
 
 ### `scripts/xlights-control/01-discovery-smoke.sh`
 Inputs:

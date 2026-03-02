@@ -29,8 +29,10 @@ jobs:
           bash -n scripts/xlights-control/03-sequencer-mutation-smoke.sh
           bash -n scripts/xlights-control/04-validation-gate-smoke.sh
           bash -n scripts/xlights-control/05-legacy-regression-smoke.sh
+          bash -n scripts/xlights-control/bootstrap-fixtures.sh
+          bash -n scripts/xlights-control/validate-fixture-manifest.sh
       - name: Validate fixture manifest JSON
-        run: jq empty specs/projects/xlights-sequencer-control/test-fixtures.manifest.json
+        run: bash scripts/xlights-control/validate-fixture-manifest.sh
 
   smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.execute_smoke == true

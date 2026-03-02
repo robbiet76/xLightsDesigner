@@ -23,6 +23,8 @@ Allow Codex/agents to iterate and test toward defined goals with minimal manual 
 - Non-interactive git operations.
 - Build/test commands for xLights and xLightsDesigner.
 - Script execution for smoke/integration verification.
+- `jq` for fixture-pack and manifest validation.
+- `shasum` for optional fixture checksum verification.
 
 ### 2.4 Audio Analysis Backend Prerequisites
 - The analysis backend is pluggable; VAMP is one supported option, not a hard dependency.
@@ -34,6 +36,7 @@ Allow Codex/agents to iterate and test toward defined goals with minimal manual 
 ## 3) Non-Interactive Execution Policy
 - Prefer deterministic scripts over manual UI interaction.
 - Use API-level smoke/integration tests as release gates.
+- Run fixture bootstrap preflight before smoke suites when fixture-pack gating is enabled.
 - Avoid requiring user approval between every loop step unless:
   - destructive action,
   - scope change,
@@ -63,4 +66,6 @@ The system is autonomously usable when an agent can run, end-to-end, without man
 - Dual-root workspace configured and persisted.
 - Session started with writable access to both repos.
 - Network permissions configured to avoid repeated push/build prompts.
+- Fixture manifest validated (`scripts/xlights-control/validate-fixture-manifest.sh`).
+- Fixture bootstrap report generated when required (`scripts/xlights-control/bootstrap-fixtures.sh`).
 - Shared smoke-test entrypoints documented and runnable.

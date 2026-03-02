@@ -24,5 +24,5 @@ Date: 2026-03-02
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
 ## 4) Next Focus (Post-WP-7)
-- Define and version a reusable fixture bootstrap package for CI/local portability.
+- Execute WP-8 (fixture pack versioning + bootstrap portability).
 - Continue expansion only through new scoped work packages.

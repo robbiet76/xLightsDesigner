@@ -15,6 +15,8 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `implementation-work-packages.md`: sequenced PR work packages with scope and acceptance gates.
 - `wp7-spec.md`: formal WP-7 scope and acceptance specification.
 - `wp7-task-breakdown.md`: executable WP-7 task plan and sequencing.
+- `wp8-spec.md`: formal WP-8 fixture-pack/versioning scope and acceptance specification.
+- `wp8-task-breakdown.md`: executable WP-8 tasks for bootstrap portability and CI integration.
 - `gap-audit.md`: delta between current documented/implemented surface and required target surface.
 - `decision-log.md`: locked decisions to minimize implementation churn.
 - `acceptance-test-matrix.md`: cross-domain acceptance tests for autonomous, non-UI sequencing loops.
