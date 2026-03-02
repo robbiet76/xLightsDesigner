@@ -7,6 +7,7 @@ Date: 2026-03-02
 - Finalize request/response/error schemas for:
   - `effects.listDefinitions`, `effects.getDefinition`
   - `transactions.begin|commit|rollback`
+  - `system.executePlan`
   - `jobs.get|cancel`
   - `sequence.getRevision`
 - Update capability/feature declarations to match implemented commands only.
@@ -36,27 +37,35 @@ Date: 2026-03-02
 - Add transaction lifecycle and state isolation for staged mutations.
 - Implement deterministic conflict/failure semantics.
 
-## Task 6: Implement Async Jobs API
+## Task 6: Implement Atomic Plan Execution
+- Add `system.executePlan` for validated multi-command apply.
+- Support "all-or-nothing" behavior via transaction boundaries.
+- Return deterministic per-step diagnostics and aggregate status.
+
+## Task 7: Implement Async Jobs API
 - Introduce job registry and progress reporting for long-running operations.
 - Add job cancellation semantics where supported.
 
-## Task 7: Implement Revision/Concurrency Controls
+## Task 8: Implement Revision/Concurrency Controls
 - Add revision token retrieval (`sequence.getRevision`).
 - Enforce `expectedRevision` checks on mutating operations where applicable.
 
-## Task 8: Harden Diagnostics
+## Task 9: Harden Diagnostics + Non-Interactive Guarantees
 - Ensure open/save/render failures return structured error payloads.
 - Eliminate UI-blocking dependencies in non-interactive API paths.
+- Add stable error class/codes and retryability hints for machine triage.
 
-## Task 9: Expand Harness Coverage
+## Task 10: Expand Harness Coverage
 - Add suites:
   - `06-effects-definition-smoke.sh`
   - `07-transactions-smoke.sh`
-  - `08-async-jobs-smoke.sh`
-  - `09-revision-conflict-smoke.sh`
+  - `08-plan-execution-smoke.sh`
+  - `09-async-jobs-smoke.sh`
+  - `10-revision-conflict-smoke.sh`
 - Wire into `run-all.sh` and report summary.
 
-## Task 10: Closeout and Documentation
+## Task 11: Closeout and Documentation
 - Update status/acceptance matrices with implementation evidence.
 - Produce migration notes for API modularization structure.
 - Run full suite and archive run summary.
+- Complete `wp9-checklist.md` with links to proof artifacts and final go/no-go.

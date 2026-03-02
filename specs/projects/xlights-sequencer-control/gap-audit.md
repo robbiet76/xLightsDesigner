@@ -48,6 +48,6 @@ Date: 2026-03-02
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
 ## 4) Next Focus (Post-WP-8)
-- Execute WP-9 to close G1..G7.
+- Execute WP-9 to close G1..G10.
 - Add dedicated acceptance suites for transactions, async jobs, revision conflicts, and effect-schema introspection.
 - Complete API file decomposition and routing clean-up.
