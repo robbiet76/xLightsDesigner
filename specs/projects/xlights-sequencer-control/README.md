@@ -12,6 +12,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `autonomy-access-requirements.md`: required local permissions, tooling, and non-interactive execution policy for Codex/agents.
 - `implementation-roadmap.md`: phased delivery plan from discovery to full sequence authoring.
 - `implementation-status-matrix.md`: command-by-command contract coverage against current xLights branch.
+- `implementation-work-packages.md`: sequenced PR work packages with scope and acceptance gates.
 - `gap-audit.md`: delta between current documented/implemented surface and required target surface.
 - `decision-log.md`: locked decisions to minimize implementation churn.
 - `acceptance-test-matrix.md`: cross-domain acceptance tests for autonomous, non-UI sequencing loops.
