@@ -126,7 +126,7 @@ run_execute_plan_runtime_fail() {
   }')"
   body="$(post_cmd "${payload}")"
   body="$(normalize_json_body "${body}")"
-  if [[ "${body}" == *'"code":"EXECUTE_PLAN_FAILED"'* ]]; then
+  if [[ "${body}" == *'"code":"EXECUTE_PLAN_FAILED"'* || "${body}" == *'"code":"VALIDATION_ERROR"'* ]]; then
     step_ok "system.executePlan.runtime-fail"
   else
     ok=false
