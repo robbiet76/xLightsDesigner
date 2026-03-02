@@ -190,7 +190,9 @@
           { "name": "system.executePlan.success", "passed": true },
           { "name": "system.executePlan.state", "passed": true },
           { "name": "system.executePlan.validation-fail", "passed": true },
-          { "name": "system.executePlan.validation-fail.no-side-effect", "passed": true }
+          { "name": "system.executePlan.validation-fail.no-side-effect", "passed": true },
+          { "name": "system.executePlan.runtime-fail", "passed": true },
+          { "name": "system.executePlan.runtime-fail.no-side-effect", "passed": true }
         ]
       }
     },

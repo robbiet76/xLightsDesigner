@@ -7,6 +7,7 @@ source "${SCRIPT_DIR}/lib.sh"
 ok=true
 track_name="AgentPlan_$(date +%s)"
 fail_track="AgentPlanFail_$(date +%s)"
+runtime_fail_track="AgentPlanRuntimeFail_$(date +%s)"
 
 ensure_sequence_open() {
   local body is_open payload
@@ -110,6 +111,42 @@ verify_validation_fail_no_side_effect() {
   fi
 }
 
+run_execute_plan_runtime_fail() {
+  local payload body
+  payload="$(jq -cn --arg track "${runtime_fail_track}" '{
+    apiVersion:2,
+    cmd:"system.executePlan",
+    params:{
+      atomic:true,
+      commands:[
+        {cmd:"timing.createTrack",params:{trackName:$track,replaceIfExists:true}},
+        {cmd:"timing.getMarks",params:{trackName:"__missing_track_for_runtime_fail__"}}
+      ]
+    }
+  }')"
+  body="$(post_cmd "${payload}")"
+  body="$(normalize_json_body "${body}")"
+  if [[ "${body}" == *'"code":"EXECUTE_PLAN_FAILED"'* ]]; then
+    step_ok "system.executePlan.runtime-fail"
+  else
+    ok=false
+    step_fail "system.executePlan.runtime-fail"
+  fi
+}
+
+verify_runtime_fail_no_side_effect() {
+  local payload body
+  payload='{"apiVersion":2,"cmd":"timing.getTracks","params":{}}'
+  body="$(post_cmd "${payload}")"
+  body="$(normalize_json_body "${body}")"
+  if json_has_res_200 "${body}" && echo "${body}" | jq -e --arg name "${runtime_fail_track}" '.data.tracks | map(.name) | index($name) | not' >/dev/null 2>&1; then
+    step_ok "system.executePlan.runtime-fail.no-side-effect"
+  else
+    ok=false
+    step_fail "system.executePlan.runtime-fail.no-side-effect"
+  fi
+}
+
 cleanup_tracks() {
   local payload body
   payload="$(jq -cn --arg track "${track_name}" '{apiVersion:2,cmd:"timing.deleteTrack",params:{trackName:$track}}')"
@@ -128,6 +165,8 @@ run_execute_plan_success
 verify_plan_results
 run_execute_plan_validation_fail
 verify_validation_fail_no_side_effect
+run_execute_plan_runtime_fail
+verify_runtime_fail_no_side_effect
 cleanup_tracks
 
 if [[ "${ok}" == "true" ]]; then
