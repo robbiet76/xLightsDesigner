@@ -1,76 +1,50 @@
-# Implementation Status Matrix: Contract vs Current xLights Branch
+# Implementation Status Matrix: WP-9 Progress Snapshot
 
-Status: Updated after WP-7 closeout  
+Status: Updated after WP-9 G6 execution  
 Date: 2026-03-02  
-xLights branch audited: `audit/agent-hooks`  
-xLights HEAD audited: `09cf17278`
+xLights branch audited: `audit/agent-hooks`
 
 ## Legend
-- `Implemented (v2)`: command exists under v2 namespaced contract in `ProcessAutomation` v2 router.
-- `Partial`: command exists but does not yet satisfy full contract expectations.
-- `Missing`: no current endpoint implementation found.
+- `Implemented`: command exists and is exercised by harness.
+- `Implemented (bounded)`: command exists with known bounded limitations still tracked in gap audit.
+- `In Progress`: partially implemented and/or pending closeout evidence.
 
-## 1) Program-Core Commands (WP-1 .. WP-6)
+## 1) WP-9 Command Surface
 
-These are the 29 commands explicitly scoped in `implementation-work-packages.md`.
+| Command | Status | Evidence |
+|---|---|---|
+| `effects.listDefinitions` | Implemented | `xLights/automation/api/EffectsV2Api.inl`, `06-effects-definition-smoke.sh` |
+| `effects.getDefinition` | Implemented | `xLights/automation/api/EffectsV2Api.inl`, `06-effects-definition-smoke.sh` |
+| `transactions.begin` | Implemented | `xLights/automation/xLightsAutomations.cpp`, `07-transactions-smoke.sh` |
+| `transactions.commit` | Implemented (bounded) | `xLights/automation/xLightsAutomations.cpp`, `07-transactions-smoke.sh` |
+| `transactions.rollback` | Implemented | `xLights/automation/xLightsAutomations.cpp`, `07-transactions-smoke.sh` |
+| `system.executePlan` | Implemented (bounded) | `xLights/automation/xLightsAutomations.cpp`, `08-plan-execution-smoke.sh` |
+| `jobs.get` | Implemented | `xLights/automation/api/JobsV2Api.inl`, `09-async-jobs-smoke.sh` |
+| `jobs.cancel` | Implemented | `xLights/automation/api/JobsV2Api.inl`, `09-async-jobs-smoke.sh` |
+| `sequence.getRevision` | Implemented | `xLights/automation/api/SequenceV2Api.inl`, `10-revision-conflict-smoke.sh` |
 
-| Contract Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `system.getCapabilities` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:832` | Advertises supported v2 commands/features. |
-| `system.validateCommands` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:901` | Returns per-command validation results (`valid`, `results[]`). |
-| `sequence.getOpen` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:943` | |
-| `sequence.open` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:953` | |
-| `sequence.create` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1005` | |
-| `sequence.save` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1068` | |
-| `sequence.close` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1113` | |
-| `layout.getModels` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1147` | |
-| `layout.getModel` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1155` | |
-| `layout.getViews` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1171` | |
-| `media.get` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1191` | |
-| `media.set` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1200` | Returns `422` for invalid path/readability in current implementation. |
-| `media.getMetadata` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1228` | |
-| `timing.getTracks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1251` | |
-| `timing.createTrack` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1281` | |
-| `timing.renameTrack` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1323` | |
-| `timing.deleteTrack` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1356` | |
-| `timing.getMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1383` | |
-| `timing.insertMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1429` | |
-| `timing.replaceMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1488` | |
-| `timing.deleteMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1541` | |
-| `sequencer.getDisplayElementOrder` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1617` | |
-| `sequencer.setDisplayElementOrder` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1624` | |
-| `effects.list` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1723` | |
-| `effects.create` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1757` | |
-| `effects.update` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1871` | |
-| `effects.delete` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1912` | |
-| `effects.shift` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1944` | |
-| `effects.alignToTiming` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1989` | |
-| `effects.clone` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2077` | |
+## 2) Cross-Cutting WP-9 Behaviors
 
-### Core Coverage Snapshot
-- Implemented (v2): `29 / 29`
-- Partial: `0 / 29`
-- Missing: `0 / 29`
+| Behavior | Status | Evidence |
+|---|---|---|
+| Structured diagnostics (`error.class`, `error.retryable`, `error.details`) | Implemented | `xLights/automation/xLightsAutomations.cpp`, `11-diagnostics-smoke.sh` |
+| Non-interactive v2 automation assert suppression | Implemented | `xLights/automation/xLightsAutomations.cpp` |
+| Capability feature flags for WP-9 additions | Implemented | `xLights/automation/api/SystemV2Api.inl`, `01-discovery-smoke.sh` |
+| Harness suites 06..11 wired into runner/manifest | Implemented | `scripts/xlights-control/run-all.sh`, `test-fixtures.manifest.json` |
 
-## 2) Extended/Adjacent Commands
+## 3) Harness Coverage Snapshot
 
-These are currently implemented in v2 but outside the original WP-1..WP-6 core package list.
+| Suite | Purpose | Status |
+|---|---|---|
+| `06-effects-definition-smoke.sh` | Effect schema discovery | Implemented |
+| `07-transactions-smoke.sh` | Transaction begin/rollback/commit | Implemented |
+| `08-plan-execution-smoke.sh` | Plan execution + rollback/no-side-effect checks | Implemented |
+| `09-async-jobs-smoke.sh` | Async jobs lifecycle visibility | Implemented |
+| `10-revision-conflict-smoke.sh` | Optimistic concurrency | Implemented |
+| `11-diagnostics-smoke.sh` | Machine diagnostics contract | Implemented |
 
-| Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `layout.getDisplayElements` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1254` | Added in WP-7 start; returns element metadata for master display order. |
-| `timing.listAnalysisPlugins` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2155` | Provider/profile discovery shape. |
-| `timing.createFromAudio` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2174` | Current provider path is remote-analysis centric. |
-| `timing.getTrackSummary` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2295` | |
-| `timing.createBarsFromBeats` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2371` | |
-| `timing.createEnergySections` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2460` | |
+## 4) Open Items (Tracked)
 
-## 3) Remaining Contract Gaps
-
-No active endpoint-level contract gaps are currently identified in the v2 command surface for WP-7 scope.
-
-## 4) Observations
-
-1. The original six work packages are functionally in place.
-2. `system.validateCommands` currently performs strong shape/precondition checks but remains preflight-oriented (it does not execute full deep semantic validation of runtime state transitions).
-3. Harness/CI scaffolding exists and supports dedicated validation and legacy regression suites.
+1. Full atomic rollback guarantees for all mid-commit mutation failure classes remain tracked under G8.
+2. `xLightsAutomations.cpp` orchestration footprint remains larger than target and is tracked under G7/G10.
+3. Final end-to-end closeout evidence (full run report + go/no-go record) remains tracked under G9/G10.

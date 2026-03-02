@@ -571,6 +571,24 @@ Params:
 Response `data`:
 - `rolledBack`
 
+### `system.executePlan`
+Purpose: execute a multi-command plan with validation and optional atomic transaction semantics.
+
+Params:
+- `commands` (array, required): command objects matching `system.validateCommands` shape.
+- `atomic` (bool, optional, default `true`): stage mutating commands into one transaction and commit once.
+
+Response `data`:
+- `atomic`
+- `dryRun`
+- `executedCount`
+- `results[]` per-step objects:
+  - `index`
+  - `cmd`
+  - `status`
+  - `ok`
+  - `response` (nested command response envelope when parseable)
+
 ### `jobs.get`
 Purpose: poll async operation progress and result payload.
 

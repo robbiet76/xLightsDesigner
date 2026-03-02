@@ -1,6 +1,6 @@
 # Gap Audit: Current State vs Full Sequencer Control Target
 
-Status: Updated after WP-7 closeout  
+Status: Updated after WP-9 G6 execution  
 Date: 2026-03-02
 
 ## 1) Current Strengths
@@ -9,35 +9,47 @@ Date: 2026-03-02
 - Harness now includes multi-suite JSON output and a validation-gate suite.
 - CI workflow exists for harness linting/report artifact publishing.
 
-## 2) Remaining Gaps After WP-8
+## 2) Gap Status After WP-9 G6
 
 ### G1: Effect Definition Introspection
-- Current `effects.*` commands support CRUD but do not expose effect parameter schema/default/range metadata.
-- Agents currently require hardcoded effect knowledge that is brittle across versions.
+- Status: Closed.
+- Implemented `effects.listDefinitions` and `effects.getDefinition` with normalized parameter metadata for agent-side effect discovery.
 
 ### G2: Atomic Multi-Step Mutation Control
-- No transaction API exists for grouping many mutations under all-or-nothing semantics.
-- Partial application risk remains for long edit plans.
+- Status: Closed for transaction staging baseline.
+- Implemented `transactions.begin|commit|rollback` with staged mutation isolation and deterministic envelope/error behavior.
 
 ### G3: Async Long-Running Operation Control
-- Long-running operations (save/render/analysis) do not provide first-class async job semantics.
-- Poll/cancel/retry behavior is not standardized.
+- Status: Closed for current scope.
+- Implemented `jobs.get|cancel` and async job IDs for timing analysis flows (`async:true`).
 
 ### G4: Structured Save/Open Diagnostics
-- Error payload detail is inconsistent for failure triage in autonomous loops.
-- Some failures still rely on internal UI-layer behavior instead of machine-first diagnostics.
+- Status: Closed for current scope.
+- Added structured machine diagnostics (`error.class`, `error.retryable`, `error.details`) on open/save/analyze failure paths.
 
 ### G5: Revision/Concurrency Guardrails
-- Sequence revision tokens (or equivalent optimistic concurrency controls) are not yet contractized.
-- Concurrent/stale write protection is incomplete.
+- Status: Closed.
+- Implemented `sequence.getRevision` and `expectedRevision` conflict checks on mutating v2 commands.
 
 ### G6: Capability Surface Drift
-- Feature flags/capabilities can drift from actual command availability.
-- Contract requires tighter runtime capability truthfulness.
+- Status: Closed for implemented surface.
+- Capabilities now advertise WP-9 commands/features that are implemented (`effects definitions`, `transactions`, `jobs`, `executePlan`, `sequence.getRevision`).
 
 ### G7: Automation Layer Maintainability
-- `xLightsAutomations.cpp` remains too large and too coupled for rapid expansion.
-- API logic needs namespace-group modularization with a thin router/orchestration layer.
+- Status: Remaining.
+- `xLightsAutomations.cpp` still carries cross-cutting orchestration (transactions/jobs/executePlan) and should be reduced further via grouped API files.
+
+### G8: Deterministic Advanced/Bulk Rollback Semantics
+- Status: Remaining (narrowed).
+- `system.executePlan` now covers validation/runtime-failure no-side-effect cases pre-commit, but full rollback guarantees for all mid-commit mutation failures still need explicit closeout evidence.
+
+### G9: Harness/Regression Completeness
+- Status: In progress.
+- Suites `06..11` are implemented and wired; full `run-all` live green (including legacy suite stability constraints) is still pending final closeout evidence.
+
+### G10: Documentation/Status Lockstep
+- Status: In progress.
+- Core docs are being updated, but final matrix/checklist closeout and decision-log go/no-go are still pending.
 
 ## 3) Actions Completed in WP-7
 - Implemented `layout.getDisplayElements` and verified capability exposure.
@@ -47,7 +59,7 @@ Date: 2026-03-02
 - Completed live non-interactive harness pass across suites 01..05.
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
-## 4) Next Focus (Post-WP-8)
-- Execute WP-9 to close G1..G10.
-- Add dedicated acceptance suites for transactions, async jobs, revision conflicts, and effect-schema introspection.
-- Complete API file decomposition and routing clean-up.
+## 4) Next Focus
+- Execute WP-9 remaining closure work for G7, G8, G9, and G10.
+- Reduce `xLightsAutomations.cpp` orchestration footprint where practical.
+- Produce final run evidence and complete go/no-go documentation.
