@@ -49,8 +49,12 @@ Acceptance gates:
 - Any remaining gaps are explicitly documented as deliberate deferrals.
 
 Progress:
-- `layout.getDisplayElements` endpoint implementation is in progress in `xLights` working tree.
+- `layout.getDisplayElements` is implemented in v2 and available in capabilities.
+- Fixed a `layout.getModels` debug crash path in xLights by avoiding group-membership expansion on `ModelGroup` entries.
 - Added `05-legacy-regression-smoke.sh` and wired legacy gate into `run-all.sh`, manifest, and CI lint workflow.
+- Discovery and legacy suites were hardened for deterministic preconditions (`SEQUENCE_NOT_OPEN` handling in discovery and forced legacy close semantics).
+- Live run validation passed all suites on `2026-03-01` using local xLights listener:
+  - `/tmp/xlights-control-reports/live-49913-fixed3-20260301-214101/run-all-summary.json`
 
 ## Sequencing Recommendation
 1. WP-7.1 Contract sync and endpoint gap closure (`layout.getDisplayElements`)

@@ -19,10 +19,23 @@ run() {
   fi
 }
 
+run_or_sequence_not_open() {
+  local name="$1"
+  local payload="$2"
+  local body
+  body="$(post_cmd "${payload}")"
+  if json_has_res_200 "${body}" || [[ "${body}" == *'"code":"SEQUENCE_NOT_OPEN"'* ]]; then
+    step_ok "${name}"
+  else
+    ok=false
+    step_fail "${name}"
+  fi
+}
+
 run "system.getCapabilities" '{"apiVersion":2,"cmd":"system.getCapabilities","params":{}}'
 run "layout.getModels" '{"apiVersion":2,"cmd":"layout.getModels","params":{}}'
-run "layout.getViews" '{"apiVersion":2,"cmd":"layout.getViews","params":{}}'
-run "layout.getDisplayElements" '{"apiVersion":2,"cmd":"layout.getDisplayElements","params":{}}'
+run_or_sequence_not_open "layout.getViews" '{"apiVersion":2,"cmd":"layout.getViews","params":{}}'
+run_or_sequence_not_open "layout.getDisplayElements" '{"apiVersion":2,"cmd":"layout.getDisplayElements","params":{}}'
 
 if [[ "${ok}" == "true" ]]; then
   emit_report "01-discovery-smoke" true

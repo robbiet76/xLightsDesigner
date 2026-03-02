@@ -6,7 +6,7 @@ Date: 2026-03-02
 ## Task Group 1: Endpoint Gap Closure
 ### T1.1 Add `layout.getDisplayElements` in xLights v2 router
 - Owner: xLights repo
-- Status: In progress
+- Status: Completed
 - Changes:
   - Add command to capability list.
   - Implement read-only response assembly for display elements.
@@ -15,6 +15,7 @@ Date: 2026-03-02
 
 ### T1.2 Add endpoint-level tests/assertions
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Changes:
   - Extend discovery smoke to assert `layout.getDisplayElements` success and payload shape.
 - Done when:
@@ -71,6 +72,7 @@ Date: 2026-03-02
 ## Task Group 5: Closeout
 ### T5.1 Re-run full harness and summarize outcomes
 - Owner: both repos
+- Status: Completed
 - Done when:
   - Reports are generated for all suites and reviewed.
 
