@@ -9,7 +9,7 @@ tx_id=""
 track_name="AgentTx_$(date +%s)"
 
 ensure_sequence_open() {
-  local body is_open
+  local body is_open payload
   body="$(post_cmd '{"apiVersion":2,"cmd":"sequence.getOpen","params":{}}')"
   body="$(normalize_json_body "${body}")"
   if ! json_has_res_200 "${body}"; then
@@ -23,13 +23,19 @@ ensure_sequence_open() {
     return
   fi
 
-  body="$(post_cmd '{"apiVersion":2,"cmd":"sequence.create","params":{"durationMs":12000,"frameMs":50,"force":true}}')"
+  if [[ -z "${TEST_SEQUENCE_PATH:-}" ]]; then
+    ok=false
+    step_fail "sequence.open" "TEST_SEQUENCE_PATH_REQUIRED"
+    return
+  fi
+  payload="$(jq -cn --arg file "${TEST_SEQUENCE_PATH}" '{apiVersion:2,cmd:"sequence.open",params:{file:$file,force:true,promptIssues:false}}')"
+  body="$(post_cmd "${payload}")"
   body="$(normalize_json_body "${body}")"
   if json_has_res_200 "${body}"; then
-    step_ok "sequence.create"
+    step_ok "sequence.open"
   else
     ok=false
-    step_fail "sequence.create"
+    step_fail "sequence.open"
   fi
 }
 

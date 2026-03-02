@@ -41,6 +41,7 @@ SUITES=(
   "05-legacy-regression-smoke.sh"
   "06-effects-definition-smoke.sh"
   "07-transactions-smoke.sh"
+  "08-plan-execution-smoke.sh"
   "09-async-jobs-smoke.sh"
   "10-revision-conflict-smoke.sh"
   "11-diagnostics-smoke.sh"

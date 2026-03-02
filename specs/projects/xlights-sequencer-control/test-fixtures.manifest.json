@@ -181,6 +181,20 @@
       }
     },
     {
+      "id": "08-plan-execution-smoke",
+      "script": "scripts/xlights-control/08-plan-execution-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "system.executePlan.success", "passed": true },
+          { "name": "system.executePlan.state", "passed": true },
+          { "name": "system.executePlan.validation-fail", "passed": true },
+          { "name": "system.executePlan.validation-fail.no-side-effect", "passed": true }
+        ]
+      }
+    },
+    {
       "id": "09-async-jobs-smoke",
       "script": "scripts/xlights-control/09-async-jobs-smoke.sh",
       "required": true,
