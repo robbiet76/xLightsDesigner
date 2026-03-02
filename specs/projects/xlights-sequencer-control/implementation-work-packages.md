@@ -55,6 +55,13 @@ Progress:
 - Discovery and legacy suites were hardened for deterministic preconditions (`SEQUENCE_NOT_OPEN` handling in discovery and forced legacy close semantics).
 - Live run validation passed all suites on `2026-03-01` using local xLights listener:
   - `/tmp/xlights-control-reports/live-49913-fixed3-20260301-214101/run-all-summary.json`
+- `system.validateCommands` semantic checks were hardened for:
+  - timing mark payload shape and ordering/overlap constraints
+  - display element reorder payload quality (`orderedIds` string/duplicate validation)
+  - effect selector payload validity (`modelName`/`effectId`/`effectIds` typing and presence)
+- Validation hardening was verified live on `2026-03-01` via:
+  - `scripts/xlights-control/04-validation-gate-smoke.sh`
+  - direct `system.validateCommands` probe returning `VALIDATION_ERROR` for duplicate `orderedIds` and invalid mark ranges
 
 ## Sequencing Recommendation
 1. WP-7.1 Contract sync and endpoint gap closure (`layout.getDisplayElements`)

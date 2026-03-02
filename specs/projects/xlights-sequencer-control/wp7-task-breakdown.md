@@ -55,6 +55,7 @@ Date: 2026-03-02
 ## Task Group 4: Validation + Legacy Regression Hardening
 ### T4.1 Expand `system.validateCommands` semantic checks
 - Owner: xLights repo
+- Status: Completed
 - Changes:
   - Add preflight checks for key high-risk command payload classes.
 - Done when:
