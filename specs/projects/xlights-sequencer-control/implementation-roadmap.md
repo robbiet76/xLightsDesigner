@@ -1,6 +1,6 @@
 # Implementation Roadmap: Full Sequencer Control Program
 
-Status: Draft  
+Status: Updated after WP-6  
 Date: 2026-03-02
 
 ## Phase 0: Contract Hardening
@@ -44,11 +44,13 @@ Exit criteria:
 Exit criteria:
 - Agent loop can run autonomously with deterministic pass/fail reporting.
 
-## Phase 5: Production Hardening
-- Performance and stability pass on song-sized datasets.
-- Error contract hardening and troubleshooting telemetry.
-- Documented runbooks for local autonomous development.
+## Phase 5: Contract Reconciliation + Production Hardening (WP-7)
+- Close remaining endpoint-level contract gap (`layout.getDisplayElements`).
+- Reconcile docs and acceptance semantics to shipped behavior.
+- Finalize deterministic fixture setup for repeatable runs.
+- Harden validation and explicit legacy regression gates.
 
 Exit criteria:
-- Stable developer workflow with minimal manual intervention.
-
+- Specs accurately describe implementation reality.
+- Autonomous harness is repeatable and actionable in local + CI contexts.
+- No unresolved high-impact contract ambiguity before further API expansion.

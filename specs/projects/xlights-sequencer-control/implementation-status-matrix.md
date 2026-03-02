@@ -1,103 +1,78 @@
 # Implementation Status Matrix: Contract vs Current xLights Branch
 
-Status: Draft  
+Status: Updated after WP-6  
 Date: 2026-03-02  
 xLights branch audited: `audit/agent-hooks`  
-xLights HEAD audited: `ea2b5f712`
+xLights HEAD audited: `98e6b5712`
 
 ## Legend
-- `Implemented (v2)`: command exists under v2 namespaced contract.
-- `Legacy Equivalent`: behavior exists only via legacy/unversioned command shape.
+- `Implemented (v2)`: command exists under v2 namespaced contract in `ProcessAutomation` v2 router.
+- `Partial`: command exists but does not yet satisfy full contract expectations.
 - `Missing`: no current endpoint implementation found.
 
-## 1) System
+## 1) Program-Core Commands (WP-1 .. WP-6)
+
+These are the 29 commands explicitly scoped in `implementation-work-packages.md`.
 
 | Contract Command | Status | Evidence | Notes |
 |---|---|---|---|
-| `system.getCapabilities` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:446` | Present and active in v2 router. |
-| `system.validateCommands` | Missing | N/A | No v2 batch validation endpoint yet. |
+| `system.getCapabilities` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:832` | Advertises supported v2 commands/features. |
+| `system.validateCommands` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:901` | Returns per-command validation results (`valid`, `results[]`). |
+| `sequence.getOpen` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:943` | |
+| `sequence.open` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:953` | |
+| `sequence.create` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1005` | |
+| `sequence.save` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1068` | |
+| `sequence.close` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1113` | |
+| `layout.getModels` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1147` | |
+| `layout.getModel` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1155` | |
+| `layout.getViews` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1171` | |
+| `media.get` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1191` | |
+| `media.set` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1200` | Returns `422` for invalid path/readability in current implementation. |
+| `media.getMetadata` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1228` | |
+| `timing.getTracks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1251` | |
+| `timing.createTrack` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1281` | |
+| `timing.renameTrack` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1323` | |
+| `timing.deleteTrack` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1356` | |
+| `timing.getMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1383` | |
+| `timing.insertMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1429` | |
+| `timing.replaceMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1488` | |
+| `timing.deleteMarks` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1541` | |
+| `sequencer.getDisplayElementOrder` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1617` | |
+| `sequencer.setDisplayElementOrder` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1624` | |
+| `effects.list` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1723` | |
+| `effects.create` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1757` | |
+| `effects.update` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1871` | |
+| `effects.delete` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1912` | |
+| `effects.shift` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1944` | |
+| `effects.alignToTiming` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1806`, `:1989` | |
+| `effects.clone` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2077` | |
 
-## 2) Sequence Lifecycle
+### Core Coverage Snapshot
+- Implemented (v2): `29 / 29`
+- Partial: `0 / 29`
+- Missing: `0 / 29`
 
-| Contract Command | Status | Evidence | Notes |
+## 2) Extended/Adjacent Commands
+
+These are currently implemented in v2 but outside the original WP-1..WP-6 core package list.
+
+| Command | Status | Evidence | Notes |
 |---|---|---|---|
-| `sequence.getOpen` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:974` | Legacy `openSequence/getOpenSequence` returns open-sequence metadata when no `seq` is provided. |
-| `sequence.open` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:974` | Legacy open path exists; no v2 `sequence.open` yet. |
-| `sequence.create` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1074` | Legacy `newSequence` exists; no v2 endpoint yet. |
-| `sequence.save` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1093` | Legacy `saveSequence` exists; no v2 endpoint yet. |
-| `sequence.close` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1044` | Legacy `closeSequence` exists; no v2 endpoint yet. |
+| `timing.listAnalysisPlugins` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2152` | Provider/profile discovery shape. |
+| `timing.createFromAudio` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2171` | Current provider path is remote-analysis centric. |
+| `timing.getTrackSummary` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2292` | |
+| `timing.createBarsFromBeats` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2368` | |
+| `timing.createEnergySections` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2460` | |
 
-## 3) Layout Discovery (Read-Only)
+## 3) Remaining Contract Gaps
 
-| Contract Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `layout.getModels` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1727` | Legacy `getModels` exists. |
-| `layout.getModel` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1796` | Legacy `getModel` exists. |
-| `layout.getViews` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1766` | Legacy `getViews` exists. |
-| `layout.getDisplayElements` | Missing | N/A | No direct command exposing display element list/order metadata. |
+| Contract Command | Status | Notes |
+|---|---|---|
+| `layout.getDisplayElements` | Missing | Included in program-level docs/tests but not implemented in current v2 router. |
 
-## 4) Media + Audio
+## 4) Observations for WP-7
 
-| Contract Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `media.get` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:974` | Media path included in legacy open/getOpen response; no dedicated command. |
-| `media.set` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1074` | Media can be set via legacy `newSequence`; no dedicated v2 setter. |
-| `media.getMetadata` | Missing | N/A | No explicit media metadata endpoint. |
-| `timing.listAnalysisPlugins` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:458` | Implemented as provider/profile discovery with remote-analysis support. |
-
-## 5) Timing Track and Mark Control
-
-| Contract Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `timing.getTracks` | Missing | N/A | No list endpoint for timing tracks. |
-| `timing.createTrack` | Missing | N/A | Track creation currently implicit in other endpoints. |
-| `timing.renameTrack` | Missing | N/A | Not found. |
-| `timing.deleteTrack` | Missing | N/A | Not found as public API command. |
-| `timing.getMarks` | Missing | N/A | Not found. |
-| `timing.insertMarks` | Missing | N/A | Not found. |
-| `timing.replaceMarks` | Missing | N/A | Not found. |
-| `timing.deleteMarks` | Missing | N/A | Not found. |
-| `timing.getTrackSummary` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:598` | Present in v2 router. |
-
-## 6) Display Element Ordering
-
-| Contract Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `sequencer.getDisplayElementOrder` | Missing | N/A | Not found. |
-| `sequencer.setDisplayElementOrder` | Missing | N/A | Not found. |
-
-## 7) Effects + Layers
-
-| Contract Command | Status | Evidence | Notes |
-|---|---|---|---|
-| `effects.list` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1844`, `1887` | Legacy `getEffectIDs` + `getEffectSettings` partially cover list/read needs, but not contract shape. |
-| `effects.create` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1692` | Legacy `addEffect` exists; no v2 `effects.create` contract form. |
-| `effects.update` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1921` | Legacy `setEffectSettings` exists; no v2 `effects.update` yet. |
-| `effects.delete` | Missing | N/A | Not found as active command. |
-| `effects.shift` | Missing | `xLights/automation/xLightsAutomations.cpp:2186`, `2190` | Historical commands appear in disabled/commented backlog, not active API. |
-| `effects.alignToTiming` | Missing | N/A | Not found. |
-| `effects.clone` | Legacy Equivalent | `xLights/automation/xLightsAutomations.cpp:1677` | Legacy `cloneModelEffects` exists; no v2 `effects.clone` yet. |
-
-## 8) Additional v2 Commands Present (Outside Program Contract Core)
-
-These are implemented in v2 today and should either be incorporated as explicit program extensions or tracked as subproject-specific:
-- `timing.createFromAudio` (`:477`)
-- `timing.createBarsFromBeats` (`:674`)
-- `timing.createEnergySections` (`:766`)
-
-## 9) Coverage Snapshot (Program Contract Commands)
-
-- Implemented (v2): `3 / 29`
-- Legacy Equivalent: `12 / 29`
-- Missing: `14 / 29`
-
-Interpretation:
-- Strong progress on timing-analysis subproject APIs.
-- Large remaining gap for full sequencer-control contract (especially timing mark CRUD, display element ordering, and effects lifecycle completeness).
-
-## 10) Immediate Spec-to-Implementation Alignment Actions
-
-1. Prioritize v2 wrappers/adapters for sequence and layout read commands currently only available in legacy names.
-2. Define and implement timing track/mark CRUD as next major block.
-3. Define and implement `effects.delete` and bulk/align commands with explicit filter semantics from program decision log.
-4. Keep legacy commands unchanged; add new behavior only under v2 namespaced commands.
+1. The original six work packages are functionally in place.
+2. `layout.getDisplayElements` is the primary endpoint-level gap between docs and implementation.
+3. `system.validateCommands` currently performs strong shape/precondition checks but remains preflight-oriented (it does not execute full deep semantic validation of runtime state transitions).
+4. Harness/CI scaffolding exists and now supports a dedicated validation-gate suite.

@@ -39,7 +39,8 @@ Inputs:
 
 Assertions:
 - `system.getCapabilities` returns v2 capabilities and required command groups.
-- `layout.getModels`, `layout.getViews`, `layout.getDisplayElements` return parseable payloads.
+- `layout.getModels` and `layout.getViews` return parseable payloads.
+- `layout.getDisplayElements` is tracked as a WP-7 endpoint and should be covered once implemented.
 
 Exit:
 - `0` on pass.

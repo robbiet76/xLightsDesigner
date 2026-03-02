@@ -13,6 +13,8 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `implementation-roadmap.md`: phased delivery plan from discovery to full sequence authoring.
 - `implementation-status-matrix.md`: command-by-command contract coverage against current xLights branch.
 - `implementation-work-packages.md`: sequenced PR work packages with scope and acceptance gates.
+- `wp7-spec.md`: formal WP-7 scope and acceptance specification.
+- `wp7-task-breakdown.md`: executable WP-7 task plan and sequencing.
 - `gap-audit.md`: delta between current documented/implemented surface and required target surface.
 - `decision-log.md`: locked decisions to minimize implementation churn.
 - `acceptance-test-matrix.md`: cross-domain acceptance tests for autonomous, non-UI sequencing loops.
