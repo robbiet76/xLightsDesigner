@@ -6,6 +6,9 @@ Phase 1 standalone project for xLights automation, covering:
 - song structure detection,
 - lyric track generation/import.
 
+This project is a focused subproject under the broader program contract:
+- `../xlights-sequencer-control/` (full sequencer control scope and autonomy requirements).
+
 ## Files
 - `project-spec.md`: source-of-truth specification (scope, API contract, requirements, tests).
 - `implementation-plan.md`: phased delivery plan and rollout sequence.

@@ -1,11 +1,16 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "../../xLights/xLights"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "/Users/robterry/Projects/xLightsDesigner"
+    },
+    {
+      "path": "/Users/robterry/xLights"
+    }
+  ],
+  "settings": {
+    "git.autoRepositoryDetection": true,
+    "files.exclude": {
+      "**/.DS_Store": true
+    }
+  }
 }

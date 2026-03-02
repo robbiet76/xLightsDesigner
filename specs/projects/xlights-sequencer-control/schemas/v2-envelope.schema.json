@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/specs/xlights-sequencer-control/v2-envelope.schema.json",
+  "title": "xLights v2 Envelope",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "cmd"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": 2
+    },
+    "cmd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "params": {
+      "type": "object",
+      "default": {}
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "dryRun": {
+          "type": "boolean",
+          "default": false
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

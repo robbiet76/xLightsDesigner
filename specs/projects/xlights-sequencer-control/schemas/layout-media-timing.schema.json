@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/specs/xlights-sequencer-control/layout-media-timing.schema.json",
+  "title": "xLights v2 Layout, Media, and Timing Params",
+  "type": "object",
+  "required": [
+    "cmd",
+    "params"
+  ],
+  "properties": {
+    "cmd": {
+      "type": "string",
+      "enum": [
+        "layout.getModels",
+        "layout.getModel",
+        "layout.getViews",
+        "layout.getDisplayElements",
+        "media.get",
+        "media.set",
+        "media.getMetadata",
+        "timing.listAnalysisPlugins",
+        "timing.getTracks",
+        "timing.createTrack",
+        "timing.renameTrack",
+        "timing.deleteTrack",
+        "timing.getMarks",
+        "timing.insertMarks",
+        "timing.replaceMarks",
+        "timing.deleteMarks",
+        "timing.getTrackSummary"
+      ]
+    },
+    "params": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "layout.getModel"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "media.set"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "mediaFile"
+            ],
+            "properties": {
+              "mediaFile": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "timing.createTrack"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "trackName"
+            ],
+            "properties": {
+              "trackName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "trackType": {
+                "type": "string"
+              },
+              "replaceIfExists": {
+                "type": "boolean"
+              },
+              "addToAllViews": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "enum": [
+              "timing.renameTrack",
+              "timing.deleteTrack",
+              "timing.getMarks",
+              "timing.insertMarks",
+              "timing.replaceMarks",
+              "timing.deleteMarks",
+              "timing.getTrackSummary"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "trackName"
+            ],
+            "properties": {
+              "trackName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "newTrackName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "marks": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "startMs": {
+                "type": "integer"
+              },
+              "endMs": {
+                "type": "integer"
+              },
+              "markIndexes": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

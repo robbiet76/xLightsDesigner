@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/specs/xlights-sequencer-control/sequencer-effects.schema.json",
+  "title": "xLights v2 Sequencer and Effects Params",
+  "type": "object",
+  "required": [
+    "cmd",
+    "params"
+  ],
+  "properties": {
+    "cmd": {
+      "type": "string",
+      "enum": [
+        "sequencer.getDisplayElementOrder",
+        "sequencer.setDisplayElementOrder",
+        "effects.list",
+        "effects.create",
+        "effects.update",
+        "effects.delete",
+        "effects.shift",
+        "effects.alignToTiming",
+        "effects.clone"
+      ]
+    },
+    "params": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "sequencer.setDisplayElementOrder"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "orderedIds"
+            ],
+            "properties": {
+              "orderedIds": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "effects.create"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "modelName",
+              "layerIndex",
+              "effectName",
+              "startMs",
+              "endMs"
+            ],
+            "properties": {
+              "modelName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "layerIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "effectName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "startMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "endMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "settings": {
+                "type": "object"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "enum": [
+              "effects.update",
+              "effects.delete",
+              "effects.shift",
+              "effects.alignToTiming",
+              "effects.clone"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "effectId": {
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              },
+              "effectIds": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              },
+              "modelName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerIndex": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "startMs": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "endMs": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "deltaMs": {
+                "type": "integer"
+              },
+              "timingTrackName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mode": {
+                "type": "string"
+              },
+              "sourceModelName": {
+                "type": "string"
+              },
+              "sourceLayerIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "targetModels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "targetLayerIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "clipToSequence": {
+                "type": "boolean"
+              },
+              "settings": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

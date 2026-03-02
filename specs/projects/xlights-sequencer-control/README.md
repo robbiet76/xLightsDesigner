@@ -1,0 +1,20 @@
+# xLights Sequencer Control + Agent Autonomy
+
+Status: Draft baseline for pre-implementation alignment.  
+Date: 2026-03-02
+
+## Purpose
+Define the full target contract between xLightsDesigner and xLights before further API implementation, with explicit boundaries and autonomous-agent execution requirements.
+
+## Files
+- `project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
+- `api-surface-contract.md`: required endpoint/capability matrix for full sequencer control.
+- `autonomy-access-requirements.md`: required local permissions, tooling, and non-interactive execution policy for Codex/agents.
+- `implementation-roadmap.md`: phased delivery plan from discovery to full sequence authoring.
+- `gap-audit.md`: delta between current documented/implemented surface and required target surface.
+- `decision-log.md`: locked decisions to minimize implementation churn.
+- `acceptance-test-matrix.md`: cross-domain acceptance tests for autonomous, non-UI sequencing loops.
+- `schemas/`: machine-readable JSON Schema artifacts for request validation.
+- `integration-test-harness.md`: required non-UI integration scripts and report format contract.
+- `test-fixtures.example.env`: fixture/environment template for integration smoke scripts.
+- `test-fixtures.manifest.json`: fixture manifest with expected baseline outputs per smoke suite.

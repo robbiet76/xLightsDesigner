@@ -1,0 +1,86 @@
+{
+  "version": "2026-03-02",
+  "description": "Fixture manifest and expected baseline outputs for xLights sequencer control smoke suites.",
+  "environment": {
+    "XLIGHTS_BASE_URL": "http://127.0.0.1:49914",
+    "TEST_SEQUENCE_PATH": "/abs/path/to/test-sequence.xsq",
+    "TEST_MEDIA_PATH": "/abs/path/to/test-song.mp3",
+    "TEST_TIMING_TRACK": "AgentTiming",
+    "TEST_MODEL_NAME": "MegaTree"
+  },
+  "suites": [
+    {
+      "id": "01-discovery-smoke",
+      "script": "scripts/xlights-control/01-discovery-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "system.getCapabilities", "passed": true },
+          { "name": "layout.getModels", "passed": true },
+          { "name": "layout.getViews", "passed": true },
+          { "name": "layout.getDisplayElements", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "02-sequence-lifecycle-smoke",
+      "script": "scripts/xlights-control/02-sequence-lifecycle-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "sequence.getOpen", "passed": true },
+          { "name": "sequence.save.dryRun", "passed": true }
+        ],
+        "conditionalSteps": [
+          {
+            "whenEnvSet": "TEST_SEQUENCE_PATH",
+            "step": { "name": "sequence.open", "passed": true }
+          },
+          {
+            "whenEnvSet": "TEST_MEDIA_PATH",
+            "step": { "name": "media.set", "passed": true }
+          },
+          {
+            "whenEnvSet": "TEST_MEDIA_PATH",
+            "step": { "name": "media.getMetadata", "passed": true }
+          }
+        ]
+      }
+    },
+    {
+      "id": "03-sequencer-mutation-smoke",
+      "script": "scripts/xlights-control/03-sequencer-mutation-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "timing.createTrack", "passed": true },
+          { "name": "timing.insertMarks", "passed": true },
+          { "name": "timing.getTrackSummary", "passed": true },
+          { "name": "sequencer.getDisplayElementOrder", "passed": true }
+        ],
+        "conditionalSteps": [
+          {
+            "whenEnvSet": "TEST_MODEL_NAME",
+            "step": { "name": "effects.create", "passed": true }
+          },
+          {
+            "whenEnvSet": "TEST_MODEL_NAME",
+            "step": { "name": "effects.list", "passed": true }
+          }
+        ]
+      }
+    }
+  ],
+  "aggregateExpectedOutput": {
+    "summaryFile": "run-all-summary.json",
+    "requiredKeys": [
+      "manifest",
+      "outDir",
+      "passed",
+      "suites"
+    ]
+  }
+}

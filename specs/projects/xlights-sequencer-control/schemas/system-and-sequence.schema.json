@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/specs/xlights-sequencer-control/system-and-sequence.schema.json",
+  "title": "xLights v2 System and Sequence Params",
+  "type": "object",
+  "required": [
+    "cmd",
+    "params"
+  ],
+  "properties": {
+    "cmd": {
+      "type": "string",
+      "enum": [
+        "system.getCapabilities",
+        "system.validateCommands",
+        "sequence.getOpen",
+        "sequence.open",
+        "sequence.create",
+        "sequence.save",
+        "sequence.close"
+      ]
+    },
+    "params": {
+      "oneOf": [
+        {
+          "description": "system.getCapabilities or sequence.getOpen",
+          "type": "object",
+          "maxProperties": 0
+        },
+        {
+          "description": "system.validateCommands",
+          "type": "object",
+          "required": [
+            "commands"
+          ],
+          "properties": {
+            "commands": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "sequence.open",
+          "type": "object",
+          "required": [
+            "file"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "force": {
+              "type": "boolean"
+            },
+            "promptIssues": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "sequence.create",
+          "type": "object",
+          "required": [
+            "frameMs"
+          ],
+          "properties": {
+            "mediaFile": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "durationMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "frameMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "view": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "sequence.save",
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "sequence.close",
+          "type": "object",
+          "properties": {
+            "force": {
+              "type": "boolean"
+            },
+            "quiet": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}
