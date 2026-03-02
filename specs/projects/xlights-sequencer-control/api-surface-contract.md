@@ -88,6 +88,8 @@ Baseline error codes:
 - Layer addressing must use explicit target (`layerIndex` or stable layer id).
 - Layout namespace endpoints are read-only by contract.
 - Controllers namespace is excluded from this program.
+- Long-running operations should support async job semantics (`jobId`, progress, cancel).
+- Sequence mutations should support optimistic concurrency controls (`revisionToken`).
 
 ## 4) Command Contracts
 
@@ -511,8 +513,99 @@ Response `data`:
 Dry-run:
 - returns projected clone summary.
 
-## 5) Completion Definition
-This contract is complete when each command in Sections 4.1-4.8 has:
+## 4.9 Proposed WP-9 Extensions
+
+### `effects.listDefinitions`
+Purpose: enumerate effect definitions and parameter contracts.
+
+Response `data`:
+- `effects` array of:
+  - `effectName`
+  - `category`
+  - `params[]` with:
+    - `name`
+    - `type` (`int|float|bool|string|enum|color|curve|file`)
+    - `required`
+    - `default`
+    - `min/max` (where applicable)
+    - `enumValues[]` (where applicable)
+    - `description`
+
+### `effects.getDefinition`
+Purpose: fetch one effect definition by effect name.
+
+Params:
+- `effectName` (string, required)
+
+Response `data`:
+- `effect` object matching the schema used by `effects.listDefinitions`.
+
+### `transactions.begin`
+Purpose: start an atomic mutation scope.
+
+Response `data`:
+- `transactionId`
+- `sequenceRevision`
+- `expiresAt`
+
+### `transactions.commit`
+Purpose: atomically apply staged mutations.
+
+Params:
+- `transactionId` (string, required)
+- `expectedRevision` (string, optional/recommended)
+
+Response `data`:
+- `committed`
+- `newRevision`
+- `appliedCommandCount`
+
+### `transactions.rollback`
+Purpose: abandon staged mutations.
+
+Params:
+- `transactionId` (string, required)
+
+Response `data`:
+- `rolledBack`
+
+### `jobs.get`
+Purpose: poll async operation progress and result payload.
+
+Params:
+- `jobId` (string, required)
+
+Response `data`:
+- `jobId`
+- `status` (`queued|running|completed|failed|cancelled`)
+- `progressPct`
+- `result`
+- `error`
+
+### `jobs.cancel`
+Purpose: cancel a running async operation.
+
+Params:
+- `jobId` (string, required)
+
+Response `data`:
+- `cancelled`
+
+### `sequence.getRevision`
+Purpose: fetch current sequence revision token.
+
+Response `data`:
+- `sequencePath`
+- `revisionToken`
+- `lastModifiedEpochMs`
+
+## 5) Implementation Architecture Requirement (WP-9)
+- API command logic should be grouped into separate source files by namespace/domain.
+- `xLightsAutomations.cpp` should be limited to envelope parsing, routing, and shared orchestration.
+- Domain behavior should not continue to expand in a single monolithic file.
+
+## 6) Completion Definition
+This contract is complete when each command in Sections 4.1-4.9 has:
 - schema-locked params and response keys,
 - validation rules and error mappings,
 - dry-run behavior (if mutating),

@@ -58,3 +58,16 @@ Date: 2026-03-02
   - verify readback
   - emit deterministic report
 - Any failed step exits with machine-readable error payload.
+
+## 10) WP-9 Advanced Control Validation
+- `effects.listDefinitions` and `effects.getDefinition` return stable machine-readable effect parameter contracts.
+- Transaction flow validates atomicity:
+  - `transactions.begin` + staged mutations + `transactions.rollback` leaves no persisted changes.
+  - `transactions.begin` + staged mutations + `transactions.commit` persists all changes or none.
+- Async job flow validates observability and cancellation:
+  - long operation returns `jobId`
+  - `jobs.get` reaches terminal status deterministically
+  - `jobs.cancel` transitions running jobs to `cancelled` when supported.
+- Revision conflict flow validates optimistic concurrency:
+  - stale `expectedRevision` returns deterministic conflict error.
+- Save/open failures return structured machine-actionable diagnostics, not blocking UI dependency.

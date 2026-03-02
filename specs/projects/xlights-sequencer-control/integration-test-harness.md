@@ -37,6 +37,12 @@ Outputs:
 - `<OUT_DIR>/05-legacy-regression-smoke.json`
 - `<OUT_DIR>/run-all-summary.json`
 
+WP-9 planned suite additions:
+- `<OUT_DIR>/06-effects-definition-smoke.json`
+- `<OUT_DIR>/07-transactions-smoke.json`
+- `<OUT_DIR>/08-async-jobs-smoke.json`
+- `<OUT_DIR>/09-revision-conflict-smoke.json`
+
 Summary contract additions:
 - `packId`
 - `packVersion`
@@ -119,6 +125,30 @@ Assertions:
 Exit:
 - `0` on pass.
 - non-zero on first failed assertion.
+
+### WP-9 Planned Scripts
+
+### `scripts/xlights-control/06-effects-definition-smoke.sh`
+Assertions:
+- `effects.listDefinitions` returns parseable effect schema contracts.
+- `effects.getDefinition` returns stable schema for representative effects.
+
+### `scripts/xlights-control/07-transactions-smoke.sh`
+Assertions:
+- begin/rollback preserves prior state.
+- begin/commit applies atomically.
+- conflict paths return deterministic transaction error codes.
+
+### `scripts/xlights-control/08-async-jobs-smoke.sh`
+Assertions:
+- long-running operations return `jobId`.
+- `jobs.get` polling reaches terminal status.
+- `jobs.cancel` behaves deterministically for cancellable operations.
+
+### `scripts/xlights-control/09-revision-conflict-smoke.sh`
+Assertions:
+- stale `revisionToken`/`expectedRevision` is rejected with conflict semantics.
+- current revision token mutation succeeds.
 
 ## 3) Required Output Format
 Each script writes a machine-readable JSON report:

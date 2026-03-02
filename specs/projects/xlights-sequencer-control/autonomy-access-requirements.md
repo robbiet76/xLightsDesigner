@@ -69,3 +69,17 @@ The system is autonomously usable when an agent can run, end-to-end, without man
 - Fixture manifest validated (`scripts/xlights-control/validate-fixture-manifest.sh`).
 - Fixture bootstrap report generated when required (`scripts/xlights-control/bootstrap-fixtures.sh`).
 - Shared smoke-test entrypoints documented and runnable.
+
+## 8) Automation Layer Code Organization Requirement
+- API command handlers should be grouped by namespace/domain and implemented in separate files.
+- `xLightsAutomations.cpp` should remain a thin router/orchestration layer only.
+- Proposed implementation grouping:
+  - `automation/api/SystemApi.*`
+  - `automation/api/SequenceApi.*`
+  - `automation/api/LayoutApi.*`
+  - `automation/api/MediaApi.*`
+  - `automation/api/TimingApi.*`
+  - `automation/api/EffectsApi.*`
+  - `automation/api/TransactionsApi.*` (WP-9)
+  - `automation/api/JobsApi.*` (WP-9)
+- Shared request parsing/validation helpers should live in a focused common module, not duplicated per command group.

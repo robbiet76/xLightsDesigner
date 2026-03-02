@@ -68,3 +68,19 @@ Exit criteria:
 Exit criteria:
 - Fixture setup is reproducible and portable across local + CI runs.
 - Agent loops can detect fixture mismatch conditions deterministically.
+
+## Phase 7: End-to-End Authoring Completeness + API Decomposition (WP-9)
+- Add missing control-plane APIs required for fully autonomous sequence building:
+  - effect definition introspection
+  - transaction semantics
+  - async job lifecycle
+  - structured open/save/render diagnostics
+  - revision/concurrency tokens
+- Reconcile capabilities and command availability to remove feature drift.
+- Restructure automation implementation into grouped API modules and keep router code thin.
+
+Exit criteria:
+- Agent can run full create/edit/save loops with deterministic API-only control and recoverable failures.
+- Long-running calls are observable/cancelable.
+- Concurrent/stale-write hazards are explicitly guarded.
+- `xLightsAutomations.cpp` is reduced to routing and shared orchestration, with command logic in grouped files.

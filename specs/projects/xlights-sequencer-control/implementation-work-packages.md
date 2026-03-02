@@ -97,3 +97,34 @@ Progress:
 - Added request timeout guardrails (`CURL_MAX_TIME`) to harness HTTP calls to prevent indefinite hangs.
 - Completed end-to-end harness run with explicit fixture-pack metadata emitted in summary:
   - `/tmp/xlights-control-reports/wp8-live-timeboxed-20260301-220608/run-all-summary.json`
+
+## WP-9: End-to-End Sequence Authoring Completeness + API Modularization
+Status: Planned
+
+Goal:
+- Close the remaining API gaps that block robust autonomous sequence generation while reducing automation-layer complexity by splitting API logic into grouped modules.
+
+Scope:
+- Add effect definition/introspection APIs (parameter schema/defaults/ranges/enums).
+- Add transaction semantics for atomic multi-step mutation (`begin`/`commit`/`rollback`).
+- Add async job control for long-running operations (job id/progress/cancel/result).
+- Add structured diagnostic/error payloads for open/save/render/write paths.
+- Add sequence revision/concurrency tokens to protect against stale writes.
+- Reconcile capabilities with shipped commands (for example, lyrics-related feature flags).
+- Refactor automation implementation into grouped API files and keep `xLightsAutomations.cpp` as orchestration/router layer.
+
+Out of scope:
+- Controller setup/control APIs.
+- Layout/model write APIs.
+- Creative decision logic in xLights.
+
+Acceptance gates:
+- New APIs are documented in contract docs and validated by automated harness coverage.
+- End-to-end autonomous flow supports deterministic create/open/edit/save with no blocking UI dialogs.
+- Transaction and revision semantics prevent partial/stale writes in concurrent agent loops.
+- Long-running operations return machine-actionable progress and cancellation semantics.
+- API code is partitioned by namespace group and `xLightsAutomations.cpp` is reduced to lightweight routing/integration responsibilities.
+
+Reference docs:
+- `wp9-spec.md`
+- `wp9-task-breakdown.md`

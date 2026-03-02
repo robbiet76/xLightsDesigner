@@ -9,11 +9,35 @@ Date: 2026-03-02
 - Harness now includes multi-suite JSON output and a validation-gate suite.
 - CI workflow exists for harness linting/report artifact publishing.
 
-## 2) Remaining Gaps After WP-7
+## 2) Remaining Gaps After WP-8
 
-### G1: Fixture Packaging Formalization (Deferred)
-- Harness, manifest, and live run gates are in place, but a versioned fixture pack/bootstrap artifact is still not formalized.
-- This is a follow-on operational improvement and does not block current WP-7 acceptance.
+### G1: Effect Definition Introspection
+- Current `effects.*` commands support CRUD but do not expose effect parameter schema/default/range metadata.
+- Agents currently require hardcoded effect knowledge that is brittle across versions.
+
+### G2: Atomic Multi-Step Mutation Control
+- No transaction API exists for grouping many mutations under all-or-nothing semantics.
+- Partial application risk remains for long edit plans.
+
+### G3: Async Long-Running Operation Control
+- Long-running operations (save/render/analysis) do not provide first-class async job semantics.
+- Poll/cancel/retry behavior is not standardized.
+
+### G4: Structured Save/Open Diagnostics
+- Error payload detail is inconsistent for failure triage in autonomous loops.
+- Some failures still rely on internal UI-layer behavior instead of machine-first diagnostics.
+
+### G5: Revision/Concurrency Guardrails
+- Sequence revision tokens (or equivalent optimistic concurrency controls) are not yet contractized.
+- Concurrent/stale write protection is incomplete.
+
+### G6: Capability Surface Drift
+- Feature flags/capabilities can drift from actual command availability.
+- Contract requires tighter runtime capability truthfulness.
+
+### G7: Automation Layer Maintainability
+- `xLightsAutomations.cpp` remains too large and too coupled for rapid expansion.
+- API logic needs namespace-group modularization with a thin router/orchestration layer.
 
 ## 3) Actions Completed in WP-7
 - Implemented `layout.getDisplayElements` and verified capability exposure.
@@ -23,6 +47,7 @@ Date: 2026-03-02
 - Completed live non-interactive harness pass across suites 01..05.
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
-## 4) Next Focus (Post-WP-7)
-- Execute WP-8 (fixture pack versioning + bootstrap portability).
-- Continue expansion only through new scoped work packages.
+## 4) Next Focus (Post-WP-8)
+- Execute WP-9 to close G1..G7.
+- Add dedicated acceptance suites for transactions, async jobs, revision conflicts, and effect-schema introspection.
+- Complete API file decomposition and routing clean-up.
