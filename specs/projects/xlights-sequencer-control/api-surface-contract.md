@@ -51,6 +51,8 @@ Error:
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "file is required",
+    "class": "client_input",
+    "retryable": false,
     "details": [
       { "path": "params.file", "reason": "required" }
     ]

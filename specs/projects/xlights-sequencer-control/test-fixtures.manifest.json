@@ -206,6 +206,20 @@
           { "name": "revision.advanced", "passed": true }
         ]
       }
+    },
+    {
+      "id": "11-diagnostics-smoke",
+      "script": "scripts/xlights-control/11-diagnostics-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "sequence.open.not-found.code", "passed": true },
+          { "name": "sequence.open.not-found.diagnostics", "passed": true },
+          { "name": "sequence.save.diagnostics", "passed": true },
+          { "name": "timing.createFromAudio.diagnostics", "passed": true }
+        ]
+      }
     }
   ],
   "aggregateExpectedOutput": {

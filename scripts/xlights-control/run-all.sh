@@ -43,6 +43,7 @@ SUITES=(
   "07-transactions-smoke.sh"
   "09-async-jobs-smoke.sh"
   "10-revision-conflict-smoke.sh"
+  "11-diagnostics-smoke.sh"
 )
 
 overall_ok="${bootstrap_ok}"

@@ -64,6 +64,7 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [ ] `08-plan-execution-smoke.sh`
 - [ ] `09-async-jobs-smoke.sh`
 - [ ] `10-revision-conflict-smoke.sh`
+- [ ] `11-diagnostics-smoke.sh`
 - [ ] Existing suites `01..05` remain green.
 - [ ] Legacy regression suite remains green.
 - [ ] Fixture manifest updated with expected baseline outputs for all new suites.

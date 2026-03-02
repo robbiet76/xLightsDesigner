@@ -42,6 +42,7 @@ WP-9 planned suite additions:
 - `<OUT_DIR>/07-transactions-smoke.json`
 - `<OUT_DIR>/09-async-jobs-smoke.json`
 - `<OUT_DIR>/10-revision-conflict-smoke.json`
+- `<OUT_DIR>/11-diagnostics-smoke.json`
 
 Summary contract additions:
 - `packId`
@@ -149,6 +150,11 @@ Assertions:
 Assertions:
 - stale `revisionToken`/`expectedRevision` is rejected with conflict semantics.
 - current revision token mutation succeeds.
+
+### `scripts/xlights-control/11-diagnostics-smoke.sh`
+Assertions:
+- open/save/analyze failure paths return structured `error.code`, `error.message`, `error.class`, and `error.retryable`.
+- diagnostics payload remains machine-readable for agent retry/stop logic.
 
 ## 3) Required Output Format
 Each script writes a machine-readable JSON report:
