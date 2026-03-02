@@ -1,9 +1,9 @@
 # Implementation Status Matrix: Contract vs Current xLights Branch
 
-Status: Updated after WP-6  
+Status: Updated during WP-7 execution  
 Date: 2026-03-02  
 xLights branch audited: `audit/agent-hooks`  
-xLights HEAD audited: `98e6b5712`
+xLights HEAD audited: `e0bedad92` (+ in-progress WP-7 working changes)
 
 ## Legend
 - `Implemented (v2)`: command exists under v2 namespaced contract in `ProcessAutomation` v2 router.
@@ -58,21 +58,19 @@ These are currently implemented in v2 but outside the original WP-1..WP-6 core p
 
 | Command | Status | Evidence | Notes |
 |---|---|---|---|
-| `timing.listAnalysisPlugins` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2152` | Provider/profile discovery shape. |
-| `timing.createFromAudio` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2171` | Current provider path is remote-analysis centric. |
-| `timing.getTrackSummary` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2292` | |
-| `timing.createBarsFromBeats` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2368` | |
+| `layout.getDisplayElements` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:1254` | Added in WP-7 start; returns element metadata for master display order. |
+| `timing.listAnalysisPlugins` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2155` | Provider/profile discovery shape. |
+| `timing.createFromAudio` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2174` | Current provider path is remote-analysis centric. |
+| `timing.getTrackSummary` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2295` | |
+| `timing.createBarsFromBeats` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2371` | |
 | `timing.createEnergySections` | Implemented (v2) | `xLights/automation/xLightsAutomations.cpp:2460` | |
 
 ## 3) Remaining Contract Gaps
 
-| Contract Command | Status | Notes |
-|---|---|---|
-| `layout.getDisplayElements` | Missing | Included in program-level docs/tests but not implemented in current v2 router. |
+No active endpoint-level contract gaps are currently identified in the v2 command surface.
 
 ## 4) Observations for WP-7
 
 1. The original six work packages are functionally in place.
-2. `layout.getDisplayElements` is the primary endpoint-level gap between docs and implementation.
-3. `system.validateCommands` currently performs strong shape/precondition checks but remains preflight-oriented (it does not execute full deep semantic validation of runtime state transitions).
-4. Harness/CI scaffolding exists and now supports a dedicated validation-gate suite.
+2. `system.validateCommands` currently performs strong shape/precondition checks but remains preflight-oriented (it does not execute full deep semantic validation of runtime state transitions).
+3. Harness/CI scaffolding exists and now supports a dedicated validation-gate suite.

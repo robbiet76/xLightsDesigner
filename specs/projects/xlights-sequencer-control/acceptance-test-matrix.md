@@ -12,7 +12,7 @@ Date: 2026-03-02
 ## 2) Layout Read-Only
 - `layout.getModels` returns deterministic model list keys.
 - `layout.getViews` returns deterministic view/model memberships.
-- `layout.getDisplayElements` is currently a known gap and tracked for WP-7.
+- `layout.getDisplayElements` returns deterministic element metadata keys (`id`, `name`, `type`, `orderIndex`) with `parentId` when derivable.
 - Any write-like params sent to `layout.*` return `422 VALIDATION_ERROR` where implemented.
 
 ## 3) Media + Audio

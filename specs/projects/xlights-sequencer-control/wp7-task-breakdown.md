@@ -6,6 +6,7 @@ Date: 2026-03-02
 ## Task Group 1: Endpoint Gap Closure
 ### T1.1 Add `layout.getDisplayElements` in xLights v2 router
 - Owner: xLights repo
+- Status: In progress
 - Changes:
   - Add command to capability list.
   - Implement read-only response assembly for display elements.

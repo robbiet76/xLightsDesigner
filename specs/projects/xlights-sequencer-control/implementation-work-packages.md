@@ -24,6 +24,8 @@ Status: Completed (`e3a962c9e`)
 Status: Completed (`98e6b5712` in xLights, `63546f3` in xLightsDesigner)
 
 ## WP-7: Contract Reconciliation + Autonomous Hardening
+Status: In progress
+
 Goal:
 - Close remaining spec/implementation drift and harden autonomous reliability so agent loops can run repeatably without manual patching.
 
@@ -45,6 +47,9 @@ Acceptance gates:
 - Harness runs with reproducible fixtures and emits consistent summary JSON.
 - Legacy compatibility regression checks run and fail-fast on behavioral drift.
 - Any remaining gaps are explicitly documented as deliberate deferrals.
+
+Progress:
+- `layout.getDisplayElements` endpoint implementation is in progress in `xLights` working tree.
 
 ## Sequencing Recommendation
 1. WP-7.1 Contract sync and endpoint gap closure (`layout.getDisplayElements`)
