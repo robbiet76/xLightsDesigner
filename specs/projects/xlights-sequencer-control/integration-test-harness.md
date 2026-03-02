@@ -31,6 +31,7 @@ Outputs:
 - `<OUT_DIR>/02-sequence-lifecycle-smoke.json`
 - `<OUT_DIR>/03-sequencer-mutation-smoke.json`
 - `<OUT_DIR>/04-validation-gate-smoke.json`
+- `<OUT_DIR>/05-legacy-regression-smoke.json`
 - `<OUT_DIR>/run-all-summary.json`
 
 ### `scripts/xlights-control/01-discovery-smoke.sh`
@@ -82,6 +83,19 @@ Inputs:
 Assertions:
 - `system.validateCommands` returns parseable per-command `results`.
 - Invalid candidate commands are flagged with `valid=false` and an error object.
+
+Exit:
+- `0` on pass.
+- non-zero on first failed assertion.
+
+### `scripts/xlights-control/05-legacy-regression-smoke.sh`
+Inputs:
+- optional `TEST_SEQUENCE_PATH`
+
+Assertions:
+- legacy command transport remains functional for representative reads (`getVersion`, `getModels`).
+- legacy close/open/save sequence behavior remains stable for non-v2 calls.
+- no-sequence behavior for `getOpenSequence` remains a parseable non-success response.
 
 Exit:
 - `0` on pass.

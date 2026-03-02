@@ -85,6 +85,38 @@
           { "name": "system.validateCommands.invalid-detection", "passed": true }
         ]
       }
+    },
+    {
+      "id": "05-legacy-regression-smoke",
+      "script": "scripts/xlights-control/05-legacy-regression-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "legacy.getVersion", "passed": true },
+          { "name": "legacy.getModels", "passed": true },
+          { "name": "legacy.closeSequence.quiet", "passed": true },
+          { "name": "legacy.getOpenSequence.no-open", "passed": true }
+        ],
+        "conditionalSteps": [
+          {
+            "whenEnvSet": "TEST_SEQUENCE_PATH",
+            "step": { "name": "legacy.openSequence", "passed": true }
+          },
+          {
+            "whenEnvSet": "TEST_SEQUENCE_PATH",
+            "step": { "name": "legacy.getViews", "passed": true }
+          },
+          {
+            "whenEnvSet": "TEST_SEQUENCE_PATH",
+            "step": { "name": "legacy.saveSequence", "passed": true }
+          },
+          {
+            "whenEnvSet": "TEST_SEQUENCE_PATH",
+            "step": { "name": "legacy.closeSequence.after-open", "passed": true }
+          }
+        ]
+      }
     }
   ],
   "aggregateExpectedOutput": {

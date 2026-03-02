@@ -61,6 +61,7 @@ Date: 2026-03-02
 
 ### T4.2 Add legacy regression suite
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Changes:
   - Add non-v2 regression script covering representative legacy commands.
   - Wire into CI reporting.

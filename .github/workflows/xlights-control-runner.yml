@@ -28,6 +28,7 @@ jobs:
           bash -n scripts/xlights-control/02-sequence-lifecycle-smoke.sh
           bash -n scripts/xlights-control/03-sequencer-mutation-smoke.sh
           bash -n scripts/xlights-control/04-validation-gate-smoke.sh
+          bash -n scripts/xlights-control/05-legacy-regression-smoke.sh
       - name: Validate fixture manifest JSON
         run: jq empty specs/projects/xlights-sequencer-control/test-fixtures.manifest.json
 

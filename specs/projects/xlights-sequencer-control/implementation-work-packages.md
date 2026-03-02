@@ -50,6 +50,7 @@ Acceptance gates:
 
 Progress:
 - `layout.getDisplayElements` endpoint implementation is in progress in `xLights` working tree.
+- Added `05-legacy-regression-smoke.sh` and wired legacy gate into `run-all.sh`, manifest, and CI lint workflow.
 
 ## Sequencing Recommendation
 1. WP-7.1 Contract sync and endpoint gap closure (`layout.getDisplayElements`)

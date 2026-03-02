@@ -20,6 +20,7 @@ SUITES=(
   "02-sequence-lifecycle-smoke.sh"
   "03-sequencer-mutation-smoke.sh"
   "04-validation-gate-smoke.sh"
+  "05-legacy-regression-smoke.sh"
 )
 
 overall_ok=true
