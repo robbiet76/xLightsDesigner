@@ -1,6 +1,6 @@
 # Implementation Work Packages: v2 Sequencer Control
 
-Status: Updated after WP-6  
+Status: Updated after WP-7 closeout  
 Date: 2026-03-02
 
 ## Completed Packages
@@ -24,7 +24,7 @@ Status: Completed (`e3a962c9e`)
 Status: Completed (`98e6b5712` in xLights, `63546f3` in xLightsDesigner)
 
 ## WP-7: Contract Reconciliation + Autonomous Hardening
-Status: In progress
+Status: Completed (`09cf17278` in xLights, `0746f1f` in xLightsDesigner)
 
 Goal:
 - Close remaining spec/implementation drift and harden autonomous reliability so agent loops can run repeatably without manual patching.
@@ -63,11 +63,6 @@ Progress:
   - `scripts/xlights-control/04-validation-gate-smoke.sh`
   - direct `system.validateCommands` probe returning `VALIDATION_ERROR` for duplicate `orderedIds` and invalid mark ranges
 
-## Sequencing Recommendation
-1. WP-7.1 Contract sync and endpoint gap closure (`layout.getDisplayElements`)
-2. WP-7.2 Fixture determinism and harness repeatability
-3. WP-7.3 Validation and legacy regression hardening
-4. WP-7.4 Documentation freeze + sign-off
-
-Rationale:
-- We now have broad feature coverage; highest value is reducing ambiguity/risk before additional API expansion.
+## WP-7 Closeout Note
+- WP-7 scope has been executed and documented.
+- Remaining improvements should be tracked as new work packages, not WP-7 extensions.

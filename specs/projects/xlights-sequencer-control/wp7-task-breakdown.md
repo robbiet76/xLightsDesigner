@@ -1,6 +1,6 @@
 # WP-7 Task Breakdown
 
-Status: Draft execution plan  
+Status: Completed  
 Date: 2026-03-02
 
 ## Task Group 1: Endpoint Gap Closure
@@ -24,6 +24,7 @@ Date: 2026-03-02
 ## Task Group 2: Contract and Spec Reconciliation
 ### T2.1 Lock status matrix to current code
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Changes:
   - Keep command-by-command matrix synchronized to current branch head.
 - Done when:
@@ -31,6 +32,7 @@ Date: 2026-03-02
 
 ### T2.2 Normalize acceptance semantics
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Changes:
   - Align expected status codes/payload keys to actual implementation semantics.
 - Done when:
@@ -39,6 +41,7 @@ Date: 2026-03-02
 ## Task Group 3: Deterministic Fixture Strategy
 ### T3.1 Define fixture bootstrap process
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Changes:
   - Add documented fixture bootstrap steps/script contract.
   - Clarify required env vars and fallback behavior.
@@ -47,6 +50,7 @@ Date: 2026-03-02
 
 ### T3.2 Tighten manifest assertions
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Changes:
   - Ensure fixture manifest includes baseline expectations for all required suites.
 - Done when:
@@ -79,6 +83,7 @@ Date: 2026-03-02
 
 ### T5.2 Final doc freeze for WP-7
 - Owner: xLightsDesigner repo
+- Status: Completed
 - Done when:
   - WP-7 docs and implementation links are internally consistent.
 

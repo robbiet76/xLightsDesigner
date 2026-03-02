@@ -1,6 +1,6 @@
 # WP-7 Spec: Contract Reconciliation + Autonomous Hardening
 
-Status: Draft for execution  
+Status: Completed  
 Date: 2026-03-02  
 Depends on: WP-1 through WP-6 completion
 
@@ -77,3 +77,9 @@ WP-1..WP-6 delivered broad command coverage and validation/harness scaffolding. 
 
 ## 8) Exit Definition
 WP-7 is complete when endpoint parity and autonomous hardening changes are merged, and a single non-interactive run can produce deterministic pass/fail outputs with docs that accurately describe shipped behavior.
+
+## 9) Closeout Evidence
+- xLights completion commit: `09cf17278`
+- xLightsDesigner closeout/docs commit: `0746f1f`
+- Live harness summary artifact:
+  - `/tmp/xlights-control-reports/live-49913-fixed3-20260301-214101/run-all-summary.json`

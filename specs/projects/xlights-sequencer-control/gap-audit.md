@@ -1,6 +1,6 @@
 # Gap Audit: Current State vs Full Sequencer Control Target
 
-Status: Updated after WP-6  
+Status: Updated after WP-7 closeout  
 Date: 2026-03-02
 
 ## 1) Current Strengths
@@ -9,24 +9,20 @@ Date: 2026-03-02
 - Harness now includes multi-suite JSON output and a validation-gate suite.
 - CI workflow exists for harness linting/report artifact publishing.
 
-## 2) Confirmed Remaining Gaps
+## 2) Remaining Gaps After WP-7
 
-### G1: Spec Drift and Semantic Mismatch Risk
-- Several docs still reflected pre-WP-implementation assumptions (status/error examples).
-- This has now been mostly corrected, but should be locked with a WP-7 doc freeze pass.
+### G1: Fixture Packaging Formalization (Deferred)
+- Harness, manifest, and live run gates are in place, but a versioned fixture pack/bootstrap artifact is still not formalized.
+- This is a follow-on operational improvement and does not block current WP-7 acceptance.
 
-### G2: Deterministic Fixture Bundle Not Finalized
-- Manifest and env templates exist, but a durable fixture pack/bootstrap path is still needed for truly repeatable local and CI runs.
+## 3) Actions Completed in WP-7
+- Implemented `layout.getDisplayElements` and verified capability exposure.
+- Fixed `layout.getModels` debug crash path for `ModelGroup` membership expansion.
+- Added and hardened legacy regression suite coverage.
+- Hardened `system.validateCommands` semantic preflight checks for high-risk payload classes.
+- Completed live non-interactive harness pass across suites 01..05.
+- Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
-### G3: Legacy Regression Coverage Needs Explicit Gate
-- Core compatibility intent is clear, but there is no dedicated automated legacy command regression suite yet.
-
-## 3) Actions Completed in This Audit Pass
-- Refreshed implementation status matrix to post-WP-6 reality.
-- Refreshed acceptance test matrix to match current behavior.
-- Defined WP-7 scope for contract reconciliation and hardening.
-
-## 4) WP-7 Focus
-- Finalize deterministic fixtures.
-- Add explicit legacy regression gate.
-- Freeze docs against implementation reality before new feature expansion.
+## 4) Next Focus (Post-WP-7)
+- Define and version a reusable fixture bootstrap package for CI/local portability.
+- Continue expansion only through new scoped work packages.

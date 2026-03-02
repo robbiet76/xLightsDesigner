@@ -1,6 +1,6 @@
 # Implementation Roadmap: Full Sequencer Control Program
 
-Status: Updated after WP-6  
+Status: Updated after WP-7 closeout  
 Date: 2026-03-02
 
 ## Phase 0: Contract Hardening
@@ -49,6 +49,10 @@ Exit criteria:
 - Reconcile docs and acceptance semantics to shipped behavior.
 - Finalize deterministic fixture setup for repeatable runs.
 - Harden validation and explicit legacy regression gates.
+
+Completion note:
+- Phase executed and closed on 2026-03-02.
+- Follow-on fixture packaging/versioning remains a post-WP-7 improvement item.
 
 Exit criteria:
 - Specs accurately describe implementation reality.

@@ -1,6 +1,6 @@
 # Acceptance Test Matrix: Full Sequencer Control
 
-Status: Updated after WP-6  
+Status: Updated after WP-7 closeout  
 Date: 2026-03-02
 
 ## 1) Sequence Lifecycle
@@ -11,8 +11,8 @@ Date: 2026-03-02
 
 ## 2) Layout Read-Only
 - `layout.getModels` returns deterministic model list keys.
-- `layout.getViews` returns deterministic view/model memberships.
-- `layout.getDisplayElements` returns deterministic element metadata keys (`id`, `name`, `type`, `orderIndex`) with `parentId` when derivable.
+- `layout.getViews` returns deterministic view/model memberships when a sequence is open; otherwise returns `SEQUENCE_NOT_OPEN`.
+- `layout.getDisplayElements` returns deterministic element metadata keys (`id`, `name`, `type`, `orderIndex`) with `parentId` when derivable when a sequence is open; otherwise returns `SEQUENCE_NOT_OPEN`.
 - Any write-like params sent to `layout.*` return `422 VALIDATION_ERROR` where implemented.
 
 ## 3) Media + Audio

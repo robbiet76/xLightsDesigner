@@ -1,9 +1,9 @@
 # Implementation Status Matrix: Contract vs Current xLights Branch
 
-Status: Updated during WP-7 execution  
+Status: Updated after WP-7 closeout  
 Date: 2026-03-02  
 xLights branch audited: `audit/agent-hooks`  
-xLights HEAD audited: `e0bedad92` (+ in-progress WP-7 working changes)
+xLights HEAD audited: `09cf17278`
 
 ## Legend
 - `Implemented (v2)`: command exists under v2 namespaced contract in `ProcessAutomation` v2 router.
@@ -67,10 +67,10 @@ These are currently implemented in v2 but outside the original WP-1..WP-6 core p
 
 ## 3) Remaining Contract Gaps
 
-No active endpoint-level contract gaps are currently identified in the v2 command surface.
+No active endpoint-level contract gaps are currently identified in the v2 command surface for WP-7 scope.
 
-## 4) Observations for WP-7
+## 4) Observations
 
 1. The original six work packages are functionally in place.
 2. `system.validateCommands` currently performs strong shape/precondition checks but remains preflight-oriented (it does not execute full deep semantic validation of runtime state transitions).
-3. Harness/CI scaffolding exists and now supports a dedicated validation-gate suite.
+3. Harness/CI scaffolding exists and supports dedicated validation and legacy regression suites.
