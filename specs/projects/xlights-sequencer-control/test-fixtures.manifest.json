@@ -192,6 +192,20 @@
           { "name": "jobs.cancel", "passed": true }
         ]
       }
+    },
+    {
+      "id": "10-revision-conflict-smoke",
+      "script": "scripts/xlights-control/10-revision-conflict-smoke.sh",
+      "required": true,
+      "expected": {
+        "passed": true,
+        "steps": [
+          { "name": "sequence.getRevision", "passed": true },
+          { "name": "revision.conflict.stale", "passed": true },
+          { "name": "revision.apply.current", "passed": true },
+          { "name": "revision.advanced", "passed": true }
+        ]
+      }
     }
   ],
   "aggregateExpectedOutput": {
