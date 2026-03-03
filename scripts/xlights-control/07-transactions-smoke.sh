@@ -7,6 +7,7 @@ source "${SCRIPT_DIR}/lib.sh"
 ok=true
 tx_id=""
 track_name="AgentTx_$(date +%s)"
+rollback_track_name="${track_name}_Rollback"
 
 ensure_sequence_open() {
   local body is_open payload
@@ -160,6 +161,74 @@ cleanup_track() {
   fi
 }
 
+verify_track_absent_by_name() {
+  local name="$1"
+  local step_name="$2"
+  local body
+  body="$(post_cmd '{"apiVersion":2,"cmd":"timing.getTracks","params":{}}')"
+  body="$(normalize_json_body "${body}")"
+  if ! json_has_res_200 "${body}"; then
+    ok=false
+    step_fail "${step_name}"
+    return
+  fi
+  if echo "${body}" | jq -e --arg name "${name}" '.data.tracks | map(.name) | index($name) | not' >/dev/null 2>&1; then
+    step_ok "${step_name}"
+  else
+    ok=false
+    step_fail "${step_name}"
+  fi
+}
+
+exercise_mid_commit_rollback() {
+  local body payload tx
+  body="$(post_cmd '{"apiVersion":2,"cmd":"transactions.begin","params":{}}')"
+  body="$(normalize_json_body "${body}")"
+  if ! json_has_res_200 "${body}"; then
+    ok=false
+    step_fail "transactions.rollback-guard.begin"
+    return
+  fi
+  tx="$(echo "${body}" | jq -r '.data.transactionId // empty')"
+  if [[ -z "${tx}" ]]; then
+    ok=false
+    step_fail "transactions.rollback-guard.begin"
+    return
+  fi
+
+  payload="$(jq -cn --arg tx "${tx}" --arg name "${rollback_track_name}" \
+    '{apiVersion:2,cmd:"timing.createTrack",params:{transactionId:$tx,trackName:$name}}')"
+  body="$(post_cmd "${payload}")"
+  body="$(normalize_json_body "${body}")"
+  if ! json_has_res_200 "${body}"; then
+    ok=false
+    step_fail "transactions.rollback-guard.stage.createTrack"
+    return
+  fi
+
+  payload="$(jq -cn --arg tx "${tx}" --arg name "${rollback_track_name}" \
+    '{apiVersion:2,cmd:"timing.insertMarks",params:{transactionId:$tx,trackName:$name,marks:[{startMs:1000,endMs:500,label:"bad"}]}}')"
+  body="$(post_cmd "${payload}")"
+  body="$(normalize_json_body "${body}")"
+  if ! json_has_res_200 "${body}"; then
+    ok=false
+    step_fail "transactions.rollback-guard.stage.invalid"
+    return
+  fi
+
+  payload="$(jq -cn --arg tx "${tx}" '{apiVersion:2,cmd:"transactions.commit",params:{transactionId:$tx}}')"
+  body="$(post_cmd "${payload}")"
+  body="$(normalize_json_body "${body}")"
+  if [[ "${body}" == *'"code":"TRANSACTION_APPLY_FAILED"'* ]]; then
+    step_ok "transactions.rollback-guard.commit-fail"
+  else
+    ok=false
+    step_fail "transactions.rollback-guard.commit-fail"
+  fi
+
+  verify_track_absent_by_name "${rollback_track_name}" "transactions.rollback-guard.state"
+}
+
 ensure_sequence_open
 begin_tx
 stage_tx_changes
@@ -171,6 +240,7 @@ stage_tx_changes
 commit_tx
 verify_track_present
 cleanup_track
+exercise_mid_commit_rollback
 
 if [[ "${ok}" == "true" ]]; then
   emit_report "07-transactions-smoke" true

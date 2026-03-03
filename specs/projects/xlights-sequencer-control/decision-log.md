@@ -1,6 +1,6 @@
 # Decision Log: xLights Sequencer Control Program
 
-Date: 2026-03-02  
+Date: 2026-03-03  
 Status: Locked unless superseded by explicit revision.
 
 ## D1) Scope Boundaries
@@ -60,3 +60,8 @@ Status: Locked unless superseded by explicit revision.
 - Active display-element subset selection and element ordering are separate controls.
 - `sequencer.setActiveDisplayElements` controls include-only visibility of non-timing display elements.
 - `sequencer.setDisplayElementOrder` remains the only ordering mutation API.
+
+## D12) WP-9 Gate Posture (2026-03-03)
+- Harness/documentation lockstep gaps (G9/G10) are considered closed based on full green `run-all.sh` evidence and synchronized status docs.
+- Program gate remains `No-Go` for final WP-9 closeout while G8 remains open.
+- G8 remains the sole tracked blocker: deterministic rollback guarantees for all mid-commit mutation failure classes.

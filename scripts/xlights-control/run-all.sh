@@ -79,6 +79,15 @@ launch_rc=$?
 set -e
 printf "%s\n" "${launch_output}" | tee "${launch_log}"
 if [[ ${launch_rc} -ne 0 ]]; then
+  if [[ ${launch_rc} -eq 3 ]]; then
+    echo "HARNESS_ENV_NOT_READY: xLights endpoint is not auto-launchable from this shell context." >&2
+    echo "Start xLights manually, then rerun run-all.sh." >&2
+    printf '{"manifest":"%s","packId":"%s","packVersion":"%s","outDir":"%s","bootstrap":{"enabled":%s,"passed":%s,"report":%s},"passed":false,"envReady":false,"reason":"HARNESS_ENV_NOT_READY","suites":[]}\n' \
+      "${MANIFEST_FILE}" "${pack_id}" "${pack_version}" "${OUT_DIR}" "${BOOTSTRAP_FIXTURES}" "${bootstrap_ok}" \
+      "$(if [[ -n "${bootstrap_report_path}" ]]; then printf '"%s"' "${bootstrap_report_path}"; else printf 'null'; fi)" \
+      | tee "${OUT_DIR}/run-all-summary.json"
+    exit 2
+  fi
   echo "Failed to launch xLights/open sequence; see ${launch_log}" >&2
   exit 1
 fi

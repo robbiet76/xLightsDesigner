@@ -1,6 +1,6 @@
 # Implementation Status Matrix: WP-9 Progress Snapshot
 
-Status: Updated after WP-9 G7 execution  
+Status: Updated after WP-9 G9/G10 evidence sync  
 Date: 2026-03-03  
 xLights branch audited: `audit/agent-hooks`
 
@@ -31,6 +31,7 @@ xLights branch audited: `audit/agent-hooks`
 | Non-interactive v2 automation assert suppression | Implemented | `xLights/automation/xLightsAutomations.cpp` |
 | Capability feature flags for WP-9 additions | Implemented | `xLights/automation/api/SystemV2Api.inl`, `01-discovery-smoke.sh` |
 | Harness suites 06..11 wired into runner/manifest | Implemented | `scripts/xlights-control/run-all.sh`, `test-fixtures.manifest.json` |
+| Full live harness pass (01..11 + legacy stability) | Implemented | `scripts/xlights-control/run-all.sh` execution on 2026-03-03 |
 
 ## 3) Harness Coverage Snapshot
 
@@ -46,4 +47,3 @@ xLights branch audited: `audit/agent-hooks`
 ## 4) Open Items (Tracked)
 
 1. Full atomic rollback guarantees for all mid-commit mutation failure classes remain tracked under G8.
-2. Final end-to-end closeout evidence (full run report + go/no-go record) remains tracked under G9/G10.

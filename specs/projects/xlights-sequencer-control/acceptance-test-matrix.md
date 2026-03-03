@@ -1,7 +1,7 @@
 # Acceptance Test Matrix: Full Sequencer Control
 
-Status: Updated after WP-7 closeout  
-Date: 2026-03-02
+Status: Updated after WP-9 harness evidence sync  
+Date: 2026-03-03
 
 ## 1) Sequence Lifecycle
 - `sequence.create` with valid params returns `200` and sequence metadata.
@@ -71,3 +71,8 @@ Date: 2026-03-02
 - Revision conflict flow validates optimistic concurrency:
   - stale `expectedRevision` returns deterministic conflict error.
 - Save/open failures return structured machine-actionable diagnostics, not blocking UI dependency.
+
+## 11) Harness Regression Gate
+- `scripts/xlights-control/run-all.sh` must launch/open a live xLights endpoint before suite execution.
+- `run-all.sh` must complete green across suites `01..11` for release-candidate validation.
+- Harness failures must provide deterministic machine-readable per-suite artifacts and summary JSON.

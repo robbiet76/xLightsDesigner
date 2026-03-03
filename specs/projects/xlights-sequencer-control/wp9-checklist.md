@@ -1,7 +1,7 @@
 # WP-9 Completion Checklist
 
-Status: Draft  
-Date: 2026-03-02
+Status: Updated  
+Date: 2026-03-03
 
 Use this checklist as the authoritative go/no-go gate for "autonomous sequence authoring ready" in WP-9.
 
@@ -68,16 +68,16 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [x] New WP-9 APIs are added to grouped files, not monolithic routing logic.
 
 ## 8) Harness and Regression Coverage (G9)
-- [ ] New suites added and wired in `run-all.sh`:
+- [x] New suites added and wired in `run-all.sh`:
 - [x] `06-effects-definition-smoke.sh`
 - [x] `07-transactions-smoke.sh`
 - [x] `08-plan-execution-smoke.sh`
 - [x] `09-async-jobs-smoke.sh`
 - [x] `10-revision-conflict-smoke.sh`
 - [x] `11-diagnostics-smoke.sh`
-- [ ] Existing suites `01..05` remain green.
-- [ ] Legacy regression suite remains green.
-- [ ] Fixture manifest updated with expected baseline outputs for all new suites.
+- [x] Existing suites `01..05` remain green.
+- [x] Legacy regression suite remains green.
+- [x] Fixture manifest updated with expected baseline outputs for all new suites.
 
 ## 9) Virtual Vision Readiness (G13)
 - [ ] Agent can bootstrap a scene snapshot from API only (no UI scraping).
@@ -94,8 +94,8 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [x] Palette readback is deterministic after mutation.
 
 ## 11) Final Closeout
-- [ ] `implementation-status-matrix.md` updated with WP-9 evidence links.
-- [ ] `acceptance-test-matrix.md` updated with WP-9 pass criteria.
+- [x] `implementation-status-matrix.md` updated with WP-9 evidence links.
+- [x] `acceptance-test-matrix.md` updated with WP-9 pass criteria.
 - [ ] `gap-audit.md` marks G1..G14 closed or explicitly deferred.
-- [ ] Final run report archived and linked in closeout notes.
-- [ ] Go/No-Go decision recorded in decision log.
+- [x] Final run report archived and linked in closeout notes.
+- [x] Go/No-Go decision recorded in decision log.

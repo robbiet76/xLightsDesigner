@@ -6,6 +6,9 @@ set -euo pipefail
 
 XLIGHTS_BIN="${XLIGHTS_BIN:-/Users/robterry/xLights/macOS/build/Debug/xLights.app/Contents/MacOS/xLights}"
 LIBDBG_DIR="${LIBDBG_DIR:-/Users/robterry/xLights/macOS/dependencies/libdbg}"
+XLIGHTS_LAUNCH_COMMAND="${XLIGHTS_LAUNCH_COMMAND:-/Users/robterry/Desktop/Show/Launch xLights Test.command}"
+LAUNCH_VIA_TERMINAL="${LAUNCH_VIA_TERMINAL:-0}"
+ALLOW_HEADLESS_DIRECT_LAUNCH="${ALLOW_HEADLESS_DIRECT_LAUNCH:-0}"
 SEQUENCE_PATH="${1:-/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq}"
 PREFERRED_PORT="${PREFERRED_PORT:-49914}"
 FALLBACK_PORT="${FALLBACK_PORT:-49913}"
@@ -34,9 +37,29 @@ date +%s > /tmp/xlights-crash-since.epoch
 port="$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | rg -i 'xlights.*4991[34]' | sed -E 's/.*:([0-9]+) .*/\1/' | head -n1 || true)"
 
 if [[ -z "${port}" ]]; then
-  # Start xLights detached and wait for listener.
-  env DYLD_LIBRARY_PATH="${LIBDBG_DIR}" "${XLIGHTS_BIN}" >/tmp/xlights-debug.log 2>&1 &
-  disown
+  headless_session=false
+  if [[ -z "${TERM_PROGRAM:-}" && -z "${DISPLAY:-}" ]]; then
+    headless_session=true
+  fi
+
+  launched=false
+  if [[ "${LAUNCH_VIA_TERMINAL}" == "1" && -x "${XLIGHTS_LAUNCH_COMMAND}" ]]; then
+    launch_cmd_escaped="${XLIGHTS_LAUNCH_COMMAND//\\/\\\\}"
+    launch_cmd_escaped="${launch_cmd_escaped//\"/\\\"}"
+    if osascript -e "tell application \"Terminal\" to do script \"${launch_cmd_escaped}\"" >/tmp/xlights-launcher.out 2>&1; then
+      launched=true
+    fi
+  fi
+  if [[ "${launched}" != "true" ]]; then
+    if [[ "${headless_session}" == "true" && "${ALLOW_HEADLESS_DIRECT_LAUNCH}" != "1" ]]; then
+      echo "No GUI terminal context detected; skipping direct xLights launch to avoid startup aborts." >&2
+      echo "Start xLights manually (e.g. Launch xLights Test.command), then rerun this script." >&2
+      exit 3
+    fi
+    # Fallback: start xLights detached and wait for listener.
+    env DYLD_LIBRARY_PATH="${LIBDBG_DIR}" "${XLIGHTS_BIN}" >/tmp/xlights-debug.log 2>&1 &
+  fi
+
   for _ in {1..90}; do
     port="$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | rg -i 'xlights.*4991[34]' | sed -E 's/.*:([0-9]+) .*/\1/' | head -n1 || true)"
     if [[ -n "${port}" ]]; then

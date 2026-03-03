@@ -1,6 +1,6 @@
 # Gap Audit: Current State vs Full Sequencer Control Target
 
-Status: Updated after WP-9 G11 execution  
+Status: Updated after WP-9 G9/G10 evidence sync  
 Date: 2026-03-03
 
 ## 0) Execution Guardrail
@@ -52,12 +52,16 @@ Date: 2026-03-03
 - `system.executePlan` now covers validation/runtime-failure no-side-effect cases pre-commit, but full rollback guarantees for all mid-commit mutation failures still need explicit closeout evidence.
 
 ### G9: Harness/Regression Completeness
-- Status: In progress.
-- Suites `06..11` are implemented and wired; full `run-all` live green (including legacy suite stability constraints) is still pending final closeout evidence.
+- Status: Closed.
+- `run-all.sh` now:
+  - launches/open-sequence automatically before suites,
+  - avoids placeholder-fixture bootstrap failure modes when using example env defaults,
+  - completed live green across suites `01..11` on 2026-03-03.
 
 ### G10: Documentation/Status Lockstep
-- Status: In progress.
-- Core docs are being updated, but final matrix/checklist closeout and decision-log go/no-go are still pending.
+- Status: Closed.
+- Matrix/checklist/acceptance docs are synchronized to current WP-9 state.
+- Decision log records current gate posture (`No-Go` while G8 remains open).
 
 ### G11: Active Display Element Subset Control
 - Status: Closed for WP-9 scope.
@@ -111,6 +115,4 @@ Date: 2026-03-03
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
 ## 4) Next Focus
-- Execute WP-9 remaining closure work for G7, G8, G9, G10, G11, G12, G13, and G14.
-- Reduce `xLightsAutomations.cpp` orchestration footprint where practical.
-- Produce final run evidence and complete go/no-go documentation.
+- Execute remaining G8 closeout work (deterministic rollback guarantees for mid-commit mutation failures).
