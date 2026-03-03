@@ -31,6 +31,22 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - Embedding generative sequencing logic directly in xLights.
 - Mandatory cloud backends or maintainer-hosted inference.
 
+### 3.3 Hard Rule: xLights Source Boundary
+- Permanent xLights code changes for this project are limited to:
+  - `xLights/xLightsAutomations.cpp`
+  - `xLights/automation/api/*`
+- Do not change other xLights source files to make tests pass.
+- If a temporary non-API xLights code change is absolutely required for investigation, it must:
+  - be logged in `temp-testing-changes.md` before merge,
+  - be marked as temporary with explicit revert criteria,
+  - be reverted before completion of the work package unless explicitly approved as scope change.
+
+### 3.4 Defect Triage Posture
+- Default assumption: if automation behavior is failing, first treat it as harness, fixture, or API-usage error on our side.
+- Do not treat this as an absolute guarantee that xLights has no defects.
+- If a minimal reproducible case still fails through supported flows, record it as potential upstream defect/edge case and avoid broad source edits.
+- Any non-API xLights source edit carries cross-feature regression risk because full xLights regression coverage is not available in this project.
+
 ## 4) System Responsibilities
 
 ### xLights
@@ -104,4 +120,3 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
   - read back summaries for verification
 - No controller APIs are required.
 - Layout writes remain out of scope and are blocked by contract.
-

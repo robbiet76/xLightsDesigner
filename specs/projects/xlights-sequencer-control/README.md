@@ -20,6 +20,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `wp9-spec.md`: formal WP-9 scope for end-to-end API completeness and automation-layer modularization.
 - `wp9-task-breakdown.md`: executable WP-9 implementation task sequence.
 - `wp9-checklist.md`: maintainer go/no-go checklist for WP-9 autonomous readiness.
+- `temp-testing-changes.md`: required register for temporary non-API xLights testing/debug code edits.
 - `gap-audit.md`: delta between current documented/implemented surface and required target surface.
 - `decision-log.md`: locked decisions to minimize implementation churn.
 - `acceptance-test-matrix.md`: cross-domain acceptance tests for autonomous, non-UI sequencing loops.
