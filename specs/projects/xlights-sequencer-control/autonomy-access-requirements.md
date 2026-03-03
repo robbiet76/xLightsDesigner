@@ -73,6 +73,12 @@ The system is autonomously usable when an agent can run, end-to-end, without man
 ## 8) Automation Layer Code Organization Requirement
 - API command handlers should be grouped by namespace/domain and implemented in separate files.
 - `xLightsAutomations.cpp` should remain a thin router/orchestration layer only.
+- xLights API layer must expose raw/structured authoritative data and deterministic mutations, but must not contain higher-order agent logic.
+- Explicitly out of scope for xLights API layer:
+  - creative/quality scoring of render outcomes,
+  - heuristic ranking of effect choices,
+  - autonomous plan optimization logic.
+- These next-level behaviors are required in xLightsDesigner, using API outputs as input signals.
 - Proposed implementation grouping:
   - `automation/api/SystemApi.*`
   - `automation/api/SequenceApi.*`

@@ -13,6 +13,18 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - xLights API additions are deterministic control hooks, not embedded design intelligence.
 - Backward compatibility with existing xLights automation is preserved.
 
+### 2.1 Logic Boundary Rule (Hard Requirement)
+- xLights API layer must remain low-level and xLights-native:
+  - expose authoritative state,
+  - execute requested mutations,
+  - expose raw/structured readback data.
+- xLights API layer must not implement next-level interpretation logic:
+  - no creative scoring,
+  - no agent decision heuristics,
+  - no outcome ranking/optimization logic,
+  - no reimplementation of xLightsDesigner planning behavior.
+- All higher-order reasoning lives in xLightsDesigner/agent workflows.
+
 ## 3) Scope Boundaries
 
 ### 3.1 In Scope
@@ -125,6 +137,7 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - New work uses `apiVersion: 2` envelope.
 - New commands are namespaced (`system.*`, `sequence.*`, `layout.*`, `timing.*`, `sequencer.*`, `effects.*`, `media.*`).
 - New command capabilities are additive and feature-detectable via `system.getCapabilities`.
+- API contracts should prefer data availability over embedded interpretation; interpretive logic belongs in xLightsDesigner.
 
 ## 8) Acceptance Criteria
 - xLightsDesigner can execute a full non-UI sequencing loop:

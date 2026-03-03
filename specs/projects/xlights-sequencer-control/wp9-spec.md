@@ -65,6 +65,9 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 ### 3.3 Code Architecture
 - Split API handlers by domain and keep `xLightsAutomations.cpp` as thin routing/orchestration.
 - Centralize shared parsing/validation/response envelope helpers.
+- Keep API logic at xLights-native control/readback level only.
+- Do not add agent scoring, render interpretation heuristics, or planning/optimization logic to xLights API handlers.
+- Implement next-level interpretation/orchestration in xLightsDesigner.
 
 ## 4) Out of Scope
 - Controller APIs.
