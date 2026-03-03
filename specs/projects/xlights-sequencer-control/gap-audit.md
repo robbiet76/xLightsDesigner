@@ -72,6 +72,16 @@ Date: 2026-03-02
   - validated render-style option/control endpoints (`effects.getRenderStyleOptions`, `effects.setRenderStyle`).
 - This is a critical dependency for autonomous "virtual layout vision" and robust render-intent control.
 
+### G14: v2 Effect Palette Read/Write Contract
+- Status: Remaining.
+- Current v2 `effects.*` contract is settings-centric and does not expose palette as a first-class field in list/create/update payloads.
+- Agent workflows need deterministic palette control for end-to-end sequencing quality.
+- Required contract additions:
+  - `effects.list` includes `palette` in each effect object.
+  - `effects.create` accepts optional `palette`.
+  - `effects.update` accepts optional `palette`.
+  - optional explicit endpoints for targeted control: `effects.getPalette`, `effects.setPalette`.
+
 ## 3) Actions Completed in WP-7
 - Implemented `layout.getDisplayElements` and verified capability exposure.
 - Fixed `layout.getModels` debug crash path for `ModelGroup` membership expansion.
@@ -81,6 +91,6 @@ Date: 2026-03-02
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
 ## 4) Next Focus
-- Execute WP-9 remaining closure work for G7, G8, G9, G10, G11, G12, and G13.
+- Execute WP-9 remaining closure work for G7, G8, G9, G10, G11, G12, G13, and G14.
 - Reduce `xLightsAutomations.cpp` orchestration footprint where practical.
 - Produce final run evidence and complete go/no-go documentation.

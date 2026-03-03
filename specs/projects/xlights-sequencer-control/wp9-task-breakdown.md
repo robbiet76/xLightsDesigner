@@ -81,3 +81,11 @@ Date: 2026-03-02
   - `effects.setRenderStyle`
 - Ensure payloads are deterministic and sufficient for agent-side scene reconstruction without UI scraping.
 - Add harness coverage for scene bootstrap, node-coordinate retrieval, and render-style option/application validation.
+
+## Task 13: Implement v2 Palette Contracts
+- Extend `effects.list` payload to include `palette`.
+- Extend `effects.create` and `effects.update` to accept optional `palette`.
+- Optionally add explicit palette endpoints:
+  - `effects.getPalette`
+  - `effects.setPalette`
+- Add harness coverage for palette create/update/readback determinism.

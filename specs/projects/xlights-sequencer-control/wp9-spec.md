@@ -35,6 +35,7 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 - G11: active display element subset control for include-only sequencing scope.
 - G12: effect layer lifecycle management (`deleteLayer` / `compactLayers`).
 - G13: virtual-vision spatial + render-style contract (scene geometry, node coordinates, camera metadata, validated render-style controls).
+- G14: v2 effect palette read/write contract (palette surfaced and mutable in v2 effects APIs).
 
 ## 3) Scope
 ### 3.1 API Contract Additions
@@ -53,6 +54,8 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 - `layout.getScene`
 - `effects.getRenderStyleOptions`
 - `effects.setRenderStyle`
+- `effects.getPalette` (optional explicit endpoint)
+- `effects.setPalette` (optional explicit endpoint)
 
 ### 3.2 Cross-Cutting Behavior
 - Structured diagnostics for open/save/render failure classes.

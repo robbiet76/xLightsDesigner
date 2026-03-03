@@ -11,6 +11,7 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [ ] Layer lifecycle contracts (`effects.deleteLayer` and/or `effects.compactLayers`) are finalized and documented.
 - [ ] Virtual-vision layout contracts (`layout.getModelGeometry`, `layout.getModelNodes`, `layout.getCameras`, `layout.getScene`) are finalized and documented.
 - [ ] Render-style control contracts (`effects.getRenderStyleOptions`, `effects.setRenderStyle`) are finalized and documented.
+- [ ] Palette control contracts (`effects.list` palette field, `effects.create/update` palette support, optional `effects.getPalette/setPalette`) are finalized and documented.
 - [x] `effects.listDefinitions` contract finalized and documented.
 - [x] `effects.getDefinition` contract finalized and documented.
 - [x] `transactions.begin|commit|rollback` contracts finalized and documented.
@@ -81,9 +82,15 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [ ] Render-style option discovery prevents invalid style/camera combinations.
 - [ ] Render-style update endpoint applies validated changes deterministically and is read-back verifiable.
 
-## 10) Final Closeout
+## 10) Palette Read/Write Readiness (G14)
+- [ ] `effects.list` returns palette payload deterministically.
+- [ ] `effects.create` accepts palette and persists correctly.
+- [ ] `effects.update` can patch palette without unintended settings regressions.
+- [ ] Palette readback is deterministic after mutation.
+
+## 11) Final Closeout
 - [ ] `implementation-status-matrix.md` updated with WP-9 evidence links.
 - [ ] `acceptance-test-matrix.md` updated with WP-9 pass criteria.
-- [ ] `gap-audit.md` marks G1..G13 closed or explicitly deferred.
+- [ ] `gap-audit.md` marks G1..G14 closed or explicitly deferred.
 - [ ] Final run report archived and linked in closeout notes.
 - [ ] Go/No-Go decision recorded in decision log.

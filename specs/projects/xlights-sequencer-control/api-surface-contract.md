@@ -503,7 +503,7 @@ Params:
 - `endMs` (int|null, optional)
 
 Response `data`:
-- `effects` array with `{ id, modelName, layerIndex, effectName, startMs, endMs, settings }`
+- `effects` array with `{ id, modelName, layerIndex, effectName, startMs, endMs, settings, palette }`
 
 Idempotency: read-only.
 
@@ -515,6 +515,7 @@ Params:
 - `startMs` (int, required)
 - `endMs` (int, required)
 - `settings` (object, optional)
+- `palette` (object, optional)
 
 Validation:
 - `endMs > startMs`
@@ -533,6 +534,7 @@ Params:
 - `startMs` (int, optional)
 - `endMs` (int, optional)
 - `settings` (object, optional)
+- `palette` (object, optional)
 
 Validation:
 - effect exists
@@ -616,6 +618,27 @@ Response `data`:
 - `effectId`
 - `updated` (bool)
 - `applied` object with `{ renderStyle, camera?, transform?, bufferStagger? }`
+
+### `effects.getPalette` (optional explicit endpoint)
+Purpose: fetch one effect's palette payload without requiring full effect listing.
+
+Params:
+- `effectId` (string, required)
+
+Response `data`:
+- `effectId`
+- `palette` (object)
+
+### `effects.setPalette` (optional explicit endpoint)
+Purpose: update one effect's palette payload explicitly.
+
+Params:
+- `effectId` (string, required)
+- `palette` (object, required)
+
+Response `data`:
+- `effectId`
+- `updated` (bool)
 
 ### `effects.shift`
 Params:
