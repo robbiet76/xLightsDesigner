@@ -7,6 +7,7 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 
 ## 1) Contract and Discovery
 - [ ] `system.getCapabilities` advertises all implemented WP-9 commands only.
+- [ ] Display-element subset contract (`sequencer.setActiveDisplayElements`) is finalized and documented.
 - [x] `effects.listDefinitions` contract finalized and documented.
 - [x] `effects.getDefinition` contract finalized and documented.
 - [x] `transactions.begin|commit|rollback` contracts finalized and documented.
@@ -72,6 +73,6 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 ## 9) Final Closeout
 - [ ] `implementation-status-matrix.md` updated with WP-9 evidence links.
 - [ ] `acceptance-test-matrix.md` updated with WP-9 pass criteria.
-- [ ] `gap-audit.md` marks G1..G10 closed or explicitly deferred.
+- [ ] `gap-audit.md` marks G1..G11 closed or explicitly deferred.
 - [ ] Final run report archived and linked in closeout notes.
 - [ ] Go/No-Go decision recorded in decision log.

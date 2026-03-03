@@ -84,6 +84,8 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 ### FR-5 Display Element Control
 - System can read display elements and ordering.
 - System can reorder display elements in a deterministic way.
+- System can set the active display/model element subset used for sequencing (include-only list), without requiring layout/model configuration edits.
+- Subset selection and ordering must be independently controllable because render output depends on element order.
 
 ### FR-6 Effect and Layer Control
 - System can list effects by model/layer/time range.

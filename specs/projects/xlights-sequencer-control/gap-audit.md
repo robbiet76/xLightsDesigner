@@ -51,6 +51,11 @@ Date: 2026-03-02
 - Status: In progress.
 - Core docs are being updated, but final matrix/checklist closeout and decision-log go/no-go are still pending.
 
+### G11: Active Display Element Subset Control
+- Status: Remaining.
+- Current `sequencer.setDisplayElementOrder` requires a full element list and does not provide include-only element activation for sequencing.
+- Agent workflows need explicit subset control plus deterministic ordering to manage render intent.
+
 ## 3) Actions Completed in WP-7
 - Implemented `layout.getDisplayElements` and verified capability exposure.
 - Fixed `layout.getModels` debug crash path for `ModelGroup` membership expansion.
@@ -60,6 +65,6 @@ Date: 2026-03-02
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
 ## 4) Next Focus
-- Execute WP-9 remaining closure work for G7, G8, G9, and G10.
+- Execute WP-9 remaining closure work for G7, G8, G9, G10, and G11.
 - Reduce `xLightsAutomations.cpp` orchestration footprint where practical.
 - Produce final run evidence and complete go/no-go documentation.

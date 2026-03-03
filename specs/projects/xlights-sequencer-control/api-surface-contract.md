@@ -411,6 +411,25 @@ Response `data`:
 Dry-run:
 - validates reorder feasibility only.
 
+### `sequencer.setActiveDisplayElements`
+Purpose: choose the active include-only display/model element set for sequence authoring.
+
+Params:
+- `activeIds` (array, required): display element ids/names to keep active/visible for sequencing.
+- `preserveRelativeOrder` (bool, default `true`): retain current relative order of active ids unless explicitly reordered later.
+
+Validation:
+- every id must map to an existing display element
+- at least one active id required
+
+Response `data`:
+- `updated` (bool)
+- `activeCount`
+- `activeIds`
+
+Dry-run:
+- validates selector and returns projected active set only.
+
 ## 4.8 Effects + Layers
 
 ### `effects.list`
