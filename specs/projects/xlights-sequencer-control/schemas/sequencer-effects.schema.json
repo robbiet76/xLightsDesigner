@@ -16,7 +16,9 @@
         "sequencer.setActiveDisplayElements",
         "effects.list",
         "effects.getPalette",
+        "effects.getRenderStyleOptions",
         "effects.setPalette",
+        "effects.setRenderStyle",
         "effects.create",
         "effects.update",
         "effects.delete",
@@ -362,6 +364,84 @@
               },
               "palette": {
                 "type": "object"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "effects.getRenderStyleOptions"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "modelName"
+            ],
+            "properties": {
+              "modelName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "layerIndex": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "effects.setRenderStyle"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "effectId",
+              "renderStyle"
+            ],
+            "properties": {
+              "effectId": {
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              },
+              "renderStyle": {
+                "type": "string",
+                "minLength": 1
+              },
+              "camera": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "transform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bufferStagger": {
+                "type": "integer"
               }
             },
             "additionalProperties": false

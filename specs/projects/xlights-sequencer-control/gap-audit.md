@@ -3,6 +3,13 @@
 Status: Updated after WP-9 G11 execution  
 Date: 2026-03-03
 
+## 0) Execution Guardrail
+- WP-9 gap closure is constrained to automation/API surface by default:
+  - `xLights/automation/**`
+  - WP-9 specs/schemas/checklists under `xLightsDesigner/specs/**`
+- Changes outside API scope require explicit user approval per exception.
+- Launch/runtime preference regressions should be treated as environment/harness/state issues first; avoid core behavior edits unless explicitly requested.
+
 ## 1) Current Strengths
 - v2 envelope and namespaced command surface are implemented across WP-1..WP-6.
 - Core sequencing control set (29 WP-scoped commands) is now present in the v2 router.
@@ -74,25 +81,25 @@ Date: 2026-03-03
   - last-layer deletion is blocked with deterministic `LAYER_LAST_REQUIRED`.
 
 ### G13: Virtual Vision Spatial + Render-Style Contract
-- Status: Remaining.
-- Current layout APIs expose only high-level model metadata + raw attributes and do not provide structured scene geometry for agent-side spatial reconstruction.
-- Agent workflows need deterministic structured APIs for:
-  - model transforms/dimensions (`layout.getModelGeometry`),
-  - per-node coordinates (`layout.getModelNodes`),
-  - camera metadata (`layout.getCameras`),
-  - one-call scene snapshot (`layout.getScene`),
-  - validated render-style option/control endpoints (`effects.getRenderStyleOptions`, `effects.setRenderStyle`).
-- This is a critical dependency for autonomous "virtual layout vision" and robust render-intent control.
+- Status: Closed.
+- Implemented virtual-vision layout discovery endpoints:
+  - `layout.getModelGeometry`,
+  - `layout.getModelNodes`,
+  - `layout.getCameras`,
+  - `layout.getScene`.
+- Implemented render-style contract endpoints:
+  - `effects.getRenderStyleOptions`,
+  - `effects.setRenderStyle`.
+- Live validation confirms deterministic option payloads and validated render-style mutation behavior for effect targets.
 
 ### G14: v2 Effect Palette Read/Write Contract
-- Status: Remaining.
-- Current v2 `effects.*` contract is settings-centric and does not expose palette as a first-class field in list/create/update payloads.
-- Agent workflows need deterministic palette control for end-to-end sequencing quality.
-- Required contract additions:
-  - `effects.list` includes `palette` in each effect object.
+- Status: Closed.
+- Implemented and validated palette contract behaviors:
+  - `effects.list` includes `palette` per effect.
   - `effects.create` accepts optional `palette`.
   - `effects.update` accepts optional `palette`.
-  - optional explicit endpoints for targeted control: `effects.getPalette`, `effects.setPalette`.
+  - explicit palette endpoints `effects.getPalette`, `effects.setPalette`.
+- Live validation confirmed deterministic read/write payloads and dry-run mutation behavior for palette operations.
 
 ## 3) Actions Completed in WP-7
 - Implemented `layout.getDisplayElements` and verified capability exposure.

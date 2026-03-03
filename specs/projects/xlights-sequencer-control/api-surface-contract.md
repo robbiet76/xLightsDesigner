@@ -262,6 +262,10 @@ Response `data`:
   - `isCustomModel` (bool)
   - `customModelParsed` (bool)
 
+Notes:
+- `screen` coordinates are sourced from xLights node coordinate payloads.
+- `camera` is accepted for forward compatibility; camera-projected screen transforms remain a follow-on step.
+
 ### `layout.getCameras`
 Purpose: return named camera/viewpoint metadata used by per-preview render styles.
 
@@ -270,6 +274,7 @@ Response `data`:
   - `name`
   - `type` (`2D|3D`)
   - `isDefault` (bool)
+  - `position`, `anglesDeg`, `distance`, `zoom`, `pan`
 
 ### `layout.getScene`
 Purpose: return a one-call layout snapshot for virtual vision bootstrap.
@@ -605,6 +610,8 @@ Params:
 - `layerIndex` (int, optional)
 
 Response `data`:
+ - `modelName` (string)
+ - `resolvedModelName` (string)
 - `renderStyles` (array of strings)
 - `supportsPerPreviewCamera` (bool)
 - `cameraOptions` (array of strings)

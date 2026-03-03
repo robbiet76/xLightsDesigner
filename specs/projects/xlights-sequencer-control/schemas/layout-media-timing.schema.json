@@ -13,6 +13,10 @@
       "enum": [
         "layout.getModels",
         "layout.getModel",
+        "layout.getModelGeometry",
+        "layout.getModelNodes",
+        "layout.getCameras",
+        "layout.getScene",
         "layout.getViews",
         "layout.getDisplayElements",
         "media.get",
@@ -35,6 +39,113 @@
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "layout.getCameras"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "layout.getModelGeometry"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "layout.getModelNodes"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "includeBufferCoords": {
+                "type": "boolean"
+              },
+              "includeWorldCoords": {
+                "type": "boolean"
+              },
+              "includeScreenCoords": {
+                "type": "boolean"
+              },
+              "camera": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "cmd": {
+            "const": "layout.getScene"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "properties": {
+              "includeNodes": {
+                "type": "boolean"
+              },
+              "includeCameras": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {

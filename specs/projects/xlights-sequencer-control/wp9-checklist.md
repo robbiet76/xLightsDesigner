@@ -5,13 +5,18 @@ Date: 2026-03-02
 
 Use this checklist as the authoritative go/no-go gate for "autonomous sequence authoring ready" in WP-9.
 
+## 0) Implementation Guardrail
+- [x] WP-9 execution scope is API-layer only by default (`xLights/automation/**` and corresponding specs/schemas).
+- [x] Non-API xLights source edits require explicit user approval for each exception.
+- [x] Runtime/config launch issues should be debugged and resolved via environment/harness/settings first, not core app behavior changes.
+
 ## 1) Contract and Discovery
 - [ ] `system.getCapabilities` advertises all implemented WP-9 commands only.
 - [x] Display-element subset contract (`sequencer.setActiveDisplayElements`) is finalized and documented.
 - [ ] Layer lifecycle contracts (`effects.deleteLayer` and/or `effects.compactLayers`) are finalized and documented.
-- [ ] Virtual-vision layout contracts (`layout.getModelGeometry`, `layout.getModelNodes`, `layout.getCameras`, `layout.getScene`) are finalized and documented.
-- [ ] Render-style control contracts (`effects.getRenderStyleOptions`, `effects.setRenderStyle`) are finalized and documented.
-- [ ] Palette control contracts (`effects.list` palette field, `effects.create/update` palette support, optional `effects.getPalette/setPalette`) are finalized and documented.
+- [x] Virtual-vision layout contracts (`layout.getModelGeometry`, `layout.getModelNodes`, `layout.getCameras`, `layout.getScene`) are finalized and documented.
+- [x] Render-style control contracts (`effects.getRenderStyleOptions`, `effects.setRenderStyle`) are finalized and documented.
+- [x] Palette control contracts (`effects.list` palette field, `effects.create/update` palette support, optional `effects.getPalette/setPalette`) are finalized and documented.
 - [x] `effects.listDefinitions` contract finalized and documented.
 - [x] `effects.getDefinition` contract finalized and documented.
 - [x] `transactions.begin|commit|rollback` contracts finalized and documented.
@@ -83,10 +88,10 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [ ] Render-style update endpoint applies validated changes deterministically and is read-back verifiable.
 
 ## 10) Palette Read/Write Readiness (G14)
-- [ ] `effects.list` returns palette payload deterministically.
-- [ ] `effects.create` accepts palette and persists correctly.
-- [ ] `effects.update` can patch palette without unintended settings regressions.
-- [ ] Palette readback is deterministic after mutation.
+- [x] `effects.list` returns palette payload deterministically.
+- [x] `effects.create` accepts palette and persists correctly.
+- [x] `effects.update` can patch palette without unintended settings regressions.
+- [x] Palette readback is deterministic after mutation.
 
 ## 11) Final Closeout
 - [ ] `implementation-status-matrix.md` updated with WP-9 evidence links.
