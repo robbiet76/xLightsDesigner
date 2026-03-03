@@ -4,12 +4,24 @@ set -euo pipefail
 XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
 CURL_MAX_TIME="${CURL_MAX_TIME:-20}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CRASH_REPORTER="${SCRIPT_DIR}/report-latest-crash.sh"
 
 TMP_REPORT_STEPS=()
 
 post_cmd() {
   local payload="$1"
-  curl --max-time "${CURL_MAX_TIME}" -sS -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}"
+  local response=""
+  local rc=0
+  if ! response="$(curl --max-time "${CURL_MAX_TIME}" -sS -X POST "${AUTOMATION_URL}" -H "Content-Type: application/json" -d "${payload}" 2>&1)"; then
+    rc=$?
+    echo "${response}" >&2
+    if [[ -x "${CRASH_REPORTER}" ]]; then
+      "${CRASH_REPORTER}" --since-epoch "$(cat /tmp/xlights-crash-since.epoch 2>/dev/null || echo 0)" >&2 || true
+    fi
+    return "${rc}"
+  fi
+  printf "%s" "${response}"
 }
 
 normalize_json_body() {

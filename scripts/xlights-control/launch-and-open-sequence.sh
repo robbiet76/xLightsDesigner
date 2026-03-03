@@ -9,6 +9,8 @@ LIBDBG_DIR="${LIBDBG_DIR:-/Users/robterry/xLights/macOS/dependencies/libdbg}"
 SEQUENCE_PATH="${1:-/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq}"
 PREFERRED_PORT="${PREFERRED_PORT:-49914}"
 FALLBACK_PORT="${FALLBACK_PORT:-49913}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CRASH_REPORTER="${SCRIPT_DIR}/report-latest-crash.sh"
 
 if [[ ! -x "${XLIGHTS_BIN}" ]]; then
   echo "Missing xLights binary: ${XLIGHTS_BIN}" >&2
@@ -24,6 +26,9 @@ if [[ ! -f "${SEQUENCE_PATH}" ]]; then
   echo "Missing sequence file: ${SEQUENCE_PATH}" >&2
   exit 2
 fi
+
+# Mark launcher start time so crash lookup can ignore stale reports.
+date +%s > /tmp/xlights-crash-since.epoch
 
 # If xLights is already listening, reuse that instance.
 port="$(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | rg -i 'xlights.*4991[34]' | sed -E 's/.*:([0-9]+) .*/\1/' | head -n1 || true)"
@@ -43,6 +48,9 @@ fi
 
 if [[ -z "${port}" ]]; then
   echo "xLights listener not detected on ports 49913/49914." >&2
+  if [[ -x "${CRASH_REPORTER}" ]]; then
+    "${CRASH_REPORTER}" --since-epoch "$(cat /tmp/xlights-crash-since.epoch 2>/dev/null || echo 0)" >&2 || true
+  fi
   exit 1
 fi
 
@@ -58,6 +66,9 @@ res="$(printf "%s" "${resp}" | jq -r '.res // empty' 2>/dev/null || true)"
 if [[ "${res}" != "200" ]]; then
   echo "Failed to open sequence via API on ${base_url}." >&2
   echo "${resp}" >&2
+  if [[ -x "${CRASH_REPORTER}" ]]; then
+    "${CRASH_REPORTER}" --since-epoch "$(cat /tmp/xlights-crash-since.epoch 2>/dev/null || echo 0)" >&2 || true
+  fi
   exit 1
 fi
 

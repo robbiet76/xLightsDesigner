@@ -1,7 +1,7 @@
 # Implementation Status Matrix: WP-9 Progress Snapshot
 
-Status: Updated after WP-9 G6 execution  
-Date: 2026-03-02  
+Status: Updated after WP-9 G7 execution  
+Date: 2026-03-03  
 xLights branch audited: `audit/agent-hooks`
 
 ## Legend
@@ -15,10 +15,10 @@ xLights branch audited: `audit/agent-hooks`
 |---|---|---|
 | `effects.listDefinitions` | Implemented | `xLights/automation/api/EffectsV2Api.inl`, `06-effects-definition-smoke.sh` |
 | `effects.getDefinition` | Implemented | `xLights/automation/api/EffectsV2Api.inl`, `06-effects-definition-smoke.sh` |
-| `transactions.begin` | Implemented | `xLights/automation/xLightsAutomations.cpp`, `07-transactions-smoke.sh` |
-| `transactions.commit` | Implemented (bounded) | `xLights/automation/xLightsAutomations.cpp`, `07-transactions-smoke.sh` |
-| `transactions.rollback` | Implemented | `xLights/automation/xLightsAutomations.cpp`, `07-transactions-smoke.sh` |
-| `system.executePlan` | Implemented (bounded) | `xLights/automation/xLightsAutomations.cpp`, `08-plan-execution-smoke.sh` |
+| `transactions.begin` | Implemented | `xLights/automation/api/TransactionsV2Api.inl`, `07-transactions-smoke.sh` |
+| `transactions.commit` | Implemented (bounded) | `xLights/automation/api/TransactionsV2Api.inl`, `07-transactions-smoke.sh` |
+| `transactions.rollback` | Implemented | `xLights/automation/api/TransactionsV2Api.inl`, `07-transactions-smoke.sh` |
+| `system.executePlan` | Implemented (bounded) | `xLights/automation/api/TransactionsV2Api.inl`, `08-plan-execution-smoke.sh` |
 | `jobs.get` | Implemented | `xLights/automation/api/JobsV2Api.inl`, `09-async-jobs-smoke.sh` |
 | `jobs.cancel` | Implemented | `xLights/automation/api/JobsV2Api.inl`, `09-async-jobs-smoke.sh` |
 | `sequence.getRevision` | Implemented | `xLights/automation/api/SequenceV2Api.inl`, `10-revision-conflict-smoke.sh` |
@@ -46,5 +46,4 @@ xLights branch audited: `audit/agent-hooks`
 ## 4) Open Items (Tracked)
 
 1. Full atomic rollback guarantees for all mid-commit mutation failure classes remain tracked under G8.
-2. `xLightsAutomations.cpp` orchestration footprint remains larger than target and is tracked under G7/G10.
-3. Final end-to-end closeout evidence (full run report + go/no-go record) remains tracked under G9/G10.
+2. Final end-to-end closeout evidence (full run report + go/no-go record) remains tracked under G9/G10.

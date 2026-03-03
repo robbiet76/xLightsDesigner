@@ -43,8 +43,9 @@ Date: 2026-03-03
 - Capabilities now advertise WP-9 commands/features that are implemented (`effects definitions`, `transactions`, `jobs`, `executePlan`, `sequence.getRevision`).
 
 ### G7: Automation Layer Maintainability
-- Status: Remaining.
-- `xLightsAutomations.cpp` still carries cross-cutting orchestration (transactions/jobs/executePlan) and should be reduced further via grouped API files.
+- Status: Closed.
+- `system.executePlan` and `transactions.begin|commit|rollback` orchestration moved to grouped API handler `xLights/automation/api/TransactionsV2Api.inl`.
+- `xLightsAutomations.cpp` now routes these commands via `HandleTransactionsV2Command(...)` instead of inlined monolithic branches.
 
 ### G8: Deterministic Advanced/Bulk Rollback Semantics
 - Status: Remaining (narrowed).

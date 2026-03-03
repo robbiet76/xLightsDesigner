@@ -4,16 +4,49 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-ENV_FILE="${ENV_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.example.env}"
+DEFAULT_ENV_FILE="${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.env"
+if [[ ! -f "${DEFAULT_ENV_FILE}" ]]; then
+  DEFAULT_ENV_FILE="${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.example.env"
+fi
+
+ENV_FILE="${ENV_FILE:-${DEFAULT_ENV_FILE}}"
 MANIFEST_FILE="${MANIFEST_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.manifest.json}"
 OUT_DIR="${OUT_DIR:-/tmp/xlights-control-reports/$(date +%Y%m%d-%H%M%S)}"
-BOOTSTRAP_FIXTURES="${BOOTSTRAP_FIXTURES:-false}"
+BOOTSTRAP_FIXTURES="${BOOTSTRAP_FIXTURES:-}"
+BOOTSTRAP_WAS_PRESET=false
+if [[ -n "${BOOTSTRAP_FIXTURES}" ]]; then
+  BOOTSTRAP_WAS_PRESET=true
+fi
 
 mkdir -p "${OUT_DIR}"
 
 if [[ -f "${ENV_FILE}" ]]; then
   # shellcheck disable=SC1090
   source "${ENV_FILE}"
+fi
+
+if [[ -z "${BOOTSTRAP_FIXTURES}" ]]; then
+  BOOTSTRAP_FIXTURES=false
+fi
+
+# If running against the example template (placeholder paths), disable bootstrap
+# unless explicitly requested by caller.
+if [[ "${BOOTSTRAP_WAS_PRESET}" != "true" && "${ENV_FILE}" == *"test-fixtures.example.env" ]]; then
+  BOOTSTRAP_FIXTURES=false
+fi
+
+if [[ -z "${TEST_SEQUENCE_PATH:-}" || "${TEST_SEQUENCE_PATH}" == "/abs/path/to/test-sequence.xsq" ]]; then
+  if [[ -f "/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq" ]]; then
+    TEST_SEQUENCE_PATH="/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq"
+    export TEST_SEQUENCE_PATH
+  fi
+fi
+
+if [[ -z "${TEST_MEDIA_PATH:-}" || "${TEST_MEDIA_PATH}" == "/abs/path/to/test-song.mp3" ]]; then
+  if [[ -d "/Users/robterry/Desktop/Show/Audio" ]]; then
+    TEST_MEDIA_PATH="/Users/robterry/Desktop/Show/Audio"
+    export TEST_MEDIA_PATH
+  fi
 fi
 
 pack_id="$(jq -r '.fixturePack.packId // "unknown"' "${MANIFEST_FILE}" 2>/dev/null || echo "unknown")"
@@ -31,6 +64,28 @@ if [[ "${BOOTSTRAP_FIXTURES}" == "true" ]]; then
   if [[ ${bootstrap_rc} -ne 0 ]]; then
     bootstrap_ok=false
   fi
+fi
+
+# Ensure xLights automation endpoint is running before suite execution.
+if [[ -z "${TEST_SEQUENCE_PATH:-}" || ! -f "${TEST_SEQUENCE_PATH}" ]]; then
+  echo "Missing usable TEST_SEQUENCE_PATH. Set it in ${ENV_FILE} or environment." >&2
+  exit 2
+fi
+
+launch_log="${OUT_DIR}/launch.log"
+set +e
+launch_output="$("${SCRIPT_DIR}/launch-and-open-sequence.sh" "${TEST_SEQUENCE_PATH}" 2>&1)"
+launch_rc=$?
+set -e
+printf "%s\n" "${launch_output}" | tee "${launch_log}"
+if [[ ${launch_rc} -ne 0 ]]; then
+  echo "Failed to launch xLights/open sequence; see ${launch_log}" >&2
+  exit 1
+fi
+
+launched_base_url="$(printf "%s\n" "${launch_output}" | sed -n 's/^xLights ready on //p' | tail -n1)"
+if [[ -n "${launched_base_url}" ]]; then
+  export XLIGHTS_BASE_URL="${launched_base_url}"
 fi
 
 SUITES=(

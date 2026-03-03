@@ -62,10 +62,10 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [ ] Legacy compatibility paths do not regress existing scripts.
 
 ## 7) Architecture and Modularity (G10)
-- [ ] `xLightsAutomations.cpp` remains routing/orchestration focused.
-- [ ] Domain handlers are grouped under `xLights/automation/api/`.
-- [ ] Shared parse/validate/response helpers are centralized and reused.
-- [ ] New WP-9 APIs are added to grouped files, not monolithic routing logic.
+- [x] `xLightsAutomations.cpp` remains routing/orchestration focused.
+- [x] Domain handlers are grouped under `xLights/automation/api/`.
+- [x] Shared parse/validate/response helpers are centralized and reused.
+- [x] New WP-9 APIs are added to grouped files, not monolithic routing logic.
 
 ## 8) Harness and Regression Coverage (G9)
 - [ ] New suites added and wired in `run-all.sh`:
