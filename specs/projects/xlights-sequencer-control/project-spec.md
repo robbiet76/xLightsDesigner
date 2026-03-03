@@ -138,6 +138,14 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - New commands are namespaced (`system.*`, `sequence.*`, `layout.*`, `timing.*`, `sequencer.*`, `effects.*`, `media.*`).
 - New command capabilities are additive and feature-detectable via `system.getCapabilities`.
 - API contracts should prefer data availability over embedded interpretation; interpretive logic belongs in xLightsDesigner.
+- Legacy command surface is compatibility-only:
+  - no new feature capability is added to legacy commands,
+  - legacy changes are limited to bugfixes and safety/non-interactive hardening,
+  - all net-new sequencing capability lands in v2 contracts first.
+- Avoid full legacy API rewrite while program delivery is active:
+  - preserve existing behavior for external consumers,
+  - reduce duplicate logic incrementally by routing shared internals to common helpers,
+  - keep the legacy regression suite as a required gate to prevent compatibility drift.
 
 ## 8) Acceptance Criteria
 - xLightsDesigner can execute a full non-UI sequencing loop:

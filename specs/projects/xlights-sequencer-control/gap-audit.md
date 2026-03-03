@@ -1,7 +1,7 @@
 # Gap Audit: Current State vs Full Sequencer Control Target
 
-Status: Updated after WP-9 G6 execution  
-Date: 2026-03-02
+Status: Updated after WP-9 G11 execution  
+Date: 2026-03-03
 
 ## 1) Current Strengths
 - v2 envelope and namespaced command surface are implemented across WP-1..WP-6.
@@ -52,14 +52,26 @@ Date: 2026-03-02
 - Core docs are being updated, but final matrix/checklist closeout and decision-log go/no-go are still pending.
 
 ### G11: Active Display Element Subset Control
-- Status: Remaining.
-- Current `sequencer.setDisplayElementOrder` requires a full element list and does not provide include-only element activation for sequencing.
-- Agent workflows need explicit subset control plus deterministic ordering to manage render intent.
+- Status: Closed for WP-9 scope.
+- Implemented `sequencer.setActiveDisplayElements` with include-only visibility control for non-timing display elements.
+- Validation enforces:
+  - non-empty `activeIds`,
+  - non-empty string ids,
+  - no duplicates.
+- Runtime behavior:
+  - fails deterministic `DISPLAY_ELEMENT_NOT_FOUND` when id does not map to an element,
+  - fails deterministic `DISPLAY_ELEMENT_AMBIGUOUS` when name lookup is non-unique,
+  - keeps ordering unchanged (ordering remains controlled by `sequencer.setDisplayElementOrder`).
 
 ### G12: Effect Layer Lifecycle Management
-- Status: Remaining.
-- Current API can clear effects in a layer (`effects.delete` with `layerIndex`) but cannot remove empty layers or compact layer stacks.
-- Agent workflows need explicit layer lifecycle control (`deleteLayer` / `compactLayers`) to keep render layering deterministic and avoid orphan/unused layers.
+- Status: Closed for WP-9 scope.
+- Implemented explicit layer lifecycle commands:
+  - `effects.deleteLayer` with non-empty guard (`force` required) and last-layer protection.
+  - `effects.compactLayers` for deterministic removal of empty layers while preserving at least one layer.
+- Live validation confirmed:
+  - empty-layer delete succeeds,
+  - forced non-empty-layer delete succeeds,
+  - last-layer deletion is blocked with deterministic `LAYER_LAST_REQUIRED`.
 
 ### G13: Virtual Vision Spatial + Render-Style Contract
 - Status: Remaining.

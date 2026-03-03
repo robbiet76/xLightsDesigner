@@ -45,3 +45,18 @@ Status: Locked unless superseded by explicit revision.
 - Audio/timing analysis backend is provider-agnostic.
 - VAMP remains supported where available but is not mandatory for the overall program contract.
 - Discovery/capability endpoints must expose which analysis backends/providers are currently available at runtime.
+
+## D10) Legacy vs v2 Evolution Policy
+- v2 is the feature-growth API surface for this program.
+- Legacy API remains compatibility-only for existing clients and scripts.
+- Legacy updates are restricted to:
+  - behavioral bugfixes,
+  - reliability hardening (including non-interactive automation behavior),
+  - compatibility-preserving refactors.
+- Net-new command capabilities and schema expansion must be introduced in v2 contracts.
+- A full legacy API rewrite is explicitly deferred due to delivery risk and regression exposure; convergence should be incremental via shared internals plus legacy regression gating.
+
+## D11) Display-Element Scope Semantics
+- Active display-element subset selection and element ordering are separate controls.
+- `sequencer.setActiveDisplayElements` controls include-only visibility of non-timing display elements.
+- `sequencer.setDisplayElementOrder` remains the only ordering mutation API.

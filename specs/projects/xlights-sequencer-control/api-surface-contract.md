@@ -484,6 +484,12 @@ Params:
 Validation:
 - every id must map to an existing display element
 - at least one active id required
+- duplicate ids are rejected
+- timing elements are not part of active include-only control
+
+Behavior notes:
+- controls include-only visibility of non-timing display elements
+- does not reorder elements; use `sequencer.setDisplayElementOrder` for order changes
 
 Response `data`:
 - `updated` (bool)

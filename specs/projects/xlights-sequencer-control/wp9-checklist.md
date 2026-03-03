@@ -7,7 +7,7 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 
 ## 1) Contract and Discovery
 - [ ] `system.getCapabilities` advertises all implemented WP-9 commands only.
-- [ ] Display-element subset contract (`sequencer.setActiveDisplayElements`) is finalized and documented.
+- [x] Display-element subset contract (`sequencer.setActiveDisplayElements`) is finalized and documented.
 - [ ] Layer lifecycle contracts (`effects.deleteLayer` and/or `effects.compactLayers`) are finalized and documented.
 - [ ] Virtual-vision layout contracts (`layout.getModelGeometry`, `layout.getModelNodes`, `layout.getCameras`, `layout.getScene`) are finalized and documented.
 - [ ] Render-style control contracts (`effects.getRenderStyleOptions`, `effects.setRenderStyle`) are finalized and documented.
