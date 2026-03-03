@@ -7,6 +7,7 @@ source "${SCRIPT_DIR}/lib.sh"
 TEST_TIMING_TRACK="${TEST_TIMING_TRACK:-AgentTiming}"
 TEST_MODEL_NAME="${TEST_MODEL_NAME:-}"
 ok=true
+last_body=""
 
 run() {
   local name="$1"
@@ -18,6 +19,18 @@ run() {
   else
     ok=false
     step_fail "${name}" "$(extract_error_code "${body}")"
+  fi
+}
+
+run_capture() {
+  local name="$1"
+  local payload="$2"
+  last_body="$(post_cmd "${payload}")"
+  if json_has_res_200 "${last_body}"; then
+    step_ok "${name}"
+  else
+    ok=false
+    step_fail "${name}" "$(extract_error_code "${last_body}")"
   fi
 }
 
@@ -52,10 +65,26 @@ run "timing.getTrackSummary" "{\"apiVersion\":2,\"cmd\":\"timing.getTrackSummary
 
 EFFECT_MODEL_NAME="$(resolve_effect_model_name)"
 if [[ -n "${EFFECT_MODEL_NAME}" ]]; then
-  run "effects.create" "{\"apiVersion\":2,\"cmd\":\"effects.create\",\"params\":{\"modelName\":\"${EFFECT_MODEL_NAME}\",\"layerIndex\":0,\"effectName\":\"On\",\"startMs\":1000,\"endMs\":2000}}"
+  run_capture "effects.create" "{\"apiVersion\":2,\"cmd\":\"effects.create\",\"params\":{\"modelName\":\"${EFFECT_MODEL_NAME}\",\"layerIndex\":0,\"effectName\":\"On\",\"startMs\":1000,\"endMs\":2000}}"
+
+  EFFECT_ID=""
+  if command -v jq >/dev/null 2>&1; then
+    EFFECT_ID="$(printf "%s" "${last_body}" | jq -r '.data.effectId // ""')"
+  fi
+
+  if [[ -n "${EFFECT_ID}" ]]; then
+    run "effects.setPalette" "{\"apiVersion\":2,\"cmd\":\"effects.setPalette\",\"params\":{\"effectId\":\"${EFFECT_ID}\",\"palette\":{\"C_BUTTON_Palette1\":\"#FF0000\",\"C_BUTTON_Palette2\":\"#00FF00\"}}}"
+    run "effects.getPalette" "{\"apiVersion\":2,\"cmd\":\"effects.getPalette\",\"params\":{\"effectId\":\"${EFFECT_ID}\"}}"
+  else
+    step_skip "effects.setPalette" "NO_EFFECT_ID"
+    step_skip "effects.getPalette" "NO_EFFECT_ID"
+  fi
+
   run "effects.list" "{\"apiVersion\":2,\"cmd\":\"effects.list\",\"params\":{\"modelName\":\"${EFFECT_MODEL_NAME}\",\"layerIndex\":0}}"
 else
   step_skip "effects.create" "NO_NON_TIMING_MODEL"
+  step_skip "effects.setPalette" "NO_NON_TIMING_MODEL"
+  step_skip "effects.getPalette" "NO_NON_TIMING_MODEL"
   step_skip "effects.list" "NO_NON_TIMING_MODEL"
 fi
 
