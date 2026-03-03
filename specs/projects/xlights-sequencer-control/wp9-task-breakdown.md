@@ -69,3 +69,15 @@ Date: 2026-03-02
 - Produce migration notes for API modularization structure.
 - Run full suite and archive run summary.
 - Complete `wp9-checklist.md` with links to proof artifacts and final go/no-go.
+
+## Task 12: Implement Virtual Vision Layout + Render-Style Contracts
+- Add read-only layout geometry commands:
+  - `layout.getModelGeometry`
+  - `layout.getModelNodes`
+  - `layout.getCameras`
+  - `layout.getScene`
+- Add render-style contract commands:
+  - `effects.getRenderStyleOptions`
+  - `effects.setRenderStyle`
+- Ensure payloads are deterministic and sufficient for agent-side scene reconstruction without UI scraping.
+- Add harness coverage for scene bootstrap, node-coordinate retrieval, and render-style option/application validation.

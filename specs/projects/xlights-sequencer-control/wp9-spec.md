@@ -16,6 +16,8 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 - no atomic plan execution contract that combines validate+apply safely,
 - incomplete non-interactive guarantees for long-running legacy operations,
 - advanced bulk/layer mutation guarantees are not fully deterministic under failure,
+- insufficient structured spatial layout geometry for agent-side virtual scene reconstruction,
+- no validated render-style option/control contract (today this is mostly implicit settings mutation),
 - capability/feature drift risk,
 - monolithic automation implementation concentrated in `xLightsAutomations.cpp`.
 
@@ -30,6 +32,9 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 - G8: deterministic semantics for advanced/bulk sequencing edits with rollback behavior.
 - G9: acceptance harness coverage for transactions/jobs/revisions/effect definition schemas.
 - G10: documentation and capability declarations that stay in lockstep with implementation.
+- G11: active display element subset control for include-only sequencing scope.
+- G12: effect layer lifecycle management (`deleteLayer` / `compactLayers`).
+- G13: virtual-vision spatial + render-style contract (scene geometry, node coordinates, camera metadata, validated render-style controls).
 
 ## 3) Scope
 ### 3.1 API Contract Additions
@@ -42,6 +47,12 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 - `jobs.get`
 - `jobs.cancel`
 - `sequence.getRevision`
+- `layout.getModelGeometry`
+- `layout.getModelNodes`
+- `layout.getCameras`
+- `layout.getScene`
+- `effects.getRenderStyleOptions`
+- `effects.setRenderStyle`
 
 ### 3.2 Cross-Cutting Behavior
 - Structured diagnostics for open/save/render failure classes.
@@ -49,6 +60,7 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 - Async operation lifecycle with deterministic terminal states.
 - All non-interactive automation paths must avoid blocking modal/prompt behavior.
 - Bulk mutation commands must define deterministic rollback/failure semantics.
+- Spatial scene reconstruction must be API-driven and deterministic for agent-side virtual layout reasoning.
 
 ### 3.3 Code Architecture
 - Split API handlers by domain and keep `xLightsAutomations.cpp` as thin routing/orchestration.
@@ -67,6 +79,7 @@ Current v2 coverage is strong for core CRUD, but autonomous end-to-end authoring
 5. Save/open/render failures return machine-actionable diagnostics without requiring UI interaction.
 6. Command plan execution supports atomic validate+apply semantics.
 7. Automation command code is partitioned into grouped files; monolithic growth of `xLightsAutomations.cpp` is halted.
+8. Agent can reconstruct the layout scene and node positions from API payloads and apply validated render-style settings without UI coupling.
 
 ## 6) Test Requirements
 - Add harness suites for effect-definition, transactions, async jobs, and revision conflicts.

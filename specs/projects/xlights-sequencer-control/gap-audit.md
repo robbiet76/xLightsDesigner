@@ -56,6 +56,22 @@ Date: 2026-03-02
 - Current `sequencer.setDisplayElementOrder` requires a full element list and does not provide include-only element activation for sequencing.
 - Agent workflows need explicit subset control plus deterministic ordering to manage render intent.
 
+### G12: Effect Layer Lifecycle Management
+- Status: Remaining.
+- Current API can clear effects in a layer (`effects.delete` with `layerIndex`) but cannot remove empty layers or compact layer stacks.
+- Agent workflows need explicit layer lifecycle control (`deleteLayer` / `compactLayers`) to keep render layering deterministic and avoid orphan/unused layers.
+
+### G13: Virtual Vision Spatial + Render-Style Contract
+- Status: Remaining.
+- Current layout APIs expose only high-level model metadata + raw attributes and do not provide structured scene geometry for agent-side spatial reconstruction.
+- Agent workflows need deterministic structured APIs for:
+  - model transforms/dimensions (`layout.getModelGeometry`),
+  - per-node coordinates (`layout.getModelNodes`),
+  - camera metadata (`layout.getCameras`),
+  - one-call scene snapshot (`layout.getScene`),
+  - validated render-style option/control endpoints (`effects.getRenderStyleOptions`, `effects.setRenderStyle`).
+- This is a critical dependency for autonomous "virtual layout vision" and robust render-intent control.
+
 ## 3) Actions Completed in WP-7
 - Implemented `layout.getDisplayElements` and verified capability exposure.
 - Fixed `layout.getModels` debug crash path for `ModelGroup` membership expansion.
@@ -65,6 +81,6 @@ Date: 2026-03-02
 - Completed doc-freeze reconciliation across status, acceptance, and WP-7 tracking docs.
 
 ## 4) Next Focus
-- Execute WP-9 remaining closure work for G7, G8, G9, G10, and G11.
+- Execute WP-9 remaining closure work for G7, G8, G9, G10, G11, G12, and G13.
 - Reduce `xLightsAutomations.cpp` orchestration footprint where practical.
 - Produce final run evidence and complete go/no-go documentation.

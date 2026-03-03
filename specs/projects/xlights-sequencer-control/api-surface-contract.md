@@ -221,6 +221,69 @@ Response `data`:
 Response `data`:
 - `elements` array with `{ id, name, type, orderIndex, parentId }`
 
+### `layout.getModelGeometry`
+Purpose: return structured transform and size metadata for one model for agent-side spatial reconstruction.
+
+Params:
+- `name` (string, required)
+
+Response `data`:
+- `model` object with:
+  - `name`
+  - `type`
+  - `transform`:
+    - `position` `{ x, y, z }`
+    - `rotationDeg` `{ x, y, z }`
+    - `scale` `{ x, y, z }`
+  - `dimensions` `{ width, height, depth }` (where derivable)
+  - `layoutGroup`
+  - `attributes` (raw passthrough for compatibility)
+
+### `layout.getModelNodes`
+Purpose: return deterministic node coordinate metadata for one model.
+
+Params:
+- `name` (string, required)
+- `includeBufferCoords` (bool, default `true`)
+- `includeWorldCoords` (bool, default `true`)
+- `includeScreenCoords` (bool, default `false`)
+- `camera` (string, optional): required when `includeScreenCoords=true` and 3D projection is requested.
+
+Response `data`:
+- `modelName`
+- `nodes` array of:
+  - `nodeId`
+  - `stringIndex` (if available)
+  - `coords[]`:
+    - `buffer` `{ x, y }` when enabled
+    - `world` `{ x, y, z }` when enabled
+    - `screen` `{ x, y, z }` when enabled
+- `source` metadata:
+  - `isCustomModel` (bool)
+  - `customModelParsed` (bool)
+
+### `layout.getCameras`
+Purpose: return named camera/viewpoint metadata used by per-preview render styles.
+
+Response `data`:
+- `cameras` array with:
+  - `name`
+  - `type` (`2D|3D`)
+  - `isDefault` (bool)
+
+### `layout.getScene`
+Purpose: return a one-call layout snapshot for virtual vision bootstrap.
+
+Params:
+- `includeNodes` (bool, default `false`)
+- `includeCameras` (bool, default `true`)
+
+Response `data`:
+- `models[]` (same shape as `layout.getModelGeometry`, optionally with `nodes`)
+- `views[]`
+- `displayElements[]`
+- `cameras[]` (when requested)
+
 All `layout.*` commands:
 - Idempotency: read-only.
 - Must reject write-like params with `VALIDATION_ERROR`.
@@ -491,6 +554,68 @@ Response `data`:
 
 Dry-run:
 - returns deletion summary only.
+
+### `effects.deleteLayer`
+Purpose: remove an effect layer from a model/submodel when it is empty (or when force-clear is explicitly requested).
+
+Params:
+- `modelName` (string, required)
+- `layerIndex` (int, required)
+- `forceClear` (bool, default `false`): when true, clear effects in the layer before removal.
+
+Validation:
+- model exists
+- layer index exists
+- layer is empty unless `forceClear=true`
+
+Response `data`:
+- `removed` (bool)
+- `layerIndex`
+- `remainingLayerCount`
+
+Dry-run:
+- validates removability and returns projected layer count.
+
+### `effects.compactLayers`
+Purpose: remove empty layer gaps in a model/submodel while preserving effect order in remaining layers.
+
+Params:
+- `modelName` (string, required)
+- `preserveVisualOrder` (bool, default `true`)
+
+Response `data`:
+- `updated` (bool)
+- `beforeLayerCount`
+- `afterLayerCount`
+- `removedLayerIndexes` (array)
+
+### `effects.getRenderStyleOptions`
+Purpose: return render-style enum options and camera compatibility for a target element/layer context.
+
+Params:
+- `modelName` (string, required)
+- `layerIndex` (int, optional)
+
+Response `data`:
+- `renderStyles` (array of strings)
+- `supportsPerPreviewCamera` (bool)
+- `cameraOptions` (array of strings)
+- `transformOptions` (array of strings)
+
+### `effects.setRenderStyle`
+Purpose: set layer/effect render-style fields through validated API payloads rather than raw settings patching.
+
+Params:
+- `effectId` (string, required)
+- `renderStyle` (string, required)
+- `camera` (string, optional)
+- `transform` (string, optional)
+- `bufferStagger` (int, optional)
+
+Response `data`:
+- `effectId`
+- `updated` (bool)
+- `applied` object with `{ renderStyle, camera?, transform?, bufferStagger? }`
 
 ### `effects.shift`
 Params:

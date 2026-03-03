@@ -17,6 +17,7 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 
 ### 3.1 In Scope
 - Read-only layout/environment discovery needed for sequence planning.
+- Read-only spatial layout discovery needed for agent-side virtual scene reconstruction (model transforms, camera context, and node coordinates).
 - Full sequencer read/write controls needed to create and edit sequences.
 - Sequence lifecycle operations.
 - Media attachment and audio inspection operations required by sequencing workflows.
@@ -63,6 +64,9 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 
 ### FR-1 Layout Discovery (Read-Only)
 - System can list models, groups, views, and display element metadata required for sequencing context.
+- System can read deterministic model transform metadata (world position, rotation, scale) needed for spatial reasoning.
+- System can read deterministic per-node coordinate metadata (buffer/grid and world/screen-projected coordinates as available) needed for virtual layout visibility.
+- System can read camera/viewpoint metadata needed for per-preview render-style decisions.
 - No API in this project may mutate model/layout setup.
 
 ### FR-2 Sequence Lifecycle
@@ -102,6 +106,15 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - Legacy automation behavior remains unchanged.
 - v2 commands return stable schemas and deterministic keys.
 
+### FR-9 Virtual Vision Readiness
+- API surface must be sufficient for xLightsDesigner agents to reconstruct a virtual scene of the layout without UI scraping.
+- Virtual scene reconstruction must be possible using API payloads only:
+  - model transforms + dimensions,
+  - node coordinate mappings,
+  - available camera definitions,
+  - render-style options and selected render-style values for effect layers.
+- Render-style controls must be scriptable via explicit API contracts (not ad-hoc settings-string mutation only).
+
 ## 6) Non-Functional Requirements
 - No dependence on implicit UI selection state for API semantics.
 - Explicit error codes/messages for all failures.
@@ -120,5 +133,6 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
   - create/edit timing artifacts
   - create/edit effects and layers
   - read back summaries for verification
+- xLightsDesigner can reconstruct a deterministic virtual layout scene (model transforms + node coordinates + camera context) from API data only.
 - No controller APIs are required.
 - Layout writes remain out of scope and are blocked by contract.
