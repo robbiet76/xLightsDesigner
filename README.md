@@ -48,6 +48,7 @@ Live endpoint:
 - `Apply to xLights` executes an atomic `system.executePlan` that writes a Designer timing track (`XD:ProposedPlan`) from the current proposed-change list.
 - Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.
 - Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
+- Proposed draft rows are directly editable/removable in Design and details views, with `Add Line` for quick manual proposal shaping.
 - When stale, the status bar exposes direct recovery actions: `Rebase/Refresh`, `Regenerate`, and `Cancel Draft`.
 - Design also shows an explicit stale-recovery card with guided actions: `Refresh + Regenerate`, `Refresh Only`, and `Cancel Draft`.
 - History supports `Compare` against current head, `Reapply as Variant` into Design, and practical rollback draft restore flow.

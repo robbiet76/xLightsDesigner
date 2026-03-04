@@ -714,6 +714,33 @@ function splitBySection() {
   render();
 }
 
+function updateProposedLine(index, value) {
+  if (index < 0 || index >= state.proposed.length) return;
+  state.proposed[index] = value.trim();
+  state.proposed = state.proposed.filter((line) => line.length > 0);
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function removeProposedLine(index) {
+  if (index < 0 || index >= state.proposed.length) return;
+  state.proposed.splice(index, 1);
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function addProposedLine() {
+  state.proposed.push("New Section / ModelGroup / describe change");
+  state.flags.hasDraftProposal = true;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 function onSaveProjectSettings() {
   const oldProjectName = state.projectName;
   const oldShowFolder = state.showFolder;
@@ -944,7 +971,10 @@ function projectScreen() {
 
 function designScreen() {
   const disabledReason = applyDisabledReason();
-  const list = filteredProposed();
+  const filtered = state.proposed
+    .map((line, idx) => ({ line, idx }))
+    .filter((x) => state.ui.sectionFilter === "all" || getSectionName(x.line) === state.ui.sectionFilter);
+  const list = filtered.map((x) => x.line);
   return `
     ${
       state.flags.proposalStale
@@ -990,9 +1020,21 @@ function designScreen() {
       <section class="card design-panel proposed ${state.ui.designTab === "proposed" ? "active" : ""}" data-panel="proposed">
         <h3>Proposed Next Write</h3>
         <div class="field"><label>Proposed Next Write</label>
-          <ol class="list">
-            ${list.slice(0, 5).map((p) => `<li>${p}</li>`).join("")}
-          </ol>
+          <ul class="list editable-list">
+            ${list
+              .slice(0, 5)
+              .map((p, idx) => {
+                const actualIdx = filtered[idx].idx;
+                return `<li>
+                  <input data-proposed-input="${actualIdx}" value="${p.replace(/\"/g, "&quot;")}" />
+                  <button data-proposed-remove="${actualIdx}">Remove</button>
+                </li>`;
+              })
+              .join("")}
+          </ul>
+          <div class="row">
+            <button id="add-proposed-line">Add Line</button>
+          </div>
           <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
         </div>
         <div class="composer">
@@ -1015,7 +1057,10 @@ function designScreen() {
 function detailsDrawer() {
   if (!state.ui.detailsOpen) return "";
   const sections = getSections();
-  const list = filteredProposed();
+  const filtered = state.proposed
+    .map((line, idx) => ({ line, idx }))
+    .filter((x) => state.ui.sectionFilter === "all" || getSectionName(x.line) === state.ui.sectionFilter);
+  const list = filtered.map((x) => x.line);
   return `
     <section class="card details-drawer">
       <h3>Proposal Detail</h3>
@@ -1031,7 +1076,15 @@ function detailsDrawer() {
           .join("")}
       </div>
       <ol class="list" style="margin-top:10px;">
-        ${list.map((p) => `<li>${p}</li>`).join("")}
+        ${list
+          .map((p, idx) => {
+            const actualIdx = filtered[idx].idx;
+            return `<li>
+              <input data-proposed-input="${actualIdx}" value="${p.replace(/\"/g, "&quot;")}" />
+              <button data-proposed-remove="${actualIdx}">Remove</button>
+            </li>`;
+          })
+          .join("")}
       </ol>
       <div class="row" style="margin-top:10px;">
         <button id="drawer-apply" ${applyEnabled() ? "" : "disabled"}>Apply</button>
@@ -1334,6 +1387,21 @@ function bindEvents() {
 
   app.querySelectorAll("[data-design-tab]").forEach((btn) => {
     btn.addEventListener("click", () => setDesignTab(btn.dataset.designTab));
+  });
+
+  const addProposedLineBtn = app.querySelector("#add-proposed-line");
+  if (addProposedLineBtn) addProposedLineBtn.addEventListener("click", addProposedLine);
+
+  app.querySelectorAll("[data-proposed-input]").forEach((input) => {
+    input.addEventListener("change", () =>
+      updateProposedLine(Number.parseInt(input.dataset.proposedInput, 10), input.value)
+    );
+  });
+
+  app.querySelectorAll("[data-proposed-remove]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      removeProposedLine(Number.parseInt(btn.dataset.proposedRemove, 10))
+    );
   });
 
   app.querySelectorAll("[data-version]").forEach((btn) => {

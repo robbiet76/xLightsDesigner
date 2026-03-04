@@ -313,6 +313,14 @@ button:disabled {
   font-size: 12px;
 }
 
+.editable-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 @media (max-width: 950px) {
   .main-grid {
     grid-template-columns: 78px 1fr;
