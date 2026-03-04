@@ -43,3 +43,6 @@ Live endpoint:
 - Click `Test Connection` to call `system.getCapabilities`.
 - `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
 - `Apply to xLights` executes an atomic `system.executePlan` that writes a Designer timing track (`XD:ProposedPlan`) from the current proposed-change list.
+- Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.
+- Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
+- When stale, the status bar exposes direct recovery actions: `Rebase/Refresh`, `Regenerate`, and `Cancel Draft`.

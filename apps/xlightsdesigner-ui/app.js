@@ -16,6 +16,7 @@ const defaultState = {
   showFolder: "/Users/robterry/Desktop/Show",
   activeSequence: "CarolOfTheBells.xsq",
   revision: "unknown",
+  draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
   flags: {
     xlightsConnected: false,
@@ -34,6 +35,10 @@ const defaultState = {
     "Chorus 2 / XD:Mood / mark as calmer pulse",
     "Chorus 2 / Roofline / soften sparkle saturation"
   ],
+  ui: {
+    detailsOpen: false,
+    sectionFilter: "all"
+  },
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
     { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
@@ -97,6 +102,21 @@ function applyDisabledReason() {
   return "";
 }
 
+function getSectionName(line) {
+  const [section] = line.split("/");
+  return (section || "General").trim();
+}
+
+function getSections() {
+  const sections = Array.from(new Set(state.proposed.map(getSectionName)));
+  return sections.length > 0 ? sections : ["General"];
+}
+
+function filteredProposed() {
+  if (state.ui.sectionFilter === "all") return state.proposed;
+  return state.proposed.filter((item) => getSectionName(item) === state.ui.sectionFilter);
+}
+
 function bumpVersion(summary = "Applied draft proposal", effects = 28) {
   const nextId = `v${Number(state.versions[0].id.slice(1)) + 1}`;
   state.versions.unshift({
@@ -110,7 +130,11 @@ function bumpVersion(summary = "Applied draft proposal", effects = 28) {
 
 function buildDesignerPlanCommands() {
   const trackName = "XD:ProposedPlan";
-  const marks = state.proposed.slice(0, 24).map((label, idx) => {
+  const source = filteredProposed();
+  if (source.length === 0) {
+    throw new Error("No proposed changes available for current section filter.");
+  }
+  const marks = source.slice(0, 24).map((label, idx) => {
     const startMs = idx * 1000;
     return {
       startMs,
@@ -154,6 +178,14 @@ async function onApply() {
     const plan = buildDesignerPlanCommands();
     const result = await executePlan(state.endpoint, plan, true);
     const executed = result?.data?.executedCount ?? 0;
+    try {
+      const postRev = await getRevision(state.endpoint);
+      state.revision = postRev?.data?.revision ?? state.revision;
+    } catch {
+      // Keep prior revision if post-apply readback is unavailable.
+    }
+    state.draftBaseRevision = state.revision;
+    state.flags.proposalStale = false;
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
     setStatus("info", `Applied via system.executePlan (${executed} steps).`);
   } catch (err) {
@@ -173,6 +205,8 @@ function onGenerate() {
 
   state.flags.hasDraftProposal = true;
   state.flags.proposalStale = false;
+  state.draftBaseRevision = state.revision;
+  state.ui.sectionFilter = "all";
   setStatus("info", "Proposal refreshed from current intent.");
   state.proposed = [
     "Chorus 2 / CandyCanes / reduce twinkle 35%",
@@ -197,6 +231,7 @@ function onTogglePlanOnly() {
 
 async function onRefresh() {
   try {
+    let staleDetected = false;
     const open = await getOpenSequence(state.endpoint);
     const seq = open?.data?.sequence;
     state.flags.activeSequenceLoaded = Boolean(open?.data?.isOpen && seq);
@@ -204,12 +239,24 @@ async function onRefresh() {
 
     try {
       const rev = await getRevision(state.endpoint);
-      state.revision = rev?.data?.revision ?? "unknown";
+      const newRevision = rev?.data?.revision ?? "unknown";
+      if (
+        state.flags.hasDraftProposal &&
+        state.draftBaseRevision !== "unknown" &&
+        newRevision !== state.draftBaseRevision
+      ) {
+        state.flags.proposalStale = true;
+        staleDetected = true;
+        setStatus("warning", "Sequence changed since draft creation. Refresh proposal before apply.");
+      }
+      state.revision = newRevision;
     } catch {
       state.revision = "unknown";
     }
 
-    setStatus("info", "Refreshed from xLights.");
+    if (!staleDetected) {
+      setStatus("info", "Refreshed from xLights.");
+    }
   } catch (err) {
     state.flags.xlightsConnected = false;
     setStatus("warning", `Refresh failed: ${err.message}`);
@@ -236,6 +283,79 @@ async function onTestConnection() {
     state.flags.xlightsConnected = false;
     setStatus("action-required", `Connection failed: ${err.message}`);
   }
+  persist();
+  render();
+}
+
+async function pollRevision() {
+  if (!state.flags.xlightsConnected || state.flags.applyInProgress) return;
+  try {
+    const rev = await getRevision(state.endpoint);
+    const newRevision = rev?.data?.revision ?? state.revision;
+    if (newRevision !== state.revision) {
+      state.revision = newRevision;
+      if (
+        state.flags.hasDraftProposal &&
+        state.draftBaseRevision !== "unknown" &&
+        newRevision !== state.draftBaseRevision &&
+        !state.flags.proposalStale
+      ) {
+        state.flags.proposalStale = true;
+        setStatus("warning", "Detected external sequence edits. Draft marked stale.");
+      }
+      persist();
+      render();
+    }
+  } catch {
+    // Ignore polling failures and rely on explicit refresh/test actions.
+  }
+}
+
+function onRegenerate() {
+  onGenerate();
+}
+
+function onCancelDraft() {
+  state.flags.hasDraftProposal = false;
+  state.flags.proposalStale = false;
+  state.proposed = [];
+  state.ui.detailsOpen = false;
+  state.ui.sectionFilter = "all";
+  setStatus("info", "Draft canceled.");
+  persist();
+  render();
+}
+
+function openDetails() {
+  if (!state.flags.hasDraftProposal) {
+    setStatus("warning", "Generate a proposal first.");
+    return render();
+  }
+  state.ui.detailsOpen = true;
+  persist();
+  render();
+}
+
+function closeDetails() {
+  state.ui.detailsOpen = false;
+  persist();
+  render();
+}
+
+function setSectionFilter(section) {
+  state.ui.sectionFilter = section;
+  persist();
+  render();
+}
+
+function splitBySection() {
+  const section = state.ui.sectionFilter;
+  if (section === "all") {
+    setStatus("warning", "Choose a section first.");
+    return render();
+  }
+  state.proposed = state.proposed.filter((item) => getSectionName(item) === section);
+  setStatus("info", `Draft narrowed to section: ${section}`);
   persist();
   render();
 }
@@ -308,6 +428,7 @@ function projectScreen() {
 
 function designScreen() {
   const disabledReason = applyDisabledReason();
+  const list = filteredProposed();
   return `
     <div class="screen-grid">
       <section class="card">
@@ -328,9 +449,9 @@ function designScreen() {
         </div>
         <div class="field"><label>Proposed Next Write</label>
           <ol class="list">
-            ${state.proposed.slice(0, 5).map((p) => `<li>${p}</li>`).join("")}
+            ${list.slice(0, 5).map((p) => `<li>${p}</li>`).join("")}
           </ol>
-          <div class="banner impact">Approx effects impacted: ${state.proposed.length * 11}</div>
+          <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
         </div>
       </section>
     </div>
@@ -340,10 +461,42 @@ function designScreen() {
         <input id="chat-input" placeholder="Type request..." value="Change chorus 2 candy canes to twinkle less" />
         <button id="generate">Generate/Refresh</button>
         <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
-        <button>Open Details</button>
+        <button id="open-details">Open Details</button>
       </div>
       <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
     </div>
+  `;
+}
+
+function detailsDrawer() {
+  if (!state.ui.detailsOpen) return "";
+  const sections = getSections();
+  const list = filteredProposed();
+  return `
+    <section class="card details-drawer">
+      <h3>Proposal Detail</h3>
+      <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
+      <div class="banner">Revision base: ${state.draftBaseRevision}</div>
+      <div class="row" style="margin-top:8px;">
+        <button data-section="all" class="${state.ui.sectionFilter === "all" ? "active-chip" : ""}">All Sections</button>
+        ${sections
+          .map(
+            (s) =>
+              `<button data-section="${s}" class="${state.ui.sectionFilter === s ? "active-chip" : ""}">${s}</button>`
+          )
+          .join("")}
+      </div>
+      <ol class="list" style="margin-top:10px;">
+        ${list.map((p) => `<li>${p}</li>`).join("")}
+      </ol>
+      <div class="row" style="margin-top:10px;">
+        <button id="drawer-apply" ${applyEnabled() ? "" : "disabled"}>Apply</button>
+        <button id="split-section">Split by Section</button>
+        <button id="discard-draft">Discard Draft</button>
+        <button id="close-details">Back to Design</button>
+      </div>
+      <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "" : applyDisabledReason()}</div>
+    </section>
   `;
 }
 
@@ -424,6 +577,21 @@ function bindEvents() {
   const applyBtn = app.querySelector("#apply");
   if (applyBtn) applyBtn.addEventListener("click", onApply);
 
+  const openDetailsBtn = app.querySelector("#open-details");
+  if (openDetailsBtn) openDetailsBtn.addEventListener("click", openDetails);
+
+  const closeDetailsBtn = app.querySelector("#close-details");
+  if (closeDetailsBtn) closeDetailsBtn.addEventListener("click", closeDetails);
+
+  const drawerApplyBtn = app.querySelector("#drawer-apply");
+  if (drawerApplyBtn) drawerApplyBtn.addEventListener("click", onApply);
+
+  const splitSectionBtn = app.querySelector("#split-section");
+  if (splitSectionBtn) splitSectionBtn.addEventListener("click", splitBySection);
+
+  const discardDraftBtn = app.querySelector("#discard-draft");
+  if (discardDraftBtn) discardDraftBtn.addEventListener("click", onCancelDraft);
+
   const planBtn = app.querySelector("#plan-toggle");
   if (planBtn) planBtn.addEventListener("click", onTogglePlanOnly);
 
@@ -432,6 +600,19 @@ function bindEvents() {
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
+
+  const staleRefreshBtn = app.querySelector("#status-refresh");
+  if (staleRefreshBtn) staleRefreshBtn.addEventListener("click", onRefresh);
+
+  const staleRegenBtn = app.querySelector("#status-regenerate");
+  if (staleRegenBtn) staleRegenBtn.addEventListener("click", onRegenerate);
+
+  const staleCancelBtn = app.querySelector("#status-cancel");
+  if (staleCancelBtn) staleCancelBtn.addEventListener("click", onCancelDraft);
+
+  app.querySelectorAll("[data-section]").forEach((btn) => {
+    btn.addEventListener("click", () => setSectionFilter(btn.dataset.section));
+  });
 
   app.querySelectorAll("[data-version]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -451,6 +632,14 @@ function bindEvents() {
 }
 
 function render() {
+  const staleActions = state.flags.proposalStale
+    ? `
+      <button id="status-refresh">Rebase/Refresh</button>
+      <button id="status-regenerate">Regenerate</button>
+      <button id="status-cancel">Cancel Draft</button>
+    `
+    : `<button>View Details</button>`;
+
   app.innerHTML = `
     <div class="app-shell">
       <header class="header">
@@ -467,7 +656,7 @@ function render() {
           <span class="status-tag ${state.status.level}">${state.status.level}</span>
           <span>${state.status.text}</span>
         </div>
-        <button>View Details</button>
+        <div class="row">${staleActions}</div>
       </div>
 
       <div class="main-grid">
@@ -478,7 +667,7 @@ function render() {
           ${navButton("metadata", "Metadata")}
         </nav>
 
-        <main class="content">${screenContent()}</main>
+        <main class="content">${screenContent()} ${state.route === "design" ? detailsDrawer() : ""}</main>
       </div>
 
       <footer class="footer">
@@ -493,3 +682,4 @@ function render() {
 }
 
 render();
+setInterval(pollRevision, 8000);

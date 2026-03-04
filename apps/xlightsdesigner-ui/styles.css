@@ -247,6 +247,19 @@ button:disabled {
   color: var(--warn);
 }
 
+.details-drawer {
+  margin-top: 12px;
+  border: 1px solid #b9d4d0;
+  background: #f8fdfc;
+}
+
+.active-chip {
+  border-color: #4e988f;
+  background: #e7f5f2;
+  color: #115e59;
+  font-weight: 700;
+}
+
 @media (max-width: 950px) {
   .main-grid {
     grid-template-columns: 78px 1fr;
