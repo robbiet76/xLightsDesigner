@@ -65,3 +65,9 @@ Status: Locked unless superseded by explicit revision.
 - Harness/documentation lockstep gaps (G9/G10) are considered closed based on full green `run-all.sh` evidence and synchronized status docs.
 - Program gate remains `No-Go` for final WP-9 closeout while G8 remains open.
 - G8 remains the sole tracked blocker: deterministic rollback guarantees for all mid-commit mutation failure classes.
+
+## D13) Iteration-First API Strategy (2026-03-03)
+- Shift from "100% closeout now" to iterative delivery driven by xLightsDesigner feature development.
+- Keep a practical integration baseline and capture new API friction in a live backlog.
+- Prioritize unblock value and deterministic behavior over full theoretical completeness at this stage.
+- Maintain lightweight regression gates (critical smoke suites + crash watcher) on each API change batch.
