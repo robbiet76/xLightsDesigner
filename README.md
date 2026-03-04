@@ -52,3 +52,4 @@ Live endpoint:
 - Compact/mobile behavior includes Design tabs (`Chat`, `Intent`, `Proposed`) and a fixed bottom `Apply to xLights` action bar.
 - Diagnostics panel can be opened from header/status bar and captures warning/action-required events with optional stack/detail payloads.
 - Validation failures now surface per-step details from `system.validateCommands` in diagnostics.
+- Diagnostics panel includes filters (`All`, `Warnings`, `Action Required`) and live counts in header/footer.

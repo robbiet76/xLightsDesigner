@@ -43,7 +43,8 @@ const defaultState = {
     detailsOpen: false,
     sectionFilter: "all",
     designTab: "chat",
-    diagnosticsOpen: false
+    diagnosticsOpen: false,
+    diagnosticsFilter: "all"
   },
   diagnostics: [],
   versions: [
@@ -390,11 +391,25 @@ function toggleDiagnostics(forceOpen = null) {
   render();
 }
 
+function setDiagnosticsFilter(filter) {
+  if (!["all", "warning", "action-required"].includes(filter)) return;
+  state.ui.diagnosticsFilter = filter;
+  persist();
+  render();
+}
+
 function clearDiagnostics() {
   state.diagnostics = [];
   setStatus("info", "Diagnostics cleared.");
   persist();
   render();
+}
+
+function getDiagnosticsCounts() {
+  const rows = state.diagnostics || [];
+  const warning = rows.filter((d) => d.level === "warning").length;
+  const actionRequired = rows.filter((d) => d.level === "action-required").length;
+  return { total: rows.length, warning, actionRequired };
 }
 
 function onCancelDraft() {
@@ -800,20 +815,27 @@ function screenContent() {
 function diagnosticsPanel() {
   if (!state.ui.diagnosticsOpen) return "";
   const rows = state.diagnostics || [];
+  const filter = state.ui.diagnosticsFilter;
+  const filteredRows =
+    filter === "all" ? rows : rows.filter((d) => d.level === filter);
+  const counts = getDiagnosticsCounts();
   return `
     <section class="card diagnostics-panel">
       <div class="row" style="justify-content:space-between;">
         <h3>Diagnostics</h3>
         <div class="row">
+          <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${counts.total})</button>
+          <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${counts.warning})</button>
+          <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${counts.actionRequired})</button>
           <button id="clear-diagnostics">Clear</button>
           <button id="close-diagnostics">Close</button>
         </div>
       </div>
       ${
-        rows.length
+        filteredRows.length
           ? `
         <ul class="list">
-          ${rows
+          ${filteredRows
             .map(
               (d) => `
             <li>
@@ -825,7 +847,7 @@ function diagnosticsPanel() {
             .join("")}
         </ul>
       `
-          : "<p class=\"banner\">No diagnostics yet.</p>"
+          : "<p class=\"banner\">No diagnostics for current filter.</p>"
       }
     </section>
   `;
@@ -850,6 +872,10 @@ function bindEvents() {
 
   const clearDiagnosticsBtn = app.querySelector("#clear-diagnostics");
   if (clearDiagnosticsBtn) clearDiagnosticsBtn.addEventListener("click", clearDiagnostics);
+
+  app.querySelectorAll("[data-diag-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => setDiagnosticsFilter(btn.dataset.diagFilter));
+  });
 
   const generateBtn = app.querySelector("#generate");
   if (generateBtn) generateBtn.addEventListener("click", onGenerate);
@@ -945,6 +971,7 @@ function bindEvents() {
 }
 
 function render() {
+  const diagCounts = getDiagnosticsCounts();
   const staleActions = state.flags.proposalStale
     ? `
       <button id="status-refresh">Rebase/Refresh</button>
@@ -961,7 +988,7 @@ function render() {
         <div class="header-badge">Revision: ${state.revision}</div>
         <button id="refresh-btn">Refresh</button>
         <button>Review in xLights</button>
-        <button id="open-diagnostics">Diagnostics</button>
+        <button id="open-diagnostics">Diagnostics (${diagCounts.total})</button>
       </header>
 
       <div class="status-bar">
@@ -990,7 +1017,7 @@ function render() {
       <footer class="footer">
         <span>Last sync: ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
         <span>Background jobs: 0</span>
-        <span>Diagnostics: ${state.flags.xlightsConnected ? "connected" : "not connected"}</span>
+        <span>Diagnostics: ${diagCounts.warning} warning, ${diagCounts.actionRequired} action-required</span>
       </footer>
     </div>
   `;
