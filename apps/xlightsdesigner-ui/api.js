@@ -67,6 +67,13 @@ export async function saveSequence(endpoint, file = null) {
   return postCommand(endpoint, "sequence.save", params);
 }
 
+export async function closeSequence(endpoint, force = true, quiet = false) {
+  return postCommand(endpoint, "sequence.close", {
+    force,
+    quiet
+  });
+}
+
 export async function validateCommands(endpoint, commands) {
   return postCommand(endpoint, "system.validateCommands", {
     commands

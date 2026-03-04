@@ -1,4 +1,5 @@
 import {
+  closeSequence,
   cancelJob,
   executePlan,
   getDefaultEndpoint,
@@ -952,6 +953,56 @@ function onResetProjectWorkspace() {
   render();
 }
 
+function resetSessionDraftState() {
+  state.draftBaseRevision = state.revision;
+  state.flags.hasDraftProposal = false;
+  state.flags.proposalStale = false;
+  state.ui.detailsOpen = false;
+  state.ui.sectionFilter = "all";
+  state.ui.designTab = "chat";
+  state.proposed = [];
+}
+
+async function onCloseSequence() {
+  if (!state.flags.xlightsConnected) {
+    setStatusWithDiagnostics("warning", "Connect to xLights before closing sequence.");
+    return render();
+  }
+  if (!window.confirm("Close active sequence in xLights?")) {
+    setStatus("info", "Close sequence canceled.");
+    return render();
+  }
+
+  setStatus("info", "Closing sequence...");
+  render();
+  try {
+    await closeSequence(state.endpoint, true, false);
+    state.flags.activeSequenceLoaded = false;
+    state.revision = "unknown";
+    state.activeSequence = "(none)";
+    resetSessionDraftState();
+    setStatus("info", "Sequence closed.");
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Close failed: ${err.message}`, err.stack || "");
+  } finally {
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
+}
+
+function onNewSession() {
+  if (!window.confirm("Start a new session and clear current draft state?")) {
+    setStatus("info", "New session canceled.");
+    return render();
+  }
+  resetSessionDraftState();
+  setStatus("info", "New session started. Draft cleared.");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 function navButton(id, label) {
   return `<button class="${state.route === id ? "active" : ""}" data-route="${id}">${label}</button>`;
 }
@@ -981,8 +1032,9 @@ function projectScreen() {
           <button id="open-sequence">Open Sequence</button>
           <button id="save-sequence">Save</button>
           <button id="save-sequence-as">Save As</button>
+          <button id="close-sequence">Close Sequence</button>
           <button id="refresh-recents">Refresh Recents</button>
-          <button>New Session</button>
+          <button id="new-session">New Session</button>
         </div>
         <p class="banner">Active: ${state.activeSequence}</p>
         <p class="banner">Sidecar: ${state.activeSequence.replace(/\.xsq$/, ".xdmeta")}</p>
@@ -1413,6 +1465,12 @@ function bindEvents() {
 
   const saveSequenceAsBtn = app.querySelector("#save-sequence-as");
   if (saveSequenceAsBtn) saveSequenceAsBtn.addEventListener("click", () => onSaveSequence(true));
+
+  const closeSequenceBtn = app.querySelector("#close-sequence");
+  if (closeSequenceBtn) closeSequenceBtn.addEventListener("click", onCloseSequence);
+
+  const newSessionBtn = app.querySelector("#new-session");
+  if (newSessionBtn) newSessionBtn.addEventListener("click", onNewSession);
 
   const refreshRecentsBtn = app.querySelector("#refresh-recents");
   if (refreshRecentsBtn) {
