@@ -42,8 +42,10 @@ const defaultState = {
   ui: {
     detailsOpen: false,
     sectionFilter: "all",
-    designTab: "chat"
+    designTab: "chat",
+    diagnosticsOpen: false
   },
+  diagnostics: [],
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
     { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
@@ -86,6 +88,23 @@ function setRoute(route) {
 
 function setStatus(level, text) {
   state.status = { level, text };
+}
+
+function pushDiagnostic(level, text, details = "") {
+  const entry = {
+    ts: new Date().toISOString(),
+    level,
+    text,
+    details
+  };
+  state.diagnostics = [entry, ...(state.diagnostics || [])].slice(0, 120);
+}
+
+function setStatusWithDiagnostics(level, text, details = "") {
+  setStatus(level, text);
+  if (level !== "info" || details) {
+    pushDiagnostic(level, text, details);
+  }
 }
 
 function applyEnabled() {
@@ -186,7 +205,7 @@ function buildDesignerPlanCommands() {
 
 async function onApply() {
   if (!applyEnabled()) {
-    setStatus("warning", applyDisabledReason());
+    setStatusWithDiagnostics("warning", applyDisabledReason());
     return render();
   }
 
@@ -204,7 +223,20 @@ async function onApply() {
       plan.map((step) => ({ cmd: step.cmd, params: step.params }))
     );
     if (validation?.data?.valid === false) {
-      throw new Error("Plan validation failed. Review proposal details and retry.");
+      const invalidResults = (validation?.data?.results || []).filter((r) => r.valid === false);
+      const details = invalidResults
+        .map((r) => {
+          const code = r?.error?.code || "VALIDATION_ERROR";
+          const msg = r?.error?.message || "Invalid command";
+          return `step ${r.index}: ${code} - ${msg}`;
+        })
+        .join("\\n");
+      setStatusWithDiagnostics(
+        "action-required",
+        `Plan validation failed (${invalidResults.length || 1} issue${invalidResults.length === 1 ? "" : "s"}).`,
+        details || "Validation failed with no detailed payload."
+      );
+      return;
     }
     const result = await executePlan(state.endpoint, plan, true);
     const executed = result?.data?.executedCount ?? 0;
@@ -217,9 +249,12 @@ async function onApply() {
     state.draftBaseRevision = state.revision;
     state.flags.proposalStale = false;
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
-    setStatus("info", `Applied via system.executePlan (${executed} steps).`);
+    setStatusWithDiagnostics(
+      "info",
+      `Applied via system.executePlan (${executed} steps).`
+    );
   } catch (err) {
-    setStatus("action-required", `Apply blocked: ${err.message}`);
+    setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
   } finally {
     state.flags.applyInProgress = false;
     persist();
@@ -277,7 +312,10 @@ async function onRefresh() {
       ) {
         state.flags.proposalStale = true;
         staleDetected = true;
-        setStatus("warning", "Sequence changed since draft creation. Refresh proposal before apply.");
+        setStatusWithDiagnostics(
+          "warning",
+          "Sequence changed since draft creation. Refresh proposal before apply."
+        );
       }
       state.revision = newRevision;
     } catch {
@@ -289,7 +327,7 @@ async function onRefresh() {
     }
   } catch (err) {
     state.flags.xlightsConnected = false;
-    setStatus("warning", `Refresh failed: ${err.message}`);
+    setStatusWithDiagnostics("warning", `Refresh failed: ${err.message}`, err.stack || "");
   }
   persist();
   render();
@@ -311,7 +349,7 @@ async function onTestConnection() {
     return;
   } catch (err) {
     state.flags.xlightsConnected = false;
-    setStatus("action-required", `Connection failed: ${err.message}`);
+    setStatusWithDiagnostics("action-required", `Connection failed: ${err.message}`, err.stack || "");
   }
   persist();
   render();
@@ -331,7 +369,7 @@ async function pollRevision() {
         !state.flags.proposalStale
       ) {
         state.flags.proposalStale = true;
-        setStatus("warning", "Detected external sequence edits. Draft marked stale.");
+        setStatusWithDiagnostics("warning", "Detected external sequence edits. Draft marked stale.");
       }
       persist();
       render();
@@ -343,6 +381,20 @@ async function pollRevision() {
 
 function onRegenerate() {
   onGenerate();
+}
+
+function toggleDiagnostics(forceOpen = null) {
+  state.ui.diagnosticsOpen =
+    forceOpen === null ? !state.ui.diagnosticsOpen : Boolean(forceOpen);
+  persist();
+  render();
+}
+
+function clearDiagnostics() {
+  state.diagnostics = [];
+  setStatus("info", "Diagnostics cleared.");
+  persist();
+  render();
 }
 
 function onCancelDraft() {
@@ -488,7 +540,7 @@ async function onOpenSequence() {
     await onRefresh();
     setStatus("info", `Opened sequence: ${name}`);
   } catch (err) {
-    setStatus("action-required", `Open failed: ${err.message}`);
+    setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
     render();
   } finally {
     persist();
@@ -745,6 +797,40 @@ function screenContent() {
   return metadataScreen();
 }
 
+function diagnosticsPanel() {
+  if (!state.ui.diagnosticsOpen) return "";
+  const rows = state.diagnostics || [];
+  return `
+    <section class="card diagnostics-panel">
+      <div class="row" style="justify-content:space-between;">
+        <h3>Diagnostics</h3>
+        <div class="row">
+          <button id="clear-diagnostics">Clear</button>
+          <button id="close-diagnostics">Close</button>
+        </div>
+      </div>
+      ${
+        rows.length
+          ? `
+        <ul class="list">
+          ${rows
+            .map(
+              (d) => `
+            <li>
+              <strong>[${d.level}]</strong> ${new Date(d.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })} - ${d.text}
+              ${d.details ? `<pre class="diag-details">${d.details}</pre>` : ""}
+            </li>
+          `
+            )
+            .join("")}
+        </ul>
+      `
+          : "<p class=\"banner\">No diagnostics yet.</p>"
+      }
+    </section>
+  `;
+}
+
 function bindEvents() {
   app.querySelectorAll("[data-route]").forEach((btn) => {
     btn.addEventListener("click", () => setRoute(btn.dataset.route));
@@ -752,6 +838,18 @@ function bindEvents() {
 
   const refreshBtn = app.querySelector("#refresh-btn");
   if (refreshBtn) refreshBtn.addEventListener("click", onRefresh);
+
+  const openDiagnosticsBtn = app.querySelector("#open-diagnostics");
+  if (openDiagnosticsBtn) openDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(true));
+
+  const statusViewDetailsBtn = app.querySelector("#status-view-details");
+  if (statusViewDetailsBtn) statusViewDetailsBtn.addEventListener("click", () => toggleDiagnostics(true));
+
+  const closeDiagnosticsBtn = app.querySelector("#close-diagnostics");
+  if (closeDiagnosticsBtn) closeDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(false));
+
+  const clearDiagnosticsBtn = app.querySelector("#clear-diagnostics");
+  if (clearDiagnosticsBtn) clearDiagnosticsBtn.addEventListener("click", clearDiagnostics);
 
   const generateBtn = app.querySelector("#generate");
   if (generateBtn) generateBtn.addEventListener("click", onGenerate);
@@ -853,7 +951,7 @@ function render() {
       <button id="status-regenerate">Regenerate</button>
       <button id="status-cancel">Cancel Draft</button>
     `
-    : `<button>View Details</button>`;
+    : `<button id="status-view-details">View Details</button>`;
 
   app.innerHTML = `
     <div class="app-shell">
@@ -863,7 +961,7 @@ function render() {
         <div class="header-badge">Revision: ${state.revision}</div>
         <button id="refresh-btn">Refresh</button>
         <button>Review in xLights</button>
-        <button>Diagnostics</button>
+        <button id="open-diagnostics">Diagnostics</button>
       </header>
 
       <div class="status-bar">
@@ -882,7 +980,11 @@ function render() {
           ${navButton("metadata", "Metadata")}
         </nav>
 
-        <main class="content">${screenContent()} ${state.route === "design" ? detailsDrawer() : ""}</main>
+        <main class="content">
+          ${screenContent()}
+          ${state.route === "design" ? detailsDrawer() : ""}
+          ${diagnosticsPanel()}
+        </main>
       </div>
 
       <footer class="footer">

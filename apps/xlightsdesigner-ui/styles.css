@@ -290,6 +290,23 @@ button:disabled {
   font-weight: 700;
 }
 
+.diagnostics-panel {
+  margin-top: 12px;
+  border: 1px solid #c5ced9;
+  background: #f8fafc;
+}
+
+.diag-details {
+  margin: 6px 0 0;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #d6dde6;
+  background: #ffffff;
+  color: #1f2937;
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+
 @media (max-width: 950px) {
   .main-grid {
     grid-template-columns: 78px 1fr;
