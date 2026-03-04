@@ -64,7 +64,8 @@ const defaultState = {
     designTab: "chat",
     diagnosticsOpen: false,
     jobsOpen: false,
-    diagnosticsFilter: "all"
+    diagnosticsFilter: "all",
+    modelFilterText: ""
   },
   diagnostics: [],
   jobs: [],
@@ -803,6 +804,24 @@ function setDesignTab(tab) {
   render();
 }
 
+function setModelFilterText(value) {
+  state.ui.modelFilterText = value;
+  persist();
+  render();
+}
+
+function insertModelIntoDraft(modelName) {
+  if (!modelName) return;
+  state.proposed.push(`Targeted Edit / ${modelName} / describe change`);
+  state.flags.hasDraftProposal = true;
+  state.route = "design";
+  state.ui.designTab = "proposed";
+  setStatus("info", `Inserted ${modelName} into draft list.`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 function splitBySection() {
   const section = state.ui.sectionFilter;
   if (section === "all") {
@@ -1377,6 +1396,14 @@ function historyScreen() {
 
 function metadataScreen() {
   const models = state.models || [];
+  const filterText = (state.ui.modelFilterText || "").trim().toLowerCase();
+  const filteredModels = filterText
+    ? models.filter((m) => {
+        const name = (m?.name || "").toLowerCase();
+        const type = (m?.type || "").toLowerCase();
+        return name.includes(filterText) || type.includes(filterText);
+      })
+    : models;
   return `
     <div class="screen-grid">
       <section class="card">
@@ -1403,16 +1430,23 @@ function metadataScreen() {
     </section>
 
     <section class="card" style="margin-top:12px;">
-      <h3>Live Models (${models.length})</h3>
+      <h3>Live Models (${filteredModels.length}/${models.length})</h3>
+      <div class="field">
+        <label>Model Filter</label>
+        <input id="model-filter-input" value="${state.ui.modelFilterText || ""}" placeholder="Search by name or type..." />
+      </div>
       <div class="row">
         <button id="refresh-models">Refresh Models</button>
       </div>
       <ul class="list">
         ${
-          models.length
-            ? models
+          filteredModels.length
+            ? filteredModels
                 .slice(0, 40)
-                .map((m) => `<li><strong>${m.name || "(unnamed)"}</strong> ${m.type ? `(${m.type})` : ""}</li>`)
+                .map(
+                  (m) =>
+                    `<li><strong>${m.name || "(unnamed)"}</strong> ${m.type ? `(${m.type})` : ""} <button data-insert-model="${(m.name || "").replace(/\"/g, "&quot;")}">Insert Into Draft</button></li>`
+                )
                 .join("")
             : "<li>No models loaded. Use Refresh/Health check.</li>"
         }
@@ -1596,6 +1630,11 @@ function bindEvents() {
   const refreshModelsBtn = app.querySelector("#refresh-models");
   if (refreshModelsBtn) refreshModelsBtn.addEventListener("click", onRefreshModels);
 
+  const modelFilterInput = app.querySelector("#model-filter-input");
+  if (modelFilterInput) {
+    modelFilterInput.addEventListener("input", () => setModelFilterText(modelFilterInput.value));
+  }
+
   const refreshRecentsBtn = app.querySelector("#refresh-recents");
   if (refreshRecentsBtn) {
     refreshRecentsBtn.addEventListener("click", () => {
@@ -1678,6 +1717,10 @@ function bindEvents() {
 
   app.querySelectorAll("[data-cancel-job]").forEach((btn) => {
     btn.addEventListener("click", () => onCancelJob(btn.dataset.cancelJob));
+  });
+
+  app.querySelectorAll("[data-insert-model]").forEach((btn) => {
+    btn.addEventListener("click", () => insertModelIntoDraft(btn.dataset.insertModel));
   });
 
   const rollbackBtn = app.querySelector("#rollback");
