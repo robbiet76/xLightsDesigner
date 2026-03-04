@@ -296,7 +296,10 @@ function getSectionChoiceRows() {
     // Temporary deterministic fallback for display until all sections carry timing metadata.
     startMs: typeof starts[label] === "number" ? starts[label] : idx * 15000,
     estimated: typeof starts[label] !== "number"
-  }));
+  })).sort((a, b) => {
+    if (a.startMs !== b.startMs) return a.startMs - b.startMs;
+    return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+  });
 }
 
 function getSelectedSections() {
@@ -323,6 +326,13 @@ function setSectionSelections(values) {
   saveCurrentProjectSnapshot();
   persist();
   render();
+}
+
+function reconcileSectionSelectionsToAvailable() {
+  if (hasAllSectionsSelected()) return;
+  const available = new Set(getSectionChoiceList());
+  const kept = getSelectedSections().filter((section) => available.has(section));
+  state.ui.sectionSelections = kept.length ? kept : ["all"];
 }
 
 function getSections() {
@@ -1133,6 +1143,7 @@ async function fetchSectionSuggestions(options = {}) {
   const labels = built.labels;
   state.sectionSuggestions = labels;
   state.sectionStartByLabel = built.startByLabel;
+  reconcileSectionSelectionsToAvailable();
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
 }
 
