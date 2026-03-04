@@ -74,6 +74,7 @@ const defaultState = {
   diagnostics: [],
   jobs: [],
   models: [],
+  timingTracks: [],
   sectionSuggestions: [],
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
@@ -147,6 +148,7 @@ function extractProjectSnapshot() {
     diagnostics: state.diagnostics,
     jobs: state.jobs,
     models: state.models,
+    timingTracks: state.timingTracks,
     sectionSuggestions: state.sectionSuggestions,
     health: state.health
   };
@@ -170,6 +172,7 @@ function applyProjectSnapshot(snapshot) {
   state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
   state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
   state.models = Array.isArray(snapshot.models) ? snapshot.models : state.models;
+  state.timingTracks = Array.isArray(snapshot.timingTracks) ? snapshot.timingTracks : [];
   state.sectionSuggestions = Array.isArray(snapshot.sectionSuggestions)
     ? snapshot.sectionSuggestions
     : [];
@@ -1030,13 +1033,24 @@ function normalizeSectionLabel(label) {
   return (label || "").trim();
 }
 
-async function fetchSectionSuggestions() {
-  const tracksResp = await getTimingTracks(state.endpoint);
-  const tracks = tracksResp?.data?.tracks || [];
+async function fetchSectionSuggestions(options = {}) {
+  const selectedTrack = options?.selectedTrack || "";
+  const refreshTracks = options?.refreshTracks !== false;
+  let tracks = Array.isArray(state.timingTracks) ? state.timingTracks : [];
+  if (refreshTracks || tracks.length === 0) {
+    const tracksResp = await getTimingTracks(state.endpoint);
+    tracks = tracksResp?.data?.tracks || [];
+    state.timingTracks = tracks;
+  }
+  const trackNames = tracks
+    .map((t) => (typeof t === "string" ? t : t?.name || ""))
+    .filter((name) => name.length > 0);
+
   const preferred =
+    selectedTrack ||
     state.ui.sectionTrackName ||
-    tracks.find((t) => /song|structure|section|xd:/i.test(t?.name || ""))?.name ||
-    tracks[0]?.name ||
+    trackNames.find((name) => /song|structure|section|xd:/i.test(name)) ||
+    trackNames[0] ||
     "";
 
   if (!preferred) {
@@ -1405,7 +1419,17 @@ function designScreen() {
             <button id="use-section-filter">Use As Filter</button>
           </div>
           <div class="row" style="margin-top:8px;">
-            <input id="section-track-input" value="${state.ui.sectionTrackName || ""}" placeholder="Timing track for section labels (optional)" />
+            <select id="section-track-select">
+              <option value="">Auto-select timing track...</option>
+              ${(state.timingTracks || [])
+                .map((t) => (typeof t === "string" ? t : t?.name || ""))
+                .filter((name) => name.length > 0)
+                .map(
+                  (name) =>
+                    `<option value="${name.replace(/\"/g, "&quot;")}" ${state.ui.sectionTrackName === name ? "selected" : ""}>${name}</option>`
+                )
+                .join("")}
+            </select>
             <button id="load-sections">Load Sections</button>
           </div>
         </div>
@@ -1860,12 +1884,13 @@ function bindEvents() {
   const loadSectionsBtn = app.querySelector("#load-sections");
   if (loadSectionsBtn) loadSectionsBtn.addEventListener("click", onLoadSectionSuggestions);
 
-  const sectionTrackInput = app.querySelector("#section-track-input");
-  if (sectionTrackInput) {
-    sectionTrackInput.addEventListener("change", () => {
-      state.ui.sectionTrackName = sectionTrackInput.value.trim();
+  const sectionTrackSelect = app.querySelector("#section-track-select");
+  if (sectionTrackSelect) {
+    sectionTrackSelect.addEventListener("change", async () => {
+      state.ui.sectionTrackName = sectionTrackSelect.value.trim();
       saveCurrentProjectSnapshot();
       persist();
+      await onLoadSectionSuggestions();
     });
   }
 
