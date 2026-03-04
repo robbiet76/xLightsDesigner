@@ -1,6 +1,8 @@
 import {
+  cancelJob,
   executePlan,
   getDefaultEndpoint,
+  getJob,
   getOpenSequence,
   getRevision,
   openSequence,
@@ -49,9 +51,11 @@ const defaultState = {
     sectionFilter: "all",
     designTab: "chat",
     diagnosticsOpen: false,
+    jobsOpen: false,
     diagnosticsFilter: "all"
   },
   diagnostics: [],
+  jobs: [],
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
     { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
@@ -335,6 +339,17 @@ async function onApply() {
     }
     const result = await executePlan(state.endpoint, plan, true);
     const executed = result?.data?.executedCount ?? 0;
+    const jobId = result?.data?.jobId || null;
+    if (jobId) {
+      upsertJob({
+        id: jobId,
+        source: "system.executePlan",
+        status: "running",
+        progress: 0,
+        updatedAt: new Date().toISOString()
+      });
+      setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
+    }
     try {
       const postRev = await getRevision(state.endpoint);
       state.revision = postRev?.data?.revision ?? state.revision;
@@ -477,6 +492,60 @@ async function pollRevision() {
   }
 }
 
+async function pollJobs() {
+  if (!state.flags.xlightsConnected) return;
+  const active = (state.jobs || []).filter((j) =>
+    !["done", "completed", "failed", "canceled", "cancelled"].includes((j.status || "").toLowerCase())
+  );
+  if (!active.length) return;
+
+  let changed = false;
+  for (const job of active) {
+    try {
+      const body = await getJob(state.endpoint, job.id);
+      const data = body?.data || {};
+      const next = {
+        id: job.id,
+        source: job.source || "unknown",
+        status: data.status || job.status || "running",
+        progress: Number.isFinite(data.progress) ? data.progress : job.progress || 0,
+        message: data.message || job.message || "",
+        updatedAt: new Date().toISOString()
+      };
+      upsertJob(next);
+      changed = true;
+      const status = (next.status || "").toLowerCase();
+      if (["failed", "canceled", "cancelled"].includes(status)) {
+        setStatusWithDiagnostics("warning", `Job ${job.id} ${next.status}.`, next.message || "");
+      } else if (["done", "completed"].includes(status)) {
+        setStatus("info", `Job ${job.id} completed.`);
+      }
+    } catch (err) {
+      setStatusWithDiagnostics("warning", `jobs.get failed for ${job.id}: ${err.message}`);
+    }
+  }
+  if (changed) {
+    persist();
+    render();
+  }
+}
+
+async function onCancelJob(jobId) {
+  try {
+    await cancelJob(state.endpoint, jobId);
+    upsertJob({
+      id: jobId,
+      status: "canceled",
+      updatedAt: new Date().toISOString()
+    });
+    setStatus("info", `Cancel requested for job ${jobId}.`);
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Cancel failed for ${jobId}: ${err.message}`);
+  }
+  persist();
+  render();
+}
+
 function onRegenerate() {
   onGenerate();
 }
@@ -495,6 +564,12 @@ function setDiagnosticsFilter(filter) {
   render();
 }
 
+function toggleJobs(forceOpen = null) {
+  state.ui.jobsOpen = forceOpen === null ? !state.ui.jobsOpen : Boolean(forceOpen);
+  persist();
+  render();
+}
+
 function clearDiagnostics() {
   state.diagnostics = [];
   setStatus("info", "Diagnostics cleared.");
@@ -507,6 +582,24 @@ function getDiagnosticsCounts() {
   const warning = rows.filter((d) => d.level === "warning").length;
   const actionRequired = rows.filter((d) => d.level === "action-required").length;
   return { total: rows.length, warning, actionRequired };
+}
+
+function getJobCounts() {
+  const rows = state.jobs || [];
+  const running = rows.filter((j) => !["done", "completed", "failed", "canceled", "cancelled"].includes((j.status || "").toLowerCase())).length;
+  return { total: rows.length, running };
+}
+
+function upsertJob(job) {
+  if (!job?.id) return;
+  const rows = state.jobs || [];
+  const idx = rows.findIndex((j) => j.id === job.id);
+  if (idx === -1) {
+    state.jobs = [job, ...rows].slice(0, 50);
+  } else {
+    rows[idx] = { ...rows[idx], ...job };
+    state.jobs = [...rows];
+  }
 }
 
 function onCancelDraft() {
@@ -1002,6 +1095,43 @@ function diagnosticsPanel() {
   `;
 }
 
+function jobsPanel() {
+  if (!state.ui.jobsOpen) return "";
+  const rows = state.jobs || [];
+  return `
+    <section class="card diagnostics-panel">
+      <div class="row" style="justify-content:space-between;">
+        <h3>Jobs</h3>
+        <div class="row">
+          <button id="close-jobs">Close</button>
+        </div>
+      </div>
+      ${
+        rows.length
+          ? `
+        <ul class="list">
+          ${rows
+            .map(
+              (j) => `
+            <li>
+              <strong>${j.id}</strong> [${j.status || "unknown"}] ${j.source || ""}
+              ${j.progress !== undefined ? ` - ${j.progress}%` : ""}
+              ${j.message ? `<div class="banner">${j.message}</div>` : ""}
+              <div class="row" style="margin-top:4px;">
+                <button data-cancel-job="${j.id}">Cancel</button>
+              </div>
+            </li>
+          `
+            )
+            .join("")}
+        </ul>
+      `
+          : "<p class=\"banner\">No jobs tracked yet.</p>"
+      }
+    </section>
+  `;
+}
+
 function bindEvents() {
   app.querySelectorAll("[data-route]").forEach((btn) => {
     btn.addEventListener("click", () => setRoute(btn.dataset.route));
@@ -1013,11 +1143,17 @@ function bindEvents() {
   const openDiagnosticsBtn = app.querySelector("#open-diagnostics");
   if (openDiagnosticsBtn) openDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(true));
 
+  const openJobsBtn = app.querySelector("#open-jobs");
+  if (openJobsBtn) openJobsBtn.addEventListener("click", () => toggleJobs(true));
+
   const statusViewDetailsBtn = app.querySelector("#status-view-details");
   if (statusViewDetailsBtn) statusViewDetailsBtn.addEventListener("click", () => toggleDiagnostics(true));
 
   const closeDiagnosticsBtn = app.querySelector("#close-diagnostics");
   if (closeDiagnosticsBtn) closeDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(false));
+
+  const closeJobsBtn = app.querySelector("#close-jobs");
+  if (closeJobsBtn) closeJobsBtn.addEventListener("click", () => toggleJobs(false));
 
   const clearDiagnosticsBtn = app.querySelector("#clear-diagnostics");
   if (clearDiagnosticsBtn) clearDiagnosticsBtn.addEventListener("click", clearDiagnostics);
@@ -1110,6 +1246,10 @@ function bindEvents() {
     btn.addEventListener("click", () => onUseRecent(btn.dataset.recent));
   });
 
+  app.querySelectorAll("[data-cancel-job]").forEach((btn) => {
+    btn.addEventListener("click", () => onCancelJob(btn.dataset.cancelJob));
+  });
+
   const rollbackBtn = app.querySelector("#rollback");
   if (rollbackBtn) {
     rollbackBtn.addEventListener("click", onRollbackToVersion);
@@ -1124,6 +1264,7 @@ function bindEvents() {
 
 function render() {
   const diagCounts = getDiagnosticsCounts();
+  const jobCounts = getJobCounts();
   const staleActions = state.flags.proposalStale
     ? `
       <button id="status-refresh">Rebase/Refresh</button>
@@ -1141,6 +1282,7 @@ function render() {
         <button id="refresh-btn">Refresh</button>
         <button>Review in xLights</button>
         <button id="open-diagnostics">Diagnostics (${diagCounts.total})</button>
+        <button id="open-jobs">Jobs (${jobCounts.running}/${jobCounts.total})</button>
       </header>
 
       <div class="status-bar">
@@ -1163,12 +1305,13 @@ function render() {
           ${screenContent()}
           ${state.route === "design" ? detailsDrawer() : ""}
           ${diagnosticsPanel()}
+          ${jobsPanel()}
         </main>
       </div>
 
       <footer class="footer">
         <span>Last sync: ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-        <span>Background jobs: 0</span>
+        <span>Background jobs: ${jobCounts.running} running / ${jobCounts.total} tracked</span>
         <span>Diagnostics: ${diagCounts.warning} warning, ${diagCounts.actionRequired} action-required</span>
       </footer>
     </div>
@@ -1179,3 +1322,4 @@ function render() {
 
 render();
 setInterval(pollRevision, 8000);
+setInterval(pollJobs, 3000);

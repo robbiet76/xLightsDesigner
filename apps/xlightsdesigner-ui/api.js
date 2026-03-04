@@ -73,3 +73,15 @@ export async function executePlan(endpoint, commands, atomic = true) {
     commands
   });
 }
+
+export async function getJob(endpoint, jobId) {
+  return postCommand(endpoint, "jobs.get", {
+    jobId
+  });
+}
+
+export async function cancelJob(endpoint, jobId) {
+  return postCommand(endpoint, "jobs.cancel", {
+    jobId
+  });
+}

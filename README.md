@@ -55,3 +55,4 @@ Live endpoint:
 - Diagnostics panel includes filters (`All`, `Warnings`, `Action Required`) and live counts in header/footer.
 - Project settings now include apply safety controls: confirmation mode (`always`, `large-only`, `never`) and configurable large-change threshold.
 - Project/show-scoped workspace snapshots are persisted (sequence path, recents, draft context, safety settings) and can be reloaded via `Load Project Snapshot`.
+- Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.
