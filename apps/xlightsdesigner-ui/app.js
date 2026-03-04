@@ -10,6 +10,7 @@ import {
 
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
+const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
 
 const defaultState = {
   route: "project",
@@ -78,8 +79,78 @@ function loadState() {
 
 const state = loadState();
 
+function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
+  return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
+}
+
+function loadProjectsStore() {
+  try {
+    const raw = localStorage.getItem(PROJECTS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistProjectsStore(store) {
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(store));
+}
+
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function extractProjectSnapshot() {
+  return {
+    sequencePathInput: state.sequencePathInput,
+    recentSequences: state.recentSequences,
+    activeSequence: state.activeSequence,
+    revision: state.revision,
+    draftBaseRevision: state.draftBaseRevision,
+    proposed: state.proposed,
+    flags: {
+      planOnlyMode: state.flags.planOnlyMode
+    },
+    safety: state.safety,
+    ui: {
+      sectionFilter: state.ui.sectionFilter,
+      designTab: state.ui.designTab
+    }
+  };
+}
+
+function applyProjectSnapshot(snapshot) {
+  if (!snapshot) return;
+  state.sequencePathInput = snapshot.sequencePathInput || state.sequencePathInput;
+  state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
+  state.activeSequence = snapshot.activeSequence || state.activeSequence;
+  state.revision = snapshot.revision || "unknown";
+  state.draftBaseRevision = snapshot.draftBaseRevision || "unknown";
+  state.proposed = Array.isArray(snapshot.proposed) ? snapshot.proposed : state.proposed;
+  state.flags.planOnlyMode = Boolean(snapshot?.flags?.planOnlyMode);
+  state.safety = { ...state.safety, ...(snapshot.safety || {}) };
+  state.ui.sectionFilter = snapshot?.ui?.sectionFilter || "all";
+  state.ui.designTab = snapshot?.ui?.designTab || "chat";
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+}
+
+function saveCurrentProjectSnapshot() {
+  const key = getProjectKey();
+  if (!key || key === "::") return;
+  const store = loadProjectsStore();
+  store[key] = extractProjectSnapshot();
+  persistProjectsStore(store);
+}
+
+function tryLoadProjectSnapshot(projectName, showFolder) {
+  const key = getProjectKey(projectName, showFolder);
+  const store = loadProjectsStore();
+  const snapshot = store[key];
+  if (!snapshot) return false;
+  applyProjectSnapshot(snapshot);
+  return true;
 }
 
 const routes = ["project", "design", "history", "metadata"];
@@ -281,6 +352,7 @@ async function onApply() {
     setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
   } finally {
     state.flags.applyInProgress = false;
+    saveCurrentProjectSnapshot();
     persist();
     render();
   }
@@ -302,6 +374,7 @@ function onGenerate() {
     "Chorus 2 / XD:Energy / taper transition",
     "Verse 1 / MegaTree / preserve current look"
   ];
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -314,6 +387,7 @@ function onTogglePlanOnly() {
       ? "Plan-only mode enabled. Apply is disabled."
       : "Plan-only mode disabled."
   );
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -442,6 +516,7 @@ function onCancelDraft() {
   state.ui.detailsOpen = false;
   state.ui.sectionFilter = "all";
   setStatus("info", "Draft canceled.");
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -469,6 +544,7 @@ function onReapplyVariant() {
   state.ui.detailsOpen = true;
   state.ui.sectionFilter = "all";
   setStatus("info", `Loaded ${selected.id} as a new draft variant.`);
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -484,6 +560,7 @@ function onRollbackToVersion() {
   bumpVersion(`Rollback to ${selected.id}`, selected.effects || state.proposed.length * 11);
   setStatus("info", `Rollback restored from ${selected.id}. Review and apply when ready.`);
   state.route = "design";
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -525,11 +602,21 @@ function splitBySection() {
   }
   state.proposed = state.proposed.filter((item) => getSectionName(item) === section);
   setStatus("info", `Draft narrowed to section: ${section}`);
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
 
 function onSaveProjectSettings() {
+  const oldProjectName = state.projectName;
+  const oldShowFolder = state.showFolder;
+  const oldKey = getProjectKey(oldProjectName, oldShowFolder);
+  if (oldKey && oldKey !== "::") {
+    const store = loadProjectsStore();
+    store[oldKey] = extractProjectSnapshot();
+    persistProjectsStore(store);
+  }
+
   const projectInput = app.querySelector("#project-input");
   const showFolderInput = app.querySelector("#showfolder-input");
   const endpointInput = app.querySelector("#endpoint-input");
@@ -545,7 +632,13 @@ function onSaveProjectSettings() {
     state.safety.largeChangeThreshold = Number.isFinite(parsed) ? parsed : state.safety.largeChangeThreshold;
   }
 
+  const loaded = tryLoadProjectSnapshot(state.projectName, state.showFolder);
+  if (!loaded) {
+    saveCurrentProjectSnapshot();
+  }
+
   setStatus("info", "Project settings saved.");
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -588,6 +681,7 @@ async function onOpenSequence() {
     setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
     render();
   } finally {
+    saveCurrentProjectSnapshot();
     persist();
     render();
   }
@@ -595,6 +689,18 @@ async function onOpenSequence() {
 
 function onUseRecent(path) {
   state.sequencePathInput = path;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function onLoadProjectSnapshot() {
+  const loaded = tryLoadProjectSnapshot(state.projectName, state.showFolder);
+  if (loaded) {
+    setStatus("info", "Project snapshot loaded.");
+  } else {
+    setStatus("warning", "No saved snapshot for this project/show.");
+  }
   persist();
   render();
 }
@@ -662,6 +768,7 @@ function projectScreen() {
         <div class="kv"><div class="k">Backups</div><div>Before apply, keep 20</div></div>
         <div class="row">
           <button id="save-project">Save Settings</button>
+          <button id="load-project">Load Project Snapshot</button>
           <button id="test-connection">Test Connection</button>
         </div>
       </section>
@@ -951,6 +1058,9 @@ function bindEvents() {
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
+
+  const loadProjectBtn = app.querySelector("#load-project");
+  if (loadProjectBtn) loadProjectBtn.addEventListener("click", onLoadProjectSnapshot);
 
   const openSequenceBtn = app.querySelector("#open-sequence");
   if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
