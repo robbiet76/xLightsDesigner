@@ -10,6 +10,10 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
 - `designer-interaction-contract.md`: user-to-agent intent, proposal/review, and iterative change-control contract for Designer UI workflows.
 - `standalone-app-requirements.md`: consolidated standalone xLightsDesigner requirements with explicit gap register and phased closure plan.
+- `wireframes-v1.md`: low-fidelity standalone UX wireframes (desktop + compact behavior) for core user flows.
+- `wireframes-v3.md`: updated wireframes with project-level settings placement, live proposed-change list in Design, and global status bar behavior.
+- `wireframes-v4.md`: implementation-focused control/state/validation/confirmation contract for core screens and actions.
+- `wireframes-v4-implementation-checklist.md`: screen-by-screen implementation and acceptance checklist derived from wireframes v4.
 - `learning-and-freshness-loop.md`: preference learning + novelty/repetition-control requirements for long-term agent improvement.
 - `model-context-and-semantic-metadata.md`: model/group spatial awareness and extensible semantic metadata contract for agent planning.
 - `api-surface-contract.md`: required endpoint/capability matrix for full sequencer control.
