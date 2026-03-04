@@ -450,6 +450,16 @@ async function onRefresh() {
   render();
 }
 
+async function onRefreshAndRegenerate() {
+  await onRefresh();
+  if (state.flags.proposalStale) {
+    onGenerate();
+    setStatus("info", "Draft regenerated on latest sequence revision.");
+    persist();
+    render();
+  }
+}
+
 async function onTestConnection() {
   const endpointInput = app.querySelector("#endpoint-input");
   if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
@@ -936,6 +946,22 @@ function designScreen() {
   const disabledReason = applyDisabledReason();
   const list = filteredProposed();
   return `
+    ${
+      state.flags.proposalStale
+        ? `
+      <section class="card stale-card">
+        <h3>Draft Is Stale</h3>
+        <p class="banner warning">Sequence changed since this draft was created. Refresh/rebase before apply.</p>
+        <div class="row">
+          <button id="stale-refresh-regenerate">Refresh + Regenerate</button>
+          <button id="stale-refresh-only">Refresh Only</button>
+          <button id="stale-cancel-draft">Cancel Draft</button>
+        </div>
+      </section>
+    `
+        : ""
+    }
+
     <div class="design-tabs">
       <button data-design-tab="chat" class="${state.ui.designTab === "chat" ? "active-chip" : ""}">Chat</button>
       <button data-design-tab="intent" class="${state.ui.designTab === "intent" ? "active-chip" : ""}">Intent</button>
@@ -1292,6 +1318,15 @@ function bindEvents() {
 
   const staleCancelBtn = app.querySelector("#status-cancel");
   if (staleCancelBtn) staleCancelBtn.addEventListener("click", onCancelDraft);
+
+  const staleRefreshRegenerateBtn = app.querySelector("#stale-refresh-regenerate");
+  if (staleRefreshRegenerateBtn) staleRefreshRegenerateBtn.addEventListener("click", onRefreshAndRegenerate);
+
+  const staleRefreshOnlyBtn = app.querySelector("#stale-refresh-only");
+  if (staleRefreshOnlyBtn) staleRefreshOnlyBtn.addEventListener("click", onRefresh);
+
+  const staleCancelDraftBtn = app.querySelector("#stale-cancel-draft");
+  if (staleCancelDraftBtn) staleCancelDraftBtn.addEventListener("click", onCancelDraft);
 
   app.querySelectorAll("[data-section]").forEach((btn) => {
     btn.addEventListener("click", () => setSectionFilter(btn.dataset.section));

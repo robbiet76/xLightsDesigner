@@ -277,6 +277,12 @@ button:disabled {
   color: var(--warn);
 }
 
+.stale-card {
+  margin-bottom: 12px;
+  border: 1px solid #f2c189;
+  background: #fff9f1;
+}
+
 .details-drawer {
   margin-top: 12px;
   border: 1px solid #b9d4d0;
