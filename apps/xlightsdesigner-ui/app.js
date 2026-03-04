@@ -124,7 +124,9 @@ function extractProjectSnapshot() {
     ui: {
       sectionFilter: state.ui.sectionFilter,
       designTab: state.ui.designTab
-    }
+    },
+    diagnostics: state.diagnostics,
+    jobs: state.jobs
   };
 }
 
@@ -141,6 +143,8 @@ function applyProjectSnapshot(snapshot) {
   state.safety = { ...state.safety, ...(snapshot.safety || {}) };
   state.ui.sectionFilter = snapshot?.ui?.sectionFilter || "all";
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
+  state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
+  state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
   state.flags.hasDraftProposal = state.proposed.length > 0;
 }
 
@@ -882,6 +886,42 @@ function onLoadProjectSnapshot() {
   render();
 }
 
+function onResetProjectWorkspace() {
+  const key = getProjectKey();
+  if (!key || key === "::") {
+    setStatus("warning", "Set project name and show folder before reset.");
+    return render();
+  }
+
+  if (!window.confirm("Reset current project workspace to defaults?")) {
+    setStatus("info", "Workspace reset canceled.");
+    return render();
+  }
+
+  state.sequencePathInput = defaultState.sequencePathInput;
+  state.savePathInput = defaultState.savePathInput;
+  state.recentSequences = [];
+  state.revision = "unknown";
+  state.draftBaseRevision = "unknown";
+  state.proposed = [...defaultState.proposed];
+  state.flags.planOnlyMode = false;
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  state.flags.proposalStale = false;
+  state.ui.sectionFilter = "all";
+  state.ui.designTab = "chat";
+  state.ui.detailsOpen = false;
+  state.diagnostics = [];
+  state.jobs = [];
+
+  const store = loadProjectsStore();
+  store[key] = extractProjectSnapshot();
+  persistProjectsStore(store);
+
+  setStatus("info", "Project workspace reset.");
+  persist();
+  render();
+}
+
 function navButton(id, label) {
   return `<button class="${state.route === id ? "active" : ""}" data-route="${id}">${label}</button>`;
 }
@@ -952,6 +992,7 @@ function projectScreen() {
         <div class="row">
           <button id="save-project">Save Settings</button>
           <button id="load-project">Load Project Snapshot</button>
+          <button id="reset-project">Reset Project Workspace</button>
           <button id="test-connection">Test Connection</button>
         </div>
       </section>
@@ -1329,6 +1370,9 @@ function bindEvents() {
 
   const loadProjectBtn = app.querySelector("#load-project");
   if (loadProjectBtn) loadProjectBtn.addEventListener("click", onLoadProjectSnapshot);
+
+  const resetProjectBtn = app.querySelector("#reset-project");
+  if (resetProjectBtn) resetProjectBtn.addEventListener("click", onResetProjectWorkspace);
 
   const openSequenceBtn = app.querySelector("#open-sequence");
   if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
