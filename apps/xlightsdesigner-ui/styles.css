@@ -1,0 +1,267 @@
+:root {
+  --bg: #f6f8fa;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --panel: #ffffff;
+  --line: #d6dde6;
+  --brand: #0f766e;
+  --brand-2: #164e63;
+  --warn: #b45309;
+  --danger: #b91c1c;
+  --ok: #166534;
+  --shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 20% 0%, #d5efe9, transparent 42%),
+    radial-gradient(circle at 85% 12%, #dcebf5, transparent 48%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: #9da9b8;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.app-shell {
+  max-width: 1400px;
+  margin: 18px auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto auto;
+  gap: 10px;
+  align-items: center;
+  background: linear-gradient(110deg, var(--brand-2), var(--brand));
+  color: #eff9f8;
+  padding: 12px 14px;
+}
+
+.header-badge {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.header button {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  color: #f7fffe;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 14px;
+  background: #f8fafc;
+}
+
+.status-tag {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid;
+}
+
+.status-tag.info {
+  color: var(--brand-2);
+  border-color: #8ab5cb;
+}
+
+.status-tag.warning {
+  color: var(--warn);
+  border-color: #f2c189;
+}
+
+.status-tag.action-required {
+  color: var(--danger);
+  border-color: #eca5a5;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 70vh;
+}
+
+.nav {
+  border-right: 1px solid var(--line);
+  background: #f9fbfd;
+  padding: 10px;
+}
+
+.nav button {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.nav button.active {
+  border-color: #5ea99f;
+  background: #e9f7f4;
+  color: #134e4a;
+  font-weight: 700;
+}
+
+.content {
+  padding: 14px;
+}
+
+.screen-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.kv .k {
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.field {
+  margin-bottom: 10px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.list li {
+  margin-bottom: 6px;
+}
+
+.composer {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+}
+
+.banner {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding: 10px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  background: #f8fafc;
+}
+
+.impact {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.warning {
+  color: var(--warn);
+}
+
+@media (max-width: 950px) {
+  .main-grid {
+    grid-template-columns: 78px 1fr;
+  }
+
+  .nav button {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .screen-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .composer {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -29,3 +29,17 @@ Project assets:
 This repo is intentionally organized as:
 - one top-level initiative (agent sequencer),
 - multiple scoped projects/phases underneath.
+
+## Initial UI Prototype
+`apps/xlightsdesigner-ui/` contains the initial standalone UI scaffold for xLightsDesigner development.
+
+Run locally:
+1. `cd apps/xlightsdesigner-ui`
+2. `./run-dev.sh` (or `python3 -m http.server 8080`)
+3. Open `http://localhost:8080`
+
+Live endpoint:
+- Set xLights endpoint on the `Project` screen (default `http://127.0.0.1:49914/xlDoAutomation`).
+- Click `Test Connection` to call `system.getCapabilities`.
+- `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
+- `Apply to xLights` executes an atomic `system.executePlan` that writes a Designer timing track (`XD:ProposedPlan`) from the current proposed-change list.
