@@ -46,3 +46,4 @@ Live endpoint:
 - Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.
 - Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
 - When stale, the status bar exposes direct recovery actions: `Rebase/Refresh`, `Regenerate`, and `Cancel Draft`.
+- History supports `Compare` against current head, `Reapply as Variant` into Design, and practical rollback draft restore flow.

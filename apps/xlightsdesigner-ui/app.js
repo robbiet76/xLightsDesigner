@@ -44,7 +44,8 @@ const defaultState = {
     { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
     { id: "v16", summary: "Initial pass", effects: 120, time: "10:22" }
   ],
-  selectedVersion: "v18"
+  selectedVersion: "v18",
+  compareVersion: null
 };
 
 function loadState() {
@@ -119,14 +120,30 @@ function filteredProposed() {
 
 function bumpVersion(summary = "Applied draft proposal", effects = 28) {
   const nextId = `v${Number(state.versions[0].id.slice(1)) + 1}`;
+  const proposalSnapshot = [...state.proposed];
   state.versions.unshift({
     id: nextId,
     summary,
     effects,
-    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    proposal: proposalSnapshot
   });
   state.selectedVersion = nextId;
 }
+
+function versionById(id) {
+  return state.versions.find((v) => v.id === id) || null;
+}
+
+function ensureVersionSnapshots() {
+  state.versions = state.versions.map((v, idx) => {
+    if (Array.isArray(v.proposal)) return v;
+    const fallback = idx === 0 ? [...state.proposed] : [`${v.summary} / snapshot placeholder`];
+    return { ...v, proposal: fallback };
+  });
+}
+
+ensureVersionSnapshots();
 
 function buildDesignerPlanCommands() {
   const trackName = "XD:ProposedPlan";
@@ -326,6 +343,48 @@ function onCancelDraft() {
   render();
 }
 
+function onCompareVersion() {
+  const currentHead = state.versions[0]?.id || null;
+  if (!state.selectedVersion || state.selectedVersion === currentHead) {
+    state.compareVersion = null;
+    setStatus("info", "Select a non-head version to compare.");
+  } else {
+    state.compareVersion = state.selectedVersion;
+    setStatus("info", `Comparing ${state.compareVersion} to ${currentHead}.`);
+  }
+  persist();
+  render();
+}
+
+function onReapplyVariant() {
+  const selected = versionById(state.selectedVersion);
+  if (!selected) return;
+  state.proposed = [...(selected.proposal || [])];
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  state.flags.proposalStale = false;
+  state.route = "design";
+  state.ui.detailsOpen = true;
+  state.ui.sectionFilter = "all";
+  setStatus("info", `Loaded ${selected.id} as a new draft variant.`);
+  persist();
+  render();
+}
+
+function onRollbackToVersion() {
+  const selected = versionById(state.selectedVersion);
+  if (!selected) return;
+  state.proposed = [...(selected.proposal || [])];
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  state.flags.proposalStale = false;
+  state.draftBaseRevision = state.revision;
+  state.ui.detailsOpen = false;
+  bumpVersion(`Rollback to ${selected.id}`, selected.effects || state.proposed.length * 11);
+  setStatus("info", `Rollback restored from ${selected.id}. Review and apply when ready.`);
+  state.route = "design";
+  persist();
+  render();
+}
+
 function openDetails() {
   if (!state.flags.hasDraftProposal) {
     setStatus("warning", "Generate a proposal first.");
@@ -501,7 +560,14 @@ function detailsDrawer() {
 }
 
 function historyScreen() {
+  ensureVersionSnapshots();
   const selected = state.versions.find((v) => v.id === state.selectedVersion) || state.versions[0];
+  const currentHead = state.versions[0] || null;
+  const compare = state.compareVersion ? versionById(state.compareVersion) : null;
+  const selectedProposal = selected?.proposal || [];
+  const compareProposal = compare?.proposal || [];
+  const added = compare ? compareProposal.filter((p) => !currentHead.proposal.includes(p)) : [];
+  const removed = compare ? currentHead.proposal.filter((p) => !compareProposal.includes(p)) : [];
   return `
     <div class="screen-grid">
       <section class="card">
@@ -520,11 +586,30 @@ function historyScreen() {
         <p class="banner">Scope: chorus-focused | Models: CandyCanes, Roofline | Labels: XD:Mood</p>
         <div class="row">
           <button id="rollback">Rollback to This Version</button>
-          <button>Compare</button>
-          <button>Reapply as Variant</button>
+          <button id="compare">Compare</button>
+          <button id="variant">Reapply as Variant</button>
         </div>
       </section>
     </div>
+    ${
+      compare
+        ? `
+      <section class="card" style="margin-top:12px;">
+        <h3>Compare ${compare.id} vs ${currentHead.id}</h3>
+        <div class="screen-grid">
+          <div>
+            <h4>Added In ${compare.id}</h4>
+            <ul class="list">${added.length ? added.map((p) => `<li>${p}</li>`).join("") : "<li>None</li>"}</ul>
+          </div>
+          <div>
+            <h4>Missing From ${compare.id}</h4>
+            <ul class="list">${removed.length ? removed.map((p) => `<li>${p}</li>`).join("") : "<li>None</li>"}</ul>
+          </div>
+        </div>
+      </section>
+    `
+        : ""
+    }
   `;
 }
 
@@ -624,11 +709,14 @@ function bindEvents() {
 
   const rollbackBtn = app.querySelector("#rollback");
   if (rollbackBtn) {
-    rollbackBtn.addEventListener("click", () => {
-      setStatus("info", `Rollback queued to ${state.selectedVersion}.`);
-      render();
-    });
+    rollbackBtn.addEventListener("click", onRollbackToVersion);
   }
+
+  const compareBtn = app.querySelector("#compare");
+  if (compareBtn) compareBtn.addEventListener("click", onCompareVersion);
+
+  const variantBtn = app.querySelector("#variant");
+  if (variantBtn) variantBtn.addEventListener("click", onReapplyVariant);
 }
 
 function render() {
