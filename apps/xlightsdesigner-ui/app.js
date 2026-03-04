@@ -3,6 +3,8 @@ import {
   getDefaultEndpoint,
   getOpenSequence,
   getRevision,
+  openSequence,
+  validateCommands,
   pingCapabilities
 } from "./api.js";
 
@@ -15,6 +17,8 @@ const defaultState = {
   projectName: "Holiday 2026",
   showFolder: "/Users/robterry/Desktop/Show",
   activeSequence: "CarolOfTheBells.xsq",
+  sequencePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
+  recentSequences: [],
   revision: "unknown",
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
@@ -195,6 +199,13 @@ async function onApply() {
     const rev = await getRevision(state.endpoint);
     state.revision = rev?.data?.revision ?? state.revision;
     const plan = buildDesignerPlanCommands();
+    const validation = await validateCommands(
+      state.endpoint,
+      plan.map((step) => ({ cmd: step.cmd, params: step.params }))
+    );
+    if (validation?.data?.valid === false) {
+      throw new Error("Plan validation failed. Review proposal details and retry.");
+    }
     const result = await executePlan(state.endpoint, plan, true);
     const executed = result?.data?.executedCount ?? 0;
     try {
@@ -442,6 +453,55 @@ function onSaveProjectSettings() {
   render();
 }
 
+function addRecentSequence(path) {
+  const next = [path, ...state.recentSequences.filter((p) => p !== path)];
+  state.recentSequences = next.slice(0, 8);
+}
+
+function syncSequencePathInput() {
+  const seqPathInput = app.querySelector("#sequence-path-input");
+  if (seqPathInput) {
+    state.sequencePathInput = seqPathInput.value.trim() || state.sequencePathInput;
+  }
+}
+
+async function onOpenSequence() {
+  syncSequencePathInput();
+  if (!state.flags.xlightsConnected) {
+    setStatus("warning", "Connect to xLights before opening a sequence.");
+    return render();
+  }
+  if (!state.sequencePathInput) {
+    setStatus("warning", "Provide a sequence path.");
+    return render();
+  }
+
+  setStatus("info", "Opening sequence...");
+  render();
+  try {
+    const body = await openSequence(state.endpoint, state.sequencePathInput, true, false);
+    const seq = body?.data || {};
+    const name = seq.name || state.sequencePathInput.split("/").pop() || state.activeSequence;
+    state.activeSequence = name;
+    state.flags.activeSequenceLoaded = true;
+    addRecentSequence(state.sequencePathInput);
+    await onRefresh();
+    setStatus("info", `Opened sequence: ${name}`);
+  } catch (err) {
+    setStatus("action-required", `Open failed: ${err.message}`);
+    render();
+  } finally {
+    persist();
+    render();
+  }
+}
+
+function onUseRecent(path) {
+  state.sequencePathInput = path;
+  persist();
+  render();
+}
+
 function navButton(id, label) {
   return `<button class="${state.route === id ? "active" : ""}" data-route="${id}">${label}</button>`;
 }
@@ -459,13 +519,29 @@ function projectScreen() {
 
       <section class="card">
         <h3>Sequence Workspace</h3>
+        <div class="field">
+          <label>Sequence Path</label>
+          <input id="sequence-path-input" value="${state.sequencePathInput}" />
+        </div>
         <div class="row">
-          <button>Open Sequence</button>
-          <button>Recent</button>
+          <button id="open-sequence">Open Sequence</button>
+          <button id="refresh-recents">Refresh Recents</button>
           <button>New Session</button>
         </div>
         <p class="banner">Active: ${state.activeSequence}</p>
         <p class="banner">Sidecar: ${state.activeSequence.replace(/\.xsq$/, ".xdmeta")}</p>
+        <div class="field">
+          <label>Recent Sequences</label>
+          <ul class="list">
+            ${
+              state.recentSequences.length
+                ? state.recentSequences
+                    .map((p) => `<li><button data-recent="${p}">Use</button> ${p}</li>`)
+                    .join("")
+                : "<li>No recent entries yet.</li>"
+            }
+          </ul>
+        </div>
       </section>
 
       <section class="card">
@@ -710,6 +786,25 @@ function bindEvents() {
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
 
+  const openSequenceBtn = app.querySelector("#open-sequence");
+  if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
+
+  const refreshRecentsBtn = app.querySelector("#refresh-recents");
+  if (refreshRecentsBtn) {
+    refreshRecentsBtn.addEventListener("click", () => {
+      setStatus("info", "Recent sequence list refreshed.");
+      render();
+    });
+  }
+
+  const seqPathInput = app.querySelector("#sequence-path-input");
+  if (seqPathInput) {
+    seqPathInput.addEventListener("change", () => {
+      state.sequencePathInput = seqPathInput.value.trim() || state.sequencePathInput;
+      persist();
+    });
+  }
+
   const staleRefreshBtn = app.querySelector("#status-refresh");
   if (staleRefreshBtn) staleRefreshBtn.addEventListener("click", onRefresh);
 
@@ -733,6 +828,10 @@ function bindEvents() {
       persist();
       render();
     });
+  });
+
+  app.querySelectorAll("[data-recent]").forEach((btn) => {
+    btn.addEventListener("click", () => onUseRecent(btn.dataset.recent));
   });
 
   const rollbackBtn = app.querySelector("#rollback");

@@ -53,6 +53,20 @@ export async function getRevision(endpoint) {
   return postCommand(endpoint, "sequence.getRevision", {});
 }
 
+export async function openSequence(endpoint, file, force = true, promptIssues = false) {
+  return postCommand(endpoint, "sequence.open", {
+    file,
+    force,
+    promptIssues
+  });
+}
+
+export async function validateCommands(endpoint, commands) {
+  return postCommand(endpoint, "system.validateCommands", {
+    commands
+  });
+}
+
 export async function executePlan(endpoint, commands, atomic = true) {
   return postCommand(endpoint, "system.executePlan", {
     atomic,

@@ -42,6 +42,8 @@ Live endpoint:
 - Set xLights endpoint on the `Project` screen (default `http://127.0.0.1:49914/xlDoAutomation`).
 - Click `Test Connection` to call `system.getCapabilities`.
 - `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
+- Project screen `Open Sequence` calls `sequence.open` using the provided sequence path and stores recent sequence entries.
+- Apply preflight includes `system.validateCommands` before `system.executePlan`.
 - `Apply to xLights` executes an atomic `system.executePlan` that writes a Designer timing track (`XD:ProposedPlan`) from the current proposed-change list.
 - Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.
 - Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
