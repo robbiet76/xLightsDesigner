@@ -43,6 +43,7 @@ Live endpoint:
 - Click `Test Connection` to call `system.getCapabilities`.
 - `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
 - Project screen `Open Sequence` calls `sequence.open` using the provided sequence path and stores recent sequence entries.
+- Project screen `Save`/`Save As` call `sequence.save` (Save As uses configured save path).
 - Apply preflight includes `system.validateCommands` before `system.executePlan`.
 - `Apply to xLights` executes an atomic `system.executePlan` that writes a Designer timing track (`XD:ProposedPlan`) from the current proposed-change list.
 - Revision is polled in the background; if external edits are detected, the draft is marked stale and apply is blocked until refresh/regenerate.

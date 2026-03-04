@@ -6,6 +6,7 @@ import {
   getOpenSequence,
   getRevision,
   openSequence,
+  saveSequence,
   validateCommands,
   pingCapabilities
 } from "./api.js";
@@ -25,6 +26,7 @@ const defaultState = {
   },
   activeSequence: "CarolOfTheBells.xsq",
   sequencePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
+  savePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
   recentSequences: [],
   revision: "unknown",
   draftBaseRevision: "unknown",
@@ -109,6 +111,7 @@ function persist() {
 function extractProjectSnapshot() {
   return {
     sequencePathInput: state.sequencePathInput,
+    savePathInput: state.savePathInput,
     recentSequences: state.recentSequences,
     activeSequence: state.activeSequence,
     revision: state.revision,
@@ -128,6 +131,7 @@ function extractProjectSnapshot() {
 function applyProjectSnapshot(snapshot) {
   if (!snapshot) return;
   state.sequencePathInput = snapshot.sequencePathInput || state.sequencePathInput;
+  state.savePathInput = snapshot.savePathInput || state.savePathInput;
   state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
   state.activeSequence = snapshot.activeSequence || state.activeSequence;
   state.revision = snapshot.revision || "unknown";
@@ -713,12 +717,14 @@ function onSaveProjectSettings() {
   const projectInput = app.querySelector("#project-input");
   const showFolderInput = app.querySelector("#showfolder-input");
   const endpointInput = app.querySelector("#endpoint-input");
+  const savePathInput = app.querySelector("#save-path-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
   const thresholdInput = app.querySelector("#threshold-input");
 
   if (projectInput) state.projectName = projectInput.value.trim() || state.projectName;
   if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
   if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
+  if (savePathInput) state.savePathInput = savePathInput.value.trim() || state.savePathInput;
   if (confirmModeInput) state.safety.applyConfirmMode = confirmModeInput.value;
   if (thresholdInput) {
     const parsed = Number.parseInt(thresholdInput.value, 10);
@@ -748,6 +754,13 @@ function syncSequencePathInput() {
   }
 }
 
+function syncSavePathInput() {
+  const savePathInput = app.querySelector("#save-path-input");
+  if (savePathInput) {
+    state.savePathInput = savePathInput.value.trim() || state.savePathInput;
+  }
+}
+
 async function onOpenSequence() {
   syncSequencePathInput();
   if (!state.flags.xlightsConnected) {
@@ -766,6 +779,7 @@ async function onOpenSequence() {
     const seq = body?.data || {};
     const name = seq.name || state.sequencePathInput.split("/").pop() || state.activeSequence;
     state.activeSequence = name;
+    state.savePathInput = state.sequencePathInput;
     state.flags.activeSequenceLoaded = true;
     addRecentSequence(state.sequencePathInput);
     await onRefresh();
@@ -782,9 +796,42 @@ async function onOpenSequence() {
 
 function onUseRecent(path) {
   state.sequencePathInput = path;
+  state.savePathInput = path;
   saveCurrentProjectSnapshot();
   persist();
   render();
+}
+
+async function onSaveSequence(asSaveAs = false) {
+  if (!state.flags.xlightsConnected) {
+    setStatusWithDiagnostics("warning", "Connect to xLights before saving.");
+    return render();
+  }
+  syncSavePathInput();
+  const target = asSaveAs ? state.savePathInput : null;
+  if (asSaveAs && !target) {
+    setStatusWithDiagnostics("warning", "Provide a save path for Save As.");
+    return render();
+  }
+
+  setStatus("info", asSaveAs ? "Saving sequence (Save As)..." : "Saving sequence...");
+  render();
+  try {
+    const body = await saveSequence(state.endpoint, target);
+    const savedFile = body?.data?.file || target || "(current path)";
+    if (asSaveAs) {
+      state.sequencePathInput = savedFile;
+      state.savePathInput = savedFile;
+      addRecentSequence(savedFile);
+    }
+    setStatus("info", `Sequence saved: ${savedFile}`);
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Save failed: ${err.message}`, err.stack || "");
+  } finally {
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
 }
 
 function onLoadProjectSnapshot() {
@@ -819,8 +866,14 @@ function projectScreen() {
           <label>Sequence Path</label>
           <input id="sequence-path-input" value="${state.sequencePathInput}" />
         </div>
+        <div class="field">
+          <label>Save Path (for Save As)</label>
+          <input id="save-path-input" value="${state.savePathInput}" />
+        </div>
         <div class="row">
           <button id="open-sequence">Open Sequence</button>
+          <button id="save-sequence">Save</button>
+          <button id="save-sequence-as">Save As</button>
           <button id="refresh-recents">Refresh Recents</button>
           <button>New Session</button>
         </div>
@@ -1201,6 +1254,12 @@ function bindEvents() {
   const openSequenceBtn = app.querySelector("#open-sequence");
   if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
 
+  const saveSequenceBtn = app.querySelector("#save-sequence");
+  if (saveSequenceBtn) saveSequenceBtn.addEventListener("click", () => onSaveSequence(false));
+
+  const saveSequenceAsBtn = app.querySelector("#save-sequence-as");
+  if (saveSequenceAsBtn) saveSequenceAsBtn.addEventListener("click", () => onSaveSequence(true));
+
   const refreshRecentsBtn = app.querySelector("#refresh-recents");
   if (refreshRecentsBtn) {
     refreshRecentsBtn.addEventListener("click", () => {
@@ -1213,6 +1272,14 @@ function bindEvents() {
   if (seqPathInput) {
     seqPathInput.addEventListener("change", () => {
       state.sequencePathInput = seqPathInput.value.trim() || state.sequencePathInput;
+      persist();
+    });
+  }
+
+  const savePathInput = app.querySelector("#save-path-input");
+  if (savePathInput) {
+    savePathInput.addEventListener("change", () => {
+      state.savePathInput = savePathInput.value.trim() || state.savePathInput;
       persist();
     });
   }
