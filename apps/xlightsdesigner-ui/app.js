@@ -871,6 +871,23 @@ function addSectionDraftLine() {
   render();
 }
 
+function useCurrentSectionAsFilter() {
+  const customInput = app.querySelector("#section-custom-input");
+  const customLabel = customInput ? customInput.value.trim() : "";
+  const label = customLabel || state.ui.sectionPreset;
+  if (!label) {
+    setStatus("warning", "Select or enter a section label to filter.");
+    return render();
+  }
+  state.ui.sectionFilter = label;
+  state.route = "design";
+  state.ui.designTab = "proposed";
+  setStatus("info", `Filtered proposed list to section: ${label}`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 function splitBySection() {
   const section = state.ui.sectionFilter;
   if (section === "all") {
@@ -1380,8 +1397,12 @@ function designScreen() {
                 )
                 .join("")}
             </select>
-            <input id="section-custom-input" placeholder="Or type custom label (e.g. Chorus 2)" />
+            <input id="section-custom-input" list="section-label-suggestions" placeholder="Or type custom label (e.g. Chorus 2)" />
+            <datalist id="section-label-suggestions">
+              ${(state.sectionSuggestions || []).map((s) => `<option value="${s.replace(/\"/g, "&quot;")}"></option>`).join("")}
+            </datalist>
             <button id="add-section-line">Add Section Line</button>
+            <button id="use-section-filter">Use As Filter</button>
           </div>
           <div class="row" style="margin-top:8px;">
             <input id="section-track-input" value="${state.ui.sectionTrackName || ""}" placeholder="Timing track for section labels (optional)" />
@@ -1833,6 +1854,9 @@ function bindEvents() {
   const addSectionLineBtn = app.querySelector("#add-section-line");
   if (addSectionLineBtn) addSectionLineBtn.addEventListener("click", addSectionDraftLine);
 
+  const useSectionFilterBtn = app.querySelector("#use-section-filter");
+  if (useSectionFilterBtn) useSectionFilterBtn.addEventListener("click", useCurrentSectionAsFilter);
+
   const loadSectionsBtn = app.querySelector("#load-sections");
   if (loadSectionsBtn) loadSectionsBtn.addEventListener("click", onLoadSectionSuggestions);
 
@@ -1842,6 +1866,18 @@ function bindEvents() {
       state.ui.sectionTrackName = sectionTrackInput.value.trim();
       saveCurrentProjectSnapshot();
       persist();
+    });
+  }
+
+  const sectionCustomInput = app.querySelector("#section-custom-input");
+  if (sectionCustomInput) {
+    sectionCustomInput.addEventListener("change", () => {
+      const v = sectionCustomInput.value.trim();
+      if (v) {
+        state.ui.sectionPreset = v;
+        saveCurrentProjectSnapshot();
+        persist();
+      }
     });
   }
 
