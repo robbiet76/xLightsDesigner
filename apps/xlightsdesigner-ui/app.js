@@ -464,6 +464,36 @@ async function onRefreshAndRegenerate() {
   }
 }
 
+async function onRebaseDraft() {
+  if (!state.flags.hasDraftProposal) {
+    setStatus("warning", "No draft available to rebase.");
+    return render();
+  }
+
+  const preserved = [...state.proposed];
+  const previousBase = state.draftBaseRevision;
+  await onRefresh();
+
+  if (state.revision === "unknown") {
+    setStatusWithDiagnostics(
+      "warning",
+      "Rebase could not complete because current revision is unknown."
+    );
+    return;
+  }
+
+  state.proposed = preserved;
+  state.draftBaseRevision = state.revision;
+  state.flags.proposalStale = false;
+  saveCurrentProjectSnapshot();
+  setStatus(
+    "info",
+    `Draft rebased from ${previousBase} to ${state.draftBaseRevision}.`
+  );
+  persist();
+  render();
+}
+
 async function onTestConnection() {
   const endpointInput = app.querySelector("#endpoint-input");
   if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
@@ -1024,6 +1054,7 @@ function designScreen() {
         <h3>Draft Is Stale</h3>
         <p class="banner warning">Sequence changed since this draft was created. Refresh/rebase before apply.</p>
         <div class="row">
+          <button id="stale-rebase">Rebase Draft</button>
           <button id="stale-refresh-regenerate">Refresh + Regenerate</button>
           <button id="stale-refresh-only">Refresh Only</button>
           <button id="stale-cancel-draft">Cancel Draft</button>
@@ -1418,6 +1449,9 @@ function bindEvents() {
 
   const staleRefreshRegenerateBtn = app.querySelector("#stale-refresh-regenerate");
   if (staleRefreshRegenerateBtn) staleRefreshRegenerateBtn.addEventListener("click", onRefreshAndRegenerate);
+
+  const staleRebaseBtn = app.querySelector("#stale-rebase");
+  if (staleRebaseBtn) staleRebaseBtn.addEventListener("click", onRebaseDraft);
 
   const staleRefreshOnlyBtn = app.querySelector("#stale-refresh-only");
   if (staleRefreshOnlyBtn) staleRefreshOnlyBtn.addEventListener("click", onRefresh);

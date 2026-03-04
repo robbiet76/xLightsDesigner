@@ -51,6 +51,7 @@ Live endpoint:
 - Proposed draft rows are directly editable/removable in Design and details views, with `Add Line` for quick manual proposal shaping.
 - When stale, the status bar exposes direct recovery actions: `Rebase/Refresh`, `Regenerate`, and `Cancel Draft`.
 - Design also shows an explicit stale-recovery card with guided actions: `Refresh + Regenerate`, `Refresh Only`, and `Cancel Draft`.
+- Stale recovery also supports `Rebase Draft` to keep current proposed edits while updating to latest revision baseline.
 - History supports `Compare` against current head, `Reapply as Variant` into Design, and practical rollback draft restore flow.
 - Compact/mobile behavior includes Design tabs (`Chat`, `Intent`, `Proposed`) and a fixed bottom `Apply to xLights` action bar.
 - Diagnostics panel can be opened from header/status bar and captures warning/action-required events with optional stack/detail payloads.
