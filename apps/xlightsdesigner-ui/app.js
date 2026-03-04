@@ -18,6 +18,21 @@ import {
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
+const FALLBACK_LOCAL_ENDPOINTS = [
+  "http://127.0.0.1:8080/xlDoAutomation",
+  "http://localhost:8080/xlDoAutomation",
+  "http://127.0.0.1:49914/xlDoAutomation",
+  "http://127.0.0.1:49913/xlDoAutomation"
+];
+const LEGACY_SAMPLE_PROPOSED = [
+  "Chorus 2 / CandyCanes / reduce twinkle 35%",
+  "Chorus 2 / XD:Mood / mark as calmer pulse",
+  "Chorus 2 / Roofline / soften sparkle saturation"
+];
+const LEGACY_SAMPLE_CHAT = [
+  "Reduce twinkle intensity on candy canes in chorus 2.",
+  "Draft updated. I focused changes to chorus 2 labels only."
+];
 
 const defaultState = {
   route: "project",
@@ -28,9 +43,9 @@ const defaultState = {
     applyConfirmMode: "large-only",
     largeChangeThreshold: 60
   },
-  activeSequence: "CarolOfTheBells.xsq",
-  sequencePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
-  savePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
+  activeSequence: "",
+  sequencePathInput: "",
+  savePathInput: "",
   recentSequences: [],
   revision: "unknown",
   health: {
@@ -45,21 +60,14 @@ const defaultState = {
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
   flags: {
     xlightsConnected: false,
-    activeSequenceLoaded: true,
-    hasDraftProposal: true,
+    activeSequenceLoaded: false,
+    hasDraftProposal: false,
     proposalStale: false,
     applyInProgress: false,
     planOnlyMode: false
   },
-  chat: [
-    { who: "user", text: "Reduce twinkle intensity on candy canes in chorus 2." },
-    { who: "agent", text: "Draft updated. I focused changes to chorus 2 labels only." }
-  ],
-  proposed: [
-    "Chorus 2 / CandyCanes / reduce twinkle 35%",
-    "Chorus 2 / XD:Mood / mark as calmer pulse",
-    "Chorus 2 / Roofline / soften sparkle saturation"
-  ],
+  chat: [],
+  proposed: [],
   ui: {
     detailsOpen: false,
     sectionSelections: ["all"],
@@ -68,7 +76,12 @@ const defaultState = {
     jobsOpen: false,
     diagnosticsFilter: "all",
     modelFilterText: "",
-    sectionTrackName: ""
+    sectionTrackName: "",
+    metadataTargetId: "",
+    metadataRole: "support",
+    metadataBehavior: "steady",
+    metadataTagDraft: "",
+    metadataNewTag: ""
   },
   diagnostics: [],
   jobs: [],
@@ -76,26 +89,45 @@ const defaultState = {
   timingTracks: [],
   sectionSuggestions: [],
   sectionStartByLabel: {},
-  versions: [
-    { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
-    { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
-    { id: "v16", summary: "Initial pass", effects: 120, time: "10:22" }
-  ],
-  selectedVersion: "v18",
+  metadata: {
+    tags: ["focal", "rhythm-driver", "ambient-fill"],
+    assignments: [],
+    ignoredOrphanTargetIds: []
+  },
+  versions: [{ id: "v1", summary: "Session initialized", effects: 0, time: "--:--" }],
+  selectedVersion: "v1",
   compareVersion: null
 };
+
+function isLegacySampleState(stateLike) {
+  const proposed = Array.isArray(stateLike?.proposed) ? stateLike.proposed : [];
+  const chat = Array.isArray(stateLike?.chat) ? stateLike.chat.map((c) => c?.text).filter(Boolean) : [];
+  return (
+    proposed.length === LEGACY_SAMPLE_PROPOSED.length &&
+    proposed.every((line, i) => line === LEGACY_SAMPLE_PROPOSED[i]) &&
+    chat.length === LEGACY_SAMPLE_CHAT.length &&
+    chat.every((line, i) => line === LEGACY_SAMPLE_CHAT[i])
+  );
+}
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return structuredClone(defaultState);
     const parsed = JSON.parse(raw);
-    return {
+    const merged = {
       ...structuredClone(defaultState),
       ...parsed,
       flags: { ...defaultState.flags, ...(parsed.flags || {}) },
       ui: { ...defaultState.ui, ...(parsed.ui || {}) }
     };
+    if (isLegacySampleState(merged)) {
+      merged.chat = [];
+      merged.proposed = [];
+      merged.flags = { ...merged.flags, hasDraftProposal: false, proposalStale: false };
+      merged.draftBaseRevision = "unknown";
+    }
+    return merged;
   } catch {
     return structuredClone(defaultState);
   }
@@ -126,6 +158,35 @@ function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function uniqueEndpoints(endpoints) {
+  return Array.from(
+    new Set(
+      (Array.isArray(endpoints) ? endpoints : [])
+        .map((e) => String(e || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+async function resolveReachableEndpoint(preferredEndpoint) {
+  const candidates = uniqueEndpoints([
+    preferredEndpoint,
+    state.endpoint,
+    getDefaultEndpoint(),
+    ...FALLBACK_LOCAL_ENDPOINTS
+  ]);
+  let lastError = null;
+  for (const endpoint of candidates) {
+    try {
+      const caps = await pingCapabilities(endpoint);
+      return { endpoint, caps };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("No reachable xLights endpoint found");
+}
+
 function extractProjectSnapshot() {
   return {
     sequencePathInput: state.sequencePathInput,
@@ -142,7 +203,12 @@ function extractProjectSnapshot() {
     ui: {
       sectionSelections: state.ui.sectionSelections,
       designTab: state.ui.designTab,
-      sectionTrackName: state.ui.sectionTrackName
+      sectionTrackName: state.ui.sectionTrackName,
+      metadataTargetId: state.ui.metadataTargetId,
+      metadataRole: state.ui.metadataRole,
+      metadataBehavior: state.ui.metadataBehavior,
+      metadataTagDraft: state.ui.metadataTagDraft,
+      metadataNewTag: state.ui.metadataNewTag
     },
     diagnostics: state.diagnostics,
     jobs: state.jobs,
@@ -150,6 +216,7 @@ function extractProjectSnapshot() {
     timingTracks: state.timingTracks,
     sectionSuggestions: state.sectionSuggestions,
     sectionStartByLabel: state.sectionStartByLabel,
+    metadata: state.metadata,
     health: state.health
   };
 }
@@ -170,6 +237,11 @@ function applyProjectSnapshot(snapshot) {
     : ["all"];
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
   state.ui.sectionTrackName = snapshot?.ui?.sectionTrackName || "";
+  state.ui.metadataTargetId = snapshot?.ui?.metadataTargetId || "";
+  state.ui.metadataRole = snapshot?.ui?.metadataRole || "support";
+  state.ui.metadataBehavior = snapshot?.ui?.metadataBehavior || "steady";
+  state.ui.metadataTagDraft = snapshot?.ui?.metadataTagDraft || "";
+  state.ui.metadataNewTag = snapshot?.ui?.metadataNewTag || "";
   state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
   state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
   state.models = Array.isArray(snapshot.models) ? snapshot.models : state.models;
@@ -181,7 +253,18 @@ function applyProjectSnapshot(snapshot) {
     snapshot?.sectionStartByLabel && typeof snapshot.sectionStartByLabel === "object"
       ? snapshot.sectionStartByLabel
       : {};
+  state.metadata =
+    snapshot?.metadata && typeof snapshot.metadata === "object"
+      ? {
+          tags: Array.isArray(snapshot.metadata.tags) ? snapshot.metadata.tags : [],
+          assignments: Array.isArray(snapshot.metadata.assignments) ? snapshot.metadata.assignments : [],
+          ignoredOrphanTargetIds: Array.isArray(snapshot.metadata.ignoredOrphanTargetIds)
+            ? snapshot.metadata.ignoredOrphanTargetIds
+            : []
+        }
+      : { tags: [], assignments: [], ignoredOrphanTargetIds: [] };
   state.health = { ...state.health, ...(snapshot.health || {}) };
+  ensureMetadataTargetSelection();
   state.flags.hasDraftProposal = state.proposed.length > 0;
 }
 
@@ -270,11 +353,9 @@ function getSectionName(line) {
 }
 
 function getSectionChoiceList() {
-  const fromSuggestions = Array.isArray(state.sectionSuggestions)
+  return Array.isArray(state.sectionSuggestions)
     ? state.sectionSuggestions.map((s) => normalizeSectionLabel(s)).filter(Boolean)
     : [];
-  const fromDraft = state.proposed.map(getSectionName).map((s) => normalizeSectionLabel(s)).filter(Boolean);
-  return Array.from(new Set([...fromSuggestions, ...fromDraft]));
 }
 
 function formatMs(ms) {
@@ -293,11 +374,13 @@ function getSectionChoiceRows() {
     : {};
   return labels.map((label, idx) => ({
     label,
-    // Temporary deterministic fallback for display until all sections carry timing metadata.
-    startMs: typeof starts[label] === "number" ? starts[label] : idx * 15000,
-    estimated: typeof starts[label] !== "number"
+    startMs: typeof starts[label] === "number" ? starts[label] : null,
+    hasStart: typeof starts[label] === "number",
+    order: idx
   })).sort((a, b) => {
-    if (a.startMs !== b.startMs) return a.startMs - b.startMs;
+    if (a.hasStart !== b.hasStart) return a.hasStart ? -1 : 1;
+    if (a.hasStart && b.hasStart && a.startMs !== b.startMs) return a.startMs - b.startMs;
+    if (!a.hasStart && !b.hasStart && a.order !== b.order) return a.order - b.order;
     return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
   });
 }
@@ -305,7 +388,7 @@ function getSectionChoiceRows() {
 function getSelectedSections() {
   const selected = Array.isArray(state.ui.sectionSelections) ? state.ui.sectionSelections : ["all"];
   const cleaned = selected.map((s) => normalizeSectionLabel(s)).filter(Boolean);
-  return cleaned.length ? Array.from(new Set(cleaned)) : ["all"];
+  return Array.from(new Set(cleaned));
 }
 
 function hasAllSectionsSelected() {
@@ -315,7 +398,7 @@ function hasAllSectionsSelected() {
 function setSectionSelections(values) {
   const next = Array.isArray(values) ? values.map((v) => normalizeSectionLabel(v)).filter(Boolean) : [];
   if (next.length === 0) {
-    state.ui.sectionSelections = ["all"];
+    state.ui.sectionSelections = [];
   } else if (next.includes("all") && next.length > 1) {
     state.ui.sectionSelections = Array.from(new Set(next.filter((v) => v !== "all")));
   } else if (next.includes("all")) {
@@ -332,7 +415,7 @@ function reconcileSectionSelectionsToAvailable() {
   if (hasAllSectionsSelected()) return;
   const available = new Set(getSectionChoiceList());
   const kept = getSelectedSections().filter((section) => available.has(section));
-  state.ui.sectionSelections = kept.length ? kept : ["all"];
+  state.ui.sectionSelections = kept;
 }
 
 function getSections() {
@@ -494,13 +577,13 @@ function onGenerate() {
   state.flags.hasDraftProposal = true;
   state.flags.proposalStale = false;
   state.draftBaseRevision = state.revision;
-  state.ui.sectionSelections = ["all"];
-  setStatus("info", "Proposal refreshed from current intent.");
-  state.proposed = [
-    "Chorus 2 / CandyCanes / reduce twinkle 35%",
-    "Chorus 2 / XD:Energy / taper transition",
-    "Verse 1 / MegaTree / preserve current look"
-  ];
+  const selected = hasAllSectionsSelected()
+    ? getSectionChoiceList()
+    : getSelectedSections().filter((s) => s !== "all");
+  const sections = selected.length ? selected : ["General"];
+  state.proposed = sections.map((section) => `${section} / SelectedModels / apply intent refinement`);
+  state.ui.sectionSelections = selected.length ? [...selected] : ["all"];
+  setStatus("info", `Proposal refreshed from current intent (${state.proposed.length} line${state.proposed.length === 1 ? "" : "s"}).`);
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -551,6 +634,7 @@ async function onRefresh() {
     try {
       const modelBody = await getModels(state.endpoint);
       state.models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : state.models;
+      ensureMetadataTargetSelection();
     } catch (err) {
       setStatusWithDiagnostics("warning", `Model refresh failed: ${err.message}`);
     }
@@ -614,13 +698,17 @@ async function onRebaseDraft() {
 
 async function onTestConnection() {
   const endpointInput = app.querySelector("#endpoint-input");
-  if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
+  const requestedEndpoint = endpointInput ? endpointInput.value.trim() || getDefaultEndpoint() : state.endpoint;
+  state.endpoint = requestedEndpoint;
 
   setStatus("info", "Testing xLights endpoint...");
   render();
 
   try {
-    const caps = await pingCapabilities(state.endpoint);
+    const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
+    const endpointChanged = endpoint !== requestedEndpoint;
+    state.endpoint = endpoint;
+    if (endpointInput) endpointInput.value = endpoint;
     state.flags.xlightsConnected = true;
     const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
     const count = commands.length;
@@ -632,7 +720,12 @@ async function onTestConnection() {
       hasValidateCommands: commands.includes("system.validateCommands"),
       hasJobsGet: commands.includes("jobs.get")
     };
-    setStatus("info", `Connected. ${count} commands reported by xLights.`);
+    setStatus(
+      "info",
+      endpointChanged
+        ? `Connected via fallback endpoint ${endpoint}. ${count} commands reported by xLights.`
+        : `Connected. ${count} commands reported by xLights.`
+    );
     await onRefresh();
     return;
   } catch (err) {
@@ -668,6 +761,7 @@ async function onCheckHealth() {
       sequenceOpen: Boolean(open?.data?.isOpen)
     };
     state.models = Array.isArray(modelsResp?.data?.models) ? modelsResp.data.models : [];
+    ensureMetadataTargetSelection();
     try {
       await fetchSectionSuggestions();
     } catch (err) {
@@ -907,6 +1001,146 @@ function setModelFilterText(value) {
   render();
 }
 
+function modelStableId(model) {
+  const raw = model?.id ?? model?.modelId ?? model?.name ?? "";
+  return String(raw || "");
+}
+
+function modelDisplayName(model) {
+  const name = model?.name || "(unnamed)";
+  const type = model?.type ? ` (${model.type})` : "";
+  return `${name}${type}`;
+}
+
+function getModelNameById(id) {
+  const found = (state.models || []).find((m) => modelStableId(m) === id);
+  return found ? modelDisplayName(found) : id;
+}
+
+function ensureMetadataTargetSelection() {
+  const options = (state.models || []).map(modelStableId).filter(Boolean);
+  if (!options.length) {
+    state.ui.metadataTargetId = "";
+    return;
+  }
+  if (!options.includes(state.ui.metadataTargetId)) {
+    state.ui.metadataTargetId = options[0];
+  }
+}
+
+function getLiveModelIdSet() {
+  return new Set((state.models || []).map(modelStableId).filter(Boolean));
+}
+
+function getMetadataOrphans() {
+  const liveIds = getLiveModelIdSet();
+  const ignored = new Set((state.metadata?.ignoredOrphanTargetIds || []).map(String));
+  return (state.metadata?.assignments || []).filter(
+    (a) => a?.targetId && !liveIds.has(String(a.targetId)) && !ignored.has(String(a.targetId))
+  );
+}
+
+function saveMetadataAndRender(statusText = "") {
+  if (statusText) setStatus("info", statusText);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function addMetadataTag() {
+  const value = normalizeSectionLabel(state.ui.metadataNewTag);
+  if (!value) return;
+  const tags = state.metadata?.tags || [];
+  if (!tags.includes(value)) {
+    state.metadata.tags = [...tags, value];
+    state.ui.metadataNewTag = "";
+    saveMetadataAndRender(`Added tag: ${value}`);
+  } else {
+    setStatus("warning", `Tag already exists: ${value}`);
+    render();
+  }
+}
+
+function removeMetadataTag(tag) {
+  state.metadata.tags = (state.metadata?.tags || []).filter((t) => t !== tag);
+  // Remove tag from assignments too.
+  state.metadata.assignments = (state.metadata?.assignments || []).map((a) => ({
+    ...a,
+    tags: (a.tags || []).filter((t) => t !== tag)
+  }));
+  saveMetadataAndRender(`Removed tag: ${tag}`);
+}
+
+function applyMetadataAssignment() {
+  const targetId = normalizeSectionLabel(state.ui.metadataTargetId);
+  if (!targetId) {
+    setStatus("warning", "Choose a model/group target first.");
+    return render();
+  }
+  const role = normalizeSectionLabel(state.ui.metadataRole) || "support";
+  const behavior = normalizeSectionLabel(state.ui.metadataBehavior) || "steady";
+  const tag = normalizeSectionLabel(state.ui.metadataTagDraft);
+  const tags = tag ? [tag] : [];
+
+  const assignments = state.metadata?.assignments || [];
+  const idx = assignments.findIndex((a) => String(a.targetId) === targetId);
+  const next = {
+    targetId,
+    targetName: getModelNameById(targetId),
+    role,
+    behavior,
+    tags
+  };
+  if (idx >= 0) {
+    assignments[idx] = next;
+    state.metadata.assignments = [...assignments];
+  } else {
+    state.metadata.assignments = [...assignments, next];
+  }
+  state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
+    (id) => String(id) !== targetId
+  );
+  saveMetadataAndRender(`Updated metadata for ${next.targetName}.`);
+}
+
+function removeMetadataAssignment(targetId) {
+  state.metadata.assignments = (state.metadata?.assignments || []).filter(
+    (a) => String(a.targetId) !== String(targetId)
+  );
+  state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
+    (id) => String(id) !== String(targetId)
+  );
+  saveMetadataAndRender("Removed metadata assignment.");
+}
+
+function ignoreMetadataOrphan(targetId) {
+  const current = new Set((state.metadata?.ignoredOrphanTargetIds || []).map(String));
+  current.add(String(targetId));
+  state.metadata.ignoredOrphanTargetIds = [...current];
+  saveMetadataAndRender("Ignored orphan metadata target.");
+}
+
+function remapMetadataOrphan(fromTargetId, toTargetId) {
+  const to = normalizeSectionLabel(toTargetId);
+  if (!to) {
+    setStatus("warning", "Select a replacement target for remap.");
+    return render();
+  }
+  const assignments = state.metadata?.assignments || [];
+  const idx = assignments.findIndex((a) => String(a.targetId) === String(fromTargetId));
+  if (idx < 0) return;
+  assignments[idx] = {
+    ...assignments[idx],
+    targetId: to,
+    targetName: getModelNameById(to)
+  };
+  state.metadata.assignments = [...assignments];
+  state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
+    (id) => String(id) !== String(fromTargetId)
+  );
+  saveMetadataAndRender("Remapped orphan metadata target.");
+}
+
 function insertModelIntoDraft(modelName) {
   if (!modelName) return;
   state.proposed.push(`Targeted Edit / ${modelName} / describe change`);
@@ -919,44 +1153,12 @@ function insertModelIntoDraft(modelName) {
   render();
 }
 
-function addSectionDraftLine() {
-  const selected = getSelectedSections().filter((s) => s !== "all");
-  if (selected.length === 0) {
-    setStatus("warning", "Select one or more sections first.");
-    return render();
-  }
-  for (const label of selected) {
-    state.proposed.push(`${label} / SelectedModels / describe change`);
-  }
-  state.flags.hasDraftProposal = true;
-  state.route = "design";
-  state.ui.designTab = "proposed";
-  setStatus("info", `Added ${selected.length} section-targeted draft line${selected.length === 1 ? "" : "s"}.`);
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
-}
-
-function useCurrentSectionAsFilter() {
-  const selected = getSelectedSections().filter((s) => s !== "all");
-  if (selected.length === 0) {
-    setStatus("warning", "Select one or more sections to filter.");
-    return render();
-  }
-  state.route = "design";
-  state.ui.designTab = "proposed";
-  setStatus("info", `Filtered proposed list to ${selected.length} selected section${selected.length === 1 ? "" : "s"}.`);
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
-}
-
 function splitBySection() {
-  if (hasAllSectionsSelected()) {
+  const selected = new Set(getSelectedSections());
+  if (hasAllSectionsSelected() || selected.size === 0) {
     setStatus("warning", "Choose a section first.");
     return render();
   }
-  const selected = new Set(getSelectedSections());
   state.proposed = state.proposed.filter((item) => selected.has(getSectionName(item)));
   setStatus("info", `Draft narrowed to ${selected.size} section${selected.size === 1 ? "" : "s"}.`);
   saveCurrentProjectSnapshot();
@@ -1111,6 +1313,20 @@ function buildSectionSuggestions(marks) {
   return { labels, startByLabel };
 }
 
+function getTimingTrackNames(tracks = state.timingTracks) {
+  return (Array.isArray(tracks) ? tracks : [])
+    .map((t) => (typeof t === "string" ? t : t?.name || ""))
+    .filter((name) => name.length > 0);
+}
+
+function isXdTimingTrack(name) {
+  return /^xd:/i.test((name || "").trim());
+}
+
+function getXdTimingTrackNames(tracks = state.timingTracks) {
+  return getTimingTrackNames(tracks).filter((name) => isXdTimingTrack(name));
+}
+
 async function fetchSectionSuggestions(options = {}) {
   const selectedTrack = options?.selectedTrack || "";
   const refreshTracks = options?.refreshTracks !== false;
@@ -1120,20 +1336,33 @@ async function fetchSectionSuggestions(options = {}) {
     tracks = tracksResp?.data?.tracks || [];
     state.timingTracks = tracks;
   }
-  const trackNames = tracks
-    .map((t) => (typeof t === "string" ? t : t?.name || ""))
-    .filter((name) => name.length > 0);
+  const trackNames = getTimingTrackNames(tracks);
+  const xdTrackNames = getXdTimingTrackNames(tracks);
+
+  const isSectionCandidate = (name) => /section|song|structure|phrase|form|mood|energy/i.test(name);
+  const isNonSectionOperational = (name) => /proposedplan|apply|transaction|diagnostic|test/i.test(name);
+
+  const selectedTrackValid = isXdTimingTrack(selectedTrack) ? selectedTrack : "";
+  const storedTrackValid = isXdTimingTrack(state.ui.sectionTrackName) ? state.ui.sectionTrackName : "";
 
   const preferred =
-    selectedTrack ||
-    state.ui.sectionTrackName ||
-    trackNames.find((name) => /song|structure|section|xd:/i.test(name)) ||
-    trackNames[0] ||
+    selectedTrackValid ||
+    storedTrackValid ||
+    xdTrackNames.find((name) => /^xd:\s*mock song sections$/i.test(name)) ||
+    xdTrackNames.find((name) => isSectionCandidate(name) && !isNonSectionOperational(name)) ||
+    xdTrackNames[0] ||
     "";
 
   if (!preferred) {
+    state.ui.sectionTrackName = "";
     state.sectionSuggestions = [];
-    return { track: "", count: 0, usedDefault: true };
+    state.sectionStartByLabel = {};
+    return {
+      track: "",
+      count: 0,
+      usedDefault: true,
+      noXdTracks: trackNames.length > 0 && xdTrackNames.length === 0
+    };
   }
 
   state.ui.sectionTrackName = preferred;
@@ -1152,20 +1381,19 @@ async function onLoadSectionSuggestions() {
     setStatusWithDiagnostics("warning", "Connect to xLights before loading section labels.");
     return render();
   }
-  setStatus("info", "Loading section labels from timing tracks...");
-  render();
   try {
     const result = await fetchSectionSuggestions();
     if (!result.track) {
-      setStatus("warning", "No timing tracks found for section labels.");
+      setStatus(
+        "warning",
+        result.noXdTracks
+          ? "No XD timing tracks found. Ask the agent to create one, then refresh globally."
+          : "No timing tracks found for section labels."
+      );
       saveCurrentProjectSnapshot();
       persist();
       return render();
     }
-    setStatus(
-      "info",
-      `Loaded ${result.count} section label${result.count === 1 ? "" : "s"} from ${result.track}.`
-    );
   } catch (err) {
     state.sectionSuggestions = [];
     state.sectionStartByLabel = {};
@@ -1234,6 +1462,7 @@ async function onRefreshModels() {
   try {
     const body = await getModels(state.endpoint);
     state.models = Array.isArray(body?.data?.models) ? body.data.models : [];
+    ensureMetadataTargetSelection();
     setStatus("info", `Loaded ${state.models.length} models.`);
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Refresh models failed: ${err.message}`);
@@ -1267,10 +1496,17 @@ function onResetProjectWorkspace() {
   state.flags.proposalStale = false;
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
+  state.ui.sectionTrackName = "";
+  state.ui.metadataTargetId = "";
+  state.ui.metadataRole = "support";
+  state.ui.metadataBehavior = "steady";
+  state.ui.metadataTagDraft = "";
+  state.ui.metadataNewTag = "";
   state.ui.detailsOpen = false;
   state.diagnostics = [];
   state.jobs = [];
   state.sectionStartByLabel = {};
+  state.metadata = structuredClone(defaultState.metadata);
 
   const store = loadProjectsStore();
   store[key] = extractProjectSnapshot();
@@ -1288,6 +1524,7 @@ function resetSessionDraftState() {
   state.ui.detailsOpen = false;
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
+  state.ui.sectionTrackName = "";
   state.proposed = [];
 }
 
@@ -1437,13 +1674,14 @@ function designScreen() {
   const sectionRows = getSectionChoiceRows();
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
-  const hasEstimatedTimes = sectionRows.some((row) => row.estimated);
+  const hasMissingTimes = sectionRows.some((row) => !row.hasStart);
   const sectionPreviewMatches = filteredProposed().length;
   const disabledReason = applyDisabledReason();
   const filtered = state.proposed
     .map((line, idx) => ({ line, idx }))
     .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
   const list = filtered.map((x) => x.line);
+  const xdTrackNames = getXdTimingTrackNames();
   return `
     ${
       state.flags.proposalStale
@@ -1480,42 +1718,31 @@ function designScreen() {
         <h3>Intent</h3>
         <div class="field">
           <label>Section Target</label>
-          <div class="row">
-            <select id="section-picker" multiple size="6">
-              <option value="all" ${allSelected ? "selected" : ""}>All Sections</option>
-              ${sectionRows
-                .map(
-                  (row) =>
-                    `<option value="${row.label.replace(/\"/g, "&quot;")}" ${selectedSections.includes(row.label) ? "selected" : ""}>${row.label} | ${formatMs(row.startMs)}${row.estimated ? " (est)" : ""}</option>`
-                )
-                .join("")}
-            </select>
-            <button id="add-section-line">Add Section Line</button>
-            <button id="use-section-filter">Use As Filter</button>
-          </div>
           <div class="row" style="margin-top:8px;">
             <select id="section-track-select">
-              <option value="">Auto-select timing track...</option>
-              ${(state.timingTracks || [])
-                .map((t) => (typeof t === "string" ? t : t?.name || ""))
-                .filter((name) => name.length > 0)
+              <option value="">Auto-select XD timing track...</option>
+              ${xdTrackNames
                 .map(
                   (name) =>
                     `<option value="${name.replace(/\"/g, "&quot;")}" ${state.ui.sectionTrackName === name ? "selected" : ""}>${name}</option>`
                 )
                 .join("")}
             </select>
-            <button id="load-sections">Load Sections</button>
           </div>
-          ${hasEstimatedTimes ? `<p class="banner warning">Some section start times are estimated placeholders.</p>` : ""}
-          <p class="banner">Target preview: ${allSelected ? "All Sections" : selectedSections.join(", ")} (${sectionPreviewMatches} matching draft row${sectionPreviewMatches === 1 ? "" : "s"})</p>
-        </div>
-        <div class="field"><label>Scope</label><select><option>Selected Range</option><option>Entire Sequence</option><option>Models</option></select></div>
-        <div class="field"><label>Range / Label</label><input value="chorus-2" /></div>
-        <div class="row">
-          <div class="field" style="flex:1"><label>Mood</label><input value="calmer" /></div>
-          <div class="field" style="flex:1"><label>Energy</label><input value="medium" /></div>
-          <div class="field" style="flex:1"><label>Priority</label><input value="preserve look" /></div>
+          ${xdTrackNames.length === 0 ? `<p class="banner warning">No XD timing tracks found yet. Agent-created tracks will appear here after global refresh.</p>` : ""}
+          <div class="row">
+            <select id="section-picker" multiple size="6">
+              <option value="all" ${allSelected ? "selected" : ""}>All Sections</option>
+              ${sectionRows
+                .map(
+                  (row) =>
+                    `<option value="${row.label.replace(/\"/g, "&quot;")}" ${selectedSections.includes(row.label) ? "selected" : ""}>${row.label} | ${row.hasStart ? formatMs(row.startMs) : "--:--.---"}</option>`
+                )
+                .join("")}
+            </select>
+          </div>
+          ${hasMissingTimes ? `<p class="banner warning">Some sections do not yet have timing marks.</p>` : ""}
+          <p class="banner">Target preview: ${allSelected ? "All Sections" : (selectedSections.length ? selectedSections.join(", ") : "None")} (${sectionPreviewMatches} matching draft row${sectionPreviewMatches === 1 ? "" : "s"})</p>
         </div>
       </section>
 
@@ -1540,7 +1767,7 @@ function designScreen() {
           <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
         </div>
         <div class="composer">
-          <input id="chat-input" placeholder="Type request..." value="Change chorus 2 candy canes to twinkle less" />
+          <input id="chat-input" placeholder="Type request..." />
           <button id="generate">Generate/Refresh</button>
           <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
           <button id="open-details">Open Details</button>
@@ -1657,6 +1884,12 @@ function historyScreen() {
 
 function metadataScreen() {
   const models = state.models || [];
+  const modelOptions = models
+    .map((m) => ({ id: modelStableId(m), name: modelDisplayName(m) }))
+    .filter((m) => m.id);
+  const assignments = state.metadata?.assignments || [];
+  const orphans = getMetadataOrphans();
+  const tags = state.metadata?.tags || [];
   const filterText = (state.ui.modelFilterText || "").trim().toLowerCase();
   const filteredModels = filterText
     ? models.filter((m) => {
@@ -1670,24 +1903,74 @@ function metadataScreen() {
       <section class="card">
         <h3>Tag Library</h3>
         <ul class="list">
-          <li>focal</li>
-          <li>rhythm-driver</li>
-          <li>ambient-fill</li>
+          ${
+            tags.length
+              ? tags.map((tag) => `<li>${tag} <button data-remove-tag="${tag.replace(/\"/g, "&quot;")}">Remove</button></li>`).join("")
+              : "<li>No tags yet.</li>"
+          }
         </ul>
-        <div class="field"><label>Add tag</label><input placeholder="new tag" /></div>
+        <div class="field"><label>Add tag</label><input id="metadata-new-tag" value="${state.ui.metadataNewTag || ""}" placeholder="new tag" /></div>
+        <button id="metadata-add-tag">Add Tag</button>
       </section>
       <section class="card">
         <h3>Context Assignment</h3>
-        <div class="field"><label>Target</label><input value="CandyCanes Group" /></div>
-        <div class="field"><label>Role</label><select><option>support</option><option>focal</option><option>accent</option></select></div>
-        <div class="field"><label>Behavior</label><select><option>steady</option><option>pulse</option><option>swell</option></select></div>
-        <button>Apply</button>
+        <div class="field">
+          <label>Target</label>
+          <select id="metadata-target-id">
+            <option value="">Select model/group...</option>
+            ${modelOptions
+              .map(
+                (m) =>
+                  `<option value="${m.id.replace(/\"/g, "&quot;")}" ${state.ui.metadataTargetId === m.id ? "selected" : ""}>${m.name}</option>`
+              )
+              .join("")}
+          </select>
+        </div>
+        <div class="field"><label>Role</label><select id="metadata-role"><option value="support" ${state.ui.metadataRole === "support" ? "selected" : ""}>support</option><option value="focal" ${state.ui.metadataRole === "focal" ? "selected" : ""}>focal</option><option value="accent" ${state.ui.metadataRole === "accent" ? "selected" : ""}>accent</option></select></div>
+        <div class="field"><label>Behavior</label><select id="metadata-behavior"><option value="steady" ${state.ui.metadataBehavior === "steady" ? "selected" : ""}>steady</option><option value="pulse" ${state.ui.metadataBehavior === "pulse" ? "selected" : ""}>pulse</option><option value="swell" ${state.ui.metadataBehavior === "swell" ? "selected" : ""}>swell</option></select></div>
+        <div class="field"><label>Primary Tag (optional)</label><input id="metadata-tag-draft" value="${state.ui.metadataTagDraft || ""}" placeholder="tag" /></div>
+        <button id="metadata-apply-assignment">Apply</button>
+        <ul class="list" style="margin-top:10px;">
+          ${
+            assignments.length
+              ? assignments
+                  .map(
+                    (a) =>
+                      `<li><strong>${a.targetName || a.targetId}</strong> | role:${a.role || "-"} | behavior:${a.behavior || "-"}${(a.tags || []).length ? ` | tags:${a.tags.join(",")}` : ""} <button data-remove-assignment="${String(a.targetId).replace(/\"/g, "&quot;")}">Remove</button></li>`
+                  )
+                  .join("")
+              : "<li>No assignments yet.</li>"
+          }
+        </ul>
       </section>
     </div>
     <section class="card" style="margin-top:12px;">
       <h3>Orphaned Metadata</h3>
-      <p class="warning">3 entries need mapping to current model identities.</p>
-      <button>View Details</button>
+      ${
+        orphans.length
+          ? `<p class="warning">${orphans.length} entr${orphans.length === 1 ? "y" : "ies"} need mapping to current model identities.</p>`
+          : `<p class="banner">No active orphans.</p>`
+      }
+      <ul class="list">
+        ${
+          orphans.length
+            ? orphans
+                .map(
+                  (o) => `
+              <li>
+                <strong>${o.targetName || o.targetId}</strong>
+                <select data-orphan-remap="${String(o.targetId).replace(/\"/g, "&quot;")}">
+                  <option value="">Re-map to model...</option>
+                  ${modelOptions.map((m) => `<option value="${m.id.replace(/\"/g, "&quot;")}">${m.name}</option>`).join("")}
+                </select>
+                <button data-orphan-ignore="${String(o.targetId).replace(/\"/g, "&quot;")}">Ignore</button>
+                <button data-remove-assignment="${String(o.targetId).replace(/\"/g, "&quot;")}">Delete</button>
+              </li>`
+                )
+                .join("")
+            : "<li>No orphaned assignments.</li>"
+        }
+      </ul>
     </section>
 
     <section class="card" style="margin-top:12px;">
@@ -1896,6 +2179,71 @@ function bindEvents() {
     modelFilterInput.addEventListener("input", () => setModelFilterText(modelFilterInput.value));
   }
 
+  const metadataNewTagInput = app.querySelector("#metadata-new-tag");
+  if (metadataNewTagInput) {
+    metadataNewTagInput.addEventListener("input", () => {
+      state.ui.metadataNewTag = metadataNewTagInput.value;
+      persist();
+    });
+  }
+
+  const metadataAddTagBtn = app.querySelector("#metadata-add-tag");
+  if (metadataAddTagBtn) metadataAddTagBtn.addEventListener("click", addMetadataTag);
+
+  const metadataTargetSelect = app.querySelector("#metadata-target-id");
+  if (metadataTargetSelect) {
+    metadataTargetSelect.addEventListener("change", () => {
+      state.ui.metadataTargetId = metadataTargetSelect.value;
+      persist();
+    });
+  }
+
+  const metadataRoleSelect = app.querySelector("#metadata-role");
+  if (metadataRoleSelect) {
+    metadataRoleSelect.addEventListener("change", () => {
+      state.ui.metadataRole = metadataRoleSelect.value;
+      persist();
+    });
+  }
+
+  const metadataBehaviorSelect = app.querySelector("#metadata-behavior");
+  if (metadataBehaviorSelect) {
+    metadataBehaviorSelect.addEventListener("change", () => {
+      state.ui.metadataBehavior = metadataBehaviorSelect.value;
+      persist();
+    });
+  }
+
+  const metadataTagDraftInput = app.querySelector("#metadata-tag-draft");
+  if (metadataTagDraftInput) {
+    metadataTagDraftInput.addEventListener("input", () => {
+      state.ui.metadataTagDraft = metadataTagDraftInput.value;
+      persist();
+    });
+  }
+
+  const metadataApplyBtn = app.querySelector("#metadata-apply-assignment");
+  if (metadataApplyBtn) metadataApplyBtn.addEventListener("click", applyMetadataAssignment);
+
+  app.querySelectorAll("[data-remove-tag]").forEach((btn) => {
+    btn.addEventListener("click", () => removeMetadataTag(btn.dataset.removeTag));
+  });
+
+  app.querySelectorAll("[data-remove-assignment]").forEach((btn) => {
+    btn.addEventListener("click", () => removeMetadataAssignment(btn.dataset.removeAssignment));
+  });
+
+  app.querySelectorAll("[data-orphan-ignore]").forEach((btn) => {
+    btn.addEventListener("click", () => ignoreMetadataOrphan(btn.dataset.orphanIgnore));
+  });
+
+  app.querySelectorAll("[data-orphan-remap]").forEach((select) => {
+    select.addEventListener("change", () => {
+      const fromTargetId = select.dataset.orphanRemap;
+      remapMetadataOrphan(fromTargetId, select.value);
+    });
+  });
+
   const refreshRecentsBtn = app.querySelector("#refresh-recents");
   if (refreshRecentsBtn) {
     refreshRecentsBtn.addEventListener("click", () => {
@@ -1956,15 +2304,6 @@ function bindEvents() {
       setSectionSelections(values);
     });
   }
-
-  const addSectionLineBtn = app.querySelector("#add-section-line");
-  if (addSectionLineBtn) addSectionLineBtn.addEventListener("click", addSectionDraftLine);
-
-  const useSectionFilterBtn = app.querySelector("#use-section-filter");
-  if (useSectionFilterBtn) useSectionFilterBtn.addEventListener("click", useCurrentSectionAsFilter);
-
-  const loadSectionsBtn = app.querySelector("#load-sections");
-  if (loadSectionsBtn) loadSectionsBtn.addEventListener("click", onLoadSectionSuggestions);
 
   const sectionTrackSelect = app.querySelector("#section-track-select");
   if (sectionTrackSelect) {
@@ -2081,6 +2420,35 @@ function render() {
   bindEvents();
 }
 
+async function bootstrapLiveData() {
+  try {
+    const requestedEndpoint = state.endpoint;
+    const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
+    const endpointChanged = endpoint !== requestedEndpoint;
+    state.endpoint = endpoint;
+    const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
+    state.flags.xlightsConnected = true;
+    state.health = {
+      ...state.health,
+      lastCheckedAt: new Date().toISOString(),
+      capabilitiesCount: commands.length,
+      hasExecutePlan: commands.includes("system.executePlan"),
+      hasValidateCommands: commands.includes("system.validateCommands"),
+      hasJobsGet: commands.includes("jobs.get")
+    };
+    if (endpointChanged) {
+      setStatus("info", `Connected via fallback endpoint ${endpoint}.`);
+    }
+    await onRefresh();
+  } catch {
+    state.flags.xlightsConnected = false;
+    setStatus("warning", "Unable to reach xLights. Start xLights and check endpoint settings.");
+    persist();
+    render();
+  }
+}
+
 render();
+bootstrapLiveData();
 setInterval(pollRevision, 8000);
 setInterval(pollJobs, 3000);

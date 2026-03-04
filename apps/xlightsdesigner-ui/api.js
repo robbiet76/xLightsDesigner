@@ -1,4 +1,4 @@
-const DEFAULT_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const DEFAULT_ENDPOINT = "/xlDoAutomation";
 
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");

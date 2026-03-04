@@ -35,11 +35,12 @@ This repo is intentionally organized as:
 
 Run locally:
 1. `cd apps/xlightsdesigner-ui`
-2. `./run-dev.sh` (or `python3 -m http.server 8080`)
+2. `./run-dev.sh`
 3. Open `http://localhost:8080`
 
 Live endpoint:
-- Set xLights endpoint on the `Project` screen (default `http://127.0.0.1:49914/xlDoAutomation`).
+- Default endpoint is `/xlDoAutomation` via local dev proxy (in `run-dev.sh`).
+- You can still set a direct endpoint on the `Project` screen (for example `http://127.0.0.1:49914/xlDoAutomation`).
 - Click `Test Connection` to call `system.getCapabilities`.
 - `Refresh` calls `sequence.getOpen` and `sequence.getRevision`.
 - Project screen `Open Sequence` calls `sequence.open` using the provided sequence path and stores recent sequence entries.
