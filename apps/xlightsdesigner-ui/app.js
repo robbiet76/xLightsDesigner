@@ -4,6 +4,7 @@ import {
   executePlan,
   getDefaultEndpoint,
   getJob,
+  getModels,
   getOpenSequence,
   getRevision,
   openSequence,
@@ -67,6 +68,7 @@ const defaultState = {
   },
   diagnostics: [],
   jobs: [],
+  models: [],
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
     { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
@@ -135,8 +137,8 @@ function extractProjectSnapshot() {
       designTab: state.ui.designTab
     },
     diagnostics: state.diagnostics,
-    jobs: state.jobs
-    ,
+    jobs: state.jobs,
+    models: state.models,
     health: state.health
   };
 }
@@ -156,6 +158,7 @@ function applyProjectSnapshot(snapshot) {
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
   state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
   state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
+  state.models = Array.isArray(snapshot.models) ? snapshot.models : state.models;
   state.health = { ...state.health, ...(snapshot.health || {}) };
   state.flags.hasDraftProposal = state.proposed.length > 0;
 }
@@ -456,6 +459,13 @@ async function onRefresh() {
       state.revision = "unknown";
     }
 
+    try {
+      const modelBody = await getModels(state.endpoint);
+      state.models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : state.models;
+    } catch (err) {
+      setStatusWithDiagnostics("warning", `Model refresh failed: ${err.message}`);
+    }
+
     if (!staleDetected) {
       setStatus("info", "Refreshed from xLights.");
     }
@@ -547,10 +557,11 @@ async function onCheckHealth() {
   setStatus("info", "Running health check...");
   render();
   try {
-    const [caps, open, rev] = await Promise.all([
+    const [caps, open, rev, modelsResp] = await Promise.all([
       pingCapabilities(state.endpoint),
       getOpenSequence(state.endpoint),
-      getRevision(state.endpoint).catch(() => ({ data: { revision: "unknown" } }))
+      getRevision(state.endpoint).catch(() => ({ data: { revision: "unknown" } })),
+      getModels(state.endpoint).catch(() => ({ data: { models: [] } }))
     ]);
     const commands = caps?.data?.commands || [];
     state.health = {
@@ -561,6 +572,7 @@ async function onCheckHealth() {
       hasJobsGet: commands.includes("jobs.get"),
       sequenceOpen: Boolean(open?.data?.isOpen)
     };
+    state.models = Array.isArray(modelsResp?.data?.models) ? modelsResp.data.models : [];
     state.revision = rev?.data?.revision ?? state.revision;
     setStatus("info", "Health check complete.");
   } catch (err) {
@@ -972,6 +984,26 @@ function onLoadProjectSnapshot() {
   render();
 }
 
+async function onRefreshModels() {
+  if (!state.flags.xlightsConnected) {
+    setStatusWithDiagnostics("warning", "Connect to xLights before refreshing models.");
+    return render();
+  }
+  setStatus("info", "Refreshing models...");
+  render();
+  try {
+    const body = await getModels(state.endpoint);
+    state.models = Array.isArray(body?.data?.models) ? body.data.models : [];
+    setStatus("info", `Loaded ${state.models.length} models.`);
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Refresh models failed: ${err.message}`);
+  } finally {
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
+}
+
 function onResetProjectWorkspace() {
   const key = getProjectKey();
   if (!key || key === "::") {
@@ -1344,6 +1376,7 @@ function historyScreen() {
 }
 
 function metadataScreen() {
+  const models = state.models || [];
   return `
     <div class="screen-grid">
       <section class="card">
@@ -1367,6 +1400,23 @@ function metadataScreen() {
       <h3>Orphaned Metadata</h3>
       <p class="warning">3 entries need mapping to current model identities.</p>
       <button>View Details</button>
+    </section>
+
+    <section class="card" style="margin-top:12px;">
+      <h3>Live Models (${models.length})</h3>
+      <div class="row">
+        <button id="refresh-models">Refresh Models</button>
+      </div>
+      <ul class="list">
+        ${
+          models.length
+            ? models
+                .slice(0, 40)
+                .map((m) => `<li><strong>${m.name || "(unnamed)"}</strong> ${m.type ? `(${m.type})` : ""}</li>`)
+                .join("")
+            : "<li>No models loaded. Use Refresh/Health check.</li>"
+        }
+      </ul>
     </section>
   `;
 }
@@ -1542,6 +1592,9 @@ function bindEvents() {
 
   const checkHealthBtn = app.querySelector("#check-health");
   if (checkHealthBtn) checkHealthBtn.addEventListener("click", onCheckHealth);
+
+  const refreshModelsBtn = app.querySelector("#refresh-models");
+  if (refreshModelsBtn) refreshModelsBtn.addEventListener("click", onRefreshModels);
 
   const refreshRecentsBtn = app.querySelector("#refresh-recents");
   if (refreshRecentsBtn) {

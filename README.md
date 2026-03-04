@@ -62,4 +62,5 @@ Live endpoint:
 - Project/show-scoped workspace snapshots are persisted (sequence path, recents, draft context, safety settings) and can be reloaded via `Load Project Snapshot`.
 - `Reset Project Workspace` clears current project draft/session artifacts and writes a fresh default snapshot for that project key.
 - Project includes a `Project Health` card with capability checks (`executePlan`, `validateCommands`, `jobs.get`), sequence-open status, and one-click recheck.
+- Metadata includes live `layout.getModels` discovery list with refresh action for current layout context.
 - Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.

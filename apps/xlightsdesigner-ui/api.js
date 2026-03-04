@@ -74,6 +74,10 @@ export async function closeSequence(endpoint, force = true, quiet = false) {
   });
 }
 
+export async function getModels(endpoint) {
+  return postCommand(endpoint, "layout.getModels", {});
+}
+
 export async function validateCommands(endpoint, commands) {
   return postCommand(endpoint, "system.validateCommands", {
     commands
