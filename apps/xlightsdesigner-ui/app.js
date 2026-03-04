@@ -30,6 +30,14 @@ const defaultState = {
   savePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
   recentSequences: [],
   revision: "unknown",
+  health: {
+    lastCheckedAt: "",
+    capabilitiesCount: 0,
+    hasExecutePlan: false,
+    hasValidateCommands: false,
+    hasJobsGet: false,
+    sequenceOpen: false
+  },
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
   flags: {
@@ -128,6 +136,8 @@ function extractProjectSnapshot() {
     },
     diagnostics: state.diagnostics,
     jobs: state.jobs
+    ,
+    health: state.health
   };
 }
 
@@ -146,6 +156,7 @@ function applyProjectSnapshot(snapshot) {
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
   state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
   state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
+  state.health = { ...state.health, ...(snapshot.health || {}) };
   state.flags.hasDraftProposal = state.proposed.length > 0;
 }
 
@@ -422,6 +433,7 @@ async function onRefresh() {
     const open = await getOpenSequence(state.endpoint);
     const seq = open?.data?.sequence;
     state.flags.activeSequenceLoaded = Boolean(open?.data?.isOpen && seq);
+    state.health.sequenceOpen = Boolean(open?.data?.isOpen);
     if (seq?.name) state.activeSequence = seq.name;
 
     try {
@@ -505,7 +517,16 @@ async function onTestConnection() {
   try {
     const caps = await pingCapabilities(state.endpoint);
     state.flags.xlightsConnected = true;
-    const count = Array.isArray(caps?.data?.commands) ? caps.data.commands.length : 0;
+    const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
+    const count = commands.length;
+    state.health = {
+      ...state.health,
+      lastCheckedAt: new Date().toISOString(),
+      capabilitiesCount: count,
+      hasExecutePlan: commands.includes("system.executePlan"),
+      hasValidateCommands: commands.includes("system.validateCommands"),
+      hasJobsGet: commands.includes("jobs.get")
+    };
     setStatus("info", `Connected. ${count} commands reported by xLights.`);
     await onRefresh();
     return;
@@ -515,6 +536,40 @@ async function onTestConnection() {
   }
   persist();
   render();
+}
+
+async function onCheckHealth() {
+  if (!state.flags.xlightsConnected) {
+    setStatusWithDiagnostics("warning", "Connect to xLights before health check.");
+    return render();
+  }
+
+  setStatus("info", "Running health check...");
+  render();
+  try {
+    const [caps, open, rev] = await Promise.all([
+      pingCapabilities(state.endpoint),
+      getOpenSequence(state.endpoint),
+      getRevision(state.endpoint).catch(() => ({ data: { revision: "unknown" } }))
+    ]);
+    const commands = caps?.data?.commands || [];
+    state.health = {
+      lastCheckedAt: new Date().toISOString(),
+      capabilitiesCount: commands.length,
+      hasExecutePlan: commands.includes("system.executePlan"),
+      hasValidateCommands: commands.includes("system.validateCommands"),
+      hasJobsGet: commands.includes("jobs.get"),
+      sequenceOpen: Boolean(open?.data?.isOpen)
+    };
+    state.revision = rev?.data?.revision ?? state.revision;
+    setStatus("info", "Health check complete.");
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Health check failed: ${err.message}`, err.stack || "");
+  } finally {
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
 }
 
 async function pollRevision() {
@@ -1088,6 +1143,19 @@ function projectScreen() {
         </div>
         <p class="banner">One active sequence at a time.</p>
       </section>
+
+      <section class="card">
+        <h3>Project Health</h3>
+        <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
+        <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
+        <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>
+        <div class="row">
+          <button id="check-health">Recheck Health</button>
+        </div>
+      </section>
     </div>
   `;
 }
@@ -1471,6 +1539,9 @@ function bindEvents() {
 
   const newSessionBtn = app.querySelector("#new-session");
   if (newSessionBtn) newSessionBtn.addEventListener("click", onNewSession);
+
+  const checkHealthBtn = app.querySelector("#check-health");
+  if (checkHealthBtn) checkHealthBtn.addEventListener("click", onCheckHealth);
 
   const refreshRecentsBtn = app.querySelector("#refresh-recents");
   if (refreshRecentsBtn) {
