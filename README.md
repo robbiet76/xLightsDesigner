@@ -64,4 +64,5 @@ Live endpoint:
 - Project includes a `Project Health` card with capability checks (`executePlan`, `validateCommands`, `jobs.get`), sequence-open status, and one-click recheck.
 - Metadata includes live `layout.getModels` discovery list with refresh action for current layout context.
 - Metadata model list supports filter/search and one-click `Insert Into Draft` to create targeted proposal lines.
+- Design Intent panel supports dynamic section targeting via loaded timing-track labels plus custom labels (for example `Chorus 2`) and quick `Add Section Line`.
 - Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.

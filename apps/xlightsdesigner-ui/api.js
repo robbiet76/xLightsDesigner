@@ -78,6 +78,16 @@ export async function getModels(endpoint) {
   return postCommand(endpoint, "layout.getModels", {});
 }
 
+export async function getTimingTracks(endpoint) {
+  return postCommand(endpoint, "timing.getTracks", {});
+}
+
+export async function getTimingMarks(endpoint, trackName) {
+  return postCommand(endpoint, "timing.getMarks", {
+    trackName
+  });
+}
+
 export async function validateCommands(endpoint, commands) {
   return postCommand(endpoint, "system.validateCommands", {
     commands
