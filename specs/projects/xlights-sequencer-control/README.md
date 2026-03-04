@@ -8,6 +8,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 
 ## Files
 - `project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
+- `designer-interaction-contract.md`: user-to-agent intent, proposal/review, and iterative change-control contract for Designer UI workflows.
 - `api-surface-contract.md`: required endpoint/capability matrix for full sequencer control.
 - `autonomy-access-requirements.md`: required local permissions, tooling, and non-interactive execution policy for Codex/agents.
 - `implementation-roadmap.md`: phased delivery plan from discovery to full sequence authoring.
