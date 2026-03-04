@@ -62,13 +62,12 @@ const defaultState = {
   ],
   ui: {
     detailsOpen: false,
-    sectionFilter: "all",
+    sectionSelections: ["all"],
     designTab: "chat",
     diagnosticsOpen: false,
     jobsOpen: false,
     diagnosticsFilter: "all",
     modelFilterText: "",
-    sectionPreset: "",
     sectionTrackName: ""
   },
   diagnostics: [],
@@ -76,6 +75,7 @@ const defaultState = {
   models: [],
   timingTracks: [],
   sectionSuggestions: [],
+  sectionStartByLabel: {},
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
     { id: "v17", summary: "Boost verse 1 energy", effects: 22, time: "10:53" },
@@ -140,9 +140,8 @@ function extractProjectSnapshot() {
     },
     safety: state.safety,
     ui: {
-      sectionFilter: state.ui.sectionFilter,
+      sectionSelections: state.ui.sectionSelections,
       designTab: state.ui.designTab,
-      sectionPreset: state.ui.sectionPreset,
       sectionTrackName: state.ui.sectionTrackName
     },
     diagnostics: state.diagnostics,
@@ -150,6 +149,7 @@ function extractProjectSnapshot() {
     models: state.models,
     timingTracks: state.timingTracks,
     sectionSuggestions: state.sectionSuggestions,
+    sectionStartByLabel: state.sectionStartByLabel,
     health: state.health
   };
 }
@@ -165,9 +165,10 @@ function applyProjectSnapshot(snapshot) {
   state.proposed = Array.isArray(snapshot.proposed) ? snapshot.proposed : state.proposed;
   state.flags.planOnlyMode = Boolean(snapshot?.flags?.planOnlyMode);
   state.safety = { ...state.safety, ...(snapshot.safety || {}) };
-  state.ui.sectionFilter = snapshot?.ui?.sectionFilter || "all";
+  state.ui.sectionSelections = Array.isArray(snapshot?.ui?.sectionSelections)
+    ? snapshot.ui.sectionSelections
+    : ["all"];
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
-  state.ui.sectionPreset = snapshot?.ui?.sectionPreset || "";
   state.ui.sectionTrackName = snapshot?.ui?.sectionTrackName || "";
   state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
   state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
@@ -176,6 +177,10 @@ function applyProjectSnapshot(snapshot) {
   state.sectionSuggestions = Array.isArray(snapshot.sectionSuggestions)
     ? snapshot.sectionSuggestions
     : [];
+  state.sectionStartByLabel =
+    snapshot?.sectionStartByLabel && typeof snapshot.sectionStartByLabel === "object"
+      ? snapshot.sectionStartByLabel
+      : {};
   state.health = { ...state.health, ...(snapshot.health || {}) };
   state.flags.hasDraftProposal = state.proposed.length > 0;
 }
@@ -264,14 +269,70 @@ function getSectionName(line) {
   return (section || "General").trim();
 }
 
+function getSectionChoiceList() {
+  const fromSuggestions = Array.isArray(state.sectionSuggestions)
+    ? state.sectionSuggestions.map((s) => normalizeSectionLabel(s)).filter(Boolean)
+    : [];
+  const fromDraft = state.proposed.map(getSectionName).map((s) => normalizeSectionLabel(s)).filter(Boolean);
+  return Array.from(new Set([...fromSuggestions, ...fromDraft]));
+}
+
+function formatMs(ms) {
+  if (typeof ms !== "number" || Number.isNaN(ms) || ms < 0) return "--:--.---";
+  const totalMs = Math.floor(ms);
+  const minutes = Math.floor(totalMs / 60000);
+  const seconds = Math.floor((totalMs % 60000) / 1000);
+  const millis = totalMs % 1000;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+}
+
+function getSectionChoiceRows() {
+  const labels = getSectionChoiceList();
+  const starts = state.sectionStartByLabel && typeof state.sectionStartByLabel === "object"
+    ? state.sectionStartByLabel
+    : {};
+  return labels.map((label, idx) => ({
+    label,
+    // Temporary deterministic fallback for display until all sections carry timing metadata.
+    startMs: typeof starts[label] === "number" ? starts[label] : idx * 15000
+  }));
+}
+
+function getSelectedSections() {
+  const selected = Array.isArray(state.ui.sectionSelections) ? state.ui.sectionSelections : ["all"];
+  const cleaned = selected.map((s) => normalizeSectionLabel(s)).filter(Boolean);
+  return cleaned.length ? Array.from(new Set(cleaned)) : ["all"];
+}
+
+function hasAllSectionsSelected() {
+  return getSelectedSections().includes("all");
+}
+
+function setSectionSelections(values) {
+  const next = Array.isArray(values) ? values.map((v) => normalizeSectionLabel(v)).filter(Boolean) : [];
+  if (next.length === 0) {
+    state.ui.sectionSelections = ["all"];
+  } else if (next.includes("all") && next.length > 1) {
+    state.ui.sectionSelections = Array.from(new Set(next.filter((v) => v !== "all")));
+  } else if (next.includes("all")) {
+    state.ui.sectionSelections = ["all"];
+  } else {
+    state.ui.sectionSelections = Array.from(new Set(next));
+  }
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 function getSections() {
-  const sections = Array.from(new Set(state.proposed.map(getSectionName)));
+  const sections = getSectionChoiceList();
   return sections.length > 0 ? sections : ["General"];
 }
 
 function filteredProposed() {
-  if (state.ui.sectionFilter === "all") return state.proposed;
-  return state.proposed.filter((item) => getSectionName(item) === state.ui.sectionFilter);
+  if (hasAllSectionsSelected()) return state.proposed;
+  const selected = new Set(getSelectedSections());
+  return state.proposed.filter((item) => selected.has(getSectionName(item)));
 }
 
 function bumpVersion(summary = "Applied draft proposal", effects = 28) {
@@ -305,7 +366,7 @@ function buildDesignerPlanCommands() {
   const trackName = "XD:ProposedPlan";
   const source = filteredProposed();
   if (source.length === 0) {
-    throw new Error("No proposed changes available for current section filter.");
+    throw new Error("No proposed changes available for current section selection.");
   }
   const marks = source.slice(0, 24).map((label, idx) => {
     const startMs = idx * 1000;
@@ -422,7 +483,7 @@ function onGenerate() {
   state.flags.hasDraftProposal = true;
   state.flags.proposalStale = false;
   state.draftBaseRevision = state.revision;
-  state.ui.sectionFilter = "all";
+  state.ui.sectionSelections = ["all"];
   setStatus("info", "Proposal refreshed from current intent.");
   state.proposed = [
     "Chorus 2 / CandyCanes / reduce twinkle 35%",
@@ -751,7 +812,7 @@ function onCancelDraft() {
   state.flags.proposalStale = false;
   state.proposed = [];
   state.ui.detailsOpen = false;
-  state.ui.sectionFilter = "all";
+  state.ui.sectionSelections = ["all"];
   setStatus("info", "Draft canceled.");
   saveCurrentProjectSnapshot();
   persist();
@@ -779,7 +840,7 @@ function onReapplyVariant() {
   state.flags.proposalStale = false;
   state.route = "design";
   state.ui.detailsOpen = true;
-  state.ui.sectionFilter = "all";
+  state.ui.sectionSelections = ["all"];
   setStatus("info", `Loaded ${selected.id} as a new draft variant.`);
   saveCurrentProjectSnapshot();
   persist();
@@ -819,9 +880,7 @@ function closeDetails() {
 }
 
 function setSectionFilter(section) {
-  state.ui.sectionFilter = section;
-  persist();
-  render();
+  setSectionSelections(section === "all" ? ["all"] : [section]);
 }
 
 function setDesignTab(tab) {
@@ -833,13 +892,6 @@ function setDesignTab(tab) {
 
 function setModelFilterText(value) {
   state.ui.modelFilterText = value;
-  persist();
-  render();
-}
-
-function setSectionPreset(value) {
-  if (!value) return;
-  state.ui.sectionPreset = value;
   persist();
   render();
 }
@@ -857,48 +909,45 @@ function insertModelIntoDraft(modelName) {
 }
 
 function addSectionDraftLine() {
-  const customInput = app.querySelector("#section-custom-input");
-  const customLabel = customInput ? customInput.value.trim() : "";
-  const label = customLabel || state.ui.sectionPreset;
-  if (!label) {
-    setStatus("warning", "Select or enter a section label first.");
+  const selected = getSelectedSections().filter((s) => s !== "all");
+  if (selected.length === 0) {
+    setStatus("warning", "Select one or more sections first.");
     return render();
   }
-  state.proposed.push(`${label} / SelectedModels / describe change`);
+  for (const label of selected) {
+    state.proposed.push(`${label} / SelectedModels / describe change`);
+  }
   state.flags.hasDraftProposal = true;
   state.route = "design";
   state.ui.designTab = "proposed";
-  setStatus("info", `Added ${label} targeted draft line.`);
+  setStatus("info", `Added ${selected.length} section-targeted draft line${selected.length === 1 ? "" : "s"}.`);
   saveCurrentProjectSnapshot();
   persist();
   render();
 }
 
 function useCurrentSectionAsFilter() {
-  const customInput = app.querySelector("#section-custom-input");
-  const customLabel = customInput ? customInput.value.trim() : "";
-  const label = customLabel || state.ui.sectionPreset;
-  if (!label) {
-    setStatus("warning", "Select or enter a section label to filter.");
+  const selected = getSelectedSections().filter((s) => s !== "all");
+  if (selected.length === 0) {
+    setStatus("warning", "Select one or more sections to filter.");
     return render();
   }
-  state.ui.sectionFilter = label;
   state.route = "design";
   state.ui.designTab = "proposed";
-  setStatus("info", `Filtered proposed list to section: ${label}`);
+  setStatus("info", `Filtered proposed list to ${selected.length} selected section${selected.length === 1 ? "" : "s"}.`);
   saveCurrentProjectSnapshot();
   persist();
   render();
 }
 
 function splitBySection() {
-  const section = state.ui.sectionFilter;
-  if (section === "all") {
+  if (hasAllSectionsSelected()) {
     setStatus("warning", "Choose a section first.");
     return render();
   }
-  state.proposed = state.proposed.filter((item) => getSectionName(item) === section);
-  setStatus("info", `Draft narrowed to section: ${section}`);
+  const selected = new Set(getSelectedSections());
+  state.proposed = state.proposed.filter((item) => selected.has(getSectionName(item)));
+  setStatus("info", `Draft narrowed to ${selected.size} section${selected.size === 1 ? "" : "s"}.`);
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -1033,6 +1082,24 @@ function normalizeSectionLabel(label) {
   return (label || "").trim();
 }
 
+function buildSectionSuggestions(marks) {
+  const labels = [];
+  const startByLabel = {};
+  for (const mark of marks) {
+    const label = normalizeSectionLabel(mark?.label);
+    if (!label) continue;
+    if (!labels.includes(label)) labels.push(label);
+    if (
+      typeof mark?.startMs === "number" &&
+      !Number.isNaN(mark.startMs) &&
+      !(label in startByLabel)
+    ) {
+      startByLabel[label] = mark.startMs;
+    }
+  }
+  return { labels, startByLabel };
+}
+
 async function fetchSectionSuggestions(options = {}) {
   const selectedTrack = options?.selectedTrack || "";
   const refreshTracks = options?.refreshTracks !== false;
@@ -1061,17 +1128,10 @@ async function fetchSectionSuggestions(options = {}) {
   state.ui.sectionTrackName = preferred;
   const marksResp = await getTimingMarks(state.endpoint, preferred);
   const marks = marksResp?.data?.marks || [];
-  const labels = Array.from(
-    new Set(
-      marks
-        .map((m) => normalizeSectionLabel(m?.label))
-        .filter((l) => l.length > 0)
-    )
-  );
+  const built = buildSectionSuggestions(marks);
+  const labels = built.labels;
   state.sectionSuggestions = labels;
-  if (!state.sectionSuggestions.includes(state.ui.sectionPreset)) {
-    state.ui.sectionPreset = state.sectionSuggestions[0] || "";
-  }
+  state.sectionStartByLabel = built.startByLabel;
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
 }
 
@@ -1096,6 +1156,7 @@ async function onLoadSectionSuggestions() {
     );
   } catch (err) {
     state.sectionSuggestions = [];
+    state.sectionStartByLabel = {};
     setStatusWithDiagnostics(
       "warning",
       `Section label load failed: ${err.message}.`,
@@ -1192,11 +1253,12 @@ function onResetProjectWorkspace() {
   state.flags.planOnlyMode = false;
   state.flags.hasDraftProposal = state.proposed.length > 0;
   state.flags.proposalStale = false;
-  state.ui.sectionFilter = "all";
+  state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
   state.ui.detailsOpen = false;
   state.diagnostics = [];
   state.jobs = [];
+  state.sectionStartByLabel = {};
 
   const store = loadProjectsStore();
   store[key] = extractProjectSnapshot();
@@ -1212,7 +1274,7 @@ function resetSessionDraftState() {
   state.flags.hasDraftProposal = false;
   state.flags.proposalStale = false;
   state.ui.detailsOpen = false;
-  state.ui.sectionFilter = "all";
+  state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
   state.proposed = [];
 }
@@ -1360,10 +1422,14 @@ function projectScreen() {
 }
 
 function designScreen() {
+  const sectionRows = getSectionChoiceRows();
+  const selectedSections = getSelectedSections();
+  const allSelected = hasAllSectionsSelected();
+  const sectionPreviewMatches = filteredProposed().length;
   const disabledReason = applyDisabledReason();
   const filtered = state.proposed
     .map((line, idx) => ({ line, idx }))
-    .filter((x) => state.ui.sectionFilter === "all" || getSectionName(x.line) === state.ui.sectionFilter);
+    .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
   const list = filtered.map((x) => x.line);
   return `
     ${
@@ -1402,19 +1468,15 @@ function designScreen() {
         <div class="field">
           <label>Section Target</label>
           <div class="row">
-            <select id="section-preset-select">
-              <option value="">Select loaded section label...</option>
-              ${(state.sectionSuggestions || [])
+            <select id="section-picker" multiple size="6">
+              <option value="all" ${allSelected ? "selected" : ""}>All Sections</option>
+              ${sectionRows
                 .map(
-                  (s) =>
-                    `<option value="${s.replace(/\"/g, "&quot;")}" ${state.ui.sectionPreset === s ? "selected" : ""}>${s}</option>`
+                  (row) =>
+                    `<option value="${row.label.replace(/\"/g, "&quot;")}" ${selectedSections.includes(row.label) ? "selected" : ""}>${row.label} | ${formatMs(row.startMs)}</option>`
                 )
                 .join("")}
             </select>
-            <input id="section-custom-input" list="section-label-suggestions" placeholder="Or type custom label (e.g. Chorus 2)" />
-            <datalist id="section-label-suggestions">
-              ${(state.sectionSuggestions || []).map((s) => `<option value="${s.replace(/\"/g, "&quot;")}"></option>`).join("")}
-            </datalist>
             <button id="add-section-line">Add Section Line</button>
             <button id="use-section-filter">Use As Filter</button>
           </div>
@@ -1432,6 +1494,7 @@ function designScreen() {
             </select>
             <button id="load-sections">Load Sections</button>
           </div>
+          <p class="banner">Target preview: ${allSelected ? "All Sections" : selectedSections.join(", ")} (${sectionPreviewMatches} matching draft row${sectionPreviewMatches === 1 ? "" : "s"})</p>
         </div>
         <div class="field"><label>Scope</label><select><option>Selected Range</option><option>Entire Sequence</option><option>Models</option></select></div>
         <div class="field"><label>Range / Label</label><input value="chorus-2" /></div>
@@ -1482,9 +1545,11 @@ function designScreen() {
 function detailsDrawer() {
   if (!state.ui.detailsOpen) return "";
   const sections = getSections();
+  const selectedSections = getSelectedSections();
+  const allSelected = hasAllSectionsSelected();
   const filtered = state.proposed
     .map((line, idx) => ({ line, idx }))
-    .filter((x) => state.ui.sectionFilter === "all" || getSectionName(x.line) === state.ui.sectionFilter);
+    .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
   const list = filtered.map((x) => x.line);
   return `
     <section class="card details-drawer">
@@ -1492,11 +1557,11 @@ function detailsDrawer() {
       <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
       <div class="banner">Revision base: ${state.draftBaseRevision}</div>
       <div class="row" style="margin-top:8px;">
-        <button data-section="all" class="${state.ui.sectionFilter === "all" ? "active-chip" : ""}">All Sections</button>
+        <button data-section="all" class="${allSelected ? "active-chip" : ""}">All Sections</button>
         ${sections
           .map(
             (s) =>
-              `<button data-section="${s}" class="${state.ui.sectionFilter === s ? "active-chip" : ""}">${s}</button>`
+              `<button data-section="${s}" class="${selectedSections.includes(s) ? "active-chip" : ""}">${s}</button>`
           )
           .join("")}
       </div>
@@ -1870,9 +1935,12 @@ function bindEvents() {
     btn.addEventListener("click", () => setDesignTab(btn.dataset.designTab));
   });
 
-  const sectionPresetSelect = app.querySelector("#section-preset-select");
-  if (sectionPresetSelect) {
-    sectionPresetSelect.addEventListener("change", () => setSectionPreset(sectionPresetSelect.value));
+  const sectionPicker = app.querySelector("#section-picker");
+  if (sectionPicker) {
+    sectionPicker.addEventListener("change", () => {
+      const values = Array.from(sectionPicker.selectedOptions || []).map((opt) => opt.value);
+      setSectionSelections(values);
+    });
   }
 
   const addSectionLineBtn = app.querySelector("#add-section-line");
@@ -1891,18 +1959,6 @@ function bindEvents() {
       saveCurrentProjectSnapshot();
       persist();
       await onLoadSectionSuggestions();
-    });
-  }
-
-  const sectionCustomInput = app.querySelector("#section-custom-input");
-  if (sectionCustomInput) {
-    sectionCustomInput.addEventListener("change", () => {
-      const v = sectionCustomInput.value.trim();
-      if (v) {
-        state.ui.sectionPreset = v;
-        saveCurrentProjectSnapshot();
-        persist();
-      }
     });
   }
 
