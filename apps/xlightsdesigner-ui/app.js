@@ -294,7 +294,8 @@ function getSectionChoiceRows() {
   return labels.map((label, idx) => ({
     label,
     // Temporary deterministic fallback for display until all sections carry timing metadata.
-    startMs: typeof starts[label] === "number" ? starts[label] : idx * 15000
+    startMs: typeof starts[label] === "number" ? starts[label] : idx * 15000,
+    estimated: typeof starts[label] !== "number"
   }));
 }
 
@@ -1425,6 +1426,7 @@ function designScreen() {
   const sectionRows = getSectionChoiceRows();
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
+  const hasEstimatedTimes = sectionRows.some((row) => row.estimated);
   const sectionPreviewMatches = filteredProposed().length;
   const disabledReason = applyDisabledReason();
   const filtered = state.proposed
@@ -1473,7 +1475,7 @@ function designScreen() {
               ${sectionRows
                 .map(
                   (row) =>
-                    `<option value="${row.label.replace(/\"/g, "&quot;")}" ${selectedSections.includes(row.label) ? "selected" : ""}>${row.label} | ${formatMs(row.startMs)}</option>`
+                    `<option value="${row.label.replace(/\"/g, "&quot;")}" ${selectedSections.includes(row.label) ? "selected" : ""}>${row.label} | ${formatMs(row.startMs)}${row.estimated ? " (est)" : ""}</option>`
                 )
                 .join("")}
             </select>
@@ -1494,6 +1496,7 @@ function designScreen() {
             </select>
             <button id="load-sections">Load Sections</button>
           </div>
+          ${hasEstimatedTimes ? `<p class="banner warning">Some section start times are estimated placeholders.</p>` : ""}
           <p class="banner">Target preview: ${allSelected ? "All Sections" : selectedSections.join(", ")} (${sectionPreviewMatches} matching draft row${sectionPreviewMatches === 1 ? "" : "s"})</p>
         </div>
         <div class="field"><label>Scope</label><select><option>Selected Range</option><option>Entire Sequence</option><option>Models</option></select></div>
