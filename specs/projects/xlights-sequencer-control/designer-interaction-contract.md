@@ -18,6 +18,7 @@ This spec defines the contract between:
 - Support iterative refinement ("keep X, change Y") without global unintended drift.
 - Preserve deterministic behavior and rollback safety in execution.
 - Let the agent act as a lighting designer that translates director-level intent into executable design choices.
+- Avoid recreating xLights editing surfaces; xLightsDesigner is a director console, not a sequencer replacement.
 
 ## 3) Core Principles
 1. Natural language is primary, structured fields are mandatory before apply.
@@ -285,6 +286,15 @@ Fresh scan is required when any of the following is true:
 - Proposal panel: structured diff preview and risk flags.
 - History panel: change sets with undo/reapply.
 
+### 10.1.1 Non-Duplication Requirement (Hard)
+- xLightsDesigner must not implement a timeline grid or sequencer-lane editing surface that duplicates xLights.
+- Detailed timeline/effect lane editing remains in xLights.
+- xLightsDesigner acts as:
+  - intent capture + clarification,
+  - proposal/review/approval,
+  - change tracking + rollback orchestration,
+  - preference/freshness controls.
+
 ## 10.2 Required Interactive Controls
 - Scope chips/tags (`Entire Sequence`, selected models, selected range).
 - Constraint toggles:
@@ -296,6 +306,41 @@ Fresh scan is required when any of the following is true:
 
 ## 10.3 Selection Binding
 When user has timeline/effect selection in UI, agent references must bind to stable ids (not ambiguous text pointers).
+
+## 10.4 xLights Collaboration Bridge
+- Designer must provide explicit sync controls with xLights:
+  - `Refresh from xLights` to pull latest state,
+  - clear revision badge indicating proposal base revision,
+  - stale-state warnings when xLights changed since last proposal.
+- Designer should support "review in xLights" workflow rather than replicating xLights rendering/editing UI.
+
+## 10.5 Designer-Linked Timing Tracks
+- Designer should use custom timing tracks in xLights as the primary visual bridge between designer intent and sequence structure.
+- These tracks are for semantic overlays (not replacing beat/timing analysis tracks), for example:
+  - song sections (`intro`, `verse`, `chorus`, `bridge`, `outro`),
+  - mood/energy arcs (`calm`, `lift`, `peak`, `resolve`),
+  - design directives (`focus-megatree`, `color-shift-warm`).
+- Track labels should map to designer-side metadata so selecting a label can bind designer panel context (scope, constraints, references).
+
+### 10.5.1 Contract Requirements
+- Designer-created semantic tracks must use stable naming conventions and ids.
+- Labels must include deterministic time ranges and machine-readable keys.
+- Designer must be able to re-scan and rebind to existing labels after restart/session restore.
+- Agent proposals should reference these labels when available to reduce ambiguity in user directives.
+
+### 10.5.2 Example Metadata Binding
+```json
+{
+  "timingTrackName": "Designer:SongStructure",
+  "label": "chorus-1",
+  "timeRangeMs": { "start": 45000, "end": 73000 },
+  "designerContext": {
+    "sectionType": "chorus",
+    "mood": "high-energy",
+    "preferredFocusModels": ["MegaTree", "Roofline"]
+  }
+}
+```
 
 ## 11) Non-Black-Box Guarantees
 - Every mutation is tied to a visible change set.
@@ -319,8 +364,11 @@ When user has timeline/effect selection in UI, agent references must bind to sta
 8. Clarification questions reference audio/section context where available.
 9. User can direct at a high level ("director intent") while agent translates it into structured design inputs.
 10. If user edits sequence content between turns, agent performs a fresh scan and rebases proposals before apply.
+11. Designer can project song/design structure into xLights via custom semantic timing tracks with stable label bindings.
+12. Agent can consume and reference semantic timing labels in proposal generation and clarification.
 
 ## 14) Out of Scope (This Spec)
 - LLM model/provider selection policy.
 - Visual styling/theme details of xLightsDesigner UI.
 - Controller/layout write operations (remains outside program scope).
+- Implementing a duplicate timeline/sequencer editor surface already provided by xLights.
