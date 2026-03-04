@@ -71,3 +71,12 @@ Status: Locked unless superseded by explicit revision.
 - Keep a practical integration baseline and capture new API friction in a live backlog.
 - Prioritize unblock value and deterministic behavior over full theoretical completeness at this stage.
 - Maintain lightweight regression gates (critical smoke suites + crash watcher) on each API change batch.
+
+## D14) Deployment Boundary: Standalone-First, Add-On Deferred (2026-03-04)
+- xLightsDesigner remains a separate application/process and is not packaged into core xLights releases at this stage.
+- Any xLights add-on/embedded integration path is explicitly deferred and considered optional future work.
+- Rationale:
+  - avoid tight coupling and release-risk spillover into xLights,
+  - preserve independent release cadence for Designer,
+  - reduce maintenance risk from xLights internal changes.
+- If add-on exploration happens later, standalone operation must remain a fully supported fallback path.

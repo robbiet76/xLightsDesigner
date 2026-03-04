@@ -372,3 +372,7 @@ When user has timeline/effect selection in UI, agent references must bind to sta
 - Visual styling/theme details of xLightsDesigner UI.
 - Controller/layout write operations (remains outside program scope).
 - Implementing a duplicate timeline/sequencer editor surface already provided by xLights.
+
+## 15) Related Specs
+- `learning-and-freshness-loop.md`
+- `model-context-and-semantic-metadata.md`
