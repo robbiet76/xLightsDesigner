@@ -26,6 +26,7 @@ This spec defines the contract between:
 4. User feedback updates future proposals but does not silently rewrite prior accepted regions.
 5. Every applied change can be traced, reverted, and replayed.
 6. When user intent is incomplete, the agent must proactively ask domain-relevant questions using lighting and audio context.
+7. User and agent are collaborative co-editors; if user edits occur, agent must refresh sequence state before proposing/applying further mutations.
 
 ## 4) Interaction Model
 
@@ -50,6 +51,7 @@ No mutating apply can execute unless these are known:
 - mutation type (create/update/delete/bulk),
 - preservation constraints,
 - user approval action.
+- current sequence revision matches proposal base revision, or a fresh scan/reproposal has been completed.
 
 ## 5) Intent Contract
 
@@ -258,6 +260,22 @@ UI must support locking at:
 
 Locked content cannot be mutated unless user explicitly unlocks.
 
+## 9.4 Collaborative User Edits (Fresh-Scan Requirement)
+- Users may directly edit sequence content between agent turns.
+- Before proposing or applying new mutations, agent must validate current sequence state against its last planning snapshot.
+- If drift is detected (revision change or conflicting state delta), agent must:
+  1. run a fresh scan/readback of affected sequence state,
+  2. rebase or regenerate the proposal on updated state,
+  3. present updated diff/risk summary before apply.
+- Agent must not apply stale plans built on outdated state.
+
+## 9.5 Fresh Scan Triggers
+Fresh scan is required when any of the following is true:
+- `sequence.getRevision` token changed since last proposal generation.
+- User manually changed timing/effects/display ordering in UI.
+- Apply attempt returns revision conflict or stale-state error.
+- User requests edits that reference recently changed content ("tweak what I just adjusted").
+
 ## 10) UI Requirements
 
 ## 10.1 Layout
@@ -300,6 +318,7 @@ When user has timeline/effect selection in UI, agent references must bind to sta
 7. For underspecified requests, agent asks domain-informed clarification questions before proposing major changes.
 8. Clarification questions reference audio/section context where available.
 9. User can direct at a high level ("director intent") while agent translates it into structured design inputs.
+10. If user edits sequence content between turns, agent performs a fresh scan and rebases proposals before apply.
 
 ## 14) Out of Scope (This Spec)
 - LLM model/provider selection policy.
