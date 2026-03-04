@@ -9,6 +9,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 ## Files
 - `project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
 - `designer-interaction-contract.md`: user-to-agent intent, proposal/review, and iterative change-control contract for Designer UI workflows.
+- `standalone-app-requirements.md`: consolidated standalone xLightsDesigner requirements with explicit gap register and phased closure plan.
 - `learning-and-freshness-loop.md`: preference learning + novelty/repetition-control requirements for long-term agent improvement.
 - `model-context-and-semantic-metadata.md`: model/group spatial awareness and extensible semantic metadata contract for agent planning.
 - `api-surface-contract.md`: required endpoint/capability matrix for full sequencer control.
