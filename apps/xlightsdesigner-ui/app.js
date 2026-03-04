@@ -16,6 +16,10 @@ const defaultState = {
   endpoint: getDefaultEndpoint(),
   projectName: "Holiday 2026",
   showFolder: "/Users/robterry/Desktop/Show",
+  safety: {
+    applyConfirmMode: "large-only",
+    largeChangeThreshold: 60
+  },
   activeSequence: "CarolOfTheBells.xsq",
   sequencePathInput: "/Users/robterry/Desktop/Show/Sequences/CarolOfTheBells.xsq",
   recentSequences: [],
@@ -129,6 +133,17 @@ function applyDisabledReason() {
   return "";
 }
 
+function currentImpactCount() {
+  return filteredProposed().length * 11;
+}
+
+function requiresApplyConfirmation() {
+  const mode = state.safety?.applyConfirmMode || "large-only";
+  if (mode === "always") return true;
+  if (mode === "never") return false;
+  return currentImpactCount() >= (state.safety?.largeChangeThreshold || 60);
+}
+
 function getSectionName(line) {
   const [section] = line.split("/");
   return (section || "General").trim();
@@ -208,6 +223,14 @@ async function onApply() {
   if (!applyEnabled()) {
     setStatusWithDiagnostics("warning", applyDisabledReason());
     return render();
+  }
+
+  if (requiresApplyConfirmation()) {
+    const message = `Apply ${currentImpactCount()} estimated impacted effects?`;
+    if (!window.confirm(message)) {
+      setStatus("info", "Apply canceled by user.");
+      return render();
+    }
   }
 
   state.flags.applyInProgress = true;
@@ -510,10 +533,17 @@ function onSaveProjectSettings() {
   const projectInput = app.querySelector("#project-input");
   const showFolderInput = app.querySelector("#showfolder-input");
   const endpointInput = app.querySelector("#endpoint-input");
+  const confirmModeInput = app.querySelector("#confirm-mode-input");
+  const thresholdInput = app.querySelector("#threshold-input");
 
   if (projectInput) state.projectName = projectInput.value.trim() || state.projectName;
   if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
   if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
+  if (confirmModeInput) state.safety.applyConfirmMode = confirmModeInput.value;
+  if (thresholdInput) {
+    const parsed = Number.parseInt(thresholdInput.value, 10);
+    state.safety.largeChangeThreshold = Number.isFinite(parsed) ? parsed : state.safety.largeChangeThreshold;
+  }
 
   setStatus("info", "Project settings saved.");
   persist();
@@ -614,6 +644,18 @@ function projectScreen() {
       <section class="card">
         <h3>Project-Level Settings</h3>
         <div class="field"><label>xLights Endpoint</label><input id="endpoint-input" value="${state.endpoint}" /></div>
+        <div class="field">
+          <label>Apply Confirmation Mode</label>
+          <select id="confirm-mode-input">
+            <option value="large-only" ${state.safety.applyConfirmMode === "large-only" ? "selected" : ""}>Large changes only</option>
+            <option value="always" ${state.safety.applyConfirmMode === "always" ? "selected" : ""}>Always confirm</option>
+            <option value="never" ${state.safety.applyConfirmMode === "never" ? "selected" : ""}>Never confirm</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Large Change Threshold (approx effects impacted)</label>
+          <input id="threshold-input" type="number" min="1" value="${state.safety.largeChangeThreshold}" />
+        </div>
         <div class="kv"><div class="k">Discovery</div><div>Auto + manual fallback</div></div>
         <div class="kv"><div class="k">Multi-instance</div><div>Latest running</div></div>
         <div class="kv"><div class="k">Retry</div><div>1,2,5,10,15 then 30s</div></div>
