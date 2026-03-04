@@ -37,7 +37,8 @@ const defaultState = {
   ],
   ui: {
     detailsOpen: false,
-    sectionFilter: "all"
+    sectionFilter: "all",
+    designTab: "chat"
   },
   versions: [
     { id: "v18", summary: "Reduce chorus 2 twinkle", effects: 34, time: "11:05" },
@@ -56,7 +57,8 @@ function loadState() {
     return {
       ...structuredClone(defaultState),
       ...parsed,
-      flags: { ...defaultState.flags, ...(parsed.flags || {}) }
+      flags: { ...defaultState.flags, ...(parsed.flags || {}) },
+      ui: { ...defaultState.ui, ...(parsed.ui || {}) }
     };
   } catch {
     return structuredClone(defaultState);
@@ -407,6 +409,13 @@ function setSectionFilter(section) {
   render();
 }
 
+function setDesignTab(tab) {
+  if (!["chat", "intent", "proposed"].includes(tab)) return;
+  state.ui.designTab = tab;
+  persist();
+  render();
+}
+
 function splitBySection() {
   const section = state.ui.sectionFilter;
   if (section === "all") {
@@ -489,16 +498,22 @@ function designScreen() {
   const disabledReason = applyDisabledReason();
   const list = filteredProposed();
   return `
-    <div class="screen-grid">
-      <section class="card">
+    <div class="design-tabs">
+      <button data-design-tab="chat" class="${state.ui.designTab === "chat" ? "active-chip" : ""}">Chat</button>
+      <button data-design-tab="intent" class="${state.ui.designTab === "intent" ? "active-chip" : ""}">Intent</button>
+      <button data-design-tab="proposed" class="${state.ui.designTab === "proposed" ? "active-chip" : ""}">Proposed</button>
+    </div>
+
+    <div class="design-panels">
+      <section class="card design-panel ${state.ui.designTab === "chat" ? "active" : ""}" data-panel="chat">
         <h3>Chat Thread</h3>
         <ul class="list">
           ${state.chat.map((c) => `<li><strong>${c.who}:</strong> ${c.text}</li>`).join("")}
         </ul>
       </section>
 
-      <section class="card">
-        <h3>Intent + Proposed Next Write</h3>
+      <section class="card design-panel ${state.ui.designTab === "intent" ? "active" : ""}" data-panel="intent">
+        <h3>Intent</h3>
         <div class="field"><label>Scope</label><select><option>Selected Range</option><option>Entire Sequence</option><option>Models</option></select></div>
         <div class="field"><label>Range / Label</label><input value="chorus-2" /></div>
         <div class="row">
@@ -506,23 +521,29 @@ function designScreen() {
           <div class="field" style="flex:1"><label>Energy</label><input value="medium" /></div>
           <div class="field" style="flex:1"><label>Priority</label><input value="preserve look" /></div>
         </div>
+      </section>
+
+      <section class="card design-panel proposed ${state.ui.designTab === "proposed" ? "active" : ""}" data-panel="proposed">
+        <h3>Proposed Next Write</h3>
         <div class="field"><label>Proposed Next Write</label>
           <ol class="list">
             ${list.slice(0, 5).map((p) => `<li>${p}</li>`).join("")}
           </ol>
           <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
         </div>
+        <div class="composer">
+          <input id="chat-input" placeholder="Type request..." value="Change chorus 2 candy canes to twinkle less" />
+          <button id="generate">Generate/Refresh</button>
+          <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
+          <button id="open-details">Open Details</button>
+        </div>
+        <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
       </section>
     </div>
 
-    <div class="card" style="margin-top:12px;">
-      <div class="composer">
-        <input id="chat-input" placeholder="Type request..." value="Change chorus 2 candy canes to twinkle less" />
-        <button id="generate">Generate/Refresh</button>
-        <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
-        <button id="open-details">Open Details</button>
-      </div>
-      <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
+    <div class="mobile-apply-bar">
+      <button id="mobile-apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
+      <span class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready" : disabledReason}</span>
     </div>
   `;
 }
@@ -662,6 +683,9 @@ function bindEvents() {
   const applyBtn = app.querySelector("#apply");
   if (applyBtn) applyBtn.addEventListener("click", onApply);
 
+  const mobileApplyBtn = app.querySelector("#mobile-apply");
+  if (mobileApplyBtn) mobileApplyBtn.addEventListener("click", onApply);
+
   const openDetailsBtn = app.querySelector("#open-details");
   if (openDetailsBtn) openDetailsBtn.addEventListener("click", openDetails);
 
@@ -697,6 +721,10 @@ function bindEvents() {
 
   app.querySelectorAll("[data-section]").forEach((btn) => {
     btn.addEventListener("click", () => setSectionFilter(btn.dataset.section));
+  });
+
+  app.querySelectorAll("[data-design-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => setDesignTab(btn.dataset.designTab));
   });
 
   app.querySelectorAll("[data-version]").forEach((btn) => {

@@ -47,3 +47,4 @@ Live endpoint:
 - Design includes an optional `Open Details` drawer with section filtering and `Split by Section` draft narrowing.
 - When stale, the status bar exposes direct recovery actions: `Rebase/Refresh`, `Regenerate`, and `Cancel Draft`.
 - History supports `Compare` against current head, `Reapply as Variant` into Design, and practical rollback draft restore flow.
+- Compact/mobile behavior includes Design tabs (`Chat`, `Intent`, `Proposed`) and a fixed bottom `Apply to xLights` action bar.

@@ -154,6 +154,36 @@ button:disabled {
   gap: 14px;
 }
 
+.design-tabs {
+  display: none;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.design-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.design-panel.proposed {
+  grid-column: 1 / -1;
+}
+
+.mobile-apply-bar {
+  display: none;
+  position: sticky;
+  bottom: 0;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffffee;
+  backdrop-filter: blur(3px);
+  padding: 8px;
+  gap: 10px;
+  align-items: center;
+}
+
 .card {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -274,7 +304,35 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .design-tabs {
+    display: flex;
+  }
+
+  .design-panels {
+    display: block;
+  }
+
+  .design-panel {
+    display: none;
+  }
+
+  .design-panel.active {
+    display: block;
+  }
+
   .composer {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .design-panel.proposed .composer {
+    grid-template-columns: 1fr;
+  }
+
+  .design-panel.proposed .composer #apply {
+    display: none;
+  }
+
+  .mobile-apply-bar {
+    display: flex;
   }
 }
