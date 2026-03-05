@@ -18,6 +18,13 @@ import {
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
+const DEFAULT_PROPOSED_ROWS = 5;
+const PROPOSED_ROWS_STEP = 5;
+const CHAT_QUICK_PROMPTS = [
+  "Make chorus 2 higher energy on MegaTree and Roofline.",
+  "Keep current look, but reduce twinkle intensity on candy canes.",
+  "Rework bridge section with calmer color transitions."
+];
 const FALLBACK_LOCAL_ENDPOINTS = [
   "http://127.0.0.1:8080/xlDoAutomation",
   "http://localhost:8080/xlDoAutomation",
@@ -77,6 +84,9 @@ const defaultState = {
     diagnosticsFilter: "all",
     modelFilterText: "",
     sectionTrackName: "",
+    proposedRowsVisible: DEFAULT_PROPOSED_ROWS,
+    chatDraft: "",
+    agentThinking: false,
     metadataTargetId: "",
     metadataRole: "support",
     metadataBehavior: "steady",
@@ -204,6 +214,9 @@ function extractProjectSnapshot() {
       sectionSelections: state.ui.sectionSelections,
       designTab: state.ui.designTab,
       sectionTrackName: state.ui.sectionTrackName,
+      proposedRowsVisible: state.ui.proposedRowsVisible,
+      chatDraft: state.ui.chatDraft,
+      agentThinking: state.ui.agentThinking,
       metadataTargetId: state.ui.metadataTargetId,
       metadataRole: state.ui.metadataRole,
       metadataBehavior: state.ui.metadataBehavior,
@@ -237,6 +250,12 @@ function applyProjectSnapshot(snapshot) {
     : ["all"];
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
   state.ui.sectionTrackName = snapshot?.ui?.sectionTrackName || "";
+  state.ui.proposedRowsVisible =
+    Number.isFinite(Number(snapshot?.ui?.proposedRowsVisible))
+      ? Math.max(DEFAULT_PROPOSED_ROWS, Number(snapshot.ui.proposedRowsVisible))
+      : DEFAULT_PROPOSED_ROWS;
+  state.ui.chatDraft = snapshot?.ui?.chatDraft || "";
+  state.ui.agentThinking = Boolean(snapshot?.ui?.agentThinking);
   state.ui.metadataTargetId = snapshot?.ui?.metadataTargetId || "";
   state.ui.metadataRole = snapshot?.ui?.metadataRole || "support";
   state.ui.metadataBehavior = snapshot?.ui?.metadataBehavior || "steady";
@@ -419,8 +438,7 @@ function reconcileSectionSelectionsToAvailable() {
 }
 
 function getSections() {
-  const sections = getSectionChoiceList();
-  return sections.length > 0 ? sections : ["General"];
+  return getSectionChoiceList();
 }
 
 function filteredProposed() {
@@ -504,6 +522,8 @@ async function onApply() {
   }
 
   state.flags.applyInProgress = true;
+  state.ui.agentThinking = true;
+  addChatMessage("agent", "Applying approved proposal to xLights...");
   setStatus("info", "Applying proposal to xLights...");
   render();
 
@@ -558,10 +578,13 @@ async function onApply() {
       "info",
       `Applied via system.executePlan (${executed} steps).`
     );
+    addChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`);
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
+    addChatMessage("agent", `Apply blocked: ${err.message}`);
   } finally {
     state.flags.applyInProgress = false;
+    state.ui.agentThinking = false;
     saveCurrentProjectSnapshot();
     persist();
     render();
@@ -574,15 +597,22 @@ function onGenerate() {
     return render();
   }
 
+  state.ui.agentThinking = true;
+  addChatMessage("agent", "Working on updated proposal from current chat intent...");
   state.flags.hasDraftProposal = true;
   state.flags.proposalStale = false;
   state.draftBaseRevision = state.revision;
-  const selected = hasAllSectionsSelected()
+  const usingAll = hasAllSectionsSelected();
+  const selected = usingAll
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
-  const sections = selected.length ? selected : ["General"];
-  state.proposed = sections.map((section) => `${section} / SelectedModels / apply intent refinement`);
-  state.ui.sectionSelections = selected.length ? [...selected] : ["all"];
+  const intentText = latestUserIntentText();
+  state.proposed = inferProposalLinesFromIntent(intentText, selected);
+  state.ui.agentThinking = false;
+  addChatMessage(
+    "agent",
+    `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`
+  );
   setStatus("info", `Proposal refreshed from current intent (${state.proposed.length} line${state.proposed.length === 1 ? "" : "s"}).`);
   saveCurrentProjectSnapshot();
   persist();
@@ -1001,6 +1031,102 @@ function setModelFilterText(value) {
   render();
 }
 
+function addChatMessage(who, text) {
+  const message = {
+    who,
+    text: String(text || "").trim(),
+    at: new Date().toISOString()
+  };
+  if (!message.text) return;
+  state.chat = [...(state.chat || []), message].slice(-200);
+}
+
+function onUseQuickPrompt(promptText) {
+  state.ui.chatDraft = promptText || "";
+  persist();
+  render();
+}
+
+function onSendChat() {
+  const raw = (state.ui.chatDraft || "").trim();
+  if (!raw) return;
+  addChatMessage("user", raw);
+  state.ui.chatDraft = "";
+  addChatMessage("agent", "Captured. I will update the proposal scope and regenerate when requested.");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function latestUserIntentText() {
+  const messages = Array.isArray(state.chat) ? [...state.chat] : [];
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i]?.who === "user" && messages[i]?.text) return String(messages[i].text);
+  }
+  return "";
+}
+
+function inferProposalLinesFromIntent(intentText, sections = []) {
+  const text = String(intentText || "").trim();
+  const normalized = text.toLowerCase();
+  const scoped = Array.isArray(sections) && sections.length > 0 ? sections.slice(0, 3) : [];
+  const lines = [];
+
+  if (normalized.includes("background")) {
+    if (normalized.includes("star") || normalized.includes("magic")) {
+      lines.push("Add gentle twinkle texture to background props for a starry-night feel");
+    } else {
+      lines.push("Increase ambient motion and color texture on background props");
+    }
+  }
+
+  if (normalized.includes("magic") && !lines.length) {
+    lines.push("Introduce soft shimmer accents and subtle sparkle layers for a magical atmosphere");
+  }
+
+  if (normalized.includes("twinkle")) {
+    lines.push(normalized.includes("reduce")
+      ? "Reduce twinkle density and brightness to keep detail without visual noise"
+      : "Add controlled twinkle accents to emphasize depth and movement");
+  }
+
+  if (normalized.includes("energy")) {
+    lines.push(normalized.includes("high") || normalized.includes("increase")
+      ? "Raise contrast and motion pacing in target moments to increase perceived energy"
+      : "Balance motion pacing to keep energy controlled and musical");
+  }
+
+  if (!lines.length && text) {
+    lines.push(`Translate intent into focused design updates: ${text}`);
+    lines.push("Keep existing successful moments and adjust only inferred target regions");
+  }
+
+  if (!lines.length) {
+    lines.push("Refine sequence with balanced motion, palette cohesion, and cleaner transitions");
+  }
+
+  if (scoped.length) {
+    lines.push(`Prioritize updates in loaded XD labels: ${scoped.join(", ")}`);
+  }
+
+  return lines.slice(0, 5);
+}
+
+function onShowMoreProposed() {
+  const current = Number.isFinite(Number(state.ui.proposedRowsVisible))
+    ? Number(state.ui.proposedRowsVisible)
+    : DEFAULT_PROPOSED_ROWS;
+  state.ui.proposedRowsVisible = Math.max(DEFAULT_PROPOSED_ROWS, current + PROPOSED_ROWS_STEP);
+  persist();
+  render();
+}
+
+function onShowLessProposed() {
+  state.ui.proposedRowsVisible = DEFAULT_PROPOSED_ROWS;
+  persist();
+  render();
+}
+
 function modelStableId(model) {
   const raw = model?.id ?? model?.modelId ?? model?.name ?? "";
   return String(raw || "");
@@ -1186,8 +1312,53 @@ function removeProposedLine(index) {
 }
 
 function addProposedLine() {
-  state.proposed.push("New Section / ModelGroup / describe change");
+  state.proposed.push("Describe the next design change in plain language");
   state.flags.hasDraftProposal = true;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function selectedProposedIndexesFromPicker() {
+  const picker = app.querySelector("#proposed-picker");
+  if (!picker) return [];
+  return Array.from(picker.selectedOptions || [])
+    .map((opt) => Number.parseInt(opt.value, 10))
+    .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < state.proposed.length);
+}
+
+function onRemoveSelectedProposed() {
+  const selected = selectedProposedIndexesFromPicker();
+  if (!selected.length) {
+    setStatus("warning", "Select one or more proposed lines first.");
+    return render();
+  }
+  const uniqueDesc = Array.from(new Set(selected)).sort((a, b) => b - a);
+  for (const idx of uniqueDesc) state.proposed.splice(idx, 1);
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  setStatus("info", `Removed ${uniqueDesc.length} proposed line${uniqueDesc.length === 1 ? "" : "s"}.`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function onEditSelectedProposed() {
+  const selected = selectedProposedIndexesFromPicker();
+  if (selected.length !== 1) {
+    setStatus("warning", "Select exactly one proposed line to edit.");
+    return render();
+  }
+  const idx = selected[0];
+  const current = state.proposed[idx] || "";
+  const next = window.prompt("Edit proposed line", current);
+  if (next == null) return;
+  const value = String(next).trim();
+  if (!value) {
+    setStatus("warning", "Edited line cannot be empty.");
+    return render();
+  }
+  state.proposed[idx] = value;
+  state.flags.hasDraftProposal = state.proposed.length > 0;
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -1374,39 +1545,6 @@ async function fetchSectionSuggestions(options = {}) {
   state.sectionStartByLabel = built.startByLabel;
   reconcileSectionSelectionsToAvailable();
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
-}
-
-async function onLoadSectionSuggestions() {
-  if (!state.flags.xlightsConnected) {
-    setStatusWithDiagnostics("warning", "Connect to xLights before loading section labels.");
-    return render();
-  }
-  try {
-    const result = await fetchSectionSuggestions();
-    if (!result.track) {
-      setStatus(
-        "warning",
-        result.noXdTracks
-          ? "No XD timing tracks found. Ask the agent to create one, then refresh globally."
-          : "No timing tracks found for section labels."
-      );
-      saveCurrentProjectSnapshot();
-      persist();
-      return render();
-    }
-  } catch (err) {
-    state.sectionSuggestions = [];
-    state.sectionStartByLabel = {};
-    setStatusWithDiagnostics(
-      "warning",
-      `Section label load failed: ${err.message}.`,
-      err.stack || ""
-    );
-  } finally {
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  }
 }
 
 async function onSaveSequence(asSaveAs = false) {
@@ -1671,17 +1809,18 @@ function projectScreen() {
 }
 
 function designScreen() {
-  const sectionRows = getSectionChoiceRows();
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
-  const hasMissingTimes = sectionRows.some((row) => !row.hasStart);
-  const sectionPreviewMatches = filteredProposed().length;
   const disabledReason = applyDisabledReason();
   const filtered = state.proposed
     .map((line, idx) => ({ line, idx }))
     .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
   const list = filtered.map((x) => x.line);
-  const xdTrackNames = getXdTimingTrackNames();
+  const proposedRowsVisible = Number.isFinite(Number(state.ui.proposedRowsVisible))
+    ? Math.max(DEFAULT_PROPOSED_ROWS, Number(state.ui.proposedRowsVisible))
+    : DEFAULT_PROPOSED_ROWS;
+  const hasMoreProposed = list.length > proposedRowsVisible;
+  const canShowLessProposed = proposedRowsVisible > DEFAULT_PROPOSED_ROWS && list.length > DEFAULT_PROPOSED_ROWS;
   return `
     ${
       state.flags.proposalStale
@@ -1700,79 +1839,61 @@ function designScreen() {
         : ""
     }
 
-    <div class="design-tabs">
-      <button data-design-tab="chat" class="${state.ui.designTab === "chat" ? "active-chip" : ""}">Chat</button>
-      <button data-design-tab="intent" class="${state.ui.designTab === "intent" ? "active-chip" : ""}">Intent</button>
-      <button data-design-tab="proposed" class="${state.ui.designTab === "proposed" ? "active-chip" : ""}">Proposed</button>
-    </div>
-
-    <div class="design-panels">
-      <section class="card design-panel ${state.ui.designTab === "chat" ? "active" : ""}" data-panel="chat">
-        <h3>Chat Thread</h3>
-        <ul class="list">
-          ${state.chat.map((c) => `<li><strong>${c.who}:</strong> ${c.text}</li>`).join("")}
-        </ul>
-      </section>
-
-      <section class="card design-panel ${state.ui.designTab === "intent" ? "active" : ""}" data-panel="intent">
-        <h3>Intent</h3>
-        <div class="field">
-          <label>Section Target</label>
-          <div class="row" style="margin-top:8px;">
-            <select id="section-track-select">
-              <option value="">Auto-select XD timing track...</option>
-              ${xdTrackNames
-                .map(
-                  (name) =>
-                    `<option value="${name.replace(/\"/g, "&quot;")}" ${state.ui.sectionTrackName === name ? "selected" : ""}>${name}</option>`
-                )
-                .join("")}
-            </select>
+    <div class="screen-grid design-workspace">
+      <section class="card design-column">
+        <h3>Designer Chat</h3>
+        <div class="panel-window chat-window">
+          <div class="chat-thread">
+          ${(state.chat || [])
+            .map((c) => {
+              const role = c.who === "user" ? "user" : c.who === "agent" ? "agent" : "system";
+              return `<article class="chat-msg ${role}">
+                <header>${role === "user" ? "You" : role === "agent" ? "Designer Agent" : "System"}</header>
+                <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+              </article>`;
+            })
+            .join("")}
+          ${state.ui.agentThinking ? `<div class="chat-typing">Designer Agent is working...</div>` : ""}
           </div>
-          ${xdTrackNames.length === 0 ? `<p class="banner warning">No XD timing tracks found yet. Agent-created tracks will appear here after global refresh.</p>` : ""}
-          <div class="row">
-            <select id="section-picker" multiple size="6">
-              <option value="all" ${allSelected ? "selected" : ""}>All Sections</option>
-              ${sectionRows
-                .map(
-                  (row) =>
-                    `<option value="${row.label.replace(/\"/g, "&quot;")}" ${selectedSections.includes(row.label) ? "selected" : ""}>${row.label} | ${row.hasStart ? formatMs(row.startMs) : "--:--.---"}</option>`
-                )
-                .join("")}
-            </select>
-          </div>
-          ${hasMissingTimes ? `<p class="banner warning">Some sections do not yet have timing marks.</p>` : ""}
-          <p class="banner">Target preview: ${allSelected ? "All Sections" : (selectedSections.length ? selectedSections.join(", ") : "None")} (${sectionPreviewMatches} matching draft row${sectionPreviewMatches === 1 ? "" : "s"})</p>
+        </div>
+        <div class="quick-prompts panel-footer-block">
+          ${CHAT_QUICK_PROMPTS.map((p, idx) => `<button data-quick-prompt="${idx}">${p}</button>`).join("")}
+        </div>
+        <div class="composer panel-footer-block">
+          <input id="chat-input" placeholder="Tell the agent what to change..." value="${(state.ui.chatDraft || "").replace(/\"/g, "&quot;")}" />
+          <button id="send-chat">Send</button>
         </div>
       </section>
 
-      <section class="card design-panel proposed ${state.ui.designTab === "proposed" ? "active" : ""}" data-panel="proposed">
-        <h3>Proposed Next Write</h3>
-        <div class="field"><label>Proposed Next Write</label>
-          <ul class="list editable-list">
+      <section class="card design-column">
+        <h3>Proposed Changes</h3>
+        <div class="field panel-window proposed-window"><label>Proposed Next Write</label>
+          <select id="proposed-picker" multiple size="${Math.max(8, Math.min(18, proposedRowsVisible + 3))}" class="proposed-picker">
             ${list
-              .slice(0, 5)
+              .slice(0, proposedRowsVisible)
               .map((p, idx) => {
                 const actualIdx = filtered[idx].idx;
-                return `<li>
-                  <input data-proposed-input="${actualIdx}" value="${p.replace(/\"/g, "&quot;")}" />
-                  <button data-proposed-remove="${actualIdx}">Remove</button>
-                </li>`;
+                return `<option value="${actualIdx}">${p
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")}</option>`;
               })
-              .join("")}
-          </ul>
-          <div class="row">
-            <button id="add-proposed-line">Add Line</button>
-          </div>
-          <div class="banner impact">Approx effects impacted: ${list.length * 11}</div>
+                .join("")}
+          </select>
         </div>
-        <div class="composer">
-          <input id="chat-input" placeholder="Type request..." />
-          <button id="generate">Generate/Refresh</button>
+        <div class="row panel-footer-block">
+            <button id="add-proposed-line">Add Line</button>
+            <button id="edit-selected-proposed">Edit Selected</button>
+            <button id="remove-selected-proposed">Remove Selected</button>
+            ${hasMoreProposed ? `<button id="show-more-proposed">Show More</button>` : ""}
+            ${canShowLessProposed ? `<button id="show-less-proposed">Show Less</button>` : ""}
+        </div>
+        <div class="banner impact panel-footer-block">Approx effects impacted: ${list.length * 11}</div>
+        <div class="row panel-footer-block">
           <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
           <button id="open-details">Open Details</button>
         </div>
-        <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
+        <div class="banner ${applyEnabled() ? "" : "warning"} panel-footer-block">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
       </section>
     </div>
 
@@ -2114,8 +2235,30 @@ function bindEvents() {
     btn.addEventListener("click", () => setDiagnosticsFilter(btn.dataset.diagFilter));
   });
 
-  const generateBtn = app.querySelector("#generate");
-  if (generateBtn) generateBtn.addEventListener("click", onGenerate);
+  const sendChatBtn = app.querySelector("#send-chat");
+  if (sendChatBtn) sendChatBtn.addEventListener("click", onSendChat);
+
+  const chatInput = app.querySelector("#chat-input");
+  if (chatInput) {
+    chatInput.addEventListener("input", () => {
+      state.ui.chatDraft = chatInput.value;
+      persist();
+    });
+    chatInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        onSendChat();
+      }
+    });
+  }
+
+  app.querySelectorAll("[data-quick-prompt]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = Number.parseInt(btn.dataset.quickPrompt, 10);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= CHAT_QUICK_PROMPTS.length) return;
+      onUseQuickPrompt(CHAT_QUICK_PROMPTS[idx]);
+    });
+  });
 
   const applyBtn = app.querySelector("#apply");
   if (applyBtn) applyBtn.addEventListener("click", onApply);
@@ -2297,26 +2440,20 @@ function bindEvents() {
     btn.addEventListener("click", () => setDesignTab(btn.dataset.designTab));
   });
 
-  const sectionPicker = app.querySelector("#section-picker");
-  if (sectionPicker) {
-    sectionPicker.addEventListener("change", () => {
-      const values = Array.from(sectionPicker.selectedOptions || []).map((opt) => opt.value);
-      setSectionSelections(values);
-    });
-  }
-
-  const sectionTrackSelect = app.querySelector("#section-track-select");
-  if (sectionTrackSelect) {
-    sectionTrackSelect.addEventListener("change", async () => {
-      state.ui.sectionTrackName = sectionTrackSelect.value.trim();
-      saveCurrentProjectSnapshot();
-      persist();
-      await onLoadSectionSuggestions();
-    });
-  }
-
   const addProposedLineBtn = app.querySelector("#add-proposed-line");
   if (addProposedLineBtn) addProposedLineBtn.addEventListener("click", addProposedLine);
+
+  const editSelectedProposedBtn = app.querySelector("#edit-selected-proposed");
+  if (editSelectedProposedBtn) editSelectedProposedBtn.addEventListener("click", onEditSelectedProposed);
+
+  const removeSelectedProposedBtn = app.querySelector("#remove-selected-proposed");
+  if (removeSelectedProposedBtn) removeSelectedProposedBtn.addEventListener("click", onRemoveSelectedProposed);
+
+  const showMoreProposedBtn = app.querySelector("#show-more-proposed");
+  if (showMoreProposedBtn) showMoreProposedBtn.addEventListener("click", onShowMoreProposed);
+
+  const showLessProposedBtn = app.querySelector("#show-less-proposed");
+  if (showLessProposedBtn) showLessProposedBtn.addEventListener("click", onShowLessProposed);
 
   app.querySelectorAll("[data-proposed-input]").forEach((input) => {
     input.addEventListener("change", () =>

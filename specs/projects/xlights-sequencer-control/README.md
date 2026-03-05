@@ -14,6 +14,8 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `wireframes-v3.md`: updated wireframes with project-level settings placement, live proposed-change list in Design, and global status bar behavior.
 - `wireframes-v4.md`: implementation-focused control/state/validation/confirmation contract for core screens and actions.
 - `wireframes-v4-implementation-checklist.md`: screen-by-screen implementation and acceptance checklist derived from wireframes v4.
+- `wireframes-v5.md`: creative-analysis-first and chat-first wireframes including kickoff dialog, reference media uploads, and Creative Brief flow.
+- `wireframes-v5-implementation-checklist.md`: implementation and acceptance checklist for v5, including sequence-folder media storage and xLights format validation policy.
 - `xlightsdesigner-dev-backlog-v1.md`: prioritized engineering epics/stories and sprint sequence for starting standalone app development.
 - `learning-and-freshness-loop.md`: preference learning + novelty/repetition-control requirements for long-term agent improvement.
 - `model-context-and-semantic-metadata.md`: model/group spatial awareness and extensible semantic metadata contract for agent planning.

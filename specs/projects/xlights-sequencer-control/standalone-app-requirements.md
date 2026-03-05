@@ -17,11 +17,12 @@ This spec assumes:
 - Proposal/approval/change-set workflow with explicit user approval.
 - Collaborative edit model with fresh-scan/rebase on user-side edits.
 - Designer-led elicitation and clarification behavior.
-- Structured intent-capture direction (chat + scope/constraint metadata, not black-box prompting).
+- Chat-first intent-capture direction with agent-managed translation to structured scope/constraints.
 - Learning + freshness loop concept (preference fit + novelty controls).
 - Model context + semantic metadata concept.
 - Semantic timing-track bridge concept for structure visibility in xLights.
 - Standalone-first architecture (separate from xLights plugin/embedded distribution path).
+- Initial creative analysis stage for new sequence setup (audio + lyrics + semantic interpretation).
 
 ## 3) Requirement Areas and Open Gaps
 
@@ -115,10 +116,11 @@ TBD fields:
 
 ## 3.6.1 Intent Capture Contract (UI <-> Agent)
 Defined:
-- User intent should be communicated through guided interaction, not opaque freeform-only chat.
+- User intent may be specific or broad/subjective; chat is primary and always available.
+- Agent is responsible for translating director-level language into executable design proposals.
 
 Gaps to define:
-- slot/tag schema for scope, mood, pacing, priority, constraints, and lock directives,
+- internal slot/tag schema for scope, mood, pacing, priority, constraints, and lock directives,
 - adaptive question policy (when agent asks clarifying questions vs proceeds),
 - traceability from captured intent inputs to generated proposal rationale.
 
@@ -126,6 +128,42 @@ TBD fields:
 - `intent.schema`
 - `intent.clarificationPolicy`
 - `intent.traceability`
+
+## 3.6.2 Initial Creative Analysis Contract (Sequence Setup)
+Defined:
+- During initial sequence setup, agent performs a creative analysis pass before first major proposal/apply.
+- Stage includes a kickoff dialog where the user shares goals, desired style, and inspiration.
+- Analysis inputs include:
+  - audio track signal/features (structure, rhythm, dynamics, energy),
+  - lyrics/text (themes, story arc, emotional cues),
+  - user-supplied reference media (image, image set, or video) used as stylistic inspiration,
+  - optional external context/inspiration research.
+
+Required behavior:
+- Produce a concise `Creative Brief` used to guide subsequent proposals:
+  - user goals + inspiration summary,
+  - section map,
+  - mood/energy arc,
+  - narrative/theme cues,
+  - visual direction cues from reference media,
+  - initial design direction hypotheses.
+- Treat external research as optional enrichment, not a hard dependency.
+- If external research is used, store source links/notes in internal traceability metadata.
+- If user reference media is provided, retain reference ids/filenames and short interpretation notes in traceability metadata.
+- Keep user control: user can accept/adjust/reject brief direction before large apply.
+
+Gaps to define:
+- which providers/services are used for lyrics and external context,
+- accepted reference-media formats and size limits for uploads,
+- prompt/template format for the creative brief,
+- fallback behavior when lyrics or internet context are unavailable.
+
+TBD fields:
+- `analysis.creativeBriefSchema`
+- `analysis.providerPolicy`
+- `analysis.referenceMediaPolicy`
+- `analysis.fallbackPolicy`
+- `analysis.traceability`
 
 ## 3.7 Learning and Preference Governance
 Defined:
@@ -293,6 +331,8 @@ Resolved / Partially Resolved:
 - `intent.schema`: initial required fields should include scope, time range, mood, energy, color constraints, priority, locked regions.
 - `intent.clarificationPolicy`: ask minimum clarifying questions needed; absence of detail implies artistic license.
 - `intent.traceability`: maintain traceability internally; deep trace output not required in default UI.
+- `analysis.creativeBriefSchema`: include section map, mood/energy arc, lyric/theme cues, and initial design hypotheses.
+- `analysis.fallbackPolicy`: if lyrics/external context are missing, continue with audio-only + user dialog; do not block.
 - `stability.preservationRules`:
   - after initial sequence generation, treat regions as preserved unless user requests targeted/global changes,
   - support section-targeted edits via semantic timing labels (for example chorus-specific updates).
