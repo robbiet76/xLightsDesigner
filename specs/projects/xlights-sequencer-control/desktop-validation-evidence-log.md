@@ -31,3 +31,4 @@ Use:
 This check passes when at least one evidence row has both:
 - `Install/Launch = PASS`
 - `Core Flow = PASS`
+| 2026-03-05 | c624259 | preview | MacBookAir-M2 | 15.7.4 | 2026.03.1 | PASS | PASS | dist/mac-arm64 + validate-nondev-install PASS | local non-dev install validation |

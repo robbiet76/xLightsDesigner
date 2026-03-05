@@ -48,13 +48,13 @@ Acceptance:
 
 ## M4) Distribution + Rollout Readiness
 - [x] macOS signed distributable pipeline is implemented.
-- [ ] Installer/app bundle can be installed and launched by non-dev users.
+- [x] Installer/app bundle can be installed and launched by non-dev users.
 - [x] Update channel strategy is implemented/documented.
 - [x] Release runbook includes compatibility matrix validation steps.
 - [x] Smoke suite includes install -> launch -> connect -> open -> apply -> rollback.
 
 Acceptance:
-- [ ] User can install one app and complete core flow without side runtime/tool installs.
+- [x] User can install one app and complete core flow without side runtime/tool installs.
 
 ## Cross-Cut Quality Gates
 - [ ] UI regressions: no loss of approved wireframe-v5 behavior.
