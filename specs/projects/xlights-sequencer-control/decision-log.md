@@ -80,3 +80,9 @@ Status: Locked unless superseded by explicit revision.
   - preserve independent release cadence for Designer,
   - reduce maintenance risk from xLights internal changes.
 - If add-on exploration happens later, standalone operation must remain a fully supported fallback path.
+
+## D15) Distribution Model: Single Packaged Desktop App, No Side Runtime Installs (2026-03-05)
+- xLightsDesigner is distributed to end users as a single packaged desktop application.
+- Internal implementation may use web UI technologies, but production users must not install side runtimes/tools (no separate Node/Python/Electron setup).
+- Desktop-native capabilities (file dialogs, filesystem-backed project/metadata persistence, diagnostics export) must be provided through the packaged runtime boundary.
+- Browser-only/dev-server mode is development-only and not the production delivery contract.

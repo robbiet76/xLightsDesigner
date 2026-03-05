@@ -2,7 +2,7 @@
 
 Status: Draft  
 Date: 2026-03-04  
-Source: `wireframes-v4.md`, `wireframes-v4-implementation-checklist.md`, `standalone-app-requirements.md`
+Source: `wireframes-v5.md`, `wireframes-v5-implementation-checklist.md`, `standalone-app-requirements.md`, `desktop-architecture-implementation-checklist.md`
 
 ## 1) Prioritization Model
 - `P0`: required to deliver first usable internal build.
@@ -10,6 +10,23 @@ Source: `wireframes-v4.md`, `wireframes-v4-implementation-checklist.md`, `standa
 - `P2`: quality/completeness hardening.
 
 ## 2) Epic Plan
+
+## E0: Desktop Runtime + Distribution Foundation (P0)
+Goal: ensure the app runs and ships as a standalone packaged desktop application without side runtime installs.
+
+Stories:
+1. Establish packaged desktop runtime host + preload bridge contract.
+2. Implement native file dialog + filesystem access boundary used by Sequence Setup.
+3. Move persistence from browser-only storage to app config + disk-backed project stores.
+4. Add startup compatibility gate and degraded mode behavior wiring.
+5. Define build/sign/update pipeline scaffolding for macOS distribution.
+
+Definition of done:
+- App launches as desktop shell with bridge-backed file selection.
+- Core flows run without requiring users to install Node/Python/Electron separately.
+
+Dependencies:
+- none
 
 ## E1: App Shell and Navigation (P0)
 Goal: establish the global shell and deterministic navigation/state persistence.
@@ -168,16 +185,18 @@ Dependencies:
 - E1-E6
 
 ## 3) Suggested Delivery Sequence
-1. Sprint A: E1, E2, E3
-2. Sprint B: E4, E5
-3. Sprint C: E6, E7, E9
-4. Sprint D: E10, E8
+1. Sprint A: E0, E1
+2. Sprint B: E2, E3
+3. Sprint C: E4, E5
+4. Sprint D: E6, E7, E9
+5. Sprint E: E10, E8
 
 ## 4) Immediate “Start Now” Tickets
-1. Create app shell scaffold and route map.
-2. Implement project/show binding with persistent storage.
-3. Implement Design screen layout with placeholder proposal list.
-4. Implement shared state store and apply button gating logic.
+1. Finalize desktop runtime bridge contract and packaged host bootstrap.
+2. Implement app-config and sequence-sidecar persistence abstraction.
+3. Create app shell scaffold and route map.
+4. Implement project/show binding with persistent storage.
+5. Implement shared state store and apply button gating logic.
 
 ## 5) Blockers Check
 No hard blockers for starting implementation.  

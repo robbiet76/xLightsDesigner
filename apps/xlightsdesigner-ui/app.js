@@ -699,14 +699,11 @@ async function onRefresh() {
     const seq = open?.data?.sequence;
     state.flags.activeSequenceLoaded = Boolean(open?.data?.isOpen && seq);
     state.health.sequenceOpen = Boolean(open?.data?.isOpen);
-    if (seq?.name) state.activeSequence = seq.name;
-    if (seq?.path) {
-      state.sequencePathInput = String(seq.path).trim();
-      state.savePathInput = String(seq.path).trim();
-    }
-    if (open?.data?.isOpen && seq) {
-      applySequenceMediaToAudioPath(seq);
-      await syncAudioPathFromMediaStatus();
+    if (seq) {
+      applyOpenSequenceState(seq);
+      if (open?.data?.isOpen) {
+        await syncAudioPathFromMediaStatus();
+      }
     }
 
     try {
@@ -1822,64 +1819,135 @@ function selectedSequencePath() {
     : String(state.sequencePathInput || "").trim();
 }
 
-function openFilePicker(inputId) {
-  const picker = app.querySelector(`#${inputId}`);
-  if (!picker) return;
-  picker.click();
-}
+function getDesktopFileDialogBridge() {
+  const w = typeof window !== "undefined" ? window : null;
+  if (!w) return null;
 
-function onSequenceFilePicked(file, mode) {
-  const pickedName = String(file?.name || "").trim();
-  if (!hasXsqExtension(pickedName)) {
-    setStatus("warning", "Only .xsq sequence files are supported for this picker.");
-    render();
-    return;
-  }
-
-  const pickedPath = extractPickedPath(file);
-  if (pickedPath) {
-    if (mode === "new") {
-      state.newSequencePathInput = pickedPath;
-    } else {
-      state.sequencePathInput = pickedPath;
+  const xld = w.xlightsDesignerDesktop || w.__xlightsDesignerDesktop;
+  if (xld) {
+    if (typeof xld.openFileDialog === "function") {
+      return async (opts) => xld.openFileDialog(opts);
     }
-    setStatus("info", `Selected sequence file: ${pickedPath}`);
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-    return;
+    if (typeof xld.pickFile === "function") {
+      return async (opts) => xld.pickFile(opts);
+    }
+    if (typeof xld.selectFile === "function") {
+      return async (opts) => xld.selectFile(opts);
+    }
   }
 
-  // Browser runtimes may not expose absolute file paths. For opening existing
-  // sequences, xLights can resolve by filename via show-folder sequence search.
-  if (mode === "existing" && pickedName) {
-    state.sequencePathInput = pickedName;
-    setStatus("info", `Selected sequence file: ${pickedName} (resolved by xLights show folder search)`);
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-    return;
+  const electron = w.electronAPI;
+  if (electron) {
+    if (typeof electron.openFileDialog === "function") {
+      return async (opts) => electron.openFileDialog(opts);
+    }
+    if (typeof electron.pickFile === "function") {
+      return async (opts) => electron.pickFile(opts);
+    }
+    if (typeof electron.selectFile === "function") {
+      return async (opts) => electron.selectFile(opts);
+    }
   }
 
-  setStatus(
-    "action-required",
-    "Absolute path was not available from this runtime for new-sequence target. Enter full path manually."
-  );
-  render();
+  // Tauri v2 plugin-style dialog API
+  if (w.__TAURI__ && w.__TAURI__.dialog && typeof w.__TAURI__.dialog.open === "function") {
+    return async (opts) => {
+      const accept = Array.isArray(opts?.filters)
+        ? opts.filters.flatMap((f) =>
+            Array.isArray(f?.extensions)
+              ? f.extensions.map((ext) => `.${String(ext).toLowerCase()}`)
+              : []
+          )
+        : [];
+      return w.__TAURI__.dialog.open({
+        title: opts?.title || "Select File",
+        multiple: false,
+        directory: false,
+        filters: Array.isArray(opts?.filters)
+          ? opts.filters.map((f) => ({
+              name: f?.name || "Files",
+              extensions: Array.isArray(f?.extensions) ? f.extensions.filter((e) => e !== "*") : []
+            }))
+          : undefined,
+        // Some hosts normalize via accept strings.
+        accept: accept.length ? accept : undefined
+      });
+    };
+  }
+
+  if (
+    w.__TAURI__ &&
+    w.__TAURI__.core &&
+    typeof w.__TAURI__.core.invoke === "function"
+  ) {
+    return async (opts) =>
+      w.__TAURI__.core.invoke("open_file_dialog", { options: opts });
+  }
+
+  return null;
 }
 
-function onAudioFilePicked(file) {
-  const pickedPath = extractPickedPath(file);
-  if (!pickedPath) {
+function normalizeDialogPathSelection(result) {
+  if (!result) return "";
+  if (typeof result === "string") return result.trim();
+  if (Array.isArray(result)) {
+    const first = result.find((v) => typeof v === "string" && v.trim());
+    return first ? first.trim() : "";
+  }
+  if (typeof result === "object") {
+    if (typeof result.path === "string") return result.path.trim();
+    if (typeof result.filePath === "string") return result.filePath.trim();
+    if (typeof result.absolutePath === "string") return result.absolutePath.trim();
+    if (Array.isArray(result.paths)) {
+      const first = result.paths.find((v) => typeof v === "string" && v.trim());
+      return first ? first.trim() : "";
+    }
+  }
+  return "";
+}
+
+function hasExtension(path, extensions) {
+  const lower = String(path || "").toLowerCase();
+  return extensions.some((ext) => lower.endsWith(`.${String(ext).toLowerCase()}`));
+}
+
+async function pickFilePathFromDesktop(options = {}) {
+  const dialog = getDesktopFileDialogBridge();
+  if (!dialog) {
     setStatus(
-      "action-required",
-      "Audio selected, but absolute path was not available from this runtime. Paste path manually or run desktop shell."
+      "warning",
+      "File dialog is only available in desktop runtime. Paste full path manually."
     );
     render();
+    return "";
+  }
+  try {
+    const result = await dialog(options);
+    return normalizeDialogPathSelection(result);
+  } catch (err) {
+    setStatusWithDiagnostics(
+      "warning",
+      `File dialog failed: ${err?.message || "unknown error"}`,
+      err?.stack || ""
+    );
+    render();
+    return "";
+  }
+}
+
+async function onBrowseExistingSequencePath() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Choose xLights Sequence",
+    filters: [{ name: "xLights Sequence", extensions: ["xsq"] }]
+  });
+  if (!selected) return;
+  if (!hasExtension(selected, ["xsq"])) {
+    setStatus("warning", "Please choose a .xsq sequence file.");
+    render();
     return;
   }
-  state.audioPathInput = pickedPath;
-  setStatus("info", `Selected audio file: ${pickedPath}`);
+  state.sequencePathInput = selected;
+  state.ui.sequenceMode = "existing";
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -1916,6 +1984,70 @@ async function closeActiveSequenceForSwitch() {
   state.health.sequenceOpen = false;
 }
 
+async function onBrowseNewSequencePath() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Choose New Sequence Path (.xsq)",
+    filters: [{ name: "xLights Sequence", extensions: ["xsq"] }]
+  });
+  if (!selected) return;
+  if (!hasExtension(selected, ["xsq"])) {
+    setStatus("warning", "New sequence path must end with .xsq.");
+    render();
+    return;
+  }
+  state.newSequencePathInput = selected;
+  state.ui.sequenceMode = "new";
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+async function onBrowseAudioPath() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Choose Sequence Audio (optional)",
+    filters: [
+      { name: "Audio", extensions: ["mp3", "wav", "m4a", "ogg", "flac", "aac"] },
+      { name: "All Files", extensions: ["*"] }
+    ]
+  });
+  if (!selected) return;
+  state.audioPathInput = selected;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function readSequencePathFromPayload(sequencePayload, fallbackPath = "") {
+  return String(
+    sequencePayload?.path ||
+      sequencePayload?.file ||
+      fallbackPath ||
+      ""
+  ).trim();
+}
+
+function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
+  const sequencePath = readSequencePathFromPayload(sequencePayload, fallbackPath);
+  const sequenceName = String(
+    sequencePayload?.name ||
+      (sequencePath ? sequencePath.split("/").pop() : "") ||
+      state.activeSequence ||
+      ""
+  ).trim();
+  const mediaFile = sequencePayload?.mediaFile;
+  const mediaPath = mediaFile == null ? "" : String(mediaFile).trim();
+
+  if (sequenceName) state.activeSequence = sequenceName;
+  if (sequencePath) {
+    state.sequencePathInput = sequencePath;
+    state.savePathInput = sequencePath;
+    state.ui.sequenceMode = "existing";
+    addRecentSequence(sequencePath);
+  }
+  // Keep UI synced to the currently-open sequence in xLights.
+  state.audioPathInput = mediaPath;
+}
+
 async function onOpenSequence() {
   const previousPath = selectedSequencePath();
   syncSequencePathInput();
@@ -1950,21 +2082,19 @@ async function onOpenSequence() {
           frameMs: state.newSequenceFrameMs
         })
       : await openSequence(state.endpoint, targetPath, false, false);
-    const seq = body?.data || {};
-    const name = seq.name || targetPath.split("/").pop() || state.activeSequence;
-    const resolvedPath = String(seq.path || targetPath || "").trim();
-    state.activeSequence = name;
-    applySequenceMediaToAudioPath(seq);
+      : await openSequence(state.endpoint, targetPath, false, false);
+    const seq = body?.data?.sequence || body?.data || {};
+    applyOpenSequenceState(seq, targetPath);
     await syncAudioPathFromMediaStatus();
-    state.sequencePathInput = resolvedPath || targetPath;
-    state.savePathInput = resolvedPath || targetPath;
     state.flags.activeSequenceLoaded = true;
     if (targetPath !== previousPath) {
       resetCreativeState();
     }
-    addRecentSequence(resolvedPath || targetPath);
     await onRefresh();
-    setStatus("info", `${state.ui.sequenceMode === "new" ? "Sequence ready" : "Opened sequence"}: ${name}`);
+    setStatus(
+      "info",
+      `${state.ui.sequenceMode === "new" ? "Sequence ready" : "Opened sequence"}: ${state.activeSequence || targetPath}`
+    );
     state.route = "sequence";
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
@@ -2316,18 +2446,16 @@ function sequenceScreen() {
                  <label>Existing Sequence Path</label>
                  <div class="row">
                    <input id="sequence-path-input" value="${state.sequencePathInput}" />
-                   <button id="pick-sequence-path" type="button">Choose…</button>
+                   <button id="browse-sequence-path">Browse...</button>
                  </div>
-                 <input id="sequence-path-picker" type="file" accept=".xsq" style="display:none" />
                </div>`
             : `
                 <div class="field">
                   <label>New Sequence Path</label>
                   <div class="row">
                     <input id="new-sequence-path-input" value="${state.newSequencePathInput}" placeholder="/path/to/NewSequence.xsq" />
-                    <button id="pick-new-sequence-path" type="button">Choose…</button>
+                    <button id="browse-new-sequence-path">Browse...</button>
                   </div>
-                  <input id="new-sequence-path-picker" type="file" accept=".xsq" style="display:none" />
                 </div>
                 <div class="field">
                   <label>New Sequence Type</label>
@@ -2350,9 +2478,8 @@ function sequenceScreen() {
           <label>Audio File Path (optional)</label>
           <div class="row">
             <input id="audio-path-input" value="${state.audioPathInput || ""}" placeholder="/path/to/song.mp3 (optional for animation-only)" />
-            <button id="pick-audio-path" type="button">Choose…</button>
+            <button id="browse-audio-path">Browse...</button>
           </div>
-          <input id="audio-path-picker" type="file" accept="audio/*,video/*" style="display:none" />
         </div>
         <p class="banner">${state.audioPathInput ? `Audio source: ${state.audioPathInput}` : "No audio path set. Sequence can run as animation-only."}</p>
         ${
@@ -2958,6 +3085,15 @@ function bindEvents() {
 
   const closeSequenceBtn = app.querySelector("#close-sequence");
   if (closeSequenceBtn) closeSequenceBtn.addEventListener("click", onCloseSequence);
+
+  const browseSequenceBtn = app.querySelector("#browse-sequence-path");
+  if (browseSequenceBtn) browseSequenceBtn.addEventListener("click", onBrowseExistingSequencePath);
+
+  const browseNewSequenceBtn = app.querySelector("#browse-new-sequence-path");
+  if (browseNewSequenceBtn) browseNewSequenceBtn.addEventListener("click", onBrowseNewSequencePath);
+
+  const browseAudioBtn = app.querySelector("#browse-audio-path");
+  if (browseAudioBtn) browseAudioBtn.addEventListener("click", onBrowseAudioPath);
 
   const newSessionBtn = app.querySelector("#new-session");
   if (newSessionBtn) newSessionBtn.addEventListener("click", onNewSession);

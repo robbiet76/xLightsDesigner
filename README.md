@@ -70,3 +70,18 @@ Live endpoint:
 - Section picker displays section start time (from timing marks) beside each section label for easier targeting.
 - `Use As Filter` and proposal views now respect the same section picker selection model.
 - Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.
+
+## Desktop Wrapper (Electron)
+`apps/xlightsdesigner-desktop/` contains an Electron wrapper that injects the desktop bridge used by `Browse...` controls in Sequence Setup.
+
+Run desktop mode:
+1. `cd apps/xlightsdesigner-desktop`
+2. `npm install`
+3. `npm run dev`
+
+What it does:
+- Starts/uses the UI dev server at `http://127.0.0.1:8080`.
+- Launches Electron pointing at that URL.
+- Exposes `window.xlightsDesignerDesktop.openFileDialog(...)` from preload.
+
+The UI still supports manual path entry when desktop bridge is unavailable.

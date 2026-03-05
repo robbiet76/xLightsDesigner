@@ -5,6 +5,15 @@ function normalizeBody(raw) {
   return idx >= 0 ? raw.slice(idx) : raw;
 }
 
+function sanitizeEndpoint(endpoint) {
+  let e = String(endpoint || "").trim();
+  if (!e) return e;
+  // Repair bad endpoint forms introduced by prior client normalization bugs.
+  e = e.replace(/\/xlDoAutomation\/xlDoAutomation\b/g, "/xlDoAutomation");
+  e = e.replace(/\/xlDoAutomation\/+$/g, "/xlDoAutomation");
+  return e;
+}
+
 export function getDefaultEndpoint() {
   return DEFAULT_ENDPOINT;
 }
@@ -16,8 +25,9 @@ export async function postCommand(endpoint, cmd, params = {}, options = {}) {
     params,
     options
   };
+  const targetEndpoint = sanitizeEndpoint(endpoint);
 
-  const response = await fetch(endpoint, {
+  const response = await fetch(targetEndpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -29,7 +39,7 @@ export async function postCommand(endpoint, cmd, params = {}, options = {}) {
   try {
     json = JSON.parse(normalized);
   } catch (err) {
-    throw new Error(`Invalid JSON from xLights endpoint (${err.message})`);
+    throw new Error(`Invalid JSON from xLights endpoint ${targetEndpoint} (${err.message})`);
   }
 
   if (json.res !== 200) {

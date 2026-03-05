@@ -354,20 +354,10 @@ Resolved / Partially Resolved:
 - `compat.failurePolicy`: require update/remediation when compatibility check fails.
 - `test.learningValidation`: success judged by user feedback on both freshness and quality (qualitative baseline).
 
-Still Open:
-- `nfr.performance`
-- `nfr.reliability`
-- `nfr.latency`
-- `nfr.resourceLimits`
-- `ops.packaging`
-- `ops.updatePolicy`
-- `ops.diagnosticsBundle`
-- `ops.supportWorkflow`
-- `test.uxFlows`
-- `test.stateRecovery`
-- `learning.retentionPolicy`
-- `learning.exportImport`
-- `learning.privacyPolicy`
+Still Open (detail refinement only):
+- updater provider/tooling choice and channel implementation details,
+- diagnostics bundle exact schema/versioning details,
+- support runbook ownership and SLA targets.
 
 Provisional Defaults (to be validated during early xLightsDesigner implementation):
 - `connect.retryPolicy`:
@@ -395,3 +385,97 @@ Provisional Defaults (to be validated during early xLightsDesigner implementatio
 - `learning.privacyPolicy`:
   - do not store raw user chat transcripts in long-term preference profile by default,
   - store derived preference signals and explicit user feedback markers.
+- `nfr.performance`:
+  - interactive UI actions should respond within `<= 150ms` for typical screens,
+  - long-running operations must surface progress within `<= 1s`.
+- `nfr.reliability`:
+  - target successful apply/rollback workflow completion rate `>= 99%` in supported environments.
+- `nfr.latency`:
+  - startup to usable shell target `<= 3s` on supported hardware,
+  - endpoint health/connect check target `<= 2s` when xLights is reachable.
+- `nfr.resourceLimits`:
+  - steady-state memory target `<= 500MB` for typical session size,
+  - avoid sustained CPU > `25%` when idle/no active apply.
+- `ops.updatePolicy`:
+  - phased channels: `internal -> beta -> stable`,
+  - minimum default behavior: app checks for updates at startup and allows deferred install,
+  - mandatory-update flag supported for critical compatibility/security fixes.
+- `ops.diagnosticsBundle`:
+  - bundle includes app version/build, xLights version/capabilities snapshot, recent diagnostics log, and redacted operation history metadata,
+  - bundle is exportable as a single zip artifact for support.
+- `ops.supportWorkflow`:
+  - standard flow: `capture diagnostics bundle -> reproduce using fixture sequence when possible -> classify (app bug/api compatibility/environment) -> issue + owner assignment`.
+- `test.uxFlows`:
+  - required smoke flows: install/launch, project setup, open existing sequence, create new sequence (musical + animation), chat->proposal->apply, rollback.
+- `test.stateRecovery`:
+  - required recovery flows: restart with persisted state, xLights unavailable->degraded mode, endpoint reconnect, stale proposal conflict recovery, and rollback after failed apply.
+
+Alignment update (2026-03-05):
+- `ops.packaging`: resolved at policy level by locked decision section 7:
+  - single packaged desktop app distribution,
+  - no side runtime/tool installs required for production users,
+  - macOS-first signed distribution, Windows follow-on.
+
+## 7) Locked Desktop Architecture Decision (2026-03-05)
+Decision:
+- xLightsDesigner is shipped as a standalone packaged desktop application (separate from xLights).
+- The app may be implemented with web UI technology internally, but distribution is a single desktop installer/app bundle.
+- Users must not be required to install side runtimes/tools (no separate Node/Python/Electron setup in production).
+
+Rationale:
+- Maintains strong API coupling to xLights while preserving independent release cadence.
+- Avoids coupling all Designer functionality into xLights core/release process.
+- Preserves a low-friction user rollout model (single app install).
+
+Deployment boundary:
+- xLights remains the sequencing/rendering system of record.
+- xLightsDesigner handles intent capture, proposal generation, approval, and metadata orchestration.
+- Integration is over localhost xLights API endpoints only (no UI scraping contract).
+
+Locked compatibility policy:
+- Minimum supported xLights version floor: `2026.1`.
+- On startup/session attach, Designer performs capability/version check.
+- If compatibility check fails, Designer blocks mutating operations and surfaces required remediation/update guidance.
+
+Locked rollout policy:
+- macOS first distribution target, then Windows.
+- Signed installer/app bundle distribution.
+- Auto-update mechanism is required before broad rollout.
+
+Locked storage policy (high level):
+- App-level config/state stored in per-user app config location.
+- Sequence-linked metadata stored adjacent to `.xsq` using same basename and Designer extension.
+- Designer reference media stored in sequence-scoped Designer media folder.
+
+## 8) Implementation Steps (Execution Order)
+M0. Architecture freeze and contract update
+- Mark this decision as authoritative in spec index/docs.
+- Align related docs (`designer-interaction-contract`, backlog, checklist) to packaged-desktop model.
+- Define canonical local bridge contract for native file dialogs and file-system operations.
+
+M1. Runtime host and packaging skeleton
+- Establish desktop host runtime (packaged shell) with preload/bridge boundary.
+- Support single-command local dev run and reproducible production build artifact.
+- Add startup health checks: runtime ready, xLights reachable, compatibility gate status.
+
+M2. Persistent storage and filesystem integration
+- Move current browser-only state persistence to app config storage abstraction.
+- Implement real sidecar metadata file read/write lifecycle.
+- Implement real sequence-scoped reference media persistence/copy policy.
+- Preserve rollback/version checkpoints per sequence according to backup policy.
+
+M3. Compatibility and safety hardening
+- Enforce startup and re-attach compatibility checks on xLights version change.
+- Lock mutating operations behind compatibility + validation gates.
+- Implement clear degraded mode behavior (plan-only when xLights unavailable).
+- Add diagnostics bundle export for support workflows.
+
+M4. Distribution readiness
+- Build signed macOS distributable.
+- Add update channel policy and release process docs.
+- Add smoke checklist for install/launch/connect/open/apply/rollback across supported xLights matrix.
+
+Exit criteria for this architecture phase:
+- User installs one app and can use browse/open/apply workflows without side runtime installs.
+- App reliably connects to compatible xLights versions and blocks unsafe mutations when incompatible.
+- Sequence metadata/reference assets persist on disk per defined policy.
