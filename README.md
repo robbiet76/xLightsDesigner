@@ -90,3 +90,13 @@ Build local desktop artifacts:
 1. `cd apps/xlightsdesigner-desktop`
 2. `npm install`
 3. `npm run dist:mac` (macOS zip) or `npm run dist:dir` (unpacked directory)
+4. `npm run verify:bundle` (checks built `.app` structure)
+
+Non-dev install validation:
+1. Copy built app to `/Applications` (for example from `dist/mac-arm64/xLightsDesigner.app`).
+2. Run:
+   - `scripts/desktop/validate-nondev-install.sh /Applications/xLightsDesigner.app`
+3. Record evidence:
+   - `scripts/desktop/record-validation-evidence.sh ...`
+4. Check rollout readiness:
+   - `scripts/desktop/check-desktop-readiness.sh`
