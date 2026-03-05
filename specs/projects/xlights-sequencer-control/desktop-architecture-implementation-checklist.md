@@ -57,7 +57,7 @@ Acceptance:
 - [x] User can install one app and complete core flow without side runtime/tool installs.
 
 ## Cross-Cut Quality Gates
-- [ ] UI regressions: no loss of approved wireframe-v5 behavior.
+- [x] UI regressions: no loss of approved wireframe-v5 behavior.
 - [ ] API regressions: existing harness suites remain passing.
 - [x] Temp debug/testing hooks are tracked and removed before release candidate.
 - [x] Docs remain synchronized (`README`, requirements, backlog, checklist statuses).
