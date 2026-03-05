@@ -1,0 +1,84 @@
+name: xLightsDesigner Desktop macOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Release channel"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - preview
+          - stable
+  push:
+    branches:
+      - master
+    paths:
+      - "apps/xlightsdesigner-desktop/**"
+      - "apps/xlightsdesigner-ui/**"
+      - ".github/workflows/xlightsdesigner-desktop-macos.yml"
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/xlightsdesigner-desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build unpacked app
+        run: npm run dist:dir
+
+      - name: Build macOS zip artifact
+        run: npm run dist:mac
+
+      - name: Upload desktop artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xlightsdesigner-macos-${{ github.sha }}
+          path: apps/xlightsdesigner-desktop/dist/**
+
+  signed-release:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    needs: build-macos
+    defaults:
+      run:
+        working-directory: apps/xlightsdesigner-desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build signed macOS artifact (if signing secrets configured)
+        env:
+          CSC_LINK: ${{ secrets.XLD_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.XLD_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.XLD_APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.XLD_APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.XLD_APPLE_TEAM_ID }}
+        run: npm run dist:mac
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xlightsdesigner-macos-signed-${{ github.sha }}
+          path: apps/xlightsdesigner-desktop/dist/**

@@ -47,7 +47,7 @@ Acceptance:
 - [ ] Degraded mode remains usable for planning/chat/metadata drafting.
 
 ## M4) Distribution + Rollout Readiness
-- [ ] macOS signed distributable pipeline is implemented.
+- [x] macOS signed distributable pipeline is implemented.
 - [ ] Installer/app bundle can be installed and launched by non-dev users.
 - [x] Update channel strategy is implemented/documented.
 - [x] Release runbook includes compatibility matrix validation steps.

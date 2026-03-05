@@ -11,6 +11,13 @@ This runbook defines pre-release validation and release execution for xLightsDes
 - Target channel (`preview` or `stable`).
 - Target xLights compatibility floor (`2026.1+`).
 - Signed/notarized packaging credentials (when signing pipeline is enabled).
+- GitHub Actions workflow: `.github/workflows/xlightsdesigner-desktop-macos.yml`.
+- Repository secrets for signed path:
+  - `XLD_CSC_LINK`
+  - `XLD_CSC_KEY_PASSWORD`
+  - `XLD_APPLE_ID`
+  - `XLD_APPLE_APP_SPECIFIC_PASSWORD`
+  - `XLD_APPLE_TEAM_ID`
 
 ## 3) Build Steps
 1. `cd apps/xlightsdesigner-desktop`
