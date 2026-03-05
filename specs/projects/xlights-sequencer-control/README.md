@@ -16,6 +16,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `desktop-nondev-install-validation.md`: manual validation protocol and evidence template for non-dev install/launch readiness.
 - `desktop-validation-evidence-log.md`: authoritative evidence log used to close final desktop rollout acceptance gates.
 - `ui-regression-pass-2026-03-05.md`: focused wireframe-v5 regression pass evidence (PASS).
+- `api-regression-pass-2026-03-05.md`: full harness 01..11 regression pass evidence (PASS).
 - `spec-alignment-audit-2026-03-05.md`: audit record aligning active specs/backlog to locked packaged-desktop architecture decision.
 - `wireframes-v1.md`: low-fidelity standalone UX wireframes (desktop + compact behavior) for core user flows.
 - `wireframes-v3.md`: updated wireframes with project-level settings placement, live proposed-change list in Design, and global status bar behavior.
