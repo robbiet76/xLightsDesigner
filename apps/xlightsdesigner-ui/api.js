@@ -49,6 +49,10 @@ export async function getOpenSequence(endpoint) {
   return postCommand(endpoint, "sequence.getOpen", {});
 }
 
+export async function getMediaStatus(endpoint) {
+  return postCommand(endpoint, "media.getStatus", {});
+}
+
 export async function getRevision(endpoint) {
   return postCommand(endpoint, "sequence.getRevision", {});
 }

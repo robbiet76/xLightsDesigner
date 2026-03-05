@@ -5,9 +5,11 @@ import {
   executePlan,
   getDefaultEndpoint,
   getJob,
+  getMediaStatus,
   getModels,
   getOpenSequence,
   getRevision,
+  saveSequence,
   getTimingMarks,
   getTimingTracks,
   openSequence,
@@ -59,7 +61,8 @@ const defaultState = {
   showFolder: "/Users/robterry/Desktop/Show",
   safety: {
     applyConfirmMode: "large-only",
-    largeChangeThreshold: 60
+    largeChangeThreshold: 60,
+    sequenceSwitchUnsavedPolicy: "save-if-needed"
   },
   activeSequence: "",
   sequencePathInput: "",
@@ -697,6 +700,14 @@ async function onRefresh() {
     state.flags.activeSequenceLoaded = Boolean(open?.data?.isOpen && seq);
     state.health.sequenceOpen = Boolean(open?.data?.isOpen);
     if (seq?.name) state.activeSequence = seq.name;
+    if (seq?.path) {
+      state.sequencePathInput = String(seq.path).trim();
+      state.savePathInput = String(seq.path).trim();
+    }
+    if (open?.data?.isOpen && seq) {
+      applySequenceMediaToAudioPath(seq);
+      await syncAudioPathFromMediaStatus();
+    }
 
     try {
       const rev = await getRevision(state.endpoint);
@@ -1129,6 +1140,41 @@ function sequenceFolderPath() {
 function designerMediaFolderPath() {
   const base = sequenceFolderPath();
   return base ? `${base}/xlightsdesigner-media` : "xlightsdesigner-media";
+}
+
+function applySequenceMediaToAudioPath(sequenceData) {
+  if (!sequenceData || typeof sequenceData !== "object") return;
+  const mediaFile = String(sequenceData.mediaFile || "").trim();
+  state.audioPathInput = mediaFile || "";
+}
+
+async function syncAudioPathFromMediaStatus() {
+  try {
+    const mediaBody = await getMediaStatus(state.endpoint);
+    const mediaFile = String(mediaBody?.data?.mediaFile || "").trim();
+    state.audioPathInput = mediaFile || "";
+  } catch {
+    // Fallback for builds without media.getStatus.
+    try {
+      const open = await getOpenSequence(state.endpoint);
+      const seq = open?.data?.sequence;
+      if (open?.data?.isOpen && seq) {
+        applySequenceMediaToAudioPath(seq);
+      }
+    } catch {
+      // Keep existing value if neither endpoint is available.
+    }
+  }
+}
+
+function extractPickedPath(file) {
+  if (!file || typeof file !== "object") return "";
+  if (typeof file.path === "string" && file.path.trim()) return file.path.trim();
+  return "";
+}
+
+function hasXsqExtension(name) {
+  return /\.xsq$/i.test(String(name || "").trim());
 }
 
 function getFileExtension(filename) {
@@ -1709,6 +1755,7 @@ function onSaveProjectSettings() {
   const endpointInput = app.querySelector("#endpoint-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
   const thresholdInput = app.querySelector("#threshold-input");
+  const sequenceSwitchPolicyInput = app.querySelector("#sequence-switch-policy-input");
 
   if (projectInput) state.projectName = projectInput.value.trim() || state.projectName;
   if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
@@ -1717,6 +1764,10 @@ function onSaveProjectSettings() {
   if (thresholdInput) {
     const parsed = Number.parseInt(thresholdInput.value, 10);
     state.safety.largeChangeThreshold = Number.isFinite(parsed) ? parsed : state.safety.largeChangeThreshold;
+  }
+  if (sequenceSwitchPolicyInput) {
+    const value = sequenceSwitchPolicyInput.value === "discard-unsaved" ? "discard-unsaved" : "save-if-needed";
+    state.safety.sequenceSwitchUnsavedPolicy = value;
   }
 
   const loaded = tryLoadProjectSnapshot(state.projectName, state.showFolder);
@@ -1771,6 +1822,100 @@ function selectedSequencePath() {
     : String(state.sequencePathInput || "").trim();
 }
 
+function openFilePicker(inputId) {
+  const picker = app.querySelector(`#${inputId}`);
+  if (!picker) return;
+  picker.click();
+}
+
+function onSequenceFilePicked(file, mode) {
+  const pickedName = String(file?.name || "").trim();
+  if (!hasXsqExtension(pickedName)) {
+    setStatus("warning", "Only .xsq sequence files are supported for this picker.");
+    render();
+    return;
+  }
+
+  const pickedPath = extractPickedPath(file);
+  if (pickedPath) {
+    if (mode === "new") {
+      state.newSequencePathInput = pickedPath;
+    } else {
+      state.sequencePathInput = pickedPath;
+    }
+    setStatus("info", `Selected sequence file: ${pickedPath}`);
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+    return;
+  }
+
+  // Browser runtimes may not expose absolute file paths. For opening existing
+  // sequences, xLights can resolve by filename via show-folder sequence search.
+  if (mode === "existing" && pickedName) {
+    state.sequencePathInput = pickedName;
+    setStatus("info", `Selected sequence file: ${pickedName} (resolved by xLights show folder search)`);
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+    return;
+  }
+
+  setStatus(
+    "action-required",
+    "Absolute path was not available from this runtime for new-sequence target. Enter full path manually."
+  );
+  render();
+}
+
+function onAudioFilePicked(file) {
+  const pickedPath = extractPickedPath(file);
+  if (!pickedPath) {
+    setStatus(
+      "action-required",
+      "Audio selected, but absolute path was not available from this runtime. Paste path manually or run desktop shell."
+    );
+    render();
+    return;
+  }
+  state.audioPathInput = pickedPath;
+  setStatus("info", `Selected audio file: ${pickedPath}`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+async function closeActiveSequenceForSwitch() {
+  if (!state.flags.activeSequenceLoaded) return;
+  try {
+    await closeSequence(state.endpoint, false, true);
+    state.flags.activeSequenceLoaded = false;
+    state.health.sequenceOpen = false;
+    return;
+  } catch (err) {
+    const message = String(err?.message || "");
+    if (!message.includes("UNSAVED_CHANGES")) {
+      throw err;
+    }
+  }
+
+  const policy = state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved"
+    ? "discard-unsaved"
+    : "save-if-needed";
+
+  if (policy === "discard-unsaved") {
+    await closeSequence(state.endpoint, true, true);
+    state.flags.activeSequenceLoaded = false;
+    state.health.sequenceOpen = false;
+    return;
+  }
+
+  await saveSequence(state.endpoint);
+  await closeSequence(state.endpoint, false, true);
+  state.flags.activeSequenceLoaded = false;
+  state.health.sequenceOpen = false;
+}
+
 async function onOpenSequence() {
   const previousPath = selectedSequencePath();
   syncSequencePathInput();
@@ -1792,6 +1937,8 @@ async function onOpenSequence() {
   setStatus("info", state.ui.sequenceMode === "new" ? "Creating sequence..." : "Opening sequence...");
   render();
   try {
+    await closeActiveSequenceForSwitch();
+
     const isAnimation = state.newSequenceType === "animation";
     const mediaFile = isAnimation ? null : (state.audioPathInput || null);
     const durationMs = isAnimation || !mediaFile ? state.newSequenceDurationMs : undefined;
@@ -1802,17 +1949,20 @@ async function onOpenSequence() {
           durationMs,
           frameMs: state.newSequenceFrameMs
         })
-      : await openSequence(state.endpoint, targetPath, true, false);
+      : await openSequence(state.endpoint, targetPath, false, false);
     const seq = body?.data || {};
     const name = seq.name || targetPath.split("/").pop() || state.activeSequence;
+    const resolvedPath = String(seq.path || targetPath || "").trim();
     state.activeSequence = name;
-    state.sequencePathInput = targetPath;
-    state.savePathInput = targetPath;
+    applySequenceMediaToAudioPath(seq);
+    await syncAudioPathFromMediaStatus();
+    state.sequencePathInput = resolvedPath || targetPath;
+    state.savePathInput = resolvedPath || targetPath;
     state.flags.activeSequenceLoaded = true;
     if (targetPath !== previousPath) {
       resetCreativeState();
     }
-    addRecentSequence(targetPath);
+    addRecentSequence(resolvedPath || targetPath);
     await onRefresh();
     setStatus("info", `${state.ui.sequenceMode === "new" ? "Sequence ready" : "Opened sequence"}: ${name}`);
     state.route = "sequence";
@@ -2093,6 +2243,13 @@ function projectScreen() {
           <label>Large Change Threshold (approx effects impacted)</label>
           <input id="threshold-input" type="number" min="1" value="${state.safety.largeChangeThreshold}" />
         </div>
+        <div class="field">
+          <label>Sequence Switch (when unsaved changes exist)</label>
+          <select id="sequence-switch-policy-input">
+            <option value="save-if-needed" ${state.safety.sequenceSwitchUnsavedPolicy !== "discard-unsaved" ? "selected" : ""}>Save then switch</option>
+            <option value="discard-unsaved" ${state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "selected" : ""}>Discard and switch</option>
+          </select>
+        </div>
         <div class="kv"><div class="k">Discovery</div><div>Auto + manual fallback</div></div>
         <div class="kv"><div class="k">Multi-instance</div><div>Latest running</div></div>
         <div class="kv"><div class="k">Retry</div><div>1,2,5,10,15 then 30s</div></div>
@@ -2157,12 +2314,20 @@ function sequenceScreen() {
           mode === "existing"
             ? `<div class="field">
                  <label>Existing Sequence Path</label>
-                 <input id="sequence-path-input" value="${state.sequencePathInput}" />
+                 <div class="row">
+                   <input id="sequence-path-input" value="${state.sequencePathInput}" />
+                   <button id="pick-sequence-path" type="button">Choose…</button>
+                 </div>
+                 <input id="sequence-path-picker" type="file" accept=".xsq" style="display:none" />
                </div>`
             : `
                 <div class="field">
                   <label>New Sequence Path</label>
-                  <input id="new-sequence-path-input" value="${state.newSequencePathInput}" placeholder="/path/to/NewSequence.xsq" />
+                  <div class="row">
+                    <input id="new-sequence-path-input" value="${state.newSequencePathInput}" placeholder="/path/to/NewSequence.xsq" />
+                    <button id="pick-new-sequence-path" type="button">Choose…</button>
+                  </div>
+                  <input id="new-sequence-path-picker" type="file" accept=".xsq" style="display:none" />
                 </div>
                 <div class="field">
                   <label>New Sequence Type</label>
@@ -2183,7 +2348,11 @@ function sequenceScreen() {
         }
         <div class="field">
           <label>Audio File Path (optional)</label>
-          <input id="audio-path-input" value="${state.audioPathInput || ""}" placeholder="/path/to/song.mp3 (optional for animation-only)" />
+          <div class="row">
+            <input id="audio-path-input" value="${state.audioPathInput || ""}" placeholder="/path/to/song.mp3 (optional for animation-only)" />
+            <button id="pick-audio-path" type="button">Choose…</button>
+          </div>
+          <input id="audio-path-picker" type="file" accept="audio/*,video/*" style="display:none" />
         </div>
         <p class="banner">${state.audioPathInput ? `Audio source: ${state.audioPathInput}` : "No audio path set. Sequence can run as animation-only."}</p>
         ${
@@ -2192,8 +2361,7 @@ function sequenceScreen() {
             : ""
         }
         <div class="row">
-          <button id="open-sequence">${mode === "new" ? "Create/Open Sequence" : "Open Sequence"}</button>
-          <button id="close-sequence">Close Sequence</button>
+          <button id="open-sequence">${mode === "new" ? "Create in xLights" : "Open in xLights"}</button>
         </div>
         <p class="banner">Saving is handled by xLights native save workflow.</p>
         <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
@@ -2980,6 +3148,48 @@ function bindEvents() {
     audioPathInput.addEventListener("change", () => {
       state.audioPathInput = audioPathInput.value.trim() || "";
       persist();
+    });
+  }
+
+  const pickSequencePathBtn = app.querySelector("#pick-sequence-path");
+  if (pickSequencePathBtn) {
+    pickSequencePathBtn.addEventListener("click", () => openFilePicker("sequence-path-picker"));
+  }
+
+  const sequencePathPicker = app.querySelector("#sequence-path-picker");
+  if (sequencePathPicker) {
+    sequencePathPicker.addEventListener("change", () => {
+      const [file] = sequencePathPicker.files || [];
+      if (file) onSequenceFilePicked(file, "existing");
+      sequencePathPicker.value = "";
+    });
+  }
+
+  const pickNewSequencePathBtn = app.querySelector("#pick-new-sequence-path");
+  if (pickNewSequencePathBtn) {
+    pickNewSequencePathBtn.addEventListener("click", () => openFilePicker("new-sequence-path-picker"));
+  }
+
+  const newSequencePathPicker = app.querySelector("#new-sequence-path-picker");
+  if (newSequencePathPicker) {
+    newSequencePathPicker.addEventListener("change", () => {
+      const [file] = newSequencePathPicker.files || [];
+      if (file) onSequenceFilePicked(file, "new");
+      newSequencePathPicker.value = "";
+    });
+  }
+
+  const pickAudioPathBtn = app.querySelector("#pick-audio-path");
+  if (pickAudioPathBtn) {
+    pickAudioPathBtn.addEventListener("click", () => openFilePicker("audio-path-picker"));
+  }
+
+  const audioPathPicker = app.querySelector("#audio-path-picker");
+  if (audioPathPicker) {
+    audioPathPicker.addEventListener("change", () => {
+      const [file] = audioPathPicker.files || [];
+      if (file) onAudioFilePicked(file);
+      audioPathPicker.value = "";
     });
   }
 
