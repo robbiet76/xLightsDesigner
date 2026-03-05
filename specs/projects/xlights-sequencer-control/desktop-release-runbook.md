@@ -72,6 +72,8 @@ Promote to target channel only when:
 
 ## 8) Post-Release Checks
 - Validate download/install path from user perspective.
+- Run baseline launch validation script on target machine:
+  - `scripts/desktop/validate-nondev-install.sh /Applications/xLightsDesigner.app`
 - Verify update check behavior for the channel.
 - Spot-check connect/open/apply on one live environment.
 
