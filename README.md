@@ -85,3 +85,8 @@ What it does:
 - Exposes `window.xlightsDesignerDesktop.openFileDialog(...)` from preload.
 
 The UI still supports manual path entry when desktop bridge is unavailable.
+
+Build local desktop artifacts:
+1. `cd apps/xlightsdesigner-desktop`
+2. `npm install`
+3. `npm run dist:mac` (macOS zip) or `npm run dist:dir` (unpacked directory)

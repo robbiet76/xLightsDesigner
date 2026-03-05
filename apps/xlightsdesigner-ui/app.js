@@ -20,6 +20,7 @@ import {
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
+const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
 const DEFAULT_PROPOSED_ROWS = 5;
 const PROPOSED_ROWS_STEP = 5;
 const CHAT_QUICK_PROMPTS = [
@@ -72,6 +73,7 @@ const defaultState = {
   newSequenceFrameMs: 50,
   audioPathInput: "",
   savePathInput: "",
+  lastApplyBackupPath: "",
   recentSequences: [],
   revision: "unknown",
   health: {
@@ -80,18 +82,23 @@ const defaultState = {
     hasExecutePlan: false,
     hasValidateCommands: false,
     hasJobsGet: false,
-    sequenceOpen: false
+    sequenceOpen: false,
+    runtimeReady: false,
+    xlightsVersion: "",
+    compatibilityStatus: "unknown"
   },
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
   flags: {
     xlightsConnected: false,
+    xlightsCompatible: true,
     activeSequenceLoaded: false,
     creativeBriefReady: false,
     hasDraftProposal: false,
     proposalStale: false,
     applyInProgress: false,
-    planOnlyMode: false
+    planOnlyMode: false,
+    planOnlyForcedByConnectivity: false
   },
   chat: [],
   proposed: [],
@@ -173,6 +180,10 @@ function loadState() {
 }
 
 const state = loadState();
+let desktopStatePersistTimer = null;
+let desktopStateHydrated = false;
+let sidecarPersistTimer = null;
+let hydratedSidecarSequencePath = "";
 
 function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
   return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
@@ -191,10 +202,213 @@ function loadProjectsStore() {
 
 function persistProjectsStore(store) {
   localStorage.setItem(PROJECTS_KEY, JSON.stringify(store));
+  queueDesktopStatePersist();
 }
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  queueDesktopStatePersist();
+  queueSidecarPersist();
+}
+
+function getDesktopBridge() {
+  const w = typeof window !== "undefined" ? window : null;
+  if (!w) return null;
+  return w.xlightsDesignerDesktop || w.__xlightsDesignerDesktop || w.electronAPI || null;
+}
+
+function getDesktopStateBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.readAppState !== "function" || typeof bridge.writeAppState !== "function") {
+    return null;
+  }
+  return bridge;
+}
+
+function getDesktopSidecarBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (
+    typeof bridge.readSequenceSidecar !== "function" ||
+    typeof bridge.writeSequenceSidecar !== "function"
+  ) {
+    return null;
+  }
+  return bridge;
+}
+
+function getDesktopMediaBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.saveReferenceMedia !== "function") return null;
+  return bridge;
+}
+
+function getDesktopBackupBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.createSequenceBackup !== "function") return null;
+  return bridge;
+}
+
+function getDesktopDiagnosticsBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.exportDiagnosticsBundle !== "function") return null;
+  return bridge;
+}
+
+function queueDesktopStatePersist() {
+  const bridge = getDesktopStateBridge();
+  if (!bridge || !desktopStateHydrated) return;
+  if (desktopStatePersistTimer) {
+    clearTimeout(desktopStatePersistTimer);
+  }
+  desktopStatePersistTimer = setTimeout(async () => {
+    desktopStatePersistTimer = null;
+    try {
+      await bridge.writeAppState({
+        localStateRaw: localStorage.getItem(STORAGE_KEY) || "",
+        projectsStoreRaw: localStorage.getItem(PROJECTS_KEY) || ""
+      });
+    } catch {
+      // Non-fatal. Browser-only and desktop bridge failures should not block UI.
+    }
+  }, DESKTOP_STATE_SYNC_DEBOUNCE_MS);
+}
+
+async function hydrateStateFromDesktop() {
+  const bridge = getDesktopStateBridge();
+  if (!bridge) {
+    desktopStateHydrated = true;
+    return;
+  }
+  try {
+    const payload = await bridge.readAppState();
+    if (payload?.ok !== true) {
+      desktopStateHydrated = true;
+      return;
+    }
+
+    let changed = false;
+    if (typeof payload.localStateRaw === "string" && payload.localStateRaw.trim()) {
+      const current = localStorage.getItem(STORAGE_KEY) || "";
+      if (!current || current !== payload.localStateRaw) {
+        localStorage.setItem(STORAGE_KEY, payload.localStateRaw);
+        changed = true;
+      }
+    }
+    if (typeof payload.projectsStoreRaw === "string" && payload.projectsStoreRaw.trim()) {
+      const current = localStorage.getItem(PROJECTS_KEY) || "";
+      if (!current || current !== payload.projectsStoreRaw) {
+        localStorage.setItem(PROJECTS_KEY, payload.projectsStoreRaw);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      const hydrated = loadState();
+      for (const key of Object.keys(state)) delete state[key];
+      Object.assign(state, hydrated);
+    }
+  } catch {
+    // Non-fatal. Continue with localStorage state.
+  } finally {
+    desktopStateHydrated = true;
+    queueDesktopStatePersist();
+  }
+}
+
+function currentSequencePathForSidecar() {
+  return String(state.sequencePathInput || "").trim();
+}
+
+function buildSequenceSidecarDocument() {
+  return {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    sequencePath: currentSequencePathForSidecar(),
+    project: {
+      name: state.projectName || "",
+      showFolder: state.showFolder || ""
+    },
+    draft: {
+      proposed: Array.isArray(state.proposed) ? state.proposed : [],
+      draftBaseRevision: state.draftBaseRevision || "unknown",
+      flags: {
+        hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
+        proposalStale: Boolean(state.flags?.proposalStale)
+      }
+    },
+    creative: state.creative || {},
+    metadata: state.metadata || {},
+    versions: Array.isArray(state.versions) ? state.versions : [],
+    selection: {
+      selectedVersion: state.selectedVersion || "",
+      compareVersion: state.compareVersion || null
+    }
+  };
+}
+
+function applySequenceSidecarDocument(doc) {
+  if (!doc || typeof doc !== "object") return;
+  if (Array.isArray(doc?.draft?.proposed)) state.proposed = [...doc.draft.proposed];
+  if (typeof doc?.draft?.draftBaseRevision === "string") {
+    state.draftBaseRevision = doc.draft.draftBaseRevision;
+  }
+  if (doc?.draft?.flags && typeof doc.draft.flags === "object") {
+    if (typeof doc.draft.flags.hasDraftProposal === "boolean") {
+      state.flags.hasDraftProposal = doc.draft.flags.hasDraftProposal;
+    }
+    if (typeof doc.draft.flags.proposalStale === "boolean") {
+      state.flags.proposalStale = doc.draft.flags.proposalStale;
+    }
+  }
+  if (doc?.creative && typeof doc.creative === "object") state.creative = { ...state.creative, ...doc.creative };
+  if (doc?.metadata && typeof doc.metadata === "object") state.metadata = { ...state.metadata, ...doc.metadata };
+  if (Array.isArray(doc?.versions) && doc.versions.length) state.versions = doc.versions;
+  if (typeof doc?.selection?.selectedVersion === "string" && doc.selection.selectedVersion) {
+    state.selectedVersion = doc.selection.selectedVersion;
+  }
+  state.compareVersion = doc?.selection?.compareVersion ?? state.compareVersion;
+}
+
+async function hydrateSidecarForCurrentSequence() {
+  const bridge = getDesktopSidecarBridge();
+  const sequencePath = currentSequencePathForSidecar();
+  if (!bridge || !sequencePath) return;
+  try {
+    const res = await bridge.readSequenceSidecar({ sequencePath });
+    if (res?.ok !== true) return;
+    hydratedSidecarSequencePath = sequencePath;
+    if (res.exists && res.data && typeof res.data === "object") {
+      applySequenceSidecarDocument(res.data);
+    }
+  } catch {
+    // Non-fatal.
+  }
+}
+
+function queueSidecarPersist() {
+  const bridge = getDesktopSidecarBridge();
+  const sequencePath = currentSequencePathForSidecar();
+  if (!bridge || !sequencePath) return;
+  if (hydratedSidecarSequencePath !== sequencePath) return;
+  if (sidecarPersistTimer) {
+    clearTimeout(sidecarPersistTimer);
+  }
+  sidecarPersistTimer = setTimeout(async () => {
+    sidecarPersistTimer = null;
+    try {
+      await bridge.writeSequenceSidecar({
+        sequencePath,
+        data: buildSequenceSidecarDocument()
+      });
+    } catch {
+      // Non-fatal.
+    }
+  }, DESKTOP_STATE_SYNC_DEBOUNCE_MS);
 }
 
 function uniqueEndpoints(endpoints) {
@@ -235,6 +449,7 @@ function extractProjectSnapshot() {
     newSequenceFrameMs: state.newSequenceFrameMs,
     audioPathInput: state.audioPathInput,
     savePathInput: state.savePathInput,
+    lastApplyBackupPath: state.lastApplyBackupPath,
     recentSequences: state.recentSequences,
     activeSequence: state.activeSequence,
     revision: state.revision,
@@ -284,6 +499,7 @@ function applyProjectSnapshot(snapshot) {
     : state.newSequenceFrameMs;
   state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
   state.savePathInput = snapshot.savePathInput || state.savePathInput;
+  state.lastApplyBackupPath = snapshot?.lastApplyBackupPath || "";
   state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
   state.activeSequence = snapshot.activeSequence || state.activeSequence;
   state.revision = snapshot.revision || "unknown";
@@ -393,11 +609,25 @@ function setStatusWithDiagnostics(level, text, details = "") {
   }
 }
 
+function enforceConnectivityPlanOnly() {
+  const changed = !state.flags.planOnlyForcedByConnectivity || !state.flags.planOnlyMode;
+  state.flags.planOnlyMode = true;
+  state.flags.planOnlyForcedByConnectivity = true;
+  return changed;
+}
+
+function releaseConnectivityPlanOnly() {
+  if (!state.flags.planOnlyForcedByConnectivity) return false;
+  state.flags.planOnlyForcedByConnectivity = false;
+  return true;
+}
+
 function applyEnabled() {
   const f = state.flags;
   return (
     f.hasDraftProposal &&
     f.xlightsConnected &&
+    f.xlightsCompatible &&
     !f.planOnlyMode &&
     !f.proposalStale &&
     !f.applyInProgress
@@ -407,6 +637,7 @@ function applyEnabled() {
 function applyDisabledReason() {
   const f = state.flags;
   if (!f.xlightsConnected) return "Connect to xLights to apply.";
+  if (!f.xlightsCompatible) return "xLights version is below minimum supported floor (2026.1).";
   if (f.planOnlyMode) return "Exit plan-only mode to apply.";
   if (f.proposalStale) return "Refresh proposal before apply.";
   if (!f.hasDraftProposal) return "Generate a proposal first.";
@@ -416,6 +647,52 @@ function applyDisabledReason() {
 
 function currentImpactCount() {
   return filteredProposed().length * 11;
+}
+
+function parseVersionParts(versionText) {
+  const text = String(versionText || "").trim();
+  const m = text.match(/^(\d{4})\.(\d{1,2})/);
+  if (!m) return null;
+  return { major: Number.parseInt(m[1], 10), minor: Number.parseInt(m[2], 10) };
+}
+
+function isVersionAtLeastFloor(versionText, floorMajor, floorMinor) {
+  const parsed = parseVersionParts(versionText);
+  if (!parsed) return null;
+  if (parsed.major > floorMajor) return true;
+  if (parsed.major < floorMajor) return false;
+  return parsed.minor >= floorMinor;
+}
+
+function extractVersionFromCapabilities(caps) {
+  const data = caps?.data && typeof caps.data === "object" ? caps.data : {};
+  const candidates = [data.xlightsVersion, data.version, data.appVersion, data.buildVersion];
+  const found = candidates.find((v) => typeof v === "string" && v.trim());
+  return found ? found.trim() : "";
+}
+
+function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen) {
+  const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
+  const xlightsVersion = extractVersionFromCapabilities(caps);
+  const compat = xlightsVersion
+    ? isVersionAtLeastFloor(xlightsVersion, 2026, 1)
+    : null;
+
+  state.flags.xlightsConnected = true;
+  state.flags.xlightsCompatible = compat !== false;
+  state.health = {
+    ...state.health,
+    lastCheckedAt: new Date().toISOString(),
+    capabilitiesCount: commands.length,
+    hasExecutePlan: commands.includes("system.executePlan"),
+    hasValidateCommands: commands.includes("system.validateCommands"),
+    hasJobsGet: commands.includes("jobs.get"),
+    sequenceOpen: Boolean(sequenceOpen),
+    runtimeReady: true,
+    xlightsVersion,
+    compatibilityStatus: compat === null ? "unknown" : compat ? "compatible" : "incompatible"
+  };
+  return { commands, xlightsVersion, compat };
 }
 
 function requiresApplyConfirmation() {
@@ -587,6 +864,22 @@ async function onApply() {
   render();
 
   try {
+    const sequencePath = currentSequencePathForSidecar();
+    const backupBridge = getDesktopBackupBridge();
+    if (backupBridge && sequencePath) {
+      const backup = await backupBridge.createSequenceBackup({ sequencePath });
+      if (backup?.ok !== true) {
+        setStatusWithDiagnostics(
+          "action-required",
+          `Apply blocked: failed to create pre-apply backup.`,
+          backup?.error || "Unknown backup error"
+        );
+        return;
+      }
+      state.lastApplyBackupPath = String(backup.backupPath || "");
+      setStatusWithDiagnostics("info", `Pre-apply backup created: ${backup.backupPath || "ok"}`);
+    }
+
     // Preflight revision read to keep stale-state behavior explicit.
     const rev = await getRevision(state.endpoint);
     state.revision = rev?.data?.revision ?? state.revision;
@@ -680,6 +973,13 @@ function onGenerate() {
 }
 
 function onTogglePlanOnly() {
+  if (state.flags.planOnlyForcedByConnectivity) {
+    setStatusWithDiagnostics(
+      "warning",
+      "Plan-only mode is currently forced while xLights is unavailable."
+    );
+    return render();
+  }
   state.flags.planOnlyMode = !state.flags.planOnlyMode;
   setStatus(
     "info",
@@ -695,14 +995,21 @@ function onTogglePlanOnly() {
 async function onRefresh() {
   try {
     let staleDetected = false;
+    const releasedForce = releaseConnectivityPlanOnly();
+    state.flags.xlightsConnected = true;
     const open = await getOpenSequence(state.endpoint);
     const seq = open?.data?.sequence;
     state.flags.activeSequenceLoaded = Boolean(open?.data?.isOpen && seq);
     state.health.sequenceOpen = Boolean(open?.data?.isOpen);
+    const prevPath = currentSequencePathForSidecar();
     if (seq) {
       applyOpenSequenceState(seq);
       if (open?.data?.isOpen) {
         await syncAudioPathFromMediaStatus();
+      }
+      const nextPath = currentSequencePathForSidecar();
+      if (nextPath && nextPath !== prevPath) {
+        await hydrateSidecarForCurrentSequence();
       }
     }
 
@@ -743,8 +1050,12 @@ async function onRefresh() {
     if (!staleDetected) {
       setStatus("info", "Refreshed from xLights.");
     }
+    if (releasedForce && !staleDetected) {
+      setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
+    }
   } catch (err) {
     state.flags.xlightsConnected = false;
+    enforceConnectivityPlanOnly();
     setStatusWithDiagnostics("warning", `Refresh failed: ${err.message}`, err.stack || "");
   }
   persist();
@@ -804,27 +1115,25 @@ async function onTestConnection() {
     const endpointChanged = endpoint !== requestedEndpoint;
     state.endpoint = endpoint;
     if (endpointInput) endpointInput.value = endpoint;
-    state.flags.xlightsConnected = true;
-    const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
+    const { commands, xlightsVersion, compat } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
     const count = commands.length;
-    state.health = {
-      ...state.health,
-      lastCheckedAt: new Date().toISOString(),
-      capabilitiesCount: count,
-      hasExecutePlan: commands.includes("system.executePlan"),
-      hasValidateCommands: commands.includes("system.validateCommands"),
-      hasJobsGet: commands.includes("jobs.get")
-    };
     setStatus(
       "info",
       endpointChanged
         ? `Connected via fallback endpoint ${endpoint}. ${count} commands reported by xLights.`
         : `Connected. ${count} commands reported by xLights.`
     );
+    if (compat === false) {
+      setStatusWithDiagnostics(
+        "action-required",
+        `Connected, but xLights ${xlightsVersion} is below supported floor 2026.1. Mutating actions are disabled.`
+      );
+    }
     await onRefresh();
     return;
   } catch (err) {
     state.flags.xlightsConnected = false;
+    enforceConnectivityPlanOnly();
     setStatusWithDiagnostics("action-required", `Connection failed: ${err.message}`, err.stack || "");
   }
   persist();
@@ -846,15 +1155,8 @@ async function onCheckHealth() {
       getRevision(state.endpoint).catch(() => ({ data: { revision: "unknown" } })),
       getModels(state.endpoint).catch(() => ({ data: { models: [] } }))
     ]);
-    const commands = caps?.data?.commands || [];
-    state.health = {
-      lastCheckedAt: new Date().toISOString(),
-      capabilitiesCount: commands.length,
-      hasExecutePlan: commands.includes("system.executePlan"),
-      hasValidateCommands: commands.includes("system.validateCommands"),
-      hasJobsGet: commands.includes("jobs.get"),
-      sequenceOpen: Boolean(open?.data?.isOpen)
-    };
+    const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, Boolean(open?.data?.isOpen));
+    const releasedForce = releaseConnectivityPlanOnly();
     state.models = Array.isArray(modelsResp?.data?.models) ? modelsResp.data.models : [];
     ensureMetadataTargetSelection();
     try {
@@ -863,8 +1165,20 @@ async function onCheckHealth() {
       setStatusWithDiagnostics("warning", `Section refresh failed: ${err.message}`);
     }
     state.revision = rev?.data?.revision ?? state.revision;
-    setStatus("info", "Health check complete.");
+    if (compat === false) {
+      setStatusWithDiagnostics(
+        "action-required",
+        `Health check: xLights ${xlightsVersion} is below supported floor 2026.1. Mutating actions are disabled.`
+      );
+    } else {
+      setStatus("info", "Health check complete.");
+      if (releasedForce) {
+        setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
+      }
+    }
   } catch (err) {
+    state.flags.xlightsConnected = false;
+    enforceConnectivityPlanOnly();
     setStatusWithDiagnostics("action-required", `Health check failed: ${err.message}`, err.stack || "");
   } finally {
     saveCurrentProjectSnapshot();
@@ -935,6 +1249,45 @@ async function pollJobs() {
   }
 }
 
+async function pollCompatibilityStatus() {
+  if (!state.flags.xlightsConnected || state.flags.applyInProgress) return;
+  try {
+    const caps = await pingCapabilities(state.endpoint);
+    releaseConnectivityPlanOnly();
+    const previousVersion = state.health.xlightsVersion || "";
+    const previousCompat = state.health.compatibilityStatus;
+    const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
+
+    const nextCompat = compat === null ? "unknown" : compat ? "compatible" : "incompatible";
+    const versionChanged = xlightsVersion && xlightsVersion !== previousVersion;
+    const compatChanged = nextCompat !== previousCompat;
+    if (versionChanged || compatChanged) {
+      if (compat === false) {
+        setStatusWithDiagnostics(
+          "action-required",
+          `Detected xLights version ${xlightsVersion}. Below supported floor 2026.1. Mutating actions are disabled.`
+        );
+      } else if (versionChanged) {
+        setStatus("info", `Detected xLights version change: ${xlightsVersion}.`);
+      }
+      persist();
+      render();
+    }
+  } catch {
+    const wasConnected = state.flags.xlightsConnected;
+    state.flags.xlightsConnected = false;
+    const forced = enforceConnectivityPlanOnly();
+    if (wasConnected || forced) {
+      setStatusWithDiagnostics(
+        "warning",
+        "Lost connectivity to xLights. Plan-only mode is now enforced until connection is restored."
+      );
+      persist();
+      render();
+    }
+  }
+}
+
 async function onCancelJob(jobId) {
   try {
     await cancelJob(state.endpoint, jobId);
@@ -978,6 +1331,69 @@ function toggleJobs(forceOpen = null) {
 function clearDiagnostics() {
   state.diagnostics = [];
   setStatus("info", "Diagnostics cleared.");
+  persist();
+  render();
+}
+
+function buildDiagnosticsBundle() {
+  return {
+    exportedAt: new Date().toISOString(),
+    app: {
+      route: state.route,
+      projectName: state.projectName || "",
+      showFolder: state.showFolder || "",
+      activeSequence: state.activeSequence || "",
+      sequencePath: state.sequencePathInput || "",
+      endpoint: state.endpoint || ""
+    },
+    health: state.health || {},
+    flags: state.flags || {},
+    revision: state.revision || "unknown",
+    diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
+    jobs: Array.isArray(state.jobs) ? state.jobs : []
+  };
+}
+
+function downloadJson(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function onExportDiagnostics() {
+  const bundle = buildDiagnosticsBundle();
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filename = `xlightsdesigner-diagnostics-${stamp}.json`;
+  const bridge = getDesktopDiagnosticsBridge();
+  if (bridge) {
+    try {
+      const res = await bridge.exportDiagnosticsBundle(bundle);
+      if (res?.ok) {
+        setStatus("info", `Diagnostics exported: ${res.outputPath || "saved"}`);
+      } else if (res?.canceled) {
+        setStatus("info", "Diagnostics export canceled.");
+      } else {
+        setStatusWithDiagnostics("action-required", "Diagnostics export failed.", res?.error || "");
+      }
+      persist();
+      render();
+      return;
+    } catch (err) {
+      setStatusWithDiagnostics("action-required", "Diagnostics export failed.", err?.message || "");
+      persist();
+      render();
+      return;
+    }
+  }
+
+  downloadJson(filename, bundle);
+  setStatus("info", "Diagnostics downloaded.");
   persist();
   render();
 }
@@ -1195,7 +1611,7 @@ function formatBytes(bytes) {
   return `${Math.round(val / (1024 * 102.4)) / 10} MB`;
 }
 
-function onReferenceMediaSelected() {
+async function onReferenceMediaSelected() {
   const input = app.querySelector("#reference-upload-input");
   if (!input?.files?.length) return;
   const existingCount = Array.isArray(state.creative.references) ? state.creative.references.length : 0;
@@ -1209,34 +1625,61 @@ function onReferenceMediaSelected() {
   const now = Date.now();
   const additions = [];
   const rejected = [];
+  const sequencePath = currentSequencePathForSidecar();
+  const mediaBridge = getDesktopMediaBridge();
+  const canPersistToSequenceMedia = Boolean(mediaBridge && sequencePath);
 
-  selectedFiles.forEach((file, idx) => {
+  for (let idx = 0; idx < selectedFiles.length; idx += 1) {
+    const file = selectedFiles[idx];
     const safeName = String(file?.name || `reference-${idx + 1}`).replace(/[^\w.\- ]+/g, "_");
     if (!isAllowedReferenceMediaFile(safeName)) {
       rejected.push(`${safeName}: unsupported reference format`);
-      return;
+      continue;
     }
     if (Number(file?.size || 0) > REFERENCE_MEDIA_MAX_FILE_BYTES) {
       rejected.push(`${safeName}: exceeds ${formatBytes(REFERENCE_MEDIA_MAX_FILE_BYTES)} limit`);
-      return;
+      continue;
     }
     const duplicate = (state.creative.references || []).some((ref) => ref.name === safeName);
     if (duplicate) {
       rejected.push(`${safeName}: already added`);
-      return;
+      continue;
     }
+
+    let storedPath = `${designerMediaFolderPath()}/${safeName}`;
+    let persistedToSequenceMedia = false;
+    if (canPersistToSequenceMedia) {
+      try {
+        const bytes = await file.arrayBuffer();
+        const res = await mediaBridge.saveReferenceMedia({
+          sequencePath,
+          fileName: safeName,
+          bytes
+        });
+        if (res?.ok === true && typeof res.absolutePath === "string" && res.absolutePath.trim()) {
+          storedPath = res.absolutePath.trim();
+          persistedToSequenceMedia = true;
+        } else {
+          rejected.push(`${safeName}: failed to persist to sequence media folder (${res?.error || "unknown error"})`);
+        }
+      } catch (err) {
+        rejected.push(`${safeName}: failed to persist to sequence media folder (${err?.message || "unknown error"})`);
+      }
+    }
+
     additions.push({
       id: `ref-${now}-${idx}`,
       name: safeName,
       mimeType: String(file?.type || ""),
       sizeBytes: Number(file?.size || 0),
-      storedPath: `${designerMediaFolderPath()}/${safeName}`,
+      storedPath,
+      persistedToSequenceMedia,
       previewUrl: URL.createObjectURL(file),
       sequenceEligible: false,
       supportedForSequence: isSupportedSequenceMediaFile(safeName),
       addedAt: new Date().toISOString()
     });
-  });
+  }
 
   if (!additions.length && rejected.length) {
     setStatusWithDiagnostics(
@@ -2082,9 +2525,12 @@ async function onOpenSequence() {
           frameMs: state.newSequenceFrameMs
         })
       : await openSequence(state.endpoint, targetPath, false, false);
-      : await openSequence(state.endpoint, targetPath, false, false);
     const seq = body?.data?.sequence || body?.data || {};
     applyOpenSequenceState(seq, targetPath);
+    if (targetPath !== previousPath) {
+      state.lastApplyBackupPath = "";
+    }
+    await hydrateSidecarForCurrentSequence();
     await syncAudioPathFromMediaStatus();
     state.flags.activeSequenceLoaded = true;
     if (targetPath !== previousPath) {
@@ -2252,11 +2698,13 @@ function onResetProjectWorkspace() {
   state.newSequenceFrameMs = defaultState.newSequenceFrameMs;
   state.audioPathInput = defaultState.audioPathInput;
   state.savePathInput = defaultState.savePathInput;
+  state.lastApplyBackupPath = defaultState.lastApplyBackupPath;
   state.recentSequences = [];
   state.revision = "unknown";
   state.draftBaseRevision = "unknown";
   state.proposed = [...defaultState.proposed];
   state.flags.planOnlyMode = false;
+  state.flags.planOnlyForcedByConnectivity = false;
   state.flags.hasDraftProposal = state.proposed.length > 0;
   state.flags.proposalStale = false;
   state.ui.sectionSelections = ["all"];
@@ -2330,6 +2778,52 @@ async function onCloseSequence() {
   }
 }
 
+async function onRestoreLastBackup() {
+  const backupBridge = getDesktopBackupBridge();
+  if (!backupBridge || typeof backupBridge.restoreSequenceBackup !== "function") {
+    setStatusWithDiagnostics("warning", "Backup restore is available in desktop runtime only.");
+    return render();
+  }
+  if (!state.flags.xlightsConnected) {
+    setStatusWithDiagnostics("warning", "Connect to xLights before restoring a backup.");
+    return render();
+  }
+  const sequencePath = selectedSequencePath() || currentSequencePathForSidecar();
+  const backupPath = String(state.lastApplyBackupPath || "").trim();
+  if (!sequencePath) {
+    setStatusWithDiagnostics("warning", "Select/open a sequence before restoring backup.");
+    return render();
+  }
+  if (!backupPath) {
+    setStatusWithDiagnostics("warning", "No backup is available for restore yet.");
+    return render();
+  }
+  if (!window.confirm(`Restore last backup for this sequence?\n\nBackup: ${backupPath}`)) {
+    setStatus("info", "Restore canceled.");
+    return render();
+  }
+
+  setStatus("info", "Restoring sequence backup...");
+  render();
+  try {
+    await closeActiveSequenceForSwitch();
+    const restore = await backupBridge.restoreSequenceBackup({ sequencePath, backupPath });
+    if (restore?.ok !== true) {
+      throw new Error(restore?.error || "Unknown restore error");
+    }
+    await openSequence(state.endpoint, sequencePath, false, false);
+    await onRefresh();
+    resetSessionDraftState();
+    setStatusWithDiagnostics("info", `Backup restored from ${backupPath}.`);
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Backup restore failed: ${err.message}`, err.stack || "");
+  } finally {
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
+}
+
 function onNewSession() {
   if (!window.confirm("Start a new session and clear current draft state?")) {
     setStatus("info", "New session canceled.");
@@ -2396,17 +2890,20 @@ function projectScreen() {
         <h3>Session Actions</h3>
         <div class="row">
           <button id="open-sequence-route">Open Sequence Workspace</button>
-          <button id="plan-toggle">${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
+          <button id="plan-toggle" ${state.flags.planOnlyForcedByConnectivity ? 'disabled title="Forced while xLights is unavailable"' : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
           <button id="new-session">New Session</button>
         </div>
         <p class="banner">Active sequence: ${state.activeSequence || "(none)"}</p>
-        <p class="banner">Plan-only mode: ${state.flags.planOnlyMode ? "enabled" : "disabled"}</p>
+        <p class="banner">Plan-only mode: ${state.flags.planOnlyMode ? (state.flags.planOnlyForcedByConnectivity ? "enabled (forced by connectivity)" : "enabled") : "disabled"}</p>
         <p class="banner">Last sync: ${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "never"}</p>
       </section>
 
       <section class="card">
         <h3>Project Health</h3>
         <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
+        <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "unknown"}</div></div>
+        <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
         <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
@@ -2489,9 +2986,11 @@ function sequenceScreen() {
         }
         <div class="row">
           <button id="open-sequence">${mode === "new" ? "Create in xLights" : "Open in xLights"}</button>
+          <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
         </div>
         <p class="banner">Saving is handled by xLights native save workflow.</p>
         <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
+        <p class="banner">Last backup: ${state.lastApplyBackupPath || "(none)"}</p>
         <p class="banner">Designer media folder: ${designerMediaFolderPath()}</p>
         <p class="banner">Sidecar metadata: ${(state.activeSequence || "sequence").replace(/\.xsq$/, ".xdmeta")}</p>
         <div class="field">
@@ -2920,6 +3419,7 @@ function diagnosticsPanel() {
           <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${counts.total})</button>
           <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${counts.warning})</button>
           <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${counts.actionRequired})</button>
+          <button id="export-diagnostics">Export</button>
           <button id="clear-diagnostics">Clear</button>
           <button id="close-diagnostics">Close</button>
         </div>
@@ -3009,6 +3509,9 @@ function bindEvents() {
   const clearDiagnosticsBtn = app.querySelector("#clear-diagnostics");
   if (clearDiagnosticsBtn) clearDiagnosticsBtn.addEventListener("click", clearDiagnostics);
 
+  const exportDiagnosticsBtn = app.querySelector("#export-diagnostics");
+  if (exportDiagnosticsBtn) exportDiagnosticsBtn.addEventListener("click", onExportDiagnostics);
+
   app.querySelectorAll("[data-diag-filter]").forEach((btn) => {
     btn.addEventListener("click", () => setDiagnosticsFilter(btn.dataset.diagFilter));
   });
@@ -3082,6 +3585,9 @@ function bindEvents() {
 
   const openSequenceBtn = app.querySelector("#open-sequence");
   if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
+
+  const restoreLastBackupBtn = app.querySelector("#restore-last-backup");
+  if (restoreLastBackupBtn) restoreLastBackupBtn.addEventListener("click", onRestoreLastBackup);
 
   const closeSequenceBtn = app.querySelector("#close-sequence");
   if (closeSequenceBtn) closeSequenceBtn.addEventListener("click", onCloseSequence);
@@ -3491,22 +3997,28 @@ async function bootstrapLiveData() {
     const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
     const endpointChanged = endpoint !== requestedEndpoint;
     state.endpoint = endpoint;
-    const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
-    state.flags.xlightsConnected = true;
-    state.health = {
-      ...state.health,
-      lastCheckedAt: new Date().toISOString(),
-      capabilitiesCount: commands.length,
-      hasExecutePlan: commands.includes("system.executePlan"),
-      hasValidateCommands: commands.includes("system.validateCommands"),
-      hasJobsGet: commands.includes("jobs.get")
-    };
+    const releasedForce = releaseConnectivityPlanOnly();
+    const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
     if (endpointChanged) {
       setStatus("info", `Connected via fallback endpoint ${endpoint}.`);
     }
+    if (compat === false) {
+      setStatusWithDiagnostics(
+        "action-required",
+        `xLights ${xlightsVersion} is below minimum supported floor 2026.1. Mutating actions are disabled.`
+      );
+    }
     await onRefresh();
+    if (releasedForce) {
+      setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
+    }
   } catch {
     state.flags.xlightsConnected = false;
+    state.flags.xlightsCompatible = true;
+    enforceConnectivityPlanOnly();
+    state.health.runtimeReady = Boolean(getDesktopBridge());
+    state.health.xlightsVersion = "";
+    state.health.compatibilityStatus = "unknown";
     setStatus("warning", "Unable to reach xLights. Start xLights and check endpoint settings.");
     persist();
     render();
@@ -3514,6 +4026,11 @@ async function bootstrapLiveData() {
 }
 
 render();
-bootstrapLiveData();
+(async () => {
+  await hydrateStateFromDesktop();
+  render();
+  await bootstrapLiveData();
+})();
 setInterval(pollRevision, 8000);
 setInterval(pollJobs, 3000);
+setInterval(pollCompatibilityStatus, 60000);

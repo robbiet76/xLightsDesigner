@@ -6,9 +6,32 @@
   "main": "main.mjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "start": "electron ."
+    "start": "electron .",
+    "prepare:renderer": "node scripts/prepare-renderer.mjs",
+    "dist:dir": "npm run prepare:renderer && electron-builder --dir",
+    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip"
   },
   "devDependencies": {
-    "electron": "^31.0.0"
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "org.xlightsdesigner.desktop",
+    "productName": "xLightsDesigner",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.mjs",
+      "preload.mjs",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.utilities"
+    }
   }
 }
