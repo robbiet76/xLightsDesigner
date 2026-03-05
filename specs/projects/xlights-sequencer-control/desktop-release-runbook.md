@@ -76,6 +76,10 @@ Promote to target channel only when:
   - `scripts/desktop/validate-nondev-install.sh /Applications/xLightsDesigner.app`
 - Verify update check behavior for the channel.
 - Spot-check connect/open/apply on one live environment.
+- Record evidence row:
+  - `scripts/desktop/record-validation-evidence.sh ...`
+- Run readiness check:
+  - `scripts/desktop/check-desktop-readiness.sh`
 
 ## 9) Exit Criteria
 Release is considered complete when:
