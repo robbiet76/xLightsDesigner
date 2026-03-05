@@ -13,6 +13,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 - `desktop-architecture-implementation-checklist.md`: execution checklist for locked standalone packaged-desktop architecture and rollout gates.
 - `desktop-update-channel-strategy.md`: channel model and update policy defaults for standalone desktop releases.
 - `desktop-release-runbook.md`: macOS-first release runbook including compatibility matrix and smoke flow.
+- `desktop-nondev-install-validation.md`: manual validation protocol and evidence template for non-dev install/launch readiness.
 - `spec-alignment-audit-2026-03-05.md`: audit record aligning active specs/backlog to locked packaged-desktop architecture decision.
 - `wireframes-v1.md`: low-fidelity standalone UX wireframes (desktop + compact behavior) for core user flows.
 - `wireframes-v3.md`: updated wireframes with project-level settings placement, live proposed-change list in Design, and global status bar behavior.
