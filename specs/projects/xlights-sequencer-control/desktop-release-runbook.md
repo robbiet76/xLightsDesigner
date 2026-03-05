@@ -23,7 +23,8 @@ This runbook defines pre-release validation and release execution for xLightsDes
 1. `cd apps/xlightsdesigner-desktop`
 2. `npm install`
 3. `npm run dist:mac` (zip artifact) or `npm run dist:dir` (unpacked artifact)
-4. Verify artifact exists under `apps/xlightsdesigner-desktop/dist`.
+4. `npm run verify:bundle`
+5. Verify artifact exists under `apps/xlightsdesigner-desktop/dist`.
 
 ## 4) Compatibility Matrix Validation
 Minimum required matrix for promotion:

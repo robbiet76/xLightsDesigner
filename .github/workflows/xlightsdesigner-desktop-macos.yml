@@ -43,6 +43,9 @@ jobs:
       - name: Build macOS zip artifact
         run: npm run dist:mac
 
+      - name: Verify app bundle structure
+        run: npm run verify:bundle
+
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -76,6 +79,9 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.XLD_APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.XLD_APPLE_TEAM_ID }}
         run: npm run dist:mac
+
+      - name: Verify signed app bundle structure
+        run: npm run verify:bundle
 
       - name: Upload signed artifacts
         uses: actions/upload-artifact@v4

@@ -22,7 +22,7 @@ Acceptance:
 - [x] Build command produces local distributable artifact (pre-signing phase allowed).
 
 Acceptance:
-- [ ] App launches as desktop shell and supports Browse dialog via bridge.
+- [x] App launches as desktop shell and supports Browse dialog via bridge.
 
 ## M2) Persistent Storage + Filesystem Integration
 - [x] App state abstraction supports per-user app config storage (not browser-only localStorage as final path).
@@ -32,8 +32,8 @@ Acceptance:
 - [x] Version checkpoints/backups are persisted per sequence before apply.
 
 Acceptance:
-- [ ] Restarting app preserves project/sequence context from disk-backed storage.
-- [ ] Sidecar metadata survives across sessions and host restarts.
+- [x] Restarting app preserves project/sequence context from disk-backed storage.
+- [x] Sidecar metadata survives across sessions and host restarts.
 
 ## M3) Compatibility + Safety Hardening
 - [x] Version/capability checks run at startup and when xLights version changes.
@@ -43,8 +43,8 @@ Acceptance:
 - [x] Diagnostics bundle export path is implemented for support cases.
 
 Acceptance:
-- [ ] Incompatible xLights never receives mutating commands from Designer.
-- [ ] Degraded mode remains usable for planning/chat/metadata drafting.
+- [x] Incompatible xLights never receives mutating commands from Designer.
+- [x] Degraded mode remains usable for planning/chat/metadata drafting.
 
 ## M4) Distribution + Rollout Readiness
 - [x] macOS signed distributable pipeline is implemented.

@@ -84,6 +84,8 @@ const defaultState = {
     hasJobsGet: false,
     sequenceOpen: false,
     runtimeReady: false,
+    desktopFileDialogReady: false,
+    desktopBridgeApiCount: 0,
     xlightsVersion: "",
     compatibilityStatus: "unknown"
   },
@@ -609,6 +611,19 @@ function setStatusWithDiagnostics(level, text, details = "") {
   }
 }
 
+function getDesktopBridgeHealth() {
+  const bridge = getDesktopBridge();
+  const apiCount =
+    bridge && typeof bridge === "object"
+      ? Object.keys(bridge).filter((key) => typeof bridge[key] === "function").length
+      : 0;
+  return {
+    runtimeReady: Boolean(bridge),
+    desktopFileDialogReady: Boolean(bridge && typeof bridge.openFileDialog === "function"),
+    desktopBridgeApiCount: apiCount
+  };
+}
+
 function enforceConnectivityPlanOnly() {
   const changed = !state.flags.planOnlyForcedByConnectivity || !state.flags.planOnlyMode;
   state.flags.planOnlyMode = true;
@@ -677,6 +692,7 @@ function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen)
   const compat = xlightsVersion
     ? isVersionAtLeastFloor(xlightsVersion, 2026, 1)
     : null;
+  const bridgeHealth = getDesktopBridgeHealth();
 
   state.flags.xlightsConnected = true;
   state.flags.xlightsCompatible = compat !== false;
@@ -688,7 +704,9 @@ function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen)
     hasValidateCommands: commands.includes("system.validateCommands"),
     hasJobsGet: commands.includes("jobs.get"),
     sequenceOpen: Boolean(sequenceOpen),
-    runtimeReady: true,
+    runtimeReady: bridgeHealth.runtimeReady,
+    desktopFileDialogReady: bridgeHealth.desktopFileDialogReady,
+    desktopBridgeApiCount: bridgeHealth.desktopBridgeApiCount,
     xlightsVersion,
     compatibilityStatus: compat === null ? "unknown" : compat ? "compatible" : "incompatible"
   };
@@ -2902,6 +2920,8 @@ function projectScreen() {
         <h3>Project Health</h3>
         <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
         <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">File Dialog Bridge</div><div>${state.health.desktopFileDialogReady ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
         <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "unknown"}</div></div>
         <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
@@ -4013,10 +4033,13 @@ async function bootstrapLiveData() {
       setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
     }
   } catch {
+    const bridgeHealth = getDesktopBridgeHealth();
     state.flags.xlightsConnected = false;
     state.flags.xlightsCompatible = true;
     enforceConnectivityPlanOnly();
-    state.health.runtimeReady = Boolean(getDesktopBridge());
+    state.health.runtimeReady = bridgeHealth.runtimeReady;
+    state.health.desktopFileDialogReady = bridgeHealth.desktopFileDialogReady;
+    state.health.desktopBridgeApiCount = bridgeHealth.desktopBridgeApiCount;
     state.health.xlightsVersion = "";
     state.health.compatibilityStatus = "unknown";
     setStatus("warning", "Unable to reach xLights. Start xLights and check endpoint settings.");

@@ -9,7 +9,8 @@
     "start": "electron .",
     "prepare:renderer": "node scripts/prepare-renderer.mjs",
     "dist:dir": "npm run prepare:renderer && electron-builder --dir",
-    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip"
+    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip",
+    "verify:bundle": "node scripts/verify-bundle.mjs"
   },
   "devDependencies": {
     "electron": "^31.0.0",
