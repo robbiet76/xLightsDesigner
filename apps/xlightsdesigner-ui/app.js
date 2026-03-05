@@ -1,6 +1,7 @@
 import {
   closeSequence,
   cancelJob,
+  createSequence,
   executePlan,
   getDefaultEndpoint,
   getJob,
@@ -10,7 +11,6 @@ import {
   getTimingMarks,
   getTimingTracks,
   openSequence,
-  saveSequence,
   validateCommands,
   pingCapabilities
 } from "./api.js";
@@ -31,6 +31,17 @@ const FALLBACK_LOCAL_ENDPOINTS = [
   "http://127.0.0.1:49914/xlDoAutomation",
   "http://127.0.0.1:49913/xlDoAutomation"
 ];
+const SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS = new Set([
+  "mp3", "wav", "ogg", "m4a", "flac",
+  "mp4", "m4v", "mov", "avi", "mpg", "mpeg",
+  "jpg", "jpeg", "png", "gif", "webp"
+]);
+const REFERENCE_MEDIA_ALLOWED_EXTENSIONS = new Set([
+  "jpg", "jpeg", "png", "gif", "webp",
+  "mp4", "m4v", "mov", "avi", "mpg", "mpeg"
+]);
+const REFERENCE_MEDIA_MAX_FILE_BYTES = 250 * 1024 * 1024;
+const REFERENCE_MEDIA_MAX_ITEMS = 40;
 const LEGACY_SAMPLE_PROPOSED = [
   "Chorus 2 / CandyCanes / reduce twinkle 35%",
   "Chorus 2 / XD:Mood / mark as calmer pulse",
@@ -52,6 +63,11 @@ const defaultState = {
   },
   activeSequence: "",
   sequencePathInput: "",
+  newSequencePathInput: "",
+  newSequenceType: "musical",
+  newSequenceDurationMs: 180000,
+  newSequenceFrameMs: 50,
+  audioPathInput: "",
   savePathInput: "",
   recentSequences: [],
   revision: "unknown",
@@ -68,6 +84,7 @@ const defaultState = {
   flags: {
     xlightsConnected: false,
     activeSequenceLoaded: false,
+    creativeBriefReady: false,
     hasDraftProposal: false,
     proposalStale: false,
     applyInProgress: false,
@@ -83,6 +100,7 @@ const defaultState = {
     jobsOpen: false,
     diagnosticsFilter: "all",
     modelFilterText: "",
+    sequenceMode: "existing",
     sectionTrackName: "",
     proposedRowsVisible: DEFAULT_PROPOSED_ROWS,
     chatDraft: "",
@@ -99,6 +117,14 @@ const defaultState = {
   timingTracks: [],
   sectionSuggestions: [],
   sectionStartByLabel: {},
+  creative: {
+    goals: "",
+    inspiration: "",
+    notes: "",
+    references: [],
+    brief: null,
+    briefUpdatedAt: ""
+  },
   metadata: {
     tags: ["focal", "rhythm-driver", "ambient-fill"],
     assignments: [],
@@ -200,6 +226,11 @@ async function resolveReachableEndpoint(preferredEndpoint) {
 function extractProjectSnapshot() {
   return {
     sequencePathInput: state.sequencePathInput,
+    newSequencePathInput: state.newSequencePathInput,
+    newSequenceType: state.newSequenceType,
+    newSequenceDurationMs: state.newSequenceDurationMs,
+    newSequenceFrameMs: state.newSequenceFrameMs,
+    audioPathInput: state.audioPathInput,
     savePathInput: state.savePathInput,
     recentSequences: state.recentSequences,
     activeSequence: state.activeSequence,
@@ -207,12 +238,14 @@ function extractProjectSnapshot() {
     draftBaseRevision: state.draftBaseRevision,
     proposed: state.proposed,
     flags: {
-      planOnlyMode: state.flags.planOnlyMode
+      planOnlyMode: state.flags.planOnlyMode,
+      creativeBriefReady: state.flags.creativeBriefReady
     },
     safety: state.safety,
     ui: {
       sectionSelections: state.ui.sectionSelections,
       designTab: state.ui.designTab,
+      sequenceMode: state.ui.sequenceMode,
       sectionTrackName: state.ui.sectionTrackName,
       proposedRowsVisible: state.ui.proposedRowsVisible,
       chatDraft: state.ui.chatDraft,
@@ -229,6 +262,7 @@ function extractProjectSnapshot() {
     timingTracks: state.timingTracks,
     sectionSuggestions: state.sectionSuggestions,
     sectionStartByLabel: state.sectionStartByLabel,
+    creative: state.creative,
     metadata: state.metadata,
     health: state.health
   };
@@ -237,6 +271,15 @@ function extractProjectSnapshot() {
 function applyProjectSnapshot(snapshot) {
   if (!snapshot) return;
   state.sequencePathInput = snapshot.sequencePathInput || state.sequencePathInput;
+  state.newSequencePathInput = snapshot.newSequencePathInput || state.newSequencePathInput;
+  state.newSequenceType = snapshot.newSequenceType || state.newSequenceType;
+  state.newSequenceDurationMs = Number.isFinite(Number(snapshot.newSequenceDurationMs))
+    ? Math.max(1, Number(snapshot.newSequenceDurationMs))
+    : state.newSequenceDurationMs;
+  state.newSequenceFrameMs = Number.isFinite(Number(snapshot.newSequenceFrameMs))
+    ? Math.max(1, Number(snapshot.newSequenceFrameMs))
+    : state.newSequenceFrameMs;
+  state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
   state.savePathInput = snapshot.savePathInput || state.savePathInput;
   state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
   state.activeSequence = snapshot.activeSequence || state.activeSequence;
@@ -244,11 +287,13 @@ function applyProjectSnapshot(snapshot) {
   state.draftBaseRevision = snapshot.draftBaseRevision || "unknown";
   state.proposed = Array.isArray(snapshot.proposed) ? snapshot.proposed : state.proposed;
   state.flags.planOnlyMode = Boolean(snapshot?.flags?.planOnlyMode);
+  state.flags.creativeBriefReady = Boolean(snapshot?.flags?.creativeBriefReady);
   state.safety = { ...state.safety, ...(snapshot.safety || {}) };
   state.ui.sectionSelections = Array.isArray(snapshot?.ui?.sectionSelections)
     ? snapshot.ui.sectionSelections
     : ["all"];
   state.ui.designTab = snapshot?.ui?.designTab || "chat";
+  state.ui.sequenceMode = snapshot?.ui?.sequenceMode || "existing";
   state.ui.sectionTrackName = snapshot?.ui?.sectionTrackName || "";
   state.ui.proposedRowsVisible =
     Number.isFinite(Number(snapshot?.ui?.proposedRowsVisible))
@@ -272,6 +317,17 @@ function applyProjectSnapshot(snapshot) {
     snapshot?.sectionStartByLabel && typeof snapshot.sectionStartByLabel === "object"
       ? snapshot.sectionStartByLabel
       : {};
+  state.creative =
+    snapshot?.creative && typeof snapshot.creative === "object"
+      ? {
+          goals: String(snapshot.creative.goals || ""),
+          inspiration: String(snapshot.creative.inspiration || ""),
+          notes: String(snapshot.creative.notes || ""),
+          references: Array.isArray(snapshot.creative.references) ? snapshot.creative.references : [],
+          brief: snapshot.creative.brief && typeof snapshot.creative.brief === "object" ? snapshot.creative.brief : null,
+          briefUpdatedAt: String(snapshot.creative.briefUpdatedAt || "")
+        }
+      : { ...defaultState.creative };
   state.metadata =
     snapshot?.metadata && typeof snapshot.metadata === "object"
       ? {
@@ -304,7 +360,7 @@ function tryLoadProjectSnapshot(projectName, showFolder) {
   return true;
 }
 
-const routes = ["project", "design", "history", "metadata"];
+const routes = ["project", "sequence", "design", "history", "metadata"];
 
 function setRoute(route) {
   if (!routes.includes(route)) return;
@@ -607,7 +663,8 @@ function onGenerate() {
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
   const intentText = latestUserIntentText();
-  state.proposed = inferProposalLinesFromIntent(intentText, selected);
+  const intentLines = inferProposalLinesFromIntent(intentText, selected);
+  state.proposed = mergeCreativeBriefIntoProposal(intentLines);
   state.ui.agentThinking = false;
   addChatMessage(
     "agent",
@@ -1052,8 +1109,266 @@ function onSendChat() {
   if (!raw) return;
   addChatMessage("user", raw);
   state.ui.chatDraft = "";
-  addChatMessage("agent", "Captured. I will update the proposal scope and regenerate when requested.");
+  if (state.flags.activeSequenceLoaded || state.flags.planOnlyMode) {
+    onGenerate();
+    return;
+  }
+  addChatMessage("agent", "Captured. Open a sequence to generate a proposal.");
+  setStatus("warning", "Open a sequence first, then chat will auto-generate proposal updates.");
   saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function sequenceFolderPath() {
+  const path = String(state.ui.sequenceMode === "new" ? state.newSequencePathInput : state.sequencePathInput || "").trim();
+  if (!path.includes("/")) return String(state.showFolder || "").trim();
+  return path.slice(0, path.lastIndexOf("/"));
+}
+
+function designerMediaFolderPath() {
+  const base = sequenceFolderPath();
+  return base ? `${base}/xlightsdesigner-media` : "xlightsdesigner-media";
+}
+
+function getFileExtension(filename) {
+  const name = String(filename || "").toLowerCase().trim();
+  if (!name.includes(".")) return "";
+  return name.split(".").pop() || "";
+}
+
+function isSupportedSequenceMediaFile(filename) {
+  return SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS.has(getFileExtension(filename));
+}
+
+function isAllowedReferenceMediaFile(filename) {
+  return REFERENCE_MEDIA_ALLOWED_EXTENSIONS.has(getFileExtension(filename));
+}
+
+function formatBytes(bytes) {
+  const val = Number(bytes || 0);
+  if (val < 1024) return `${val} B`;
+  if (val < 1024 * 1024) return `${Math.round(val / 102.4) / 10} KB`;
+  return `${Math.round(val / (1024 * 102.4)) / 10} MB`;
+}
+
+function onReferenceMediaSelected() {
+  const input = app.querySelector("#reference-upload-input");
+  if (!input?.files?.length) return;
+  const existingCount = Array.isArray(state.creative.references) ? state.creative.references.length : 0;
+  if (existingCount >= REFERENCE_MEDIA_MAX_ITEMS) {
+    setStatus("warning", `Reference media limit reached (${REFERENCE_MEDIA_MAX_ITEMS}). Remove items before adding more.`);
+    return render();
+  }
+
+  const remainingSlots = REFERENCE_MEDIA_MAX_ITEMS - existingCount;
+  const selectedFiles = Array.from(input.files).slice(0, remainingSlots);
+  const now = Date.now();
+  const additions = [];
+  const rejected = [];
+
+  selectedFiles.forEach((file, idx) => {
+    const safeName = String(file?.name || `reference-${idx + 1}`).replace(/[^\w.\- ]+/g, "_");
+    if (!isAllowedReferenceMediaFile(safeName)) {
+      rejected.push(`${safeName}: unsupported reference format`);
+      return;
+    }
+    if (Number(file?.size || 0) > REFERENCE_MEDIA_MAX_FILE_BYTES) {
+      rejected.push(`${safeName}: exceeds ${formatBytes(REFERENCE_MEDIA_MAX_FILE_BYTES)} limit`);
+      return;
+    }
+    const duplicate = (state.creative.references || []).some((ref) => ref.name === safeName);
+    if (duplicate) {
+      rejected.push(`${safeName}: already added`);
+      return;
+    }
+    additions.push({
+      id: `ref-${now}-${idx}`,
+      name: safeName,
+      mimeType: String(file?.type || ""),
+      sizeBytes: Number(file?.size || 0),
+      storedPath: `${designerMediaFolderPath()}/${safeName}`,
+      previewUrl: URL.createObjectURL(file),
+      sequenceEligible: false,
+      supportedForSequence: isSupportedSequenceMediaFile(safeName),
+      addedAt: new Date().toISOString()
+    });
+  });
+
+  if (!additions.length && rejected.length) {
+    setStatusWithDiagnostics(
+      "warning",
+      "No reference media added. Review format/size constraints.",
+      rejected.join("\n")
+    );
+    return render();
+  }
+
+  if (additions.length) {
+    state.creative.references = [...(state.creative.references || []), ...additions];
+    state.flags.creativeBriefReady = false;
+  }
+
+  input.value = "";
+  if (rejected.length) {
+    setStatusWithDiagnostics(
+      "warning",
+      `Added ${additions.length} reference file${additions.length === 1 ? "" : "s"} with ${rejected.length} rejection${rejected.length === 1 ? "" : "s"}.`,
+      rejected.join("\n")
+    );
+  } else {
+    setStatus("info", `Added ${additions.length} reference file${additions.length === 1 ? "" : "s"}.`);
+  }
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function creativeAnalysisDisabledReason() {
+  if (!state.flags.activeSequenceLoaded) return "Open a sequence first.";
+  if (!String(state.sequencePathInput || "").trim()) return "Set a sequence path.";
+  return "";
+}
+
+function isCreativeAnalysisEnabled() {
+  return creativeAnalysisDisabledReason() === "";
+}
+
+function referenceFormatSummaryText() {
+  return Array.from(REFERENCE_MEDIA_ALLOWED_EXTENSIONS)
+    .map((ext) => `.${ext}`)
+    .join(", ");
+}
+
+function sequenceEligibilityFormatSummaryText() {
+  return Array.from(SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS)
+    .map((ext) => `.${ext}`)
+    .join(", ");
+}
+
+function onRemoveReferenceMedia(id) {
+  const refs = state.creative.references || [];
+  const hit = refs.find((ref) => ref.id === id);
+  if (hit?.previewUrl) {
+    try {
+      URL.revokeObjectURL(hit.previewUrl);
+    } catch {
+      // no-op: best effort cleanup
+    }
+  }
+  state.creative.references = refs.filter((ref) => ref.id !== id);
+  state.flags.creativeBriefReady = false;
+  setStatus("info", "Removed reference media.");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function onPreviewReferenceMedia(id) {
+  const ref = (state.creative.references || []).find((item) => item.id === id);
+  if (!ref?.previewUrl) {
+    setStatus("warning", "Preview is only available for references added in this session.");
+    return render();
+  }
+  window.open(ref.previewUrl, "_blank", "noopener,noreferrer");
+}
+
+function onToggleReferenceEligible(id) {
+  const refs = (state.creative.references || []).map((ref) => {
+    if (ref.id !== id) return ref;
+    if (!ref.supportedForSequence) {
+      setStatus("warning", `${ref.name} is not in the current xLights-supported media format list. Keeping as inspiration-only.`);
+      return { ...ref, sequenceEligible: false };
+    }
+    return { ...ref, sequenceEligible: !ref.sequenceEligible };
+  });
+  state.creative.references = refs;
+  state.flags.creativeBriefReady = false;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function revokeReferencePreviewUrls() {
+  (state.creative.references || []).forEach((ref) => {
+    if (!ref?.previewUrl) return;
+    try {
+      URL.revokeObjectURL(ref.previewUrl);
+    } catch {
+      // no-op: best effort cleanup
+    }
+  });
+}
+
+function buildCreativeBrief() {
+  const refs = state.creative.references || [];
+  const labels = getSectionChoiceList();
+  const topLabels = labels.length ? labels.slice(0, 6) : ["Intro", "Verse", "Chorus", "Bridge", "Outro"];
+  const goals = String(state.creative.goals || "").trim();
+  const inspiration = String(state.creative.inspiration || "").trim();
+  const notes = String(state.creative.notes || "").trim();
+  const audioPath = String(state.audioPathInput || "").trim();
+  const recentIntent = latestUserIntentText();
+  const referenceNames = refs.slice(0, 5).map((r) => r.name);
+
+  return {
+    summary: goals || inspiration || recentIntent
+      ? `Design direction anchored to: ${goals || inspiration || recentIntent}`
+      : "Design direction anchored to sequence mood and audio dynamics.",
+    goalsSummary: goals || "No explicit goal provided; using artistic license with conservative first pass.",
+    inspirationSummary: inspiration || "No explicit inspiration provided.",
+    audioContext: audioPath || "Animation-only mode (no audio path provided).",
+    sections: topLabels,
+    moodEnergyArc: "Builds from calm textures into higher-energy focal moments, then resolves with cleaner transitions.",
+    narrativeCues: "Use lyric and phrasing cues to align contrast changes with emotional beats.",
+    visualCues: referenceNames.length
+      ? `Reference cues from: ${referenceNames.join(", ")}`
+      : "No visual references uploaded; infer visual language from user direction + audio profile.",
+    hypotheses: [
+      "Prioritize background depth before foreground intensity spikes.",
+      "Keep successful motifs and avoid broad rewrites outside target moments."
+    ],
+    notes: notes || ""
+  };
+}
+
+function onRunCreativeAnalysis() {
+  if (!state.flags.activeSequenceLoaded) {
+    setStatus("warning", "Open a sequence before running Creative Analysis.");
+    return render();
+  }
+  state.ui.agentThinking = true;
+  addChatMessage("agent", "Running Creative Analysis from kickoff goals, audio context, lyrics context, and references...");
+  state.creative.brief = buildCreativeBrief();
+  state.creative.briefUpdatedAt = new Date().toISOString();
+  state.flags.creativeBriefReady = true;
+  state.ui.agentThinking = false;
+  setStatus("info", "Creative brief generated. Review and accept to continue.");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function onRegenerateCreativeBrief() {
+  onRunCreativeAnalysis();
+}
+
+function onAcceptCreativeBrief() {
+  if (!state.flags.creativeBriefReady) {
+    setStatus("warning", "Generate a creative brief first.");
+    return render();
+  }
+  state.route = "design";
+  addChatMessage("agent", "Creative brief accepted. Ready for iterative design changes.");
+  setStatus("info", "Creative brief accepted. Continue in Design.");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function onEditBriefDirection() {
+  state.route = "sequence";
+  setStatus("info", "Update kickoff goals/inspiration and regenerate Creative Analysis.");
   persist();
   render();
 }
@@ -1110,6 +1425,21 @@ function inferProposalLinesFromIntent(intentText, sections = []) {
   }
 
   return lines.slice(0, 5);
+}
+
+function mergeCreativeBriefIntoProposal(lines) {
+  const base = Array.isArray(lines) ? [...lines] : [];
+  if (!state.flags.creativeBriefReady || !state.creative?.brief) return base;
+  const brief = state.creative.brief;
+  const additions = [];
+
+  if (brief.goalsSummary) additions.push(`Anchor design changes to brief goal: ${brief.goalsSummary}`);
+  if (brief.visualCues) additions.push(`Use visual direction cues: ${brief.visualCues}`);
+  if (Array.isArray(brief.sections) && brief.sections.length) {
+    additions.push(`Focus first pass on brief sections: ${brief.sections.slice(0, 3).join(", ")}`);
+  }
+
+  return [...additions, ...base].filter(Boolean).slice(0, 6);
 }
 
 function onShowMoreProposed() {
@@ -1377,14 +1707,12 @@ function onSaveProjectSettings() {
   const projectInput = app.querySelector("#project-input");
   const showFolderInput = app.querySelector("#showfolder-input");
   const endpointInput = app.querySelector("#endpoint-input");
-  const savePathInput = app.querySelector("#save-path-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
   const thresholdInput = app.querySelector("#threshold-input");
 
   if (projectInput) state.projectName = projectInput.value.trim() || state.projectName;
   if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
   if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
-  if (savePathInput) state.savePathInput = savePathInput.value.trim() || state.savePathInput;
   if (confirmModeInput) state.safety.applyConfirmMode = confirmModeInput.value;
   if (thresholdInput) {
     const parsed = Number.parseInt(thresholdInput.value, 10);
@@ -1408,42 +1736,86 @@ function addRecentSequence(path) {
 }
 
 function syncSequencePathInput() {
-  const seqPathInput = app.querySelector("#sequence-path-input");
-  if (seqPathInput) {
-    state.sequencePathInput = seqPathInput.value.trim() || state.sequencePathInput;
+  const existingInput = app.querySelector("#sequence-path-input");
+  if (existingInput) {
+    state.sequencePathInput = existingInput.value.trim() || state.sequencePathInput;
+  }
+  const newInput = app.querySelector("#new-sequence-path-input");
+  if (newInput) {
+    state.newSequencePathInput = newInput.value.trim() || state.newSequencePathInput;
+  }
+  const audioInput = app.querySelector("#audio-path-input");
+  if (audioInput) {
+    state.audioPathInput = audioInput.value.trim() || "";
+  }
+  const typeInput = app.querySelector("#new-sequence-type-input");
+  if (typeInput) {
+    state.newSequenceType = typeInput.value === "animation" ? "animation" : "musical";
+  }
+  const durationInput = app.querySelector("#new-sequence-duration-input");
+  if (durationInput) {
+    const parsed = Number.parseInt(durationInput.value, 10);
+    state.newSequenceDurationMs = Number.isFinite(parsed) ? Math.max(1, parsed) : state.newSequenceDurationMs;
+  }
+  const frameInput = app.querySelector("#new-sequence-frame-input");
+  if (frameInput) {
+    const parsed = Number.parseInt(frameInput.value, 10);
+    state.newSequenceFrameMs = Number.isFinite(parsed) ? Math.max(1, parsed) : state.newSequenceFrameMs;
   }
 }
 
-function syncSavePathInput() {
-  const savePathInput = app.querySelector("#save-path-input");
-  if (savePathInput) {
-    state.savePathInput = savePathInput.value.trim() || state.savePathInput;
-  }
+function selectedSequencePath() {
+  const mode = state.ui.sequenceMode === "new" ? "new" : "existing";
+  return mode === "new"
+    ? String(state.newSequencePathInput || "").trim()
+    : String(state.sequencePathInput || "").trim();
 }
 
 async function onOpenSequence() {
+  const previousPath = selectedSequencePath();
   syncSequencePathInput();
+  const targetPath = selectedSequencePath();
   if (!state.flags.xlightsConnected) {
     setStatus("warning", "Connect to xLights before opening a sequence.");
     return render();
   }
-  if (!state.sequencePathInput) {
-    setStatus("warning", "Provide a sequence path.");
+  if (!targetPath) {
+    setStatus("warning", state.ui.sequenceMode === "new" ? "Provide a new sequence path." : "Provide an existing sequence path.");
     return render();
   }
 
-  setStatus("info", "Opening sequence...");
+  if (state.ui.sequenceMode === "new" && state.newSequenceType === "musical" && !state.audioPathInput) {
+    setStatus("warning", "Musical sequence requires an audio file path.");
+    return render();
+  }
+
+  setStatus("info", state.ui.sequenceMode === "new" ? "Creating sequence..." : "Opening sequence...");
   render();
   try {
-    const body = await openSequence(state.endpoint, state.sequencePathInput, true, false);
+    const isAnimation = state.newSequenceType === "animation";
+    const mediaFile = isAnimation ? null : (state.audioPathInput || null);
+    const durationMs = isAnimation || !mediaFile ? state.newSequenceDurationMs : undefined;
+    const body = state.ui.sequenceMode === "new"
+      ? await createSequence(state.endpoint, {
+          file: targetPath,
+          mediaFile,
+          durationMs,
+          frameMs: state.newSequenceFrameMs
+        })
+      : await openSequence(state.endpoint, targetPath, true, false);
     const seq = body?.data || {};
-    const name = seq.name || state.sequencePathInput.split("/").pop() || state.activeSequence;
+    const name = seq.name || targetPath.split("/").pop() || state.activeSequence;
     state.activeSequence = name;
-    state.savePathInput = state.sequencePathInput;
+    state.sequencePathInput = targetPath;
+    state.savePathInput = targetPath;
     state.flags.activeSequenceLoaded = true;
-    addRecentSequence(state.sequencePathInput);
+    if (targetPath !== previousPath) {
+      resetCreativeState();
+    }
+    addRecentSequence(targetPath);
     await onRefresh();
-    setStatus("info", `Opened sequence: ${name}`);
+    setStatus("info", `${state.ui.sequenceMode === "new" ? "Sequence ready" : "Opened sequence"}: ${name}`);
+    state.route = "sequence";
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
     render();
@@ -1457,6 +1829,8 @@ async function onOpenSequence() {
 function onUseRecent(path) {
   state.sequencePathInput = path;
   state.savePathInput = path;
+  state.ui.sequenceMode = "existing";
+  state.route = "sequence";
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -1547,38 +1921,6 @@ async function fetchSectionSuggestions(options = {}) {
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
 }
 
-async function onSaveSequence(asSaveAs = false) {
-  if (!state.flags.xlightsConnected) {
-    setStatusWithDiagnostics("warning", "Connect to xLights before saving.");
-    return render();
-  }
-  syncSavePathInput();
-  const target = asSaveAs ? state.savePathInput : null;
-  if (asSaveAs && !target) {
-    setStatusWithDiagnostics("warning", "Provide a save path for Save As.");
-    return render();
-  }
-
-  setStatus("info", asSaveAs ? "Saving sequence (Save As)..." : "Saving sequence...");
-  render();
-  try {
-    const body = await saveSequence(state.endpoint, target);
-    const savedFile = body?.data?.file || target || "(current path)";
-    if (asSaveAs) {
-      state.sequencePathInput = savedFile;
-      state.savePathInput = savedFile;
-      addRecentSequence(savedFile);
-    }
-    setStatus("info", `Sequence saved: ${savedFile}`);
-  } catch (err) {
-    setStatusWithDiagnostics("action-required", `Save failed: ${err.message}`, err.stack || "");
-  } finally {
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  }
-}
-
 function onLoadProjectSnapshot() {
   const loaded = tryLoadProjectSnapshot(state.projectName, state.showFolder);
   if (loaded) {
@@ -1624,6 +1966,11 @@ function onResetProjectWorkspace() {
   }
 
   state.sequencePathInput = defaultState.sequencePathInput;
+  state.newSequencePathInput = defaultState.newSequencePathInput;
+  state.newSequenceType = defaultState.newSequenceType;
+  state.newSequenceDurationMs = defaultState.newSequenceDurationMs;
+  state.newSequenceFrameMs = defaultState.newSequenceFrameMs;
+  state.audioPathInput = defaultState.audioPathInput;
   state.savePathInput = defaultState.savePathInput;
   state.recentSequences = [];
   state.revision = "unknown";
@@ -1634,6 +1981,7 @@ function onResetProjectWorkspace() {
   state.flags.proposalStale = false;
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
+  state.ui.sequenceMode = "existing";
   state.ui.sectionTrackName = "";
   state.ui.metadataTargetId = "";
   state.ui.metadataRole = "support";
@@ -1645,6 +1993,7 @@ function onResetProjectWorkspace() {
   state.jobs = [];
   state.sectionStartByLabel = {};
   state.metadata = structuredClone(defaultState.metadata);
+  resetCreativeState();
 
   const store = loadProjectsStore();
   store[key] = extractProjectSnapshot();
@@ -1666,6 +2015,12 @@ function resetSessionDraftState() {
   state.proposed = [];
 }
 
+function resetCreativeState() {
+  revokeReferencePreviewUrls();
+  state.creative = structuredClone(defaultState.creative);
+  state.flags.creativeBriefReady = false;
+}
+
 async function onCloseSequence() {
   if (!state.flags.xlightsConnected) {
     setStatusWithDiagnostics("warning", "Connect to xLights before closing sequence.");
@@ -1684,6 +2039,7 @@ async function onCloseSequence() {
     state.revision = "unknown";
     state.activeSequence = "(none)";
     resetSessionDraftState();
+    resetCreativeState();
     setStatus("info", "Sequence closed.");
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Close failed: ${err.message}`, err.stack || "");
@@ -1700,6 +2056,7 @@ function onNewSession() {
     return render();
   }
   resetSessionDraftState();
+  resetCreativeState();
   setStatus("info", "New session started. Draft cleared.");
   saveCurrentProjectSnapshot();
   persist();
@@ -1719,40 +2076,6 @@ function projectScreen() {
         <div class="field"><label>Show Folder</label><input id="showfolder-input" value="${state.showFolder}" /></div>
         <div class="kv"><div class="k">xLights Version</div><div>${state.flags.xlightsConnected ? "Connected" : "Not connected"}</div></div>
         <div class="kv"><div class="k">Compatibility</div><div>2026.x floor</div></div>
-      </section>
-
-      <section class="card">
-        <h3>Sequence Workspace</h3>
-        <div class="field">
-          <label>Sequence Path</label>
-          <input id="sequence-path-input" value="${state.sequencePathInput}" />
-        </div>
-        <div class="field">
-          <label>Save Path (for Save As)</label>
-          <input id="save-path-input" value="${state.savePathInput}" />
-        </div>
-        <div class="row">
-          <button id="open-sequence">Open Sequence</button>
-          <button id="save-sequence">Save</button>
-          <button id="save-sequence-as">Save As</button>
-          <button id="close-sequence">Close Sequence</button>
-          <button id="refresh-recents">Refresh Recents</button>
-          <button id="new-session">New Session</button>
-        </div>
-        <p class="banner">Active: ${state.activeSequence}</p>
-        <p class="banner">Sidecar: ${state.activeSequence.replace(/\.xsq$/, ".xdmeta")}</p>
-        <div class="field">
-          <label>Recent Sequences</label>
-          <ul class="list">
-            ${
-              state.recentSequences.length
-                ? state.recentSequences
-                    .map((p) => `<li><button data-recent="${p}">Use</button> ${p}</li>`)
-                    .join("")
-                : "<li>No recent entries yet.</li>"
-            }
-          </ul>
-        </div>
       </section>
 
       <section class="card">
@@ -1785,11 +2108,13 @@ function projectScreen() {
       <section class="card">
         <h3>Session Actions</h3>
         <div class="row">
-          <button>Resume Last</button>
+          <button id="open-sequence-route">Open Sequence Workspace</button>
           <button id="plan-toggle">${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
-          <button>Open in xLights</button>
+          <button id="new-session">New Session</button>
         </div>
-        <p class="banner">One active sequence at a time.</p>
+        <p class="banner">Active sequence: ${state.activeSequence || "(none)"}</p>
+        <p class="banner">Plan-only mode: ${state.flags.planOnlyMode ? "enabled" : "disabled"}</p>
+        <p class="banner">Last sync: ${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "never"}</p>
       </section>
 
       <section class="card">
@@ -1803,6 +2128,162 @@ function projectScreen() {
         <div class="row">
           <button id="check-health">Recheck Health</button>
         </div>
+      </section>
+    </div>
+  `;
+}
+
+function sequenceScreen() {
+  const refs = Array.isArray(state.creative.references) ? state.creative.references : [];
+  const brief = state.creative.brief;
+  const creativeDisabledReason = creativeAnalysisDisabledReason();
+  const creativeEnabled = isCreativeAnalysisEnabled();
+  const mode = state.ui.sequenceMode === "new" ? "new" : "existing";
+  const briefAt = state.creative.briefUpdatedAt
+    ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
+  return `
+    <div class="screen-grid">
+      <section class="card">
+        <h3>Sequence Setup</h3>
+        <div class="field">
+          <label>Sequence Mode</label>
+          <select id="sequence-mode-input">
+            <option value="existing" ${mode === "existing" ? "selected" : ""}>Open Existing Sequence</option>
+            <option value="new" ${mode === "new" ? "selected" : ""}>Create New Sequence</option>
+          </select>
+        </div>
+        ${
+          mode === "existing"
+            ? `<div class="field">
+                 <label>Existing Sequence Path</label>
+                 <input id="sequence-path-input" value="${state.sequencePathInput}" />
+               </div>`
+            : `
+                <div class="field">
+                  <label>New Sequence Path</label>
+                  <input id="new-sequence-path-input" value="${state.newSequencePathInput}" placeholder="/path/to/NewSequence.xsq" />
+                </div>
+                <div class="field">
+                  <label>New Sequence Type</label>
+                  <select id="new-sequence-type-input">
+                    <option value="musical" ${state.newSequenceType === "musical" ? "selected" : ""}>Musical Sequence</option>
+                    <option value="animation" ${state.newSequenceType === "animation" ? "selected" : ""}>Animation</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Frame Interval (ms)</label>
+                  <input id="new-sequence-frame-input" type="number" min="1" value="${state.newSequenceFrameMs}" />
+                </div>
+                <div class="field">
+                  <label>Duration (ms)</label>
+                  <input id="new-sequence-duration-input" type="number" min="1" value="${state.newSequenceDurationMs}" />
+                </div>
+               `
+        }
+        <div class="field">
+          <label>Audio File Path (optional)</label>
+          <input id="audio-path-input" value="${state.audioPathInput || ""}" placeholder="/path/to/song.mp3 (optional for animation-only)" />
+        </div>
+        <p class="banner">${state.audioPathInput ? `Audio source: ${state.audioPathInput}` : "No audio path set. Sequence can run as animation-only."}</p>
+        ${
+          mode === "new" && state.newSequenceType === "musical" && !state.audioPathInput
+            ? `<p class="banner warning">Musical Sequence mode requires an audio file path.</p>`
+            : ""
+        }
+        <div class="row">
+          <button id="open-sequence">${mode === "new" ? "Create/Open Sequence" : "Open Sequence"}</button>
+          <button id="close-sequence">Close Sequence</button>
+        </div>
+        <p class="banner">Saving is handled by xLights native save workflow.</p>
+        <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
+        <p class="banner">Designer media folder: ${designerMediaFolderPath()}</p>
+        <p class="banner">Sidecar metadata: ${(state.activeSequence || "sequence").replace(/\.xsq$/, ".xdmeta")}</p>
+        <div class="field">
+          <label>Recent Sequences</label>
+          <ul class="list">
+            ${
+              state.recentSequences.length
+                ? state.recentSequences
+                    .map((p) => `<li><button data-recent="${p}">Use</button> ${p}</li>`)
+                    .join("")
+                : "<li>No recent entries yet.</li>"
+            }
+          </ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Creative Analysis Kickoff</h3>
+        <div class="field"><label>Goals</label><input id="creative-goals-input" value="${String(state.creative.goals || "").replace(/\"/g, "&quot;")}" placeholder="cinematic but magical, focus on background depth..." /></div>
+        <div class="field"><label>Inspiration</label><input id="creative-inspiration-input" value="${String(state.creative.inspiration || "").replace(/\"/g, "&quot;")}" placeholder="starry night, dreamy snowfall, retro synthwave..." /></div>
+        <div class="field"><label>Notes</label><textarea id="creative-notes-input" rows="4" placeholder="Any additional direction for the agent...">${String(state.creative.notes || "")}</textarea></div>
+        <div class="row">
+          <button id="run-creative-analysis" ${creativeEnabled ? "" : "disabled"}>Run Creative Analysis</button>
+          <button id="regenerate-creative-brief" ${creativeEnabled ? "" : "disabled"}>Regenerate Brief</button>
+          <button id="accept-creative-brief" ${state.flags.creativeBriefReady ? "" : "disabled"}>Accept Brief and Start Design</button>
+        </div>
+        <p class="banner ${creativeEnabled ? "" : "warning"}">${creativeEnabled ? "Sequence ready for analysis." : creativeDisabledReason}</p>
+      </section>
+
+      <section class="card">
+        <h3>Reference Media</h3>
+        <div class="field">
+          <label>Upload images/video for inspiration</label>
+          <input id="reference-upload-input" type="file" multiple accept="image/*,video/*" />
+        </div>
+        <p class="banner">Allowed reference formats: ${referenceFormatSummaryText()}</p>
+        <p class="banner">Sequence-eligible formats: ${sequenceEligibilityFormatSummaryText()}</p>
+        <p class="banner">Max file size: ${formatBytes(REFERENCE_MEDIA_MAX_FILE_BYTES)} | Max references: ${REFERENCE_MEDIA_MAX_ITEMS}</p>
+        <div class="row">
+          <button id="add-reference-media" ${refs.length >= REFERENCE_MEDIA_MAX_ITEMS ? "disabled" : ""}>Add Selected References</button>
+          <button id="refresh-recents">Refresh Recents</button>
+        </div>
+        <ul class="list">
+          ${
+            refs.length
+              ? refs.map((ref) => `
+                    <li>
+                      <strong>${ref.name}</strong> (${ref.mimeType || "unknown"}) - ${ref.storedPath}
+                      <div class="row">
+                        <button data-ref-preview="${ref.id}">Preview</button>
+                        <button data-ref-toggle-eligible="${ref.id}">${ref.sequenceEligible ? "Mark Inspiration-Only" : "Mark Sequence-Eligible"}</button>
+                        <button data-ref-remove="${ref.id}">Remove</button>
+                      </div>
+                      <div class="banner ${ref.supportedForSequence ? "impact" : "warning"}">
+                        ${ref.sequenceEligible ? "Sequence-eligible" : "Inspiration-only"} |
+                        ${ref.supportedForSequence ? "Format passes current xLights media checks" : "Format not in current xLights media support set"}
+                      </div>
+                    </li>
+                  `).join("")
+              : "<li>No reference media yet.</li>"
+          }
+        </ul>
+      </section>
+
+      <section class="card">
+        <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
+        ${
+          brief
+            ? `
+                <p><strong>Summary:</strong> ${brief.summary}</p>
+                <p><strong>Goals:</strong> ${brief.goalsSummary}</p>
+                <p><strong>Inspiration:</strong> ${brief.inspirationSummary}</p>
+                <p><strong>Audio Context:</strong> ${brief.audioContext || "-"}</p>
+                <p><strong>Sections:</strong> ${Array.isArray(brief.sections) ? brief.sections.join(", ") : "-"}</p>
+                <p><strong>Mood/Energy Arc:</strong> ${brief.moodEnergyArc || "-"}</p>
+                <p><strong>Narrative Cues:</strong> ${brief.narrativeCues || "-"}</p>
+                <p><strong>Visual Cues:</strong> ${brief.visualCues || "-"}</p>
+                <p><strong>Hypotheses:</strong></p>
+                <ul class="list">
+                  ${(Array.isArray(brief.hypotheses) ? brief.hypotheses : []).map((h) => `<li>${h}</li>`).join("")}
+                </ul>
+                <div class="row">
+                  <button id="edit-brief-direction">Edit Brief Direction</button>
+                </div>
+              `
+            : `<p class="banner">No brief generated yet. Run Creative Analysis to populate this panel.</p>`
+        }
       </section>
     </div>
   `;
@@ -1891,6 +2372,7 @@ function designScreen() {
         <div class="banner impact panel-footer-block">Approx effects impacted: ${list.length * 11}</div>
         <div class="row panel-footer-block">
           <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
+          <button id="discard-draft-inline">Discard Draft</button>
           <button id="open-details">Open Details</button>
         </div>
         <div class="banner ${applyEnabled() ? "" : "warning"} panel-footer-block">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
@@ -2122,6 +2604,7 @@ function metadataScreen() {
 
 function screenContent() {
   if (state.route === "project") return projectScreen();
+  if (state.route === "sequence") return sequenceScreen();
   if (state.route === "design") return designScreen();
   if (state.route === "history") return historyScreen();
   return metadataScreen();
@@ -2281,6 +2764,9 @@ function bindEvents() {
   const discardDraftBtn = app.querySelector("#discard-draft");
   if (discardDraftBtn) discardDraftBtn.addEventListener("click", onCancelDraft);
 
+  const discardDraftInlineBtn = app.querySelector("#discard-draft-inline");
+  if (discardDraftInlineBtn) discardDraftInlineBtn.addEventListener("click", onCancelDraft);
+
   const planBtn = app.querySelector("#plan-toggle");
   if (planBtn) planBtn.addEventListener("click", onTogglePlanOnly);
 
@@ -2289,6 +2775,9 @@ function bindEvents() {
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
+
+  const openSequenceRouteBtn = app.querySelector("#open-sequence-route");
+  if (openSequenceRouteBtn) openSequenceRouteBtn.addEventListener("click", () => setRoute("sequence"));
 
   const loadProjectBtn = app.querySelector("#load-project");
   if (loadProjectBtn) loadProjectBtn.addEventListener("click", onLoadProjectSnapshot);
@@ -2299,17 +2788,65 @@ function bindEvents() {
   const openSequenceBtn = app.querySelector("#open-sequence");
   if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
 
-  const saveSequenceBtn = app.querySelector("#save-sequence");
-  if (saveSequenceBtn) saveSequenceBtn.addEventListener("click", () => onSaveSequence(false));
-
-  const saveSequenceAsBtn = app.querySelector("#save-sequence-as");
-  if (saveSequenceAsBtn) saveSequenceAsBtn.addEventListener("click", () => onSaveSequence(true));
-
   const closeSequenceBtn = app.querySelector("#close-sequence");
   if (closeSequenceBtn) closeSequenceBtn.addEventListener("click", onCloseSequence);
 
   const newSessionBtn = app.querySelector("#new-session");
   if (newSessionBtn) newSessionBtn.addEventListener("click", onNewSession);
+
+  const creativeGoalsInput = app.querySelector("#creative-goals-input");
+  if (creativeGoalsInput) {
+    creativeGoalsInput.addEventListener("input", () => {
+      state.creative.goals = creativeGoalsInput.value;
+      state.flags.creativeBriefReady = false;
+      persist();
+    });
+  }
+
+  const creativeInspirationInput = app.querySelector("#creative-inspiration-input");
+  if (creativeInspirationInput) {
+    creativeInspirationInput.addEventListener("input", () => {
+      state.creative.inspiration = creativeInspirationInput.value;
+      state.flags.creativeBriefReady = false;
+      persist();
+    });
+  }
+
+  const creativeNotesInput = app.querySelector("#creative-notes-input");
+  if (creativeNotesInput) {
+    creativeNotesInput.addEventListener("input", () => {
+      state.creative.notes = creativeNotesInput.value;
+      state.flags.creativeBriefReady = false;
+      persist();
+    });
+  }
+
+  const addReferenceMediaBtn = app.querySelector("#add-reference-media");
+  if (addReferenceMediaBtn) addReferenceMediaBtn.addEventListener("click", onReferenceMediaSelected);
+
+  const runCreativeAnalysisBtn = app.querySelector("#run-creative-analysis");
+  if (runCreativeAnalysisBtn) runCreativeAnalysisBtn.addEventListener("click", onRunCreativeAnalysis);
+
+  const regenerateCreativeBriefBtn = app.querySelector("#regenerate-creative-brief");
+  if (regenerateCreativeBriefBtn) regenerateCreativeBriefBtn.addEventListener("click", onRegenerateCreativeBrief);
+
+  const acceptCreativeBriefBtn = app.querySelector("#accept-creative-brief");
+  if (acceptCreativeBriefBtn) acceptCreativeBriefBtn.addEventListener("click", onAcceptCreativeBrief);
+
+  const editBriefDirectionBtn = app.querySelector("#edit-brief-direction");
+  if (editBriefDirectionBtn) editBriefDirectionBtn.addEventListener("click", onEditBriefDirection);
+
+  app.querySelectorAll("[data-ref-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => onRemoveReferenceMedia(btn.dataset.refRemove));
+  });
+
+  app.querySelectorAll("[data-ref-preview]").forEach((btn) => {
+    btn.addEventListener("click", () => onPreviewReferenceMedia(btn.dataset.refPreview));
+  });
+
+  app.querySelectorAll("[data-ref-toggle-eligible]").forEach((btn) => {
+    btn.addEventListener("click", () => onToggleReferenceEligible(btn.dataset.refToggleEligible));
+  });
 
   const checkHealthBtn = app.querySelector("#check-health");
   if (checkHealthBtn) checkHealthBtn.addEventListener("click", onCheckHealth);
@@ -2403,11 +2940,55 @@ function bindEvents() {
     });
   }
 
-  const savePathInput = app.querySelector("#save-path-input");
-  if (savePathInput) {
-    savePathInput.addEventListener("change", () => {
-      state.savePathInput = savePathInput.value.trim() || state.savePathInput;
+  const newSeqPathInput = app.querySelector("#new-sequence-path-input");
+  if (newSeqPathInput) {
+    newSeqPathInput.addEventListener("change", () => {
+      state.newSequencePathInput = newSeqPathInput.value.trim() || state.newSequencePathInput;
       persist();
+    });
+  }
+
+  const newSequenceTypeInput = app.querySelector("#new-sequence-type-input");
+  if (newSequenceTypeInput) {
+    newSequenceTypeInput.addEventListener("change", () => {
+      state.newSequenceType = newSequenceTypeInput.value === "animation" ? "animation" : "musical";
+      persist();
+      render();
+    });
+  }
+
+  const newSequenceFrameInput = app.querySelector("#new-sequence-frame-input");
+  if (newSequenceFrameInput) {
+    newSequenceFrameInput.addEventListener("change", () => {
+      const parsed = Number.parseInt(newSequenceFrameInput.value, 10);
+      state.newSequenceFrameMs = Number.isFinite(parsed) ? Math.max(1, parsed) : state.newSequenceFrameMs;
+      persist();
+    });
+  }
+
+  const newSequenceDurationInput = app.querySelector("#new-sequence-duration-input");
+  if (newSequenceDurationInput) {
+    newSequenceDurationInput.addEventListener("change", () => {
+      const parsed = Number.parseInt(newSequenceDurationInput.value, 10);
+      state.newSequenceDurationMs = Number.isFinite(parsed) ? Math.max(1, parsed) : state.newSequenceDurationMs;
+      persist();
+    });
+  }
+
+  const audioPathInput = app.querySelector("#audio-path-input");
+  if (audioPathInput) {
+    audioPathInput.addEventListener("change", () => {
+      state.audioPathInput = audioPathInput.value.trim() || "";
+      persist();
+    });
+  }
+
+  const sequenceModeInput = app.querySelector("#sequence-mode-input");
+  if (sequenceModeInput) {
+    sequenceModeInput.addEventListener("change", () => {
+      state.ui.sequenceMode = sequenceModeInput.value === "new" ? "new" : "existing";
+      persist();
+      render();
     });
   }
 
@@ -2533,6 +3114,7 @@ function render() {
       <div class="main-grid">
         <nav class="nav">
           ${navButton("project", "Project")}
+          ${navButton("sequence", "Sequence")}
           ${navButton("design", "Design")}
           ${navButton("history", "History")}
           ${navButton("metadata", "Metadata")}

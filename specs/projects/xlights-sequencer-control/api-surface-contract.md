@@ -153,14 +153,17 @@ Dry-run:
 Purpose: create a new sequence.
 
 Params:
+- `file` (string, required): target sequence file path.
 - `mediaFile` (string|null, optional)
 - `durationMs` (int, required when `mediaFile` absent)
 - `frameMs` (int, required)
 - `view` (string|null, optional)
 
 Validation:
+- `file` is writable target path.
 - `frameMs > 0`
 - `durationMs > 0` when media is not provided
+- if `mediaFile` is provided, it must exist and be readable.
 
 Response `data`:
 - created sequence metadata.

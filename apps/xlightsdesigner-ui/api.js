@@ -61,6 +61,10 @@ export async function openSequence(endpoint, file, force = true, promptIssues = 
   });
 }
 
+export async function createSequence(endpoint, params = {}) {
+  return postCommand(endpoint, "sequence.create", params);
+}
+
 export async function saveSequence(endpoint, file = null) {
   const params = {};
   if (file) params.file = file;
