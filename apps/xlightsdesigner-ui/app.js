@@ -1268,7 +1268,37 @@ async function pollJobs() {
 }
 
 async function pollCompatibilityStatus() {
-  if (!state.flags.xlightsConnected || state.flags.applyInProgress) return;
+  if (state.flags.applyInProgress) return;
+  if (!state.flags.xlightsConnected) {
+    try {
+      const requestedEndpoint = state.endpoint;
+      const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
+      const endpointChanged = endpoint !== requestedEndpoint;
+      state.endpoint = endpoint;
+      const releasedForce = releaseConnectivityPlanOnly();
+      const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
+      await onRefresh();
+      if (compat === false) {
+        setStatusWithDiagnostics(
+          "action-required",
+          `Reconnected, but xLights ${xlightsVersion} is below supported floor 2026.1. Mutating actions are disabled.`
+        );
+      } else if (endpointChanged) {
+        setStatus("info", `Reconnected via fallback endpoint ${endpoint}.`);
+      } else {
+        setStatus("info", "Reconnected to xLights.");
+      }
+      if (releasedForce && compat !== false) {
+        setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
+      }
+      persist();
+      render();
+      return;
+    } catch {
+      // Stay disconnected; keep this poll quiet until a state transition occurs.
+      return;
+    }
+  }
   try {
     const caps = await pingCapabilities(state.endpoint);
     releaseConnectivityPlanOnly();
