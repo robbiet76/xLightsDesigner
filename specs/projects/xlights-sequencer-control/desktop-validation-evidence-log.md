@@ -5,6 +5,7 @@ Purpose: record concrete execution evidence for final M4 acceptance closure.
 ## Evidence Rows
 | Date | Build SHA | Channel | Machine | macOS | xLights | Install/Launch | Core Flow | Evidence | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-03-07 | 4538f8d | preview | dev-workspace | N/A | N/A | N/A | N/A | `node --check` ui/desktop + `test:agent-ui` (9/9 pass) | Sprint 4 rollout gating + diagnostics hardening (code-level evidence) |
 
 ## How To Add Evidence
 Use:
@@ -40,3 +41,8 @@ Use this checklist for agent rollout hardening evidence per build:
 - [ ] `Agent Apply Rollout Mode = disabled` verified (apply blocked by rollout policy)
 - [ ] Diagnostics export contains `agentRun` section + `applyHistory`
 - [ ] Diagnostics panel shows recent apply history entries
+
+Manual packaged-app smoke still required for stable-channel promotion:
+- Launch packaged desktop app artifact from current candidate build
+- Execute the five rollout checklist items above in a live xLights session
+- Record PASS/PASS row via `scripts/desktop/record-validation-evidence.sh`
