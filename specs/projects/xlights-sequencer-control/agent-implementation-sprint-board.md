@@ -170,16 +170,16 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 - final readiness checklist
 
 ### Tasks
-- [ ] Feature-flag agent apply path (plan-only fallback):
+- [x] Feature-flag agent apply path (plan-only fallback):
   - `apps/xlightsdesigner-ui/app.js`
-- [ ] Add agent-run diagnostics export:
+- [x] Add agent-run diagnostics export:
   - `apps/xlightsdesigner-ui/app.js`
   - `apps/xlightsdesigner-desktop/main.mjs`
-- [ ] Update runbooks/checklists:
+- [x] Update runbooks/checklists:
   - `specs/projects/xlights-sequencer-control/desktop-release-runbook.md`
   - `specs/projects/xlights-sequencer-control/desktop-validation-evidence-log.md`
   - `specs/projects/xlights-sequencer-control/wp9-checklist.md` (or successor checklist)
-- [ ] Record go/no-go in:
+- [x] Record go/no-go in:
   - `specs/projects/xlights-sequencer-control/implementation-status-matrix.md`
 
 ### Exit Criteria

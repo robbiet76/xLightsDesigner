@@ -90,7 +90,8 @@ const defaultState = {
   safety: {
     applyConfirmMode: "large-only",
     largeChangeThreshold: 60,
-    sequenceSwitchUnsavedPolicy: "save-if-needed"
+    sequenceSwitchUnsavedPolicy: "save-if-needed",
+    agentApplyRollout: "full"
   },
   activeSequence: "",
   sequencePathInput: "",
@@ -135,7 +136,8 @@ const defaultState = {
     proposalStale: false,
     applyInProgress: false,
     planOnlyMode: false,
-    planOnlyForcedByConnectivity: false
+    planOnlyForcedByConnectivity: false,
+    planOnlyForcedByRollout: false
   },
   chat: [],
   proposed: [],
@@ -790,6 +792,12 @@ function getDesktopBridgeHealth() {
   };
 }
 
+function getAgentApplyRolloutMode() {
+  const raw = String(state.safety?.agentApplyRollout || "full").trim().toLowerCase();
+  if (raw === "full" || raw === "plan-only" || raw === "disabled") return raw;
+  return "full";
+}
+
 function enforceConnectivityPlanOnly() {
   const changed = !state.flags.planOnlyForcedByConnectivity || !state.flags.planOnlyMode;
   state.flags.planOnlyMode = true;
@@ -800,7 +808,36 @@ function enforceConnectivityPlanOnly() {
 function releaseConnectivityPlanOnly() {
   if (!state.flags.planOnlyForcedByConnectivity) return false;
   state.flags.planOnlyForcedByConnectivity = false;
+  if (!state.flags.planOnlyForcedByRollout) {
+    state.flags.planOnlyMode = false;
+  }
   return true;
+}
+
+function enforceRolloutPlanOnly() {
+  const changed = !state.flags.planOnlyForcedByRollout || !state.flags.planOnlyMode;
+  state.flags.planOnlyMode = true;
+  state.flags.planOnlyForcedByRollout = true;
+  return changed;
+}
+
+function releaseRolloutPlanOnly() {
+  if (!state.flags.planOnlyForcedByRollout) return false;
+  state.flags.planOnlyForcedByRollout = false;
+  if (!state.flags.planOnlyForcedByConnectivity) {
+    state.flags.planOnlyMode = false;
+  }
+  return true;
+}
+
+function applyRolloutPolicy() {
+  const mode = getAgentApplyRolloutMode();
+  if (mode === "full") {
+    const released = releaseRolloutPlanOnly();
+    return { mode, enforced: false, changed: released };
+  }
+  const changed = enforceRolloutPlanOnly();
+  return { mode, enforced: true, changed };
 }
 
 function applyEnabled() {
@@ -817,8 +854,11 @@ function applyEnabled() {
 
 function applyDisabledReason() {
   const f = state.flags;
+  const rolloutMode = getAgentApplyRolloutMode();
   if (!f.xlightsConnected) return "Connect to xLights to apply.";
   if (!f.xlightsCompatible) return "xLights version is below minimum supported floor (2026.1).";
+  if (rolloutMode === "disabled") return "Agent apply is disabled by rollout policy.";
+  if (rolloutMode === "plan-only") return "Agent rollout is in plan-only mode; apply is disabled.";
   if (f.planOnlyMode) return "Exit plan-only mode to apply.";
   if (f.proposalStale) return "Refresh proposal before apply.";
   if (!f.hasDraftProposal) return "Generate a proposal first.";
@@ -1404,6 +1444,13 @@ function onTogglePlanOnly() {
     );
     return render();
   }
+  if (state.flags.planOnlyForcedByRollout) {
+    setStatusWithDiagnostics(
+      "warning",
+      "Plan-only mode is currently forced by rollout policy."
+    );
+    return render();
+  }
   state.flags.planOnlyMode = !state.flags.planOnlyMode;
   setStatus(
     "info",
@@ -1447,6 +1494,7 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
 
 async function onRefresh() {
   try {
+    applyRolloutPolicy();
     let staleDetected = false;
     const releasedForce = releaseConnectivityPlanOnly();
     state.flags.xlightsConnected = true;
@@ -1899,6 +1947,13 @@ function clearDiagnostics() {
 }
 
 function buildDiagnosticsBundle() {
+  let previewCommands = [];
+  let previewError = "";
+  try {
+    previewCommands = buildDesignerPlanCommands(filteredProposed());
+  } catch (err) {
+    previewError = String(err?.message || "");
+  }
   return {
     exportedAt: new Date().toISOString(),
     app: {
@@ -1912,6 +1967,17 @@ function buildDiagnosticsBundle() {
     health: state.health || {},
     flags: state.flags || {},
     revision: state.revision || "unknown",
+    agentRun: {
+      rolloutMode: getAgentApplyRolloutMode(),
+      applyApprovalChecked: Boolean(state.ui.applyApprovalChecked),
+      draftBaseRevision: state.draftBaseRevision || "unknown",
+      proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+      selectedProposedCount: Array.isArray(state.ui.proposedSelection) ? state.ui.proposedSelection.length : 0,
+      previewCommandCount: Array.isArray(previewCommands) ? previewCommands.length : 0,
+      previewError,
+      lastApplyBackupPath: state.lastApplyBackupPath || "",
+      sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || ""
+    },
     diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
     applyHistory: Array.isArray(state.applyHistory) ? state.applyHistory : [],
     jobs: Array.isArray(state.jobs) ? state.jobs : []
@@ -4243,6 +4309,7 @@ function onResetProjectWorkspace() {
   state.proposed = [...defaultState.proposed];
   state.flags.planOnlyMode = false;
   state.flags.planOnlyForcedByConnectivity = false;
+  state.flags.planOnlyForcedByRollout = false;
   state.flags.hasDraftProposal = state.proposed.length > 0;
   state.flags.proposalStale = false;
   state.ui.sectionSelections = ["all"];
@@ -4843,6 +4910,13 @@ function detailsDrawer() {
 
 function settingsDrawer() {
   if (!state.ui.settingsOpen) return "";
+  const rolloutMode = getAgentApplyRolloutMode();
+  const planOnlyToggleForced = state.flags.planOnlyForcedByConnectivity || state.flags.planOnlyForcedByRollout;
+  const planOnlyToggleTitle = state.flags.planOnlyForcedByConnectivity
+    ? "Forced while xLights is unavailable"
+    : state.flags.planOnlyForcedByRollout
+      ? "Forced by rollout policy"
+      : "";
   return `
     <section class="settings-overlay" id="settings-overlay">
       <section class="card settings-drawer">
@@ -4874,10 +4948,18 @@ function settingsDrawer() {
             <option value="discard-unsaved" ${state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "selected" : ""}>Discard and switch</option>
           </select>
         </section>
+        <section class="field">
+          <label>Agent Apply Rollout Mode</label>
+          <select id="agent-apply-rollout-input">
+            <option value="full" ${rolloutMode === "full" ? "selected" : ""}>Full (plan + apply)</option>
+            <option value="plan-only" ${rolloutMode === "plan-only" ? "selected" : ""}>Plan Only</option>
+            <option value="disabled" ${rolloutMode === "disabled" ? "selected" : ""}>Disabled</option>
+          </select>
+        </section>
         <div class="row">
           <button id="test-connection">Test Connection</button>
           <button id="check-health">Recheck Health</button>
-          <button id="plan-toggle" ${state.flags.planOnlyForcedByConnectivity ? 'disabled title="Forced while xLights is unavailable"' : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
+          <button id="plan-toggle" ${planOnlyToggleForced ? `disabled title="${planOnlyToggleTitle}"` : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
         </div>
         <hr />
         <h3>Application Health</h3>
@@ -5394,6 +5476,25 @@ function bindEvents() {
       state.safety.sequenceSwitchUnsavedPolicy =
         sequenceSwitchPolicyInput.value === "discard-unsaved" ? "discard-unsaved" : "save-if-needed";
       persist();
+    });
+  }
+
+  const agentApplyRolloutInput = app.querySelector("#agent-apply-rollout-input");
+  if (agentApplyRolloutInput) {
+    agentApplyRolloutInput.addEventListener("change", () => {
+      const next = String(agentApplyRolloutInput.value || "").trim();
+      state.safety.agentApplyRollout =
+        next === "plan-only" || next === "disabled" ? next : "full";
+      const rollout = applyRolloutPolicy();
+      if (rollout.mode === "full") {
+        setStatus("info", "Agent apply rollout set to full mode.");
+      } else if (rollout.mode === "plan-only") {
+        setStatus("info", "Agent apply rollout set to plan-only mode.");
+      } else {
+        setStatus("info", "Agent apply rollout set to disabled.");
+      }
+      persist();
+      render();
     });
   }
 
@@ -5995,6 +6096,7 @@ function render() {
 
 async function bootstrapLiveData() {
   try {
+    applyRolloutPolicy();
     const requestedEndpoint = state.endpoint;
     const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
     const endpointChanged = endpoint !== requestedEndpoint;
@@ -6034,6 +6136,7 @@ async function bootstrapLiveData() {
 render();
 (async () => {
   await hydrateStateFromDesktop();
+  applyRolloutPolicy();
   await refreshApplyHistoryFromDesktop(40);
   render();
   await bootstrapLiveData();

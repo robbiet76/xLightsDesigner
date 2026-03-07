@@ -1,7 +1,7 @@
 # Implementation Status Matrix: WP-9 Progress Snapshot
 
-Status: Updated after WP-9 G9/G10 evidence sync  
-Date: 2026-03-03  
+Status: Updated with Sprint 4 agent rollout hardening snapshot  
+Date: 2026-03-07  
 xLights branch audited: `audit/agent-hooks`
 
 ## Legend
@@ -47,3 +47,17 @@ xLights branch audited: `audit/agent-hooks`
 ## 4) Open Items (Tracked)
 
 1. Full atomic rollback guarantees for all mid-commit mutation failure classes remain tracked under G8.
+
+## 5) Agent Rollout Hardening Snapshot (Designer App)
+
+| Area | Status | Evidence |
+|---|---|---|
+| Rollout feature flag (`full`/`plan-only`/`disabled`) | Implemented | `apps/xlightsdesigner-ui/app.js` settings + apply gating |
+| Explicit approval gate before apply | Implemented | `apps/xlightsdesigner-ui/app.js` (`applyApprovalChecked` checks) |
+| Persisted apply audit history | Implemented | `apps/xlightsdesigner-desktop/main.mjs` (`xld:agent-log:*`) |
+| Diagnostics export includes agent-run context | Implemented | `apps/xlightsdesigner-ui/app.js` `buildDiagnosticsBundle().agentRun` |
+| UI regression evidence for review/approve/apply loop | Implemented | `specs/projects/xlights-sequencer-control/ui-regression-pass-2026-03-07.md` |
+
+Go/No-Go (2026-03-07):
+- `GO` for continued internal implementation and preview-channel validation.
+- `NO-GO` for stable-channel production release until repeated packaged-app smoke runs are logged in `desktop-validation-evidence-log.md`.

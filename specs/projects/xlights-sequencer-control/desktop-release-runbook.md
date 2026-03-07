@@ -50,6 +50,16 @@ Execute this end-to-end flow for each candidate build:
 7. Confirm pre-apply backup recorded.
 8. Trigger restore from last backup and reopen sequence.
 9. Confirm rollback restore completed without crash.
+10. Confirm `Agent Apply Rollout Mode` behavior:
+   - `full`: plan + apply available
+   - `plan-only`: plan generation available, apply blocked
+   - `disabled`: agent apply path blocked by rollout policy
+11. Export diagnostics and verify `agentRun` payload includes:
+   - rollout mode
+   - proposal counts
+   - preview command count/error
+   - last backup path + sequence path
+12. Confirm recent apply history is visible in diagnostics panel.
 
 Expected outcome:
 - No fatal errors/crashes.
@@ -86,3 +96,5 @@ Release is considered complete when:
 - Artifact published to target channel.
 - Release notes posted.
 - Checklist updated with pass/fail evidence.
+- Rollout mode behavior validated across `full`, `plan-only`, and `disabled`.
+- Agent diagnostics export verified to contain `agentRun` context and apply history.

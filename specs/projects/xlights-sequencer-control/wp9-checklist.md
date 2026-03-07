@@ -99,3 +99,10 @@ Use this checklist as the authoritative go/no-go gate for "autonomous sequence a
 - [ ] `gap-audit.md` marks G1..G14 closed or explicitly deferred.
 - [x] Final run report archived and linked in closeout notes.
 - [x] Go/No-Go decision recorded in decision log.
+
+## 12) Designer Agent Rollout Hardening (Sprint 4)
+- [x] Agent apply path is feature-flagged with staged rollout modes (`full`, `plan-only`, `disabled`).
+- [x] Plan review + explicit approval gate enforced before apply.
+- [x] Apply audit trail is persisted and surfaced in diagnostics.
+- [x] Diagnostics export includes agent-run context payload.
+- [x] UI regression evidence captured for review/approve/apply loop.
