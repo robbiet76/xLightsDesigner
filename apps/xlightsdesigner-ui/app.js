@@ -17,6 +17,15 @@ import {
   validateCommands,
   pingCapabilities
 } from "./api.js";
+import { buildProposalFromIntent } from "./agent/planner.js";
+import { buildGuidedQuestions } from "./agent/guided-dialog.js";
+import {
+  buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
+  estimateImpactCount
+} from "./agent/command-builders.js";
+import { analyzeAudioContext } from "./agent/audio-analyzer.js";
+import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
+import { validateAndApplyPlan } from "./agent/orchestrator.js";
 
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
@@ -155,9 +164,11 @@ const defaultState = {
     metadataNewTag: "",
     metadataNewTagDescription: "",
     navCollapsed: false,
-    proposedPayloadOpen: false
+    proposedPayloadOpen: false,
+    applyApprovalChecked: false
   },
   diagnostics: [],
+  applyHistory: [],
   jobs: [],
   models: [],
   submodels: [],
@@ -228,6 +239,12 @@ if (!Array.isArray(state.ui?.metadataSelectionIds)) {
 }
 if (!Array.isArray(state.ui?.metadataSelectedTags)) {
   state.ui.metadataSelectedTags = [];
+}
+if (typeof state.ui?.applyApprovalChecked !== "boolean") {
+  state.ui.applyApprovalChecked = false;
+}
+if (!Array.isArray(state.applyHistory)) {
+  state.applyHistory = [];
 }
 if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterName = "";
 if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
@@ -333,6 +350,18 @@ function getDesktopSequenceBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
   if (typeof bridge.listSequencesInShowFolder !== "function") return null;
+  return bridge;
+}
+
+function getDesktopAgentLogBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (
+    typeof bridge.appendAgentApplyLog !== "function" ||
+    typeof bridge.readAgentApplyLog !== "function"
+  ) {
+    return null;
+  }
   return bridge;
 }
 
@@ -793,12 +822,17 @@ function applyDisabledReason() {
   if (f.planOnlyMode) return "Exit plan-only mode to apply.";
   if (f.proposalStale) return "Refresh proposal before apply.";
   if (!f.hasDraftProposal) return "Generate a proposal first.";
+  if (!state.ui.applyApprovalChecked) return "Review the plan and check approval before apply.";
   if (f.applyInProgress) return "Apply in progress.";
   return "";
 }
 
+function invalidateApplyApproval() {
+  state.ui.applyApprovalChecked = false;
+}
+
 function currentImpactCount() {
-  return filteredProposed().length * 11;
+  return estimateImpactCount(filteredProposed());
 }
 
 function parseVersionParts(versionText) {
@@ -912,6 +946,41 @@ function requiresApplyConfirmation() {
 function getSectionName(line) {
   const [section] = line.split("/");
   return (section || "General").trim();
+}
+
+function getModelHintNames(line) {
+  const parts = String(line || "")
+    .split("/")
+    .map((part) => part.trim());
+  if (parts.length < 2) return [];
+  return splitModelTokenList(parts[1]);
+}
+
+function summarizeImpactForLines(lines = []) {
+  const source = Array.isArray(lines) ? lines.filter(Boolean) : [];
+  const targetSet = new Set();
+  const sectionSet = new Set();
+  for (const line of source) {
+    for (const target of getModelHintNames(line)) targetSet.add(target);
+    sectionSet.add(getSectionName(line));
+  }
+
+  const sectionRows = getSectionChoiceRows();
+  const sectionMap = new Map(sectionRows.map((row) => [row.label, row]));
+  const sectionWindows = Array.from(sectionSet)
+    .map((label) => {
+      const row = sectionMap.get(label);
+      if (!row || typeof row.startMs !== "number") return `${label}: start unknown`;
+      return `${label}: ${formatMs(row.startMs)}`;
+    })
+    .slice(0, 5);
+
+  return {
+    targetCount: targetSet.size,
+    targets: Array.from(targetSet).slice(0, 6),
+    sectionCount: sectionSet.size,
+    sectionWindows
+  };
 }
 
 function escapeHtml(value) {
@@ -1065,6 +1134,7 @@ function setSectionSelections(values) {
   } else {
     state.ui.sectionSelections = Array.from(new Set(next));
   }
+  invalidateApplyApproval();
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -1115,36 +1185,7 @@ function ensureVersionSnapshots() {
 ensureVersionSnapshots();
 
 function buildDesignerPlanCommands(sourceLines = filteredProposed()) {
-  const trackName = "XD:ProposedPlan";
-  const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
-  if (source.length === 0) {
-    throw new Error("No proposed changes available for current section selection.");
-  }
-  const marks = source.slice(0, 24).map((label, idx) => {
-    const startMs = idx * 1000;
-    return {
-      startMs,
-      endMs: startMs + 1000,
-      label
-    };
-  });
-
-  return [
-    {
-      cmd: "timing.createTrack",
-      params: {
-        trackName,
-        replaceIfExists: true
-      }
-    },
-    {
-      cmd: "timing.insertMarks",
-      params: {
-        trackName,
-        marks
-      }
-    }
-  ];
+  return buildDesignerPlanCommandsFromLines(sourceLines, { trackName: "XD:ProposedPlan" });
 }
 
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
@@ -1155,6 +1196,10 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!scopedSource.length) {
     setStatusWithDiagnostics("warning", "No proposed changes available for this apply action.");
+    return render();
+  }
+  if (!state.ui.applyApprovalChecked) {
+    setStatusWithDiagnostics("warning", "Review the plan and check approval before apply.");
     return render();
   }
   const scopedImpactCount = scopedSource.length * 11;
@@ -1172,6 +1217,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
   setStatus("info", `Applying ${applyLabel} to xLights...`);
   render();
+  let applyAuditEntry = null;
 
   try {
     const sequencePath = currentSequencePathForSidecar();
@@ -1190,33 +1236,39 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       setStatusWithDiagnostics("info", `Pre-apply backup created: ${backup.backupPath || "ok"}`);
     }
 
-    // Preflight revision read to keep stale-state behavior explicit.
-    const rev = await getRevision(state.endpoint);
-    state.revision = rev?.data?.revision ?? state.revision;
     const plan = buildDesignerPlanCommands(scopedSource);
-    const validation = await validateCommands(
-      state.endpoint,
-      plan.map((step) => ({ cmd: step.cmd, params: step.params }))
-    );
-    if (validation?.data?.valid === false) {
-      const invalidResults = (validation?.data?.results || []).filter((r) => r.valid === false);
-      const details = invalidResults
-        .map((r) => {
-          const code = r?.error?.code || "VALIDATION_ERROR";
-          const msg = r?.error?.message || "Invalid command";
-          return `step ${r.index}: ${code} - ${msg}`;
-        })
-        .join("\\n");
+    const orchestrated = await validateAndApplyPlan({
+      endpoint: state.endpoint,
+      commands: plan,
+      expectedRevision: state.draftBaseRevision,
+      getRevision,
+      validateCommands,
+      executePlan,
+      safetyOptions: { maxCommands: 200 }
+    });
+
+    if (!orchestrated?.ok) {
+      applyAuditEntry = {
+        ts: new Date().toISOString(),
+        type: "apply",
+        status: "blocked",
+        stage: orchestrated?.stage || "unknown",
+        commandCount: plan.length,
+        impactCount: scopedImpactCount,
+        reason: orchestrated?.error || "Unknown orchestration error.",
+        ...currentApplyContext()
+      };
       setStatusWithDiagnostics(
         "action-required",
-        `Plan validation failed (${invalidResults.length || 1} issue${invalidResults.length === 1 ? "" : "s"}).`,
-        details || "Validation failed with no detailed payload."
+        `Apply blocked at ${orchestrated?.stage || "unknown"} stage.`,
+        orchestrated?.error || "Unknown orchestration error."
       );
       return;
     }
-    const result = await executePlan(state.endpoint, plan, true);
-    const executed = result?.data?.executedCount ?? 0;
-    const jobId = result?.data?.jobId || null;
+
+    const executed = Number(orchestrated?.executedCount || 0);
+    const jobId = orchestrated?.jobId || null;
+    state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
     if (jobId) {
       upsertJob({
         id: jobId,
@@ -1227,12 +1279,6 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       });
       setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
     }
-    try {
-      const postRev = await getRevision(state.endpoint);
-      state.revision = postRev?.data?.revision ?? state.revision;
-    } catch {
-      // Keep prior revision if post-apply readback is unavailable.
-    }
     state.draftBaseRevision = state.revision;
     state.flags.proposalStale = false;
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
@@ -1241,10 +1287,37 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       `Applied via system.executePlan (${executed} steps).`
     );
     addChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`);
+    applyAuditEntry = {
+      ts: new Date().toISOString(),
+      type: "apply",
+      status: "success",
+      commandCount: plan.length,
+      impactCount: scopedImpactCount,
+      executedCount: executed,
+      jobId: jobId || "",
+      revision: state.revision || "unknown",
+      ...currentApplyContext()
+    };
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
     addChatMessage("agent", `Apply blocked: ${err.message}`);
+    applyAuditEntry = {
+      ts: new Date().toISOString(),
+      type: "apply",
+      status: "failed",
+      stage: "exception",
+      commandCount: Array.isArray(scopedSource) ? scopedSource.length : 0,
+      impactCount: scopedImpactCount,
+      reason: String(err?.message || "Unknown apply error"),
+      ...currentApplyContext()
+    };
   } finally {
+    state.ui.applyApprovalChecked = false;
+    if (applyAuditEntry) {
+      pushApplyHistory(applyAuditEntry);
+      await appendDesktopApplyLog(applyAuditEntry);
+      await refreshApplyHistoryFromDesktop(40);
+    }
     state.flags.applyInProgress = false;
     state.ui.agentThinking = false;
     saveCurrentProjectSnapshot();
@@ -1288,14 +1361,31 @@ function onGenerate() {
   state.flags.hasDraftProposal = true;
   state.flags.proposalStale = false;
   state.draftBaseRevision = state.revision;
+  invalidateApplyApproval();
   const usingAll = hasAllSectionsSelected();
   const selected = usingAll
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
   const intentText = latestUserIntentText();
-  const intentLines = inferProposalLinesFromIntent(intentText, selected);
-  state.proposed = mergeCreativeBriefIntoProposal(intentLines);
+  const plan = buildProposalFromIntent({
+    promptText: intentText,
+    selectedSections: selected,
+    creativeBrief: state.creative?.brief || null,
+    selectedTagNames: state.ui.metadataSelectedTags || [],
+    selectedTargetIds: state.ui.metadataSelectionIds || [],
+    models: state.models || [],
+    submodels: state.submodels || [],
+    metadataAssignments: state.metadata?.assignments || []
+  });
+  const guidedQuestions = buildGuidedQuestions({
+    normalizedIntent: plan.normalizedIntent,
+    targets: plan.targets
+  });
+  state.proposed = mergeCreativeBriefIntoProposal(plan.proposalLines);
   state.ui.agentThinking = false;
+  if (guidedQuestions.length) {
+    addChatMessage("agent", `Before next pass, consider: ${guidedQuestions.join(" | ")}`);
+  }
   addChatMessage(
     "agent",
     `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`
@@ -1411,6 +1501,7 @@ async function onRefresh() {
     } catch (err) {
       setStatusWithDiagnostics("warning", `Section refresh failed: ${err.message}`);
     }
+    await refreshApplyHistoryFromDesktop(40);
 
     if (!staleDetected) {
       setStatus("info", "Refreshed from xLights.");
@@ -1822,8 +1913,48 @@ function buildDiagnosticsBundle() {
     flags: state.flags || {},
     revision: state.revision || "unknown",
     diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
+    applyHistory: Array.isArray(state.applyHistory) ? state.applyHistory : [],
     jobs: Array.isArray(state.jobs) ? state.jobs : []
   };
+}
+
+function currentApplyContext() {
+  return {
+    projectKey: getProjectKey(),
+    sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
+    endpoint: state.endpoint || ""
+  };
+}
+
+function pushApplyHistory(entry) {
+  state.applyHistory = [entry, ...(state.applyHistory || [])].slice(0, 80);
+}
+
+async function appendDesktopApplyLog(entry) {
+  const bridge = getDesktopAgentLogBridge();
+  if (!bridge) return;
+  try {
+    await bridge.appendAgentApplyLog({ entry });
+  } catch {
+    // Non-fatal logging failure.
+  }
+}
+
+async function refreshApplyHistoryFromDesktop(limit = 40) {
+  const bridge = getDesktopAgentLogBridge();
+  if (!bridge) return;
+  const context = currentApplyContext();
+  try {
+    const res = await bridge.readAgentApplyLog({
+      limit,
+      projectKey: context.projectKey,
+      sequencePath: context.sequencePath || ""
+    });
+    if (!res?.ok || !Array.isArray(res?.rows)) return;
+    state.applyHistory = res.rows.slice(0, limit);
+  } catch {
+    // Non-fatal history read failure.
+  }
 }
 
 function downloadJson(filename, data) {
@@ -1901,6 +2032,7 @@ function onCancelDraft() {
   state.proposed = [];
   state.ui.detailsOpen = false;
   state.ui.sectionSelections = ["all"];
+  invalidateApplyApproval();
   setStatus("info", "Draft canceled.");
   saveCurrentProjectSnapshot();
   persist();
@@ -1926,6 +2058,7 @@ function onReapplyVariant() {
   state.proposed = [...(selected.proposal || [])];
   state.flags.hasDraftProposal = state.proposed.length > 0;
   state.flags.proposalStale = false;
+  invalidateApplyApproval();
   state.route = "design";
   state.ui.detailsOpen = true;
   state.ui.sectionSelections = ["all"];
@@ -1941,6 +2074,7 @@ function onRollbackToVersion() {
   state.proposed = [...(selected.proposal || [])];
   state.flags.hasDraftProposal = state.proposed.length > 0;
   state.flags.proposalStale = false;
+  invalidateApplyApproval();
   state.draftBaseRevision = state.revision;
   state.ui.detailsOpen = false;
   bumpVersion(`Rollback to ${selected.id}`, selected.effects || state.proposed.length * 11);
@@ -2283,35 +2417,22 @@ function revokeReferencePreviewUrls() {
 }
 
 function buildCreativeBrief() {
-  const refs = state.creative.references || [];
-  const labels = getSectionChoiceList();
-  const topLabels = labels.length ? labels.slice(0, 6) : ["Intro", "Verse", "Chorus", "Bridge", "Outro"];
-  const goals = String(state.creative.goals || "").trim();
-  const inspiration = String(state.creative.inspiration || "").trim();
-  const notes = String(state.creative.notes || "").trim();
-  const audioPath = String(state.audioPathInput || "").trim();
-  const recentIntent = latestUserIntentText();
-  const referenceNames = refs.slice(0, 5).map((r) => r.name);
+  const audioAnalysis = analyzeAudioContext({
+    audioPath: state.audioPathInput,
+    sectionSuggestions: state.sectionSuggestions,
+    timingTracks: state.timingTracks
+  });
+  state.audioAnalysis.summary = (audioAnalysis.summaryLines || []).join("\n");
+  state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
 
-  return {
-    summary: goals || inspiration || recentIntent
-      ? `Design direction anchored to: ${goals || inspiration || recentIntent}`
-      : "Design direction anchored to sequence mood and audio dynamics.",
-    goalsSummary: goals || "No explicit goal provided; using artistic license with conservative first pass.",
-    inspirationSummary: inspiration || "No explicit inspiration provided.",
-    audioContext: audioPath || "Animation-only mode (no audio path provided).",
-    sections: topLabels,
-    moodEnergyArc: "Builds from calm textures into higher-energy focal moments, then resolves with cleaner transitions.",
-    narrativeCues: "Use lyric and phrasing cues to align contrast changes with emotional beats.",
-    visualCues: referenceNames.length
-      ? `Reference cues from: ${referenceNames.join(", ")}`
-      : "No visual references uploaded; infer visual language from user direction + audio profile.",
-    hypotheses: [
-      "Prioritize background depth before foreground intensity spikes.",
-      "Keep successful motifs and avoid broad rewrites outside target moments."
-    ],
-    notes: notes || ""
-  };
+  return synthesizeCreativeBrief({
+    goals: state.creative.goals,
+    inspiration: state.creative.inspiration,
+    notes: state.creative.notes,
+    references: state.creative.references || [],
+    audioAnalysis,
+    latestIntent: latestUserIntentText()
+  });
 }
 
 function onRunCreativeAnalysis() {
@@ -2456,6 +2577,7 @@ function toggleProposedSelection(index) {
   if (selected.has(idx)) selected.delete(idx);
   else selected.add(idx);
   state.ui.proposedSelection = Array.from(selected).sort((a, b) => a - b);
+  invalidateApplyApproval();
   persist();
   render();
 }
@@ -2897,6 +3019,7 @@ function splitBySection() {
     return render();
   }
   state.proposed = state.proposed.filter((item) => selected.has(getSectionName(item)));
+  invalidateApplyApproval();
   setStatus("info", `Draft narrowed to ${selected.size} section${selected.size === 1 ? "" : "s"}.`);
   saveCurrentProjectSnapshot();
   persist();
@@ -2908,6 +3031,7 @@ function updateProposedLine(index, value) {
   state.proposed[index] = value.trim();
   state.proposed = state.proposed.filter((line) => line.length > 0);
   state.flags.hasDraftProposal = state.proposed.length > 0;
+  invalidateApplyApproval();
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -2918,6 +3042,7 @@ function removeProposedLine(index) {
   state.proposed.splice(index, 1);
   sanitizeProposedSelection();
   state.flags.hasDraftProposal = state.proposed.length > 0;
+  invalidateApplyApproval();
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -2926,6 +3051,7 @@ function removeProposedLine(index) {
 function addProposedLine() {
   state.proposed.push("Describe the next design change in plain language");
   state.flags.hasDraftProposal = true;
+  invalidateApplyApproval();
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -2944,6 +3070,7 @@ function onRemoveAllProposed() {
   state.proposed = [];
   state.ui.proposedSelection = [];
   state.flags.hasDraftProposal = false;
+  invalidateApplyApproval();
   setStatus("info", "Deleted all proposed changes.");
   saveCurrentProjectSnapshot();
   persist();
@@ -2959,6 +3086,7 @@ function onRemoveSelectedProposed() {
   const uniqueDesc = Array.from(new Set(selected)).sort((a, b) => b - a);
   for (const idx of uniqueDesc) state.proposed.splice(idx, 1);
   state.flags.hasDraftProposal = state.proposed.length > 0;
+  invalidateApplyApproval();
   setStatus("info", `Removed ${uniqueDesc.length} proposed line${uniqueDesc.length === 1 ? "" : "s"}.`);
   saveCurrentProjectSnapshot();
   persist();
@@ -4153,6 +4281,7 @@ function resetSessionDraftState() {
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
   state.ui.sectionTrackName = "";
+  state.ui.applyApprovalChecked = false;
   state.proposed = [];
 }
 
@@ -4164,17 +4293,12 @@ function resetCreativeState() {
 }
 
 function buildAudioAnalysisStubSummary() {
-  const path = String(state.audioPathInput || "").trim();
-  const track = basenameOfPath(path) || "audio track";
-  return [
-    `Scaffold summary for ${track}.`,
-    "Song structure: pending",
-    "Beat/tempo profile: pending",
-    "Mood and energy arc: pending",
-    "Narrative cues from lyrics: pending",
-    "",
-    "Agent-integrated audio analysis will populate this section."
-  ].join("\n");
+  const analysis = analyzeAudioContext({
+    audioPath: state.audioPathInput,
+    sectionSuggestions: state.sectionSuggestions,
+    timingTracks: state.timingTracks
+  });
+  return (analysis.summaryLines || []).join("\n");
 }
 
 function onAnalyzeAudio() {
@@ -4185,7 +4309,7 @@ function onAnalyzeAudio() {
   }
   state.audioAnalysis.summary = buildAudioAnalysisStubSummary();
   state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
-  setStatus("info", "Audio analysis summary generated (scaffold).");
+  setStatus("info", "Audio analysis summary generated.");
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -4560,14 +4684,32 @@ function designScreen() {
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
   const disabledReason = applyDisabledReason();
+  const applyReady = applyEnabled();
   sanitizeProposedSelection();
   const filtered = state.proposed
     .map((line, idx) => ({ line, idx }))
     .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
   const list = filtered;
+  const allVisibleLines = list.map((item) => item.line);
+  const selectedLines = selectedProposedLinesForApply();
+  const previewLines = selectedLines.length ? selectedLines : allVisibleLines;
+  let previewCommands = [];
+  let previewError = "";
+  if (previewLines.length) {
+    try {
+      previewCommands = buildDesignerPlanCommands(previewLines);
+    } catch (err) {
+      previewError = String(err?.message || "Unable to build command preview.");
+    }
+  }
   const selectedCount = (state.ui.proposedSelection || []).filter((idx) => list.some((item) => item.idx === idx)).length;
-  const canApplySelected = selectedCount > 0 && !state.flags.applyInProgress;
-  const canApplyAll = list.length > 0 && !state.flags.applyInProgress;
+  const approvalChecked = Boolean(state.ui.applyApprovalChecked);
+  const canApplySelected = selectedCount > 0 && !state.flags.applyInProgress && applyReady && approvalChecked;
+  const canApplyAll = list.length > 0 && !state.flags.applyInProgress && applyReady && approvalChecked;
+  const impact = summarizeImpactForLines(previewLines);
+  const planSummary = previewCommands.length
+    ? `${previewCommands.length} command${previewCommands.length === 1 ? "" : "s"} ready for execution`
+    : previewError || "No command preview available.";
   const payloadPreview = escapeHtml(getProposedPayloadPreviewText());
   return `
     ${
@@ -4625,6 +4767,17 @@ function designScreen() {
         </div>
         <details class="panel-footer-block proposed-payload-footer" ${state.ui.proposedPayloadOpen ? "open" : ""}>
           <summary id="toggle-proposed-payload">Selected Change Payload Preview</summary>
+          <p class="banner">${escapeHtml(planSummary)}</p>
+          <p class="banner">Scope: ${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`} change${(selectedLines.length || allVisibleLines.length) === 1 ? "" : "s"}</p>
+          <p class="banner">Affected targets: ${impact.targetCount}${impact.targets.length ? ` (${escapeHtml(impact.targets.join(", "))})` : ""}</p>
+          <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
+          <div class="row">
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
+              I reviewed the plan and approve apply.
+            </label>
+            <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
+          </div>
           <pre class="proposed-payload">${payloadPreview}</pre>
         </details>
         <div class="row panel-footer-block proposed-actions">
@@ -4638,7 +4791,7 @@ function designScreen() {
 
     <div class="mobile-apply-bar">
       <button id="mobile-apply-all" ${canApplyAll ? "" : "disabled"}>Apply All</button>
-      <span class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready" : disabledReason}</span>
+      <span class="banner ${applyReady ? "" : "warning"}">${applyReady ? (approvalChecked ? "Ready" : "Awaiting approval") : disabledReason}</span>
     </div>
   `;
 }
@@ -4975,6 +5128,7 @@ function diagnosticsPanel() {
   const filteredRows =
     filter === "all" ? rows : rows.filter((d) => d.level === filter);
   const counts = getDiagnosticsCounts();
+  const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 12) : [];
   return `
     <section class="card diagnostics-panel">
       <div class="row" style="justify-content:space-between;">
@@ -5006,6 +5160,32 @@ function diagnosticsPanel() {
       `
           : "<p class=\"banner\">No diagnostics for current filter.</p>"
       }
+      <div style="margin-top:10px;">
+        <h4 style="margin:0 0 6px;">Recent Applies</h4>
+        ${
+          applyHistory.length
+            ? `
+          <ul class="list">
+            ${applyHistory
+              .map((entry) => {
+                const ts = entry?.ts ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:--";
+                const status = String(entry?.status || "unknown");
+                const count = Number(entry?.commandCount || 0);
+                const reason = String(entry?.reason || "").trim();
+                return `
+                <li>
+                  <strong>[${status}]</strong> ${ts} - ${count} command${count === 1 ? "" : "s"}
+                  ${entry?.stage ? ` (${entry.stage})` : ""}
+                  ${reason ? `<div class="banner">${escapeHtml(reason)}</div>` : ""}
+                </li>
+              `;
+              })
+              .join("")}
+          </ul>
+        `
+            : '<p class="banner">No apply history yet.</p>'
+        }
+      </div>
     </section>
   `;
 }
@@ -5112,6 +5292,18 @@ function bindEvents() {
 
   const mobileApplyAllBtn = app.querySelector("#mobile-apply-all");
   if (mobileApplyAllBtn) mobileApplyAllBtn.addEventListener("click", onApplyAll);
+
+  const applyApprovalCheckbox = app.querySelector("#apply-approval-checkbox");
+  if (applyApprovalCheckbox) {
+    applyApprovalCheckbox.addEventListener("change", () => {
+      state.ui.applyApprovalChecked = Boolean(applyApprovalCheckbox.checked);
+      persist();
+      render();
+    });
+  }
+
+  const restoreLastBackupBtn = app.querySelector("#restore-last-backup");
+  if (restoreLastBackupBtn) restoreLastBackupBtn.addEventListener("click", onRestoreLastBackup);
 
   const openDetailsBtn = app.querySelector("#open-details");
   if (openDetailsBtn) openDetailsBtn.addEventListener("click", openDetails);
@@ -5678,6 +5870,7 @@ function render() {
   const filter = state.ui.diagnosticsFilter;
   const rows = state.diagnostics || [];
   const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
+  const footerApplyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 8) : [];
 
   app.innerHTML = `
     <div class="app-shell ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
@@ -5763,6 +5956,32 @@ function render() {
               `
                 : '<p class="banner">No diagnostics for current filter.</p>'
             }
+            <div style="margin-top:8px;">
+              <h4 style="margin:0 0 6px;">Recent Applies</h4>
+              ${
+                footerApplyHistory.length
+                  ? `
+                  <ul class="list">
+                    ${footerApplyHistory
+                      .map((entry) => {
+                        const status = String(entry?.status || "unknown");
+                        const count = Number(entry?.commandCount || 0);
+                        const ts = entry?.ts
+                          ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : "--:--";
+                        return `
+                      <li>
+                        <strong>[${status}]</strong> ${ts} - ${count} cmd${count === 1 ? "" : "s"}
+                        ${entry?.stage ? ` (${entry.stage})` : ""}
+                      </li>
+                    `;
+                      })
+                      .join("")}
+                  </ul>
+                `
+                  : '<p class="banner">No apply history yet.</p>'
+              }
+            </div>
           </div>
         `
             : ""
@@ -5792,6 +6011,7 @@ async function bootstrapLiveData() {
       );
     }
     await onRefresh();
+    await refreshApplyHistoryFromDesktop(40);
     if (releasedForce) {
       setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
     }
@@ -5814,6 +6034,7 @@ async function bootstrapLiveData() {
 render();
 (async () => {
   await hydrateStateFromDesktop();
+  await refreshApplyHistoryFromDesktop(40);
   render();
   await bootstrapLiveData();
 })();

@@ -41,6 +41,46 @@
     "TEST_TIMING_TRACK": "AgentTiming",
     "TEST_MODEL_NAME": "MegaTree"
   },
+  "agentPlannerFixtures": {
+    "version": "2026-03-07",
+    "cases": [
+      {
+        "id": "director-prompt-first-pass",
+        "input": {
+          "promptText": "Make chorus 2 feel bigger and more energetic",
+          "selectedSections": ["Chorus 2"],
+          "selectedTagNames": ["focal"]
+        },
+        "expects": {
+          "hasTargets": true,
+          "hasProposalLines": true,
+          "containsAny": ["increase pulse contrast", "accelerate motion pacing", "punchy accents"]
+        }
+      },
+      {
+        "id": "explicit-effect-overrides",
+        "input": {
+          "promptText": "Keep it smooth but use twinkle and bars for key hits",
+          "selectedSections": ["Bridge"],
+          "selectedTargetIds": ["MegaTree"]
+        },
+        "expects": {
+          "containsAll": ["honor explicit user effect preferences", "twinkle", "bars"]
+        }
+      },
+      {
+        "id": "determinism-same-input",
+        "input": {
+          "promptText": "Increase chorus energy on focal elements with cleaner transitions",
+          "selectedSections": ["Chorus"],
+          "selectedTagNames": ["focal"]
+        },
+        "expects": {
+          "deterministic": true
+        }
+      }
+    ]
+  },
   "suites": [
     {
       "id": "01-discovery-smoke",

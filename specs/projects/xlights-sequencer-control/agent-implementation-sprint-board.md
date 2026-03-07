@@ -55,37 +55,38 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 - sequencing-decision engine that converts director intent into concrete effect/layer plans
 
 ### Tasks (xLightsDesigner)
-- [ ] Add agent planning module:
+- [x] Add agent planning module:
   - `apps/xlightsdesigner-ui/agent/planner.js` (new)
   - `apps/xlightsdesigner-ui/agent/intent-normalizer.js` (new)
   - `apps/xlightsdesigner-ui/agent/target-resolver.js` (new)
-- [ ] Add command-building adapters:
+- [x] Add command-building adapters:
   - `apps/xlightsdesigner-ui/agent/command-builders.js` (new)
-- [ ] Wire planner into UI state flow:
+- [x] Wire planner into UI state flow:
   - `apps/xlightsdesigner-ui/app.js`
 - [ ] Add endpoint helpers if missing:
   - `apps/xlightsdesigner-ui/api.js`
-- [ ] Add analysis service modules:
+- [x] Add analysis service modules:
   - `apps/xlightsdesigner-ui/agent/audio-analyzer.js` (new)
   - `apps/xlightsdesigner-ui/agent/brief-synthesizer.js` (new)
-- [ ] Add guided elicitation module:
+- [x] Add guided elicitation module:
   - `apps/xlightsdesigner-ui/agent/guided-dialog.js` (new)
-- [ ] Add sequencing-decision policy module:
+- [x] Add sequencing-decision policy module:
   - `apps/xlightsdesigner-ui/agent/sequencing-strategy.js` (new)
-- [ ] Encode director-intent translation rules in planner:
+- [x] Encode director-intent translation rules in planner:
   - `apps/xlightsdesigner-ui/agent/planner.js`
   - `apps/xlightsdesigner-ui/agent/intent-normalizer.js`
 - [ ] Add explicit override handling for user low-level effect constraints:
+- [x] Add explicit override handling for user low-level effect constraints:
   - `apps/xlightsdesigner-ui/agent/command-builders.js`
-- [ ] Add deterministic fixtures for intent/plan snapshots:
+- [x] Add deterministic fixtures for intent/plan snapshots:
   - `specs/projects/xlights-sequencer-control/test-fixtures.manifest.json`
 
 ### Tests
-- [ ] Unit tests for intent normalization and target resolution:
+- [x] Unit tests for intent normalization and target resolution:
   - `apps/xlightsdesigner-ui/tests/agent/*.test.js` (new)
-- [ ] Unit tests for director-intent-to-plan translation without explicit effect names:
+- [x] Unit tests for director-intent-to-plan translation without explicit effect names:
   - `apps/xlightsdesigner-ui/tests/agent/*.test.js` (new)
-- [ ] Unit tests for low-level user overrides taking precedence when provided:
+- [x] Unit tests for low-level user overrides taking precedence when provided:
   - `apps/xlightsdesigner-ui/tests/agent/*.test.js` (new)
 
 ### Exit Criteria
@@ -104,14 +105,14 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 - stale revision protection
 
 ### Tasks (xLightsDesigner)
-- [ ] Add orchestrator state machine:
+- [x] Add orchestrator state machine:
   - `apps/xlightsdesigner-ui/agent/orchestrator.js` (new)
-- [ ] Integrate validation + revision guards:
+- [x] Integrate validation + revision guards:
   - `apps/xlightsdesigner-ui/app.js`
   - `apps/xlightsdesigner-ui/api.js`
-- [ ] Add safety policy module (limits, blocked ops, max blast radius):
+- [x] Add safety policy module (limits, blocked ops, max blast radius):
   - `apps/xlightsdesigner-ui/agent/safety-policy.js` (new)
-- [ ] Persist apply logs and last plan result:
+- [x] Persist apply logs and last plan result:
   - `apps/xlightsdesigner-ui/app.js`
   - `apps/xlightsdesigner-desktop/main.mjs` (if file-backed audit log needed)
 
@@ -139,20 +140,20 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 - rollback entrypoint from UI
 
 ### Tasks
-- [ ] Add plan preview panel and approval gate:
+- [x] Add plan preview panel and approval gate:
   - `apps/xlightsdesigner-ui/app.js`
   - `apps/xlightsdesigner-ui/styles.css`
-- [ ] Add impact summary sections:
+- [x] Add impact summary sections:
   - affected targets
   - affected time windows
   - command count/risk indicators
-- [ ] Add post-apply verification + status surface:
+- [x] Add post-apply verification + status surface:
   - `apps/xlightsdesigner-ui/app.js`
-- [ ] Add rollback shortcut wiring to existing version snapshots:
+- [x] Add rollback shortcut wiring to existing version snapshots:
   - `apps/xlightsdesigner-ui/app.js`
 
 ### Tests
-- [ ] UI regression checklist for agent flow:
+- [x] UI regression checklist for agent flow:
   - `specs/projects/xlights-sequencer-control/ui-regression-pass-YYYY-MM-DD.md`
 
 ### Exit Criteria

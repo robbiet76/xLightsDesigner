@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const UI_URL = String(process.env.XLD_UI_URL || "").trim();
 const STATE_FILENAME = "xlightsdesigner-state.json";
+const AGENT_APPLY_LOG_FILENAME = "xlightsdesigner-agent-apply-log.jsonl";
 const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
 const DEV_RENDERER_ENTRY = path.resolve(__dirname, "..", "xlightsdesigner-ui", "index.html");
 let mainWindow = null;
@@ -198,6 +199,10 @@ function stateFilePath() {
   return path.join(app.getPath("userData"), STATE_FILENAME);
 }
 
+function agentApplyLogPath() {
+  return path.join(app.getPath("userData"), AGENT_APPLY_LOG_FILENAME);
+}
+
 function readDesktopStatePayload() {
   const file = stateFilePath();
   if (!fs.existsSync(file)) return { localStateRaw: "", projectsStoreRaw: "" };
@@ -241,6 +246,56 @@ ipcMain.handle("xld:state:write", async (_event, payload = {}) => {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(next, null, 2), "utf8");
     return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:agent-log:append", async (_event, payload = {}) => {
+  try {
+    const entry = payload?.entry && typeof payload.entry === "object" ? payload.entry : null;
+    if (!entry) return { ok: false, error: "Missing entry" };
+    const file = agentApplyLogPath();
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const row = {
+      ...entry,
+      ts: String(entry?.ts || new Date().toISOString())
+    };
+    fs.appendFileSync(file, `${JSON.stringify(row)}\n`, "utf8");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:agent-log:read", async (_event, payload = {}) => {
+  try {
+    const file = agentApplyLogPath();
+    const limitRaw = Number.parseInt(String(payload?.limit || "40"), 10);
+    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, limitRaw)) : 40;
+    const filterProjectKey = String(payload?.projectKey || "").trim();
+    const filterSequencePath = String(payload?.sequencePath || "").trim();
+    if (!fs.existsSync(file)) return { ok: true, rows: [] };
+    const lines = fs.readFileSync(file, "utf8")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const rows = [];
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line);
+        rows.push(parsed);
+      } catch {
+        // Skip malformed lines.
+      }
+    }
+    const filtered = rows.filter((row) => {
+      if (filterProjectKey && String(row?.projectKey || "").trim() !== filterProjectKey) return false;
+      if (filterSequencePath && String(row?.sequencePath || "").trim() !== filterSequencePath) return false;
+      return true;
+    });
+    const sliced = filtered.slice(-limit).reverse();
+    return { ok: true, rows: sliced };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
