@@ -6,7 +6,7 @@
   "main": "main.mjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "start": "electron .",
+    "start": "env -u ELECTRON_RUN_AS_NODE electron .",
     "prepare:renderer": "node scripts/prepare-renderer.mjs",
     "dist:dir": "npm run prepare:renderer && electron-builder --dir",
     "dist:mac": "npm run prepare:renderer && electron-builder --mac zip",
@@ -33,7 +33,7 @@
         "zip"
       ],
       "category": "public.app-category.utilities",
-      "hardenedRuntime": true
+      "hardenedRuntime": false
     }
   }
 }

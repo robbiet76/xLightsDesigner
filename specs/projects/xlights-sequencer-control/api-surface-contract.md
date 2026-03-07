@@ -1,7 +1,7 @@
 # API Surface Contract: xLights Sequencer Control (Program-Level)
 
-Status: Draft  
-Date: 2026-03-02  
+Status: In Progress (Sprint 0)  
+Date: 2026-03-07  
 Version: `v2-alpha-program`
 
 ## 1) Transport and Envelope
@@ -92,6 +92,89 @@ Baseline error codes:
 - Controllers namespace is excluded from this program.
 - Long-running operations should support async job semantics (`jobId`, progress, cancel).
 - Sequence mutations should support optimistic concurrency controls (`revisionToken`).
+
+## 3.1) Sprint 0 Lock: Agent Plan/Apply Contract
+
+### Agent input contract (designer-side)
+```json
+{
+  "intent": {
+    "verb": "propose_changes",
+    "goal": "Boost chorus energy without changing timing tracks"
+  },
+  "scope": {
+    "targetIds": ["MegaTree", "Roofline/TopHalf"],
+    "tagNames": ["focal", "rhythm-driver"],
+    "timeRangeMs": { "start": 45000, "end": 73000 }
+  },
+  "constraints": {
+    "allowGlobalRewrite": false,
+    "preserveTimingTracks": true,
+    "changeTolerance": "moderate"
+  },
+  "context": {
+    "sequencePath": "/path/show/MySong.xsq",
+    "baseRevision": "rev-123"
+  }
+}
+```
+
+### Agent output contract (planner-side)
+```json
+{
+  "planId": "plan-uuid",
+  "summary": "Increase contrast and pulse density for selected chorus targets.",
+  "assumptions": [
+    "Time range aligns with chorus section."
+  ],
+  "warnings": [
+    { "code": "MULTI_TARGET_UPDATE", "severity": "medium", "message": "8 targets affected." }
+  ],
+  "estimatedImpact": {
+    "targetsTouched": 8,
+    "effectsCreate": 2,
+    "effectsUpdate": 7,
+    "effectsDelete": 0
+  },
+  "commands": [
+    { "cmd": "effects.update", "params": {} }
+  ]
+}
+```
+
+### Apply preconditions (v1)
+- `commands` must pass `system.validateCommands` before apply.
+- apply must include `expectedRevision`/equivalent stale-write guard.
+- apply must be triggered by explicit user approval.
+- multi-command apply should use transaction/plan execution path where available.
+
+### Guided + analysis preconditions (v1)
+- In `create` mode, first major `propose_changes` must include an `analysis` section:
+  - `audio.source` (resolved media reference)
+  - `audio.sections[]` (song structure map)
+  - `audio.timing` (`tempo`, `timeSignature`, `beats[]`, `bars[]`)
+  - `creativeBrief` (`tone`, `moodArc`, `storyNotes`, `designHypotheses[]`)
+- If analysis is incomplete, planner must return structured `warnings[]` and block apply paths until completion.
+- External track/lyrics research is optional; when used, include `analysis.sources[]` links/notes.
+
+### Settings-edit contract (v1)
+- Agent-proposed settings edits use a patch payload and require explicit user confirmation:
+```json
+{
+  "settingsPatch": {
+    "fields": [
+      {
+        "path": "ui.agent.changeToleranceDefault",
+        "before": "moderate",
+        "after": "aggressive"
+      }
+    ],
+    "reason": "User requested stronger edits in chorus workflows."
+  }
+}
+```
+- Any settings patch apply without user confirmation action must be rejected.
+- Settings patch fields must be restricted to editable UI/form settings namespaces.
 
 ## 4) Command Contracts
 

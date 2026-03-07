@@ -1,7 +1,7 @@
 # Designer Interaction Contract: Agent + User Iterative Sequencing
 
-Status: Draft  
-Date: 2026-03-04  
+Status: In Progress (Sprint 0)  
+Date: 2026-03-07  
 Scope: xLightsDesigner interaction layer above xLights control APIs
 
 ## 1) Purpose
@@ -28,6 +28,42 @@ This spec defines the contract between:
 5. Every applied change can be traced, reverted, and replayed.
 6. When user intent is incomplete, the agent must proactively ask domain-relevant questions using lighting and audio context.
 7. User and agent are collaborative co-editors; if user edits occur, agent must refresh sequence state before proposing/applying further mutations.
+
+## 3.1) Sprint 0 Lock: v1 Intent Contract
+
+### Supported v1 intent verbs
+- `analyze`: read-only analysis and recommendations.
+- `propose_changes`: produce a scoped, reviewable mutation proposal.
+- `refine_proposal`: regenerate proposal with updated constraints.
+- `apply_approved_plan`: execute previously approved command plan.
+
+### Required fields before `apply_approved_plan`
+- open sequence context
+- explicit target scope (models/groups/submodels and/or metadata tags)
+- explicit time scope (range or explicit full-sequence confirmation)
+- base revision token from latest sequence read
+- explicit approval from user action (button-driven)
+
+### Guided workflow requirement (v1)
+- Agent must guide users through a structured creative workflow:
+  - project concept, tone, goals
+  - sequence-specific intent and constraints
+  - gap-filling questions before plan generation
+- Agent should proactively identify missing decisions and present concise choices.
+- Agent owns sequencing craft decisions (effect choice, layering approach, transition technique, model emphasis) while honoring user direction.
+- User is treated as director-level intent owner; agent is responsible for translating intent into concrete sequencing plans.
+
+### Agent-assisted settings edits (v1)
+- Agent may read and propose updates to editable app form/settings fields.
+- Agent may apply settings edits only after explicit user confirmation.
+- Agent should offer to apply settings changes when they reduce friction for the user.
+
+### v1 non-goals (interaction-level)
+- free-form autonomous apply without explicit user approval
+- hidden/background mutation outside visible proposal contract
+- global sequence rewrites unless user explicitly confirms elevated risk
+- controller/channel configuration authoring
+- requiring users to micromanage low-level effect authoring choices for normal workflows
 
 ## 4) Interaction Model
 

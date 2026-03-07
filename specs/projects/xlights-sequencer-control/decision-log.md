@@ -86,3 +86,41 @@ Status: Locked unless superseded by explicit revision.
 - Internal implementation may use web UI technologies, but production users must not install side runtimes/tools (no separate Node/Python/Electron setup).
 - Desktop-native capabilities (file dialogs, filesystem-backed project/metadata persistence, diagnostics export) must be provided through the packaged runtime boundary.
 - Browser-only/dev-server mode is development-only and not the production delivery contract.
+
+## D16) Initial Development Policy: No Legacy/Compatibility Shims (2026-03-05)
+- During initial development, do not add legacy paths, compatibility shims, fallback schemas, or dual-format support.
+- Fixes must target the current approved contract directly (root-cause first).
+- Compatibility behavior may be considered only after first final release, with explicit approval and spec update.
+
+## D17) Agent v1 Non-Goals and Blocked Operations (2026-03-07)
+- Agent v1 is scoped to deterministic proposal/apply loops for sequencing mutations only.
+- Agent v1 must not perform:
+  - controller/output configuration changes,
+  - layout/model write operations,
+  - implicit global rewrites without elevated explicit confirmation,
+  - autonomous background apply without user-triggered approval.
+- Agent v1 apply path is blocked when:
+  - sequence revision is stale,
+  - scope is ambiguous or empty,
+  - `system.validateCommands` fails,
+  - plan contains commands outside approved v1 command set.
+
+## D18) Guided Workflow + Settings-Edit Boundaries (2026-03-07)
+- Agent v1 must operate as a guided creative partner, including explicit concept/tone/goals capture and gap-resolution prompts before first major mutation proposal.
+- Agent v1 may propose and execute settings/form edits only for editable UI namespaces.
+- Any settings edit requires explicit user confirmation and must be auditable with before/after deltas.
+- Silent/background settings mutation is prohibited.
+
+## D19) Audio-Analysis-First Kickoff Policy (2026-03-07)
+- In `create` mode, analysis is mandatory before first major proposal:
+  - media read
+  - structure segmentation
+  - timing extraction (tempo/time signature/beats/bars)
+  - creative brief synthesis
+- Optional enrichments (web context, lyric timing) remain non-blocking for proposal generation, but if present must be traceable in analysis metadata.
+
+## D20) Sequencing Responsibility Split: Director User, Designer Agent (2026-03-07)
+- The user primarily provides director-level intent (creative direction, priorities, constraints).
+- The agent is responsible for sequencing craft decisions and concrete plan generation (target strategy, effect approach, layering/transition choices).
+- The system must not depend on the user providing low-level effect instructions for normal plan generation.
+- Explicit user low-level instructions, when provided, are treated as constraints/overrides.

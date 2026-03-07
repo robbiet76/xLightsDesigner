@@ -17,8 +17,12 @@ say "Checking app bundle at: $APP_PATH"
 [[ -d "$APP_PATH" ]] || fail "App bundle not found"
 [[ -x "$APP_PATH/Contents/MacOS/xLightsDesigner" ]] || fail "Executable missing"
 
+if [[ "${ELECTRON_RUN_AS_NODE:-}" == "1" ]]; then
+  say "Detected ELECTRON_RUN_AS_NODE=1 in shell; launching with variable unset"
+fi
+
 say "Launching app..."
-open "$APP_PATH"
+env -u ELECTRON_RUN_AS_NODE open "$APP_PATH"
 
 sleep 3
 if ! pgrep -f "/xLightsDesigner.app/Contents/MacOS/xLightsDesigner" >/dev/null 2>&1; then

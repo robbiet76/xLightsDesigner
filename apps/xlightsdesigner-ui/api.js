@@ -1,4 +1,4 @@
-const DEFAULT_ENDPOINT = "/xlDoAutomation";
+const DEFAULT_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
 
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");
@@ -6,12 +6,7 @@ function normalizeBody(raw) {
 }
 
 function sanitizeEndpoint(endpoint) {
-  let e = String(endpoint || "").trim();
-  if (!e) return e;
-  // Repair bad endpoint forms introduced by prior client normalization bugs.
-  e = e.replace(/\/xlDoAutomation\/xlDoAutomation\b/g, "/xlDoAutomation");
-  e = e.replace(/\/xlDoAutomation\/+$/g, "/xlDoAutomation");
-  return e;
+  return String(endpoint || "").trim();
 }
 
 export function getDefaultEndpoint() {
@@ -55,6 +50,10 @@ export async function pingCapabilities(endpoint) {
   return postCommand(endpoint, "system.getCapabilities", {});
 }
 
+export async function getSystemVersion(endpoint) {
+  return postCommand(endpoint, "system.getVersion", {});
+}
+
 export async function getOpenSequence(endpoint) {
   return postCommand(endpoint, "sequence.getOpen", {});
 }
@@ -94,6 +93,14 @@ export async function closeSequence(endpoint, force = true, quiet = false) {
 
 export async function getModels(endpoint) {
   return postCommand(endpoint, "layout.getModels", {});
+}
+
+export async function getDisplayElements(endpoint) {
+  return postCommand(endpoint, "layout.getDisplayElements", {});
+}
+
+export async function getSubmodels(endpoint) {
+  return postCommand(endpoint, "layout.getSubmodels", {});
 }
 
 export async function getTimingTracks(endpoint) {

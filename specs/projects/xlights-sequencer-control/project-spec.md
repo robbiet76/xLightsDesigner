@@ -1,7 +1,7 @@
 # Project Spec: xLights Full Sequencer Control for xLightsDesigner
 
-Status: Draft  
-Date: 2026-03-02  
+Status: In Progress (Sprint 0)  
+Date: 2026-03-07  
 Project type: Program-level control contract (multi-phase)
 
 ## 1) Objective
@@ -157,3 +157,44 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - xLightsDesigner can reconstruct a deterministic virtual layout scene (model transforms + node coordinates + camera context) from API data only.
 - No controller APIs are required.
 - Layout writes remain out of scope and are blocked by contract.
+
+## 9) Sprint 0: Agent v1 Contract Lock
+
+### 9.1 Supported v1 agent verbs
+- `analyze`
+- `propose_changes`
+- `refine_proposal`
+- `apply_approved_plan`
+
+### 9.2 v1 apply requirements
+- explicit user approval action
+- explicit scope (targets and time range, or explicit full-sequence confirmation)
+- base revision token present and current
+- pre-apply `system.validateCommands` pass
+
+### 9.3 v1 non-goals
+- controller/output configuration
+- layout/model write operations
+- autonomous unapproved background mutation
+- implicit global rewrites without elevated confirmation
+
+### 9.4 Audio analysis first-step requirement (v1)
+- After sequence selection/open, agent must execute an analysis-first pass before major mutation proposals:
+  - read sequence-attached media file
+  - derive song structure and produce structure timing track
+  - derive tempo/time-signature/beats/bars and produce timing tracks
+  - optionally enrich via web track research
+  - optionally derive lyrics timing track (secondary goal)
+  - synthesize a creative brief (tone, mood, story/arc) and attach to sequence context
+
+### 9.5 Guided collaboration + settings assistance (v1)
+- Agent must operate as a guided creative partner, not only a command translator.
+- Agent must lead high-level project/sequence dialogue and resolve intent gaps before planning.
+- Agent can update editable app settings/forms when requested, and may offer to apply suggested setting changes.
+- Any settings mutation must be explicitly confirmed by the user before commit.
+
+### 9.6 Sequencing skill ownership and director split (v1)
+- Agent must be capable of end-to-end sequence authoring operations within API scope, including model/submodel targeting and effect/layer manipulation.
+- Agent is responsible for sequencing technique decisions (what effect family, where, and why) based on user goals and constraints.
+- User interaction should stay primarily at director level (creative direction, priorities, constraints), not low-level effect programming.
+- Agent should ask for sequencing specifics only when needed to resolve genuine ambiguity or explicit user preference.

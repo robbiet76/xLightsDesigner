@@ -81,7 +81,7 @@ async function main() {
   electronProc = spawn(electron, [desktopDir], {
     cwd: desktopDir,
     stdio: "inherit",
-    env: { ...process.env, XLD_UI_URL: uiUrl }
+    env: { ...process.env, XLD_UI_URL: uiUrl, ELECTRON_RUN_AS_NODE: undefined }
   });
 
   electronProc.on("exit", (code) => {

@@ -3,12 +3,13 @@ import {
   cancelJob,
   createSequence,
   executePlan,
-  getDefaultEndpoint,
   getJob,
   getMediaStatus,
   getModels,
   getOpenSequence,
   getRevision,
+  getSubmodels,
+  getSystemVersion,
   saveSequence,
   getTimingMarks,
   getTimingTracks,
@@ -20,7 +21,12 @@ import {
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
+const PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
 const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
+const CONNECTIVITY_POLL_MS = 10000;
+const FOCUS_SYNC_COOLDOWN_MS = 1200;
+const QUICK_RECONNECT_DELAY_MS = 3000;
+const ENDPOINT_PROBE_TIMEOUT_MS = 1800;
 const DEFAULT_PROPOSED_ROWS = 5;
 const PROPOSED_ROWS_STEP = 5;
 const CHAT_QUICK_PROMPTS = [
@@ -28,12 +34,7 @@ const CHAT_QUICK_PROMPTS = [
   "Keep current look, but reduce twinkle intensity on candy canes.",
   "Rework bridge section with calmer color transitions."
 ];
-const FALLBACK_LOCAL_ENDPOINTS = [
-  "http://127.0.0.1:8080/xlDoAutomation",
-  "http://localhost:8080/xlDoAutomation",
-  "http://127.0.0.1:49914/xlDoAutomation",
-  "http://127.0.0.1:49913/xlDoAutomation"
-];
+const INLINE_CHIP_MODEL_FALLBACKS = ["MegaTree", "Roofline", "Candy Canes", "Matrix", "Arches", "CandyCane"];
 const SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS = new Set([
   "mp3", "wav", "ogg", "m4a", "flac",
   "mp4", "m4v", "mov", "avi", "mpg", "mpeg",
@@ -45,21 +46,38 @@ const REFERENCE_MEDIA_ALLOWED_EXTENSIONS = new Set([
 ]);
 const REFERENCE_MEDIA_MAX_FILE_BYTES = 250 * 1024 * 1024;
 const REFERENCE_MEDIA_MAX_ITEMS = 40;
-const LEGACY_SAMPLE_PROPOSED = [
-  "Chorus 2 / CandyCanes / reduce twinkle 35%",
-  "Chorus 2 / XD:Mood / mark as calmer pulse",
-  "Chorus 2 / Roofline / soften sparkle saturation"
-];
-const LEGACY_SAMPLE_CHAT = [
-  "Reduce twinkle intensity on candy canes in chorus 2.",
-  "Draft updated. I focused changes to chorus 2 labels only."
-];
+
+function buildDemoProposedLines() {
+  return [
+    "Verse 1 / MegaTree + Roofline / soften intensity, cool-blue shimmer with slow rise.",
+    "Pre-Chorus / Candy Canes / tighten chases and add alternating white accents.",
+    "Chorus 1 / Arches / increase energy with layered wipes + sparkle peaks on downbeats.",
+    "Chorus 1 / Matrix / add lyric-synced bursts on key words for emphasis.",
+    "Post-Chorus / House Outline / hold warm amber glow with gentle breathing pulse.",
+    "Verse 2 / Bushes + Mini Trees / introduce twinkle bed with subtle hue rotation.",
+    "Build / Whole yard / ramp tempo perception using staggered chases by depth.",
+    "Chorus 2 / MegaTree / higher contrast color transitions, reduce muddy mid-tones.",
+    "Chorus 2 / Roofline / mirror MegaTree rhythm with delayed echo motion.",
+    "Bridge / Background props / create calm starfield, de-emphasize foreground movement.",
+    "Bridge / Window Frames / slow color drift to support quieter emotional tone.",
+    "Final Chorus / Whole yard / full-spectrum sweep then converge to hero color.",
+    "Final Chorus / Candy Canes / reduce twinkle density by 35% for readability.",
+    "Outro / Matrix / fade to silhouette with sparse white spark accents.",
+    "Outro / Arch line / cascading dim-down from center outward.",
+    "Global / Timing refinements / align transitions to phrase boundaries on XD: Mood.",
+    "Global / Depth pass / push rear elements cooler and front elements warmer.",
+    "Global / Cleanup / remove conflicting overlapping effects in chorus transitions."
+  ];
+}
 
 const defaultState = {
   route: "project",
-  endpoint: getDefaultEndpoint(),
+  endpoint: PREFERRED_XLIGHTS_ENDPOINT,
   projectName: "Holiday 2026",
+  projectConcept: "",
   showFolder: "/Users/robterry/Desktop/Show",
+  projectMetadataRoot: "",
+  projectFilePath: "",
   safety: {
     applyConfirmMode: "large-only",
     largeChangeThreshold: 60,
@@ -72,9 +90,16 @@ const defaultState = {
   newSequenceDurationMs: 180000,
   newSequenceFrameMs: 50,
   audioPathInput: "",
+  audioAnalysis: {
+    summary: "",
+    lastAnalyzedAt: ""
+  },
   savePathInput: "",
   lastApplyBackupPath: "",
   recentSequences: [],
+  showDirectoryStats: { xsqCount: 0, xdmetaCount: 0 },
+  projectCreatedAt: "",
+  projectUpdatedAt: "",
   revision: "unknown",
   health: {
     lastCheckedAt: "",
@@ -87,7 +112,8 @@ const defaultState = {
     desktopFileDialogReady: false,
     desktopBridgeApiCount: 0,
     xlightsVersion: "",
-    compatibilityStatus: "unknown"
+    compatibilityStatus: "unknown",
+    submodelDiscoveryError: ""
   },
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
@@ -110,22 +136,31 @@ const defaultState = {
     designTab: "chat",
     diagnosticsOpen: false,
     jobsOpen: false,
+    settingsOpen: false,
     diagnosticsFilter: "all",
     modelFilterText: "",
+    metadataTypeFilter: "all",
+    metadataFilterName: "",
+    metadataFilterType: "",
+    metadataFilterTags: "",
+    metadataSelectionIds: [],
+    proposedSelection: [],
     sequenceMode: "existing",
     sectionTrackName: "",
     proposedRowsVisible: DEFAULT_PROPOSED_ROWS,
     chatDraft: "",
     agentThinking: false,
     metadataTargetId: "",
-    metadataRole: "support",
-    metadataBehavior: "steady",
-    metadataTagDraft: "",
-    metadataNewTag: ""
+    metadataSelectedTags: [],
+    metadataNewTag: "",
+    metadataNewTagDescription: "",
+    navCollapsed: false,
+    proposedPayloadOpen: false
   },
   diagnostics: [],
   jobs: [],
   models: [],
+  submodels: [],
   timingTracks: [],
   sectionSuggestions: [],
   sectionStartByLabel: {},
@@ -133,29 +168,37 @@ const defaultState = {
     goals: "",
     inspiration: "",
     notes: "",
+    briefText: "",
     references: [],
     brief: null,
     briefUpdatedAt: ""
+  },
+  inspiration: {
+    paletteSwatches: ["#0b3d91", "#2a9d8f", "#f4a261", "#e76f51"]
   },
   metadata: {
     tags: ["focal", "rhythm-driver", "ambient-fill"],
     assignments: [],
     ignoredOrphanTargetIds: []
   },
+  projectSequences: [],
+  sequenceCatalog: [],
   versions: [{ id: "v1", summary: "Session initialized", effects: 0, time: "--:--" }],
   selectedVersion: "v1",
   compareVersion: null
 };
 
-function isLegacySampleState(stateLike) {
-  const proposed = Array.isArray(stateLike?.proposed) ? stateLike.proposed : [];
-  const chat = Array.isArray(stateLike?.chat) ? stateLike.chat.map((c) => c?.text).filter(Boolean) : [];
-  return (
-    proposed.length === LEGACY_SAMPLE_PROPOSED.length &&
-    proposed.every((line, i) => line === LEGACY_SAMPLE_PROPOSED[i]) &&
-    chat.length === LEGACY_SAMPLE_CHAT.length &&
-    chat.every((line, i) => line === LEGACY_SAMPLE_CHAT[i])
-  );
+function normalizeConfiguredEndpoint(endpoint) {
+  const raw = String(endpoint || "").trim();
+  if (!raw) return PREFERRED_XLIGHTS_ENDPOINT;
+  const lowered = raw.toLowerCase();
+  if (lowered.includes("127.0.0.1:8080") || lowered.includes("localhost:8080")) {
+    return PREFERRED_XLIGHTS_ENDPOINT;
+  }
+  if (raw.startsWith("/")) {
+    return PREFERRED_XLIGHTS_ENDPOINT;
+  }
+  return raw;
 }
 
 function loadState() {
@@ -169,12 +212,7 @@ function loadState() {
       flags: { ...defaultState.flags, ...(parsed.flags || {}) },
       ui: { ...defaultState.ui, ...(parsed.ui || {}) }
     };
-    if (isLegacySampleState(merged)) {
-      merged.chat = [];
-      merged.proposed = [];
-      merged.flags = { ...merged.flags, hasDraftProposal: false, proposalStale: false };
-      merged.draftBaseRevision = "unknown";
-    }
+    merged.endpoint = normalizeConfiguredEndpoint(merged.endpoint);
     return merged;
   } catch {
     return structuredClone(defaultState);
@@ -182,13 +220,43 @@ function loadState() {
 }
 
 const state = loadState();
+if (!Array.isArray(state.ui?.proposedSelection)) {
+  state.ui.proposedSelection = [];
+}
+if (!Array.isArray(state.ui?.metadataSelectionIds)) {
+  state.ui.metadataSelectionIds = [];
+}
+if (!Array.isArray(state.ui?.metadataSelectedTags)) {
+  state.ui.metadataSelectedTags = [];
+}
+if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterName = "";
+if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
+if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
+if (!Array.isArray(state.proposed) || state.proposed.length === 0) {
+  state.proposed = buildDemoProposedLines();
+  state.flags.hasDraftProposal = true;
+}
 let desktopStatePersistTimer = null;
 let desktopStateHydrated = false;
 let sidecarPersistTimer = null;
+let quickReconnectTimer = null;
 let hydratedSidecarSequencePath = "";
+let focusSyncInFlight = false;
+let lastFocusSyncAt = 0;
+let lastIgnoredExternalSequencePath = "";
 
 function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
   return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
+}
+
+function parseProjectKey(key) {
+  const raw = String(key || "");
+  const idx = raw.indexOf("::");
+  if (idx < 0) return { projectName: raw.trim(), showFolder: "" };
+  return {
+    projectName: raw.slice(0, idx).trim(),
+    showFolder: raw.slice(idx + 2).trim()
+  };
 }
 
 function loadProjectsStore() {
@@ -258,6 +326,34 @@ function getDesktopDiagnosticsBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
   if (typeof bridge.exportDiagnosticsBundle !== "function") return null;
+  return bridge;
+}
+
+function getDesktopSequenceBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.listSequencesInShowFolder !== "function") return null;
+  return bridge;
+}
+
+function getDesktopSequenceDialogBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.saveSequenceDialog !== "function") return null;
+  return async (payload) => bridge.saveSequenceDialog(payload);
+}
+
+function getDesktopProjectBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (
+    typeof bridge.openProjectDialog !== "function" ||
+    typeof bridge.saveProjectDialog !== "function" ||
+    typeof bridge.openProjectFile !== "function" ||
+    typeof bridge.writeProjectFile !== "function"
+  ) {
+    return null;
+  }
   return bridge;
 }
 
@@ -413,6 +509,26 @@ function queueSidecarPersist() {
   }, DESKTOP_STATE_SYNC_DEBOUNCE_MS);
 }
 
+function withTimeout(promise, timeoutMs, label = "request") {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
+function queueQuickReconnectPoll() {
+  if (quickReconnectTimer) return;
+  quickReconnectTimer = setTimeout(async () => {
+    quickReconnectTimer = null;
+    await pollCompatibilityStatus();
+  }, QUICK_RECONNECT_DELAY_MS);
+}
+
 function uniqueEndpoints(endpoints) {
   return Array.from(
     new Set(
@@ -424,72 +540,102 @@ function uniqueEndpoints(endpoints) {
 }
 
 async function resolveReachableEndpoint(preferredEndpoint) {
-  const candidates = uniqueEndpoints([
-    preferredEndpoint,
-    state.endpoint,
-    getDefaultEndpoint(),
-    ...FALLBACK_LOCAL_ENDPOINTS
-  ]);
-  let lastError = null;
-  for (const endpoint of candidates) {
-    try {
-      const caps = await pingCapabilities(endpoint);
-      return { endpoint, caps };
-    } catch (err) {
-      lastError = err;
-    }
+  const endpoint = normalizeConfiguredEndpoint(
+    String(preferredEndpoint || state.endpoint || PREFERRED_XLIGHTS_ENDPOINT).trim()
+  );
+  if (!endpoint) {
+    throw new Error("No xLights endpoint configured.");
   }
-  throw lastError || new Error("No reachable xLights endpoint found");
+  const caps = await withTimeout(
+    pingCapabilities(endpoint),
+    ENDPOINT_PROBE_TIMEOUT_MS,
+    `Endpoint probe ${endpoint}`
+  );
+  return { endpoint, caps };
+}
+
+function sidecarPathForSequencePath(sequencePath) {
+  const path = String(sequencePath || "").trim();
+  if (!path) return "";
+  if (/\.xsq$/i.test(path)) {
+    return path.replace(/\.xsq$/i, ".xdmeta");
+  }
+  return `${path}.xdmeta`;
+}
+
+function basenameOfPath(filePath) {
+  const raw = String(filePath || "").trim();
+  if (!raw) return "";
+  const parts = raw.split(/[\\/]/);
+  return String(parts[parts.length - 1] || "").trim();
+}
+
+function buildProjectSequencesIndex() {
+  const paths = [];
+  const addPath = (value) => {
+    const next = String(value || "").trim();
+    if (next) paths.push(next);
+  };
+
+  addPath(state.sequencePathInput);
+  addPath(state.newSequencePathInput);
+  for (const p of Array.isArray(state.recentSequences) ? state.recentSequences : []) addPath(p);
+  for (const s of Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : []) {
+    addPath(typeof s === "string" ? s : s?.path || "");
+  }
+
+  const uniquePaths = Array.from(new Set(paths));
+  return uniquePaths.map((sequencePath) => ({
+    sequencePath,
+    sidecarPath: sidecarPathForSequencePath(sequencePath),
+    sequenceName: basenameOfPath(sequencePath) || sequencePath,
+    inShowCatalog: (state.sequenceCatalog || []).some((s) => String((s && s.path) || s || "") === sequencePath),
+    isActive: String(state.sequencePathInput || "").trim() === sequencePath
+  }));
 }
 
 function extractProjectSnapshot() {
+  state.projectSequences = buildProjectSequencesIndex();
   return {
+    projectMetadataRoot: state.projectMetadataRoot,
+    projectFilePath: state.projectFilePath,
+    endpoint: state.endpoint,
+    route: state.route,
+    projectConcept: state.projectConcept,
     sequencePathInput: state.sequencePathInput,
     newSequencePathInput: state.newSequencePathInput,
     newSequenceType: state.newSequenceType,
     newSequenceDurationMs: state.newSequenceDurationMs,
     newSequenceFrameMs: state.newSequenceFrameMs,
     audioPathInput: state.audioPathInput,
+    audioAnalysis: state.audioAnalysis,
     savePathInput: state.savePathInput,
     lastApplyBackupPath: state.lastApplyBackupPath,
     recentSequences: state.recentSequences,
+    showDirectoryStats: state.showDirectoryStats,
+    projectCreatedAt: state.projectCreatedAt,
+    projectUpdatedAt: state.projectUpdatedAt,
+    inspiration: state.inspiration,
     activeSequence: state.activeSequence,
-    revision: state.revision,
-    draftBaseRevision: state.draftBaseRevision,
-    proposed: state.proposed,
+    projectSequences: state.projectSequences,
     flags: {
-      planOnlyMode: state.flags.planOnlyMode,
-      creativeBriefReady: state.flags.creativeBriefReady
+      planOnlyMode: state.flags.planOnlyMode
     },
     safety: state.safety,
     ui: {
-      sectionSelections: state.ui.sectionSelections,
-      designTab: state.ui.designTab,
-      sequenceMode: state.ui.sequenceMode,
-      sectionTrackName: state.ui.sectionTrackName,
-      proposedRowsVisible: state.ui.proposedRowsVisible,
-      chatDraft: state.ui.chatDraft,
-      agentThinking: state.ui.agentThinking,
-      metadataTargetId: state.ui.metadataTargetId,
-      metadataRole: state.ui.metadataRole,
-      metadataBehavior: state.ui.metadataBehavior,
-      metadataTagDraft: state.ui.metadataTagDraft,
-      metadataNewTag: state.ui.metadataNewTag
-    },
-    diagnostics: state.diagnostics,
-    jobs: state.jobs,
-    models: state.models,
-    timingTracks: state.timingTracks,
-    sectionSuggestions: state.sectionSuggestions,
-    sectionStartByLabel: state.sectionStartByLabel,
-    creative: state.creative,
-    metadata: state.metadata,
-    health: state.health
+      sequenceMode: state.ui.sequenceMode
+    }
   };
 }
 
 function applyProjectSnapshot(snapshot) {
   if (!snapshot) return;
+  state.projectMetadataRoot = String(snapshot?.projectMetadataRoot || state.projectMetadataRoot || "");
+  state.projectFilePath = String(snapshot?.projectFilePath || state.projectFilePath || "");
+  state.endpoint = normalizeConfiguredEndpoint(snapshot?.endpoint || state.endpoint);
+  const route = String(snapshot?.route || "").trim();
+  if (route && routes.includes(route)) state.route = route;
+  state.projectConcept = String(snapshot?.projectConcept || state.projectConcept || "");
   state.sequencePathInput = snapshot.sequencePathInput || state.sequencePathInput;
   state.newSequencePathInput = snapshot.newSequencePathInput || state.newSequencePathInput;
   state.newSequenceType = snapshot.newSequenceType || state.newSequenceType;
@@ -500,66 +646,54 @@ function applyProjectSnapshot(snapshot) {
     ? Math.max(1, Number(snapshot.newSequenceFrameMs))
     : state.newSequenceFrameMs;
   state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
+  if (snapshot?.audioAnalysis && typeof snapshot.audioAnalysis === "object") {
+    state.audioAnalysis = {
+      summary: String(snapshot.audioAnalysis.summary || ""),
+      lastAnalyzedAt: String(snapshot.audioAnalysis.lastAnalyzedAt || "")
+    };
+  } else {
+    state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
+  }
   state.savePathInput = snapshot.savePathInput || state.savePathInput;
   state.lastApplyBackupPath = snapshot?.lastApplyBackupPath || "";
   state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
+  state.showDirectoryStats =
+    snapshot?.showDirectoryStats && typeof snapshot.showDirectoryStats === "object"
+      ? {
+          xsqCount: Number.isFinite(Number(snapshot.showDirectoryStats.xsqCount))
+            ? Math.max(0, Number(snapshot.showDirectoryStats.xsqCount))
+            : 0,
+          xdmetaCount: Number.isFinite(Number(snapshot.showDirectoryStats.xdmetaCount))
+            ? Math.max(0, Number(snapshot.showDirectoryStats.xdmetaCount))
+            : 0
+        }
+      : { ...state.showDirectoryStats };
+  state.projectCreatedAt = String(snapshot?.projectCreatedAt || state.projectCreatedAt || "");
+  state.projectUpdatedAt = String(snapshot?.projectUpdatedAt || state.projectUpdatedAt || "");
+  if (snapshot?.inspiration && typeof snapshot.inspiration === "object") {
+    state.inspiration = {
+      ...state.inspiration,
+      ...snapshot.inspiration,
+      paletteSwatches: Array.isArray(snapshot.inspiration.paletteSwatches)
+        ? snapshot.inspiration.paletteSwatches.map((v) => String(v || "").trim()).filter(Boolean)
+        : state.inspiration.paletteSwatches
+    };
+  }
   state.activeSequence = snapshot.activeSequence || state.activeSequence;
-  state.revision = snapshot.revision || "unknown";
-  state.draftBaseRevision = snapshot.draftBaseRevision || "unknown";
-  state.proposed = Array.isArray(snapshot.proposed) ? snapshot.proposed : state.proposed;
   state.flags.planOnlyMode = Boolean(snapshot?.flags?.planOnlyMode);
-  state.flags.creativeBriefReady = Boolean(snapshot?.flags?.creativeBriefReady);
   state.safety = { ...state.safety, ...(snapshot.safety || {}) };
-  state.ui.sectionSelections = Array.isArray(snapshot?.ui?.sectionSelections)
-    ? snapshot.ui.sectionSelections
-    : ["all"];
-  state.ui.designTab = snapshot?.ui?.designTab || "chat";
   state.ui.sequenceMode = snapshot?.ui?.sequenceMode || "existing";
-  state.ui.sectionTrackName = snapshot?.ui?.sectionTrackName || "";
-  state.ui.proposedRowsVisible =
-    Number.isFinite(Number(snapshot?.ui?.proposedRowsVisible))
-      ? Math.max(DEFAULT_PROPOSED_ROWS, Number(snapshot.ui.proposedRowsVisible))
-      : DEFAULT_PROPOSED_ROWS;
-  state.ui.chatDraft = snapshot?.ui?.chatDraft || "";
-  state.ui.agentThinking = Boolean(snapshot?.ui?.agentThinking);
-  state.ui.metadataTargetId = snapshot?.ui?.metadataTargetId || "";
-  state.ui.metadataRole = snapshot?.ui?.metadataRole || "support";
-  state.ui.metadataBehavior = snapshot?.ui?.metadataBehavior || "steady";
-  state.ui.metadataTagDraft = snapshot?.ui?.metadataTagDraft || "";
-  state.ui.metadataNewTag = snapshot?.ui?.metadataNewTag || "";
-  state.diagnostics = Array.isArray(snapshot.diagnostics) ? snapshot.diagnostics : state.diagnostics;
-  state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs : state.jobs;
-  state.models = Array.isArray(snapshot.models) ? snapshot.models : state.models;
-  state.timingTracks = Array.isArray(snapshot.timingTracks) ? snapshot.timingTracks : [];
-  state.sectionSuggestions = Array.isArray(snapshot.sectionSuggestions)
-    ? snapshot.sectionSuggestions
-    : [];
-  state.sectionStartByLabel =
-    snapshot?.sectionStartByLabel && typeof snapshot.sectionStartByLabel === "object"
-      ? snapshot.sectionStartByLabel
-      : {};
-  state.creative =
-    snapshot?.creative && typeof snapshot.creative === "object"
-      ? {
-          goals: String(snapshot.creative.goals || ""),
-          inspiration: String(snapshot.creative.inspiration || ""),
-          notes: String(snapshot.creative.notes || ""),
-          references: Array.isArray(snapshot.creative.references) ? snapshot.creative.references : [],
-          brief: snapshot.creative.brief && typeof snapshot.creative.brief === "object" ? snapshot.creative.brief : null,
-          briefUpdatedAt: String(snapshot.creative.briefUpdatedAt || "")
-        }
-      : { ...defaultState.creative };
-  state.metadata =
-    snapshot?.metadata && typeof snapshot.metadata === "object"
-      ? {
-          tags: Array.isArray(snapshot.metadata.tags) ? snapshot.metadata.tags : [],
-          assignments: Array.isArray(snapshot.metadata.assignments) ? snapshot.metadata.assignments : [],
-          ignoredOrphanTargetIds: Array.isArray(snapshot.metadata.ignoredOrphanTargetIds)
-            ? snapshot.metadata.ignoredOrphanTargetIds
-            : []
-        }
-      : { tags: [], assignments: [], ignoredOrphanTargetIds: [] };
-  state.health = { ...state.health, ...(snapshot.health || {}) };
+  if (Array.isArray(snapshot.projectSequences)) {
+    state.projectSequences = snapshot.projectSequences.map((entry) => ({
+      sequencePath: String(entry?.sequencePath || "").trim(),
+      sidecarPath: String(entry?.sidecarPath || "").trim(),
+      sequenceName: String(entry?.sequenceName || "").trim(),
+      inShowCatalog: Boolean(entry?.inShowCatalog),
+      isActive: Boolean(entry?.isActive)
+    })).filter((entry) => entry.sequencePath);
+  } else {
+    state.projectSequences = [];
+  }
   ensureMetadataTargetSelection();
   state.flags.hasDraftProposal = state.proposed.length > 0;
 }
@@ -581,13 +715,16 @@ function tryLoadProjectSnapshot(projectName, showFolder) {
   return true;
 }
 
-const routes = ["project", "sequence", "design", "history", "metadata"];
+const routes = ["project", "sequence", "inspiration", "design", "history", "metadata"];
 
 function setRoute(route) {
   if (!routes.includes(route)) return;
   state.route = route;
   persist();
   render();
+  if (route === "sequence") {
+    void onRefreshSequenceCatalog({ silent: true });
+  }
 }
 
 function setStatus(level, text) {
@@ -679,16 +816,68 @@ function isVersionAtLeastFloor(versionText, floorMajor, floorMinor) {
   return parsed.minor >= floorMinor;
 }
 
+function deepFindVersionString(value, depth = 0) {
+  if (depth > 6 || value == null) return "";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (/^\d{4}\.\d+(\.\d+)?/.test(trimmed)) return trimmed;
+    return "";
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = deepFindVersionString(item, depth + 1);
+      if (found) return found;
+    }
+    return "";
+  }
+  if (typeof value === "object") {
+    for (const key of Object.keys(value)) {
+      const found = deepFindVersionString(value[key], depth + 1);
+      if (found) return found;
+    }
+  }
+  return "";
+}
+
 function extractVersionFromCapabilities(caps) {
   const data = caps?.data && typeof caps.data === "object" ? caps.data : {};
   const candidates = [data.xlightsVersion, data.version, data.appVersion, data.buildVersion];
   const found = candidates.find((v) => typeof v === "string" && v.trim());
-  return found ? found.trim() : "";
+  if (found) return found.trim();
+  return deepFindVersionString(data);
+}
+
+function extractVersionFromVersionResponse(body) {
+  const data = body?.data && typeof body.data === "object" ? body.data : {};
+  const candidates = [data.xlightsVersion, data.version, data.appVersion, data.buildVersion, body?.version];
+  const found = candidates.find((v) => typeof v === "string" && v.trim());
+  if (found) return found.trim();
+  return deepFindVersionString(data) || deepFindVersionString(body);
+}
+
+async function hydrateVersionIfMissing(endpoint, caps = null) {
+  if (String(state.health.xlightsVersion || "").trim()) return;
+  const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
+  if (commands.length > 0 && !commands.includes("system.getVersion")) return;
+  try {
+    const versionBody = await getSystemVersion(endpoint);
+    const version = extractVersionFromVersionResponse(versionBody);
+    if (!version) return;
+    const compat = isVersionAtLeastFloor(version, 2026, 1);
+    state.health.xlightsVersion = version;
+    if (compat !== null) {
+      state.flags.xlightsCompatible = compat;
+      state.health.compatibilityStatus = compat ? "compatible" : "incompatible";
+    }
+  } catch {
+    // Non-fatal; xLights may not expose system.getVersion.
+  }
 }
 
 function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen) {
   const commands = Array.isArray(caps?.data?.commands) ? caps.data.commands : [];
-  const xlightsVersion = extractVersionFromCapabilities(caps);
+  const extractedVersion = extractVersionFromCapabilities(caps);
+  const xlightsVersion = extractedVersion || String(state.health.xlightsVersion || "").trim();
   const compat = xlightsVersion
     ? isVersionAtLeastFloor(xlightsVersion, 2026, 1)
     : null;
@@ -723,6 +912,103 @@ function requiresApplyConfirmation() {
 function getSectionName(line) {
   const [section] = line.split("/");
   return (section || "General").trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function splitModelTokenList(raw) {
+  return String(raw || "")
+    .split(/\+|,|&/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+function renderProposedLineHtml(line) {
+  const parts = String(line || "")
+    .split("/")
+    .map((p) => p.trim())
+    .filter((p, idx) => idx < 3 || p.length > 0);
+
+  if (!parts.length) return "";
+
+  const section = parts[0] || "General";
+  const maybeModels = parts.length > 1 ? parts[1] : "";
+  const description = parts.length > 2 ? parts.slice(2).join(" / ") : (parts.length > 1 ? "" : section);
+  const modelTokens = splitModelTokenList(maybeModels);
+
+  const sectionChip = `<button class="proposed-tag proposed-tag-section" data-proposed-tag-type="section" data-proposed-tag-value="${escapeHtml(section)}">${escapeHtml(section)}</button>`;
+  const modelChips = modelTokens
+    .map((m) => `<button class="proposed-tag proposed-tag-model" data-proposed-tag-type="model" data-proposed-tag-value="${escapeHtml(m)}">${escapeHtml(m)}</button>`)
+    .join('<span class="proposed-inline-sep"> + </span>');
+  const descriptionHtml = escapeHtml(description || "");
+
+  if (!modelTokens.length) {
+    return `
+      <div class="proposed-line">
+        <span class="proposed-inline-text">
+          In <span class="proposed-inline-chip">${sectionChip}</span>${descriptionHtml ? `, ${descriptionHtml}` : ""}.
+        </span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="proposed-line">
+      <span class="proposed-inline-text">
+        In <span class="proposed-inline-chip">${sectionChip}</span> on <span class="proposed-inline-chip">${modelChips}</span>${descriptionHtml ? `, ${descriptionHtml}` : ""}.
+      </span>
+    </div>
+  `;
+}
+
+function getInlineModelTerms() {
+  const fromLiveModels = (state.models || [])
+    .map((m) => String(m?.name || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set([...INLINE_CHIP_MODEL_FALLBACKS, ...fromLiveModels]))
+    .filter((t) => t.length >= 3);
+}
+
+function inlineChipButtonHtml(type, label) {
+  const cls = type === "section" ? "proposed-tag-section" : "proposed-tag-model";
+  return `<button class="proposed-tag ${cls}" data-proposed-tag-type="${type}" data-proposed-tag-value="${escapeHtml(label)}">${escapeHtml(label)}</button>`;
+}
+
+function renderInlineChipSentence(text) {
+  const source = String(text || "");
+  if (!source.trim()) return "";
+
+  const replacements = [];
+  const place = (type, label) => {
+    const token = `@@XLD_TAG_${replacements.length}@@`;
+    replacements.push({ token, type, label: String(label || "").trim() });
+    return token;
+  };
+
+  let working = source;
+  const sectionRegex = /\b(pre-chorus|pre chorus|chorus|verse|bridge|intro|outro|drop|build)(\s*\d+)?\b/gi;
+  working = working.replace(sectionRegex, (match) => place("section", match));
+
+  const modelTerms = getInlineModelTerms().sort((a, b) => b.length - a.length);
+  if (modelTerms.length) {
+    const modelRegex = new RegExp(`\\b(?:${modelTerms.map(escapeRegex).join("|")})\\b`, "gi");
+    working = working.replace(modelRegex, (match) => place("model", match));
+  }
+
+  let html = escapeHtml(working);
+  for (const { token, type, label } of replacements) {
+    html = html.replace(token, inlineChipButtonHtml(type, label));
+  }
+  return html;
 }
 
 function getSectionChoiceList() {
@@ -828,9 +1114,9 @@ function ensureVersionSnapshots() {
 
 ensureVersionSnapshots();
 
-function buildDesignerPlanCommands() {
+function buildDesignerPlanCommands(sourceLines = filteredProposed()) {
   const trackName = "XD:ProposedPlan";
-  const source = filteredProposed();
+  const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (source.length === 0) {
     throw new Error("No proposed changes available for current section selection.");
   }
@@ -861,14 +1147,20 @@ function buildDesignerPlanCommands() {
   ];
 }
 
-async function onApply() {
+async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
   if (!applyEnabled()) {
     setStatusWithDiagnostics("warning", applyDisabledReason());
     return render();
   }
+  const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
+  if (!scopedSource.length) {
+    setStatusWithDiagnostics("warning", "No proposed changes available for this apply action.");
+    return render();
+  }
+  const scopedImpactCount = scopedSource.length * 11;
 
   if (requiresApplyConfirmation()) {
-    const message = `Apply ${currentImpactCount()} estimated impacted effects?`;
+    const message = `Apply ${scopedImpactCount} estimated impacted effects?`;
     if (!window.confirm(message)) {
       setStatus("info", "Apply canceled by user.");
       return render();
@@ -877,8 +1169,8 @@ async function onApply() {
 
   state.flags.applyInProgress = true;
   state.ui.agentThinking = true;
-  addChatMessage("agent", "Applying approved proposal to xLights...");
-  setStatus("info", "Applying proposal to xLights...");
+  addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
+  setStatus("info", `Applying ${applyLabel} to xLights...`);
   render();
 
   try {
@@ -901,7 +1193,7 @@ async function onApply() {
     // Preflight revision read to keep stale-state behavior explicit.
     const rev = await getRevision(state.endpoint);
     state.revision = rev?.data?.revision ?? state.revision;
-    const plan = buildDesignerPlanCommands();
+    const plan = buildDesignerPlanCommands(scopedSource);
     const validation = await validateCommands(
       state.endpoint,
       plan.map((step) => ({ cmd: step.cmd, params: step.params }))
@@ -961,6 +1253,30 @@ async function onApply() {
   }
 }
 
+function selectedProposedLinesForApply() {
+  const selected = new Set(selectedProposedIndexesFromPicker());
+  if (!selected.size) return [];
+  const all = (state.proposed || [])
+    .map((line, idx) => ({ line, idx }))
+    .filter((row) => selected.has(row.idx));
+  if (hasAllSectionsSelected()) return all.map((row) => row.line);
+  const sectionSet = new Set(getSelectedSections());
+  return all.filter((row) => sectionSet.has(getSectionName(row.line))).map((row) => row.line);
+}
+
+async function onApplySelected() {
+  const selectedLines = selectedProposedLinesForApply();
+  if (!selectedLines.length) {
+    setStatus("warning", "Select one or more proposed changes first.");
+    return render();
+  }
+  await onApply(selectedLines, "selected proposed changes");
+}
+
+async function onApplyAll() {
+  await onApply(filteredProposed(), "all proposed changes");
+}
+
 function onGenerate() {
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
@@ -1010,6 +1326,35 @@ function onTogglePlanOnly() {
   render();
 }
 
+async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false } = {}) {
+  try {
+    const open = await getOpenSequence(state.endpoint);
+    state.health.sequenceOpen = Boolean(open?.data?.isOpen);
+  } catch {
+    // Keep previous sequence-open state when open-sequence probe fails.
+  }
+
+  const modelBody = await getModels(state.endpoint);
+  state.models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
+
+  try {
+    const submodelBody = await getSubmodels(state.endpoint);
+    state.submodels = Array.isArray(submodelBody?.data?.submodels) ? submodelBody.data.submodels : [];
+    state.health.submodelDiscoveryError = "";
+  } catch (err) {
+    state.submodels = [];
+    state.health.submodelDiscoveryError = String(err?.message || "Unknown error");
+    if (warnOnSubmodelFailure) {
+      setStatusWithDiagnostics(
+        "warning",
+        `Submodels unavailable (${err.message}).`
+      );
+    }
+  }
+
+  ensureMetadataTargetSelection();
+}
+
 async function onRefresh() {
   try {
     let staleDetected = false;
@@ -1017,10 +1362,12 @@ async function onRefresh() {
     state.flags.xlightsConnected = true;
     const open = await getOpenSequence(state.endpoint);
     const seq = open?.data?.sequence;
-    state.flags.activeSequenceLoaded = Boolean(open?.data?.isOpen && seq);
+    const seqAllowed = Boolean(open?.data?.isOpen && seq && isSequenceAllowedInActiveShowFolder(seq));
+    state.flags.activeSequenceLoaded = seqAllowed;
     state.health.sequenceOpen = Boolean(open?.data?.isOpen);
     const prevPath = currentSequencePathForSidecar();
-    if (seq) {
+    if (seqAllowed) {
+      clearIgnoredExternalSequenceNote();
       applyOpenSequenceState(seq);
       if (open?.data?.isOpen) {
         await syncAudioPathFromMediaStatus();
@@ -1029,6 +1376,8 @@ async function onRefresh() {
       if (nextPath && nextPath !== prevPath) {
         await hydrateSidecarForCurrentSequence();
       }
+    } else if (open?.data?.isOpen && seq) {
+      noteIgnoredExternalSequence(seq);
     }
 
     try {
@@ -1052,9 +1401,7 @@ async function onRefresh() {
     }
 
     try {
-      const modelBody = await getModels(state.endpoint);
-      state.models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : state.models;
-      ensureMetadataTargetSelection();
+      await refreshMetadataTargetsFromXLights();
     } catch (err) {
       setStatusWithDiagnostics("warning", `Model refresh failed: ${err.message}`);
     }
@@ -1122,7 +1469,9 @@ async function onRebaseDraft() {
 
 async function onTestConnection() {
   const endpointInput = app.querySelector("#endpoint-input");
-  const requestedEndpoint = endpointInput ? endpointInput.value.trim() || getDefaultEndpoint() : state.endpoint;
+  const requestedEndpoint = endpointInput
+    ? normalizeConfiguredEndpoint(endpointInput.value)
+    : normalizeConfiguredEndpoint(state.endpoint);
   state.endpoint = requestedEndpoint;
 
   setStatus("info", "Testing xLights endpoint...");
@@ -1134,6 +1483,9 @@ async function onTestConnection() {
     state.endpoint = endpoint;
     if (endpointInput) endpointInput.value = endpoint;
     const { commands, xlightsVersion, compat } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
+    if (!xlightsVersion) {
+      await hydrateVersionIfMissing(endpoint, caps);
+    }
     const count = commands.length;
     setStatus(
       "info",
@@ -1167,16 +1519,17 @@ async function onCheckHealth() {
   setStatus("info", "Running health check...");
   render();
   try {
-    const [caps, open, rev, modelsResp] = await Promise.all([
+    const [caps, open, rev] = await Promise.all([
       pingCapabilities(state.endpoint),
       getOpenSequence(state.endpoint),
-      getRevision(state.endpoint).catch(() => ({ data: { revision: "unknown" } })),
-      getModels(state.endpoint).catch(() => ({ data: { models: [] } }))
+      getRevision(state.endpoint).catch(() => ({ data: { revision: "unknown" } }))
     ]);
     const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, Boolean(open?.data?.isOpen));
+    if (!xlightsVersion) {
+      await hydrateVersionIfMissing(state.endpoint, caps);
+    }
     const releasedForce = releaseConnectivityPlanOnly();
-    state.models = Array.isArray(modelsResp?.data?.models) ? modelsResp.data.models : [];
-    ensureMetadataTargetSelection();
+    await refreshMetadataTargetsFromXLights();
     try {
       await fetchSectionSuggestions();
     } catch (err) {
@@ -1277,6 +1630,9 @@ async function pollCompatibilityStatus() {
       state.endpoint = endpoint;
       const releasedForce = releaseConnectivityPlanOnly();
       const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
+      if (!xlightsVersion) {
+        await hydrateVersionIfMissing(endpoint, caps);
+      }
       await onRefresh();
       if (compat === false) {
         setStatusWithDiagnostics(
@@ -1305,6 +1661,9 @@ async function pollCompatibilityStatus() {
     const previousVersion = state.health.xlightsVersion || "";
     const previousCompat = state.health.compatibilityStatus;
     const { compat, xlightsVersion } = applyCapabilitiesHealth(caps, state.health.sequenceOpen);
+    if (!xlightsVersion) {
+      await hydrateVersionIfMissing(state.endpoint, caps);
+    }
 
     const nextCompat = compat === null ? "unknown" : compat ? "compatible" : "incompatible";
     const versionChanged = xlightsVersion && xlightsVersion !== previousVersion;
@@ -1333,6 +1692,71 @@ async function pollCompatibilityStatus() {
       persist();
       render();
     }
+    queueQuickReconnectPoll();
+  }
+}
+
+async function syncOpenSequenceOnFocusReturn() {
+  if (focusSyncInFlight) return;
+  if (!state.flags.xlightsConnected) return;
+  const now = Date.now();
+  if (now - lastFocusSyncAt < FOCUS_SYNC_COOLDOWN_MS) return;
+  lastFocusSyncAt = now;
+  focusSyncInFlight = true;
+
+  try {
+    const open = await getOpenSequence(state.endpoint);
+    const isOpen = Boolean(open?.data?.isOpen);
+    const seq = open?.data?.sequence;
+
+    const prevPath = currentSequencePathForSidecar();
+    const prevAudioPath = String(state.audioPathInput || "");
+    const prevLoaded = Boolean(state.flags.activeSequenceLoaded);
+
+    if (isOpen && seq) {
+      if (!isSequenceAllowedInActiveShowFolder(seq)) {
+        noteIgnoredExternalSequence(seq, "xLights");
+        return;
+      }
+      clearIgnoredExternalSequenceNote();
+      applyOpenSequenceState(seq);
+      state.flags.activeSequenceLoaded = true;
+      state.health.sequenceOpen = true;
+      await syncAudioPathFromMediaStatus();
+
+      const nextPath = currentSequencePathForSidecar();
+      if (nextPath && nextPath !== prevPath) {
+        try {
+          await hydrateSidecarForCurrentSequence();
+        } catch {
+          // Keep focus-return sync best-effort and quiet.
+        }
+      }
+
+      if (nextPath !== prevPath || String(state.audioPathInput || "") !== prevAudioPath || !prevLoaded) {
+        setStatus("info", `Updated from xLights: ${state.activeSequence || "(none)"}.`);
+        saveCurrentProjectSnapshot();
+        persist();
+        render();
+      }
+      return;
+    }
+
+    state.health.sequenceOpen = false;
+    clearIgnoredExternalSequenceNote();
+    if (prevLoaded || prevPath || prevAudioPath) {
+      state.flags.activeSequenceLoaded = false;
+      state.activeSequence = "";
+      state.audioPathInput = "";
+      setStatus("info", "Updated from xLights: no sequence is currently open.");
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+    }
+  } catch {
+    // Focus-return sync is best effort; normal health polls handle failures.
+  } finally {
+    focusSyncInFlight = false;
   }
 }
 
@@ -1550,12 +1974,6 @@ function setSectionFilter(section) {
 function setDesignTab(tab) {
   if (!["chat", "intent", "proposed"].includes(tab)) return;
   state.ui.designTab = tab;
-  persist();
-  render();
-}
-
-function setModelFilterText(value) {
-  state.ui.modelFilterText = value;
   persist();
   render();
 }
@@ -1823,6 +2241,36 @@ function onToggleReferenceEligible(id) {
   render();
 }
 
+function addPaletteSwatch() {
+  const input = app.querySelector("#palette-color-input");
+  const value = String(input?.value || "").trim();
+  if (!/^#[0-9a-fA-F]{6}$/.test(value)) {
+    setStatus("warning", "Choose a valid hex color.");
+    render();
+    return;
+  }
+  const existing = Array.isArray(state.inspiration?.paletteSwatches) ? state.inspiration.paletteSwatches : [];
+  if (existing.includes(value)) {
+    setStatus("info", "Color already in palette.");
+    return;
+  }
+  state.inspiration.paletteSwatches = [...existing, value];
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function removePaletteSwatch(indexText) {
+  const index = Number.parseInt(String(indexText || ""), 10);
+  const swatches = Array.isArray(state.inspiration?.paletteSwatches) ? [...state.inspiration.paletteSwatches] : [];
+  if (!Number.isFinite(index) || index < 0 || index >= swatches.length) return;
+  swatches.splice(index, 1);
+  state.inspiration.paletteSwatches = swatches;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 function revokeReferencePreviewUrls() {
   (state.creative.references || []).forEach((ref) => {
     if (!ref?.previewUrl) return;
@@ -1991,6 +2439,27 @@ function onShowLessProposed() {
   render();
 }
 
+function sanitizeProposedSelection() {
+  const valid = new Set(
+    (state.proposed || [])
+      .map((_, idx) => idx)
+  );
+  state.ui.proposedSelection = (state.ui.proposedSelection || [])
+    .map((idx) => Number.parseInt(idx, 10))
+    .filter((idx) => Number.isInteger(idx) && valid.has(idx));
+}
+
+function toggleProposedSelection(index) {
+  const idx = Number.parseInt(index, 10);
+  if (!Number.isInteger(idx) || idx < 0 || idx >= state.proposed.length) return;
+  const selected = new Set(state.ui.proposedSelection || []);
+  if (selected.has(idx)) selected.delete(idx);
+  else selected.add(idx);
+  state.ui.proposedSelection = Array.from(selected).sort((a, b) => a - b);
+  persist();
+  render();
+}
+
 function modelStableId(model) {
   const raw = model?.id ?? model?.modelId ?? model?.name ?? "";
   return String(raw || "");
@@ -2002,32 +2471,119 @@ function modelDisplayName(model) {
   return `${name}${type}`;
 }
 
-function getModelNameById(id) {
-  const found = (state.models || []).find((m) => modelStableId(m) === id);
-  return found ? modelDisplayName(found) : id;
+function normalizeElementType(type) {
+  const raw = String(type || "").trim();
+  if (!raw) return "";
+  if (raw === "ModelGroup") return "group";
+  return raw.toLowerCase();
+}
+
+function buildMetadataTargets({ includeSubmodels = true } = {}) {
+  const byId = new Map();
+
+  (state.models || []).forEach((model) => {
+    const id = modelStableId(model);
+    if (!id) return;
+    byId.set(id, {
+      id,
+      name: String(model?.name || id),
+      displayName: modelDisplayName(model),
+      type: normalizeElementType(model?.type) || "model",
+      parentId: "",
+      source: "models"
+    });
+  });
+
+  (state.submodels || []).forEach((submodel) => {
+    if (!includeSubmodels) return;
+    const id = String(submodel?.id || "").trim();
+    if (!id) return;
+    const type = "submodel";
+    const parentId = String(submodel?.parentId || parseSubmodelParentId(id)).trim();
+    const rawName = String(submodel?.name || id);
+    const displayName = parentId ? `${parentId} / ${rawName}` : rawName;
+    byId.set(id, {
+      id,
+      name: rawName,
+      displayName,
+      type,
+      parentId,
+      source: "submodels"
+    });
+  });
+
+  return Array.from(byId.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
+function getMetadataTargetById(id) {
+  const key = String(id || "");
+  if (!key) return null;
+  return buildMetadataTargets().find((target) => target.id === key) || null;
+}
+
+function getMetadataTargetNameById(id) {
+  const found = getMetadataTargetById(id);
+  return found ? found.displayName : String(id || "");
 }
 
 function ensureMetadataTargetSelection() {
-  const options = (state.models || []).map(modelStableId).filter(Boolean);
+  const options = buildMetadataTargets({ includeSubmodels: true })
+    .map((target) => target.id)
+    .filter(Boolean);
   if (!options.length) {
     state.ui.metadataTargetId = "";
+    state.ui.metadataSelectionIds = [];
     return;
   }
   if (!options.includes(state.ui.metadataTargetId)) {
     state.ui.metadataTargetId = options[0];
   }
+  const optionSet = new Set(options.map(String));
+  state.ui.metadataSelectionIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds, optionSet);
 }
 
-function getLiveModelIdSet() {
+function parseSubmodelParentId(targetId) {
+  const id = String(targetId || "");
+  const slash = id.indexOf("/");
+  if (slash <= 0) return "";
+  return id.slice(0, slash);
+}
+
+function resolveAssignmentParentId(assignment) {
+  const explicit = String(assignment?.targetParentId || "").trim();
+  if (explicit) return explicit;
+  const type = normalizeElementType(assignment?.targetType || "");
+  if (type === "submodel") return parseSubmodelParentId(assignment?.targetId);
+  const id = String(assignment?.targetId || "");
+  if (id.includes("/")) return parseSubmodelParentId(id);
+  return "";
+}
+
+function getLiveModelOrGroupIdSet() {
   return new Set((state.models || []).map(modelStableId).filter(Boolean));
 }
 
 function getMetadataOrphans() {
-  const liveIds = getLiveModelIdSet();
-  const ignored = new Set((state.metadata?.ignoredOrphanTargetIds || []).map(String));
-  return (state.metadata?.assignments || []).filter(
-    (a) => a?.targetId && !liveIds.has(String(a.targetId)) && !ignored.has(String(a.targetId))
+  const liveTargetIds = new Set(
+    buildMetadataTargets({ includeSubmodels: true })
+      .map((target) => target.id)
+      .filter(Boolean)
   );
+  const liveModelOrGroupIds = getLiveModelOrGroupIdSet();
+  const ignored = new Set((state.metadata?.ignoredOrphanTargetIds || []).map(String));
+  return (state.metadata?.assignments || []).filter((assignment) => {
+    const targetId = String(assignment?.targetId || "");
+    if (!targetId || ignored.has(targetId)) return false;
+
+    const targetType = normalizeElementType(assignment?.targetType || "");
+    const isSubmodel = targetType === "submodel" || targetId.includes("/");
+    if (isSubmodel) {
+      const parentId = resolveAssignmentParentId(assignment);
+      return !parentId || !liveModelOrGroupIds.has(parentId);
+    }
+
+    return !liveTargetIds.has(targetId);
+  });
 }
 
 function saveMetadataAndRender(statusText = "") {
@@ -2037,60 +2593,242 @@ function saveMetadataAndRender(statusText = "") {
   render();
 }
 
-function addMetadataTag() {
-  const value = normalizeSectionLabel(state.ui.metadataNewTag);
-  if (!value) return;
-  const tags = state.metadata?.tags || [];
-  if (!tags.includes(value)) {
-    state.metadata.tags = [...tags, value];
-    state.ui.metadataNewTag = "";
-    saveMetadataAndRender(`Added tag: ${value}`);
-  } else {
-    setStatus("warning", `Tag already exists: ${value}`);
-    render();
-  }
+function normalizeMetadataTagName(name) {
+  return normalizeSectionLabel(name);
 }
 
-function removeMetadataTag(tag) {
-  state.metadata.tags = (state.metadata?.tags || []).filter((t) => t !== tag);
+function normalizeMetadataTagDescription(description) {
+  return String(description || "").trim();
+}
+
+function getMetadataTagRecords() {
+  const raw = Array.isArray(state.metadata?.tags) ? state.metadata.tags : [];
+  const byName = new Map();
+  raw.forEach((entry) => {
+    if (typeof entry === "string") {
+      const name = normalizeMetadataTagName(entry);
+      if (!name || byName.has(name)) return;
+      byName.set(name, { name, description: "" });
+      return;
+    }
+    if (!entry || typeof entry !== "object") return;
+    const name = normalizeMetadataTagName(entry.name);
+    if (!name || byName.has(name)) return;
+    byName.set(name, { name, description: normalizeMetadataTagDescription(entry.description) });
+  });
+  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function setMetadataTagRecords(records) {
+  state.metadata.tags = records.map((record) => ({
+    name: String(record.name),
+    description: String(record.description || "")
+  }));
+}
+
+function updateMetadataTagDescription(tagName, description) {
+  const name = normalizeMetadataTagName(tagName);
+  if (!name) return;
+  const nextDescription = normalizeMetadataTagDescription(description);
+  const records = getMetadataTagRecords();
+  const idx = records.findIndex((record) => record.name === name);
+  if (idx < 0) return;
+  if (String(records[idx].description || "") === nextDescription) return;
+  records[idx] = { ...records[idx], description: nextDescription };
+  setMetadataTagRecords(records);
+  persist();
+}
+
+function addMetadataTag() {
+  const name = normalizeMetadataTagName(state.ui.metadataNewTag);
+  const description = normalizeMetadataTagDescription(state.ui.metadataNewTagDescription);
+  if (!name) return;
+  const records = getMetadataTagRecords();
+  if (records.some((record) => record.name === name)) {
+    setStatus("warning", `Tag already exists: ${name}`);
+    return render();
+  }
+  records.push({ name, description });
+  records.sort((a, b) => a.name.localeCompare(b.name));
+  setMetadataTagRecords(records);
+  state.ui.metadataSelectedTags = Array.from(new Set([...(state.ui.metadataSelectedTags || []), name]));
+  state.ui.metadataNewTag = "";
+  state.ui.metadataNewTagDescription = "";
+  saveMetadataAndRender(`Added tag: ${name}`);
+}
+
+function removeMetadataTag(tagName) {
+  const name = normalizeMetadataTagName(tagName);
+  if (!name) return;
+  const records = getMetadataTagRecords().filter((record) => record.name !== name);
+  setMetadataTagRecords(records);
   // Remove tag from assignments too.
   state.metadata.assignments = (state.metadata?.assignments || []).map((a) => ({
     ...a,
-    tags: (a.tags || []).filter((t) => t !== tag)
+    tags: (a.tags || []).filter((t) => t !== name)
   }));
-  saveMetadataAndRender(`Removed tag: ${tag}`);
+  state.ui.metadataSelectedTags = (state.ui.metadataSelectedTags || []).filter((t) => t !== name);
+  saveMetadataAndRender(`Removed tag: ${name}`);
 }
 
-function applyMetadataAssignment() {
-  const targetId = normalizeSectionLabel(state.ui.metadataTargetId);
-  if (!targetId) {
-    setStatus("warning", "Choose a model/group target first.");
+function normalizeMetadataSelectedTags(tags) {
+  const known = new Set(getMetadataTagRecords().map((record) => record.name));
+  const selected = Array.isArray(tags) ? tags : [];
+  const out = [];
+  for (const raw of selected) {
+    const value = normalizeMetadataTagName(raw);
+    if (!value || !known.has(value) || out.includes(value)) continue;
+    out.push(value);
+  }
+  return out;
+}
+
+function toggleMetadataSelectedTag(tagName) {
+  const name = normalizeMetadataTagName(tagName);
+  if (!name) return;
+  const selected = new Set(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
+  if (selected.has(name)) selected.delete(name);
+  else selected.add(name);
+  state.ui.metadataSelectedTags = normalizeMetadataSelectedTags(Array.from(selected));
+  persist();
+}
+
+function clearMetadataSelectedTags() {
+  state.ui.metadataSelectedTags = [];
+  persist();
+  render();
+}
+
+function normalizeMetadataSelectionIds(selectionIds, availableIds = null) {
+  const available = availableIds || new Set(buildMetadataTargets().map((target) => String(target.id)));
+  const selected = Array.isArray(selectionIds) ? selectionIds : [];
+  const out = [];
+  for (const raw of selected) {
+    const value = String(raw || "").trim();
+    if (!value || !available.has(value) || out.includes(value)) continue;
+    out.push(value);
+  }
+  return out;
+}
+
+function parseMetadataFilterTerms(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .split(/[,;|]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function matchesMetadataFilterValue(haystack, rawFilter) {
+  const terms = parseMetadataFilterTerms(rawFilter);
+  if (!terms.length) return true;
+  const text = String(haystack || "").toLowerCase();
+  return terms.some((term) => text.includes(term));
+}
+
+function setMetadataSelectionIds(selectionIds, { save = true } = {}) {
+  state.ui.metadataSelectionIds = normalizeMetadataSelectionIds(selectionIds);
+  if (save) persist();
+}
+
+function toggleMetadataSelectionId(targetId) {
+  const id = String(targetId || "").trim();
+  if (!id) return;
+  const selected = new Set(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds));
+  if (selected.has(id)) selected.delete(id);
+  else selected.add(id);
+  setMetadataSelectionIds(Array.from(selected));
+}
+
+function clearMetadataSelection() {
+  setMetadataSelectionIds([]);
+  render();
+}
+
+function selectAllMetadataTargets(targetIds) {
+  const ids = Array.isArray(targetIds) ? targetIds.map((id) => String(id || "").trim()).filter(Boolean) : [];
+  setMetadataSelectionIds(ids);
+  render();
+}
+
+function upsertMetadataAssignmentTags(targetId, tagsToAdd = [], tagsToRemove = []) {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const target = getMetadataTargetById(id);
+  if (!target) return false;
+
+  const addSet = new Set(normalizeMetadataSelectedTags(tagsToAdd));
+  const removeSet = new Set(normalizeMetadataSelectedTags(tagsToRemove));
+  const assignments = state.metadata?.assignments || [];
+  const idx = assignments.findIndex((a) => String(a.targetId) === id);
+  const existing = idx >= 0 ? assignments[idx] : null;
+  const currentTags = new Set(Array.isArray(existing?.tags) ? existing.tags : []);
+  for (const t of addSet) currentTags.add(t);
+  for (const t of removeSet) currentTags.delete(t);
+  const nextTags = Array.from(currentTags);
+
+  if (!nextTags.length) {
+    if (idx >= 0) assignments.splice(idx, 1);
+    state.metadata.assignments = [...assignments];
+    return true;
+  }
+
+  const targetType = target?.type || (id.includes("/") ? "submodel" : "model");
+  const targetParentId = targetType === "submodel"
+    ? (target?.parentId || parseSubmodelParentId(id))
+    : "";
+  const targetParentName = targetParentId ? getMetadataTargetNameById(targetParentId) : "";
+  const next = {
+    targetId: id,
+    targetName: target?.displayName || getMetadataTargetNameById(id),
+    targetType,
+    targetParentId,
+    targetParentName,
+    tags: nextTags
+  };
+  if (idx >= 0) assignments[idx] = next;
+  else assignments.push(next);
+  state.metadata.assignments = [...assignments];
+  state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
+    (orphanId) => String(orphanId) !== id
+  );
+  return true;
+}
+
+function applyTagsToSelectedMetadataTargets() {
+  const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
+  if (!selectedIds.length) {
+    setStatus("warning", "Select one or more metadata targets first.");
     return render();
   }
-  const role = normalizeSectionLabel(state.ui.metadataRole) || "support";
-  const behavior = normalizeSectionLabel(state.ui.metadataBehavior) || "steady";
-  const tag = normalizeSectionLabel(state.ui.metadataTagDraft);
-  const tags = tag ? [tag] : [];
-
-  const assignments = state.metadata?.assignments || [];
-  const idx = assignments.findIndex((a) => String(a.targetId) === targetId);
-  const next = {
-    targetId,
-    targetName: getModelNameById(targetId),
-    role,
-    behavior,
-    tags
-  };
-  if (idx >= 0) {
-    assignments[idx] = next;
-    state.metadata.assignments = [...assignments];
-  } else {
-    state.metadata.assignments = [...assignments, next];
+  const opTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags);
+  if (!opTags.length) {
+    setStatus("warning", "Select one or more tags to apply.");
+    return render();
   }
-  state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
-    (id) => String(id) !== targetId
-  );
-  saveMetadataAndRender(`Updated metadata for ${next.targetName}.`);
+  let touched = 0;
+  for (const id of selectedIds) {
+    if (upsertMetadataAssignmentTags(id, opTags, [])) touched++;
+  }
+  saveMetadataAndRender(`Applied ${opTags.length} tag${opTags.length === 1 ? "" : "s"} to ${touched} target${touched === 1 ? "" : "s"}.`);
+}
+
+function removeTagsFromSelectedMetadataTargets() {
+  const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
+  if (!selectedIds.length) {
+    setStatus("warning", "Select one or more metadata targets first.");
+    return render();
+  }
+  const opTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags);
+  if (!opTags.length) {
+    setStatus("warning", "Select one or more tags to remove.");
+    return render();
+  }
+  let touched = 0;
+  for (const id of selectedIds) {
+    if (upsertMetadataAssignmentTags(id, [], opTags)) touched++;
+  }
+  saveMetadataAndRender(`Removed ${opTags.length} tag${opTags.length === 1 ? "" : "s"} from ${touched} target${touched === 1 ? "" : "s"}.`);
 }
 
 function removeMetadataAssignment(targetId) {
@@ -2116,13 +2854,22 @@ function remapMetadataOrphan(fromTargetId, toTargetId) {
     setStatus("warning", "Select a replacement target for remap.");
     return render();
   }
+  const target = getMetadataTargetById(to);
   const assignments = state.metadata?.assignments || [];
   const idx = assignments.findIndex((a) => String(a.targetId) === String(fromTargetId));
   if (idx < 0) return;
+  const targetType = target?.type || (to.includes("/") ? "submodel" : "model");
+  const targetParentId = targetType === "submodel"
+    ? (target?.parentId || parseSubmodelParentId(to))
+    : "";
+  const targetParentName = targetParentId ? getMetadataTargetNameById(targetParentId) : "";
   assignments[idx] = {
     ...assignments[idx],
     targetId: to,
-    targetName: getModelNameById(to)
+    targetName: target?.displayName || getMetadataTargetNameById(to),
+    targetType,
+    targetParentId,
+    targetParentName
   };
   state.metadata.assignments = [...assignments];
   state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
@@ -2169,6 +2916,7 @@ function updateProposedLine(index, value) {
 function removeProposedLine(index) {
   if (index < 0 || index >= state.proposed.length) return;
   state.proposed.splice(index, 1);
+  sanitizeProposedSelection();
   state.flags.hasDraftProposal = state.proposed.length > 0;
   saveCurrentProjectSnapshot();
   persist();
@@ -2184,11 +2932,22 @@ function addProposedLine() {
 }
 
 function selectedProposedIndexesFromPicker() {
-  const picker = app.querySelector("#proposed-picker");
-  if (!picker) return [];
-  return Array.from(picker.selectedOptions || [])
-    .map((opt) => Number.parseInt(opt.value, 10))
-    .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < state.proposed.length);
+  sanitizeProposedSelection();
+  return [...(state.ui.proposedSelection || [])];
+}
+
+function onRemoveAllProposed() {
+  if (!state.proposed.length) {
+    setStatus("warning", "No proposed changes to delete.");
+    return render();
+  }
+  state.proposed = [];
+  state.ui.proposedSelection = [];
+  state.flags.hasDraftProposal = false;
+  setStatus("info", "Deleted all proposed changes.");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
 }
 
 function onRemoveSelectedProposed() {
@@ -2204,6 +2963,53 @@ function onRemoveSelectedProposed() {
   saveCurrentProjectSnapshot();
   persist();
   render();
+}
+
+function getProposedPayloadPreviewText() {
+  const selected = selectedProposedIndexesFromPicker();
+  const sourceIndexes = selected.length ? selected : state.proposed.map((_, idx) => idx).slice(0, 1);
+  const lines = sourceIndexes
+    .map((idx) => ({
+      index: idx,
+      summary: String(state.proposed[idx] || "").trim(),
+      sectionHint: getSectionName(state.proposed[idx] || ""),
+      approxEffectsImpacted: 11
+    }))
+    .filter((row) => row.summary);
+
+  const operations = lines.flatMap((row) => ([
+    {
+      type: "effect.update",
+      target: row.sectionHint || "auto-section",
+      scope: "selected-models",
+      action: "adjust-intensity",
+      params: { deltaPercent: -12, clamp: [5, 95] }
+    },
+    {
+      type: "effect.update",
+      target: row.sectionHint || "auto-section",
+      scope: "selected-models",
+      action: "apply-palette",
+      params: { primary: "#0b3d91", secondary: "#2a9d8f", accent: "#f4a261" }
+    },
+    {
+      type: "timing.align",
+      target: row.sectionHint || "auto-section",
+      action: "snap-transition-edges",
+      params: { track: "XD: Mood", toleranceMs: 45 }
+    }
+  ]));
+
+  const payload = {
+    action: "sequence.apply",
+    source: "designer.proposed",
+    selectedCount: lines.length,
+    changes: lines,
+    operations,
+    note: "Scaffold preview. Final write payload will include resolved models/sections/effects.",
+    generatedAt: new Date().toISOString()
+  };
+  return JSON.stringify(payload, null, 2);
 }
 
 function onEditSelectedProposed() {
@@ -2228,26 +3034,70 @@ function onEditSelectedProposed() {
   render();
 }
 
-function onSaveProjectSettings() {
-  const oldProjectName = state.projectName;
-  const oldShowFolder = state.showFolder;
-  const oldKey = getProjectKey(oldProjectName, oldShowFolder);
-  if (oldKey && oldKey !== "::") {
-    const store = loadProjectsStore();
-    store[oldKey] = extractProjectSnapshot();
-    persistProjectsStore(store);
+function syncProjectSummaryInputs() {
+  const showFolderInput = app.querySelector("#showfolder-input");
+  const metadataRootInput = app.querySelector("#project-metadata-root-input");
+  if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
+  if (metadataRootInput) state.projectMetadataRoot = metadataRootInput.value.trim();
+}
+
+function dirnameOfPath(filePath) {
+  const p = String(filePath || "");
+  const slash = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
+  return slash > 0 ? p.slice(0, slash) : "";
+}
+
+function projectNameFromPath(filePath) {
+  const p = String(filePath || "");
+  const slash = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
+  const file = slash >= 0 ? p.slice(slash + 1) : p;
+  return file.replace(/\.xdproj$/i, "").trim();
+}
+
+async function saveProjectToCurrentFile(options = {}) {
+  const saveAs = options?.saveAs === true;
+  const bridge = getDesktopProjectBridge();
+  if (!bridge) return { ok: false, code: "NO_BRIDGE", error: "Desktop project bridge unavailable." };
+
+  let filePath = String(state.projectFilePath || "").trim();
+  if (saveAs || !filePath) {
+    const defaultName = `${(state.projectName || "project").trim() || "project"}.xdproj`;
+    const dialogRes = await bridge.saveProjectDialog({
+      rootPath: state.projectMetadataRoot,
+      defaultName
+    });
+    if (!dialogRes?.ok || !dialogRes?.filePath) {
+      return { ok: false, code: "CANCELED", error: "User canceled save dialog." };
+    }
+    filePath = String(dialogRes.filePath);
+    state.projectFilePath = filePath;
+    const dir = dirnameOfPath(filePath);
+    if (dir) state.projectMetadataRoot = dir;
+    const inferredName = projectNameFromPath(filePath);
+    if (inferredName) state.projectName = inferredName;
   }
 
-  const projectInput = app.querySelector("#project-input");
-  const showFolderInput = app.querySelector("#showfolder-input");
+  const res = await bridge.writeProjectFile({
+    filePath,
+    projectName: state.projectName,
+    showFolder: state.showFolder,
+    snapshot: extractProjectSnapshot()
+  });
+  if (!res?.ok) return res || { ok: false, code: "WRITE_FAILED", error: "Project file write failed." };
+  state.projectFilePath = filePath;
+  state.projectCreatedAt = String(res?.project?.createdAt || state.projectCreatedAt || "");
+  state.projectUpdatedAt = String(res?.project?.updatedAt || state.projectUpdatedAt || "");
+  return { ok: true, filePath };
+}
+
+async function onSaveProjectSettings() {
+  syncProjectSummaryInputs();
   const endpointInput = app.querySelector("#endpoint-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
   const thresholdInput = app.querySelector("#threshold-input");
   const sequenceSwitchPolicyInput = app.querySelector("#sequence-switch-policy-input");
 
-  if (projectInput) state.projectName = projectInput.value.trim() || state.projectName;
-  if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
-  if (endpointInput) state.endpoint = endpointInput.value.trim() || getDefaultEndpoint();
+  if (endpointInput) state.endpoint = normalizeConfiguredEndpoint(endpointInput.value);
   if (confirmModeInput) state.safety.applyConfirmMode = confirmModeInput.value;
   if (thresholdInput) {
     const parsed = Number.parseInt(thresholdInput.value, 10);
@@ -2258,12 +3108,16 @@ function onSaveProjectSettings() {
     state.safety.sequenceSwitchUnsavedPolicy = value;
   }
 
-  const loaded = tryLoadProjectSnapshot(state.projectName, state.showFolder);
-  if (!loaded) {
-    saveCurrentProjectSnapshot();
+  const saved = await saveProjectToCurrentFile({ saveAs: false });
+  if (saved?.ok) {
+    setStatus("info", `Project saved: ${saved.filePath}`);
+  } else if (saved?.code === "CANCELED") {
+    setStatus("info", "Save canceled.");
+  } else if (saved?.code !== "NO_BRIDGE") {
+    setStatusWithDiagnostics("warning", `Project save failed: ${saved?.error || "unknown error"}`);
+  } else {
+    setStatus("info", "Project settings saved.");
   }
-
-  setStatus("info", "Project settings saved.");
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -2353,7 +3207,7 @@ function getDesktopFileDialogBridge() {
       return w.__TAURI__.dialog.open({
         title: opts?.title || "Select File",
         multiple: false,
-        directory: false,
+        directory: Boolean(opts?.directory),
         filters: Array.isArray(opts?.filters)
           ? opts.filters.map((f) => ({
               name: f?.name || "Files",
@@ -2426,6 +3280,31 @@ async function pickFilePathFromDesktop(options = {}) {
   }
 }
 
+async function pickSequenceSavePathFromDesktop(options = {}) {
+  const bridge = getDesktopSequenceDialogBridge();
+  if (!bridge) {
+    setStatus("warning", "Sequence save dialog requires desktop runtime.");
+    render();
+    return "";
+  }
+  try {
+    const res = await bridge(options);
+    if (!res?.ok) {
+      if (res?.canceled) return "";
+      throw new Error(res?.error || "Unable to choose sequence path.");
+    }
+    return String(res.filePath || "").trim();
+  } catch (err) {
+    setStatusWithDiagnostics(
+      "warning",
+      `Sequence dialog failed: ${err?.message || "unknown error"}`,
+      err?.stack || ""
+    );
+    render();
+    return "";
+  }
+}
+
 async function onBrowseExistingSequencePath() {
   const selected = await pickFilePathFromDesktop({
     title: "Choose xLights Sequence",
@@ -2444,7 +3323,95 @@ async function onBrowseExistingSequencePath() {
   render();
 }
 
-async function closeActiveSequenceForSwitch() {
+async function onBrowseShowFolder() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Select Show Directory",
+    directory: true
+  });
+  if (!selected) return;
+  state.showFolder = selected;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+  void onRefreshSequenceCatalog({ silent: true });
+}
+
+async function onBrowseProjectMetadataRoot() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Choose Project Metadata Folder",
+    directory: true
+  });
+  if (!selected) return;
+  state.projectMetadataRoot = selected;
+  persist();
+  render();
+}
+
+async function onRefreshSequenceCatalog(options = {}) {
+  const silent = options?.silent === true;
+  const showFolder = String(state.showFolder || "").trim();
+  if (!showFolder) {
+    state.sequenceCatalog = [];
+    state.showDirectoryStats = { xsqCount: 0, xdmetaCount: 0 };
+    if (!silent) setStatus("warning", "Set Show Folder first.");
+    persist();
+    render();
+    return;
+  }
+  const bridge = getDesktopSequenceBridge();
+  if (!bridge) {
+    if (!silent) setStatus("warning", "Sequence discovery requires desktop runtime.");
+    render();
+    return;
+  }
+  try {
+    const res = await bridge.listSequencesInShowFolder({ showFolder });
+    if (!res?.ok) {
+      throw new Error(res?.error || "Unable to list sequences.");
+    }
+    const sequences = Array.isArray(res.sequences) ? res.sequences : [];
+    state.sequenceCatalog = sequences;
+    state.showDirectoryStats = {
+      xsqCount: Number.isFinite(Number(res?.stats?.xsqCount)) ? Math.max(0, Number(res.stats.xsqCount)) : sequences.length,
+      xdmetaCount: Number.isFinite(Number(res?.stats?.xdmetaCount)) ? Math.max(0, Number(res.stats.xdmetaCount)) : 0
+    };
+    if (state.ui.sequenceMode === "existing") {
+      const exists = sequences.some((s) => String(s?.path || "") === state.sequencePathInput);
+      if (!exists && sequences.length) {
+        state.sequencePathInput = String(sequences[0].path || "");
+      }
+    }
+    if (!silent) {
+      setStatus("info", `Loaded ${sequences.length} sequence${sequences.length === 1 ? "" : "s"} from show folder.`);
+    }
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  } catch (err) {
+    if (!silent) {
+      setStatusWithDiagnostics(
+        "action-required",
+        `Sequence discovery failed: ${err.message}`,
+        err.stack || ""
+      );
+    }
+    render();
+  }
+}
+
+function onSelectCatalogSequence() {
+  const input = app.querySelector("#sequence-catalog-select");
+  if (!input) return;
+  const value = String(input.value || "").trim();
+  if (!value) return;
+  state.sequencePathInput = value;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+async function closeActiveSequenceForSwitch(options = {}) {
+  const mode = options?.mode === "discard-unsaved" ? "discard-unsaved" : "policy";
   if (!state.flags.activeSequenceLoaded) return;
   try {
     await closeSequence(state.endpoint, false, true);
@@ -2458,9 +3425,9 @@ async function closeActiveSequenceForSwitch() {
     }
   }
 
-  const policy = state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved"
+  const policy = mode === "discard-unsaved"
     ? "discard-unsaved"
-    : "save-if-needed";
+    : (state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "discard-unsaved" : "save-if-needed");
 
   if (policy === "discard-unsaved") {
     await closeSequence(state.endpoint, true, true);
@@ -2475,22 +3442,68 @@ async function closeActiveSequenceForSwitch() {
   state.health.sequenceOpen = false;
 }
 
-async function onBrowseNewSequencePath() {
+function isPathWithinShowFolder(candidatePath, showFolderPath) {
+  const normalize = (value) =>
+    String(value || "")
+      .trim()
+      .replace(/\\/g, "/")
+      .replace(/\/+$/, "");
+  const candidate = normalize(candidatePath);
+  const root = normalize(showFolderPath);
+  if (!candidate || !root) return false;
+  if (candidate === root) return true;
+  return candidate.startsWith(`${root}/`);
+}
+
+function isSequenceAllowedInActiveShowFolder(sequencePayload) {
+  const showFolder = String(state.showFolder || "").trim();
+  if (!showFolder) return true;
+  const sequencePath = readSequencePathFromPayload(sequencePayload);
+  if (!sequencePath) return true;
+  return isPathWithinShowFolder(sequencePath, showFolder);
+}
+
+function noteIgnoredExternalSequence(sequencePayload, sourceLabel = "xLights") {
+  const sequencePath = readSequencePathFromPayload(sequencePayload);
+  if (!sequencePath) return;
+  if (sequencePath === lastIgnoredExternalSequencePath) return;
+  lastIgnoredExternalSequencePath = sequencePath;
+  setStatus("warning", `${sourceLabel} has a sequence outside active Show Directory. Ignoring in app: ${basenameOfPath(sequencePath) || sequencePath}`);
+}
+
+function clearIgnoredExternalSequenceNote() {
+  lastIgnoredExternalSequencePath = "";
+}
+
+async function onOpenSequenceFromDialog() {
+  const showFolder = String(state.showFolder || "").trim();
+  if (!showFolder) {
+    setStatus("warning", "Set Show Directory first.");
+    render();
+    return;
+  }
   const selected = await pickFilePathFromDesktop({
-    title: "Choose New Sequence Path (.xsq)",
+    title: "Open Sequence",
+    defaultPath: showFolder,
     filters: [{ name: "xLights Sequence", extensions: ["xsq"] }]
   });
   if (!selected) return;
   if (!hasExtension(selected, ["xsq"])) {
-    setStatus("warning", "New sequence path must end with .xsq.");
+    setStatus("warning", "Please choose a .xsq sequence file.");
     render();
     return;
   }
-  state.newSequencePathInput = selected;
-  state.ui.sequenceMode = "new";
+  if (!isPathWithinShowFolder(selected, showFolder)) {
+    setStatus("warning", "Selected sequence must be inside Show Directory.");
+    render();
+    return;
+  }
+
+  state.sequencePathInput = selected;
   saveCurrentProjectSnapshot();
   persist();
   render();
+  await onOpenExistingSequence(selected);
 }
 
 async function onBrowseAudioPath() {
@@ -2560,7 +3573,7 @@ async function onOpenSequence() {
   setStatus("info", state.ui.sequenceMode === "new" ? "Creating sequence..." : "Opening sequence...");
   render();
   try {
-    await closeActiveSequenceForSwitch();
+    await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
 
     const isAnimation = state.newSequenceType === "animation";
     const mediaFile = isAnimation ? null : (state.audioPathInput || null);
@@ -2578,24 +3591,238 @@ async function onOpenSequence() {
     if (targetPath !== previousPath) {
       state.lastApplyBackupPath = "";
     }
-    await hydrateSidecarForCurrentSequence();
-    await syncAudioPathFromMediaStatus();
     state.flags.activeSequenceLoaded = true;
     if (targetPath !== previousPath) {
       resetCreativeState();
     }
-    await onRefresh();
     setStatus(
       "info",
       `${state.ui.sequenceMode === "new" ? "Sequence ready" : "Opened sequence"}: ${state.activeSequence || targetPath}`
     );
     state.route = "sequence";
+    render();
+
+    try {
+      await withTimeout(hydrateSidecarForCurrentSequence(), 3000, "Hydrate sidecar");
+    } catch (err) {
+      pushDiagnostic("warning", `Post-open sidecar hydrate timed out: ${err.message}`);
+    }
+    try {
+      await withTimeout(syncAudioPathFromMediaStatus(), 3000, "Sync media status");
+    } catch (err) {
+      pushDiagnostic("warning", `Post-open media sync timed out: ${err.message}`);
+    }
+    try {
+      await withTimeout(onRefresh(), 6000, "Post-open refresh");
+    } catch (err) {
+      pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
+      setStatus(
+        "warning",
+        "Sequence opened, but refresh is taking too long. You can continue and use Refresh if needed."
+      );
+    }
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
     render();
   } finally {
     saveCurrentProjectSnapshot();
     persist();
+    render();
+  }
+}
+
+async function onOpenExistingSequence(targetPathInput = "") {
+  const previousPath = String(state.sequencePathInput || "").trim();
+  const targetPath = String(targetPathInput || state.sequencePathInput || "").trim();
+  if (!state.flags.xlightsConnected) {
+    setStatus("warning", "Connect to xLights before opening a sequence.");
+    return render();
+  }
+  if (!targetPath) {
+    setStatus("warning", "Choose a sequence first.");
+    return render();
+  }
+
+  setStatus("info", "Opening sequence...");
+  render();
+  try {
+    await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
+    const body = await openSequence(state.endpoint, targetPath, false, false);
+    const seq = body?.data?.sequence || body?.data || {};
+    applyOpenSequenceState(seq, targetPath);
+    if (targetPath !== previousPath) {
+      state.lastApplyBackupPath = "";
+      resetCreativeState();
+    }
+    state.flags.activeSequenceLoaded = true;
+    setStatus("info", `Opened sequence: ${state.activeSequence || targetPath}`);
+    state.route = "sequence";
+    render();
+
+    try {
+      await withTimeout(hydrateSidecarForCurrentSequence(), 3000, "Hydrate sidecar");
+    } catch (err) {
+      pushDiagnostic("warning", `Post-open sidecar hydrate timed out: ${err.message}`);
+    }
+    try {
+      await withTimeout(syncAudioPathFromMediaStatus(), 3000, "Sync media status");
+    } catch (err) {
+      pushDiagnostic("warning", `Post-open media sync timed out: ${err.message}`);
+    }
+    try {
+      await withTimeout(onRefresh(), 6000, "Post-open refresh");
+    } catch (err) {
+      pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
+      setStatus(
+        "warning",
+        "Sequence opened, but refresh is taking too long. You can continue and use Refresh if needed."
+      );
+    }
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
+    render();
+  } finally {
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
+}
+
+async function onOpenSelectedSequence() {
+  const targetPath = String(state.sequencePathInput || "").trim();
+  if (!targetPath) {
+    setStatus("warning", "Select a sequence first.");
+    render();
+    return;
+  }
+  await onOpenExistingSequence(targetPath);
+}
+
+function defaultNewSequenceName() {
+  const base = String(state.projectName || "").trim() || "NewSequence";
+  const cleaned = base.replace(/[^\w.\- ]+/g, "_").trim() || "NewSequence";
+  return `${cleaned}.xsq`;
+}
+
+async function onNewSequence() {
+  const showFolder = String(state.showFolder || "").trim();
+  if (!showFolder) {
+    setStatus("warning", "Set Show Directory first.");
+    render();
+    return;
+  }
+  if (!state.flags.xlightsConnected) {
+    setStatus("warning", "Connect to xLights before creating a sequence.");
+    render();
+    return;
+  }
+
+  const targetPath = await pickSequenceSavePathFromDesktop({
+    title: "Create New Sequence",
+    showFolder,
+    defaultName: defaultNewSequenceName()
+  });
+  if (!targetPath) return;
+
+  if (state.newSequenceType === "musical" && !state.audioPathInput) {
+    setStatus("warning", "Musical sequence requires an audio file path.");
+    render();
+    return;
+  }
+
+  setStatus("info", "Creating sequence...");
+  render();
+  try {
+    await closeActiveSequenceForSwitch();
+    const isAnimation = state.newSequenceType === "animation";
+    const mediaFile = isAnimation ? null : (state.audioPathInput || null);
+    const durationMs = isAnimation || !mediaFile ? state.newSequenceDurationMs : undefined;
+    const body = await createSequence(state.endpoint, {
+      file: targetPath,
+      mediaFile,
+      durationMs,
+      frameMs: state.newSequenceFrameMs
+    });
+    const seq = body?.data?.sequence || body?.data || {};
+    state.sequencePathInput = targetPath;
+    applyOpenSequenceState(seq, targetPath);
+    state.flags.activeSequenceLoaded = true;
+    state.lastApplyBackupPath = "";
+    resetCreativeState();
+    setStatus("info", `Sequence ready: ${state.activeSequence || targetPath}`);
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+    await onRefreshSequenceCatalog({ silent: true });
+    await onRefresh();
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Create failed: ${err.message}`, err.stack || "");
+    render();
+  }
+}
+
+async function onSaveSequenceCurrent() {
+  if (!state.flags.xlightsConnected) {
+    setStatus("warning", "Connect to xLights before saving.");
+    render();
+    return;
+  }
+  if (!state.flags.activeSequenceLoaded) {
+    setStatus("warning", "No active sequence loaded.");
+    render();
+    return;
+  }
+  try {
+    const targetPath = String(state.sequencePathInput || "").trim();
+    await saveSequence(state.endpoint, targetPath || null);
+    setStatus("info", "Sequence saved.");
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Save failed: ${err.message}`, err.stack || "");
+    render();
+  }
+}
+
+async function onSaveSequenceAs() {
+  const showFolder = String(state.showFolder || "").trim();
+  if (!showFolder) {
+    setStatus("warning", "Set Show Directory first.");
+    render();
+    return;
+  }
+  if (!state.flags.xlightsConnected) {
+    setStatus("warning", "Connect to xLights before saving.");
+    render();
+    return;
+  }
+  if (!state.flags.activeSequenceLoaded) {
+    setStatus("warning", "No active sequence loaded.");
+    render();
+    return;
+  }
+
+  const currentBase = String(state.sequencePathInput || "").trim().split("/").pop() || defaultNewSequenceName();
+  const targetPath = await pickSequenceSavePathFromDesktop({
+    title: "Save Sequence As",
+    showFolder,
+    defaultName: currentBase
+  });
+  if (!targetPath) return;
+
+  try {
+    await saveSequence(state.endpoint, targetPath);
+    state.sequencePathInput = targetPath;
+    state.savePathInput = targetPath;
+    addRecentSequence(targetPath);
+    setStatus("info", `Sequence saved as: ${targetPath}`);
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+    await onRefreshSequenceCatalog({ silent: true });
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", `Save As failed: ${err.message}`, err.stack || "");
     render();
   }
 }
@@ -2695,13 +3922,137 @@ async function fetchSectionSuggestions(options = {}) {
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
 }
 
-function onLoadProjectSnapshot() {
-  const loaded = tryLoadProjectSnapshot(state.projectName, state.showFolder);
-  if (loaded) {
-    setStatus("info", "Project snapshot loaded.");
-  } else {
-    setStatus("warning", "No saved snapshot for this project/show.");
+async function onOpenSelectedProject(selectedKeyArg = "") {
+  syncProjectSummaryInputs();
+  if (selectedKeyArg && typeof selectedKeyArg === "object") {
+    selectedKeyArg = "";
   }
+  let selectedKey = String(selectedKeyArg || "").trim();
+  const bridge = getDesktopProjectBridge();
+  if (!bridge) {
+    setStatusWithDiagnostics("warning", "Open project requires desktop runtime.");
+    return render();
+  }
+
+  if (!selectedKey) {
+    const dialogRes = await bridge.openProjectDialog({ rootPath: state.projectMetadataRoot });
+    if (!dialogRes?.ok || !dialogRes?.filePath) {
+      setStatus("info", "Open project canceled.");
+      return render();
+    }
+    const fileRes = await bridge.openProjectFile({ filePath: dialogRes.filePath });
+    if (!fileRes?.ok || !fileRes?.snapshot) {
+      setStatusWithDiagnostics("warning", `Open failed: ${fileRes?.error || "Invalid project file."}`);
+      return render();
+    }
+    const dir = dirnameOfPath(dialogRes.filePath);
+    if (dir) {
+      state.projectMetadataRoot = dir;
+    }
+    state.projectFilePath = String(dialogRes.filePath);
+    state.projectName = String(fileRes.project?.projectName || state.projectName);
+    state.showFolder = String(fileRes.project?.showFolder || state.showFolder);
+    state.projectCreatedAt = String(fileRes.project?.createdAt || state.projectCreatedAt || "");
+    state.projectUpdatedAt = String(fileRes.project?.updatedAt || state.projectUpdatedAt || "");
+    applyProjectSnapshot(fileRes.snapshot);
+    setStatus("info", `Opened project: ${state.projectName}`);
+    persist();
+    render();
+    void onRefreshSequenceCatalog({ silent: true });
+    return;
+  }
+
+  const { projectName, showFolder } = parseProjectKey(selectedKey);
+  if (!projectName || !showFolder) {
+    setStatus("warning", "Selected project key is invalid.");
+    return render();
+  }
+
+  const rootPath = state.projectMetadataRoot || dirnameOfPath(state.projectFilePath);
+  if (!rootPath) {
+    setStatusWithDiagnostics("warning", "Open failed: project metadata folder is not set.");
+    return render();
+  }
+  const guessedFilePath = `${rootPath}/${projectName}.xdproj`;
+  const fileRes = await bridge.openProjectFile({ filePath: guessedFilePath });
+  if (!fileRes?.ok || !fileRes?.snapshot) {
+    setStatusWithDiagnostics("warning", `Open failed: ${fileRes?.error || "Invalid project file."}`);
+    return render();
+  }
+  state.projectFilePath = guessedFilePath;
+  state.projectName = String(fileRes.project?.projectName || projectName);
+  state.showFolder = String(fileRes.project?.showFolder || showFolder);
+  state.projectCreatedAt = String(fileRes.project?.createdAt || state.projectCreatedAt || "");
+  state.projectUpdatedAt = String(fileRes.project?.updatedAt || state.projectUpdatedAt || "");
+  applyProjectSnapshot(fileRes.snapshot);
+  setStatus("info", `Opened project: ${state.projectName}`);
+  persist();
+  render();
+  void onRefreshSequenceCatalog({ silent: true });
+}
+
+function onCreateNewProject() {
+  syncProjectSummaryInputs();
+  const bridge = getDesktopProjectBridge();
+  const suggested = `${state.projectName || "Project"}-new.xdproj`;
+  const openNew = async () => {
+    if (!bridge) {
+      setStatusWithDiagnostics("warning", "New project requires desktop runtime.");
+      return render();
+    }
+
+    const dialogRes = await bridge.saveProjectDialog({
+      rootPath: state.projectMetadataRoot,
+      defaultName: suggested
+    });
+    if (!dialogRes?.ok || !dialogRes?.filePath) {
+      setStatus("info", "New project canceled.");
+      return render();
+    }
+
+    state.projectFilePath = String(dialogRes.filePath);
+    const dir = dirnameOfPath(state.projectFilePath);
+    if (dir) state.projectMetadataRoot = dir;
+    const inferredName = projectNameFromPath(state.projectFilePath);
+    if (inferredName) state.projectName = inferredName;
+
+    resetSessionDraftState();
+    resetCreativeState();
+    state.flags.activeSequenceLoaded = false;
+    state.activeSequence = "";
+    state.sequencePathInput = "";
+    state.newSequencePathInput = "";
+    state.audioPathInput = "";
+    state.savePathInput = "";
+    state.recentSequences = [];
+    state.projectSequences = [];
+    state.projectCreatedAt = "";
+    state.projectUpdatedAt = "";
+
+    const saved = await saveProjectToCurrentFile({ saveAs: false });
+    if (!saved?.ok) {
+      setStatusWithDiagnostics("warning", `Created new project but initial save failed: ${saved?.error || "unknown error"}`);
+    } else {
+      setStatus("info", `Created new project: ${state.projectName}`);
+    }
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  };
+  void openNew();
+}
+
+async function onSaveProjectAs() {
+  syncProjectSummaryInputs();
+  const saved = await saveProjectToCurrentFile({ saveAs: true });
+  if (saved?.ok) {
+    setStatus("info", `Saved project as: ${saved.filePath}`);
+  } else if (saved?.code === "CANCELED") {
+    setStatus("info", "Save As canceled.");
+  } else {
+    setStatusWithDiagnostics("action-required", `Save As failed: ${saved?.error || "unknown error"}`);
+  }
+  saveCurrentProjectSnapshot();
   persist();
   render();
 }
@@ -2714,10 +4065,20 @@ async function onRefreshModels() {
   setStatus("info", "Refreshing models...");
   render();
   try {
-    const body = await getModels(state.endpoint);
-    state.models = Array.isArray(body?.data?.models) ? body.data.models : [];
-    ensureMetadataTargetSelection();
-    setStatus("info", `Loaded ${state.models.length} models.`);
+    await refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure: true });
+    const targetCount = buildMetadataTargets().length;
+    const submodelCount = buildMetadataTargets().filter((target) => target.type === "submodel").length;
+    if (state.health?.submodelDiscoveryError) {
+      setStatusWithDiagnostics(
+        "warning",
+        `Loaded ${state.models.length} models/groups; submodels unavailable (${state.health.submodelDiscoveryError}).`
+      );
+    } else {
+      setStatus(
+        "info",
+        `Loaded ${state.models.length} models/groups and ${submodelCount} submodels (${targetCount} metadata targets total).`
+      );
+    }
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Refresh models failed: ${err.message}`);
   } finally {
@@ -2748,6 +4109,7 @@ function onResetProjectWorkspace() {
   state.savePathInput = defaultState.savePathInput;
   state.lastApplyBackupPath = defaultState.lastApplyBackupPath;
   state.recentSequences = [];
+  state.projectSequences = [];
   state.revision = "unknown";
   state.draftBaseRevision = "unknown";
   state.proposed = [...defaultState.proposed];
@@ -2760,10 +4122,13 @@ function onResetProjectWorkspace() {
   state.ui.sequenceMode = "existing";
   state.ui.sectionTrackName = "";
   state.ui.metadataTargetId = "";
-  state.ui.metadataRole = "support";
-  state.ui.metadataBehavior = "steady";
-  state.ui.metadataTagDraft = "";
+  state.ui.metadataSelectionIds = [];
+  state.ui.metadataSelectedTags = [];
   state.ui.metadataNewTag = "";
+  state.ui.metadataNewTagDescription = "";
+  state.ui.metadataFilterName = "";
+  state.ui.metadataFilterType = "";
+  state.ui.metadataFilterTags = "";
   state.ui.detailsOpen = false;
   state.diagnostics = [];
   state.jobs = [];
@@ -2794,7 +4159,36 @@ function resetSessionDraftState() {
 function resetCreativeState() {
   revokeReferencePreviewUrls();
   state.creative = structuredClone(defaultState.creative);
+  state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   state.flags.creativeBriefReady = false;
+}
+
+function buildAudioAnalysisStubSummary() {
+  const path = String(state.audioPathInput || "").trim();
+  const track = basenameOfPath(path) || "audio track";
+  return [
+    `Scaffold summary for ${track}.`,
+    "Song structure: pending",
+    "Beat/tempo profile: pending",
+    "Mood and energy arc: pending",
+    "Narrative cues from lyrics: pending",
+    "",
+    "Agent-integrated audio analysis will populate this section."
+  ].join("\n");
+}
+
+function onAnalyzeAudio() {
+  const audioPath = String(state.audioPathInput || "").trim();
+  if (!audioPath) {
+    setStatus("warning", "No audio track available for analysis on this sequence.");
+    return render();
+  }
+  state.audioAnalysis.summary = buildAudioAnalysisStubSummary();
+  state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
+  setStatus("info", "Audio analysis summary generated (scaffold).");
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
 }
 
 async function onCloseSequence() {
@@ -2886,81 +4280,60 @@ function onNewSession() {
 }
 
 function navButton(id, label) {
-  return `<button class="${state.route === id ? "active" : ""}" data-route="${id}">${label}</button>`;
+  const icons = {
+    project: "P",
+    sequence: "S",
+    inspiration: "I",
+    design: "D",
+    history: "H",
+    metadata: "M"
+  };
+  const icon = icons[id] || "•";
+  return `<button class="${state.route === id ? "active" : ""}" data-route="${id}" title="${label}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></button>`;
 }
 
 function projectScreen() {
+  const createdAt = state.projectCreatedAt
+    ? new Date(state.projectCreatedAt).toLocaleString([], { hour12: false })
+    : "(not set)";
+  const updatedAt = state.projectUpdatedAt
+    ? new Date(state.projectUpdatedAt).toLocaleString([], { hour12: false })
+    : "(not set)";
   return `
     <div class="screen-grid">
       <section class="card">
         <h3>Project Summary</h3>
-        <div class="field"><label>Project Name</label><input id="project-input" value="${state.projectName}" /></div>
-        <div class="field"><label>Show Folder</label><input id="showfolder-input" value="${state.showFolder}" /></div>
-        <div class="kv"><div class="k">xLights Version</div><div>${state.flags.xlightsConnected ? "Connected" : "Not connected"}</div></div>
-        <div class="kv"><div class="k">Compatibility</div><div>2026.x floor</div></div>
-      </section>
-
-      <section class="card">
-        <h3>Project-Level Settings</h3>
-        <div class="field"><label>xLights Endpoint</label><input id="endpoint-input" value="${state.endpoint}" /></div>
+        <div class="banner">Current Project: <strong>${state.projectName}</strong></div>
         <div class="field">
-          <label>Apply Confirmation Mode</label>
-          <select id="confirm-mode-input">
-            <option value="large-only" ${state.safety.applyConfirmMode === "large-only" ? "selected" : ""}>Large changes only</option>
-            <option value="always" ${state.safety.applyConfirmMode === "always" ? "selected" : ""}>Always confirm</option>
-            <option value="never" ${state.safety.applyConfirmMode === "never" ? "selected" : ""}>Never confirm</option>
-          </select>
+          <label>Creative Direction (Project Level)</label>
+          <textarea id="project-concept-input" rows="3" placeholder="High-level show concept and tone...">${String(state.projectConcept || "")}</textarea>
+          <p class="banner">Project-level concept only. Sequence-specific inspiration lives in the Inspiration tab.</p>
         </div>
         <div class="field">
-          <label>Large Change Threshold (approx effects impacted)</label>
-          <input id="threshold-input" type="number" min="1" value="${state.safety.largeChangeThreshold}" />
+          <label>Project Metadata Folder</label>
+          <div class="row">
+            <input id="project-metadata-root-input" value="${state.projectMetadataRoot || ""}" placeholder="Default: app data folder" />
+          </div>
         </div>
-        <div class="field">
-          <label>Sequence Switch (when unsaved changes exist)</label>
-          <select id="sequence-switch-policy-input">
-            <option value="save-if-needed" ${state.safety.sequenceSwitchUnsavedPolicy !== "discard-unsaved" ? "selected" : ""}>Save then switch</option>
-            <option value="discard-unsaved" ${state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "selected" : ""}>Discard and switch</option>
-          </select>
-        </div>
-        <div class="kv"><div class="k">Discovery</div><div>Auto + manual fallback</div></div>
-        <div class="kv"><div class="k">Multi-instance</div><div>Latest running</div></div>
-        <div class="kv"><div class="k">Retry</div><div>1,2,5,10,15 then 30s</div></div>
-        <div class="kv"><div class="k">Backups</div><div>Before apply, keep 20</div></div>
         <div class="row">
-          <button id="save-project">Save Settings</button>
-          <button id="load-project">Load Project Snapshot</button>
+          <button id="new-project">New</button>
+          <button id="open-selected-project">Open</button>
+          <button id="save-project">Save</button>
+          <button id="save-project-as">Save As</button>
+        </div>
+        <div style="height: 10px;"></div>
+        <div class="field">
+          <label>Show Directory</label>
+          <div class="row">
+            <input id="showfolder-input" value="${state.showFolder}" />
+            <button id="browse-showfolder">Browse...</button>
+          </div>
+        </div>
+        <p class="banner">Show Directory inventory: ${state.showDirectoryStats?.xsqCount || 0} .xsq | ${state.showDirectoryStats?.xdmetaCount || 0} .xdmeta</p>
+        <p class="banner">Project created: ${createdAt}</p>
+        <p class="banner">Project updated: ${updatedAt}</p>
+        <div class="row">
           <button id="reset-project">Reset Project Workspace</button>
-          <button id="test-connection">Test Connection</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h3>Session Actions</h3>
-        <div class="row">
-          <button id="open-sequence-route">Open Sequence Workspace</button>
-          <button id="plan-toggle" ${state.flags.planOnlyForcedByConnectivity ? 'disabled title="Forced while xLights is unavailable"' : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
-          <button id="new-session">New Session</button>
-        </div>
-        <p class="banner">Active sequence: ${state.activeSequence || "(none)"}</p>
-        <p class="banner">Plan-only mode: ${state.flags.planOnlyMode ? (state.flags.planOnlyForcedByConnectivity ? "enabled (forced by connectivity)" : "enabled") : "disabled"}</p>
-        <p class="banner">Last sync: ${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "never"}</p>
-      </section>
-
-      <section class="card">
-        <h3>Project Health</h3>
-        <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
-        <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">File Dialog Bridge</div><div>${state.health.desktopFileDialogReady ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
-        <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "unknown"}</div></div>
-        <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
-        <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
-        <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>
-        <div class="row">
-          <button id="check-health">Recheck Health</button>
         </div>
       </section>
     </div>
@@ -2968,11 +4341,26 @@ function projectScreen() {
 }
 
 function sequenceScreen() {
-  const refs = Array.isArray(state.creative.references) ? state.creative.references : [];
-  const brief = state.creative.brief;
-  const creativeDisabledReason = creativeAnalysisDisabledReason();
-  const creativeEnabled = isCreativeAnalysisEnabled();
-  const mode = state.ui.sequenceMode === "new" ? "new" : "existing";
+  const audioTrackPath = String(state.audioPathInput || "").trim();
+  const audioTrackName = basenameOfPath(audioTrackPath) || audioTrackPath;
+  const hasAudioTrack = Boolean(audioTrackPath);
+  const audioSummary = String(state.audioAnalysis?.summary || "");
+  const audioAnalyzedAt = state.audioAnalysis?.lastAnalyzedAt
+    ? new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
+  const creativeBriefText = String(state.creative?.briefText || "");
+  const creativeBriefTextEscaped = creativeBriefText
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const catalog = Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : [];
+  const catalogHasCurrent = catalog.some((s) => String(s?.path || "") === state.sequencePathInput);
+  const catalogOptions = [
+    ...catalog,
+    ...(!catalogHasCurrent && state.sequencePathInput
+      ? [{ path: state.sequencePathInput, relativePath: state.sequencePathInput, name: state.sequencePathInput.split("/").pop() || "Current" }]
+      : [])
+  ];
   const briefAt = state.creative.briefUpdatedAt
     ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
@@ -2981,95 +4369,67 @@ function sequenceScreen() {
       <section class="card">
         <h3>Sequence Setup</h3>
         <div class="field">
-          <label>Sequence Mode</label>
-          <select id="sequence-mode-input">
-            <option value="existing" ${mode === "existing" ? "selected" : ""}>Open Existing Sequence</option>
-            <option value="new" ${mode === "new" ? "selected" : ""}>Create New Sequence</option>
-          </select>
-        </div>
-        ${
-          mode === "existing"
-            ? `<div class="field">
-                 <label>Existing Sequence Path</label>
-                 <div class="row">
-                   <input id="sequence-path-input" value="${state.sequencePathInput}" />
-                   <button id="browse-sequence-path">Browse...</button>
-                 </div>
-               </div>`
-            : `
-                <div class="field">
-                  <label>New Sequence Path</label>
-                  <div class="row">
-                    <input id="new-sequence-path-input" value="${state.newSequencePathInput}" placeholder="/path/to/NewSequence.xsq" />
-                    <button id="browse-new-sequence-path">Browse...</button>
-                  </div>
-                </div>
-                <div class="field">
-                  <label>New Sequence Type</label>
-                  <select id="new-sequence-type-input">
-                    <option value="musical" ${state.newSequenceType === "musical" ? "selected" : ""}>Musical Sequence</option>
-                    <option value="animation" ${state.newSequenceType === "animation" ? "selected" : ""}>Animation</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label>Frame Interval (ms)</label>
-                  <input id="new-sequence-frame-input" type="number" min="1" value="${state.newSequenceFrameMs}" />
-                </div>
-                <div class="field">
-                  <label>Duration (ms)</label>
-                  <input id="new-sequence-duration-input" type="number" min="1" value="${state.newSequenceDurationMs}" />
-                </div>
-               `
-        }
-        <div class="field">
-          <label>Audio File Path (optional)</label>
-          <div class="row">
-            <input id="audio-path-input" value="${state.audioPathInput || ""}" placeholder="/path/to/song.mp3 (optional for animation-only)" />
-            <button id="browse-audio-path">Browse...</button>
-          </div>
-        </div>
-        <p class="banner">${state.audioPathInput ? `Audio source: ${state.audioPathInput}` : "No audio path set. Sequence can run as animation-only."}</p>
-        ${
-          mode === "new" && state.newSequenceType === "musical" && !state.audioPathInput
-            ? `<p class="banner warning">Musical Sequence mode requires an audio file path.</p>`
-            : ""
-        }
-        <div class="row">
-          <button id="open-sequence">${mode === "new" ? "Create in xLights" : "Open in xLights"}</button>
-          <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
-        </div>
-        <p class="banner">Saving is handled by xLights native save workflow.</p>
-        <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
-        <p class="banner">Last backup: ${state.lastApplyBackupPath || "(none)"}</p>
-        <p class="banner">Designer media folder: ${designerMediaFolderPath()}</p>
-        <p class="banner">Sidecar metadata: ${(state.activeSequence || "sequence").replace(/\.xsq$/, ".xdmeta")}</p>
-        <div class="field">
-          <label>Recent Sequences</label>
-          <ul class="list">
+          <label>Sequence (from Show Directory)</label>
+          <select id="sequence-catalog-select">
             ${
-              state.recentSequences.length
-                ? state.recentSequences
-                    .map((p) => `<li><button data-recent="${p}">Use</button> ${p}</li>`)
+              catalogOptions.length
+                ? catalogOptions
+                    .map((s) => {
+                      const path = String(s?.path || "");
+                      const rel = String(s?.relativePath || path);
+                      const name = String(s?.name || path.split("/").pop() || rel);
+                      return `<option value="${path.replace(/\"/g, "&quot;")}" ${path === state.sequencePathInput ? "selected" : ""}>${name} - ${rel}</option>`;
+                    })
                     .join("")
-                : "<li>No recent entries yet.</li>"
+                : `<option value="">No sequences found under Show Directory</option>`
             }
-          </ul>
+          </select>
+          <p class="banner">Show Directory: ${state.showFolder || "(not set)"}</p>
+        </div>
+        <div class="row project-actions">
+          <button id="open-sequence">Open</button>
+        </div>
+        <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
+      </section>
+
+      ${
+        hasAudioTrack
+          ? `
+      <section class="card">
+        <h3>Audio Analysis ${audioAnalyzedAt ? `<span class="banner">(${audioAnalyzedAt})</span>` : ""}</h3>
+        <div class="field">
+          <label>Audio Track (from open sequence)</label>
+          <input value="${audioTrackName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}" readonly />
+          <p class="banner">${audioTrackPath.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+        </div>
+        <div class="row">
+          <button id="analyze-audio">Analyze Audio</button>
+        </div>
+        <div class="field">
+          <label>Analysis Summary</label>
+          <textarea id="audio-analysis-summary" rows="5" placeholder="Agent audio analysis summary will appear here...">${audioSummary.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</textarea>
         </div>
       </section>
+      `
+          : ""
+      }
 
       <section class="card">
-        <h3>Creative Analysis Kickoff</h3>
-        <div class="field"><label>Goals</label><input id="creative-goals-input" value="${String(state.creative.goals || "").replace(/\"/g, "&quot;")}" placeholder="cinematic but magical, focus on background depth..." /></div>
-        <div class="field"><label>Inspiration</label><input id="creative-inspiration-input" value="${String(state.creative.inspiration || "").replace(/\"/g, "&quot;")}" placeholder="starry night, dreamy snowfall, retro synthwave..." /></div>
-        <div class="field"><label>Notes</label><textarea id="creative-notes-input" rows="4" placeholder="Any additional direction for the agent...">${String(state.creative.notes || "")}</textarea></div>
-        <div class="row">
-          <button id="run-creative-analysis" ${creativeEnabled ? "" : "disabled"}>Run Creative Analysis</button>
-          <button id="regenerate-creative-brief" ${creativeEnabled ? "" : "disabled"}>Regenerate Brief</button>
-          <button id="accept-creative-brief" ${state.flags.creativeBriefReady ? "" : "disabled"}>Accept Brief and Start Design</button>
+        <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
+        <div class="field">
+          <label>Direction, goals, theme, mood, and other brief notes</label>
+          <textarea id="creative-brief-text" rows="10" placeholder="Write or let the agent build the creative brief for this sequence...">${creativeBriefTextEscaped}</textarea>
         </div>
-        <p class="banner ${creativeEnabled ? "" : "warning"}">${creativeEnabled ? "Sequence ready for analysis." : creativeDisabledReason}</p>
       </section>
+    </div>
+  `;
+}
 
+function inspirationScreen() {
+  const refs = Array.isArray(state.creative.references) ? state.creative.references : [];
+  const swatches = Array.isArray(state.inspiration?.paletteSwatches) ? state.inspiration.paletteSwatches : [];
+  return `
+    <div class="screen-grid">
       <section class="card">
         <h3>Reference Media</h3>
         <div class="field">
@@ -3082,6 +4442,31 @@ function sequenceScreen() {
         <div class="row">
           <button id="add-reference-media" ${refs.length >= REFERENCE_MEDIA_MAX_ITEMS ? "disabled" : ""}>Add Selected References</button>
           <button id="refresh-recents">Refresh Recents</button>
+        </div>
+        <div class="media-grid">
+          ${
+            refs.length
+              ? refs.map((ref) => {
+                  const preview = String(ref.previewUrl || "").replace(/\"/g, "&quot;");
+                  const name = String(ref.name || "reference");
+                  const safeName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                  const mime = String(ref.mimeType || "").toLowerCase();
+                  const ext = (name.split(".").pop() || "file").slice(0, 8).toUpperCase();
+                  const media =
+                    preview && mime.startsWith("image/")
+                      ? `<img src="${preview}" alt="${safeName}" loading="lazy" />`
+                      : preview && mime.startsWith("video/")
+                        ? `<video src="${preview}" muted loop playsinline preload="metadata"></video>`
+                        : `<div class="media-fallback">${ext}</div>`;
+                  return `
+                    <article class="media-tile">
+                      <div class="media-thumb">${media}</div>
+                      <div class="media-meta">${safeName}</div>
+                    </article>
+                  `;
+                }).join("")
+              : `<article class="media-tile media-empty"><div class="media-meta">No media uploaded yet.</div></article>`
+          }
         </div>
         <ul class="list">
           ${
@@ -3106,29 +4491,67 @@ function sequenceScreen() {
       </section>
 
       <section class="card">
-        <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
-        ${
-          brief
-            ? `
-                <p><strong>Summary:</strong> ${brief.summary}</p>
-                <p><strong>Goals:</strong> ${brief.goalsSummary}</p>
-                <p><strong>Inspiration:</strong> ${brief.inspirationSummary}</p>
-                <p><strong>Audio Context:</strong> ${brief.audioContext || "-"}</p>
-                <p><strong>Sections:</strong> ${Array.isArray(brief.sections) ? brief.sections.join(", ") : "-"}</p>
-                <p><strong>Mood/Energy Arc:</strong> ${brief.moodEnergyArc || "-"}</p>
-                <p><strong>Narrative Cues:</strong> ${brief.narrativeCues || "-"}</p>
-                <p><strong>Visual Cues:</strong> ${brief.visualCues || "-"}</p>
-                <p><strong>Hypotheses:</strong></p>
-                <ul class="list">
-                  ${(Array.isArray(brief.hypotheses) ? brief.hypotheses : []).map((h) => `<li>${h}</li>`).join("")}
-                </ul>
-                <div class="row">
-                  <button id="edit-brief-direction">Edit Brief Direction</button>
-                </div>
-              `
-            : `<p class="banner">No brief generated yet. Run Creative Analysis to populate this panel.</p>`
-        }
+        <h3>Color Palette</h3>
+        <div class="row">
+          <input id="palette-color-input" type="color" value="${swatches[0] || "#0b3d91"}" />
+          <button id="add-palette-swatch">Add Color</button>
+        </div>
+        <ul class="list">
+          ${
+            swatches.length
+              ? swatches.map((hex, idx) => `
+                  <li>
+                    <span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:${hex};border:1px solid #444;vertical-align:middle;margin-right:8px;"></span>
+                    <code>${hex}</code>
+                    <button data-palette-remove="${idx}">Remove</button>
+                  </li>
+                `).join("")
+              : "<li>No palette colors yet.</li>"
+          }
+        </ul>
+        <p class="banner">Initial placeholder. We will expand this tab later.</p>
       </section>
+    </div>
+  `;
+}
+
+function persistentCoachPanel() {
+  return `
+    <aside class="coach-panel card">
+      <h3>Designer</h3>
+      <div class="panel-window chat-window">
+        <div class="chat-thread">
+          ${(state.chat || [])
+            .map((c) => {
+              const role = c.who === "user" ? "user" : c.who === "agent" ? "agent" : "system";
+              return `<article class="chat-msg ${role}">
+                <header>${role === "user" ? "You" : role === "agent" ? "Designer Agent" : "System"}</header>
+                <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+              </article>`;
+            })
+            .join("")}
+          ${state.ui.agentThinking ? `<div class="chat-typing">Designer Agent is working...</div>` : ""}
+        </div>
+      </div>
+      <div class="quick-prompts panel-footer-block">
+        ${CHAT_QUICK_PROMPTS.map((p, idx) => `
+          <article class="quick-suggestion">
+            <div class="quick-suggestion-text">${renderInlineChipSentence(p)}</div>
+            <button data-quick-prompt="${idx}">Use</button>
+          </article>
+        `).join("")}
+      </div>
+    </aside>
+  `;
+}
+
+function globalChatBar() {
+  return `
+    <div class="global-chat-bar">
+      <div class="composer">
+        <input id="chat-input" placeholder="Tell the agent what to change or ask for guidance..." value="${(state.ui.chatDraft || "").replace(/\"/g, "&quot;")}" />
+        <button id="send-chat">Send</button>
+      </div>
     </div>
   `;
 }
@@ -3137,15 +4560,15 @@ function designScreen() {
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
   const disabledReason = applyDisabledReason();
+  sanitizeProposedSelection();
   const filtered = state.proposed
     .map((line, idx) => ({ line, idx }))
     .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
-  const list = filtered.map((x) => x.line);
-  const proposedRowsVisible = Number.isFinite(Number(state.ui.proposedRowsVisible))
-    ? Math.max(DEFAULT_PROPOSED_ROWS, Number(state.ui.proposedRowsVisible))
-    : DEFAULT_PROPOSED_ROWS;
-  const hasMoreProposed = list.length > proposedRowsVisible;
-  const canShowLessProposed = proposedRowsVisible > DEFAULT_PROPOSED_ROWS && list.length > DEFAULT_PROPOSED_ROWS;
+  const list = filtered;
+  const selectedCount = (state.ui.proposedSelection || []).filter((idx) => list.some((item) => item.idx === idx)).length;
+  const canApplySelected = selectedCount > 0 && !state.flags.applyInProgress;
+  const canApplyAll = list.length > 0 && !state.flags.applyInProgress;
+  const payloadPreview = escapeHtml(getProposedPayloadPreviewText());
   return `
     ${
       state.flags.proposalStale
@@ -3164,67 +4587,57 @@ function designScreen() {
         : ""
     }
 
-    <div class="screen-grid design-workspace">
-      <section class="card design-column">
-        <h3>Designer Chat</h3>
-        <div class="panel-window chat-window">
-          <div class="chat-thread">
-          ${(state.chat || [])
-            .map((c) => {
-              const role = c.who === "user" ? "user" : c.who === "agent" ? "agent" : "system";
-              return `<article class="chat-msg ${role}">
-                <header>${role === "user" ? "You" : role === "agent" ? "Designer Agent" : "System"}</header>
-                <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-              </article>`;
-            })
-            .join("")}
-          ${state.ui.agentThinking ? `<div class="chat-typing">Designer Agent is working...</div>` : ""}
-          </div>
-        </div>
-        <div class="quick-prompts panel-footer-block">
-          ${CHAT_QUICK_PROMPTS.map((p, idx) => `<button data-quick-prompt="${idx}">${p}</button>`).join("")}
-        </div>
-        <div class="composer panel-footer-block">
-          <input id="chat-input" placeholder="Tell the agent what to change..." value="${(state.ui.chatDraft || "").replace(/\"/g, "&quot;")}" />
-          <button id="send-chat">Send</button>
-        </div>
-      </section>
-
-      <section class="card design-column">
+    <div class="screen-grid design-workspace design-workspace-fill">
+      <section class="card design-column full-span">
         <h3>Proposed Changes</h3>
         <div class="field panel-window proposed-window"><label>Proposed Next Write</label>
-          <select id="proposed-picker" multiple size="${Math.max(8, Math.min(18, proposedRowsVisible + 3))}" class="proposed-picker">
-            ${list
-              .slice(0, proposedRowsVisible)
-              .map((p, idx) => {
-                const actualIdx = filtered[idx].idx;
-                return `<option value="${actualIdx}">${p
-                  .replace(/&/g, "&amp;")
-                  .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;")}</option>`;
-              })
-                .join("")}
-          </select>
+          <div class="metadata-grid-wrap proposed-grid-wrap">
+            <table class="metadata-grid proposed-grid">
+              <thead>
+                <tr>
+                  <th style="width:48px;">Pick</th>
+                  <th>Change</th>
+                  <th style="width:84px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  list.length
+                    ? list
+                        .map(({ line, idx }) => {
+                          const selected = (state.ui.proposedSelection || []).includes(idx);
+                          return `
+                    <tr class="${selected ? "proposed-row-selected" : ""}">
+                      <td>
+                        <input type="checkbox" data-proposed-select="${idx}" ${selected ? "checked" : ""} />
+                      </td>
+                      <td data-proposed-focus="${idx}">${renderProposedLineHtml(line)}</td>
+                      <td><button data-proposed-delete="${idx}">Delete</button></td>
+                    </tr>
+                  `;
+                        })
+                        .join("")
+                    : `<tr><td colspan="3" class="banner">No proposed changes yet. Ask the designer in chat.</td></tr>`
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="row panel-footer-block">
-            <button id="add-proposed-line">Add Line</button>
-            <button id="edit-selected-proposed">Edit Selected</button>
-            <button id="remove-selected-proposed">Remove Selected</button>
-            ${hasMoreProposed ? `<button id="show-more-proposed">Show More</button>` : ""}
-            ${canShowLessProposed ? `<button id="show-less-proposed">Show Less</button>` : ""}
+        <details class="panel-footer-block proposed-payload-footer" ${state.ui.proposedPayloadOpen ? "open" : ""}>
+          <summary id="toggle-proposed-payload">Selected Change Payload Preview</summary>
+          <pre class="proposed-payload">${payloadPreview}</pre>
+        </details>
+        <div class="row panel-footer-block proposed-actions">
+            <button id="remove-selected-proposed" ${selectedCount ? "" : "disabled"}>Delete Selected</button>
+            <button id="remove-all-proposed" ${list.length ? "" : "disabled"}>Delete All</button>
+            <button id="apply-selected" class="proposed-apply-btn proposed-apply-start" ${canApplySelected ? "" : "disabled"}>Apply Selected</button>
+            <button id="apply-all" class="proposed-apply-btn" ${canApplyAll ? "" : "disabled"}>Apply All</button>
         </div>
-        <div class="banner impact panel-footer-block">Approx effects impacted: ${list.length * 11}</div>
-        <div class="row panel-footer-block">
-          <button id="apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
-          <button id="discard-draft-inline">Discard Draft</button>
-          <button id="open-details">Open Details</button>
-        </div>
-        <div class="banner ${applyEnabled() ? "" : "warning"} panel-footer-block">${applyEnabled() ? "Ready to apply." : disabledReason}</div>
       </section>
     </div>
 
     <div class="mobile-apply-bar">
-      <button id="mobile-apply" ${applyEnabled() ? "" : "disabled"}>Apply to xLights</button>
+      <button id="mobile-apply-all" ${canApplyAll ? "" : "disabled"}>Apply All</button>
       <span class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "Ready" : disabledReason}</span>
     </div>
   `;
@@ -3271,6 +4684,62 @@ function detailsDrawer() {
         <button id="close-details">Back to Design</button>
       </div>
       <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "" : applyDisabledReason()}</div>
+    </section>
+  `;
+}
+
+function settingsDrawer() {
+  if (!state.ui.settingsOpen) return "";
+  return `
+    <section class="settings-overlay" id="settings-overlay">
+      <section class="card settings-drawer">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <h3>Settings</h3>
+          <button id="close-settings" aria-label="Close settings">Close</button>
+        </div>
+        <section class="field" style="margin-top:8px;">
+          <label>xLights Endpoint</label>
+          <input id="endpoint-input" value="${state.endpoint}" />
+          <p class="banner">Endpoint is explicit and fail-fast. No automatic fallback endpoints are used.</p>
+        </section>
+        <section class="field">
+          <label>Apply Confirmation Mode</label>
+          <select id="confirm-mode-input">
+            <option value="large-only" ${state.safety.applyConfirmMode === "large-only" ? "selected" : ""}>Large changes only</option>
+            <option value="always" ${state.safety.applyConfirmMode === "always" ? "selected" : ""}>Always confirm</option>
+            <option value="never" ${state.safety.applyConfirmMode === "never" ? "selected" : ""}>Never confirm</option>
+          </select>
+        </section>
+        <section class="field">
+          <label>Large Change Threshold (approx effects impacted)</label>
+          <input id="threshold-input" type="number" min="1" value="${state.safety.largeChangeThreshold}" />
+        </section>
+        <section class="field">
+          <label>Sequence Switch (when unsaved changes exist)</label>
+          <select id="sequence-switch-policy-input">
+            <option value="save-if-needed" ${state.safety.sequenceSwitchUnsavedPolicy !== "discard-unsaved" ? "selected" : ""}>Save then switch</option>
+            <option value="discard-unsaved" ${state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "selected" : ""}>Discard and switch</option>
+          </select>
+        </section>
+        <div class="row">
+          <button id="test-connection">Test Connection</button>
+          <button id="check-health">Recheck Health</button>
+          <button id="plan-toggle" ${state.flags.planOnlyForcedByConnectivity ? 'disabled title="Forced while xLights is unavailable"' : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
+        </div>
+        <hr />
+        <h3>Application Health</h3>
+        <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
+        <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">File Dialog Bridge</div><div>${state.health.desktopFileDialogReady ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
+        <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "not reported"}</div></div>
+        <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
+        <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
+        <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
+        <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>
+      </section>
     </section>
   `;
 }
@@ -3330,65 +4799,133 @@ function historyScreen() {
 }
 
 function metadataScreen() {
-  const models = state.models || [];
-  const modelOptions = models
-    .map((m) => ({ id: modelStableId(m), name: modelDisplayName(m) }))
-    .filter((m) => m.id);
+  const hasLoadedSubmodels = (state.submodels || []).length > 0;
+  const submodelsAvailable = hasLoadedSubmodels;
+  const metadataTargets = buildMetadataTargets({ includeSubmodels: submodelsAvailable });
+  const modelOptions = metadataTargets
+    .map((target) => ({ id: target.id, name: target.displayName, raw: target }))
+    .filter((target) => target.id);
   const assignments = state.metadata?.assignments || [];
   const orphans = getMetadataOrphans();
-  const tags = state.metadata?.tags || [];
-  const filterText = (state.ui.modelFilterText || "").trim().toLowerCase();
-  const filteredModels = filterText
-    ? models.filter((m) => {
-        const name = (m?.name || "").toLowerCase();
-        const type = (m?.type || "").toLowerCase();
-        return name.includes(filterText) || type.includes(filterText);
-      })
-    : models;
+  const tags = getMetadataTagRecords();
+  const assignmentByTargetId = new Map(assignments.map((a) => [String(a.targetId), a]));
+  const nameFilter = String(state.ui.metadataFilterName || "");
+  const typeFilter = String(state.ui.metadataFilterType || "");
+  const tagsFilter = String(state.ui.metadataFilterTags || "");
+  const submodelBanner = state.health?.submodelDiscoveryError
+    ? `Submodels unavailable: ${state.health.submodelDiscoveryError}`
+    : "No submodels found in current show data.";
+  const filteredModels = modelOptions.filter((m) => {
+    const rowName = (m?.raw?.displayName || "").toLowerCase();
+    const rowType = (m?.raw?.type || "").toLowerCase();
+    const assignment = assignmentByTargetId.get(String(m.id));
+    const rowTags = Array.isArray(assignment?.tags) ? assignment.tags.join(", ").toLowerCase() : "";
+    if (!matchesMetadataFilterValue(rowName, nameFilter)) return false;
+    if (!matchesMetadataFilterValue(rowType, typeFilter)) return false;
+    if (!matchesMetadataFilterValue(rowTags, tagsFilter)) return false;
+    return true;
+  });
+  const submodelCount = modelOptions.filter((target) => target.raw.type === "submodel").length;
+  const selectedIds = new Set(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds));
+  const selectedCount = selectedIds.size;
+  const selectedEditorTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags);
   return `
-    <div class="screen-grid">
-      <section class="card">
-        <h3>Tag Library</h3>
-        <ul class="list">
-          ${
-            tags.length
-              ? tags.map((tag) => `<li>${tag} <button data-remove-tag="${tag.replace(/\"/g, "&quot;")}">Remove</button></li>`).join("")
-              : "<li>No tags yet.</li>"
-          }
-        </ul>
-        <div class="field"><label>Add tag</label><input id="metadata-new-tag" value="${state.ui.metadataNewTag || ""}" placeholder="new tag" /></div>
-        <button id="metadata-add-tag">Add Tag</button>
-      </section>
-      <section class="card">
-        <h3>Context Assignment</h3>
-        <div class="field">
-          <label>Target</label>
-          <select id="metadata-target-id">
-            <option value="">Select model/group...</option>
-            ${modelOptions
-              .map(
-                (m) =>
-                  `<option value="${m.id.replace(/\"/g, "&quot;")}" ${state.ui.metadataTargetId === m.id ? "selected" : ""}>${m.name}</option>`
-              )
-              .join("")}
-          </select>
+    <div class="screen-grid metadata-workspace">
+      <section class="card metadata-panel">
+        <h3>Tag Manager</h3>
+        <div class="field" style="margin-top:10px;">
+          <label>Operation Tags</label>
+          <div class="metadata-grid-wrap metadata-tag-grid-wrap">
+            <table class="metadata-grid metadata-tag-grid">
+              <thead>
+                <tr>
+                  <th style="width:42px;">Use</th>
+                  <th style="width:220px;">Tag</th>
+                  <th>Description</th>
+                  <th style="width:70px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="new-tag-row">
+                  <td></td>
+                  <td><input id="metadata-new-tag" value="${(state.ui.metadataNewTag || "").replace(/"/g, "&quot;")}" placeholder="new tag" /></td>
+                  <td><input id="metadata-new-tag-description" value="${(state.ui.metadataNewTagDescription || "").replace(/"/g, "&quot;")}" placeholder="description (optional)" /></td>
+                  <td><button id="metadata-add-tag">Add</button></td>
+                </tr>
+                ${
+                  tags.length
+                    ? tags
+                        .map((tag) => {
+                          const safeTag = String(tag.name).replace(/\"/g, "&quot;");
+                          const checked = selectedEditorTags.includes(String(tag.name)) ? "checked" : "";
+                          return `<tr>
+                            <td><input type="checkbox" data-metadata-tag-toggle="${safeTag}" ${checked} /></td>
+                            <td>${String(tag.name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                            <td><input data-metadata-tag-description="${safeTag}" value="${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="description" /></td>
+                            <td><button data-remove-tag="${safeTag}">Delete</button></td>
+                          </tr>`;
+                        })
+                        .join("")
+                    : `<tr><td colspan="4">No tags yet.</td></tr>`
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="field"><label>Role</label><select id="metadata-role"><option value="support" ${state.ui.metadataRole === "support" ? "selected" : ""}>support</option><option value="focal" ${state.ui.metadataRole === "focal" ? "selected" : ""}>focal</option><option value="accent" ${state.ui.metadataRole === "accent" ? "selected" : ""}>accent</option></select></div>
-        <div class="field"><label>Behavior</label><select id="metadata-behavior"><option value="steady" ${state.ui.metadataBehavior === "steady" ? "selected" : ""}>steady</option><option value="pulse" ${state.ui.metadataBehavior === "pulse" ? "selected" : ""}>pulse</option><option value="swell" ${state.ui.metadataBehavior === "swell" ? "selected" : ""}>swell</option></select></div>
-        <div class="field"><label>Primary Tag (optional)</label><input id="metadata-tag-draft" value="${state.ui.metadataTagDraft || ""}" placeholder="tag" /></div>
-        <button id="metadata-apply-assignment">Apply</button>
-        <ul class="list" style="margin-top:10px;">
-          ${
-            assignments.length
-              ? assignments
-                  .map(
-                    (a) =>
-                      `<li><strong>${a.targetName || a.targetId}</strong> | role:${a.role || "-"} | behavior:${a.behavior || "-"}${(a.tags || []).length ? ` | tags:${a.tags.join(",")}` : ""} <button data-remove-assignment="${String(a.targetId).replace(/\"/g, "&quot;")}">Remove</button></li>`
-                  )
-                  .join("")
-              : "<li>No assignments yet.</li>"
-          }
-        </ul>
+        <div class="row">
+          <button id="metadata-apply-selected-tags">Apply Tags To Selected</button>
+          <button id="metadata-remove-selected-tags">Remove Tags From Selected</button>
+          <button id="metadata-clear-tags">Clear Tag Picks</button>
+          <span class="banner">Selected: ${selectedCount}</span>
+        </div>
+        <hr />
+        <h3>Element Metadata Grid</h3>
+        <div class="row">
+          <button id="refresh-models">Refresh Models</button>
+          <button id="metadata-select-visible">Select Visible</button>
+          <button id="metadata-clear-selection">Clear Selection</button>
+          <span class="banner">Targets: ${modelOptions.length} total (${submodelCount} submodels)</span>
+        </div>
+        ${submodelsAvailable ? "" : `<p class="banner">${submodelBanner.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}
+        <div class="metadata-grid-wrap metadata-targets-wrap">
+          <table class="metadata-grid metadata-target-grid">
+            <thead>
+              <tr>
+                <th style="width:36px;">Sel</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Tags</th>
+              </tr>
+              <tr class="metadata-filter-row">
+                <th></th>
+                <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
+                <th><input id="metadata-filter-type" value="${(state.ui.metadataFilterType || "").replace(/"/g, "&quot;")}" placeholder="type (comma-separated)..." /></th>
+                <th><input id="metadata-filter-tags" value="${(state.ui.metadataFilterTags || "").replace(/"/g, "&quot;")}" placeholder="tags (comma-separated)..." /></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                filteredModels.length
+                  ? filteredModels
+                      .slice(0, 200)
+                      .map((m) => {
+                        const type = String(m?.raw?.type || "");
+                        const a = assignmentByTargetId.get(String(m.id));
+                        const tagList = Array.isArray(a?.tags) && a.tags.length ? a.tags.join(", ") : "-";
+                        const selected = selectedIds.has(String(m.id)) ? "checked" : "";
+                        return `<tr>
+                          <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${selected} /></td>
+                          <td>${(m.raw?.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                          <td>${type.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                          <td>${tagList.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                        </tr>`;
+                      })
+                      .join("")
+                  : `<tr><td colspan="4">No targets found.</td></tr>`
+              }
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
     <section class="card" style="margin-top:12px;">
@@ -3419,36 +4956,13 @@ function metadataScreen() {
         }
       </ul>
     </section>
-
-    <section class="card" style="margin-top:12px;">
-      <h3>Live Models (${filteredModels.length}/${models.length})</h3>
-      <div class="field">
-        <label>Model Filter</label>
-        <input id="model-filter-input" value="${state.ui.modelFilterText || ""}" placeholder="Search by name or type..." />
-      </div>
-      <div class="row">
-        <button id="refresh-models">Refresh Models</button>
-      </div>
-      <ul class="list">
-        ${
-          filteredModels.length
-            ? filteredModels
-                .slice(0, 40)
-                .map(
-                  (m) =>
-                    `<li><strong>${m.name || "(unnamed)"}</strong> ${m.type ? `(${m.type})` : ""} <button data-insert-model="${(m.name || "").replace(/\"/g, "&quot;")}">Insert Into Draft</button></li>`
-                )
-                .join("")
-            : "<li>No models loaded. Use Refresh/Health check.</li>"
-        }
-      </ul>
-    </section>
   `;
 }
 
 function screenContent() {
   if (state.route === "project") return projectScreen();
   if (state.route === "sequence") return sequenceScreen();
+  if (state.route === "inspiration") return inspirationScreen();
   if (state.route === "design") return designScreen();
   if (state.route === "history") return historyScreen();
   return metadataScreen();
@@ -3538,20 +5052,19 @@ function bindEvents() {
     btn.addEventListener("click", () => setRoute(btn.dataset.route));
   });
 
-  const refreshBtn = app.querySelector("#refresh-btn");
-  if (refreshBtn) refreshBtn.addEventListener("click", onRefresh);
+  const toggleNavBtn = app.querySelector("#toggle-nav");
+  if (toggleNavBtn) {
+    toggleNavBtn.addEventListener("click", () => {
+      state.ui.navCollapsed = !Boolean(state.ui.navCollapsed);
+      persist();
+      render();
+    });
+  }
 
-  const openDiagnosticsBtn = app.querySelector("#open-diagnostics");
-  if (openDiagnosticsBtn) openDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(true));
-
-  const openJobsBtn = app.querySelector("#open-jobs");
-  if (openJobsBtn) openJobsBtn.addEventListener("click", () => toggleJobs(true));
-
-  const statusViewDetailsBtn = app.querySelector("#status-view-details");
-  if (statusViewDetailsBtn) statusViewDetailsBtn.addEventListener("click", () => toggleDiagnostics(true));
-
-  const closeDiagnosticsBtn = app.querySelector("#close-diagnostics");
-  if (closeDiagnosticsBtn) closeDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(false));
+  const toggleFooterDiagnosticsBtn = app.querySelector("#toggle-footer-diagnostics");
+  if (toggleFooterDiagnosticsBtn) {
+    toggleFooterDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics());
+  }
 
   const closeJobsBtn = app.querySelector("#close-jobs");
   if (closeJobsBtn) closeJobsBtn.addEventListener("click", () => toggleJobs(false));
@@ -3591,11 +5104,14 @@ function bindEvents() {
     });
   });
 
-  const applyBtn = app.querySelector("#apply");
-  if (applyBtn) applyBtn.addEventListener("click", onApply);
+  const applySelectedBtn = app.querySelector("#apply-selected");
+  if (applySelectedBtn) applySelectedBtn.addEventListener("click", onApplySelected);
 
-  const mobileApplyBtn = app.querySelector("#mobile-apply");
-  if (mobileApplyBtn) mobileApplyBtn.addEventListener("click", onApply);
+  const applyAllBtn = app.querySelector("#apply-all");
+  if (applyAllBtn) applyAllBtn.addEventListener("click", onApplyAll);
+
+  const mobileApplyAllBtn = app.querySelector("#mobile-apply-all");
+  if (mobileApplyAllBtn) mobileApplyAllBtn.addEventListener("click", onApplyAll);
 
   const openDetailsBtn = app.querySelector("#open-details");
   if (openDetailsBtn) openDetailsBtn.addEventListener("click", openDetails);
@@ -3604,7 +5120,7 @@ function bindEvents() {
   if (closeDetailsBtn) closeDetailsBtn.addEventListener("click", closeDetails);
 
   const drawerApplyBtn = app.querySelector("#drawer-apply");
-  if (drawerApplyBtn) drawerApplyBtn.addEventListener("click", onApply);
+  if (drawerApplyBtn) drawerApplyBtn.addEventListener("click", onApplyAll);
 
   const splitSectionBtn = app.querySelector("#split-section");
   if (splitSectionBtn) splitSectionBtn.addEventListener("click", splitBySection);
@@ -3618,38 +5134,109 @@ function bindEvents() {
   const planBtn = app.querySelector("#plan-toggle");
   if (planBtn) planBtn.addEventListener("click", onTogglePlanOnly);
 
+  const openSettingsBtn = app.querySelector("#open-settings");
+  if (openSettingsBtn) {
+    openSettingsBtn.addEventListener("click", async () => {
+      state.ui.settingsOpen = true;
+      persist();
+      render();
+      if (state.flags.xlightsConnected && !String(state.health.xlightsVersion || "").trim()) {
+        await onCheckHealth();
+      }
+    });
+  }
+
+  const closeSettingsBtn = app.querySelector("#close-settings");
+  if (closeSettingsBtn) {
+    closeSettingsBtn.addEventListener("click", () => {
+      state.ui.settingsOpen = false;
+      persist();
+      render();
+    });
+  }
+
+  const settingsOverlay = app.querySelector("#settings-overlay");
+  if (settingsOverlay) {
+    settingsOverlay.addEventListener("click", (event) => {
+      if (event.target === settingsOverlay) {
+        state.ui.settingsOpen = false;
+        persist();
+        render();
+      }
+    });
+  }
+
   const connectionBtn = app.querySelector("#test-connection");
   if (connectionBtn) connectionBtn.addEventListener("click", onTestConnection);
+
+  const endpointInput = app.querySelector("#endpoint-input");
+  if (endpointInput) {
+    endpointInput.addEventListener("change", () => {
+      state.endpoint = normalizeConfiguredEndpoint(endpointInput.value);
+      persist();
+    });
+  }
+
+  const confirmModeInput = app.querySelector("#confirm-mode-input");
+  if (confirmModeInput) {
+    confirmModeInput.addEventListener("change", () => {
+      state.safety.applyConfirmMode = confirmModeInput.value;
+      persist();
+    });
+  }
+
+  const thresholdInput = app.querySelector("#threshold-input");
+  if (thresholdInput) {
+    thresholdInput.addEventListener("change", () => {
+      const parsed = Number.parseInt(thresholdInput.value, 10);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        state.safety.largeChangeThreshold = parsed;
+        persist();
+      }
+    });
+  }
+
+  const sequenceSwitchPolicyInput = app.querySelector("#sequence-switch-policy-input");
+  if (sequenceSwitchPolicyInput) {
+    sequenceSwitchPolicyInput.addEventListener("change", () => {
+      state.safety.sequenceSwitchUnsavedPolicy =
+        sequenceSwitchPolicyInput.value === "discard-unsaved" ? "discard-unsaved" : "save-if-needed";
+      persist();
+    });
+  }
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
 
-  const openSequenceRouteBtn = app.querySelector("#open-sequence-route");
-  if (openSequenceRouteBtn) openSequenceRouteBtn.addEventListener("click", () => setRoute("sequence"));
+  const openSelectedProjectBtn = app.querySelector("#open-selected-project");
+  if (openSelectedProjectBtn) openSelectedProjectBtn.addEventListener("click", onOpenSelectedProject);
 
-  const loadProjectBtn = app.querySelector("#load-project");
-  if (loadProjectBtn) loadProjectBtn.addEventListener("click", onLoadProjectSnapshot);
+  const newProjectBtn = app.querySelector("#new-project");
+  if (newProjectBtn) newProjectBtn.addEventListener("click", onCreateNewProject);
+
+  const saveProjectAsBtn = app.querySelector("#save-project-as");
+  if (saveProjectAsBtn) saveProjectAsBtn.addEventListener("click", onSaveProjectAs);
 
   const resetProjectBtn = app.querySelector("#reset-project");
   if (resetProjectBtn) resetProjectBtn.addEventListener("click", onResetProjectWorkspace);
 
+  const projectConceptInput = app.querySelector("#project-concept-input");
+  if (projectConceptInput) {
+    projectConceptInput.addEventListener("input", () => {
+      state.projectConcept = projectConceptInput.value;
+      saveCurrentProjectSnapshot();
+      persist();
+    });
+  }
+
   const openSequenceBtn = app.querySelector("#open-sequence");
-  if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSequence);
+  if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSelectedSequence);
 
-  const restoreLastBackupBtn = app.querySelector("#restore-last-backup");
-  if (restoreLastBackupBtn) restoreLastBackupBtn.addEventListener("click", onRestoreLastBackup);
+  const sequenceCatalogSelect = app.querySelector("#sequence-catalog-select");
+  if (sequenceCatalogSelect) sequenceCatalogSelect.addEventListener("change", onSelectCatalogSequence);
 
-  const closeSequenceBtn = app.querySelector("#close-sequence");
-  if (closeSequenceBtn) closeSequenceBtn.addEventListener("click", onCloseSequence);
-
-  const browseSequenceBtn = app.querySelector("#browse-sequence-path");
-  if (browseSequenceBtn) browseSequenceBtn.addEventListener("click", onBrowseExistingSequencePath);
-
-  const browseNewSequenceBtn = app.querySelector("#browse-new-sequence-path");
-  if (browseNewSequenceBtn) browseNewSequenceBtn.addEventListener("click", onBrowseNewSequencePath);
-
-  const browseAudioBtn = app.querySelector("#browse-audio-path");
-  if (browseAudioBtn) browseAudioBtn.addEventListener("click", onBrowseAudioPath);
+  const browseShowFolderBtn = app.querySelector("#browse-showfolder");
+  if (browseShowFolderBtn) browseShowFolderBtn.addEventListener("click", onBrowseShowFolder);
 
   const newSessionBtn = app.querySelector("#new-session");
   if (newSessionBtn) newSessionBtn.addEventListener("click", onNewSession);
@@ -3681,11 +5268,33 @@ function bindEvents() {
     });
   }
 
+  const creativeBriefTextInput = app.querySelector("#creative-brief-text");
+  if (creativeBriefTextInput) {
+    creativeBriefTextInput.addEventListener("input", () => {
+      state.creative.briefText = creativeBriefTextInput.value;
+      persist();
+    });
+  }
+
   const addReferenceMediaBtn = app.querySelector("#add-reference-media");
   if (addReferenceMediaBtn) addReferenceMediaBtn.addEventListener("click", onReferenceMediaSelected);
 
+  const addPaletteSwatchBtn = app.querySelector("#add-palette-swatch");
+  if (addPaletteSwatchBtn) addPaletteSwatchBtn.addEventListener("click", addPaletteSwatch);
+
   const runCreativeAnalysisBtn = app.querySelector("#run-creative-analysis");
   if (runCreativeAnalysisBtn) runCreativeAnalysisBtn.addEventListener("click", onRunCreativeAnalysis);
+
+  const analyzeAudioBtn = app.querySelector("#analyze-audio");
+  if (analyzeAudioBtn) analyzeAudioBtn.addEventListener("click", onAnalyzeAudio);
+
+  const audioAnalysisSummaryInput = app.querySelector("#audio-analysis-summary");
+  if (audioAnalysisSummaryInput) {
+    audioAnalysisSummaryInput.addEventListener("input", () => {
+      state.audioAnalysis.summary = audioAnalysisSummaryInput.value;
+      persist();
+    });
+  }
 
   const regenerateCreativeBriefBtn = app.querySelector("#regenerate-creative-brief");
   if (regenerateCreativeBriefBtn) regenerateCreativeBriefBtn.addEventListener("click", onRegenerateCreativeBrief);
@@ -3708,15 +5317,68 @@ function bindEvents() {
     btn.addEventListener("click", () => onToggleReferenceEligible(btn.dataset.refToggleEligible));
   });
 
+  app.querySelectorAll("[data-palette-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => removePaletteSwatch(btn.dataset.paletteRemove));
+  });
+
   const checkHealthBtn = app.querySelector("#check-health");
   if (checkHealthBtn) checkHealthBtn.addEventListener("click", onCheckHealth);
 
   const refreshModelsBtn = app.querySelector("#refresh-models");
   if (refreshModelsBtn) refreshModelsBtn.addEventListener("click", onRefreshModels);
 
-  const modelFilterInput = app.querySelector("#model-filter-input");
-  if (modelFilterInput) {
-    modelFilterInput.addEventListener("input", () => setModelFilterText(modelFilterInput.value));
+  const metadataFilterNameInput = app.querySelector("#metadata-filter-name");
+  if (metadataFilterNameInput) {
+    const commitNameFilter = () => {
+      const next = metadataFilterNameInput.value;
+      if (next === state.ui.metadataFilterName) return;
+      state.ui.metadataFilterName = next;
+      persist();
+      render();
+    };
+    metadataFilterNameInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commitNameFilter();
+    });
+    metadataFilterNameInput.addEventListener("change", commitNameFilter);
+    metadataFilterNameInput.addEventListener("blur", commitNameFilter);
+  }
+
+  const metadataFilterTypeInput = app.querySelector("#metadata-filter-type");
+  if (metadataFilterTypeInput) {
+    const commitTypeFilter = () => {
+      const next = metadataFilterTypeInput.value;
+      if (next === state.ui.metadataFilterType) return;
+      state.ui.metadataFilterType = next;
+      persist();
+      render();
+    };
+    metadataFilterTypeInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commitTypeFilter();
+    });
+    metadataFilterTypeInput.addEventListener("change", commitTypeFilter);
+    metadataFilterTypeInput.addEventListener("blur", commitTypeFilter);
+  }
+
+  const metadataFilterTagsInput = app.querySelector("#metadata-filter-tags");
+  if (metadataFilterTagsInput) {
+    const commitTagsFilter = () => {
+      const next = metadataFilterTagsInput.value;
+      if (next === state.ui.metadataFilterTags) return;
+      state.ui.metadataFilterTags = next;
+      persist();
+      render();
+    };
+    metadataFilterTagsInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commitTagsFilter();
+    });
+    metadataFilterTagsInput.addEventListener("change", commitTagsFilter);
+    metadataFilterTagsInput.addEventListener("blur", commitTagsFilter);
   }
 
   const metadataNewTagInput = app.querySelector("#metadata-new-tag");
@@ -3727,43 +5389,65 @@ function bindEvents() {
     });
   }
 
+  const metadataNewTagDescriptionInput = app.querySelector("#metadata-new-tag-description");
+  if (metadataNewTagDescriptionInput) {
+    metadataNewTagDescriptionInput.addEventListener("input", () => {
+      state.ui.metadataNewTagDescription = metadataNewTagDescriptionInput.value;
+      persist();
+    });
+  }
+
   const metadataAddTagBtn = app.querySelector("#metadata-add-tag");
   if (metadataAddTagBtn) metadataAddTagBtn.addEventListener("click", addMetadataTag);
 
-  const metadataTargetSelect = app.querySelector("#metadata-target-id");
-  if (metadataTargetSelect) {
-    metadataTargetSelect.addEventListener("change", () => {
-      state.ui.metadataTargetId = metadataTargetSelect.value;
-      persist();
+  const metadataApplySelectedBtn = app.querySelector("#metadata-apply-selected-tags");
+  if (metadataApplySelectedBtn) metadataApplySelectedBtn.addEventListener("click", applyTagsToSelectedMetadataTargets);
+
+  const metadataRemoveSelectedBtn = app.querySelector("#metadata-remove-selected-tags");
+  if (metadataRemoveSelectedBtn) metadataRemoveSelectedBtn.addEventListener("click", removeTagsFromSelectedMetadataTargets);
+
+  const metadataClearTagsBtn = app.querySelector("#metadata-clear-tags");
+  if (metadataClearTagsBtn) metadataClearTagsBtn.addEventListener("click", clearMetadataSelectedTags);
+
+  const metadataSelectVisibleBtn = app.querySelector("#metadata-select-visible");
+  if (metadataSelectVisibleBtn) {
+    metadataSelectVisibleBtn.addEventListener("click", () => {
+      const visibleIds = Array.from(app.querySelectorAll("[data-metadata-select]"))
+        .map((node) => String(node.dataset.metadataSelect || "").trim())
+        .filter(Boolean);
+      selectAllMetadataTargets(visibleIds);
     });
   }
 
-  const metadataRoleSelect = app.querySelector("#metadata-role");
-  if (metadataRoleSelect) {
-    metadataRoleSelect.addEventListener("change", () => {
-      state.ui.metadataRole = metadataRoleSelect.value;
-      persist();
-    });
-  }
+  const metadataClearSelectionBtn = app.querySelector("#metadata-clear-selection");
+  if (metadataClearSelectionBtn) metadataClearSelectionBtn.addEventListener("click", clearMetadataSelection);
 
-  const metadataBehaviorSelect = app.querySelector("#metadata-behavior");
-  if (metadataBehaviorSelect) {
-    metadataBehaviorSelect.addEventListener("change", () => {
-      state.ui.metadataBehavior = metadataBehaviorSelect.value;
-      persist();
+  app.querySelectorAll("[data-metadata-tag-toggle]").forEach((input) => {
+    input.addEventListener("change", () => {
+      toggleMetadataSelectedTag(input.dataset.metadataTagToggle);
+      render();
     });
-  }
+  });
 
-  const metadataTagDraftInput = app.querySelector("#metadata-tag-draft");
-  if (metadataTagDraftInput) {
-    metadataTagDraftInput.addEventListener("input", () => {
-      state.ui.metadataTagDraft = metadataTagDraftInput.value;
-      persist();
+  app.querySelectorAll("[data-metadata-tag-description]").forEach((input) => {
+    const commit = () => {
+      updateMetadataTagDescription(input.dataset.metadataTagDescription, input.value);
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commit();
     });
-  }
+  });
 
-  const metadataApplyBtn = app.querySelector("#metadata-apply-assignment");
-  if (metadataApplyBtn) metadataApplyBtn.addEventListener("click", applyMetadataAssignment);
+  app.querySelectorAll("[data-metadata-select]").forEach((input) => {
+    input.addEventListener("change", () => {
+      toggleMetadataSelectionId(input.dataset.metadataSelect);
+      render();
+    });
+  });
 
   app.querySelectorAll("[data-remove-tag]").forEach((btn) => {
     btn.addEventListener("click", () => removeMetadataTag(btn.dataset.removeTag));
@@ -3789,22 +5473,6 @@ function bindEvents() {
     refreshRecentsBtn.addEventListener("click", () => {
       setStatus("info", "Recent sequence list refreshed.");
       render();
-    });
-  }
-
-  const seqPathInput = app.querySelector("#sequence-path-input");
-  if (seqPathInput) {
-    seqPathInput.addEventListener("change", () => {
-      state.sequencePathInput = seqPathInput.value.trim() || state.sequencePathInput;
-      persist();
-    });
-  }
-
-  const newSeqPathInput = app.querySelector("#new-sequence-path-input");
-  if (newSeqPathInput) {
-    newSeqPathInput.addEventListener("change", () => {
-      state.newSequencePathInput = newSeqPathInput.value.trim() || state.newSequencePathInput;
-      persist();
     });
   }
 
@@ -3885,15 +5553,6 @@ function bindEvents() {
     });
   }
 
-  const sequenceModeInput = app.querySelector("#sequence-mode-input");
-  if (sequenceModeInput) {
-    sequenceModeInput.addEventListener("change", () => {
-      state.ui.sequenceMode = sequenceModeInput.value === "new" ? "new" : "existing";
-      persist();
-      render();
-    });
-  }
-
   const staleRefreshBtn = app.querySelector("#status-refresh");
   if (staleRefreshBtn) staleRefreshBtn.addEventListener("click", onRefresh);
 
@@ -3923,20 +5582,52 @@ function bindEvents() {
     btn.addEventListener("click", () => setDesignTab(btn.dataset.designTab));
   });
 
-  const addProposedLineBtn = app.querySelector("#add-proposed-line");
-  if (addProposedLineBtn) addProposedLineBtn.addEventListener("click", addProposedLine);
-
-  const editSelectedProposedBtn = app.querySelector("#edit-selected-proposed");
-  if (editSelectedProposedBtn) editSelectedProposedBtn.addEventListener("click", onEditSelectedProposed);
-
   const removeSelectedProposedBtn = app.querySelector("#remove-selected-proposed");
   if (removeSelectedProposedBtn) removeSelectedProposedBtn.addEventListener("click", onRemoveSelectedProposed);
 
-  const showMoreProposedBtn = app.querySelector("#show-more-proposed");
-  if (showMoreProposedBtn) showMoreProposedBtn.addEventListener("click", onShowMoreProposed);
+  const removeAllProposedBtn = app.querySelector("#remove-all-proposed");
+  if (removeAllProposedBtn) removeAllProposedBtn.addEventListener("click", onRemoveAllProposed);
 
-  const showLessProposedBtn = app.querySelector("#show-less-proposed");
-  if (showLessProposedBtn) showLessProposedBtn.addEventListener("click", onShowLessProposed);
+  const proposedPayloadDetails = app.querySelector(".proposed-payload-footer");
+  if (proposedPayloadDetails) {
+    proposedPayloadDetails.addEventListener("toggle", () => {
+      state.ui.proposedPayloadOpen = proposedPayloadDetails.open;
+      persist();
+    });
+  }
+
+  app.querySelectorAll("[data-proposed-select]").forEach((input) => {
+    input.addEventListener("change", () => toggleProposedSelection(input.dataset.proposedSelect));
+  });
+
+  app.querySelectorAll("[data-proposed-delete]").forEach((btn) => {
+    btn.addEventListener("click", () => removeProposedLine(Number.parseInt(btn.dataset.proposedDelete, 10)));
+  });
+
+  app.querySelectorAll("[data-proposed-focus]").forEach((cell) => {
+    cell.addEventListener("click", () => toggleProposedSelection(cell.dataset.proposedFocus));
+  });
+
+  app.querySelectorAll("[data-proposed-tag-type]").forEach((tag) => {
+    tag.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const type = String(tag.dataset.proposedTagType || "").trim();
+      const value = String(tag.dataset.proposedTagValue || "").trim();
+      if (!type || !value) return;
+      if (type === "section") {
+        state.ui.chatDraft = `Focus updates on section "${value}". `;
+        setStatus("info", `Section tag selected: ${value}`);
+      } else if (type === "model") {
+        state.ui.chatDraft = `Focus updates on model "${value}". `;
+        setStatus("info", `Model tag selected: ${value}`);
+      } else {
+        state.ui.chatDraft = `${value} `;
+      }
+      persist();
+      render();
+    });
+  });
 
   app.querySelectorAll("[data-proposed-input]").forEach((input) => {
     input.addEventListener("change", () =>
@@ -3984,56 +5675,98 @@ function bindEvents() {
 
 function render() {
   const diagCounts = getDiagnosticsCounts();
-  const jobCounts = getJobCounts();
-  const staleActions = state.flags.proposalStale
-    ? `
-      <button id="status-refresh">Rebase/Refresh</button>
-      <button id="status-regenerate">Regenerate</button>
-      <button id="status-cancel">Cancel Draft</button>
-    `
-    : `<button id="status-view-details">View Details</button>`;
+  const filter = state.ui.diagnosticsFilter;
+  const rows = state.diagnostics || [];
+  const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
 
   app.innerHTML = `
-    <div class="app-shell">
-      <header class="header">
-        <div><strong>${state.projectName}</strong> | ${state.activeSequence}</div>
-        <div class="header-badge">xLights: ${state.flags.xlightsConnected ? "Connected" : "Disconnected"}</div>
-        <div class="header-badge">Revision: ${state.revision}</div>
-        <button id="refresh-btn">Refresh</button>
-        <button>Review in xLights</button>
-        <button id="open-diagnostics">Diagnostics (${diagCounts.total})</button>
-        <button id="open-jobs">Jobs (${jobCounts.running}/${jobCounts.total})</button>
-      </header>
-
-      <div class="status-bar">
-        <div>
-          <span class="status-tag ${state.status.level}">${state.status.level}</span>
-          <span>${state.status.text}</span>
-        </div>
-        <div class="row">${staleActions}</div>
-      </div>
-
-      <div class="main-grid">
-        <nav class="nav">
-          ${navButton("project", "Project")}
-          ${navButton("sequence", "Sequence")}
-          ${navButton("design", "Design")}
-          ${navButton("history", "History")}
-          ${navButton("metadata", "Metadata")}
+    <div class="app-shell ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
+      <div class="main-grid ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
+        <nav class="nav ${state.ui.navCollapsed ? "collapsed" : ""}">
+          <div class="nav-header">
+            <button id="toggle-nav" class="nav-toggle-btn" title="${state.ui.navCollapsed ? "Expand navigation" : "Collapse navigation"}"><span class="nav-icon">${state.ui.navCollapsed ? "›" : "‹"}</span></button>
+            <div class="nav-project-name">${state.projectName || "Project"}</div>
+          </div>
+          <div class="nav-links">
+            ${navButton("project", "Project")}
+            ${navButton("sequence", "Sequence")}
+            ${navButton("inspiration", "Inspiration")}
+            ${navButton("design", "Design")}
+            ${navButton("history", "History")}
+            ${navButton("metadata", "Metadata")}
+          </div>
         </nav>
 
-        <main class="content">
-          ${screenContent()}
-          ${state.route === "design" ? detailsDrawer() : ""}
-          ${diagnosticsPanel()}
-          ${jobsPanel()}
-        </main>
+        <div class="main-shell">
+          <header class="header">
+            <div class="header-sequence"><strong>${state.activeSequence || "No Sequence Open"}</strong></div>
+            <div class="header-badge">xLights: ${state.flags.xlightsConnected ? "Connected" : "Disconnected"}</div>
+          </header>
+
+          <div class="main-body">
+            <main class="content">
+              ${screenContent()}
+              ${state.route === "design" ? detailsDrawer() : ""}
+              ${settingsDrawer()}
+              ${jobsPanel()}
+            </main>
+            ${persistentCoachPanel()}
+          </div>
+
+        </div>
+      </div>
+
+      <div class="bottom-input-row ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
+        <div class="bottom-nav-settings">
+          <button id="open-settings" title="Application Settings"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></button>
+        </div>
+        ${globalChatBar()}
       </div>
 
       <footer class="footer">
-        <span>Last sync: ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-        <span>Background jobs: ${jobCounts.running} running / ${jobCounts.total} tracked</span>
-        <span>Diagnostics: ${diagCounts.warning} warning, ${diagCounts.actionRequired} action-required</span>
+        <div class="footer-summary">
+          <button id="toggle-footer-diagnostics">${state.ui.diagnosticsOpen ? "Hide" : "Show"} Diagnostics</button>
+          <span>Diagnostics: ${diagCounts.total} total</span>
+          <span>${diagCounts.warning} warning</span>
+          <span>${diagCounts.actionRequired} action-required</span>
+        </div>
+        ${
+          state.ui.diagnosticsOpen
+            ? `
+          <div class="footer-diagnostics">
+            <div class="row" style="justify-content:space-between;">
+              <div class="row">
+                <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${diagCounts.total})</button>
+                <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${diagCounts.warning})</button>
+                <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${diagCounts.actionRequired})</button>
+              </div>
+              <div class="row">
+                <button id="export-diagnostics">Export</button>
+                <button id="clear-diagnostics">Clear</button>
+              </div>
+            </div>
+            ${
+              filteredRows.length
+                ? `
+                <ul class="list">
+                  ${filteredRows
+                    .map(
+                      (d) => `
+                    <li>
+                      <strong>[${d.level}]</strong> ${d.text}
+                      ${d.details ? `<pre class="diag-details">${d.details}</pre>` : ""}
+                    </li>
+                  `
+                    )
+                    .join("")}
+                </ul>
+              `
+                : '<p class="banner">No diagnostics for current filter.</p>'
+            }
+          </div>
+        `
+            : ""
+        }
       </footer>
     </div>
   `;
@@ -4086,4 +5819,16 @@ render();
 })();
 setInterval(pollRevision, 8000);
 setInterval(pollJobs, 3000);
-setInterval(pollCompatibilityStatus, 60000);
+setInterval(pollCompatibilityStatus, CONNECTIVITY_POLL_MS);
+if (typeof window !== "undefined") {
+  window.addEventListener("focus", () => {
+    void syncOpenSequenceOnFocusReturn();
+  });
+}
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      void syncOpenSequenceOnFocusReturn();
+    }
+  });
+}

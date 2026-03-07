@@ -1,7 +1,7 @@
 # Acceptance Test Matrix: Full Sequencer Control
 
-Status: Updated after WP-9 harness evidence sync  
-Date: 2026-03-03
+Status: In Progress (Sprint 0 + WP-9 baseline)  
+Date: 2026-03-07
 
 ## 1) Sequence Lifecycle
 - `sequence.create` with valid params returns `200` and sequence metadata.
@@ -76,3 +76,32 @@ Date: 2026-03-03
 - `scripts/xlights-control/run-all.sh` must launch/open a live xLights endpoint before suite execution.
 - `run-all.sh` must complete green across suites `01..11` for release-candidate validation.
 - Harness failures must provide deterministic machine-readable per-suite artifacts and summary JSON.
+
+## 12) Sprint 0 Agent Contract Gates
+- Intent verb outside allowed v1 set (`analyze`, `propose_changes`, `refine_proposal`, `apply_approved_plan`) is rejected before planning.
+- `apply_approved_plan` without explicit user approval token/action is rejected.
+- Missing scope for apply (`targets` or explicit full-sequence confirmation) is rejected.
+- Missing `baseRevision` for apply is rejected.
+- In `create` mode, first major proposal is blocked until audio-analysis kickoff is complete:
+  - media read attempted
+  - section map produced
+  - tempo/time-signature/beats/bars timing data produced
+  - creative brief persisted for user review
+- Guided workflow prompts must be present before first major proposal:
+  - project concept/tone/goals capture
+  - sequence intent/constraints capture
+  - unresolved gaps surfaced as structured questions
+- Planner output for normal flows must include concrete sequencing decisions (targeting + effect strategy), not only restated user intent.
+- Agent must generate a viable first-pass plan from director-level prompts without requiring user-specified effect names.
+- When user does specify detailed effect preferences, planner should honor them as constraints/overrides.
+- Settings/form mutations requested by agent are blocked without explicit user confirmation action.
+- Agent settings mutations are limited to editable UI fields and must emit auditable before/after deltas.
+- Planner output must always include:
+  - `planId`
+  - `summary`
+  - `assumptions[]`
+  - `warnings[]`
+  - `estimatedImpact`
+  - `commands[]`
+- Empty `commands[]` on apply path is rejected with machine-readable validation error.
+- Any apply path must run `system.validateCommands` and fail closed on invalid result.

@@ -9,6 +9,7 @@ Source of truth: `standalone-app-requirements.md` section "Locked Desktop Archit
 - [x] Delivery model is explicitly "single packaged desktop app, no side runtime installs for users".
 - [x] Canonical desktop bridge contract is documented (`openFileDialog`, storage/file APIs as needed).
 - [x] Compatibility gate policy is locked (`xLights 2026.1+`, mutate-block on incompatibility).
+- [x] Initial-development rule is locked: no legacy/compatibility shims or dual-format fallbacks.
 - [x] Rollout policy is locked (macOS first, signed packages, updater required before broad rollout).
 
 Acceptance:

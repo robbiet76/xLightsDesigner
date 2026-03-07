@@ -447,6 +447,12 @@ Locked storage policy (high level):
 - Sequence-linked metadata stored adjacent to `.xsq` using same basename and Designer extension.
 - Designer reference media stored in sequence-scoped Designer media folder.
 
+Hard implementation rule for initial development:
+- Do not add legacy behavior or compatibility shims during initial development.
+- Do not introduce fallback schemas, dual-format project/metadata support, or transitional compatibility layers.
+- Fix root cause in the current approved contract instead of patching with compatibility logic.
+- Compatibility support may be evaluated only after first final release and requires explicit documented approval.
+
 ## 8) Implementation Steps (Execution Order)
 M0. Architecture freeze and contract update
 - Mark this decision as authoritative in spec index/docs.
