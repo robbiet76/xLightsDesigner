@@ -10,6 +10,10 @@ This runbook defines pre-release validation and release execution for xLightsDes
 - Candidate commit SHA.
 - Target channel (`preview` or `stable`).
 - Target xLights compatibility floor (`2026.1+`).
+- Cloud agent environment:
+  - `OPENAI_API_KEY` (required for conversation agent)
+  - `OPENAI_MODEL` (optional override; default configured in app)
+  - `OPENAI_BASE_URL` (optional; defaults to OpenAI public API)
 - Signed/notarized packaging credentials (when signing pipeline is enabled).
 - GitHub Actions workflow: `.github/workflows/xlightsdesigner-desktop-macos.yml`.
 - Repository secrets for signed path:

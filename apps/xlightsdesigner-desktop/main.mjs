@@ -13,6 +13,8 @@ const __dirname = path.dirname(__filename);
 const UI_URL = String(process.env.XLD_UI_URL || "").trim();
 const STATE_FILENAME = "xlightsdesigner-state.json";
 const AGENT_APPLY_LOG_FILENAME = "xlightsdesigner-agent-apply-log.jsonl";
+const OPENAI_BASE_URL = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").trim().replace(/\/+$/, "");
+const OPENAI_MODEL = String(process.env.OPENAI_MODEL || "gpt-4.1-mini").trim();
 const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
 const DEV_RENDERER_ENTRY = path.resolve(__dirname, "..", "xlightsdesigner-ui", "index.html");
 let mainWindow = null;
@@ -203,6 +205,86 @@ function agentApplyLogPath() {
   return path.join(app.getPath("userData"), AGENT_APPLY_LOG_FILENAME);
 }
 
+function getAgentConfig() {
+  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  return {
+    baseUrl: OPENAI_BASE_URL,
+    model: OPENAI_MODEL,
+    configured: Boolean(apiKey),
+    apiKey
+  };
+}
+
+function extractResponseText(body) {
+  if (typeof body?.output_text === "string" && body.output_text.trim()) return body.output_text.trim();
+  const output = Array.isArray(body?.output) ? body.output : [];
+  const textChunks = [];
+  for (const item of output) {
+    const content = Array.isArray(item?.content) ? item.content : [];
+    for (const c of content) {
+      if (c?.type === "output_text" && typeof c?.text === "string") textChunks.push(c.text);
+      if (c?.type === "text" && typeof c?.text === "string") textChunks.push(c.text);
+    }
+  }
+  return textChunks.join("\n").trim();
+}
+
+function parseAgentJson(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      const inner = raw.slice(start, end + 1);
+      try {
+        return JSON.parse(inner);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
+function normalizeConversationMessages(messages = []) {
+  const rows = Array.isArray(messages) ? messages : [];
+  const out = [];
+  for (const row of rows.slice(-24)) {
+    const roleRaw = String(row?.role || row?.who || "").trim().toLowerCase();
+    const content = String(row?.content || row?.text || "").trim();
+    if (!content) continue;
+    const role = roleRaw === "assistant" || roleRaw === "agent"
+      ? "assistant"
+      : roleRaw === "system"
+        ? "system"
+        : "user";
+    out.push({
+      role,
+      content: [{ type: "input_text", text: content }]
+    });
+  }
+  return out;
+}
+
+function buildAgentSystemPrompt(context = {}) {
+  const c = context && typeof context === "object" ? context : {};
+  return [
+    "You are xLights Designer Agent.",
+    "Role split: user is the creative director; you are the sequencing designer.",
+    "Be concise, practical, and collaborative. Ask targeted follow-up questions when intent is ambiguous.",
+    "Do not ask users to specify exact low-level effects unless needed for constraints.",
+    "Return only valid JSON with keys:",
+    "assistantMessage (string),",
+    "shouldGenerateProposal (boolean),",
+    "proposalIntent (string).",
+    "Set shouldGenerateProposal=true when user asks for sequence changes or refinements.",
+    `Context: ${JSON.stringify(c)}`
+  ].join("\n");
+}
+
 function readDesktopStatePayload() {
   const file = stateFilePath();
   if (!fs.existsSync(file)) return { localStateRaw: "", projectsStoreRaw: "" };
@@ -248,6 +330,104 @@ ipcMain.handle("xld:state:write", async (_event, payload = {}) => {
     return { ok: true };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:agent:health", async () => {
+  try {
+    const cfg = getAgentConfig();
+    return {
+      ok: true,
+      provider: "openai",
+      model: cfg.model,
+      configured: cfg.configured
+    };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
+  try {
+    const cfg = getAgentConfig();
+    if (!cfg.configured) {
+      return {
+        ok: false,
+        code: "AGENT_NOT_CONFIGURED",
+        error: "OPENAI_API_KEY is not set in desktop app environment."
+      };
+    }
+
+    const userMessage = String(payload?.userMessage || "").trim();
+    if (!userMessage) return { ok: false, error: "Missing userMessage" };
+    const context = payload?.context && typeof payload.context === "object" ? payload.context : {};
+    const messages = normalizeConversationMessages(payload?.messages || []);
+    const input = [
+      {
+        role: "system",
+        content: [{ type: "input_text", text: buildAgentSystemPrompt(context) }]
+      },
+      ...messages,
+      {
+        role: "user",
+        content: [{ type: "input_text", text: userMessage }]
+      }
+    ];
+
+    const body = {
+      model: cfg.model,
+      input
+    };
+
+    const response = await fetch(`${cfg.baseUrl}/responses`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cfg.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    const raw = await response.text();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = null;
+    }
+    if (!response.ok) {
+      const errMsg = parsed?.error?.message || raw || `HTTP ${response.status}`;
+      return {
+        ok: false,
+        code: "AGENT_UPSTREAM_ERROR",
+        error: String(errMsg)
+      };
+    }
+    const modelText = extractResponseText(parsed || {});
+    const json = parseAgentJson(modelText) || {};
+    const assistantMessage = String(json?.assistantMessage || modelText || "").trim();
+    const shouldGenerateProposal = Boolean(json?.shouldGenerateProposal);
+    const proposalIntent = String(json?.proposalIntent || userMessage).trim();
+    if (!assistantMessage) {
+      return {
+        ok: false,
+        code: "AGENT_EMPTY_RESPONSE",
+        error: "Agent returned an empty response."
+      };
+    }
+    return {
+      ok: true,
+      provider: "openai",
+      model: cfg.model,
+      assistantMessage,
+      shouldGenerateProposal,
+      proposalIntent
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      code: "AGENT_RUNTIME_ERROR",
+      error: String(err?.message || err)
+    };
   }
 });
 

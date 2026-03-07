@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld("xlightsDesignerDesktop", {
   writeAppState: (payload = {}) => ipcRenderer.invoke("xld:state:write", payload),
   openProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:open-file", payload),
   writeProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:write-file", payload),
+  getAgentHealth: () => ipcRenderer.invoke("xld:agent:health"),
+  runAgentConversation: (payload = {}) => ipcRenderer.invoke("xld:agent:chat", payload),
   appendAgentApplyLog: (payload = {}) => ipcRenderer.invoke("xld:agent-log:append", payload),
   readAgentApplyLog: (payload = {}) => ipcRenderer.invoke("xld:agent-log:read", payload),
   readSequenceSidecar: (payload = {}) => ipcRenderer.invoke("xld:sidecar:read", payload),

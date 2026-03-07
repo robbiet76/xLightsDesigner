@@ -123,7 +123,10 @@ const defaultState = {
     desktopBridgeApiCount: 0,
     xlightsVersion: "",
     compatibilityStatus: "unknown",
-    submodelDiscoveryError: ""
+    submodelDiscoveryError: "",
+    agentProvider: "",
+    agentModel: "",
+    agentConfigured: false
   },
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
@@ -361,6 +364,18 @@ function getDesktopAgentLogBridge() {
   if (
     typeof bridge.appendAgentApplyLog !== "function" ||
     typeof bridge.readAgentApplyLog !== "function"
+  ) {
+    return null;
+  }
+  return bridge;
+}
+
+function getDesktopAgentConversationBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (
+    typeof bridge.runAgentConversation !== "function" ||
+    typeof bridge.getAgentHealth !== "function"
   ) {
     return null;
   }
@@ -1390,7 +1405,7 @@ async function onApplyAll() {
   await onApply(filteredProposed(), "all proposed changes");
 }
 
-function onGenerate() {
+function onGenerate(intentOverride = "") {
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
     return render();
@@ -1406,7 +1421,7 @@ function onGenerate() {
   const selected = usingAll
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
-  const intentText = latestUserIntentText();
+  const intentText = String(intentOverride || "").trim() || latestUserIntentText();
   const plan = buildProposalFromIntent({
     promptText: intentText,
     selectedSections: selected,
@@ -1494,6 +1509,7 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
 
 async function onRefresh() {
   try {
+    await hydrateAgentHealth();
     applyRolloutPolicy();
     let staleDetected = false;
     const releasedForce = releaseConnectivityPlanOnly();
@@ -1658,6 +1674,7 @@ async function onCheckHealth() {
   setStatus("info", "Running health check...");
   render();
   try {
+    await hydrateAgentHealth();
     const [caps, open, rev] = await Promise.all([
       pingCapabilities(state.endpoint),
       getOpenSequence(state.endpoint),
@@ -1968,6 +1985,9 @@ function buildDiagnosticsBundle() {
     flags: state.flags || {},
     revision: state.revision || "unknown",
     agentRun: {
+      provider: state.health.agentProvider || "openai",
+      model: state.health.agentModel || "",
+      configured: Boolean(state.health.agentConfigured),
       rolloutMode: getAgentApplyRolloutMode(),
       applyApprovalChecked: Boolean(state.ui.applyApprovalChecked),
       draftBaseRevision: state.draftBaseRevision || "unknown",
@@ -2194,20 +2214,111 @@ function onUseQuickPrompt(promptText) {
   render();
 }
 
-function onSendChat() {
+function buildAgentConversationContext() {
+  const selectedSectionNames = hasAllSectionsSelected()
+    ? ["all"]
+    : getSelectedSections();
+  const selectedTargets = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []);
+  const selectedTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []);
+  return {
+    projectName: state.projectName || "",
+    sequenceName: state.activeSequence || "",
+    sequenceOpen: Boolean(state.flags.activeSequenceLoaded),
+    planOnlyMode: Boolean(state.flags.planOnlyMode),
+    rolloutMode: getAgentApplyRolloutMode(),
+    revision: state.revision || "unknown",
+    selectedSections: selectedSectionNames,
+    selectedTargets,
+    selectedTags,
+    creativeBriefReady: Boolean(state.flags.creativeBriefReady),
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
+  };
+}
+
+async function hydrateAgentHealth() {
+  const bridge = getDesktopAgentConversationBridge();
+  if (!bridge) {
+    state.health.agentProvider = "";
+    state.health.agentModel = "";
+    state.health.agentConfigured = false;
+    return;
+  }
+  try {
+    const res = await bridge.getAgentHealth();
+    if (res?.ok) {
+      state.health.agentProvider = String(res.provider || "openai");
+      state.health.agentModel = String(res.model || "");
+      state.health.agentConfigured = Boolean(res.configured);
+    }
+  } catch {
+    state.health.agentConfigured = false;
+  }
+}
+
+async function onSendChat() {
   const raw = (state.ui.chatDraft || "").trim();
   if (!raw) return;
   addChatMessage("user", raw);
   state.ui.chatDraft = "";
-  if (state.flags.activeSequenceLoaded || state.flags.planOnlyMode) {
-    onGenerate();
+  state.ui.agentThinking = true;
+  render();
+
+  const bridge = getDesktopAgentConversationBridge();
+  if (!bridge) {
+    state.ui.agentThinking = false;
+    addChatMessage("agent", "Cloud agent is available only in desktop runtime.");
+    setStatusWithDiagnostics("warning", "Desktop runtime required for cloud conversation agent.");
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
     return;
   }
-  addChatMessage("agent", "Captured. Open a sequence to generate a proposal.");
-  setStatus("warning", "Open a sequence first, then chat will auto-generate proposal updates.");
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
+
+  try {
+    const history = (state.chat || []).map((m) => ({
+      role: m.who === "agent" ? "assistant" : m.who === "system" ? "system" : "user",
+      content: m.text || ""
+    }));
+    const res = await bridge.runAgentConversation({
+      userMessage: raw,
+      messages: history,
+      context: buildAgentConversationContext()
+    });
+    if (!res?.ok) {
+      const errText = String(res?.error || "Cloud agent request failed.");
+      addChatMessage("agent", `Agent unavailable: ${errText}`);
+      setStatusWithDiagnostics("action-required", "Cloud agent conversation failed.", errText);
+      await hydrateAgentHealth();
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+      return;
+    }
+
+    addChatMessage("agent", String(res.assistantMessage || ""));
+    state.health.agentProvider = String(res.provider || "openai");
+    state.health.agentModel = String(res.model || state.health.agentModel || "");
+    state.health.agentConfigured = true;
+
+    if ((state.flags.activeSequenceLoaded || state.flags.planOnlyMode) && res.shouldGenerateProposal) {
+      onGenerate(String(res.proposalIntent || raw));
+      return;
+    }
+    if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
+      setStatus("warning", "Open a sequence (or use plan-only mode) for proposal generation.");
+    } else {
+      setStatus("info", "Conversation updated.");
+    }
+  } catch (err) {
+    const errText = String(err?.message || err);
+    addChatMessage("agent", `Agent runtime error: ${errText}`);
+    setStatusWithDiagnostics("action-required", "Cloud agent runtime error.", errText);
+  } finally {
+    state.ui.agentThinking = false;
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
 }
 
 function sequenceFolderPath() {
@@ -4969,6 +5080,9 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
         <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "not reported"}</div></div>
         <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
+        <div class="kv"><div class="k">Agent Provider</div><div>${state.health.agentProvider || "openai"}</div></div>
+        <div class="kv"><div class="k">Agent Model</div><div>${state.health.agentModel || "(default env model)"}</div></div>
+        <div class="kv"><div class="k">Agent Cloud Config</div><div>${state.health.agentConfigured ? "configured" : "missing OPENAI_API_KEY"}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
         <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
@@ -6096,6 +6210,7 @@ function render() {
 
 async function bootstrapLiveData() {
   try {
+    await hydrateAgentHealth();
     applyRolloutPolicy();
     const requestedEndpoint = state.endpoint;
     const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
@@ -6136,6 +6251,7 @@ async function bootstrapLiveData() {
 render();
 (async () => {
   await hydrateStateFromDesktop();
+  await hydrateAgentHealth();
   applyRolloutPolicy();
   await refreshApplyHistoryFromDesktop(40);
   render();
