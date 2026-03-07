@@ -5,7 +5,9 @@ Purpose: record concrete execution evidence for final M4 acceptance closure.
 ## Evidence Rows
 | Date | Build SHA | Channel | Machine | macOS | xLights | Install/Launch | Core Flow | Evidence | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-03-05 | c624259 | preview | MacBookAir-M2 | 15.7.4 | 2026.03.1 | PASS | PASS | dist/mac-arm64 + validate-nondev-install PASS | local non-dev install validation |
 | 2026-03-07 | 4538f8d | preview | dev-workspace | N/A | N/A | N/A | N/A | `node --check` ui/desktop + `test:agent-ui` (9/9 pass) | Sprint 4 rollout gating + diagnostics hardening (code-level evidence) |
+| 2026-03-07 | 46c3b1d | preview | Terry-MacBook-Air.local | 15.7.4 | N/A | PASS | FAIL | validate-nondev-install.sh /Applications/xLightsDesigner.app PASS | Packaged app launch verified; full live xLights core flow pending manual run |
 
 ## How To Add Evidence
 Use:
@@ -32,7 +34,6 @@ Use:
 This check passes when at least one evidence row has both:
 - `Install/Launch = PASS`
 - `Core Flow = PASS`
-| 2026-03-05 | c624259 | preview | MacBookAir-M2 | 15.7.4 | 2026.03.1 | PASS | PASS | dist/mac-arm64 + validate-nondev-install PASS | local non-dev install validation |
 
 ## Agent Rollout Evidence (Sprint 4)
 Use this checklist for agent rollout hardening evidence per build:
