@@ -62,6 +62,10 @@ export async function getMediaStatus(endpoint) {
   return postCommand(endpoint, "media.getStatus", {});
 }
 
+export async function getMediaMetadata(endpoint) {
+  return postCommand(endpoint, "media.getMetadata", {});
+}
+
 export async function getRevision(endpoint) {
   return postCommand(endpoint, "sequence.getRevision", {});
 }

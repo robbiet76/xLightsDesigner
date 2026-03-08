@@ -5,6 +5,7 @@ import {
   executePlan,
   getJob,
   getMediaStatus,
+  getMediaMetadata,
   getModels,
   getOpenSequence,
   getRevision,
@@ -102,7 +103,8 @@ const defaultState = {
   audioPathInput: "",
   audioAnalysis: {
     summary: "",
-    lastAnalyzedAt: ""
+    lastAnalyzedAt: "",
+    pipeline: null
   },
   savePathInput: "",
   lastApplyBackupPath: "",
@@ -712,7 +714,10 @@ function applyProjectSnapshot(snapshot) {
   if (snapshot?.audioAnalysis && typeof snapshot.audioAnalysis === "object") {
     state.audioAnalysis = {
       summary: String(snapshot.audioAnalysis.summary || ""),
-      lastAnalyzedAt: String(snapshot.audioAnalysis.lastAnalyzedAt || "")
+      lastAnalyzedAt: String(snapshot.audioAnalysis.lastAnalyzedAt || ""),
+      pipeline: snapshot.audioAnalysis.pipeline && typeof snapshot.audioAnalysis.pipeline === "object"
+        ? snapshot.audioAnalysis.pipeline
+        : null
     };
   } else {
     state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
@@ -2714,14 +2719,29 @@ function onRunCreativeAnalysis() {
   }
   state.ui.agentThinking = true;
   addChatMessage("agent", "Running Creative Analysis from kickoff goals, audio context, lyrics context, and references...");
-  state.creative.brief = buildCreativeBrief();
-  state.creative.briefUpdatedAt = new Date().toISOString();
-  state.flags.creativeBriefReady = true;
-  state.ui.agentThinking = false;
-  setStatus("info", "Creative brief generated. Review and accept to continue.");
-  saveCurrentProjectSnapshot();
-  persist();
   render();
+  Promise.resolve()
+    .then(async () => {
+      if (String(state.audioPathInput || "").trim()) {
+        const analysis = await runAudioAnalysisPipeline({ refreshTracks: true });
+        state.audioAnalysis.summary = String(analysis.summary || state.audioAnalysis.summary || "");
+        state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
+        state.audioAnalysis.pipeline = analysis.pipeline || null;
+      }
+      state.creative.brief = buildCreativeBrief();
+      state.creative.briefUpdatedAt = new Date().toISOString();
+      state.flags.creativeBriefReady = true;
+      setStatus("info", "Creative brief generated. Review and accept to continue.");
+    })
+    .catch((err) => {
+      setStatusWithDiagnostics("warning", `Creative Analysis encountered issues: ${err.message}`);
+    })
+    .finally(() => {
+      state.ui.agentThinking = false;
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+    });
 }
 
 function onRegenerateCreativeBrief() {
@@ -4569,20 +4589,97 @@ function buildAudioAnalysisStubSummary() {
   const analysis = analyzeAudioContext({
     audioPath: state.audioPathInput,
     sectionSuggestions: state.sectionSuggestions,
+    sectionStartByLabel: state.sectionStartByLabel,
     timingTracks: state.timingTracks
   });
   return (analysis.summaryLines || []).join("\n");
 }
 
-function onAnalyzeAudio() {
+async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
+  const audioPath = String(state.audioPathInput || "").trim();
+  const pipeline = {
+    mediaAttached: Boolean(audioPath),
+    mediaMetadataRead: false,
+    structureDerived: false,
+    timingDerived: false,
+    lyricsDetected: false
+  };
+  const trackMarksByName = {};
+  let mediaMetadata = null;
+
+  if (!audioPath) {
+    return {
+      summary: "No audio track available for analysis on this sequence.",
+      pipeline,
+      details: null
+    };
+  }
+
+  try {
+    const media = await getMediaMetadata(state.endpoint);
+    mediaMetadata = media?.data || null;
+    pipeline.mediaMetadataRead = Boolean(mediaMetadata && Object.keys(mediaMetadata || {}).length);
+  } catch {
+    // Non-fatal: continue with available timing context.
+  }
+
+  try {
+    await fetchSectionSuggestions({ refreshTracks });
+  } catch {
+    // Non-fatal: section suggestions may remain empty.
+  }
+
+  const trackNames = getTimingTrackNames(state.timingTracks || []);
+  const candidateTracks = trackNames.filter((name) => /section|song|structure|phrase|beat|tempo|bpm|bar|lyric/i.test(name)).slice(0, 6);
+  for (const trackName of candidateTracks) {
+    try {
+      const marksResp = await getTimingMarks(state.endpoint, trackName);
+      trackMarksByName[trackName] = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
+    } catch {
+      trackMarksByName[trackName] = [];
+    }
+  }
+
+  const analysis = analyzeAudioContext({
+    audioPath,
+    mediaMetadata,
+    sectionSuggestions: state.sectionSuggestions,
+    sectionStartByLabel: state.sectionStartByLabel,
+    timingTracks: state.timingTracks,
+    trackMarksByName
+  });
+
+  const mergedPipeline = { ...pipeline, ...(analysis?.pipeline || {}) };
+  return {
+    summary: (analysis.summaryLines || []).join("\n"),
+    pipeline: mergedPipeline,
+    details: analysis
+  };
+}
+
+async function onAnalyzeAudio() {
   const audioPath = String(state.audioPathInput || "").trim();
   if (!audioPath) {
     setStatus("warning", "No audio track available for analysis on this sequence.");
     return render();
   }
-  state.audioAnalysis.summary = buildAudioAnalysisStubSummary();
-  state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
-  setStatus("info", "Audio analysis summary generated.");
+  state.ui.agentThinking = true;
+  setStatus("info", "Running audio analysis pipeline...");
+  render();
+  try {
+    const result = await runAudioAnalysisPipeline({ refreshTracks: true });
+    state.audioAnalysis.summary = String(result.summary || buildAudioAnalysisStubSummary());
+    state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
+    state.audioAnalysis.pipeline = result.pipeline || null;
+    setStatus("info", "Audio analysis pipeline complete.");
+  } catch (err) {
+    state.audioAnalysis.summary = buildAudioAnalysisStubSummary();
+    state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
+    state.audioAnalysis.pipeline = null;
+    setStatusWithDiagnostics("warning", `Audio analysis pipeline failed: ${err.message}`);
+  } finally {
+    state.ui.agentThinking = false;
+  }
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -4742,6 +4839,16 @@ function sequenceScreen() {
   const audioTrackName = basenameOfPath(audioTrackPath) || audioTrackPath;
   const hasAudioTrack = Boolean(audioTrackPath);
   const audioSummary = String(state.audioAnalysis?.summary || "");
+  const audioPipeline = state.audioAnalysis?.pipeline && typeof state.audioAnalysis.pipeline === "object"
+    ? state.audioAnalysis.pipeline
+    : null;
+  const pipelineRows = [
+    ["Media attached", Boolean(audioPipeline?.mediaAttached)],
+    ["Metadata read", Boolean(audioPipeline?.mediaMetadataRead)],
+    ["Structure derived", Boolean(audioPipeline?.structureDerived)],
+    ["Timing derived", Boolean(audioPipeline?.timingDerived)],
+    ["Lyrics detected", Boolean(audioPipeline?.lyricsDetected)]
+  ];
   const audioAnalyzedAt = state.audioAnalysis?.lastAnalyzedAt
     ? new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
@@ -4801,6 +4908,12 @@ function sequenceScreen() {
         </div>
         <div class="row">
           <button id="analyze-audio">Analyze Audio</button>
+        </div>
+        <div class="field">
+          <label>Pipeline Stages</label>
+          <ul class="list">
+            ${pipelineRows.map(([label, done]) => `<li><strong>${done ? "PASS" : "PENDING"}</strong> - ${label}</li>`).join("")}
+          </ul>
         </div>
         <div class="field">
           <label>Analysis Summary</label>
