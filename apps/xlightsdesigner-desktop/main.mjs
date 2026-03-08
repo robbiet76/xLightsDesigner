@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename);
 const UI_URL = String(process.env.XLD_UI_URL || "").trim();
 const STATE_FILENAME = "xlightsdesigner-state.json";
 const AGENT_APPLY_LOG_FILENAME = "xlightsdesigner-agent-apply-log.jsonl";
+const AGENT_CONFIG_FILENAME = "xlightsdesigner-agent-config.json";
 const OPENAI_BASE_URL = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").trim().replace(/\/+$/, "");
 const OPENAI_MODEL = String(process.env.OPENAI_MODEL || "gpt-4.1-mini").trim();
 const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
@@ -205,13 +206,57 @@ function agentApplyLogPath() {
   return path.join(app.getPath("userData"), AGENT_APPLY_LOG_FILENAME);
 }
 
+function agentConfigPath() {
+  return path.join(app.getPath("userData"), AGENT_CONFIG_FILENAME);
+}
+
+function readStoredAgentConfig() {
+  const file = agentConfigPath();
+  if (!fs.existsSync(file)) return { apiKey: "", model: "", baseUrl: "" };
+  try {
+    const raw = fs.readFileSync(file, "utf8");
+    const parsed = JSON.parse(raw);
+    return {
+      apiKey: String(parsed?.apiKey || "").trim(),
+      model: String(parsed?.model || "").trim(),
+      baseUrl: String(parsed?.baseUrl || "").trim().replace(/\/+$/, "")
+    };
+  } catch {
+    return { apiKey: "", model: "", baseUrl: "" };
+  }
+}
+
+function writeStoredAgentConfig(next = {}) {
+  const file = agentConfigPath();
+  const payload = {
+    apiKey: String(next?.apiKey || "").trim(),
+    model: String(next?.model || "").trim(),
+    baseUrl: String(next?.baseUrl || "").trim().replace(/\/+$/, "")
+  };
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2), "utf8");
+  try {
+    fs.chmodSync(file, 0o600);
+  } catch {
+    // best effort on platforms that ignore chmod semantics
+  }
+}
+
 function getAgentConfig() {
-  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  const stored = readStoredAgentConfig();
+  const envKey = String(process.env.OPENAI_API_KEY || "").trim();
+  const envModel = String(process.env.OPENAI_MODEL || "").trim();
+  const envBaseUrl = String(process.env.OPENAI_BASE_URL || "").trim().replace(/\/+$/, "");
+  const apiKey = stored.apiKey || envKey;
+  const model = stored.model || envModel || OPENAI_MODEL;
+  const baseUrl = stored.baseUrl || envBaseUrl || OPENAI_BASE_URL;
   return {
-    baseUrl: OPENAI_BASE_URL,
-    model: OPENAI_MODEL,
+    baseUrl,
+    model,
     configured: Boolean(apiKey),
-    apiKey
+    apiKey,
+    hasStoredApiKey: Boolean(stored.apiKey),
+    source: stored.apiKey ? "stored" : envKey ? "env" : "none"
   };
 }
 
@@ -261,9 +306,10 @@ function normalizeConversationMessages(messages = []) {
       : roleRaw === "system"
         ? "system"
         : "user";
+    const contentType = role === "assistant" ? "output_text" : "input_text";
     out.push({
       role,
-      content: [{ type: "input_text", text: content }]
+      content: [{ type: contentType, text: content }]
     });
   }
   return out;
@@ -340,7 +386,55 @@ ipcMain.handle("xld:agent:health", async () => {
       ok: true,
       provider: "openai",
       model: cfg.model,
-      configured: cfg.configured
+      configured: cfg.configured,
+      hasStoredApiKey: cfg.hasStoredApiKey,
+      source: cfg.source
+    };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:agent-config:get", async () => {
+  try {
+    const stored = readStoredAgentConfig();
+    const cfg = getAgentConfig();
+    return {
+      ok: true,
+      provider: "openai",
+      model: cfg.model,
+      baseUrl: cfg.baseUrl,
+      hasStoredApiKey: Boolean(stored.apiKey),
+      configured: cfg.configured,
+      source: cfg.source
+    };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:agent-config:set", async (_event, payload = {}) => {
+  try {
+    const current = readStoredAgentConfig();
+    const clearApiKey = Boolean(payload?.clearApiKey);
+    const apiKeyRaw = typeof payload?.apiKey === "string" ? payload.apiKey : null;
+    const modelRaw = typeof payload?.model === "string" ? payload.model : null;
+    const baseUrlRaw = typeof payload?.baseUrl === "string" ? payload.baseUrl : null;
+
+    const next = {
+      apiKey: clearApiKey ? "" : (apiKeyRaw != null ? String(apiKeyRaw).trim() : current.apiKey),
+      model: modelRaw != null ? String(modelRaw).trim() : current.model,
+      baseUrl: baseUrlRaw != null ? String(baseUrlRaw).trim().replace(/\/+$/, "") : current.baseUrl
+    };
+    writeStoredAgentConfig(next);
+    const cfg = getAgentConfig();
+    return {
+      ok: true,
+      configured: cfg.configured,
+      hasStoredApiKey: cfg.hasStoredApiKey,
+      model: cfg.model,
+      baseUrl: cfg.baseUrl,
+      source: cfg.source
     };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };

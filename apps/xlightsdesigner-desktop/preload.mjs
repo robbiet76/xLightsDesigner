@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld("xlightsDesignerDesktop", {
   openProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:open-file", payload),
   writeProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:write-file", payload),
   getAgentHealth: () => ipcRenderer.invoke("xld:agent:health"),
+  getAgentConfig: () => ipcRenderer.invoke("xld:agent-config:get"),
+  setAgentConfig: (payload = {}) => ipcRenderer.invoke("xld:agent-config:set", payload),
   runAgentConversation: (payload = {}) => ipcRenderer.invoke("xld:agent:chat", payload),
   appendAgentApplyLog: (payload = {}) => ipcRenderer.invoke("xld:agent-log:append", payload),
   readAgentApplyLog: (payload = {}) => ipcRenderer.invoke("xld:agent-log:read", payload),

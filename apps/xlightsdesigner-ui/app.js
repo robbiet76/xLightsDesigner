@@ -126,7 +126,9 @@ const defaultState = {
     submodelDiscoveryError: "",
     agentProvider: "",
     agentModel: "",
-    agentConfigured: false
+    agentConfigured: false,
+    agentHasStoredApiKey: false,
+    agentConfigSource: "none"
   },
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
@@ -170,7 +172,10 @@ const defaultState = {
     metadataNewTagDescription: "",
     navCollapsed: false,
     proposedPayloadOpen: false,
-    applyApprovalChecked: false
+    applyApprovalChecked: false,
+    agentApiKeyDraft: "",
+    agentModelDraft: "",
+    agentBaseUrlDraft: ""
   },
   diagnostics: [],
   applyHistory: [],
@@ -376,6 +381,18 @@ function getDesktopAgentConversationBridge() {
   if (
     typeof bridge.runAgentConversation !== "function" ||
     typeof bridge.getAgentHealth !== "function"
+  ) {
+    return null;
+  }
+  return bridge;
+}
+
+function getDesktopAgentConfigBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (
+    typeof bridge.getAgentConfig !== "function" ||
+    typeof bridge.setAgentConfig !== "function"
   ) {
     return null;
   }
@@ -2241,6 +2258,8 @@ async function hydrateAgentHealth() {
     state.health.agentProvider = "";
     state.health.agentModel = "";
     state.health.agentConfigured = false;
+    state.health.agentHasStoredApiKey = false;
+    state.health.agentConfigSource = "none";
     return;
   }
   try {
@@ -2249,9 +2268,85 @@ async function hydrateAgentHealth() {
       state.health.agentProvider = String(res.provider || "openai");
       state.health.agentModel = String(res.model || "");
       state.health.agentConfigured = Boolean(res.configured);
+      state.health.agentHasStoredApiKey = Boolean(res.hasStoredApiKey);
+      state.health.agentConfigSource = String(res.source || "none");
     }
   } catch {
     state.health.agentConfigured = false;
+  }
+}
+
+async function hydrateAgentConfigDraft() {
+  const bridge = getDesktopAgentConfigBridge();
+  if (!bridge) return;
+  try {
+    const res = await bridge.getAgentConfig();
+    if (!res?.ok) return;
+    state.ui.agentModelDraft = String(res.model || state.ui.agentModelDraft || "");
+    state.ui.agentBaseUrlDraft = String(res.baseUrl || state.ui.agentBaseUrlDraft || "");
+    state.health.agentHasStoredApiKey = Boolean(res.hasStoredApiKey);
+    state.health.agentConfigSource = String(res.source || state.health.agentConfigSource || "none");
+  } catch {
+    // Non-fatal config read failure.
+  }
+}
+
+async function onSaveAgentConfig() {
+  const bridge = getDesktopAgentConfigBridge();
+  if (!bridge) {
+    setStatusWithDiagnostics("warning", "Cloud agent config requires desktop runtime.");
+    return render();
+  }
+  const apiKeyInput = app.querySelector("#agent-api-key-input");
+  const modelInput = app.querySelector("#agent-model-input");
+  const baseUrlInput = app.querySelector("#agent-base-url-input");
+  const apiKey = String(apiKeyInput?.value || "").trim();
+  const model = String(modelInput?.value || "").trim();
+  const baseUrl = String(baseUrlInput?.value || "").trim();
+  try {
+    const res = await bridge.setAgentConfig({
+      apiKey: apiKey || undefined,
+      model,
+      baseUrl
+    });
+    if (!res?.ok) {
+      setStatusWithDiagnostics("action-required", "Saving cloud agent config failed.", String(res?.error || "Unknown error"));
+      return render();
+    }
+    state.ui.agentApiKeyDraft = "";
+    if (apiKeyInput) apiKeyInput.value = "";
+    await hydrateAgentHealth();
+    await hydrateAgentConfigDraft();
+    setStatus("info", "Cloud agent config saved.");
+    persist();
+    render();
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", "Saving cloud agent config failed.", String(err?.message || err));
+    render();
+  }
+}
+
+async function onClearStoredAgentApiKey() {
+  const bridge = getDesktopAgentConfigBridge();
+  if (!bridge) {
+    setStatusWithDiagnostics("warning", "Cloud agent config requires desktop runtime.");
+    return render();
+  }
+  if (!window.confirm("Clear stored cloud agent API key?")) return;
+  try {
+    const res = await bridge.setAgentConfig({ clearApiKey: true });
+    if (!res?.ok) {
+      setStatusWithDiagnostics("action-required", "Clearing API key failed.", String(res?.error || "Unknown error"));
+      return render();
+    }
+    await hydrateAgentHealth();
+    await hydrateAgentConfigDraft();
+    setStatus("info", "Stored cloud agent API key cleared.");
+    persist();
+    render();
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", "Clearing API key failed.", String(err?.message || err));
+    render();
   }
 }
 
@@ -5067,6 +5162,17 @@ function settingsDrawer() {
             <option value="disabled" ${rolloutMode === "disabled" ? "selected" : ""}>Disabled</option>
           </select>
         </section>
+        <section class="field">
+          <label>Cloud Agent Configuration</label>
+          <input id="agent-base-url-input" placeholder="Base URL (optional)" value="${String(state.ui.agentBaseUrlDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="agent-model-input" placeholder="Model (optional)" value="${String(state.ui.agentModelDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="agent-api-key-input" type="password" placeholder="${state.health.agentHasStoredApiKey ? "Stored API key is set. Enter to replace." : "Enter API key to enable cloud chat"}" value="" />
+          <div class="row" style="margin-top:6px;">
+            <button id="save-agent-config">Save Cloud Config</button>
+            <button id="clear-agent-key" ${state.health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
+          </div>
+          <p class="banner">Source: ${state.health.agentConfigSource || "none"} | Stored key: ${state.health.agentHasStoredApiKey ? "yes" : "no"}</p>
+        </section>
         <div class="row">
           <button id="test-connection">Test Connection</button>
           <button id="check-health">Recheck Health</button>
@@ -5526,6 +5632,7 @@ function bindEvents() {
   if (openSettingsBtn) {
     openSettingsBtn.addEventListener("click", async () => {
       state.ui.settingsOpen = true;
+      await hydrateAgentConfigDraft();
       persist();
       render();
       if (state.flags.xlightsConnected && !String(state.health.xlightsVersion || "").trim()) {
@@ -5611,6 +5718,36 @@ function bindEvents() {
       render();
     });
   }
+
+  const agentBaseUrlInput = app.querySelector("#agent-base-url-input");
+  if (agentBaseUrlInput) {
+    agentBaseUrlInput.addEventListener("input", () => {
+      state.ui.agentBaseUrlDraft = String(agentBaseUrlInput.value || "");
+      persist();
+    });
+  }
+
+  const agentModelInput = app.querySelector("#agent-model-input");
+  if (agentModelInput) {
+    agentModelInput.addEventListener("input", () => {
+      state.ui.agentModelDraft = String(agentModelInput.value || "");
+      persist();
+    });
+  }
+
+  const agentApiKeyInput = app.querySelector("#agent-api-key-input");
+  if (agentApiKeyInput) {
+    agentApiKeyInput.addEventListener("input", () => {
+      state.ui.agentApiKeyDraft = String(agentApiKeyInput.value || "");
+      persist();
+    });
+  }
+
+  const saveAgentConfigBtn = app.querySelector("#save-agent-config");
+  if (saveAgentConfigBtn) saveAgentConfigBtn.addEventListener("click", onSaveAgentConfig);
+
+  const clearAgentKeyBtn = app.querySelector("#clear-agent-key");
+  if (clearAgentKeyBtn) clearAgentKeyBtn.addEventListener("click", onClearStoredAgentApiKey);
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
@@ -6252,6 +6389,7 @@ render();
 (async () => {
   await hydrateStateFromDesktop();
   await hydrateAgentHealth();
+  await hydrateAgentConfigDraft();
   applyRolloutPolicy();
   await refreshApplyHistoryFromDesktop(40);
   render();
