@@ -115,6 +115,11 @@ Response `data`:
 - `plugins`: array of:
   - `id` (string)
   - `name` (string)
+  - optional `category` (string; e.g., `beat`, `tempo`, `onset`)
+
+Selection guidance:
+- Clients that need sequencing-grade beat/bar timing should prefer QM beat-tracker plugins when present.
+- Recommended selection heuristic: first plugin whose `id` or `name` matches QM beat tracker patterns (for example `qm` + `tempo`/`beat` tokens).
 
 Idempotency: read-only.
 
@@ -147,6 +152,9 @@ Response `data`:
 
 Idempotency:
 - same inputs + same source state => same resulting marks/count.
+
+Fidelity behavior note:
+- In QM-required workflows, if no acceptable QM plugin is present, callers should treat this as a capability constraint and fail explicitly rather than emitting guessed/synthetic beat marks.
 
 ## 3.4 `timing.getTrackSummary`
 Purpose: query timing track metrics.

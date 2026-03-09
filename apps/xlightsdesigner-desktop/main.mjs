@@ -294,6 +294,35 @@ function parseAgentJson(text) {
   }
 }
 
+function inferProposalIntent({ userMessage = "", assistantMessage = "", context = {} } = {}) {
+  const user = String(userMessage || "").toLowerCase();
+  const assistant = String(assistantMessage || "").toLowerCase();
+  const route = String(context?.route || "").toLowerCase();
+  const sequenceOpen = Boolean(context?.activeSequenceLoaded);
+  const planOnly = Boolean(context?.planOnlyMode);
+  const actionTerms = [
+    "sequence",
+    "design",
+    "generate",
+    "create",
+    "build",
+    "add",
+    "remove",
+    "change",
+    "update",
+    "apply",
+    "revise",
+    "refine"
+  ];
+  const hasActionTerm = actionTerms.some((term) => user.includes(term));
+  const asksQuestion = user.includes("?");
+  const allowsProposal = sequenceOpen || planOnly || route === "design";
+  if (!allowsProposal) return false;
+  if (!hasActionTerm) return false;
+  if (asksQuestion && !assistant.includes("ready")) return false;
+  return true;
+}
+
 function normalizeConversationMessages(messages = []) {
   const rows = Array.isArray(messages) ? messages : [];
   const out = [];
@@ -320,13 +349,12 @@ function buildAgentSystemPrompt(context = {}) {
   return [
     "You are xLights Designer Agent.",
     "Role split: user is the creative director; you are the sequencing designer.",
+    "Hold a natural multi-turn conversation and preserve continuity with prior turns.",
     "Be concise, practical, and collaborative. Ask targeted follow-up questions when intent is ambiguous.",
-    "Do not ask users to specify exact low-level effects unless needed for constraints.",
-    "Return only valid JSON with keys:",
-    "assistantMessage (string),",
-    "shouldGenerateProposal (boolean),",
-    "proposalIntent (string).",
-    "Set shouldGenerateProposal=true when user asks for sequence changes or refinements.",
+    "Default to making sequencing decisions yourself while honoring user direction.",
+    "Do not require the user to specify low-level xLights effects unless needed for constraints.",
+    "When relevant, mention concrete next actions you can perform in the app.",
+    "Do not output JSON unless explicitly asked by the user.",
     `Context: ${JSON.stringify(c)}`
   ].join("\n");
 }
@@ -376,6 +404,118 @@ ipcMain.handle("xld:state:write", async (_event, payload = {}) => {
     return { ok: true };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:audio:read", async (_event, payload = {}) => {
+  try {
+    const filePath = String(payload?.filePath || "").trim();
+    if (!filePath) return { ok: false, error: "Missing filePath" };
+    if (!fs.existsSync(filePath)) return { ok: false, error: "Audio file not found" };
+    const stat = fs.statSync(filePath);
+    if (!stat.isFile()) return { ok: false, error: "Audio path is not a file" };
+    const maxBytes = 200 * 1024 * 1024;
+    if (stat.size > maxBytes) return { ok: false, error: "Audio file exceeds 200MB limit" };
+    const buf = fs.readFileSync(filePath);
+    return {
+      ok: true,
+      fileName: path.basename(filePath),
+      mimeType: "application/octet-stream",
+      byteLength: buf.byteLength,
+      base64: buf.toString("base64")
+    };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
+  try {
+    const filePath = String(payload?.filePath || "").trim();
+    const baseUrl = String(payload?.baseUrl || "").trim().replace(/\/+$/, "");
+    const provider = String(payload?.provider || "beatnet").trim();
+    const apiKey = String(payload?.apiKey || "").trim();
+    const authBearer = String(payload?.authBearer || "").trim();
+    const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "90000"), 10);
+    const timeoutMs = Number.isFinite(timeoutMsRaw) ? Math.max(3000, Math.min(300000, timeoutMsRaw)) : 90000;
+    const retryRaw = Number.parseInt(String(payload?.retryAttempts || "3"), 10);
+    const retryAttempts = Number.isFinite(retryRaw) ? Math.max(1, Math.min(5, retryRaw)) : 3;
+    if (!filePath) return { ok: false, error: "Missing filePath" };
+    if (!baseUrl) return { ok: false, error: "Missing analysis service baseUrl" };
+    if (!fs.existsSync(filePath)) return { ok: false, error: "Audio file not found" };
+    const stat = fs.statSync(filePath);
+    if (!stat.isFile()) return { ok: false, error: "Audio path is not a file" };
+    const maxBytes = 200 * 1024 * 1024;
+    if (stat.size > maxBytes) return { ok: false, error: "Audio file exceeds 200MB limit" };
+
+    const transientHttp = new Set([408, 425, 429, 500, 502, 503, 504]);
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const buf = fs.readFileSync(filePath);
+    let lastError = "Analysis service unavailable.";
+
+    for (let attempt = 1; attempt <= retryAttempts; attempt += 1) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const form = new FormData();
+        form.append("provider", provider);
+        form.append("fileName", path.basename(filePath));
+        form.append("file", new Blob([buf]), path.basename(filePath));
+        const headers = {};
+        if (apiKey) headers["x-api-key"] = apiKey;
+        if (authBearer) headers.Authorization = `Bearer ${authBearer}`;
+        const response = await fetch(`${baseUrl}/analyze`, {
+          method: "POST",
+          headers,
+          body: form,
+          signal: controller.signal
+        });
+        const raw = await response.text();
+        let parsed = null;
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          parsed = null;
+        }
+        if (response.ok) {
+          return {
+            ok: true,
+            provider,
+            baseUrl,
+            attempts: attempt,
+            data: parsed?.data || parsed || {}
+          };
+        }
+        lastError = String(parsed?.error || parsed?.message || raw || `HTTP ${response.status}`);
+        const canRetry = transientHttp.has(response.status);
+        if (!canRetry || attempt >= retryAttempts) {
+          return { ok: false, error: lastError };
+        }
+      } catch (err) {
+        const isTimeout = err?.name === "AbortError";
+        const msg = isTimeout ? "Analysis service request timed out." : String(err?.message || err);
+        lastError = msg;
+        if (attempt >= retryAttempts) {
+          return { ok: false, error: msg };
+        }
+      } finally {
+        clearTimeout(timer);
+      }
+
+      // Reconnect grace period between retries.
+      try {
+        await fetch(`${baseUrl}/health`, { method: "GET" });
+      } catch {
+        // best effort health probe
+      }
+      await sleep(Math.min(2000, 300 * (2 ** (attempt - 1))));
+    }
+    return { ok: false, error: lastError };
+  } catch (err) {
+    const msg = err?.name === "AbortError"
+      ? "Analysis service request timed out."
+      : String(err?.message || err);
+    return { ok: false, error: msg };
   }
 });
 
@@ -455,6 +595,7 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
     const userMessage = String(payload?.userMessage || "").trim();
     if (!userMessage) return { ok: false, error: "Missing userMessage" };
     const context = payload?.context && typeof payload.context === "object" ? payload.context : {};
+    const previousResponseId = String(payload?.previousResponseId || "").trim();
     const messages = normalizeConversationMessages(payload?.messages || []);
     const input = [
       {
@@ -470,8 +611,10 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
 
     const body = {
       model: cfg.model,
-      input
+      input,
+      max_output_tokens: 900
     };
+    if (previousResponseId) body.previous_response_id = previousResponseId;
 
     const response = await fetch(`${cfg.baseUrl}/responses`, {
       method: "POST",
@@ -498,9 +641,12 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
     }
     const modelText = extractResponseText(parsed || {});
     const json = parseAgentJson(modelText) || {};
-    const assistantMessage = String(json?.assistantMessage || modelText || "").trim();
-    const shouldGenerateProposal = Boolean(json?.shouldGenerateProposal);
+    const assistantMessage = String(json?.assistantMessage || modelText || "I can continue from here. Tell me what you want to design next.").trim();
+    const shouldGenerateProposal = typeof json?.shouldGenerateProposal === "boolean"
+      ? Boolean(json.shouldGenerateProposal)
+      : inferProposalIntent({ userMessage, assistantMessage, context });
     const proposalIntent = String(json?.proposalIntent || userMessage).trim();
+    const responseId = String(parsed?.id || "").trim();
     if (!assistantMessage) {
       return {
         ok: false,
@@ -514,7 +660,8 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
       model: cfg.model,
       assistantMessage,
       shouldGenerateProposal,
-      proposalIntent
+      proposalIntent,
+      responseId
     };
   } catch (err) {
     return {

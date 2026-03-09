@@ -117,6 +117,34 @@ export async function getTimingMarks(endpoint, trackName) {
   });
 }
 
+export async function listTimingAnalysisPlugins(endpoint) {
+  return postCommand(endpoint, "timing.listAnalysisPlugins", {});
+}
+
+export async function createTimingTrack(endpoint, params = {}) {
+  return postCommand(endpoint, "timing.createTrack", params);
+}
+
+export async function replaceTimingMarks(endpoint, params = {}) {
+  return postCommand(endpoint, "timing.replaceMarks", params);
+}
+
+export async function insertTimingMarks(endpoint, params = {}) {
+  return postCommand(endpoint, "timing.insertMarks", params);
+}
+
+export async function createTimingFromAudio(endpoint, params = {}) {
+  return postCommand(endpoint, "timing.createFromAudio", params);
+}
+
+export async function createBarsFromBeats(endpoint, params = {}) {
+  return postCommand(endpoint, "timing.createBarsFromBeats", params);
+}
+
+export async function detectSongStructure(endpoint, params = {}) {
+  return postCommand(endpoint, "timing.detectSongStructure", params);
+}
+
 export async function validateCommands(endpoint, commands) {
   return postCommand(endpoint, "system.validateCommands", {
     commands

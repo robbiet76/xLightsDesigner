@@ -4,6 +4,7 @@ export function synthesizeCreativeBrief({
   notes = "",
   references = [],
   audioAnalysis = null,
+  songContextSummary = "",
   latestIntent = ""
 } = {}) {
   const refs = Array.isArray(references) ? references : [];
@@ -17,7 +18,7 @@ export function synthesizeCreativeBrief({
     audioContext: String(audioAnalysis?.trackName || "Audio context pending."),
     sections: sectionMap.length ? sectionMap : ["Intro", "Verse", "Chorus", "Bridge", "Outro"],
     moodEnergyArc: "Start readable, escalate contrast at impact sections, resolve cleanly.",
-    narrativeCues: "Tie transitions to phrasing and lyrical emphasis where available.",
+    narrativeCues: String(songContextSummary || "Tie transitions to phrasing and lyrical emphasis where available."),
     visualCues: refNames.length ? `Reference cues from: ${refNames.join(", ")}` : "No uploaded references.",
     hypotheses: [
       "Use focal-target contrast to clarify musical hierarchy.",

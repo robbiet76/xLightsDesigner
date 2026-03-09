@@ -14,6 +14,9 @@ import {
   saveSequence,
   getTimingMarks,
   getTimingTracks,
+  createTimingTrack,
+  replaceTimingMarks,
+  insertTimingMarks,
   openSequence,
   validateCommands,
   pingCapabilities
@@ -168,6 +171,7 @@ const defaultState = {
     proposedRowsVisible: DEFAULT_PROPOSED_ROWS,
     chatDraft: "",
     agentThinking: false,
+    agentLastTestStatus: "",
     metadataTargetId: "",
     metadataSelectedTags: [],
     metadataNewTag: "",
@@ -177,7 +181,12 @@ const defaultState = {
     applyApprovalChecked: false,
     agentApiKeyDraft: "",
     agentModelDraft: "",
-    agentBaseUrlDraft: ""
+    agentBaseUrlDraft: "",
+    analysisServiceUrlDraft: "",
+    analysisServiceProvider: "beatnet",
+    analysisServiceApiKeyDraft: "",
+    analysisServiceAuthBearerDraft: "",
+    agentResponseId: ""
   },
   diagnostics: [],
   applyHistory: [],
@@ -254,6 +263,9 @@ if (!Array.isArray(state.ui?.metadataSelectedTags)) {
 }
 if (typeof state.ui?.applyApprovalChecked !== "boolean") {
   state.ui.applyApprovalChecked = false;
+}
+if (!["beatnet", "librosa"].includes(String(state.ui?.analysisServiceProvider || "").toLowerCase())) {
+  state.ui.analysisServiceProvider = "beatnet";
 }
 if (!Array.isArray(state.applyHistory)) {
   state.applyHistory = [];
@@ -398,6 +410,13 @@ function getDesktopAgentConfigBridge() {
   ) {
     return null;
   }
+  return bridge;
+}
+
+function getDesktopAudioAnalysisBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.runAudioAnalysisService !== "function") return null;
   return bridge;
 }
 
@@ -2246,8 +2265,10 @@ function buildAgentConversationContext() {
     projectName: state.projectName || "",
     sequenceName: state.activeSequence || "",
     sequenceOpen: Boolean(state.flags.activeSequenceLoaded),
+    activeSequenceLoaded: Boolean(state.flags.activeSequenceLoaded),
     planOnlyMode: Boolean(state.flags.planOnlyMode),
     rolloutMode: getAgentApplyRolloutMode(),
+    route: state.route || "",
     revision: state.revision || "unknown",
     selectedSections: selectedSectionNames,
     selectedTargets,
@@ -2355,6 +2376,63 @@ async function onClearStoredAgentApiKey() {
   }
 }
 
+async function onTestCloudAgent() {
+  const bridge = getDesktopAgentConversationBridge();
+  if (!bridge) {
+    state.ui.agentLastTestStatus = "Failed: desktop runtime bridge unavailable.";
+    setStatusWithDiagnostics("warning", "Cloud agent test requires desktop runtime.");
+    return render();
+  }
+
+  state.ui.agentThinking = true;
+  state.ui.diagnosticsOpen = true;
+  state.ui.diagnosticsFilter = "all";
+  state.ui.agentLastTestStatus = "Running cloud agent connectivity test...";
+  setStatus("info", "Testing cloud agent...");
+  pushDiagnostic("warning", "Cloud agent test started.");
+  render();
+  try {
+    await hydrateAgentHealth();
+    if (!state.health.agentConfigured) {
+      state.ui.agentLastTestStatus = "Failed: cloud agent is not configured. Save API key first.";
+      setStatusWithDiagnostics("warning", "Cloud agent is not configured. Save API key first.");
+      addChatMessage("system", "Cloud agent test failed: agent is not configured.");
+      return;
+    }
+    const res = await bridge.runAgentConversation({
+      userMessage: "Reply with CLOUD_AGENT_OK",
+      messages: [],
+      context: {
+        purpose: "connectivity-test",
+        projectName: state.projectName || ""
+      }
+    });
+    if (!res?.ok) {
+      const errText = String(res?.error || "Unknown cloud agent error.");
+      state.ui.agentLastTestStatus = `Failed: ${errText}`;
+      setStatusWithDiagnostics("action-required", "Cloud agent test failed.", errText);
+      addChatMessage("system", `Cloud agent test failed: ${errText}`);
+      return;
+    }
+    state.health.agentProvider = String(res.provider || state.health.agentProvider || "openai");
+    state.health.agentModel = String(res.model || state.health.agentModel || "");
+    state.health.agentConfigured = true;
+    state.ui.agentLastTestStatus = `Passed (${state.health.agentModel || "model unknown"}).`;
+    setStatus("info", `Cloud agent test passed (${state.health.agentModel || "model unknown"}).`);
+    pushDiagnostic("info", `Cloud agent test passed (${state.health.agentModel || "model unknown"}).`);
+    addChatMessage("system", `Cloud agent test passed (${state.health.agentModel || "model unknown"}).`);
+  } catch (err) {
+    const errText = String(err?.message || err);
+    state.ui.agentLastTestStatus = `Failed: ${errText}`;
+    setStatusWithDiagnostics("action-required", "Cloud agent test failed.", errText);
+    addChatMessage("system", `Cloud agent test failed: ${errText}`);
+  } finally {
+    state.ui.agentThinking = false;
+    persist();
+    render();
+  }
+}
+
 async function onSendChat() {
   const raw = (state.ui.chatDraft || "").trim();
   if (!raw) return;
@@ -2375,13 +2453,19 @@ async function onSendChat() {
   }
 
   try {
-    const history = (state.chat || []).map((m) => ({
-      role: m.who === "agent" ? "assistant" : m.who === "system" ? "system" : "user",
-      content: m.text || ""
-    }));
+    const chatRows = Array.isArray(state.chat) ? state.chat : [];
+    const contextRows = chatRows.slice(0, Math.max(0, chatRows.length - 1));
+    const history = contextRows
+      .filter((m) => m && (m.who === "user" || m.who === "agent"))
+      .slice(-30)
+      .map((m) => ({
+        role: m.who === "agent" ? "assistant" : "user",
+        content: String(m.text || "")
+      }));
     const res = await bridge.runAgentConversation({
       userMessage: raw,
       messages: history,
+      previousResponseId: String(state.ui.agentResponseId || ""),
       context: buildAgentConversationContext()
     });
     if (!res?.ok) {
@@ -2396,6 +2480,7 @@ async function onSendChat() {
     }
 
     addChatMessage("agent", String(res.assistantMessage || ""));
+    state.ui.agentResponseId = String(res.responseId || state.ui.agentResponseId || "");
     state.health.agentProvider = String(res.provider || "openai");
     state.health.agentModel = String(res.model || state.health.agentModel || "");
     state.health.agentConfigured = true;
@@ -2701,6 +2786,11 @@ function buildCreativeBrief() {
   });
   state.audioAnalysis.summary = (audioAnalysis.summaryLines || []).join("\n");
   state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
+  const songContextLine = (audioAnalysis.summaryLines || [])
+    .find((line) => String(line || "").toLowerCase().startsWith("song context:"));
+  const songContextSummary = songContextLine
+    ? String(songContextLine).slice("Song context:".length).trim()
+    : "";
 
   return synthesizeCreativeBrief({
     goals: state.creative.goals,
@@ -2708,6 +2798,7 @@ function buildCreativeBrief() {
     notes: state.creative.notes,
     references: state.creative.references || [],
     audioAnalysis,
+    songContextSummary,
     latestIntent: latestUserIntentText()
   });
 }
@@ -4014,6 +4105,7 @@ async function onOpenSequence() {
     state.flags.activeSequenceLoaded = true;
     if (targetPath !== previousPath) {
       resetCreativeState();
+      state.ui.agentResponseId = "";
     }
     setStatus(
       "info",
@@ -4073,6 +4165,7 @@ async function onOpenExistingSequence(targetPathInput = "") {
     if (targetPath !== previousPath) {
       state.lastApplyBackupPath = "";
       resetCreativeState();
+      state.ui.agentResponseId = "";
     }
     state.flags.activeSequenceLoaded = true;
     setStatus("info", `Opened sequence: ${state.activeSequence || targetPath}`);
@@ -4547,6 +4640,7 @@ function onResetProjectWorkspace() {
   state.ui.metadataSelectedTags = [];
   state.ui.metadataNewTag = "";
   state.ui.metadataNewTagDescription = "";
+  state.ui.agentResponseId = "";
   state.ui.metadataFilterName = "";
   state.ui.metadataFilterType = "";
   state.ui.metadataFilterTags = "";
@@ -4575,6 +4669,7 @@ function resetSessionDraftState() {
   state.ui.designTab = "chat";
   state.ui.sectionTrackName = "";
   state.ui.applyApprovalChecked = false;
+  state.ui.agentResponseId = "";
   state.proposed = [];
 }
 
@@ -4585,6 +4680,81 @@ function resetCreativeState() {
   state.flags.creativeBriefReady = false;
 }
 
+function buildAudioPipelineSummaryLines(pipeline = {}) {
+  const checks = [
+    ["Service reached", Boolean(pipeline?.analysisServiceCalled)],
+    ["Service succeeded", Boolean(pipeline?.analysisServiceSucceeded)],
+    ["Beat track written", Boolean(pipeline?.beatTrackWritten)],
+    ["Bars track written", Boolean(pipeline?.barTrackWritten)],
+    ["Song structure written", Boolean(pipeline?.structureTrackWritten)],
+    ["Lyrics track written", Boolean(pipeline?.lyricsTrackWritten)],
+    ["Song context derived", Boolean(pipeline?.webContextDerived)]
+  ];
+  return checks.map(([label, ok]) => `${label}: ${ok ? "PASS" : "PENDING"}`);
+}
+
+function formatAudioAnalysisSummary({ analysis = null, pipeline = null, webValidation = null } = {}) {
+  const a = analysis && typeof analysis === "object" ? analysis : {};
+  const trackName = String(a?.trackName || basenameOfPath(state.audioPathInput || "") || "(none)");
+  const fpTitle = String(a?.trackIdentity?.title || "").trim();
+  const fpArtist = String(a?.trackIdentity?.artist || "").trim();
+  const fpIsrc = String(a?.trackIdentity?.isrc || "").trim();
+  const fingerprintMatch = fpTitle && fpArtist ? `${fpTitle} - ${fpArtist}` : "unavailable";
+  const durationMs = Number(a?.media?.durationMs);
+  const channels = Number(a?.media?.channels);
+  const sampleRate = Number(a?.media?.sampleRate);
+  const structure = Array.isArray(a?.structure) ? a.structure.filter(Boolean) : [];
+  const tempoEstimate = a?.timing?.tempoEstimate;
+  const timeSignature = String(a?.timing?.timeSignature || "unknown");
+  const songContextLine = (Array.isArray(a?.summaryLines) ? a.summaryLines : [])
+    .find((line) => String(line || "").toLowerCase().startsWith("song context:"));
+  const songContext = songContextLine
+    ? String(songContextLine).slice("Song context:".length).trim()
+    : "pending";
+  const tempoText = Number.isFinite(Number(tempoEstimate))
+    ? `${Number(tempoEstimate)} BPM (inferred)`
+    : (String(tempoEstimate || "").trim() || "pending");
+
+  const lines = [
+    `Audio source: ${trackName}`,
+    `Fingerprint match: ${fingerprintMatch}`,
+    `Fingerprint ISRC: ${fpIsrc || "unavailable"}`,
+    `Media metadata: ${Number.isFinite(durationMs) ? `${Math.round(durationMs)}ms` : "duration pending"}, ${Number.isFinite(channels) ? `${channels}ch` : "ch?"}, ${Number.isFinite(sampleRate) ? `${sampleRate}Hz` : "rate?"}`,
+    `Song structure: ${structure.length ? structure.join(", ") : "pending"}`,
+    `Tempo/time signature: ${tempoText} / ${timeSignature}`,
+    "Pipeline checks:"
+  ];
+  for (const row of buildAudioPipelineSummaryLines(pipeline || {})) {
+    lines.push(`- ${row}`);
+  }
+  if (webValidation && typeof webValidation === "object") {
+    if (webValidation.ignored) {
+      if (webValidation.reason === "non-informational-sources") {
+        lines.push("Web validation: ignored (non-informational sources)");
+      } else if (webValidation.reason === "unverifiable-sources") {
+        lines.push("Web validation: ignored (sources not track-specific)");
+      } else if (webValidation.reason === "low-confidence") {
+        lines.push("Web validation: ignored (low-confidence web evidence)");
+      } else {
+        lines.push("Web validation: ignored (non-exact track match)");
+      }
+      lines.push(`Song context: ${songContext || "pending"}`);
+      return lines.join("\n");
+    }
+    const sig = String(webValidation.timeSignature || "unknown");
+    const bpm = Number(webValidation.tempoBpm);
+    const conf = String(webValidation.confidence || "low");
+    const conflict = Boolean(webValidation.conflict);
+    if (conflict) {
+      lines.push("Web validation: conflict with service result (see diagnostics)");
+    } else {
+      lines.push(`Web validation: ${sig}${Number.isFinite(bpm) ? `, ${bpm} BPM` : ""} (${conf})`);
+    }
+  }
+  lines.push(`Song context: ${songContext || "pending"}`);
+  return lines.join("\n");
+}
+
 function buildAudioAnalysisStubSummary() {
   const analysis = analyzeAudioContext({
     audioPath: state.audioPathInput,
@@ -4592,7 +4762,362 @@ function buildAudioAnalysisStubSummary() {
     sectionStartByLabel: state.sectionStartByLabel,
     timingTracks: state.timingTracks
   });
-  return (analysis.summaryLines || []).join("\n");
+  return formatAudioAnalysisSummary({
+    analysis,
+    pipeline: state.audioAnalysis?.pipeline || null
+  });
+}
+
+function audioTrackQueryFromPath(audioPath = "") {
+  const raw = basenameOfPath(audioPath);
+  const noExt = raw.replace(/\.[a-z0-9]+$/i, "");
+  return noExt.replace(/^\s*\d+\s*/, "").replace(/\s+/g, " ").trim();
+}
+
+function isLikelyInformationalSourceUrl(url = "") {
+  const s = String(url || "").trim().toLowerCase();
+  if (!s) return false;
+  return !(
+    s.includes("open.spotify.com") ||
+    s.includes("music.apple.com") ||
+    s.includes("youtube.com") ||
+    s.includes("youtu.be") ||
+    s.includes("deezer.com") ||
+    s.includes("tidal.com") ||
+    s.includes("soundcloud.com") ||
+    s.includes("amazon.com/music") ||
+    s.includes("shazam.com") ||
+    s.includes("audd.io") ||
+    s.includes("musicnotes.com") ||
+    s.includes("sheetmusicplus.com") ||
+    s.includes("sheetmusicdirect.com") ||
+    s.includes("ultimate-guitar.com") ||
+    s.includes("chordify.net") ||
+    s.includes("tabs.ultimate-guitar.com") ||
+    s.includes("tunebat.com")
+  );
+}
+
+function areMetersCompatible(a = "", b = "") {
+  const parse = (sig) => {
+    const m = String(sig || "").trim().toLowerCase().match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (!m) return null;
+    const n = Number(m[1]);
+    const d = Number(m[2]);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || n <= 0 || d <= 0) return null;
+    return { n, d, barLen: n / d };
+  };
+  const left = parse(a);
+  const right = parse(b);
+  if (!left || !right) return false;
+  if (left.n === right.n && left.d === right.d) return true;
+  return Math.abs(left.barLen - right.barLen) <= 1e-6;
+}
+
+function normalizeTrackTokens(text = "") {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3);
+}
+
+function sourceLooksTrackSpecific(url = "", title = "", artist = "") {
+  const s = String(url || "").toLowerCase();
+  if (!s) return false;
+  const titleTokens = normalizeTrackTokens(title).slice(0, 6);
+  const artistTokens = normalizeTrackTokens(artist).slice(0, 4);
+  const hasTitle = titleTokens.some((t) => s.includes(t));
+  const hasArtist = artistTokens.some((t) => s.includes(t));
+  return hasTitle && hasArtist;
+}
+
+function beatsPerBarFromSignature(sig = "") {
+  const m = String(sig || "").trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!m) return 4;
+  const n = Number(m[1]);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 4;
+}
+
+function relabelBeats(beats = [], beatsPerBar = 4, startLabel = 1) {
+  const bpb = Math.max(1, Math.round(Number(beatsPerBar) || 4));
+  let cur = Math.max(1, Math.min(bpb, Math.round(Number(startLabel) || 1)));
+  return (Array.isArray(beats) ? beats : []).map((row) => {
+    const out = { ...row, label: String(cur) };
+    cur = (cur % bpb) + 1;
+    return out;
+  });
+}
+
+function subdivideBeatsByFactor(beats = [], factor = 2) {
+  const src = Array.isArray(beats) ? beats : [];
+  const f = Math.max(1, Math.round(Number(factor) || 1));
+  if (f <= 1 || src.length < 2) return src;
+  const starts = [];
+  for (let i = 0; i < src.length; i += 1) {
+    const s = Math.round(Number(src[i]?.startMs));
+    if (!Number.isFinite(s)) continue;
+    starts.push(s);
+    if (i + 1 < src.length) {
+      const n = Math.round(Number(src[i + 1]?.startMs));
+      if (Number.isFinite(n) && n > s) {
+        const span = n - s;
+        for (let k = 1; k < f; k += 1) {
+          const p = Math.round(s + (span * k) / f);
+          if (p > s && p < n) starts.push(p);
+        }
+      }
+    }
+  }
+  const uniq = Array.from(new Set(starts)).sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < uniq.length; i += 1) {
+    const s = uniq[i];
+    const e = i + 1 < uniq.length ? uniq[i + 1] : Math.max(s + 1, Math.round(Number(src[src.length - 1]?.endMs) || (s + 1)));
+    if (e > s) out.push({ startMs: s, endMs: e });
+  }
+  return out;
+}
+
+function mergeBeatsByFactor(beats = [], factor = 2) {
+  const src = Array.isArray(beats) ? beats : [];
+  const f = Math.max(1, Math.round(Number(factor) || 1));
+  if (f <= 1 || src.length < (f + 1)) return src;
+  const out = [];
+  for (let i = 0; i < src.length; i += f) {
+    const s = Math.round(Number(src[i]?.startMs));
+    if (!Number.isFinite(s)) continue;
+    let e = null;
+    if (i + f < src.length) {
+      const n = Math.round(Number(src[i + f]?.startMs));
+      if (Number.isFinite(n) && n > s) e = n;
+    }
+    if (!Number.isFinite(e)) {
+      const endRaw = Math.round(Number(src[Math.min(i + f - 1, src.length - 1)]?.endMs));
+      e = Number.isFinite(endRaw) && endRaw > s ? endRaw : s + 1;
+    }
+    if (e > s) out.push({ startMs: s, endMs: e });
+  }
+  return out;
+}
+
+function barsFromBeats(beats = [], beatsPerBar = 4) {
+  const src = Array.isArray(beats) ? beats : [];
+  const bpb = Math.max(1, Math.round(Number(beatsPerBar) || 4));
+  const out = [];
+  for (let i = 0; i < src.length; i += bpb) {
+    const s = Math.round(Number(src[i]?.startMs));
+    if (!Number.isFinite(s)) continue;
+    let e = null;
+    if (i + bpb < src.length) {
+      const n = Math.round(Number(src[i + bpb]?.startMs));
+      if (Number.isFinite(n) && n > s) e = n;
+    }
+    if (!Number.isFinite(e)) {
+      const endRaw = Math.round(Number(src[Math.min(i + bpb - 1, src.length - 1)]?.endMs));
+      e = Number.isFinite(endRaw) && endRaw > s ? endRaw : s + 1;
+    }
+    if (e > s) out.push({ startMs: s, endMs: e, label: String(out.length + 1) });
+  }
+  return out;
+}
+
+function splitBarsByFactor(bars = [], factor = 2) {
+  const src = Array.isArray(bars) ? bars : [];
+  const f = Math.max(1, Math.round(Number(factor) || 1));
+  if (f <= 1 || !src.length) return src;
+  const out = [];
+  for (const row of src) {
+    const s = Math.round(Number(row?.startMs));
+    const e = Math.round(Number(row?.endMs));
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) continue;
+    const span = e - s;
+    for (let k = 0; k < f; k += 1) {
+      const segStart = Math.round(s + (span * k) / f);
+      const segEnd = Math.round(s + (span * (k + 1)) / f);
+      if (segEnd <= segStart) continue;
+      out.push({ startMs: segStart, endMs: segEnd, label: String(out.length + 1) });
+    }
+  }
+  return out;
+}
+
+function extractNumericCandidates(values = []) {
+  const out = [];
+  for (const item of Array.isArray(values) ? values : []) {
+    const text = String(item || "");
+    const matches = text.match(/\d+(?:\.\d+)?/g) || [];
+    for (const m of matches) {
+      const n = Number(m);
+      if (Number.isFinite(n) && n > 0) out.push(n);
+    }
+  }
+  return out;
+}
+
+function medianNumber(values = []) {
+  const nums = (Array.isArray(values) ? values : [])
+    .map((n) => Number(n))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+  if (!nums.length) return NaN;
+  const mid = Math.floor(nums.length / 2);
+  if (nums.length % 2) return nums[mid];
+  return (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function extractFirstJsonObject(text = "") {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // continue
+  }
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    return JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
+
+async function runSongContextResearch({ audioPath = "", sections = [], trackIdentity = null } = {}) {
+  const bridge = getDesktopAgentConversationBridge();
+  if (!bridge) return "";
+  const tTitle = String(trackIdentity?.title || "").trim();
+  const tArtist = String(trackIdentity?.artist || "").trim();
+  const tIsrc = String(trackIdentity?.isrc || "").trim();
+  const trackQuery = tTitle && tArtist ? `${tTitle} - ${tArtist}` : audioTrackQueryFromPath(audioPath);
+  if (!trackQuery) return "";
+  try {
+    const userMessage = [
+      `Research this exact track and return strict JSON only: ${trackQuery}.`,
+      tIsrc ? `ISRC: ${tIsrc}` : "ISRC: unavailable",
+      "Use informational sources (articles/reference/music analysis) and avoid streaming/catalog pages.",
+      "If uncertain, reduce confidence and explain briefly.",
+      "JSON keys only:",
+      "- summary (single concise sentence, <=45 words)",
+      "- styleEra (short phrase)",
+      "- moodTheme (short phrase)",
+      "- sequencingImplication (short phrase)",
+      "- confidence (high|medium|low)",
+      "- rationale (1 sentence)",
+      "- sources (array of 1-3 URLs)"
+    ].join("\n");
+    const res = await bridge.runAgentConversation({
+      userMessage,
+      messages: [],
+      context: {
+        purpose: "song-context-research",
+        sequenceName: state.activeSequence || "",
+        sections: Array.isArray(sections) ? sections.slice(0, 12) : []
+      }
+    });
+    if (!res?.ok) return null;
+    const parsed = extractFirstJsonObject(res.assistantMessage || "");
+    if (!parsed || typeof parsed !== "object") return null;
+    const sources = Array.isArray(parsed.sources)
+      ? parsed.sources.map((s) => String(s || "").trim()).filter(Boolean).slice(0, 3)
+      : [];
+    const informativeSources = sources.filter((url) => isLikelyInformationalSourceUrl(url));
+    const confidence = String(parsed.confidence || "").trim().toLowerCase();
+    return {
+      summary: String(parsed.summary || "").trim(),
+      styleEra: String(parsed.styleEra || "").trim(),
+      moodTheme: String(parsed.moodTheme || "").trim(),
+      sequencingImplication: String(parsed.sequencingImplication || "").trim(),
+      confidence: ["high", "medium", "low"].includes(confidence) ? confidence : "low",
+      rationale: String(parsed.rationale || "").trim(),
+      sources: informativeSources
+    };
+  } catch {
+    return null;
+  }
+}
+
+function buildWebValidationFromServiceEvidence({ evidence = null, trackIdentity = null } = {}) {
+  if (!evidence || typeof evidence !== "object") return null;
+  const sourceBpmValues = extractNumericCandidates(evidence.bpmValues).slice(0, 8);
+  const sourceBarsValues = extractNumericCandidates(evidence.barsPerMinuteValues).slice(0, 8);
+  const signatures = Array.isArray(evidence.timeSignatures)
+    ? evidence.timeSignatures.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
+  const timeSignature = signatures.find((sig) => /^\d+\s*\/\s*\d+$/.test(sig)) || "unknown";
+  const chosenBeatRaw = Number(evidence.chosenBeatBpm);
+  const chosenBeatBpm = Number.isFinite(chosenBeatRaw) && chosenBeatRaw > 0 ? chosenBeatRaw : null;
+  const tempoBpm =
+    chosenBeatBpm != null
+      ? chosenBeatBpm
+      : medianNumber(sourceBpmValues.filter((n) => Number.isFinite(n) && n > 0));
+  const sources = Array.isArray(evidence.sources)
+    ? evidence.sources.map((s) => String(s || "").trim()).filter(Boolean).slice(0, 3)
+    : [];
+  if (!sources.length && !Number.isFinite(tempoBpm)) return null;
+  const title = String(trackIdentity?.title || "").trim();
+  const artist = String(trackIdentity?.artist || "").trim();
+  const confidence =
+    (sources.length > 0 && Number.isFinite(Number(tempoBpm))) ? "high" :
+    (sources.length > 0 || Number.isFinite(Number(tempoBpm))) ? "medium" :
+    "low";
+  return {
+    timeSignature,
+    tempoBpm: Number.isFinite(Number(tempoBpm)) ? Number(tempoBpm) : null,
+    confidence,
+    rationale: "Deterministic BPM/time-signature evidence parsed from songbpm/getsongbpm.",
+    alternates: [],
+    sourceBpmValues,
+    sourceBarsValues,
+    chosenBeatBpm,
+    matchedTitle: title,
+    matchedArtist: artist,
+    exactMatch: Boolean(title && artist),
+    sources
+  };
+}
+
+async function runSongContextWebFallback(audioPath = "") {
+  const query = audioTrackQueryFromPath(audioPath);
+  if (!query) return "";
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=3`;
+    const res = await fetch(url);
+    if (!res.ok) return "";
+    const body = await res.json();
+    const rows = Array.isArray(body?.results) ? body.results : [];
+    if (!rows.length) return "";
+    const top = rows[0];
+    const artist = String(top?.artistName || "").trim();
+    const track = String(top?.trackName || "").trim();
+    const genre = String(top?.primaryGenreName || "").trim();
+    const date = String(top?.releaseDate || "").trim();
+    const year = date ? date.slice(0, 4) : "";
+    const parts = [];
+    if (track || artist) parts.push(`${track || query}${artist ? ` by ${artist}` : ""}`);
+    if (genre) parts.push(`genre: ${genre}`);
+    if (year) parts.push(`release: ${year}`);
+    return parts.join(" | ");
+  } catch {
+    return "";
+  }
+}
+
+async function forceSequenceRefreshAfterAnalysis() {
+  const open = await getOpenSequence(state.endpoint);
+  const seq = open?.data?.sequence;
+  const filePath = String(seq?.path || state.sequencePathInput || "").trim();
+  if (!open?.data?.isOpen || !filePath) {
+    return { ok: false, reason: "no-open-sequence" };
+  }
+  // Explicitly avoid auto-save/reopen here to prevent unintended sequence overwrites.
+  return {
+    ok: false,
+    reason: "auto-save-disabled",
+    filePath
+  };
 }
 
 async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
@@ -4600,43 +5125,658 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   const pipeline = {
     mediaAttached: Boolean(audioPath),
     mediaMetadataRead: false,
+    analysisServiceCalled: false,
+    analysisServiceSucceeded: false,
+    beatTrackWritten: false,
+    barTrackWritten: false,
+    structureTrackWritten: false,
+    lyricsTrackWritten: false,
     structureDerived: false,
     timingDerived: false,
-    lyricsDetected: false
+    lyricsDetected: false,
+    webContextDerived: false
   };
   const trackMarksByName = {};
+  const diagnostics = [];
   let mediaMetadata = null;
+  let sequenceDurationMs = null;
+  let detectedTimeSignature = "";
+  let detectedTempoBpm = null;
+  let detectedTrackIdentity = null;
+  let serviceWebTempoEvidence = null;
+  let webValidation = null;
+  const analysisBaseUrl = String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "");
+  const analysisProviderRaw = String(state.ui.analysisServiceProvider || "beatnet").trim().toLowerCase() || "beatnet";
+  const analysisProvider = ["beatnet", "librosa"].includes(analysisProviderRaw) ? analysisProviderRaw : "beatnet";
+  const analysisApiKey = String(state.ui.analysisServiceApiKeyDraft || "").trim();
+  const analysisBearer = String(state.ui.analysisServiceAuthBearerDraft || "").trim();
 
   if (!audioPath) {
     return {
       summary: "No audio track available for analysis on this sequence.",
       pipeline,
-      details: null
+      details: null,
+      diagnostics
     };
   }
+
+  const addDiag = (message) => {
+    const text = String(message || "").trim();
+    if (!text) return;
+    diagnostics.push(text);
+  };
+  const retry = async (fn, attempts = 3, delayMs = 250) => {
+    let lastErr = null;
+    for (let i = 0; i < attempts; i += 1) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastErr = err;
+        if (i + 1 < attempts) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+    throw lastErr || new Error("retry failed");
+  };
+  try {
+    const open = await getOpenSequence(state.endpoint);
+    const seqDuration = Number(open?.data?.sequence?.durationMs);
+    if (Number.isFinite(seqDuration) && seqDuration > 1) {
+      sequenceDurationMs = Math.round(seqDuration);
+    }
+  } catch {
+    // Non-fatal; clamp can fallback to media duration.
+  }
+
+  if (!analysisBaseUrl) {
+    const analysis = analyzeAudioContext({
+      audioPath,
+      mediaMetadata,
+      sectionSuggestions: [],
+      sectionStartByLabel: {},
+      timingTracks: state.timingTracks || [],
+      trackMarksByName: {},
+      songContextSummary: ""
+    });
+    diagnostics.push("Audio analysis service URL is required in Settings.");
+    return {
+      summary: formatAudioAnalysisSummary({ analysis, pipeline, webValidation }),
+      pipeline: { ...pipeline },
+      details: analysis,
+      diagnostics
+    };
+  }
+  const normalizeMarksForApi = (marks = []) => {
+    const cap =
+      Number.isFinite(sequenceDurationMs) && sequenceDurationMs > 1
+        ? sequenceDurationMs
+        : (Number.isFinite(Number(mediaMetadata?.durationMs)) && Number(mediaMetadata.durationMs) > 1
+          ? Math.round(Number(mediaMetadata.durationMs))
+          : null);
+    const maxExclusive = cap != null ? Math.max(1, cap) : null;
+    const maxEnd = maxExclusive != null ? Math.max(1, maxExclusive - 1) : null;
+    const out = [];
+    for (const mark of Array.isArray(marks) ? marks : []) {
+      const startMsRaw = Math.round(Number(mark?.startMs));
+      if (!Number.isFinite(startMsRaw)) continue;
+      let startMs = Math.max(0, startMsRaw);
+      if (maxExclusive != null && startMs >= maxExclusive) continue;
+      if (!Number.isFinite(startMs)) continue;
+      const endRaw = Number(mark?.endMs);
+      const label = String(mark?.label || "").trim();
+      const row = { startMs };
+      if (Number.isFinite(endRaw) && endRaw > startMs) row.endMs = Math.round(endRaw);
+      if (maxEnd != null && Number.isFinite(row.endMs)) {
+        row.endMs = Math.min(row.endMs, maxEnd);
+      }
+      if (maxEnd != null && !Number.isFinite(row.endMs)) {
+        row.endMs = Math.min(maxEnd, row.startMs + 1);
+      }
+      if (maxEnd != null && row.endMs <= row.startMs) {
+        row.endMs = Math.min(maxEnd, row.startMs + 1);
+      }
+      if (maxEnd != null && row.endMs <= row.startMs) continue;
+      if (label) row.label = label;
+      out.push(row);
+    }
+    return out;
+  };
+  const writeTrackMarks = async (trackName, marks) => {
+    const normalized = normalizeMarksForApi(marks);
+    if (!normalized.length) return { ok: false, error: "No marks to write." };
+    try {
+      await createTimingTrack(state.endpoint, { trackName, replaceIfExists: true });
+      await replaceTimingMarks(state.endpoint, { trackName, marks: normalized });
+      return { ok: true, marks: normalized };
+    } catch (replaceErr) {
+      try {
+        await createTimingTrack(state.endpoint, { trackName, replaceIfExists: true });
+        await insertTimingMarks(state.endpoint, { trackName, marks: normalized });
+        return { ok: true, marks: normalized };
+      } catch (insertErr) {
+        return {
+          ok: false,
+          error: `replace failed: ${String(replaceErr?.message || replaceErr)} | insert failed: ${String(insertErr?.message || insertErr)}`,
+          marks: normalized
+        };
+      }
+    }
+  };
+  const marksRange = (marks = []) => {
+    const rows = Array.isArray(marks) ? marks : [];
+    if (!rows.length) return "none";
+    let minStart = Number.POSITIVE_INFINITY;
+    let maxEnd = Number.NEGATIVE_INFINITY;
+    for (const row of rows) {
+      const start = Number(row?.startMs);
+      const end = Number.isFinite(Number(row?.endMs)) ? Number(row.endMs) : start;
+      if (Number.isFinite(start)) minStart = Math.min(minStart, start);
+      if (Number.isFinite(end)) maxEnd = Math.max(maxEnd, end);
+    }
+    if (!Number.isFinite(minStart) || !Number.isFinite(maxEnd)) return "none";
+    return `${Math.round(minStart)}..${Math.round(maxEnd)}ms`;
+  };
+
+  const trackNameMatches = (name, re) => re.test(String(name || ""));
+  const pickTrackName = (tracks, patterns = []) => {
+    const names = getTimingTrackNames(tracks || []);
+    for (const re of patterns) {
+      const match = names.find((name) => trackNameMatches(name, re));
+      if (match) return match;
+    }
+    return "";
+  };
 
   try {
     const media = await getMediaMetadata(state.endpoint);
     mediaMetadata = media?.data || null;
     pipeline.mediaMetadataRead = Boolean(mediaMetadata && Object.keys(mediaMetadata || {}).length);
-  } catch {
-    // Non-fatal: continue with available timing context.
+  } catch (err) {
+    addDiag(`media.getMetadata failed: ${String(err?.message || err)}`);
+  }
+
+  let tracks = Array.isArray(state.timingTracks) ? state.timingTracks : [];
+  if (refreshTracks || tracks.length === 0) {
+    try {
+      const tracksResp = await getTimingTracks(state.endpoint);
+      tracks = tracksResp?.data?.tracks || [];
+      state.timingTracks = tracks;
+    } catch (err) {
+      addDiag(`timing.getTracks failed: ${String(err?.message || err)}`);
+      tracks = Array.isArray(state.timingTracks) ? state.timingTracks : [];
+    }
+  }
+
+  const generatedBeatTrackName = "XD: Beats (Agent)";
+  const generatedBarsTrackName = "XD: Bars (Agent)";
+  const generatedBeatRawTrackName = "XD: Beats (Agent Raw)";
+  const generatedBarsRawTrackName = "XD: Bars (Agent Raw)";
+  const generatedStructureTrackName = "XD: Song Structure (Agent)";
+  const generatedLyricsTrackName = "XD: Lyrics (Agent)";
+  let beatTrackName = "";
+  let structureTrackName = "";
+  const analysisBridge = getDesktopAudioAnalysisBridge();
+  if (!analysisBridge) {
+    addDiag("Analysis service bridge unavailable in this runtime.");
+  } else {
+    try {
+      pipeline.analysisServiceCalled = true;
+      const analysisRes = await analysisBridge.runAudioAnalysisService({
+        filePath: audioPath,
+        baseUrl: analysisBaseUrl,
+        provider: analysisProvider,
+        apiKey: analysisApiKey || undefined,
+        authBearer: analysisBearer || undefined
+      });
+      addDiag(`Analysis service URL: ${analysisBaseUrl}`);
+      if (!analysisRes?.ok) {
+        addDiag(`Audio analysis service failed: ${String(analysisRes?.error || "unknown error")}`);
+      } else {
+        pipeline.analysisServiceSucceeded = true;
+        const data = analysisRes?.data && typeof analysisRes.data === "object" ? analysisRes.data : {};
+        const dataMeta = data?.meta && typeof data.meta === "object" ? data.meta : {};
+        if (String(dataMeta?.lyricsParserVersion || "").trim()) {
+          addDiag(`Lyrics parser: ${String(dataMeta.lyricsParserVersion).trim()}`);
+        }
+        if (dataMeta?.lyricsLookup && typeof dataMeta.lyricsLookup === "object") {
+          const lrId = String(dataMeta.lyricsLookup.lrclibId || "").trim();
+          const lrAlbum = String(dataMeta.lyricsLookup.lrclibAlbum || "").trim();
+          const lrFirst = Math.round(Number(dataMeta.lyricsLookup.lrclibFirstTimestampMs));
+          if (lrId) addDiag(`Lyrics source LRCLIB id: ${lrId}`);
+          if (lrAlbum) addDiag(`Lyrics source album: ${lrAlbum}`);
+          if (Number.isFinite(lrFirst)) addDiag(`Lyrics source first timestamp: ${lrFirst}ms.`);
+        }
+        detectedTrackIdentity = data?.meta?.trackIdentity && typeof data.meta.trackIdentity === "object"
+          ? data.meta.trackIdentity
+          : null;
+        serviceWebTempoEvidence = data?.meta?.webTempoEvidence && typeof data.meta.webTempoEvidence === "object"
+          ? data.meta.webTempoEvidence
+          : null;
+        const beats = Array.isArray(data?.beats) ? data.beats : [];
+        const bars = Array.isArray(data?.bars) ? data.bars : [];
+        const sections = Array.isArray(data?.sections) ? data.sections : [];
+        const lyrics = Array.isArray(data?.lyrics) ? data.lyrics : [];
+        const serviceDurationMs = Number(data?.durationMs);
+        if (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1) {
+          const roundedDuration = Math.round(serviceDurationMs);
+          if (!Number.isFinite(sequenceDurationMs) || sequenceDurationMs <= 1) {
+            sequenceDurationMs = roundedDuration;
+          }
+          if (!Number.isFinite(Number(mediaMetadata?.durationMs)) || Number(mediaMetadata?.durationMs) <= 1) {
+            mediaMetadata = { ...(mediaMetadata || {}), durationMs: roundedDuration };
+            pipeline.mediaMetadataRead = true;
+          }
+        }
+        const tempoBpm = Number(data?.bpm);
+        const timeSignature = String(data?.timeSignature || "").trim();
+        detectedTempoBpm = Number.isFinite(tempoBpm) ? tempoBpm : null;
+        detectedTimeSignature = timeSignature;
+        if (Number.isFinite(tempoBpm) || timeSignature) {
+          const note = `${Number.isFinite(tempoBpm) ? `${tempoBpm} BPM` : "BPM?"}${timeSignature ? ` / ${timeSignature}` : ""}`;
+          addDiag(`Service analysis summary: ${note}`);
+        }
+        if (Array.isArray(beats) && beats.length) {
+          const beatWrite = await writeTrackMarks(generatedBeatTrackName, beats);
+          if (beatWrite.ok) {
+            beatTrackName = generatedBeatTrackName;
+            trackMarksByName[generatedBeatTrackName] = beatWrite.marks;
+            const beatRawWrite = await writeTrackMarks(generatedBeatRawTrackName, beats);
+            if (beatRawWrite.ok) {
+              trackMarksByName[generatedBeatRawTrackName] = beatRawWrite.marks;
+            } else {
+              addDiag(`Raw beat track write failed: ${beatRawWrite.error}`);
+            }
+            pipeline.beatTrackWritten = true;
+            pipeline.timingDerived = true;
+          } else {
+            addDiag(`Beat track write failed: ${beatWrite.error}`);
+          }
+        } else {
+          addDiag("Analysis service returned no beats.");
+        }
+        if (Array.isArray(bars) && bars.length) {
+          const barsWrite = await writeTrackMarks(generatedBarsTrackName, bars);
+          if (barsWrite.ok) {
+            trackMarksByName[generatedBarsTrackName] = barsWrite.marks;
+            const barsRawWrite = await writeTrackMarks(generatedBarsRawTrackName, bars);
+            if (barsRawWrite.ok) {
+              trackMarksByName[generatedBarsRawTrackName] = barsRawWrite.marks;
+            } else {
+              addDiag(`Raw bars track write failed: ${barsRawWrite.error}`);
+            }
+            pipeline.barTrackWritten = true;
+            pipeline.timingDerived = true;
+          } else {
+            addDiag(`Bars track write failed: ${barsWrite.error}`);
+          }
+        } else {
+          addDiag("Analysis service returned no bars.");
+        }
+        if (Array.isArray(sections) && sections.length) {
+          let structureWrite = await writeTrackMarks(generatedStructureTrackName, sections);
+          if (
+            !structureWrite.ok &&
+            /within sequence duration/i.test(String(structureWrite?.error || "")) &&
+            Array.isArray(beats) &&
+            beats.length
+          ) {
+            const beatCap = beats.reduce((acc, mark) => {
+              const start = Number(mark?.startMs);
+              const end = Number(mark?.endMs);
+              const candidate =
+                Number.isFinite(end) && end > start
+                  ? end
+                  : (Number.isFinite(start) ? start + 1 : 0);
+              return Math.max(acc, candidate);
+            }, 0);
+            const strictCap = Math.max(1, Math.round(beatCap));
+            const strictMaxEnd = Math.max(1, strictCap - 1);
+            const cappedSections = sections
+              .map((mark) => {
+                const start = Math.max(0, Math.round(Number(mark?.startMs)));
+                if (!Number.isFinite(start) || start >= strictCap) return null;
+                let end = Math.round(Number(mark?.endMs));
+                if (!Number.isFinite(end) || end <= start) end = start + 1;
+                end = Math.min(end, strictMaxEnd);
+                if (end <= start) return null;
+                const row = { startMs: start, endMs: end };
+                const label = String(mark?.label || "").trim();
+                if (label) row.label = label;
+                return row;
+              })
+              .filter(Boolean);
+            if (cappedSections.length) {
+              structureWrite = await writeTrackMarks(generatedStructureTrackName, cappedSections);
+              if (structureWrite.ok) {
+                addDiag(
+                  `Structure track write retried with beat-derived cap ${strictCap}ms (range ${marksRange(cappedSections)}).`
+                );
+              }
+            }
+          }
+          if (structureWrite.ok) {
+            structureTrackName = generatedStructureTrackName;
+            trackMarksByName[generatedStructureTrackName] = structureWrite.marks;
+            pipeline.structureTrackWritten = true;
+            pipeline.structureDerived = true;
+          } else {
+            addDiag(
+              `Structure track write failed: ${structureWrite.error} | normalized range=${marksRange(structureWrite?.marks || sections)}`
+            );
+          }
+        } else {
+          addDiag("Analysis service returned no song sections.");
+        }
+        if (Array.isArray(lyrics) && lyrics.length) {
+          const firstServiceLyricMs = Math.round(Number(lyrics?.[0]?.startMs));
+          if (Number.isFinite(firstServiceLyricMs)) {
+            addDiag(`Lyrics first mark from service: ${firstServiceLyricMs}ms.`);
+          }
+          const lyricsWrite = await writeTrackMarks(generatedLyricsTrackName, lyrics);
+          if (lyricsWrite.ok) {
+            trackMarksByName[generatedLyricsTrackName] = lyricsWrite.marks;
+            pipeline.lyricsTrackWritten = true;
+            pipeline.lyricsDetected = true;
+            pipeline.timingDerived = true;
+            const firstWrittenLyricMs = Math.round(Number(lyricsWrite?.marks?.[0]?.startMs));
+            if (Number.isFinite(firstWrittenLyricMs)) {
+              addDiag(`Lyrics first mark written: ${firstWrittenLyricMs}ms.`);
+            }
+            if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
+              addDiag(`Lyrics global shift applied: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
+            }
+          } else {
+            addDiag(`Lyrics track write failed: ${lyricsWrite.error}`);
+          }
+        } else {
+          addDiag("Analysis service returned no synced lyrics.");
+          if (String(dataMeta.lyricsSourceError || "").trim()) {
+            addDiag(`Lyrics source detail: ${String(dataMeta.lyricsSourceError).trim()}`);
+          }
+        }
+      }
+    } catch (err) {
+      addDiag(`Audio analysis service runtime failure: ${String(err?.message || err)}`);
+    }
   }
 
   try {
-    await fetchSectionSuggestions({ refreshTracks });
-  } catch {
-    // Non-fatal: section suggestions may remain empty.
+    const tracksResp = await getTimingTracks(state.endpoint);
+    tracks = tracksResp?.data?.tracks || [];
+    state.timingTracks = tracks;
+  } catch (err) {
+    addDiag(`timing.getTracks refresh failed: ${String(err?.message || err)}`);
   }
 
   const trackNames = getTimingTrackNames(state.timingTracks || []);
-  const candidateTracks = trackNames.filter((name) => /section|song|structure|phrase|beat|tempo|bpm|bar|lyric/i.test(name)).slice(0, 6);
+  const explicitCandidates = [
+    beatTrackName,
+    generatedBeatRawTrackName,
+    generatedBarsTrackName,
+    generatedBarsRawTrackName,
+    structureTrackName,
+    generatedStructureTrackName
+  ]
+    .map((name) => String(name || "").trim())
+    .filter(Boolean);
+  const candidateTracks = Array.from(
+    new Set([
+      ...explicitCandidates,
+      ...trackNames.filter((name) => /section|song|structure|phrase|beat|tempo|bpm|bar|lyric/i.test(name)).slice(0, 8)
+    ])
+  );
   for (const trackName of candidateTracks) {
     try {
       const marksResp = await getTimingMarks(state.endpoint, trackName);
       trackMarksByName[trackName] = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
-    } catch {
-      trackMarksByName[trackName] = [];
+    } catch (err) {
+      addDiag(`timing.getMarks failed for ${trackName}: ${String(err?.message || err)}`);
+      if (!Array.isArray(trackMarksByName[trackName]) || trackMarksByName[trackName].length === 0) {
+        trackMarksByName[trackName] = [];
+      }
+    }
+  }
+
+  const structureTrack =
+    structureTrackName ||
+    pickTrackName(state.timingTracks || [], [/^xd:\s*song\s*structure\s*\(agent\)$/i, /^xd:\s*song\s*structure$/i, /section|song|structure|phrase|form/i]);
+  if (structureTrack && Array.isArray(trackMarksByName[structureTrack]) && trackMarksByName[structureTrack].length > 0) {
+    const built = buildSectionSuggestions(trackMarksByName[structureTrack]);
+    state.ui.sectionTrackName = structureTrack;
+    state.sectionSuggestions = built.labels;
+    state.sectionStartByLabel = built.startByLabel;
+    pipeline.structureDerived = built.labels.length > 0;
+  } else {
+    try {
+      await retry(() => fetchSectionSuggestions({ refreshTracks: false, selectedTrack: structureTrack || "" }), 3, 300);
+    } catch (err) {
+      addDiag(`Section suggestion refresh failed: ${String(err?.message || err)}`);
+    }
+  }
+
+  const songContextResearch = await runSongContextResearch({
+    audioPath,
+    sections: state.sectionSuggestions || [],
+    trackIdentity: detectedTrackIdentity
+  });
+  const songContextSummary = String(songContextResearch?.summary || "").trim();
+  const webFallbackContext = songContextSummary ? "" : (await runSongContextWebFallback(audioPath));
+  const effectiveSongContext = songContextSummary || webFallbackContext || "";
+  pipeline.webContextDerived = Boolean(effectiveSongContext);
+  if (!effectiveSongContext) addDiag("Song context unavailable from cloud agent and web fallback.");
+  if (songContextResearch) {
+    addDiag("Track research sources are context-only and are not used for BPM/time-signature correction.");
+    if (songContextResearch.confidence) addDiag(`Track research confidence: ${songContextResearch.confidence}`);
+    if (songContextResearch.rationale) addDiag(`Track research rationale: ${songContextResearch.rationale}`);
+    const rsources = Array.isArray(songContextResearch.sources) ? songContextResearch.sources : [];
+    for (let i = 0; i < rsources.length; i += 1) {
+      addDiag(`Track research source ${i + 1}: ${rsources[i]}`);
+    }
+  }
+  webValidation = buildWebValidationFromServiceEvidence({
+    evidence: serviceWebTempoEvidence,
+    trackIdentity: detectedTrackIdentity
+  });
+  if (detectedTrackIdentity && (detectedTrackIdentity.title || detectedTrackIdentity.artist)) {
+    addDiag(
+      `Fingerprint identity: ${String(detectedTrackIdentity.title || "?")} / ${String(detectedTrackIdentity.artist || "?")} / ISRC=${String(detectedTrackIdentity.isrc || "unavailable")}`
+    );
+  }
+  if (webValidation) {
+    if (webValidation.ignored) {
+      if (webValidation.reason === "non-informational-sources") {
+        addDiag("Web validation ignored: non-informational sources (streaming/catalog links).");
+      } else if (webValidation.reason === "unverifiable-sources") {
+        addDiag("Web validation ignored: returned sources are not track-specific to fingerprinted title/artist.");
+      } else if (webValidation.reason === "low-confidence") {
+        addDiag("Web validation ignored: low-confidence web evidence.");
+      } else {
+        addDiag("Web validation ignored: non-exact track match.");
+        if (webValidation.matchedTitle || webValidation.matchedArtist) {
+          addDiag(`Web matched track candidate: ${webValidation.matchedTitle || "?"} / ${webValidation.matchedArtist || "?"}`);
+        }
+      }
+    } else {
+    const wsig = String(webValidation.timeSignature || "unknown");
+    const wbpm = Number(webValidation.tempoBpm);
+    const wconf = String(webValidation.confidence || "low");
+    const wsources = Array.isArray(webValidation.sources)
+      ? webValidation.sources.map((s) => String(s || "").trim()).filter(Boolean).slice(0, 3)
+      : [];
+    const wSourceBpms = extractNumericCandidates(webValidation.sourceBpmValues).slice(0, 8);
+    const wSourceBars = extractNumericCandidates(webValidation.sourceBarsValues).slice(0, 8);
+    const wsrc = wsources.length;
+    let hasConflict = false;
+    const hasNumericEvidence =
+      Number.isFinite(Number(webValidation.tempoBpm)) ||
+      Number.isFinite(Number(webValidation.chosenBeatBpm)) ||
+      wSourceBpms.length > 0 ||
+      wSourceBars.length > 0;
+    const strongEvidence = wconf === "high" && wsrc > 0 && hasNumericEvidence;
+    if (!strongEvidence) {
+      webValidation.ignored = true;
+      webValidation.reason = "low-confidence";
+      webValidation.conflict = false;
+      addDiag(
+        `Web validation ignored: low-confidence or insufficient evidence (${wconf}${wsrc ? `, sources=${wsrc}` : ""}).`
+      );
+      if (webValidation.rationale) addDiag(`Web validation rationale: ${webValidation.rationale}`);
+      if (Array.isArray(webValidation.alternates) && webValidation.alternates.length) {
+        addDiag(`Web validation alternates: ${webValidation.alternates.join(" | ")}`);
+      }
+      if (wSourceBpms.length) addDiag(`Web source BPM values: ${wSourceBpms.join(", ")}`);
+      if (wSourceBars.length) addDiag(`Web source bars/min values: ${wSourceBars.join(", ")}`);
+      for (let i = 0; i < wsources.length; i += 1) {
+        addDiag(`Web source ${i + 1}: ${wsources[i]}`);
+      }
+    } else {
+      addDiag(`Web validation: ${wsig}${Number.isFinite(wbpm) ? ` / ${wbpm} BPM` : ""} (${wconf})${wsrc ? `, sources=${wsrc}` : ""}`);
+      if (webValidation.rationale) addDiag(`Web validation rationale: ${webValidation.rationale}`);
+      if (Array.isArray(webValidation.alternates) && webValidation.alternates.length) {
+        addDiag(`Web validation alternates: ${webValidation.alternates.join(" | ")}`);
+      }
+      if (wSourceBpms.length) addDiag(`Web source BPM values: ${wSourceBpms.join(", ")}`);
+      if (wSourceBars.length) addDiag(`Web source bars/min values: ${wSourceBars.join(", ")}`);
+      for (let i = 0; i < wsources.length; i += 1) {
+        addDiag(`Web source ${i + 1}: ${wsources[i]}`);
+      }
+      if (detectedTimeSignature && wsig !== "unknown" && !areMetersCompatible(detectedTimeSignature, wsig)) {
+        addDiag(`Meter mismatch: service=${detectedTimeSignature}, web=${wsig}`);
+        hasConflict = true;
+      }
+      if (Number.isFinite(detectedTempoBpm) && detectedTempoBpm > 0) {
+        const bpb = beatsPerBarFromSignature(detectedTimeSignature || wsig);
+        const serviceTempo = Number(detectedTempoBpm);
+        const relErr = (a, b) => Math.abs((a - b) / Math.max(1e-9, b));
+        // Core check:
+        // Bars Per Minute = Beats Per Minute / Beats Per Bar
+        // Compare BeatNet tempo to both web BPM and web Bars/Minute.
+        const chosenBeatBpm = Number(webValidation.chosenBeatBpm);
+        const evidenceBeatCandidates = [];
+        if (Number.isFinite(chosenBeatBpm) && chosenBeatBpm > 0) evidenceBeatCandidates.push(chosenBeatBpm);
+        evidenceBeatCandidates.push(...wSourceBpms);
+        evidenceBeatCandidates.push(wbpm);
+        const webBeatBpm = medianNumber(evidenceBeatCandidates.filter((n) => Number.isFinite(n) && n > 0));
+        const derivedBeatsFromBars = wSourceBars.map((v) => v * Math.max(1, bpb));
+        const webBarsPerMinute = Number.isFinite(medianNumber(wSourceBars))
+          ? medianNumber(wSourceBars)
+          : (Number.isFinite(webBeatBpm) ? (webBeatBpm / Math.max(1, bpb)) : NaN);
+        const errVsBeats = Number.isFinite(webBeatBpm) ? relErr(serviceTempo, webBeatBpm) : Number.POSITIVE_INFINITY;
+        const errVsBars = Number.isFinite(webBarsPerMinute) ? relErr(serviceTempo, webBarsPerMinute) : Number.POSITIVE_INFINITY;
+        const altNums = extractNumericCandidates(webValidation.alternates);
+        const altNearService = altNums.some((n) => relErr(n, serviceTempo) <= 0.12);
+        addDiag(
+          `Tempo compare: service=${serviceTempo} vs webBeats=${Number.isFinite(webBeatBpm) ? webBeatBpm : "n/a"} (err ${Number.isFinite(errVsBeats) ? (errVsBeats * 100).toFixed(2) : "n/a"}%), webBars=${Number.isFinite(webBarsPerMinute) ? webBarsPerMinute.toFixed(2) : "n/a"} (err ${Number.isFinite(errVsBars) ? (errVsBars * 100).toFixed(2) : "n/a"}%), beatsPerBar=${bpb}.`
+        );
+        if (derivedBeatsFromBars.length) {
+          addDiag(`Tempo compare derived beats from bars/min: ${derivedBeatsFromBars.map((n) => n.toFixed(2)).join(", ")}`);
+        }
+        if (altNearService) {
+          addDiag("Tempo compare hint: web alternates include a value close to service tempo (possible bar-rate capture).");
+        }
+
+        let bestScale = 1;
+        let bestErr = errVsBeats;
+        let forcedScale = false;
+        if (altNearService && bpb > 1) {
+          bestScale = bpb;
+          bestErr = Math.min(bestErr, errVsBars);
+        } else if (errVsBars + 0.01 < errVsBeats) {
+          bestScale = bpb;
+          bestErr = errVsBars;
+        } else {
+          // Secondary fallback for half/double-time ambiguity around beat-level tempo.
+          const candidates = [1, 0.5, 2];
+          for (const scale of candidates) {
+            const scaled = serviceTempo * scale;
+            const err = Number.isFinite(webBeatBpm) ? relErr(scaled, webBeatBpm) : Number.POSITIVE_INFINITY;
+            if (err < bestErr) {
+              bestErr = err;
+              bestScale = scale;
+            }
+          }
+        }
+        const scaledErrCandidates = [1, 0.5, 2]
+          .map((scale) => {
+            const scaled = serviceTempo * scale;
+            return Number.isFinite(webBeatBpm) ? relErr(scaled, webBeatBpm) : Number.POSITIVE_INFINITY;
+          })
+          .filter((n) => Number.isFinite(n));
+        const minScaledErr = scaledErrCandidates.length ? Math.min(...scaledErrCandidates) : Number.POSITIVE_INFINITY;
+        if (!altNearService && Math.min(errVsBeats, errVsBars) > 0.20 && minScaledErr > 0.12) {
+          addDiag("Tempo compare: web evidence is incoherent with service tempo; skipping automatic tempo correction.");
+          bestScale = 1;
+        }
+        // Prevent 3x inflation in triple meter for BeatNet half-time correction.
+        // In practice this path should normalize half-time beat capture to 2x.
+        if (Math.round(bpb) === 3 && Math.abs(bestScale - 3) < 0.01) {
+          bestScale = 2;
+          forcedScale = true;
+          bestErr = 0;
+          addDiag("Tempo correction normalization: forcing 2x for triple-meter half-time adjustment.");
+        }
+
+        if ((bestErr <= 0.08 || forcedScale) && Math.abs(bestScale - 1) > 0.01) {
+          const currentBeats = Array.isArray(trackMarksByName[generatedBeatTrackName])
+            ? trackMarksByName[generatedBeatTrackName]
+            : [];
+          const currentBars = Array.isArray(trackMarksByName[generatedBarsTrackName])
+            ? trackMarksByName[generatedBarsTrackName]
+            : [];
+          const halfTimeDoubleMode = bestScale > 1.01 && Math.round(bestScale) === 2 && currentBars.length > 0;
+          let correctedBeats = currentBeats;
+          let correctedBars = [];
+          if (halfTimeDoubleMode) {
+            correctedBeats = subdivideBeatsByFactor(currentBeats, 2);
+            correctedBeats = relabelBeats(correctedBeats, bpb, 1);
+            correctedBars = barsFromBeats(correctedBeats, bpb);
+          } else {
+            if (bestScale > 1.01) {
+              correctedBeats = subdivideBeatsByFactor(currentBeats, Math.max(2, Math.round(bestScale)));
+            } else if (bestScale < 0.99) {
+              correctedBeats = mergeBeatsByFactor(currentBeats, Math.max(2, Math.round(1 / bestScale)));
+            }
+            correctedBeats = relabelBeats(correctedBeats, bpb, 1);
+            correctedBars = barsFromBeats(correctedBeats, bpb);
+          }
+          const beatFixWrite = await writeTrackMarks(generatedBeatTrackName, correctedBeats);
+          const barFixWrite = await writeTrackMarks(generatedBarsTrackName, correctedBars);
+          if (beatFixWrite.ok) {
+            trackMarksByName[generatedBeatTrackName] = beatFixWrite.marks;
+            pipeline.beatTrackWritten = true;
+          } else {
+            addDiag(`Beat correction write failed: ${beatFixWrite.error}`);
+          }
+          if (barFixWrite.ok) {
+            trackMarksByName[generatedBarsTrackName] = barFixWrite.marks;
+            pipeline.barTrackWritten = true;
+          } else {
+            addDiag(`Bars correction write failed: ${barFixWrite.error}`);
+          }
+          detectedTempoBpm = Math.round(serviceTempo * bestScale * 100) / 100;
+          if (halfTimeDoubleMode) {
+            addDiag("Tempo correction mode: half-time doubling adjustment (beats and bars doubled).");
+          }
+          addDiag(
+            `Tempo corrected by factor ${bestScale.toFixed(2)} using meter-aware web validation (${serviceTempo} -> ${detectedTempoBpm} BPM, beatsPerBar=${bpb}).`
+          );
+          webValidation.correctionApplied = true;
+        } else if (bestErr > 0.08) {
+          addDiag(
+            `Tempo mismatch: service=${detectedTempoBpm} BPM, web=${Number.isFinite(webBeatBpm) ? webBeatBpm : (Number.isFinite(wbpm) ? wbpm : "n/a")} BPM`
+          );
+          hasConflict = true;
+        }
+      }
+      webValidation.conflict = hasConflict;
+    }
+    }
+  } else {
+    if (detectedTrackIdentity && detectedTrackIdentity.title && detectedTrackIdentity.artist) {
+      addDiag("Web validation unavailable for exact track lookup.");
+    } else {
+      addDiag("Web validation skipped: fingerprinted title+artist not available.");
     }
   }
 
@@ -4646,14 +5786,24 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     sectionSuggestions: state.sectionSuggestions,
     sectionStartByLabel: state.sectionStartByLabel,
     timingTracks: state.timingTracks,
-    trackMarksByName
+    trackMarksByName,
+    songContextSummary: effectiveSongContext,
+    detectedTimeSignature,
+    detectedTempoBpm
   });
+  if (detectedTrackIdentity && typeof detectedTrackIdentity === "object") {
+    analysis.trackIdentity = {
+      title: String(detectedTrackIdentity.title || "").trim(),
+      artist: String(detectedTrackIdentity.artist || "").trim(),
+      isrc: String(detectedTrackIdentity.isrc || "").trim()
+    };
+  }
 
-  const mergedPipeline = { ...pipeline, ...(analysis?.pipeline || {}) };
   return {
-    summary: (analysis.summaryLines || []).join("\n"),
-    pipeline: mergedPipeline,
-    details: analysis
+    summary: formatAudioAnalysisSummary({ analysis, pipeline, webValidation }),
+    pipeline: { ...pipeline },
+    details: analysis,
+    diagnostics
   };
 }
 
@@ -4663,12 +5813,66 @@ async function onAnalyzeAudio() {
     setStatus("warning", "No audio track available for analysis on this sequence.");
     return render();
   }
+  state.diagnostics = (state.diagnostics || []).filter(
+    (entry) => !String(entry?.text || "").startsWith("Audio analysis:")
+  );
+  state.sectionSuggestions = [];
+  state.sectionStartByLabel = {};
+  state.audioAnalysis.summary = "";
+  state.audioAnalysis.lastAnalyzedAt = "";
+  state.audioAnalysis.pipeline = {
+    mediaAttached: true,
+    mediaMetadataRead: false,
+    analysisServiceCalled: false,
+    analysisServiceSucceeded: false,
+    beatTrackWritten: false,
+    barTrackWritten: false,
+    structureTrackWritten: false,
+    lyricsTrackWritten: false,
+    structureDerived: false,
+    timingDerived: false,
+    lyricsDetected: false,
+    webContextDerived: false
+  };
   state.ui.agentThinking = true;
   setStatus("info", "Running audio analysis pipeline...");
   render();
   try {
     const result = await runAudioAnalysisPipeline({ refreshTracks: true });
     state.audioAnalysis.summary = String(result.summary || buildAudioAnalysisStubSummary());
+    for (const row of Array.isArray(result?.diagnostics) ? result.diagnostics : []) {
+      pushDiagnostic("warning", `Audio analysis: ${row}`);
+    }
+    try {
+      const refreshRes = await forceSequenceRefreshAfterAnalysis();
+      if (refreshRes?.ok) {
+        pushDiagnostic("info", `Audio analysis: forced xLights sequence refresh (${refreshRes.filePath}).`);
+        if (refreshRes?.warning === "save-failed-reopened") {
+          pushDiagnostic(
+            "warning",
+            `Audio analysis: sequence save failed, but reopen succeeded (${refreshRes.error}).`
+          );
+        }
+      } else if (refreshRes?.reason === "auto-save-disabled") {
+        pushDiagnostic(
+          "info",
+          "Audio analysis: skipped forced xLights refresh (auto-save/reopen disabled by policy)."
+        );
+      } else if (refreshRes?.reason === "save-failed") {
+        pushDiagnostic(
+          "warning",
+          `Audio analysis: sequence save failed; skipped reopen to avoid dropping in-memory timing tracks (${refreshRes.error}).`
+        );
+      } else if (refreshRes?.reason === "reopen-failed") {
+        pushDiagnostic(
+          "warning",
+          `Audio analysis: sequence reopen failed after analysis (${refreshRes.error}).`
+        );
+      }
+    } catch (err) {
+      pushDiagnostic("warning", `Audio analysis: force refresh failed: ${String(err?.message || err)}`);
+    }
+    await onRefresh();
     state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
     state.audioAnalysis.pipeline = result.pipeline || null;
     setStatus("info", "Audio analysis pipeline complete.");
@@ -4845,9 +6049,13 @@ function sequenceScreen() {
   const pipelineRows = [
     ["Media attached", Boolean(audioPipeline?.mediaAttached)],
     ["Metadata read", Boolean(audioPipeline?.mediaMetadataRead)],
-    ["Structure derived", Boolean(audioPipeline?.structureDerived)],
-    ["Timing derived", Boolean(audioPipeline?.timingDerived)],
-    ["Lyrics detected", Boolean(audioPipeline?.lyricsDetected)]
+    ["Analysis service reached", Boolean(audioPipeline?.analysisServiceCalled)],
+    ["Analysis service succeeded", Boolean(audioPipeline?.analysisServiceSucceeded)],
+    ["Beat track written", Boolean(audioPipeline?.beatTrackWritten)],
+    ["Bars track written", Boolean(audioPipeline?.barTrackWritten)],
+    ["Song structure written", Boolean(audioPipeline?.structureTrackWritten)],
+    ["Lyrics track written", Boolean(audioPipeline?.lyricsTrackWritten)],
+    ["Song context derived", Boolean(audioPipeline?.webContextDerived)]
   ];
   const audioAnalyzedAt = state.audioAnalysis?.lastAnalyzedAt
     ? new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -4911,7 +6119,7 @@ function sequenceScreen() {
         </div>
         <div class="field">
           <label>Pipeline Stages</label>
-          <ul class="list">
+          <ul class="list pipeline-list">
             ${pipelineRows.map(([label, done]) => `<li><strong>${done ? "PASS" : "PENDING"}</strong> - ${label}</li>`).join("")}
           </ul>
         </div>
@@ -5280,11 +6488,24 @@ function settingsDrawer() {
           <input id="agent-base-url-input" placeholder="Base URL (optional)" value="${String(state.ui.agentBaseUrlDraft || "").replace(/\"/g, "&quot;")}" />
           <input id="agent-model-input" placeholder="Model (optional)" value="${String(state.ui.agentModelDraft || "").replace(/\"/g, "&quot;")}" />
           <input id="agent-api-key-input" type="password" placeholder="${state.health.agentHasStoredApiKey ? "Stored API key is set. Enter to replace." : "Enter API key to enable cloud chat"}" value="" />
-          <div class="row" style="margin-top:6px;">
-            <button id="save-agent-config">Save Cloud Config</button>
-            <button id="clear-agent-key" ${state.health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
-          </div>
+        <div class="row" style="margin-top:6px;">
+          <button id="save-agent-config">Save Cloud Config</button>
+          <button id="clear-agent-key" ${state.health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
+          <button id="test-agent-cloud">Test Cloud Agent</button>
+        </div>
           <p class="banner">Source: ${state.health.agentConfigSource || "none"} | Stored key: ${state.health.agentHasStoredApiKey ? "yes" : "no"}</p>
+          <p class="banner">Last cloud test: ${state.ui.agentLastTestStatus || "not run in this session"}</p>
+        </section>
+        <section class="field">
+          <label>Audio Analysis Service</label>
+          <input id="analysis-service-url-input" placeholder="Service base URL (e.g. http://127.0.0.1:5055)" value="${String(state.ui.analysisServiceUrlDraft || "").replace(/\"/g, "&quot;")}" />
+          <select id="analysis-service-provider-input">
+            <option value="beatnet" ${state.ui.analysisServiceProvider === "beatnet" ? "selected" : ""}>BeatNet</option>
+            <option value="librosa" ${state.ui.analysisServiceProvider === "librosa" ? "selected" : ""}>Librosa</option>
+          </select>
+          <input id="analysis-service-api-key-input" type="password" placeholder="x-api-key (optional)" value="${String(state.ui.analysisServiceApiKeyDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="analysis-service-bearer-input" type="password" placeholder="Bearer token (optional)" value="${String(state.ui.analysisServiceAuthBearerDraft || "").replace(/\"/g, "&quot;")}" />
+          <p class="banner">Thin client mode: app sends audio to this service and writes returned beats/bars/sections.</p>
         </section>
         <div class="row">
           <button id="test-connection">Test Connection</button>
@@ -5856,11 +7077,45 @@ function bindEvents() {
     });
   }
 
+  const analysisServiceUrlInput = app.querySelector("#analysis-service-url-input");
+  if (analysisServiceUrlInput) {
+    analysisServiceUrlInput.addEventListener("input", () => {
+      state.ui.analysisServiceUrlDraft = String(analysisServiceUrlInput.value || "");
+      persist();
+    });
+  }
+
+  const analysisServiceProviderInput = app.querySelector("#analysis-service-provider-input");
+  if (analysisServiceProviderInput) {
+    analysisServiceProviderInput.addEventListener("change", () => {
+      const raw = String(analysisServiceProviderInput.value || "").trim().toLowerCase();
+      state.ui.analysisServiceProvider = ["beatnet", "librosa"].includes(raw) ? raw : "beatnet";
+      persist();
+    });
+  }
+  const analysisServiceApiKeyInput = app.querySelector("#analysis-service-api-key-input");
+  if (analysisServiceApiKeyInput) {
+    analysisServiceApiKeyInput.addEventListener("input", () => {
+      state.ui.analysisServiceApiKeyDraft = String(analysisServiceApiKeyInput.value || "");
+      persist();
+    });
+  }
+  const analysisServiceBearerInput = app.querySelector("#analysis-service-bearer-input");
+  if (analysisServiceBearerInput) {
+    analysisServiceBearerInput.addEventListener("input", () => {
+      state.ui.analysisServiceAuthBearerDraft = String(analysisServiceBearerInput.value || "");
+      persist();
+    });
+  }
+
   const saveAgentConfigBtn = app.querySelector("#save-agent-config");
   if (saveAgentConfigBtn) saveAgentConfigBtn.addEventListener("click", onSaveAgentConfig);
 
   const clearAgentKeyBtn = app.querySelector("#clear-agent-key");
   if (clearAgentKeyBtn) clearAgentKeyBtn.addEventListener("click", onClearStoredAgentApiKey);
+
+  const testAgentCloudBtn = app.querySelector("#test-agent-cloud");
+  if (testAgentCloudBtn) testAgentCloudBtn.addEventListener("click", onTestCloudAgent);
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);

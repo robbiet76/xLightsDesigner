@@ -1,0 +1,1676 @@
+from __future__ import annotations
+
+import os
+import tempfile
+import hashlib
+import json
+import time
+import re
+import math
+from urllib.parse import quote_plus
+import collections
+import collections.abc
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import requests
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+
+# madmom (used by BeatNet) still references legacy collections symbols.
+for _name in ("MutableSequence", "MutableMapping", "MutableSet", "Sequence", "Mapping", "Set"):
+    if not hasattr(collections, _name) and hasattr(collections.abc, _name):
+        setattr(collections, _name, getattr(collections.abc, _name))
+
+try:
+    import librosa  # type: ignore
+except Exception:  # pragma: no cover
+    librosa = None
+
+try:
+    from BeatNet.BeatNet import BeatNet as BeatNetEstimator  # type: ignore
+except Exception:  # pragma: no cover
+    BeatNetEstimator = None
+
+
+APP_API_KEY = os.getenv("ANALYSIS_API_KEY", "").strip()
+DEFAULT_BEATS_PER_BAR = int(os.getenv("ANALYSIS_BEATS_PER_BAR", "4"))
+AUDD_API_TOKEN = os.getenv("AUDD_API_TOKEN", "").strip()
+AUDD_API_URL = os.getenv("AUDD_API_URL", "https://api.audd.io/").strip()
+ENABLE_DSP_SECTION_FALLBACK = os.getenv("ENABLE_DSP_SECTION_FALLBACK", "").strip().lower() in ("1", "true", "yes")
+LRCLIB_API_BASE = os.getenv("LRCLIB_API_BASE", "https://lrclib.net/api").strip().rstrip("/")
+ENABLE_LYRICS_AUTO_SHIFT = (
+    str(os.getenv("ENABLE_LYRICS_AUTO_SHIFT", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
+IDENTITY_CACHE_PATH = os.getenv(
+    "ANALYSIS_IDENTITY_CACHE_PATH",
+    os.path.join(os.path.dirname(__file__), ".cache", "track-identity-cache.json"),
+).strip()
+
+app = FastAPI(title="xLightsDesigner Analysis Service", version="0.1.0")
+
+
+def _ensure_auth(x_api_key: Optional[str]) -> None:
+    if not APP_API_KEY:
+        return
+    if (x_api_key or "").strip() != APP_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+
+def _sanitize_marks(marks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for idx, mark in enumerate(marks):
+        try:
+            start = int(round(float(mark.get("startMs", 0))))
+        except Exception:
+            continue
+        end_raw = mark.get("endMs")
+        end = None
+        if end_raw is not None:
+            try:
+                end = int(round(float(end_raw)))
+            except Exception:
+                end = None
+        row: Dict[str, Any] = {"startMs": max(0, start)}
+        if end is not None and end > row["startMs"]:
+            row["endMs"] = end
+        label = str(mark.get("label", "")).strip()
+        if label:
+            row["label"] = label
+        rows.append(row)
+    return rows
+
+
+def _provider_config_state() -> Dict[str, Any]:
+    missing = []
+    if not AUDD_API_TOKEN:
+        missing.append("AUDD_API_TOKEN")
+    return {
+        "auddConfigured": bool(AUDD_API_TOKEN),
+        "dspFallbackEnabled": bool(ENABLE_DSP_SECTION_FALLBACK),
+        "identityCachePath": IDENTITY_CACHE_PATH,
+        "missing": missing,
+    }
+
+
+def _audio_fingerprint(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        while True:
+            chunk = fh.read(1024 * 1024)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _slugify(s: str) -> str:
+    text = str(s or "").strip().lower()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    text = re.sub(r"-{2,}", "-", text).strip("-")
+    return text
+
+
+def _extract_numeric_list(pattern: str, text: str) -> List[float]:
+    out: List[float] = []
+    for m in re.finditer(pattern, text, flags=re.IGNORECASE):
+        try:
+            v = float(m.group(1))
+        except Exception:
+            continue
+        if math.isfinite(v) and v > 0:
+            out.append(v)
+    return out
+
+
+def _extract_bpm_values(text: str) -> List[float]:
+    plain = re.sub(r"<[^>]+>", " ", str(text or " "))
+    plain = re.sub(r"\s+", " ", plain).strip()
+    out: List[float] = []
+    alternates: List[float] = []
+    for m in re.finditer(r"\b(\d+(?:\.\d+)?)\s*bpm\b", plain, flags=re.IGNORECASE):
+        try:
+            v = float(m.group(1))
+        except Exception:
+            continue
+        if math.isfinite(v) and v > 0:
+            out.append(v)
+
+    alt_patterns = [
+        r"half(?:-| )time[^0-9]{0,24}(\d+(?:\.\d+)?)\s*bpm",
+        r"(\d+(?:\.\d+)?)\s*bpm[^a-z0-9]{0,24}half(?:-| )time",
+        r"double(?:-| )time[^0-9]{0,24}(\d+(?:\.\d+)?)\s*bpm",
+        r"(\d+(?:\.\d+)?)\s*bpm[^a-z0-9]{0,24}double(?:-| )time",
+    ]
+    for pat in alt_patterns:
+        for m in re.finditer(pat, plain, flags=re.IGNORECASE):
+            try:
+                v = float(m.group(1))
+            except Exception:
+                continue
+            if math.isfinite(v) and v > 0:
+                alternates.append(v)
+
+    if not alternates:
+        return out
+
+    filtered: List[float] = []
+    for v in out:
+        if any(abs(v - a) <= 0.05 for a in alternates):
+            continue
+        filtered.append(v)
+    return filtered
+
+
+def _extract_time_signatures(text: str) -> List[str]:
+    out: List[str] = []
+    for m in re.finditer(r"\b(\d{1,2}\s*/\s*\d{1,2})\b", text):
+        sig = re.sub(r"\s+", "", m.group(1))
+        if sig not in out:
+            out.append(sig)
+    # SongBPM often uses prose "N beats per bar"
+    for m in re.finditer(r"\b(\d{1,2})\s+beats?\s+per\s+bar\b", text, flags=re.IGNORECASE):
+        n = int(m.group(1))
+        sig = f"{n}/4"
+        if sig not in out:
+            out.append(sig)
+    return out
+
+
+def _fetch_songbpm_evidence(identity: Dict[str, Any]) -> Dict[str, Any]:
+    title = str(identity.get("title", "")).strip()
+    artist = str(identity.get("artist", "")).strip()
+    if not title or not artist:
+        return {"sources": [], "bpmValues": [], "barsPerMinuteValues": [], "timeSignatures": [], "chosenBeatBpm": None}
+
+    title_slug = _slugify(title)
+    artist_slug = _slugify(artist)
+    candidates = [
+        f"https://songbpm.com/@{artist_slug}/{title_slug}",
+        f"https://www.songbpm.com/@{artist_slug}/{title_slug}",
+        f"https://getsongbpm.com/search?type=all&lookup={quote_plus(f'{artist} {title}')}",
+    ]
+
+    bpm_vals: List[float] = []
+    bars_vals: List[float] = []
+    sigs: List[str] = []
+    used_sources: List[str] = []
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    }
+    for url in candidates:
+        try:
+            resp = requests.get(url, timeout=15.0, headers=headers)
+            if resp.status_code >= 400:
+                continue
+            text = resp.text or ""
+            low = text.lower()
+            # Skip anti-bot challenge pages
+            if "just a moment" in low and "cloudflare" in low:
+                continue
+            local_bpm = _extract_bpm_values(text)
+            local_bars = _extract_numeric_list(r"\b(\d+(?:\.\d+)?)\s*(?:bars?|measures?)\s*(?:per|/)\s*minute\b", text)
+            local_sigs = _extract_time_signatures(text)
+            if local_bpm or local_bars or local_sigs:
+                used_sources.append(url)
+                bpm_vals.extend(local_bpm)
+                bars_vals.extend(local_bars)
+                for sig in local_sigs:
+                    if sig not in sigs:
+                        sigs.append(sig)
+        except Exception:
+            continue
+
+    # Keep values in musically plausible ranges and dedupe by rounded value.
+    bpm_vals = [v for v in bpm_vals if 30.0 <= v <= 320.0]
+    bars_vals = [v for v in bars_vals if 10.0 <= v <= 160.0]
+    bpm_vals = sorted({round(v, 2) for v in bpm_vals})
+    bars_vals = sorted({round(v, 2) for v in bars_vals})
+
+    chosen_beat_bpm: Optional[float] = None
+    if bpm_vals:
+        chosen_beat_bpm = float(np.median(np.asarray(bpm_vals, dtype=float)))
+    elif bars_vals and sigs:
+        # derive beat bpm from bars/min and first known signature numerator
+        m = re.match(r"^(\d+)\s*/\s*(\d+)$", sigs[0])
+        if m:
+            n = int(m.group(1))
+            chosen_beat_bpm = float(np.median(np.asarray(bars_vals, dtype=float))) * max(1, n)
+
+    return {
+        "sources": used_sources[:3],
+        "bpmValues": bpm_vals[:8],
+        "barsPerMinuteValues": bars_vals[:8],
+        "timeSignatures": sigs[:4],
+        "chosenBeatBpm": round(chosen_beat_bpm, 2) if chosen_beat_bpm and math.isfinite(chosen_beat_bpm) else None,
+        "provider": "songbpm+getsongbpm",
+    }
+
+
+def _load_identity_cache() -> Dict[str, Any]:
+    try:
+        with open(IDENTITY_CACHE_PATH, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+    return {"version": 1, "entries": {}}
+
+
+def _normalize_identity(identity: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(identity, dict):
+        return {}
+    out = {
+        "provider": str(identity.get("provider", "")).strip(),
+        "title": str(identity.get("title", "")).strip(),
+        "artist": str(identity.get("artist", "")).strip(),
+        "album": str(identity.get("album", "")).strip(),
+        "releaseDate": str(identity.get("releaseDate", "")).strip(),
+        "isrc": str(identity.get("isrc", "")).strip(),
+    }
+    return {k: v for k, v in out.items() if v}
+
+
+def _save_identity_cache(cache: Dict[str, Any]) -> None:
+    directory = os.path.dirname(IDENTITY_CACHE_PATH)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    tmp_path = f"{IDENTITY_CACHE_PATH}.tmp"
+    with open(tmp_path, "w", encoding="utf-8") as fh:
+        json.dump(cache, fh, separators=(",", ":"), ensure_ascii=True)
+    os.replace(tmp_path, IDENTITY_CACHE_PATH)
+
+
+def _identity_cache_get(fingerprint: str) -> Dict[str, Any]:
+    cache = _load_identity_cache()
+    entries = cache.get("entries") if isinstance(cache, dict) else {}
+    row = entries.get(fingerprint) if isinstance(entries, dict) else None
+    if isinstance(row, dict):
+        identity = row.get("identity")
+        if isinstance(identity, dict):
+            return _normalize_identity(identity)
+    return {}
+
+
+def _identity_cache_put(fingerprint: str, identity: Dict[str, Any]) -> None:
+    normalized = _normalize_identity(identity)
+    if not fingerprint or not normalized:
+        return
+    cache = _load_identity_cache()
+    entries = cache.get("entries")
+    if not isinstance(entries, dict):
+        entries = {}
+        cache["entries"] = entries
+    entries[fingerprint] = {
+        "identity": normalized,
+        "updatedAt": int(time.time()),
+    }
+    _save_identity_cache(cache)
+
+
+def _parse_lrc_synced_lyrics(lrc_text: str, duration_ms: int) -> List[Dict[str, Any]]:
+    if not lrc_text:
+        return []
+    lines = [str(line).strip() for line in str(lrc_text).splitlines() if str(line).strip()]
+    time_re = re.compile(r"\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]")
+    offset_re = re.compile(r"^\[offset:([+-]?\d+)\]$", re.IGNORECASE)
+    global_offset_ms = 0
+    for line in lines:
+        m = offset_re.match(line)
+        if m:
+            try:
+                global_offset_ms = int(m.group(1))
+            except Exception:
+                global_offset_ms = 0
+            break
+    marks: List[Dict[str, Any]] = []
+    for line in lines:
+        if offset_re.match(line):
+            continue
+        tags = list(time_re.finditer(line))
+        if not tags:
+            continue
+        lyric = time_re.sub("", line).strip()
+        # Keep true lyric lines only; skip pure timestamp/meta rows.
+        if not lyric:
+            continue
+        for tag in tags:
+            mm = int(tag.group(1))
+            ss = int(tag.group(2))
+            frac = tag.group(3) or "0"
+            if len(frac) == 1:
+                frac_ms = int(frac) * 100
+            elif len(frac) == 2:
+                frac_ms = int(frac) * 10
+            else:
+                frac_ms = int(frac[:3])
+            start = mm * 60000 + ss * 1000 + frac_ms + global_offset_ms
+            if start < 0 or start >= duration_ms:
+                continue
+            row: Dict[str, Any] = {"startMs": int(start)}
+            row["label"] = lyric
+            marks.append(row)
+    marks.sort(key=lambda x: int(x.get("startMs", 0)))
+    out: List[Dict[str, Any]] = []
+    for i, row in enumerate(marks):
+        start = int(row["startMs"])
+        next_start = int(marks[i + 1]["startMs"]) if i + 1 < len(marks) else duration_ms
+        end = max(start + 1, min(duration_ms, next_start))
+        if end <= start:
+            continue
+        out_row: Dict[str, Any] = {"startMs": start, "endMs": end}
+        label = str(row.get("label", "")).strip()
+        if label:
+            out_row["label"] = label
+        out.append(out_row)
+    return _sanitize_marks(out)
+
+
+def _normalize_lyric_text(text: str) -> str:
+    s = str(text or "").lower().strip()
+    s = re.sub(r"[^a-z0-9 ]+", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms: int) -> List[Dict[str, Any]]:
+    rows = sorted(
+        [r for r in (lyrics_marks or []) if isinstance(r, dict) and "startMs" in r and "endMs" in r],
+        key=lambda r: int(r.get("startMs", 0)),
+    )
+    if not rows:
+        return []
+
+    # Learn repeated lyric lines (refrain/chorus cues) from normalized text.
+    freq: Dict[str, int] = {}
+    for r in rows:
+        t = _normalize_lyric_text(r.get("label", ""))
+        if t:
+            freq[t] = freq.get(t, 0) + 1
+    repeated = {k for k, v in freq.items() if v >= 2}
+
+    segments: List[Dict[str, Any]] = []
+
+    # Intro before first lyric mark.
+    first_start = int(rows[0]["startMs"])
+    if first_start > 500:
+        segments.append({"startMs": 0, "endMs": first_start, "label": "Intro"})
+
+    prev_end = first_start
+    for r in rows:
+        s = int(r.get("startMs", 0))
+        e = int(r.get("endMs", s + 1))
+        if e <= s:
+            continue
+        if s - prev_end >= 6000:
+            segments.append({"startMs": prev_end, "endMs": s, "label": "Instrumental"})
+        text = _normalize_lyric_text(r.get("label", ""))
+        if not text:
+            seg_label = "Instrumental"
+        elif text in repeated:
+            seg_label = "Chorus"
+        else:
+            seg_label = "Verse"
+        segments.append({"startMs": s, "endMs": e, "label": seg_label})
+        prev_end = e
+
+    # Outro tail after last lyric.
+    if duration_ms - prev_end >= 500:
+        tail_label = "Outro" if duration_ms - prev_end <= 12000 else "Instrumental"
+        segments.append({"startMs": prev_end, "endMs": duration_ms, "label": tail_label})
+
+    # Clamp, remove invalid overlaps, then number repeated labels.
+    cleaned: List[Dict[str, Any]] = []
+    for seg in sorted(segments, key=lambda x: int(x.get("startMs", 0))):
+        s = max(0, int(seg.get("startMs", 0)))
+        e = min(duration_ms, int(seg.get("endMs", s + 1)))
+        if e <= s:
+            continue
+        label = str(seg.get("label", "Section")).strip() or "Section"
+        if cleaned and cleaned[-1]["label"] == label and s <= int(cleaned[-1]["endMs"]):
+            cleaned[-1]["endMs"] = max(int(cleaned[-1]["endMs"]), e)
+        else:
+            cleaned.append({"startMs": s, "endMs": e, "label": label})
+    return _build_numbered_sections(cleaned)
+
+
+def _first_lrc_timestamp_ms(lrc_text: str) -> Optional[int]:
+    if not lrc_text:
+        return None
+    time_re = re.compile(r"\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]")
+    first: Optional[int] = None
+    for line in str(lrc_text).splitlines():
+        m = time_re.search(str(line))
+        if not m:
+            continue
+        mm = int(m.group(1))
+        ss = int(m.group(2))
+        frac = m.group(3) or "0"
+        if len(frac) == 1:
+            frac_ms = int(frac) * 100
+        elif len(frac) == 2:
+            frac_ms = int(frac) * 10
+        else:
+            frac_ms = int(frac[:3])
+        ts = mm * 60000 + ss * 1000 + frac_ms
+        if first is None or ts < first:
+            first = ts
+    return first
+
+
+def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+    title = str(identity.get("title", "")).strip()
+    artist = str(identity.get("artist", "")).strip()
+    album = str(identity.get("album", "")).strip()
+    duration_s = int(round(max(1, duration_ms) / 1000.0))
+    if not title or not artist:
+        return [], "lrclib skipped: missing title/artist", {}
+    try:
+        selected_payload: Dict[str, Any] = {}
+        params = {
+            "track_name": title,
+            "artist_name": artist,
+            "duration": duration_s,
+        }
+        resp = requests.get(f"{LRCLIB_API_BASE}/get", params=params, timeout=20.0)
+        if resp.status_code == 404:
+            # Secondary attempt with album hint if available.
+            if album:
+                resp_album = requests.get(
+                    f"{LRCLIB_API_BASE}/get",
+                    params={**params, "album_name": album},
+                    timeout=20.0,
+                )
+                if resp_album.status_code < 400:
+                    payload = resp_album.json() if isinstance(resp_album.json(), dict) else {}
+                    selected_payload = payload if isinstance(payload, dict) else {}
+                else:
+                    payload = {}
+            else:
+                payload = {}
+            if not selected_payload:
+                # Fallback search if direct get could not locate a record.
+                search = requests.get(
+                    f"{LRCLIB_API_BASE}/search",
+                    params={"track_name": title, "artist_name": artist},
+                    timeout=20.0,
+                )
+                if search.status_code >= 400:
+                    return [], f"lrclib search failed: HTTP {search.status_code}", {}
+                arr = search.json()
+                if isinstance(arr, list) and arr:
+                    # Prefer rows with synced lyrics, then closest duration.
+                    best = None
+                    best_key = None
+                    for row in arr:
+                        if not isinstance(row, dict):
+                            continue
+                        synced = str(row.get("syncedLyrics") or "").strip()
+                        has_synced = 1 if synced else 0
+                        d = int(row.get("duration") or 0)
+                        delta = abs(d - duration_s) if d > 0 else 10**9
+                        first_ts = _first_lrc_timestamp_ms(synced) if synced else None
+                        # Avoid pathological near-zero first timestamps when better matches exist.
+                        early_penalty = 1 if first_ts is not None and first_ts < 3000 else 0
+                        key = (-has_synced, delta, early_penalty, str(row.get("id", "")))
+                        if best is None or key < best_key:
+                            best = row
+                            best_key = key
+                    payload = best if isinstance(best, dict) else {}
+                    selected_payload = payload if isinstance(payload, dict) else {}
+                else:
+                    return [], "lrclib: no matches from search", {}
+            else:
+                payload = selected_payload
+        else:
+            if resp.status_code >= 400:
+                return [], f"lrclib get failed: HTTP {resp.status_code}", {}
+            payload = resp.json() if isinstance(resp.json(), dict) else {}
+            selected_payload = payload if isinstance(payload, dict) else {}
+        lrc = str(payload.get("syncedLyrics") or "").strip()
+        if not lrc:
+            plain = str(payload.get("plainLyrics") or "").strip()
+            if plain:
+                return [], "lrclib: plain lyrics available, synced timestamps unavailable", {}
+            return [], "lrclib: no synced lyrics", {}
+        marks = _parse_lrc_synced_lyrics(lrc, duration_ms)
+        if not marks:
+            return [], "lrclib: synced lyrics parse empty", {}
+        info = {
+            "lrclibId": str(payload.get("id", "")).strip(),
+            "lrclibAlbum": str(payload.get("albumName", "")).strip(),
+            "lrclibDurationSec": payload.get("duration"),
+            "lrclibFirstTimestampMs": _first_lrc_timestamp_ms(lrc),
+        }
+        return marks, "", info
+    except Exception as err:
+        return [], f"lrclib fetch failed: {err}", {}
+
+
+def _identify_track_with_audd(path: str) -> tuple[Dict[str, Any], bool]:
+    fingerprint = _audio_fingerprint(path)
+    cached = _identity_cache_get(fingerprint)
+    # Always prefer cached identity for the same audio fingerprint to avoid
+    # repeated AudD usage on subsequent analyses of the same track.
+    if cached:
+        return cached, True
+    if not AUDD_API_TOKEN:
+        return {}, False
+    with open(path, "rb") as fh:
+        files = {"file": fh}
+        data = {"api_token": AUDD_API_TOKEN}
+        resp = requests.post(AUDD_API_URL, data=data, files=files, timeout=45.0)
+    resp.raise_for_status()
+    body = resp.json()
+    if not isinstance(body, dict):
+        return {}, False
+    result = body.get("result")
+    if not isinstance(result, dict):
+        if cached:
+            return cached, True
+        return {}, False
+    # AudD can expose ISRC either at top-level result or under provider-specific payloads.
+    isrc = str(result.get("isrc", "")).strip()
+    if not isrc:
+        spotify = result.get("spotify")
+        if isinstance(spotify, dict):
+            external_ids = spotify.get("external_ids")
+            if isinstance(external_ids, dict):
+                isrc = str(external_ids.get("isrc", "")).strip()
+    if not isrc:
+        apple_music = result.get("apple_music")
+        if isinstance(apple_music, dict):
+            isrc = str(apple_music.get("isrc", "")).strip()
+    if not isrc:
+        deezer = result.get("deezer")
+        if isinstance(deezer, dict):
+            isrc = str(deezer.get("isrc", "")).strip()
+    identity = _normalize_identity(
+        {
+            "provider": "audd",
+            "title": str(result.get("title", "")).strip(),
+            "artist": str(result.get("artist", "")).strip(),
+            "album": str(result.get("album", "")).strip(),
+            "releaseDate": str(result.get("release_date", "")).strip(),
+            "isrc": isrc,
+        }
+    )
+    if not identity and cached:
+        return cached, True
+    _identity_cache_put(fingerprint, identity)
+    return identity, False
+
+
+def _bars_from_beats(beats: List[Dict[str, Any]], beats_per_bar: int = 4) -> List[Dict[str, Any]]:
+    if beats_per_bar <= 0:
+        beats_per_bar = 4
+    bars: List[Dict[str, Any]] = []
+    for i in range(0, len(beats) - beats_per_bar + 1, beats_per_bar):
+        first = beats[i]
+        last = beats[i + beats_per_bar - 1]
+        nxt = beats[i + beats_per_bar] if i + beats_per_bar < len(beats) else None
+        start = int(first["startMs"])
+        end = int(nxt["startMs"]) if nxt else int(last.get("endMs", start + 1))
+        if end <= start:
+            end = start + 1
+        bars.append({"startMs": start, "endMs": end, "label": str(len(bars) + 1)})
+    return bars
+
+
+def _bars_from_downbeats(
+    beats: List[Dict[str, Any]],
+    downbeat_starts: List[int],
+    duration_ms: int,
+) -> List[Dict[str, Any]]:
+    starts = sorted(set(int(x) for x in downbeat_starts if int(x) >= 0))
+    if len(starts) < 2:
+        return _bars_from_beats(beats, DEFAULT_BEATS_PER_BAR)
+    bars: List[Dict[str, Any]] = []
+    for i, s in enumerate(starts):
+        if i + 1 < len(starts):
+            e = int(starts[i + 1])
+        else:
+            e = int(duration_ms)
+        if e <= s:
+            continue
+        bars.append({"startMs": s, "endMs": e, "label": str(len(bars) + 1)})
+    return _sanitize_marks(bars)
+
+
+def _align_sections_to_bar_starts(
+    sections: List[Dict[str, Any]],
+    bars: List[Dict[str, Any]],
+    duration_ms: int,
+) -> List[Dict[str, Any]]:
+    rows = [dict(s) for s in (sections or []) if isinstance(s, dict) and "startMs" in s]
+    if not rows or not bars:
+        return _sanitize_marks(rows)
+    boundaries = sorted(set([0] + [int(b.get("startMs", 0)) for b in bars if int(b.get("startMs", 0)) >= 0]))
+    if not boundaries:
+        return _sanitize_marks(rows)
+
+    rows.sort(key=lambda r: int(r.get("startMs", 0)))
+    snapped: List[Dict[str, Any]] = []
+    prev_start = -1
+    for idx, row in enumerate(rows):
+        orig_start = int(row.get("startMs", 0))
+        label = str(row.get("label", "")).strip()
+
+        if idx == 0 and orig_start <= boundaries[0]:
+            start = 0
+        else:
+            # snap to nearest bar start
+            start = min(boundaries, key=lambda x: abs(x - orig_start))
+        if start <= prev_start:
+            nxt = next((b for b in boundaries if b > prev_start), None)
+            if nxt is None:
+                continue
+            start = int(nxt)
+        snapped.append({"startMs": int(start), "label": label})
+        prev_start = int(start)
+
+    out: List[Dict[str, Any]] = []
+    for i, row in enumerate(snapped):
+        start = int(row["startMs"])
+        if i + 1 < len(snapped):
+            end = int(snapped[i + 1]["startMs"])
+        else:
+            end = int(duration_ms)
+        if end <= start:
+            continue
+        next_row: Dict[str, Any] = {"startMs": start, "endMs": end}
+        if row.get("label"):
+            next_row["label"] = str(row["label"]).strip()
+        out.append(next_row)
+    return _sanitize_marks(out)
+
+
+def _downbeats_from_labeled_beats(beats: List[Dict[str, Any]]) -> List[int]:
+    out: List[int] = []
+    for row in (beats or []):
+        try:
+            label = str(row.get("label", "")).strip()
+            if label != "1":
+                continue
+            s = int(row.get("startMs", 0))
+            if s >= 0:
+                out.append(s)
+        except Exception:
+            continue
+    return sorted(set(out))
+
+
+def _derive_bars_from_labeled_beats(
+    beats: List[Dict[str, Any]],
+    duration_ms: int,
+    beats_per_bar: int,
+) -> List[Dict[str, Any]]:
+    downbeats = _downbeats_from_labeled_beats(beats)
+    if len(downbeats) >= 2:
+        return _bars_from_downbeats(beats, downbeats, duration_ms)
+    return _bars_from_beats(beats, beats_per_bar)
+
+
+def _label_beats_from_downbeats(
+    beats: List[Dict[str, Any]],
+    downbeat_starts: List[int],
+    beats_per_bar: int,
+) -> List[Dict[str, Any]]:
+    rows = [dict(b) for b in (beats or []) if isinstance(b, dict) and "startMs" in b]
+    if not rows:
+        return rows
+    bpb = max(1, int(beats_per_bar or 4))
+    beat_starts = [int(r.get("startMs", 0)) for r in rows]
+    unique_downbeats = sorted(set(int(x) for x in (downbeat_starts or [])))
+
+    # Map downbeat timestamps to nearest beat indices.
+    anchor_indices: set[int] = set()
+    for db in unique_downbeats:
+        best_idx = -1
+        best_delta = 10**9
+        for i, s in enumerate(beat_starts):
+            d = abs(s - db)
+            if d < best_delta:
+                best_delta = d
+                best_idx = i
+        if best_idx >= 0 and best_delta <= 300:
+            anchor_indices.add(best_idx)
+    if not anchor_indices:
+        for i, row in enumerate(rows):
+            row["label"] = str((i % bpb) + 1)
+        return rows
+
+    labels = [0] * len(rows)
+
+    # Forward pass: reset to 1 on each anchored downbeat, otherwise increment.
+    prev = 0
+    for i in range(len(rows)):
+        if i in anchor_indices:
+            labels[i] = 1
+            prev = 1
+        else:
+            if prev <= 0:
+                labels[i] = 0
+            else:
+                prev = (prev % bpb) + 1
+                labels[i] = prev
+
+    # Backfill before first anchor so pickup beats are phase-correct.
+    first_anchor = min(anchor_indices)
+    if labels[first_anchor] != 1:
+        labels[first_anchor] = 1
+    for i in range(first_anchor - 1, -1, -1):
+        nxt = labels[i + 1] if labels[i + 1] > 0 else 1
+        labels[i] = bpb if nxt == 1 else nxt - 1
+
+    # Fill any remaining zeros forward.
+    for i in range(len(labels)):
+        if labels[i] <= 0:
+            prev_label = labels[i - 1] if i > 0 else 1
+            labels[i] = (prev_label % bpb) + 1
+
+    for i, row in enumerate(rows):
+        row["label"] = str(labels[i])
+    return rows
+
+
+def _downbeat_anchor_indices(beat_starts: List[int], downbeat_starts: List[int]) -> List[int]:
+    anchors: List[int] = []
+    unique_downbeats = sorted(set(int(x) for x in (downbeat_starts or [])))
+    if not beat_starts or not unique_downbeats:
+        return anchors
+    for db in unique_downbeats:
+        best_idx = -1
+        best_delta = 10**9
+        for i, s in enumerate(beat_starts):
+            d = abs(int(s) - int(db))
+            if d < best_delta:
+                best_delta = d
+                best_idx = i
+        if best_idx >= 0 and best_delta <= 300:
+            anchors.append(best_idx)
+    return sorted(set(anchors))
+
+
+def _estimate_beats_per_bar(
+    beat_starts: List[int],
+    downbeat_starts: List[int],
+    default_bpb: int = DEFAULT_BEATS_PER_BAR,
+) -> int:
+    anchors = _downbeat_anchor_indices(beat_starts, downbeat_starts)
+    if len(anchors) < 2:
+        return max(1, int(default_bpb or 4))
+    intervals: List[int] = []
+    for i in range(len(anchors) - 1):
+        interval = int(anchors[i + 1] - anchors[i])
+        if 2 <= interval <= 12:
+            intervals.append(interval)
+    if len(intervals) < 2:
+        return max(1, int(default_bpb or 4))
+    counts: Dict[int, int] = {}
+    for val in intervals:
+        counts[val] = counts.get(val, 0) + 1
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], abs(kv[0] - int(default_bpb or 4))))
+    return int(ranked[0][0]) if ranked else max(1, int(default_bpb or 4))
+
+
+def _beats_per_bar_from_phase_values(phase_values: List[float]) -> int:
+    ints: List[int] = []
+    for raw in (phase_values or []):
+        try:
+            val = float(raw)
+        except Exception:
+            continue
+        rounded = int(round(val))
+        if rounded < 1 or rounded > 12:
+            continue
+        if abs(val - rounded) > 0.2:
+            continue
+        ints.append(rounded)
+    if len(ints) < 16:
+        return 0
+    uniq = sorted(set(ints))
+    if not uniq:
+        return 0
+    max_phase = int(max(uniq))
+    if max_phase < 2:
+        return 0
+    present_ratio = len(uniq) / float(max_phase)
+    return max_phase if present_ratio >= 0.66 else 0
+
+
+def _best_accent_phase(
+    beat_starts_ms: List[int],
+    y: np.ndarray,
+    sr: int,
+    beats_per_bar: int,
+) -> tuple[int, float]:
+    bpb = int(beats_per_bar)
+    if bpb < 2 or len(beat_starts_ms) < bpb * 6:
+        return 0, -1.0
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+    if onset_env.size <= 0:
+        return 0, -1.0
+    frame_times = librosa.times_like(onset_env, sr=sr)
+    accents: List[float] = []
+    for ms in beat_starts_ms:
+        t = max(0.0, float(ms) / 1000.0)
+        idx = int(np.searchsorted(frame_times, t, side="left"))
+        lo = max(0, idx - 1)
+        hi = min(len(onset_env), idx + 2)
+        if hi <= lo:
+            accents.append(0.0)
+        else:
+            accents.append(float(np.max(onset_env[lo:hi])))
+    arr = np.asarray(accents, dtype=float)
+    if arr.size < bpb * 6:
+        return 0, -1.0
+    arr = (arr - float(np.mean(arr))) / (float(np.std(arr)) + 1e-6)
+    indices = np.arange(arr.size)
+    best_offset = 0
+    best_score = -1.0
+    for offset in range(bpb):
+        phase_vals = arr[(indices % bpb) == offset]
+        other_vals = arr[(indices % bpb) != offset]
+        if phase_vals.size < 4 or other_vals.size < 4:
+            continue
+        score = float(np.mean(phase_vals) - np.mean(other_vals))
+        if score > best_score:
+            best_score = score
+            best_offset = offset
+    return best_offset, best_score
+
+
+def _beat_times_from_librosa(y: np.ndarray, sr: int, duration_ms: int) -> List[int]:
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr, trim=False)
+    _ = tempo
+    beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+    out: List[int] = []
+    for t in beat_times:
+        ms = int(round(float(t) * 1000.0))
+        if 0 <= ms < duration_ms:
+            out.append(ms)
+    return sorted(set(out))
+
+
+def _beat_quality_metrics(beat_times_ms: List[int], y: np.ndarray, sr: int, duration_ms: int) -> Dict[str, float]:
+    if len(beat_times_ms) < 8:
+        return {
+            "score": -1.0,
+            "onsetZ": -1.0,
+            "jumpRatio": 1.0,
+            "coverageRatio": 0.0,
+            "intervalCv": 10.0,
+        }
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+    frame_times = librosa.times_like(onset_env, sr=sr)
+    aligned: List[float] = []
+    for ms in beat_times_ms:
+        t = max(0.0, float(ms) / 1000.0)
+        idx = int(np.searchsorted(frame_times, t, side="left"))
+        lo = max(0, idx - 1)
+        hi = min(len(onset_env), idx + 2)
+        if hi <= lo:
+            aligned.append(0.0)
+        else:
+            aligned.append(float(np.max(onset_env[lo:hi])))
+    aligned_arr = np.asarray(aligned, dtype=float)
+    onset_mean = float(np.mean(onset_env)) if onset_env.size else 0.0
+    onset_std = float(np.std(onset_env)) if onset_env.size else 1.0
+    onset_z = (float(np.mean(aligned_arr)) - onset_mean) / max(1e-6, onset_std)
+
+    diffs = np.diff(np.asarray(beat_times_ms, dtype=float))
+    diffs = diffs[diffs > 1.0]
+    if diffs.size == 0:
+        return {
+            "score": -1.0,
+            "onsetZ": onset_z,
+            "jumpRatio": 1.0,
+            "coverageRatio": 0.0,
+            "intervalCv": 10.0,
+        }
+    med = float(np.median(diffs))
+    cv = float(np.std(diffs) / max(1e-6, np.mean(diffs)))
+    rel = np.abs(np.diff(diffs)) / np.maximum(1.0, diffs[:-1])
+    jump_ratio = float(np.mean(rel > 0.35)) if rel.size else 0.0
+    expected_count = max(1.0, duration_ms / max(1.0, med))
+    coverage_ratio = min(2.0, len(beat_times_ms) / expected_count)
+
+    # Higher is better:
+    # strong onset alignment, low abrupt jump ratio, and reasonable interval spread.
+    score = (1.00 * onset_z) - (1.20 * jump_ratio) - (0.35 * cv) - (0.50 * abs(1.0 - coverage_ratio))
+    return {
+        "score": float(score),
+        "onsetZ": float(onset_z),
+        "jumpRatio": float(jump_ratio),
+        "coverageRatio": float(coverage_ratio),
+        "intervalCv": float(cv),
+    }
+
+
+def _infer_beats_per_bar_from_accent(
+    beat_starts_ms: List[int],
+    y: np.ndarray,
+    sr: int,
+    default_bpb: int,
+) -> tuple[int, int, Dict[int, float]]:
+    scores: Dict[int, float] = {}
+    offsets: Dict[int, int] = {}
+    best_bpb = int(default_bpb or 4)
+    best_score = -1.0
+    best_offset = 0
+    for cand in (2, 3, 4):
+        off, score = _best_accent_phase(beat_starts_ms, y, sr, cand)
+        scores[cand] = float(score)
+        offsets[cand] = int(off)
+        if score > best_score:
+            best_score = float(score)
+            best_bpb = int(cand)
+            best_offset = int(off)
+    if best_score < 0.05:
+        return max(1, int(default_bpb or 4)), 0, scores
+    return best_bpb, best_offset, scores
+
+
+def _subdivide_beat_times_linear(beat_times_ms: List[int], factor: int = 2) -> List[int]:
+    src = sorted(set(int(x) for x in (beat_times_ms or []) if int(x) >= 0))
+    f = max(1, int(factor))
+    if f <= 1 or len(src) < 2:
+        return src
+    out: List[int] = []
+    for i, s in enumerate(src):
+        out.append(int(s))
+        if i + 1 >= len(src):
+            continue
+        n = int(src[i + 1])
+        if n <= s:
+            continue
+        span = n - s
+        for k in range(1, f):
+            p = int(round(s + (span * k) / float(f)))
+            if s < p < n:
+                out.append(p)
+    return sorted(set(out))
+
+
+def _select_best_beat_grid(
+    beat_times_ms: List[int],
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+) -> tuple[List[int], Dict[str, Any]]:
+    base = sorted(set(int(x) for x in (beat_times_ms or []) if int(x) >= 0))
+    cands: List[tuple[str, List[int], float]] = []
+    q_base = _beat_quality_metrics(base, y, sr, duration_ms)
+    cands.append(("1x", base, float(q_base.get("score", -1.0))))
+    sub2 = _subdivide_beat_times_linear(base, 2)
+    q_sub2 = _beat_quality_metrics(sub2, y, sr, duration_ms)
+    cands.append(("2x", sub2, float(q_sub2.get("score", -1.0))))
+    cands.sort(key=lambda row: row[2], reverse=True)
+    best_name, best_beats, best_score = cands[0]
+    base_score = float(q_base.get("score", -1.0))
+    use_best = best_name == "1x" or best_score > (base_score + 0.12)
+    selected_name = best_name if use_best else "1x"
+    selected = best_beats if use_best else base
+    return selected, {
+        "selectedGrid": selected_name,
+        "scores": {
+            "1x": float(q_base.get("score", -1.0)),
+            "2x": float(q_sub2.get("score", -1.0)),
+        },
+        "counts": {
+            "1x": len(base),
+            "2x": len(sub2),
+            "selected": len(selected),
+        },
+    }
+
+
+def _resolve_identity_and_web(path: str) -> tuple[Dict[str, Any], bool, Dict[str, Any], str]:
+    identity: Dict[str, Any] = {}
+    identity_cache_hit = False
+    web_tempo_evidence: Dict[str, Any] = {
+        "sources": [],
+        "bpmValues": [],
+        "barsPerMinuteValues": [],
+        "timeSignatures": [],
+        "chosenBeatBpm": None,
+        "provider": "songbpm+getsongbpm",
+    }
+    error = ""
+    try:
+        identity, identity_cache_hit = _identify_track_with_audd(path)
+    except Exception as err:
+        error = f"audd identify failed: {err}"
+    if identity:
+        try:
+            web_tempo_evidence = _fetch_songbpm_evidence(identity)
+        except Exception as err:
+            error = f"{error} | web tempo evidence failed: {err}" if error else f"web tempo evidence failed: {err}"
+    return identity, identity_cache_hit, web_tempo_evidence, error
+
+
+def _resolve_lyrics(
+    identity: Dict[str, Any],
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+) -> tuple[List[Dict[str, Any]], str, int, Dict[str, Any]]:
+    lyrics_marks: List[Dict[str, Any]] = []
+    lyrics_error = ""
+    lyrics_shift_ms = 0
+    lyrics_info: Dict[str, Any] = {}
+    try:
+        lyrics_marks, lyrics_error, lyrics_info = _fetch_lrclib_lyrics(identity, duration_ms)
+    except Exception as err:
+        lyrics_error = f"lrclib runtime failed: {err}"
+    if lyrics_marks and ENABLE_LYRICS_AUTO_SHIFT:
+        try:
+            lyrics_shift_ms = _estimate_lyrics_global_shift_ms(lyrics_marks, y, sr, duration_ms)
+            if lyrics_shift_ms:
+                lyrics_marks = _apply_global_shift_to_marks(lyrics_marks, lyrics_shift_ms, duration_ms)
+        except Exception as err:
+            lyrics_error = f"{lyrics_error} | lyrics-shift failed: {err}" if lyrics_error else f"lyrics-shift failed: {err}"
+    return lyrics_marks, lyrics_error, int(lyrics_shift_ms), lyrics_info
+
+
+def _detect_sections_from_audio(
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+    beat_times_ms: Optional[List[int]] = None,
+) -> List[Dict[str, Any]]:
+    chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
+    beat_frames = np.array([], dtype=int)
+    beat_times_sync = np.array([], dtype=float)
+    if beat_times_ms and len(beat_times_ms) >= 8:
+        beat_times_sec = np.asarray([max(0.0, float(v) / 1000.0) for v in beat_times_ms], dtype=float)
+        beat_frames = librosa.time_to_frames(beat_times_sec, sr=sr)
+        beat_frames = np.unique(beat_frames[(beat_frames >= 0) & (beat_frames < chroma.shape[1])]).astype(int)
+    if beat_frames.size >= 8:
+        sync = librosa.util.sync(chroma, beat_frames, aggregate=np.median)
+        beat_times_sync = librosa.frames_to_time(beat_frames, sr=sr)
+    else:
+        sync = chroma
+        beat_times_sync = librosa.frames_to_time(np.arange(sync.shape[1]), sr=sr)
+
+    boundary_times: List[float] = [0.0]
+    if sync.shape[1] >= 4:
+        deltas = np.linalg.norm(sync[:, 1:] - sync[:, :-1], axis=0)
+        if deltas.size:
+            kernel = np.array([0.25, 0.5, 0.25], dtype=float)
+            novelty = np.convolve(deltas, kernel, mode="same")
+            min_gap = 24
+            selected: List[int] = []
+            thresholds = np.percentile(novelty, [90, 85, 80, 75, 70, 65])
+            min_edge_sec = 6.0
+            for threshold in thresholds:
+                candidates: List[int] = []
+                for i in range(1, novelty.shape[0] - 1):
+                    if novelty[i] < threshold:
+                        continue
+                    if novelty[i] < novelty[i - 1] or novelty[i] < novelty[i + 1]:
+                        continue
+                    t = float(beat_times_sync[i + 1])
+                    if t < min_edge_sec or (duration_ms / 1000.0 - t) < min_edge_sec:
+                        continue
+                    candidates.append(i + 1)
+                picks: List[int] = []
+                for idx in sorted(candidates, key=lambda x: float(novelty[x - 1]), reverse=True):
+                    if any(abs(idx - p) < min_gap for p in picks):
+                        continue
+                    picks.append(idx)
+                picks.sort()
+                if 4 <= len(picks) <= 10:
+                    selected = picks
+                    break
+                if not selected:
+                    selected = picks
+            for idx in selected:
+                if idx <= 0 or idx >= len(beat_times_sync):
+                    continue
+                t = float(beat_times_sync[idx])
+                if t > boundary_times[-1]:
+                    boundary_times.append(t)
+    if boundary_times[-1] * 1000 < duration_ms:
+        boundary_times.append(duration_ms / 1000.0)
+    segs: List[Dict[str, Any]] = []
+    for i in range(len(boundary_times) - 1):
+        start_ms = int(round(boundary_times[i] * 1000))
+        end_ms = int(round(boundary_times[i + 1] * 1000))
+        if end_ms <= start_ms:
+            continue
+        segs.append({"startMs": start_ms, "endMs": end_ms, "label": "Section"})
+    return _build_numbered_sections(segs)
+
+
+def _apply_global_shift_to_marks(
+    marks: List[Dict[str, Any]], shift_ms: int, duration_ms: int
+) -> List[Dict[str, Any]]:
+    if not marks or int(shift_ms) == 0:
+        return _sanitize_marks(marks)
+    shifted: List[Dict[str, Any]] = []
+    for row in marks:
+        s = int(round(float(row.get("startMs", 0)))) + int(shift_ms)
+        e_raw = row.get("endMs")
+        e = None
+        if e_raw is not None:
+            try:
+                e = int(round(float(e_raw))) + int(shift_ms)
+            except Exception:
+                e = None
+        s = max(0, min(int(duration_ms) - 1, s))
+        out: Dict[str, Any] = {"startMs": s}
+        if e is not None:
+            e = max(s + 1, min(int(duration_ms), e))
+            if e > s:
+                out["endMs"] = e
+        label = str(row.get("label", "")).strip()
+        if label:
+            out["label"] = label
+        shifted.append(out)
+    shifted = _sanitize_marks(shifted)
+    shifted.sort(key=lambda x: int(x.get("startMs", 0)))
+    for i in range(len(shifted)):
+        s = int(shifted[i]["startMs"])
+        nxt_s = int(shifted[i + 1]["startMs"]) if i + 1 < len(shifted) else int(duration_ms)
+        e = int(shifted[i].get("endMs", s + 1))
+        e = min(e, nxt_s)
+        if e <= s:
+            e = min(int(duration_ms), s + 1)
+        shifted[i]["endMs"] = e
+    return _sanitize_marks(shifted)
+
+
+def _estimate_lyrics_global_shift_ms(
+    marks: List[Dict[str, Any]],
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+) -> int:
+    rows = [r for r in (marks or []) if isinstance(r, dict) and str(r.get("label", "")).strip()]
+    starts = sorted(set(int(r.get("startMs", 0)) for r in rows if 0 <= int(r.get("startMs", 0)) < int(duration_ms)))
+    if len(starts) < 8:
+        return 0
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+    if onset_env.size <= 0:
+        return 0
+    frame_times_ms = librosa.times_like(onset_env, sr=sr) * 1000.0
+
+    def score_shift(shift_ms: int) -> float:
+        vals: List[float] = []
+        for s in starts:
+            t_ms = float(s + shift_ms)
+            if t_ms < 0 or t_ms >= float(duration_ms):
+                continue
+            idx = int(np.searchsorted(frame_times_ms, t_ms, side="left"))
+            lo = max(0, idx - 1)
+            hi = min(len(onset_env), idx + 2)
+            if hi <= lo:
+                continue
+            vals.append(float(np.max(onset_env[lo:hi])))
+        return float(np.mean(vals)) if vals else -1.0
+
+    baseline = score_shift(0)
+    best_shift = 0
+    best_score = baseline
+    for shift in range(-20000, 20001, 100):
+        s = score_shift(shift)
+        if s > best_score:
+            best_score = s
+            best_shift = shift
+    if abs(best_shift) < 200:
+        return 0
+    if baseline <= 0 and best_score > baseline:
+        return int(best_shift)
+    improvement = (best_score - baseline) / max(1e-6, abs(baseline))
+    return int(best_shift) if improvement >= 0.05 else 0
+
+
+def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    counts: Dict[str, int] = {}
+    totals: Dict[str, int] = {}
+    for seg in segments:
+        base = str(seg.get("label", "Section")).strip() or "Section"
+        totals[base] = totals.get(base, 0) + 1
+    out: List[Dict[str, Any]] = []
+    for seg in segments:
+        base = str(seg.get("label", "Section")).strip() or "Section"
+        counts[base] = counts.get(base, 0) + 1
+        suffix = f" {counts[base]}" if totals.get(base, 1) > 1 else ""
+        out.append(
+            {
+                "startMs": int(seg["startMs"]),
+                "endMs": int(seg["endMs"]),
+                "label": f"{base}{suffix}",
+            }
+        )
+    return out
+
+
+def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
+    na = float(np.linalg.norm(a))
+    nb = float(np.linalg.norm(b))
+    if na <= 1e-9 or nb <= 1e-9:
+        return 0.0
+    return float(np.dot(a, b) / (na * nb))
+
+
+def _label_song_sections(
+    segments: List[Dict[str, Any]],
+    section_chroma: List[np.ndarray],
+    section_energy: List[float],
+    duration_ms: int,
+) -> List[Dict[str, Any]]:
+    if not segments:
+        return []
+
+    n = len(segments)
+    durations = [max(1, int(seg["endMs"]) - int(seg["startMs"])) for seg in segments]
+
+    groups: Dict[int, List[int]] = {}
+    anchor_for: List[int] = [-1] * n
+    for i in range(n):
+        best_j = -1
+        best_sim = -1.0
+        for j in range(i):
+            sim = _cosine_sim(section_chroma[i], section_chroma[j])
+            len_ratio = durations[i] / max(1.0, float(durations[j]))
+            if sim > 0.84 and 0.55 <= len_ratio <= 1.8 and sim > best_sim:
+                best_sim = sim
+                best_j = j
+        if best_j >= 0:
+            anchor_for[i] = anchor_for[best_j] if anchor_for[best_j] >= 0 else best_j
+        else:
+            anchor_for[i] = i
+        groups.setdefault(anchor_for[i], []).append(i)
+
+    repeated = [idxs for idxs in groups.values() if len(idxs) >= 2]
+    chorus_anchor = -1
+    verse_anchor = -1
+    if repeated:
+        scored = []
+        for idxs in repeated:
+            energy = float(np.mean([section_energy[i] for i in idxs]))
+            total_dur = float(np.sum([durations[i] for i in idxs]))
+            score = energy * 0.65 + (total_dur / max(1.0, float(duration_ms))) * 0.35
+            scored.append((score, idxs))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        chorus_anchor = anchor_for[scored[0][1][0]]
+        for _, idxs in scored[1:]:
+            cand = anchor_for[idxs[0]]
+            if cand != chorus_anchor:
+                verse_anchor = cand
+                break
+
+    labels = ["Section"] * n
+    if n >= 1:
+        first_len = durations[0]
+        if first_len <= max(15000, int(duration_ms * 0.15)):
+            labels[0] = "Intro"
+    if n >= 2:
+        last_len = durations[-1]
+        if last_len <= max(18000, int(duration_ms * 0.2)):
+            labels[-1] = "Outro"
+
+    for i in range(n):
+        anchor = anchor_for[i]
+        if anchor == chorus_anchor:
+            labels[i] = "Chorus"
+        elif anchor == verse_anchor:
+            labels[i] = "Verse"
+
+    if chorus_anchor >= 0:
+        chorus_idxs = groups.get(chorus_anchor, [])
+        if chorus_idxs:
+            cmin, cmax = min(chorus_idxs), max(chorus_idxs)
+            for i in range(cmin + 1, cmax):
+                if labels[i] == "Section" and anchor_for[i] not in (chorus_anchor, verse_anchor):
+                    labels[i] = "Bridge"
+
+    out = []
+    for i, seg in enumerate(segments):
+        out.append(
+            {
+                "startMs": int(seg["startMs"]),
+                "endMs": int(seg["endMs"]),
+                "label": labels[i],
+            }
+        )
+    return _build_numbered_sections(out)
+
+
+def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
+    if BeatNetEstimator is None:
+        raise RuntimeError("BeatNet is not installed in this runtime.")
+    if librosa is None:
+        raise RuntimeError("librosa is required for BeatNet duration metadata.")
+
+    y, sr = librosa.load(path, sr=22050, mono=True)
+    duration_ms = int(round((len(y) / float(sr)) * 1000))
+
+    estimator = BeatNetEstimator(1, mode="offline", inference_model="DBN", plot=[], thread=False)
+    output = estimator.process(path)
+    arr = np.asarray(output)
+    if arr.ndim != 2 or arr.shape[0] == 0:
+        raise RuntimeError("BeatNet returned empty or invalid output.")
+
+    beat_times_ms: List[int] = []
+    beat_flags: List[float] = []
+    for i in range(arr.shape[0]):
+        try:
+            t = float(arr[i, 0])
+        except Exception:
+            continue
+        if not np.isfinite(t):
+            continue
+        ms = int(round(t * 1000.0))
+        if ms < 0 or ms >= duration_ms:
+            continue
+        beat_times_ms.append(ms)
+        flag = 0.0
+        if arr.shape[1] > 1:
+            try:
+                flag = float(arr[i, 1])
+            except Exception:
+                flag = 0.0
+        beat_flags.append(flag)
+
+    beat_times_ms = sorted(set(beat_times_ms))
+
+    # BeatNet second column can represent downbeat flags/positions depending on mode.
+    downbeat_starts: List[int] = []
+    if len(beat_flags) == len(beat_times_ms):
+        for i, val in enumerate(beat_flags):
+            is_downbeat = False
+            if val in (0.0, 1.0):
+                is_downbeat = val >= 0.5
+            else:
+                is_downbeat = int(round(val)) == 1
+            if is_downbeat:
+                downbeat_starts.append(beat_times_ms[i])
+
+    phase_bpb = _beats_per_bar_from_phase_values(beat_flags)
+    interval_bpb = _estimate_beats_per_bar(beat_times_ms, downbeat_starts, DEFAULT_BEATS_PER_BAR)
+    accent_candidates = [2, 3, 4]
+    accent_best_bpb = 0
+    accent_best_offset = 0
+    accent_best_score = -1.0
+    accent_scores: Dict[int, float] = {}
+    accent_offsets: Dict[int, int] = {}
+    for cand in accent_candidates:
+        off, score = _best_accent_phase(beat_times_ms, y, sr, cand)
+        accent_scores[cand] = score
+        accent_offsets[cand] = off
+        if score > accent_best_score:
+            accent_best_bpb = cand
+            accent_best_offset = off
+            accent_best_score = score
+
+    detected_beats_per_bar = phase_bpb or interval_bpb or max(1, int(DEFAULT_BEATS_PER_BAR))
+    # If BeatNet collapses to duple phase labels, use accent periodicity to recover triple/quad meters.
+    if detected_beats_per_bar == 2:
+        score2 = float(accent_scores.get(2, -1.0))
+        score3 = float(accent_scores.get(3, -1.0))
+        score4 = float(accent_scores.get(4, -1.0))
+        if score3 >= (score2 + 0.12) and score3 >= (score4 + 0.08):
+            detected_beats_per_bar = 3
+        elif score4 >= (score2 + 0.12):
+            detected_beats_per_bar = 4
+
+    if detected_beats_per_bar in (3, 4):
+        score_target = float(accent_scores.get(detected_beats_per_bar, -1.0))
+        score_phase = float(accent_scores.get(phase_bpb, -1.0)) if phase_bpb else -1.0
+        if score_target > (score_phase + 0.08):
+            target_offset = int(accent_offsets.get(detected_beats_per_bar, accent_best_offset))
+            downbeat_starts = [
+                beat_times_ms[i]
+                for i in range(len(beat_times_ms))
+                if (i % detected_beats_per_bar) == target_offset
+            ]
+
+    # Generic under-segmentation correction:
+    # If BeatNet phase output is duple but meter inference is higher, test a subdivided beat grid.
+    if phase_bpb == 2 and detected_beats_per_bar in (3, 4) and len(beat_times_ms) >= 12:
+        subdivided: List[int] = []
+        for i, start in enumerate(beat_times_ms):
+            subdivided.append(int(start))
+            if i + 1 < len(beat_times_ms):
+                nxt = int(beat_times_ms[i + 1])
+                if nxt > start:
+                    mid = int(round((start + nxt) / 2.0))
+                    if 0 <= mid < duration_ms:
+                        subdivided.append(mid)
+        subdivided = sorted(set(subdivided))
+        if len(subdivided) >= int(len(beat_times_ms) * 1.8):
+            base_score = float(accent_scores.get(detected_beats_per_bar, -1.0))
+            sub_off, sub_score = _best_accent_phase(subdivided, y, sr, detected_beats_per_bar)
+            if sub_score > (base_score + 0.08):
+                beat_times_ms = subdivided
+                downbeat_starts = [
+                    beat_times_ms[i]
+                    for i in range(len(beat_times_ms))
+                    if (i % detected_beats_per_bar) == int(sub_off)
+                ]
+
+    # Beat quality layer: compare BeatNet vs librosa and select cleaner beat grid.
+    beatnet_candidate = list(beat_times_ms)
+    librosa_candidate = _beat_times_from_librosa(y, sr, duration_ms)
+    quality_beatnet = _beat_quality_metrics(beatnet_candidate, y, sr, duration_ms)
+    quality_librosa = _beat_quality_metrics(librosa_candidate, y, sr, duration_ms)
+    selected_beat_source = "beatnet"
+    if quality_librosa["score"] > (quality_beatnet["score"] + 0.10):
+        selected_beat_source = "librosa"
+        beat_times_ms = librosa_candidate
+        detected_beats_per_bar, off, _ = _infer_beats_per_bar_from_accent(
+            beat_times_ms, y, sr, detected_beats_per_bar
+        )
+        downbeat_starts = [
+            beat_times_ms[i]
+            for i in range(len(beat_times_ms))
+            if (i % max(1, detected_beats_per_bar)) == int(off)
+        ]
+
+    beat_times_ms, beat_grid_info = _select_best_beat_grid(beat_times_ms, y, sr, duration_ms)
+    if beat_grid_info.get("selectedGrid") == "2x":
+        detected_beats_per_bar, off2, _ = _infer_beats_per_bar_from_accent(
+            beat_times_ms, y, sr, detected_beats_per_bar
+        )
+        downbeat_starts = [
+            beat_times_ms[i]
+            for i in range(len(beat_times_ms))
+            if (i % max(1, detected_beats_per_bar)) == int(off2)
+        ]
+
+    beats_out: List[Dict[str, Any]] = []
+    for i, s in enumerate(beat_times_ms):
+        if i + 1 < len(beat_times_ms):
+            e = int(beat_times_ms[i + 1])
+        else:
+            if len(beat_times_ms) > 1:
+                step = int(round(np.median(np.diff(np.asarray(beat_times_ms, dtype=float)))))
+                e = int(s + max(1, step))
+            else:
+                e = int(min(duration_ms, s + 500))
+        e = int(min(duration_ms, max(int(s) + 1, e)))
+        beats_out.append({"startMs": int(s), "endMs": e})
+
+    beats_out = _label_beats_from_downbeats(beats_out, downbeat_starts, detected_beats_per_bar)
+    beats_out = _sanitize_marks(beats_out)
+    bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, detected_beats_per_bar)
+
+    bpm_est = None
+    if len(beat_times_ms) >= 2:
+        diffs = np.diff(np.asarray(beat_times_ms, dtype=float))
+        med = float(np.median(diffs)) if diffs.size else 0.0
+        if med > 0:
+            bpm_est = round(60000.0 / med, 2)
+
+    identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path)
+    provider_sections: List[Dict[str, Any]] = []
+    provider_name = ""
+
+    sections: List[Dict[str, Any]] = provider_sections
+
+    lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
+    if not sections and lyrics_marks:
+        try:
+            sections = _infer_sections_from_lyrics(lyrics_marks, duration_ms)
+            if sections:
+                provider_name = "lyrics-inferred"
+        except Exception as err:
+            provider_error = f"{provider_error} | lyrics-inferred failed: {err}" if provider_error else f"lyrics-inferred failed: {err}"
+    if sections and bars_out:
+        sections = _align_sections_to_bar_starts(sections, bars_out, duration_ms)
+
+    return {
+        "bpm": bpm_est,
+        "timeSignature": f"{detected_beats_per_bar}/4",
+        "durationMs": duration_ms,
+        "beats": beats_out,
+        "bars": bars_out,
+        "sections": sections,
+        "lyrics": lyrics_marks,
+        "meta": {
+            "engine": "beatnet",
+            "sectionSource": provider_name or "none",
+            "trackIdentity": identity,
+            "trackIdentityCacheHit": identity_cache_hit,
+            "webTempoEvidence": web_tempo_evidence,
+            "sectionSourceError": provider_error or "",
+            "lyricsSource": "lrclib" if lyrics_marks else "none",
+            "lyricsSourceError": lyrics_error,
+            "lyricsGlobalShiftMs": int(lyrics_shift_ms),
+            "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
+            "lyricsLookup": lyrics_info,
+            "sectionProviderConfig": _provider_config_state(),
+            "downbeatCount": len(downbeat_starts),
+            "beatsPerBar": detected_beats_per_bar,
+            "beatQuality": {
+                "selectedSource": selected_beat_source,
+                "beatnet": quality_beatnet,
+                "librosa": quality_librosa,
+            },
+            "beatGridSelection": beat_grid_info,
+        },
+    }
+
+
+def _analyze_with_librosa(path: str) -> Dict[str, Any]:
+    if librosa is None:
+        raise RuntimeError("librosa is not installed in this runtime.")
+    y, sr = librosa.load(path, sr=22050, mono=True)
+    duration_ms = int(round((len(y) / float(sr)) * 1000))
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr, trim=False)
+    beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+    beat_starts_ms: List[int] = []
+    for t in beat_times:
+        ms = int(round(float(t) * 1000))
+        if 0 <= ms < duration_ms:
+            beat_starts_ms.append(ms)
+    beat_starts_ms = sorted(set(beat_starts_ms))
+    beat_starts_ms, beat_grid_info = _select_best_beat_grid(beat_starts_ms, y, sr, duration_ms)
+    inferred_bpb, inferred_offset, inferred_scores = _infer_beats_per_bar_from_accent(
+        beat_starts_ms, y, sr, DEFAULT_BEATS_PER_BAR
+    )
+    beats_out: List[Dict[str, Any]] = []
+    for i, start in enumerate(beat_starts_ms):
+        if i + 1 < len(beat_starts_ms):
+            end = int(beat_starts_ms[i + 1])
+        else:
+            step = int(round((60.0 / max(float(tempo), 1.0)) * 1000))
+            end = start + max(1, step)
+        if end <= start:
+            end = start + 1
+        beat_num = ((i - int(inferred_offset)) % max(1, inferred_bpb)) + 1
+        beats_out.append({"startMs": start, "endMs": end, "label": str(beat_num)})
+    beats_out = _sanitize_marks(beats_out)
+    bpm_est = None
+    if len(beat_starts_ms) >= 2:
+        diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
+        med = float(np.median(diffs)) if diffs.size else 0.0
+        if med > 0:
+            bpm_est = float(round(60000.0 / med, 2))
+
+    identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path)
+    lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
+    sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
+    return {
+        "bpm": bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+        "timeSignature": f"{max(1, int(inferred_bpb))}/4",
+        "durationMs": duration_ms,
+        "beats": beats_out,
+        "bars": _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb))),
+        "sections": sections,
+        "lyrics": lyrics_marks,
+        "meta": {
+            "engine": "librosa",
+            "trackIdentity": identity,
+            "trackIdentityCacheHit": identity_cache_hit,
+            "webTempoEvidence": web_tempo_evidence,
+            "identityError": identity_error,
+            "lyricsSource": "lrclib" if lyrics_marks else "none",
+            "lyricsSourceError": lyrics_error,
+            "lyricsGlobalShiftMs": int(lyrics_shift_ms),
+            "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
+            "lyricsLookup": lyrics_info,
+            "beatsPerBar": int(max(1, int(inferred_bpb))),
+            "meterAccentOffset": int(inferred_offset),
+            "meterAccentScores": inferred_scores,
+            "beatGridSelection": beat_grid_info,
+        },
+    }
+
+
+def _analyze(path: str, provider: str) -> Dict[str, Any]:
+    p = (provider or "beatnet").strip().lower()
+    if p == "beatnet":
+        return _analyze_with_beatnet(path)
+    if p == "librosa":
+        return _analyze_with_librosa(path)
+    raise HTTPException(status_code=422, detail=f"Unsupported provider: {provider}")
+
+
+@app.get("/health")
+def health() -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "service": "xlightsdesigner-analysis",
+        "librosaAvailable": bool(librosa is not None),
+        "beatnetAvailable": bool(BeatNetEstimator is not None),
+        "lyricsAutoShiftEnabled": bool(ENABLE_LYRICS_AUTO_SHIFT),
+        "sectionProviders": _provider_config_state(),
+    }
+
+
+@app.post("/analyze")
+async def analyze(
+    file: UploadFile = File(...),
+    provider: str = Form("beatnet"),
+    fileName: str = Form(""),
+    x_api_key: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    _ensure_auth(x_api_key)
+    suffix = os.path.splitext(file.filename or fileName or "audio.wav")[1] or ".wav"
+    fd, temp_path = tempfile.mkstemp(prefix="xld-audio-", suffix=suffix)
+    os.close(fd)
+    try:
+        payload = await file.read()
+        with open(temp_path, "wb") as fh:
+            fh.write(payload)
+        data = _analyze(temp_path, provider)
+        data["beats"] = _sanitize_marks(data.get("beats") or [])
+        data["bars"] = _sanitize_marks(data.get("bars") or [])
+        data["sections"] = _sanitize_marks(data.get("sections") or [])
+        data["lyrics"] = _sanitize_marks(data.get("lyrics") or [])
+        return {"ok": True, "data": data}
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+    finally:
+        try:
+            os.remove(temp_path)
+        except Exception:
+            pass

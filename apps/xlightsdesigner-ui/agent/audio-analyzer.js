@@ -37,28 +37,60 @@ function normalizeTrackNames(timingTracks = []) {
     .filter(Boolean);
 }
 
+function findTrackName(trackNames = [], pattern) {
+  return (trackNames || []).find((name) => pattern.test(String(name || ""))) || "";
+}
+
+function extractSectionRowsFromMarks(marks = []) {
+  const rows = [];
+  for (const mark of Array.isArray(marks) ? marks : []) {
+    const label = String(mark?.label || "").trim();
+    const startMs = Number(mark?.startMs);
+    if (!label || !Number.isFinite(startMs)) continue;
+    rows.push({ label, startMs });
+  }
+  return rows.sort((a, b) => a.startMs - b.startMs);
+}
+
 export function analyzeAudioContext({
   audioPath = "",
   mediaMetadata = null,
   sectionSuggestions = [],
   sectionStartByLabel = {},
   timingTracks = [],
-  trackMarksByName = {}
+  trackMarksByName = {},
+  songContextSummary = "",
+  detectedTimeSignature = "",
+  detectedTempoBpm = null
 } = {}) {
   const trackName = basename(audioPath || "");
   const sections = Array.isArray(sectionSuggestions) ? sectionSuggestions.filter(Boolean) : [];
   const trackNames = normalizeTrackNames(timingTracks);
+  const structureTrackName =
+    findTrackName(trackNames, /^xd:\s*song\s*structure$/i) ||
+    findTrackName(trackNames, /section|song|structure|phrase|form/i);
 
   const hasBeatTrack = trackNames.some((name) => /beat|bpm|tempo/i.test(name));
   const hasBarTrack = trackNames.some((name) => /\bbar(s)?\b/i.test(name));
   const hasLyricsTrack = trackNames.some((name) => /lyric/i.test(name));
   const beatTrackName = trackNames.find((name) => /beat|bpm|tempo/i.test(name)) || "";
   const beatMarks = beatTrackName ? (trackMarksByName?.[beatTrackName] || []) : [];
-  const inferredBpm = inferTempoFromBeatMarks(beatMarks);
+  const structureMarks = structureTrackName ? (trackMarksByName?.[structureTrackName] || []) : [];
+  const structureRows = extractSectionRowsFromMarks(structureMarks);
+  const effectiveSections = structureRows.length
+    ? Array.from(new Set(structureRows.map((row) => row.label)))
+    : sections;
+  const inferredBpm = Number.isFinite(Number(detectedTempoBpm))
+    ? Number(detectedTempoBpm)
+    : inferTempoFromBeatMarks(beatMarks);
+  const normalizedSignature = String(detectedTimeSignature || "").trim();
+  const timeSignatureText = normalizedSignature || "unknown";
   const durationMs = Number(mediaMetadata?.durationMs);
   const channels = Number(mediaMetadata?.channels);
   const sampleRate = Number(mediaMetadata?.sampleRate);
-  const sectionRows = sections.map((label) => {
+  const sectionRows = structureRows.length
+    ? structureRows.map((row) => `${row.label}@${Math.round(row.startMs)}ms`)
+    : sections.map((label) => {
     const start = Number(sectionStartByLabel?.[label]);
     return Number.isFinite(start) ? `${label}@${Math.round(start)}ms` : `${label}@?`;
   });
@@ -66,10 +98,10 @@ export function analyzeAudioContext({
   return {
     source: audioPath || "(none)",
     trackName,
-    structure: sections.length ? sections : ["Intro", "Verse", "Chorus", "Bridge", "Outro"],
+    structure: effectiveSections.length ? effectiveSections : ["Intro", "Verse", "Chorus", "Bridge", "Outro"],
     timing: {
       tempoEstimate: inferredBpm || (hasBeatTrack ? "derived-from-beat-track" : "pending"),
-      timeSignature: "4/4 (assumed until explicit track analysis)",
+      timeSignature: timeSignatureText,
       hasBeatTrack,
       hasBarTrack,
       hasLyricsTrack
@@ -82,18 +114,20 @@ export function analyzeAudioContext({
     pipeline: {
       mediaAttached: Boolean(audioPath),
       mediaMetadataRead: Boolean(mediaMetadata && Object.keys(mediaMetadata || {}).length),
-      structureDerived: sections.length > 0,
+      structureDerived: effectiveSections.length > 0,
       timingDerived: Boolean(inferredBpm || hasBeatTrack || hasBarTrack),
-      lyricsDetected: hasLyricsTrack
+      lyricsDetected: hasLyricsTrack,
+      webContextDerived: Boolean(String(songContextSummary || "").trim())
     },
     summaryLines: [
       `Audio source: ${trackName || "(none)"}`,
       `Media metadata: ${Number.isFinite(durationMs) ? `${Math.round(durationMs)}ms` : "duration pending"}, ${Number.isFinite(channels) ? `${channels}ch` : "ch?"}, ${Number.isFinite(sampleRate) ? `${sampleRate}Hz` : "rate?"}`,
-      `Song structure: ${(sections.length ? sections.join(", ") : "pending")}`,
+      `Song structure: ${(effectiveSections.length ? effectiveSections.join(", ") : "pending")}`,
       `Section map: ${sectionRows.length ? sectionRows.join(" | ") : "pending"}`,
-      `Tempo/time signature: ${inferredBpm ? `${inferredBpm} BPM (inferred)` : (hasBeatTrack ? "beat track detected (BPM pending)" : "pending explicit beat analysis")} / 4/4 assumed`,
+      `Song context: ${String(songContextSummary || "").trim() || "pending"}`,
+      `Tempo/time signature: ${inferredBpm ? `${inferredBpm} BPM (inferred)` : (hasBeatTrack ? "beat track detected (BPM pending)" : "pending explicit beat analysis")} / ${timeSignatureText}`,
       `Timing tracks: beat=${hasBeatTrack ? "yes" : "no"}, bars=${hasBarTrack ? "yes" : "no"}, lyrics=${hasLyricsTrack ? "yes" : "no"}`,
-      `Creative brief seed: ${sections.length ? "structure-aware" : "needs section analysis"}`
+      `Creative brief seed: ${effectiveSections.length ? "structure-aware" : "needs section analysis"}`
     ]
   };
 }

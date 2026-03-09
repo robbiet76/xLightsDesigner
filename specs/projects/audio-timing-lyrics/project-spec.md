@@ -248,6 +248,10 @@ Bars/downbeats generation must produce ordered, non-overlapping marks aligned to
 ### FR-8 Energy Output
 Energy section generation must produce ordered, non-overlapping low/medium/high (or configured) segments suitable for sequencing intensity changes.
 
+### FR-9 Timing Source Fidelity (VAMP QM-first)
+Beat/bar generation for sequencing-critical timing must prefer VAMP QM plugins when available.  
+If QM plugin capability is unavailable, the system must return explicit capability/error signaling rather than silently emitting guessed beat marks.
+
 ## 6. Non-Functional Requirements
 
 - Backward compatibility with current automation commands.
@@ -265,6 +269,7 @@ Energy section generation must produce ordered, non-overlapping low/medium/high 
 
 ### 7.2 Integration Coverage
 - open/create sequence + run `timing.createFromAudio`.
+- validate QM plugin discovery/selection path via `timing.listAnalysisPlugins`.
 - run `lyrics.createTrackFromText` and verify layer counts.
 - run `lyrics.importSrt` with valid/invalid SRT.
 - run `timing.detectSongStructure` and verify section ordering, coverage, and labels.
@@ -301,9 +306,10 @@ Project is complete when:
 4. Sequencer can generate timing + lyric scaffolding from an MP3 workflow without manual UI editing steps.
 5. Song structure sections (Verse/Chorus/etc.) can be generated as a timing track for downstream sequencing workflows.
 6. Bars/downbeats and energy section tracks can be generated for downstream sequencing workflows.
+7. Beat/bar timing generation demonstrates acceptable fidelity on representative songs when QM plugin is present, and reports explicit capability constraints when QM is absent.
 
 ## 10. Open Decisions
 
 1. Should `timing.createFromAudio` auto-create a timing track when missing, or require explicit track pre-creation?
 2. For lyric text import, should phrase segmentation be strictly newline-based in v1 of this project?
-3. What minimum plugin availability guarantees should be documented when VAMP plugins are missing?
+3. What quantitative acceptance thresholds should be used for beat/bar fidelity (for example median beat error window) in automated validation?

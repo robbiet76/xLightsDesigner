@@ -38,11 +38,14 @@ Acceptance tests:
 Implementation checklist:
 - [ ] Non-UI plugin processing helper extracted from dialog path.
 - [ ] Supports `plugin`, `trackName`, optional `mediaFile`, `replaceIfExists`.
+- [ ] QM-first plugin selection policy documented and implemented in callers (discover plugins, prefer QM beat tracker identifiers/names).
 - [ ] Collision behavior enforced (`409` when replace is false and track exists).
 - [ ] Existing UI flow still works via shared helper (no behavior drift).
+- [ ] If QM plugin is unavailable in environments that require high-fidelity timing, return explicit capability/error path (no synthetic guessed beats).
 
 Acceptance tests:
 - [ ] Valid request creates timing track and returns `markCount > 0` for known plugin/media.
+- [ ] `timing.listAnalysisPlugins` includes QM plugin in configured environments and selection chooses it.
 - [ ] Unknown plugin returns `PLUGIN_NOT_FOUND`.
 - [ ] Existing track + `replaceIfExists=false` returns `TRACK_ALREADY_EXISTS`.
 - [ ] Existing track + `replaceIfExists=true` updates same track name.
@@ -62,6 +65,7 @@ Implementation checklist:
 - [ ] Source track lookup/validation added.
 - [ ] Bar/downbeat derivation added with `beatsPerBar`.
 - [ ] Target track write path uses standard collision rules.
+- [ ] Bar spans follow downbeat-to-downbeat boundaries from source beat timing (not fixed-duration extrapolation).
 
 Acceptance tests:
 - [ ] Known beat track + `beatsPerBar=4` creates bar track with ordered marks.

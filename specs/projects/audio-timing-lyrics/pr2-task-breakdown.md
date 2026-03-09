@@ -62,12 +62,18 @@ Tasks:
   - media available/resolved
   - plugin exists
   - non-empty `trackName`
+- Enforce QM-first plugin policy for beat workflows:
+  - discover plugins,
+  - select QM beat tracker when available,
+  - return explicit capability/error when QM is required but missing.
 - Run extracted non-UI VAMP processor.
 - Implement collision semantics with `replaceIfExists`.
 - Return `trackName`, `action`, `plugin`, `markCount`, `startMs`, `endMs`.
 
 Acceptance:
 - Known plugin/media creates or updates timing track without dialogs.
+- QM-capable environments choose QM plugin deterministically for beat timing flows.
+- QM-missing environments return explicit capability constraint (no synthetic beat output).
 
 ### `timing.getTrackSummary`
 Tasks:

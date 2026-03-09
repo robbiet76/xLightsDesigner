@@ -140,6 +140,24 @@ Rationale:
 Impacted work:
 - Optional PR-4
 
+---
+
+### D11) Beat/bar source strategy (VAMP QM-first)
+Decision:
+- For beat/bar timing fidelity, prefer VAMP QM plugins as first-choice analysis source.
+- Use `timing.listAnalysisPlugins` discovery and select the first available plugin matching QM beat tracker patterns (for example `qm-tempotracker` style identifiers/names).
+- If no acceptable QM plugin is available, do not fabricate/guess beat marks in xLights automation paths; return explicit capability/error and keep timing generation incomplete.
+- Bars must be derived from the produced beat track (`timing.createBarsFromBeats`) and must span downbeat-to-downbeat boundaries.
+
+Rationale:
+- Service-only beat extraction has produced visibly inaccurate timing for real sequences.
+- xLights+VAMP QM is currently the highest-confidence local path available for hobbyist usage.
+- Avoiding synthetic fallback prevents false confidence in generated timing tracks.
+
+Impacted work:
+- PR-2
+- App/service integration behavior that consumes beat/bar tracks
+
 ## Change Control
 - Any change to these decisions requires:
   - update to this file,

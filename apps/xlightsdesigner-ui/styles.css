@@ -442,6 +442,17 @@ button:disabled {
   margin-bottom: 6px;
 }
 
+.pipeline-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 18px;
+  padding-left: 18px;
+}
+
+.pipeline-list li {
+  margin-bottom: 0;
+}
+
 .chat-thread {
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -1020,5 +1031,9 @@ button:disabled {
 
   .mobile-apply-bar {
     display: flex;
+  }
+
+  .pipeline-list {
+    grid-template-columns: 1fr;
   }
 }
