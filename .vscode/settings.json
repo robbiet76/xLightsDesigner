@@ -1,0 +1,18 @@
+{
+  "files.exclude": {
+    "**/.venv/**": true,
+    "**/.venv310/**": true,
+    "**/.cache/**": true,
+    "**/__pycache__/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true
+  },
+  "search.exclude": {
+    "**/.venv/**": true,
+    "**/.venv310/**": true,
+    "**/.cache/**": true,
+    "**/__pycache__/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true
+  }
+}
