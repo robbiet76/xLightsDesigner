@@ -34,3 +34,4 @@ This rubric is semantic-first: timing boundaries come from lyric timestamps, whi
 ## Follow-up Work Placeholder
 - TODO: Build a dedicated song-structure training/evaluation pack to improve Verse vs Chorus discrimination, with emphasis on title-hook repetition and verse-to-chorus bleed transitions across diverse genres.
 - TODO: Add a measurable benchmark set (tracks + expected section labels) and require regression checks before prompt/rubric updates ship.
+- TODO: Add chord-progression evidence as a secondary structure signal (per-bar chord inference + repeating harmonic loop detection) and fuse it with lyric/section evidence for chorus and section-boundary confidence.

@@ -65,7 +65,7 @@ Error:
 Standard status codes:
 - `200`: success
 - `400`: malformed envelope / unsupported `apiVersion`
-- `404`: referenced entity not found (track/file/plugin)
+- `404`: referenced entity not found (track/file/provider)
 - `409`: conflict (duplicate track with replace disabled)
 - `422`: semantic validation error
 - `500`: unexpected internal error
@@ -97,14 +97,14 @@ Response `data`:
 - `apiVersions`: `[2]`
 - `commands`: string array
 - `features`:
-  - `vampPluginsAvailable` (bool)
+  - `analysisProvidersAvailable` (bool)
   - `lyricsSrtImportAvailable` (bool)
   - `songStructureDetectionAvailable` (bool)
 
 Idempotency: read-only.
 
 ## 3.2 `timing.listAnalysisPlugins`
-Purpose: list available audio-analysis plugins.
+Purpose: list available audio-analysis providers.
 
 Request:
 ```json
@@ -112,29 +112,28 @@ Request:
 ```
 
 Response `data`:
-- `plugins`: array of:
+- `providers`: array of:
   - `id` (string)
   - `name` (string)
   - optional `category` (string; e.g., `beat`, `tempo`, `onset`)
 
 Selection guidance:
-- Clients that need sequencing-grade beat/bar timing should prefer QM beat-tracker plugins when present.
-- Recommended selection heuristic: first plugin whose `id` or `name` matches QM beat tracker patterns (for example `qm` + `tempo`/`beat` tokens).
+- Clients should select best available provider by quality scoring and meter/tempo coherence checks.
 
 Idempotency: read-only.
 
 ## 3.3 `timing.createFromAudio`
-Purpose: create timing marks from selected analysis plugin.
+Purpose: create timing marks from selected analysis provider.
 
 Params:
-- `plugin` (string, required)
+- `provider` (string, required)
 - `trackName` (string, required)
 - `mediaFile` (string|null, optional)
 - `replaceIfExists` (bool, default `false`)
 - `addToAllViews` (bool, default `false`)
 
 Validation:
-- `plugin` must exist in `timing.listAnalysisPlugins`.
+- `provider` must exist in `timing.listAnalysisPlugins`.
 - `trackName` non-empty.
 - media must resolve to a readable file.
 
@@ -145,7 +144,7 @@ Conflict behavior:
 Response `data`:
 - `trackName`
 - `action`: `created|updated`
-- `plugin`
+- `provider`
 - `markCount`
 - `startMs`
 - `endMs`
@@ -154,7 +153,7 @@ Idempotency:
 - same inputs + same source state => same resulting marks/count.
 
 Fidelity behavior note:
-- In QM-required workflows, if no acceptable QM plugin is present, callers should treat this as a capability constraint and fail explicitly rather than emitting guessed/synthetic beat marks.
+- If required providers are unavailable, callers should treat this as a capability constraint and fail explicitly rather than emitting guessed/synthetic beat marks.
 
 ## 3.4 `timing.getTrackSummary`
 Purpose: query timing track metrics.
@@ -366,7 +365,7 @@ Response still uses `res=200` when preflight passes.
 ## 7) Minimal Contract Test Matrix
 - envelope validation (`apiVersion`, unknown cmd, malformed types)
 - per-command required fields
-- plugin not found
+- provider not found
 - sequence/media missing
 - duplicate track conflict vs replace path
 - dry-run no-mutation verification

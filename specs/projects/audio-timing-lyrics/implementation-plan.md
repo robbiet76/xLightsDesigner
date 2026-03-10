@@ -18,9 +18,7 @@ Given an MP3/media-backed sequence, automation can:
 4. return deterministic metadata so an external agent can continue with effect authoring later.
 
 ## Existing Capabilities We Can Reuse
-- VAMP plugin discovery/processing for timing marks:
-  - `/Users/robterry/xLights/xLights/AudioManager.cpp:2914`
-  - `/Users/robterry/xLights/xLights/sequencer/RowHeading.cpp:816`
+- App-side analysis service orchestration (BeatNet/Librosa providers).
 - Timing track creation and management:
   - `/Users/robterry/xLights/xLights/sequencer/tabSequencer.cpp:3399`
 - Lyrics import and phrase/word/phoneme breakdown on timing elements:
@@ -40,7 +38,7 @@ No breaking changes to legacy commands.
 Purpose: allow clients/agents to feature-detect phase-1 support.
 
 ### 2) `timing.listAnalysisPlugins`
-Returns available VAMP timing plugins in the current runtime.
+Returns available analysis providers in the current runtime.
 
 Request
 ```json
@@ -53,13 +51,13 @@ Response (example)
   "res": 200,
   "apiVersion": 2,
   "data": {
-    "plugins": ["Bar and Beat Tracker", "Percussion Onset Detector"]
+    "providers": ["beatnet", "librosa"]
   }
 }
 ```
 
 ### 3) `timing.createFromAudio`
-Runs selected timing analysis plugin and creates a timing track.
+Runs selected timing analysis provider and creates a timing track.
 
 Request
 ```json
@@ -67,7 +65,7 @@ Request
   "apiVersion": 2,
   "cmd": "timing.createFromAudio",
   "params": {
-    "plugin": "Bar and Beat Tracker",
+    "provider": "beatnet",
     "trackName": "Beats",
     "mediaFile": null,
     "createIfMissing": true,
@@ -213,7 +211,7 @@ Response should include mark count, start/end, avg interval, and lyric layer pre
 - Add `timing.getTrackSummary`.
 - Add `timing.createBarsFromBeats`.
 - Add `timing.createEnergySections`.
-- Include tests for plugin-not-found, no-media, duplicate-track handling.
+- Include tests for provider-not-found, no-media, duplicate-track handling.
 
 ### PR-3: Lyrics Tracks
 - Add `lyrics.createTrackFromText`.

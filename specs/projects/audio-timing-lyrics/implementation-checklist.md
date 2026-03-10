@@ -24,29 +24,29 @@ Acceptance tests:
 
 ### `timing.listAnalysisPlugins`
 Implementation checklist:
-- [ ] Handler calls VAMP plugin discovery from current media runtime.
-- [ ] Response returns stable plugin identifiers/names.
+- [ ] Handler returns available analysis providers from configured service runtime (e.g., BeatNet, Librosa).
+- [ ] Response returns stable provider identifiers/names.
 
 Acceptance tests:
-- [ ] Returns `res=200` with `plugins` array.
-- [ ] Empty-plugin environments return `plugins=[]` (not error).
+- [ ] Returns `res=200` with provider array.
+- [ ] Empty-provider environments return `[]` (not error).
 - [ ] No sequence/media returns clear error (`SEQUENCE_NOT_OPEN` or `MEDIA_NOT_AVAILABLE`).
 
 ## PR-2: Audio Timing Generation
 
 ### `timing.createFromAudio`
 Implementation checklist:
-- [ ] Non-UI plugin processing helper extracted from dialog path.
-- [ ] Supports `plugin`, `trackName`, optional `mediaFile`, `replaceIfExists`.
-- [ ] QM-first plugin selection policy documented and implemented in callers (discover plugins, prefer QM beat tracker identifiers/names).
+- [ ] Service provider call path implemented without UI/plugin dialog dependencies.
+- [ ] Supports `provider`, `trackName`, optional `mediaFile`, `replaceIfExists`.
+- [ ] Provider quality selection policy documented and implemented in callers.
 - [ ] Collision behavior enforced (`409` when replace is false and track exists).
 - [ ] Existing UI flow still works via shared helper (no behavior drift).
-- [ ] If QM plugin is unavailable in environments that require high-fidelity timing, return explicit capability/error path (no synthetic guessed beats).
+- [ ] If required providers are unavailable, return explicit capability/error path (no synthetic guessed beats).
 
 Acceptance tests:
-- [ ] Valid request creates timing track and returns `markCount > 0` for known plugin/media.
-- [ ] `timing.listAnalysisPlugins` includes QM plugin in configured environments and selection chooses it.
-- [ ] Unknown plugin returns `PLUGIN_NOT_FOUND`.
+- [ ] Valid request creates timing track and returns `markCount > 0` for known provider/media.
+- [ ] Provider selection chooses best-quality provider when multiple are available.
+- [ ] Unknown provider returns `VALIDATION_ERROR`.
 - [ ] Existing track + `replaceIfExists=false` returns `TRACK_ALREADY_EXISTS`.
 - [ ] Existing track + `replaceIfExists=true` updates same track name.
 
@@ -121,6 +121,39 @@ Acceptance tests:
 - [ ] If disabled/unavailable, endpoint returns explicit not-supported error or excluded capability.
 - [ ] Confidence values constrained to `0.0..1.0`.
 
+## Pipeline Refinement Workstream (App/Service)
+
+### Identity + Caching
+- [ ] Fingerprint audio via AudD before remote metadata lookups.
+- [ ] Cache identity by audio hash with TTL/refresh policy.
+- [ ] Ensure fingerprinted `title/artist` drives all web tempo/meter and lyrics lookups.
+
+### Beat Detection and Provider Arbitration
+- [ ] Run BeatNet and Librosa beat extraction (when both available).
+- [ ] Implement quality scoring and provider auto-selection.
+- [ ] Persist provider choice + quality diagnostics in analysis metadata.
+
+### Meter/Tempo Validation + Correction
+- [ ] Query deterministic web validation sources (`songbpm`, `getsongbpm`) for exact track identity.
+- [ ] Compare service BPM vs web beat-BPM and bar-rate using meter-aware math.
+- [ ] Apply controlled half-time/double-time correction before writing beats/bars.
+- [ ] Emit clear diagnostics for correction mode and source evidence.
+
+### Chord Progression Stage (NEW)
+- [ ] Add chord extraction from existing service stack (or minimal additional dependency).
+- [ ] Generate `XD: Chords` timing marks (label + start/end + confidence).
+- [ ] Align chord marks to beat/bar grid where possible.
+
+### Lyrics Stage
+- [ ] Fetch LRCLIB synced lyrics for fingerprinted identity.
+- [ ] Write lyrics only when timestamped lines exist.
+- [ ] Preserve parser/version/source metadata in diagnostics.
+
+### Song Structure Stage
+- [ ] Feed LLM both lyric recurrence features and chord recurrence features.
+- [ ] Keep deterministic boundaries from timing data; use LLM for semantic labels.
+- [ ] Emit final section labels + rationale in diagnostics for each run.
+
 ## Cross-Cutting Validation Checklist
 - [ ] No legacy command behavior changed.
 - [ ] All new mutating endpoints honor dry-run no-mutation guarantee.
@@ -130,7 +163,7 @@ Acceptance tests:
 
 ## Exit Criteria for Phase 1
 - [ ] External client can run full prep flow:
-  - list plugins
+  - list providers
   - create base timing track
   - create bars/downbeats track
   - create energy track

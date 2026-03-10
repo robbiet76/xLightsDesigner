@@ -21,11 +21,27 @@ Sequencers spend significant manual time creating timing marks and lyric scaffol
 - Outputs are stable, queryable, and suitable for follow-on automation.
 - Existing automation behavior remains backward compatible.
 
+### 1.4 Revised Analysis Pipeline (Current Target)
+This project now targets the following ordered pipeline for app-side audio analysis:
+1. Fingerprint the attached audio with AudD and cache identity by audio hash.
+2. Run beat onset detection with both BeatNet and Librosa (or available providers) and select the better result using quality scoring.
+3. Determine candidate meter/bars from service output; validate BPM/meter using exact-track web evidence (songbpm/getsongbpm) based on fingerprinted title+artist.
+4. Apply correction when beat stream is likely half/double-time or bar-rate mislabeled as beat-rate; then write `XD: Beats` and `XD: Bars`.
+5. Derive chord progression (per-bar harmonic evidence) and write `XD: Chords` timing track.
+6. Fetch synced lyrics from LRCLIB for fingerprinted track and write `XD: Lyrics` only when timestamped lines exist.
+7. Run trained LLM section labeling over lyric patterns plus chord progression evidence to write `XD: Song Structure`.
+
+Design constraints:
+- No synthetic fallback data that appears successful when core services fail.
+- Source lineage and confidence must be visible in diagnostics.
+- Fingerprinted identity is authoritative over local filename for remote lookups.
+
 ## 2. Scope
 
 ### 2.1 In Scope
 - Audio timing analysis command(s).
 - Bar/downbeat track derivation from timing analysis.
+- Chord progression extraction and chord timing-track generation.
 - Song structure section detection (e.g., Intro, Verse, Chorus, Bridge, Outro).
 - Energy section detection (e.g., low/medium/high intensity segments).
 - Timing track creation/update commands.
@@ -40,6 +56,7 @@ Sequencers spend significant manual time creating timing marks and lyric scaffol
 - Playback transport automation (play/pause/seek).
 - Full headless/server re-architecture.
 - Generic “agent sequencing” orchestration.
+- VAMP plugin integration, installation, or support workflows.
 
 ## 3. Architecture and Compatibility
 
@@ -102,22 +119,22 @@ Purpose: feature discovery for this project.
 Returns:
 - supported `apiVersions`,
 - supported project commands,
-- capability flags (e.g., `vampPluginsAvailable`, `lyricsSrtImportAvailable`).
+- capability flags (e.g., `analysisProvidersAvailable`, `lyricsSrtImportAvailable`).
 
 ### 4.2.2 `timing.listAnalysisPlugins`
-Purpose: list available audio timing analysis plugins.
+Purpose: list available audio timing analysis providers.
 
 Params: none.
 
 Returns:
-- plugin list,
+- provider list,
 - optional metadata (display name, internal key).
 
 ### 4.2.3 `timing.createFromAudio`
 Purpose: generate a timing track from audio analysis.
 
 Params:
-- `plugin` (string, required)
+- `provider` (string, required)
 - `trackName` (string, required)
 - `mediaFile` (string|null, optional; default active sequence media)
 - `replaceIfExists` (bool, default false)
@@ -127,7 +144,7 @@ Returns:
 - created/updated track name,
 - mark count,
 - start/end time,
-- plugin used.
+- provider used.
 
 ### 4.2.4 `timing.getTrackSummary`
 Purpose: fetch timing track statistics for verification.
@@ -248,9 +265,27 @@ Bars/downbeats generation must produce ordered, non-overlapping marks aligned to
 ### FR-8 Energy Output
 Energy section generation must produce ordered, non-overlapping low/medium/high (or configured) segments suitable for sequencing intensity changes.
 
-### FR-9 Timing Source Fidelity (VAMP QM-first)
-Beat/bar generation for sequencing-critical timing must prefer VAMP QM plugins when available.  
-If QM plugin capability is unavailable, the system must return explicit capability/error signaling rather than silently emitting guessed beat marks.
+### FR-9 Timing Source Fidelity (Service-first, No Fake Success)
+Beat/bar generation for sequencing-critical timing must use configured analysis services (BeatNet/Librosa) with quality-based provider selection.  
+If required analysis services are unavailable, system must return explicit capability/error signaling rather than silently emitting guessed marks.
+
+### FR-10 Identity-Coupled Validation
+Remote metadata validation (tempo/meter/lyrics context) must key off fingerprinted track identity (`title`, `artist`, optional `isrc`) and not local file naming.
+
+### FR-11 Beat Provider Quality Arbitration
+When multiple beat providers are available, system must score/select the best candidate and record selection rationale in diagnostics/metadata.
+
+### FR-12 Meter-Aware Tempo Correction
+System must detect likely half-time/double-time/bar-rate mismatches and apply deterministic correction before final beat/bar tracks are written.
+
+### FR-13 Chord Track Output
+System must produce a chord timing track (`XD: Chords`) with ordered non-overlapping marks and confidence metadata suitable for structure inference.
+
+### FR-14 Lyrics Timestamp Integrity
+Lyrics track generation must occur only when synced timestamps are available from source; no fabricated lyric timings.
+
+### FR-15 Structure Inference Inputs
+Song-structure labeling must consider both lyric recurrence and harmonic/chord recurrence signals, with LLM rationale retained for diagnostics.
 
 ## 6. Non-Functional Requirements
 
@@ -269,7 +304,7 @@ If QM plugin capability is unavailable, the system must return explicit capabili
 
 ### 7.2 Integration Coverage
 - open/create sequence + run `timing.createFromAudio`.
-- validate QM plugin discovery/selection path via `timing.listAnalysisPlugins`.
+- validate analysis provider discovery/selection path.
 - run `lyrics.createTrackFromText` and verify layer counts.
 - run `lyrics.importSrt` with valid/invalid SRT.
 - run `timing.detectSongStructure` and verify section ordering, coverage, and labels.
@@ -306,7 +341,7 @@ Project is complete when:
 4. Sequencer can generate timing + lyric scaffolding from an MP3 workflow without manual UI editing steps.
 5. Song structure sections (Verse/Chorus/etc.) can be generated as a timing track for downstream sequencing workflows.
 6. Bars/downbeats and energy section tracks can be generated for downstream sequencing workflows.
-7. Beat/bar timing generation demonstrates acceptable fidelity on representative songs when QM plugin is present, and reports explicit capability constraints when QM is absent.
+7. Beat/bar timing generation demonstrates acceptable fidelity on representative songs using service providers, and reports explicit capability constraints when providers are unavailable.
 
 ## 10. Open Decisions
 

@@ -34,10 +34,10 @@ Impacted work:
 
 ---
 
-### D3) `timing.createFromAudio` plugin parameters (PR-2)
+### D3) `timing.createFromAudio` provider parameters (PR-2)
 Decision:
-- Defer plugin parameter override API to later phase.
-- PR-2 uses plugin default parameters only.
+- Defer provider parameter override API to later phase.
+- PR-2 uses provider default parameters only.
 
 Rationale:
 - Avoid broad surface area in initial non-UI extraction.
@@ -142,21 +142,70 @@ Impacted work:
 
 ---
 
-### D11) Beat/bar source strategy (VAMP QM-first)
+### D11) Beat/bar source strategy (service-first + quality arbitration)
 Decision:
-- For beat/bar timing fidelity, prefer VAMP QM plugins as first-choice analysis source.
-- Use `timing.listAnalysisPlugins` discovery and select the first available plugin matching QM beat tracker patterns (for example `qm-tempotracker` style identifiers/names).
-- If no acceptable QM plugin is available, do not fabricate/guess beat marks in xLights automation paths; return explicit capability/error and keep timing generation incomplete.
-- Bars must be derived from the produced beat track (`timing.createBarsFromBeats`) and must span downbeat-to-downbeat boundaries.
+- Use app-side analysis services (BeatNet + Librosa when available) as primary beat/onset sources.
+- Score candidate beat streams and select best provider automatically.
+- Use deterministic web tempo/meter validation from exact track identity (songbpm/getsongbpm) to detect half/double-time or bar-rate mismatches.
+- Apply correction before writing final beat/bar tracks.
+- Do not emit synthetic “success” data when service calls fail.
 
 Rationale:
-- Service-only beat extraction has produced visibly inaccurate timing for real sequences.
-- xLights+VAMP QM is currently the highest-confidence local path available for hobbyist usage.
-- Avoiding synthetic fallback prevents false confidence in generated timing tracks.
+- Avoid dependency on local VAMP installation for hobbyist users.
+- Beat providers can fail differently by song; quality arbitration is more robust than single-provider lock-in.
+- Meter-aware correction plus exact-track validation materially improves beat/bar fidelity.
 
 Impacted work:
-- PR-2
-- App/service integration behavior that consumes beat/bar tracks
+- App analysis pipeline
+- Analysis service contracts/metadata
+- Beat/bar write stage
+
+---
+
+### D12) Fingerprint-first identity and cache
+Decision:
+- AudD fingerprint identity is authoritative for track-level lookups.
+- Cache fingerprint->identity results to minimize repeat third-party calls.
+- Local filename is fallback hint only when fingerprint identity is unavailable.
+
+Rationale:
+- Prevent mismatched lookups from renamed files.
+- Reduce API quota consumption and improve responsiveness.
+
+Impacted work:
+- Analysis service identity layer
+- Web validation and lyrics lookup paths
+
+---
+
+### D13) Chord progression as structure evidence
+Decision:
+- Add chord progression extraction as a secondary structure signal.
+- Write a dedicated `XD: Chords` timing track.
+- Feed chord recurrence evidence into LLM section labeling together with lyrics.
+
+Rationale:
+- Lyrics-only sectioning is fragile for instrumental passages and some genres.
+- Harmonic recurrence improves chorus/section boundary confidence.
+
+Impacted work:
+- Analysis service feature extraction
+- UI pipeline stage ordering
+- Song-structure labeling prompt/evidence
+
+---
+
+### D14) VAMP support scope
+Decision:
+- VAMP integration/support is out of scope for this application.
+- Users may install/use VAMP independently in xLights, but app pipeline logic will not depend on or orchestrate VAMP.
+
+Rationale:
+- Keeps setup simple for hobbyist users.
+- Avoids optional local plugin dependency drift in core pipeline behavior.
+
+Impacted work:
+- All current/future pipeline specs and checklists
 
 ## Change Control
 - Any change to these decisions requires:
