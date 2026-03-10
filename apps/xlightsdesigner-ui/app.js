@@ -5733,16 +5733,12 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         apiKey: analysisApiKey || undefined,
         authBearer: analysisBearer || undefined
       });
-      addDiag(`Analysis service URL: ${analysisBaseUrl}`);
       if (!analysisRes?.ok) {
         addDiag(`Audio analysis service failed: ${String(analysisRes?.error || "unknown error")}`);
       } else {
         pipeline.analysisServiceSucceeded = true;
         const data = analysisRes?.data && typeof analysisRes.data === "object" ? analysisRes.data : {};
         const dataMeta = data?.meta && typeof data.meta === "object" ? data.meta : {};
-        if (String(dataMeta?.lyricsParserVersion || "").trim()) {
-          addDiag(`Lyrics parser: ${String(dataMeta.lyricsParserVersion).trim()}`);
-        }
         if (String(dataMeta?.engine || "").trim()) {
           addDiag(`Analysis engine selected: ${String(dataMeta.engine).trim()}`);
         }
@@ -5754,14 +5750,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
               `Auto provider selection: ${sel}${Number.isFinite(score) ? ` (score ${score.toFixed(3)})` : ""}.`
             );
           }
-        }
-        if (dataMeta?.lyricsLookup && typeof dataMeta.lyricsLookup === "object") {
-          const lrId = String(dataMeta.lyricsLookup.lrclibId || "").trim();
-          const lrAlbum = String(dataMeta.lyricsLookup.lrclibAlbum || "").trim();
-          const lrFirst = Math.round(Number(dataMeta.lyricsLookup.lrclibFirstTimestampMs));
-          if (lrId) addDiag(`Lyrics source LRCLIB id: ${lrId}`);
-          if (lrAlbum) addDiag(`Lyrics source album: ${lrAlbum}`);
-          if (Number.isFinite(lrFirst)) addDiag(`Lyrics source first timestamp: ${lrFirst}ms.`);
         }
         detectedTrackIdentity = data?.meta?.trackIdentity && typeof data.meta.trackIdentity === "object"
           ? data.meta.trackIdentity
@@ -5942,20 +5930,12 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           addDiag("Analysis service returned no song sections.");
         }
         if (Array.isArray(lyrics) && lyrics.length) {
-          const firstServiceLyricMs = Math.round(Number(lyrics?.[0]?.startMs));
-          if (Number.isFinite(firstServiceLyricMs)) {
-            addDiag(`Lyrics first mark from service: ${firstServiceLyricMs}ms.`);
-          }
           const lyricsWrite = await writeTrackMarks(generatedLyricsTrackName, lyrics);
           if (lyricsWrite.ok) {
             trackMarksByName[generatedLyricsTrackName] = lyricsWrite.marks;
             pipeline.lyricsTrackWritten = true;
             pipeline.lyricsDetected = true;
             pipeline.timingDerived = true;
-            const firstWrittenLyricMs = Math.round(Number(lyricsWrite?.marks?.[0]?.startMs));
-            if (Number.isFinite(firstWrittenLyricMs)) {
-              addDiag(`Lyrics first mark written: ${firstWrittenLyricMs}ms.`);
-            }
             if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
               addDiag(`Lyrics global shift applied: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
             }
@@ -6037,24 +6017,11 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   const effectiveSongContext = songContextSummary || webFallbackContext || "";
   pipeline.webContextDerived = Boolean(effectiveSongContext);
   if (!effectiveSongContext) addDiag("Song context unavailable from cloud agent and web fallback.");
-  if (songContextResearch) {
-    addDiag("Track research sources are context-only and are not used for BPM/time-signature correction.");
-    if (songContextResearch.confidence) addDiag(`Track research confidence: ${songContextResearch.confidence}`);
-    if (songContextResearch.rationale) addDiag(`Track research rationale: ${songContextResearch.rationale}`);
-    const rsources = Array.isArray(songContextResearch.sources) ? songContextResearch.sources : [];
-    for (let i = 0; i < rsources.length; i += 1) {
-      addDiag(`Track research source ${i + 1}: ${rsources[i]}`);
-    }
-  }
+  if (songContextResearch?.confidence) addDiag(`Track research confidence: ${songContextResearch.confidence}`);
   webValidation = buildWebValidationFromServiceEvidence({
     evidence: serviceWebTempoEvidence,
     trackIdentity: detectedTrackIdentity
   });
-  if (detectedTrackIdentity && (detectedTrackIdentity.title || detectedTrackIdentity.artist)) {
-    addDiag(
-      `Fingerprint identity: ${String(detectedTrackIdentity.title || "?")} / ${String(detectedTrackIdentity.artist || "?")} / ISRC=${String(detectedTrackIdentity.isrc || "unavailable")}`
-    );
-  }
   if (webValidation) {
     if (webValidation.ignored) {
       if (webValidation.reason === "non-informational-sources") {
@@ -6093,26 +6060,8 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
       addDiag(
         `Web validation ignored: low-confidence or insufficient evidence (${wconf}${wsrc ? `, sources=${wsrc}` : ""}).`
       );
-      if (webValidation.rationale) addDiag(`Web validation rationale: ${webValidation.rationale}`);
-      if (Array.isArray(webValidation.alternates) && webValidation.alternates.length) {
-        addDiag(`Web validation alternates: ${webValidation.alternates.join(" | ")}`);
-      }
-      if (wSourceBpms.length) addDiag(`Web source BPM values: ${wSourceBpms.join(", ")}`);
-      if (wSourceBars.length) addDiag(`Web source bars/min values: ${wSourceBars.join(", ")}`);
-      for (let i = 0; i < wsources.length; i += 1) {
-        addDiag(`Web source ${i + 1}: ${wsources[i]}`);
-      }
     } else {
       addDiag(`Web validation: ${wsig}${Number.isFinite(wbpm) ? ` / ${wbpm} BPM` : ""} (${wconf})${wsrc ? `, sources=${wsrc}` : ""}`);
-      if (webValidation.rationale) addDiag(`Web validation rationale: ${webValidation.rationale}`);
-      if (Array.isArray(webValidation.alternates) && webValidation.alternates.length) {
-        addDiag(`Web validation alternates: ${webValidation.alternates.join(" | ")}`);
-      }
-      if (wSourceBpms.length) addDiag(`Web source BPM values: ${wSourceBpms.join(", ")}`);
-      if (wSourceBars.length) addDiag(`Web source bars/min values: ${wSourceBars.join(", ")}`);
-      for (let i = 0; i < wsources.length; i += 1) {
-        addDiag(`Web source ${i + 1}: ${wsources[i]}`);
-      }
       if (detectedTimeSignature && wsig !== "unknown" && !areMetersCompatible(detectedTimeSignature, wsig)) {
         addDiag(`Meter mismatch: service=${detectedTimeSignature}, web=${wsig}`);
         hasConflict = true;
@@ -6130,7 +6079,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         evidenceBeatCandidates.push(...wSourceBpms);
         evidenceBeatCandidates.push(wbpm);
         const webBeatBpm = medianNumber(evidenceBeatCandidates.filter((n) => Number.isFinite(n) && n > 0));
-        const derivedBeatsFromBars = wSourceBars.map((v) => v * Math.max(1, bpb));
         const webBarsPerMinute = Number.isFinite(medianNumber(wSourceBars))
           ? medianNumber(wSourceBars)
           : (Number.isFinite(webBeatBpm) ? (webBeatBpm / Math.max(1, bpb)) : NaN);
@@ -6138,15 +6086,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         const errVsBars = Number.isFinite(webBarsPerMinute) ? relErr(serviceTempo, webBarsPerMinute) : Number.POSITIVE_INFINITY;
         const altNums = extractNumericCandidates(webValidation.alternates);
         const altNearService = altNums.some((n) => relErr(n, serviceTempo) <= 0.12);
-        addDiag(
-          `Tempo compare: service=${serviceTempo} vs webBeats=${Number.isFinite(webBeatBpm) ? webBeatBpm : "n/a"} (err ${Number.isFinite(errVsBeats) ? (errVsBeats * 100).toFixed(2) : "n/a"}%), webBars=${Number.isFinite(webBarsPerMinute) ? webBarsPerMinute.toFixed(2) : "n/a"} (err ${Number.isFinite(errVsBars) ? (errVsBars * 100).toFixed(2) : "n/a"}%), beatsPerBar=${bpb}.`
-        );
-        if (derivedBeatsFromBars.length) {
-          addDiag(`Tempo compare derived beats from bars/min: ${derivedBeatsFromBars.map((n) => n.toFixed(2)).join(", ")}`);
-        }
-        if (altNearService) {
-          addDiag("Tempo compare hint: web alternates include a value close to service tempo (possible bar-rate capture).");
-        }
 
         let bestScale = 1;
         let bestErr = errVsBeats;
