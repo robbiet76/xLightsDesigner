@@ -12,6 +12,16 @@ const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Prevent macOS GPU helper crash loops on startup.
+app.disableHardwareAcceleration();
+// Work around helper/service crash loops on some unsigned local builds.
+app.commandLine.appendSwitch("no-sandbox");
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-features", "NetworkService,NetworkServiceSandbox");
+// Use a fresh profile dir to avoid startup crash loops from corrupted Chromium caches.
+const XLD_USER_DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop-v2");
+app.setPath("userData", XLD_USER_DATA_DIR);
+
 const UI_URL = String(process.env.XLD_UI_URL || "").trim();
 const STATE_FILENAME = "xlightsdesigner-state.json";
 const AGENT_APPLY_LOG_FILENAME = "xlightsdesigner-agent-apply-log.jsonl";
@@ -32,6 +42,45 @@ function logStartup(message) {
     fs.appendFileSync(STARTUP_LOG, `${new Date().toISOString()} ${message}\n`, "utf8");
   } catch {
     // ignore logging failures
+  }
+}
+
+function ensureDirSync(dir) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+function tryCopyIfMissing(src, dest) {
+  try {
+    if (!fs.existsSync(src) || fs.existsSync(dest)) return false;
+    ensureDirSync(path.dirname(dest));
+    fs.copyFileSync(src, dest);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function migrateLegacyUserData() {
+  const userData = app.getPath("userData");
+  const legacyData = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop");
+  if (!legacyData || legacyData === userData || !fs.existsSync(legacyData)) return;
+  try {
+    ensureDirSync(userData);
+    const filesToCopy = [
+      STATE_FILENAME,
+      AGENT_CONFIG_FILENAME,
+      AGENT_APPLY_LOG_FILENAME,
+      path.join("projects", "index.json")
+    ];
+    let copied = 0;
+    for (const rel of filesToCopy) {
+      const src = path.join(legacyData, rel);
+      const dest = path.join(userData, rel);
+      if (tryCopyIfMissing(src, dest)) copied += 1;
+    }
+    logStartup(`app:userData migration legacy=${legacyData} copied=${copied}`);
+  } catch (err) {
+    logStartup(`app:userData migration error=${String(err?.message || err)}`);
   }
 }
 
@@ -1269,10 +1318,24 @@ process.on("unhandledRejection", (err) => {
 });
 
 app.on("will-finish-launching", () => logStartup("app:will-finish-launching"));
-app.on("ready", () => logStartup("app:ready"));
+app.on("ready", () => {
+  migrateLegacyUserData();
+  logStartup("app:ready");
+  logStartup(`app:userData ${app.getPath("userData")}`);
+});
 app.on("before-quit", () => logStartup("app:before-quit"));
 app.on("will-quit", () => logStartup("app:will-quit"));
 app.on("quit", (_event, code) => logStartup(`app:quit code=${code}`));
+app.on("child-process-gone", (_event, details) => {
+  const type = String(details?.type || "unknown");
+  const reason = String(details?.reason || "unknown");
+  const name = String(details?.name || "unknown");
+  const serviceName = String(details?.serviceName || "").trim();
+  const exitCode = Number.isFinite(Number(details?.exitCode)) ? Number(details.exitCode) : 0;
+  logStartup(
+    `app:child-process-gone type=${type} reason=${reason} name=${name} service=${serviceName || "n/a"} exitCode=${exitCode}`
+  );
+});
 
 app.whenReady().then(() => {
   logStartup("app:whenReady:resolved");

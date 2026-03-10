@@ -183,7 +183,7 @@ const defaultState = {
     agentModelDraft: "",
     agentBaseUrlDraft: "",
     analysisServiceUrlDraft: "",
-    analysisServiceProvider: "beatnet",
+    analysisServiceProvider: "auto",
     analysisServiceApiKeyDraft: "",
     analysisServiceAuthBearerDraft: "",
     analysisServiceReady: false,
@@ -268,8 +268,8 @@ if (!Array.isArray(state.ui?.metadataSelectedTags)) {
 if (typeof state.ui?.applyApprovalChecked !== "boolean") {
   state.ui.applyApprovalChecked = false;
 }
-if (!["beatnet", "librosa"].includes(String(state.ui?.analysisServiceProvider || "").toLowerCase())) {
-  state.ui.analysisServiceProvider = "beatnet";
+if (!["auto", "beatnet", "librosa"].includes(String(state.ui?.analysisServiceProvider || "").toLowerCase())) {
+  state.ui.analysisServiceProvider = "auto";
 }
 if (typeof state.ui?.analysisServiceReady !== "boolean") {
   state.ui.analysisServiceReady = false;
@@ -4781,6 +4781,7 @@ function buildAudioPipelineSummaryLines(pipeline = {}) {
     ["Service succeeded", Boolean(pipeline?.analysisServiceSucceeded)],
     ["Beat track written", Boolean(pipeline?.beatTrackWritten)],
     ["Bars track written", Boolean(pipeline?.barTrackWritten)],
+    ["Chords track written", Boolean(pipeline?.chordTrackWritten)],
     ["Song structure written", Boolean(pipeline?.structureTrackWritten)],
     ["Lyrics track written", Boolean(pipeline?.lyricsTrackWritten)],
     ["Song context derived", Boolean(pipeline?.webContextDerived)]
@@ -5248,9 +5249,38 @@ function buildSectionLyricContextRows(sections = [], lyrics = [], lyricalIndices
   }).filter(Boolean);
 }
 
-function buildSongStructureEvidence(ctxRows = [], trackIdentity = null, trackTitleHint = "") {
+function buildSectionChordContextRows(sections = [], chords = [], lyricalIndices = []) {
+  const sec = Array.isArray(sections) ? sections : [];
+  const rows = Array.isArray(chords) ? chords : [];
+  const allow = new Set(Array.isArray(lyricalIndices) ? lyricalIndices : []);
+  return sec.map((s, idx) => {
+    if (!allow.has(idx)) return null;
+    const startMs = Math.max(0, Math.round(Number(s?.startMs || 0)));
+    const endMs = Math.max(startMs + 1, Math.round(Number(s?.endMs || (startMs + 1))));
+    const labels = rows
+      .filter((row) => {
+        const t = Number(row?.startMs);
+        return Number.isFinite(t) && t >= startMs && t < endMs;
+      })
+      .map((row) => String(row?.label || "").trim())
+      .filter((label) => label && label.toUpperCase() !== "N");
+    const compact = [];
+    for (const label of labels) {
+      if (!compact.length || compact[compact.length - 1] !== label) compact.push(label);
+    }
+    return {
+      index: idx,
+      chordCount: labels.length,
+      chordSetSize: new Set(labels).size,
+      progression: compact.slice(0, 8).join("->")
+    };
+  }).filter(Boolean);
+}
+
+function buildSongStructureEvidence(ctxRows = [], chordRows = [], trackIdentity = null, trackTitleHint = "") {
   const rows = Array.isArray(ctxRows) ? ctxRows : [];
   if (!rows.length) return [];
+  const chordByIndex = new Map((Array.isArray(chordRows) ? chordRows : []).map((r) => [Number(r?.index), r]));
   const effectiveTitle = String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim();
   const titleTokens = new Set(
     effectiveTitle
@@ -5261,6 +5291,7 @@ function buildSongStructureEvidence(ctxRows = [], trackIdentity = null, trackTit
       .filter((t) => t.length >= 3)
   );
   const seenLineSet = new Set();
+  const seenProgressions = new Set();
   return rows.map((row, idx) => {
     const text = String(row?.stanzaText || "").toLowerCase();
     const lines = text.split("|").map((s) => s.trim()).filter(Boolean);
@@ -5279,12 +5310,20 @@ function buildSongStructureEvidence(ctxRows = [], trackIdentity = null, trackTit
     const uniqueTokenRatio = tokenSet.size > 0 ? Number((tokenSet.size / Math.max(1, tokens.length)).toFixed(3)) : 0;
     const repeatedLineRatio = lineSet.size > 0 ? Number((repeatedLines / lineSet.size).toFixed(3)) : 0;
     const titleTokenRatio = titleTokens.size > 0 ? Number((titleHits / Math.max(1, tokens.length)).toFixed(3)) : 0;
+    const chord = chordByIndex.get(Number(row?.index ?? idx)) || {};
+    const progression = String(chord?.progression || "").trim();
+    const progressionSeenBefore = Boolean(progression) && seenProgressions.has(progression);
+    if (progression) seenProgressions.add(progression);
     return {
       index: Number(row?.index ?? idx),
       lineCount: Number(row?.lineCount || lines.length || 0),
       repeatedLineRatio,
       uniqueTokenRatio,
-      titleTokenRatio
+      titleTokenRatio,
+      chordCount: Number(chord?.chordCount || 0),
+      chordSetSize: Number(chord?.chordSetSize || 0),
+      progression,
+      progressionSeenBefore
     };
   });
 }
@@ -5313,6 +5352,7 @@ function parseLlmSectionLabelResult(text = "", expectedCount = 0) {
 async function relabelSectionsWithLlm({
   sections = [],
   lyrics = [],
+  chords = [],
   lyricalIndices = [],
   trackIdentity = null,
   trackTitleHint = "",
@@ -5326,7 +5366,8 @@ async function relabelSectionsWithLlm({
   if (!targetIdx.length) return null;
   const ctxRows = buildSectionLyricContextRows(sec, lyrics, targetIdx);
   if (!ctxRows.length) return null;
-  const structureEvidence = buildSongStructureEvidence(ctxRows, trackIdentity, trackTitleHint);
+  const chordRows = buildSectionChordContextRows(sec, chords, targetIdx);
+  const structureEvidence = buildSongStructureEvidence(ctxRows, chordRows, trackIdentity, trackTitleHint);
   try {
     const tTitle = String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim();
     const tArtist = String(trackIdentity?.artist || "").trim();
@@ -5355,6 +5396,8 @@ async function relabelSectionsWithLlm({
       "- A single high-novelty late section can indicate Bridge.",
       "- If title words recur in multiple stanzas, weight those stanzas toward Chorus/Refrain.",
       "- When uncertain between Verse vs Chorus, prefer Chorus if title/hook lines recur across 2+ stanzas.",
+      "- Repeated chord progression across non-adjacent stanzas is supporting evidence for Chorus/Refrain.",
+      "- High lyric novelty plus chord progression change can indicate Verse or Bridge.",
       "Avoid one-label collapse unless evidence strongly supports it.",
       `Track: ${trackName}`,
       `Song title hint: ${tTitle || "unavailable"}`,
@@ -5365,6 +5408,7 @@ async function relabelSectionsWithLlm({
       "- confidence: high|medium|low",
       "- rationale: one short sentence",
       `Stanza sequence data: ${JSON.stringify(ctxRows)}`,
+      `Stanza chord data: ${JSON.stringify(chordRows)}`,
       `Stanza evidence data: ${JSON.stringify(structureEvidence)}`
     ].join("\n");
     const res = await bridge.runAgentConversation({
@@ -5489,6 +5533,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     analysisServiceSucceeded: false,
     beatTrackWritten: false,
     barTrackWritten: false,
+    chordTrackWritten: false,
     structureTrackWritten: false,
     lyricsTrackWritten: false,
     structureDerived: false,
@@ -5506,8 +5551,8 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   let serviceWebTempoEvidence = null;
   let webValidation = null;
   const analysisBaseUrl = String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "");
-  const analysisProviderRaw = String(state.ui.analysisServiceProvider || "beatnet").trim().toLowerCase() || "beatnet";
-  const analysisProvider = ["beatnet", "librosa"].includes(analysisProviderRaw) ? analysisProviderRaw : "beatnet";
+  const analysisProviderRaw = String(state.ui.analysisServiceProvider || "auto").trim().toLowerCase() || "auto";
+  const analysisProvider = ["auto", "beatnet", "librosa"].includes(analysisProviderRaw) ? analysisProviderRaw : "auto";
   const analysisApiKey = String(state.ui.analysisServiceApiKeyDraft || "").trim();
   const analysisBearer = String(state.ui.analysisServiceAuthBearerDraft || "").trim();
 
@@ -5670,6 +5715,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
 
   const generatedBeatTrackName = "XD: Beats";
   const generatedBarsTrackName = "XD: Bars";
+  const generatedChordsTrackName = "XD: Chords";
   const generatedStructureTrackName = "XD: Song Structure";
   const generatedLyricsTrackName = "XD: Lyrics";
   let beatTrackName = "";
@@ -5697,6 +5743,18 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         if (String(dataMeta?.lyricsParserVersion || "").trim()) {
           addDiag(`Lyrics parser: ${String(dataMeta.lyricsParserVersion).trim()}`);
         }
+        if (String(dataMeta?.engine || "").trim()) {
+          addDiag(`Analysis engine selected: ${String(dataMeta.engine).trim()}`);
+        }
+        if (dataMeta?.autoSelection && typeof dataMeta.autoSelection === "object") {
+          const sel = String(dataMeta.autoSelection.selectedProvider || "").trim();
+          const score = Number(dataMeta.autoSelection.selectedScore);
+          if (sel) {
+            addDiag(
+              `Auto provider selection: ${sel}${Number.isFinite(score) ? ` (score ${score.toFixed(3)})` : ""}.`
+            );
+          }
+        }
         if (dataMeta?.lyricsLookup && typeof dataMeta.lyricsLookup === "object") {
           const lrId = String(dataMeta.lyricsLookup.lrclibId || "").trim();
           const lrAlbum = String(dataMeta.lyricsLookup.lrclibAlbum || "").trim();
@@ -5713,6 +5771,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           : null;
         const beats = Array.isArray(data?.beats) ? data.beats : [];
         const bars = Array.isArray(data?.bars) ? data.bars : [];
+        const chords = Array.isArray(data?.chords) ? data.chords : [];
         const sections = Array.isArray(data?.sections) ? data.sections : [];
         const lyrics = Array.isArray(data?.lyrics) ? data.lyrics : [];
         let effectiveSections = sections;
@@ -5754,6 +5813,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           const relabeled = await relabelSectionsWithLlm({
             sections: effectiveSections,
             lyrics,
+            chords,
             lyricalIndices: lyricalSectionIndices,
             trackIdentity: detectedTrackIdentity,
             trackTitleHint: audioTrackQueryFromPath(audioPath),
@@ -5804,6 +5864,27 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           }
         } else {
           addDiag("Analysis service returned no bars.");
+        }
+        if (Array.isArray(chords) && chords.length) {
+          const chordsWrite = await writeTrackMarks(generatedChordsTrackName, chords);
+          if (chordsWrite.ok) {
+            trackMarksByName[generatedChordsTrackName] = chordsWrite.marks;
+            pipeline.chordTrackWritten = true;
+            pipeline.timingDerived = true;
+            if (dataMeta?.chordAnalysis?.engine) {
+              addDiag(`Chord analysis engine: ${String(dataMeta.chordAnalysis.engine).trim()}`);
+            }
+            if (String(dataMeta?.chordAnalysis?.avgMarginConfidence || "").trim()) {
+              addDiag(`Chord analysis confidence: ${String(dataMeta.chordAnalysis.avgMarginConfidence).trim()}`);
+            }
+          } else {
+            addDiag(`Chords track write failed: ${chordsWrite.error}`);
+          }
+        } else {
+          addDiag("Analysis service returned no chords.");
+          if (String(dataMeta?.chordAnalysis?.error || "").trim()) {
+            addDiag(`Chord analysis detail: ${String(dataMeta.chordAnalysis.error).trim()}`);
+          }
         }
         if (Array.isArray(effectiveSections) && effectiveSections.length) {
           let structureWrite = await writeTrackMarks(generatedStructureTrackName, effectiveSections);
@@ -5905,6 +5986,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   const explicitCandidates = [
     beatTrackName,
     generatedBarsTrackName,
+    generatedChordsTrackName,
     structureTrackName,
     generatedStructureTrackName
   ]
@@ -5913,7 +5995,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   const candidateTracks = Array.from(
     new Set([
       ...explicitCandidates,
-      ...trackNames.filter((name) => /section|song|structure|phrase|beat|tempo|bpm|bar|lyric/i.test(name)).slice(0, 8)
+      ...trackNames.filter((name) => /section|song|structure|phrase|beat|tempo|bpm|bar|lyric|chord/i.test(name)).slice(0, 8)
     ])
   );
   for (const trackName of candidateTracks) {
@@ -6221,6 +6303,7 @@ async function onAnalyzeAudio() {
     analysisServiceSucceeded: false,
     beatTrackWritten: false,
     barTrackWritten: false,
+    chordTrackWritten: false,
     structureTrackWritten: false,
     lyricsTrackWritten: false,
     structureDerived: false,
@@ -6447,6 +6530,7 @@ function sequenceScreen() {
     ["Analysis service succeeded", Boolean(audioPipeline?.analysisServiceSucceeded)],
     ["Beat track written", Boolean(audioPipeline?.beatTrackWritten)],
     ["Bars track written", Boolean(audioPipeline?.barTrackWritten)],
+    ["Chords track written", Boolean(audioPipeline?.chordTrackWritten)],
     ["Song structure written", Boolean(audioPipeline?.structureTrackWritten)],
     ["Lyrics track written", Boolean(audioPipeline?.lyricsTrackWritten)],
     ["Song context derived", Boolean(audioPipeline?.webContextDerived)]
@@ -6900,6 +6984,7 @@ function settingsDrawer() {
           <label>Audio Analysis Service</label>
           <input id="analysis-service-url-input" placeholder="Service base URL (e.g. http://127.0.0.1:5055)" value="${String(state.ui.analysisServiceUrlDraft || "").replace(/\"/g, "&quot;")}" />
           <select id="analysis-service-provider-input">
+            <option value="auto" ${state.ui.analysisServiceProvider === "auto" ? "selected" : ""}>Auto (Best)</option>
             <option value="beatnet" ${state.ui.analysisServiceProvider === "beatnet" ? "selected" : ""}>BeatNet</option>
             <option value="librosa" ${state.ui.analysisServiceProvider === "librosa" ? "selected" : ""}>Librosa</option>
           </select>
@@ -7490,7 +7575,7 @@ function bindEvents() {
   if (analysisServiceProviderInput) {
     analysisServiceProviderInput.addEventListener("change", () => {
       const raw = String(analysisServiceProviderInput.value || "").trim().toLowerCase();
-      state.ui.analysisServiceProvider = ["beatnet", "librosa"].includes(raw) ? raw : "beatnet";
+      state.ui.analysisServiceProvider = ["auto", "beatnet", "librosa"].includes(raw) ? raw : "auto";
       persist();
     });
   }

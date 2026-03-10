@@ -10,7 +10,8 @@
     "test:agent-ui": "node --test ../xlightsdesigner-ui/tests/agent/*.test.js",
     "prepare:renderer": "node scripts/prepare-renderer.mjs",
     "dist:dir": "npm run prepare:renderer && electron-builder --dir",
-    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip",
+    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip && node scripts/install-mac-app.mjs",
+    "install:mac-app": "node scripts/install-mac-app.mjs",
     "verify:bundle": "node scripts/verify-bundle.mjs"
   },
   "devDependencies": {

@@ -691,6 +691,126 @@ def _bars_from_downbeats(
     return _sanitize_marks(bars)
 
 
+def _build_chord_templates() -> List[tuple[str, np.ndarray]]:
+    names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    out: List[tuple[str, np.ndarray]] = []
+    for i, root in enumerate(names):
+        maj = np.zeros(12, dtype=float)
+        maj[i] = 1.0
+        maj[(i + 4) % 12] = 0.8
+        maj[(i + 7) % 12] = 0.7
+        minv = np.zeros(12, dtype=float)
+        minv[i] = 1.0
+        minv[(i + 3) % 12] = 0.8
+        minv[(i + 7) % 12] = 0.7
+        out.append((root, maj / max(1e-9, np.linalg.norm(maj))))
+        out.append((f"{root}m", minv / max(1e-9, np.linalg.norm(minv))))
+    return out
+
+
+CHORD_TEMPLATES = _build_chord_templates()
+
+
+def _detect_chords_independent(
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    confidences: List[float] = []
+    if librosa is None or not isinstance(y, np.ndarray) or y.size == 0:
+        return rows, {"engine": "none", "error": "librosa unavailable for chord extraction"}
+    hop = 512
+    try:
+        chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=hop)
+    except Exception as err:
+        return rows, {"engine": "none", "error": f"chroma_cqt failed: {err}"}
+    if not isinstance(chroma, np.ndarray) or chroma.size == 0 or chroma.shape[1] < 2:
+        return rows, {"engine": "none", "error": "insufficient chroma frames"}
+
+    frame_starts = librosa.frames_to_time(np.arange(chroma.shape[1]), sr=sr, hop_length=hop) * 1000.0
+    labels: List[str] = []
+    margins: List[float] = []
+    scores_best: List[float] = []
+    for i in range(chroma.shape[1]):
+        profile = np.asarray(chroma[:, i], dtype=float)
+        norm = float(np.linalg.norm(profile))
+        if not np.isfinite(norm) or norm <= 0:
+            labels.append("N")
+            margins.append(0.0)
+            scores_best.append(0.0)
+            continue
+        profile = profile / norm
+        scored: List[tuple[str, float]] = []
+        for label, tpl in CHORD_TEMPLATES:
+            score = float(np.dot(profile, tpl))
+            if np.isfinite(score):
+                scored.append((label, score))
+        if not scored:
+            labels.append("N")
+            margins.append(0.0)
+            scores_best.append(0.0)
+            continue
+        scored.sort(key=lambda x: x[1], reverse=True)
+        best_label, best_score = scored[0]
+        second_score = scored[1][1] if len(scored) > 1 else -1.0
+        margin = float(best_score - second_score)
+        out_label = best_label if (best_score >= 0.35 and margin >= 0.03) else "N"
+        labels.append(out_label)
+        margins.append(max(0.0, margin))
+        scores_best.append(max(0.0, best_score))
+
+    # Majority smoothing over a tiny window reduces frame jitter without forcing bar alignment.
+    smooth = list(labels)
+    for i in range(1, len(labels) - 1):
+        a, b, c = labels[i - 1], labels[i], labels[i + 1]
+        if a == c and b != a:
+            smooth[i] = a
+    labels = smooth
+
+    i = 0
+    n = len(labels)
+    while i < n:
+        label = labels[i]
+        j = i + 1
+        while j < n and labels[j] == label:
+            j += 1
+        start_ms = int(round(float(frame_starts[i])))
+        if j < n:
+            end_ms = int(round(float(frame_starts[j])))
+        else:
+            end_ms = int(duration_ms)
+        start_ms = max(0, min(int(duration_ms) - 1, start_ms))
+        end_ms = max(start_ms + 1, min(int(duration_ms), end_ms))
+        seg_margin = float(np.mean(np.asarray(margins[i:j], dtype=float))) if j > i else 0.0
+        seg_score = float(np.mean(np.asarray(scores_best[i:j], dtype=float))) if j > i else 0.0
+        # Keep unknown segments for continuity, but drop sub-250ms micro fragments.
+        if (end_ms - start_ms) >= 250:
+            rows.append({"startMs": start_ms, "endMs": end_ms, "label": label})
+            if label != "N":
+                confidences.append(max(0.0, seg_margin * seg_score))
+        i = j
+
+    # Merge adjacent equal labels created after micro-fragment filtering.
+    merged: List[Dict[str, Any]] = []
+    for row in rows:
+        prev_label = str(merged[-1].get("label", "")).strip() if merged else ""
+        cur_label = str(row.get("label", "")).strip()
+        if merged and prev_label and prev_label == cur_label:
+            merged[-1]["endMs"] = int(row.get("endMs", merged[-1]["endMs"]))
+        else:
+            merged.append(dict(row))
+
+    clean = _sanitize_marks(merged)
+    confidence = float(np.mean(np.asarray(confidences, dtype=float))) if confidences else 0.0
+    return clean, {
+        "engine": "librosa-chroma-template-v2-independent",
+        "timelineAligned": False,
+        "chordMarkCount": int(len(clean)),
+        "avgMarginConfidence": round(confidence, 4),
+    }
+
+
 def _align_sections_to_bar_starts(
     sections: List[Dict[str, Any]],
     bars: List[Dict[str, Any]],
@@ -1552,6 +1672,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
     beats_out = _label_beats_from_downbeats(beats_out, downbeat_starts, detected_beats_per_bar)
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, detected_beats_per_bar)
+    chords_out, chord_meta = _detect_chords_independent(y, sr, duration_ms)
 
     bpm_est = None
     if len(beat_times_ms) >= 2:
@@ -1583,6 +1704,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
         "durationMs": duration_ms,
         "beats": beats_out,
         "bars": bars_out,
+        "chords": chords_out,
         "sections": sections,
         "lyrics": lyrics_marks,
         "meta": {
@@ -1606,6 +1728,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
                 "librosa": quality_librosa,
             },
             "beatGridSelection": beat_grid_info,
+            "chordAnalysis": chord_meta,
         },
     }
 
@@ -1624,6 +1747,7 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
             beat_starts_ms.append(ms)
     beat_starts_ms = sorted(set(beat_starts_ms))
     beat_starts_ms, beat_grid_info = _select_best_beat_grid(beat_starts_ms, y, sr, duration_ms)
+    beat_quality = _beat_quality_metrics(beat_starts_ms, y, sr, duration_ms)
     inferred_bpb, inferred_offset, inferred_scores = _infer_beats_per_bar_from_accent(
         beat_starts_ms, y, sr, DEFAULT_BEATS_PER_BAR
     )
@@ -1639,6 +1763,8 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         beat_num = ((i - int(inferred_offset)) % max(1, inferred_bpb)) + 1
         beats_out.append({"startMs": start, "endMs": end, "label": str(beat_num)})
     beats_out = _sanitize_marks(beats_out)
+    bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb)))
+    chords_out, chord_meta = _detect_chords_independent(y, sr, duration_ms)
     bpm_est = None
     if len(beat_starts_ms) >= 2:
         diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
@@ -1654,7 +1780,8 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         "timeSignature": f"{max(1, int(inferred_bpb))}/4",
         "durationMs": duration_ms,
         "beats": beats_out,
-        "bars": _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb))),
+        "bars": bars_out,
+        "chords": chords_out,
         "sections": sections,
         "lyrics": lyrics_marks,
         "meta": {
@@ -1672,12 +1799,92 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
             "meterAccentOffset": int(inferred_offset),
             "meterAccentScores": inferred_scores,
             "beatGridSelection": beat_grid_info,
+            "beatQuality": {
+                "selectedSource": "librosa",
+                "librosa": beat_quality,
+            },
+            "chordAnalysis": chord_meta,
         },
     }
 
 
+def _analysis_quality_score(data: Dict[str, Any]) -> float:
+    meta = data.get("meta") if isinstance(data, dict) else {}
+    if not isinstance(meta, dict):
+        return -999.0
+    bq = meta.get("beatQuality")
+    if not isinstance(bq, dict):
+        return -999.0
+    selected = str(bq.get("selectedSource", "")).strip().lower()
+    if selected and isinstance(bq.get(selected), dict):
+        try:
+            return float(bq[selected].get("score", -999.0))
+        except Exception:
+            return -999.0
+    scores: List[float] = []
+    for key in ("beatnet", "librosa"):
+        payload = bq.get(key)
+        if isinstance(payload, dict):
+            try:
+                val = float(payload.get("score", -999.0))
+            except Exception:
+                continue
+            if np.isfinite(val):
+                scores.append(val)
+    return max(scores) if scores else -999.0
+
+
+def _analyze_auto(path: str) -> Dict[str, Any]:
+    candidates: List[Dict[str, Any]] = []
+    errors: Dict[str, str] = {}
+    for name, fn in (("beatnet", _analyze_with_beatnet), ("librosa", _analyze_with_librosa)):
+        try:
+            out = fn(path)
+            meta = out.get("meta") if isinstance(out, dict) else {}
+            if isinstance(meta, dict):
+                meta["autoCandidateProvider"] = name
+            out["_autoProviderName"] = name
+            out["_autoQualityScore"] = _analysis_quality_score(out)
+            candidates.append(out)
+        except Exception as err:
+            errors[name] = str(err)
+    if not candidates:
+        raise RuntimeError(f"auto provider failed: {errors}")
+    candidates.sort(
+        key=lambda item: (
+            float(item.get("_autoQualityScore", -999.0)),
+            len(item.get("beats") or []),
+            len(item.get("bars") or []),
+        ),
+        reverse=True,
+    )
+    best = candidates[0]
+    meta = best.get("meta")
+    if isinstance(meta, dict):
+        meta["engine"] = str(best.get("_autoProviderName") or meta.get("engine") or "auto")
+        meta["autoSelection"] = {
+            "selectedProvider": str(best.get("_autoProviderName") or ""),
+            "selectedScore": float(best.get("_autoQualityScore", -999.0)),
+            "candidates": [
+                {
+                    "provider": str(c.get("_autoProviderName") or ""),
+                    "qualityScore": float(c.get("_autoQualityScore", -999.0)),
+                    "beats": int(len(c.get("beats") or [])),
+                    "bars": int(len(c.get("bars") or [])),
+                }
+                for c in candidates
+            ],
+            "errors": errors,
+        }
+    best.pop("_autoProviderName", None)
+    best.pop("_autoQualityScore", None)
+    return best
+
+
 def _analyze(path: str, provider: str) -> Dict[str, Any]:
     p = (provider or "beatnet").strip().lower()
+    if p == "auto":
+        return _analyze_auto(path)
     if p == "beatnet":
         return _analyze_with_beatnet(path)
     if p == "librosa":
@@ -1715,6 +1922,7 @@ async def analyze(
         data = _analyze(temp_path, provider)
         data["beats"] = _sanitize_marks(data.get("beats") or [])
         data["bars"] = _sanitize_marks(data.get("bars") or [])
+        data["chords"] = _sanitize_marks(data.get("chords") or [])
         data["sections"] = _sanitize_marks(data.get("sections") or [])
         data["lyrics"] = _sanitize_marks(data.get("lyrics") or [])
         return {"ok": True, "data": data}

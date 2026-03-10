@@ -72,6 +72,7 @@ export function analyzeAudioContext({
 
   const hasBeatTrack = trackNames.some((name) => /beat|bpm|tempo/i.test(name));
   const hasBarTrack = trackNames.some((name) => /\bbar(s)?\b/i.test(name));
+  const hasChordTrack = trackNames.some((name) => /chord/i.test(name));
   const hasLyricsTrack = trackNames.some((name) => /lyric/i.test(name));
   const beatTrackName = trackNames.find((name) => /beat|bpm|tempo/i.test(name)) || "";
   const beatMarks = beatTrackName ? (trackMarksByName?.[beatTrackName] || []) : [];
@@ -104,6 +105,7 @@ export function analyzeAudioContext({
       timeSignature: timeSignatureText,
       hasBeatTrack,
       hasBarTrack,
+      hasChordTrack,
       hasLyricsTrack
     },
     media: {
@@ -126,7 +128,7 @@ export function analyzeAudioContext({
       `Section map: ${sectionRows.length ? sectionRows.join(" | ") : "pending"}`,
       `Song context: ${String(songContextSummary || "").trim() || "pending"}`,
       `Tempo/time signature: ${inferredBpm ? `${inferredBpm} BPM (inferred)` : (hasBeatTrack ? "beat track detected (BPM pending)" : "pending explicit beat analysis")} / ${timeSignatureText}`,
-      `Timing tracks: beat=${hasBeatTrack ? "yes" : "no"}, bars=${hasBarTrack ? "yes" : "no"}, lyrics=${hasLyricsTrack ? "yes" : "no"}`,
+      `Timing tracks: beat=${hasBeatTrack ? "yes" : "no"}, bars=${hasBarTrack ? "yes" : "no"}, chords=${hasChordTrack ? "yes" : "no"}, lyrics=${hasLyricsTrack ? "yes" : "no"}`,
       `Creative brief seed: ${effectiveSections.length ? "structure-aware" : "needs section analysis"}`
     ]
   };
