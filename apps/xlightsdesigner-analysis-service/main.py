@@ -381,46 +381,99 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
     )
     if not rows:
         return []
+    # Derive adaptive stanza split threshold from actual lyric pacing.
+    gaps: List[int] = []
+    for i in range(1, len(rows)):
+        prev_end = int(rows[i - 1].get("endMs", rows[i - 1].get("startMs", 0)))
+        gap = int(rows[i].get("startMs", 0)) - prev_end
+        if gap > 0:
+            gaps.append(gap)
+    if gaps:
+        g = np.asarray(gaps, dtype=float)
+        med = float(np.median(g))
+        p75 = float(np.percentile(g, 75))
+        stanza_gap_ms = int(max(2500.0, min(12000.0, max(p75 * 1.35, med * 2.1))))
+    else:
+        stanza_gap_ms = 6000
 
-    # Learn repeated lyric lines (refrain/chorus cues) from normalized text.
-    freq: Dict[str, int] = {}
-    for r in rows:
-        t = _normalize_lyric_text(r.get("label", ""))
-        if t:
-            freq[t] = freq.get(t, 0) + 1
-    repeated = {k for k, v in freq.items() if v >= 2}
+    texts = [_normalize_lyric_text(r.get("label", "")) for r in rows]
+
+    # Identify repeated multi-line windows (2-4 lines) as chorus anchors.
+    window_hits: Dict[tuple[str, ...], List[int]] = {}
+    n = len(texts)
+    for k in (4, 3, 2):
+        if n < k:
+            continue
+        for i in range(0, n - k + 1):
+            win = tuple(texts[i : i + k])
+            if any(not t for t in win):
+                continue
+            # Ignore overly-short windows that tend to create false positives.
+            if sum(len(t) for t in win) < 20:
+                continue
+            window_hits.setdefault(win, []).append(i)
+
+    best_window: Optional[tuple[str, ...]] = None
+    best_starts: List[int] = []
+    best_score = -1
+    for win, starts in window_hits.items():
+        k = len(win)
+        # Keep non-overlapping occurrences only.
+        chosen: List[int] = []
+        for s in sorted(starts):
+            if not chosen or s >= (chosen[-1] + k):
+                chosen.append(s)
+        if len(chosen) < 2:
+            continue
+        score = len(chosen) * k
+        if score > best_score:
+            best_score = score
+            best_window = win
+            best_starts = chosen
+
+    # Split into stanzas by adaptive inter-line silence.
+    stanzas: List[tuple[int, int]] = []
+    stanza_start = 0
+    for i in range(1, len(rows)):
+        prev_end = int(rows[i - 1].get("endMs", rows[i - 1].get("startMs", 0)))
+        gap = int(rows[i].get("startMs", 0)) - prev_end
+        if gap >= stanza_gap_ms:
+            stanzas.append((stanza_start, i))
+            stanza_start = i
+    stanzas.append((stanza_start, len(rows)))
+
+    chorus_stanza_idx: set[int] = set()
+    if best_window and best_starts:
+        k = len(best_window)
+        for s in best_starts:
+            e = s + k
+            for idx, (a, b) in enumerate(stanzas):
+                if s < b and e > a:
+                    chorus_stanza_idx.add(idx)
 
     segments: List[Dict[str, Any]] = []
-
-    # Intro before first lyric mark.
     first_start = int(rows[0]["startMs"])
     if first_start > 500:
         segments.append({"startMs": 0, "endMs": first_start, "label": "Intro"})
 
     prev_end = first_start
-    for r in rows:
-        s = int(r.get("startMs", 0))
-        e = int(r.get("endMs", s + 1))
+    for idx, (a, b) in enumerate(stanzas):
+        if a >= b:
+            continue
+        s = int(rows[a].get("startMs", 0))
+        e = int(rows[b - 1].get("endMs", s + 1))
         if e <= s:
             continue
-        if s - prev_end >= 6000:
+        if s - prev_end >= stanza_gap_ms:
             segments.append({"startMs": prev_end, "endMs": s, "label": "Instrumental"})
-        text = _normalize_lyric_text(r.get("label", ""))
-        if not text:
-            seg_label = "Instrumental"
-        elif text in repeated:
-            seg_label = "Chorus"
-        else:
-            seg_label = "Verse"
-        segments.append({"startMs": s, "endMs": e, "label": seg_label})
+        label = "Chorus" if idx in chorus_stanza_idx else "Verse"
+        segments.append({"startMs": s, "endMs": e, "label": label})
         prev_end = e
 
-    # Outro tail after last lyric.
     if duration_ms - prev_end >= 500:
-        tail_label = "Outro" if duration_ms - prev_end <= 12000 else "Instrumental"
+        tail_label = "Outro" if duration_ms - prev_end <= max(12000, stanza_gap_ms * 2) else "Instrumental"
         segments.append({"startMs": prev_end, "endMs": duration_ms, "label": tail_label})
 
-    # Clamp, remove invalid overlaps, then number repeated labels.
     cleaned: List[Dict[str, Any]] = []
     for seg in sorted(segments, key=lambda x: int(x.get("startMs", 0))):
         s = max(0, int(seg.get("startMs", 0)))

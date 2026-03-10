@@ -5134,6 +5134,271 @@ async function runSongContextResearch({ audioPath = "", sections = [], trackIden
   }
 }
 
+function normalizeSectionLabelBase(label = "") {
+  const raw = String(label || "").trim();
+  if (!raw) return "Section";
+  const noSuffix = raw.replace(/\s+\d+$/, "").trim();
+  return noSuffix || "Section";
+}
+
+function buildNumberedSectionLabels(labels = []) {
+  const base = (Array.isArray(labels) ? labels : []).map((l) => normalizeSectionLabelBase(l));
+  const totals = new Map();
+  for (const b of base) totals.set(b, (totals.get(b) || 0) + 1);
+  const counts = new Map();
+  return base.map((b) => {
+    const next = (counts.get(b) || 0) + 1;
+    counts.set(b, next);
+    return (totals.get(b) || 0) > 1 ? `${b} ${next}` : b;
+  });
+}
+
+function inferLyricStanzaPlan(lyrics = [], durationMs = 0) {
+  const rows = (Array.isArray(lyrics) ? lyrics : [])
+    .map((r) => ({
+      startMs: Math.max(0, Math.round(Number(r?.startMs || 0))),
+      endMs: Math.max(0, Math.round(Number(r?.endMs || 0))),
+      label: String(r?.label || "").trim()
+    }))
+    .filter((r) => Number.isFinite(r.startMs) && Number.isFinite(r.endMs) && r.endMs > r.startMs)
+    .sort((a, b) => a.startMs - b.startMs);
+  const totalMs = Math.max(1, Math.round(Number(durationMs || 0)));
+  if (!rows.length) return { sections: [], lyricalIndices: [] };
+
+  const gaps = [];
+  for (let i = 1; i < rows.length; i += 1) {
+    const gap = rows[i].startMs - rows[i - 1].endMs;
+    if (gap > 0) gaps.push(gap);
+  }
+  let stanzaGapMs = 6000;
+  if (gaps.length) {
+    const sorted = [...gaps].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const med = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    const p75 = sorted[Math.floor((sorted.length - 1) * 0.75)];
+    stanzaGapMs = Math.max(2500, Math.min(12000, Math.round(Math.max(p75 * 1.35, med * 2.1))));
+  }
+
+  // Split stanzas using adaptive pauses plus hard caps on stanza size,
+  // so continuous lyrics don't collapse into one giant "lyrical" section.
+  const MAX_LINES_PER_STANZA = 6;
+  const MAX_STANZA_MS = 28000;
+  const stanzas = [];
+  let a = 0;
+  for (let i = 1; i < rows.length; i += 1) {
+    const gap = rows[i].startMs - rows[i - 1].endMs;
+    const lineCount = i - a;
+    const stanzaSpan = rows[i - 1].endMs - rows[a].startMs;
+    const shouldBreak =
+      gap >= stanzaGapMs ||
+      lineCount >= MAX_LINES_PER_STANZA ||
+      stanzaSpan >= MAX_STANZA_MS;
+    if (shouldBreak) {
+      stanzas.push([a, i]);
+      a = i;
+    }
+  }
+  stanzas.push([a, rows.length]);
+
+  const sections = [];
+  const lyricalIndices = [];
+  const firstStart = rows[0].startMs;
+  if (firstStart > 500) {
+    sections.push({ startMs: 0, endMs: firstStart, label: "Intro" });
+  }
+  let prevEnd = firstStart;
+  for (const [sIdx, eIdx] of stanzas) {
+    const startMs = rows[sIdx].startMs;
+    const endMs = rows[eIdx - 1].endMs;
+    if (startMs - prevEnd >= stanzaGapMs) {
+      sections.push({ startMs: prevEnd, endMs: startMs, label: "Instrumental" });
+    }
+    lyricalIndices.push(sections.length);
+    sections.push({ startMs, endMs, label: "Lyrical" });
+    prevEnd = endMs;
+  }
+  if (totalMs - prevEnd >= 500) {
+    const tailLabel = (totalMs - prevEnd) <= Math.max(12000, stanzaGapMs * 2) ? "Outro" : "Instrumental";
+    sections.push({ startMs: prevEnd, endMs: totalMs, label: tailLabel });
+  }
+  return { sections, lyricalIndices };
+}
+
+function buildSectionLyricContextRows(sections = [], lyrics = [], lyricalIndices = []) {
+  const sec = Array.isArray(sections) ? sections : [];
+  const lyr = Array.isArray(lyrics) ? lyrics : [];
+  const allow = new Set(Array.isArray(lyricalIndices) ? lyricalIndices : []);
+  return sec.map((s, idx) => {
+    if (!allow.has(idx)) return null;
+    const startMs = Math.max(0, Math.round(Number(s?.startMs || 0)));
+    const endMs = Math.max(startMs + 1, Math.round(Number(s?.endMs || (startMs + 1))));
+    const lines = lyr
+      .filter((row) => {
+        const t = Number(row?.startMs);
+        return Number.isFinite(t) && t >= startMs && t < endMs;
+      })
+      .slice(0, 8)
+      .map((row) => String(row?.label || "").trim())
+      .filter(Boolean);
+    return {
+      index: idx,
+      lineCount: lines.length,
+      stanzaText: lines.join(" | ")
+    };
+  }).filter(Boolean);
+}
+
+function buildSongStructureEvidence(ctxRows = [], trackIdentity = null, trackTitleHint = "") {
+  const rows = Array.isArray(ctxRows) ? ctxRows : [];
+  if (!rows.length) return [];
+  const effectiveTitle = String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim();
+  const titleTokens = new Set(
+    effectiveTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 3)
+  );
+  const seenLineSet = new Set();
+  return rows.map((row, idx) => {
+    const text = String(row?.stanzaText || "").toLowerCase();
+    const lines = text.split("|").map((s) => s.trim()).filter(Boolean);
+    const lineSet = new Set(lines);
+    let repeatedLines = 0;
+    for (const line of lineSet) {
+      if (seenLineSet.has(line)) repeatedLines += 1;
+    }
+    for (const line of lineSet) seenLineSet.add(line);
+    const tokens = text.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).map((t) => t.trim()).filter(Boolean);
+    let titleHits = 0;
+    for (const token of tokens) {
+      if (titleTokens.has(token)) titleHits += 1;
+    }
+    const tokenSet = new Set(tokens);
+    const uniqueTokenRatio = tokenSet.size > 0 ? Number((tokenSet.size / Math.max(1, tokens.length)).toFixed(3)) : 0;
+    const repeatedLineRatio = lineSet.size > 0 ? Number((repeatedLines / lineSet.size).toFixed(3)) : 0;
+    const titleTokenRatio = titleTokens.size > 0 ? Number((titleHits / Math.max(1, tokens.length)).toFixed(3)) : 0;
+    return {
+      index: Number(row?.index ?? idx),
+      lineCount: Number(row?.lineCount || lines.length || 0),
+      repeatedLineRatio,
+      uniqueTokenRatio,
+      titleTokenRatio
+    };
+  });
+}
+
+function parseLlmSectionLabelResult(text = "", expectedCount = 0) {
+  const parsed = extractFirstJsonObject(text);
+  if (!parsed || typeof parsed !== "object") return null;
+  const rows = Array.isArray(parsed.sections) ? parsed.sections : [];
+  if (!rows.length) return null;
+  const labels = new Array(expectedCount).fill("");
+  for (const row of rows) {
+    const idx = Number(row?.index);
+    const label = normalizeSectionLabelBase(String(row?.label || ""));
+    if (!Number.isInteger(idx) || idx < 0 || idx >= expectedCount) continue;
+    if (!label || label === "Section") continue;
+    labels[idx] = label;
+  }
+  if (!labels.some(Boolean)) return null;
+  return {
+    labels,
+    confidence: String(parsed.confidence || "").trim().toLowerCase(),
+    rationale: String(parsed.rationale || "").trim()
+  };
+}
+
+async function relabelSectionsWithLlm({
+  sections = [],
+  lyrics = [],
+  lyricalIndices = [],
+  trackIdentity = null,
+  trackTitleHint = "",
+  timeSignature = "",
+  tempoBpm = null
+} = {}) {
+  const bridge = getDesktopAgentConversationBridge();
+  const sec = Array.isArray(sections) ? sections : [];
+  if (!bridge || !sec.length) return null;
+  const targetIdx = Array.isArray(lyricalIndices) ? lyricalIndices.filter((i) => Number.isInteger(i) && i >= 0 && i < sec.length) : [];
+  if (!targetIdx.length) return null;
+  const ctxRows = buildSectionLyricContextRows(sec, lyrics, targetIdx);
+  if (!ctxRows.length) return null;
+  const structureEvidence = buildSongStructureEvidence(ctxRows, trackIdentity, trackTitleHint);
+  try {
+    const tTitle = String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim();
+    const tArtist = String(trackIdentity?.artist || "").trim();
+    const trackName = tTitle && tArtist ? `${tTitle} - ${tArtist}` : (tTitle || "unknown track");
+    const prompt = [
+      "Interpret lyrical structure from stanza text first, then assign labels to stanza indices.",
+      "Do not use timing cues for structure inference; use language/content and repetition patterns.",
+      "Do not change stanza count. Output strict JSON only.",
+      "Use this songwriting-structure rubric (compiled from Open Music Theory + NSAI songwriting guidance):",
+      "- Verse: lyric-variant, advances story/details, less exact repetition.",
+      "- Chorus/Refrain: lyric-invariant or highly repeated hook/title idea, emotional center, often same core words each return.",
+      "- Pre-Chorus: short transitional stanza that increases tension and points into a chorus.",
+      "- Post-Chorus/Hook: short tag after chorus reinforcing hook phrase.",
+      "- Bridge: contrasting lyrical perspective/material, typically appears once, usually late song.",
+      "- Intro/Outro/Instrumental: use only when stanza text indicates no active lyric narrative/hook content.",
+      "- Refrain is usually a repeated line within a verse-like block; Chorus is a full recurring section.",
+      "- If a stanza pivots from narrative lines into repeated title/hook lines, bias that hook-heavy portion toward Chorus.",
+      "- If boundaries are coarse and cannot split internally, label the stanza containing recurring title/hook lines as Chorus when that hook reappears in later stanzas.",
+      "Common cycle expectations in verse-chorus songs:",
+      "- Verse -> (Pre-Chorus) -> Chorus -> (Post-Chorus), repeated.",
+      "- Bridge usually before a final chorus return.",
+      "Prioritize semantic/language evidence over pattern-only guesses when they conflict.",
+      "Use stanza evidence metrics:",
+      "- Higher repeatedLineRatio + titleTokenRatio suggests Chorus/Refrain.",
+      "- Higher uniqueTokenRatio with lower repetition suggests Verse.",
+      "- A single high-novelty late section can indicate Bridge.",
+      "- If title words recur in multiple stanzas, weight those stanzas toward Chorus/Refrain.",
+      "- When uncertain between Verse vs Chorus, prefer Chorus if title/hook lines recur across 2+ stanzas.",
+      "Avoid one-label collapse unless evidence strongly supports it.",
+      `Track: ${trackName}`,
+      `Song title hint: ${tTitle || "unavailable"}`,
+      `Tempo/time signature hint: ${Number.isFinite(Number(tempoBpm)) ? `${tempoBpm} BPM` : "unknown BPM"} / ${String(timeSignature || "unknown")}`,
+      "Allowed labels: Intro, Verse, Chorus, Pre-Chorus, Post-Chorus, Bridge, Instrumental, Outro, Refrain, Hook, Solo, Interlude, Breakdown, Tag.",
+      "Return JSON with keys:",
+      "- sections: array of {index:number,label:string} matching provided indices",
+      "- confidence: high|medium|low",
+      "- rationale: one short sentence",
+      `Stanza sequence data: ${JSON.stringify(ctxRows)}`,
+      `Stanza evidence data: ${JSON.stringify(structureEvidence)}`
+    ].join("\n");
+    const res = await bridge.runAgentConversation({
+      userMessage: prompt,
+      messages: [],
+      context: {
+        purpose: "lyrics-section-labeling",
+        sequenceName: state.activeSequence || ""
+      }
+    });
+    if (!res?.ok) return null;
+    const parsed = parseLlmSectionLabelResult(res.assistantMessage || "", sec.length);
+    if (!parsed) return null;
+    const rawLabels = parsed.labels.slice();
+    const mergedBase = sec.map((s, i) => {
+      const cur = normalizeSectionLabelBase(String(s?.label || ""));
+      if (cur === "Lyrical") return rawLabels[i] || "Verse";
+      return cur;
+    });
+    const numbered = buildNumberedSectionLabels(mergedBase);
+    const relabeled = sec.map((s, i) => ({
+      ...s,
+      label: numbered[i] || String(s?.label || "")
+    }));
+    return {
+      sections: relabeled,
+      confidence: parsed.confidence,
+      rationale: parsed.rationale
+    };
+  } catch {
+    return null;
+  }
+}
+
 function buildWebValidationFromServiceEvidence({ evidence = null, trackIdentity = null } = {}) {
   if (!evidence || typeof evidence !== "object") return null;
   const sourceBpmValues = extractNumericCandidates(evidence.bpmValues).slice(0, 8);
@@ -5403,12 +5668,10 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     }
   }
 
-  const generatedBeatTrackName = "XD: Beats (Agent)";
-  const generatedBarsTrackName = "XD: Bars (Agent)";
-  const generatedBeatRawTrackName = "XD: Beats (Agent Raw)";
-  const generatedBarsRawTrackName = "XD: Bars (Agent Raw)";
-  const generatedStructureTrackName = "XD: Song Structure (Agent)";
-  const generatedLyricsTrackName = "XD: Lyrics (Agent)";
+  const generatedBeatTrackName = "XD: Beats";
+  const generatedBarsTrackName = "XD: Bars";
+  const generatedStructureTrackName = "XD: Song Structure";
+  const generatedLyricsTrackName = "XD: Lyrics";
   let beatTrackName = "";
   let structureTrackName = "";
   const analysisBridge = getDesktopAudioAnalysisBridge();
@@ -5452,6 +5715,8 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         const bars = Array.isArray(data?.bars) ? data.bars : [];
         const sections = Array.isArray(data?.sections) ? data.sections : [];
         const lyrics = Array.isArray(data?.lyrics) ? data.lyrics : [];
+        let effectiveSections = sections;
+        let lyricalSectionIndices = [];
         const serviceDurationMs = Number(data?.durationMs);
         if (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1) {
           const roundedDuration = Math.round(serviceDurationMs);
@@ -5471,17 +5736,55 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           const note = `${Number.isFinite(tempoBpm) ? `${tempoBpm} BPM` : "BPM?"}${timeSignature ? ` / ${timeSignature}` : ""}`;
           addDiag(`Service analysis summary: ${note}`);
         }
+        if (Array.isArray(lyrics) && lyrics.length >= 4) {
+          const durationForSections =
+            (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1 ? Math.round(serviceDurationMs) : null) ||
+            (Number.isFinite(sequenceDurationMs) && sequenceDurationMs > 1 ? Math.round(sequenceDurationMs) : null) ||
+            (Number.isFinite(Number(mediaMetadata?.durationMs)) && Number(mediaMetadata.durationMs) > 1
+              ? Math.round(Number(mediaMetadata.durationMs))
+              : 0);
+          const stanzaPlan = inferLyricStanzaPlan(lyrics, durationForSections);
+          if (Array.isArray(stanzaPlan.sections) && stanzaPlan.sections.length) {
+            effectiveSections = stanzaPlan.sections;
+            lyricalSectionIndices = Array.isArray(stanzaPlan.lyricalIndices) ? stanzaPlan.lyricalIndices : [];
+            addDiag(`Lyrics stanza plan: ${effectiveSections.length} sections (${lyricalSectionIndices.length} lyrical).`);
+          }
+        }
+        if (Array.isArray(effectiveSections) && effectiveSections.length >= 2 && Array.isArray(lyrics) && lyrics.length >= 4 && lyricalSectionIndices.length) {
+          const relabeled = await relabelSectionsWithLlm({
+            sections: effectiveSections,
+            lyrics,
+            lyricalIndices: lyricalSectionIndices,
+            trackIdentity: detectedTrackIdentity,
+            trackTitleHint: audioTrackQueryFromPath(audioPath),
+            timeSignature,
+            tempoBpm
+          });
+          if (relabeled?.sections?.length === effectiveSections.length) {
+            effectiveSections = relabeled.sections;
+            if (String(relabeled.confidence || "").trim()) {
+              addDiag(`LLM section relabel: ${String(relabeled.confidence).trim()}`);
+            } else {
+              addDiag("LLM section relabel: applied.");
+            }
+            if (String(relabeled.rationale || "").trim()) {
+              addDiag(`LLM section rationale: ${String(relabeled.rationale).trim()}`);
+            }
+          }
+        }
+        if (Array.isArray(effectiveSections) && effectiveSections.length) {
+          const finalLabels = effectiveSections
+            .map((row) => String(row?.label || "").trim())
+            .filter(Boolean);
+          if (finalLabels.length) {
+            addDiag(`Final song structure labels: ${finalLabels.join(", ")}`);
+          }
+        }
         if (Array.isArray(beats) && beats.length) {
           const beatWrite = await writeTrackMarks(generatedBeatTrackName, beats);
           if (beatWrite.ok) {
             beatTrackName = generatedBeatTrackName;
             trackMarksByName[generatedBeatTrackName] = beatWrite.marks;
-            const beatRawWrite = await writeTrackMarks(generatedBeatRawTrackName, beats);
-            if (beatRawWrite.ok) {
-              trackMarksByName[generatedBeatRawTrackName] = beatRawWrite.marks;
-            } else {
-              addDiag(`Raw beat track write failed: ${beatRawWrite.error}`);
-            }
             pipeline.beatTrackWritten = true;
             pipeline.timingDerived = true;
           } else {
@@ -5494,12 +5797,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           const barsWrite = await writeTrackMarks(generatedBarsTrackName, bars);
           if (barsWrite.ok) {
             trackMarksByName[generatedBarsTrackName] = barsWrite.marks;
-            const barsRawWrite = await writeTrackMarks(generatedBarsRawTrackName, bars);
-            if (barsRawWrite.ok) {
-              trackMarksByName[generatedBarsRawTrackName] = barsRawWrite.marks;
-            } else {
-              addDiag(`Raw bars track write failed: ${barsRawWrite.error}`);
-            }
             pipeline.barTrackWritten = true;
             pipeline.timingDerived = true;
           } else {
@@ -5508,8 +5805,8 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         } else {
           addDiag("Analysis service returned no bars.");
         }
-        if (Array.isArray(sections) && sections.length) {
-          let structureWrite = await writeTrackMarks(generatedStructureTrackName, sections);
+        if (Array.isArray(effectiveSections) && effectiveSections.length) {
+          let structureWrite = await writeTrackMarks(generatedStructureTrackName, effectiveSections);
           if (
             !structureWrite.ok &&
             /within sequence duration/i.test(String(structureWrite?.error || "")) &&
@@ -5527,7 +5824,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             }, 0);
             const strictCap = Math.max(1, Math.round(beatCap));
             const strictMaxEnd = Math.max(1, strictCap - 1);
-            const cappedSections = sections
+            const cappedSections = effectiveSections
               .map((mark) => {
                 const start = Math.max(0, Math.round(Number(mark?.startMs)));
                 if (!Number.isFinite(start) || start >= strictCap) return null;
@@ -5557,7 +5854,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             pipeline.structureDerived = true;
           } else {
             addDiag(
-              `Structure track write failed: ${structureWrite.error} | normalized range=${marksRange(structureWrite?.marks || sections)}`
+              `Structure track write failed: ${structureWrite.error} | normalized range=${marksRange(structureWrite?.marks || effectiveSections)}`
             );
           }
         } else {
@@ -5607,9 +5904,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   const trackNames = getTimingTrackNames(state.timingTracks || []);
   const explicitCandidates = [
     beatTrackName,
-    generatedBeatRawTrackName,
     generatedBarsTrackName,
-    generatedBarsRawTrackName,
     structureTrackName,
     generatedStructureTrackName
   ]
