@@ -186,6 +186,10 @@ const defaultState = {
     analysisServiceProvider: "beatnet",
     analysisServiceApiKeyDraft: "",
     analysisServiceAuthBearerDraft: "",
+    analysisServiceReady: false,
+    analysisServiceChecking: false,
+    analysisServiceLastError: "",
+    analysisServiceLastCheckedAt: "",
     agentResponseId: ""
   },
   diagnostics: [],
@@ -267,6 +271,18 @@ if (typeof state.ui?.applyApprovalChecked !== "boolean") {
 if (!["beatnet", "librosa"].includes(String(state.ui?.analysisServiceProvider || "").toLowerCase())) {
   state.ui.analysisServiceProvider = "beatnet";
 }
+if (typeof state.ui?.analysisServiceReady !== "boolean") {
+  state.ui.analysisServiceReady = false;
+}
+if (typeof state.ui?.analysisServiceChecking !== "boolean") {
+  state.ui.analysisServiceChecking = false;
+}
+if (typeof state.ui?.analysisServiceLastError !== "string") {
+  state.ui.analysisServiceLastError = "";
+}
+if (typeof state.ui?.analysisServiceLastCheckedAt !== "string") {
+  state.ui.analysisServiceLastCheckedAt = "";
+}
 if (!Array.isArray(state.applyHistory)) {
   state.applyHistory = [];
 }
@@ -281,6 +297,7 @@ let desktopStatePersistTimer = null;
 let desktopStateHydrated = false;
 let sidecarPersistTimer = null;
 let quickReconnectTimer = null;
+let analysisServiceProbeInFlight = false;
 let hydratedSidecarSequencePath = "";
 let focusSyncInFlight = false;
 let lastFocusSyncAt = 0;
@@ -418,6 +435,84 @@ function getDesktopAudioAnalysisBridge() {
   if (!bridge) return null;
   if (typeof bridge.runAudioAnalysisService !== "function") return null;
   return bridge;
+}
+
+function normalizeAnalysisServiceBaseUrl(raw = "") {
+  return String(raw || "").trim().replace(/\/+$/, "");
+}
+
+function getAnalysisServiceHeaderBadgeText() {
+  const baseUrl = normalizeAnalysisServiceBaseUrl(state.ui.analysisServiceUrlDraft);
+  if (!baseUrl) return "Analysis: URL missing";
+  if (state.ui.analysisServiceChecking) return "Analysis: Checking";
+  return state.ui.analysisServiceReady ? "Analysis: Ready" : "Analysis: Unavailable";
+}
+
+async function probeAnalysisServiceHealth({ quiet = true, force = false } = {}) {
+  const bridge = getDesktopAudioAnalysisBridge();
+  const baseUrl = normalizeAnalysisServiceBaseUrl(state.ui.analysisServiceUrlDraft);
+  if (!bridge || typeof bridge.checkAudioAnalysisService !== "function") {
+    state.ui.analysisServiceReady = false;
+    state.ui.analysisServiceChecking = false;
+    state.ui.analysisServiceLastError = "Desktop analysis health bridge unavailable.";
+    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    if (!quiet) setStatusWithDiagnostics("warning", state.ui.analysisServiceLastError);
+    persist();
+    render();
+    return false;
+  }
+  if (!baseUrl) {
+    state.ui.analysisServiceReady = false;
+    state.ui.analysisServiceChecking = false;
+    state.ui.analysisServiceLastError = "Audio analysis service URL is required.";
+    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    persist();
+    render();
+    return false;
+  }
+  if (analysisServiceProbeInFlight && !force) return Boolean(state.ui.analysisServiceReady);
+  analysisServiceProbeInFlight = true;
+  state.ui.analysisServiceChecking = true;
+  persist();
+  render();
+  try {
+    const res = await bridge.checkAudioAnalysisService({
+      baseUrl,
+      apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim() || undefined,
+      authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim() || undefined,
+      timeoutMs: 5000
+    });
+    const ok = Boolean(res?.ok && res?.reachable);
+    state.ui.analysisServiceReady = ok;
+    const detailBits = [];
+    if (res && typeof res === "object") {
+      if (res.selfHealAttempted === true) detailBits.push("self-heal attempted");
+      const dir = String(res.analysisServiceDir || "").trim();
+      if (dir) detailBits.push(`dir=${dir}`);
+    }
+    const detail = detailBits.length ? ` (${detailBits.join(", ")})` : "";
+    state.ui.analysisServiceLastError = ok
+      ? ""
+      : `${String(res?.error || "Analysis service unavailable.")}${detail}`;
+    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    if (!ok && !quiet) {
+      setStatusWithDiagnostics("warning", `Audio analysis service unavailable: ${state.ui.analysisServiceLastError}`);
+    }
+    return ok;
+  } catch (err) {
+    state.ui.analysisServiceReady = false;
+    state.ui.analysisServiceLastError = String(err?.message || err);
+    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    if (!quiet) {
+      setStatusWithDiagnostics("warning", `Audio analysis service unavailable: ${state.ui.analysisServiceLastError}`);
+    }
+    return false;
+  } finally {
+    state.ui.analysisServiceChecking = false;
+    analysisServiceProbeInFlight = false;
+    persist();
+    render();
+  }
 }
 
 function getDesktopSequenceDialogBridge() {
@@ -5813,6 +5908,10 @@ async function onAnalyzeAudio() {
     setStatus("warning", "No audio track available for analysis on this sequence.");
     return render();
   }
+  const serviceReady = await probeAnalysisServiceHealth({ quiet: false, force: true });
+  if (!serviceReady) {
+    return;
+  }
   state.diagnostics = (state.diagnostics || []).filter(
     (entry) => !String(entry?.text || "").startsWith("Audio analysis:")
   );
@@ -6060,6 +6159,9 @@ function sequenceScreen() {
   const audioAnalyzedAt = state.audioAnalysis?.lastAnalyzedAt
     ? new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
+  const analysisServiceBadge = getAnalysisServiceHeaderBadgeText();
+  const analysisServiceReady = Boolean(state.ui.analysisServiceReady);
+  const analysisServiceChecking = Boolean(state.ui.analysisServiceChecking);
   const creativeBriefText = String(state.creative?.briefText || "");
   const creativeBriefTextEscaped = creativeBriefText
     .replace(/&/g, "&amp;")
@@ -6115,8 +6217,11 @@ function sequenceScreen() {
           <p class="banner">${audioTrackPath.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
         </div>
         <div class="row">
-          <button id="analyze-audio">Analyze Audio</button>
+          <button id="analyze-audio" ${analysisServiceReady && !analysisServiceChecking ? "" : "disabled"}>
+            ${analysisServiceChecking ? "Checking Service..." : "Analyze Audio"}
+          </button>
         </div>
+        <p class="banner">${analysisServiceBadge}</p>
         <div class="field">
           <label>Pipeline Stages</label>
           <ul class="list pipeline-list">
@@ -7082,6 +7187,7 @@ function bindEvents() {
     analysisServiceUrlInput.addEventListener("input", () => {
       state.ui.analysisServiceUrlDraft = String(analysisServiceUrlInput.value || "");
       persist();
+      void probeAnalysisServiceHealth({ quiet: true });
     });
   }
 
@@ -7098,6 +7204,7 @@ function bindEvents() {
     analysisServiceApiKeyInput.addEventListener("input", () => {
       state.ui.analysisServiceApiKeyDraft = String(analysisServiceApiKeyInput.value || "");
       persist();
+      void probeAnalysisServiceHealth({ quiet: true });
     });
   }
   const analysisServiceBearerInput = app.querySelector("#analysis-service-bearer-input");
@@ -7105,6 +7212,7 @@ function bindEvents() {
     analysisServiceBearerInput.addEventListener("input", () => {
       state.ui.analysisServiceAuthBearerDraft = String(analysisServiceBearerInput.value || "");
       persist();
+      void probeAnalysisServiceHealth({ quiet: true });
     });
   }
 
@@ -7591,6 +7699,7 @@ function render() {
   const rows = state.diagnostics || [];
   const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
   const footerApplyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 8) : [];
+  const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
 
   app.innerHTML = `
     <div class="app-shell ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
@@ -7613,7 +7722,10 @@ function render() {
         <div class="main-shell">
           <header class="header">
             <div class="header-sequence"><strong>${state.activeSequence || "No Sequence Open"}</strong></div>
-            <div class="header-badge">xLights: ${state.flags.xlightsConnected ? "Connected" : "Disconnected"}</div>
+            <div class="header-badges">
+              <div class="header-badge">xLights: ${state.flags.xlightsConnected ? "Connected" : "Disconnected"}</div>
+              <div class="header-badge">${analysisHeaderBadge}</div>
+            </div>
           </header>
 
           <div class="main-body">
@@ -7758,6 +7870,7 @@ render();
   await hydrateStateFromDesktop();
   await hydrateAgentHealth();
   await hydrateAgentConfigDraft();
+  await probeAnalysisServiceHealth({ quiet: true, force: true });
   applyRolloutPolicy();
   await refreshApplyHistoryFromDesktop(40);
   render();
@@ -7766,9 +7879,13 @@ render();
 setInterval(pollRevision, 8000);
 setInterval(pollJobs, 3000);
 setInterval(pollCompatibilityStatus, CONNECTIVITY_POLL_MS);
+setInterval(() => {
+  void probeAnalysisServiceHealth({ quiet: true });
+}, CONNECTIVITY_POLL_MS);
 if (typeof window !== "undefined") {
   window.addEventListener("focus", () => {
     void syncOpenSequenceOnFocusReturn();
+    void probeAnalysisServiceHealth({ quiet: true });
   });
 }
 if (typeof document !== "undefined") {

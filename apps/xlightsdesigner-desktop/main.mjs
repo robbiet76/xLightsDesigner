@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import crypto from "node:crypto";
+import { spawn } from "node:child_process";
+import os from "node:os";
 
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
@@ -20,6 +22,10 @@ const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
 const DEV_RENDERER_ENTRY = path.resolve(__dirname, "..", "xlightsdesigner-ui", "index.html");
 let mainWindow = null;
 const STARTUP_LOG = "/tmp/xld-desktop-main.log";
+const ANALYSIS_SERVICE_HOST = "127.0.0.1";
+const ANALYSIS_SERVICE_PORT = "5055";
+let analysisServiceProcess = null;
+let analysisServiceStarting = null;
 
 function logStartup(message) {
   try {
@@ -32,6 +38,161 @@ function logStartup(message) {
 function resolveRendererEntry() {
   if (fs.existsSync(PACKAGED_RENDERER_ENTRY)) return PACKAGED_RENDERER_ENTRY;
   return DEV_RENDERER_ENTRY;
+}
+
+async function sleep(ms) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function candidateAnalysisServiceDirs() {
+  const envDir = String(process.env.XLD_ANALYSIS_SERVICE_DIR || "").trim();
+  const out = [];
+  if (envDir) out.push(path.resolve(envDir));
+  out.push(path.resolve(__dirname, "..", "xlightsdesigner-analysis-service"));
+  out.push(path.resolve(process.cwd(), "apps", "xlightsdesigner-analysis-service"));
+  out.push(path.resolve(os.homedir(), "Projects", "xLightsDesigner", "apps", "xlightsdesigner-analysis-service"));
+  return Array.from(new Set(out));
+}
+
+function resolveAnalysisServiceDir() {
+  for (const dir of candidateAnalysisServiceDirs()) {
+    if (!dir) continue;
+    const mainPy = path.join(dir, "main.py");
+    if (fs.existsSync(mainPy)) return dir;
+  }
+  return "";
+}
+
+function parsePythonCommand(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return [];
+  return text.split(/\s+/).filter(Boolean);
+}
+
+function resolveAnalysisPythonCommand() {
+  const analysisDir = resolveAnalysisServiceDir();
+  if (!analysisDir) return [];
+  const envCmd = parsePythonCommand(process.env.XLD_ANALYSIS_PYTHON);
+  if (envCmd.length) return envCmd;
+  const venv310 = path.join(analysisDir, ".venv310", "bin", "python");
+  if (fs.existsSync(venv310)) return [venv310];
+  const venv = path.join(analysisDir, ".venv", "bin", "python");
+  if (fs.existsSync(venv)) return [venv];
+  return ["python3"];
+}
+
+async function probeAnalysisService(baseUrl, timeoutMs = 1500, headers = {}) {
+  if (!baseUrl) return { ok: false, status: 0, error: "Missing analysis service baseUrl", data: null };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${baseUrl}/health`, {
+      method: "GET",
+      headers,
+      signal: controller.signal
+    });
+    const raw = await response.text();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = null;
+    }
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error: String(parsed?.error || parsed?.message || raw || `HTTP ${response.status}`),
+        data: parsed
+      };
+    }
+    return { ok: true, status: response.status, error: "", data: parsed || {} };
+  } catch (err) {
+    const msg = err?.name === "AbortError"
+      ? "Analysis service health check timed out."
+      : String(err?.message || err);
+    return { ok: false, status: 0, error: msg, data: null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function buildAnalysisServiceEnv() {
+  const next = { ...process.env };
+  const analysisDir = resolveAnalysisServiceDir();
+  next.MPLCONFIGDIR = String(process.env.MPLCONFIGDIR || "/tmp/mplcache-xld");
+  next.PYTHONUNBUFFERED = "1";
+  if (!next.AUDD_API_TOKEN) {
+    const envFile = analysisDir ? path.join(analysisDir, ".env.local") : "";
+    if (fs.existsSync(envFile)) {
+      try {
+        const lines = fs.readFileSync(envFile, "utf8").split(/\r?\n/);
+        for (const line of lines) {
+          const trimmed = String(line || "").trim();
+          if (!trimmed || trimmed.startsWith("#")) continue;
+          const idx = trimmed.indexOf("=");
+          if (idx <= 0) continue;
+          const k = trimmed.slice(0, idx).trim();
+          const v = trimmed.slice(idx + 1).trim().replace(/^['"]|['"]$/g, "");
+          if (!next[k]) next[k] = v;
+        }
+      } catch {
+        // best effort
+      }
+    }
+  }
+  return next;
+}
+
+async function ensureAnalysisServiceRunning(baseUrl, headers = {}) {
+  const current = await probeAnalysisService(baseUrl, 1200, headers);
+  if (current.ok) return current;
+  logStartup(`analysis:self-heal probe failed baseUrl=${baseUrl} err=${current.error || "unknown"}`);
+  if (analysisServiceStarting) {
+    await analysisServiceStarting;
+    return probeAnalysisService(baseUrl, 2000, headers);
+  }
+  analysisServiceStarting = (async () => {
+    try {
+      const analysisDir = resolveAnalysisServiceDir();
+      if (!analysisDir) {
+        logStartup("analysis:self-heal skipped no-analysis-dir");
+        return;
+      }
+      const [cmd, ...cmdArgs] = resolveAnalysisPythonCommand();
+      if (!cmd) {
+        logStartup("analysis:self-heal skipped no-python-cmd");
+        return;
+      }
+      const args = [...cmdArgs, "-m", "uvicorn", "main:app", "--host", ANALYSIS_SERVICE_HOST, "--port", ANALYSIS_SERVICE_PORT];
+      logStartup(`analysis:self-heal spawn cmd=${cmd} cwd=${analysisDir}`);
+      const child = spawn(cmd, args, {
+        cwd: analysisDir,
+        env: buildAnalysisServiceEnv(),
+        stdio: "ignore",
+        detached: true
+      });
+      child.unref();
+      analysisServiceProcess = child;
+      for (let i = 0; i < 20; i += 1) {
+        const probe = await probeAnalysisService(baseUrl, 1200, headers);
+        if (probe.ok) {
+          logStartup("analysis:self-heal ready");
+          return;
+        }
+        await sleep(500);
+      }
+      logStartup("analysis:self-heal timeout waiting-for-health");
+    } catch {
+      logStartup("analysis:self-heal exception");
+    }
+  })();
+  try {
+    await analysisServiceStarting;
+  } finally {
+    analysisServiceStarting = null;
+  }
+  return probeAnalysisService(baseUrl, 2500, headers);
 }
 
 function createWindow() {
@@ -452,6 +613,15 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const buf = fs.readFileSync(filePath);
     let lastError = "Analysis service unavailable.";
+    const healthHeaders = {};
+    if (apiKey) healthHeaders["x-api-key"] = apiKey;
+    if (authBearer) healthHeaders.Authorization = `Bearer ${authBearer}`;
+
+    // Self-heal: ensure service is up before first analyze attempt.
+    const warm = await ensureAnalysisServiceRunning(baseUrl, healthHeaders);
+    if (!warm.ok) {
+      lastError = String(warm.error || lastError);
+    }
 
     for (let attempt = 1; attempt <= retryAttempts; attempt += 1) {
       const controller = new AbortController();
@@ -503,11 +673,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
       }
 
       // Reconnect grace period between retries.
-      try {
-        await fetch(`${baseUrl}/health`, { method: "GET" });
-      } catch {
-        // best effort health probe
-      }
+      await ensureAnalysisServiceRunning(baseUrl, healthHeaders);
       await sleep(Math.min(2000, 300 * (2 ** (attempt - 1))));
     }
     return { ok: false, error: lastError };
@@ -516,6 +682,60 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
       ? "Analysis service request timed out."
       : String(err?.message || err);
     return { ok: false, error: msg };
+  }
+});
+
+ipcMain.handle("xld:analysis:health", async (_event, payload = {}) => {
+  try {
+    const baseUrl = String(payload?.baseUrl || "").trim().replace(/\/+$/, "");
+    const apiKey = String(payload?.apiKey || "").trim();
+    const authBearer = String(payload?.authBearer || "").trim();
+    const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "5000"), 10);
+    const timeoutMs = Number.isFinite(timeoutMsRaw) ? Math.max(1000, Math.min(30000, timeoutMsRaw)) : 5000;
+    if (!baseUrl) return { ok: false, reachable: false, error: "Missing analysis service baseUrl" };
+
+    const analysisServiceDir = resolveAnalysisServiceDir();
+    const headers = {};
+    if (apiKey) headers["x-api-key"] = apiKey;
+    if (authBearer) headers.Authorization = `Bearer ${authBearer}`;
+    const initial = await probeAnalysisService(baseUrl, timeoutMs, headers);
+    if (initial.ok) {
+      return {
+        ok: true,
+        reachable: true,
+        status: initial.status,
+        baseUrl,
+        analysisServiceDir,
+        selfHealAttempted: false,
+        data: initial.data || {}
+      };
+    }
+    // Self-heal path: try to start service then probe again.
+    const healed = await ensureAnalysisServiceRunning(baseUrl, headers);
+    if (healed.ok) {
+      return {
+        ok: true,
+        reachable: true,
+        status: healed.status,
+        baseUrl,
+        analysisServiceDir,
+        selfHealAttempted: true,
+        data: healed.data || {}
+      };
+    }
+    return {
+      ok: false,
+      reachable: false,
+      status: healed.status || initial.status || 0,
+      analysisServiceDir,
+      selfHealAttempted: true,
+      error: String(healed.error || initial.error || "Analysis service unavailable.")
+    };
+  } catch (err) {
+    const msg = err?.name === "AbortError"
+      ? "Analysis service health check timed out."
+      : String(err?.message || err);
+    return { ok: false, reachable: false, error: msg };
   }
 });
 

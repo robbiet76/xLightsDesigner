@@ -102,6 +102,17 @@ button:disabled {
   margin-right: var(--edge-pad);
 }
 
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: var(--edge-pad);
+}
+
+.header-badges .header-badge {
+  margin-right: 0;
+}
+
 .main-grid {
   display: grid;
   grid-template-columns: 260px 1fr;

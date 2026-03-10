@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("xlightsDesignerDesktop", {
   writeAppState: (payload = {}) => ipcRenderer.invoke("xld:state:write", payload),
   readAudioFile: (payload = {}) => ipcRenderer.invoke("xld:audio:read", payload),
   runAudioAnalysisService: (payload = {}) => ipcRenderer.invoke("xld:analysis:run", payload),
+  checkAudioAnalysisService: (payload = {}) => ipcRenderer.invoke("xld:analysis:health", payload),
   openProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:open-file", payload),
   writeProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:write-file", payload),
   getAgentHealth: () => ipcRenderer.invoke("xld:agent:health"),
