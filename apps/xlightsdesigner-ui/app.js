@@ -28,6 +28,10 @@ import {
   estimateImpactCount
 } from "./agent/command-builders.js";
 import { buildSequencerDesignerPlan } from "./agent/sequencer-designer.js";
+import {
+  AGENT_HANDOFF_CONTRACTS,
+  validateAgentHandoff
+} from "./agent/handoff-contracts.js";
 import { analyzeAudioContext } from "./agent/audio-analyzer.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
@@ -212,6 +216,7 @@ const defaultState = {
   },
   diagnostics: [],
   applyHistory: [],
+  agentPlan: null,
   jobs: [],
   models: [],
   submodels: [],
@@ -353,8 +358,6 @@ let trainingPackageAudioBundleCacheAt = 0;
 let trainingPackageAgentBundleCache = null;
 let trainingPackageAgentBundleCacheAt = 0;
 let currentOrchestrationRun = null;
-
-const AGENT_HANDOFF_CONTRACTS = ["analysis_handoff_v1", "intent_handoff_v1", "plan_handoff_v1"];
 
 function emptyAgentRuntimeState() {
   return {
@@ -550,51 +553,6 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function validateAnalysisHandoff(payload = {}) {
-  const errors = [];
-  if (!isPlainObject(payload.trackIdentity)) errors.push("trackIdentity is required");
-  if (!isPlainObject(payload.timing)) errors.push("timing is required");
-  if (!isPlainObject(payload.structure)) errors.push("structure is required");
-  if (!isPlainObject(payload.lyrics)) errors.push("lyrics is required");
-  if (!isPlainObject(payload.chords)) errors.push("chords is required");
-  if (!isPlainObject(payload.briefSeed)) errors.push("briefSeed is required");
-  if (!isPlainObject(payload.evidence)) errors.push("evidence is required");
-  const sections = Array.isArray(payload?.structure?.sections) ? payload.structure.sections : [];
-  if (!sections.length) errors.push("structure.sections is required");
-  return errors;
-}
-
-function validateIntentHandoff(payload = {}) {
-  const errors = [];
-  if (!String(payload.goal || "").trim()) errors.push("goal is required");
-  const mode = String(payload.mode || "").trim();
-  if (!["create", "revise", "polish", "analyze"].includes(mode)) errors.push("mode must be create|revise|polish|analyze");
-  if (!isPlainObject(payload.scope)) errors.push("scope is required");
-  if (!isPlainObject(payload.constraints)) errors.push("constraints is required");
-  if (!isPlainObject(payload.directorPreferences)) errors.push("directorPreferences is required");
-  if (!isPlainObject(payload.approvalPolicy)) errors.push("approvalPolicy is required");
-  return errors;
-}
-
-function validatePlanHandoff(payload = {}) {
-  const errors = [];
-  if (!String(payload.planId || "").trim()) errors.push("planId is required");
-  if (!String(payload.summary || "").trim()) errors.push("summary is required");
-  if (!Number.isFinite(Number(payload.estimatedImpact))) errors.push("estimatedImpact is required");
-  if (!Array.isArray(payload.warnings)) errors.push("warnings must be an array");
-  if (!Array.isArray(payload.commands) || !payload.commands.length) errors.push("commands is required");
-  if (!String(payload.baseRevision || "").trim()) errors.push("baseRevision is required");
-  if (payload.validationReady !== true) errors.push("validationReady must be true");
-  return errors;
-}
-
-function validateAgentHandoff(contract = "", payload = {}) {
-  if (contract === "analysis_handoff_v1") return validateAnalysisHandoff(payload);
-  if (contract === "intent_handoff_v1") return validateIntentHandoff(payload);
-  if (contract === "plan_handoff_v1") return validatePlanHandoff(payload);
-  return [`Unknown handoff contract: ${contract}`];
-}
-
 function getAgentHandoffReadyCount() {
   let count = 0;
   for (const contract of AGENT_HANDOFF_CONTRACTS) {
@@ -680,6 +638,16 @@ function arraysEqualAsSets(a = [], b = []) {
   if (left.length !== right.length) return false;
   for (let i = 0; i < left.length; i += 1) {
     if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+function arraysEqualOrdered(a = [], b = []) {
+  const left = Array.isArray(a) ? a : [];
+  const right = Array.isArray(b) ? b : [];
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (String(left[i] || "") !== String(right[i] || "")) return false;
   }
   return true;
 }
@@ -1220,6 +1188,7 @@ function buildSequenceSidecarDocument() {
     },
     draft: {
       proposed: Array.isArray(state.proposed) ? state.proposed : [],
+      agentPlan: state.agentPlan && typeof state.agentPlan === "object" ? state.agentPlan : null,
       draftBaseRevision: state.draftBaseRevision || "unknown",
       flags: {
         hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
@@ -1268,6 +1237,9 @@ function buildSequenceSidecarDocument() {
 function applySequenceSidecarDocument(doc) {
   if (!doc || typeof doc !== "object") return;
   if (Array.isArray(doc?.draft?.proposed)) state.proposed = [...doc.draft.proposed];
+  state.agentPlan = doc?.draft?.agentPlan && typeof doc.draft.agentPlan === "object"
+    ? { ...doc.draft.agentPlan }
+    : null;
   if (typeof doc?.draft?.draftBaseRevision === "string") {
     state.draftBaseRevision = doc.draft.draftBaseRevision;
   }
@@ -2213,13 +2185,29 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
 
     const analysisHandoff = getValidHandoff("analysis_handoff_v1");
-    const sequencerPlan = buildSequencerDesignerPlan({
-      analysisHandoff,
-      intentHandoff,
-      sourceLines: scopedSource,
-      baseRevision: state.draftBaseRevision
-    });
-    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "apply plan built");
+    const currentFiltered = filteredProposed();
+    const canUseHandoffPlan =
+      applyLabel === "all proposed changes" &&
+      arraysEqualOrdered(scopedSource, currentFiltered) &&
+      Array.isArray(planHandoff?.commands) &&
+      planHandoff.commands.length > 0;
+    const sequencerPlan = canUseHandoffPlan
+      ? {
+          commands: planHandoff.commands,
+          warnings: Array.isArray(planHandoff.warnings) ? planHandoff.warnings : []
+        }
+      : buildSequencerDesignerPlan({
+          analysisHandoff,
+          intentHandoff,
+          sourceLines: scopedSource,
+          baseRevision: state.draftBaseRevision
+        });
+    markOrchestrationStage(
+      orchestrationRun,
+      "sequencer_plan",
+      "ok",
+      canUseHandoffPlan ? "using plan_handoff_v1 command graph" : "apply plan built"
+    );
     const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
     if (!rawPlan.length) {
       throw new Error("sequencer_designer generated no commands for apply.");
@@ -2497,14 +2485,14 @@ function onGenerate(intentOverride = "") {
     normalizedIntent: plan.normalizedIntent,
     targets: plan.targets
   });
-  state.proposed = mergeCreativeBriefIntoProposal(plan.proposalLines);
+  const proposalSeedLines = mergeCreativeBriefIntoProposal(plan.proposalLines);
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
   let sequencerPlan = null;
   try {
     sequencerPlan = buildSequencerDesignerPlan({
       analysisHandoff,
       intentHandoff,
-      sourceLines: state.proposed,
+      sourceLines: proposalSeedLines,
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown")
     });
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequencer_designer plan built");
@@ -2528,6 +2516,16 @@ function onGenerate(intentOverride = "") {
     commands: Array.isArray(sequencerPlan.commands) ? sequencerPlan.commands : [],
     baseRevision: String(sequencerPlan.baseRevision || state.draftBaseRevision || state.revision || "unknown"),
     validationReady: Boolean(sequencerPlan.validationReady)
+  };
+  const executionLines = Array.isArray(sequencerPlan?.executionLines)
+    ? sequencerPlan.executionLines
+    : proposalSeedLines;
+  state.proposed = mergeCreativeBriefIntoProposal(executionLines);
+  state.agentPlan = {
+    createdAt: new Date().toISOString(),
+    source: "sequencer_designer",
+    handoff: planHandoff,
+    executionLines
   };
   const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequencer_designer");
   if (!planSet.ok) {
@@ -6179,6 +6177,7 @@ function resetSessionDraftState() {
   state.ui.applyApprovalChecked = false;
   state.ui.agentResponseId = "";
   state.proposed = [];
+  state.agentPlan = null;
   clearAgentHandoffs();
 }
 
