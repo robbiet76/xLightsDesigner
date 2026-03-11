@@ -113,6 +113,39 @@ test('orchestrator executes when safety/revision/validation pass', async () => {
   assert.equal(res.nextRevision, 'rev-2-next');
 });
 
+test("orchestrator happy path supports handoff-style command graph", async () => {
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [
+      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Sequencer Plan", replaceIfExists: true } },
+      {
+        id: "timing.marks.insert",
+        dependsOn: ["timing.track.create"],
+        cmd: "timing.insertMarks",
+        params: { trackName: "XD: Sequencer Plan", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] }
+      },
+      {
+        id: "effect.1",
+        dependsOn: ["timing.marks.insert"],
+        cmd: "effects.create",
+        params: { modelName: "MegaTree", layerIndex: 0, effectName: "Bars", startMs: 0, endMs: 1000 }
+      }
+    ],
+    expectedRevision: "rev-10",
+    getRevision: okRevision("rev-10"),
+    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }, { index: 1, valid: true }, { index: 2, valid: true }] } }),
+    beginTransaction: async () => ({ data: { transactionId: "tx-graph" } }),
+    stageTransactionCommand: async () => ({ res: 200 }),
+    commitTransaction: async () => ({ data: { newRevision: "rev-11" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.stage, "done");
+  assert.equal(res.executedCount, 3);
+  assert.equal(res.nextRevision, "rev-11");
+});
+
 test("orchestrator rolls back staged transaction on runtime failure", async () => {
   const staged = [];
   let rolledBack = false;

@@ -216,3 +216,26 @@ test("sequence_agent continues XD timing writes even when prior manual ownership
   assert.equal(out.commands.some((row) => row.cmd === "effects.create"), true);
   assert.equal(out.warnings.some((w) => /user-owned\/manual/i.test(String(w))), false);
 });
+
+test("sequence_agent supports partial-scope apply planning", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Partial scope chorus touch-up",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / MegaTree / shimmer fade"],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  assert.equal(out.validationReady, true);
+  assert.ok(out.commands.length > 0);
+  assert.deepEqual(out.metadata.scope.sections, ["Chorus 1"]);
+  assert.deepEqual(out.metadata.scope.targetIds, ["MegaTree"]);
+});

@@ -86,11 +86,11 @@ Boundary summary:
 ### Phase G: Acceptance Matrix and Regression Harness
 - [x] Expand in-app orchestration matrix to include sequence-agent execution scenarios.
 - [ ] Add automated scenarios:
-  - [ ] happy path apply from handoff graph
-  - [ ] stale revision blocked
-  - [ ] missing analysis degraded mode with warning
-  - [ ] cumulative timing edits remain writable
-  - [ ] partial-scope apply
+  - [x] happy path apply from handoff graph
+  - [x] stale revision blocked
+  - [x] missing analysis degraded mode with warning
+  - [x] cumulative timing edits remain writable
+  - [x] partial-scope apply
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration
