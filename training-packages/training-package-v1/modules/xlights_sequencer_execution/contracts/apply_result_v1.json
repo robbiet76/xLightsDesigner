@@ -1,0 +1,29 @@
+{
+  "contract": "apply_result_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/sequence-agent-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "planId",
+    "status"
+  ],
+  "statusEnum": [
+    "applied",
+    "blocked",
+    "failed"
+  ],
+  "failureReasonEnum": [
+    "validate",
+    "revision",
+    "capability",
+    "lock",
+    "runtime",
+    "unknown",
+    null
+  ],
+  "notes": [
+    "Applied results should include verification with revisionAdvanced and expectedMutationsPresent.",
+    "Sequence-agent apply failures should classify the blocking stage rather than masking it."
+  ]
+}

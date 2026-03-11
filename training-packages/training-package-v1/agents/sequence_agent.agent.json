@@ -1,6 +1,6 @@
 {
   "id": "sequence_agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "purpose": "Translate approved intent and analysis context into validated xLights mutation plans.",
   "ownedModules": [
     "xlights_sequencer_execution"

@@ -1,7 +1,7 @@
 {
   "packageId": "xlightsdesigner-training-package-v1",
   "schemaVersion": "1.0.0",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "createdAt": "2026-03-10",
   "status": "draft",
   "distributionModel": "byo-api-key",
@@ -18,7 +18,7 @@
     },
     {
       "id": "xlights_sequencer_execution",
-      "version": "0.1.0",
+      "version": "0.1.2",
       "path": "modules/xlights_sequencer_execution/module.manifest.json"
     }
   ],

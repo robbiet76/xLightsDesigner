@@ -16,6 +16,56 @@ function isEffectMutationCommand(cmd = "") {
 }
 
 const SHARED_EFFECT_SETTINGS = {
+  B_CHOICE_BufferStyle: {
+    type: "enum",
+    enumValues: [
+      "Default",
+      "Per Preview",
+      "Per Model Default",
+      "Per Model Per Preview",
+      "Per Model Single Line",
+      "Single Line",
+      "Single Line Model As A Pixel",
+      "Horizontal Stack",
+      "Horizontal Per Model",
+      "Horizontal Per Strand",
+      "Horizontal Per Model/Strand",
+      "Vertical Stack - Scaled",
+      "Overlay - Centered",
+      "Overlay - Scaled",
+      "Layer Star",
+      "Default Model As A Pixel"
+    ]
+  },
+  B_CHOICE_BufferTransform: {
+    type: "enum",
+    enumValues: [
+      "None",
+      "Flip Horizontal",
+      "Flip Vertical",
+      "Rotate 180",
+      "Rotate CC 90",
+      "Rotate CW 90",
+      "Rotate CW 90 Flip Horizontal"
+    ]
+  },
+  B_CHOICE_PerPreviewCamera: {
+    type: "enum",
+    enumValues: ["2D", "3D"]
+  },
+  B_CUSTOM_SubBuffer: { type: "string" },
+  B_SLIDER_PivotPointX: { type: "int" },
+  B_SLIDER_PivotPointY: { type: "int" },
+  B_SLIDER_ZoomQuality: { type: "int" },
+  B_SLIDER_Rotations: { type: "int" },
+  B_SLIDER_Blur: { type: "int" },
+  B_SLIDER_XRotation: { type: "int" },
+  B_SLIDER_Rotation: { type: "int" },
+  B_SLIDER_Zoom: { type: "int" },
+  B_VALUECURVE_Rotation: { type: "curve" },
+  B_VALUECURVE_XRotation: { type: "curve" },
+  B_VALUECURVE_Zoom: { type: "curve" },
+  B_VALUECURVE_Blur: { type: "curve" },
   T_CHECKBOX_LayerMorph: { type: "bool" },
   T_CHOICE_LayerMethod: {
     type: "enum",

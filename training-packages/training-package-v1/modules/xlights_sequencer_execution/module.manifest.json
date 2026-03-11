@@ -1,13 +1,16 @@
 {
   "moduleId": "xlights_sequencer_execution",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "purpose": "Translate design intent into safe, deterministic xLights API plans and write operations.",
   "assets": {
     "prompts": [
       "prompts/sequencer_execution_system.md"
     ],
     "contracts": [
-      "contracts/api_capabilities_required.json"
+      "contracts/api_capabilities_required.json",
+      "contracts/sequence_agent_input_v1.json",
+      "contracts/plan_handoff_v1.json",
+      "contracts/apply_result_v1.json"
     ],
     "datasets": [
       "datasets/index.json"

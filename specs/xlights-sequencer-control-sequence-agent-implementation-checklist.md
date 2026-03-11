@@ -96,10 +96,10 @@ Boundary summary:
 ### Phase H: Training Package Integration
 - [x] Add canonical `sequence_agent` profile in training package registry.
 - [ ] Add/update module assets under `modules/xlights_sequencer_execution`:
-  - [ ] prompts
-  - [ ] fewshot
-  - [ ] eval configuration
-  - [ ] contracts references
+  - [x] prompts
+  - [x] fewshot
+  - [x] eval configuration
+  - [x] contracts references
 - [x] Remove temporary alias compatibility and enforce canonical `sequence_agent` naming.
 
 ## 3) Exit Criteria

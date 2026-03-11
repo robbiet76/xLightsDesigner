@@ -239,3 +239,36 @@ test("sequence_agent supports partial-scope apply planning", () => {
   assert.deepEqual(out.metadata.scope.sections, ["Chorus 1"]);
   assert.deepEqual(out.metadata.scope.targetIds, ["MegaTree"]);
 });
+
+test("sequence_agent remains timing-name agnostic when existing track names vary", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: { sections: ["Zydeco Christmas 2014: Main Grid", "Note Onsets", "Beats"] },
+      briefSeed: { tone: "upbeat" }
+    },
+    intentHandoff: {
+      goal: "Revise focal accents without assuming canonical timing names",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: [],
+        sections: ["Zydeco Christmas 2014: Main Grid"]
+      }
+    },
+    sourceLines: ["Zydeco Christmas 2014: Main Grid / MegaTree / shimmer fade"],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"],
+    timingOwnership: [
+      { sourceTrack: "Backup", manual: false, trackName: "Backup" },
+      { sourceTrack: "Note Onsets", manual: false, trackName: "Note Onsets" },
+      { sourceTrack: "60000ms Metronome", manual: false, trackName: "60000ms Metronome" }
+    ]
+  });
+
+  assert.equal(out.validationReady, true);
+  assert.equal(out.commands.some((row) => row.cmd === "timing.createTrack"), true);
+  assert.deepEqual(out.metadata.scope.sections, ["Zydeco Christmas 2014: Main Grid"]);
+  assert.equal(out.warnings.some((w) => /beats track name/i.test(String(w))), false);
+  assert.equal(out.warnings.some((w) => /lyrics track name/i.test(String(w))), false);
+});

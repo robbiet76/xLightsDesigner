@@ -1,0 +1,20 @@
+{
+  "contract": "sequence_agent_input_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/sequence-agent-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "requestId",
+    "context.sequenceRevision",
+    "context.endpoint",
+    "intentHandoff",
+    "safety.timingOwnership",
+    "safety.manualXdLocks",
+    "safety.allowTimingWrites"
+  ],
+  "notes": [
+    "timingOwnership is informational sequencing state, not a permanent lock policy.",
+    "sequence_agent must plan against the latest sequence revision."
+  ]
+}

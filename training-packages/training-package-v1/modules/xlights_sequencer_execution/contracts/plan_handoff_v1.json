@@ -1,0 +1,20 @@
+{
+  "contract": "plan_handoff_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/sequence-agent-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "planId",
+    "summary",
+    "baseRevision",
+    "validationReady",
+    "warnings",
+    "commands",
+    "metadata.degradedMode"
+  ],
+  "notes": [
+    "Commands must form a valid deterministic command graph.",
+    "Partial-scope apply should generate a fresh plan rather than reusing stale handoff commands."
+  ]
+}

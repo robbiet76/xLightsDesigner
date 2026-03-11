@@ -1,12 +1,20 @@
 {
   "requiredCapabilities": [
     "system.validateCommands",
-    "system.executePlan",
     "sequence.getRevision",
+    "transactions.begin",
+    "transactions.commit",
+    "transactions.rollback",
     "timing.getTracks",
     "timing.getMarks",
-    "sequencer.getEffectSummary"
+    "effects.list"
   ],
   "requiredApiVersion": 2,
-  "sourceSpec": "specs/xlights-sequencer-control-api-surface-contract.md"
+  "applyModel": "transactions-only",
+  "sourceSpec": "specs/xlights-sequencer-control-api-surface-contract.md",
+  "notes": [
+    "Apply execution must use transactions.begin/stage/commit with expectedRevision.",
+    "system.executePlan is deprecated for sequence_agent runtime flow.",
+    "Post-apply verification reads back timing marks and effects.list results."
+  ]
 }
