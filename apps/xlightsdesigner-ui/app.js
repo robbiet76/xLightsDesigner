@@ -50,9 +50,7 @@ import {
   classifyDepthBands,
   collectSpatialNodes,
   computeSceneBounds,
-  depthSemanticToZ,
-  inferLayoutMode,
-  normalizeDepthSemanticTag
+  inferLayoutMode
 } from "./agent/scene-graph-queries.js";
 
 const app = document.getElementById("app");
@@ -158,7 +156,6 @@ const defaultState = {
     sceneGraphWarnings: [],
     sceneGraphSpatialNodeCount: 0,
     sceneGraphLayoutMode: "2d",
-    sceneGraphDepthTagFallbackCount: 0,
     sequenceOpen: false,
     runtimeReady: false,
     desktopFileDialogReady: false,
@@ -269,7 +266,6 @@ const defaultState = {
       spatialNodeCount: 0,
       layoutMode: "2d",
       depthPlanningEnabled: false,
-      depthTagFallbackCount: 0,
       modelTypeCategoryCounts: {},
       bounds: null,
       depthBands: {
@@ -393,9 +389,6 @@ if (!Array.isArray(state.health?.sceneGraphWarnings)) {
 }
 if (!Number.isFinite(Number(state.health?.sceneGraphSpatialNodeCount))) {
   state.health.sceneGraphSpatialNodeCount = 0;
-}
-if (!Number.isFinite(Number(state.health?.sceneGraphDepthTagFallbackCount))) {
-  state.health.sceneGraphDepthTagFallbackCount = 0;
 }
 if (!["2d", "3d"].includes(String(state.health?.sceneGraphLayoutMode || "").toLowerCase())) {
   state.health.sceneGraphLayoutMode = "2d";
@@ -2991,32 +2984,6 @@ function normalizeVector3(source) {
   };
 }
 
-function buildDepthSemanticByTargetId(assignments = []) {
-  const rows = Array.isArray(assignments) ? assignments : [];
-  const out = new Map();
-  for (const row of rows) {
-    const targetId = String(row?.targetId || "").trim();
-    if (!targetId) continue;
-    const tags = Array.isArray(row?.tags) ? row.tags : [];
-    let semantic = "";
-    for (const tag of tags) {
-      const mapped = normalizeDepthSemanticTag(tag);
-      if (mapped) semantic = mapped;
-    }
-    if (!semantic) continue;
-    out.set(targetId, semantic);
-  }
-  return out;
-}
-
-function resolveDepthFallbackZForModelNode(node = {}, depthSemanticByTargetId = new Map()) {
-  const id = String(node?.id || "").trim();
-  if (!id || !(depthSemanticByTargetId instanceof Map)) return null;
-  const semantic = depthSemanticByTargetId.get(id);
-  if (!semantic) return null;
-  return depthSemanticToZ(semantic);
-}
-
 function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   const id = String(model?.name || model?.id || "").trim();
   const typeInfo = classifyModelDisplayType(model?.type || "");
@@ -3059,14 +3026,11 @@ function buildSceneGraphFromData({
   sceneData = {},
   models = [],
   submodels = [],
-  metadataAssignments = [],
   source = "",
   warnings = []
 } = {}) {
   const modelsById = {};
   const groupsById = {};
-  let depthTagFallbackCount = 0;
-  const depthSemanticByTargetId = buildDepthSemanticByTargetId(metadataAssignments);
   const cameras = (Array.isArray(sceneData?.cameras) ? sceneData.cameras : [])
     .map((row) => ({
       name: String(row?.name || "").trim(),
@@ -3084,16 +3048,6 @@ function buildSceneGraphFromData({
   for (const row of modelRows) {
     const node = normalizeSceneGraphModelNode(row, sceneModels.length ? "layout.getScene" : "layout.getModels");
     if (!node.id) continue;
-    if (layoutMode === "2d") {
-      const currentZ = toFiniteNumberOrNull(node?.transform?.position?.z);
-      if (currentZ === 0) {
-        const fallbackZ = resolveDepthFallbackZForModelNode(node, depthSemanticByTargetId);
-        if (fallbackZ != null) {
-          node.transform.position.z = fallbackZ;
-          depthTagFallbackCount += 1;
-        }
-      }
-    }
     if (node.type === "group") groupsById[node.id] = node;
     else modelsById[node.id] = node;
   }
@@ -3170,7 +3124,6 @@ function buildSceneGraphFromData({
       spatialNodeCount: spatialNodes.length,
       layoutMode,
       depthPlanningEnabled,
-      depthTagFallbackCount,
       modelTypeCategoryCounts,
       bounds,
       depthBands: {
@@ -3190,7 +3143,6 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
       sceneData: body?.data && isPlainObject(body.data) ? body.data : {},
       models,
       submodels,
-      metadataAssignments: state.metadata?.assignments || [],
       source: "layout.getScene",
       warnings: []
     });
@@ -3200,7 +3152,6 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
     state.health.sceneGraphWarnings = graph.warnings.slice(0, 6);
     state.health.sceneGraphSpatialNodeCount = Number(graph?.stats?.spatialNodeCount || 0);
     state.health.sceneGraphLayoutMode = String(graph?.stats?.layoutMode || "unknown");
-    state.health.sceneGraphDepthTagFallbackCount = Number(graph?.stats?.depthTagFallbackCount || 0);
     return;
   } catch (err) {
     const warning = `Scene graph fallback active: ${String(err?.message || "layout.getScene unavailable")}`;
@@ -3208,7 +3159,6 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
       sceneData: {},
       models,
       submodels,
-      metadataAssignments: state.metadata?.assignments || [],
       source: "fallback.models-submodels",
       warnings: [warning]
     });
@@ -3218,7 +3168,6 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
     state.health.sceneGraphWarnings = graph.warnings.slice(0, 6);
     state.health.sceneGraphSpatialNodeCount = Number(graph?.stats?.spatialNodeCount || 0);
     state.health.sceneGraphLayoutMode = String(graph?.stats?.layoutMode || "unknown");
-    state.health.sceneGraphDepthTagFallbackCount = Number(graph?.stats?.depthTagFallbackCount || 0);
   }
 }
 
@@ -10009,7 +9958,6 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
         <div class="kv"><div class="k">Layout Mode</div><div>${String(state.health.sceneGraphLayoutMode || "2d").toUpperCase()}</div></div>
         <div class="kv"><div class="k">Spatial Nodes</div><div>${Number(state.health.sceneGraphSpatialNodeCount || 0)}</div></div>
-        <div class="kv"><div class="k">Depth Tag Z Fallbacks</div><div>${Number(state.health.sceneGraphDepthTagFallbackCount || 0)}</div></div>
         ${
           Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
             ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`

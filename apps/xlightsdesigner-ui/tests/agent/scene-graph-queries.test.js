@@ -5,9 +5,7 @@ import {
   classifyDepthBands,
   collectSpatialNodes,
   computeSceneBounds,
-  depthSemanticToZ,
   inferLayoutMode,
-  normalizeDepthSemanticTag,
   findNearestNodes,
   findNodesInAxisAlignedRegion
 } from "../../agent/scene-graph-queries.js";
@@ -82,19 +80,4 @@ test("inferLayoutMode falls back to 2d when camera types conflict without defaul
     ]
   });
   assert.equal(mode, "2d");
-});
-
-test("normalizeDepthSemanticTag resolves canonical depth semantics", () => {
-  assert.equal(normalizeDepthSemanticTag("depth:foreground"), "foreground");
-  assert.equal(normalizeDepthSemanticTag("mid"), "midground");
-  assert.equal(normalizeDepthSemanticTag("far-field"), "background");
-  assert.equal(normalizeDepthSemanticTag("unknown"), "");
-});
-
-test("depthSemanticToZ maps canonical semantics to deterministic z values", () => {
-  assert.equal(depthSemanticToZ("foreground"), 0);
-  assert.equal(depthSemanticToZ("midground"), 50);
-  assert.equal(depthSemanticToZ("background"), 100);
-  assert.equal(depthSemanticToZ("depth:rear"), 100);
-  assert.equal(depthSemanticToZ("none"), null);
 });

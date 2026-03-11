@@ -3,28 +3,6 @@ function toFiniteOrNull(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-const DEPTH_SEMANTIC_TO_Z = Object.freeze({
-  foreground: 0,
-  midground: 50,
-  background: 100
-});
-
-export function normalizeDepthSemanticTag(value = "") {
-  const raw = String(value || "").trim().toLowerCase();
-  if (!raw) return "";
-  const key = raw.startsWith("depth:") ? raw.slice(6).trim() : raw;
-  if (["foreground", "front", "near", "nearfield", "near-field"].includes(key)) return "foreground";
-  if (["midground", "mid", "middle"].includes(key)) return "midground";
-  if (["background", "back", "rear", "far", "farfield", "far-field"].includes(key)) return "background";
-  return "";
-}
-
-export function depthSemanticToZ(semantic = "") {
-  const key = normalizeDepthSemanticTag(semantic);
-  if (!key) return null;
-  return Object.prototype.hasOwnProperty.call(DEPTH_SEMANTIC_TO_Z, key) ? DEPTH_SEMANTIC_TO_Z[key] : null;
-}
-
 function normalizeLayoutMode(value = "") {
   const key = String(value || "").trim().toLowerCase();
   if (key === "2d") return "2d";
