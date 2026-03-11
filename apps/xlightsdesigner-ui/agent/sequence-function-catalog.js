@@ -17,16 +17,76 @@ export const SEQUENCE_FUNCTION_CATALOG = {
     requiredCapabilities: ["timing.replaceMarks"],
     writeScope: "track"
   },
-  "effects.apply": {
-    id: "effects.apply",
+  "sequencer.setDisplayElementOrder": {
+    id: "sequencer.set_display_element_order",
+    category: "sequencer",
+    requiredCapabilities: ["sequencer.setDisplayElementOrder"],
+    writeScope: "sequence"
+  },
+  "sequencer.setActiveDisplayElements": {
+    id: "sequencer.set_active_display_elements",
+    category: "sequencer",
+    requiredCapabilities: ["sequencer.setActiveDisplayElements"],
+    writeScope: "sequence"
+  },
+  "effects.create": {
+    id: "effects.create",
     category: "effects",
-    requiredCapabilities: ["effects.apply"],
+    requiredCapabilities: ["effects.create"],
     writeScope: "target"
   },
-  "effects.bulkApply": {
-    id: "effects.bulk_apply",
+  "effects.update": {
+    id: "effects.update",
     category: "effects",
-    requiredCapabilities: ["effects.bulkApply"],
+    requiredCapabilities: ["effects.update"],
+    writeScope: "target"
+  },
+  "effects.delete": {
+    id: "effects.delete",
+    category: "effects",
+    requiredCapabilities: ["effects.delete"],
+    writeScope: "target"
+  },
+  "effects.deleteLayer": {
+    id: "effects.delete_layer",
+    category: "effects",
+    requiredCapabilities: ["effects.deleteLayer"],
+    writeScope: "target"
+  },
+  "effects.compactLayers": {
+    id: "effects.compact_layers",
+    category: "effects",
+    requiredCapabilities: ["effects.compactLayers"],
+    writeScope: "target"
+  },
+  "effects.setRenderStyle": {
+    id: "effects.set_render_style",
+    category: "effects",
+    requiredCapabilities: ["effects.setRenderStyle"],
+    writeScope: "target"
+  },
+  "effects.setPalette": {
+    id: "effects.set_palette",
+    category: "effects",
+    requiredCapabilities: ["effects.setPalette"],
+    writeScope: "target"
+  },
+  "effects.shift": {
+    id: "effects.shift",
+    category: "effects",
+    requiredCapabilities: ["effects.shift"],
+    writeScope: "target"
+  },
+  "effects.alignToTiming": {
+    id: "effects.align_to_timing",
+    category: "effects",
+    requiredCapabilities: ["effects.alignToTiming"],
+    writeScope: "target"
+  },
+  "effects.clone": {
+    id: "effects.clone",
+    category: "effects",
+    requiredCapabilities: ["effects.clone"],
     writeScope: "target"
   }
 };

@@ -1,8 +1,9 @@
 import {
+  beginTransaction,
   closeSequence,
+  commitTransaction,
   cancelJob,
   createSequence,
-  executePlan,
   getJob,
   getMediaStatus,
   getMediaMetadata,
@@ -16,6 +17,8 @@ import {
   getTimingMarks,
   getTimingTracks,
   getEffectDefinitions,
+  rollbackTransaction,
+  stageTransactionCommand,
   createTimingTrack,
   replaceTimingMarks,
   insertTimingMarks,
@@ -149,7 +152,6 @@ const defaultState = {
   health: {
     lastCheckedAt: "",
     capabilitiesCount: 0,
-    hasExecutePlan: false,
     hasValidateCommands: false,
     hasJobsGet: false,
     capabilityCommands: [],
@@ -2045,7 +2047,6 @@ function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen)
     lastCheckedAt: new Date().toISOString(),
     capabilitiesCount: commands.length,
     capabilityCommands: commands,
-    hasExecutePlan: commands.includes("system.executePlan"),
     hasValidateCommands: commands.includes("system.validateCommands"),
     hasJobsGet: commands.includes("jobs.get"),
     sequenceOpen: Boolean(sequenceOpen),
@@ -2583,7 +2584,10 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       expectedRevision: state.draftBaseRevision,
       getRevision,
       validateCommands,
-      executePlan,
+      beginTransaction,
+      commitTransaction,
+      rollbackTransaction,
+      stageTransactionCommand,
       safetyOptions: { maxCommands: 200 }
     });
 
@@ -2652,7 +2656,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     if (jobId) {
       upsertJob({
         id: jobId,
-        source: "system.executePlan",
+        source: "transactions.commit",
         status: "running",
         progress: 0,
         updatedAt: new Date().toISOString()
@@ -2679,7 +2683,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
     setStatusWithDiagnostics(
       "info",
-      `Applied via system.executePlan (${executed} steps).`
+      `Applied via transaction commit (${executed} steps).`
     );
     addChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`);
     applyAuditEntry = {
@@ -10021,7 +10025,6 @@ function settingsDrawer() {
             ? `<p class="banner warning">Effect catalog: ${escapeHtml(state.health.effectCatalogError)}</p>`
             : ""
         }
-        <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>

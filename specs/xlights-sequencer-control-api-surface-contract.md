@@ -705,33 +705,34 @@ Purpose: remove an effect layer from a model/submodel when it is empty (or when 
 Params:
 - `modelName` (string, required)
 - `layerIndex` (int, required)
-- `forceClear` (bool, default `false`): when true, clear effects in the layer before removal.
+- `force` (bool, default `false`): when true, remove the layer even if it contains effects.
 
 Validation:
 - model exists
 - layer index exists
-- layer is empty unless `forceClear=true`
+- at least one layer must remain
+- layer is empty unless `force=true`
 
 Response `data`:
-- `removed` (bool)
-- `layerIndex`
-- `remainingLayerCount`
+- `deleted` (bool)
+- `modelName`
+- `deletedLayerIndex`
+- `removedEffects`
 
 Dry-run:
-- validates removability and returns projected layer count.
+- validates removability and returns projected deletion summary.
 
 ### `effects.compactLayers`
 Purpose: remove empty layer gaps in a model/submodel while preserving effect order in remaining layers.
 
 Params:
 - `modelName` (string, required)
-- `preserveVisualOrder` (bool, default `true`)
 
 Response `data`:
-- `updated` (bool)
-- `beforeLayerCount`
-- `afterLayerCount`
+- `modelName`
+- `removedCount`
 - `removedLayerIndexes` (array)
+- `layerCount`
 
 ### `effects.getRenderStyleOptions`
 Purpose: return render-style enum options and camera compatibility for a target element/layer context.
@@ -783,6 +784,25 @@ Params:
 Response `data`:
 - `effectId`
 - `updated` (bool)
+
+Shared per-effect timing/layer settings:
+- xLights also supports effect-level timing/layer settings through generic `settings` payloads.
+- Confirmed source-backed keys include:
+  - `T_CHOICE_LayerMethod`
+  - `T_SLIDER_EffectLayerMix`
+  - `T_CHECKBOX_LayerMorph`
+  - `T_CHOICE_In_Transition_Type`
+  - `T_CHOICE_Out_Transition_Type`
+  - `T_SLIDER_In_Transition_Adjust`
+  - `T_SLIDER_Out_Transition_Adjust`
+  - `T_CHECKBOX_In_Transition_Reverse`
+  - `T_CHECKBOX_Out_Transition_Reverse`
+  - `C_SLIDER_Brightness`
+  - `C_SLIDER_Color_HueAdjust`
+  - `C_SLIDER_Color_SaturationAdjust`
+  - `C_SLIDER_Color_ValueAdjust`
+  - `C_SLIDER_Contrast`
+- These are per-effect controls, not global sequence settings.
 
 ### `effects.shift`
 Params:

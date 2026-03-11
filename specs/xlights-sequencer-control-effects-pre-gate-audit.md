@@ -65,18 +65,34 @@ Render-style settings surface:
   - `transformOptions`
 - `effects.setRenderStyle` validates selected render style/camera/transform against those options.
 
+Shared timing/layer settings surface:
+- xLights also applies per-effect timing/layer settings through generic `settings` payloads, not separate endpoints.
+- Source-confirmed keys include:
+  - `T_CHOICE_LayerMethod`
+  - `T_SLIDER_EffectLayerMix`
+  - `T_CHECKBOX_LayerMorph`
+  - `T_CHOICE_In_Transition_Type`
+  - `T_CHOICE_Out_Transition_Type`
+  - `T_SLIDER_In_Transition_Adjust`
+  - `T_SLIDER_Out_Transition_Adjust`
+  - `T_CHECKBOX_In_Transition_Reverse`
+  - `T_CHECKBOX_Out_Transition_Reverse`
+  - color/timing modifiers such as `C_SLIDER_Brightness`, `C_SLIDER_Color_HueAdjust`, `C_SLIDER_Color_SaturationAdjust`, `C_SLIDER_Color_ValueAdjust`, `C_SLIDER_Contrast`
+- These are per-effect controls from the xLights timing panel and must be treated as valid settings even when absent from a specific effect's panel-derived definition.
+
 ## 5) Current xLightsDesigner Coverage
-Current app-layer sequencing execution is still minimal:
-- `apps/xlightsdesigner-ui/agent/command-builders.js` emits only timing-track commands (`timing.createTrack`, `timing.insertMarks`).
-- no canonical effects command templates are generated yet.
-- no effect-definition caching/catalog consumption exists in runtime planner path.
+Current app-layer sequencing execution is still partial:
+- `apps/xlightsdesigner-ui/agent/command-builders.js` now emits timing-track commands plus inferred `effects.create` templates.
+- effect-definition catalog hydration and compatibility evaluation exist in the runtime planner path.
+- shared timing/layer settings need explicit normalization because `effects.listDefinitions` only reflects per-effect panel controls and not the shared timing panel controls.
 
 ## 6) Gap List (Effects Types and Settings Step)
 
-### G1: Missing canonical effect catalog in app layer
+### G1: Missing canonical shared-settings augmentation in app layer
 Need normalized local catalog synthesized from:
 - `effects.listDefinitions` output,
-- stable canonical ids and parameter schemas.
+- stable canonical ids and parameter schemas,
+- shared timing/layer settings that are valid across effects but are not emitted by `effects.listDefinitions`.
 
 ### G2: Missing model-type × effect compatibility matrix
 Need deterministic compatibility rules combining:
@@ -84,9 +100,10 @@ Need deterministic compatibility rules combining:
 - effect definition constraints,
 - render style capabilities.
 
-### G3: Missing parameter schema validator in planner path
+### G3: Missing parameter schema validator coverage for full per-effect settings surface
 Need command synthesis guards that validate:
 - parameter keys/types/ranges/enums,
+- shared timing/layer settings,
 - render-style/camera/transform compatibility before apply.
 
 ### G4: Missing deterministic effect command templates
@@ -105,7 +122,7 @@ Pre-gate status for Phase I effects types/settings:
 - source audit: COMPLETE
 - API coverage map: COMPLETE
 - gap list: READY FOR APPROVAL
-- semantic implementation: NOT STARTED
+- semantic implementation: IN PROGRESS
 
 ## 8) Recommended Next Implementation Slice
 1. Add effect definition ingest/cache module in app agent layer.

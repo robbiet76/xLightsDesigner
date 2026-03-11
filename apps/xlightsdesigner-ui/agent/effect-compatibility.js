@@ -15,6 +15,103 @@ function isEffectMutationCommand(cmd = "") {
   return key.startsWith("effects.");
 }
 
+const SHARED_EFFECT_SETTINGS = {
+  T_CHECKBOX_LayerMorph: { type: "bool" },
+  T_CHOICE_LayerMethod: {
+    type: "enum",
+    enumValues: [
+      "Normal",
+      "Effect 1",
+      "Effect 2",
+      "1 is Mask",
+      "2 is Mask",
+      "1 is Unmask",
+      "2 is Unmask",
+      "1 is True Unmask",
+      "2 is True Unmask",
+      "1 reveals 2",
+      "2 reveals 1",
+      "Shadow 1 on 2",
+      "Shadow 2 on 1",
+      "Layered",
+      "Average",
+      "Bottom-Top",
+      "Left-Right",
+      "Highlight",
+      "Highlight Vibrant",
+      "Additive",
+      "Subtractive",
+      "Brightness",
+      "Max",
+      "Min"
+    ]
+  },
+  T_SLIDER_EffectLayerMix: { type: "int", min: 0, max: 100 },
+  T_CHOICE_In_Transition_Type: {
+    type: "enum",
+    enumValues: [
+      "Blend",
+      "Blinds",
+      "Blobs",
+      "Bow Tie",
+      "Circle Explode",
+      "Circles",
+      "Circular Swirl",
+      "Clock",
+      "Dissolve",
+      "Doorway",
+      "Fade",
+      "Fold",
+      "From Middle",
+      "Pinwheel",
+      "Shatter",
+      "Slide Bars",
+      "Slide Checks",
+      "Square Explode",
+      "Star",
+      "Swap",
+      "Wipe",
+      "Zoom"
+    ]
+  },
+  T_CHOICE_Out_Transition_Type: {
+    type: "enum",
+    enumValues: [
+      "Blend",
+      "Blinds",
+      "Blobs",
+      "Bow Tie",
+      "Circle Explode",
+      "Circles",
+      "Circular Swirl",
+      "Clock",
+      "Dissolve",
+      "Doorway",
+      "Fade",
+      "Fold",
+      "From Middle",
+      "Pinwheel",
+      "Shatter",
+      "Slide Bars",
+      "Slide Checks",
+      "Square Explode",
+      "Star",
+      "Swap",
+      "Wipe",
+      "Zoom"
+    ]
+  },
+  T_SLIDER_In_Transition_Adjust: { type: "int", min: 0, max: 100 },
+  T_SLIDER_Out_Transition_Adjust: { type: "int", min: 0, max: 100 },
+  T_CHECKBOX_In_Transition_Reverse: { type: "bool" },
+  T_CHECKBOX_Out_Transition_Reverse: { type: "bool" },
+  C_SLIDER_Brightness: { type: "int", min: 0, max: 400 },
+  C_SLIDER_Color_HueAdjust: { type: "int", min: -100, max: 100 },
+  C_SLIDER_Color_SaturationAdjust: { type: "int", min: -100, max: 100 },
+  C_SLIDER_Color_ValueAdjust: { type: "int", min: -100, max: 100 },
+  C_SLIDER_Contrast: { type: "int", min: -100, max: 100 }
+};
+
 function checkParamValueType(param = {}, value) {
   const type = normText(param.type).toLowerCase();
   if (type === "bool") return typeof value === "boolean";
@@ -29,7 +126,7 @@ function evaluateSettingsAgainstDefinition(settings = {}, definition = {}) {
   const warnings = [];
   const params = asObject(definition.paramIndex);
   for (const [key, value] of Object.entries(asObject(settings))) {
-    const param = params[key];
+    const param = params[key] || SHARED_EFFECT_SETTINGS[key];
     if (!param) {
       warnings.push(`Unknown settings key for effect ${definition.effectName}: ${key}`);
       continue;

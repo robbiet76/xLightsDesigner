@@ -34,7 +34,10 @@ test('orchestrator blocks on revision mismatch', async () => {
     expectedRevision: 'rev-expected',
     getRevision: okRevision('rev-current'),
     validateCommands: async () => ({ data: { valid: true } }),
-    executePlan: async () => ({ data: { executedCount: 1 } })
+    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
+    stageTransactionCommand: async () => ({ res: 200 }),
+    commitTransaction: async () => ({ data: { newRevision: 'rev-next' } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
   });
 
   assert.equal(res.ok, false);
@@ -53,7 +56,10 @@ test('orchestrator blocks on command validation failure', async () => {
         results: [{ index: 0, valid: false, error: { code: 'VALIDATION_ERROR', message: 'trackName required' } }]
       }
     }),
-    executePlan: async () => ({ data: { executedCount: 1 } })
+    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
+    stageTransactionCommand: async () => ({ res: 200 }),
+    commitTransaction: async () => ({ data: { newRevision: 'rev-next' } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
   });
 
   assert.equal(res.ok, false);
@@ -71,7 +77,10 @@ test("orchestrator blocks on invalid command graph", async () => {
     expectedRevision: "rev-1",
     getRevision: okRevision("rev-1"),
     validateCommands: async () => ({ data: { valid: true, results: [] } }),
-    executePlan: async () => ({ data: { executedCount: 2 } })
+    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
+    stageTransactionCommand: async () => ({ res: 200 }),
+    commitTransaction: async () => ({ data: { newRevision: 'rev-next' } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
   });
 
   assert.equal(res.ok, false);
@@ -80,17 +89,53 @@ test("orchestrator blocks on invalid command graph", async () => {
 });
 
 test('orchestrator executes when safety/revision/validation pass', async () => {
+  const staged = [];
   const res = await validateAndApplyPlan({
     endpoint: 'http://127.0.0.1:49914/xlDoAutomation',
     commands: [{ cmd: 'timing.createTrack', params: { trackName: 'XD:Test' } }],
     expectedRevision: 'rev-2',
     getRevision: okRevision('rev-2'),
     validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
-    executePlan: async () => ({ data: { executedCount: 1, jobId: 'job-123' } })
+    beginTransaction: async () => ({ data: { transactionId: 'tx-1' } }),
+    stageTransactionCommand: async (_endpoint, txId, command) => {
+      staged.push({ txId, command });
+      return { res: 200 };
+    },
+    commitTransaction: async (_endpoint, txId, expectedRevision) => ({ data: { transactionId: txId, newRevision: `${expectedRevision}-next` } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
   });
 
   assert.equal(res.ok, true);
   assert.equal(res.stage, 'done');
   assert.equal(res.executedCount, 1);
-  assert.equal(res.jobId, 'job-123');
+  assert.equal(res.jobId, null);
+  assert.equal(staged.length, 1);
+  assert.equal(res.nextRevision, 'rev-2-next');
+});
+
+test("orchestrator rolls back staged transaction on runtime failure", async () => {
+  const staged = [];
+  let rolledBack = false;
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [{ cmd: "effects.create", params: { modelName: "MegaTree", layerIndex: 0, effectName: "Bars", startMs: 0, endMs: 1000 } }],
+    expectedRevision: "rev-2",
+    getRevision: okRevision("rev-2"),
+    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
+    beginTransaction: async () => ({ data: { transactionId: "tx-1" } }),
+    stageTransactionCommand: async (_endpoint, txId, command) => {
+      staged.push({ txId, command });
+      throw new Error("stage failed");
+    },
+    commitTransaction: async (_endpoint, txId, expectedRevision) => ({ data: { transactionId: txId, newRevision: `${expectedRevision}-next` } }),
+    rollbackTransaction: async () => {
+      rolledBack = true;
+      return { data: { rolledBack: true } };
+    }
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "runtime");
+  assert.equal(staged.length, 1);
+  assert.equal(rolledBack, true);
 });

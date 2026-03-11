@@ -305,6 +305,24 @@
               },
               "palette": {
                 "type": "object"
+              },
+              "renderStyle": {
+                "type": "string"
+              },
+              "camera": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "transform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bufferStagger": {
+                "type": "integer"
               }
             }
           }

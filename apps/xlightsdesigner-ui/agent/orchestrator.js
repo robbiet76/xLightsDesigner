@@ -7,13 +7,19 @@ export async function validateAndApplyPlan({
   expectedRevision = 'unknown',
   getRevision,
   validateCommands,
-  executePlan,
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction,
+  stageTransactionCommand,
   safetyOptions = {}
 } = {}) {
   if (!endpoint) throw new Error('endpoint is required');
   if (typeof getRevision !== 'function') throw new Error('getRevision function is required');
   if (typeof validateCommands !== 'function') throw new Error('validateCommands function is required');
-  if (typeof executePlan !== 'function') throw new Error('executePlan function is required');
+  if (typeof beginTransaction !== 'function') throw new Error('beginTransaction function is required');
+  if (typeof commitTransaction !== 'function') throw new Error('commitTransaction function is required');
+  if (typeof rollbackTransaction !== 'function') throw new Error('rollbackTransaction function is required');
+  if (typeof stageTransactionCommand !== 'function') throw new Error('stageTransactionCommand function is required');
 
   const safety = evaluatePlanSafety(commands, safetyOptions);
   if (!safety.ok) {
@@ -73,12 +79,50 @@ export async function validateAndApplyPlan({
     };
   }
 
-  const result = await executePlan(endpoint, commands, true);
-  const executedCount = result?.data?.executedCount ?? 0;
-  const jobId = result?.data?.jobId || null;
+  let executedCount = 0;
+  let jobId = null;
+  let commitRevision = "";
+  let transactionId = "";
+  try {
+    const begun = await beginTransaction(endpoint);
+    transactionId = String(begun?.data?.transactionId || "").trim();
+    if (!transactionId) {
+      return {
+        ok: false,
+        stage: "runtime",
+        error: "transactions.begin returned no transactionId",
+        details: begun
+      };
+    }
+
+    for (const step of Array.isArray(commands) ? commands : []) {
+      await stageTransactionCommand(endpoint, transactionId, step);
+      executedCount += 1;
+    }
+
+    const commit = await commitTransaction(
+      endpoint,
+      transactionId,
+      expectedRevision && expectedRevision !== "unknown" ? expectedRevision : null
+    );
+    commitRevision = String(commit?.data?.newRevision || "").trim();
+  } catch (err) {
+    if (transactionId) {
+      try {
+        await rollbackTransaction(endpoint, transactionId);
+      } catch {
+        // Best-effort rollback only.
+      }
+    }
+    return {
+      ok: false,
+      stage: "runtime",
+      error: String(err?.message || err || "transaction apply failed")
+    };
+  }
 
   const postRev = await getRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }));
-  const nextRevision = postRev?.data?.revision ?? currentRevision;
+  const nextRevision = commitRevision || (postRev?.data?.revision ?? currentRevision);
 
   return {
     ok: true,

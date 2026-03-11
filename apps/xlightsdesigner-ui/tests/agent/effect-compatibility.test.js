@@ -54,3 +54,25 @@ test("effect compatibility emits warnings for out-of-schema settings", () => {
   assert.ok(out.warnings.some((w) => /enum value out of range/i.test(String(w))));
   assert.ok(out.warnings.some((w) => /unknown settings key/i.test(String(w))));
 });
+
+test("effect compatibility accepts shared xlights timing and blend settings", () => {
+  const out = evaluateEffectCommandCompatibility({
+    commands: [{
+      cmd: "effects.create",
+      params: {
+        effectName: "Bars",
+        settings: {
+          T_CHOICE_LayerMethod: "Additive",
+          T_SLIDER_EffectLayerMix: 80,
+          T_CHOICE_In_Transition_Type: "Fade",
+          T_SLIDER_In_Transition_Adjust: 50,
+          T_CHECKBOX_Out_Transition_Reverse: true,
+          C_SLIDER_Brightness: 125
+        }
+      }
+    }],
+    effectCatalog: sampleCatalog()
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.warnings.length, 0);
+});

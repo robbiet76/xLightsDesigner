@@ -36,6 +36,9 @@ Last Reviewed: 2026-03-11
 ## 6) Effects + Layers
 - `effects.list` filter behavior is deterministic by model/layer/range.
 - `effects.create/update/delete` enforce required fields and range validity.
+- `effects.create/update` preserve per-effect timing/layer settings such as layer blending, transition type, transition adjustment, transition reverse, and color modifiers when passed through `settings`.
+- `effects.deleteLayer` enforces last-layer protection and only deletes non-empty layers when `force=true`.
+- `effects.compactLayers` removes only empty layers and reports `removedLayerIndexes` deterministically.
 - `effects.shift` and `effects.alignToTiming` honor explicit target filters.
 - `effects.clone` enforces source and destination requirements.
 - Dry-run behavior on mutating effects commands is non-persistent.

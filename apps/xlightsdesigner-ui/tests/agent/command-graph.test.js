@@ -49,3 +49,18 @@ test("validateCommandGraph passes valid graph", () => {
   assert.equal(out.ok, true);
   assert.equal(out.nodeCount, 2);
 });
+
+test("buildCommandGraph derives effect write keys from model and layer", () => {
+  const out = buildCommandGraph([
+    { cmd: "effects.create", params: { modelName: "MegaTree", layerIndex: 2, effectName: "Bars", startMs: 0, endMs: 1000 } }
+  ]);
+  assert.equal(out.nodes[0].writeKey, "effects:model:MegaTree:layer:2");
+});
+
+test("validateCommandGraph counts real effect writes", () => {
+  const out = validateCommandGraph([
+    { cmd: "effects.create", params: { modelName: "MegaTree", layerIndex: 0, effectName: "Bars", startMs: 0, endMs: 1000 } }
+  ]);
+  assert.equal(out.ok, true);
+  assert.equal(out.writeCount, 1);
+});

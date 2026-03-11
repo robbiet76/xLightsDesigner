@@ -183,11 +183,33 @@ export async function validateCommands(endpoint, commands) {
   });
 }
 
-export async function executePlan(endpoint, commands, atomic = true) {
-  return postCommand(endpoint, "system.executePlan", {
-    atomic,
-    commands
+export async function beginTransaction(endpoint) {
+  return postCommand(endpoint, "transactions.begin", {});
+}
+
+export async function commitTransaction(endpoint, transactionId, expectedRevision = null) {
+  const params = { transactionId };
+  if (expectedRevision != null && String(expectedRevision).trim()) {
+    params.expectedRevision = String(expectedRevision).trim();
+  }
+  return postCommand(endpoint, "transactions.commit", params);
+}
+
+export async function rollbackTransaction(endpoint, transactionId) {
+  return postCommand(endpoint, "transactions.rollback", {
+    transactionId
   });
+}
+
+export async function stageTransactionCommand(endpoint, transactionId, command = {}) {
+  const cmd = String(command?.cmd || "").trim();
+  if (!cmd) {
+    throw new Error("stageTransactionCommand requires command.cmd");
+  }
+  const params = command?.params && typeof command.params === "object" ? { ...command.params } : {};
+  params.transactionId = transactionId;
+  const options = command?.options && typeof command.options === "object" ? command.options : {};
+  return postCommand(endpoint, cmd, params, options);
 }
 
 export async function getJob(endpoint, jobId) {

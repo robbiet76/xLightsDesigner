@@ -3,8 +3,18 @@ const WRITE_CMDS = new Set([
   "timing.createTrack",
   "timing.insertMarks",
   "timing.replaceMarks",
-  "effects.apply",
-  "effects.bulkApply"
+  "sequencer.setDisplayElementOrder",
+  "sequencer.setActiveDisplayElements",
+  "effects.create",
+  "effects.update",
+  "effects.delete",
+  "effects.deleteLayer",
+  "effects.compactLayers",
+  "effects.setRenderStyle",
+  "effects.setPalette",
+  "effects.shift",
+  "effects.alignToTiming",
+  "effects.clone"
 ]);
 
 function isPlainObject(value) {
@@ -30,9 +40,29 @@ function deriveWriteKey(cmd = "", params = {}) {
   if (track && c.startsWith("timing.")) {
     return `timing:${track}`;
   }
-  const target = normText(params?.targetId || params?.modelId || params?.elementId);
-  if (target && c.startsWith("effects.")) {
-    return `effects:${target}`;
+  if (c === "sequencer.setDisplayElementOrder") {
+    return "sequencer:display-order";
+  }
+  if (c === "sequencer.setActiveDisplayElements") {
+    return "sequencer:active-display-elements";
+  }
+  if (c.startsWith("effects.")) {
+    const effectId = normText(params?.effectId);
+    if (effectId) return `effects:id:${effectId}`;
+
+    const modelName = normText(params?.modelName);
+    const layerIndex = Number.isInteger(params?.layerIndex) ? params.layerIndex : null;
+    if (modelName) {
+      return layerIndex == null ? `effects:model:${modelName}` : `effects:model:${modelName}:layer:${layerIndex}`;
+    }
+
+    const sourceModelName = normText(params?.sourceModelName);
+    const sourceLayerIndex = Number.isInteger(params?.sourceLayerIndex) ? params.sourceLayerIndex : null;
+    if (sourceModelName) {
+      return sourceLayerIndex == null
+        ? `effects:source:${sourceModelName}`
+        : `effects:source:${sourceModelName}:layer:${sourceLayerIndex}`;
+    }
   }
   return c ? `cmd:${c}` : "";
 }

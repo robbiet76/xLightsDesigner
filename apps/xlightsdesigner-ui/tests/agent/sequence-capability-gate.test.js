@@ -20,7 +20,7 @@ test("capability gate passes when required capabilities are available", () => {
       { cmd: "timing.createTrack", params: { trackName: "XD: Test" } },
       { cmd: "timing.insertMarks", params: { trackName: "XD: Test", marks: [] } }
     ],
-    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "system.executePlan"]
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "transactions.begin", "transactions.commit"]
   });
   assert.equal(out.ok, true);
   assert.equal(out.missingCapabilities.length, 0);
@@ -34,4 +34,16 @@ test("capability gate skips when capability list is unavailable", () => {
   assert.equal(out.ok, true);
   assert.equal(out.skipped, true);
   assert.ok(out.warnings.length > 0);
+});
+
+test("capability gate recognizes real effect and sequencer capabilities", () => {
+  const out = evaluateSequencePlanCapabilities({
+    commands: [
+      { cmd: "effects.create", params: { modelName: "MegaTree", layerIndex: 0, effectName: "Bars", startMs: 0, endMs: 1000 } },
+      { cmd: "sequencer.setDisplayElementOrder", params: { orderedIds: ["MegaTree", "Roofline"] } }
+    ],
+    capabilityCommands: ["effects.create", "sequencer.setDisplayElementOrder", "transactions.begin", "transactions.commit"]
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.missingCapabilities.length, 0);
 });
