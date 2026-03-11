@@ -1,0 +1,9 @@
+{
+  "harness": "scripts/xlights-control/run-all.sh",
+  "status": "active",
+  "keySuites": [
+    "03-sequencer-mutation-smoke.sh",
+    "08-plan-execution-smoke.sh",
+    "09-async-jobs-smoke.sh"
+  ]
+}

@@ -40,6 +40,7 @@ const CONNECTIVITY_POLL_MS = 10000;
 const FOCUS_SYNC_COOLDOWN_MS = 1200;
 const QUICK_RECONNECT_DELAY_MS = 3000;
 const ENDPOINT_PROBE_TIMEOUT_MS = 1800;
+const DEFAULT_ANALYSIS_SERVICE_URL = "http://127.0.0.1:5055";
 const DEFAULT_PROPOSED_ROWS = 5;
 const PROPOSED_ROWS_STEP = 5;
 const CHAT_QUICK_PROMPTS = [
@@ -107,7 +108,12 @@ const defaultState = {
   audioAnalysis: {
     summary: "",
     lastAnalyzedAt: "",
-    pipeline: null
+    pipeline: null,
+    structurePolicies: {},
+    structureGeneratedSignatures: {},
+    structureManualExamples: {},
+    timingTrackPolicies: {},
+    timingGeneratedSignatures: {}
   },
   savePathInput: "",
   lastApplyBackupPath: "",
@@ -133,7 +139,9 @@ const defaultState = {
     agentModel: "",
     agentConfigured: false,
     agentHasStoredApiKey: false,
-    agentConfigSource: "none"
+    agentConfigSource: "none",
+    desktopAppVersion: "",
+    desktopBuildTime: ""
   },
   draftBaseRevision: "unknown",
   status: { level: "info", text: "Ready. Start in Design or open a sequence." },
@@ -182,7 +190,7 @@ const defaultState = {
     agentApiKeyDraft: "",
     agentModelDraft: "",
     agentBaseUrlDraft: "",
-    analysisServiceUrlDraft: "",
+    analysisServiceUrlDraft: DEFAULT_ANALYSIS_SERVICE_URL,
     analysisServiceProvider: "auto",
     analysisServiceApiKeyDraft: "",
     analysisServiceAuthBearerDraft: "",
@@ -256,6 +264,7 @@ function loadState() {
 }
 
 const state = loadState();
+ensureAnalysisServiceDefaults(state);
 if (!Array.isArray(state.ui?.proposedSelection)) {
   state.ui.proposedSelection = [];
 }
@@ -296,12 +305,17 @@ if (!Array.isArray(state.proposed) || state.proposed.length === 0) {
 let desktopStatePersistTimer = null;
 let desktopStateHydrated = false;
 let sidecarPersistTimer = null;
+let sidecarDirtySequencePath = "";
+let sidecarDirtyBaselineMtimeMs = 0;
+const sequenceFileMtimeByPath = new Map();
 let quickReconnectTimer = null;
 let analysisServiceProbeInFlight = false;
 let hydratedSidecarSequencePath = "";
 let focusSyncInFlight = false;
 let lastFocusSyncAt = 0;
 let lastIgnoredExternalSequencePath = "";
+let trainingPackageAudioBundleCache = null;
+let trainingPackageAudioBundleCacheAt = 0;
 
 function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
   return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
@@ -354,6 +368,13 @@ function getDesktopStateBridge() {
   return bridge;
 }
 
+function getDesktopAppInfoBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.getAppInfo !== "function") return null;
+  return bridge;
+}
+
 function getDesktopSidecarBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
@@ -363,6 +384,13 @@ function getDesktopSidecarBridge() {
   ) {
     return null;
   }
+  return bridge;
+}
+
+function getDesktopFileStatBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.getFileStat !== "function") return null;
   return bridge;
 }
 
@@ -437,8 +465,146 @@ function getDesktopAudioAnalysisBridge() {
   return bridge;
 }
 
+function getDesktopTrainingPackageBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.readTrainingPackageAsset !== "function") return null;
+  return bridge;
+}
+
+function dirnameRelPath(relPath = "") {
+  const raw = String(relPath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  const idx = raw.lastIndexOf("/");
+  return idx >= 0 ? raw.slice(0, idx) : "";
+}
+
+function joinRelPath(base = "", child = "") {
+  const b = String(base || "").replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+  const c = String(child || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!b) return c;
+  if (!c) return b;
+  return `${b}/${c}`;
+}
+
+async function loadAudioTrainingPackageBundle({ force = false } = {}) {
+  const CACHE_TTL_MS = 60_000;
+  if (!force && trainingPackageAudioBundleCache && (Date.now() - trainingPackageAudioBundleCacheAt) < CACHE_TTL_MS) {
+    return trainingPackageAudioBundleCache;
+  }
+  const bridge = getDesktopTrainingPackageBridge();
+  if (!bridge) {
+    const out = { ok: false, error: "Desktop training package bridge unavailable." };
+    trainingPackageAudioBundleCache = out;
+    trainingPackageAudioBundleCacheAt = Date.now();
+    return out;
+  }
+  try {
+    const manifestRes = await bridge.readTrainingPackageAsset({ relativePath: "manifest.json", asJson: true });
+    if (!manifestRes?.ok) {
+      const out = { ok: false, error: String(manifestRes?.error || "Training package manifest not found.") };
+      trainingPackageAudioBundleCache = out;
+      trainingPackageAudioBundleCacheAt = Date.now();
+      return out;
+    }
+    const pkg = manifestRes?.data && typeof manifestRes.data === "object" ? manifestRes.data : {};
+    const modules = Array.isArray(pkg?.modules) ? pkg.modules : [];
+    const audioModuleRef = modules.find((m) => String(m?.id || "").trim() === "audio_track_analysis");
+    const modulePath = String(audioModuleRef?.path || "").trim();
+    if (!modulePath) {
+      const out = { ok: false, error: "audio_track_analysis module path missing in training package." };
+      trainingPackageAudioBundleCache = out;
+      trainingPackageAudioBundleCacheAt = Date.now();
+      return out;
+    }
+    const moduleRes = await bridge.readTrainingPackageAsset({ relativePath: modulePath, asJson: true });
+    if (!moduleRes?.ok) {
+      const out = { ok: false, error: String(moduleRes?.error || "Audio module manifest read failed.") };
+      trainingPackageAudioBundleCache = out;
+      trainingPackageAudioBundleCacheAt = Date.now();
+      return out;
+    }
+    const moduleData = moduleRes?.data && typeof moduleRes.data === "object" ? moduleRes.data : {};
+    const moduleVersion = String(moduleData?.version || "").trim();
+    const promptFiles = Array.isArray(moduleData?.assets?.prompts)
+      ? moduleData.assets.prompts.map((p) => String(p || "").trim()).filter(Boolean)
+      : [];
+    const moduleDir = dirnameRelPath(modulePath);
+    const promptTexts = [];
+    for (const rel of promptFiles) {
+      const absRel = joinRelPath(moduleDir, rel);
+      const textRes = await bridge.readTrainingPackageAsset({ relativePath: absRel, asJson: false });
+      if (!textRes?.ok) continue;
+      const text = String(textRes?.text || "").trim();
+      if (!text) continue;
+      promptTexts.push({
+        path: absRel,
+        text
+      });
+    }
+    if (!promptTexts.length) {
+      const out = { ok: false, error: "No prompt assets available for audio_track_analysis module." };
+      trainingPackageAudioBundleCache = out;
+      trainingPackageAudioBundleCacheAt = Date.now();
+      return out;
+    }
+    const combinedPromptText = promptTexts
+      .map((row) => `# Asset: ${row.path}\n${row.text}`)
+      .join("\n\n");
+    const datasetFiles = Array.isArray(moduleData?.assets?.datasets)
+      ? moduleData.assets.datasets.map((p) => String(p || "").trim()).filter(Boolean)
+      : [];
+    const corpusSongs = [];
+    for (const rel of datasetFiles) {
+      const datasetIndexPath = joinRelPath(moduleDir, rel);
+      const datasetRes = await bridge.readTrainingPackageAsset({ relativePath: datasetIndexPath, asJson: true });
+      if (!datasetRes?.ok || !datasetRes?.data || typeof datasetRes.data !== "object") continue;
+      const sources = Array.isArray(datasetRes.data.sources) ? datasetRes.data.sources : [];
+      for (const src of sources) {
+        if (String(src?.type || "").trim() !== "stanza-corpus") continue;
+        const srcPath = String(src?.path || "").trim();
+        if (!srcPath) continue;
+        const corpusPath = joinRelPath(moduleDir, srcPath);
+        const corpusRes = await bridge.readTrainingPackageAsset({ relativePath: corpusPath, asJson: true });
+        if (!corpusRes?.ok || !corpusRes?.data || typeof corpusRes.data !== "object") continue;
+        const songs = Array.isArray(corpusRes.data.songs) ? corpusRes.data.songs : [];
+        for (const song of songs) {
+          if (!song || typeof song !== "object") continue;
+          if (String(song?.status || "").trim() !== "ok") continue;
+          corpusSongs.push(song);
+        }
+      }
+    }
+    const out = {
+      ok: true,
+      packageId: String(pkg?.packageId || "").trim() || "unknown-package",
+      packageVersion: String(pkg?.version || "").trim() || "unknown-version",
+      moduleId: "audio_track_analysis",
+      moduleVersion: moduleVersion || "unknown-version",
+      promptPaths: promptTexts.map((p) => p.path),
+      combinedPromptText,
+      corpusSongs
+    };
+    trainingPackageAudioBundleCache = out;
+    trainingPackageAudioBundleCacheAt = Date.now();
+    return out;
+  } catch (err) {
+    const out = { ok: false, error: String(err?.message || err) };
+    trainingPackageAudioBundleCache = out;
+    trainingPackageAudioBundleCacheAt = Date.now();
+    return out;
+  }
+}
+
 function normalizeAnalysisServiceBaseUrl(raw = "") {
   return String(raw || "").trim().replace(/\/+$/, "");
+}
+
+function ensureAnalysisServiceDefaults(targetState) {
+  if (!targetState || typeof targetState !== "object") return;
+  if (!targetState.ui || typeof targetState.ui !== "object") return;
+  if (!normalizeAnalysisServiceBaseUrl(targetState.ui.analysisServiceUrlDraft)) {
+    targetState.ui.analysisServiceUrlDraft = DEFAULT_ANALYSIS_SERVICE_URL;
+  }
 }
 
 function getAnalysisServiceHeaderBadgeText() {
@@ -588,6 +754,7 @@ async function hydrateStateFromDesktop() {
       const hydrated = loadState();
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state, hydrated);
+      ensureAnalysisServiceDefaults(state);
     }
   } catch {
     // Non-fatal. Continue with localStorage state.
@@ -597,13 +764,26 @@ async function hydrateStateFromDesktop() {
   }
 }
 
+async function hydrateDesktopAppInfo() {
+  const bridge = getDesktopAppInfoBridge();
+  if (!bridge) return;
+  try {
+    const res = await bridge.getAppInfo();
+    if (!res?.ok) return;
+    state.health.desktopAppVersion = String(res.appVersion || "").trim();
+    state.health.desktopBuildTime = String(res.buildTime || "").trim();
+  } catch {
+    // non-fatal
+  }
+}
+
 function currentSequencePathForSidecar() {
   return String(state.sequencePathInput || "").trim();
 }
 
 function buildSequenceSidecarDocument() {
   return {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     sequencePath: currentSequencePathForSidecar(),
     project: {
@@ -618,6 +798,30 @@ function buildSequenceSidecarDocument() {
         proposalStale: Boolean(state.flags?.proposalStale)
       }
     },
+    audioAnalysis: state.audioAnalysis && typeof state.audioAnalysis === "object"
+      ? {
+          summary: String(state.audioAnalysis.summary || ""),
+          lastAnalyzedAt: String(state.audioAnalysis.lastAnalyzedAt || ""),
+          pipeline: state.audioAnalysis.pipeline && typeof state.audioAnalysis.pipeline === "object"
+            ? state.audioAnalysis.pipeline
+            : null,
+          structurePolicies: state.audioAnalysis.structurePolicies && typeof state.audioAnalysis.structurePolicies === "object"
+            ? state.audioAnalysis.structurePolicies
+            : {},
+          structureGeneratedSignatures: state.audioAnalysis.structureGeneratedSignatures && typeof state.audioAnalysis.structureGeneratedSignatures === "object"
+            ? state.audioAnalysis.structureGeneratedSignatures
+            : {},
+          structureManualExamples: state.audioAnalysis.structureManualExamples && typeof state.audioAnalysis.structureManualExamples === "object"
+            ? state.audioAnalysis.structureManualExamples
+            : {},
+          timingTrackPolicies: state.audioAnalysis.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+            ? state.audioAnalysis.timingTrackPolicies
+            : {},
+          timingGeneratedSignatures: state.audioAnalysis.timingGeneratedSignatures && typeof state.audioAnalysis.timingGeneratedSignatures === "object"
+            ? state.audioAnalysis.timingGeneratedSignatures
+            : {}
+        }
+      : structuredClone(defaultState.audioAnalysis),
     creative: state.creative || {},
     metadata: state.metadata || {},
     versions: Array.isArray(state.versions) ? state.versions : [],
@@ -643,6 +847,32 @@ function applySequenceSidecarDocument(doc) {
     }
   }
   if (doc?.creative && typeof doc.creative === "object") state.creative = { ...state.creative, ...doc.creative };
+  if (doc?.audioAnalysis && typeof doc.audioAnalysis === "object") {
+    state.audioAnalysis = {
+      summary: String(doc.audioAnalysis.summary || ""),
+      lastAnalyzedAt: String(doc.audioAnalysis.lastAnalyzedAt || ""),
+      pipeline: doc.audioAnalysis.pipeline && typeof doc.audioAnalysis.pipeline === "object"
+        ? doc.audioAnalysis.pipeline
+        : null,
+      structurePolicies: doc.audioAnalysis.structurePolicies && typeof doc.audioAnalysis.structurePolicies === "object"
+        ? { ...doc.audioAnalysis.structurePolicies }
+        : {},
+      structureGeneratedSignatures: doc.audioAnalysis.structureGeneratedSignatures && typeof doc.audioAnalysis.structureGeneratedSignatures === "object"
+        ? { ...doc.audioAnalysis.structureGeneratedSignatures }
+        : {},
+      structureManualExamples: doc.audioAnalysis.structureManualExamples && typeof doc.audioAnalysis.structureManualExamples === "object"
+        ? { ...doc.audioAnalysis.structureManualExamples }
+        : {},
+      timingTrackPolicies: doc.audioAnalysis.timingTrackPolicies && typeof doc.audioAnalysis.timingTrackPolicies === "object"
+        ? { ...doc.audioAnalysis.timingTrackPolicies }
+        : {},
+      timingGeneratedSignatures: doc.audioAnalysis.timingGeneratedSignatures && typeof doc.audioAnalysis.timingGeneratedSignatures === "object"
+        ? { ...doc.audioAnalysis.timingGeneratedSignatures }
+        : {}
+    };
+  } else {
+    state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
+  }
   if (doc?.metadata && typeof doc.metadata === "object") state.metadata = { ...state.metadata, ...doc.metadata };
   if (Array.isArray(doc?.versions) && doc.versions.length) state.versions = doc.versions;
   if (typeof doc?.selection?.selectedVersion === "string" && doc.selection.selectedVersion) {
@@ -659,8 +889,12 @@ async function hydrateSidecarForCurrentSequence() {
     const res = await bridge.readSequenceSidecar({ sequencePath });
     if (res?.ok !== true) return;
     hydratedSidecarSequencePath = sequencePath;
+    sidecarDirtySequencePath = "";
+    sidecarDirtyBaselineMtimeMs = 0;
     if (res.exists && res.data && typeof res.data === "object") {
       applySequenceSidecarDocument(res.data);
+    } else {
+      state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
     }
   } catch {
     // Non-fatal.
@@ -668,24 +902,69 @@ async function hydrateSidecarForCurrentSequence() {
 }
 
 function queueSidecarPersist() {
-  const bridge = getDesktopSidecarBridge();
   const sequencePath = currentSequencePathForSidecar();
-  if (!bridge || !sequencePath) return;
+  if (!sequencePath) return;
   if (hydratedSidecarSequencePath !== sequencePath) return;
+  // Save-gated policy: mark sidecar dirty, but do not write until sequence.save succeeds.
+  const known = Number(sequenceFileMtimeByPath.get(sequencePath) || 0);
+  if (!sidecarDirtySequencePath || sidecarDirtySequencePath !== sequencePath) {
+    sidecarDirtyBaselineMtimeMs = Number.isFinite(known) ? known : 0;
+  }
+  sidecarDirtySequencePath = sequencePath;
+}
+
+async function flushSidecarPersistIfDirty(sequencePath = "") {
+  const bridge = getDesktopSidecarBridge();
+  const targetPath = String(sequencePath || currentSequencePathForSidecar() || "").trim();
+  if (!bridge || !targetPath) return;
+  if (!sidecarDirtySequencePath || sidecarDirtySequencePath !== targetPath) return;
+  if (hydratedSidecarSequencePath !== targetPath) return;
   if (sidecarPersistTimer) {
     clearTimeout(sidecarPersistTimer);
-  }
-  sidecarPersistTimer = setTimeout(async () => {
     sidecarPersistTimer = null;
-    try {
-      await bridge.writeSequenceSidecar({
-        sequencePath,
-        data: buildSequenceSidecarDocument()
-      });
-    } catch {
-      // Non-fatal.
+  }
+  try {
+    await bridge.writeSequenceSidecar({
+      sequencePath: targetPath,
+      data: buildSequenceSidecarDocument()
+    });
+    sidecarDirtySequencePath = "";
+    sidecarDirtyBaselineMtimeMs = 0;
+  } catch {
+    // Non-fatal.
+  }
+}
+
+async function updateSequenceFileMtime(sequencePath = "") {
+  const targetPath = String(sequencePath || "").trim();
+  if (!targetPath) return 0;
+  const bridge = getDesktopFileStatBridge();
+  if (!bridge) return Number(sequenceFileMtimeByPath.get(targetPath) || 0);
+  try {
+    const res = await bridge.getFileStat({ filePath: targetPath });
+    if (!res?.ok || !res?.exists) return Number(sequenceFileMtimeByPath.get(targetPath) || 0);
+    const mtimeMs = Number(res.mtimeMs || 0);
+    if (Number.isFinite(mtimeMs) && mtimeMs > 0) {
+      sequenceFileMtimeByPath.set(targetPath, mtimeMs);
+      return mtimeMs;
     }
-  }, DESKTOP_STATE_SYNC_DEBOUNCE_MS);
+  } catch {
+    // Non-fatal.
+  }
+  return Number(sequenceFileMtimeByPath.get(targetPath) || 0);
+}
+
+async function maybeFlushSidecarAfterExternalSave(sequencePath = "") {
+  const targetPath = String(sequencePath || "").trim();
+  if (!targetPath) return;
+  if (!sidecarDirtySequencePath || sidecarDirtySequencePath !== targetPath) return;
+  const mtimeMs = await updateSequenceFileMtime(targetPath);
+  if (!Number.isFinite(mtimeMs) || mtimeMs <= 0) return;
+  const baseline = Number(sidecarDirtyBaselineMtimeMs || 0);
+  if (baseline > 0 && mtimeMs > baseline + 1) {
+    await flushSidecarPersistIfDirty(targetPath);
+    pushDiagnostic("info", "Audio analysis: detected xLights-side sequence save; flushed pending .xdmeta metadata.");
+  }
 }
 
 function withTimeout(promise, timeoutMs, label = "request") {
@@ -787,7 +1066,6 @@ function extractProjectSnapshot() {
     newSequenceDurationMs: state.newSequenceDurationMs,
     newSequenceFrameMs: state.newSequenceFrameMs,
     audioPathInput: state.audioPathInput,
-    audioAnalysis: state.audioAnalysis,
     savePathInput: state.savePathInput,
     lastApplyBackupPath: state.lastApplyBackupPath,
     recentSequences: state.recentSequences,
@@ -825,13 +1103,20 @@ function applyProjectSnapshot(snapshot) {
     ? Math.max(1, Number(snapshot.newSequenceFrameMs))
     : state.newSequenceFrameMs;
   state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
+  // Sequence-specific audio analysis state is loaded from the sequence .xdmeta sidecar.
+  // Keep project snapshot state free of per-sequence analysis metadata.
   if (snapshot?.audioAnalysis && typeof snapshot.audioAnalysis === "object") {
+    // Backward compatibility for older snapshots that included audioAnalysis.
+    const legacy = snapshot.audioAnalysis;
     state.audioAnalysis = {
-      summary: String(snapshot.audioAnalysis.summary || ""),
-      lastAnalyzedAt: String(snapshot.audioAnalysis.lastAnalyzedAt || ""),
-      pipeline: snapshot.audioAnalysis.pipeline && typeof snapshot.audioAnalysis.pipeline === "object"
-        ? snapshot.audioAnalysis.pipeline
-        : null
+      summary: String(legacy.summary || ""),
+      lastAnalyzedAt: String(legacy.lastAnalyzedAt || ""),
+      pipeline: legacy.pipeline && typeof legacy.pipeline === "object" ? legacy.pipeline : null,
+      structurePolicies: legacy.structurePolicies && typeof legacy.structurePolicies === "object" ? { ...legacy.structurePolicies } : {},
+      structureGeneratedSignatures: legacy.structureGeneratedSignatures && typeof legacy.structureGeneratedSignatures === "object" ? { ...legacy.structureGeneratedSignatures } : {},
+      structureManualExamples: legacy.structureManualExamples && typeof legacy.structureManualExamples === "object" ? { ...legacy.structureManualExamples } : {},
+      timingTrackPolicies: legacy.timingTrackPolicies && typeof legacy.timingTrackPolicies === "object" ? { ...legacy.timingTrackPolicies } : {},
+      timingGeneratedSignatures: legacy.timingGeneratedSignatures && typeof legacy.timingGeneratedSignatures === "object" ? { ...legacy.timingGeneratedSignatures } : {}
     };
   } else {
     state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
@@ -1666,6 +1951,8 @@ async function onRefresh() {
       if (nextPath && nextPath !== prevPath) {
         await hydrateSidecarForCurrentSequence();
       }
+      await updateSequenceFileMtime(currentSequencePathForSidecar());
+      await maybeFlushSidecarAfterExternalSave(currentSequencePathForSidecar());
     } else if (open?.data?.isOpen && seq) {
       noteIgnoredExternalSequence(seq);
     }
@@ -4043,6 +4330,7 @@ async function closeActiveSequenceForSwitch(options = {}) {
   }
 
   await saveSequence(state.endpoint);
+  await flushSidecarPersistIfDirty(currentSequencePathForSidecar());
   await closeSequence(state.endpoint, false, true);
   state.flags.activeSequenceLoaded = false;
   state.health.sequenceOpen = false;
@@ -4383,6 +4671,7 @@ async function onSaveSequenceCurrent() {
   try {
     const targetPath = String(state.sequencePathInput || "").trim();
     await saveSequence(state.endpoint, targetPath || null);
+    await flushSidecarPersistIfDirty(targetPath || currentSequencePathForSidecar());
     setStatus("info", "Sequence saved.");
     saveCurrentProjectSnapshot();
     persist();
@@ -4423,6 +4712,7 @@ async function onSaveSequenceAs() {
     await saveSequence(state.endpoint, targetPath);
     state.sequencePathInput = targetPath;
     state.savePathInput = targetPath;
+    await flushSidecarPersistIfDirty(targetPath);
     addRecentSequence(targetPath);
     setStatus("info", `Sequence saved as: ${targetPath}`);
     saveCurrentProjectSnapshot();
@@ -4786,6 +5076,13 @@ function buildAudioPipelineSummaryLines(pipeline = {}) {
     ["Lyrics track written", Boolean(pipeline?.lyricsTrackWritten)],
     ["Song context derived", Boolean(pipeline?.webContextDerived)]
   ];
+  if (pipeline?.structureTrackPreserved) {
+    checks.push(["Song structure preserved (manual edits)", true]);
+  }
+  if (pipeline?.beatTrackPreserved) checks.push(["Beat track preserved (manual edits)", true]);
+  if (pipeline?.barTrackPreserved) checks.push(["Bars track preserved (manual edits)", true]);
+  if (pipeline?.chordTrackPreserved) checks.push(["Chords track preserved (manual edits)", true]);
+  if (pipeline?.lyricsTrackPreserved) checks.push(["Lyrics track preserved (manual edits)", true]);
   return checks.map(([label, ok]) => `${label}: ${ok ? "PASS" : "PENDING"}`);
 }
 
@@ -5154,7 +5451,7 @@ function buildNumberedSectionLabels(labels = []) {
   });
 }
 
-function inferLyricStanzaPlan(lyrics = [], durationMs = 0) {
+function inferLyricStanzaPlan(lyrics = [], durationMs = 0, trackTitleHint = "") {
   const rows = (Array.isArray(lyrics) ? lyrics : [])
     .map((r) => ({
       startMs: Math.max(0, Math.round(Number(r?.startMs || 0))),
@@ -5183,7 +5480,7 @@ function inferLyricStanzaPlan(lyrics = [], durationMs = 0) {
   // Split stanzas using adaptive pauses plus hard caps on stanza size,
   // so continuous lyrics don't collapse into one giant "lyrical" section.
   const MAX_LINES_PER_STANZA = 6;
-  const MAX_STANZA_MS = 28000;
+  const MAX_STANZA_MS = 16000;
   const stanzas = [];
   let a = 0;
   for (let i = 1; i < rows.length; i += 1) {
@@ -5201,6 +5498,66 @@ function inferLyricStanzaPlan(lyrics = [], durationMs = 0) {
   }
   stanzas.push([a, rows.length]);
 
+  const normalize = (text = "") =>
+    String(text || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const titleNorm = normalize(trackTitleHint);
+  const shouldUseTitle = titleNorm.length >= 8;
+  const refined = [];
+  let titleAwareSplits = 0;
+  for (const stanza of stanzas) {
+    const [sIdx, eIdx] = stanza;
+    const lineCount = Math.max(0, eIdx - sIdx);
+    if (lineCount < 5) {
+      refined.push(stanza);
+      continue;
+    }
+    let splitAt = -1;
+    if (shouldUseTitle) {
+      const hitOffsets = [];
+      for (let k = sIdx; k < eIdx; k += 1) {
+        const lineNorm = normalize(rows[k]?.label || "");
+        if (lineNorm && lineNorm.includes(titleNorm)) {
+          hitOffsets.push(k - sIdx);
+        }
+      }
+      if (hitOffsets.length >= 2) {
+        const firstHit = hitOffsets[0];
+        const linesAfter = lineCount - firstHit;
+        if (firstHit >= 2 && linesAfter >= 2) {
+          splitAt = sIdx + firstHit;
+        }
+      }
+    }
+    if (splitAt < 0) {
+      const seen = new Map();
+      for (let k = sIdx; k < eIdx; k += 1) {
+        const lineNorm = normalize(rows[k]?.label || "");
+        if (!lineNorm) continue;
+        const prev = seen.get(lineNorm);
+        if (Number.isInteger(prev)) {
+          const offset = k - sIdx;
+          const linesAfter = lineCount - offset;
+          if (offset >= 2 && linesAfter >= 2) {
+            splitAt = k;
+            break;
+          }
+        } else {
+          seen.set(lineNorm, k);
+        }
+      }
+    }
+    if (splitAt > sIdx && splitAt < eIdx) {
+      refined.push([sIdx, splitAt], [splitAt, eIdx]);
+      titleAwareSplits += 1;
+    } else {
+      refined.push(stanza);
+    }
+  }
+
   const sections = [];
   const lyricalIndices = [];
   const firstStart = rows[0].startMs;
@@ -5208,7 +5565,7 @@ function inferLyricStanzaPlan(lyrics = [], durationMs = 0) {
     sections.push({ startMs: 0, endMs: firstStart, label: "Intro" });
   }
   let prevEnd = firstStart;
-  for (const [sIdx, eIdx] of stanzas) {
+  for (const [sIdx, eIdx] of refined) {
     const startMs = rows[sIdx].startMs;
     const endMs = rows[eIdx - 1].endMs;
     if (startMs - prevEnd >= stanzaGapMs) {
@@ -5222,7 +5579,7 @@ function inferLyricStanzaPlan(lyrics = [], durationMs = 0) {
     const tailLabel = (totalMs - prevEnd) <= Math.max(12000, stanzaGapMs * 2) ? "Outro" : "Instrumental";
     sections.push({ startMs: prevEnd, endMs: totalMs, label: tailLabel });
   }
-  return { sections, lyricalIndices };
+  return { sections, lyricalIndices, titleAwareSplits };
 }
 
 function buildSectionLyricContextRows(sections = [], lyrics = [], lyricalIndices = []) {
@@ -5238,7 +5595,7 @@ function buildSectionLyricContextRows(sections = [], lyrics = [], lyricalIndices
         const t = Number(row?.startMs);
         return Number.isFinite(t) && t >= startMs && t < endMs;
       })
-      .slice(0, 8)
+      .slice(0, 14)
       .map((row) => String(row?.label || "").trim())
       .filter(Boolean);
     return {
@@ -5249,6 +5606,68 @@ function buildSectionLyricContextRows(sections = [], lyrics = [], lyricalIndices
   }).filter(Boolean);
 }
 
+function normalizeLyricLineForPattern(line = "") {
+  return String(line || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function countSharedNormalizedLines(aLines = [], bLines = []) {
+  const a = new Set((Array.isArray(aLines) ? aLines : []).map(normalizeLyricLineForPattern).filter(Boolean));
+  const b = new Set((Array.isArray(bLines) ? bLines : []).map(normalizeLyricLineForPattern).filter(Boolean));
+  if (!a.size || !b.size) return 0;
+  let n = 0;
+  for (const line of a) {
+    if (b.has(line)) n += 1;
+  }
+  return n;
+}
+
+function parseChordLabelBasic(label = "") {
+  const raw = String(label || "").trim();
+  if (!raw || raw.toUpperCase() === "N") return null;
+  const normalized = raw.replace(":", "");
+  const match = normalized.match(/^([A-G](?:#|b)?)(.*)$/i);
+  if (!match) return null;
+  const root = String(match[1] || "").trim();
+  const qualityRaw = String(match[2] || "").trim().toLowerCase();
+  const rootPcMap = {
+    C: 0,
+    "C#": 1,
+    Db: 1,
+    D: 2,
+    "D#": 3,
+    Eb: 3,
+    E: 4,
+    F: 5,
+    "F#": 6,
+    Gb: 6,
+    G: 7,
+    "G#": 8,
+    Ab: 8,
+    A: 9,
+    "A#": 10,
+    Bb: 10,
+    B: 11
+  };
+  const rootPc = rootPcMap[root];
+  if (!Number.isFinite(rootPc)) return null;
+  const isMinor =
+    qualityRaw.startsWith("m") ||
+    qualityRaw.startsWith("min") ||
+    qualityRaw.includes("minor");
+  const quality = isMinor ? "m" : "M";
+  return { root, rootPc, quality, normalized: `${root}${quality === "m" ? "m" : ""}` };
+}
+
+function buildRelativeChordToken(chord, tonicPc) {
+  if (!chord || !Number.isFinite(tonicPc)) return "";
+  const rel = ((Number(chord.rootPc) - Number(tonicPc)) % 12 + 12) % 12;
+  return `${rel}${chord.quality || "M"}`;
+}
+
 function buildSectionChordContextRows(sections = [], chords = [], lyricalIndices = []) {
   const sec = Array.isArray(sections) ? sections : [];
   const rows = Array.isArray(chords) ? chords : [];
@@ -5257,24 +5676,75 @@ function buildSectionChordContextRows(sections = [], chords = [], lyricalIndices
     if (!allow.has(idx)) return null;
     const startMs = Math.max(0, Math.round(Number(s?.startMs || 0)));
     const endMs = Math.max(startMs + 1, Math.round(Number(s?.endMs || (startMs + 1))));
-    const labels = rows
-      .filter((row) => {
-        const t = Number(row?.startMs);
-        return Number.isFinite(t) && t >= startMs && t < endMs;
+    const overlapping = rows
+      .map((row) => {
+        const rs = Number(row?.startMs);
+        const reRaw = Number(row?.endMs);
+        const re = Number.isFinite(reRaw) ? reRaw : rs + 1;
+        if (!Number.isFinite(rs) || !Number.isFinite(re)) return null;
+        const os = Math.max(startMs, Math.round(rs));
+        const oe = Math.min(endMs, Math.round(re));
+        const dur = Math.max(0, oe - os);
+        if (dur <= 0) return null;
+        const parsed = parseChordLabelBasic(String(row?.label || ""));
+        if (!parsed) return null;
+        return { ...parsed, startMs: os, endMs: oe, durMs: dur };
       })
-      .map((row) => String(row?.label || "").trim())
-      .filter((label) => label && label.toUpperCase() !== "N");
-    const compact = [];
-    for (const label of labels) {
-      if (!compact.length || compact[compact.length - 1] !== label) compact.push(label);
+      .filter(Boolean)
+      .sort((a, b) => Number(a.startMs) - Number(b.startMs));
+    const MIN_CHORD_MS = 180;
+    const filtered = overlapping.filter((row) => Number(row?.durMs || 0) >= MIN_CHORD_MS);
+    const active = filtered.length ? filtered : overlapping;
+    const collapsed = [];
+    for (const row of active) {
+      const prev = collapsed[collapsed.length - 1];
+      if (!prev || prev.normalized !== row.normalized) {
+        collapsed.push({ ...row });
+      } else {
+        prev.endMs = row.endMs;
+        prev.durMs += row.durMs;
+      }
     }
+    const byLabel = new Map();
+    for (const row of collapsed) {
+      byLabel.set(row.normalized, (byLabel.get(row.normalized) || 0) + Number(row.durMs || 0));
+    }
+    const dominant = [...byLabel.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    const dominantParsed = parseChordLabelBasic(dominant);
+    const tonicPc = Number.isFinite(dominantParsed?.rootPc) ? dominantParsed.rootPc : collapsed[0]?.rootPc;
+    const progressionAbs = collapsed.map((row) => row.normalized);
+    const progressionRel = collapsed
+      .map((row) => buildRelativeChordToken(row, tonicPc))
+      .filter(Boolean);
+    const changes = Math.max(0, collapsed.length - 1);
+    const sectionMs = Math.max(1, endMs - startMs);
+    const changesPerMinute = Number((changes / (sectionMs / 60000)).toFixed(2));
+    const cadence = progressionRel.slice(-3).join("->");
+    const chordSeconds = Number((active.reduce((sum, row) => sum + Number(row?.durMs || 0), 0) / 1000).toFixed(2));
     return {
       index: idx,
-      chordCount: labels.length,
-      chordSetSize: new Set(labels).size,
-      progression: compact.slice(0, 8).join("->")
+      chordCount: active.length,
+      chordSetSize: new Set(progressionAbs).size,
+      progression: progressionAbs.slice(0, 10).join("->"),
+      progressionRelative: progressionRel.slice(0, 10).join("->"),
+      cadenceRelative: cadence,
+      dominantChord: dominant || "",
+      harmonicRhythmCpm: changesPerMinute,
+      chordSeconds
     };
   }).filter(Boolean);
+}
+
+function progressionSimilarityScore(a = "", b = "") {
+  const left = String(a || "").split("->").map((x) => x.trim()).filter(Boolean);
+  const right = String(b || "").split("->").map((x) => x.trim()).filter(Boolean);
+  if (!left.length || !right.length) return 0;
+  const leftSet = new Set(left);
+  const rightSet = new Set(right);
+  const inter = [...leftSet].filter((tok) => rightSet.has(tok)).length;
+  const union = new Set([...leftSet, ...rightSet]).size;
+  if (!union) return 0;
+  return Number((inter / union).toFixed(3));
 }
 
 function buildSongStructureEvidence(ctxRows = [], chordRows = [], trackIdentity = null, trackTitleHint = "") {
@@ -5282,6 +5752,7 @@ function buildSongStructureEvidence(ctxRows = [], chordRows = [], trackIdentity 
   if (!rows.length) return [];
   const chordByIndex = new Map((Array.isArray(chordRows) ? chordRows : []).map((r) => [Number(r?.index), r]));
   const effectiveTitle = String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim();
+  const titlePhrase = normalizeLyricLineForPattern(effectiveTitle);
   const titleTokens = new Set(
     effectiveTitle
       .toLowerCase()
@@ -5290,11 +5761,23 @@ function buildSongStructureEvidence(ctxRows = [], chordRows = [], trackIdentity 
       .map((t) => t.trim())
       .filter((t) => t.length >= 3)
   );
+  const globalLineFreq = new Map();
+  const rowLinesNormalized = rows.map((row) =>
+    String(row?.stanzaText || "")
+      .split("|")
+      .map((s) => normalizeLyricLineForPattern(s))
+      .filter(Boolean)
+  );
+  for (const line of rowLinesNormalized.flat()) {
+    globalLineFreq.set(line, (globalLineFreq.get(line) || 0) + 1);
+  }
   const seenLineSet = new Set();
   const seenProgressions = new Set();
-  return rows.map((row, idx) => {
+  let prevProgression = "";
+  const base = rows.map((row, idx) => {
     const text = String(row?.stanzaText || "").toLowerCase();
     const lines = text.split("|").map((s) => s.trim()).filter(Boolean);
+    const normLines = rowLinesNormalized[idx] || [];
     const lineSet = new Set(lines);
     let repeatedLines = 0;
     for (const line of lineSet) {
@@ -5310,20 +5793,172 @@ function buildSongStructureEvidence(ctxRows = [], chordRows = [], trackIdentity 
     const uniqueTokenRatio = tokenSet.size > 0 ? Number((tokenSet.size / Math.max(1, tokens.length)).toFixed(3)) : 0;
     const repeatedLineRatio = lineSet.size > 0 ? Number((repeatedLines / lineSet.size).toFixed(3)) : 0;
     const titleTokenRatio = titleTokens.size > 0 ? Number((titleHits / Math.max(1, tokens.length)).toFixed(3)) : 0;
+    const titleLineHits = titlePhrase
+      ? normLines.reduce((n, line) => n + (line.includes(titlePhrase) ? 1 : 0), 0)
+      : 0;
+    const titleLineRatio = normLines.length ? Number((titleLineHits / normLines.length).toFixed(3)) : 0;
+    const globallyRepeatedLines = normLines.filter((line) => (globalLineFreq.get(line) || 0) >= 2).length;
+    const globallyRepeatedLineRatio = normLines.length
+      ? Number((globallyRepeatedLines / normLines.length).toFixed(3))
+      : 0;
+    let maxLineOverlapWithAny = 0;
+    for (let j = 0; j < rowLinesNormalized.length; j += 1) {
+      if (j === idx) continue;
+      maxLineOverlapWithAny = Math.max(
+        maxLineOverlapWithAny,
+        countSharedNormalizedLines(normLines, rowLinesNormalized[j] || [])
+      );
+    }
     const chord = chordByIndex.get(Number(row?.index ?? idx)) || {};
     const progression = String(chord?.progression || "").trim();
-    const progressionSeenBefore = Boolean(progression) && seenProgressions.has(progression);
-    if (progression) seenProgressions.add(progression);
+    const progressionRelative = String(chord?.progressionRelative || "").trim();
+    const progressionKey = progressionRelative || progression;
+    const progressionSeenBefore = Boolean(progressionKey) && seenProgressions.has(progressionKey);
+    if (progressionKey) seenProgressions.add(progressionKey);
+    const progressionSimilarityToPrev = progressionSimilarityScore(progressionKey, prevProgression);
+    prevProgression = progressionKey;
     return {
       index: Number(row?.index ?? idx),
       lineCount: Number(row?.lineCount || lines.length || 0),
       repeatedLineRatio,
       uniqueTokenRatio,
       titleTokenRatio,
+      titleLineHits,
+      titleLineRatio,
+      globallyRepeatedLineRatio,
+      maxLineOverlapWithAny,
       chordCount: Number(chord?.chordCount || 0),
       chordSetSize: Number(chord?.chordSetSize || 0),
       progression,
-      progressionSeenBefore
+      progressionRelative,
+      cadenceRelative: String(chord?.cadenceRelative || "").trim(),
+      dominantChord: String(chord?.dominantChord || "").trim(),
+      harmonicRhythmCpm: Number(chord?.harmonicRhythmCpm || 0),
+      chordSeconds: Number(chord?.chordSeconds || 0),
+      progressionSeenBefore,
+      progressionSimilarityToPrev
+    };
+  });
+  return base.map((row, idx) => {
+    const prev = base[idx - 1] || null;
+    const next = base[idx + 1] || null;
+    const nextChorusLike = Boolean(
+      next && (
+        Number(next.titleLineRatio || 0) >= 0.2 ||
+        Number(next.globallyRepeatedLineRatio || 0) >= 0.4 ||
+        Number(next.repeatedLineRatio || 0) >= 0.35
+      )
+    );
+    const prevVerseLike = Boolean(
+      prev && (
+        Number(prev.uniqueTokenRatio || 0) >= 0.72 &&
+        Number(prev.titleLineRatio || 0) <= 0.15
+      )
+    );
+    return {
+      ...row,
+      nextTitleLineRatio: next ? Number(next.titleLineRatio || 0) : 0,
+      nextGloballyRepeatedLineRatio: next ? Number(next.globallyRepeatedLineRatio || 0) : 0,
+      nextRepeatedLineRatio: next ? Number(next.repeatedLineRatio || 0) : 0,
+      nextLikelyChorus: nextChorusLike,
+      prevLikelyVerse: prevVerseLike,
+      transitionToHookScore: Number(
+        (
+          (next ? Number(next.titleLineRatio || 0) * 0.5 : 0) +
+          (next ? Number(next.globallyRepeatedLineRatio || 0) * 0.35 : 0) +
+          (next ? Number(next.repeatedLineRatio || 0) * 0.15 : 0)
+        ).toFixed(3)
+      )
+    };
+  });
+}
+
+function meanNumber(rows = [], key = "") {
+  const vals = (Array.isArray(rows) ? rows : [])
+    .map((r) => Number(r?.[key]))
+    .filter((n) => Number.isFinite(n));
+  if (!vals.length) return 0;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function corpusSongProfile(song = {}) {
+  const stanzas = Array.isArray(song?.stanzas) ? song.stanzas : [];
+  if (!stanzas.length) return null;
+  const labels = stanzas.map((s) => String(s?.draftLabel || "").trim());
+  const chorusCount = labels.filter((l) => l.toLowerCase() === "chorus").length;
+  const verseCount = labels.filter((l) => l.toLowerCase() === "verse").length;
+  const avgRepeat = meanNumber(stanzas, "globallyRepeatedLineRatio");
+  const avgTitleRatio = meanNumber(stanzas, "titleLineRatio");
+  const avgLineCount = meanNumber(
+    stanzas.map((s) => ({ lineCount: Array.isArray(s?.lines) ? s.lines.length : 0 })),
+    "lineCount"
+  );
+  return {
+    stanzaCount: stanzas.length,
+    chorusCount,
+    verseCount,
+    chorusRatio: stanzas.length ? chorusCount / stanzas.length : 0,
+    avgRepeat,
+    avgTitleRatio,
+    avgLineCount
+  };
+}
+
+function selectFewShotFromCorpus({
+  corpusSongs = [],
+  structureEvidence = [],
+  trackTitle = "",
+  maxExamples = 3
+} = {}) {
+  const songs = Array.isArray(corpusSongs) ? corpusSongs : [];
+  if (!songs.length) return [];
+  const currentProfile = {
+    stanzaCount: (Array.isArray(structureEvidence) ? structureEvidence : []).length,
+    chorusRatio: meanNumber(
+      (Array.isArray(structureEvidence) ? structureEvidence : []).map((r) => ({
+        chorusLike: (Number(r?.titleLineRatio || 0) >= 0.2 || Number(r?.globallyRepeatedLineRatio || 0) >= 0.4) ? 1 : 0
+      })),
+      "chorusLike"
+    ),
+    avgRepeat: meanNumber(structureEvidence, "repeatedLineRatio"),
+    avgTitleRatio: meanNumber(structureEvidence, "titleLineRatio"),
+    avgLineCount: meanNumber(structureEvidence, "lineCount")
+  };
+  const tNorm = String(trackTitle || "").trim().toLowerCase();
+  const candidates = [];
+  for (const song of songs) {
+    const profile = corpusSongProfile(song);
+    if (!profile) continue;
+    if (profile.stanzaCount < 3) continue;
+    if (profile.chorusCount < 1 || profile.verseCount < 1) continue;
+    const sTitle = String(song?.title || "").trim();
+    if (tNorm && sTitle.toLowerCase() === tNorm) continue;
+    const dist =
+      Math.abs(profile.chorusRatio - currentProfile.chorusRatio) * 1.8 +
+      Math.abs(profile.avgRepeat - currentProfile.avgRepeat) * 2.0 +
+      Math.abs(profile.avgTitleRatio - currentProfile.avgTitleRatio) * 1.6 +
+      Math.abs(profile.avgLineCount - currentProfile.avgLineCount) * 0.2 +
+      Math.abs(profile.stanzaCount - currentProfile.stanzaCount) * 0.15;
+    candidates.push({ song, profile, dist });
+  }
+  candidates.sort((a, b) => a.dist - b.dist);
+  return candidates.slice(0, Math.max(0, maxExamples)).map((c) => {
+    const stanzas = Array.isArray(c.song?.stanzas) ? c.song.stanzas : [];
+    return {
+      track: `${String(c.song?.title || "").trim()} - ${String(c.song?.artist || "").trim()}`.trim(),
+      lyricsSource: String(c.song?.lyricsSource || "").trim(),
+      stanzaCount: stanzas.length,
+      labels: stanzas.map((s) => String(s?.draftLabel || "").trim() || "Verse"),
+      stanzas: stanzas.slice(0, 8).map((s, idx) => ({
+        index: Number(s?.index ?? idx),
+        label: String(s?.draftLabel || "").trim() || "Verse",
+        text: String(s?.text || "").trim().slice(0, 220)
+      })),
+      profile: {
+        chorusRatio: Number(c.profile.chorusRatio.toFixed(3)),
+        avgRepeat: Number(c.profile.avgRepeat.toFixed(3)),
+        avgTitleRatio: Number(c.profile.avgTitleRatio.toFixed(3))
+      }
     };
   });
 }
@@ -5349,6 +5984,38 @@ function parseLlmSectionLabelResult(text = "", expectedCount = 0) {
   };
 }
 
+function normalizeTrackIdentityToken(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function buildTrackIdentityKey(trackIdentity = null, trackTitleHint = "") {
+  const isrc = String(trackIdentity?.isrc || "").trim().toLowerCase();
+  if (isrc) return `isrc:${isrc}`;
+  const title = normalizeTrackIdentityToken(
+    String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim()
+  );
+  const artist = normalizeTrackIdentityToken(String(trackIdentity?.artist || "").trim());
+  if (!title) return "";
+  return `title:${title}|artist:${artist || "unknown"}`;
+}
+
+function timingMarksSignature(marks = []) {
+  const rows = (Array.isArray(marks) ? marks : [])
+    .map((m) => {
+      const s = Math.max(0, Math.round(Number(m?.startMs || 0)));
+      const e = Math.max(s + 1, Math.round(Number(m?.endMs || (s + 1))));
+      const l = String(m?.label || "").trim();
+      return `${s}:${e}:${l}`;
+    })
+    .filter(Boolean)
+    .sort();
+  return rows.join("|");
+}
+
 async function relabelSectionsWithLlm({
   sections = [],
   lyrics = [],
@@ -5356,6 +6023,7 @@ async function relabelSectionsWithLlm({
   lyricalIndices = [],
   trackIdentity = null,
   trackTitleHint = "",
+  userManualStructureHint = null,
   timeSignature = "",
   tempoBpm = null
 } = {}) {
@@ -5369,10 +6037,22 @@ async function relabelSectionsWithLlm({
   const chordRows = buildSectionChordContextRows(sec, chords, targetIdx);
   const structureEvidence = buildSongStructureEvidence(ctxRows, chordRows, trackIdentity, trackTitleHint);
   try {
+    const pkgBundle = await loadAudioTrainingPackageBundle();
     const tTitle = String(trackIdentity?.title || "").trim() || String(trackTitleHint || "").trim();
     const tArtist = String(trackIdentity?.artist || "").trim();
     const trackName = tTitle && tArtist ? `${tTitle} - ${tArtist}` : (tTitle || "unknown track");
-    const prompt = [
+    const fewShotExamples = pkgBundle?.ok
+      ? selectFewShotFromCorpus({
+          corpusSongs: pkgBundle.corpusSongs,
+          structureEvidence,
+          trackTitle: tTitle,
+          maxExamples: 3
+        })
+      : [];
+    const packagedInstruction = pkgBundle?.ok
+      ? String(pkgBundle.combinedPromptText || "").trim()
+      : "";
+    const fallbackInstruction = [
       "Interpret lyrical structure from stanza text first, then assign labels to stanza indices.",
       "Do not use timing cues for structure inference; use language/content and repetition patterns.",
       "Do not change stanza count. Output strict JSON only.",
@@ -5380,33 +6060,51 @@ async function relabelSectionsWithLlm({
       "- Verse: lyric-variant, advances story/details, less exact repetition.",
       "- Chorus/Refrain: lyric-invariant or highly repeated hook/title idea, emotional center, often same core words each return.",
       "- Pre-Chorus: short transitional stanza that increases tension and points into a chorus.",
+      "- Pre-Chorus should usually have weaker title/hook repetition than the following Chorus.",
+      "- Do not label the opening hook-heavy lyrical stanza as Pre-Chorus when it already carries the main recurring title phrase.",
       "- Post-Chorus/Hook: short tag after chorus reinforcing hook phrase.",
       "- Bridge: contrasting lyrical perspective/material, typically appears once, usually late song.",
       "- Intro/Outro/Instrumental: use only when stanza text indicates no active lyric narrative/hook content.",
       "- Refrain is usually a repeated line within a verse-like block; Chorus is a full recurring section.",
       "- If a stanza pivots from narrative lines into repeated title/hook lines, bias that hook-heavy portion toward Chorus.",
       "- If boundaries are coarse and cannot split internally, label the stanza containing recurring title/hook lines as Chorus when that hook reappears in later stanzas.",
+      "- If exact title phrase appears in multiple lines of a stanza and reappears later, strongly prefer Chorus over Verse.",
       "Common cycle expectations in verse-chorus songs:",
       "- Verse -> (Pre-Chorus) -> Chorus -> (Post-Chorus), repeated.",
       "- Bridge usually before a final chorus return.",
       "Prioritize semantic/language evidence over pattern-only guesses when they conflict.",
       "Use stanza evidence metrics:",
       "- Higher repeatedLineRatio + titleTokenRatio suggests Chorus/Refrain.",
+      "- High titleLineRatio or titleLineHits is strong Chorus/Refrain evidence.",
+      "- High globallyRepeatedLineRatio or maxLineOverlapWithAny indicates repeated hook content (often Chorus/Refrain).",
+      "- High nextLikelyChorus or transitionToHookScore suggests current stanza may be Pre-Chorus rather than Verse.",
       "- Higher uniqueTokenRatio with lower repetition suggests Verse.",
       "- A single high-novelty late section can indicate Bridge.",
       "- If title words recur in multiple stanzas, weight those stanzas toward Chorus/Refrain.",
       "- When uncertain between Verse vs Chorus, prefer Chorus if title/hook lines recur across 2+ stanzas.",
-      "- Repeated chord progression across non-adjacent stanzas is supporting evidence for Chorus/Refrain.",
-      "- High lyric novelty plus chord progression change can indicate Verse or Bridge.",
-      "Avoid one-label collapse unless evidence strongly supports it.",
+      "- Repeated relative chord progression/cadence across non-adjacent stanzas supports Chorus/Refrain.",
+      "- High lyric novelty plus harmonic change (new progression, different cadence, different harmonic rhythm) can indicate Verse or Bridge.",
+      "- Use progressionRelative and cadenceRelative more than absolute chord names for repetition checks.",
+      "- progressionSimilarityToPrev near 1.0 suggests neighboring stanzas may be the same section type.",
+      "Avoid one-label collapse unless evidence strongly supports it."
+    ].join("\n");
+    const instructionBlock = packagedInstruction || fallbackInstruction;
+    const prompt = [
+      instructionBlock,
       `Track: ${trackName}`,
       `Song title hint: ${tTitle || "unavailable"}`,
       `Tempo/time signature hint: ${Number.isFinite(Number(tempoBpm)) ? `${tempoBpm} BPM` : "unknown BPM"} / ${String(timeSignature || "unknown")}`,
+      userManualStructureHint && typeof userManualStructureHint === "object"
+        ? `User manual structure reference (authoritative when present): ${JSON.stringify(userManualStructureHint)}`
+        : "User manual structure reference: none",
       "Allowed labels: Intro, Verse, Chorus, Pre-Chorus, Post-Chorus, Bridge, Instrumental, Outro, Refrain, Hook, Solo, Interlude, Breakdown, Tag.",
       "Return JSON with keys:",
       "- sections: array of {index:number,label:string} matching provided indices",
       "- confidence: high|medium|low",
       "- rationale: one short sentence",
+      fewShotExamples.length
+        ? `Few-shot reference examples (weakly supervised corpus, use as soft guidance not strict truth): ${JSON.stringify(fewShotExamples)}`
+        : "Few-shot reference examples: none",
       `Stanza sequence data: ${JSON.stringify(ctxRows)}`,
       `Stanza chord data: ${JSON.stringify(chordRows)}`,
       `Stanza evidence data: ${JSON.stringify(structureEvidence)}`
@@ -5436,7 +6134,18 @@ async function relabelSectionsWithLlm({
     return {
       sections: relabeled,
       confidence: parsed.confidence,
-      rationale: parsed.rationale
+      rationale: parsed.rationale,
+      trainingPackage: pkgBundle?.ok
+        ? {
+            packageId: String(pkgBundle.packageId || "").trim(),
+            packageVersion: String(pkgBundle.packageVersion || "").trim(),
+            moduleId: String(pkgBundle.moduleId || "").trim(),
+            moduleVersion: String(pkgBundle.moduleVersion || "").trim(),
+            promptPaths: Array.isArray(pkgBundle.promptPaths) ? pkgBundle.promptPaths : [],
+            fewShotCount: fewShotExamples.length
+          }
+        : null,
+      trainingPackageError: pkgBundle?.ok ? "" : String(pkgBundle?.error || "").trim()
     };
   } catch {
     return null;
@@ -5532,10 +6241,15 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     analysisServiceCalled: false,
     analysisServiceSucceeded: false,
     beatTrackWritten: false,
+    beatTrackPreserved: false,
     barTrackWritten: false,
+    barTrackPreserved: false,
     chordTrackWritten: false,
+    chordTrackPreserved: false,
     structureTrackWritten: false,
+    structureTrackPreserved: false,
     lyricsTrackWritten: false,
+    lyricsTrackPreserved: false,
     structureDerived: false,
     timingDerived: false,
     lyricsDetected: false,
@@ -5682,6 +6396,99 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     if (!Number.isFinite(minStart) || !Number.isFinite(maxEnd)) return "none";
     return `${Math.round(minStart)}..${Math.round(maxEnd)}ms`;
   };
+  const getTrackMarksCached = async (trackName) => {
+    const name = String(trackName || "").trim();
+    if (!name) return [];
+    if (Array.isArray(trackMarksByName[name])) return trackMarksByName[name];
+    try {
+      const marksResp = await getTimingMarks(state.endpoint, name);
+      const marks = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
+      trackMarksByName[name] = marks;
+      return marks;
+    } catch (err) {
+      addDiag(`timing.getMarks failed for ${name}: ${String(err?.message || err)}`);
+      trackMarksByName[name] = [];
+      return [];
+    }
+  };
+  const buildTimingPolicyKey = (identityKey, kind) => {
+    const id = String(identityKey || "").trim();
+    const k = String(kind || "").trim().toLowerCase();
+    if (!id || !k) return "";
+    return `${id}::${k}`;
+  };
+  const applyGeneratedTimingTrackWithManualPolicy = async ({
+    identityKey = "",
+    kind = "",
+    generatedTrackName = "",
+    userTrackName = "",
+    marks = []
+  } = {}) => {
+    const normalizedKind = String(kind || "").trim().toLowerCase();
+    const policyKey = buildTimingPolicyKey(identityKey, normalizedKind);
+    const policy = policyKey ? timingTrackPolicies[policyKey] : null;
+    const generatedName = String(generatedTrackName || "").trim();
+    const userName = String(userTrackName || "").trim();
+
+    if (policy?.manual) {
+      const lockedTrack = String(policy.trackName || userName || generatedName).trim();
+      const lockedMarks = await getTrackMarksCached(lockedTrack);
+      if (lockedMarks.length) {
+        addDiag(`${normalizedKind} track preserved: manual user track "${lockedTrack}" is authoritative.`);
+        return { ok: true, preserved: true, written: false, trackName: lockedTrack, marks: lockedMarks, manualLocked: true };
+      }
+      addDiag(`${normalizedKind} policy found but track "${lockedTrack}" has no marks; regenerating.`);
+    }
+
+    if (policyKey) {
+      const lastGeneratedSig = String(timingGeneratedSignatures[policyKey] || "").trim();
+      if (lastGeneratedSig && generatedName) {
+        const existingGeneratedMarks = await getTrackMarksCached(generatedName);
+        const existingGeneratedSig = timingMarksSignature(existingGeneratedMarks);
+        if (existingGeneratedMarks.length && existingGeneratedSig && existingGeneratedSig !== lastGeneratedSig) {
+          const promote = await writeTrackMarks(userName || generatedName, existingGeneratedMarks);
+          if (promote.ok) {
+            const promotedTrack = userName || generatedName;
+            timingTrackPolicies[policyKey] = {
+              manual: true,
+              trackName: promotedTrack,
+              lockedAt: new Date().toISOString(),
+              sourceTrack: generatedName
+            };
+            state.audioAnalysis.timingTrackPolicies = timingTrackPolicies;
+            addDiag(
+              `Manual ${normalizedKind} edits detected; promoted to "${promotedTrack}" and disabled auto-overwrite for this track.`
+            );
+            return {
+              ok: true,
+              preserved: true,
+              written: false,
+              trackName: promotedTrack,
+              marks: promote.marks,
+              manualLocked: true
+            };
+          }
+          addDiag(`Manual ${normalizedKind} promotion failed: ${promote.error}`);
+        }
+      }
+    }
+
+    const write = await writeTrackMarks(generatedName, marks);
+    if (!write.ok) return { ok: false, preserved: false, written: false, trackName: generatedName, marks: [], error: write.error, manualLocked: false };
+    if (policyKey) {
+      timingGeneratedSignatures[policyKey] = timingMarksSignature(write.marks);
+      state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
+      if (!timingTrackPolicies[policyKey]?.manual) {
+        timingTrackPolicies[policyKey] = {
+          manual: false,
+          trackName: generatedName,
+          updatedAt: new Date().toISOString()
+        };
+        state.audioAnalysis.timingTrackPolicies = timingTrackPolicies;
+      }
+    }
+    return { ok: true, preserved: false, written: true, trackName: generatedName, marks: write.marks, manualLocked: false };
+  };
 
   const trackNameMatches = (name, re) => re.test(String(name || ""));
   const pickTrackName = (tracks, patterns = []) => {
@@ -5714,10 +6521,38 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   }
 
   const generatedBeatTrackName = "XD: Beats";
+  const userBeatTrackName = "Beats";
   const generatedBarsTrackName = "XD: Bars";
+  const userBarsTrackName = "Bars";
   const generatedChordsTrackName = "XD: Chords";
+  const userChordsTrackName = "Chords";
   const generatedStructureTrackName = "XD: Song Structure";
+  const userStructureTrackName = "Song Structure";
   const generatedLyricsTrackName = "XD: Lyrics";
+  const userLyricsTrackName = "Lyrics";
+  const structurePolicies =
+    state.audioAnalysis?.structurePolicies && typeof state.audioAnalysis.structurePolicies === "object"
+      ? state.audioAnalysis.structurePolicies
+      : {};
+  const structureGeneratedSignatures =
+    state.audioAnalysis?.structureGeneratedSignatures && typeof state.audioAnalysis.structureGeneratedSignatures === "object"
+      ? state.audioAnalysis.structureGeneratedSignatures
+      : {};
+  const structureManualExamples =
+    state.audioAnalysis?.structureManualExamples && typeof state.audioAnalysis.structureManualExamples === "object"
+      ? state.audioAnalysis.structureManualExamples
+      : {};
+  const timingTrackPolicies =
+    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+      ? state.audioAnalysis.timingTrackPolicies
+      : {};
+  const timingGeneratedSignatures =
+    state.audioAnalysis?.timingGeneratedSignatures && typeof state.audioAnalysis.timingGeneratedSignatures === "object"
+      ? state.audioAnalysis.timingGeneratedSignatures
+      : {};
+  let beatTrackManualLock = false;
+  let barsTrackManualLock = false;
+  let structureIdentityKey = "";
   let beatTrackName = "";
   let structureTrackName = "";
   const analysisBridge = getDesktopAudioAnalysisBridge();
@@ -5754,6 +6589,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         detectedTrackIdentity = data?.meta?.trackIdentity && typeof data.meta.trackIdentity === "object"
           ? data.meta.trackIdentity
           : null;
+        structureIdentityKey = buildTrackIdentityKey(detectedTrackIdentity, audioTrackQueryFromPath(audioPath));
         serviceWebTempoEvidence = data?.meta?.webTempoEvidence && typeof data.meta.webTempoEvidence === "object"
           ? data.meta.webTempoEvidence
           : null;
@@ -5790,14 +6626,24 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             (Number.isFinite(Number(mediaMetadata?.durationMs)) && Number(mediaMetadata.durationMs) > 1
               ? Math.round(Number(mediaMetadata.durationMs))
               : 0);
-          const stanzaPlan = inferLyricStanzaPlan(lyrics, durationForSections);
+          const titleHintForStanzas =
+            String(detectedTrackIdentity?.title || "").trim() ||
+            audioTrackQueryFromPath(audioPath);
+          const stanzaPlan = inferLyricStanzaPlan(lyrics, durationForSections, titleHintForStanzas);
           if (Array.isArray(stanzaPlan.sections) && stanzaPlan.sections.length) {
             effectiveSections = stanzaPlan.sections;
             lyricalSectionIndices = Array.isArray(stanzaPlan.lyricalIndices) ? stanzaPlan.lyricalIndices : [];
             addDiag(`Lyrics stanza plan: ${effectiveSections.length} sections (${lyricalSectionIndices.length} lyrical).`);
+            if (Number(stanzaPlan?.titleAwareSplits || 0) > 0) {
+              addDiag(`Lyrics stanza title-aware splits: ${Number(stanzaPlan.titleAwareSplits)}.`);
+            }
           }
         }
         if (Array.isArray(effectiveSections) && effectiveSections.length >= 2 && Array.isArray(lyrics) && lyrics.length >= 4 && lyricalSectionIndices.length) {
+          const manualStructureHint =
+            structureIdentityKey && structureManualExamples[structureIdentityKey] && typeof structureManualExamples[structureIdentityKey] === "object"
+              ? structureManualExamples[structureIdentityKey]
+              : null;
           const relabeled = await relabelSectionsWithLlm({
             sections: effectiveSections,
             lyrics,
@@ -5805,6 +6651,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             lyricalIndices: lyricalSectionIndices,
             trackIdentity: detectedTrackIdentity,
             trackTitleHint: audioTrackQueryFromPath(audioPath),
+            userManualStructureHint: manualStructureHint,
             timeSignature,
             tempoBpm
           });
@@ -5818,6 +6665,21 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             if (String(relabeled.rationale || "").trim()) {
               addDiag(`LLM section rationale: ${String(relabeled.rationale).trim()}`);
             }
+            if (relabeled?.trainingPackage && typeof relabeled.trainingPackage === "object") {
+              const pkgId = String(relabeled.trainingPackage.packageId || "").trim();
+              const pkgVer = String(relabeled.trainingPackage.packageVersion || "").trim();
+              const modId = String(relabeled.trainingPackage.moduleId || "").trim();
+              const modVer = String(relabeled.trainingPackage.moduleVersion || "").trim();
+              const promptCount = Array.isArray(relabeled.trainingPackage.promptPaths)
+                ? relabeled.trainingPackage.promptPaths.length
+                : 0;
+              const fewShotCount = Number(relabeled.trainingPackage.fewShotCount || 0);
+              addDiag(
+                `Training package: ${pkgId || "unknown"}@${pkgVer || "?"} module ${modId || "audio_track_analysis"}@${modVer || "?"} prompts=${promptCount}, fewShot=${fewShotCount}`
+              );
+            } else if (String(relabeled?.trainingPackageError || "").trim()) {
+              addDiag(`Training package fallback: ${String(relabeled.trainingPackageError).trim()}`);
+            }
           }
         }
         if (Array.isArray(effectiveSections) && effectiveSections.length) {
@@ -5829,35 +6691,60 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           }
         }
         if (Array.isArray(beats) && beats.length) {
-          const beatWrite = await writeTrackMarks(generatedBeatTrackName, beats);
-          if (beatWrite.ok) {
-            beatTrackName = generatedBeatTrackName;
-            trackMarksByName[generatedBeatTrackName] = beatWrite.marks;
-            pipeline.beatTrackWritten = true;
+          const beatApply = await applyGeneratedTimingTrackWithManualPolicy({
+            identityKey: structureIdentityKey,
+            kind: "beat",
+            generatedTrackName: generatedBeatTrackName,
+            userTrackName: userBeatTrackName,
+            marks: beats
+          });
+          if (beatApply.ok) {
+            beatTrackName = beatApply.trackName || generatedBeatTrackName;
+            trackMarksByName[beatTrackName] = beatApply.marks;
+            if (beatApply.written) pipeline.beatTrackWritten = true;
+            if (beatApply.preserved) pipeline.beatTrackPreserved = true;
+            beatTrackManualLock = Boolean(beatApply.manualLocked);
             pipeline.timingDerived = true;
           } else {
-            addDiag(`Beat track write failed: ${beatWrite.error}`);
+            addDiag(`Beat track write failed: ${beatApply.error}`);
           }
         } else {
           addDiag("Analysis service returned no beats.");
         }
         if (Array.isArray(bars) && bars.length) {
-          const barsWrite = await writeTrackMarks(generatedBarsTrackName, bars);
-          if (barsWrite.ok) {
-            trackMarksByName[generatedBarsTrackName] = barsWrite.marks;
-            pipeline.barTrackWritten = true;
+          const barApply = await applyGeneratedTimingTrackWithManualPolicy({
+            identityKey: structureIdentityKey,
+            kind: "bar",
+            generatedTrackName: generatedBarsTrackName,
+            userTrackName: userBarsTrackName,
+            marks: bars
+          });
+          if (barApply.ok) {
+            const barTrackName = barApply.trackName || generatedBarsTrackName;
+            trackMarksByName[barTrackName] = barApply.marks;
+            if (barApply.written) pipeline.barTrackWritten = true;
+            if (barApply.preserved) pipeline.barTrackPreserved = true;
+            barsTrackManualLock = Boolean(barApply.manualLocked);
             pipeline.timingDerived = true;
           } else {
-            addDiag(`Bars track write failed: ${barsWrite.error}`);
+            addDiag(`Bars track write failed: ${barApply.error}`);
           }
         } else {
           addDiag("Analysis service returned no bars.");
         }
         if (Array.isArray(chords) && chords.length) {
-          const chordsWrite = await writeTrackMarks(generatedChordsTrackName, chords);
-          if (chordsWrite.ok) {
-            trackMarksByName[generatedChordsTrackName] = chordsWrite.marks;
-            pipeline.chordTrackWritten = true;
+          const chordApply = await applyGeneratedTimingTrackWithManualPolicy({
+            identityKey: structureIdentityKey,
+            kind: "chord",
+            generatedTrackName: generatedChordsTrackName,
+            userTrackName: userChordsTrackName,
+            marks: chords
+          });
+          if (chordApply.ok) {
+            const chordTrackName = chordApply.trackName || generatedChordsTrackName;
+            trackMarksByName[chordTrackName] = chordApply.marks;
+            if (chordApply.written) pipeline.chordTrackWritten = true;
+            if (chordApply.preserved) pipeline.chordTrackPreserved = true;
             pipeline.timingDerived = true;
             if (dataMeta?.chordAnalysis?.engine) {
               addDiag(`Chord analysis engine: ${String(dataMeta.chordAnalysis.engine).trim()}`);
@@ -5866,7 +6753,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
               addDiag(`Chord analysis confidence: ${String(dataMeta.chordAnalysis.avgMarginConfidence).trim()}`);
             }
           } else {
-            addDiag(`Chords track write failed: ${chordsWrite.error}`);
+            addDiag(`Chords track write failed: ${chordApply.error}`);
           }
         } else {
           addDiag("Analysis service returned no chords.");
@@ -5875,72 +6762,161 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           }
         }
         if (Array.isArray(effectiveSections) && effectiveSections.length) {
-          let structureWrite = await writeTrackMarks(generatedStructureTrackName, effectiveSections);
-          if (
-            !structureWrite.ok &&
-            /within sequence duration/i.test(String(structureWrite?.error || "")) &&
-            Array.isArray(beats) &&
-            beats.length
-          ) {
-            const beatCap = beats.reduce((acc, mark) => {
-              const start = Number(mark?.startMs);
-              const end = Number(mark?.endMs);
-              const candidate =
-                Number.isFinite(end) && end > start
-                  ? end
-                  : (Number.isFinite(start) ? start + 1 : 0);
-              return Math.max(acc, candidate);
-            }, 0);
-            const strictCap = Math.max(1, Math.round(beatCap));
-            const strictMaxEnd = Math.max(1, strictCap - 1);
-            const cappedSections = effectiveSections
-              .map((mark) => {
-                const start = Math.max(0, Math.round(Number(mark?.startMs)));
-                if (!Number.isFinite(start) || start >= strictCap) return null;
-                let end = Math.round(Number(mark?.endMs));
-                if (!Number.isFinite(end) || end <= start) end = start + 1;
-                end = Math.min(end, strictMaxEnd);
-                if (end <= start) return null;
-                const row = { startMs: start, endMs: end };
-                const label = String(mark?.label || "").trim();
-                if (label) row.label = label;
-                return row;
-              })
-              .filter(Boolean);
-            if (cappedSections.length) {
-              structureWrite = await writeTrackMarks(generatedStructureTrackName, cappedSections);
-              if (structureWrite.ok) {
-                addDiag(
-                  `Structure track write retried with beat-derived cap ${strictCap}ms (range ${marksRange(cappedSections)}).`
-                );
+          const identityKey =
+            structureIdentityKey ||
+            buildTrackIdentityKey(detectedTrackIdentity, audioTrackQueryFromPath(audioPath));
+          const existingPolicy =
+            identityKey && structurePolicies[identityKey] && typeof structurePolicies[identityKey] === "object"
+              ? structurePolicies[identityKey]
+              : null;
+          let preserveUserStructure = false;
+
+          if (existingPolicy?.manual) {
+            const lockedTrack = String(existingPolicy.trackName || userStructureTrackName).trim() || userStructureTrackName;
+            const lockedMarks = await getTrackMarksCached(lockedTrack);
+            if (lockedMarks.length) {
+              if (identityKey) {
+                structureManualExamples[identityKey] = {
+                  trackName: lockedTrack,
+                  updatedAt: new Date().toISOString(),
+                  sections: lockedMarks
+                };
+                state.audioAnalysis.structureManualExamples = structureManualExamples;
+              }
+              structureTrackName = lockedTrack;
+              pipeline.structureTrackPreserved = true;
+              pipeline.structureDerived = true;
+              preserveUserStructure = true;
+              addDiag(`Structure track preserved: manual user track "${lockedTrack}" is authoritative.`);
+            } else {
+              addDiag(`Structure policy found but track "${lockedTrack}" has no marks; regenerating structure.`);
+            }
+          }
+
+          if (!preserveUserStructure && identityKey) {
+            const lastGeneratedSig = String(structureGeneratedSignatures[identityKey] || "").trim();
+            if (lastGeneratedSig) {
+              const existingAgentMarks = await getTrackMarksCached(generatedStructureTrackName);
+              const existingAgentSig = timingMarksSignature(existingAgentMarks);
+              if (existingAgentMarks.length && existingAgentSig && existingAgentSig !== lastGeneratedSig) {
+                const promote = await writeTrackMarks(userStructureTrackName, existingAgentMarks);
+                if (promote.ok) {
+                  structurePolicies[identityKey] = {
+                    manual: true,
+                    trackName: userStructureTrackName,
+                    lockedAt: new Date().toISOString(),
+                    sourceTrack: generatedStructureTrackName
+                  };
+                  state.audioAnalysis.structurePolicies = structurePolicies;
+                  structureManualExamples[identityKey] = {
+                    trackName: userStructureTrackName,
+                    updatedAt: new Date().toISOString(),
+                    sections: promote.marks
+                  };
+                  state.audioAnalysis.structureManualExamples = structureManualExamples;
+                  structureTrackName = userStructureTrackName;
+                  trackMarksByName[userStructureTrackName] = promote.marks;
+                  pipeline.structureTrackPreserved = true;
+                  pipeline.structureDerived = true;
+                  preserveUserStructure = true;
+                  addDiag(
+                    `Manual structure edits detected; promoted to "${userStructureTrackName}" and disabled auto-overwrite for this track.`
+                  );
+                } else {
+                  addDiag(`Manual-edit promotion failed: ${promote.error}`);
+                }
               }
             }
           }
-          if (structureWrite.ok) {
-            structureTrackName = generatedStructureTrackName;
-            trackMarksByName[generatedStructureTrackName] = structureWrite.marks;
-            pipeline.structureTrackWritten = true;
-            pipeline.structureDerived = true;
-          } else {
-            addDiag(
-              `Structure track write failed: ${structureWrite.error} | normalized range=${marksRange(structureWrite?.marks || effectiveSections)}`
-            );
+
+          if (!preserveUserStructure) {
+            let structureWrite = await writeTrackMarks(generatedStructureTrackName, effectiveSections);
+            if (
+              !structureWrite.ok &&
+              /within sequence duration/i.test(String(structureWrite?.error || "")) &&
+              Array.isArray(beats) &&
+              beats.length
+            ) {
+              const beatCap = beats.reduce((acc, mark) => {
+                const start = Number(mark?.startMs);
+                const end = Number(mark?.endMs);
+                const candidate =
+                  Number.isFinite(end) && end > start
+                    ? end
+                    : (Number.isFinite(start) ? start + 1 : 0);
+                return Math.max(acc, candidate);
+              }, 0);
+              const strictCap = Math.max(1, Math.round(beatCap));
+              const strictMaxEnd = Math.max(1, strictCap - 1);
+              const cappedSections = effectiveSections
+                .map((mark) => {
+                  const start = Math.max(0, Math.round(Number(mark?.startMs)));
+                  if (!Number.isFinite(start) || start >= strictCap) return null;
+                  let end = Math.round(Number(mark?.endMs));
+                  if (!Number.isFinite(end) || end <= start) end = start + 1;
+                  end = Math.min(end, strictMaxEnd);
+                  if (end <= start) return null;
+                  const row = { startMs: start, endMs: end };
+                  const label = String(mark?.label || "").trim();
+                  if (label) row.label = label;
+                  return row;
+                })
+                .filter(Boolean);
+              if (cappedSections.length) {
+                structureWrite = await writeTrackMarks(generatedStructureTrackName, cappedSections);
+                if (structureWrite.ok) {
+                  addDiag(
+                    `Structure track write retried with beat-derived cap ${strictCap}ms (range ${marksRange(cappedSections)}).`
+                  );
+                }
+              }
+            }
+            if (structureWrite.ok) {
+              structureTrackName = generatedStructureTrackName;
+              trackMarksByName[generatedStructureTrackName] = structureWrite.marks;
+              pipeline.structureTrackWritten = true;
+              pipeline.structureDerived = true;
+              if (identityKey) {
+                structureGeneratedSignatures[identityKey] = timingMarksSignature(structureWrite.marks);
+                state.audioAnalysis.structureGeneratedSignatures = structureGeneratedSignatures;
+                if (!structurePolicies[identityKey]?.manual) {
+                  structurePolicies[identityKey] = {
+                    manual: false,
+                    trackName: generatedStructureTrackName,
+                    updatedAt: new Date().toISOString()
+                  };
+                  state.audioAnalysis.structurePolicies = structurePolicies;
+                }
+              }
+            } else {
+              addDiag(
+                `Structure track write failed: ${structureWrite.error} | normalized range=${marksRange(structureWrite?.marks || effectiveSections)}`
+              );
+            }
           }
         } else {
           addDiag("Analysis service returned no song sections.");
         }
         if (Array.isArray(lyrics) && lyrics.length) {
-          const lyricsWrite = await writeTrackMarks(generatedLyricsTrackName, lyrics);
-          if (lyricsWrite.ok) {
-            trackMarksByName[generatedLyricsTrackName] = lyricsWrite.marks;
-            pipeline.lyricsTrackWritten = true;
+          const lyricsApply = await applyGeneratedTimingTrackWithManualPolicy({
+            identityKey: structureIdentityKey,
+            kind: "lyrics",
+            generatedTrackName: generatedLyricsTrackName,
+            userTrackName: userLyricsTrackName,
+            marks: lyrics
+          });
+          if (lyricsApply.ok) {
+            const lyricsTrackName = lyricsApply.trackName || generatedLyricsTrackName;
+            trackMarksByName[lyricsTrackName] = lyricsApply.marks;
+            if (lyricsApply.written) pipeline.lyricsTrackWritten = true;
+            if (lyricsApply.preserved) pipeline.lyricsTrackPreserved = true;
             pipeline.lyricsDetected = true;
             pipeline.timingDerived = true;
             if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
               addDiag(`Lyrics global shift applied: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
             }
           } else {
-            addDiag(`Lyrics track write failed: ${lyricsWrite.error}`);
+            addDiag(`Lyrics track write failed: ${lyricsApply.error}`);
           }
         } else {
           addDiag("Analysis service returned no synced lyrics.");
@@ -5964,11 +6940,18 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
 
   const trackNames = getTimingTrackNames(state.timingTracks || []);
   const explicitCandidates = [
+    generatedBeatTrackName,
     beatTrackName,
+    userBeatTrackName,
     generatedBarsTrackName,
+    userBarsTrackName,
     generatedChordsTrackName,
+    userChordsTrackName,
     structureTrackName,
-    generatedStructureTrackName
+    generatedStructureTrackName,
+    userStructureTrackName,
+    generatedLyricsTrackName,
+    userLyricsTrackName
   ]
     .map((name) => String(name || "").trim())
     .filter(Boolean);
@@ -5992,7 +6975,12 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
 
   const structureTrack =
     structureTrackName ||
-    pickTrackName(state.timingTracks || [], [/^xd:\s*song\s*structure\s*\(agent\)$/i, /^xd:\s*song\s*structure$/i, /section|song|structure|phrase|form/i]);
+    pickTrackName(state.timingTracks || [], [
+      /^song\s*structure$/i,
+      /^xd:\s*song\s*structure\s*\(agent\)$/i,
+      /^xd:\s*song\s*structure$/i,
+      /section|song|structure|phrase|form/i
+    ]);
   if (structureTrack && Array.isArray(trackMarksByName[structureTrack]) && trackMarksByName[structureTrack].length > 0) {
     const built = buildSectionSuggestions(trackMarksByName[structureTrack]);
     state.ui.sectionTrackName = structureTrack;
@@ -6129,50 +7117,63 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         }
 
         if ((bestErr <= 0.08 || forcedScale) && Math.abs(bestScale - 1) > 0.01) {
-          const currentBeats = Array.isArray(trackMarksByName[generatedBeatTrackName])
-            ? trackMarksByName[generatedBeatTrackName]
-            : [];
-          const currentBars = Array.isArray(trackMarksByName[generatedBarsTrackName])
-            ? trackMarksByName[generatedBarsTrackName]
-            : [];
-          const halfTimeDoubleMode = bestScale > 1.01 && Math.round(bestScale) === 2 && currentBars.length > 0;
-          let correctedBeats = currentBeats;
-          let correctedBars = [];
-          if (halfTimeDoubleMode) {
-            correctedBeats = subdivideBeatsByFactor(currentBeats, 2);
-            correctedBeats = relabelBeats(correctedBeats, bpb, 1);
-            correctedBars = barsFromBeats(correctedBeats, bpb);
+          if (beatTrackManualLock || barsTrackManualLock) {
+            addDiag("Tempo correction skipped: beat/bar track is user-locked due to manual edits.");
+            webValidation.correctionApplied = false;
           } else {
-            if (bestScale > 1.01) {
-              correctedBeats = subdivideBeatsByFactor(currentBeats, Math.max(2, Math.round(bestScale)));
+            const currentBeats = Array.isArray(trackMarksByName[generatedBeatTrackName])
+              ? trackMarksByName[generatedBeatTrackName]
+              : [];
+            const currentBars = Array.isArray(trackMarksByName[generatedBarsTrackName])
+              ? trackMarksByName[generatedBarsTrackName]
+              : [];
+            const halfTimeDoubleMode = bestScale > 1.01 && Math.round(bestScale) === 2 && currentBars.length > 0;
+            let correctedBeats = currentBeats;
+            let correctedBars = [];
+            if (halfTimeDoubleMode) {
+              correctedBeats = subdivideBeatsByFactor(currentBeats, 2);
+              correctedBeats = relabelBeats(correctedBeats, bpb, 1);
+              correctedBars = barsFromBeats(correctedBeats, bpb);
             } else if (bestScale < 0.99) {
               correctedBeats = mergeBeatsByFactor(currentBeats, Math.max(2, Math.round(1 / bestScale)));
+            } else if (bestScale > 1.01) {
+              correctedBeats = subdivideBeatsByFactor(currentBeats, Math.max(2, Math.round(bestScale)));
             }
             correctedBeats = relabelBeats(correctedBeats, bpb, 1);
             correctedBars = barsFromBeats(correctedBeats, bpb);
+            const beatFixWrite = await writeTrackMarks(generatedBeatTrackName, correctedBeats);
+            const barFixWrite = await writeTrackMarks(generatedBarsTrackName, correctedBars);
+            if (beatFixWrite.ok) {
+              trackMarksByName[generatedBeatTrackName] = beatFixWrite.marks;
+              pipeline.beatTrackWritten = true;
+              if (structureIdentityKey) {
+                const beatKey = `${structureIdentityKey}::beat`;
+                timingGeneratedSignatures[beatKey] = timingMarksSignature(beatFixWrite.marks);
+                state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
+              }
+            } else {
+              addDiag(`Beat correction write failed: ${beatFixWrite.error}`);
+            }
+            if (barFixWrite.ok) {
+              trackMarksByName[generatedBarsTrackName] = barFixWrite.marks;
+              pipeline.barTrackWritten = true;
+              if (structureIdentityKey) {
+                const barKey = `${structureIdentityKey}::bar`;
+                timingGeneratedSignatures[barKey] = timingMarksSignature(barFixWrite.marks);
+                state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
+              }
+            } else {
+              addDiag(`Bars correction write failed: ${barFixWrite.error}`);
+            }
+            detectedTempoBpm = Math.round(serviceTempo * bestScale * 100) / 100;
+            if (halfTimeDoubleMode) {
+              addDiag("Tempo correction mode: half-time doubling adjustment (beats and bars doubled).");
+            }
+            addDiag(
+              `Tempo corrected by factor ${bestScale.toFixed(2)} using meter-aware web validation (${serviceTempo} -> ${detectedTempoBpm} BPM, beatsPerBar=${bpb}).`
+            );
+            webValidation.correctionApplied = true;
           }
-          const beatFixWrite = await writeTrackMarks(generatedBeatTrackName, correctedBeats);
-          const barFixWrite = await writeTrackMarks(generatedBarsTrackName, correctedBars);
-          if (beatFixWrite.ok) {
-            trackMarksByName[generatedBeatTrackName] = beatFixWrite.marks;
-            pipeline.beatTrackWritten = true;
-          } else {
-            addDiag(`Beat correction write failed: ${beatFixWrite.error}`);
-          }
-          if (barFixWrite.ok) {
-            trackMarksByName[generatedBarsTrackName] = barFixWrite.marks;
-            pipeline.barTrackWritten = true;
-          } else {
-            addDiag(`Bars correction write failed: ${barFixWrite.error}`);
-          }
-          detectedTempoBpm = Math.round(serviceTempo * bestScale * 100) / 100;
-          if (halfTimeDoubleMode) {
-            addDiag("Tempo correction mode: half-time doubling adjustment (beats and bars doubled).");
-          }
-          addDiag(
-            `Tempo corrected by factor ${bestScale.toFixed(2)} using meter-aware web validation (${serviceTempo} -> ${detectedTempoBpm} BPM, beatsPerBar=${bpb}).`
-          );
-          webValidation.correctionApplied = true;
         } else if (bestErr > 0.08) {
           addDiag(
             `Tempo mismatch: service=${detectedTempoBpm} BPM, web=${Number.isFinite(webBeatBpm) ? webBeatBpm : (Number.isFinite(wbpm) ? wbpm : "n/a")} BPM`
@@ -6241,10 +7242,15 @@ async function onAnalyzeAudio() {
     analysisServiceCalled: false,
     analysisServiceSucceeded: false,
     beatTrackWritten: false,
+    beatTrackPreserved: false,
     barTrackWritten: false,
+    barTrackPreserved: false,
     chordTrackWritten: false,
+    chordTrackPreserved: false,
     structureTrackWritten: false,
+    structureTrackPreserved: false,
     lyricsTrackWritten: false,
+    lyricsTrackPreserved: false,
     structureDerived: false,
     timingDerived: false,
     lyricsDetected: false,
@@ -8018,6 +9024,14 @@ function render() {
   const rows = state.diagnostics || [];
   const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
   const footerApplyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 8) : [];
+  const buildVersion = String(state.health.desktopAppVersion || "").trim();
+  const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
+  const buildTimeLabel = buildTimeIso
+    ? new Date(buildTimeIso).toLocaleString([], { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+    : "";
+  const buildLabel = buildVersion
+    ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
+    : "Build: unknown";
   const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
 
   app.innerHTML = `
@@ -8073,6 +9087,7 @@ function render() {
           <span>Diagnostics: ${diagCounts.total} total</span>
           <span>${diagCounts.warning} warning</span>
           <span>${diagCounts.actionRequired} action-required</span>
+          <span>${buildLabel}</span>
         </div>
         ${
           state.ui.diagnosticsOpen
@@ -8187,6 +9202,7 @@ async function bootstrapLiveData() {
 render();
 (async () => {
   await hydrateStateFromDesktop();
+  await hydrateDesktopAppInfo();
   await hydrateAgentHealth();
   await hydrateAgentConfigDraft();
   await probeAnalysisServiceHealth({ quiet: true, force: true });

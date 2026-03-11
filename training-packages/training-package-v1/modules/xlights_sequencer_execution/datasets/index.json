@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "id": "agent-contract",
+      "type": "spec",
+      "path": "specs/projects/xlights-sequencer-control/designer-interaction-contract.md"
+    },
+    {
+      "id": "api-surface-contract",
+      "type": "spec",
+      "path": "specs/projects/xlights-sequencer-control/api-surface-contract.md"
+    },
+    {
+      "id": "ui-agent-tests",
+      "type": "test-corpus",
+      "path": "apps/xlightsdesigner-ui/tests/agent"
+    }
+  ]
+}

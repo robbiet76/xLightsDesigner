@@ -1,0 +1,20 @@
+{
+  "moduleId": "audio_track_analysis",
+  "version": "0.1.2",
+  "purpose": "Infer usable music structure and timing scaffolding from attached sequence audio.",
+  "assets": {
+    "prompts": [
+      "prompts/song_structure_system.md",
+      "prompts/song_structure_rubric.md"
+    ],
+    "datasets": [
+      "datasets/index.json"
+    ],
+    "eval": [
+      "eval/index.json"
+    ],
+    "fewshot": [
+      "fewshot/index.json"
+    ]
+  }
+}

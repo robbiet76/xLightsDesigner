@@ -112,6 +112,25 @@ function resolveAnalysisServiceDir() {
   return "";
 }
 
+function candidateTrainingPackageDirs() {
+  const envDir = String(process.env.XLD_TRAINING_PACKAGE_DIR || "").trim();
+  const out = [];
+  if (envDir) out.push(path.resolve(envDir));
+  out.push(path.resolve(process.cwd(), "training-packages", "training-package-v1"));
+  out.push(path.resolve(__dirname, "..", "..", "training-packages", "training-package-v1"));
+  out.push(path.resolve(os.homedir(), "Projects", "xLightsDesigner", "training-packages", "training-package-v1"));
+  return Array.from(new Set(out));
+}
+
+function resolveTrainingPackageDir() {
+  for (const dir of candidateTrainingPackageDirs()) {
+    if (!dir) continue;
+    const manifest = path.join(dir, "manifest.json");
+    if (fs.existsSync(manifest)) return dir;
+  }
+  return "";
+}
+
 function parsePythonCommand(raw) {
   const text = String(raw || "").trim();
   if (!text) return [];
@@ -580,6 +599,46 @@ function readDesktopStatePayload() {
   };
 }
 
+function getDesktopAppInfo() {
+  const appPath = app.getAppPath();
+  const appVersion = String(app.getVersion() || "").trim() || "0.0.0";
+  let buildTime = "";
+  let buildEpochMs = 0;
+  let buildInfoSource = "";
+  try {
+    const buildInfoPath = path.join(__dirname, "renderer", "build-info.json");
+    if (fs.existsSync(buildInfoPath)) {
+      const raw = fs.readFileSync(buildInfoPath, "utf8");
+      const parsed = JSON.parse(raw);
+      const parsedTime = String(parsed?.buildTime || "").trim();
+      const parsedEpoch = Number(parsed?.buildEpochMs || 0);
+      if (parsedTime) buildTime = parsedTime;
+      if (Number.isFinite(parsedEpoch) && parsedEpoch > 0) buildEpochMs = parsedEpoch;
+      buildInfoSource = "renderer/build-info.json";
+    }
+  } catch {
+    // fallback below
+  }
+  try {
+    if (!buildTime) {
+      const stat = fs.statSync(appPath);
+      if (stat?.mtime) buildTime = new Date(stat.mtime).toISOString();
+      if (stat?.mtimeMs) buildEpochMs = Number(stat.mtimeMs);
+      buildInfoSource = "appPath.mtime";
+    }
+  } catch {
+    // ignore stat errors
+  }
+  return {
+    appVersion,
+    appPath,
+    buildTime,
+    buildEpochMs,
+    buildInfoSource,
+    isPackaged: Boolean(app.isPackaged),
+  };
+}
+
 function projectKey(projectName, showFolder) {
   return `${String(projectName || "").trim()}::${String(showFolder || "").trim()}`;
 }
@@ -617,6 +676,14 @@ ipcMain.handle("xld:state:write", async (_event, payload = {}) => {
   }
 });
 
+ipcMain.handle("xld:app:info", async () => {
+  try {
+    return { ok: true, ...getDesktopAppInfo() };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
 ipcMain.handle("xld:audio:read", async (_event, payload = {}) => {
   try {
     const filePath = String(payload?.filePath || "").trim();
@@ -643,7 +710,8 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
   try {
     const filePath = String(payload?.filePath || "").trim();
     const baseUrl = String(payload?.baseUrl || "").trim().replace(/\/+$/, "");
-    const provider = String(payload?.provider || "beatnet").trim();
+    const requestedProvider = String(payload?.provider || "beatnet").trim();
+    let provider = requestedProvider;
     const apiKey = String(payload?.apiKey || "").trim();
     const authBearer = String(payload?.authBearer || "").trim();
     const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "90000"), 10);
@@ -704,6 +772,16 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
             attempts: attempt,
             data: parsed?.data || parsed || {}
           };
+        }
+        const detail = String(parsed?.detail || "").trim();
+        const unsupportedAuto =
+          response.status === 422 &&
+          provider.toLowerCase() === "auto" &&
+          /unsupported provider/i.test(detail || raw);
+        if (unsupportedAuto) {
+          provider = "beatnet";
+          lastError = "Analysis service does not support provider=auto; retried with beatnet.";
+          continue;
         }
         lastError = String(parsed?.error || parsed?.message || raw || `HTTP ${response.status}`);
         const canRetry = transientHttp.has(response.status);
@@ -1014,6 +1092,54 @@ ipcMain.handle("xld:project:open-file", async (_event, payload = {}) => {
       },
       snapshot: parsed?.snapshot && typeof parsed.snapshot === "object" ? parsed.snapshot : null
     };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:file:stat", async (_event, payload = {}) => {
+  try {
+    const filePath = String(payload?.filePath || "").trim();
+    if (!filePath) return { ok: false, error: "Missing filePath" };
+    if (!fs.existsSync(filePath)) return { ok: false, exists: false, error: "File not found" };
+    const stat = fs.statSync(filePath);
+    return {
+      ok: true,
+      exists: true,
+      filePath,
+      size: Number(stat?.size || 0),
+      mtimeMs: Number(stat?.mtimeMs || 0),
+      mtimeIso: stat?.mtime ? new Date(stat.mtime).toISOString() : ""
+    };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:training-package:read", async (_event, payload = {}) => {
+  try {
+    const relativePath = String(payload?.relativePath || "").trim().replace(/^\/+/, "");
+    const asJson = Boolean(payload?.asJson);
+    if (!relativePath) return { ok: false, error: "Missing relativePath" };
+    if (relativePath.includes("..")) return { ok: false, error: "Invalid relativePath" };
+    const rootDir = resolveTrainingPackageDir();
+    if (!rootDir) return { ok: false, error: "Training package not found" };
+    const filePath = path.resolve(rootDir, relativePath);
+    if (!filePath.startsWith(path.resolve(rootDir))) {
+      return { ok: false, error: "Resolved path outside training package root" };
+    }
+    if (!fs.existsSync(filePath)) return { ok: false, error: "Training package asset not found" };
+    const text = fs.readFileSync(filePath, "utf8");
+    if (!asJson) {
+      return { ok: true, rootDir, filePath, text };
+    }
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      return { ok: false, error: `Invalid JSON in training package asset: ${String(err?.message || err)}` };
+    }
+    return { ok: true, rootDir, filePath, data };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }

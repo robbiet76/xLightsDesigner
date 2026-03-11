@@ -1,0 +1,9 @@
+{
+  "status": "pending",
+  "plannedMetrics": [
+    "brief_alignment_score",
+    "energy_arc_consistency",
+    "color_intent_consistency",
+    "readability_conflict_count"
+  ]
+}

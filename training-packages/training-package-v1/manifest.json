@@ -1,0 +1,34 @@
+{
+  "packageId": "xlightsdesigner-training-package-v1",
+  "schemaVersion": "1.0.0",
+  "version": "0.1.2",
+  "createdAt": "2026-03-10",
+  "status": "draft",
+  "distributionModel": "byo-api-key",
+  "modules": [
+    {
+      "id": "audio_track_analysis",
+      "version": "0.1.2",
+      "path": "modules/audio_track_analysis/module.manifest.json"
+    },
+    {
+      "id": "lighting_design_principles",
+      "version": "0.1.0",
+      "path": "modules/lighting_design_principles/module.manifest.json"
+    },
+    {
+      "id": "xlights_sequencer_execution",
+      "version": "0.1.0",
+      "path": "modules/xlights_sequencer_execution/module.manifest.json"
+    }
+  ],
+  "providerPolicy": {
+    "hostedByProject": false,
+    "requiresUserProviderAccount": true,
+    "supportedFamilies": [
+      "openai-compatible",
+      "anthropic-compatible",
+      "other-llm-via-adapter"
+    ]
+  }
+}

@@ -15,6 +15,10 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import requests
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+try:
+    import soundfile as sf  # type: ignore
+except Exception:  # pragma: no cover
+    sf = None
 
 # madmom (used by BeatNet) still references legacy collections symbols.
 for _name in ("MutableSequence", "MutableMapping", "MutableSet", "Sequence", "Mapping", "Set"):
@@ -30,6 +34,14 @@ try:
     from BeatNet.BeatNet import BeatNet as BeatNetEstimator  # type: ignore
 except Exception:  # pragma: no cover
     BeatNetEstimator = None
+
+try:
+    from madmom.features.chords import CNNChordFeatureProcessor, CRFChordRecognitionProcessor  # type: ignore
+    from madmom.audio.signal import Signal as MadmomSignal  # type: ignore
+except Exception:  # pragma: no cover
+    CNNChordFeatureProcessor = None
+    CRFChordRecognitionProcessor = None
+    MadmomSignal = None
 
 
 APP_API_KEY = os.getenv("ANALYSIS_API_KEY", "").strip()
@@ -711,56 +723,208 @@ def _build_chord_templates() -> List[tuple[str, np.ndarray]]:
 CHORD_TEMPLATES = _build_chord_templates()
 
 
+def _normalize_madmom_chord_label(raw: Any) -> str:
+    text = str(raw or "").strip()
+    if not text:
+        return "N"
+    upper = text.upper()
+    if upper == "N":
+        return "N"
+    if ":" not in text:
+        return text
+    root, quality = text.split(":", 1)
+    root = root.strip()
+    q = quality.strip().lower()
+    if q.startswith("maj"):
+        return root
+    if q.startswith("min"):
+        return f"{root}m"
+    return root
+
+
+def _merge_adjacent_label_marks(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    merged: List[Dict[str, Any]] = []
+    for row in rows:
+        label = str(row.get("label", "")).strip()
+        start = int(row.get("startMs", 0))
+        end = int(row.get("endMs", start + 1))
+        if end <= start:
+            continue
+        if merged and str(merged[-1].get("label", "")).strip() == label:
+            merged[-1]["endMs"] = max(int(merged[-1].get("endMs", start)), end)
+        else:
+            merged.append({"startMs": start, "endMs": end, "label": label})
+    return merged
+
+
+def _detect_chords_madmom(
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    if CNNChordFeatureProcessor is None or CRFChordRecognitionProcessor is None or MadmomSignal is None:
+        return [], {"engine": "none", "error": "madmom chord processors unavailable"}
+    if not isinstance(y, np.ndarray) or y.size == 0:
+        return [], {"engine": "none", "error": "empty waveform"}
+
+    try:
+        y_in = np.asarray(y, dtype=np.float32)
+        sr_in = int(sr)
+        # madmom chord models are calibrated for 44.1kHz input.
+        if sr_in != 44100 and librosa is not None:
+            y_in = librosa.resample(y_in, orig_sr=sr_in, target_sr=44100)
+            sr_in = 44100
+        sig = MadmomSignal(y_in, sample_rate=sr_in, num_channels=1)
+        feat = CNNChordFeatureProcessor()
+        decode = CRFChordRecognitionProcessor()
+        seq = decode(feat(sig))
+        rows: List[Dict[str, Any]] = []
+        for item in list(seq):
+            try:
+                start_ms = int(round(float(item[0]) * 1000.0))
+                end_ms = int(round(float(item[1]) * 1000.0))
+                label = _normalize_madmom_chord_label(item[2])
+            except Exception:
+                continue
+            start_ms = max(0, min(int(duration_ms) - 1, start_ms))
+            end_ms = max(start_ms + 1, min(int(duration_ms), end_ms))
+            if (end_ms - start_ms) < 250:
+                continue
+            rows.append({"startMs": start_ms, "endMs": end_ms, "label": label})
+        rows = _sanitize_marks(_merge_adjacent_label_marks(rows))
+        labeled = [r for r in rows if str(r.get("label", "")).strip().upper() != "N"]
+        labeled_ratio = float(len(labeled) / max(1, len(rows)))
+        if not labeled:
+            return [], {
+                "engine": "madmom-crf-chords-v1",
+                "timelineAligned": False,
+                "chordMarkCount": int(len(rows)),
+                "labeledRatio": round(labeled_ratio, 4),
+                "error": "madmom produced no labeled chords",
+            }
+        return rows, {
+            "engine": "madmom-crf-chords-v1",
+            "timelineAligned": False,
+            "chordMarkCount": int(len(rows)),
+            "labeledRatio": round(labeled_ratio, 4),
+            "avgMarginConfidence": None,
+        }
+    except Exception as err:
+        return [], {"engine": "madmom-crf-chords-v1", "error": str(err)}
+
+
+def _detect_chords(
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    # Preferred path: madmom CRF chord recognizer from WAV (better full-song stability).
+    chords, meta = _detect_chords_madmom(y, sr, duration_ms)
+    if chords:
+        return chords, meta
+    madmom_error = str(meta.get("error", "")).strip() if isinstance(meta, dict) else ""
+
+    # Fallback path: lightweight chroma/template chord estimate.
+    chords_fb, meta_fb = _detect_chords_independent(y, sr, duration_ms)
+    if madmom_error:
+        base = str(meta_fb.get("error", "")).strip() if isinstance(meta_fb, dict) else ""
+        meta_fb["error"] = f"{base} | madmom: {madmom_error}" if base else f"madmom: {madmom_error}"
+    return chords_fb, meta_fb
+
+
+def _classify_chord_profile(profile: np.ndarray) -> tuple[str, float, float]:
+    norm = float(np.linalg.norm(profile))
+    if not np.isfinite(norm) or norm <= 0:
+        return "N", 0.0, 0.0
+    p = profile / norm
+    scored: List[tuple[str, float]] = []
+    for label, tpl in CHORD_TEMPLATES:
+        score = float(np.dot(p, tpl))
+        if np.isfinite(score):
+            scored.append((label, score))
+    if not scored:
+        return "N", 0.0, 0.0
+    scored.sort(key=lambda x: x[1], reverse=True)
+    best_label, best_score = scored[0]
+    second_score = scored[1][1] if len(scored) > 1 else -1.0
+    margin = float(best_score - second_score)
+    out_label = best_label if (best_score >= 0.35 and margin >= 0.03) else "N"
+    return out_label, max(0.0, margin), max(0.0, float(best_score))
+
+
+def _build_chord_rows_from_labels(
+    labels: List[str],
+    starts_ms: List[int],
+    duration_ms: int,
+    min_segment_ms: int = 250,
+) -> tuple[List[Dict[str, Any]], List[float], float]:
+    rows: List[Dict[str, Any]] = []
+    if not labels or not starts_ms:
+        return rows, [], 0.0
+    n = min(len(labels), len(starts_ms))
+    if n <= 0:
+        return rows, [], 0.0
+    i = 0
+    while i < n:
+        label = str(labels[i] or "N").strip() or "N"
+        j = i + 1
+        while j < n and str(labels[j] or "N").strip() == label:
+            j += 1
+        start_ms = max(0, min(int(duration_ms) - 1, int(starts_ms[i])))
+        if j < n:
+            end_ms = int(starts_ms[j])
+        else:
+            end_ms = int(duration_ms)
+        end_ms = max(start_ms + 1, min(int(duration_ms), end_ms))
+        if (end_ms - start_ms) >= int(max(1, min_segment_ms)):
+            rows.append({"startMs": start_ms, "endMs": end_ms, "label": label})
+        i = j
+
+    merged: List[Dict[str, Any]] = []
+    for row in rows:
+        cur_label = str(row.get("label", "")).strip()
+        prev_label = str(merged[-1].get("label", "")).strip() if merged else ""
+        if merged and cur_label == prev_label:
+            merged[-1]["endMs"] = int(row.get("endMs", merged[-1].get("endMs", 0)))
+        else:
+            merged.append(dict(row))
+
+    clean = _sanitize_marks(merged)
+    non_n = [r for r in clean if str(r.get("label", "")).strip().upper() != "N"]
+    labeled_ratio = float(len(non_n) / max(1, len(clean)))
+    return clean, [], labeled_ratio
+
+
 def _detect_chords_independent(
     y: np.ndarray,
     sr: int,
     duration_ms: int,
 ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    rows: List[Dict[str, Any]] = []
     confidences: List[float] = []
     if librosa is None or not isinstance(y, np.ndarray) or y.size == 0:
-        return rows, {"engine": "none", "error": "librosa unavailable for chord extraction"}
+        return [], {"engine": "none", "error": "librosa unavailable for chord extraction"}
     hop = 512
     try:
         chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=hop)
     except Exception as err:
-        return rows, {"engine": "none", "error": f"chroma_cqt failed: {err}"}
+        return [], {"engine": "none", "error": f"chroma_cqt failed: {err}"}
     if not isinstance(chroma, np.ndarray) or chroma.size == 0 or chroma.shape[1] < 2:
-        return rows, {"engine": "none", "error": "insufficient chroma frames"}
+        return [], {"engine": "none", "error": "insufficient chroma frames"}
 
-    frame_starts = librosa.frames_to_time(np.arange(chroma.shape[1]), sr=sr, hop_length=hop) * 1000.0
+    frame_starts = [
+        int(round(v))
+        for v in (librosa.frames_to_time(np.arange(chroma.shape[1]), sr=sr, hop_length=hop) * 1000.0)
+    ]
     labels: List[str] = []
     margins: List[float] = []
-    scores_best: List[float] = []
     for i in range(chroma.shape[1]):
-        profile = np.asarray(chroma[:, i], dtype=float)
-        norm = float(np.linalg.norm(profile))
-        if not np.isfinite(norm) or norm <= 0:
-            labels.append("N")
-            margins.append(0.0)
-            scores_best.append(0.0)
-            continue
-        profile = profile / norm
-        scored: List[tuple[str, float]] = []
-        for label, tpl in CHORD_TEMPLATES:
-            score = float(np.dot(profile, tpl))
-            if np.isfinite(score):
-                scored.append((label, score))
-        if not scored:
-            labels.append("N")
-            margins.append(0.0)
-            scores_best.append(0.0)
-            continue
-        scored.sort(key=lambda x: x[1], reverse=True)
-        best_label, best_score = scored[0]
-        second_score = scored[1][1] if len(scored) > 1 else -1.0
-        margin = float(best_score - second_score)
-        out_label = best_label if (best_score >= 0.35 and margin >= 0.03) else "N"
+        out_label, margin, best_score = _classify_chord_profile(np.asarray(chroma[:, i], dtype=float))
         labels.append(out_label)
-        margins.append(max(0.0, margin))
-        scores_best.append(max(0.0, best_score))
+        margins.append(margin)
+        if out_label != "N":
+            confidences.append(max(0.0, margin * best_score))
 
-    # Majority smoothing over a tiny window reduces frame jitter without forcing bar alignment.
+    # Majority smoothing over a tiny window reduces jitter without forcing bar alignment.
     smooth = list(labels)
     for i in range(1, len(labels) - 1):
         a, b, c = labels[i - 1], labels[i], labels[i + 1]
@@ -768,46 +932,98 @@ def _detect_chords_independent(
             smooth[i] = a
     labels = smooth
 
-    i = 0
-    n = len(labels)
-    while i < n:
-        label = labels[i]
-        j = i + 1
-        while j < n and labels[j] == label:
-            j += 1
-        start_ms = int(round(float(frame_starts[i])))
-        if j < n:
-            end_ms = int(round(float(frame_starts[j])))
-        else:
-            end_ms = int(duration_ms)
-        start_ms = max(0, min(int(duration_ms) - 1, start_ms))
-        end_ms = max(start_ms + 1, min(int(duration_ms), end_ms))
-        seg_margin = float(np.mean(np.asarray(margins[i:j], dtype=float))) if j > i else 0.0
-        seg_score = float(np.mean(np.asarray(scores_best[i:j], dtype=float))) if j > i else 0.0
-        # Keep unknown segments for continuity, but drop sub-250ms micro fragments.
-        if (end_ms - start_ms) >= 250:
-            rows.append({"startMs": start_ms, "endMs": end_ms, "label": label})
-            if label != "N":
-                confidences.append(max(0.0, seg_margin * seg_score))
-        i = j
-
-    # Merge adjacent equal labels created after micro-fragment filtering.
-    merged: List[Dict[str, Any]] = []
-    for row in rows:
-        prev_label = str(merged[-1].get("label", "")).strip() if merged else ""
-        cur_label = str(row.get("label", "")).strip()
-        if merged and prev_label and prev_label == cur_label:
-            merged[-1]["endMs"] = int(row.get("endMs", merged[-1]["endMs"]))
-        else:
-            merged.append(dict(row))
-
-    clean = _sanitize_marks(merged)
+    clean, _, labeled_ratio = _build_chord_rows_from_labels(labels, frame_starts, duration_ms, min_segment_ms=250)
     confidence = float(np.mean(np.asarray(confidences, dtype=float))) if confidences else 0.0
+    if confidence < 0.08 or labeled_ratio < 0.35:
+        return [], {
+            "engine": "librosa-chroma-template-v2-independent",
+            "timelineAligned": False,
+            "chordMarkCount": int(len(clean)),
+            "avgMarginConfidence": round(confidence, 4),
+            "labeledRatio": round(labeled_ratio, 4),
+            "error": "low-confidence chord estimate",
+        }
     return clean, {
         "engine": "librosa-chroma-template-v2-independent",
         "timelineAligned": False,
         "chordMarkCount": int(len(clean)),
         "avgMarginConfidence": round(confidence, 4),
+        "labeledRatio": round(labeled_ratio, 4),
+    }
+
+
+def _detect_chords_from_beats(
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+    beat_starts_ms: List[int],
+) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    if librosa is None or not isinstance(y, np.ndarray) or y.size == 0:
+        return [], {"engine": "none", "error": "librosa unavailable for chord extraction"}
+    starts = sorted({int(x) for x in (beat_starts_ms or []) if 0 <= int(x) < int(duration_ms)})
+    if len(starts) < 8:
+        return _detect_chords_independent(y, sr, duration_ms)
+    hop = 512
+    try:
+        chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=hop)
+    except Exception as err:
+        return [], {"engine": "none", "error": f"chroma_cqt failed: {err}"}
+    if not isinstance(chroma, np.ndarray) or chroma.size == 0 or chroma.shape[1] < 2:
+        return [], {"engine": "none", "error": "insufficient chroma frames"}
+
+    beat_sec = np.asarray(starts, dtype=float) / 1000.0
+    beat_frames = librosa.time_to_frames(beat_sec, sr=sr, hop_length=hop)
+    beat_frames = np.asarray(sorted(set(int(max(0, f)) for f in beat_frames.tolist())), dtype=int)
+    max_frame = int(chroma.shape[1] - 1)
+    beat_frames = beat_frames[(beat_frames >= 0) & (beat_frames <= max_frame)]
+    if beat_frames.size < 2:
+        return _detect_chords_independent(y, sr, duration_ms)
+    try:
+        sync = librosa.util.sync(chroma, beat_frames, aggregate=np.median)
+    except Exception:
+        return _detect_chords_independent(y, sr, duration_ms)
+    if not isinstance(sync, np.ndarray) or sync.size == 0:
+        return _detect_chords_independent(y, sr, duration_ms)
+
+    seg_count = min(sync.shape[1], len(starts))
+    labels: List[str] = []
+    confidences: List[float] = []
+    for i in range(seg_count):
+        out_label, margin, best_score = _classify_chord_profile(np.asarray(sync[:, i], dtype=float))
+        labels.append(out_label)
+        if out_label != "N":
+            confidences.append(max(0.0, margin * best_score))
+
+    # Smooth single-beat flips.
+    smooth = list(labels)
+    for i in range(1, len(labels) - 1):
+        a, b, c = labels[i - 1], labels[i], labels[i + 1]
+        if a == c and b != a:
+            smooth[i] = a
+    labels = smooth
+
+    clean, _, labeled_ratio = _build_chord_rows_from_labels(
+        labels,
+        starts[:len(labels)],
+        duration_ms,
+        min_segment_ms=350,
+    )
+    confidence = float(np.mean(np.asarray(confidences, dtype=float))) if confidences else 0.0
+    if confidence < 0.08 or labeled_ratio < 0.35:
+        return [], {
+            "engine": "librosa-chroma-template-v3-beat-synchronous",
+            "timelineAligned": "beat",
+            "chordMarkCount": int(len(clean)),
+            "avgMarginConfidence": round(confidence, 4),
+            "labeledRatio": round(labeled_ratio, 4),
+            "error": "low-confidence chord estimate",
+        }
+    return clean, {
+        "engine": "librosa-chroma-template-v3-beat-synchronous",
+        "timelineAligned": "beat",
+        "chordMarkCount": int(len(clean)),
+        "avgMarginConfidence": round(confidence, 4),
+        "labeledRatio": round(labeled_ratio, 4),
     }
 
 
@@ -1672,7 +1888,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
     beats_out = _label_beats_from_downbeats(beats_out, downbeat_starts, detected_beats_per_bar)
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, detected_beats_per_bar)
-    chords_out, chord_meta = _detect_chords_independent(y, sr, duration_ms)
+    chords_out, chord_meta = _detect_chords(y, sr, duration_ms)
 
     bpm_est = None
     if len(beat_times_ms) >= 2:
@@ -1764,7 +1980,7 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         beats_out.append({"startMs": start, "endMs": end, "label": str(beat_num)})
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb)))
-    chords_out, chord_meta = _detect_chords_independent(y, sr, duration_ms)
+    chords_out, chord_meta = _detect_chords(y, sr, duration_ms)
     bpm_est = None
     if len(beat_starts_ms) >= 2:
         diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
@@ -1899,6 +2115,7 @@ def health() -> Dict[str, Any]:
         "service": "xlightsdesigner-analysis",
         "librosaAvailable": bool(librosa is not None),
         "beatnetAvailable": bool(BeatNetEstimator is not None),
+        "madmomChordAvailable": bool(CNNChordFeatureProcessor is not None and CRFChordRecognitionProcessor is not None and MadmomSignal is not None),
         "lyricsAutoShiftEnabled": bool(ENABLE_LYRICS_AUTO_SHIFT),
         "sectionProviders": _provider_config_state(),
     }

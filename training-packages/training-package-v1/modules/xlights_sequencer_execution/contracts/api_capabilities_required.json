@@ -1,0 +1,12 @@
+{
+  "requiredCapabilities": [
+    "system.validateCommands",
+    "system.executePlan",
+    "sequence.getRevision",
+    "timing.getTracks",
+    "timing.getMarks",
+    "sequencer.getEffectSummary"
+  ],
+  "requiredApiVersion": 2,
+  "sourceSpec": "specs/projects/xlights-sequencer-control/api-surface-contract.md"
+}

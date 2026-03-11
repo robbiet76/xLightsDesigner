@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "id": "most-wonderful-time-andy-williams",
+      "title": "It's the Most Wonderful Time of the Year",
+      "audioPath": "/ABSOLUTE/PATH/TO/04 It's the Most Wonderful Time of the Year.mp3",
+      "expectedSections": [
+        { "startMs": 0, "endMs": 6500, "label": "Intro" },
+        { "startMs": 6500, "endMs": 36000, "label": "Verse" },
+        { "startMs": 36000, "endMs": 54000, "label": "Chorus" },
+        { "startMs": 54000, "endMs": 86000, "label": "Verse" },
+        { "startMs": 86000, "endMs": 118000, "label": "Chorus" },
+        { "startMs": 118000, "endMs": 152579, "label": "Outro" }
+      ]
+    }
+  ]
+}

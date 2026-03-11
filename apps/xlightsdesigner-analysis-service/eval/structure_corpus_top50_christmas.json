@@ -1,0 +1,1622 @@
+{
+  "meta": {
+    "source": "lrclib",
+    "songCount": 50,
+    "matchedCount": 12,
+    "matchRate": 0.24
+  },
+  "songs": [
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "Darlene Love",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970091,
+      "albumName": "A Christmas Gift for You from Phil Spector",
+      "duration": 170.0,
+      "stanzaCount": 17,
+      "stanzas": [
+        {
+          "startMs": 16060,
+          "endMs": 48030,
+          "lines": [
+            "(Christmas)",
+            "The snow's coming down",
+            "(Christmas)",
+            "I'm watching it fall",
+            "(Christmas)",
+            "Lots of people around",
+            "(Christmas)",
+            "Baby, please come home",
+            "(Christmas)",
+            "The church bells in town",
+            "(Christmas)",
+            "All ringing in song",
+            "(Christmas)",
+            "Full of happy sounds",
+            "(Christmas)",
+            "Baby, please come home",
+            "They're singing, 'Deck The Halls'"
+          ],
+          "text": "(Christmas) | The snow's coming down | (Christmas) | I'm watching it fall | (Christmas) | Lots of people around | (Christmas) | Baby, please come home | (Christmas) | The church bells in town | (Christmas) | All ringing in song | (Christmas) | Full of happy sounds | (Christmas) | Baby, please come home | They're singing, 'Deck The Halls'",
+          "index": 0,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.647,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 50530,
+          "endMs": 51730,
+          "lines": [
+            "But it's not like Christmas at all"
+          ],
+          "text": "But it's not like Christmas at all",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 54380,
+          "endMs": 55580,
+          "lines": [
+            "'Cause I remember when you were here"
+          ],
+          "text": "'Cause I remember when you were here",
+          "index": 2,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 58060,
+          "endMs": 59260,
+          "lines": [
+            "And all the fun we had last year"
+          ],
+          "text": "And all the fun we had last year",
+          "index": 3,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 61520,
+          "endMs": 80190,
+          "lines": [
+            "(Christmas)",
+            "Pretty lights on the tree",
+            "(Christmas)",
+            "I'm watching them shine",
+            "(Christmas)",
+            "You should be here with me",
+            "(Christmas)",
+            "Baby, please come home",
+            "Come on!",
+            "Yeah come on!",
+            "I know, I know y'all wanna get up"
+          ],
+          "text": "(Christmas) | Pretty lights on the tree | (Christmas) | I'm watching them shine | (Christmas) | You should be here with me | (Christmas) | Baby, please come home | Come on! | Yeah come on! | I know, I know y'all wanna get up",
+          "index": 4,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.455,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 82730,
+          "endMs": 83930,
+          "lines": [
+            "Get on up!"
+          ],
+          "text": "Get on up!",
+          "index": 5,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 92120,
+          "endMs": 93320,
+          "lines": [
+            "They're singing, 'Deck The Halls'"
+          ],
+          "text": "They're singing, 'Deck The Halls'",
+          "index": 6,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 95970,
+          "endMs": 97170,
+          "lines": [
+            "But it's not like Christmas at all"
+          ],
+          "text": "But it's not like Christmas at all",
+          "index": 7,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": true
+        },
+        {
+          "startMs": 99520,
+          "endMs": 100720,
+          "lines": [
+            "'Cause I remember when you were here"
+          ],
+          "text": "'Cause I remember when you were here",
+          "index": 8,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": true
+        },
+        {
+          "startMs": 103630,
+          "endMs": 104830,
+          "lines": [
+            "And all the fun we had last year"
+          ],
+          "text": "And all the fun we had last year",
+          "index": 9,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": true
+        },
+        {
+          "startMs": 106840,
+          "endMs": 127280,
+          "lines": [
+            "(Christmas)",
+            "If there was a way",
+            "(Christmas)",
+            "I'd hold back this tear",
+            "(Christmas)",
+            "But it's Christmas day",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "Baby, please come home (Christmas)"
+          ],
+          "text": "(Christmas) | If there was a way | (Christmas) | I'd hold back this tear | (Christmas) | But it's Christmas day | (Please) Please | (Please) Please | (Please) Please | (Please) Please | (Please) Please | (Please) Please | Baby, please come home (Christmas)",
+          "index": 10,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 129600,
+          "endMs": 130800,
+          "lines": [
+            "Baby, please come home (Christmas)"
+          ],
+          "text": "Baby, please come home (Christmas)",
+          "index": 11,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 133340,
+          "endMs": 134540,
+          "lines": [
+            "Baby, please come home (Christmas)"
+          ],
+          "text": "Baby, please come home (Christmas)",
+          "index": 12,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": true
+        },
+        {
+          "startMs": 137300,
+          "endMs": 140970,
+          "lines": [
+            "Baby, please come home (Christmas)",
+            "Oh, yeah, yeah, yeah, yeah..."
+          ],
+          "text": "Baby, please come home (Christmas) | Oh, yeah, yeah, yeah, yeah...",
+          "index": 13,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 144160,
+          "endMs": 145360,
+          "lines": [
+            "I need you, I need you (Christmas)"
+          ],
+          "text": "I need you, I need you (Christmas)",
+          "index": 14,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 148170,
+          "endMs": 149370,
+          "lines": [
+            "Baby please come home (Christmas)"
+          ],
+          "text": "Baby please come home (Christmas)",
+          "index": 15,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": true
+        },
+        {
+          "startMs": 155070,
+          "endMs": 167070,
+          "lines": [
+            "Baby please come home (Christmas)",
+            "Oh yeah, yeah, yeah... (Christmas)",
+            "Thank you so much",
+            "God bless you, thank you for coming out",
+            "And making this a special day for me, I love you so much",
+            "They're singing, 'Deck The Halls'",
+            "But it's not like Christmas at all",
+            "'Cause I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas)",
+            "If there was a way",
+            "(Christmas)",
+            "I'd hold back this tear",
+            "(Christmas)",
+            "But it's Christmas day",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "(Please) Please",
+            "Baby, please come home (Christmas)",
+            "Baby, please come home (Christmas)",
+            "Baby, please come home (Christmas)",
+            "Baby, please come home (Christmas)",
+            "Oh, yeah, yeah, yeah, yeah...",
+            "I need you, I need you (Christmas)",
+            "Baby please come home (Christmas)",
+            "Baby please come home (Christmas)",
+            "Oh yeah, yeah, yeah... (Christmas)"
+          ],
+          "text": "Baby please come home (Christmas) | Oh yeah, yeah, yeah... (Christmas) | Thank you so much | God bless you, thank you for coming out | And making this a special day for me, I love you so much | They're singing, 'Deck The Halls' | But it's not like Christmas at all | 'Cause I remember when you were here | And all the fun we had last year | (Christmas) | If there was a way | (Christmas) | I'd hold back this tear | (Christmas) | But it's Christmas day | (Please) Please | (Please) Please | (Please) Please | (Please) Please | (Please) Please | (Please) Please | Baby, please come home (Christmas) | Baby, please come home (Christmas) | Baby, please come home (Christmas) | Baby, please come home (Christmas) | Oh, yeah, yeah, yeah, yeah... | I need you, I need you (Christmas) | Baby please come home (Christmas) | Baby please come home (Christmas) | Oh yeah, yeah, yeah... (Christmas)",
+          "index": 16,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.9,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "Mariah Carey",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 970093,
+      "albumName": "Merry Christmas (Deluxe Anniversary Edition)",
+      "duration": 155.0,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "startMs": 1920,
+          "endMs": 7140,
+          "lines": [
+            "Oh, ohh",
+            "Yeah, ohh"
+          ],
+          "text": "Oh, ohh | Yeah, ohh",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 11970,
+          "endMs": 73980,
+          "lines": [
+            "Ooh yeah",
+            "(Christmas)",
+            "The snow's comin' down",
+            "(Christmas)",
+            "I'm watchin' it fall",
+            "(Christmas)",
+            "Lots of people around",
+            "(Christmas)",
+            "Baby, please come home",
+            "(Christmas)",
+            "The church bells in town",
+            "(Christmas)",
+            "Are ringing in song",
+            "(Christmas)",
+            "Full of the happiest sounds",
+            "(Christmas)",
+            "Baby, please come home",
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "'Cause I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas)",
+            "Pretty lights on the tree",
+            "(Christmas)",
+            "I'm watching them shine",
+            "(Christmas)",
+            "You should be here with me",
+            "(Christmas)",
+            "Baby, please come home"
+          ],
+          "text": "Ooh yeah | (Christmas) | The snow's comin' down | (Christmas) | I'm watchin' it fall | (Christmas) | Lots of people around | (Christmas) | Baby, please come home | (Christmas) | The church bells in town | (Christmas) | Are ringing in song | (Christmas) | Full of the happiest sounds | (Christmas) | Baby, please come home | They're singing \"Deck The Halls\" | But it's not like Christmas at all | 'Cause I remember when you were here | And all the fun we had last year | (Christmas) | Pretty lights on the tree | (Christmas) | I'm watching them shine | (Christmas) | You should be here with me | (Christmas) | Baby, please come home",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.655,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 90930,
+          "endMs": 135750,
+          "lines": [
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "'Cause I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas)",
+            "If there was a way",
+            "(Christmas)",
+            "I'd hold back this tear",
+            "(Christmas)",
+            "But it's Christmas day",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "Baby please come home",
+            "(Christmas)",
+            "Baby please come home",
+            "(Christmas)",
+            "Baby please come home",
+            "(Christmas)",
+            "Baby please come home, oh yeah yeah"
+          ],
+          "text": "They're singing \"Deck The Halls\" | But it's not like Christmas at all | 'Cause I remember when you were here | And all the fun we had last year | (Christmas) | If there was a way | (Christmas) | I'd hold back this tear | (Christmas) | But it's Christmas day | (Please) please | (Please) please | (Please) please | (Please) please | Baby please come home | (Christmas) | Baby please come home | (Christmas) | Baby please come home | (Christmas) | Baby please come home, oh yeah yeah",
+          "index": 2,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.81,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 139520,
+          "endMs": 144770,
+          "lines": [
+            "Christmas",
+            "Christmas"
+          ],
+          "text": "Christmas | Christmas",
+          "index": 3,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "Michael Bubl\u00e9",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 977862,
+      "albumName": "Christmas (Deluxe 10th Anniversary Edition)",
+      "duration": 190.0,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "startMs": 15480,
+          "endMs": 73830,
+          "lines": [
+            "(Christmas) the snow's coming down",
+            "(Christmas) I'm watching it fall",
+            "(Christmas) lots of people around",
+            "(Christmas) baby, please come home",
+            "(Christmas) the church bells in town",
+            "(Christmas) all ringing in song",
+            "(Christmas) full of happy sounds",
+            "(Christmas) baby, please come home",
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas) pretty lights on the tree",
+            "(Christmas) I'm watching 'em shine",
+            "(Christmas) you should be here with me",
+            "(Christmas) mm, baby, please come home"
+          ],
+          "text": "(Christmas) the snow's coming down | (Christmas) I'm watching it fall | (Christmas) lots of people around | (Christmas) baby, please come home | (Christmas) the church bells in town | (Christmas) all ringing in song | (Christmas) full of happy sounds | (Christmas) baby, please come home | They're singing \"Deck The Halls\" | But it's not like Christmas at all | I remember when you were here | And all the fun we had last year | (Christmas) pretty lights on the tree | (Christmas) I'm watching 'em shine | (Christmas) you should be here with me | (Christmas) mm, baby, please come home",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 2,
+          "titleLineRatio": 0.125,
+          "globallyRepeatedLineRatio": 0.25,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 92030,
+          "endMs": 186360,
+          "lines": [
+            "They're singing \"Deck The Halls\"",
+            "Not like Christmas at all",
+            "I remember when you were here",
+            "All the fun we had last year",
+            "(Christmas) oh, if there was a way",
+            "(Christmas) I'd hold back these tears",
+            "(Christmas) oh, but it's Christmas day",
+            "(Please)",
+            "Please",
+            "(Please)",
+            "Please",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please (please, please)",
+            "Oh, come home",
+            "Oh, babe",
+            "You know I need you",
+            "Oh, come home (home)",
+            "(Love, love, love, love) I gotta have ya",
+            "(Love, love, love, love) you know I need you",
+            "Love (oh, love), love, love (oh, love), love",
+            "(Christmas)",
+            "Woo-hoo (love, love, love, love)",
+            "(Love, love, love, love) I gotta have ya",
+            "I sing, \"Na, na-na, na, na, na-na-na-na, na-na, na-na\"",
+            "It's Christmas, Christmas",
+            "Christmas, Christmas, yeah (love, love, love, love)",
+            "La, la, la, la, la, la, la (love, love, love, love)",
+            "(Love, love, love, love)",
+            "(Christmas)"
+          ],
+          "text": "They're singing \"Deck The Halls\" | Not like Christmas at all | I remember when you were here | All the fun we had last year | (Christmas) oh, if there was a way | (Christmas) I'd hold back these tears | (Christmas) oh, but it's Christmas day | (Please) | Please | (Please) | Please | (Please) please | (Please) please | (Please) please | (Please) please (please, please) | Oh, come home | Oh, babe | You know I need you | Oh, come home (home) | (Love, love, love, love) I gotta have ya | (Love, love, love, love) you know I need you | Love (oh, love), love, love (oh, love), love | (Christmas) | Woo-hoo (love, love, love, love) | (Love, love, love, love) I gotta have ya | I sing, \"Na, na-na, na, na, na-na-na-na, na-na, na-na\" | It's Christmas, Christmas | Christmas, Christmas, yeah (love, love, love, love) | La, la, la, la, la, la, la (love, love, love, love) | (Love, love, love, love) | (Christmas)",
+          "index": 1,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.419,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "Chris Young",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 7828500,
+      "albumName": "NOW That's What I Call Country Christmas [2019]",
+      "duration": 162.0,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "startMs": 18150,
+          "endMs": 74180,
+          "lines": [
+            "The snow's coming down",
+            "I'm watching it fall",
+            "Lots of people around",
+            "Baby please come home",
+            "The church bells in town",
+            "All singing in song",
+            "Full of happy sounds",
+            "Baby please come home",
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "'Cause I remember when you were here",
+            "And all the fun we had last year",
+            "Pretty lights on the tree",
+            "I'm watching them shine",
+            "You should be here with me",
+            "Baby please come home"
+          ],
+          "text": "The snow's coming down | I'm watching it fall | Lots of people around | Baby please come home | The church bells in town | All singing in song | Full of happy sounds | Baby please come home | They're singing \"Deck The Halls\" | But it's not like Christmas at all | 'Cause I remember when you were here | And all the fun we had last year | Pretty lights on the tree | I'm watching them shine | You should be here with me | Baby please come home",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.438,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 91650,
+          "endMs": 134130,
+          "lines": [
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "'Cause I remember when you were here",
+            "And all the fun we had last year",
+            "If there was a way",
+            "I'd hold back this tear",
+            "But it's Christmas day",
+            "Please",
+            "Please",
+            "Please",
+            "Please",
+            "Baby please come home",
+            "Baby, you know that I need you",
+            "Oh come home"
+          ],
+          "text": "They're singing \"Deck The Halls\" | But it's not like Christmas at all | 'Cause I remember when you were here | And all the fun we had last year | If there was a way | I'd hold back this tear | But it's Christmas day | Please | Please | Please | Please | Baby please come home | Baby, you know that I need you | Oh come home",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.643,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 139730,
+          "endMs": 152790,
+          "lines": [
+            "You know that I need you",
+            "I got to have you",
+            "I need you, I need you, I need you",
+            "I need you, I need you, I need you",
+            "Baby please come home"
+          ],
+          "text": "You know that I need you | I got to have you | I need you, I need you, I need you | I need you, I need you, I need you | Baby please come home",
+          "index": 2,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.6,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Silent Night",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "O Come All Ye Faithful",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Joy to the World",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "O Holy Night",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "We Three Kings",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "The First Noel",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Let All Mortal Flesh Keep Silence",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas (Baby Please Come Home) [Instrumental Version]",
+      "artist": "The O'Neill Brothers Group",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas Songs",
+      "artist": "Andr\u00e9 Previn, Frederica von Stade, Kathleen Battle, The Christmas Concert Choir, Orchestra of St. Luke's, The American Boychoir, Nancy Allen, Wynton Marsalis & Wynton Marsalis Septet",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "God Rest Ye Merry Gentlemen",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "It Came Upon a Midnight Clear",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Away in a Manger",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "O Come O Come Emmanuel",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "top christmas songs",
+      "artist": "Armonia Artificial",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Angels We Have Heard On High",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Hark the Herald Angels Sing",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas Songs",
+      "artist": "Josh Rouse",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Lo How a Rose Ere Blooming",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "What Child Is This",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Coventry Carol the Lullay Song",
+      "artist": "Instrumental Holiday Music Artists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas Songs",
+      "artist": "Josh William",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas (Baby, Please Come Home) [feat. Darlene Love]",
+      "artist": "Cher",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 4693685,
+      "albumName": "Christmas Songs and Holiday Music",
+      "duration": 163.0,
+      "stanzaCount": 3,
+      "stanzas": [
+        {
+          "startMs": 15440,
+          "endMs": 72820,
+          "lines": [
+            "(Christmas) the snow's coming down",
+            "(Christmas) I'm watching it fall",
+            "(Christmas) lots of people around",
+            "(Christmas) baby, please come home",
+            "(Christmas) the church bells in town",
+            "(Christmas) all ringing in song",
+            "(Christmas) full of happy sounds",
+            "(Christmas) baby please come home",
+            "They're singing 'deck the halls'",
+            "But it's not like christmas at all",
+            "'Cause i remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas) pretty lights on the tree",
+            "(Christmas) I'm watching them shine",
+            "(Christmas) you should be here with me",
+            "(Christmas) baby please come home"
+          ],
+          "text": "(Christmas) the snow's coming down | (Christmas) I'm watching it fall | (Christmas) lots of people around | (Christmas) baby, please come home | (Christmas) the church bells in town | (Christmas) all ringing in song | (Christmas) full of happy sounds | (Christmas) baby please come home | They're singing 'deck the halls' | But it's not like christmas at all | 'Cause i remember when you were here | And all the fun we had last year | (Christmas) pretty lights on the tree | (Christmas) I'm watching them shine | (Christmas) you should be here with me | (Christmas) baby please come home",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.438,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 90710,
+          "endMs": 136380,
+          "lines": [
+            "They're singing 'deck the halls'",
+            "But it's not like christmas at all",
+            "'Cause I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas) if there was a way",
+            "(Christmas) i'd hold back these tears",
+            "(Christmas) but it's christmas day",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "(Please) please",
+            "Baby, please come home",
+            "Baby, please come home",
+            "Baby, please come home",
+            "Baby, please come home (yeah, yeah, yeah)"
+          ],
+          "text": "They're singing 'deck the halls' | But it's not like christmas at all | 'Cause I remember when you were here | And all the fun we had last year | (Christmas) if there was a way | (Christmas) i'd hold back these tears | (Christmas) but it's christmas day | (Please) please | (Please) please | (Please) please | (Please) please | (Please) please | (Please) please | Baby, please come home | Baby, please come home | Baby, please come home | Baby, please come home (yeah, yeah, yeah)",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.765,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 143380,
+          "endMs": 149290,
+          "lines": [
+            "I need you, I need you",
+            "Please come home"
+          ],
+          "text": "I need you, I need you | Please come home",
+          "index": 2,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "U2",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 974274,
+      "albumName": "I Believe In Father Christmas EP",
+      "duration": 140.0,
+      "stanzaCount": 1,
+      "stanzas": [
+        {
+          "startMs": 1760,
+          "endMs": 136750,
+          "lines": [
+            "It's Christmas",
+            "Baby please come home",
+            "Yeah!",
+            "(Christmas) The snow's coming down",
+            "(Christmas) I'm watching it fall",
+            "(Christmas) Lots of people around",
+            "(Christmas) Baby please come home",
+            "(Christmas) The church bells in town",
+            "(Christmas) They're ringing their song",
+            "(Christmas) Oh the happiest town",
+            "(Christmas) Baby please come home",
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas) Pretty lights on the tree",
+            "(Christmas) I'm watching them shine",
+            "(Christmas) You should be here with me",
+            "(Christmas) Baby please come home",
+            "Oh!",
+            "Baby please come home",
+            "Baby please come home",
+            "They're singing \"Deck The Halls\"",
+            "But it's not like Christmas at all",
+            "I remember when you were here",
+            "And all the fun we had last year",
+            "(Christmas) If there was a way",
+            "(Christmas) I would hold back these tears",
+            "(Christmas) For this Christmas day",
+            "(Christmas) Baby please come home",
+            "Home",
+            "Baby please come home!",
+            "Baby please come home!",
+            "Baby please come home!",
+            "Oh!",
+            "Baby please come home!",
+            "Baby please come home!"
+          ],
+          "text": "It's Christmas | Baby please come home | Yeah! | (Christmas) The snow's coming down | (Christmas) I'm watching it fall | (Christmas) Lots of people around | (Christmas) Baby please come home | (Christmas) The church bells in town | (Christmas) They're ringing their song | (Christmas) Oh the happiest town | (Christmas) Baby please come home | They're singing \"Deck The Halls\" | But it's not like Christmas at all | I remember when you were here | And all the fun we had last year | (Christmas) Pretty lights on the tree | (Christmas) I'm watching them shine | (Christmas) You should be here with me | (Christmas) Baby please come home | Oh! | Baby please come home | Baby please come home | They're singing \"Deck The Halls\" | But it's not like Christmas at all | I remember when you were here | And all the fun we had last year | (Christmas) If there was a way | (Christmas) I would hold back these tears | (Christmas) For this Christmas day | (Christmas) Baby please come home | Home | Baby please come home! | Baby please come home! | Baby please come home! | Oh! | Baby please come home! | Baby please come home!",
+          "index": 0,
+          "draftLabel": "Chorus",
+          "titleLineHits": 4,
+          "titleLineRatio": 0.108,
+          "globallyRepeatedLineRatio": 0.595,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Instrumental Christmas Music",
+      "artist": "Christmas Evangelists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas Hymns",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Holiday Classics",
+      "artist": "Xmas Holiday Collection",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "It's Beginning to Look a Lot Like Christmas (with Mitchell Ayres and His Orchestra)",
+      "artist": "Perry Como & The Fontane Sisters",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 15846758,
+      "albumName": "The Christmas Album 2015",
+      "duration": 155.976,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "startMs": 12270,
+          "endMs": 59380,
+          "lines": [
+            "It's beginning to look a lot like Christmas",
+            "Everywhere you go",
+            "Take a look in the Five and Ten",
+            "Glistening once again",
+            "With candy canes and silver lanes aglow",
+            "It's beginning to look a lot like Christmas",
+            "Toys in every store",
+            "But the prettiest sight to see",
+            "Is the holly that will be",
+            "On your own front door",
+            "A pair of Hop-a-long boots and a pistol that shoots",
+            "Is the wish of Barny and Ben",
+            "Dolls that will talk and go for a walk",
+            "Is the hope of Janice and Jenn",
+            "And mom and dad can hardly wait",
+            "For school to start again"
+          ],
+          "text": "It's beginning to look a lot like Christmas | Everywhere you go | Take a look in the Five and Ten | Glistening once again | With candy canes and silver lanes aglow | It's beginning to look a lot like Christmas | Toys in every store | But the prettiest sight to see | Is the holly that will be | On your own front door | A pair of Hop-a-long boots and a pistol that shoots | Is the wish of Barny and Ben | Dolls that will talk and go for a walk | Is the hope of Janice and Jenn | And mom and dad can hardly wait | For school to start again",
+          "index": 0,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.562,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 63800,
+          "endMs": 95210,
+          "lines": [
+            "It's beginning to look a lot like Christmas",
+            "Everywhere you go",
+            "There's a tree in the Grand Hotel",
+            "One in the park as well",
+            "The sturdy kind that doesn't mind the snow",
+            "It's beginning to look a lot like Christmas",
+            "Soon the bells will start",
+            "And the thing that will make them ring",
+            "Is the Carol that you sing",
+            "Right within your heart"
+          ],
+          "text": "It's beginning to look a lot like Christmas | Everywhere you go | There's a tree in the Grand Hotel | One in the park as well | The sturdy kind that doesn't mind the snow | It's beginning to look a lot like Christmas | Soon the bells will start | And the thing that will make them ring | Is the Carol that you sing | Right within your heart",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.7,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 115020,
+          "endMs": 127270,
+          "lines": [
+            "A pair of Hop-a-long boots and a pistol that shoots",
+            "Is the wish of Barny and Ben",
+            "Dolls that will talk and go for a walk",
+            "Is the hope of Janice and Jenn",
+            "And mom and dad can hardly wait",
+            "For school to start again"
+          ],
+          "text": "A pair of Hop-a-long boots and a pistol that shoots | Is the wish of Barny and Ben | Dolls that will talk and go for a walk | Is the hope of Janice and Jenn | And mom and dad can hardly wait | For school to start again",
+          "index": 2,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 131710,
+          "endMs": 145720,
+          "lines": [
+            "It's beginning to look a lot like Christmas",
+            "Soon the bells will start",
+            "And the thing that will make them ring",
+            "Is the Carol that you sing",
+            "Right within your heart"
+          ],
+          "text": "It's beginning to look a lot like Christmas | Soon the bells will start | And the thing that will make them ring | Is the Carol that you sing | Right within your heart",
+          "index": 3,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Relaxing Music",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Winter Wonderland (with Percy Faith)",
+      "artist": "Johnny Mathis",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 6327356,
+      "albumName": "Merry Christmas",
+      "duration": 200.0,
+      "stanzaCount": 5,
+      "stanzas": [
+        {
+          "startMs": 6620,
+          "endMs": 50850,
+          "lines": [
+            "Sleigh bells ring, are you listening?",
+            "In the lane, snow is glistening",
+            "A beautiful sight, we're happy tonight",
+            "Walking in a winter wonderland",
+            "Gone away is the bluebird",
+            "Here to stay is a new bird",
+            "He sings a love song",
+            "As we go along walking in a winter wonderland",
+            "In the meadow, we can build a snowman",
+            "Then pretend that he is Parson Brown",
+            "He'll say, \"Are you married?\"",
+            "We'll say, \"No, man",
+            "But you can do the job when you're in town\"",
+            "Later on we'll conspire, as we dream by the fire"
+          ],
+          "text": "Sleigh bells ring, are you listening? | In the lane, snow is glistening | A beautiful sight, we're happy tonight | Walking in a winter wonderland | Gone away is the bluebird | Here to stay is a new bird | He sings a love song | As we go along walking in a winter wonderland | In the meadow, we can build a snowman | Then pretend that he is Parson Brown | He'll say, \"Are you married?\" | We'll say, \"No, man | But you can do the job when you're in town\" | Later on we'll conspire, as we dream by the fire",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.429,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 57420,
+          "endMs": 62620,
+          "lines": [
+            "To face unafraid, the plans that we made",
+            "Walking in a winter wonderland"
+          ],
+          "text": "To face unafraid, the plans that we made | Walking in a winter wonderland",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.5,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 70180,
+          "endMs": 84630,
+          "lines": [
+            "Over the ground lies a mantle of white",
+            "A heaven of diamonds shine down through the night",
+            "Two hearts are thrilling",
+            "In spite of the chilling weather"
+          ],
+          "text": "Over the ground lies a mantle of white | A heaven of diamonds shine down through the night | Two hearts are thrilling | In spite of the chilling weather",
+          "index": 2,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 91860,
+          "endMs": 156970,
+          "lines": [
+            "Love knows no season",
+            "Love knows no clime",
+            "Romance can blossom",
+            "Any old time",
+            "Here in the open",
+            "We're walkin' and hopin'",
+            "Together, together",
+            "Together, together",
+            "Sleigh Bells ring are you listening?",
+            "In the lane, snow is glistening",
+            "A beautiful sight we're happy tonight",
+            "Walking in a winter wonderland",
+            "Gone away is the bluebird",
+            "Here to say is a new bird",
+            "He's singing a love song",
+            "As we go along",
+            "Walking in a winter wonderland",
+            "In the meadow, we can build a snowman",
+            "And pretend he's a circus clown",
+            "We'll have lots of fun with Mr. Snowman",
+            "Until the other kiddies knock him down"
+          ],
+          "text": "Love knows no season | Love knows no clime | Romance can blossom | Any old time | Here in the open | We're walkin' and hopin' | Together, together | Together, together | Sleigh Bells ring are you listening? | In the lane, snow is glistening | A beautiful sight we're happy tonight | Walking in a winter wonderland | Gone away is the bluebird | Here to say is a new bird | He's singing a love song | As we go along | Walking in a winter wonderland | In the meadow, we can build a snowman | And pretend he's a circus clown | We'll have lots of fun with Mr. Snowman | Until the other kiddies knock him down",
+          "index": 3,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.429,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 162500,
+          "endMs": 186440,
+          "lines": [
+            "When it snows, ain't it thrillin'?",
+            "Though your nose gets a chillin'",
+            "We'll frolic and play the Eskimo way",
+            "Walking in a winter wonderland",
+            "Walking in a winter wonderland",
+            "Winter wonder, winter wonderland",
+            "Winter winter, wonder wonderland"
+          ],
+          "text": "When it snows, ain't it thrillin'? | Though your nose gets a chillin' | We'll frolic and play the Eskimo way | Walking in a winter wonderland | Walking in a winter wonderland | Winter wonder, winter wonderland | Winter winter, wonder wonderland",
+          "index": 4,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.286,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "This Christmas",
+      "artist": "Chris Brown",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1557660,
+      "albumName": "This Christmas",
+      "duration": 198.0,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "startMs": 930,
+          "endMs": 125460,
+          "lines": [
+            "Hang all the mistletoe",
+            "I'm gonna get to know you better",
+            "This Christmas",
+            "And as we trim the tree",
+            "How much fun it's gonna be together",
+            "This Christmas",
+            "The fireside is blazing bright, woah, oh, oh",
+            "We're caroling through the night, woah, oh, oh",
+            "This Christmas will be",
+            "A very special Christmas for me",
+            "Woah, oh, oh, woah, oh, oh, oh",
+            "Ha, let's go (woo)",
+            "Presents and cards are here",
+            "My world is filled with cheer and you",
+            "This Christmas",
+            "And as I look around",
+            "Your eyes outshine the town, they do",
+            "This Christmas",
+            "The fireside is blazing bright",
+            "And we're caroling through the night",
+            "And this Christmas will be",
+            "A very special Christmas for me, yeah, huh, woah, oh, oh",
+            "Oh, haha, shake a hand, shake a hand, now",
+            "Na, na, na, na, na, na",
+            "Ooh, the fireside is blazing bright"
+          ],
+          "text": "Hang all the mistletoe | I'm gonna get to know you better | This Christmas | And as we trim the tree | How much fun it's gonna be together | This Christmas | The fireside is blazing bright, woah, oh, oh | We're caroling through the night, woah, oh, oh | This Christmas will be | A very special Christmas for me | Woah, oh, oh, woah, oh, oh, oh | Ha, let's go (woo) | Presents and cards are here | My world is filled with cheer and you | This Christmas | And as I look around | Your eyes outshine the town, they do | This Christmas | The fireside is blazing bright | And we're caroling through the night | And this Christmas will be | A very special Christmas for me, yeah, huh, woah, oh, oh | Oh, haha, shake a hand, shake a hand, now | Na, na, na, na, na, na | Ooh, the fireside is blazing bright",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 6,
+          "titleLineRatio": 0.24,
+          "globallyRepeatedLineRatio": 0.24,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 152750,
+          "endMs": 186350,
+          "lines": [
+            "And we're caroling through the night",
+            "And this Christmas will be",
+            "So special for you and me, yes, it will be",
+            "Woah, oh, oh, ha",
+            "Shake a hand now",
+            "Come on, everybody shake a hand now, ha",
+            "Family, hey",
+            "We'll be together",
+            "To make this Christmas bright, yes, we will"
+          ],
+          "text": "And we're caroling through the night | And this Christmas will be | So special for you and me, yes, it will be | Woah, oh, oh, ha | Shake a hand now | Come on, everybody shake a hand now, ha | Family, hey | We'll be together | To make this Christmas bright, yes, we will",
+          "index": 1,
+          "draftLabel": "Verse",
+          "titleLineHits": 2,
+          "titleLineRatio": 0.222,
+          "globallyRepeatedLineRatio": 0.222,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Christmas Carols",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Where Are You Christmas (Instrumental Version)",
+      "artist": "The O'Neill Brothers Group",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Xmas Songs",
+      "artist": "Christmas Evangelists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Classic Christmas Songs",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Best Christmas Songs",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Believe (From \"the Polar Express\") [Instrumental Version]",
+      "artist": "The O'Neill Brothers Group",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas (Baby Please Come Home) [feat. Scarlett Johansson, Taron Egerton, Reese Witherspoon & Tori Kelly] [BONUS TRACK]",
+      "artist": "Keke Palmer",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "My Wild Irish Rose",
+      "artist": "Xmas Holiday Collection",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Santa Claus is Coming to Town",
+      "artist": "Pentatonix",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 1352580,
+      "albumName": "That's Christmas To Me",
+      "duration": 162.0,
+      "stanzaCount": 10,
+      "stanzas": [
+        {
+          "startMs": 5930,
+          "endMs": 23200,
+          "lines": [
+            "Santa is coming to town",
+            "Santa is coming to town",
+            "Santa is coming to town",
+            "Santa is coming",
+            "You better watch out, you better not cry",
+            "Better not pout, I'm telling you why",
+            "Santa Claus is coming to town (Santa is coming to town)"
+          ],
+          "text": "Santa is coming to town | Santa is coming to town | Santa is coming to town | Santa is coming | You better watch out, you better not cry | Better not pout, I'm telling you why | Santa Claus is coming to town (Santa is coming to town)",
+          "index": 0,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.143,
+          "globallyRepeatedLineRatio": 0.857,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 27480,
+          "endMs": 34150,
+          "lines": [
+            "He's making a list, he's checking it twice",
+            "Gonna find out who's naughty or nice",
+            "Santa Claus is coming to town (Santa is coming to town)"
+          ],
+          "text": "He's making a list, he's checking it twice | Gonna find out who's naughty or nice | Santa Claus is coming to town (Santa is coming to town)",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 0.667,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 38140,
+          "endMs": 55820,
+          "lines": [
+            "He sees you when you're sleeping",
+            "He knows when you're awake",
+            "He knows when you've been bad or good",
+            "So be good for goodness sake",
+            "You better watch out, you better not cry",
+            "You better not pout, I'm telling you why",
+            "Santa Claus is coming to town (Santa is coming to town)"
+          ],
+          "text": "He sees you when you're sleeping | He knows when you're awake | He knows when you've been bad or good | So be good for goodness sake | You better watch out, you better not cry | You better not pout, I'm telling you why | Santa Claus is coming to town (Santa is coming to town)",
+          "index": 2,
+          "draftLabel": "Verse",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.143,
+          "globallyRepeatedLineRatio": 0.429,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 60120,
+          "endMs": 69240,
+          "lines": [
+            "Santa is coming to town",
+            "Santa is coming to town",
+            "Santa Claus is coming to town",
+            "You better watch out, you better not cry"
+          ],
+          "text": "Santa is coming to town | Santa is coming to town | Santa Claus is coming to town | You better watch out, you better not cry",
+          "index": 3,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.25,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 73280,
+          "endMs": 74480,
+          "lines": [
+            "You better not pout, I'm telling you why"
+          ],
+          "text": "You better not pout, I'm telling you why",
+          "index": 4,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 79140,
+          "endMs": 85790,
+          "lines": [
+            "Santa Claus is coming",
+            "Santa Claus is coming",
+            "Santa Claus is coming to town (Santa is coming to town)"
+          ],
+          "text": "Santa Claus is coming | Santa Claus is coming | Santa Claus is coming to town (Santa is coming to town)",
+          "index": 5,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.333,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 90190,
+          "endMs": 91390,
+          "lines": [
+            "Santa is coming to town"
+          ],
+          "text": "Santa is coming to town",
+          "index": 6,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 114950,
+          "endMs": 132360,
+          "lines": [
+            "Santa is coming to town",
+            "Santa is coming to town",
+            "Santa is coming to town",
+            "Santa is coming",
+            "You better watch out, you better not cry",
+            "You better not pout, I'm telling you why",
+            "Santa Claus is coming to town (Santa is coming to town)"
+          ],
+          "text": "Santa is coming to town | Santa is coming to town | Santa is coming to town | Santa is coming | You better watch out, you better not cry | You better not pout, I'm telling you why | Santa Claus is coming to town (Santa is coming to town)",
+          "index": 7,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.143,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 136300,
+          "endMs": 148570,
+          "lines": [
+            "He's making a list, he's checking it twice",
+            "He's gonna find out who's naughty or nice",
+            "Santa Claus is coming",
+            "Santa Claus is coming",
+            "Santa Claus is coming to town (Santa is coming to town)"
+          ],
+          "text": "He's making a list, he's checking it twice | He's gonna find out who's naughty or nice | Santa Claus is coming | Santa Claus is coming | Santa Claus is coming to town (Santa is coming to town)",
+          "index": 8,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 0.2,
+          "globallyRepeatedLineRatio": 0.8,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 155580,
+          "endMs": 156780,
+          "lines": [
+            "Santa Claus is coming to town"
+          ],
+          "text": "Santa Claus is coming to town",
+          "index": 9,
+          "draftLabel": "Chorus",
+          "titleLineHits": 1,
+          "titleLineRatio": 1.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Last Christmas",
+      "artist": "Wham!",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 169867,
+      "albumName": "LAST CHRISTMAS",
+      "duration": 263.0,
+      "stanzaCount": 4,
+      "stanzas": [
+        {
+          "startMs": 6530,
+          "endMs": 50670,
+          "lines": [
+            "Oh, oh-oh, ooh-oh-oh-oh",
+            "Ah-ah",
+            "Last Christmas, I gave you my heart",
+            "But the very next day, you gave it away",
+            "This year, to save me from tears",
+            "I'll give it to someone special",
+            "Last Christmas, I gave you my heart",
+            "But the very next day, you gave it away (you gave it away)",
+            "This year, to save me from tears",
+            "I'll give it to someone special (special)"
+          ],
+          "text": "Oh, oh-oh, ooh-oh-oh-oh | Ah-ah | Last Christmas, I gave you my heart | But the very next day, you gave it away | This year, to save me from tears | I'll give it to someone special | Last Christmas, I gave you my heart | But the very next day, you gave it away (you gave it away) | This year, to save me from tears | I'll give it to someone special (special)",
+          "index": 0,
+          "draftLabel": "Chorus",
+          "titleLineHits": 2,
+          "titleLineRatio": 0.2,
+          "globallyRepeatedLineRatio": 0.7,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 72740,
+          "endMs": 145870,
+          "lines": [
+            "Once bitten and twice shy",
+            "I keep my distance, but you still catch my eye",
+            "Tell me, baby, do you recognize me?",
+            "Well, it's been a year, it doesn't surprise me",
+            "\"Merry Christmas,\" I wrapped it up and sent it",
+            "With a note saying, \"I love you,\" I meant it",
+            "Now I know what a fool I've been",
+            "But if you kissed me now, I know you'd fool me again",
+            "Last Christmas, I gave you my heart",
+            "But the very next day, you gave it away (you gave it away)",
+            "This year, to save me from tears",
+            "I'll give it to someone special (special)",
+            "Last Christmas, I gave you my heart",
+            "But the very next day, you gave it away",
+            "This year, to save me from tears",
+            "I'll give it to someone special (special)",
+            "Oh-oh, oh my, baby"
+          ],
+          "text": "Once bitten and twice shy | I keep my distance, but you still catch my eye | Tell me, baby, do you recognize me? | Well, it's been a year, it doesn't surprise me | \"Merry Christmas,\" I wrapped it up and sent it | With a note saying, \"I love you,\" I meant it | Now I know what a fool I've been | But if you kissed me now, I know you'd fool me again | Last Christmas, I gave you my heart | But the very next day, you gave it away (you gave it away) | This year, to save me from tears | I'll give it to someone special (special) | Last Christmas, I gave you my heart | But the very next day, you gave it away | This year, to save me from tears | I'll give it to someone special (special) | Oh-oh, oh my, baby",
+          "index": 1,
+          "draftLabel": "Verse",
+          "titleLineHits": 2,
+          "titleLineRatio": 0.118,
+          "globallyRepeatedLineRatio": 0.471,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 162340,
+          "endMs": 248750,
+          "lines": [
+            "A crowded room, friends with tired eyes",
+            "I'm hiding from you, and your soul of ice",
+            "My God, I thought you were someone to rely on",
+            "Me? I guess I was a shoulder to cry on",
+            "A face on a lover with a fire in his heart",
+            "A man undercover, but you tore me apart",
+            "Ooh-hoo",
+            "Now I've found a real love, you'll never fool me again",
+            "Last Christmas, I gave you my heart",
+            "But the very next day, you gave it away (you gave it away)",
+            "This year, to save me from tears",
+            "I'll give it to someone special (special)",
+            "Last Christmas, I gave you my heart (I gave you my heart)",
+            "But the very next day, you gave it away (you gave it away)",
+            "This year, to save me from tears",
+            "I'll give it to someone special (special)",
+            "A face on a lover with a fire in his heart (I gave you my heart)",
+            "A man undercover, but you tore him apart",
+            "Maybe next year, I'll give it to someone",
+            "I'll give it to someone special (special!)"
+          ],
+          "text": "A crowded room, friends with tired eyes | I'm hiding from you, and your soul of ice | My God, I thought you were someone to rely on | Me? I guess I was a shoulder to cry on | A face on a lover with a fire in his heart | A man undercover, but you tore me apart | Ooh-hoo | Now I've found a real love, you'll never fool me again | Last Christmas, I gave you my heart | But the very next day, you gave it away (you gave it away) | This year, to save me from tears | I'll give it to someone special (special) | Last Christmas, I gave you my heart (I gave you my heart) | But the very next day, you gave it away (you gave it away) | This year, to save me from tears | I'll give it to someone special (special) | A face on a lover with a fire in his heart (I gave you my heart) | A man undercover, but you tore him apart | Maybe next year, I'll give it to someone | I'll give it to someone special (special!)",
+          "index": 2,
+          "draftLabel": "Verse",
+          "titleLineHits": 2,
+          "titleLineRatio": 0.1,
+          "globallyRepeatedLineRatio": 0.4,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 256640,
+          "endMs": 257840,
+          "lines": [
+            "So long!"
+          ],
+          "text": "So long!",
+          "index": 3,
+          "draftLabel": "Verse",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 0.0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Let It Go",
+      "artist": "Pentatonix",
+      "status": "ok",
+      "lyricsSource": "synced",
+      "lrclibId": 3210544,
+      "albumName": "White Christmas",
+      "duration": 208.0,
+      "stanzaCount": 2,
+      "stanzas": [
+        {
+          "startMs": 15720,
+          "endMs": 183760,
+          "lines": [
+            "The snow glows white on the mountain tonight, not a footprint to be seen",
+            "A kingdom of isolation and it looks like I'm the queen",
+            "The wind is howling like this swirling storm inside",
+            "Couldn't keep it in, Heaven knows I've tried",
+            "Don't let them in, don't let them see",
+            "Be the good girl you always have to be",
+            "Conceal, don't feel, don't let them know",
+            "Well, now they know",
+            "Let it go, let it go",
+            "Can't hold me back anymore",
+            "Let it go, let it go",
+            "Turn away and slam the door",
+            "I don't care what they're going to say",
+            "Let the storm rage on",
+            "The cold never bothered me anyway",
+            "It's funny how some distance makes everything seem small",
+            "And the fears that once controlled me can't get to me at all",
+            "It's time to see what I can do",
+            "To test the limits and break through",
+            "No right, no wrong, no rules for me",
+            "I'm free",
+            "Let it go, let it go",
+            "I walk with the wind and sky",
+            "Let it go, let it go",
+            "You'll never see me cry",
+            "Here I stand and here I stay",
+            "Let the storm rage on",
+            "My power flurries through the air into the ground",
+            "My soul is spiraling in frozen fractals all around",
+            "And one thought crystallizes like an icy blast",
+            "I'm never going back, the past is in the past",
+            "Let it go, let it go",
+            "When I'll rise like the break of dawn",
+            "Let it go, let it go",
+            "That perfect girl is gone",
+            "Here I stand in the light of day"
+          ],
+          "text": "The snow glows white on the mountain tonight, not a footprint to be seen | A kingdom of isolation and it looks like I'm the queen | The wind is howling like this swirling storm inside | Couldn't keep it in, Heaven knows I've tried | Don't let them in, don't let them see | Be the good girl you always have to be | Conceal, don't feel, don't let them know | Well, now they know | Let it go, let it go | Can't hold me back anymore | Let it go, let it go | Turn away and slam the door | I don't care what they're going to say | Let the storm rage on | The cold never bothered me anyway | It's funny how some distance makes everything seem small | And the fears that once controlled me can't get to me at all | It's time to see what I can do | To test the limits and break through | No right, no wrong, no rules for me | I'm free | Let it go, let it go | I walk with the wind and sky | Let it go, let it go | You'll never see me cry | Here I stand and here I stay | Let the storm rage on | My power flurries through the air into the ground | My soul is spiraling in frozen fractals all around | And one thought crystallizes like an icy blast | I'm never going back, the past is in the past | Let it go, let it go | When I'll rise like the break of dawn | Let it go, let it go | That perfect girl is gone | Here I stand in the light of day",
+          "index": 0,
+          "draftLabel": "Verse",
+          "titleLineHits": 6,
+          "titleLineRatio": 0.167,
+          "globallyRepeatedLineRatio": 0.25,
+          "patternSeenBefore": false
+        },
+        {
+          "startMs": 190710,
+          "endMs": 197250,
+          "lines": [
+            "Let the storm rage on",
+            "The cold never bothered me anyway"
+          ],
+          "text": "Let the storm rage on | The cold never bothered me anyway",
+          "index": 1,
+          "draftLabel": "Chorus",
+          "titleLineHits": 0,
+          "titleLineRatio": 0.0,
+          "globallyRepeatedLineRatio": 1.0,
+          "patternSeenBefore": false
+        }
+      ]
+    },
+    {
+      "title": "Instrumental Christmas Music",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas Time",
+      "artist": "Christmas Evangelists",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "The Dirt Drifters",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Christmas (Baby Please Come Home)",
+      "artist": "Cooltime",
+      "status": "no_lyrics"
+    },
+    {
+      "title": "Xmas Radio",
+      "artist": "Piano Music for Christmas & Christmas Music Central",
+      "status": "no_lyrics"
+    }
+  ]
+}

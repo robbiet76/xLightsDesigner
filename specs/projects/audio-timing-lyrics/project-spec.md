@@ -70,6 +70,20 @@ New commands for this project must use a versioned envelope:
 
 Legacy commands remain unchanged.
 
+### 3.3 Training Package Binding (Audio Module)
+Audio-analysis prompt/eval/corpus assets must be maintained under:
+- `training-packages/training-package-v1/modules/audio_track_analysis/`
+
+This module is one of the three required training-package modules for the broader Designer agent architecture:
+1. `audio_track_analysis`
+2. `lighting_design_principles`
+3. `xlights_sequencer_execution`
+
+Rules:
+- New audio-training assets should be added via this module structure.
+- Existing local audio eval/corpus assets may remain in current paths, but must be indexed by the module dataset/eval manifests.
+- Runtime migration to package-first loading is phased; architecture is locked now, loader migration follows.
+
 ## 4. API Contract (Project-Specific)
 
 ## 4.1 Envelope

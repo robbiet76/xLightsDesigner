@@ -1,0 +1,11 @@
+{
+  "sources": [
+    {
+      "id": "project-creative-briefs",
+      "type": "app-state-derived",
+      "path": "apps/xlightsdesigner-ui/app.js",
+      "description": "Current app stores and synthesizes creative brief context; structured export path pending."
+    }
+  ],
+  "status": "bootstrap"
+}

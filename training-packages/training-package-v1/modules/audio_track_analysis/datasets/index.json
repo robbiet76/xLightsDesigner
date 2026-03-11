@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "id": "packaged_christmas_top50_holiday_keywords",
+      "type": "stanza-corpus",
+      "path": "datasets/structure_corpus_top50_holiday_keywords.json",
+      "description": "Packaged weak-supervision stanza corpus used for runtime few-shot retrieval."
+    },
+    {
+      "id": "director_reference_case_local",
+      "type": "xlights-timing-track-export",
+      "path": "apps/xlightsdesigner-analysis-service/eval/structure_eval_cases.local.json",
+      "description": "Director-authored reference timing track exported from xLights."
+    },
+    {
+      "id": "christmas_top50_holiday_keywords",
+      "type": "stanza-corpus",
+      "path": "apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_top50_holiday_keywords.json",
+      "description": "Holiday-focused lyric/stanza corpus with weak supervision fields."
+    },
+    {
+      "id": "christmas_overfetch",
+      "type": "stanza-corpus",
+      "path": "apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_overfetch.json",
+      "description": "Large source harvest for corpus curation and future few-shot selection."
+    }
+  ]
+}

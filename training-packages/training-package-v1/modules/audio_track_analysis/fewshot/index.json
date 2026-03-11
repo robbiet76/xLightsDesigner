@@ -1,0 +1,5 @@
+{
+  "status": "pending",
+  "notes": "Few-shot examples will be generated from curated corpus + director validated cases.",
+  "selectionPolicy": "nearest-pattern by repetition/title/harmonic evidence"
+}

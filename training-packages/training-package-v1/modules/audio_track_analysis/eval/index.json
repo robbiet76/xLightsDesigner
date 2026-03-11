@@ -1,0 +1,11 @@
+{
+  "runner": "apps/xlightsdesigner-analysis-service/eval/structure_eval.py",
+  "exporter": "apps/xlightsdesigner-analysis-service/eval/export_xlights_track_case.py",
+  "ingest": "apps/xlightsdesigner-analysis-service/eval/ingest_structure_corpus.py",
+  "defaultCases": "apps/xlightsdesigner-analysis-service/eval/structure_eval_cases.local.json",
+  "metrics": [
+    "labelAccuracy",
+    "startMaeMs",
+    "endMaeMs"
+  ]
+}

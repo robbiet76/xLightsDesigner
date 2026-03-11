@@ -198,3 +198,24 @@ Enable xLightsDesigner to read the xLights environment and perform end-to-end se
 - Agent is responsible for sequencing technique decisions (what effect family, where, and why) based on user goals and constraints.
 - User interaction should stay primarily at director level (creative direction, priorities, constraints), not low-level effect programming.
 - Agent should ask for sequencing specifics only when needed to resolve genuine ambiguity or explicit user preference.
+
+## 10) Training Package Architecture (Program Requirement)
+
+### 10.1 Required module split
+Agent training assets must be organized into exactly three modules:
+1. `audio_track_analysis`
+2. `lighting_design_principles`
+3. `xlights_sequencer_execution`
+
+### 10.2 Source-of-truth package
+- Canonical package root: `training-packages/training-package-v1/`
+- Canonical architecture doc: `specs/projects/xlights-sequencer-control/training-package-architecture.md`
+
+### 10.3 BYO-provider policy
+- Distributed app must support user-owned API/provider credentials.
+- Training package must not store maintainer API keys.
+- Training package assets should remain provider-agnostic where practical (prompt/few-shot/eval format not tied to one vendor API).
+
+### 10.4 Phase requirement
+- New training/eval data for agent behavior must be added under the package structure.
+- Legacy local assets may remain in place short-term, but package indexes must reference them until migrated.

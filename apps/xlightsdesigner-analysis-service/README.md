@@ -16,7 +16,7 @@ Returns service status.
 
 ### `POST /analyze`
 Multipart form:
-- `provider`: `beatnet|librosa`
+- `provider`: `beatnet|librosa|auto`
 - `fileName`: optional
 - `file`: audio upload
 
@@ -93,3 +93,85 @@ In xLightsDesigner Settings:
 - `Audio Analysis Service URL` => your deployed base URL (e.g. `https://analysis.example.com`)
 - Provider => `BeatNet` (primary)
 - Optional `x-api-key` => same as `ANALYSIS_API_KEY`
+
+## Structure Eval Harness
+
+Use this to score section-label quality against your expected structure on known tracks.
+
+Files:
+- `eval/structure_eval.py` - runner
+- `eval/structure_eval_cases.example.json` - starter case format
+- `eval/export_xlights_track_case.py` - export a timing track from xLights into eval-case JSON
+- `eval/ingest_structure_corpus.py` - auto-build stanza corpus from catalog songs (LRCLIB)
+- `eval/optimize_stanza_split.py` - grid-search stanza segmentation parameters against reference cases
+
+Export from your xLights reference track:
+```bash
+cd apps/xlightsdesigner-analysis-service
+python3 eval/export_xlights_track_case.py \
+  --endpoint http://127.0.0.1:49914/xlDoAutomation \
+  --track-name "Director Song Structure" \
+  --out eval/structure_eval_cases.local.json
+```
+
+If the exported case has empty `audioPath`, re-run with explicit `--audio-path`.
+
+Run:
+```bash
+cd apps/xlightsdesigner-analysis-service
+python3 eval/structure_eval.py \
+  --cases eval/structure_eval_cases.local.json \
+  --base-url http://127.0.0.1:5055 \
+  --provider beatnet \
+  --out /tmp/structure-eval-report.json
+```
+
+Output metrics:
+- `labelAccuracy` (midpoint label match, numbering ignored: `Verse 2` == `Verse`)
+- `startMaeMs` / `endMaeMs` (boundary timing error)
+- per-case mismatches for quick review
+
+### Stanza Split Parameter Optimization
+
+Use this to tune stanza segmentation systematically (instead of manual trial/error).
+
+```bash
+cd apps/xlightsdesigner-analysis-service
+python3 eval/optimize_stanza_split.py \
+  --cases eval/structure_eval_cases.local.json \
+  --base-url http://127.0.0.1:5055 \
+  --provider beatnet \
+  --out /tmp/xld-stanza-opt.json
+```
+
+The report returns top parameter sets ranked by a weighted objective of:
+- section start/end boundary error,
+- section-count alignment with your reference track(s).
+
+### Auto Corpus Ingest (Holiday/Classical Discovery)
+
+This reduces manual stanza collection by scanning a catalog and pulling lyrics from LRCLIB.
+
+Example (discovery terms):
+```bash
+cd apps/xlightsdesigner-analysis-service
+python3 eval/ingest_structure_corpus.py \
+  --itunes-term "holiday classics" \
+  --itunes-term "classical christmas" \
+  --itunes-limit 80 \
+  --max-songs 200 \
+  --out eval/structure_corpus_holiday_classical.json
+```
+
+Example (your own catalog CSV/JSON):
+```bash
+python3 eval/ingest_structure_corpus.py \
+  --catalog /path/to/your_songs.csv \
+  --out eval/structure_corpus_catalog.json
+```
+
+Catalog format:
+- CSV headers: `title,artist`
+- JSON shape: `{ "songs": [{ "title": "...", "artist": "..." }] }`
+
+The output contains stanza blocks and weak-label hints (`Verse`/`Chorus`) for prompt/eval tuning.
