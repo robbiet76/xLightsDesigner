@@ -58,7 +58,7 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Model type ontology + constraints documented and encoded.
 - [ ] Model groups and functionality:
-  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution).
 - [ ] Submodels and functionality:
   - [ ] Pre-gate complete (source + API coverage + approved gaps).
