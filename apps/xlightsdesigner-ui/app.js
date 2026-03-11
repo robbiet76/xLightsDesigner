@@ -194,6 +194,7 @@ const defaultState = {
     agentThinking: false,
     agentLastTestStatus: "",
     agentLastOrchestrationTestStatus: "",
+    agentLastOrchestrationMatrixStatus: "",
     metadataTargetId: "",
     metadataSelectedTags: [],
     metadataNewTag: "",
@@ -216,6 +217,7 @@ const defaultState = {
   },
   diagnostics: [],
   applyHistory: [],
+  orchestrationMatrix: null,
   agentPlan: null,
   jobs: [],
   models: [],
@@ -307,6 +309,9 @@ if (typeof state.ui?.analysisServiceLastError !== "string") {
 if (typeof state.ui?.analysisServiceLastCheckedAt !== "string") {
   state.ui.analysisServiceLastCheckedAt = "";
 }
+if (typeof state.ui?.agentLastOrchestrationMatrixStatus !== "string") {
+  state.ui.agentLastOrchestrationMatrixStatus = "";
+}
 if (typeof state.health?.agentLayerReady !== "boolean") {
   state.health.agentLayerReady = false;
 }
@@ -333,6 +338,9 @@ if (typeof state.health?.orchestrationLastAt !== "string") {
 }
 if (!Array.isArray(state.applyHistory)) {
   state.applyHistory = [];
+}
+if (!state.orchestrationMatrix || typeof state.orchestrationMatrix !== "object") {
+  state.orchestrationMatrix = null;
 }
 if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterName = "";
 if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
@@ -3116,6 +3124,9 @@ function buildDiagnosticsBundle() {
       sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
       handoffs: agentRuntime.handoffs
     },
+    orchestrationMatrix: state.orchestrationMatrix && typeof state.orchestrationMatrix === "object"
+      ? state.orchestrationMatrix
+      : null,
     diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
     applyHistory: Array.isArray(state.applyHistory) ? state.applyHistory : [],
     jobs: Array.isArray(state.jobs) ? state.jobs : []
@@ -3756,10 +3767,17 @@ async function onRunOrchestrationMatrix() {
   state.ui.agentThinking = true;
   state.ui.diagnosticsOpen = true;
   state.ui.diagnosticsFilter = "all";
+  state.ui.agentLastOrchestrationMatrixStatus = "Running orchestration matrix...";
   setStatus("info", "Running orchestration acceptance matrix...");
   render();
   const previousHandoffs = cloneHandoffsMap(agentRuntime.handoffs);
   const previousRole = String(agentRuntime.activeRole || "");
+  const previousUiSections = [...(state.ui.sectionSelections || [])];
+  const previousUiTargets = [...(state.ui.metadataSelectionIds || [])];
+  const previousUiTags = [...(state.ui.metadataSelectedTags || [])];
+  const previousAudioPath = String(state.audioPathInput || "");
+  const previousRevision = String(state.revision || "unknown");
+  const previousDraftBase = String(state.draftBaseRevision || "unknown");
   const results = [];
   try {
     const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
@@ -3854,9 +3872,56 @@ async function onRunOrchestrationMatrix() {
       return { ok: !gate.ok && gate.reason === "plan-base-revision-mismatch", note: gate.message };
     });
 
+    runScenario("section-change-invalidates-plan", () => {
+      setAgentHandoff("intent_handoff_v1", {
+        goal: "section drift case",
+        mode: "revise",
+        scope: { targetIds: [], tagNames: [], sections: ["Verse 1"], timeRangeMs: null },
+        constraints: { changeTolerance: "medium", preserveTimingTracks: true, allowGlobalRewrite: false },
+        directorPreferences: { styleDirection: "", energyArc: "hold", focusElements: [], colorDirection: "" },
+        approvalPolicy: { requiresExplicitApprove: true, elevatedRiskConfirmed: false }
+      }, "designer_dialog");
+      setAgentHandoff("plan_handoff_v1", {
+        planId: `matrix-plan-${nowMs()}`,
+        summary: "section invalidation",
+        estimatedImpact: 11,
+        warnings: [],
+        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
+        baseRevision: String(state.draftBaseRevision || "unknown"),
+        validationReady: true
+      }, "sequencer_designer");
+      state.ui.sectionSelections = ["Verse 2"];
+      reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix section-change" });
+      return {
+        ok: !getValidHandoff("plan_handoff_v1"),
+        note: "plan_handoff_v1 cleared after section change"
+      };
+    });
+
+    runScenario("audio-change-invalidates-analysis", () => {
+      const beforeAudio = String(state.audioPathInput || "");
+      setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
+      const changed = beforeAudio ? `${beforeAudio}.matrix` : "/tmp/matrix-audio.mp3";
+      setAudioPathWithAgentPolicy(changed, "matrix audio change");
+      const analysisCleared = !getValidHandoff("analysis_handoff_v1");
+      const planCleared = !getValidHandoff("plan_handoff_v1");
+      return {
+        ok: analysisCleared && planCleared,
+        note: "analysis and dependent plan cleared after audio change"
+      };
+    });
+
     const passed = results.filter((r) => r.ok).length;
     const total = results.length;
     const failed = total - passed;
+    state.orchestrationMatrix = {
+      ranAt: new Date().toISOString(),
+      passed,
+      total,
+      failed,
+      results
+    };
+    state.ui.agentLastOrchestrationMatrixStatus = `${passed}/${total} passed`;
     pushDiagnostic("info", `Orchestration matrix: ${passed}/${total} passed.`);
     for (const row of results) {
       const level = row.ok ? "info" : "warning";
@@ -3871,10 +3936,18 @@ async function onRunOrchestrationMatrix() {
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: "matrix run error" });
-    setStatusWithDiagnostics("warning", `Orchestration matrix failed: ${String(err?.message || err)}`);
+    const msg = String(err?.message || err);
+    state.ui.agentLastOrchestrationMatrixStatus = `Failed: ${msg}`;
+    setStatusWithDiagnostics("warning", `Orchestration matrix failed: ${msg}`);
   } finally {
     agentRuntime.handoffs = cloneHandoffsMap(previousHandoffs);
     agentRuntime.activeRole = previousRole;
+    state.ui.sectionSelections = [...previousUiSections];
+    state.ui.metadataSelectionIds = [...previousUiTargets];
+    state.ui.metadataSelectedTags = [...previousUiTags];
+    state.audioPathInput = previousAudioPath;
+    state.revision = previousRevision;
+    state.draftBaseRevision = previousDraftBase;
     refreshAgentRuntimeHealth();
     reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix restore" });
     state.ui.agentThinking = false;
@@ -9144,6 +9217,7 @@ function settingsDrawer() {
           <p class="banner">Source: ${state.health.agentConfigSource || "none"} | Stored key: ${state.health.agentHasStoredApiKey ? "yes" : "no"}</p>
           <p class="banner">Last cloud test: ${state.ui.agentLastTestStatus || "not run in this session"}</p>
           <p class="banner">Last orchestration test: ${state.ui.agentLastOrchestrationTestStatus || "not run in this session"}</p>
+          <p class="banner">Last orchestration matrix: ${state.ui.agentLastOrchestrationMatrixStatus || "not run in this session"}</p>
         </section>
         <section class="field">
           <label>Audio Analysis Service</label>
