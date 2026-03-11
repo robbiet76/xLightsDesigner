@@ -229,12 +229,12 @@ Agent training assets must be organized into exactly three modules:
 The app must implement three explicit agent roles:
 1. `audio_analyst`
 2. `designer_dialog`
-3. `sequencer_designer`
+3. `sequence_agent`
 
 ### 11.2 Role responsibilities
-- `audio_analyst`: audio/timing/lyrics/chords/section analysis + evidence summary.
-- `designer_dialog`: user collaboration, intent clarification, creative-brief management.
-- `sequencer_designer`: deterministic sequencing plan generation and apply-ready command payloads.
+- `audio_analyst`: audio/lyrics/chords/structure analysis + evidence summary (no xLights mutations).
+- `designer_dialog`: user collaboration, intent clarification, creative-brief + lighting-design intent management.
+- `sequence_agent`: deterministic xLights sequencing execution, including timing-track creation decisions and apply-ready command payloads.
 
 ### 11.3 Agent vs LLM boundary
 - Agent role orchestration is an app/runtime concern.
@@ -250,7 +250,7 @@ For normal sequencing flow:
 1. Sequence selected/opened
 2. `audio_analyst` handoff produced
 3. `designer_dialog` intent handoff produced
-4. `sequencer_designer` plan handoff produced
+4. `sequence_agent` plan handoff produced
 5. validate + approval + apply
 
 Apply paths must be blocked when required upstream handoff fields are missing.

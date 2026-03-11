@@ -91,7 +91,7 @@ Exit gate:
 Goal: robust multi-turn designer conversation and intent-to-plan behavior.
 
 Tasks:
-- Lock role orchestration across `audio_analyst` -> `designer_dialog` -> `sequencer_designer`.
+- Lock role orchestration across `audio_analyst` -> `designer_dialog` -> `sequence_agent`.
 - Implement structured handoff payloads (`analysis_handoff_v1`, `intent_handoff_v1`, `plan_handoff_v1`).
 - Finalize orchestrator contract for guided dialog + proposal lifecycle.
 - Ensure stateful context continuity across turns.

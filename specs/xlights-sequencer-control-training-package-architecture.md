@@ -26,8 +26,8 @@ Core files:
 The training package must maintain these three first-class modules:
 
 1. `audio_track_analysis`
-- scope: fingerprint/tempo/meter/beats/bars/lyrics/chords/song-structure inference
-- outputs: timing tracks and structure/brief evidence
+- scope: fingerprint/tempo/meter/lyrics/chords/song-structure inference
+- outputs: analysis artifacts and structure/brief evidence (no xLights mutations)
 
 2. `lighting_design_principles`
 - scope: visual storytelling heuristics (energy arc, contrast, color intent, hierarchy)
@@ -35,7 +35,7 @@ The training package must maintain these three first-class modules:
 
 3. `xlights_sequencer_execution`
 - scope: deterministic plan generation + safe apply orchestration over xLights APIs
-- outputs: validate/apply-ready command plans and write/readback verification
+- outputs: validate/apply-ready command plans, timing-track write decisions, and write/readback verification
 
 ## 4) Asset Types by Module
 Each module follows the same asset categories:
@@ -55,7 +55,25 @@ Required files:
 Minimum required agent ids:
 - `audio_analyst`
 - `designer_dialog`
-- `sequencer_designer`
+- `sequence_agent`
+
+Transition note:
+- `sequencer_designer` may remain as a temporary runtime alias during migration.
+- Package metadata target is `sequence_agent` as canonical execution role.
+
+## 4.2) Cross-Role Boundary Contract
+`audio_analyst`:
+- model/domain analysis only
+- xLights-independent, supports offline/batch analysis workflows
+
+`designer_dialog`:
+- lighting-design reasoning and intent authoring
+- no direct xLights command execution
+
+`sequence_agent`:
+- technical xLights implementation
+- owns timing-track creation choices and all mutation writes
+- consumes intent + analysis handoffs
 
 ## 5) Distribution and Provider Policy
 - Package distribution is app-bundled and/or user-installable.

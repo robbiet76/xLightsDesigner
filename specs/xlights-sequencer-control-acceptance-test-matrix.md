@@ -128,8 +128,11 @@ Last Reviewed: 2026-03-11
 ## 14) Multi-Agent Orchestration + Handoff Gates
 - Runtime role ownership is explicit:
   - `audio_analyst` owns analysis payload generation.
-  - `designer_dialog` owns user-facing intent refinement.
-  - `sequencer_designer` owns plan command construction.
+  - `designer_dialog` owns user-facing intent refinement and lighting-design intent authoring.
+  - `sequence_agent` owns xLights plan command construction and execution.
+- Boundary rule:
+  - `audio_analyst` does not write timing tracks.
+  - timing-track creation is owned by `sequence_agent`.
 - `analysis_handoff_v1` must be emitted after analysis pass with required keys:
   - `trackIdentity`, `timing`, `structure`, `briefSeed`.
 - `intent_handoff_v1` must be emitted before plan generation with required keys:
@@ -137,4 +140,4 @@ Last Reviewed: 2026-03-11
 - `plan_handoff_v1` must include:
   - `planId`, `summary`, `warnings[]`, `commands[]`, `baseRevision`, `validationReady`.
 - Apply must fail closed when required upstream handoff fields are missing.
-- Diagnostics must indicate role-level failure origin (`audio_analyst|designer_dialog|sequencer_designer`) when orchestration breaks.
+- Diagnostics must indicate role-level failure origin (`audio_analyst|designer_dialog|sequence_agent`) when orchestration breaks.

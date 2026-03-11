@@ -73,17 +73,17 @@ This spec defines the contract between:
 This interaction contract assumes three cooperating runtime roles:
 - `audio_analyst`
 - `designer_dialog`
-- `sequencer_designer`
+- `sequence_agent`
 
 Boundary rules:
 - `designer_dialog` is the only role that should directly drive user-facing conversation.
-- `audio_analyst` provides structured analysis context; it does not own apply decisions.
-- `sequencer_designer` owns plan construction for apply paths; it does not bypass approval or revision gates.
+- `audio_analyst` provides structured analysis context; it does not own apply decisions or timing-track writes.
+- `sequence_agent` owns technical plan construction for apply paths (including timing-track creation decisions); it does not bypass approval or revision gates.
 
 Required upstream context for `designer_dialog` proposal quality:
 - `analysis_handoff_v1` from `audio_analyst` when available.
 
-Required upstream context for `sequencer_designer` execution quality:
+Required upstream context for `sequence_agent` execution quality:
 - `intent_handoff_v1` from `designer_dialog`.
 - `analysis_handoff_v1` from `audio_analyst` for timing/context-aware sequencing.
 
