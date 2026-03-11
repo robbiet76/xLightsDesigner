@@ -68,6 +68,61 @@ function inferTargets(source = [], explicitTargetIds = []) {
   return Array.from(new Set(inferred));
 }
 
+function buildDisplayElementOrderCommand({
+  targetIds = [],
+  displayElements = [],
+  trackName = ""
+} = {}) {
+  const current = Array.isArray(displayElements)
+    ? displayElements
+      .map((row) => ({
+        id: normText(row?.id || row?.name),
+        type: normText(row?.type).toLowerCase()
+      }))
+      .filter((row) => row.id)
+    : [];
+  if (!current.length) return null;
+
+  const timingIds = current.filter((row) => row.type === "timing").map((row) => row.id);
+  const modelIds = current.filter((row) => row.type !== "timing").map((row) => row.id);
+  const desiredTargets = Array.isArray(targetIds)
+    ? targetIds.map((v) => normText(v)).filter(Boolean)
+    : [];
+  if (!desiredTargets.length) return null;
+
+  const aggregateTargets = desiredTargets.filter((id) => looksLikeAggregateTarget(id));
+  const specificTargets = desiredTargets.filter((id) => !looksLikeAggregateTarget(id));
+  const prioritized = Array.from(new Set(aggregateTargets.concat(specificTargets)));
+  const currentModelSet = new Set(modelIds);
+  const prioritizedInCurrent = prioritized.filter((id) => currentModelSet.has(id));
+  if (!prioritizedInCurrent.length) return null;
+
+  const remainingModels = modelIds.filter((id) => !prioritizedInCurrent.includes(id));
+  const timingOut = timingIds.slice();
+  const normalizedTrackName = normText(trackName);
+  if (normalizedTrackName && !timingOut.includes(normalizedTrackName)) {
+    timingOut.push(normalizedTrackName);
+  }
+
+  const orderedIds = timingOut.concat(prioritizedInCurrent, remainingModels);
+  const currentIds = current.map((row) => row.id);
+  if (
+    orderedIds.length === currentIds.length &&
+    orderedIds.every((id, idx) => id === currentIds[idx])
+  ) {
+    return null;
+  }
+
+  return {
+    id: "display.order.apply",
+    dependsOn: ["timing.track.create"],
+    cmd: "sequencer.setDisplayElementOrder",
+    params: {
+      orderedIds
+    }
+  };
+}
+
 function inferEffectNameFromDescription(description = "", effectCatalog = null) {
   const byName = normalizeEffectCatalog(effectCatalog);
   const text = normText(description).toLowerCase();
@@ -222,7 +277,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
 export function buildDesignerPlanCommands(
   sourceLines = [],
-  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null } = {}
+  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [] } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!source.length) {
@@ -232,7 +287,7 @@ export function buildDesignerPlanCommands(
   const parsed = source.map((line) => parseProposalLine(line));
   const marks = buildTimingMarks(source);
 
-  return [
+  const baseCommands = [
     {
       id: "timing.track.create",
       cmd: "timing.createTrack",
@@ -250,7 +305,29 @@ export function buildDesignerPlanCommands(
         marks
       }
     }
-  ].concat(buildEffectTemplates(source, parsed, targetIds, effectCatalog));
+  ];
+
+  const displayOrderCommand = buildDisplayElementOrderCommand({
+    targetIds,
+    displayElements,
+    trackName
+  });
+
+  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog).map((row) => {
+    if (!displayOrderCommand) return row;
+    const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
+    if (!dependsOn.includes(displayOrderCommand.id)) {
+      dependsOn.push(displayOrderCommand.id);
+    }
+    return {
+      ...row,
+      dependsOn
+    };
+  });
+
+  return baseCommands
+    .concat(displayOrderCommand ? [displayOrderCommand] : [])
+    .concat(effectCommands);
 }
 
 export {

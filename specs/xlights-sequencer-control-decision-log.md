@@ -126,3 +126,10 @@ Last Reviewed: 2026-03-11
 - The agent is responsible for sequencing craft decisions and concrete plan generation (target strategy, effect approach, layering/transition choices).
 - The system must not depend on the user providing low-level effect instructions for normal plan generation.
 - Explicit user low-level instructions, when provided, are treated as constraints/overrides.
+
+## D21) Group-First Ordering Heuristic (2026-03-11)
+- `sequence_agent` should treat display-element ordering as part of sequencing semantics, not just UI organization.
+- Timing rows remain pinned at the top of display-element order.
+- When intent supports layered broad-to-specific coverage, broader group targets should be ordered earlier and more specific model/submodel targets should follow beneath them as refinements.
+- This heuristic is an efficiency rule, not an aesthetic style rule.
+- Existing automation should use explicit final ordering via `sequencer.setDisplayElementOrder`; xLights built-in sort presets are guidance, not a required API dependency.

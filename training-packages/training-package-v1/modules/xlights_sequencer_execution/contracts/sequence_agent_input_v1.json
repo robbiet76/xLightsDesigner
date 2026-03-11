@@ -8,6 +8,7 @@
     "requestId",
     "context.sequenceRevision",
     "context.endpoint",
+    "context.displayElements",
     "intentHandoff",
     "safety.timingOwnership",
     "safety.manualXdLocks",
@@ -15,6 +16,7 @@
   ],
   "notes": [
     "timingOwnership is informational sequencing state, not a permanent lock policy.",
-    "sequence_agent must plan against the latest sequence revision."
+    "sequence_agent must plan against the latest sequence revision.",
+    "displayElements provides the current explicit order state required for deterministic display-element reorder plans."
   ]
 }

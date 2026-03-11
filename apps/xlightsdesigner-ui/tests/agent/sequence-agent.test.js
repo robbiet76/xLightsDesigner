@@ -340,3 +340,43 @@ test("sequence_agent preserves group-first then specific-target ordering", () =>
     ]
   );
 });
+
+test("sequence_agent emits explicit display-element ordering plan for group-first sequencing", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: { sections: ["Chorus 1"] },
+      briefSeed: { tone: "upbeat" }
+    },
+    intentHandoff: {
+      goal: "Keep broad group coverage above focused props in display order",
+      mode: "revise",
+      scope: {
+        targetIds: ["AllModels", "MegaTree", "Roofline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Whole Show / bars",
+      "Chorus 1 / MegaTree / shimmer fade",
+      "Chorus 1 / Roofline / hold steady glow"
+    ],
+    displayElements: [
+      { id: "Lyrics", type: "timing" },
+      { id: "Roofline", type: "model" },
+      { id: "MegaTree", type: "model" },
+      { id: "AllModels", type: "model" }
+    ],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+  });
+
+  const reorder = out.commands.find((row) => row.cmd === "sequencer.setDisplayElementOrder");
+  assert.ok(reorder);
+  assert.deepEqual(
+    reorder.params.orderedIds,
+    ["Lyrics", "XD: Sequencer Plan", "AllModels", "MegaTree", "Roofline"]
+  );
+  assert.equal(out.metadata.displayElementCount, 4);
+});

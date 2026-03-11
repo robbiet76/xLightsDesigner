@@ -94,6 +94,15 @@ Need surfaced group rendering style metadata where available:
 ### G4: Planner not yet group-aware
 `sequence_agent` currently treats targets as ids/tags only; it does not adapt commands based on group composition semantics.
 
+### G5: Display-element ordering semantics not yet encoded with group behavior
+Group behavior is not only about target expansion. xLights `Edit Display Elements` behavior shows that ordering is part of practical sequencing semantics:
+
+- timing rows remain structurally at the top,
+- broad group rows are often placed earlier,
+- more specific model rows below refine or override the broader coverage.
+
+Current planner behavior only partially reflects this. A canonical ordering heuristic still needs to be encoded alongside group-target semantics.
+
 ## 7) Pre-Gate Decision
 Pre-gate status for Phase I model groups:
 - source audit: COMPLETE
@@ -105,4 +114,8 @@ Pre-gate status for Phase I model groups:
 1. Build group membership graph in scene graph normalization.
 2. Add group semantics utility layer (`directMembers`, `flattenedMembers`, cycle-safe checks).
 3. Encode group behavior rules for planner target expansion and distribution strategies.
-4. Add deterministic tests for nested group scenarios.
+4. Encode display-element ordering heuristics for group-first sequencing:
+   - keep timing rows pinned at top,
+   - prefer broad groups earlier,
+   - keep focused model/submodel refinements below when intent calls for layered override behavior.
+5. Add deterministic tests for nested group scenarios and group-first ordering behavior.

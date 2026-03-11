@@ -117,3 +117,29 @@ test("command builders preserve explicit group-first then specific target orderi
     ]
   );
 });
+
+test("command builders emit explicit display-element reorder command when current order is available", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars",
+    "Chorus 1 / MegaTree / shimmer fade"
+  ], {
+    targetIds: ["AllModels", "MegaTree"],
+    displayElements: [
+      { id: "Lyrics", type: "timing" },
+      { id: "Roofline", type: "model" },
+      { id: "MegaTree", type: "model" },
+      { id: "AllModels", type: "model" }
+    ],
+    effectCatalog: sampleCatalog()
+  });
+
+  const reorder = commands.find((row) => row.cmd === "sequencer.setDisplayElementOrder");
+  assert.ok(reorder);
+  assert.deepEqual(
+    reorder.params.orderedIds,
+    ["Lyrics", "XD:ProposedPlan", "AllModels", "MegaTree", "Roofline"]
+  );
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.equal(effectCommands.every((row) => row.dependsOn.includes("display.order.apply")), true);
+});

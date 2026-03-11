@@ -59,7 +59,8 @@ Boundary summary:
   - [x] Model type ontology + constraints documented and encoded.
 - [ ] Model groups and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
-  - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution).
+  - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution/order preservation).
+  - [x] Initial display-element ordering heuristics encoded for group-first sequencing.
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.
@@ -69,6 +70,7 @@ Boundary summary:
 - [ ] Sequence planner integration:
   - [x] Sequence functions mapped to validated command graph templates.
   - [x] Deterministic tests added for mixed model/effect scenarios.
+  - [x] Broad group-first coverage heuristic preserved when explicit aggregate targets are provided.
 
 ### Phase E: Timing Track Ownership in Sequence Agent
 - [x] Move timing-track write decisions fully into `sequence_agent`.
