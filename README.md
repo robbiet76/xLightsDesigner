@@ -16,20 +16,20 @@ Portable BYO-provider training assets.
 - Module layout: `audio_track_analysis`, `lighting_design_principles`, `xlights_sequencer_execution`.
 
 ### `docs/`
-Cross-project and project-scoped documentation.
+Cross-project architecture and operational documentation.
 - `docs/architecture/`: architecture decisions and analysis for the overall initiative.
-- `docs/projects/`: project-specific docs and proposal artifacts.
+- `docs/operations/`: release/runbook procedures and validation evidence logs.
 
 ### `specs/`
 Implementation-facing specifications.
-- `specs/projects/`: executable project specs and implementation plans.
+- Flat root-level spec set with prefixed filenames by domain.
 
 ### `scripts/`
 Developer/build/validation automation.
 
 ## Repo Governance
-- Structural placement and ownership rules: `docs/architecture/repo-structure-governance.md`
-- Canonical training package architecture: `specs/projects/xlights-sequencer-control/training-package-architecture.md`
+- Structural placement and ownership rules: `specs/repo-structure-governance.md`
+- Canonical training package architecture: `specs/xlights-sequencer-control-training-package-architecture.md`
 
 ## Current Project Phases
 
@@ -40,8 +40,7 @@ Goal: automate song prep workflows in xLights:
 - lyric track generation/import.
 
 Project assets:
-- Docs: `docs/projects/audio-timing-lyrics/`
-- Specs: `specs/projects/audio-timing-lyrics/`
+- Specs: `specs/audio-timing-lyrics-*.md`
 
 ## Notes
 This repo is intentionally organized as:

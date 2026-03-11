@@ -1,7 +1,9 @@
 # Implementation Roadmap: Full Sequencer Control Program
 
-Status: Active (governed by architecture reset plan)  
+Status: Active (governed by architecture reset plan)
 Date: 2026-03-11
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 Planning note:
 - This roadmap remains valid as a phase inventory.

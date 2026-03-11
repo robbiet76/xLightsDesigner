@@ -1,8 +1,11 @@
 # API Contract: Audio Timing + Lyrics (Phase 1)
 
-Status: Draft  
-Version: `v2-alpha1`  
+Status: Draft
 Date: 2026-02-26
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
+
+Version: `v2-alpha1`  
 
 ## 1) Transport and Envelope
 

@@ -6,7 +6,7 @@
     "packVersion": "2026.03.02",
     "source": {
       "type": "local",
-      "uri": "file:///Users/robterry/Projects/xLightsDesigner/specs/projects/xlights-sequencer-control",
+      "uri": "file://./specs",
       "description": "Baseline local fixture contract for smoke harness execution."
     },
     "assets": [

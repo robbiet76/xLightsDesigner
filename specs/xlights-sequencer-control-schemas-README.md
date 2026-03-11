@@ -1,5 +1,10 @@
 # JSON Schemas (v2 Program Contract)
 
+Status: Active
+Date: 2026-03-11
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
+
 These schemas provide machine-readable validation for the xLights sequencer control program contract.
 
 Files:

@@ -1,7 +1,9 @@
 # Repo Structure Governance
 
-Status: Active  
+Status: Active
 Date: 2026-03-11
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## Purpose
 Keep repository layout purpose-built and predictable so new work lands in the correct location.

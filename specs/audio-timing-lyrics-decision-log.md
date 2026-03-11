@@ -1,7 +1,9 @@
 # Decision Log: Audio Timing + Lyrics (Phase 1)
 
-Date: 2026-02-26  
 Status: Locked defaults for implementation unless explicitly revised.
+Date: 2026-02-26
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## Purpose
 Capture key behavior decisions ahead of coding to reduce churn across PR-1/PR-2/PR-3.

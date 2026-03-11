@@ -1,7 +1,10 @@
 # Project Spec: xLights Audio Analysis + Timing/Lyric Track Automation
 
-Status: Draft  
-Date: 2026-02-26  
+Status: Draft
+Date: 2026-02-26
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
+
 Project type: Standalone Phase (independent of full agent sequencing)
 
 ## 1. Project Definition

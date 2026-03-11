@@ -4,13 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-DEFAULT_ENV_FILE="${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.env"
+DEFAULT_ENV_FILE="${ROOT_DIR}/specs/xlights-sequencer-control-test-fixtures.env"
 if [[ ! -f "${DEFAULT_ENV_FILE}" ]]; then
-  DEFAULT_ENV_FILE="${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.example.env"
+  DEFAULT_ENV_FILE="${ROOT_DIR}/specs/xlights-sequencer-control-test-fixtures.example.env"
 fi
 
 ENV_FILE="${ENV_FILE:-${DEFAULT_ENV_FILE}}"
-MANIFEST_FILE="${MANIFEST_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.manifest.json}"
+MANIFEST_FILE="${MANIFEST_FILE:-${ROOT_DIR}/specs/xlights-sequencer-control-test-fixtures.manifest.json}"
 OUT_DIR="${OUT_DIR:-/tmp/xlights-control-reports/$(date +%Y%m%d-%H%M%S)}"
 BOOTSTRAP_FIXTURES="${BOOTSTRAP_FIXTURES:-}"
 BOOTSTRAP_WAS_PRESET=false

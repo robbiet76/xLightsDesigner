@@ -3,12 +3,12 @@
     {
       "id": "agent-contract",
       "type": "spec",
-      "path": "specs/projects/xlights-sequencer-control/designer-interaction-contract.md"
+      "path": "specs/xlights-sequencer-control-designer-interaction-contract.md"
     },
     {
       "id": "api-surface-contract",
       "type": "spec",
-      "path": "specs/projects/xlights-sequencer-control/api-surface-contract.md"
+      "path": "specs/xlights-sequencer-control-api-surface-contract.md"
     },
     {
       "id": "ui-agent-tests",

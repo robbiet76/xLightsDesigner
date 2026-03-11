@@ -1,7 +1,9 @@
 # Training Package Architecture (v1)
 
-Status: Active (architecture baseline)  
+Status: Active (architecture baseline)
 Date: 2026-03-10
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## 1) Purpose
 Define a portable training-data and prompt architecture for the Designer agent under a BYO-provider model.

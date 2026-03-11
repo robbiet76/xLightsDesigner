@@ -1,7 +1,9 @@
 # Acceptance Test Matrix: Full Sequencer Control
 
-Status: In Progress (Sprint 0 + WP-9 baseline)  
+Status: In Progress (Sprint 0 + WP-9 baseline)
 Date: 2026-03-07
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## 1) Sequence Lifecycle
 - `sequence.create` with valid params returns `200` and sequence metadata.

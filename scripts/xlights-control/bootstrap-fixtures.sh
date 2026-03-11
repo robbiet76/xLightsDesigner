@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-MANIFEST_FILE="${MANIFEST_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.manifest.json}"
-ENV_FILE="${ENV_FILE:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.example.env}"
+MANIFEST_FILE="${MANIFEST_FILE:-${ROOT_DIR}/specs/xlights-sequencer-control-test-fixtures.manifest.json}"
+ENV_FILE="${ENV_FILE:-${ROOT_DIR}/specs/xlights-sequencer-control-test-fixtures.example.env}"
 OUT_FILE="${OUT_FILE:-/tmp/xlights-control-bootstrap.json}"
 
 if [ -f "${ENV_FILE}" ]; then

@@ -1,7 +1,10 @@
 # Project Spec: xLights Full Sequencer Control for xLightsDesigner
 
-Status: In Progress (Sprint 0)  
-Date: 2026-03-07  
+Status: In Progress (Sprint 0)
+Date: 2026-03-07
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
+
 Project type: Program-level control contract (multi-phase)
 
 ## 1) Objective
@@ -209,7 +212,7 @@ Agent training assets must be organized into exactly three modules:
 
 ### 10.2 Source-of-truth package
 - Canonical package root: `training-packages/training-package-v1/`
-- Canonical architecture doc: `specs/projects/xlights-sequencer-control/training-package-architecture.md`
+- Canonical architecture doc: `specs/xlights-sequencer-control-training-package-architecture.md`
 
 ### 10.3 BYO-provider policy
 - Distributed app must support user-owned API/provider credentials.

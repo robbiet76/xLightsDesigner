@@ -1,7 +1,9 @@
 # Decision Log: xLights Sequencer Control Program
 
-Date: 2026-03-03  
 Status: Locked unless superseded by explicit revision.
+Date: 2026-03-03
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## D1) Scope Boundaries
 - Controllers are out of scope.

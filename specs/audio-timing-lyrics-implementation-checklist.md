@@ -1,7 +1,9 @@
 # Implementation Checklist: Audio Timing + Lyrics (Phase 1)
 
-Date: 2026-02-26  
 Status: Execution checklist for xLights PR work.
+Date: 2026-02-26
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## Global Prerequisites
 - [ ] v2 envelope accepted by `/xlDoAutomation` with `apiVersion`, `cmd`, `params`, `options`.

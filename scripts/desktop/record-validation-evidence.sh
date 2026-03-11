@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG_FILE="specs/projects/xlights-sequencer-control/desktop-validation-evidence-log.md"
+LOG_FILE="docs/operations/xlightsdesigner-desktop-validation-evidence-log.md"
 
 date_val="$(date +%F)"
 build_val=""

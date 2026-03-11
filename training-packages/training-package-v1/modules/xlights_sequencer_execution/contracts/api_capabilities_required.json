@@ -8,5 +8,5 @@
     "sequencer.getEffectSummary"
   ],
   "requiredApiVersion": 2,
-  "sourceSpec": "specs/projects/xlights-sequencer-control/api-surface-contract.md"
+  "sourceSpec": "specs/xlights-sequencer-control-api-surface-contract.md"
 }

@@ -1,7 +1,10 @@
 # Designer Interaction Contract: Agent + User Iterative Sequencing
 
-Status: In Progress (Sprint 0)  
-Date: 2026-03-07  
+Status: In Progress (Sprint 0)
+Date: 2026-03-07
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
+
 Scope: xLightsDesigner interaction layer above xLights control APIs
 
 ## 1) Purpose

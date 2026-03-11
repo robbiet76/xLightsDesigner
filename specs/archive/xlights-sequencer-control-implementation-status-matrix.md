@@ -56,7 +56,7 @@ xLights branch audited: `audit/agent-hooks`
 | Explicit approval gate before apply | Implemented | `apps/xlightsdesigner-ui/app.js` (`applyApprovalChecked` checks) |
 | Persisted apply audit history | Implemented | `apps/xlightsdesigner-desktop/main.mjs` (`xld:agent-log:*`) |
 | Diagnostics export includes agent-run context | Implemented | `apps/xlightsdesigner-ui/app.js` `buildDiagnosticsBundle().agentRun` |
-| UI regression evidence for review/approve/apply loop | Implemented | `specs/projects/xlights-sequencer-control/ui-regression-pass-2026-03-07.md` |
+| UI regression evidence for review/approve/apply loop | Implemented | `specs/xlights-sequencer-control-ui-regression-pass-2026-03-07.md` |
 
 Go/No-Go (2026-03-07):
 - `GO` for continued internal implementation and preview-channel validation.

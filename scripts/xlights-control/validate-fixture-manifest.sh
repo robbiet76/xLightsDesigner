@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-MANIFEST_FILE="${1:-${ROOT_DIR}/specs/projects/xlights-sequencer-control/test-fixtures.manifest.json}"
+MANIFEST_FILE="${1:-${ROOT_DIR}/specs/xlights-sequencer-control-test-fixtures.manifest.json}"
 
 jq empty "${MANIFEST_FILE}" >/dev/null
 

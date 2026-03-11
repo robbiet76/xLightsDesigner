@@ -23,20 +23,20 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 
 ### Tasks
 - [x] Define v1 intent schema and supported verbs in:
-  - `specs/projects/xlights-sequencer-control/designer-interaction-contract.md`
-  - `specs/projects/xlights-sequencer-control/project-spec.md`
+  - `specs/xlights-sequencer-control-designer-interaction-contract.md`
+  - `specs/xlights-sequencer-control-project-spec.md`
 - [x] Define agent output payload shape (`assumptions`, `warnings`, `commands`, `impact`) in:
-  - `specs/projects/xlights-sequencer-control/api-surface-contract.md`
+  - `specs/xlights-sequencer-control-api-surface-contract.md`
 - [x] Add explicit v1 non-goals and blocked operation list in:
-  - `specs/projects/xlights-sequencer-control/decision-log.md`
+  - `specs/xlights-sequencer-control-decision-log.md`
 - [x] Add v1 acceptance tests to:
-  - `specs/projects/xlights-sequencer-control/acceptance-test-matrix.md`
+  - `specs/xlights-sequencer-control-acceptance-test-matrix.md`
 - [x] Add guided-workflow + settings-edit boundaries to:
-  - `specs/projects/xlights-sequencer-control/designer-interaction-contract.md`
-  - `specs/projects/xlights-sequencer-control/decision-log.md`
+  - `specs/xlights-sequencer-control-designer-interaction-contract.md`
+  - `specs/xlights-sequencer-control-decision-log.md`
 - [x] Add audio-analysis-first requirement to:
-  - `specs/projects/xlights-sequencer-control/project-spec.md`
-  - `specs/projects/xlights-sequencer-control/api-surface-contract.md`
+  - `specs/xlights-sequencer-control-project-spec.md`
+  - `specs/xlights-sequencer-control-api-surface-contract.md`
 
 ### Exit Criteria
 - one unambiguous contract for prompt-to-plan and plan-to-apply
@@ -79,7 +79,7 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 - [x] Add explicit override handling for user low-level effect constraints:
   - `apps/xlightsdesigner-ui/agent/command-builders.js`
 - [x] Add deterministic fixtures for intent/plan snapshots:
-  - `specs/projects/xlights-sequencer-control/test-fixtures.manifest.json`
+  - `specs/xlights-sequencer-control-test-fixtures.manifest.json`
 
 ### Tests
 - [x] Unit tests for intent normalization and target resolution:
@@ -124,7 +124,7 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 ### Tests
 - [ ] Integration tests: validate fail/pass, revision conflict, blocked operation:
   - `scripts/xlights-control/*.sh`
-  - `specs/projects/xlights-sequencer-control/api-regression-pass-*.md`
+  - `specs/xlights-sequencer-control-api-regression-pass-*.md`
 
 ### Exit Criteria
 - no write path without `validateCommands` pass
@@ -154,7 +154,7 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 
 ### Tests
 - [x] UI regression checklist for agent flow:
-  - `specs/projects/xlights-sequencer-control/ui-regression-pass-YYYY-MM-DD.md`
+  - `specs/xlights-sequencer-control-ui-regression-pass-YYYY-MM-DD.md`
 
 ### Exit Criteria
 - user can inspect plan and must explicitly approve before apply
@@ -176,11 +176,11 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
   - `apps/xlightsdesigner-ui/app.js`
   - `apps/xlightsdesigner-desktop/main.mjs`
 - [x] Update runbooks/checklists:
-  - `specs/projects/xlights-sequencer-control/desktop-release-runbook.md`
-  - `specs/projects/xlights-sequencer-control/desktop-validation-evidence-log.md`
-  - `specs/projects/xlights-sequencer-control/wp9-checklist.md` (or successor checklist)
+  - `specs/xlights-sequencer-control-desktop-release-runbook.md`
+  - `specs/xlights-sequencer-control-desktop-validation-evidence-log.md`
+  - `specs/xlights-sequencer-control-wp9-checklist.md` (or successor checklist)
 - [x] Record go/no-go in:
-  - `specs/projects/xlights-sequencer-control/implementation-status-matrix.md`
+  - `specs/xlights-sequencer-control-implementation-status-matrix.md`
 
 ### Exit Criteria
 - stable plan/apply loop under repeated local runs

@@ -40,8 +40,8 @@ Mapped into:
 - `training-packages/training-package-v1/modules/xlights_sequencer_execution/*`
 
 Referenced local sources:
-- `specs/projects/xlights-sequencer-control/api-surface-contract.md`
-- `specs/projects/xlights-sequencer-control/designer-interaction-contract.md`
+- `specs/xlights-sequencer-control-api-surface-contract.md`
+- `specs/xlights-sequencer-control-designer-interaction-contract.md`
 - `apps/xlightsdesigner-ui/tests/agent`
 - `scripts/xlights-control/run-all.sh`
 

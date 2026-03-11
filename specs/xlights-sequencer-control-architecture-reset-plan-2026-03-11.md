@@ -1,7 +1,10 @@
 # Architecture Reset Plan (2026-03-11)
 
-Status: Active execution plan  
-Owner: xLightsDesigner program  
+Status: Active execution plan
+Date: 2026-03-11
+Owner: xLightsDesigner program
+Last Reviewed: 2026-03-11
+
 Purpose: Re-anchor implementation to one high-level plan with explicit gates, boundaries, and sequencing.
 
 ## 1) Why Reset
@@ -134,4 +137,3 @@ Exit gate:
 - `README.md`: mark this document as active execution spine.
 - `implementation-roadmap.md`: note it is governed by this reset plan.
 - `acceptance-test-matrix.md`: add sidecar consistency and manual-lock test cases.
-

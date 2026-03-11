@@ -1,7 +1,9 @@
 # Integration Test Harness Contract (xLightsDesigner -> xLights)
 
-Status: Draft  
+Status: Draft
 Date: 2026-03-02
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-03-11
 
 ## 1) Purpose
 Define concrete, scriptable integration runs that validate end-to-end behavior without UI interaction.
@@ -22,8 +24,8 @@ Purpose:
 - Write per-suite JSON reports and a summary JSON report.
 
 Inputs:
-- `ENV_FILE` (optional): defaults to `specs/projects/xlights-sequencer-control/test-fixtures.example.env`
-- `MANIFEST_FILE` (optional): defaults to `specs/projects/xlights-sequencer-control/test-fixtures.manifest.json`
+- `ENV_FILE` (optional): defaults to `specs/xlights-sequencer-control-test-fixtures.example.env`
+- `MANIFEST_FILE` (optional): defaults to `specs/xlights-sequencer-control-test-fixtures.manifest.json`
 - `OUT_DIR` (optional): defaults under `/tmp/xlights-control-reports/<timestamp>`
 - `BOOTSTRAP_FIXTURES` (optional): when `true`, runs fixture bootstrap preflight and writes `bootstrap-report.json`
 - `CURL_MAX_TIME` (optional): max seconds per request to avoid indefinite hangs (default `20`)
