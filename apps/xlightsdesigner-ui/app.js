@@ -27,6 +27,7 @@ import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
   estimateImpactCount
 } from "./agent/command-builders.js";
+import { buildSequencerDesignerPlan } from "./agent/sequencer-designer.js";
 import { analyzeAudioContext } from "./agent/audio-analyzer.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
@@ -1995,7 +1996,20 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       setStatusWithDiagnostics("info", `Pre-apply backup created: ${backup.backupPath || "ok"}`);
     }
 
-    const plan = buildDesignerPlanCommands(scopedSource);
+    const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+    const sequencerPlan = buildSequencerDesignerPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines: scopedSource,
+      baseRevision: state.draftBaseRevision
+    });
+    const plan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
+    if (!plan.length) {
+      throw new Error("sequencer_designer generated no commands for apply.");
+    }
+    if (Array.isArray(sequencerPlan?.warnings) && sequencerPlan.warnings.length) {
+      pushDiagnostic("warning", `Sequencer apply warnings: ${sequencerPlan.warnings.join(" | ")}`);
+    }
     const orchestrated = await validateAndApplyPlan({
       endpoint: state.endpoint,
       commands: plan,
@@ -2152,25 +2166,40 @@ function onGenerate(intentOverride = "") {
     targets: plan.targets
   });
   state.proposed = mergeCreativeBriefIntoProposal(plan.proposalLines);
-  let planCommands = [];
-  let planWarnings = [];
+  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  let sequencerPlan = null;
   try {
-    planCommands = buildDesignerPlanCommands(state.proposed);
+    sequencerPlan = buildSequencerDesignerPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines: state.proposed,
+      baseRevision: String(state.draftBaseRevision || state.revision || "unknown")
+    });
   } catch (err) {
-    planWarnings = [String(err?.message || err)];
+    sequencerPlan = {
+      planId: `plan-${Date.now()}`,
+      summary: `Designer plan from intent "${intentText.slice(0, 90)}${intentText.length > 90 ? "..." : ""}"`,
+      estimatedImpact: estimateImpactCount(state.proposed),
+      warnings: [String(err?.message || err)],
+      commands: [],
+      baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+      validationReady: false
+    };
   }
   const planHandoff = {
-    planId: `plan-${Date.now()}`,
-    summary: `Designer plan from intent "${intentText.slice(0, 90)}${intentText.length > 90 ? "..." : ""}"`,
-    estimatedImpact: estimateImpactCount(state.proposed),
-    warnings: planWarnings,
-    commands: planCommands,
-    baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
-    validationReady: Array.isArray(planCommands) && planCommands.length > 0
+    planId: String(sequencerPlan.planId || `plan-${Date.now()}`),
+    summary: String(sequencerPlan.summary || `Designer plan from intent "${intentText.slice(0, 90)}${intentText.length > 90 ? "..." : ""}"`),
+    estimatedImpact: Number(sequencerPlan.estimatedImpact || estimateImpactCount(state.proposed)),
+    warnings: Array.isArray(sequencerPlan.warnings) ? sequencerPlan.warnings : [],
+    commands: Array.isArray(sequencerPlan.commands) ? sequencerPlan.commands : [],
+    baseRevision: String(sequencerPlan.baseRevision || state.draftBaseRevision || state.revision || "unknown"),
+    validationReady: Boolean(sequencerPlan.validationReady)
   };
   const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequencer_designer");
   if (!planSet.ok) {
     addChatMessage("system", `Plan handoff is incomplete: ${planSet.errors.join("; ")}`);
+  } else if (planHandoff.warnings.length) {
+    pushDiagnostic("warning", `Sequencer plan warnings: ${planHandoff.warnings.join(" | ")}`);
   }
   state.ui.agentThinking = false;
   if (guidedQuestions.length) {
@@ -2977,6 +3006,7 @@ function buildIntentHandoffFromPlan(plan = {}, intentText = "") {
     scope: {
       targetIds: selectedTargetIds,
       tagNames: selectedTags,
+      sections: selectedSections,
       timeRangeMs: selectedSections.length ? null : null
     },
     constraints: {
@@ -3273,6 +3303,7 @@ async function onTestAgentOrchestration() {
         scope: {
           targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
           tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []),
+          sections: hasAllSectionsSelected() ? [] : getSelectedSections(),
           timeRangeMs: null
         },
         constraints: {
@@ -3361,6 +3392,7 @@ async function onSendChat() {
       scope: {
         targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
         tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []),
+        sections: hasAllSectionsSelected() ? [] : getSelectedSections(),
         timeRangeMs: null
       },
       constraints: {
