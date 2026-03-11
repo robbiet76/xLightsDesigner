@@ -55,8 +55,8 @@ Boundary summary:
   - [x] Spatial query helpers implemented (region/proximity/orientation).
   - [x] Layout mode awareness wired (`2d|3d`) with 3D-operation gating policy while preserving depth semantics in both modes.
 - [ ] Model types and functionality:
-  - [ ] Pre-gate complete (source + API coverage + approved gaps).
-  - [ ] Model type ontology + constraints documented and encoded.
+  - [x] Pre-gate complete (source + API coverage + approved gaps).
+  - [x] Model type ontology + constraints documented and encoded.
 - [ ] Model groups and functionality:
   - [ ] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution).

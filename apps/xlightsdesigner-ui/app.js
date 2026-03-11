@@ -31,6 +31,7 @@ import {
 } from "./agent/command-builders.js";
 import { buildSequenceAgentPlan } from "./agent/sequence-agent.js";
 import { evaluateSequencePlanCapabilities } from "./agent/sequence-capability-gate.js";
+import { classifyModelDisplayType } from "./agent/model-type-catalog.js";
 import {
   buildSequenceAgentApplyResult,
   buildSequenceAgentInput,
@@ -269,6 +270,7 @@ const defaultState = {
       layoutMode: "2d",
       depthPlanningEnabled: false,
       depthTagFallbackCount: 0,
+      modelTypeCategoryCounts: {},
       bounds: null,
       depthBands: {
         front: 0,
@@ -444,6 +446,9 @@ if (!["2d", "3d"].includes(String(state.sceneGraph?.stats?.layoutMode || "").toL
   state.sceneGraph.stats.layoutMode = "2d";
 }
 state.sceneGraph.stats.depthPlanningEnabled = state.sceneGraph.stats.layoutMode === "3d";
+if (!isPlainObject(state.sceneGraph?.stats?.modelTypeCategoryCounts)) {
+  state.sceneGraph.stats.modelTypeCategoryCounts = {};
+}
 if (!Array.isArray(state.proposed) || state.proposed.length === 0) {
   state.proposed = buildDemoProposedLines();
   state.flags.hasDraftProposal = true;
@@ -3014,6 +3019,7 @@ function resolveDepthFallbackZForModelNode(node = {}, depthSemanticByTargetId = 
 
 function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   const id = String(model?.name || model?.id || "").trim();
+  const typeInfo = classifyModelDisplayType(model?.type || "");
   const type = normalizeElementType(model?.type || "model") || "model";
   const transform = isPlainObject(model?.transform) ? model.transform : {};
   const dimensions = isPlainObject(model?.dimensions) ? model.dimensions : {};
@@ -3021,6 +3027,15 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
     id,
     name: String(model?.name || id),
     type,
+    rawType: String(typeInfo.rawType || model?.type || ""),
+    canonicalType: String(typeInfo.canonicalType || "unknown"),
+    typeCategory: String(typeInfo.category || "unknown"),
+    typeFlags: {
+      isGroup: Boolean(typeInfo.isGroup),
+      isSubmodel: Boolean(typeInfo.isSubmodel),
+      isDmx: Boolean(typeInfo.isDmx),
+      isDeprecated: Boolean(typeInfo.isDeprecated)
+    },
     source,
     layoutGroup: String(model?.layoutGroup || "").trim(),
     groupNames: Array.isArray(model?.groupNames) ? model.groupNames.map((v) => String(v || "").trim()).filter(Boolean) : [],
@@ -3118,6 +3133,11 @@ function buildSceneGraphFromData({
     .filter((row) => row.name);
 
   const allModelNodes = Object.values(modelsById).concat(Object.values(groupsById));
+  const modelTypeCategoryCounts = {};
+  for (const row of allModelNodes) {
+    const key = String(row?.typeCategory || "unknown").trim() || "unknown";
+    modelTypeCategoryCounts[key] = Number(modelTypeCategoryCounts[key] || 0) + 1;
+  }
   const hasSpatialTransforms = allModelNodes.some((row) => {
     const p = row?.transform?.position || {};
     return p.x !== null || p.y !== null || p.z !== null;
@@ -3151,6 +3171,7 @@ function buildSceneGraphFromData({
       layoutMode,
       depthPlanningEnabled,
       depthTagFallbackCount,
+      modelTypeCategoryCounts,
       bounds,
       depthBands: {
         front: Array.isArray(depthBands.front) ? depthBands.front.length : 0,
