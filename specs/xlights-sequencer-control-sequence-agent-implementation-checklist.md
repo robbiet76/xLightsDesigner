@@ -45,7 +45,7 @@ Boundary summary:
 ### Phase D: xLights Capability and Safety Integration
 - [x] Build capability matrix usage in planning stage.
 - [x] Add explicit blocked/unsupported mapping per command category.
-- [ ] Enforce revision gate and stale-plan gate uniformly.
+- [x] Enforce revision gate and stale-plan gate uniformly.
 - [x] Enforce safety policy on graph and per-node command groups.
 
 ### Phase I: xLights Domain Semantics (layout/models/groups/submodels/effects)

@@ -2321,6 +2321,17 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     setStatusWithDiagnostics("warning", applyDisabledReason());
     return render();
   }
+  const revisionState = await syncLatestSequenceRevision({
+    onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
+    onUnknownMessage: "Unable to confirm current xLights revision. Refresh before apply."
+  });
+  if (!revisionState.ok || revisionState.revision === "unknown") {
+    return render();
+  }
+  if (state.flags.proposalStale) {
+    setStatusWithDiagnostics("warning", "Apply blocked: draft is stale against the latest xLights revision.");
+    return render();
+  }
   const handoffGate = evaluateApplyHandoffGate();
   if (!handoffGate.ok) {
     setStatusWithDiagnostics("warning", `Apply blocked: ${handoffGate.message}`);
@@ -2752,10 +2763,19 @@ async function onApplyAll() {
   await onApply(filteredProposed(), "all proposed changes");
 }
 
-function onGenerate(intentOverride = "") {
+async function onGenerate(intentOverride = "") {
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
     return render();
+  }
+  if (state.flags.xlightsConnected && !state.flags.planOnlyMode) {
+    const revisionState = await syncLatestSequenceRevision({
+      onStaleMessage: "Detected newer xLights sequence revision. Regenerating against latest sequence state.",
+      onUnknownMessage: "Unable to confirm current xLights revision. Refresh before generating a new proposal."
+    });
+    if (!revisionState.ok || revisionState.revision === "unknown") {
+      return render();
+    }
   }
 
   setAgentActiveRole("designer_dialog");
@@ -3258,6 +3278,61 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
   ensureMetadataTargetSelection();
 }
 
+async function syncLatestSequenceRevision({
+  onStaleMessage = "Detected newer xLights sequence revision. Draft marked stale.",
+  onUnknownMessage = ""
+} = {}) {
+  try {
+    const rev = await getRevision(state.endpoint);
+    const previousRevision = String(state.revision || "unknown");
+    const newRevision = String(rev?.data?.revision ?? "unknown");
+    const revisionChanged = newRevision !== previousRevision;
+    let staleDetected = false;
+
+    state.revision = newRevision;
+
+    if (revisionChanged) {
+      invalidatePlanHandoff("sequence revision changed");
+    }
+
+    if (
+      state.flags.hasDraftProposal &&
+      state.draftBaseRevision !== "unknown" &&
+      newRevision !== "unknown" &&
+      newRevision !== state.draftBaseRevision
+    ) {
+      state.flags.proposalStale = true;
+      staleDetected = true;
+      if (onStaleMessage) {
+        setStatusWithDiagnostics("warning", onStaleMessage);
+      }
+    }
+
+    if (newRevision === "unknown" && onUnknownMessage) {
+      setStatusWithDiagnostics("warning", onUnknownMessage);
+    }
+
+    return {
+      ok: true,
+      revision: newRevision,
+      revisionChanged,
+      staleDetected
+    };
+  } catch (err) {
+    state.revision = "unknown";
+    if (onUnknownMessage) {
+      setStatusWithDiagnostics("warning", onUnknownMessage, err?.stack || "");
+    }
+    return {
+      ok: false,
+      revision: "unknown",
+      revisionChanged: false,
+      staleDetected: false,
+      error: String(err?.message || err || "revision sync failed")
+    };
+  }
+}
+
 async function onRefresh() {
   try {
     await hydrateAgentHealth();
@@ -3287,29 +3362,11 @@ async function onRefresh() {
       noteIgnoredExternalSequence(seq);
     }
 
-    try {
-      const rev = await getRevision(state.endpoint);
-      const newRevision = rev?.data?.revision ?? "unknown";
-      const revisionChanged = newRevision !== state.revision;
-      if (
-        state.flags.hasDraftProposal &&
-        state.draftBaseRevision !== "unknown" &&
-        newRevision !== state.draftBaseRevision
-      ) {
-        state.flags.proposalStale = true;
-        staleDetected = true;
-        setStatusWithDiagnostics(
-          "warning",
-          "Sequence changed since draft creation. Refresh proposal before apply."
-        );
-      }
-      state.revision = newRevision;
-      if (revisionChanged) {
-        invalidatePlanHandoff("sequence revision changed");
-      }
-    } catch {
-      state.revision = "unknown";
-    }
+    const revisionState = await syncLatestSequenceRevision({
+      onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
+      onUnknownMessage: ""
+    });
+    staleDetected = staleDetected || revisionState.staleDetected;
 
     try {
       await refreshMetadataTargetsFromXLights();
@@ -3343,7 +3400,7 @@ async function onRefresh() {
 async function onRefreshAndRegenerate() {
   await onRefresh();
   if (state.flags.proposalStale) {
-    onGenerate();
+    await onGenerate();
     setStatus("info", "Draft regenerated on latest sequence revision.");
     persist();
     render();
@@ -3476,20 +3533,11 @@ async function onCheckHealth() {
 async function pollRevision() {
   if (!state.flags.xlightsConnected || state.flags.applyInProgress) return;
   try {
-    const rev = await getRevision(state.endpoint);
-    const newRevision = rev?.data?.revision ?? state.revision;
-    if (newRevision !== state.revision) {
-      state.revision = newRevision;
-      invalidatePlanHandoff("sequence revision changed");
-      if (
-        state.flags.hasDraftProposal &&
-        state.draftBaseRevision !== "unknown" &&
-        newRevision !== state.draftBaseRevision &&
-        !state.flags.proposalStale
-      ) {
-        state.flags.proposalStale = true;
-        setStatusWithDiagnostics("warning", "Detected external sequence edits. Draft marked stale.");
-      }
+    const result = await syncLatestSequenceRevision({
+      onStaleMessage: "Detected external sequence edits. Draft marked stale.",
+      onUnknownMessage: ""
+    });
+    if (result.revisionChanged || result.staleDetected) {
       persist();
       render();
     }
@@ -3692,8 +3740,8 @@ async function onCancelJob(jobId) {
   render();
 }
 
-function onRegenerate() {
-  onGenerate();
+async function onRegenerate() {
+  await onGenerate();
 }
 
 function toggleDiagnostics(forceOpen = null) {
@@ -4733,7 +4781,7 @@ async function onSendChat() {
     state.health.agentConfigured = true;
 
     if ((state.flags.activeSequenceLoaded || state.flags.planOnlyMode) && res.shouldGenerateProposal) {
-      onGenerate(String(res.proposalIntent || raw));
+      await onGenerate(String(res.proposalIntent || raw));
       return;
     }
     if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
