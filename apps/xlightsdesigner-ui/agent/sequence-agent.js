@@ -95,7 +95,6 @@ function stageCommandGraphSynthesis({
   capabilityCommands = [],
   effectCatalog = null,
   targetIds = [],
-  timingOwnership = [],
   allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
@@ -105,13 +104,6 @@ function stageCommandGraphSynthesis({
     targetIds,
     effectCatalog
   });
-  const ownershipRows = Array.isArray(timingOwnership) ? timingOwnership : [];
-  const lockedTracks = new Set(
-    ownershipRows
-      .filter((row) => row && typeof row === "object" && row.manual)
-      .map((row) => normText(row.sourceTrack || row.trackName))
-      .filter(Boolean)
-  );
   const filteredCommands = [];
   for (const command of commands) {
     const cmd = normText(command?.cmd);
@@ -120,10 +112,6 @@ function stageCommandGraphSynthesis({
     if (isTimingWrite && trackName.startsWith("XD:")) {
       if (!allowTimingWrites) {
         warnings.push(`Timing write skipped: ${trackName} blocked because timing writes are disabled.`);
-        continue;
-      }
-      if (lockedTracks.has(trackName)) {
-        warnings.push(`Timing write skipped: ${trackName} is user-owned/manual and preserved.`);
         continue;
       }
     }
@@ -253,7 +241,6 @@ export function buildSequenceAgentPlan({
           capabilityCommands,
           effectCatalog,
           targetIds: scope.targetIds,
-          timingOwnership,
           allowTimingWrites
         }))
   });

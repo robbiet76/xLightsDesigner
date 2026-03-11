@@ -17,6 +17,7 @@ import {
   getTimingMarks,
   getTimingTracks,
   getEffectDefinitions,
+  listEffects,
   rollbackTransaction,
   stageTransactionCommand,
   createTimingTrack,
@@ -2361,6 +2362,75 @@ function buildDesignerPlanCommands(sourceLines = filteredProposed()) {
   return buildDesignerPlanCommandsFromLines(sourceLines, { trackName: "XD:ProposedPlan" });
 }
 
+async function verifyAppliedPlanReadback(plan = []) {
+  const commands = Array.isArray(plan) ? plan : [];
+  const verification = {
+    revisionAdvanced: false,
+    expectedMutationsPresent: false,
+    lockedTracksUnchanged: true,
+    checks: []
+  };
+
+  const readbackChecks = [];
+  for (const step of commands) {
+    const cmd = String(step?.cmd || "").trim();
+    const params = step?.params && typeof step.params === "object" ? step.params : {};
+    if ((cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") && String(params.trackName || "").trim()) {
+      readbackChecks.push((async () => {
+        const trackName = String(params.trackName || "").trim();
+        const expectedSignature = timingMarksSignature(Array.isArray(params.marks) ? params.marks : []);
+        const resp = await getTimingMarks(state.endpoint, trackName);
+        const actualMarks = Array.isArray(resp?.data?.marks) ? resp.data.marks : [];
+        const actualSignature = timingMarksSignature(actualMarks);
+        const ok = Boolean(expectedSignature) && actualSignature === expectedSignature;
+        return {
+          kind: "timing",
+          target: trackName,
+          ok,
+          detail: ok ? "mark signature matched" : "mark signature mismatch"
+        };
+      })());
+    }
+    if (cmd === "effects.create" && String(params.modelName || "").trim()) {
+      readbackChecks.push((async () => {
+        const modelName = String(params.modelName || "").trim();
+        const layerIndex = Number(params.layerIndex);
+        const startMs = Number(params.startMs);
+        const endMs = Number(params.endMs);
+        const effectName = String(params.effectName || "").trim();
+        const resp = await listEffects(state.endpoint, { modelName, layerIndex, startMs, endMs });
+        const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+        const ok = effects.some((row) =>
+          String(row?.effectName || "").trim() === effectName &&
+          Number(row?.startMs) === startMs &&
+          Number(row?.endMs) === endMs &&
+          Number(row?.layerIndex) === layerIndex
+        );
+        return {
+          kind: "effect",
+          target: `${modelName}@${layerIndex}`,
+          ok,
+          detail: ok ? `${effectName} present` : `${effectName} missing`
+        };
+      })());
+    }
+  }
+
+  const results = await Promise.allSettled(readbackChecks);
+  verification.checks = results.map((row) => {
+    if (row.status === "fulfilled") return row.value;
+    return {
+      kind: "readback",
+      target: "",
+      ok: false,
+      detail: String(row.reason?.message || row.reason || "readback failed")
+    };
+  });
+  verification.expectedMutationsPresent =
+    verification.checks.length > 0 && verification.checks.every((row) => Boolean(row?.ok));
+  return verification;
+}
+
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
   if (!applyEnabled()) {
     setStatusWithDiagnostics("warning", applyDisabledReason());
@@ -2623,17 +2693,16 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
 
     const executed = Number(orchestrated?.executedCount || 0);
+    const verification = await verifyAppliedPlanReadback(plan);
+    verification.revisionAdvanced =
+      String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || "");
     const applyResult = buildSequenceAgentApplyResult({
       planId: String(planHandoff?.planId || ""),
       status: "applied",
       failureReason: null,
       currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
       nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
-      verification: {
-        revisionAdvanced: String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || ""),
-        expectedMutationsPresent: executed > 0,
-        lockedTracksUnchanged: true
-      }
+      verification
     });
     const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
     pushSequenceAgentContractDiagnostic(applyGate.report);
@@ -2642,7 +2711,20 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(orchestrated || {})}`);
       throw new Error(`Apply result contract invalid: ${applyGate.report.errors.join("; ")}`);
     }
-    markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed}`);
+    if (!verification.revisionAdvanced) {
+      markOrchestrationStage(orchestrationRun, "validate_apply", "error", "revision did not advance");
+      throw new Error("Apply verification failed: revision did not advance.");
+    }
+    if (!verification.expectedMutationsPresent) {
+      const failedChecks = verification.checks.filter((row) => !row.ok).map((row) => `${row.kind}:${row.target} ${row.detail}`);
+      markOrchestrationStage(orchestrationRun, "validate_apply", "error", failedChecks.join(" | ") || "expected mutations missing");
+      throw new Error(`Apply verification failed: ${failedChecks.join("; ") || "expected mutations missing"}`);
+    }
+    pushDiagnostic(
+      "info",
+      `Apply verification passed: revision advanced, ${verification.checks.length} readback check${verification.checks.length === 1 ? "" : "s"}.`
+    );
+    markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed} verified=${verification.checks.length}`);
     const jobId = orchestrated?.jobId || null;
     state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
     if (jobId) {
@@ -2689,6 +2771,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       executedCount: executed,
       jobId: jobId || "",
       revision: state.revision || "unknown",
+      verification,
       ...currentApplyContext()
     };
     endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });

@@ -177,6 +177,10 @@ export async function getEffectDefinition(endpoint, effectName) {
   return postCommand(endpoint, "effects.getDefinition", { effectName });
 }
 
+export async function listEffects(endpoint, params = {}) {
+  return postCommand(endpoint, "effects.list", params);
+}
+
 export async function validateCommands(endpoint, commands) {
   return postCommand(endpoint, "system.validateCommands", {
     commands

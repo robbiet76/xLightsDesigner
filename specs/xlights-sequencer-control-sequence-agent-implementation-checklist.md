@@ -72,16 +72,15 @@ Boundary summary:
 
 ### Phase E: Timing Track Ownership in Sequence Agent
 - [x] Move timing-track write decisions fully into `sequence_agent`.
-- [x] Keep lock-aware behavior for all `XD:` generated timing tracks.
-- [x] Preserve user-owned manual tracks and never overwrite locked tracks.
-- [x] Emit explicit diagnostics for skipped writes due to lock policy.
+- [x] Keep timing-track mutation policy fully inside `sequence_agent`.
+- [x] Treat timing tracks as cumulative sequence state, like effects, against latest revision.
+- [x] Preserve explicit write-disable diagnostics when timing writes are disabled by policy.
 
 ### Phase F: Apply Verification and Readback
 - [ ] Add deterministic post-apply verification checks:
-  - [ ] revision advanced check
-  - [ ] expected mutations present
-  - [ ] locked tracks unchanged
-- [ ] Add structured apply verification report to diagnostics bundle.
+  - [x] revision advanced check
+  - [x] expected mutations present
+- [x] Add structured apply verification report to diagnostics bundle.
 - [ ] Add failure reason taxonomy (`validate|revision|capability|lock|runtime|unknown`).
 
 ### Phase G: Acceptance Matrix and Regression Harness
