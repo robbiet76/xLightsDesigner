@@ -3512,6 +3512,24 @@ async function onClearStoredAgentApiKey() {
   }
 }
 
+function onClearXdTrackLocks() {
+  const locked = getManualLockedXdTracks();
+  if (!locked.length) {
+    setStatus("info", "No manual XD track locks are active.");
+    return render();
+  }
+  if (!window.confirm(`Clear manual lock policy for ${locked.length} XD track${locked.length === 1 ? "" : "s"}?`)) {
+    setStatus("info", "Clear XD track locks canceled.");
+    return render();
+  }
+  const changed = removeGlobalXdManualLocks();
+  pushDiagnostic("info", `Cleared manual lock policy for ${changed} XD track${changed === 1 ? "" : "s"}.`);
+  setStatus("info", `Cleared manual lock policy for ${changed} XD track${changed === 1 ? "" : "s"}.`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
 async function onTestCloudAgent() {
   const bridge = getDesktopAgentConversationBridge();
   if (!bridge) {
@@ -3778,12 +3796,17 @@ async function onRunOrchestrationMatrix() {
   const previousAudioPath = String(state.audioPathInput || "");
   const previousRevision = String(state.revision || "unknown");
   const previousDraftBase = String(state.draftBaseRevision || "unknown");
+  const previousTimingTrackPolicies =
+    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+      ? JSON.parse(JSON.stringify(state.audioAnalysis.timingTrackPolicies))
+      : {};
   const results = [];
   try {
     const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
     if (!runtimeReady) {
       markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
       endOrchestrationRun(orchestrationRun, { status: "failed", summary: "runtime unavailable" });
+      state.ui.agentLastOrchestrationMatrixStatus = "Failed: runtime unavailable";
       setStatusWithDiagnostics("warning", "Orchestration matrix failed: runtime unavailable.");
       return;
     }
@@ -3911,6 +3934,37 @@ async function onRunOrchestrationMatrix() {
       };
     });
 
+    runScenario("all-writes-locked-blocked", () => {
+      const policies =
+        state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+          ? state.audioAnalysis.timingTrackPolicies
+          : {};
+      const lockKey = buildGlobalXdTrackPolicyKey("XD: Sequencer Plan");
+      policies[lockKey] = {
+        manual: true,
+        trackName: "Sequencer Plan",
+        sourceTrack: "XD: Sequencer Plan",
+        lockedAt: new Date().toISOString()
+      };
+      state.audioAnalysis.timingTrackPolicies = policies;
+      const raw = buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 2));
+      const executable = raw.filter((step) => {
+        const cmd = String(step?.cmd || "").trim();
+        const params = step?.params && typeof step.params === "object" ? step.params : {};
+        const trackName = String(params?.trackName || "").trim();
+        if (!isXdTimingTrack(trackName)) return true;
+        const isTrackWriteStep = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
+        if (!isTrackWriteStep) return true;
+        const policyKey = buildGlobalXdTrackPolicyKey(trackName);
+        const policy = policies[policyKey];
+        return !(policy && typeof policy === "object" && policy.manual);
+      });
+      return {
+        ok: executable.length === 0,
+        note: "all XD writes are filtered when manual lock is active"
+      };
+    });
+
     const passed = results.filter((r) => r.ok).length;
     const total = results.length;
     const failed = total - passed;
@@ -3948,6 +4002,7 @@ async function onRunOrchestrationMatrix() {
     state.audioPathInput = previousAudioPath;
     state.revision = previousRevision;
     state.draftBaseRevision = previousDraftBase;
+    state.audioAnalysis.timingTrackPolicies = previousTimingTrackPolicies;
     refreshAgentRuntimeHealth();
     reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix restore" });
     state.ui.agentThinking = false;
@@ -7224,6 +7279,54 @@ function deriveUserOwnedTrackNameFromXd(trackName = "") {
   return raw.replace(/^xd:\s*/i, "").trim() || raw;
 }
 
+function getGlobalXdTrackPolicies() {
+  const policies =
+    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+      ? state.audioAnalysis.timingTrackPolicies
+      : {};
+  const rows = [];
+  for (const [key, value] of Object.entries(policies)) {
+    if (!String(key || "").startsWith("__xd_global__::")) continue;
+    if (!value || typeof value !== "object") continue;
+    const sourceTrack = String(value.sourceTrack || key.replace(/^__xd_global__::/i, "")).trim();
+    const userTrack = String(value.trackName || deriveUserOwnedTrackNameFromXd(sourceTrack)).trim();
+    rows.push({
+      policyKey: key,
+      sourceTrack,
+      userTrack,
+      manual: Boolean(value.manual),
+      lockedAt: String(value.lockedAt || ""),
+      updatedAt: String(value.updatedAt || "")
+    });
+  }
+  return rows.sort((a, b) => a.sourceTrack.localeCompare(b.sourceTrack));
+}
+
+function getManualLockedXdTracks() {
+  return getGlobalXdTrackPolicies().filter((row) => row.manual);
+}
+
+function removeGlobalXdManualLocks() {
+  const policies =
+    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+      ? state.audioAnalysis.timingTrackPolicies
+      : {};
+  let changed = 0;
+  for (const key of Object.keys(policies)) {
+    if (!String(key || "").startsWith("__xd_global__::")) continue;
+    const row = policies[key];
+    if (!row || typeof row !== "object" || !row.manual) continue;
+    policies[key] = {
+      ...row,
+      manual: false,
+      updatedAt: new Date().toISOString()
+    };
+    changed += 1;
+  }
+  state.audioAnalysis.timingTrackPolicies = policies;
+  return changed;
+}
+
 async function relabelSectionsWithLlm({
   sections = [],
   lyrics = [],
@@ -9157,6 +9260,10 @@ function detailsDrawer() {
 function settingsDrawer() {
   if (!state.ui.settingsOpen) return "";
   const rolloutMode = getAgentApplyRolloutMode();
+  const manualXdLocks = getManualLockedXdTracks();
+  const manualXdLockText = manualXdLocks.length
+    ? manualXdLocks.map((row) => row.sourceTrack).join(", ")
+    : "none";
   const planOnlyToggleForced = state.flags.planOnlyForcedByConnectivity || state.flags.planOnlyForcedByRollout;
   const planOnlyToggleTitle = state.flags.planOnlyForcedByConnectivity
     ? "Forced while xLights is unavailable"
@@ -9234,8 +9341,10 @@ function settingsDrawer() {
         <div class="row">
           <button id="test-connection">Test Connection</button>
           <button id="check-health">Recheck Health</button>
+          <button id="clear-xd-track-locks" ${manualXdLocks.length ? "" : "disabled"}>Clear XD Locks</button>
           <button id="plan-toggle" ${planOnlyToggleForced ? `disabled title="${planOnlyToggleTitle}"` : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
         </div>
+        <p class="banner">Manual XD track locks: ${manualXdLockText}</p>
         <hr />
         <h3>Application Health</h3>
         <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
@@ -9854,6 +9963,8 @@ function bindEvents() {
   if (testAgentOrchestrationBtn) testAgentOrchestrationBtn.addEventListener("click", onTestAgentOrchestration);
   const testAgentOrchestrationMatrixBtn = app.querySelector("#test-agent-orchestration-matrix");
   if (testAgentOrchestrationMatrixBtn) testAgentOrchestrationMatrixBtn.addEventListener("click", onRunOrchestrationMatrix);
+  const clearXdTrackLocksBtn = app.querySelector("#clear-xd-track-locks");
+  if (clearXdTrackLocksBtn) clearXdTrackLocksBtn.addEventListener("click", onClearXdTrackLocks);
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
