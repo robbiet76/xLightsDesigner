@@ -64,7 +64,7 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.
 - [ ] Effects types and settings:
-  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Effect catalog + parameter schemas + compatibility rules encoded.
 - [ ] Sequence planner integration:
   - [ ] Sequence functions mapped to validated command graph templates.
