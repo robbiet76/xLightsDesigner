@@ -302,3 +302,41 @@ test("sequence_agent supports dense submodel-heavy targeting", () => {
     ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"]
   );
 });
+
+test("sequence_agent preserves group-first then specific-target ordering", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: { sections: ["Chorus 1"] },
+      briefSeed: { tone: "upbeat" }
+    },
+    intentHandoff: {
+      goal: "Lay broad coverage on the group and refine focal props below it",
+      mode: "revise",
+      scope: {
+        targetIds: ["AllModels", "MegaTree", "Roofline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Whole Show / bars",
+      "Chorus 1 / MegaTree / shimmer fade",
+      "Chorus 1 / Roofline / hold steady glow"
+    ],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.equal(out.validationReady, true);
+  assert.deepEqual(out.metadata.scope.targetIds, ["AllModels", "MegaTree", "Roofline"]);
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["AllModels", "Bars"],
+      ["MegaTree", "Shimmer"],
+      ["Roofline", "On"]
+    ]
+  );
+});

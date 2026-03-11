@@ -16,6 +16,17 @@ function splitModelTokenList(raw = "") {
   return rows.filter((row) => !genericScopes.has(row.toLowerCase()));
 }
 
+function isGenericScopeToken(raw = "") {
+  const key = normText(raw).toLowerCase();
+  return new Set(["whole show", "whole yard", "global", "all", "all props"]).has(key);
+}
+
+function looksLikeAggregateTarget(name = "") {
+  const text = normText(name);
+  if (!text) return false;
+  return /(all|group|props|outlines|borders|greens|floods|wreath|snowflakes|spirals|train|front|upper|bulbs)/i.test(text);
+}
+
 function parseProposalLine(line = "") {
   const parts = String(line || "").split("/").map((p) => normText(p));
   if (!parts.length) return { section: "General", models: [], description: "" };
@@ -24,6 +35,8 @@ function parseProposalLine(line = "") {
   const description = parts.length > 2 ? parts.slice(2).join(" / ") : "";
   return {
     section,
+    rawTarget: modelPart,
+    hasGenericScope: isGenericScopeToken(modelPart),
     models: splitModelTokenList(modelPart),
     description
   };
@@ -167,7 +180,16 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
   for (let i = 0; i < parsed.length; i++) {
     const row = parsed[i];
-    const models = row.models.length ? row.models : fallbackTargets;
+    let models = row.models.length ? row.models : fallbackTargets;
+    if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
+      const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
+      const firstAggregate = orderedTargets.find((name) => looksLikeAggregateTarget(name));
+      if (firstAggregate) {
+        models = [firstAggregate];
+      } else {
+        models = orderedTargets;
+      }
+    }
     const window = sectionWindows.get(row.section) || { startMs: i * 1000, endMs: (i * 1000) + 1000 };
 
     for (const modelName of models) {

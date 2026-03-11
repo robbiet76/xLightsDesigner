@@ -62,6 +62,7 @@
       "2D buffer transforms such as Flip Horizontal and Rotate CC 90",
       "timing-track vocabulary variability including Beats, Bars, Note Onsets, metronome tracks, and song-specific names",
       "group and submodel targeting patterns, including dense submodel-heavy props",
+      "broad group coverage followed by more specific model targets when explicitly requested",
       "per-effect brightness and sparkle modifiers"
     ],
     "rareButDocumentedMechanics": [
@@ -97,6 +98,13 @@
       "asserts": [
         "sequence_agent treats dense submodel target lists as standard xLights functionality",
         "planning preserves explicit submodel targets without collapsing them to the parent model"
+      ]
+    },
+    {
+      "id": "group_first_then_specific_override_support",
+      "asserts": [
+        "sequence_agent preserves explicit group-first target ordering when broad coverage plus focused overrides are requested",
+        "planning does not collapse specific model targets into a group or reorder them arbitrarily"
       ]
     },
     {

@@ -96,3 +96,24 @@ test("command builders preserve explicit dense submodel targets", () => {
   );
   assert.equal(new Set(effectCommands.map((row) => row.params.modelName)).size, 4);
 });
+
+test("command builders preserve explicit group-first then specific target ordering", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars",
+    "Chorus 1 / MegaTree / shimmer fade",
+    "Chorus 1 / Roofline / hold steady glow"
+  ], {
+    targetIds: ["AllModels", "MegaTree", "Roofline"],
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["AllModels", "Bars"],
+      ["MegaTree", "Shimmer"],
+      ["Roofline", "On"]
+    ]
+  );
+});

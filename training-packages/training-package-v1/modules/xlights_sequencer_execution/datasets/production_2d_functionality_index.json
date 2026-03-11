@@ -157,6 +157,7 @@
       {"name": "Rows", "count": 33}
     ],
     "notes": [
+      "A common practical sequencing pattern is broad group coverage first, followed by more specific model rows below that override or refine the group effect.",
       "Some props are sequenced primarily through many submodels rather than only the parent model.",
       "Sequence-agent targeting should treat dense submodel inventories as standard functionality."
     ]
