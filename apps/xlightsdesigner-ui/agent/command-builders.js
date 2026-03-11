@@ -21,9 +21,11 @@ function isGenericScopeToken(raw = "") {
   return new Set(["whole show", "whole yard", "global", "all", "all props"]).has(key);
 }
 
-function looksLikeAggregateTarget(name = "") {
+function looksLikeAggregateTarget(name = "", groupIds = []) {
   const text = normText(name);
   if (!text) return false;
+  const groups = Array.isArray(groupIds) ? new Set(groupIds.map((v) => normText(v)).filter(Boolean)) : new Set();
+  if (groups.has(text)) return true;
   return /(all|group|props|outlines|borders|greens|floods|wreath|snowflakes|spirals|train|front|upper|bulbs)/i.test(text);
 }
 
@@ -71,6 +73,7 @@ function inferTargets(source = [], explicitTargetIds = []) {
 function buildDisplayElementOrderCommand({
   targetIds = [],
   displayElements = [],
+  groupIds = [],
   trackName = ""
 } = {}) {
   const current = Array.isArray(displayElements)
@@ -90,8 +93,8 @@ function buildDisplayElementOrderCommand({
     : [];
   if (!desiredTargets.length) return null;
 
-  const aggregateTargets = desiredTargets.filter((id) => looksLikeAggregateTarget(id));
-  const specificTargets = desiredTargets.filter((id) => !looksLikeAggregateTarget(id));
+  const aggregateTargets = desiredTargets.filter((id) => looksLikeAggregateTarget(id, groupIds));
+  const specificTargets = desiredTargets.filter((id) => !looksLikeAggregateTarget(id, groupIds));
   const prioritized = Array.from(new Set(aggregateTargets.concat(specificTargets)));
   const currentModelSet = new Set(modelIds);
   const prioritizedInCurrent = prioritized.filter((id) => currentModelSet.has(id));
@@ -225,7 +228,7 @@ function buildSectionWindows(source = [], parsed = []) {
   return new Map(sectionOrder.map((section, idx) => [section, { startMs: idx * 1000, endMs: (idx * 1000) + 1000 }]));
 }
 
-function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null) {
+function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null, groupIds = []) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
 
@@ -238,7 +241,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
     let models = row.models.length ? row.models : fallbackTargets;
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
-      const firstAggregate = orderedTargets.find((name) => looksLikeAggregateTarget(name));
+      const firstAggregate = orderedTargets.find((name) => looksLikeAggregateTarget(name, groupIds));
       if (firstAggregate) {
         models = [firstAggregate];
       } else {
@@ -277,7 +280,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
 export function buildDesignerPlanCommands(
   sourceLines = [],
-  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [] } = {}
+  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [], groupIds = [] } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!source.length) {
@@ -310,10 +313,11 @@ export function buildDesignerPlanCommands(
   const displayOrderCommand = buildDisplayElementOrderCommand({
     targetIds,
     displayElements,
+    groupIds,
     trackName
   });
 
-  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog).map((row) => {
+  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds).map((row) => {
     if (!displayOrderCommand) return row;
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
     if (!dependsOn.includes(displayOrderCommand.id)) {

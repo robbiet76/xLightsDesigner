@@ -69,6 +69,7 @@ File:
 
 Current behavior:
 - groups are identified from type and separated into `groupsById`,
+- group ids are now passed into `sequence_agent` planning so group-first ordering/target preservation can use authoritative xLights group identity,
 - no explicit group membership graph is reconstructed,
 - no group behavior semantics (fanout/stagger/mirror/distribution) are encoded yet.
 

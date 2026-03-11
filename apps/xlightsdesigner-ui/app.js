@@ -2524,6 +2524,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
+      groupIds: Object.keys(state.groupsById || {}),
       intentHandoff,
       analysisHandoff,
       planningScope: {
@@ -2591,6 +2592,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         effectCatalog: state.effectCatalog,
         layoutMode: currentLayoutMode(),
         displayElements: state.displayElements,
+        groupIds: Object.keys(state.groupsById || {}),
         timingOwnership: getSequenceTimingOwnershipRows(),
         allowTimingWrites: true
       });
@@ -2913,6 +2915,7 @@ async function onGenerate(intentOverride = "") {
     sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
     layoutMode: currentLayoutMode(),
     displayElements: state.displayElements,
+    groupIds: Object.keys(state.groupsById || {}),
     intentHandoff,
     analysisHandoff,
     planningScope: {
@@ -2950,6 +2953,7 @@ async function onGenerate(intentOverride = "") {
       effectCatalog: state.effectCatalog,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
+      groupIds: Object.keys(state.groupsById || {}),
       timingOwnership: getSequenceTimingOwnershipRows(),
       allowTimingWrites: true
     });

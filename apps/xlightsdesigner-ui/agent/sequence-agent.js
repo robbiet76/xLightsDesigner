@@ -96,6 +96,7 @@ function stageCommandGraphSynthesis({
   effectCatalog = null,
   targetIds = [],
   displayElements = [],
+  groupIds = [],
   allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
@@ -104,7 +105,8 @@ function stageCommandGraphSynthesis({
     trackName: "XD: Sequencer Plan",
     targetIds,
     effectCatalog,
-    displayElements
+    displayElements,
+    groupIds
   });
   const filteredCommands = [];
   for (const command of commands) {
@@ -188,6 +190,7 @@ export function buildSequenceAgentPlan({
   effectCatalog = null,
   layoutMode = "2d",
   displayElements = [],
+  groupIds = [],
   timingOwnership = [],
   allowTimingWrites = true,
   stageOverrides = {}
@@ -245,6 +248,7 @@ export function buildSequenceAgentPlan({
           effectCatalog,
           targetIds: scope.targetIds,
           displayElements,
+          groupIds,
           allowTimingWrites
         }))
   });
@@ -264,6 +268,7 @@ export function buildSequenceAgentPlan({
     metadata: {
       layoutMode: normalizedLayoutMode,
       displayElementCount: Array.isArray(displayElements) ? displayElements.length : 0,
+      groupCount: Array.isArray(groupIds) ? groupIds.length : 0,
       mode: scope.mode,
       scope: {
         sections: scope.sectionNames,

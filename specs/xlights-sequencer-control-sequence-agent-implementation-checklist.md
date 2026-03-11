@@ -61,6 +61,7 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution/order preservation).
   - [x] Initial display-element ordering heuristics encoded for group-first sequencing.
+  - [x] Group-first planning uses explicit xLights group identity rather than name heuristics.
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

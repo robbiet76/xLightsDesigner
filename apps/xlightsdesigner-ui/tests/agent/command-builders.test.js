@@ -143,3 +143,35 @@ test("command builders emit explicit display-element reorder command when curren
   const effectCommands = commands.filter((row) => row.cmd === "effects.create");
   assert.equal(effectCommands.every((row) => row.dependsOn.includes("display.order.apply")), true);
 });
+
+test("command builders treat xlights-known group ids as aggregate targets even without aggregate naming", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars",
+    "Chorus 1 / MegaTree / shimmer fade"
+  ], {
+    targetIds: ["Frontline", "MegaTree"],
+    groupIds: ["Frontline"],
+    displayElements: [
+      { id: "Beats", type: "timing" },
+      { id: "MegaTree", type: "model" },
+      { id: "Frontline", type: "model" }
+    ],
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["Frontline", "Bars"],
+      ["MegaTree", "Shimmer"]
+    ]
+  );
+
+  const reorder = commands.find((row) => row.cmd === "sequencer.setDisplayElementOrder");
+  assert.ok(reorder);
+  assert.deepEqual(
+    reorder.params.orderedIds,
+    ["Beats", "XD:ProposedPlan", "Frontline", "MegaTree"]
+  );
+});

@@ -14,6 +14,7 @@ export function buildSequenceAgentInput({
   sequenceRevision = "unknown",
   layoutMode = "unknown",
   displayElements = [],
+  groupIds = [],
   intentHandoff = null,
   analysisHandoff = null,
   planningScope = null,
@@ -31,7 +32,8 @@ export function buildSequenceAgentInput({
       layoutMode: ["2d", "3d"].includes(String(layoutMode || "").toLowerCase())
         ? String(layoutMode || "").toLowerCase()
         : "2d",
-      displayElements: Array.isArray(displayElements) ? displayElements : []
+      displayElements: Array.isArray(displayElements) ? displayElements : [],
+      groupIds: Array.isArray(groupIds) ? groupIds : []
     },
     intentHandoff: intentHandoff && typeof intentHandoff === "object" ? intentHandoff : null,
     analysisHandoff: analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : null,

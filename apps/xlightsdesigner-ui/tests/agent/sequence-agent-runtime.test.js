@@ -71,7 +71,8 @@ test("sequence agent input gate validates context.layoutMode when provided", () 
         sequenceRevision: "rev-1",
         endpoint: "http://127.0.0.1:49914/xlDoAutomation",
         layoutMode: "invalid",
-        displayElements: []
+        displayElements: [],
+        groupIds: []
       },
       intentHandoff: { role: "designer_dialog" },
       safety: {

@@ -380,3 +380,44 @@ test("sequence_agent emits explicit display-element ordering plan for group-firs
   );
   assert.equal(out.metadata.displayElementCount, 4);
 });
+
+test("sequence_agent uses explicit xlights group ids for group-first planning", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: { sections: ["Chorus 1"] },
+      briefSeed: { tone: "upbeat" }
+    },
+    intentHandoff: {
+      goal: "Keep frontline group coverage above focal props",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline", "MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Whole Show / bars",
+      "Chorus 1 / MegaTree / shimmer fade"
+    ],
+    displayElements: [
+      { id: "Beats", type: "timing" },
+      { id: "MegaTree", type: "model" },
+      { id: "Frontline", type: "model" }
+    ],
+    groupIds: ["Frontline"],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["Frontline", "Bars"],
+      ["MegaTree", "Shimmer"]
+    ]
+  );
+  assert.equal(out.metadata.groupCount, 1);
+});

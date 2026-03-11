@@ -61,6 +61,10 @@ export function validateSequenceAgentInput(payload = {}) {
   if (!Array.isArray(displayElements)) {
     errors.push("context.displayElements is required");
   }
+  const groupIds = getByPath(obj, "context.groupIds");
+  if (!Array.isArray(groupIds)) {
+    errors.push("context.groupIds is required");
+  }
   pushRequiredObject(errors, obj, "intentHandoff");
   pushRequiredObject(errors, obj, "safety");
 
