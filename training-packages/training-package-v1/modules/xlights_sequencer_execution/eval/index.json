@@ -61,7 +61,7 @@
       "per-effect buffer styles such as Per Preview, Per Model Default, Single Line, and Per Model Per Preview",
       "2D buffer transforms such as Flip Horizontal and Rotate CC 90",
       "timing-track vocabulary variability including Beats, Bars, Note Onsets, metronome tracks, and song-specific names",
-      "group and submodel targeting patterns",
+      "group and submodel targeting patterns, including dense submodel-heavy props",
       "per-effect brightness and sparkle modifiers"
     ],
     "rareButDocumentedMechanics": [
@@ -90,6 +90,13 @@
       "asserts": [
         "sequence_agent does not require canonical beats or lyrics track names",
         "timing-track handling remains semantics-driven instead of name-biased"
+      ]
+    },
+    {
+      "id": "submodel_dense_targeting_support",
+      "asserts": [
+        "sequence_agent treats dense submodel target lists as standard xLights functionality",
+        "planning preserves explicit submodel targets without collapsing them to the parent model"
       ]
     },
     {

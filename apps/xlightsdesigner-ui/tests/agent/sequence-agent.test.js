@@ -272,3 +272,33 @@ test("sequence_agent remains timing-name agnostic when existing track names vary
   assert.equal(out.warnings.some((w) => /beats track name/i.test(String(w))), false);
   assert.equal(out.warnings.some((w) => /lyrics track name/i.test(String(w))), false);
 });
+
+test("sequence_agent supports dense submodel-heavy targeting", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: { sections: ["Chorus 1"] },
+      briefSeed: { tone: "upbeat" }
+    },
+    intentHandoff: {
+      goal: "Drive face and hat submodels independently during chorus",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / shimmer fade"],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.equal(out.validationReady, true);
+  assert.deepEqual(out.metadata.scope.targetIds, ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"]);
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"]
+  );
+});

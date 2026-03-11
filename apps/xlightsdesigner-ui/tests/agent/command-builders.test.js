@@ -80,3 +80,19 @@ test("command builders stay style-neutral when source lines do not request share
   assert.equal(effectCommand.params.effectName, "Bars");
   assert.deepEqual(effectCommand.params.settings, {});
 });
+
+test("command builders preserve explicit dense submodel targets", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / shimmer fade"
+  ], {
+    targetIds: ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"],
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"]
+  );
+  assert.equal(new Set(effectCommands.map((row) => row.params.modelName)).size, 4);
+});

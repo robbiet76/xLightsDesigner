@@ -11,7 +11,8 @@
     "notes": [
       "Static sequences are included as valid non-audio/static display sequencing examples.",
       "This corpus is intended for 2D functionality coverage, not 3D sequencing coverage.",
-      "Use as a functionality corpus only, not a style corpus."
+      "Use as a functionality corpus only, not a style corpus.",
+      "Dense submodel usage is a normal xLights pattern for some props and should not be treated as exceptional."
     ]
   },
   "coverageSummary": {
@@ -154,6 +155,10 @@
       {"name": "Rings", "count": 34},
       {"name": "Diagonals", "count": 34},
       {"name": "Rows", "count": 33}
+    ],
+    "notes": [
+      "Some props are sequenced primarily through many submodels rather than only the parent model.",
+      "Sequence-agent targeting should treat dense submodel inventories as standard functionality."
     ]
   },
   "colorControls": {
