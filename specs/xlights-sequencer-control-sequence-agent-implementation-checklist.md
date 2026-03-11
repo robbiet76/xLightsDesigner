@@ -84,12 +84,12 @@ Boundary summary:
 - [ ] Add failure reason taxonomy (`validate|revision|capability|lock|runtime|unknown`).
 
 ### Phase G: Acceptance Matrix and Regression Harness
-- [ ] Expand in-app orchestration matrix to include sequence-agent execution scenarios.
+- [x] Expand in-app orchestration matrix to include sequence-agent execution scenarios.
 - [ ] Add automated scenarios:
   - [ ] happy path apply from handoff graph
   - [ ] stale revision blocked
   - [ ] missing analysis degraded mode with warning
-  - [ ] all-write-lock blocked
+  - [ ] cumulative timing edits remain writable
   - [ ] partial-scope apply
 - [ ] Export matrix results as structured diagnostics artifact.
 
@@ -107,7 +107,7 @@ Boundary summary:
 - deterministic planning stages and command graph validation are active,
 - apply executes from handoff graph by default,
 - timing-track ownership is fully in `sequence_agent`,
-- lock-preservation and stale/failure gates are verified in matrix runs,
+- cumulative timing edit behavior and stale/failure gates are verified in matrix runs,
 - diagnostics export includes structured run, stage, and matrix outcomes.
 
 ## 4) Notes

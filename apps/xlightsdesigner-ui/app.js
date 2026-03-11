@@ -4687,7 +4687,51 @@ async function onRunOrchestrationMatrix() {
       };
     });
 
-    runScenario("all-writes-locked-blocked", () => {
+    runScenario("missing-analysis-degraded-mode-warning", () => {
+      const raw = buildSequenceAgentPlan({
+        analysisHandoff: null,
+        intentHandoff: {
+          goal: "degraded analysis case",
+          mode: "revise",
+          scope: { targetIds: ["MegaTree"], tagNames: [], sections: ["Chorus 1"] }
+        },
+        sourceLines: ["Chorus 1 / MegaTree / shimmer fade"],
+        baseRevision: String(state.draftBaseRevision || "unknown"),
+        capabilityCommands: state.health.capabilityCommands || [],
+        effectCatalog: state.effectCatalog,
+        layoutMode: currentLayoutMode(),
+        timingOwnership: getSequenceTimingOwnershipRows(),
+        allowTimingWrites: true
+      });
+      return {
+        ok: raw.metadata?.degradedMode === true && raw.warnings.some((row) => /reduced-confidence/i.test(String(row))),
+        note: "sequence_agent enters degraded mode and warns when analysis handoff is missing"
+      };
+    });
+
+    runScenario("partial-scope-apply-generates-fresh-plan", () => {
+      const partial = buildSequenceAgentPlan({
+        analysisHandoff: buildOrchestrationTestAnalysisHandoff(),
+        intentHandoff: {
+          goal: "partial scope case",
+          mode: "revise",
+          scope: { targetIds: ["MegaTree"], tagNames: [], sections: ["Chorus 1"] }
+        },
+        sourceLines: buildDemoProposedLines().slice(0, 1),
+        baseRevision: String(state.draftBaseRevision || "unknown"),
+        capabilityCommands: state.health.capabilityCommands || [],
+        effectCatalog: state.effectCatalog,
+        layoutMode: currentLayoutMode(),
+        timingOwnership: getSequenceTimingOwnershipRows(),
+        allowTimingWrites: true
+      });
+      return {
+        ok: Array.isArray(partial.commands) && partial.commands.length > 0,
+        note: "partial-scope apply uses a fresh generated plan"
+      };
+    });
+
+    runScenario("timing-edits-remain-cumulative", () => {
       const policies = getSequenceTimingTrackPoliciesState();
       const lockKey = buildGlobalXdTrackPolicyKey("XD: Sequencer Plan");
       policies[lockKey] = {
@@ -4713,8 +4757,8 @@ async function onRunOrchestrationMatrix() {
         allowTimingWrites: true
       }).commands;
       return {
-        ok: raw.every((step) => !String(step?.cmd || "").startsWith("timing.")),
-        note: "sequence_agent suppresses XD timing writes when manual lock is active"
+        ok: raw.some((step) => String(step?.cmd || "").startsWith("timing.")),
+        note: "prior manual timing edits do not suppress future sequence_agent timing updates"
       };
     });
 
