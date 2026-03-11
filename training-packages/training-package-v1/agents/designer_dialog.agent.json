@@ -1,0 +1,28 @@
+{
+  "id": "designer_dialog",
+  "version": "0.1.0",
+  "purpose": "Guide the director-style conversation, refine intent, and maintain constraints and creative goals.",
+  "ownedModules": [
+    "lighting_design_principles"
+  ],
+  "runtime": {
+    "primaryEngine": "cloud-llm",
+    "llmUsage": "primary",
+    "llmTasks": [
+      "guided conversation",
+      "intent normalization",
+      "constraint synthesis"
+    ]
+  },
+  "outputs": [
+    "intent_handoff_v1",
+    "guided_questions",
+    "creative_brief_updates"
+  ],
+  "handoff": {
+    "to": [
+      "sequencer_designer"
+    ],
+    "contract": "intent_handoff_v1"
+  }
+}

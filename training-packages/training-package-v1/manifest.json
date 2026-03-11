@@ -30,5 +30,8 @@
       "anthropic-compatible",
       "other-llm-via-adapter"
     ]
+  },
+  "agents": {
+    "registryPath": "agents/registry.json"
   }
 }

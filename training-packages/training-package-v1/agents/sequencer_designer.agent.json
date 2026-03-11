@@ -1,0 +1,30 @@
+{
+  "id": "sequencer_designer",
+  "version": "0.1.0",
+  "purpose": "Translate approved intent and analysis context into validated xLights mutation plans.",
+  "ownedModules": [
+    "xlights_sequencer_execution"
+  ],
+  "runtime": {
+    "primaryEngine": "deterministic-command-builder",
+    "llmUsage": "targeted",
+    "llmTasks": [
+      "plan framing",
+      "risk/warning articulation"
+    ]
+  },
+  "inputs": [
+    "analysis_handoff_v1",
+    "intent_handoff_v1"
+  ],
+  "outputs": [
+    "plan_handoff_v1",
+    "xlights_command_list"
+  ],
+  "handoff": {
+    "to": [
+      "orchestrator"
+    ],
+    "contract": "plan_handoff_v1"
+  }
+}

@@ -140,6 +140,10 @@ const defaultState = {
     agentConfigured: false,
     agentHasStoredApiKey: false,
     agentConfigSource: "none",
+    agentLayerReady: false,
+    agentActiveRole: "",
+    agentRegistryVersion: "",
+    agentHandoffsReady: "0/3",
     desktopAppVersion: "",
     desktopBuildTime: ""
   },
@@ -292,6 +296,18 @@ if (typeof state.ui?.analysisServiceLastError !== "string") {
 if (typeof state.ui?.analysisServiceLastCheckedAt !== "string") {
   state.ui.analysisServiceLastCheckedAt = "";
 }
+if (typeof state.health?.agentLayerReady !== "boolean") {
+  state.health.agentLayerReady = false;
+}
+if (typeof state.health?.agentActiveRole !== "string") {
+  state.health.agentActiveRole = "";
+}
+if (typeof state.health?.agentRegistryVersion !== "string") {
+  state.health.agentRegistryVersion = "";
+}
+if (typeof state.health?.agentHandoffsReady !== "string") {
+  state.health.agentHandoffsReady = "0/3";
+}
 if (!Array.isArray(state.applyHistory)) {
   state.applyHistory = [];
 }
@@ -316,6 +332,31 @@ let lastFocusSyncAt = 0;
 let lastIgnoredExternalSequencePath = "";
 let trainingPackageAudioBundleCache = null;
 let trainingPackageAudioBundleCacheAt = 0;
+let trainingPackageAgentBundleCache = null;
+let trainingPackageAgentBundleCacheAt = 0;
+
+const AGENT_HANDOFF_CONTRACTS = ["analysis_handoff_v1", "intent_handoff_v1", "plan_handoff_v1"];
+
+function emptyAgentRuntimeState() {
+  return {
+    loaded: false,
+    error: "",
+    packageId: "",
+    packageVersion: "",
+    registryVersion: "",
+    lastLoadedAt: "",
+    activeRole: "",
+    roles: [],
+    profilesById: {},
+    handoffs: {
+      analysis_handoff_v1: null,
+      intent_handoff_v1: null,
+      plan_handoff_v1: null
+    }
+  };
+}
+
+const agentRuntime = emptyAgentRuntimeState();
 
 function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
   return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
@@ -484,6 +525,217 @@ function joinRelPath(base = "", child = "") {
   if (!b) return c;
   if (!c) return b;
   return `${b}/${c}`;
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateAnalysisHandoff(payload = {}) {
+  const errors = [];
+  if (!isPlainObject(payload.trackIdentity)) errors.push("trackIdentity is required");
+  if (!isPlainObject(payload.timing)) errors.push("timing is required");
+  if (!isPlainObject(payload.structure)) errors.push("structure is required");
+  if (!isPlainObject(payload.lyrics)) errors.push("lyrics is required");
+  if (!isPlainObject(payload.chords)) errors.push("chords is required");
+  if (!isPlainObject(payload.briefSeed)) errors.push("briefSeed is required");
+  if (!isPlainObject(payload.evidence)) errors.push("evidence is required");
+  const sections = Array.isArray(payload?.structure?.sections) ? payload.structure.sections : [];
+  if (!sections.length) errors.push("structure.sections is required");
+  return errors;
+}
+
+function validateIntentHandoff(payload = {}) {
+  const errors = [];
+  if (!String(payload.goal || "").trim()) errors.push("goal is required");
+  const mode = String(payload.mode || "").trim();
+  if (!["create", "revise", "polish", "analyze"].includes(mode)) errors.push("mode must be create|revise|polish|analyze");
+  if (!isPlainObject(payload.scope)) errors.push("scope is required");
+  if (!isPlainObject(payload.constraints)) errors.push("constraints is required");
+  if (!isPlainObject(payload.directorPreferences)) errors.push("directorPreferences is required");
+  if (!isPlainObject(payload.approvalPolicy)) errors.push("approvalPolicy is required");
+  return errors;
+}
+
+function validatePlanHandoff(payload = {}) {
+  const errors = [];
+  if (!String(payload.planId || "").trim()) errors.push("planId is required");
+  if (!String(payload.summary || "").trim()) errors.push("summary is required");
+  if (!Number.isFinite(Number(payload.estimatedImpact))) errors.push("estimatedImpact is required");
+  if (!Array.isArray(payload.warnings)) errors.push("warnings must be an array");
+  if (!Array.isArray(payload.commands) || !payload.commands.length) errors.push("commands is required");
+  if (!String(payload.baseRevision || "").trim()) errors.push("baseRevision is required");
+  if (payload.validationReady !== true) errors.push("validationReady must be true");
+  return errors;
+}
+
+function validateAgentHandoff(contract = "", payload = {}) {
+  if (contract === "analysis_handoff_v1") return validateAnalysisHandoff(payload);
+  if (contract === "intent_handoff_v1") return validateIntentHandoff(payload);
+  if (contract === "plan_handoff_v1") return validatePlanHandoff(payload);
+  return [`Unknown handoff contract: ${contract}`];
+}
+
+function getAgentHandoffReadyCount() {
+  let count = 0;
+  for (const contract of AGENT_HANDOFF_CONTRACTS) {
+    const row = agentRuntime.handoffs?.[contract];
+    if (row?.valid === true && isPlainObject(row.payload)) count += 1;
+  }
+  return count;
+}
+
+function refreshAgentRuntimeHealth() {
+  const readyCount = getAgentHandoffReadyCount();
+  state.health.agentLayerReady = Boolean(agentRuntime.loaded && !agentRuntime.error);
+  state.health.agentActiveRole = String(agentRuntime.activeRole || "");
+  state.health.agentRegistryVersion = String(agentRuntime.registryVersion || "");
+  state.health.agentHandoffsReady = `${readyCount}/${AGENT_HANDOFF_CONTRACTS.length}`;
+}
+
+function setAgentActiveRole(roleId = "") {
+  agentRuntime.activeRole = String(roleId || "").trim();
+  refreshAgentRuntimeHealth();
+}
+
+function setAgentHandoff(contract = "", payload = {}, producer = "") {
+  const key = String(contract || "").trim();
+  if (!key) return { ok: false, errors: ["contract is required"] };
+  const errors = validateAgentHandoff(key, payload);
+  agentRuntime.handoffs[key] = {
+    contract: key,
+    producer: String(producer || "").trim(),
+    payload: isPlainObject(payload) ? payload : {},
+    valid: errors.length === 0,
+    errors,
+    at: new Date().toISOString()
+  };
+  refreshAgentRuntimeHealth();
+  if (errors.length) {
+    pushDiagnostic("warning", `Agent handoff invalid (${key}): ${errors.join("; ")}`);
+  } else {
+    pushDiagnostic("info", `Agent handoff ready (${key}) from ${producer || "unknown"}.`);
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+function getValidHandoff(contract = "") {
+  const row = agentRuntime.handoffs?.[String(contract || "").trim()];
+  return row?.valid ? row.payload : null;
+}
+
+function clearAgentHandoffs() {
+  agentRuntime.handoffs = {
+    analysis_handoff_v1: null,
+    intent_handoff_v1: null,
+    plan_handoff_v1: null
+  };
+  if (!["audio_analyst", "designer_dialog", "sequencer_designer"].includes(agentRuntime.activeRole)) {
+    agentRuntime.activeRole = "";
+  }
+  refreshAgentRuntimeHealth();
+}
+
+async function loadAgentRuntimeBundle({ force = false } = {}) {
+  const CACHE_TTL_MS = 60_000;
+  if (!force && trainingPackageAgentBundleCache && (Date.now() - trainingPackageAgentBundleCacheAt) < CACHE_TTL_MS) {
+    return trainingPackageAgentBundleCache;
+  }
+  const bridge = getDesktopTrainingPackageBridge();
+  if (!bridge) {
+    const out = { ok: false, error: "Desktop training package bridge unavailable." };
+    trainingPackageAgentBundleCache = out;
+    trainingPackageAgentBundleCacheAt = Date.now();
+    return out;
+  }
+  try {
+    const manifestRes = await bridge.readTrainingPackageAsset({ relativePath: "manifest.json", asJson: true });
+    if (!manifestRes?.ok || !isPlainObject(manifestRes.data)) {
+      const out = { ok: false, error: String(manifestRes?.error || "Training package manifest not found.") };
+      trainingPackageAgentBundleCache = out;
+      trainingPackageAgentBundleCacheAt = Date.now();
+      return out;
+    }
+    const manifest = manifestRes.data;
+    const registryRes = await bridge.readTrainingPackageAsset({ relativePath: "agents/registry.json", asJson: true });
+    if (!registryRes?.ok || !isPlainObject(registryRes.data)) {
+      const out = { ok: false, error: String(registryRes?.error || "Agent registry not found.") };
+      trainingPackageAgentBundleCache = out;
+      trainingPackageAgentBundleCacheAt = Date.now();
+      return out;
+    }
+    const registry = registryRes.data;
+    const refs = Array.isArray(registry?.agents) ? registry.agents : [];
+    const profiles = [];
+    for (const ref of refs) {
+      const id = String(ref?.id || "").trim();
+      const path = String(ref?.path || "").trim();
+      if (!id || !path) continue;
+      const profileRes = await bridge.readTrainingPackageAsset({ relativePath: path, asJson: true });
+      if (!profileRes?.ok || !isPlainObject(profileRes.data)) continue;
+      profiles.push({
+        id,
+        status: String(ref?.status || "").trim() || "unknown",
+        path,
+        profile: profileRes.data
+      });
+    }
+    const out = {
+      ok: true,
+      packageId: String(manifest?.packageId || "").trim(),
+      packageVersion: String(manifest?.version || "").trim(),
+      registryVersion: String(registry?.version || "").trim(),
+      profiles
+    };
+    trainingPackageAgentBundleCache = out;
+    trainingPackageAgentBundleCacheAt = Date.now();
+    return out;
+  } catch (err) {
+    const out = { ok: false, error: String(err?.message || err) };
+    trainingPackageAgentBundleCache = out;
+    trainingPackageAgentBundleCacheAt = Date.now();
+    return out;
+  }
+}
+
+async function hydrateAgentRuntime({ force = false, quiet = true } = {}) {
+  const loaded = await loadAgentRuntimeBundle({ force });
+  if (!loaded?.ok) {
+    Object.assign(agentRuntime, emptyAgentRuntimeState(), {
+      error: String(loaded?.error || "Unknown agent runtime load error")
+    });
+    refreshAgentRuntimeHealth();
+    if (!quiet) pushDiagnostic("warning", `Agent runtime load failed: ${agentRuntime.error}`);
+    return false;
+  }
+  const profilesById = {};
+  for (const row of loaded.profiles || []) {
+    profilesById[row.id] = {
+      id: row.id,
+      status: row.status,
+      path: row.path,
+      profile: row.profile
+    };
+  }
+  const next = emptyAgentRuntimeState();
+  next.loaded = true;
+  next.packageId = loaded.packageId;
+  next.packageVersion = loaded.packageVersion;
+  next.registryVersion = loaded.registryVersion;
+  next.lastLoadedAt = new Date().toISOString();
+  next.roles = (loaded.profiles || []).map((r) => r.id);
+  next.profilesById = profilesById;
+  next.activeRole = agentRuntime.activeRole || "";
+  next.handoffs = agentRuntime.handoffs || next.handoffs;
+  Object.assign(agentRuntime, next);
+  refreshAgentRuntimeHealth();
+  if (!quiet) {
+    pushDiagnostic(
+      "info",
+      `Agent runtime loaded (${next.roles.length} role${next.roles.length === 1 ? "" : "s"}, registry ${next.registryVersion || "unknown"}).`
+    );
+  }
+  return true;
 }
 
 async function loadAudioTrainingPackageBundle({ force = false } = {}) {
@@ -1278,13 +1530,17 @@ function applyRolloutPolicy() {
 
 function applyEnabled() {
   const f = state.flags;
+  const hasIntentHandoff = Boolean(getValidHandoff("intent_handoff_v1"));
+  const hasPlanHandoff = Boolean(getValidHandoff("plan_handoff_v1"));
   return (
     f.hasDraftProposal &&
     f.xlightsConnected &&
     f.xlightsCompatible &&
     !f.planOnlyMode &&
     !f.proposalStale &&
-    !f.applyInProgress
+    !f.applyInProgress &&
+    hasIntentHandoff &&
+    hasPlanHandoff
   );
 }
 
@@ -1298,6 +1554,8 @@ function applyDisabledReason() {
   if (f.planOnlyMode) return "Exit plan-only mode to apply.";
   if (f.proposalStale) return "Refresh proposal before apply.";
   if (!f.hasDraftProposal) return "Generate a proposal first.";
+  if (!getValidHandoff("intent_handoff_v1")) return "Generate proposal to establish intent handoff.";
+  if (!getValidHandoff("plan_handoff_v1")) return "Generate proposal to establish plan handoff.";
   if (!state.ui.applyApprovalChecked) return "Review the plan and check approval before apply.";
   if (f.applyInProgress) return "Apply in progress.";
   return "";
@@ -1669,6 +1927,29 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     setStatusWithDiagnostics("warning", applyDisabledReason());
     return render();
   }
+  if (!getValidHandoff("intent_handoff_v1")) {
+    setStatusWithDiagnostics("warning", "Apply blocked: missing valid intent handoff (intent_handoff_v1).");
+    return render();
+  }
+  const planHandoff = getValidHandoff("plan_handoff_v1");
+  if (!planHandoff) {
+    setStatusWithDiagnostics("warning", "Apply blocked: missing valid plan handoff (plan_handoff_v1).");
+    return render();
+  }
+  const handoffBaseRevision = String(planHandoff?.baseRevision || "unknown");
+  if (
+    handoffBaseRevision &&
+    handoffBaseRevision !== "unknown" &&
+    state.draftBaseRevision &&
+    state.draftBaseRevision !== "unknown" &&
+    handoffBaseRevision !== state.draftBaseRevision
+  ) {
+    setStatusWithDiagnostics(
+      "warning",
+      `Apply blocked: plan handoff base revision mismatch (${handoffBaseRevision} vs ${state.draftBaseRevision}). Regenerate proposal.`
+    );
+    return render();
+  }
   const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!scopedSource.length) {
     setStatusWithDiagnostics("warning", "No proposed changes available for this apply action.");
@@ -1689,6 +1970,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   }
 
   state.flags.applyInProgress = true;
+  setAgentActiveRole("sequencer_designer");
   state.ui.agentThinking = true;
   addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
   setStatus("info", `Applying ${applyLabel} to xLights...`);
@@ -1832,6 +2114,7 @@ function onGenerate(intentOverride = "") {
     return render();
   }
 
+  setAgentActiveRole("designer_dialog");
   state.ui.agentThinking = true;
   addChatMessage("agent", "Working on updated proposal from current chat intent...");
   state.flags.hasDraftProposal = true;
@@ -1853,11 +2136,41 @@ function onGenerate(intentOverride = "") {
     submodels: state.submodels || [],
     metadataAssignments: state.metadata?.assignments || []
   });
+  const intentHandoff = buildIntentHandoffFromPlan(plan, intentText);
+  const intentSet = setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
+  if (!intentSet.ok) {
+    state.ui.agentThinking = false;
+    setStatusWithDiagnostics("warning", "Intent handoff invalid. Proposal generation blocked.", intentSet.errors.join("\n"));
+    persist();
+    render();
+    return;
+  }
+  setAgentActiveRole("sequencer_designer");
   const guidedQuestions = buildGuidedQuestions({
     normalizedIntent: plan.normalizedIntent,
     targets: plan.targets
   });
   state.proposed = mergeCreativeBriefIntoProposal(plan.proposalLines);
+  let planCommands = [];
+  let planWarnings = [];
+  try {
+    planCommands = buildDesignerPlanCommands(state.proposed);
+  } catch (err) {
+    planWarnings = [String(err?.message || err)];
+  }
+  const planHandoff = {
+    planId: `plan-${Date.now()}`,
+    summary: `Designer plan from intent "${intentText.slice(0, 90)}${intentText.length > 90 ? "..." : ""}"`,
+    estimatedImpact: estimateImpactCount(state.proposed),
+    warnings: planWarnings,
+    commands: planCommands,
+    baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+    validationReady: Array.isArray(planCommands) && planCommands.length > 0
+  };
+  const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequencer_designer");
+  if (!planSet.ok) {
+    addChatMessage("system", `Plan handoff is incomplete: ${planSet.errors.join("; ")}`);
+  }
   state.ui.agentThinking = false;
   if (guidedQuestions.length) {
     addChatMessage("agent", `Before next pass, consider: ${guidedQuestions.join(" | ")}`);
@@ -2411,6 +2724,10 @@ function buildDiagnosticsBundle() {
       provider: state.health.agentProvider || "openai",
       model: state.health.agentModel || "",
       configured: Boolean(state.health.agentConfigured),
+      layerReady: Boolean(state.health.agentLayerReady),
+      activeRole: String(state.health.agentActiveRole || ""),
+      registryVersion: String(state.health.agentRegistryVersion || ""),
+      handoffsReady: String(state.health.agentHandoffsReady || "0/3"),
       rolloutMode: getAgentApplyRolloutMode(),
       applyApprovalChecked: Boolean(state.ui.applyApprovalChecked),
       draftBaseRevision: state.draftBaseRevision || "unknown",
@@ -2419,7 +2736,8 @@ function buildDiagnosticsBundle() {
       previewCommandCount: Array.isArray(previewCommands) ? previewCommands.length : 0,
       previewError,
       lastApplyBackupPath: state.lastApplyBackupPath || "",
-      sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || ""
+      sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
+      handoffs: agentRuntime.handoffs
     },
     diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
     applyHistory: Array.isArray(state.applyHistory) ? state.applyHistory : [],
@@ -2637,6 +2955,47 @@ function onUseQuickPrompt(promptText) {
   render();
 }
 
+function inferIntentModeFromGoal(text = "") {
+  const lower = String(text || "").toLowerCase();
+  if (/(analyz|review|inspect|diagnos)/.test(lower)) return "analyze";
+  if (/(polish|refine|tweak|minor)/.test(lower)) return "polish";
+  if (/(revise|rework|change|update|adjust)/.test(lower)) return "revise";
+  return "create";
+}
+
+function buildIntentHandoffFromPlan(plan = {}, intentText = "") {
+  const normalized = isPlainObject(plan?.normalizedIntent) ? plan.normalizedIntent : {};
+  const selectedTargetIds = Array.isArray(normalized?.targetIds) ? normalized.targetIds : [];
+  const selectedTags = Array.isArray(normalized?.tags) ? normalized.tags : [];
+  const selectedSections = Array.isArray(normalized?.sections) ? normalized.sections : [];
+  const goal = String(normalized?.goal || intentText || "").trim();
+  const mode = inferIntentModeFromGoal(goal);
+  return {
+    goal,
+    mode,
+    scope: {
+      targetIds: selectedTargetIds,
+      tagNames: selectedTags,
+      timeRangeMs: selectedSections.length ? null : null
+    },
+    constraints: {
+      changeTolerance: mode === "polish" ? "low" : "medium",
+      preserveTimingTracks: normalized?.preserveTimingTracks !== false,
+      allowGlobalRewrite: mode === "create"
+    },
+    directorPreferences: {
+      styleDirection: String(state.creative?.brief?.mood || "").trim(),
+      energyArc: String(normalized?.tempoIntent || "hold"),
+      focusElements: selectedTargetIds.slice(0, 40),
+      colorDirection: String(state.creative?.brief?.paletteIntent || "").trim()
+    },
+    approvalPolicy: {
+      requiresExplicitApprove: true,
+      elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+    }
+  };
+}
+
 function buildAgentConversationContext() {
   const selectedSectionNames = hasAllSectionsSelected()
     ? ["all"]
@@ -2656,7 +3015,13 @@ function buildAgentConversationContext() {
     selectedTargets,
     selectedTags,
     creativeBriefReady: Boolean(state.flags.creativeBriefReady),
-    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    agentLayer: {
+      loaded: Boolean(state.health.agentLayerReady),
+      activeRole: String(state.health.agentActiveRole || ""),
+      registryVersion: String(state.health.agentRegistryVersion || ""),
+      handoffsReady: String(state.health.agentHandoffsReady || "0/3")
+    }
   };
 }
 
@@ -2819,6 +3184,35 @@ async function onSendChat() {
   const raw = (state.ui.chatDraft || "").trim();
   if (!raw) return;
   addChatMessage("user", raw);
+  setAgentActiveRole("designer_dialog");
+  setAgentHandoff(
+    "intent_handoff_v1",
+    {
+      goal: raw,
+      mode: inferIntentModeFromGoal(raw),
+      scope: {
+        targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+        tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []),
+        timeRangeMs: null
+      },
+      constraints: {
+        changeTolerance: "medium",
+        preserveTimingTracks: true,
+        allowGlobalRewrite: false
+      },
+      directorPreferences: {
+        styleDirection: String(state.creative?.brief?.mood || "").trim(),
+        energyArc: "hold",
+        focusElements: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+        colorDirection: String(state.creative?.brief?.paletteIntent || "").trim()
+      },
+      approvalPolicy: {
+        requiresExplicitApprove: true,
+        elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+      }
+    },
+    "designer_dialog"
+  );
   state.ui.chatDraft = "";
   state.ui.agentThinking = true;
   render();
@@ -5056,6 +5450,7 @@ function resetSessionDraftState() {
   state.ui.applyApprovalChecked = false;
   state.ui.agentResponseId = "";
   state.proposed = [];
+  clearAgentHandoffs();
 }
 
 function resetCreativeState() {
@@ -7219,12 +7614,83 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
   };
 }
 
+function buildAnalysisHandoffFromPipelineResult(result = {}) {
+  const details = isPlainObject(result?.details) ? result.details : {};
+  const pipeline = isPlainObject(result?.pipeline) ? result.pipeline : {};
+  const structure = Array.isArray(details?.structure) ? details.structure : [];
+  const timing = isPlainObject(details?.timing) ? details.timing : {};
+  const trackIdentity = isPlainObject(details?.trackIdentity) ? details.trackIdentity : {};
+  const summaryLines = Array.isArray(details?.summaryLines) ? details.summaryLines : [];
+  const serviceSummaryLine =
+    summaryLines.find((line) => String(line || "").toLowerCase().startsWith("tempo/time signature:")) ||
+    summaryLines.find((line) => String(line || "").toLowerCase().startsWith("timing tracks:")) ||
+    "";
+  const webValidationLine =
+    summaryLines.find((line) => String(line || "").toLowerCase().startsWith("web validation:")) || "";
+  const songContextLine =
+    summaryLines.find((line) => String(line || "").toLowerCase().startsWith("song context:")) || "";
+  const sources = (state.diagnostics || [])
+    .map((entry) => String(entry?.text || ""))
+    .filter((text) => text.startsWith("Audio analysis: Web source "))
+    .map((text) => text.replace(/^Audio analysis:\s*Web source \d+:\s*/i, "").trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  const trackName =
+    String(trackIdentity?.title || "").trim() || String(details?.trackName || "").trim() || String(state.activeSequence || "").trim();
+  const artistName = String(trackIdentity?.artist || "").trim();
+  return {
+    trackIdentity: {
+      title: trackName,
+      artist: artistName,
+      isrc: String(trackIdentity?.isrc || "").trim()
+    },
+    timing: {
+      bpm: Number.isFinite(Number(timing?.tempoEstimate)) ? Number(timing.tempoEstimate) : null,
+      timeSignature: String(timing?.timeSignature || "unknown"),
+      beatsTrack: "XD: Beats",
+      barsTrack: "XD: Bars"
+    },
+    structure: {
+      sections: structure,
+      source: pipeline.structureDerived ? "service+llm" : "pending",
+      confidence: pipeline.structureDerived ? "medium" : "low"
+    },
+    lyrics: {
+      hasSyncedLyrics: Boolean(timing?.hasLyricsTrack),
+      lyricsTrackName: timing?.hasLyricsTrack ? "XD: Lyrics" : ""
+    },
+    chords: {
+      hasChords: Boolean(timing?.hasChordTrack),
+      chordsTrackName: timing?.hasChordTrack ? "XD: Chords" : "",
+      confidence: timing?.hasChordTrack ? "medium" : "low"
+    },
+    briefSeed: {
+      tone: songContextLine || "",
+      mood: String(state.creative?.brief?.mood || "").trim(),
+      story: String(state.creative?.brief?.storyArc || "").trim(),
+      designHints: String(state.creative?.brief?.designHints || "")
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 8)
+    },
+    evidence: {
+      serviceSummary: serviceSummaryLine,
+      webValidationSummary: webValidationLine,
+      sources
+    }
+  };
+}
+
 async function onAnalyzeAudio() {
   const audioPath = String(state.audioPathInput || "").trim();
   if (!audioPath) {
     setStatus("warning", "No audio track available for analysis on this sequence.");
     return render();
   }
+  setAgentActiveRole("audio_analyst");
+  agentRuntime.handoffs.analysis_handoff_v1 = null;
+  refreshAgentRuntimeHealth();
   const serviceReady = await probeAnalysisServiceHealth({ quiet: false, force: true });
   if (!serviceReady) {
     return;
@@ -7261,6 +7727,8 @@ async function onAnalyzeAudio() {
   render();
   try {
     const result = await runAudioAnalysisPipeline({ refreshTracks: true });
+    const analysisHandoff = buildAnalysisHandoffFromPipelineResult(result);
+    setAgentHandoff("analysis_handoff_v1", analysisHandoff, "audio_analyst");
     state.audioAnalysis.summary = String(result.summary || buildAudioAnalysisStubSummary());
     for (const row of Array.isArray(result?.diagnostics) ? result.diagnostics : []) {
       pushDiagnostic("warning", `Audio analysis: ${row}`);
@@ -7953,6 +8421,10 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Agent Provider</div><div>${state.health.agentProvider || "openai"}</div></div>
         <div class="kv"><div class="k">Agent Model</div><div>${state.health.agentModel || "(default env model)"}</div></div>
         <div class="kv"><div class="k">Agent Cloud Config</div><div>${state.health.agentConfigured ? "configured" : "missing OPENAI_API_KEY"}</div></div>
+        <div class="kv"><div class="k">Agent Layer</div><div>${state.health.agentLayerReady ? "loaded" : "unavailable"}</div></div>
+        <div class="kv"><div class="k">Agent Role</div><div>${state.health.agentActiveRole || "idle"}</div></div>
+        <div class="kv"><div class="k">Agent Registry</div><div>${state.health.agentRegistryVersion || "unknown"}</div></div>
+        <div class="kv"><div class="k">Handoffs Ready</div><div>${state.health.agentHandoffsReady || "0/3"}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
         <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
@@ -9162,6 +9634,7 @@ function render() {
 async function bootstrapLiveData() {
   try {
     await hydrateAgentHealth();
+    await hydrateAgentRuntime({ quiet: true });
     applyRolloutPolicy();
     const requestedEndpoint = state.endpoint;
     const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
@@ -9204,6 +9677,7 @@ render();
   await hydrateStateFromDesktop();
   await hydrateDesktopAppInfo();
   await hydrateAgentHealth();
+  await hydrateAgentRuntime({ quiet: true });
   await hydrateAgentConfigDraft();
   await probeAnalysisServiceHealth({ quiet: true, force: true });
   applyRolloutPolicy();

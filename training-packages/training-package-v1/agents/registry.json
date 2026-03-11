@@ -9,12 +9,12 @@
     {
       "id": "designer_dialog",
       "path": "agents/designer_dialog.agent.json",
-      "status": "in_progress"
+      "status": "active"
     },
     {
       "id": "sequencer_designer",
       "path": "agents/sequencer_designer.agent.json",
-      "status": "in_progress"
+      "status": "active"
     }
   ]
 }
