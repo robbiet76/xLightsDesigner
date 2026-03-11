@@ -67,8 +67,8 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Effect catalog + parameter schemas + compatibility rules encoded.
 - [ ] Sequence planner integration:
-  - [ ] Sequence functions mapped to validated command graph templates.
-  - [ ] Deterministic tests added for mixed model/effect scenarios.
+  - [x] Sequence functions mapped to validated command graph templates.
+  - [x] Deterministic tests added for mixed model/effect scenarios.
 
 ### Phase E: Timing Track Ownership in Sequence Agent
 - [ ] Move timing-track write decisions fully into `sequence_agent`.

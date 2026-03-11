@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { buildSequenceAgentPlan } from "../../agent/sequence-agent.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "../../agent/sequence-agent-contracts.js";
+import { buildEffectDefinitionCatalog } from "../../agent/effect-definition-catalog.js";
 
 function sampleAnalysis() {
   return {
@@ -22,6 +23,14 @@ function sampleIntent() {
       sections: ["Chorus 1"]
     }
   };
+}
+
+function sampleCatalog() {
+  return buildEffectDefinitionCatalog([
+    { effectName: "Bars", params: [] },
+    { effectName: "Shimmer", params: [] },
+    { effectName: "On", params: [] }
+  ]);
 }
 
 test("sequence_agent requires intent handoff", () => {
@@ -162,4 +171,32 @@ test("sequence_agent keeps 3d mode without 2d warning", () => {
   });
   assert.equal(out.metadata.layoutMode, "3d");
   assert.equal(out.warnings.some((w) => /layout mode is 2d/i.test(String(w))), false);
+});
+
+test("sequence_agent maps mixed model/effect scenarios to validated templates", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: [
+      "Chorus 1 / MegaTree / shimmer fade",
+      "Chorus 1 / MegaTree / additive bars with brighter accents",
+      "Chorus 1 / Roofline / hold steady glow"
+    ],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.equal(out.validationReady, true);
+  assert.equal(effectCommands.length, 3);
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.layerIndex, row.params.effectName]),
+    [
+      ["MegaTree", 0, "Shimmer"],
+      ["MegaTree", 1, "Bars"],
+      ["Roofline", 0, "On"]
+    ]
+  );
+  assert.deepEqual(out.commands[1].dependsOn, ["timing.track.create"]);
+  assert.deepEqual(effectCommands[0].dependsOn, ["timing.marks.insert"]);
 });

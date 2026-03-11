@@ -93,11 +93,16 @@ function stageCommandGraphSynthesis({
   effect = {},
   warnings = [],
   capabilityCommands = [],
-  effectCatalog = null
+  effectCatalog = null,
+  targetIds = []
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
-  const commands = buildDesignerPlanCommands(executionLines, { trackName: "XD: Sequencer Plan" });
+  const commands = buildDesignerPlanCommands(executionLines, {
+    trackName: "XD: Sequencer Plan",
+    targetIds,
+    effectCatalog
+  });
   const capabilityGate = evaluateSequencePlanCapabilities({ commands, capabilityCommands });
   if (!capabilityGate.ok) {
     const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
@@ -212,7 +217,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.command_graph_synthesis === "function"
       ? stageOverrides.command_graph_synthesis({ sourceLines, effect, warnings })
-      : stageCommandGraphSynthesis({ sourceLines, effect, warnings, capabilityCommands, effectCatalog }))
+      : stageCommandGraphSynthesis({ sourceLines, effect, warnings, capabilityCommands, effectCatalog, targetIds: scope.targetIds }))
   });
 
   return {
