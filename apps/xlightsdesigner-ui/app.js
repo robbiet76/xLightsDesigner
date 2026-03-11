@@ -23,6 +23,7 @@ import {
 } from "./api.js";
 import { buildProposalFromIntent } from "./agent/planner.js";
 import { buildGuidedQuestions } from "./agent/guided-dialog.js";
+import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
   estimateImpactCount
@@ -154,6 +155,8 @@ const defaultState = {
     agentLayerReady: false,
     agentActiveRole: "",
     agentRegistryVersion: "",
+    agentRegistryValid: false,
+    agentRegistryErrors: [],
     agentHandoffsReady: "0/3",
     orchestrationLastRunId: "",
     orchestrationLastStatus: "",
@@ -327,6 +330,12 @@ if (typeof state.health?.agentActiveRole !== "string") {
 if (typeof state.health?.agentRegistryVersion !== "string") {
   state.health.agentRegistryVersion = "";
 }
+if (typeof state.health?.agentRegistryValid !== "boolean") {
+  state.health.agentRegistryValid = false;
+}
+if (!Array.isArray(state.health?.agentRegistryErrors)) {
+  state.health.agentRegistryErrors = [];
+}
 if (typeof state.health?.agentHandoffsReady !== "string") {
   state.health.agentHandoffsReady = "0/3";
 }
@@ -380,6 +389,8 @@ function emptyAgentRuntimeState() {
     packageId: "",
     packageVersion: "",
     registryVersion: "",
+    registryValid: false,
+    registryErrors: [],
     lastLoadedAt: "",
     activeRole: "",
     roles: [],
@@ -581,6 +592,8 @@ function refreshAgentRuntimeHealth() {
   state.health.agentLayerReady = Boolean(agentRuntime.loaded && !agentRuntime.error);
   state.health.agentActiveRole = String(agentRuntime.activeRole || "");
   state.health.agentRegistryVersion = String(agentRuntime.registryVersion || "");
+  state.health.agentRegistryValid = Boolean(agentRuntime.registryValid);
+  state.health.agentRegistryErrors = Array.isArray(agentRuntime.registryErrors) ? agentRuntime.registryErrors.slice(0, 12) : [];
   state.health.agentHandoffsReady = `${readyCount}/${AGENT_HANDOFF_CONTRACTS.length}`;
 }
 
@@ -830,9 +843,19 @@ async function loadAgentRuntimeBundle({ force = false } = {}) {
     for (const ref of refs) {
       const id = String(ref?.id || "").trim();
       const path = String(ref?.path || "").trim();
-      if (!id || !path) continue;
+      if (!id || !path) {
+        const out = { ok: false, error: "Agent registry contains an entry with missing id/path." };
+        trainingPackageAgentBundleCache = out;
+        trainingPackageAgentBundleCacheAt = Date.now();
+        return out;
+      }
       const profileRes = await bridge.readTrainingPackageAsset({ relativePath: path, asJson: true });
-      if (!profileRes?.ok || !isPlainObject(profileRes.data)) continue;
+      if (!profileRes?.ok || !isPlainObject(profileRes.data)) {
+        const out = { ok: false, error: `Agent profile load failed for ${id} (${path}).` };
+        trainingPackageAgentBundleCache = out;
+        trainingPackageAgentBundleCacheAt = Date.now();
+        return out;
+      }
       profiles.push({
         id,
         status: String(ref?.status || "").trim() || "unknown",
@@ -840,11 +863,25 @@ async function loadAgentRuntimeBundle({ force = false } = {}) {
         profile: profileRes.data
       });
     }
+    const parity = validateTrainingAgentRegistry({ registry, profiles });
+    if (!parity.ok) {
+      const out = {
+        ok: false,
+        error: `Agent registry validation failed: ${parity.errors.join("; ")}`,
+        registryVersion: String(registry?.version || "").trim(),
+        registryErrors: parity.errors
+      };
+      trainingPackageAgentBundleCache = out;
+      trainingPackageAgentBundleCacheAt = Date.now();
+      return out;
+    }
     const out = {
       ok: true,
       packageId: String(manifest?.packageId || "").trim(),
       packageVersion: String(manifest?.version || "").trim(),
       registryVersion: String(registry?.version || "").trim(),
+      registryValid: true,
+      registryErrors: [],
       profiles
     };
     trainingPackageAgentBundleCache = out;
@@ -862,7 +899,10 @@ async function hydrateAgentRuntime({ force = false, quiet = true } = {}) {
   const loaded = await loadAgentRuntimeBundle({ force });
   if (!loaded?.ok) {
     Object.assign(agentRuntime, emptyAgentRuntimeState(), {
-      error: String(loaded?.error || "Unknown agent runtime load error")
+      error: String(loaded?.error || "Unknown agent runtime load error"),
+      registryVersion: String(loaded?.registryVersion || ""),
+      registryValid: false,
+      registryErrors: Array.isArray(loaded?.registryErrors) ? loaded.registryErrors : []
     });
     refreshAgentRuntimeHealth();
     if (!quiet) pushDiagnostic("warning", `Agent runtime load failed: ${agentRuntime.error}`);
@@ -882,10 +922,12 @@ async function hydrateAgentRuntime({ force = false, quiet = true } = {}) {
   next.packageId = loaded.packageId;
   next.packageVersion = loaded.packageVersion;
   next.registryVersion = loaded.registryVersion;
+  next.registryValid = Boolean(loaded.registryValid);
+  next.registryErrors = Array.isArray(loaded.registryErrors) ? loaded.registryErrors : [];
   next.lastLoadedAt = new Date().toISOString();
   next.roles = (loaded.profiles || []).map((r) => r.id);
   next.profilesById = profilesById;
-  next.activeRole = agentRuntime.activeRole || "";
+  next.activeRole = next.roles.includes(agentRuntime.activeRole) ? agentRuntime.activeRole : "";
   next.handoffs = agentRuntime.handoffs || next.handoffs;
   Object.assign(agentRuntime, next);
   refreshAgentRuntimeHealth();
@@ -9500,6 +9542,12 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Agent Layer</div><div>${state.health.agentLayerReady ? "loaded" : "unavailable"}</div></div>
         <div class="kv"><div class="k">Agent Role</div><div>${state.health.agentActiveRole || "idle"}</div></div>
         <div class="kv"><div class="k">Agent Registry</div><div>${state.health.agentRegistryVersion || "unknown"}</div></div>
+        <div class="kv"><div class="k">Registry Valid</div><div>${state.health.agentRegistryValid ? "yes" : "no"}</div></div>
+        ${
+          Array.isArray(state.health.agentRegistryErrors) && state.health.agentRegistryErrors.length
+            ? `<p class="banner warning">Registry errors: ${escapeHtml(state.health.agentRegistryErrors.join(" | "))}</p>`
+            : ""
+        }
         <div class="kv"><div class="k">Handoffs Ready</div><div>${state.health.agentHandoffsReady || "0/3"}</div></div>
         <div class="kv"><div class="k">Orchestration Last Run</div><div>${state.health.orchestrationLastRunId || "none"}</div></div>
         <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
