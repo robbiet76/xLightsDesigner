@@ -123,3 +123,21 @@ test("sequence_agent stage failure is classified and surfaced", () => {
     }
   );
 });
+
+test("sequence_agent blocks plan synthesis when required capabilities are missing", () => {
+  assert.throws(
+    () =>
+      buildSequenceAgentPlan({
+        analysisHandoff: sampleAnalysis(),
+        intentHandoff: sampleIntent(),
+        sourceLines: ["Chorus 1 / MegaTree / pulse"],
+        capabilityCommands: ["timing.createTrack"]
+      }),
+    (err) => {
+      assert.equal(err.stage, "command_graph_synthesis");
+      assert.equal(err.failureCategory, "capability");
+      assert.match(String(err.message || ""), /Unsupported command capabilities/i);
+      return true;
+    }
+  );
+});

@@ -18,6 +18,15 @@ test('evaluatePlanSafety blocks forbidden commands', () => {
   assert.ok(result.errors.some((e) => e.includes('Blocked command')));
 });
 
+test("evaluatePlanSafety blocks conflicting timing write groups", () => {
+  const result = evaluatePlanSafety([
+    { cmd: "timing.insertMarks", params: { trackName: "XD: Beats", marks: [] } },
+    { cmd: "timing.replaceMarks", params: { trackName: "XD: Beats", marks: [] } }
+  ]);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => /Conflicting timing write group/i.test(e)));
+});
+
 test('orchestrator blocks on revision mismatch', async () => {
   const res = await validateAndApplyPlan({
     endpoint: 'http://127.0.0.1:49914/xlDoAutomation',

@@ -1,5 +1,6 @@
 import { buildDesignerPlanCommands, estimateImpactCount } from "./command-builders.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
+import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -81,17 +82,31 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } =
   };
 }
 
-function stageCommandGraphSynthesis({ sourceLines = [], effect = {}, warnings = [] } = {}) {
+function stageCommandGraphSynthesis({
+  sourceLines = [],
+  effect = {},
+  warnings = [],
+  capabilityCommands = []
+} = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
   const commands = buildDesignerPlanCommands(executionLines, { trackName: "XD: Sequencer Plan" });
+  const capabilityGate = evaluateSequencePlanCapabilities({ commands, capabilityCommands });
+  if (!capabilityGate.ok) {
+    const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
+    err.failureCategory = "capability";
+    throw err;
+  }
+  if (Array.isArray(capabilityGate.warnings) && capabilityGate.warnings.length) {
+    warnings.push(...capabilityGate.warnings);
+  }
   return {
     commands,
     executionLines,
     estimatedImpact: estimateImpactCount(executionLines),
     warnings,
     validationReady: Array.isArray(commands) && commands.length > 0,
-    detail: `commands=${Array.isArray(commands) ? commands.length : 0}`
+    detail: `commands=${Array.isArray(commands) ? commands.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
   };
 }
 
@@ -110,7 +125,7 @@ function runStage({ stage = "", fn, stageTelemetry = [] } = {}) {
   } catch (err) {
     const finishedAt = nowMs();
     const message = String(err?.message || err || "unknown stage error");
-    const failureCategory = classifyStageFailure(stage);
+    const failureCategory = normText(err?.failureCategory) || classifyStageFailure(stage);
     stageTelemetry.push({
       stage,
       status: "error",
@@ -131,6 +146,7 @@ export function buildSequenceAgentPlan({
   intentHandoff = null,
   sourceLines = [],
   baseRevision = "unknown",
+  capabilityCommands = [],
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -174,7 +190,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.command_graph_synthesis === "function"
       ? stageOverrides.command_graph_synthesis({ sourceLines, effect, warnings })
-      : stageCommandGraphSynthesis({ sourceLines, effect, warnings }))
+      : stageCommandGraphSynthesis({ sourceLines, effect, warnings, capabilityCommands }))
   });
 
   return {

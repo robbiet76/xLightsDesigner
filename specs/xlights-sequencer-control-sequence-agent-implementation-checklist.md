@@ -15,6 +15,12 @@ Boundary summary:
 
 ## 2) Phase Checklist
 
+### Required Pre-Gate (applies to each domain area)
+- [ ] Source audit complete (xLights code references documented).
+- [ ] API coverage map complete (source fields/enums/constraints mapped to automation API).
+- [ ] Gap list approved (missing/partial API surface documented and prioritized).
+- [ ] Domain semantic modeling starts only after source+API audit gate is complete.
+
 ### Phase A: Role Contract and Data Shapes
 - [x] Define canonical `sequence_agent` input contract.
 - [x] Define canonical `sequence_agent` output contract (`plan_handoff_v1` + apply result contract).
@@ -37,10 +43,31 @@ Boundary summary:
 - [x] Restrict fallback regeneration paths to explicit non-default cases only.
 
 ### Phase D: xLights Capability and Safety Integration
-- [ ] Build capability matrix usage in planning stage.
-- [ ] Add explicit blocked/unsupported mapping per command category.
+- [x] Build capability matrix usage in planning stage.
+- [x] Add explicit blocked/unsupported mapping per command category.
 - [ ] Enforce revision gate and stale-plan gate uniformly.
-- [ ] Enforce safety policy on graph and per-node command groups.
+- [x] Enforce safety policy on graph and per-node command groups.
+
+### Phase I: xLights Domain Semantics (layout/models/groups/submodels/effects)
+- [ ] Show layout and model spatial placement:
+  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [ ] Canonical scene graph schema defined in app layer.
+  - [ ] Spatial query helpers implemented (region/proximity/orientation).
+- [ ] Model types and functionality:
+  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [ ] Model type ontology + constraints documented and encoded.
+- [ ] Model groups and functionality:
+  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution).
+- [ ] Submodels and functionality:
+  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [ ] Submodel inheritance/override rules encoded.
+- [ ] Effects types and settings:
+  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [ ] Effect catalog + parameter schemas + compatibility rules encoded.
+- [ ] Sequence planner integration:
+  - [ ] Sequence functions mapped to validated command graph templates.
+  - [ ] Deterministic tests added for mixed model/effect scenarios.
 
 ### Phase E: Timing Track Ownership in Sequence Agent
 - [ ] Move timing-track write decisions fully into `sequence_agent`.

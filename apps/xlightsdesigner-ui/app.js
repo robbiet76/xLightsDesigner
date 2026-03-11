@@ -29,6 +29,7 @@ import {
   estimateImpactCount
 } from "./agent/command-builders.js";
 import { buildSequenceAgentPlan } from "./agent/sequence-agent.js";
+import { evaluateSequencePlanCapabilities } from "./agent/sequence-capability-gate.js";
 import {
   buildSequenceAgentApplyResult,
   buildSequenceAgentInput,
@@ -141,6 +142,7 @@ const defaultState = {
     hasExecutePlan: false,
     hasValidateCommands: false,
     hasJobsGet: false,
+    capabilityCommands: [],
     sequenceOpen: false,
     runtimeReady: false,
     desktopFileDialogReady: false,
@@ -330,6 +332,9 @@ if (typeof state.health?.agentActiveRole !== "string") {
 }
 if (typeof state.health?.agentRegistryVersion !== "string") {
   state.health.agentRegistryVersion = "";
+}
+if (!Array.isArray(state.health?.capabilityCommands)) {
+  state.health.capabilityCommands = [];
 }
 if (typeof state.health?.agentRegistryValid !== "boolean") {
   state.health.agentRegistryValid = false;
@@ -1945,6 +1950,7 @@ function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen)
     ...state.health,
     lastCheckedAt: new Date().toISOString(),
     capabilitiesCount: commands.length,
+    capabilityCommands: commands,
     hasExecutePlan: commands.includes("system.executePlan"),
     hasValidateCommands: commands.includes("system.validateCommands"),
     hasJobsGet: commands.includes("jobs.get"),
@@ -2338,7 +2344,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         analysisHandoff,
         intentHandoff,
         sourceLines: scopedSource,
-        baseRevision: state.draftBaseRevision
+        baseRevision: state.draftBaseRevision,
+        capabilityCommands: state.health.capabilityCommands || []
       });
       emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
       if (fallbackReason) {
@@ -2354,6 +2361,24 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
     if (!rawPlan.length) {
       throw new Error("sequence_agent generated no commands for apply.");
+    }
+    const capabilityGate = evaluateSequencePlanCapabilities({
+      commands: rawPlan,
+      capabilityCommands: state.health.capabilityCommands || []
+    });
+    if (!capabilityGate.ok) {
+      markOrchestrationStage(orchestrationRun, "capability_gate", "error", capabilityGate.errors.join(" | "));
+      throw new Error(`Apply blocked by capability gate: ${capabilityGate.errors.join("; ")}`);
+    }
+    if (capabilityGate.skipped) {
+      markOrchestrationStage(orchestrationRun, "capability_gate", "warning", capabilityGate.warnings.join(" | "));
+    } else {
+      markOrchestrationStage(
+        orchestrationRun,
+        "capability_gate",
+        "ok",
+        `required=${capabilityGate.requiredCapabilities.length}`
+      );
     }
     if (planSource !== "handoff_graph") {
       const generatedGraph = validateCommandGraph(rawPlan);
@@ -2710,7 +2735,8 @@ function onGenerate(intentOverride = "") {
       analysisHandoff,
       intentHandoff,
       sourceLines: proposalSeedLines,
-      baseRevision: String(state.draftBaseRevision || state.revision || "unknown")
+      baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+      capabilityCommands: state.health.capabilityCommands || []
     });
     emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequence_agent plan built");

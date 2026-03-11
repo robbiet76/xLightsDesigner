@@ -34,6 +34,23 @@ export function evaluatePlanSafety(commands = [], options = {}) {
     }
   }
 
+  // Group-level conflict safety: mixed insert/replace on same timing track in one plan.
+  const timingWriteKindsByTrack = new Map();
+  for (const row of rows) {
+    const cmd = String(row?.cmd || "").trim();
+    if (cmd !== "timing.insertMarks" && cmd !== "timing.replaceMarks") continue;
+    const trackName = String(row?.params?.trackName || "").trim();
+    if (!trackName) continue;
+    const kinds = timingWriteKindsByTrack.get(trackName) || new Set();
+    kinds.add(cmd);
+    timingWriteKindsByTrack.set(trackName, kinds);
+  }
+  for (const [trackName, kinds] of timingWriteKindsByTrack.entries()) {
+    if (kinds.has("timing.insertMarks") && kinds.has("timing.replaceMarks")) {
+      errors.push(`Conflicting timing write group for track ${trackName}: insertMarks + replaceMarks.`);
+    }
+  }
+
   if (rows.length >= 50) {
     warnings.push(`Large plan size: ${rows.length} commands.`);
   }
