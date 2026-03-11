@@ -5,5 +5,121 @@
     "03-sequencer-mutation-smoke.sh",
     "08-plan-execution-smoke.sh",
     "09-async-jobs-smoke.sh"
+  ],
+  "automatedCoverage": [
+    {
+      "id": "happy_path_apply_from_handoff_graph",
+      "source": "apps/xlightsdesigner-ui/tests/agent/orchestrator.test.js",
+      "asserts": [
+        "handoff-style command graph applies successfully",
+        "transaction path advances revision"
+      ]
+    },
+    {
+      "id": "stale_revision_blocked",
+      "source": "apps/xlightsdesigner-ui/tests/agent/orchestrator.test.js",
+      "asserts": [
+        "revision mismatch blocks apply",
+        "blocked stage classified as revision"
+      ]
+    },
+    {
+      "id": "missing_analysis_degraded_mode",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent.test.js",
+      "asserts": [
+        "reduced-confidence warning emitted",
+        "validation-ready plan still produced"
+      ]
+    },
+    {
+      "id": "cumulative_timing_edits_remain_writable",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent.test.js",
+      "asserts": [
+        "prior manual timing ownership does not suppress later timing writes",
+        "timing edits are cumulative sequence state"
+      ]
+    },
+    {
+      "id": "partial_scope_apply",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent.test.js",
+      "asserts": [
+        "partial scope planning remains deterministic",
+        "scope metadata narrows to selected target/section"
+      ]
+    }
+  ],
+  "corpusBackedCoverage": {
+    "source": "training-packages/training-package-v1/modules/xlights_sequencer_execution/datasets/production_2d_functionality_index.json",
+    "intent": [
+      "use production xLights sequences as a functionality corpus only",
+      "do not reward imitation of any one user's visual style or pacing",
+      "prefer capability correctness over corpus frequency when the manual documents valid behavior"
+    ],
+    "commonMechanics": [
+      "layer methods including Layered, Average, masking, and reveal modes",
+      "in/out transition coverage including Wipe and Circle Explode",
+      "per-effect buffer styles such as Per Preview, Per Model Default, Single Line, and Per Model Per Preview",
+      "2D buffer transforms such as Flip Horizontal and Rotate CC 90",
+      "timing-track vocabulary variability including Beats, Bars, Note Onsets, metronome tracks, and song-specific names",
+      "group and submodel targeting patterns",
+      "per-effect brightness and sparkle modifiers"
+    ],
+    "rareButDocumentedMechanics": [
+      "rare layer modes such as Additive, Subtractive, Brightness, and Shadow variants",
+      "rare transitions such as Doorway, Circular Swirl, Blinds, Star, Square Explode, and Slide Bars",
+      "documented per-effect buffer behavior such as Persistent"
+    ]
+  },
+  "plannedEvalCases": [
+    {
+      "id": "corpus_common_layer_method_support",
+      "asserts": [
+        "sequence_agent recognizes common layer methods as valid shared timing/layer settings",
+        "planning does not warn on corpus-backed shared settings without cause"
+      ]
+    },
+    {
+      "id": "corpus_common_buffer_setting_support",
+      "asserts": [
+        "sequence_agent accepts common per-effect buffer style and transform settings as valid effect settings",
+        "planning remains style-neutral and does not prefer one buffer style by default"
+      ]
+    },
+    {
+      "id": "timing_track_name_agnostic_behavior",
+      "asserts": [
+        "sequence_agent does not require canonical beats or lyrics track names",
+        "timing-track handling remains semantics-driven instead of name-biased"
+      ]
+    },
+    {
+      "id": "rare_but_documented_transition_support",
+      "asserts": [
+        "documented rare transition settings are treated as valid when requested",
+        "lack of corpus frequency does not cause rejection of documented xLights functionality"
+      ]
+    },
+    {
+      "id": "no_style_imitation_bias",
+      "asserts": [
+        "evals do not reward matching historical user sequence style",
+        "success is based on valid xLights functionality and safe deterministic behavior"
+      ]
+    }
+  ],
+  "plannedMetrics": [
+    "graph_validation_pass_rate",
+    "revision_conflict_block_rate",
+    "degraded_mode_warning_presence",
+    "timing_write_policy_correctness",
+    "post_apply_readback_success_rate",
+    "corpus_functionality_support_rate",
+    "rare_documented_feature_acceptance_rate",
+    "style_bias_absence_review"
+  ],
+  "notes": [
+    "Eval assets are functionality-oriented and should not reward stylistic imitation.",
+    "Historical user sequences may be referenced as capability corpus only, not aesthetic ground truth.",
+    "Sequence-agent evals should remain focused on sequencing functionality and execution safety, not designer-side creative composition."
   ]
 }

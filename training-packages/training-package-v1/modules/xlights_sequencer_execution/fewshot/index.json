@@ -1,4 +1,82 @@
 {
-  "status": "pending",
-  "notes": "Few-shot sequencing examples should be derived from approved proposal->apply pairs with readback verification."
+  "status": "active",
+  "selectionPolicy": "functionality-first, style-neutral",
+  "notes": [
+    "Examples teach safe xLights sequencing behavior and command graph structure.",
+    "Examples must not encode preferred artistic style, pacing, color taste, or prop bias.",
+    "Historical sequences may be mined for valid functionality patterns only.",
+    "Examples should teach capability usage and safety boundaries, not visual resemblance to prior user sequences."
+  ],
+  "examples": [
+    {
+      "id": "handoff_happy_path",
+      "intent": "Apply approved chorus energy increase on focal props using current handoff graph.",
+      "focus": [
+        "use current plan_handoff_v1 when scope and base revision still match",
+        "preserve deterministic command ordering",
+        "apply via transaction-only flow"
+      ],
+      "expectedBehavior": [
+        "reuses handoff graph by default",
+        "validates capability and command graph before apply",
+        "expects post-apply readback verification"
+      ]
+    },
+    {
+      "id": "missing_analysis_degraded_mode",
+      "intent": "Revise a single section when analysis_handoff_v1 is unavailable.",
+      "focus": [
+        "continue planning with reduced confidence",
+        "emit explicit degraded-mode warning",
+        "avoid inventing unsupported timing semantics"
+      ],
+      "expectedBehavior": [
+        "plan remains validation-ready",
+        "warnings include reduced-confidence notice",
+        "scope remains anchored to intent handoff"
+      ]
+    },
+    {
+      "id": "partial_scope_regeneration",
+      "intent": "Apply only a subset of proposed lines for one target and one section.",
+      "focus": [
+        "generate a fresh plan for partial scope",
+        "avoid blindly reusing full-scope handoff commands",
+        "keep command graph deterministic"
+      ],
+      "expectedBehavior": [
+        "partial-scope graph contains only the requested section/target impact",
+        "validation-ready output is preserved",
+        "summary/metadata reflects narrowed scope"
+      ]
+    },
+    {
+      "id": "cumulative_timing_revision",
+      "intent": "User manually adjusted timing track contents and now requests a new sequence revision.",
+      "focus": [
+        "treat current timing tracks as cumulative sequence state",
+        "do not auto-lock timing tracks on prior manual edits",
+        "plan from latest revision"
+      ],
+      "expectedBehavior": [
+        "timing writes remain allowed unless policy explicitly disables them",
+        "revision freshness gates prevent stale overwrite",
+        "agent may update timing tracks again as part of new revision"
+      ]
+    },
+    {
+      "id": "revision_conflict_block",
+      "intent": "Sequence changed in xLights after plan generation and before apply.",
+      "focus": [
+        "fail closed on revision mismatch",
+        "classify blocked apply correctly",
+        "require regenerate against latest state"
+      ],
+      "expectedBehavior": [
+        "apply_result_v1 reports blocked status",
+        "failure reason classifies revision conflict",
+        "stale plan is not applied"
+      ]
+    }
+  ]
 }

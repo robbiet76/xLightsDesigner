@@ -1,0 +1,175 @@
+{
+  "artifactType": "xlights-production-2d-functionality-index-v1",
+  "generatedFrom": {
+    "root": "/Users/robterry/Documents/Lights/Current/Christmas/Show",
+    "excluded": [
+      "Backup/...",
+      "Props_Setup.xsq",
+      "RGBW Test.xsq",
+      "Test_Flood.xsq"
+    ],
+    "notes": [
+      "Static sequences are included as valid non-audio/static display sequencing examples.",
+      "This corpus is intended for 2D functionality coverage, not 3D sequencing coverage.",
+      "Use as a functionality corpus only, not a style corpus."
+    ]
+  },
+  "coverageSummary": {
+    "sequenceCount": 63,
+    "modelBlending": {
+      "true": 37,
+      "false": 26
+    }
+  },
+  "topEffects": [
+    {"name": "SingleStrand", "count": 16879},
+    {"name": "On", "count": 11579},
+    {"name": "Shockwave", "count": 7987},
+    {"name": "Color Wash", "count": 4847},
+    {"name": "Pinwheel", "count": 3663},
+    {"name": "Spirals", "count": 3340},
+    {"name": "Marquee", "count": 2894},
+    {"name": "Ripple", "count": 2777},
+    {"name": "Morph", "count": 2468},
+    {"name": "Curtain", "count": 2023},
+    {"name": "Text", "count": 1574},
+    {"name": "VU Meter", "count": 1490},
+    {"name": "Fan", "count": 1238},
+    {"name": "Bars", "count": 1197},
+    {"name": "Off", "count": 1178},
+    {"name": "Pictures", "count": 1136},
+    {"name": "Wave", "count": 894},
+    {"name": "Fill", "count": 759},
+    {"name": "Butterfly", "count": 550},
+    {"name": "Twinkle", "count": 531}
+  ],
+  "documentedRareEffects": [
+    "Video",
+    "Shader",
+    "Fireworks",
+    "Faces",
+    "Tree",
+    "Lines",
+    "Kaleidoscope",
+    "Life"
+  ],
+  "layerAndTransitionSettings": {
+    "common": [
+      {"key": "T_CHOICE_LayerMethod=Layered", "count": 661},
+      {"key": "T_CHOICE_LayerMethod=Average", "count": 172},
+      {"key": "T_CHOICE_Out_Transition_Type=Circle Explode", "count": 133},
+      {"key": "T_CHOICE_In_Transition_Type=Wipe", "count": 115},
+      {"key": "T_CHOICE_In_Transition_Type=Circle Explode", "count": 106},
+      {"key": "T_CHOICE_LayerMethod=1 reveals 2", "count": 97},
+      {"key": "T_CHECKBOX_LayerMorph=1", "count": 74},
+      {"key": "T_CHOICE_LayerMethod=2 is Mask", "count": 57},
+      {"key": "T_CHOICE_LayerMethod=1 is Unmask", "count": 55},
+      {"key": "T_CHOICE_LayerMethod=1 is Mask", "count": 50}
+    ],
+    "rareButDocumented": [
+      "Additive",
+      "Subtractive",
+      "Brightness",
+      "Left-Right",
+      "Shadow 1 on 2",
+      "Shadow 2 on 1",
+      "Clock",
+      "Swap",
+      "Doorway",
+      "Circular Swirl",
+      "Blinds",
+      "Star",
+      "Square Explode",
+      "Slide Bars"
+    ]
+  },
+  "bufferAndRenderSettings": {
+    "common": [
+      {"key": "B_CHOICE_BufferStyle=Per Preview", "count": 976},
+      {"key": "B_CHOICE_BufferStyle=Per Model Default", "count": 889},
+      {"key": "B_CHOICE_BufferStyle=Default", "count": 795},
+      {"key": "B_CHOICE_BufferStyle=Per Model Per Preview", "count": 507},
+      {"key": "B_CHOICE_BufferStyle=Single Line", "count": 472},
+      {"key": "B_CHOICE_BufferTransform=Flip Horizontal", "count": 452},
+      {"key": "B_CHOICE_PerPreviewCamera=2D", "count": 400},
+      {"key": "B_CHOICE_BufferTransform=Rotate CC 90", "count": 379}
+    ],
+    "notable": [
+      "Overlay - Centered",
+      "Overlay - Scaled",
+      "Per Model Single Line",
+      "Horizontal Stack",
+      "Horizontal Per Strand",
+      "Rotate 180",
+      "Rotate CW 90",
+      "Flip Vertical",
+      "Value-curve rotation",
+      "Value-curve zoom",
+      "Value-curve blur",
+      "Sub-buffer"
+    ],
+    "documentedButNeedsFutureReview": [
+      "Persistent",
+      "3D camera/render-style behavior"
+    ]
+  },
+  "timingTrackVocabulary": {
+    "common": [
+      {"name": "New Timing", "count": 32},
+      {"name": "Beats", "count": 25},
+      {"name": "60000ms Metronome", "count": 14},
+      {"name": "Clock2", "count": 13},
+      {"name": "Clock", "count": 13},
+      {"name": "20000ms Metronome", "count": 13},
+      {"name": "10000ms Metronome", "count": 13},
+      {"name": "Note Onsets", "count": 10},
+      {"name": "Bars", "count": 9}
+    ],
+    "notes": [
+      "Timing track naming is highly user-defined.",
+      "Sequence agent should not assume a canonical beats/lyrics naming scheme."
+    ]
+  },
+  "targetingPatterns": {
+    "commonGroups": [
+      {"name": "SpiralTreeStars", "count": 53},
+      {"name": "Floods", "count": 52},
+      {"name": "Icicles_All", "count": 51},
+      {"name": "Borders", "count": 39},
+      {"name": "MiniCanes", "count": 36},
+      {"name": "CandyCanes", "count": 34},
+      {"name": "Train_NoMatrix", "count": 33},
+      {"name": "Snowflakes", "count": 31},
+      {"name": "AllModels", "count": 29},
+      {"name": "Wreathes_All", "count": 28}
+    ],
+    "commonSubmodels": [
+      {"name": "Spokes", "count": 74},
+      {"name": "Ribbon", "count": 60},
+      {"name": "Base", "count": 60},
+      {"name": "Snowman Hat Beads", "count": 57},
+      {"name": "Stars", "count": 45},
+      {"name": "TuneTo", "count": 39},
+      {"name": "Station", "count": 39},
+      {"name": "Rings", "count": 34},
+      {"name": "Diagonals", "count": 34},
+      {"name": "Rows", "count": 33}
+    ]
+  },
+  "colorControls": {
+    "common": [
+      {"key": "C_SLIDER_Brightness=70", "count": 180},
+      {"key": "C_CHECKBOX_MusicSparkles=1", "count": 118},
+      {"key": "C_SLIDER_Brightness=60", "count": 78},
+      {"key": "C_SLIDER_Brightness=80", "count": 69},
+      {"key": "C_SLIDER_SparkleFrequency=0", "count": 66},
+      {"key": "C_SLIDER_Brightness=100", "count": 62},
+      {"key": "C_SLIDER_SparkleFrequency=100", "count": 39},
+      {"key": "C_SLIDER_Brightness=90", "count": 39}
+    ],
+    "notes": [
+      "Brightness and sparkle controls are routine per-effect modifiers.",
+      "Value-curve brightness is present and should remain in compatibility coverage."
+    ]
+  }
+}

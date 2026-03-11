@@ -14,6 +14,36 @@
       "id": "ui-agent-tests",
       "type": "test-corpus",
       "path": "apps/xlightsdesigner-ui/tests/agent"
+    },
+    {
+      "id": "sequence-agent-runtime-contracts",
+      "type": "runtime-contract",
+      "path": "apps/xlightsdesigner-ui/agent/sequence-agent-contracts.js"
+    },
+    {
+      "id": "handoff-contracts",
+      "type": "runtime-contract",
+      "path": "apps/xlightsdesigner-ui/agent/handoff-contracts.js"
+    },
+    {
+      "id": "sequence-agent-checklist",
+      "type": "implementation-checklist",
+      "path": "specs/xlights-sequencer-control-sequence-agent-implementation-checklist.md"
+    },
+    {
+      "id": "project-storage-layout",
+      "type": "storage-spec",
+      "path": "specs/xlightsdesigner-project-storage-layout.md"
+    },
+    {
+      "id": "functionality-corpus-initial-audit",
+      "type": "corpus-audit",
+      "path": "specs/xlights-sequencer-control-functionality-corpus-initial-audit.md"
+    },
+    {
+      "id": "production-2d-functionality-index",
+      "type": "corpus-index",
+      "path": "training-packages/training-package-v1/modules/xlights_sequencer_execution/datasets/production_2d_functionality_index.json"
     }
   ]
 }
