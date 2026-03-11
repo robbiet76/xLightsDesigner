@@ -124,3 +124,17 @@ Last Reviewed: 2026-03-11
   - `XD: Song Structure` -> `Song Structure`
 - Once promoted/manual-locked for a fingerprinted track identity, subsequent analysis runs do not auto-overwrite that track.
 - Tempo-correction rewrite paths must skip beat/bar mutations when manual lock is active.
+
+## 14) Multi-Agent Orchestration + Handoff Gates
+- Runtime role ownership is explicit:
+  - `audio_analyst` owns analysis payload generation.
+  - `designer_dialog` owns user-facing intent refinement.
+  - `sequencer_designer` owns plan command construction.
+- `analysis_handoff_v1` must be emitted after analysis pass with required keys:
+  - `trackIdentity`, `timing`, `structure`, `briefSeed`.
+- `intent_handoff_v1` must be emitted before plan generation with required keys:
+  - `goal`, `mode`, `scope`, `constraints`.
+- `plan_handoff_v1` must include:
+  - `planId`, `summary`, `warnings[]`, `commands[]`, `baseRevision`, `validationReady`.
+- Apply must fail closed when required upstream handoff fields are missing.
+- Diagnostics must indicate role-level failure origin (`audio_analyst|designer_dialog|sequencer_designer`) when orchestration breaks.

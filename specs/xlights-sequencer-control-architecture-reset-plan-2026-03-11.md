@@ -16,10 +16,11 @@ This reset defines one authoritative execution spine so features are delivered i
 
 Use this hierarchy when conflicts exist:
 
-1. `project-spec.md` (program scope and hard boundaries)
-2. `training-package-architecture.md` (portable training architecture)
-3. `architecture-reset-plan-2026-03-11.md` (execution plan and gates)
-4. work-package docs (`wp*`, task breakdowns, status matrix)
+1. `xlights-sequencer-control-project-spec.md` (program scope and hard boundaries)
+2. `xlights-sequencer-control-training-package-architecture.md` (portable training architecture)
+3. `xlights-sequencer-control-agent-orchestration-architecture.md` (multi-agent role boundaries and handoff contracts)
+4. `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md` (execution plan and gates)
+5. work-package docs (`wp*`, task breakdowns, status matrix)
 
 Rule:
 - If a lower document conflicts with higher priority docs, update the lower doc before shipping new feature work.
@@ -90,6 +91,8 @@ Exit gate:
 Goal: robust multi-turn designer conversation and intent-to-plan behavior.
 
 Tasks:
+- Lock role orchestration across `audio_analyst` -> `designer_dialog` -> `sequencer_designer`.
+- Implement structured handoff payloads (`analysis_handoff_v1`, `intent_handoff_v1`, `plan_handoff_v1`).
 - Finalize orchestrator contract for guided dialog + proposal lifecycle.
 - Ensure stateful context continuity across turns.
 - Validate apply gating (approval, revision checks, dry-run path).

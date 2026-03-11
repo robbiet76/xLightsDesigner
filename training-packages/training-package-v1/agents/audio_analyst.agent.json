@@ -1,0 +1,29 @@
+{
+  "id": "audio_analyst",
+  "version": "0.1.0",
+  "purpose": "Convert sequence audio into timing intelligence and context evidence for downstream design/planning.",
+  "ownedModules": [
+    "audio_track_analysis"
+  ],
+  "runtime": {
+    "primaryEngine": "analysis-service",
+    "llmUsage": "targeted",
+    "llmTasks": [
+      "lyrics stanza labeling and section relabel rationale"
+    ]
+  },
+  "outputs": [
+    "audio_summary",
+    "timing_tracks:beats,bars,lyrics,chords,structure",
+    "track_identity",
+    "web_validation",
+    "creative_brief_seed"
+  ],
+  "handoff": {
+    "to": [
+      "designer_dialog",
+      "sequencer_designer"
+    ],
+    "contract": "analysis_handoff_v1"
+  }
+}

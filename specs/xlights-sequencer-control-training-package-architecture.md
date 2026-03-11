@@ -19,6 +19,8 @@ Core files:
 - `modules/audio_track_analysis/*`
 - `modules/lighting_design_principles/*`
 - `modules/xlights_sequencer_execution/*`
+- `agents/registry.json`
+- `agents/*.agent.json`
 
 ## 3) Three Module Model (Hard Requirement)
 The training package must maintain these three first-class modules:
@@ -42,6 +44,18 @@ Each module follows the same asset categories:
 - `fewshot/` (model-agnostic example IO)
 - `eval/` (runner and metrics configuration)
 - optional `contracts/` (capability requirements and schema bindings)
+
+## 4.1) Agent Layer (Role Binding)
+The training package must include an agent-layer mapping that binds runtime roles to module assets.
+
+Required files:
+- `agents/registry.json`: lists runtime agent ids and profiles.
+- `agents/*.agent.json`: per-agent role profile, owned modules, outputs, and handoff contracts.
+
+Minimum required agent ids:
+- `audio_analyst`
+- `designer_dialog`
+- `sequencer_designer`
 
 ## 5) Distribution and Provider Policy
 - Package distribution is app-bundled and/or user-installable.
@@ -75,5 +89,6 @@ Phase C:
 ## 9) Acceptance Criteria
 This architecture is considered implemented when:
 - all three modules exist with manifests and indexes,
+- agent-layer registry/profiles exist and map runtime roles to modules,
 - active specs reference this package as source of truth for agent-training assets,
 - at least one working eval harness is wired under module `eval/`.

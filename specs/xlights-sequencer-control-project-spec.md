@@ -222,3 +222,35 @@ Agent training assets must be organized into exactly three modules:
 ### 10.4 Phase requirement
 - New training/eval data for agent behavior must be added under the package structure.
 - Legacy local assets may remain in place short-term, but package indexes must reference them until migrated.
+
+## 11) Multi-Agent Runtime Architecture (Program Requirement)
+
+### 11.1 Required runtime roles
+The app must implement three explicit agent roles:
+1. `audio_analyst`
+2. `designer_dialog`
+3. `sequencer_designer`
+
+### 11.2 Role responsibilities
+- `audio_analyst`: audio/timing/lyrics/chords/section analysis + evidence summary.
+- `designer_dialog`: user collaboration, intent clarification, creative-brief management.
+- `sequencer_designer`: deterministic sequencing plan generation and apply-ready command payloads.
+
+### 11.3 Agent vs LLM boundary
+- Agent role orchestration is an app/runtime concern.
+- LLM usage is a tool used by agents where interpretation/synthesis is needed.
+- Deterministic services and code paths should be preferred for extraction/validation/mutation logic.
+
+### 11.4 Handoff contract requirement
+Role-to-role handoffs must use structured payload contracts (analysis, intent, plan) as defined in:
+- `specs/xlights-sequencer-control-agent-orchestration-architecture.md`
+
+### 11.5 Ordered execution requirement
+For normal sequencing flow:
+1. Sequence selected/opened
+2. `audio_analyst` handoff produced
+3. `designer_dialog` intent handoff produced
+4. `sequencer_designer` plan handoff produced
+5. validate + approval + apply
+
+Apply paths must be blocked when required upstream handoff fields are missing.

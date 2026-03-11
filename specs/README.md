@@ -23,6 +23,7 @@ Implementation-facing specifications that drive development work.
 - `xlights-sequencer-control-project-spec.md`
 - `xlights-sequencer-control-api-surface-contract.md`
 - `xlights-sequencer-control-designer-interaction-contract.md`
+- `xlights-sequencer-control-agent-orchestration-architecture.md`
 - `xlights-sequencer-control-implementation-roadmap.md`
 - `xlights-sequencer-control-acceptance-test-matrix.md`
 - `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`

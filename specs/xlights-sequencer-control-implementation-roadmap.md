@@ -46,6 +46,7 @@ Exit criteria:
 - Ship `system.validateCommands` batch dry-run.
 - Add end-to-end scriptable tests for full loop behavior.
 - Add regression gates for legacy automation compatibility.
+- Lock inter-agent orchestration contracts and enforce handoff validation in runtime flow.
 
 Exit criteria:
 - Agent loop can run autonomously with deterministic pass/fail reporting.

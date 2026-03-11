@@ -179,6 +179,48 @@ Baseline error codes:
 - Any settings patch apply without user confirmation action must be rejected.
 - Settings patch fields must be restricted to editable UI/form settings namespaces.
 
+## 3.2) Inter-Agent Handoff Payload Contracts (v1)
+
+These contracts are app-side orchestration payloads (not xLights API commands). They are included here to keep plan/apply behavior machine-checkable.
+
+### `analysis_handoff_v1`
+```json
+{
+  "trackIdentity": { "title": "string", "artist": "string", "isrc": "string|null" },
+  "timing": { "bpm": 0, "timeSignature": "string", "beatsTrack": "string", "barsTrack": "string" },
+  "structure": { "sections": [], "source": "string", "confidence": "high|medium|low" },
+  "lyrics": { "hasSyncedLyrics": true, "lyricsTrackName": "string" },
+  "chords": { "hasChords": true, "chordsTrackName": "string", "confidence": 0.0 },
+  "briefSeed": { "tone": "string", "mood": "string", "story": "string", "designHints": [] },
+  "evidence": { "serviceSummary": "string", "webValidationSummary": "string", "sources": [] }
+}
+```
+
+### `intent_handoff_v1`
+```json
+{
+  "goal": "string",
+  "mode": "create|revise|polish|analyze",
+  "scope": { "targetIds": [], "tagNames": [], "timeRangeMs": { "start": 0, "end": 0 } },
+  "constraints": { "changeTolerance": "minimal|moderate|aggressive", "allowGlobalRewrite": false },
+  "directorPreferences": { "styleDirection": "string", "energyArc": "string", "focusElements": [], "colorDirection": "string" },
+  "approvalPolicy": { "requiresExplicitApprove": true, "elevatedRiskConfirmed": false }
+}
+```
+
+### `plan_handoff_v1`
+```json
+{
+  "planId": "string",
+  "summary": "string",
+  "estimatedImpact": {},
+  "warnings": [],
+  "commands": [],
+  "baseRevision": "string",
+  "validationReady": true
+}
+```
+
 ## 4) Command Contracts
 
 ## 4.1 System

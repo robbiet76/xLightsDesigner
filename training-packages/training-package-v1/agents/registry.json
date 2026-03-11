@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0",
+  "agents": [
+    {
+      "id": "audio_analyst",
+      "path": "agents/audio_analyst.agent.json",
+      "status": "active"
+    },
+    {
+      "id": "designer_dialog",
+      "path": "agents/designer_dialog.agent.json",
+      "status": "in_progress"
+    },
+    {
+      "id": "sequencer_designer",
+      "path": "agents/sequencer_designer.agent.json",
+      "status": "in_progress"
+    }
+  ]
+}
