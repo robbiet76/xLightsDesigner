@@ -67,3 +67,16 @@ test("command builders honor explicit target ids when proposal lines omit model 
     ["MegaTree", "Roofline"]
   );
 });
+
+test("command builders stay style-neutral when source lines do not request shared settings", () => {
+  const commands = buildDesignerPlanCommands([
+    "Verse 1 / MegaTree / bars"
+  ], {
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommand = commands.find((row) => row.cmd === "effects.create");
+  assert.ok(effectCommand);
+  assert.equal(effectCommand.params.effectName, "Bars");
+  assert.deepEqual(effectCommand.params.settings, {});
+});

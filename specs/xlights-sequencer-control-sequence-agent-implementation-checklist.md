@@ -91,6 +91,10 @@ Boundary summary:
   - [x] missing analysis degraded mode with warning
   - [x] cumulative timing edits remain writable
   - [x] partial-scope apply
+  - [x] timing-track name agnostic behavior
+  - [x] common corpus-backed layer/buffer setting acceptance
+  - [x] rare-but-documented transition acceptance
+  - [x] style-neutral command synthesis when shared settings are not requested
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration
