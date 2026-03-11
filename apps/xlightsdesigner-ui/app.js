@@ -663,6 +663,22 @@ function pushSequenceAgentContractDiagnostic(report = {}) {
   pushDiagnostic("info", `${prefix} valid${runId ? ` (run=${runId})` : ""}.`);
 }
 
+function emitSequenceAgentStageTelemetry(orchestrationRun, sequencePlan = {}) {
+  const rows = Array.isArray(sequencePlan?.stageTelemetry) ? sequencePlan.stageTelemetry : [];
+  for (const row of rows) {
+    const stage = `sequence_agent.${String(row?.stage || "unknown")}`;
+    const status = String(row?.status || "ok") === "error" ? "error" : "ok";
+    const detail = [
+      String(row?.detail || "").trim(),
+      Number.isFinite(Number(row?.durationMs)) ? `duration=${Number(row.durationMs)}ms` : "",
+      String(row?.failureCategory || "").trim() ? `class=${String(row.failureCategory).trim()}` : ""
+    ]
+      .filter(Boolean)
+      .join(" | ");
+    markOrchestrationStage(orchestrationRun, stage, status, detail);
+  }
+}
+
 function normalizeStringArray(values = []) {
   return Array.from(
     new Set(
@@ -2299,6 +2315,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
           sourceLines: scopedSource,
           baseRevision: state.draftBaseRevision
         });
+    if (!canUseHandoffPlan) {
+      emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
+    }
     markOrchestrationStage(
       orchestrationRun,
       "sequencer_plan",
@@ -2658,8 +2677,12 @@ function onGenerate(intentOverride = "") {
       sourceLines: proposalSeedLines,
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown")
     });
+    emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequence_agent plan built");
   } catch (err) {
+    if (Array.isArray(err?.stageTelemetry)) {
+      emitSequenceAgentStageTelemetry(orchestrationRun, { stageTelemetry: err.stageTelemetry });
+    }
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "error", String(err?.message || err));
     sequencerPlan = {
       planId: `plan-${Date.now()}`,
@@ -2668,7 +2691,16 @@ function onGenerate(intentOverride = "") {
       warnings: [String(err?.message || err)],
       commands: [],
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
-      validationReady: false
+      validationReady: false,
+      metadata: {
+        mode: String(intentHandoff?.mode || "create"),
+        scope: {
+          sections: selected,
+          targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+          tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+        },
+        degradedMode: !analysisHandoff
+      }
     };
   }
   const planHandoff = {

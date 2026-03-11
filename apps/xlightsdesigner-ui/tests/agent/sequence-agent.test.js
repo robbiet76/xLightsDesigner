@@ -68,3 +68,58 @@ test("sequence_agent emits reduced-confidence warning when analysis is missing",
   assert.equal(out.metadata.degradedMode, true);
   assert.ok(out.executionLines.length > 0);
 });
+
+test("sequence_agent planning stages run in deterministic order", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / pulse"]
+  });
+  assert.deepEqual(
+    out.stageTelemetry.map((row) => row.stage),
+    ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"]
+  );
+  assert.equal(out.stageTelemetry.every((row) => row.status === "ok"), true);
+});
+
+test("sequence_agent produces deterministic stage outputs for same input", () => {
+  const a = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / pulse", "Chorus 1 / Roofline / mirror"]
+  });
+  const b = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / pulse", "Chorus 1 / Roofline / mirror"]
+  });
+  assert.deepEqual(a.executionLines, b.executionLines);
+  assert.deepEqual(a.metadata.stageOrder, b.metadata.stageOrder);
+  assert.deepEqual(
+    a.stageTelemetry.map((row) => ({ stage: row.stage, status: row.status })),
+    b.stageTelemetry.map((row) => ({ stage: row.stage, status: row.status }))
+  );
+});
+
+test("sequence_agent stage failure is classified and surfaced", () => {
+  assert.throws(
+    () =>
+      buildSequenceAgentPlan({
+        analysisHandoff: sampleAnalysis(),
+        intentHandoff: sampleIntent(),
+        sourceLines: [],
+        stageOverrides: {
+          effect_strategy: () => {
+            throw new Error("forced-effect-failure");
+          }
+        }
+      }),
+    (err) => {
+      assert.equal(err.stage, "effect_strategy");
+      assert.equal(err.failureCategory, "strategy");
+      assert.ok(Array.isArray(err.stageTelemetry));
+      assert.equal(err.stageTelemetry.some((row) => row.stage === "effect_strategy" && row.status === "error"), true);
+      return true;
+    }
+  );
+});

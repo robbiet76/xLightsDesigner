@@ -22,13 +22,13 @@ Boundary summary:
 - [x] Define strict contract versioning policy (`1.0` required) with no migration/alias support in pre-release development.
 
 ### Phase B: Deterministic Planning Pipeline
-- [ ] Implement deterministic planning stages:
-  - [ ] scope resolution (sections, targets, tags)
-  - [ ] timing asset decision stage (create/use/skip)
-  - [ ] effect strategy stage
-  - [ ] command graph synthesis stage
-- [ ] Add stage-level failure classification and policy.
-- [ ] Add stage timing telemetry and run-id correlation.
+- [x] Implement deterministic planning stages:
+  - [x] scope resolution (sections, targets, tags)
+  - [x] timing asset decision stage (create/use/skip)
+  - [x] effect strategy stage
+  - [x] command graph synthesis stage
+- [x] Add stage-level failure classification and policy.
+- [x] Add stage timing telemetry and run-id correlation.
 
 ### Phase C: Command Graph as Source of Truth
 - [ ] Define canonical command graph node schema.
