@@ -595,6 +595,37 @@ function refreshAgentRuntimeHealth() {
   state.health.agentHandoffsReady = `${readyCount}/${AGENT_HANDOFF_CONTRACTS.length}`;
 }
 
+function normalizeStringArray(values = []) {
+  return Array.from(
+    new Set(
+      (Array.isArray(values) ? values : [])
+        .map((v) => String(v || "").trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+}
+
+function arraysEqualAsSets(a = [], b = []) {
+  const left = normalizeStringArray(a);
+  const right = normalizeStringArray(b);
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+function buildAgentPersistenceContext() {
+  return {
+    revision: String(state.revision || "unknown"),
+    draftBaseRevision: String(state.draftBaseRevision || "unknown"),
+    audioPath: String(state.audioPathInput || "").trim(),
+    selectedSections: normalizeStringArray(getSelectedSections()),
+    selectedTargets: normalizeStringArray(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || [])),
+    selectedTags: normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []))
+  };
+}
+
 function setAgentActiveRole(roleId = "") {
   agentRuntime.activeRole = String(roleId || "").trim();
   refreshAgentRuntimeHealth();
@@ -604,10 +635,12 @@ function setAgentHandoff(contract = "", payload = {}, producer = "") {
   const key = String(contract || "").trim();
   if (!key) return { ok: false, errors: ["contract is required"] };
   const errors = validateAgentHandoff(key, payload);
+  const context = buildAgentPersistenceContext();
   agentRuntime.handoffs[key] = {
     contract: key,
     producer: String(producer || "").trim(),
     payload: isPlainObject(payload) ? payload : {},
+    context,
     valid: errors.length === 0,
     errors,
     at: new Date().toISOString()
@@ -626,7 +659,67 @@ function getValidHandoff(contract = "") {
   return row?.valid ? row.payload : null;
 }
 
+function clearAgentHandoff(contract = "", reason = "", { pushLog = true } = {}) {
+  const key = String(contract || "").trim();
+  if (!key || !AGENT_HANDOFF_CONTRACTS.includes(key)) return false;
+  const existing = agentRuntime.handoffs?.[key];
+  if (!existing) return false;
+  agentRuntime.handoffs[key] = null;
+  refreshAgentRuntimeHealth();
+  if (pushLog && reason) {
+    pushDiagnostic("info", `Agent handoff cleared (${key}): ${reason}`);
+  }
+  return true;
+}
+
+function invalidatePlanHandoff(reason = "context changed") {
+  clearAgentHandoff("plan_handoff_v1", reason);
+}
+
+function invalidateAnalysisHandoff(reason = "audio changed", { cascadePlan = true } = {}) {
+  const cleared = clearAgentHandoff("analysis_handoff_v1", reason);
+  if (cleared && cascadePlan) {
+    clearAgentHandoff("plan_handoff_v1", `analysis invalidated (${reason})`);
+  }
+}
+
+function reconcileHandoffsAgainstCurrentContext({ reasonPrefix = "context drift" } = {}) {
+  const current = buildAgentPersistenceContext();
+  const plan = agentRuntime.handoffs?.plan_handoff_v1;
+  if (plan?.valid && isPlainObject(plan.context)) {
+    const contextRevision = String(plan.context.revision || "unknown");
+    const revisionChanged =
+      contextRevision !== "unknown" &&
+      current.revision !== "unknown" &&
+      contextRevision !== current.revision;
+    const sectionsChanged = !arraysEqualAsSets(plan.context.selectedSections, current.selectedSections);
+    const targetsChanged = !arraysEqualAsSets(plan.context.selectedTargets, current.selectedTargets);
+    const tagsChanged = !arraysEqualAsSets(plan.context.selectedTags, current.selectedTags);
+    if (revisionChanged || sectionsChanged || targetsChanged || tagsChanged) {
+      invalidatePlanHandoff(
+        `${reasonPrefix}: ${
+          revisionChanged
+            ? "revision changed"
+            : (sectionsChanged ? "section scope changed" : (targetsChanged ? "target scope changed" : "tag scope changed"))
+        }`
+      );
+    }
+  }
+
+  const analysis = agentRuntime.handoffs?.analysis_handoff_v1;
+  if (analysis?.valid && isPlainObject(analysis.context)) {
+    const persistedAudio = String(analysis.context.audioPath || "").trim();
+    const currentAudio = String(current.audioPath || "").trim();
+    if (persistedAudio && currentAudio && persistedAudio !== currentAudio) {
+      invalidateAnalysisHandoff(`${reasonPrefix}: audio/media changed`, { cascadePlan: true });
+    }
+  }
+}
+
 function clearAgentHandoffs() {
+  clearAgentHandoff("analysis_handoff_v1", "session reset", { pushLog: false });
+  clearAgentHandoff("intent_handoff_v1", "session reset", { pushLog: false });
+  clearAgentHandoff("plan_handoff_v1", "session reset", { pushLog: false });
   agentRuntime.handoffs = {
     analysis_handoff_v1: null,
     intent_handoff_v1: null,
@@ -1036,8 +1129,20 @@ function currentSequencePathForSidecar() {
 }
 
 function buildSequenceSidecarDocument() {
+  const handoffs = {};
+  for (const contract of AGENT_HANDOFF_CONTRACTS) {
+    const row = agentRuntime.handoffs?.[contract];
+    if (!row?.valid || !isPlainObject(row.payload)) continue;
+    handoffs[contract] = {
+      contract,
+      producer: String(row.producer || "").trim(),
+      payload: row.payload,
+      context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+      at: String(row.at || "")
+    };
+  }
   return {
-    version: 2,
+    version: 3,
     updatedAt: new Date().toISOString(),
     sequencePath: currentSequencePathForSidecar(),
     project: {
@@ -1082,6 +1187,11 @@ function buildSequenceSidecarDocument() {
     selection: {
       selectedVersion: state.selectedVersion || "",
       compareVersion: state.compareVersion || null
+    },
+    agentRuntime: {
+      registryVersion: String(state.health.agentRegistryVersion || ""),
+      activeRole: String(state.health.agentActiveRole || ""),
+      handoffs
     }
   };
 }
@@ -1133,6 +1243,31 @@ function applySequenceSidecarDocument(doc) {
     state.selectedVersion = doc.selection.selectedVersion;
   }
   state.compareVersion = doc?.selection?.compareVersion ?? state.compareVersion;
+  clearAgentHandoffs();
+  if (doc?.agentRuntime && isPlainObject(doc.agentRuntime)) {
+    const runtimeRole = String(doc.agentRuntime.activeRole || "").trim();
+    if (runtimeRole) {
+      setAgentActiveRole(runtimeRole);
+    }
+    const persisted = isPlainObject(doc.agentRuntime.handoffs) ? doc.agentRuntime.handoffs : {};
+    for (const contract of AGENT_HANDOFF_CONTRACTS) {
+      const row = isPlainObject(persisted[contract]) ? persisted[contract] : null;
+      if (!row || !isPlainObject(row.payload)) continue;
+      const errors = validateAgentHandoff(contract, row.payload);
+      if (errors.length) continue;
+      agentRuntime.handoffs[contract] = {
+        contract,
+        producer: String(row.producer || "").trim(),
+        payload: row.payload,
+        context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+        valid: true,
+        errors: [],
+        at: String(row.at || new Date().toISOString())
+      };
+    }
+    refreshAgentRuntimeHealth();
+    reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "sidecar hydrate" });
+  }
 }
 
 async function hydrateSidecarForCurrentSequence() {
@@ -1860,6 +1995,7 @@ function hasAllSectionsSelected() {
 }
 
 function setSectionSelections(values) {
+  const before = normalizeStringArray(getSelectedSections());
   const next = Array.isArray(values) ? values.map((v) => normalizeSectionLabel(v)).filter(Boolean) : [];
   if (next.length === 0) {
     state.ui.sectionSelections = [];
@@ -1869,6 +2005,10 @@ function setSectionSelections(values) {
     state.ui.sectionSelections = ["all"];
   } else {
     state.ui.sectionSelections = Array.from(new Set(next));
+  }
+  const after = normalizeStringArray(getSelectedSections());
+  if (!arraysEqualAsSets(before, after)) {
+    invalidatePlanHandoff("section selection changed");
   }
   invalidateApplyApproval();
   saveCurrentProjectSnapshot();
@@ -2303,6 +2443,7 @@ async function onRefresh() {
     try {
       const rev = await getRevision(state.endpoint);
       const newRevision = rev?.data?.revision ?? "unknown";
+      const revisionChanged = newRevision !== state.revision;
       if (
         state.flags.hasDraftProposal &&
         state.draftBaseRevision !== "unknown" &&
@@ -2316,6 +2457,9 @@ async function onRefresh() {
         );
       }
       state.revision = newRevision;
+      if (revisionChanged) {
+        invalidatePlanHandoff("sequence revision changed");
+      }
     } catch {
       state.revision = "unknown";
     }
@@ -2487,6 +2631,7 @@ async function pollRevision() {
     const newRevision = rev?.data?.revision ?? state.revision;
     if (newRevision !== state.revision) {
       state.revision = newRevision;
+      invalidatePlanHandoff("sequence revision changed");
       if (
         state.flags.hasDraftProposal &&
         state.draftBaseRevision !== "unknown" &&
@@ -2669,7 +2814,7 @@ async function syncOpenSequenceOnFocusReturn() {
     if (prevLoaded || prevPath || prevAudioPath) {
       state.flags.activeSequenceLoaded = false;
       state.activeSequence = "";
-      state.audioPathInput = "";
+      setAudioPathWithAgentPolicy("", "sequence closed");
       setStatus("info", "Updated from xLights: no sequence is currently open.");
       saveCurrentProjectSnapshot();
       persist();
@@ -3493,17 +3638,26 @@ function designerMediaFolderPath() {
   return base ? `${base}/xlightsdesigner-media` : "xlightsdesigner-media";
 }
 
+function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated") {
+  const prev = String(state.audioPathInput || "").trim();
+  const next = String(nextPath || "").trim();
+  state.audioPathInput = next;
+  if (prev !== next) {
+    invalidateAnalysisHandoff(reason, { cascadePlan: true });
+  }
+}
+
 function applySequenceMediaToAudioPath(sequenceData) {
   if (!sequenceData || typeof sequenceData !== "object") return;
   const mediaFile = String(sequenceData.mediaFile || "").trim();
-  state.audioPathInput = mediaFile || "";
+  setAudioPathWithAgentPolicy(mediaFile || "", "sequence media changed");
 }
 
 async function syncAudioPathFromMediaStatus() {
   try {
     const mediaBody = await getMediaStatus(state.endpoint);
     const mediaFile = String(mediaBody?.data?.mediaFile || "").trim();
-    state.audioPathInput = mediaFile || "";
+    setAudioPathWithAgentPolicy(mediaFile || "", "media status changed");
   } catch {
     // Fallback for builds without media.getStatus.
     try {
@@ -4167,15 +4321,24 @@ function normalizeMetadataSelectedTags(tags) {
 function toggleMetadataSelectedTag(tagName) {
   const name = normalizeMetadataTagName(tagName);
   if (!name) return;
+  const before = normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
   const selected = new Set(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
   if (selected.has(name)) selected.delete(name);
   else selected.add(name);
   state.ui.metadataSelectedTags = normalizeMetadataSelectedTags(Array.from(selected));
+  const after = normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
+  if (!arraysEqualAsSets(before, after)) {
+    invalidatePlanHandoff("selected tags changed");
+  }
   persist();
 }
 
 function clearMetadataSelectedTags() {
+  const before = normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
   state.ui.metadataSelectedTags = [];
+  if (before.length) {
+    invalidatePlanHandoff("selected tags cleared");
+  }
   persist();
   render();
 }
@@ -4208,7 +4371,12 @@ function matchesMetadataFilterValue(haystack, rawFilter) {
 }
 
 function setMetadataSelectionIds(selectionIds, { save = true } = {}) {
+  const before = normalizeStringArray(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds));
   state.ui.metadataSelectionIds = normalizeMetadataSelectionIds(selectionIds);
+  const after = normalizeStringArray(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds));
+  if (!arraysEqualAsSets(before, after)) {
+    invalidatePlanHandoff("target selection changed");
+  }
   if (save) persist();
 }
 
@@ -4626,7 +4794,7 @@ function syncSequencePathInput() {
   }
   const audioInput = app.querySelector("#audio-path-input");
   if (audioInput) {
-    state.audioPathInput = audioInput.value.trim() || "";
+    setAudioPathWithAgentPolicy(audioInput.value.trim() || "", "audio path edited");
   }
   const typeInput = app.querySelector("#new-sequence-type-input");
   if (typeInput) {
@@ -5003,7 +5171,7 @@ async function onBrowseAudioPath() {
     ]
   });
   if (!selected) return;
-  state.audioPathInput = selected;
+  setAudioPathWithAgentPolicy(selected, "audio path selected");
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -5037,7 +5205,7 @@ function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
     addRecentSequence(sequencePath);
   }
   // Keep UI synced to the currently-open sequence in xLights.
-  state.audioPathInput = mediaPath;
+  setAudioPathWithAgentPolicy(mediaPath, "open sequence media changed");
 }
 
 async function onOpenSequence() {
@@ -9527,7 +9695,7 @@ function bindEvents() {
   const audioPathInput = app.querySelector("#audio-path-input");
   if (audioPathInput) {
     audioPathInput.addEventListener("change", () => {
-      state.audioPathInput = audioPathInput.value.trim() || "";
+      setAudioPathWithAgentPolicy(audioPathInput.value.trim() || "", "audio path edited");
       persist();
     });
   }
