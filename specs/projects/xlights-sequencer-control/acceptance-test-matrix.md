@@ -105,3 +105,20 @@ Date: 2026-03-07
   - `commands[]`
 - Empty `commands[]` on apply path is rejected with machine-readable validation error.
 - Any apply path must run `system.validateCommands` and fail closed on invalid result.
+
+## 13) Sequence Sidecar + Manual-Edit Ownership Gates
+- Sequence-specific analysis metadata is stored in sequence `.xdmeta` sidecar and not persisted as global app/project sequence state.
+- Sidecar write is save-gated:
+  - metadata changes mark sidecar dirty,
+  - no sidecar write occurs before sequence save.
+- App-side save path (`Save`, `Save As`) flushes dirty sidecar metadata for active sequence.
+- xLights-side save path (external save) is detected and flushes dirty sidecar metadata.
+- If no save event occurs, sidecar remains dirty and unwritten.
+- Manual edits to generated `XD:` timing tracks are detected by signature mismatch and promote ownership to non-`XD:` user tracks:
+  - `XD: Beats` -> `Beats`
+  - `XD: Bars` -> `Bars`
+  - `XD: Chords` -> `Chords`
+  - `XD: Lyrics` -> `Lyrics`
+  - `XD: Song Structure` -> `Song Structure`
+- Once promoted/manual-locked for a fingerprinted track identity, subsequent analysis runs do not auto-overwrite that track.
+- Tempo-correction rewrite paths must skip beat/bar mutations when manual lock is active.

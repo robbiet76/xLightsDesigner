@@ -694,9 +694,12 @@ def run_case(case: Dict[str, Any], args, bundle: Dict[str, Any]) -> Dict[str, An
 
 
 def main() -> int:
+    repo_root = Path(__file__).resolve().parents[3]
+    default_training_root = repo_root / "training-packages" / "training-package-v1"
+
     ap = argparse.ArgumentParser(description="App-level song-structure eval (service + stanza planner + package prompt/corpus + LLM)")
     ap.add_argument("--cases", required=True)
-    ap.add_argument("--training-package-root", default="/Users/robterry/Projects/xLightsDesigner/training-packages/training-package-v1")
+    ap.add_argument("--training-package-root", default=str(default_training_root))
     ap.add_argument("--analysis-base-url", default="http://127.0.0.1:5055")
     ap.add_argument("--provider", default="beatnet", choices=["beatnet", "librosa", "auto"])
     ap.add_argument("--llm-base-url", default=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"))

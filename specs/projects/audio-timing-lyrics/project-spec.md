@@ -35,6 +35,9 @@ Design constraints:
 - No synthetic fallback data that appears successful when core services fail.
 - Source lineage and confidence must be visible in diagnostics.
 - Fingerprinted identity is authoritative over local filename for remote lookups.
+- Sequence-specific analysis metadata must be stored with the sequence sidecar (`.xdmeta`) and not in global app/project state.
+- Sidecar writes are save-gated: metadata should flush only after sequence save events (app save or detected xLights-side save) to keep `.xsq` and `.xdmeta` consistent.
+- If user edits generated timing tracks, those tracks become user-authoritative and must not be auto-overwritten on subsequent analysis runs.
 
 ## 2. Scope
 

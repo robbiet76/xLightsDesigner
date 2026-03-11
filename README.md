@@ -4,6 +4,17 @@ Repository for the **xLights Agent Sequencer** initiative.
 
 ## Structure
 
+### `apps/`
+Runtime application code.
+- `apps/xlightsdesigner-ui/`: web UI used by desktop wrapper.
+- `apps/xlightsdesigner-desktop/`: Electron shell/build packaging.
+- `apps/xlightsdesigner-analysis-service/`: audio analysis backend.
+
+### `training-packages/`
+Portable BYO-provider training assets.
+- Canonical package root: `training-packages/training-package-v1/`
+- Module layout: `audio_track_analysis`, `lighting_design_principles`, `xlights_sequencer_execution`.
+
 ### `docs/`
 Cross-project and project-scoped documentation.
 - `docs/architecture/`: architecture decisions and analysis for the overall initiative.
@@ -12,6 +23,13 @@ Cross-project and project-scoped documentation.
 ### `specs/`
 Implementation-facing specifications.
 - `specs/projects/`: executable project specs and implementation plans.
+
+### `scripts/`
+Developer/build/validation automation.
+
+## Repo Governance
+- Structural placement and ownership rules: `docs/architecture/repo-structure-governance.md`
+- Canonical training package architecture: `specs/projects/xlights-sequencer-control/training-package-architecture.md`
 
 ## Current Project Phases
 

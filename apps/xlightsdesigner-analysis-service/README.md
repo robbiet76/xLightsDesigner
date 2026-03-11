@@ -108,6 +108,7 @@ Files:
 Export from your xLights reference track:
 ```bash
 cd apps/xlightsdesigner-analysis-service
+cp eval/structure_eval_cases.example.json eval/structure_eval_cases.local.json
 python3 eval/export_xlights_track_case.py \
   --endpoint http://127.0.0.1:49914/xlDoAutomation \
   --track-name "Director Song Structure" \
@@ -175,3 +176,8 @@ Catalog format:
 - JSON shape: `{ "songs": [{ "title": "...", "artist": "..." }] }`
 
 The output contains stanza blocks and weak-label hints (`Verse`/`Chorus`) for prompt/eval tuning.
+
+Data ownership note:
+- Canonical packaged runtime corpus lives under:
+  `training-packages/training-package-v1/modules/audio_track_analysis/datasets/`
+- `eval/*.local.json` files are local-only and should not be committed.

@@ -10,7 +10,12 @@
   "settings": {
     "git.autoRepositoryDetection": true,
     "files.exclude": {
-      "**/.DS_Store": true
+      "**/.DS_Store": true,
+      "**/.venv": true,
+      "**/.venv*": true,
+      "**/__pycache__": true,
+      "**/node_modules": true,
+      "**/dist": true
     }
   }
 }

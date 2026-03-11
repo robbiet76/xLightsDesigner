@@ -1,1 +1,30 @@
 .DS_Store
+
+# Node/Electron
+node_modules/
+dist/
+out/
+*.tsbuildinfo
+
+# Python
+.venv/
+.venv*/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Env / local config
+.env
+.env.*
+!.env.example
+
+# Logs / temp
+*.log
+*.tmp
+*.swp
+
+# Local eval data
+apps/xlightsdesigner-analysis-service/eval/*.local.json
+
+# Editor
+.vscode/settings.json

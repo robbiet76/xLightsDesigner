@@ -3,10 +3,10 @@ set -euo pipefail
 
 XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
-SHOW_ROOT="${SHOW_ROOT:-/Users/robterry/Desktop/Show}"
-TEST_ROOT="${TEST_ROOT:-${SHOW_ROOT}/Tests}"
-SOURCE_SEQ="${SOURCE_SEQ:-${SHOW_ROOT}/HolidayRoad/HolidayRoad.xsq}"
-SOURCE_FSEQ="${SOURCE_FSEQ:-${SHOW_ROOT}/HolidayRoad/HolidayRoad.fseq}"
+SHOW_ROOT="${SHOW_ROOT:-}"
+TEST_ROOT="${TEST_ROOT:-/tmp/xlights-sequence-scenarios}"
+SOURCE_SEQ="${SOURCE_SEQ:-}"
+SOURCE_FSEQ="${SOURCE_FSEQ:-}"
 REPORT_PATH="${REPORT_PATH:-/tmp/xlights-control-reports/sequence-session-scenarios-$(date +%Y%m%d-%H%M%S).json}"
 
 mkdir -p "${TEST_ROOT}"
@@ -14,7 +14,16 @@ mkdir -p "$(dirname "${REPORT_PATH}")"
 
 if [[ ! -f "${SOURCE_SEQ}" ]]; then
   echo "Missing SOURCE_SEQ: ${SOURCE_SEQ}" >&2
+  echo "Set SOURCE_SEQ to an existing .xsq file." >&2
   exit 2
+fi
+
+if [[ -z "${SOURCE_FSEQ}" ]]; then
+  SOURCE_FSEQ="${SOURCE_SEQ%.xsq}.fseq"
+fi
+
+if [[ -z "${SHOW_ROOT}" ]]; then
+  SHOW_ROOT="$(cd "$(dirname "${SOURCE_SEQ}")/.." && pwd)"
 fi
 
 seed_existing_test_copy() {

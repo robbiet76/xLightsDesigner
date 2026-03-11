@@ -10,4 +10,5 @@ Modules:
 Notes:
 - This package stores prompts, rubric data, eval configuration, and references to local corpora.
 - API keys are not stored in this package.
-- Local corpus files can be refreshed independently while preserving package structure.
+- Packaged corpora used at runtime should live under module `datasets/`.
+- Machine-specific eval inputs (for example local audio path case files) must stay outside package assets.

@@ -6,8 +6,13 @@ Date: 2026-03-02
 ## Purpose
 Define the full target contract between xLightsDesigner and xLights before further API implementation, with explicit boundaries and autonomous-agent execution requirements.
 
+## Active Planning Note
+- Primary execution spine: `architecture-reset-plan-2026-03-11.md`
+- Use this when prioritizing active implementation order and phase gates.
+
 ## Files
 - `project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
+- `architecture-reset-plan-2026-03-11.md`: authoritative phase-gated execution plan used to keep implementation aligned to high-level architecture.
 - `designer-interaction-contract.md`: user-to-agent intent, proposal/review, and iterative change-control contract for Designer UI workflows.
 - `standalone-app-requirements.md`: consolidated standalone xLightsDesigner requirements with explicit gap register and phased closure plan.
 - `desktop-architecture-implementation-checklist.md`: execution checklist for locked standalone packaged-desktop architecture and rollout gates.

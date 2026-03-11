@@ -4,12 +4,14 @@ set -euo pipefail
 # Launch xLights test/debug binary first, then open a sequence via automation API.
 # This avoids macOS file-open startup flows that can trigger modal prompts.
 
-XLIGHTS_BIN="${XLIGHTS_BIN:-/Users/robterry/xLights/macOS/build/Debug/xLights.app/Contents/MacOS/xLights}"
-LIBDBG_DIR="${LIBDBG_DIR:-/Users/robterry/xLights/macOS/dependencies/libdbg}"
-XLIGHTS_LAUNCH_COMMAND="${XLIGHTS_LAUNCH_COMMAND:-/Users/robterry/Desktop/Show/Launch xLights Test.command}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SIBLING_XLIGHTS_REPO="$(cd "${REPO_ROOT}/.." && pwd)/xLights"
+XLIGHTS_BIN="${XLIGHTS_BIN:-${SIBLING_XLIGHTS_REPO}/macOS/build/Debug/xLights.app/Contents/MacOS/xLights}"
+LIBDBG_DIR="${LIBDBG_DIR:-${SIBLING_XLIGHTS_REPO}/macOS/dependencies/libdbg}"
+XLIGHTS_LAUNCH_COMMAND="${XLIGHTS_LAUNCH_COMMAND:-}"
 LAUNCH_VIA_TERMINAL="${LAUNCH_VIA_TERMINAL:-0}"
 ALLOW_HEADLESS_DIRECT_LAUNCH="${ALLOW_HEADLESS_DIRECT_LAUNCH:-0}"
-SEQUENCE_PATH="${1:-/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq}"
+SEQUENCE_PATH="${1:-${SEQUENCE_PATH:-}}"
 PREFERRED_PORT="${PREFERRED_PORT:-49914}"
 FALLBACK_PORT="${FALLBACK_PORT:-49913}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,7 +28,8 @@ if [[ ! -d "${LIBDBG_DIR}" ]]; then
 fi
 
 if [[ ! -f "${SEQUENCE_PATH}" ]]; then
-  echo "Missing sequence file: ${SEQUENCE_PATH}" >&2
+  echo "Missing sequence file: ${SEQUENCE_PATH:-<unset>}" >&2
+  echo "Pass path as arg 1, or set SEQUENCE_PATH." >&2
   exit 2
 fi
 

@@ -3,10 +3,16 @@ set -euo pipefail
 
 BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49913}"
 AUTOMATION_URL="${BASE_URL}/xlDoAutomation"
-OUT_DIR="${1:-/Users/robterry/Desktop/Show/Tests}"
-SOURCE_SEQUENCE="${SOURCE_SEQUENCE:-/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq}"
+OUT_DIR="${1:-${OUT_DIR:-/tmp/xlights-demo-sequences}}"
+SOURCE_SEQUENCE="${SOURCE_SEQUENCE:-}"
 
 mkdir -p "${OUT_DIR}"
+
+if [[ -z "${SOURCE_SEQUENCE}" || ! -f "${SOURCE_SEQUENCE}" ]]; then
+  echo "Missing SOURCE_SEQUENCE: ${SOURCE_SEQUENCE:-<unset>}" >&2
+  echo "Set SOURCE_SEQUENCE to an existing .xsq file." >&2
+  exit 2
+fi
 
 post() {
   local payload="$1"

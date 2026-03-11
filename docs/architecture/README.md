@@ -7,3 +7,4 @@ Cross-project decision and analysis documents that inform implementation, but ar
 - `xlights-automation-api-audit.md`
 - `xlights-automation-design-proposal.md`
 - `two-agent-flow.md`
+- `repo-structure-governance.md`

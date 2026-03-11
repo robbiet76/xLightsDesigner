@@ -89,7 +89,7 @@ const defaultState = {
   endpoint: PREFERRED_XLIGHTS_ENDPOINT,
   projectName: "Holiday 2026",
   projectConcept: "",
-  showFolder: "/Users/robterry/Desktop/Show",
+  showFolder: "",
   projectMetadataRoot: "",
   projectFilePath: "",
   safety: {

@@ -1,7 +1,11 @@
 # Implementation Roadmap: Full Sequencer Control Program
 
-Status: Updated after WP-7 closeout  
-Date: 2026-03-02
+Status: Active (governed by architecture reset plan)  
+Date: 2026-03-11
+
+Planning note:
+- This roadmap remains valid as a phase inventory.
+- Active execution ordering and gates are now controlled by `architecture-reset-plan-2026-03-11.md`.
 
 ## Phase 0: Contract Hardening
 - Lock full program scope and boundaries.

@@ -35,20 +35,6 @@ if [[ "${BOOTSTRAP_WAS_PRESET}" != "true" && "${ENV_FILE}" == *"test-fixtures.ex
   BOOTSTRAP_FIXTURES=false
 fi
 
-if [[ -z "${TEST_SEQUENCE_PATH:-}" || "${TEST_SEQUENCE_PATH}" == "/abs/path/to/test-sequence.xsq" ]]; then
-  if [[ -f "/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq" ]]; then
-    TEST_SEQUENCE_PATH="/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq"
-    export TEST_SEQUENCE_PATH
-  fi
-fi
-
-if [[ -z "${TEST_MEDIA_PATH:-}" || "${TEST_MEDIA_PATH}" == "/abs/path/to/test-song.mp3" ]]; then
-  if [[ -d "/Users/robterry/Desktop/Show/Audio" ]]; then
-    TEST_MEDIA_PATH="/Users/robterry/Desktop/Show/Audio"
-    export TEST_MEDIA_PATH
-  fi
-fi
-
 pack_id="$(jq -r '.fixturePack.packId // "unknown"' "${MANIFEST_FILE}" 2>/dev/null || echo "unknown")"
 pack_version="$(jq -r '.fixturePack.packVersion // "unknown"' "${MANIFEST_FILE}" 2>/dev/null || echo "unknown")"
 
