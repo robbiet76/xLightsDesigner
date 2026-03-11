@@ -16,6 +16,7 @@ export function buildSequenceAgentInput({
   intentHandoff = null,
   analysisHandoff = null,
   planningScope = null,
+  timingOwnership = [],
   manualXdLocks = [],
   allowTimingWrites = true
 } = {}) {
@@ -34,6 +35,7 @@ export function buildSequenceAgentInput({
     analysisHandoff: analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : null,
     planningScope: planningScope && typeof planningScope === "object" ? planningScope : null,
     safety: {
+      timingOwnership: Array.isArray(timingOwnership) ? timingOwnership : [],
       manualXdLocks: Array.isArray(manualXdLocks) ? manualXdLocks : [],
       allowTimingWrites: Boolean(allowTimingWrites)
     }

@@ -26,6 +26,8 @@ const UI_URL = String(process.env.XLD_UI_URL || "").trim();
 const STATE_FILENAME = "xlightsdesigner-state.json";
 const AGENT_APPLY_LOG_FILENAME = "xlightsdesigner-agent-apply-log.jsonl";
 const AGENT_CONFIG_FILENAME = "xlightsdesigner-agent-config.json";
+const PROJECTS_DIRNAME = "projects";
+const PROJECT_REQUIRED_SUBDIRS = ["analysis", "sequencing", "diagnostics"];
 const OPENAI_BASE_URL = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").trim().replace(/\/+$/, "");
 const OPENAI_MODEL = String(process.env.OPENAI_MODEL || "gpt-4.1-mini").trim();
 const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
@@ -643,14 +645,82 @@ function projectKey(projectName, showFolder) {
   return `${String(projectName || "").trim()}::${String(showFolder || "").trim()}`;
 }
 
-function resolveProjectsRootPath(rootPath) {
+function sanitizeProjectName(projectName) {
+  return String(projectName || "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[. ]+$/g, "");
+}
+
+function resolveAppProjectsRootInput(rootPath) {
   const custom = String(rootPath || "").trim();
-  if (custom) return custom;
-  return path.join(app.getPath("userData"), "projects");
+  if (!custom) {
+    return path.join(app.getPath("userData"), PROJECTS_DIRNAME);
+  }
+  const resolved = path.resolve(custom);
+  return path.basename(resolved) === PROJECTS_DIRNAME ? resolved : path.join(resolved, PROJECTS_DIRNAME);
+}
+
+function resolveProjectsRootPath(rootPath) {
+  return resolveAppProjectsRootInput(rootPath);
 }
 
 function projectIdFromKey(key) {
   return crypto.createHash("sha1").update(String(key || "")).digest("hex");
+}
+
+function buildProjectPaths(rootPath, projectName) {
+  const normalizedName = sanitizeProjectName(projectName);
+  const projectsRoot = resolveProjectsRootPath(rootPath);
+  const projectDir = path.join(projectsRoot, normalizedName);
+  const filePath = path.join(projectDir, `${normalizedName}.xdproj`);
+  return { projectsRoot, normalizedName, projectDir, filePath };
+}
+
+function ensureProjectStructure(projectDir) {
+  fs.mkdirSync(projectDir, { recursive: true });
+  for (const dirName of PROJECT_REQUIRED_SUBDIRS) {
+    fs.mkdirSync(path.join(projectDir, dirName), { recursive: true });
+  }
+}
+
+function normalizePathForCompare(filePath) {
+  return path.resolve(String(filePath || "").trim());
+}
+
+function inferAppRootFromProjectFile(filePath) {
+  const absoluteFile = normalizePathForCompare(filePath);
+  const projectDir = path.dirname(absoluteFile);
+  const projectsRoot = path.dirname(projectDir);
+  if (path.basename(projectsRoot) !== PROJECTS_DIRNAME) return "";
+  return path.dirname(projectsRoot);
+}
+
+function validateProjectFileLocation(filePath, projectName) {
+  const absoluteFile = normalizePathForCompare(filePath);
+  const normalizedName = sanitizeProjectName(projectName);
+  if (!normalizedName) {
+    return { ok: false, code: "INVALID_PROJECT_NAME", error: "Project name is required." };
+  }
+  const projectDir = path.dirname(absoluteFile);
+  const fileName = path.basename(absoluteFile);
+  const dirName = path.basename(projectDir);
+  if (dirName !== normalizedName) {
+    return {
+      ok: false,
+      code: "INVALID_PROJECT_LAYOUT",
+      error: `Project folder must match project name: expected ${normalizedName}`
+    };
+  }
+  if (fileName !== `${normalizedName}.xdproj`) {
+    return {
+      ok: false,
+      code: "INVALID_PROJECT_LAYOUT",
+      error: `Project file must be named ${normalizedName}.xdproj`
+    };
+  }
+  return { ok: true };
 }
 
 ipcMain.handle("xld:state:read", async () => {
@@ -1078,7 +1148,14 @@ ipcMain.handle("xld:project:open-file", async (_event, payload = {}) => {
     const parsed = JSON.parse(raw);
     const projectName = String(parsed?.projectName || "").trim();
     const showFolder = String(parsed?.showFolder || "").trim();
+    const mediaPath = String(parsed?.mediaPath || "").trim();
+    const layout = validateProjectFileLocation(filePath, projectName);
+    if (!layout.ok) {
+      return { ok: false, code: layout.code, error: layout.error };
+    }
+    ensureProjectStructure(path.dirname(filePath));
     const key = String(parsed?.key || projectKey(projectName, showFolder)).trim();
+    const appRootPath = inferAppRootFromProjectFile(filePath);
     return {
       ok: true,
       filePath,
@@ -1087,6 +1164,8 @@ ipcMain.handle("xld:project:open-file", async (_event, payload = {}) => {
         key,
         projectName,
         showFolder,
+        mediaPath,
+        appRootPath,
         createdAt: String(parsed?.createdAt || parsed?.updatedAt || ""),
         updatedAt: String(parsed?.updatedAt || "")
       },
@@ -1147,21 +1226,67 @@ ipcMain.handle("xld:training-package:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:project:write-file", async (_event, payload = {}) => {
   try {
-    const filePath = String(payload?.filePath || "").trim();
+    const rootPath = String(payload?.rootPath || "").trim();
+    const currentFilePath = String(payload?.currentFilePath || "").trim();
     const projectName = String(payload?.projectName || "").trim();
     const showFolder = String(payload?.showFolder || "").trim();
+    const mediaPath = String(payload?.mediaPath || "").trim();
+    const modeRaw = String(payload?.mode || "save").trim().toLowerCase();
+    const mode = modeRaw === "rename" || modeRaw === "save-as" ? modeRaw : "save";
     const snapshot = payload?.snapshot && typeof payload.snapshot === "object" ? payload.snapshot : null;
-    if (!filePath) return { ok: false, error: "Missing filePath" };
     if (!projectName) return { ok: false, error: "Missing projectName" };
     if (!showFolder) return { ok: false, error: "Missing showFolder" };
     if (!snapshot) return { ok: false, error: "Missing snapshot" };
+    const { normalizedName, projectDir, filePath } = buildProjectPaths(rootPath, projectName);
+    if (!normalizedName) return { ok: false, code: "INVALID_PROJECT_NAME", error: "Project name is required." };
+
+    const currentResolved = currentFilePath ? normalizePathForCompare(currentFilePath) : "";
+    const targetResolved = normalizePathForCompare(filePath);
+    const currentDir = currentResolved ? path.dirname(currentResolved) : "";
+    const targetDir = path.dirname(targetResolved);
+
+    if (mode === "save" && currentResolved && currentResolved !== targetResolved) {
+      return {
+        ok: false,
+        code: "PROJECT_RENAME_REQUIRED",
+        error: "Project name changed. Use Rename Project to move the project folder."
+      };
+    }
+
+    if (currentResolved && currentResolved !== targetResolved && fs.existsSync(targetResolved)) {
+      return {
+        ok: false,
+        code: "PROJECT_NAME_CONFLICT",
+        error: `A project named "${normalizedName}" already exists.`
+      };
+    }
+
+    if (!currentResolved && fs.existsSync(targetResolved)) {
+      return {
+        ok: false,
+        code: "PROJECT_NAME_CONFLICT",
+        error: `A project named "${normalizedName}" already exists.`
+      };
+    }
+
+    if (mode === "rename" && currentResolved && currentResolved !== targetResolved && fs.existsSync(currentDir)) {
+      if (fs.existsSync(targetDir)) {
+        return {
+          ok: false,
+          code: "PROJECT_NAME_CONFLICT",
+          error: `A project named "${normalizedName}" already exists.`
+        };
+      }
+      fs.mkdirSync(path.dirname(targetDir), { recursive: true });
+      fs.renameSync(currentDir, targetDir);
+    }
 
     const key = projectKey(projectName, showFolder);
     const id = projectIdFromKey(key);
     let createdAt = "";
-    if (fs.existsSync(filePath)) {
+    if (fs.existsSync(targetResolved)) {
       try {
-        const previousRaw = fs.readFileSync(filePath, "utf8");
+        const previousRaw = fs.readFileSync(targetResolved, "utf8");
         const previous = JSON.parse(previousRaw);
         createdAt = String(previous?.createdAt || previous?.updatedAt || "");
       } catch {
@@ -1173,22 +1298,25 @@ ipcMain.handle("xld:project:write-file", async (_event, payload = {}) => {
       version: 1,
       projectName,
       showFolder,
+      mediaPath,
       key,
       id,
       createdAt,
       updatedAt: new Date().toISOString(),
       snapshot
     };
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, JSON.stringify(doc, null, 2), "utf8");
+    ensureProjectStructure(projectDir);
+    fs.writeFileSync(targetResolved, JSON.stringify(doc, null, 2), "utf8");
     return {
       ok: true,
-      filePath,
+      filePath: targetResolved,
       project: {
         id,
         key,
         projectName,
         showFolder,
+        mediaPath,
+        appRootPath: inferAppRootFromProjectFile(targetResolved),
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
       }

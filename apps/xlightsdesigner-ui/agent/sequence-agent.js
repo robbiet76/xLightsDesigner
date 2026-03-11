@@ -94,7 +94,9 @@ function stageCommandGraphSynthesis({
   warnings = [],
   capabilityCommands = [],
   effectCatalog = null,
-  targetIds = []
+  targetIds = [],
+  timingOwnership = [],
+  allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
@@ -103,7 +105,32 @@ function stageCommandGraphSynthesis({
     targetIds,
     effectCatalog
   });
-  const capabilityGate = evaluateSequencePlanCapabilities({ commands, capabilityCommands });
+  const ownershipRows = Array.isArray(timingOwnership) ? timingOwnership : [];
+  const lockedTracks = new Set(
+    ownershipRows
+      .filter((row) => row && typeof row === "object" && row.manual)
+      .map((row) => normText(row.sourceTrack || row.trackName))
+      .filter(Boolean)
+  );
+  const filteredCommands = [];
+  for (const command of commands) {
+    const cmd = normText(command?.cmd);
+    const trackName = normText(command?.params?.trackName);
+    const isTimingWrite = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
+    if (isTimingWrite && trackName.startsWith("XD:")) {
+      if (!allowTimingWrites) {
+        warnings.push(`Timing write skipped: ${trackName} blocked because timing writes are disabled.`);
+        continue;
+      }
+      if (lockedTracks.has(trackName)) {
+        warnings.push(`Timing write skipped: ${trackName} is user-owned/manual and preserved.`);
+        continue;
+      }
+    }
+    filteredCommands.push(command);
+  }
+  const commandsOut = filteredCommands;
+  const capabilityGate = evaluateSequencePlanCapabilities({ commands: commandsOut, capabilityCommands });
   if (!capabilityGate.ok) {
     const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
     err.failureCategory = "capability";
@@ -112,7 +139,7 @@ function stageCommandGraphSynthesis({
   if (Array.isArray(capabilityGate.warnings) && capabilityGate.warnings.length) {
     warnings.push(...capabilityGate.warnings);
   }
-  const effectCompat = evaluateEffectCommandCompatibility({ commands, effectCatalog });
+  const effectCompat = evaluateEffectCommandCompatibility({ commands: commandsOut, effectCatalog });
   if (!effectCompat.ok) {
     const err = new Error(effectCompat.errors.join("; ") || "effect compatibility gate failed");
     err.failureCategory = "validate";
@@ -122,12 +149,12 @@ function stageCommandGraphSynthesis({
     warnings.push(...effectCompat.warnings);
   }
   return {
-    commands,
+    commands: commandsOut,
     executionLines,
     estimatedImpact: estimateImpactCount(executionLines),
     warnings,
-    validationReady: Array.isArray(commands) && commands.length > 0,
-    detail: `commands=${Array.isArray(commands) ? commands.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
+    validationReady: Array.isArray(commandsOut) && commandsOut.length > 0,
+    detail: `commands=${Array.isArray(commandsOut) ? commandsOut.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
   };
 }
 
@@ -170,6 +197,8 @@ export function buildSequenceAgentPlan({
   capabilityCommands = [],
   effectCatalog = null,
   layoutMode = "2d",
+  timingOwnership = [],
+  allowTimingWrites = true,
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -217,7 +246,16 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.command_graph_synthesis === "function"
       ? stageOverrides.command_graph_synthesis({ sourceLines, effect, warnings })
-      : stageCommandGraphSynthesis({ sourceLines, effect, warnings, capabilityCommands, effectCatalog, targetIds: scope.targetIds }))
+      : stageCommandGraphSynthesis({
+          sourceLines,
+          effect,
+          warnings,
+          capabilityCommands,
+          effectCatalog,
+          targetIds: scope.targetIds,
+          timingOwnership,
+          allowTimingWrites
+        }))
   });
 
   return {

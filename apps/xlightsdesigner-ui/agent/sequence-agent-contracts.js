@@ -64,6 +64,10 @@ export function validateSequenceAgentInput(payload = {}) {
   if (!Array.isArray(manualXdLocks)) {
     errors.push("safety.manualXdLocks is required");
   }
+  const timingOwnership = getByPath(obj, "safety.timingOwnership");
+  if (!Array.isArray(timingOwnership)) {
+    errors.push("safety.timingOwnership is required");
+  }
   const allowTimingWrites = getByPath(obj, "safety.allowTimingWrites");
   if (typeof allowTimingWrites !== "boolean") {
     errors.push("safety.allowTimingWrites is required");

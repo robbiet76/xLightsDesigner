@@ -117,7 +117,8 @@ const defaultState = {
   projectName: "Holiday 2026",
   projectConcept: "",
   showFolder: "",
-  projectMetadataRoot: "",
+  mediaPath: "",
+  projectMetadataRoot: "/Users/robterry/Documents/Lights/xLightsDesigner",
   projectFilePath: "",
   safety: {
     applyConfirmMode: "large-only",
@@ -138,7 +139,9 @@ const defaultState = {
     pipeline: null,
     structurePolicies: {},
     structureGeneratedSignatures: {},
-    structureManualExamples: {},
+    structureManualExamples: {}
+  },
+  sequenceAgentRuntime: {
     timingTrackPolicies: {},
     timingGeneratedSignatures: {}
   },
@@ -1265,7 +1268,6 @@ function getDesktopProjectBridge() {
   if (!bridge) return null;
   if (
     typeof bridge.openProjectDialog !== "function" ||
-    typeof bridge.saveProjectDialog !== "function" ||
     typeof bridge.openProjectFile !== "function" ||
     typeof bridge.writeProjectFile !== "function"
   ) {
@@ -1398,15 +1400,15 @@ function buildSequenceSidecarDocument() {
             : {},
           structureManualExamples: state.audioAnalysis.structureManualExamples && typeof state.audioAnalysis.structureManualExamples === "object"
             ? state.audioAnalysis.structureManualExamples
-            : {},
-          timingTrackPolicies: state.audioAnalysis.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-            ? state.audioAnalysis.timingTrackPolicies
-            : {},
-          timingGeneratedSignatures: state.audioAnalysis.timingGeneratedSignatures && typeof state.audioAnalysis.timingGeneratedSignatures === "object"
-            ? state.audioAnalysis.timingGeneratedSignatures
             : {}
         }
       : structuredClone(defaultState.audioAnalysis),
+    sequenceAgentRuntime: state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+      ? {
+          timingTrackPolicies: getSequenceTimingTrackPoliciesState(),
+          timingGeneratedSignatures: getSequenceTimingGeneratedSignaturesState()
+        }
+      : structuredClone(defaultState.sequenceAgentRuntime),
     creative: state.creative || {},
     metadata: state.metadata || {},
     versions: Array.isArray(state.versions) ? state.versions : [],
@@ -1455,17 +1457,30 @@ function applySequenceSidecarDocument(doc) {
         : {},
       structureManualExamples: doc.audioAnalysis.structureManualExamples && typeof doc.audioAnalysis.structureManualExamples === "object"
         ? { ...doc.audioAnalysis.structureManualExamples }
-        : {},
-      timingTrackPolicies: doc.audioAnalysis.timingTrackPolicies && typeof doc.audioAnalysis.timingTrackPolicies === "object"
-        ? { ...doc.audioAnalysis.timingTrackPolicies }
-        : {},
-      timingGeneratedSignatures: doc.audioAnalysis.timingGeneratedSignatures && typeof doc.audioAnalysis.timingGeneratedSignatures === "object"
-        ? { ...doc.audioAnalysis.timingGeneratedSignatures }
         : {}
     };
   } else {
     state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   }
+  const runtimeDoc = doc?.sequenceAgentRuntime && typeof doc.sequenceAgentRuntime === "object"
+    ? doc.sequenceAgentRuntime
+    : {};
+  const legacyTimingTrackPolicies =
+    doc?.audioAnalysis?.timingTrackPolicies && typeof doc.audioAnalysis.timingTrackPolicies === "object"
+      ? doc.audioAnalysis.timingTrackPolicies
+      : {};
+  const legacyTimingGeneratedSignatures =
+    doc?.audioAnalysis?.timingGeneratedSignatures && typeof doc.audioAnalysis.timingGeneratedSignatures === "object"
+      ? doc.audioAnalysis.timingGeneratedSignatures
+      : {};
+  state.sequenceAgentRuntime = {
+    timingTrackPolicies: runtimeDoc.timingTrackPolicies && typeof runtimeDoc.timingTrackPolicies === "object"
+      ? { ...runtimeDoc.timingTrackPolicies }
+      : { ...legacyTimingTrackPolicies },
+    timingGeneratedSignatures: runtimeDoc.timingGeneratedSignatures && typeof runtimeDoc.timingGeneratedSignatures === "object"
+      ? { ...runtimeDoc.timingGeneratedSignatures }
+      : { ...legacyTimingGeneratedSignatures }
+  };
   if (doc?.metadata && typeof doc.metadata === "object") state.metadata = { ...state.metadata, ...doc.metadata };
   if (Array.isArray(doc?.versions) && doc.versions.length) state.versions = doc.versions;
   if (typeof doc?.selection?.selectedVersion === "string" && doc.selection.selectedVersion) {
@@ -1678,6 +1693,7 @@ function extractProjectSnapshot() {
     endpoint: state.endpoint,
     route: state.route,
     projectConcept: state.projectConcept,
+    mediaPath: state.mediaPath,
     sequencePathInput: state.sequencePathInput,
     newSequencePathInput: state.newSequencePathInput,
     newSequenceType: state.newSequenceType,
@@ -1711,6 +1727,7 @@ function applyProjectSnapshot(snapshot) {
   const route = String(snapshot?.route || "").trim();
   if (route && routes.includes(route)) state.route = route;
   state.projectConcept = String(snapshot?.projectConcept || state.projectConcept || "");
+  state.mediaPath = String(snapshot?.mediaPath || state.mediaPath || "");
   state.sequencePathInput = snapshot.sequencePathInput || state.sequencePathInput;
   state.newSequencePathInput = snapshot.newSequencePathInput || state.newSequencePathInput;
   state.newSequenceType = snapshot.newSequenceType || state.newSequenceType;
@@ -1732,13 +1749,32 @@ function applyProjectSnapshot(snapshot) {
       pipeline: legacy.pipeline && typeof legacy.pipeline === "object" ? legacy.pipeline : null,
       structurePolicies: legacy.structurePolicies && typeof legacy.structurePolicies === "object" ? { ...legacy.structurePolicies } : {},
       structureGeneratedSignatures: legacy.structureGeneratedSignatures && typeof legacy.structureGeneratedSignatures === "object" ? { ...legacy.structureGeneratedSignatures } : {},
-      structureManualExamples: legacy.structureManualExamples && typeof legacy.structureManualExamples === "object" ? { ...legacy.structureManualExamples } : {},
-      timingTrackPolicies: legacy.timingTrackPolicies && typeof legacy.timingTrackPolicies === "object" ? { ...legacy.timingTrackPolicies } : {},
-      timingGeneratedSignatures: legacy.timingGeneratedSignatures && typeof legacy.timingGeneratedSignatures === "object" ? { ...legacy.timingGeneratedSignatures } : {}
+      structureManualExamples: legacy.structureManualExamples && typeof legacy.structureManualExamples === "object" ? { ...legacy.structureManualExamples } : {}
     };
   } else {
     state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   }
+  state.sequenceAgentRuntime = snapshot?.sequenceAgentRuntime && typeof snapshot.sequenceAgentRuntime === "object"
+    ? {
+        timingTrackPolicies:
+          snapshot.sequenceAgentRuntime.timingTrackPolicies && typeof snapshot.sequenceAgentRuntime.timingTrackPolicies === "object"
+            ? { ...snapshot.sequenceAgentRuntime.timingTrackPolicies }
+            : {},
+        timingGeneratedSignatures:
+          snapshot.sequenceAgentRuntime.timingGeneratedSignatures && typeof snapshot.sequenceAgentRuntime.timingGeneratedSignatures === "object"
+            ? { ...snapshot.sequenceAgentRuntime.timingGeneratedSignatures }
+            : {}
+      }
+    : {
+        timingTrackPolicies:
+          snapshot?.audioAnalysis?.timingTrackPolicies && typeof snapshot.audioAnalysis.timingTrackPolicies === "object"
+            ? { ...snapshot.audioAnalysis.timingTrackPolicies }
+            : {},
+        timingGeneratedSignatures:
+          snapshot?.audioAnalysis?.timingGeneratedSignatures && typeof snapshot.audioAnalysis.timingGeneratedSignatures === "object"
+            ? { ...snapshot.audioAnalysis.timingGeneratedSignatures }
+            : {}
+      };
   state.savePathInput = snapshot.savePathInput || state.savePathInput;
   state.lastApplyBackupPath = snapshot?.lastApplyBackupPath || "";
   state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
@@ -1788,6 +1824,15 @@ function saveCurrentProjectSnapshot() {
   if (!key || key === "::") return;
   const store = loadProjectsStore();
   store[key] = extractProjectSnapshot();
+  persistProjectsStore(store);
+}
+
+function deleteProjectSnapshot(projectName, showFolder) {
+  const key = getProjectKey(projectName, showFolder);
+  if (!key || key === "::") return;
+  const store = loadProjectsStore();
+  if (!(key in store)) return;
+  delete store[key];
   persistProjectsStore(store);
 }
 
@@ -2397,6 +2442,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
         tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
       },
+      timingOwnership: getSequenceTimingOwnershipRows(),
       manualXdLocks: getManualLockedXdTracks(),
       allowTimingWrites: true
     });
@@ -2454,7 +2500,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         baseRevision: state.draftBaseRevision,
         capabilityCommands: state.health.capabilityCommands || [],
         effectCatalog: state.effectCatalog,
-        layoutMode: currentLayoutMode()
+        layoutMode: currentLayoutMode(),
+        timingOwnership: getSequenceTimingOwnershipRows(),
+        allowTimingWrites: true
       });
       emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
       if (fallbackReason) {
@@ -2497,95 +2545,28 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       }
       markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=generated nodes=${generatedGraph.nodeCount}`);
     }
-    const timingTrackPolicies =
-      state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-        ? state.audioAnalysis.timingTrackPolicies
-        : {};
-    const timingGeneratedSignatures =
-      state.audioAnalysis?.timingGeneratedSignatures && typeof state.audioAnalysis.timingGeneratedSignatures === "object"
-        ? state.audioAnalysis.timingGeneratedSignatures
-        : {};
-    const protectedTrackState = new Map();
     const pendingGenerated = new Map();
-    const blockedTracks = new Set();
-    const nextPlan = [];
     for (const step of rawPlan) {
       const cmd = String(step?.cmd || "").trim();
       const params = step?.params && typeof step.params === "object" ? step.params : {};
       const trackName = String(params?.trackName || "").trim();
-      if (!isXdTimingTrack(trackName)) {
-        nextPlan.push(step);
-        continue;
-      }
       const isTrackWriteStep = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
-      if (!isTrackWriteStep) {
-        nextPlan.push(step);
-        continue;
-      }
-      const policyKey = buildGlobalXdTrackPolicyKey(trackName);
-      const existingPolicy = timingTrackPolicies[policyKey] && typeof timingTrackPolicies[policyKey] === "object"
-        ? timingTrackPolicies[policyKey]
-        : null;
-      if (existingPolicy?.manual) {
-        blockedTracks.add(trackName);
-        continue;
-      }
-      if (!protectedTrackState.has(trackName)) {
-        let manualDetected = false;
-        let currentSig = "";
-        try {
-          const marksResp = await getTimingMarks(state.endpoint, trackName);
-          const marks = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
-          currentSig = timingMarksSignature(marks);
-        } catch {
-          currentSig = "";
-        }
-        const lastGeneratedSig = String(timingGeneratedSignatures[policyKey] || "").trim();
-        if (lastGeneratedSig && currentSig && currentSig !== lastGeneratedSig) {
-          manualDetected = true;
-          const userOwnedName = deriveUserOwnedTrackNameFromXd(trackName);
-          timingTrackPolicies[policyKey] = {
-            manual: true,
-            trackName: userOwnedName,
-            sourceTrack: trackName,
-            lockedAt: new Date().toISOString()
-          };
-          blockedTracks.add(trackName);
-          pushDiagnostic("info", `Manual edits detected on ${trackName}; marking user-owned and skipping agent overwrite.`);
-        }
-        protectedTrackState.set(trackName, {
-          manualDetected,
-          policyKey
-        });
-      }
-      const stateRow = protectedTrackState.get(trackName);
-      if (stateRow?.manualDetected) {
-        blockedTracks.add(trackName);
-        continue;
-      }
-      if ((cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") && Array.isArray(params?.marks)) {
+      if (isXdTimingTrack(trackName) && (cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") && Array.isArray(params?.marks)) {
         const sig = timingMarksSignature(params.marks);
         if (sig) {
           pendingGenerated.set(trackName, {
-            policyKey,
+            policyKey: buildGlobalXdTrackPolicyKey(trackName),
             signature: sig
           });
         }
       }
-      nextPlan.push(step);
     }
-    const plan = nextPlan;
-    if (blockedTracks.size) {
-      pushDiagnostic(
-        "warning",
-        `Manual XD track protection active; skipped writes for: ${Array.from(blockedTracks).sort().join(", ")}`
-      );
-    }
+    const plan = rawPlan;
     if (!plan.length) {
-      markOrchestrationStage(orchestrationRun, "xd_protection", "error", "all generated writes were user-locked");
-      throw new Error("Apply blocked: all generated XD track writes are user-locked.");
+      markOrchestrationStage(orchestrationRun, "xd_protection", "error", "sequence_agent emitted no executable commands");
+      throw new Error("Apply blocked: sequence_agent emitted no executable commands.");
     }
-    markOrchestrationStage(orchestrationRun, "xd_protection", "ok", blockedTracks.size ? `blocked=${blockedTracks.size}` : "no locked tracks");
+    markOrchestrationStage(orchestrationRun, "xd_protection", "ok", "timing ownership resolved by sequence_agent");
     if (Array.isArray(sequencerPlan?.warnings) && sequencerPlan.warnings.length) {
       pushDiagnostic("warning", `Sequencer apply warnings: ${sequencerPlan.warnings.join(" | ")}`);
     }
@@ -2675,6 +2656,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
     }
     state.draftBaseRevision = state.revision;
+    const timingTrackPolicies = getSequenceTimingTrackPoliciesState();
+    const timingGeneratedSignatures = getSequenceTimingGeneratedSignaturesState();
     for (const [trackName, row] of pendingGenerated.entries()) {
       const key = String(row?.policyKey || "").trim();
       const sig = String(row?.signature || "").trim();
@@ -2688,8 +2671,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         updatedAt: new Date().toISOString()
       };
     }
-    state.audioAnalysis.timingTrackPolicies = timingTrackPolicies;
-    state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
+    setSequenceTimingTrackPoliciesState(timingTrackPolicies);
+    setSequenceTimingGeneratedSignaturesState(timingGeneratedSignatures);
     state.flags.proposalStale = false;
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
     setStatusWithDiagnostics(
@@ -2833,6 +2816,7 @@ async function onGenerate(intentOverride = "") {
       targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
       tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
     },
+    timingOwnership: getSequenceTimingOwnershipRows(),
     manualXdLocks: getManualLockedXdTracks(),
     allowTimingWrites: true
   });
@@ -2860,7 +2844,9 @@ async function onGenerate(intentOverride = "") {
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       capabilityCommands: state.health.capabilityCommands || [],
       effectCatalog: state.effectCatalog,
-      layoutMode: currentLayoutMode()
+      layoutMode: currentLayoutMode(),
+      timingOwnership: getSequenceTimingOwnershipRows(),
+      allowTimingWrites: true
     });
     emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequence_agent plan built");
@@ -4294,8 +4280,8 @@ function buildOrchestrationTestAnalysisHandoff() {
     timing: {
       bpm: timingGuess.bpm,
       timeSignature: timingGuess.timeSignature,
-      beatsTrack: "XD: Beats",
-      barsTrack: "XD: Bars"
+      beatsArtifact: "beats",
+      barsArtifact: "bars"
     },
     structure: {
       sections: ["Intro", "Verse 1", "Chorus 1"],
@@ -4304,11 +4290,11 @@ function buildOrchestrationTestAnalysisHandoff() {
     },
     lyrics: {
       hasSyncedLyrics: false,
-      lyricsTrackName: ""
+      lyricsArtifact: ""
     },
     chords: {
       hasChords: false,
-      chordsTrackName: "",
+      chordsArtifact: "",
       confidence: "low"
     },
     briefSeed: {
@@ -4483,10 +4469,7 @@ async function onRunOrchestrationMatrix() {
   const previousAudioPath = String(state.audioPathInput || "");
   const previousRevision = String(state.revision || "unknown");
   const previousDraftBase = String(state.draftBaseRevision || "unknown");
-  const previousTimingTrackPolicies =
-    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-      ? JSON.parse(JSON.stringify(state.audioAnalysis.timingTrackPolicies))
-      : {};
+  const previousTimingTrackPolicies = JSON.parse(JSON.stringify(getSequenceTimingTrackPoliciesState()));
   const results = [];
   try {
     const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
@@ -4622,10 +4605,7 @@ async function onRunOrchestrationMatrix() {
     });
 
     runScenario("all-writes-locked-blocked", () => {
-      const policies =
-        state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-          ? state.audioAnalysis.timingTrackPolicies
-          : {};
+      const policies = getSequenceTimingTrackPoliciesState();
       const lockKey = buildGlobalXdTrackPolicyKey("XD: Sequencer Plan");
       policies[lockKey] = {
         manual: true,
@@ -4633,22 +4613,25 @@ async function onRunOrchestrationMatrix() {
         sourceTrack: "XD: Sequencer Plan",
         lockedAt: new Date().toISOString()
       };
-      state.audioAnalysis.timingTrackPolicies = policies;
-      const raw = buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 2));
-      const executable = raw.filter((step) => {
-        const cmd = String(step?.cmd || "").trim();
-        const params = step?.params && typeof step.params === "object" ? step.params : {};
-        const trackName = String(params?.trackName || "").trim();
-        if (!isXdTimingTrack(trackName)) return true;
-        const isTrackWriteStep = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
-        if (!isTrackWriteStep) return true;
-        const policyKey = buildGlobalXdTrackPolicyKey(trackName);
-        const policy = policies[policyKey];
-        return !(policy && typeof policy === "object" && policy.manual);
-      });
+      setSequenceTimingTrackPoliciesState(policies);
+      const raw = buildSequenceAgentPlan({
+        analysisHandoff: buildOrchestrationTestAnalysisHandoff(),
+        intentHandoff: {
+          goal: "lock case",
+          mode: "revise",
+          scope: { targetIds: [], tagNames: [], sections: [] }
+        },
+        sourceLines: buildDemoProposedLines().slice(0, 2),
+        baseRevision: String(state.draftBaseRevision || "unknown"),
+        capabilityCommands: state.health.capabilityCommands || [],
+        effectCatalog: state.effectCatalog,
+        layoutMode: currentLayoutMode(),
+        timingOwnership: getSequenceTimingOwnershipRows(),
+        allowTimingWrites: true
+      }).commands;
       return {
-        ok: executable.length === 0,
-        note: "all XD writes are filtered when manual lock is active"
+        ok: raw.every((step) => !String(step?.cmd || "").startsWith("timing.")),
+        note: "sequence_agent suppresses XD timing writes when manual lock is active"
       };
     });
 
@@ -4689,7 +4672,7 @@ async function onRunOrchestrationMatrix() {
     state.audioPathInput = previousAudioPath;
     state.revision = previousRevision;
     state.draftBaseRevision = previousDraftBase;
-    state.audioAnalysis.timingTrackPolicies = previousTimingTrackPolicies;
+    setSequenceTimingTrackPoliciesState(previousTimingTrackPolicies);
     refreshAgentRuntimeHealth();
     reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix restore" });
     state.ui.agentThinking = false;
@@ -5864,9 +5847,13 @@ function onEditSelectedProposed() {
 }
 
 function syncProjectSummaryInputs() {
+  const projectNameInput = app.querySelector("#project-name-input");
   const showFolderInput = app.querySelector("#showfolder-input");
+  const mediaPathInput = app.querySelector("#mediapath-input");
   const metadataRootInput = app.querySelector("#project-metadata-root-input");
+  if (projectNameInput) state.projectName = projectNameInput.value.trim() || state.projectName;
   if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
+  if (mediaPathInput) state.mediaPath = mediaPathInput.value.trim() || "";
   if (metadataRootInput) state.projectMetadataRoot = metadataRootInput.value.trim();
 }
 
@@ -5883,43 +5870,61 @@ function projectNameFromPath(filePath) {
   return file.replace(/\.xdproj$/i, "").trim();
 }
 
+function normalizeProjectDisplayName(value) {
+  return String(value || "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[. ]+$/g, "");
+}
+
+function buildCanonicalProjectFilePath(rootPath, projectName) {
+  const root = String(rootPath || "").trim().replace(/[\\/]+$/, "");
+  const normalizedName = normalizeProjectDisplayName(projectName);
+  if (!root || !normalizedName) return "";
+  return `${root}/projects/${normalizedName}/${normalizedName}.xdproj`;
+}
+
+function inferProjectRootFromFilePath(filePath) {
+  const raw = String(filePath || "").trim().replace(/\\/g, "/");
+  if (!raw) return "";
+  const marker = "/projects/";
+  const idx = raw.lastIndexOf(marker);
+  if (idx < 0) return "";
+  return raw.slice(0, idx);
+}
+
 async function saveProjectToCurrentFile(options = {}) {
   const saveAs = options?.saveAs === true;
+  const rename = options?.rename === true;
   const bridge = getDesktopProjectBridge();
   if (!bridge) return { ok: false, code: "NO_BRIDGE", error: "Desktop project bridge unavailable." };
-
-  let filePath = String(state.projectFilePath || "").trim();
-  if (saveAs || !filePath) {
-    const defaultName = `${(state.projectName || "project").trim() || "project"}.xdproj`;
-    const dialogRes = await bridge.saveProjectDialog({
-      rootPath: state.projectMetadataRoot,
-      defaultName
-    });
-    if (!dialogRes?.ok || !dialogRes?.filePath) {
-      return { ok: false, code: "CANCELED", error: "User canceled save dialog." };
-    }
-    filePath = String(dialogRes.filePath);
-    state.projectFilePath = filePath;
-    const dir = dirnameOfPath(filePath);
-    if (dir) state.projectMetadataRoot = dir;
-    const inferredName = projectNameFromPath(filePath);
-    if (inferredName) state.projectName = inferredName;
+  const normalizedProjectName = normalizeProjectDisplayName(state.projectName);
+  if (!normalizedProjectName) {
+    return { ok: false, code: "INVALID_PROJECT_NAME", error: "Project name is required." };
   }
+  state.projectName = normalizedProjectName;
 
   const res = await bridge.writeProjectFile({
-    filePath,
+    rootPath: state.projectMetadataRoot,
+    currentFilePath: saveAs ? "" : state.projectFilePath,
+    mode: rename ? "rename" : (saveAs ? "save-as" : "save"),
     projectName: state.projectName,
     showFolder: state.showFolder,
+    mediaPath: state.mediaPath,
     snapshot: extractProjectSnapshot()
   });
   if (!res?.ok) return res || { ok: false, code: "WRITE_FAILED", error: "Project file write failed." };
-  state.projectFilePath = filePath;
+  state.projectFilePath = String(res.filePath || state.projectFilePath || "");
+  state.projectMetadataRoot = String(res?.project?.appRootPath || state.projectMetadataRoot || "");
   state.projectCreatedAt = String(res?.project?.createdAt || state.projectCreatedAt || "");
   state.projectUpdatedAt = String(res?.project?.updatedAt || state.projectUpdatedAt || "");
-  return { ok: true, filePath };
+  return { ok: true, filePath: state.projectFilePath };
 }
 
 async function onSaveProjectSettings() {
+  const previousProjectName = String(state.projectName || "").trim();
+  const previousShowFolder = String(state.showFolder || "").trim();
   syncProjectSummaryInputs();
   const endpointInput = app.querySelector("#endpoint-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
@@ -5940,8 +5945,13 @@ async function onSaveProjectSettings() {
   const saved = await saveProjectToCurrentFile({ saveAs: false });
   if (saved?.ok) {
     setStatus("info", `Project saved: ${saved.filePath}`);
+    if (previousProjectName && previousProjectName !== state.projectName) {
+      deleteProjectSnapshot(previousProjectName, previousShowFolder || state.showFolder);
+    }
   } else if (saved?.code === "CANCELED") {
     setStatus("info", "Save canceled.");
+  } else if (saved?.code === "PROJECT_RENAME_REQUIRED") {
+    setStatus("warning", saved.error || "Project name changed. Use Rename Project.");
   } else if (saved?.code !== "NO_BRIDGE") {
     setStatusWithDiagnostics("warning", `Project save failed: ${saved?.error || "unknown error"}`);
   } else {
@@ -6167,7 +6177,7 @@ async function onBrowseShowFolder() {
 
 async function onBrowseProjectMetadataRoot() {
   const selected = await pickFilePathFromDesktop({
-    title: "Choose Project Metadata Folder",
+    title: "Choose Project Root Folder",
     directory: true
   });
   if (!selected) return;
@@ -6779,13 +6789,11 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
       setStatusWithDiagnostics("warning", `Open failed: ${fileRes?.error || "Invalid project file."}`);
       return render();
     }
-    const dir = dirnameOfPath(dialogRes.filePath);
-    if (dir) {
-      state.projectMetadataRoot = dir;
-    }
+    if (fileRes.project?.appRootPath) state.projectMetadataRoot = String(fileRes.project.appRootPath);
     state.projectFilePath = String(dialogRes.filePath);
     state.projectName = String(fileRes.project?.projectName || state.projectName);
     state.showFolder = String(fileRes.project?.showFolder || state.showFolder);
+    state.mediaPath = String(fileRes.project?.mediaPath || state.mediaPath);
     state.projectCreatedAt = String(fileRes.project?.createdAt || state.projectCreatedAt || "");
     state.projectUpdatedAt = String(fileRes.project?.updatedAt || state.projectUpdatedAt || "");
     applyProjectSnapshot(fileRes.snapshot);
@@ -6802,20 +6810,22 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
     return render();
   }
 
-  const rootPath = state.projectMetadataRoot || dirnameOfPath(state.projectFilePath);
+  const rootPath = state.projectMetadataRoot || inferProjectRootFromFilePath(state.projectFilePath);
   if (!rootPath) {
     setStatusWithDiagnostics("warning", "Open failed: project metadata folder is not set.");
     return render();
   }
-  const guessedFilePath = `${rootPath}/${projectName}.xdproj`;
+  const guessedFilePath = buildCanonicalProjectFilePath(rootPath, projectName);
   const fileRes = await bridge.openProjectFile({ filePath: guessedFilePath });
   if (!fileRes?.ok || !fileRes?.snapshot) {
     setStatusWithDiagnostics("warning", `Open failed: ${fileRes?.error || "Invalid project file."}`);
     return render();
   }
   state.projectFilePath = guessedFilePath;
+  if (fileRes.project?.appRootPath) state.projectMetadataRoot = String(fileRes.project.appRootPath);
   state.projectName = String(fileRes.project?.projectName || projectName);
   state.showFolder = String(fileRes.project?.showFolder || showFolder);
+  state.mediaPath = String(fileRes.project?.mediaPath || state.mediaPath);
   state.projectCreatedAt = String(fileRes.project?.createdAt || state.projectCreatedAt || "");
   state.projectUpdatedAt = String(fileRes.project?.updatedAt || state.projectUpdatedAt || "");
   applyProjectSnapshot(fileRes.snapshot);
@@ -6828,27 +6838,18 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
 function onCreateNewProject() {
   syncProjectSummaryInputs();
   const bridge = getDesktopProjectBridge();
-  const suggested = `${state.projectName || "Project"}-new.xdproj`;
   const openNew = async () => {
     if (!bridge) {
       setStatusWithDiagnostics("warning", "New project requires desktop runtime.");
       return render();
     }
-
-    const dialogRes = await bridge.saveProjectDialog({
-      rootPath: state.projectMetadataRoot,
-      defaultName: suggested
-    });
-    if (!dialogRes?.ok || !dialogRes?.filePath) {
-      setStatus("info", "New project canceled.");
+    const normalizedProjectName = normalizeProjectDisplayName(state.projectName);
+    if (!normalizedProjectName) {
+      setStatus("warning", "Project name is required.");
       return render();
     }
-
-    state.projectFilePath = String(dialogRes.filePath);
-    const dir = dirnameOfPath(state.projectFilePath);
-    if (dir) state.projectMetadataRoot = dir;
-    const inferredName = projectNameFromPath(state.projectFilePath);
-    if (inferredName) state.projectName = inferredName;
+    state.projectName = normalizedProjectName;
+    state.projectFilePath = "";
 
     resetSessionDraftState();
     resetCreativeState();
@@ -6857,6 +6858,7 @@ function onCreateNewProject() {
     state.sequencePathInput = "";
     state.newSequencePathInput = "";
     state.audioPathInput = "";
+    state.mediaPath = "";
     state.savePathInput = "";
     state.recentSequences = [];
     state.projectSequences = [];
@@ -6878,13 +6880,63 @@ function onCreateNewProject() {
 
 async function onSaveProjectAs() {
   syncProjectSummaryInputs();
+  const previousName = String(state.projectName || "").trim();
+  const proposedName = window.prompt("Save project as", previousName || "Project");
+  if (proposedName == null) {
+    setStatus("info", "Save As canceled.");
+    render();
+    return;
+  }
+  const nextName = normalizeProjectDisplayName(proposedName);
+  if (!nextName) {
+    setStatus("warning", "Project name is required.");
+    render();
+    return;
+  }
+  state.projectName = nextName;
   const saved = await saveProjectToCurrentFile({ saveAs: true });
   if (saved?.ok) {
     setStatus("info", `Saved project as: ${saved.filePath}`);
   } else if (saved?.code === "CANCELED") {
     setStatus("info", "Save As canceled.");
   } else {
+    state.projectName = previousName;
     setStatusWithDiagnostics("action-required", `Save As failed: ${saved?.error || "unknown error"}`);
+  }
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+async function onRenameProject() {
+  const previousProjectName = String(projectNameFromPath(state.projectFilePath) || state.projectName || "").trim();
+  const previousShowFolder = String(state.showFolder || "").trim();
+  const originalDisplayName = String(state.projectName || "").trim();
+  syncProjectSummaryInputs();
+  if (!state.projectFilePath) {
+    setStatus("warning", "Save the project once before renaming it.");
+    render();
+    return;
+  }
+  const normalizedProjectName = normalizeProjectDisplayName(state.projectName);
+  if (!normalizedProjectName) {
+    setStatus("warning", "Project name is required.");
+    render();
+    return;
+  }
+  if (normalizedProjectName === projectNameFromPath(state.projectFilePath)) {
+    setStatus("info", "Project name is already current.");
+    render();
+    return;
+  }
+  state.projectName = normalizedProjectName;
+  const saved = await saveProjectToCurrentFile({ rename: true });
+  if (saved?.ok) {
+    deleteProjectSnapshot(previousProjectName, previousShowFolder || state.showFolder);
+    setStatus("info", `Project renamed: ${state.projectName}`);
+  } else {
+    state.projectName = originalDisplayName;
+    setStatusWithDiagnostics("warning", `Project rename failed: ${saved?.error || "unknown error"}`);
   }
   saveCurrentProjectSnapshot();
   persist();
@@ -6940,6 +6992,7 @@ function onResetProjectWorkspace() {
   state.newSequenceDurationMs = defaultState.newSequenceDurationMs;
   state.newSequenceFrameMs = defaultState.newSequenceFrameMs;
   state.audioPathInput = defaultState.audioPathInput;
+  state.mediaPath = defaultState.mediaPath;
   state.savePathInput = defaultState.savePathInput;
   state.lastApplyBackupPath = defaultState.lastApplyBackupPath;
   state.recentSequences = [];
@@ -7000,6 +7053,7 @@ function resetCreativeState() {
   revokeReferencePreviewUrls();
   state.creative = structuredClone(defaultState.creative);
   state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
+  state.sequenceAgentRuntime = structuredClone(defaultState.sequenceAgentRuntime);
   state.flags.creativeBriefReady = false;
 }
 
@@ -7007,11 +7061,11 @@ function buildAudioPipelineSummaryLines(pipeline = {}) {
   const checks = [
     ["Service reached", Boolean(pipeline?.analysisServiceCalled)],
     ["Service succeeded", Boolean(pipeline?.analysisServiceSucceeded)],
-    ["Beat track written", Boolean(pipeline?.beatTrackWritten)],
-    ["Bars track written", Boolean(pipeline?.barTrackWritten)],
-    ["Chords track written", Boolean(pipeline?.chordTrackWritten)],
-    ["Song structure written", Boolean(pipeline?.structureTrackWritten)],
-    ["Lyrics track written", Boolean(pipeline?.lyricsTrackWritten)],
+    ["Beat markers ready", Boolean(pipeline?.beatTrackWritten)],
+    ["Bar markers ready", Boolean(pipeline?.barTrackWritten)],
+    ["Chord markers ready", Boolean(pipeline?.chordTrackWritten)],
+    ["Structure markers ready", Boolean(pipeline?.structureTrackWritten)],
+    ["Lyrics markers ready", Boolean(pipeline?.lyricsTrackWritten)],
     ["Song context derived", Boolean(pipeline?.webContextDerived)]
   ];
   if (pipeline?.structureTrackPreserved) {
@@ -7966,11 +8020,44 @@ function deriveUserOwnedTrackNameFromXd(trackName = "") {
   return raw.replace(/^xd:\s*/i, "").trim() || raw;
 }
 
+function getSequenceTimingTrackPoliciesState() {
+  return state.sequenceAgentRuntime?.timingTrackPolicies && typeof state.sequenceAgentRuntime.timingTrackPolicies === "object"
+    ? state.sequenceAgentRuntime.timingTrackPolicies
+    : {};
+}
+
+function setSequenceTimingTrackPoliciesState(policies = {}) {
+  state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+    ? state.sequenceAgentRuntime
+    : structuredClone(defaultState.sequenceAgentRuntime);
+  state.sequenceAgentRuntime.timingTrackPolicies = policies && typeof policies === "object" ? policies : {};
+}
+
+function getSequenceTimingGeneratedSignaturesState() {
+  return state.sequenceAgentRuntime?.timingGeneratedSignatures && typeof state.sequenceAgentRuntime.timingGeneratedSignatures === "object"
+    ? state.sequenceAgentRuntime.timingGeneratedSignatures
+    : {};
+}
+
+function setSequenceTimingGeneratedSignaturesState(signatures = {}) {
+  state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+    ? state.sequenceAgentRuntime
+    : structuredClone(defaultState.sequenceAgentRuntime);
+  state.sequenceAgentRuntime.timingGeneratedSignatures = signatures && typeof signatures === "object" ? signatures : {};
+}
+
+function getSequenceTimingOwnershipRows() {
+  return getGlobalXdTrackPolicies().map((row) => ({
+    sourceTrack: row.sourceTrack,
+    trackName: row.userTrack || row.sourceTrack,
+    manual: Boolean(row.manual),
+    lockedAt: row.lockedAt,
+    updatedAt: row.updatedAt
+  }));
+}
+
 function getGlobalXdTrackPolicies() {
-  const policies =
-    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-      ? state.audioAnalysis.timingTrackPolicies
-      : {};
+  const policies = getSequenceTimingTrackPoliciesState();
   const rows = [];
   for (const [key, value] of Object.entries(policies)) {
     if (!String(key || "").startsWith("__xd_global__::")) continue;
@@ -7994,10 +8081,7 @@ function getManualLockedXdTracks() {
 }
 
 function removeGlobalXdManualLocks() {
-  const policies =
-    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-      ? state.audioAnalysis.timingTrackPolicies
-      : {};
+  const policies = getSequenceTimingTrackPoliciesState();
   let changed = 0;
   for (const key of Object.keys(policies)) {
     if (!String(key || "").startsWith("__xd_global__::")) continue;
@@ -8010,7 +8094,7 @@ function removeGlobalXdManualLocks() {
     };
     changed += 1;
   }
-  state.audioAnalysis.timingTrackPolicies = policies;
+  setSequenceTimingTrackPoliciesState(policies);
   return changed;
 }
 
@@ -8216,22 +8300,7 @@ async function runSongContextWebFallback(audioPath = "") {
   }
 }
 
-async function forceSequenceRefreshAfterAnalysis() {
-  const open = await getOpenSequence(state.endpoint);
-  const seq = open?.data?.sequence;
-  const filePath = String(seq?.path || state.sequencePathInput || "").trim();
-  if (!open?.data?.isOpen || !filePath) {
-    return { ok: false, reason: "no-open-sequence" };
-  }
-  // Explicitly avoid auto-save/reopen here to prevent unintended sequence overwrites.
-  return {
-    ok: false,
-    reason: "auto-save-disabled",
-    filePath
-  };
-}
-
-async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
+async function runAudioAnalysisPipeline() {
   const audioPath = String(state.audioPathInput || "").trim();
   const pipeline = {
     mediaAttached: Boolean(audioPath),
@@ -8282,29 +8351,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     if (!text) return;
     diagnostics.push(text);
   };
-  const retry = async (fn, attempts = 3, delayMs = 250) => {
-    let lastErr = null;
-    for (let i = 0; i < attempts; i += 1) {
-      try {
-        return await fn();
-      } catch (err) {
-        lastErr = err;
-        if (i + 1 < attempts) {
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-        }
-      }
-    }
-    throw lastErr || new Error("retry failed");
-  };
-  try {
-    const open = await getOpenSequence(state.endpoint);
-    const seqDuration = Number(open?.data?.sequence?.durationMs);
-    if (Number.isFinite(seqDuration) && seqDuration > 1) {
-      sequenceDurationMs = Math.round(seqDuration);
-    }
-  } catch {
-    // Non-fatal; clamp can fallback to media duration.
-  }
 
   if (!analysisBaseUrl) {
     const analysis = analyzeAudioContext({
@@ -8324,6 +8370,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
       diagnostics
     };
   }
+
   const normalizeMarksForApi = (marks = []) => {
     const cap =
       Number.isFinite(sequenceDurationMs) && sequenceDurationMs > 1
@@ -8359,200 +8406,17 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     }
     return out;
   };
-  const writeTrackMarks = async (trackName, marks) => {
-    const normalized = normalizeMarksForApi(marks);
-    if (!normalized.length) return { ok: false, error: "No marks to write." };
-    try {
-      await createTimingTrack(state.endpoint, { trackName, replaceIfExists: true });
-      await replaceTimingMarks(state.endpoint, { trackName, marks: normalized });
-      return { ok: true, marks: normalized };
-    } catch (replaceErr) {
-      try {
-        await createTimingTrack(state.endpoint, { trackName, replaceIfExists: true });
-        await insertTimingMarks(state.endpoint, { trackName, marks: normalized });
-        return { ok: true, marks: normalized };
-      } catch (insertErr) {
-        return {
-          ok: false,
-          error: `replace failed: ${String(replaceErr?.message || replaceErr)} | insert failed: ${String(insertErr?.message || insertErr)}`,
-          marks: normalized
-        };
-      }
-    }
-  };
-  const marksRange = (marks = []) => {
-    const rows = Array.isArray(marks) ? marks : [];
-    if (!rows.length) return "none";
-    let minStart = Number.POSITIVE_INFINITY;
-    let maxEnd = Number.NEGATIVE_INFINITY;
-    for (const row of rows) {
-      const start = Number(row?.startMs);
-      const end = Number.isFinite(Number(row?.endMs)) ? Number(row.endMs) : start;
-      if (Number.isFinite(start)) minStart = Math.min(minStart, start);
-      if (Number.isFinite(end)) maxEnd = Math.max(maxEnd, end);
-    }
-    if (!Number.isFinite(minStart) || !Number.isFinite(maxEnd)) return "none";
-    return `${Math.round(minStart)}..${Math.round(maxEnd)}ms`;
-  };
-  const getTrackMarksCached = async (trackName) => {
+  const analysisTrackNames = [];
+  const addAnalysisTrack = (trackName, marks, pipelineKey = "") => {
     const name = String(trackName || "").trim();
-    if (!name) return [];
-    if (Array.isArray(trackMarksByName[name])) return trackMarksByName[name];
-    try {
-      const marksResp = await getTimingMarks(state.endpoint, name);
-      const marks = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
-      trackMarksByName[name] = marks;
-      return marks;
-    } catch (err) {
-      addDiag(`timing.getMarks failed for ${name}: ${String(err?.message || err)}`);
-      trackMarksByName[name] = [];
-      return [];
+    const normalized = normalizeMarksForApi(marks);
+    if (!name || !normalized.length) return;
+    trackMarksByName[name] = normalized;
+    analysisTrackNames.push(name);
+    if (pipelineKey && Object.prototype.hasOwnProperty.call(pipeline, pipelineKey)) {
+      pipeline[pipelineKey] = true;
     }
   };
-  const buildTimingPolicyKey = (identityKey, kind) => {
-    const id = String(identityKey || "").trim();
-    const k = String(kind || "").trim().toLowerCase();
-    if (!id || !k) return "";
-    return `${id}::${k}`;
-  };
-  const applyGeneratedTimingTrackWithManualPolicy = async ({
-    identityKey = "",
-    kind = "",
-    generatedTrackName = "",
-    userTrackName = "",
-    marks = []
-  } = {}) => {
-    const normalizedKind = String(kind || "").trim().toLowerCase();
-    const policyKey = buildTimingPolicyKey(identityKey, normalizedKind);
-    const policy = policyKey ? timingTrackPolicies[policyKey] : null;
-    const generatedName = String(generatedTrackName || "").trim();
-    const userName = String(userTrackName || "").trim();
-
-    if (policy?.manual) {
-      const lockedTrack = String(policy.trackName || userName || generatedName).trim();
-      const lockedMarks = await getTrackMarksCached(lockedTrack);
-      if (lockedMarks.length) {
-        addDiag(`${normalizedKind} track preserved: manual user track "${lockedTrack}" is authoritative.`);
-        return { ok: true, preserved: true, written: false, trackName: lockedTrack, marks: lockedMarks, manualLocked: true };
-      }
-      addDiag(`${normalizedKind} policy found but track "${lockedTrack}" has no marks; regenerating.`);
-    }
-
-    if (policyKey) {
-      const lastGeneratedSig = String(timingGeneratedSignatures[policyKey] || "").trim();
-      if (lastGeneratedSig && generatedName) {
-        const existingGeneratedMarks = await getTrackMarksCached(generatedName);
-        const existingGeneratedSig = timingMarksSignature(existingGeneratedMarks);
-        if (existingGeneratedMarks.length && existingGeneratedSig && existingGeneratedSig !== lastGeneratedSig) {
-          const promote = await writeTrackMarks(userName || generatedName, existingGeneratedMarks);
-          if (promote.ok) {
-            const promotedTrack = userName || generatedName;
-            timingTrackPolicies[policyKey] = {
-              manual: true,
-              trackName: promotedTrack,
-              lockedAt: new Date().toISOString(),
-              sourceTrack: generatedName
-            };
-            state.audioAnalysis.timingTrackPolicies = timingTrackPolicies;
-            addDiag(
-              `Manual ${normalizedKind} edits detected; promoted to "${promotedTrack}" and disabled auto-overwrite for this track.`
-            );
-            return {
-              ok: true,
-              preserved: true,
-              written: false,
-              trackName: promotedTrack,
-              marks: promote.marks,
-              manualLocked: true
-            };
-          }
-          addDiag(`Manual ${normalizedKind} promotion failed: ${promote.error}`);
-        }
-      }
-    }
-
-    const write = await writeTrackMarks(generatedName, marks);
-    if (!write.ok) return { ok: false, preserved: false, written: false, trackName: generatedName, marks: [], error: write.error, manualLocked: false };
-    if (policyKey) {
-      timingGeneratedSignatures[policyKey] = timingMarksSignature(write.marks);
-      state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
-      if (!timingTrackPolicies[policyKey]?.manual) {
-        timingTrackPolicies[policyKey] = {
-          manual: false,
-          trackName: generatedName,
-          updatedAt: new Date().toISOString()
-        };
-        state.audioAnalysis.timingTrackPolicies = timingTrackPolicies;
-      }
-    }
-    return { ok: true, preserved: false, written: true, trackName: generatedName, marks: write.marks, manualLocked: false };
-  };
-
-  const trackNameMatches = (name, re) => re.test(String(name || ""));
-  const pickTrackName = (tracks, patterns = []) => {
-    const names = getTimingTrackNames(tracks || []);
-    for (const re of patterns) {
-      const match = names.find((name) => trackNameMatches(name, re));
-      if (match) return match;
-    }
-    return "";
-  };
-
-  try {
-    const media = await getMediaMetadata(state.endpoint);
-    mediaMetadata = media?.data || null;
-    pipeline.mediaMetadataRead = Boolean(mediaMetadata && Object.keys(mediaMetadata || {}).length);
-  } catch (err) {
-    addDiag(`media.getMetadata failed: ${String(err?.message || err)}`);
-  }
-
-  let tracks = Array.isArray(state.timingTracks) ? state.timingTracks : [];
-  if (refreshTracks || tracks.length === 0) {
-    try {
-      const tracksResp = await getTimingTracks(state.endpoint);
-      tracks = tracksResp?.data?.tracks || [];
-      state.timingTracks = tracks;
-    } catch (err) {
-      addDiag(`timing.getTracks failed: ${String(err?.message || err)}`);
-      tracks = Array.isArray(state.timingTracks) ? state.timingTracks : [];
-    }
-  }
-
-  const generatedBeatTrackName = "XD: Beats";
-  const userBeatTrackName = "Beats";
-  const generatedBarsTrackName = "XD: Bars";
-  const userBarsTrackName = "Bars";
-  const generatedChordsTrackName = "XD: Chords";
-  const userChordsTrackName = "Chords";
-  const generatedStructureTrackName = "XD: Song Structure";
-  const userStructureTrackName = "Song Structure";
-  const generatedLyricsTrackName = "XD: Lyrics";
-  const userLyricsTrackName = "Lyrics";
-  const structurePolicies =
-    state.audioAnalysis?.structurePolicies && typeof state.audioAnalysis.structurePolicies === "object"
-      ? state.audioAnalysis.structurePolicies
-      : {};
-  const structureGeneratedSignatures =
-    state.audioAnalysis?.structureGeneratedSignatures && typeof state.audioAnalysis.structureGeneratedSignatures === "object"
-      ? state.audioAnalysis.structureGeneratedSignatures
-      : {};
-  const structureManualExamples =
-    state.audioAnalysis?.structureManualExamples && typeof state.audioAnalysis.structureManualExamples === "object"
-      ? state.audioAnalysis.structureManualExamples
-      : {};
-  const timingTrackPolicies =
-    state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
-      ? state.audioAnalysis.timingTrackPolicies
-      : {};
-  const timingGeneratedSignatures =
-    state.audioAnalysis?.timingGeneratedSignatures && typeof state.audioAnalysis.timingGeneratedSignatures === "object"
-      ? state.audioAnalysis.timingGeneratedSignatures
-      : {};
-  let beatTrackManualLock = false;
-  let barsTrackManualLock = false;
-  let structureIdentityKey = "";
-  let beatTrackName = "";
-  let structureTrackName = "";
   const analysisBridge = getDesktopAudioAnalysisBridge();
   if (!analysisBridge) {
     addDiag("Analysis service bridge unavailable in this runtime.");
@@ -8587,7 +8451,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         detectedTrackIdentity = data?.meta?.trackIdentity && typeof data.meta.trackIdentity === "object"
           ? data.meta.trackIdentity
           : null;
-        structureIdentityKey = buildTrackIdentityKey(detectedTrackIdentity, audioTrackQueryFromPath(audioPath));
         serviceWebTempoEvidence = data?.meta?.webTempoEvidence && typeof data.meta.webTempoEvidence === "object"
           ? data.meta.webTempoEvidence
           : null;
@@ -8638,10 +8501,6 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
           }
         }
         if (Array.isArray(effectiveSections) && effectiveSections.length >= 2 && Array.isArray(lyrics) && lyrics.length >= 4 && lyricalSectionIndices.length) {
-          const manualStructureHint =
-            structureIdentityKey && structureManualExamples[structureIdentityKey] && typeof structureManualExamples[structureIdentityKey] === "object"
-              ? structureManualExamples[structureIdentityKey]
-              : null;
           const relabeled = await relabelSectionsWithLlm({
             sections: effectiveSections,
             lyrics,
@@ -8649,7 +8508,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             lyricalIndices: lyricalSectionIndices,
             trackIdentity: detectedTrackIdentity,
             trackTitleHint: audioTrackQueryFromPath(audioPath),
-            userManualStructureHint: manualStructureHint,
+            userManualStructureHint: null,
             timeSignature,
             tempoBpm
           });
@@ -8688,235 +8547,43 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
             addDiag(`Final song structure labels: ${finalLabels.join(", ")}`);
           }
         }
-        if (Array.isArray(beats) && beats.length) {
-          const beatApply = await applyGeneratedTimingTrackWithManualPolicy({
-            identityKey: structureIdentityKey,
-            kind: "beat",
-            generatedTrackName: generatedBeatTrackName,
-            userTrackName: userBeatTrackName,
-            marks: beats
-          });
-          if (beatApply.ok) {
-            beatTrackName = beatApply.trackName || generatedBeatTrackName;
-            trackMarksByName[beatTrackName] = beatApply.marks;
-            if (beatApply.written) pipeline.beatTrackWritten = true;
-            if (beatApply.preserved) pipeline.beatTrackPreserved = true;
-            beatTrackManualLock = Boolean(beatApply.manualLocked);
-            pipeline.timingDerived = true;
-          } else {
-            addDiag(`Beat track write failed: ${beatApply.error}`);
-          }
-        } else {
-          addDiag("Analysis service returned no beats.");
+
+        addAnalysisTrack("Analysis: Beats", beats, "beatTrackWritten");
+        addAnalysisTrack("Analysis: Bars", bars, "barTrackWritten");
+        addAnalysisTrack("Analysis: Chords", chords, "chordTrackWritten");
+        addAnalysisTrack("Analysis: Lyrics", lyrics, "lyricsTrackWritten");
+        addAnalysisTrack("Analysis: Song Structure", effectiveSections, "structureTrackWritten");
+        if (Array.isArray(beats) && beats.length) pipeline.timingDerived = true;
+        if (Array.isArray(bars) && bars.length) pipeline.timingDerived = true;
+        if (Array.isArray(chords) && chords.length) pipeline.timingDerived = true;
+        if (Array.isArray(lyrics) && lyrics.length) pipeline.lyricsDetected = true;
+        if (Array.isArray(effectiveSections) && effectiveSections.length) {
+          const built = buildSectionSuggestions(normalizeMarksForApi(effectiveSections));
+          state.ui.sectionTrackName = "Analysis: Song Structure";
+          state.sectionSuggestions = built.labels;
+          state.sectionStartByLabel = built.startByLabel;
+          pipeline.structureDerived = built.labels.length > 0;
         }
-        if (Array.isArray(bars) && bars.length) {
-          const barApply = await applyGeneratedTimingTrackWithManualPolicy({
-            identityKey: structureIdentityKey,
-            kind: "bar",
-            generatedTrackName: generatedBarsTrackName,
-            userTrackName: userBarsTrackName,
-            marks: bars
-          });
-          if (barApply.ok) {
-            const barTrackName = barApply.trackName || generatedBarsTrackName;
-            trackMarksByName[barTrackName] = barApply.marks;
-            if (barApply.written) pipeline.barTrackWritten = true;
-            if (barApply.preserved) pipeline.barTrackPreserved = true;
-            barsTrackManualLock = Boolean(barApply.manualLocked);
-            pipeline.timingDerived = true;
-          } else {
-            addDiag(`Bars track write failed: ${barApply.error}`);
-          }
-        } else {
-          addDiag("Analysis service returned no bars.");
+
+        if (String(dataMeta?.chordAnalysis?.engine || "").trim()) {
+          addDiag(`Chord analysis engine: ${String(dataMeta.chordAnalysis.engine).trim()}`);
         }
-        if (Array.isArray(chords) && chords.length) {
-          const chordApply = await applyGeneratedTimingTrackWithManualPolicy({
-            identityKey: structureIdentityKey,
-            kind: "chord",
-            generatedTrackName: generatedChordsTrackName,
-            userTrackName: userChordsTrackName,
-            marks: chords
-          });
-          if (chordApply.ok) {
-            const chordTrackName = chordApply.trackName || generatedChordsTrackName;
-            trackMarksByName[chordTrackName] = chordApply.marks;
-            if (chordApply.written) pipeline.chordTrackWritten = true;
-            if (chordApply.preserved) pipeline.chordTrackPreserved = true;
-            pipeline.timingDerived = true;
-            if (dataMeta?.chordAnalysis?.engine) {
-              addDiag(`Chord analysis engine: ${String(dataMeta.chordAnalysis.engine).trim()}`);
-            }
-            if (String(dataMeta?.chordAnalysis?.avgMarginConfidence || "").trim()) {
-              addDiag(`Chord analysis confidence: ${String(dataMeta.chordAnalysis.avgMarginConfidence).trim()}`);
-            }
-          } else {
-            addDiag(`Chords track write failed: ${chordApply.error}`);
-          }
-        } else {
+        if (String(dataMeta?.chordAnalysis?.avgMarginConfidence || "").trim()) {
+          addDiag(`Chord analysis confidence: ${String(dataMeta.chordAnalysis.avgMarginConfidence).trim()}`);
+        }
+        if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
+          addDiag(`Lyrics global shift suggested: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
+        }
+        if (!beats.length) addDiag("Analysis service returned no beats.");
+        if (!bars.length) addDiag("Analysis service returned no bars.");
+        if (!chords.length) {
           addDiag("Analysis service returned no chords.");
           if (String(dataMeta?.chordAnalysis?.error || "").trim()) {
             addDiag(`Chord analysis detail: ${String(dataMeta.chordAnalysis.error).trim()}`);
           }
         }
-        if (Array.isArray(effectiveSections) && effectiveSections.length) {
-          const identityKey =
-            structureIdentityKey ||
-            buildTrackIdentityKey(detectedTrackIdentity, audioTrackQueryFromPath(audioPath));
-          const existingPolicy =
-            identityKey && structurePolicies[identityKey] && typeof structurePolicies[identityKey] === "object"
-              ? structurePolicies[identityKey]
-              : null;
-          let preserveUserStructure = false;
-
-          if (existingPolicy?.manual) {
-            const lockedTrack = String(existingPolicy.trackName || userStructureTrackName).trim() || userStructureTrackName;
-            const lockedMarks = await getTrackMarksCached(lockedTrack);
-            if (lockedMarks.length) {
-              if (identityKey) {
-                structureManualExamples[identityKey] = {
-                  trackName: lockedTrack,
-                  updatedAt: new Date().toISOString(),
-                  sections: lockedMarks
-                };
-                state.audioAnalysis.structureManualExamples = structureManualExamples;
-              }
-              structureTrackName = lockedTrack;
-              pipeline.structureTrackPreserved = true;
-              pipeline.structureDerived = true;
-              preserveUserStructure = true;
-              addDiag(`Structure track preserved: manual user track "${lockedTrack}" is authoritative.`);
-            } else {
-              addDiag(`Structure policy found but track "${lockedTrack}" has no marks; regenerating structure.`);
-            }
-          }
-
-          if (!preserveUserStructure && identityKey) {
-            const lastGeneratedSig = String(structureGeneratedSignatures[identityKey] || "").trim();
-            if (lastGeneratedSig) {
-              const existingAgentMarks = await getTrackMarksCached(generatedStructureTrackName);
-              const existingAgentSig = timingMarksSignature(existingAgentMarks);
-              if (existingAgentMarks.length && existingAgentSig && existingAgentSig !== lastGeneratedSig) {
-                const promote = await writeTrackMarks(userStructureTrackName, existingAgentMarks);
-                if (promote.ok) {
-                  structurePolicies[identityKey] = {
-                    manual: true,
-                    trackName: userStructureTrackName,
-                    lockedAt: new Date().toISOString(),
-                    sourceTrack: generatedStructureTrackName
-                  };
-                  state.audioAnalysis.structurePolicies = structurePolicies;
-                  structureManualExamples[identityKey] = {
-                    trackName: userStructureTrackName,
-                    updatedAt: new Date().toISOString(),
-                    sections: promote.marks
-                  };
-                  state.audioAnalysis.structureManualExamples = structureManualExamples;
-                  structureTrackName = userStructureTrackName;
-                  trackMarksByName[userStructureTrackName] = promote.marks;
-                  pipeline.structureTrackPreserved = true;
-                  pipeline.structureDerived = true;
-                  preserveUserStructure = true;
-                  addDiag(
-                    `Manual structure edits detected; promoted to "${userStructureTrackName}" and disabled auto-overwrite for this track.`
-                  );
-                } else {
-                  addDiag(`Manual-edit promotion failed: ${promote.error}`);
-                }
-              }
-            }
-          }
-
-          if (!preserveUserStructure) {
-            let structureWrite = await writeTrackMarks(generatedStructureTrackName, effectiveSections);
-            if (
-              !structureWrite.ok &&
-              /within sequence duration/i.test(String(structureWrite?.error || "")) &&
-              Array.isArray(beats) &&
-              beats.length
-            ) {
-              const beatCap = beats.reduce((acc, mark) => {
-                const start = Number(mark?.startMs);
-                const end = Number(mark?.endMs);
-                const candidate =
-                  Number.isFinite(end) && end > start
-                    ? end
-                    : (Number.isFinite(start) ? start + 1 : 0);
-                return Math.max(acc, candidate);
-              }, 0);
-              const strictCap = Math.max(1, Math.round(beatCap));
-              const strictMaxEnd = Math.max(1, strictCap - 1);
-              const cappedSections = effectiveSections
-                .map((mark) => {
-                  const start = Math.max(0, Math.round(Number(mark?.startMs)));
-                  if (!Number.isFinite(start) || start >= strictCap) return null;
-                  let end = Math.round(Number(mark?.endMs));
-                  if (!Number.isFinite(end) || end <= start) end = start + 1;
-                  end = Math.min(end, strictMaxEnd);
-                  if (end <= start) return null;
-                  const row = { startMs: start, endMs: end };
-                  const label = String(mark?.label || "").trim();
-                  if (label) row.label = label;
-                  return row;
-                })
-                .filter(Boolean);
-              if (cappedSections.length) {
-                structureWrite = await writeTrackMarks(generatedStructureTrackName, cappedSections);
-                if (structureWrite.ok) {
-                  addDiag(
-                    `Structure track write retried with beat-derived cap ${strictCap}ms (range ${marksRange(cappedSections)}).`
-                  );
-                }
-              }
-            }
-            if (structureWrite.ok) {
-              structureTrackName = generatedStructureTrackName;
-              trackMarksByName[generatedStructureTrackName] = structureWrite.marks;
-              pipeline.structureTrackWritten = true;
-              pipeline.structureDerived = true;
-              if (identityKey) {
-                structureGeneratedSignatures[identityKey] = timingMarksSignature(structureWrite.marks);
-                state.audioAnalysis.structureGeneratedSignatures = structureGeneratedSignatures;
-                if (!structurePolicies[identityKey]?.manual) {
-                  structurePolicies[identityKey] = {
-                    manual: false,
-                    trackName: generatedStructureTrackName,
-                    updatedAt: new Date().toISOString()
-                  };
-                  state.audioAnalysis.structurePolicies = structurePolicies;
-                }
-              }
-            } else {
-              addDiag(
-                `Structure track write failed: ${structureWrite.error} | normalized range=${marksRange(structureWrite?.marks || effectiveSections)}`
-              );
-            }
-          }
-        } else {
-          addDiag("Analysis service returned no song sections.");
-        }
-        if (Array.isArray(lyrics) && lyrics.length) {
-          const lyricsApply = await applyGeneratedTimingTrackWithManualPolicy({
-            identityKey: structureIdentityKey,
-            kind: "lyrics",
-            generatedTrackName: generatedLyricsTrackName,
-            userTrackName: userLyricsTrackName,
-            marks: lyrics
-          });
-          if (lyricsApply.ok) {
-            const lyricsTrackName = lyricsApply.trackName || generatedLyricsTrackName;
-            trackMarksByName[lyricsTrackName] = lyricsApply.marks;
-            if (lyricsApply.written) pipeline.lyricsTrackWritten = true;
-            if (lyricsApply.preserved) pipeline.lyricsTrackPreserved = true;
-            pipeline.lyricsDetected = true;
-            pipeline.timingDerived = true;
-            if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
-              addDiag(`Lyrics global shift applied: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
-            }
-          } else {
-            addDiag(`Lyrics track write failed: ${lyricsApply.error}`);
-          }
-        } else {
+        if (!effectiveSections.length) addDiag("Analysis service returned no song sections.");
+        if (!lyrics.length) {
           addDiag("Analysis service returned no synced lyrics.");
           if (String(dataMeta.lyricsSourceError || "").trim()) {
             addDiag(`Lyrics source detail: ${String(dataMeta.lyricsSourceError).trim()}`);
@@ -8928,70 +8595,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     }
   }
 
-  try {
-    const tracksResp = await getTimingTracks(state.endpoint);
-    tracks = tracksResp?.data?.tracks || [];
-    state.timingTracks = tracks;
-  } catch (err) {
-    addDiag(`timing.getTracks refresh failed: ${String(err?.message || err)}`);
-  }
-
-  const trackNames = getTimingTrackNames(state.timingTracks || []);
-  const explicitCandidates = [
-    generatedBeatTrackName,
-    beatTrackName,
-    userBeatTrackName,
-    generatedBarsTrackName,
-    userBarsTrackName,
-    generatedChordsTrackName,
-    userChordsTrackName,
-    structureTrackName,
-    generatedStructureTrackName,
-    userStructureTrackName,
-    generatedLyricsTrackName,
-    userLyricsTrackName
-  ]
-    .map((name) => String(name || "").trim())
-    .filter(Boolean);
-  const candidateTracks = Array.from(
-    new Set([
-      ...explicitCandidates,
-      ...trackNames.filter((name) => /section|song|structure|phrase|beat|tempo|bpm|bar|lyric|chord/i.test(name)).slice(0, 8)
-    ])
-  );
-  for (const trackName of candidateTracks) {
-    try {
-      const marksResp = await getTimingMarks(state.endpoint, trackName);
-      trackMarksByName[trackName] = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
-    } catch (err) {
-      addDiag(`timing.getMarks failed for ${trackName}: ${String(err?.message || err)}`);
-      if (!Array.isArray(trackMarksByName[trackName]) || trackMarksByName[trackName].length === 0) {
-        trackMarksByName[trackName] = [];
-      }
-    }
-  }
-
-  const structureTrack =
-    structureTrackName ||
-    pickTrackName(state.timingTracks || [], [
-      /^song\s*structure$/i,
-      /^xd:\s*song\s*structure\s*\(agent\)$/i,
-      /^xd:\s*song\s*structure$/i,
-      /section|song|structure|phrase|form/i
-    ]);
-  if (structureTrack && Array.isArray(trackMarksByName[structureTrack]) && trackMarksByName[structureTrack].length > 0) {
-    const built = buildSectionSuggestions(trackMarksByName[structureTrack]);
-    state.ui.sectionTrackName = structureTrack;
-    state.sectionSuggestions = built.labels;
-    state.sectionStartByLabel = built.startByLabel;
-    pipeline.structureDerived = built.labels.length > 0;
-  } else {
-    try {
-      await retry(() => fetchSectionSuggestions({ refreshTracks: false, selectedTrack: structureTrack || "" }), 3, 300);
-    } catch (err) {
-      addDiag(`Section suggestion refresh failed: ${String(err?.message || err)}`);
-    }
-  }
+  const analysisTracks = analysisTrackNames.map((name) => ({ name }));
 
   const songContextResearch = await runSongContextResearch({
     audioPath,
@@ -9115,63 +8719,11 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
         }
 
         if ((bestErr <= 0.08 || forcedScale) && Math.abs(bestScale - 1) > 0.01) {
-          if (beatTrackManualLock || barsTrackManualLock) {
-            addDiag("Tempo correction skipped: beat/bar track is user-locked due to manual edits.");
-            webValidation.correctionApplied = false;
-          } else {
-            const currentBeats = Array.isArray(trackMarksByName[generatedBeatTrackName])
-              ? trackMarksByName[generatedBeatTrackName]
-              : [];
-            const currentBars = Array.isArray(trackMarksByName[generatedBarsTrackName])
-              ? trackMarksByName[generatedBarsTrackName]
-              : [];
-            const halfTimeDoubleMode = bestScale > 1.01 && Math.round(bestScale) === 2 && currentBars.length > 0;
-            let correctedBeats = currentBeats;
-            let correctedBars = [];
-            if (halfTimeDoubleMode) {
-              correctedBeats = subdivideBeatsByFactor(currentBeats, 2);
-              correctedBeats = relabelBeats(correctedBeats, bpb, 1);
-              correctedBars = barsFromBeats(correctedBeats, bpb);
-            } else if (bestScale < 0.99) {
-              correctedBeats = mergeBeatsByFactor(currentBeats, Math.max(2, Math.round(1 / bestScale)));
-            } else if (bestScale > 1.01) {
-              correctedBeats = subdivideBeatsByFactor(currentBeats, Math.max(2, Math.round(bestScale)));
-            }
-            correctedBeats = relabelBeats(correctedBeats, bpb, 1);
-            correctedBars = barsFromBeats(correctedBeats, bpb);
-            const beatFixWrite = await writeTrackMarks(generatedBeatTrackName, correctedBeats);
-            const barFixWrite = await writeTrackMarks(generatedBarsTrackName, correctedBars);
-            if (beatFixWrite.ok) {
-              trackMarksByName[generatedBeatTrackName] = beatFixWrite.marks;
-              pipeline.beatTrackWritten = true;
-              if (structureIdentityKey) {
-                const beatKey = `${structureIdentityKey}::beat`;
-                timingGeneratedSignatures[beatKey] = timingMarksSignature(beatFixWrite.marks);
-                state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
-              }
-            } else {
-              addDiag(`Beat correction write failed: ${beatFixWrite.error}`);
-            }
-            if (barFixWrite.ok) {
-              trackMarksByName[generatedBarsTrackName] = barFixWrite.marks;
-              pipeline.barTrackWritten = true;
-              if (structureIdentityKey) {
-                const barKey = `${structureIdentityKey}::bar`;
-                timingGeneratedSignatures[barKey] = timingMarksSignature(barFixWrite.marks);
-                state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
-              }
-            } else {
-              addDiag(`Bars correction write failed: ${barFixWrite.error}`);
-            }
-            detectedTempoBpm = Math.round(serviceTempo * bestScale * 100) / 100;
-            if (halfTimeDoubleMode) {
-              addDiag("Tempo correction mode: half-time doubling adjustment (beats and bars doubled).");
-            }
-            addDiag(
-              `Tempo corrected by factor ${bestScale.toFixed(2)} using meter-aware web validation (${serviceTempo} -> ${detectedTempoBpm} BPM, beatsPerBar=${bpb}).`
-            );
-            webValidation.correctionApplied = true;
-          }
+          detectedTempoBpm = Math.round(serviceTempo * bestScale * 100) / 100;
+          addDiag(
+            `Tempo correction suggested by factor ${bestScale.toFixed(2)} using meter-aware web validation (${serviceTempo} -> ${detectedTempoBpm} BPM, beatsPerBar=${bpb}).`
+          );
+          webValidation.correctionApplied = false;
         } else if (bestErr > 0.08) {
           addDiag(
             `Tempo mismatch: service=${detectedTempoBpm} BPM, web=${Number.isFinite(webBeatBpm) ? webBeatBpm : (Number.isFinite(wbpm) ? wbpm : "n/a")} BPM`
@@ -9195,7 +8747,7 @@ async function runAudioAnalysisPipeline({ refreshTracks = true } = {}) {
     mediaMetadata,
     sectionSuggestions: state.sectionSuggestions,
     sectionStartByLabel: state.sectionStartByLabel,
-    timingTracks: state.timingTracks,
+    timingTracks: analysisTracks,
     trackMarksByName,
     songContextSummary: effectiveSongContext,
     detectedTimeSignature,
@@ -9250,8 +8802,8 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
     timing: {
       bpm: Number.isFinite(Number(timing?.tempoEstimate)) ? Number(timing.tempoEstimate) : null,
       timeSignature: String(timing?.timeSignature || "unknown"),
-      beatsTrack: "XD: Beats",
-      barsTrack: "XD: Bars"
+      beatsArtifact: timing?.hasBeatTrack ? "beats" : "",
+      barsArtifact: timing?.hasBarTrack ? "bars" : ""
     },
     structure: {
       sections: structure,
@@ -9260,11 +8812,11 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
     },
     lyrics: {
       hasSyncedLyrics: Boolean(timing?.hasLyricsTrack),
-      lyricsTrackName: timing?.hasLyricsTrack ? "XD: Lyrics" : ""
+      lyricsArtifact: timing?.hasLyricsTrack ? "lyrics" : ""
     },
     chords: {
       hasChords: Boolean(timing?.hasChordTrack),
-      chordsTrackName: timing?.hasChordTrack ? "XD: Chords" : "",
+      chordsArtifact: timing?.hasChordTrack ? "chords" : "",
       confidence: timing?.hasChordTrack ? "medium" : "low"
     },
     briefSeed: {
@@ -9342,39 +8894,9 @@ async function onAnalyzeAudio() {
     for (const row of Array.isArray(result?.diagnostics) ? result.diagnostics : []) {
       pushDiagnostic("warning", `Audio analysis: ${row}`);
     }
-    try {
-      const refreshRes = await forceSequenceRefreshAfterAnalysis();
-      if (refreshRes?.ok) {
-        pushDiagnostic("info", `Audio analysis: forced xLights sequence refresh (${refreshRes.filePath}).`);
-        if (refreshRes?.warning === "save-failed-reopened") {
-          pushDiagnostic(
-            "warning",
-            `Audio analysis: sequence save failed, but reopen succeeded (${refreshRes.error}).`
-          );
-        }
-      } else if (refreshRes?.reason === "auto-save-disabled") {
-        pushDiagnostic(
-          "info",
-          "Audio analysis: skipped forced xLights refresh (auto-save/reopen disabled by policy)."
-        );
-      } else if (refreshRes?.reason === "save-failed") {
-        pushDiagnostic(
-          "warning",
-          `Audio analysis: sequence save failed; skipped reopen to avoid dropping in-memory timing tracks (${refreshRes.error}).`
-        );
-      } else if (refreshRes?.reason === "reopen-failed") {
-        pushDiagnostic(
-          "warning",
-          `Audio analysis: sequence reopen failed after analysis (${refreshRes.error}).`
-        );
-      }
-    } catch (err) {
-      pushDiagnostic("warning", `Audio analysis: force refresh failed: ${String(err?.message || err)}`);
-    }
-    await onRefresh();
     state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
     state.audioAnalysis.pipeline = result.pipeline || null;
-    setStatus("info", "Audio analysis pipeline complete.");
+    setStatus("info", "Audio analysis complete.");
     endOrchestrationRun(orchestrationRun, { status: "ok", summary: "audio analysis complete" });
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "audio_pipeline", "error", String(err?.message || err));
@@ -9505,12 +9027,19 @@ function projectScreen() {
         <h3>Project Summary</h3>
         <div class="banner">Current Project: <strong>${state.projectName}</strong></div>
         <div class="field">
+          <label>Project Name</label>
+          <div class="row">
+            <input id="project-name-input" value="${state.projectName || ""}" placeholder="Project name" />
+            <button id="rename-project">Rename Project</button>
+          </div>
+        </div>
+        <div class="field">
           <label>Creative Direction (Project Level)</label>
           <textarea id="project-concept-input" rows="3" placeholder="High-level show concept and tone...">${String(state.projectConcept || "")}</textarea>
           <p class="banner">Project-level concept only. Sequence-specific inspiration lives in the Inspiration tab.</p>
         </div>
         <div class="field">
-          <label>Project Metadata Folder</label>
+          <label>Project Root Folder</label>
           <div class="row">
             <input id="project-metadata-root-input" value="${state.projectMetadataRoot || ""}" placeholder="Default: app data folder" />
           </div>
@@ -9527,6 +9056,12 @@ function projectScreen() {
           <div class="row">
             <input id="showfolder-input" value="${state.showFolder}" />
             <button id="browse-showfolder">Browse...</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Media Path</label>
+          <div class="row">
+            <input id="mediapath-input" value="${state.mediaPath || ""}" placeholder="Optional default media root or reference path" />
           </div>
         </div>
         <p class="banner">Show Directory inventory: ${state.showDirectoryStats?.xsqCount || 0} .xsq | ${state.showDirectoryStats?.xdmetaCount || 0} .xdmeta</p>
@@ -9553,11 +9088,11 @@ function sequenceScreen() {
     ["Metadata read", Boolean(audioPipeline?.mediaMetadataRead)],
     ["Analysis service reached", Boolean(audioPipeline?.analysisServiceCalled)],
     ["Analysis service succeeded", Boolean(audioPipeline?.analysisServiceSucceeded)],
-    ["Beat track written", Boolean(audioPipeline?.beatTrackWritten)],
-    ["Bars track written", Boolean(audioPipeline?.barTrackWritten)],
-    ["Chords track written", Boolean(audioPipeline?.chordTrackWritten)],
-    ["Song structure written", Boolean(audioPipeline?.structureTrackWritten)],
-    ["Lyrics track written", Boolean(audioPipeline?.lyricsTrackWritten)],
+    ["Beat markers ready", Boolean(audioPipeline?.beatTrackWritten)],
+    ["Bar markers ready", Boolean(audioPipeline?.barTrackWritten)],
+    ["Chord markers ready", Boolean(audioPipeline?.chordTrackWritten)],
+    ["Structure markers ready", Boolean(audioPipeline?.structureTrackWritten)],
+    ["Lyrics markers ready", Boolean(audioPipeline?.lyricsTrackWritten)],
     ["Song context derived", Boolean(audioPipeline?.webContextDerived)]
   ];
   const audioAnalyzedAt = state.audioAnalysis?.lastAnalyzedAt
@@ -10685,6 +10220,9 @@ function bindEvents() {
 
   const saveProjectAsBtn = app.querySelector("#save-project-as");
   if (saveProjectAsBtn) saveProjectAsBtn.addEventListener("click", onSaveProjectAs);
+
+  const renameProjectBtn = app.querySelector("#rename-project");
+  if (renameProjectBtn) renameProjectBtn.addEventListener("click", onRenameProject);
 
   const resetProjectBtn = app.querySelector("#reset-project");
   if (resetProjectBtn) resetProjectBtn.addEventListener("click", onResetProjectWorkspace);

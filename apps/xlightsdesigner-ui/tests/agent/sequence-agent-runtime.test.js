@@ -74,6 +74,7 @@ test("sequence agent input gate validates context.layoutMode when provided", () 
       },
       intentHandoff: { role: "designer_dialog" },
       safety: {
+        timingOwnership: [],
         manualXdLocks: [],
         allowTimingWrites: true
       }

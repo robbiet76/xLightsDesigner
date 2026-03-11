@@ -71,10 +71,10 @@ Boundary summary:
   - [x] Deterministic tests added for mixed model/effect scenarios.
 
 ### Phase E: Timing Track Ownership in Sequence Agent
-- [ ] Move timing-track write decisions fully into `sequence_agent`.
-- [ ] Keep lock-aware behavior for all `XD:` generated timing tracks.
-- [ ] Preserve user-owned manual tracks and never overwrite locked tracks.
-- [ ] Emit explicit diagnostics for skipped writes due to lock policy.
+- [x] Move timing-track write decisions fully into `sequence_agent`.
+- [x] Keep lock-aware behavior for all `XD:` generated timing tracks.
+- [x] Preserve user-owned manual tracks and never overwrite locked tracks.
+- [x] Emit explicit diagnostics for skipped writes due to lock policy.
 
 ### Phase F: Apply Verification and Readback
 - [ ] Add deterministic post-apply verification checks:

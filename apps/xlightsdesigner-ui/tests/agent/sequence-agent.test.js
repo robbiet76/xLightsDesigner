@@ -200,3 +200,19 @@ test("sequence_agent maps mixed model/effect scenarios to validated templates", 
   assert.deepEqual(out.commands[1].dependsOn, ["timing.track.create"]);
   assert.deepEqual(effectCommands[0].dependsOn, ["timing.marks.insert"]);
 });
+
+test("sequence_agent suppresses XD timing writes for manual-owned tracks in planner output", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / shimmer fade"],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"],
+    timingOwnership: [{ sourceTrack: "XD: Sequencer Plan", manual: true, trackName: "Sequencer Plan" }]
+  });
+
+  assert.equal(out.commands.some((row) => row.cmd === "timing.createTrack"), false);
+  assert.equal(out.commands.some((row) => row.cmd === "timing.insertMarks"), false);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create"), true);
+  assert.ok(out.warnings.some((w) => /user-owned\/manual/i.test(String(w))));
+});
