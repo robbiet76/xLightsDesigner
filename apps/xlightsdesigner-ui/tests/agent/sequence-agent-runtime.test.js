@@ -59,3 +59,27 @@ test("classifyOrchestrationFailureReason maps known stages", () => {
   assert.equal(classifyOrchestrationFailureReason("xd_lock_gate"), "lock");
   assert.equal(classifyOrchestrationFailureReason("some-other-stage"), "unknown");
 });
+
+test("sequence agent input gate validates context.layoutMode when provided", () => {
+  const gate = validateSequenceAgentContractGate(
+    "input",
+    {
+      agentRole: "sequence_agent",
+      contractVersion: "1.0",
+      requestId: "req-1",
+      context: {
+        sequenceRevision: "rev-1",
+        endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+        layoutMode: "invalid"
+      },
+      intentHandoff: { role: "designer_dialog" },
+      safety: {
+        manualXdLocks: [],
+        allowTimingWrites: true
+      }
+    },
+    "orch-layout-mode"
+  );
+  assert.equal(gate.ok, false);
+  assert.ok(gate.report.errors.some((e) => /context\\.layoutMode must be 2d\\|3d/i.test(String(e))));
+});

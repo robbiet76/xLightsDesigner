@@ -45,6 +45,14 @@ import { analyzeAudioContext } from "./agent/audio-analyzer.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/command-graph.js";
+import {
+  classifyDepthBands,
+  collectSpatialNodes,
+  computeSceneBounds,
+  depthSemanticToZ,
+  inferLayoutMode,
+  normalizeDepthSemanticTag
+} from "./agent/scene-graph-queries.js";
 
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
@@ -147,6 +155,9 @@ const defaultState = {
     sceneGraphReady: false,
     sceneGraphSource: "",
     sceneGraphWarnings: [],
+    sceneGraphSpatialNodeCount: 0,
+    sceneGraphLayoutMode: "2d",
+    sceneGraphDepthTagFallbackCount: 0,
     sequenceOpen: false,
     runtimeReady: false,
     desktopFileDialogReady: false,
@@ -253,7 +264,17 @@ const defaultState = {
       groupCount: 0,
       submodelCount: 0,
       displayElementCount: 0,
-      hasSpatialTransforms: false
+      hasSpatialTransforms: false,
+      spatialNodeCount: 0,
+      layoutMode: "2d",
+      depthPlanningEnabled: false,
+      depthTagFallbackCount: 0,
+      bounds: null,
+      depthBands: {
+        front: 0,
+        mid: 0,
+        rear: 0
+      }
     },
     warnings: []
   },
@@ -368,6 +389,15 @@ if (typeof state.health?.sceneGraphSource !== "string") {
 if (!Array.isArray(state.health?.sceneGraphWarnings)) {
   state.health.sceneGraphWarnings = [];
 }
+if (!Number.isFinite(Number(state.health?.sceneGraphSpatialNodeCount))) {
+  state.health.sceneGraphSpatialNodeCount = 0;
+}
+if (!Number.isFinite(Number(state.health?.sceneGraphDepthTagFallbackCount))) {
+  state.health.sceneGraphDepthTagFallbackCount = 0;
+}
+if (!["2d", "3d"].includes(String(state.health?.sceneGraphLayoutMode || "").toLowerCase())) {
+  state.health.sceneGraphLayoutMode = "2d";
+}
 if (typeof state.health?.agentRegistryValid !== "boolean") {
   state.health.agentRegistryValid = false;
 }
@@ -400,7 +430,20 @@ if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterTyp
 if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
 if (!isPlainObject(state.sceneGraph)) {
   state.sceneGraph = structuredClone(defaultState.sceneGraph);
+} else {
+  state.sceneGraph = {
+    ...structuredClone(defaultState.sceneGraph),
+    ...state.sceneGraph,
+    stats: {
+      ...structuredClone(defaultState.sceneGraph.stats),
+      ...(isPlainObject(state.sceneGraph.stats) ? state.sceneGraph.stats : {})
+    }
+  };
 }
+if (!["2d", "3d"].includes(String(state.sceneGraph?.stats?.layoutMode || "").toLowerCase())) {
+  state.sceneGraph.stats.layoutMode = "2d";
+}
+state.sceneGraph.stats.depthPlanningEnabled = state.sceneGraph.stats.layoutMode === "3d";
 if (!Array.isArray(state.proposed) || state.proposed.length === 0) {
   state.proposed = buildDemoProposedLines();
   state.flags.hasDraftProposal = true;
@@ -2318,6 +2361,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
       sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+      layoutMode: currentLayoutMode(),
       intentHandoff,
       analysisHandoff,
       planningScope: {
@@ -2380,7 +2424,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         intentHandoff,
         sourceLines: scopedSource,
         baseRevision: state.draftBaseRevision,
-        capabilityCommands: state.health.capabilityCommands || []
+        capabilityCommands: state.health.capabilityCommands || [],
+        layoutMode: currentLayoutMode()
       });
       emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
       if (fallbackReason) {
@@ -2739,6 +2784,7 @@ function onGenerate(intentOverride = "") {
     requestId: `${orchestrationRun.id}-generate`,
     endpoint: state.endpoint,
     sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+    layoutMode: currentLayoutMode(),
     intentHandoff,
     analysisHandoff,
     planningScope: {
@@ -2771,7 +2817,8 @@ function onGenerate(intentOverride = "") {
       intentHandoff,
       sourceLines: proposalSeedLines,
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
-      capabilityCommands: state.health.capabilityCommands || []
+      capabilityCommands: state.health.capabilityCommands || [],
+      layoutMode: currentLayoutMode()
     });
     emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequence_agent plan built");
@@ -2788,10 +2835,11 @@ function onGenerate(intentOverride = "") {
       commands: [],
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       validationReady: false,
-      metadata: {
-        mode: String(intentHandoff?.mode || "create"),
-        scope: {
-          sections: selected,
+        metadata: {
+          layoutMode: currentLayoutMode(),
+          mode: String(intentHandoff?.mode || "create"),
+          scope: {
+            sections: selected,
           targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
           tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
         },
@@ -2812,6 +2860,7 @@ function onGenerate(intentOverride = "") {
     metadata: isPlainObject(sequencerPlan.metadata)
       ? sequencerPlan.metadata
       : {
+          layoutMode: currentLayoutMode(),
           mode: String(intentHandoff?.mode || "create"),
           scope: {
             sections: selected,
@@ -2923,6 +2972,11 @@ function toFiniteNumberOrNull(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function currentLayoutMode() {
+  const mode = String(state.sceneGraph?.stats?.layoutMode || state.health?.sceneGraphLayoutMode || "").toLowerCase();
+  return mode === "3d" ? "3d" : "2d";
+}
+
 function normalizeVector3(source) {
   const row = isPlainObject(source) ? source : {};
   return {
@@ -2930,6 +2984,32 @@ function normalizeVector3(source) {
     y: toFiniteNumberOrNull(row.y),
     z: toFiniteNumberOrNull(row.z)
   };
+}
+
+function buildDepthSemanticByTargetId(assignments = []) {
+  const rows = Array.isArray(assignments) ? assignments : [];
+  const out = new Map();
+  for (const row of rows) {
+    const targetId = String(row?.targetId || "").trim();
+    if (!targetId) continue;
+    const tags = Array.isArray(row?.tags) ? row.tags : [];
+    let semantic = "";
+    for (const tag of tags) {
+      const mapped = normalizeDepthSemanticTag(tag);
+      if (mapped) semantic = mapped;
+    }
+    if (!semantic) continue;
+    out.set(targetId, semantic);
+  }
+  return out;
+}
+
+function resolveDepthFallbackZForModelNode(node = {}, depthSemanticByTargetId = new Map()) {
+  const id = String(node?.id || "").trim();
+  if (!id || !(depthSemanticByTargetId instanceof Map)) return null;
+  const semantic = depthSemanticByTargetId.get(id);
+  if (!semantic) return null;
+  return depthSemanticToZ(semantic);
 }
 
 function normalizeSceneGraphModelNode(model = {}, source = "scene") {
@@ -2960,14 +3040,45 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   };
 }
 
-function buildSceneGraphFromData({ sceneData = {}, models = [], submodels = [], source = "", warnings = [] } = {}) {
+function buildSceneGraphFromData({
+  sceneData = {},
+  models = [],
+  submodels = [],
+  metadataAssignments = [],
+  source = "",
+  warnings = []
+} = {}) {
   const modelsById = {};
   const groupsById = {};
+  let depthTagFallbackCount = 0;
+  const depthSemanticByTargetId = buildDepthSemanticByTargetId(metadataAssignments);
+  const cameras = (Array.isArray(sceneData?.cameras) ? sceneData.cameras : [])
+    .map((row) => ({
+      name: String(row?.name || "").trim(),
+      type: String(row?.type || "").trim(),
+      isDefault: Boolean(row?.isDefault),
+      position: normalizeVector3(row?.position),
+      anglesDeg: normalizeVector3(row?.anglesDeg),
+      distance: toFiniteNumberOrNull(row?.distance),
+      zoom: toFiniteNumberOrNull(row?.zoom)
+    }))
+    .filter((row) => row.name);
+  const layoutMode = inferLayoutMode({ cameras });
   const sceneModels = Array.isArray(sceneData?.models) ? sceneData.models : [];
   const modelRows = sceneModels.length ? sceneModels : (Array.isArray(models) ? models : []);
   for (const row of modelRows) {
     const node = normalizeSceneGraphModelNode(row, sceneModels.length ? "layout.getScene" : "layout.getModels");
     if (!node.id) continue;
+    if (layoutMode === "2d") {
+      const currentZ = toFiniteNumberOrNull(node?.transform?.position?.z);
+      if (currentZ === 0) {
+        const fallbackZ = resolveDepthFallbackZForModelNode(node, depthSemanticByTargetId);
+        if (fallbackZ != null) {
+          node.transform.position.z = fallbackZ;
+          depthTagFallbackCount += 1;
+        }
+      }
+    }
     if (node.type === "group") groupsById[node.id] = node;
     else modelsById[node.id] = node;
   }
@@ -3006,23 +3117,19 @@ function buildSceneGraphFromData({ sceneData = {}, models = [], submodels = [], 
     }))
     .filter((row) => row.name);
 
-  const cameras = (Array.isArray(sceneData?.cameras) ? sceneData.cameras : [])
-    .map((row) => ({
-      name: String(row?.name || "").trim(),
-      type: String(row?.type || "").trim(),
-      isDefault: Boolean(row?.isDefault),
-      position: normalizeVector3(row?.position),
-      anglesDeg: normalizeVector3(row?.anglesDeg),
-      distance: toFiniteNumberOrNull(row?.distance),
-      zoom: toFiniteNumberOrNull(row?.zoom)
-    }))
-    .filter((row) => row.name);
-
   const allModelNodes = Object.values(modelsById).concat(Object.values(groupsById));
   const hasSpatialTransforms = allModelNodes.some((row) => {
     const p = row?.transform?.position || {};
     return p.x !== null || p.y !== null || p.z !== null;
   });
+  const spatialNodes = collectSpatialNodes({
+    modelsById,
+    groupsById,
+    submodelsById
+  });
+  const bounds = computeSceneBounds(spatialNodes);
+  const depthBands = classifyDepthBands({ modelsById, groupsById, submodelsById });
+  const depthPlanningEnabled = layoutMode === "3d";
 
   return {
     loaded: true,
@@ -3039,7 +3146,17 @@ function buildSceneGraphFromData({ sceneData = {}, models = [], submodels = [], 
       groupCount: Object.keys(groupsById).length,
       submodelCount: Object.keys(submodelsById).length,
       displayElementCount: displayElements.length,
-      hasSpatialTransforms
+      hasSpatialTransforms,
+      spatialNodeCount: spatialNodes.length,
+      layoutMode,
+      depthPlanningEnabled,
+      depthTagFallbackCount,
+      bounds,
+      depthBands: {
+        front: Array.isArray(depthBands.front) ? depthBands.front.length : 0,
+        mid: Array.isArray(depthBands.mid) ? depthBands.mid.length : 0,
+        rear: Array.isArray(depthBands.rear) ? depthBands.rear.length : 0
+      }
     },
     warnings: Array.isArray(warnings) ? warnings.filter(Boolean) : []
   };
@@ -3052,6 +3169,7 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
       sceneData: body?.data && isPlainObject(body.data) ? body.data : {},
       models,
       submodels,
+      metadataAssignments: state.metadata?.assignments || [],
       source: "layout.getScene",
       warnings: []
     });
@@ -3059,6 +3177,9 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
     state.health.sceneGraphReady = true;
     state.health.sceneGraphSource = "layout.getScene";
     state.health.sceneGraphWarnings = graph.warnings.slice(0, 6);
+    state.health.sceneGraphSpatialNodeCount = Number(graph?.stats?.spatialNodeCount || 0);
+    state.health.sceneGraphLayoutMode = String(graph?.stats?.layoutMode || "unknown");
+    state.health.sceneGraphDepthTagFallbackCount = Number(graph?.stats?.depthTagFallbackCount || 0);
     return;
   } catch (err) {
     const warning = `Scene graph fallback active: ${String(err?.message || "layout.getScene unavailable")}`;
@@ -3066,6 +3187,7 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
       sceneData: {},
       models,
       submodels,
+      metadataAssignments: state.metadata?.assignments || [],
       source: "fallback.models-submodels",
       warnings: [warning]
     });
@@ -3073,6 +3195,9 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
     state.health.sceneGraphReady = true;
     state.health.sceneGraphSource = "fallback.models-submodels";
     state.health.sceneGraphWarnings = graph.warnings.slice(0, 6);
+    state.health.sceneGraphSpatialNodeCount = Number(graph?.stats?.spatialNodeCount || 0);
+    state.health.sceneGraphLayoutMode = String(graph?.stats?.layoutMode || "unknown");
+    state.health.sceneGraphDepthTagFallbackCount = Number(graph?.stats?.depthTagFallbackCount || 0);
   }
 }
 
@@ -9861,6 +9986,9 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
         <div class="kv"><div class="k">Scene Graph</div><div>${state.health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
         <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
+        <div class="kv"><div class="k">Layout Mode</div><div>${String(state.health.sceneGraphLayoutMode || "2d").toUpperCase()}</div></div>
+        <div class="kv"><div class="k">Spatial Nodes</div><div>${Number(state.health.sceneGraphSpatialNodeCount || 0)}</div></div>
+        <div class="kv"><div class="k">Depth Tag Z Fallbacks</div><div>${Number(state.health.sceneGraphDepthTagFallbackCount || 0)}</div></div>
         ${
           Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
             ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`

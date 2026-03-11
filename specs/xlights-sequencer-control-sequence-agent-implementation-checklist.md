@@ -50,9 +50,10 @@ Boundary summary:
 
 ### Phase I: xLights Domain Semantics (layout/models/groups/submodels/effects)
 - [ ] Show layout and model spatial placement:
-  - [ ] Pre-gate complete (source + API coverage + approved gaps).
-  - [ ] Canonical scene graph schema defined in app layer.
-  - [ ] Spatial query helpers implemented (region/proximity/orientation).
+  - [x] Pre-gate complete (source + API coverage + approved gaps).
+  - [x] Canonical scene graph schema defined in app layer.
+  - [x] Spatial query helpers implemented (region/proximity/orientation).
+  - [x] Layout mode awareness wired (`2d|3d`) with 3D-operation gating policy while preserving depth semantics in both modes.
 - [ ] Model types and functionality:
   - [ ] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Model type ontology + constraints documented and encoded.

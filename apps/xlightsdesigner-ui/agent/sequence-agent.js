@@ -16,6 +16,11 @@ function normArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
+function normLayoutMode(value = "") {
+  const key = String(value || "").trim().toLowerCase();
+  return key === "3d" ? "3d" : "2d";
+}
+
 function classifyStageFailure(stage = "") {
   const key = String(stage || "").trim();
   if (key === "scope_resolution") return "scope";
@@ -147,6 +152,7 @@ export function buildSequenceAgentPlan({
   sourceLines = [],
   baseRevision = "unknown",
   capabilityCommands = [],
+  layoutMode = "2d",
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -156,6 +162,10 @@ export function buildSequenceAgentPlan({
   const hasAnalysis = Boolean(analysisHandoff && typeof analysisHandoff === "object");
   if (!hasAnalysis) {
     warnings.push("analysis_handoff_v1 missing; running reduced-confidence plan synthesis.");
+  }
+  const normalizedLayoutMode = normLayoutMode(layoutMode);
+  if (normalizedLayoutMode === "2d") {
+    warnings.push("Layout mode is 2D: depth semantics allowed, camera/projection-specific 3D operations are disabled.");
   }
 
   const safeAnalysis = hasAnalysis ? analysisHandoff : {};
@@ -206,6 +216,7 @@ export function buildSequenceAgentPlan({
     executionLines: Array.isArray(graph.executionLines) ? graph.executionLines : [],
     stageTelemetry,
     metadata: {
+      layoutMode: normalizedLayoutMode,
       mode: scope.mode,
       scope: {
         sections: scope.sectionNames,

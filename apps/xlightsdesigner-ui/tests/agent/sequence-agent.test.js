@@ -141,3 +141,25 @@ test("sequence_agent blocks plan synthesis when required capabilities are missin
     }
   );
 });
+
+test("sequence_agent annotates layout mode and warns for 2d operation mode", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / pulse"],
+    layoutMode: "2d"
+  });
+  assert.equal(out.metadata.layoutMode, "2d");
+  assert.ok(out.warnings.some((w) => /layout mode is 2d/i.test(String(w))));
+});
+
+test("sequence_agent keeps 3d mode without 2d warning", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / pulse"],
+    layoutMode: "3d"
+  });
+  assert.equal(out.metadata.layoutMode, "3d");
+  assert.equal(out.warnings.some((w) => /layout mode is 2d/i.test(String(w))), false);
+});
