@@ -99,6 +99,30 @@ export async function getModels(endpoint) {
   return postCommand(endpoint, "layout.getModels", {});
 }
 
+export async function getModel(endpoint, name) {
+  return postCommand(endpoint, "layout.getModel", { name });
+}
+
+export async function getModelGeometry(endpoint, name) {
+  return postCommand(endpoint, "layout.getModelGeometry", { name });
+}
+
+export async function getModelNodes(endpoint, params = {}) {
+  return postCommand(endpoint, "layout.getModelNodes", params);
+}
+
+export async function getCameras(endpoint) {
+  return postCommand(endpoint, "layout.getCameras", {});
+}
+
+export async function getLayoutScene(endpoint, params = {}) {
+  return postCommand(endpoint, "layout.getScene", params);
+}
+
+export async function getLayoutViews(endpoint) {
+  return postCommand(endpoint, "layout.getViews", {});
+}
+
 export async function getDisplayElements(endpoint) {
   return postCommand(endpoint, "layout.getDisplayElements", {});
 }

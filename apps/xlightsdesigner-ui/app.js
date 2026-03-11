@@ -7,6 +7,7 @@ import {
   getMediaStatus,
   getMediaMetadata,
   getModels,
+  getLayoutScene,
   getOpenSequence,
   getRevision,
   getSubmodels,
@@ -143,6 +144,9 @@ const defaultState = {
     hasValidateCommands: false,
     hasJobsGet: false,
     capabilityCommands: [],
+    sceneGraphReady: false,
+    sceneGraphSource: "",
+    sceneGraphWarnings: [],
     sequenceOpen: false,
     runtimeReady: false,
     desktopFileDialogReady: false,
@@ -234,6 +238,25 @@ const defaultState = {
   jobs: [],
   models: [],
   submodels: [],
+  sceneGraph: {
+    loaded: false,
+    source: "",
+    loadedAt: "",
+    modelsById: {},
+    groupsById: {},
+    submodelsById: {},
+    displayElements: [],
+    views: [],
+    cameras: [],
+    stats: {
+      modelCount: 0,
+      groupCount: 0,
+      submodelCount: 0,
+      displayElementCount: 0,
+      hasSpatialTransforms: false
+    },
+    warnings: []
+  },
   timingTracks: [],
   sectionSuggestions: [],
   sectionStartByLabel: {},
@@ -336,6 +359,15 @@ if (typeof state.health?.agentRegistryVersion !== "string") {
 if (!Array.isArray(state.health?.capabilityCommands)) {
   state.health.capabilityCommands = [];
 }
+if (typeof state.health?.sceneGraphReady !== "boolean") {
+  state.health.sceneGraphReady = false;
+}
+if (typeof state.health?.sceneGraphSource !== "string") {
+  state.health.sceneGraphSource = "";
+}
+if (!Array.isArray(state.health?.sceneGraphWarnings)) {
+  state.health.sceneGraphWarnings = [];
+}
 if (typeof state.health?.agentRegistryValid !== "boolean") {
   state.health.agentRegistryValid = false;
 }
@@ -366,6 +398,9 @@ if (!state.orchestrationMatrix || typeof state.orchestrationMatrix !== "object")
 if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterName = "";
 if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
 if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
+if (!isPlainObject(state.sceneGraph)) {
+  state.sceneGraph = structuredClone(defaultState.sceneGraph);
+}
 if (!Array.isArray(state.proposed) || state.proposed.length === 0) {
   state.proposed = buildDemoProposedLines();
   state.flags.hasDraftProposal = true;
@@ -2883,6 +2918,164 @@ function onTogglePlanOnly() {
   render();
 }
 
+function toFiniteNumberOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeVector3(source) {
+  const row = isPlainObject(source) ? source : {};
+  return {
+    x: toFiniteNumberOrNull(row.x),
+    y: toFiniteNumberOrNull(row.y),
+    z: toFiniteNumberOrNull(row.z)
+  };
+}
+
+function normalizeSceneGraphModelNode(model = {}, source = "scene") {
+  const id = String(model?.name || model?.id || "").trim();
+  const type = normalizeElementType(model?.type || "model") || "model";
+  const transform = isPlainObject(model?.transform) ? model.transform : {};
+  const dimensions = isPlainObject(model?.dimensions) ? model.dimensions : {};
+  return {
+    id,
+    name: String(model?.name || id),
+    type,
+    source,
+    layoutGroup: String(model?.layoutGroup || "").trim(),
+    groupNames: Array.isArray(model?.groupNames) ? model.groupNames.map((v) => String(v || "").trim()).filter(Boolean) : [],
+    startChannel: toFiniteNumberOrNull(model?.startChannel),
+    endChannel: toFiniteNumberOrNull(model?.endChannel),
+    transform: {
+      position: normalizeVector3(transform.position),
+      rotationDeg: normalizeVector3(transform.rotationDeg),
+      scale: normalizeVector3(transform.scale)
+    },
+    dimensions: {
+      width: toFiniteNumberOrNull(dimensions.width),
+      height: toFiniteNumberOrNull(dimensions.height),
+      depth: toFiniteNumberOrNull(dimensions.depth)
+    },
+    attributes: isPlainObject(model?.attributes) ? model.attributes : {}
+  };
+}
+
+function buildSceneGraphFromData({ sceneData = {}, models = [], submodels = [], source = "", warnings = [] } = {}) {
+  const modelsById = {};
+  const groupsById = {};
+  const sceneModels = Array.isArray(sceneData?.models) ? sceneData.models : [];
+  const modelRows = sceneModels.length ? sceneModels : (Array.isArray(models) ? models : []);
+  for (const row of modelRows) {
+    const node = normalizeSceneGraphModelNode(row, sceneModels.length ? "layout.getScene" : "layout.getModels");
+    if (!node.id) continue;
+    if (node.type === "group") groupsById[node.id] = node;
+    else modelsById[node.id] = node;
+  }
+
+  const submodelsById = {};
+  for (const row of (Array.isArray(submodels) ? submodels : [])) {
+    const id = String(row?.id || "").trim();
+    if (!id) continue;
+    submodelsById[id] = {
+      id,
+      name: String(row?.name || id).trim(),
+      type: "submodel",
+      source: "layout.getSubmodels",
+      parentId: String(row?.parentId || parseSubmodelParentId(id)).trim(),
+      layoutGroup: String(row?.layoutGroup || "").trim(),
+      groupNames: Array.isArray(row?.groupNames) ? row.groupNames.map((v) => String(v || "").trim()).filter(Boolean) : [],
+      startChannel: toFiniteNumberOrNull(row?.startChannel),
+      endChannel: toFiniteNumberOrNull(row?.endChannel)
+    };
+  }
+
+  const displayElements = (Array.isArray(sceneData?.displayElements) ? sceneData.displayElements : [])
+    .map((row) => ({
+      id: String(row?.id || "").trim(),
+      name: String(row?.name || "").trim(),
+      type: normalizeElementType(row?.type || ""),
+      parentId: String(row?.parentId || "").trim(),
+      orderIndex: Number.isFinite(Number(row?.orderIndex)) ? Number(row.orderIndex) : null
+    }))
+    .filter((row) => row.id);
+
+  const views = (Array.isArray(sceneData?.views) ? sceneData.views : [])
+    .map((row) => ({
+      name: String(row?.name || "").trim(),
+      models: Array.isArray(row?.models) ? row.models.map((v) => String(v || "").trim()).filter(Boolean) : []
+    }))
+    .filter((row) => row.name);
+
+  const cameras = (Array.isArray(sceneData?.cameras) ? sceneData.cameras : [])
+    .map((row) => ({
+      name: String(row?.name || "").trim(),
+      type: String(row?.type || "").trim(),
+      isDefault: Boolean(row?.isDefault),
+      position: normalizeVector3(row?.position),
+      anglesDeg: normalizeVector3(row?.anglesDeg),
+      distance: toFiniteNumberOrNull(row?.distance),
+      zoom: toFiniteNumberOrNull(row?.zoom)
+    }))
+    .filter((row) => row.name);
+
+  const allModelNodes = Object.values(modelsById).concat(Object.values(groupsById));
+  const hasSpatialTransforms = allModelNodes.some((row) => {
+    const p = row?.transform?.position || {};
+    return p.x !== null || p.y !== null || p.z !== null;
+  });
+
+  return {
+    loaded: true,
+    source,
+    loadedAt: new Date().toISOString(),
+    modelsById,
+    groupsById,
+    submodelsById,
+    displayElements,
+    views,
+    cameras,
+    stats: {
+      modelCount: Object.keys(modelsById).length,
+      groupCount: Object.keys(groupsById).length,
+      submodelCount: Object.keys(submodelsById).length,
+      displayElementCount: displayElements.length,
+      hasSpatialTransforms
+    },
+    warnings: Array.isArray(warnings) ? warnings.filter(Boolean) : []
+  };
+}
+
+async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}) {
+  try {
+    const body = await getLayoutScene(state.endpoint, { includeNodes: false, includeCameras: true });
+    const graph = buildSceneGraphFromData({
+      sceneData: body?.data && isPlainObject(body.data) ? body.data : {},
+      models,
+      submodels,
+      source: "layout.getScene",
+      warnings: []
+    });
+    state.sceneGraph = graph;
+    state.health.sceneGraphReady = true;
+    state.health.sceneGraphSource = "layout.getScene";
+    state.health.sceneGraphWarnings = graph.warnings.slice(0, 6);
+    return;
+  } catch (err) {
+    const warning = `Scene graph fallback active: ${String(err?.message || "layout.getScene unavailable")}`;
+    const graph = buildSceneGraphFromData({
+      sceneData: {},
+      models,
+      submodels,
+      source: "fallback.models-submodels",
+      warnings: [warning]
+    });
+    state.sceneGraph = graph;
+    state.health.sceneGraphReady = true;
+    state.health.sceneGraphSource = "fallback.models-submodels";
+    state.health.sceneGraphWarnings = graph.warnings.slice(0, 6);
+  }
+}
+
 async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false } = {}) {
   try {
     const open = await getOpenSequence(state.endpoint);
@@ -2908,6 +3101,11 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
       );
     }
   }
+
+  await refreshSceneGraphFromXLights({
+    models: state.models,
+    submodels: state.submodels
+  });
 
   ensureMetadataTargetSelection();
 }
@@ -9661,6 +9859,13 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
         <div class="kv"><div class="k">Orchestration Summary</div><div>${state.health.orchestrationLastSummary || "none"}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
+        <div class="kv"><div class="k">Scene Graph</div><div>${state.health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
+        <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
+        ${
+          Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
+            ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`
+            : ""
+        }
         <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
