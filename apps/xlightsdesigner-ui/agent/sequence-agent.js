@@ -1,6 +1,7 @@
 import { buildDesignerPlanCommands, estimateImpactCount } from "./command-builders.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
+import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -91,7 +92,8 @@ function stageCommandGraphSynthesis({
   sourceLines = [],
   effect = {},
   warnings = [],
-  capabilityCommands = []
+  capabilityCommands = [],
+  effectCatalog = null
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
@@ -104,6 +106,15 @@ function stageCommandGraphSynthesis({
   }
   if (Array.isArray(capabilityGate.warnings) && capabilityGate.warnings.length) {
     warnings.push(...capabilityGate.warnings);
+  }
+  const effectCompat = evaluateEffectCommandCompatibility({ commands, effectCatalog });
+  if (!effectCompat.ok) {
+    const err = new Error(effectCompat.errors.join("; ") || "effect compatibility gate failed");
+    err.failureCategory = "validate";
+    throw err;
+  }
+  if (Array.isArray(effectCompat.warnings) && effectCompat.warnings.length) {
+    warnings.push(...effectCompat.warnings);
   }
   return {
     commands,
@@ -152,6 +163,7 @@ export function buildSequenceAgentPlan({
   sourceLines = [],
   baseRevision = "unknown",
   capabilityCommands = [],
+  effectCatalog = null,
   layoutMode = "2d",
   stageOverrides = {}
 } = {}) {
@@ -200,7 +212,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.command_graph_synthesis === "function"
       ? stageOverrides.command_graph_synthesis({ sourceLines, effect, warnings })
-      : stageCommandGraphSynthesis({ sourceLines, effect, warnings, capabilityCommands }))
+      : stageCommandGraphSynthesis({ sourceLines, effect, warnings, capabilityCommands, effectCatalog }))
   });
 
   return {

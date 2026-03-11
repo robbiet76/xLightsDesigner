@@ -169,6 +169,14 @@ export async function detectSongStructure(endpoint, params = {}) {
   return postCommand(endpoint, "timing.detectSongStructure", params);
 }
 
+export async function getEffectDefinitions(endpoint) {
+  return postCommand(endpoint, "effects.listDefinitions", {});
+}
+
+export async function getEffectDefinition(endpoint, effectName) {
+  return postCommand(endpoint, "effects.getDefinition", { effectName });
+}
+
 export async function validateCommands(endpoint, commands) {
   return postCommand(endpoint, "system.validateCommands", {
     commands

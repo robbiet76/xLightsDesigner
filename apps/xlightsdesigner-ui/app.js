@@ -15,6 +15,7 @@ import {
   saveSequence,
   getTimingMarks,
   getTimingTracks,
+  getEffectDefinitions,
   createTimingTrack,
   replaceTimingMarks,
   insertTimingMarks,
@@ -32,6 +33,7 @@ import {
 import { buildSequenceAgentPlan } from "./agent/sequence-agent.js";
 import { evaluateSequencePlanCapabilities } from "./agent/sequence-capability-gate.js";
 import { classifyModelDisplayType } from "./agent/model-type-catalog.js";
+import { buildEffectDefinitionCatalog, emptyEffectDefinitionCatalog } from "./agent/effect-definition-catalog.js";
 import {
   buildSequenceAgentApplyResult,
   buildSequenceAgentInput,
@@ -151,6 +153,9 @@ const defaultState = {
     hasValidateCommands: false,
     hasJobsGet: false,
     capabilityCommands: [],
+    effectDefinitionCount: 0,
+    effectCatalogReady: false,
+    effectCatalogError: "",
     sceneGraphReady: false,
     sceneGraphSource: "",
     sceneGraphWarnings: [],
@@ -247,6 +252,7 @@ const defaultState = {
   jobs: [],
   models: [],
   submodels: [],
+  effectCatalog: emptyEffectDefinitionCatalog(),
   sceneGraph: {
     loaded: false,
     source: "",
@@ -378,6 +384,15 @@ if (typeof state.health?.agentRegistryVersion !== "string") {
 if (!Array.isArray(state.health?.capabilityCommands)) {
   state.health.capabilityCommands = [];
 }
+if (!Number.isFinite(Number(state.health?.effectDefinitionCount))) {
+  state.health.effectDefinitionCount = 0;
+}
+if (typeof state.health?.effectCatalogReady !== "boolean") {
+  state.health.effectCatalogReady = false;
+}
+if (typeof state.health?.effectCatalogError !== "string") {
+  state.health.effectCatalogError = "";
+}
 if (typeof state.health?.sceneGraphReady !== "boolean") {
   state.health.sceneGraphReady = false;
 }
@@ -434,6 +449,9 @@ if (!isPlainObject(state.sceneGraph)) {
       ...(isPlainObject(state.sceneGraph.stats) ? state.sceneGraph.stats : {})
     }
   };
+}
+if (!isPlainObject(state.effectCatalog)) {
+  state.effectCatalog = emptyEffectDefinitionCatalog();
 }
 if (!["2d", "3d"].includes(String(state.sceneGraph?.stats?.layoutMode || "").toLowerCase())) {
   state.sceneGraph.stats.layoutMode = "2d";
@@ -2423,6 +2441,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         sourceLines: scopedSource,
         baseRevision: state.draftBaseRevision,
         capabilityCommands: state.health.capabilityCommands || [],
+        effectCatalog: state.effectCatalog,
         layoutMode: currentLayoutMode()
       });
       emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
@@ -2816,6 +2835,7 @@ function onGenerate(intentOverride = "") {
       sourceLines: proposalSeedLines,
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       capabilityCommands: state.health.capabilityCommands || [],
+      effectCatalog: state.effectCatalog,
       layoutMode: currentLayoutMode()
     });
     emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
@@ -3171,6 +3191,35 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
   }
 }
 
+async function refreshEffectCatalogFromXLights() {
+  const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
+  if (!commands.includes("effects.listDefinitions")) {
+    state.effectCatalog = emptyEffectDefinitionCatalog("effects.listDefinitions unavailable");
+    state.health.effectDefinitionCount = 0;
+    state.health.effectCatalogReady = false;
+    state.health.effectCatalogError = "effects.listDefinitions unavailable";
+    return;
+  }
+
+  try {
+    const body = await getEffectDefinitions(state.endpoint);
+    const rows = Array.isArray(body?.data?.effects) ? body.data.effects : [];
+    const catalog = buildEffectDefinitionCatalog(rows, {
+      source: "effects.listDefinitions",
+      loadedAt: new Date().toISOString()
+    });
+    state.effectCatalog = catalog;
+    state.health.effectDefinitionCount = Number(catalog.definitionCount || 0);
+    state.health.effectCatalogReady = true;
+    state.health.effectCatalogError = "";
+  } catch (err) {
+    state.effectCatalog = emptyEffectDefinitionCatalog(String(err?.message || "effect catalog refresh failed"));
+    state.health.effectDefinitionCount = 0;
+    state.health.effectCatalogReady = false;
+    state.health.effectCatalogError = String(err?.message || "effect catalog refresh failed");
+  }
+}
+
 async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false } = {}) {
   try {
     const open = await getOpenSequence(state.endpoint);
@@ -3263,6 +3312,7 @@ async function onRefresh() {
     } catch (err) {
       setStatusWithDiagnostics("warning", `Model refresh failed: ${err.message}`);
     }
+    await refreshEffectCatalogFromXLights();
 
     try {
       await fetchSectionSuggestions();
@@ -3390,6 +3440,7 @@ async function onCheckHealth() {
     }
     const releasedForce = releaseConnectivityPlanOnly();
     await refreshMetadataTargetsFromXLights();
+    await refreshEffectCatalogFromXLights();
     try {
       await fetchSectionSuggestions();
     } catch (err) {
@@ -9954,6 +10005,8 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
         <div class="kv"><div class="k">Orchestration Summary</div><div>${state.health.orchestrationLastSummary || "none"}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
+        <div class="kv"><div class="k">Effect Catalog</div><div>${state.health.effectCatalogReady ? "ready" : "unavailable"}</div></div>
+        <div class="kv"><div class="k">Effect Definitions</div><div>${Number(state.health.effectDefinitionCount || 0)}</div></div>
         <div class="kv"><div class="k">Scene Graph</div><div>${state.health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
         <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
         <div class="kv"><div class="k">Layout Mode</div><div>${String(state.health.sceneGraphLayoutMode || "2d").toUpperCase()}</div></div>
@@ -9961,6 +10014,11 @@ function settingsDrawer() {
         ${
           Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
             ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`
+            : ""
+        }
+        ${
+          state.health.effectCatalogError
+            ? `<p class="banner warning">Effect catalog: ${escapeHtml(state.health.effectCatalogError)}</p>`
             : ""
         }
         <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
