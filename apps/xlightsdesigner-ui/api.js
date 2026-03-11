@@ -127,6 +127,10 @@ export async function getDisplayElements(endpoint) {
   return postCommand(endpoint, "layout.getDisplayElements", {});
 }
 
+export async function getDisplayElementOrder(endpoint) {
+  return postCommand(endpoint, "sequencer.getDisplayElementOrder", {});
+}
+
 export async function getSubmodels(endpoint) {
   return postCommand(endpoint, "layout.getSubmodels", {});
 }

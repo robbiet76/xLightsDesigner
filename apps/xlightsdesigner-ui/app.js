@@ -7,6 +7,7 @@ import {
   getJob,
   getMediaStatus,
   getMediaMetadata,
+  getDisplayElementOrder,
   getModels,
   getLayoutScene,
   getOpenSequence,
@@ -2388,6 +2389,23 @@ async function verifyAppliedPlanReadback(plan = []) {
           target: trackName,
           ok,
           detail: ok ? "mark signature matched" : "mark signature mismatch"
+        };
+      })());
+    }
+    if (cmd === "sequencer.setDisplayElementOrder" && Array.isArray(params.orderedIds) && params.orderedIds.length) {
+      readbackChecks.push((async () => {
+        const expectedOrder = params.orderedIds.map((row) => String(row || "").trim()).filter(Boolean);
+        const resp = await getDisplayElementOrder(state.endpoint);
+        const elements = Array.isArray(resp?.data?.elements) ? resp.data.elements : [];
+        const actualOrder = elements.map((row) => String(row?.id || row?.name || "").trim()).filter(Boolean);
+        const ok =
+          expectedOrder.length === actualOrder.length &&
+          expectedOrder.every((id, idx) => id === actualOrder[idx]);
+        return {
+          kind: "display-order",
+          target: "master-view",
+          ok,
+          detail: ok ? "display element order matched" : "display element order mismatch"
         };
       })());
     }
