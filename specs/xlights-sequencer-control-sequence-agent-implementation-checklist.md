@@ -91,7 +91,7 @@ Boundary summary:
   - [ ] missing analysis degraded mode with warning
   - [ ] cumulative timing edits remain writable
   - [ ] partial-scope apply
-- [ ] Export matrix results as structured diagnostics artifact.
+- [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration
 - [x] Add canonical `sequence_agent` profile in training package registry.

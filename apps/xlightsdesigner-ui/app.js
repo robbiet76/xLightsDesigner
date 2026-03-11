@@ -3840,6 +3840,30 @@ function clearDiagnostics() {
   render();
 }
 
+function buildMatrixDiagnosticsArtifact() {
+  const matrix = state.orchestrationMatrix && typeof state.orchestrationMatrix === "object"
+    ? state.orchestrationMatrix
+    : null;
+  if (!matrix) return null;
+  return {
+    artifactType: "orchestration-matrix-v1",
+    generatedAt: new Date().toISOString(),
+    summary: {
+      ranAt: String(matrix.ranAt || ""),
+      passed: Number(matrix.passed || 0),
+      failed: Number(matrix.failed || 0),
+      total: Number(matrix.total || 0)
+    },
+    scenarios: Array.isArray(matrix.results)
+      ? matrix.results.map((row) => ({
+          name: String(row?.name || ""),
+          ok: Boolean(row?.ok),
+          note: String(row?.note || "")
+        }))
+      : []
+  };
+}
+
 function buildDiagnosticsBundle() {
   let previewCommands = [];
   let previewError = "";
@@ -3880,9 +3904,7 @@ function buildDiagnosticsBundle() {
       sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
       handoffs: agentRuntime.handoffs
     },
-    orchestrationMatrix: state.orchestrationMatrix && typeof state.orchestrationMatrix === "object"
-      ? state.orchestrationMatrix
-      : null,
+    orchestrationMatrix: buildMatrixDiagnosticsArtifact(),
     diagnostics: Array.isArray(state.diagnostics) ? state.diagnostics : [],
     applyHistory: Array.isArray(state.applyHistory) ? state.applyHistory : [],
     jobs: Array.isArray(state.jobs) ? state.jobs : []
