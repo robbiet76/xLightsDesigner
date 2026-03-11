@@ -52,6 +52,24 @@ test('orchestrator blocks on command validation failure', async () => {
   assert.match(String(res.error || ''), /trackName required/i);
 });
 
+test("orchestrator blocks on invalid command graph", async () => {
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [
+      { cmd: "timing.createTrack", params: { trackName: "XD: Test" } },
+      { cmd: "timing.createTrack", params: { trackName: "XD: Test" } }
+    ],
+    expectedRevision: "rev-1",
+    getRevision: okRevision("rev-1"),
+    validateCommands: async () => ({ data: { valid: true, results: [] } }),
+    executePlan: async () => ({ data: { executedCount: 2 } })
+  });
+
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "graph");
+  assert.match(String(res.error || ""), /Duplicate write command/i);
+});
+
 test('orchestrator executes when safety/revision/validation pass', async () => {
   const res = await validateAndApplyPlan({
     endpoint: 'http://127.0.0.1:49914/xlDoAutomation',

@@ -1,4 +1,5 @@
 import { evaluatePlanSafety } from './safety-policy.js';
+import { validateCommandGraph } from "./command-graph.js";
 
 export async function validateAndApplyPlan({
   endpoint,
@@ -21,6 +22,16 @@ export async function validateAndApplyPlan({
       stage: 'safety',
       error: safety.errors.join('\n'),
       details: safety
+    };
+  }
+
+  const graph = validateCommandGraph(commands);
+  if (!graph.ok) {
+    return {
+      ok: false,
+      stage: "graph",
+      error: graph.errors.join("\n"),
+      details: graph
     };
   }
 

@@ -31,10 +31,10 @@ Boundary summary:
 - [x] Add stage timing telemetry and run-id correlation.
 
 ### Phase C: Command Graph as Source of Truth
-- [ ] Define canonical command graph node schema.
-- [ ] Add graph integrity validation (dependencies, ordering, duplicate writes, unsafe writes).
-- [ ] Ensure apply path executes from `plan_handoff_v1.commands` by default.
-- [ ] Restrict fallback regeneration paths to explicit non-default cases only.
+- [x] Define canonical command graph node schema.
+- [x] Add graph integrity validation (dependencies, ordering, duplicate writes, unsafe writes).
+- [x] Ensure apply path executes from `plan_handoff_v1.commands` by default.
+- [x] Restrict fallback regeneration paths to explicit non-default cases only.
 
 ### Phase D: xLights Capability and Safety Integration
 - [ ] Build capability matrix usage in planning stage.

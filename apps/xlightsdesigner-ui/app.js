@@ -42,6 +42,7 @@ import {
 import { analyzeAudioContext } from "./agent/audio-analyzer.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
+import { validateCommandGraph } from "./agent/command-graph.js";
 
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
@@ -2299,34 +2300,68 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       return;
     }
     const currentFiltered = filteredProposed();
-    const canUseHandoffPlan =
+    const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
+    const hasHandoffGraph = handoffCommands.length > 0;
+    const fullScopeApply =
       applyLabel === "all proposed changes" &&
-      arraysEqualOrdered(scopedSource, currentFiltered) &&
-      Array.isArray(planHandoff?.commands) &&
-      planHandoff.commands.length > 0;
-    const sequencerPlan = canUseHandoffPlan
-      ? {
-          commands: planHandoff.commands,
+      arraysEqualOrdered(scopedSource, currentFiltered);
+    const shouldUseHandoffByDefault = hasHandoffGraph;
+
+    let planSource = "generated";
+    let fallbackReason = "";
+    let sequencerPlan = null;
+
+    if (shouldUseHandoffByDefault && fullScopeApply) {
+      const graphGate = validateCommandGraph(handoffCommands);
+      if (graphGate.ok) {
+        planSource = "handoff_graph";
+        markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=plan_handoff_v1 nodes=${graphGate.nodeCount}`);
+        sequencerPlan = {
+          commands: handoffCommands,
           warnings: Array.isArray(planHandoff.warnings) ? planHandoff.warnings : []
-        }
-      : buildSequenceAgentPlan({
-          analysisHandoff,
-          intentHandoff,
-          sourceLines: scopedSource,
-          baseRevision: state.draftBaseRevision
-        });
-    if (!canUseHandoffPlan) {
+        };
+      } else {
+        fallbackReason = `handoff graph invalid (${graphGate.errors.join(" | ")})`;
+        markOrchestrationStage(orchestrationRun, "graph_validation", "error", fallbackReason);
+      }
+    } else if (shouldUseHandoffByDefault && !fullScopeApply) {
+      fallbackReason = "non-default partial-scope apply requested";
+      markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
+    } else {
+      fallbackReason = "plan_handoff_v1 commands unavailable";
+      markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
+    }
+
+    if (!sequencerPlan) {
+      planSource = "generated";
+      sequencerPlan = buildSequenceAgentPlan({
+        analysisHandoff,
+        intentHandoff,
+        sourceLines: scopedSource,
+        baseRevision: state.draftBaseRevision
+      });
       emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
+      if (fallbackReason) {
+        pushDiagnostic("warning", `Apply fallback from handoff graph to generated plan: ${fallbackReason}`);
+      }
     }
     markOrchestrationStage(
       orchestrationRun,
       "sequencer_plan",
       "ok",
-      canUseHandoffPlan ? "using plan_handoff_v1 command graph" : "apply plan built"
+      planSource === "handoff_graph" ? "using plan_handoff_v1 command graph" : "apply plan built"
     );
     const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
     if (!rawPlan.length) {
       throw new Error("sequence_agent generated no commands for apply.");
+    }
+    if (planSource !== "handoff_graph") {
+      const generatedGraph = validateCommandGraph(rawPlan);
+      if (!generatedGraph.ok) {
+        markOrchestrationStage(orchestrationRun, "graph_validation", "error", generatedGraph.errors.join(" | "));
+        throw new Error(`Generated command graph invalid: ${generatedGraph.errors.join("; ")}`);
+      }
+      markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=generated nodes=${generatedGraph.nodeCount}`);
     }
     const timingTrackPolicies =
       state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
@@ -2725,6 +2760,21 @@ function onGenerate(intentOverride = "") {
           degradedMode: !analysisHandoff
         }
   };
+  const planGraphGate = validateCommandGraph(planHandoff.commands);
+  if (!planGraphGate.ok) {
+    markOrchestrationStage(orchestrationRun, "graph_validation", "error", planGraphGate.errors.join("; "));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "sequence_agent graph validation failed" });
+    state.ui.agentThinking = false;
+    setStatusWithDiagnostics(
+      "warning",
+      "Proposal generation blocked: sequence_agent command graph invalid.",
+      planGraphGate.errors.join("\n")
+    );
+    persist();
+    render();
+    return;
+  }
+  markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `nodes=${planGraphGate.nodeCount}`);
   const planGate = validateSequenceAgentContractGate("plan", planHandoff, orchestrationRun.id);
   pushSequenceAgentContractDiagnostic(planGate.report);
   if (!planGate.ok) {
