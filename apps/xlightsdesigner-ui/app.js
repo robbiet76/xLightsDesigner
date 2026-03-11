@@ -145,6 +145,10 @@ const defaultState = {
     agentActiveRole: "",
     agentRegistryVersion: "",
     agentHandoffsReady: "0/3",
+    orchestrationLastRunId: "",
+    orchestrationLastStatus: "",
+    orchestrationLastSummary: "",
+    orchestrationLastAt: "",
     desktopAppVersion: "",
     desktopBuildTime: ""
   },
@@ -310,6 +314,18 @@ if (typeof state.health?.agentRegistryVersion !== "string") {
 if (typeof state.health?.agentHandoffsReady !== "string") {
   state.health.agentHandoffsReady = "0/3";
 }
+if (typeof state.health?.orchestrationLastRunId !== "string") {
+  state.health.orchestrationLastRunId = "";
+}
+if (typeof state.health?.orchestrationLastStatus !== "string") {
+  state.health.orchestrationLastStatus = "";
+}
+if (typeof state.health?.orchestrationLastSummary !== "string") {
+  state.health.orchestrationLastSummary = "";
+}
+if (typeof state.health?.orchestrationLastAt !== "string") {
+  state.health.orchestrationLastAt = "";
+}
 if (!Array.isArray(state.applyHistory)) {
   state.applyHistory = [];
 }
@@ -336,6 +352,7 @@ let trainingPackageAudioBundleCache = null;
 let trainingPackageAudioBundleCacheAt = 0;
 let trainingPackageAgentBundleCache = null;
 let trainingPackageAgentBundleCacheAt = 0;
+let currentOrchestrationRun = null;
 
 const AGENT_HANDOFF_CONTRACTS = ["analysis_handoff_v1", "intent_handoff_v1", "plan_handoff_v1"];
 
@@ -593,6 +610,58 @@ function refreshAgentRuntimeHealth() {
   state.health.agentActiveRole = String(agentRuntime.activeRole || "");
   state.health.agentRegistryVersion = String(agentRuntime.registryVersion || "");
   state.health.agentHandoffsReady = `${readyCount}/${AGENT_HANDOFF_CONTRACTS.length}`;
+}
+
+function nowMs() {
+  return Date.now();
+}
+
+function beginOrchestrationRun({ trigger = "", role = "" } = {}) {
+  const run = {
+    id: `orch-${nowMs()}`,
+    trigger: String(trigger || "").trim() || "unknown",
+    role: String(role || "").trim() || "",
+    startedAtMs: nowMs(),
+    startedAtIso: new Date().toISOString(),
+    stages: [],
+    status: "running",
+    summary: ""
+  };
+  currentOrchestrationRun = run;
+  pushDiagnostic("info", `Orchestration run started (${run.id}) trigger=${run.trigger}${run.role ? ` role=${run.role}` : ""}.`);
+  return run;
+}
+
+function markOrchestrationStage(run, stage = "", status = "ok", detail = "") {
+  if (!run || run !== currentOrchestrationRun) return;
+  const row = {
+    stage: String(stage || "").trim() || "unknown",
+    status: String(status || "").trim() || "ok",
+    detail: String(detail || "").trim(),
+    atMs: nowMs(),
+    elapsedMs: Math.max(0, nowMs() - run.startedAtMs)
+  };
+  run.stages.push(row);
+  const suffix = row.detail ? `: ${row.detail}` : "";
+  const level = row.status === "ok" ? "info" : "warning";
+  pushDiagnostic(level, `Orchestration ${run.id} stage ${row.stage} [${row.status}]${suffix}`);
+}
+
+function endOrchestrationRun(run, { status = "ok", summary = "" } = {}) {
+  if (!run || run !== currentOrchestrationRun) return;
+  run.status = String(status || "").trim() || "ok";
+  run.summary = String(summary || "").trim();
+  run.endedAtMs = nowMs();
+  run.durationMs = Math.max(0, run.endedAtMs - run.startedAtMs);
+  const sum = run.summary || `${run.trigger} completed`;
+  const st = run.status;
+  state.health.orchestrationLastRunId = run.id;
+  state.health.orchestrationLastStatus = st;
+  state.health.orchestrationLastSummary = `${sum} (${run.durationMs}ms)`;
+  state.health.orchestrationLastAt = new Date().toISOString();
+  const level = st === "ok" ? "info" : "warning";
+  pushDiagnostic(level, `Orchestration run ended (${run.id}) status=${st} duration=${run.durationMs}ms summary=${sum}`);
+  currentOrchestrationRun = null;
 }
 
 function normalizeStringArray(values = []) {
@@ -1665,10 +1734,34 @@ function applyRolloutPolicy() {
   return { mode, enforced: true, changed };
 }
 
+function evaluateApplyHandoffGate() {
+  const intent = getValidHandoff("intent_handoff_v1");
+  if (!intent) {
+    return { ok: false, reason: "missing-intent-handoff", message: "Generate proposal to establish intent handoff." };
+  }
+  const plan = getValidHandoff("plan_handoff_v1");
+  if (!plan) {
+    return { ok: false, reason: "missing-plan-handoff", message: "Generate proposal to establish plan handoff." };
+  }
+  const handoffBaseRevision = String(plan?.baseRevision || "unknown");
+  const draftBaseRevision = String(state.draftBaseRevision || "unknown");
+  if (
+    handoffBaseRevision !== "unknown" &&
+    draftBaseRevision !== "unknown" &&
+    handoffBaseRevision !== draftBaseRevision
+  ) {
+    return {
+      ok: false,
+      reason: "plan-base-revision-mismatch",
+      message: `Plan handoff revision mismatch (${handoffBaseRevision} vs ${draftBaseRevision}). Regenerate proposal.`
+    };
+  }
+  return { ok: true, reason: "ok", message: "" };
+}
+
 function applyEnabled() {
   const f = state.flags;
-  const hasIntentHandoff = Boolean(getValidHandoff("intent_handoff_v1"));
-  const hasPlanHandoff = Boolean(getValidHandoff("plan_handoff_v1"));
+  const handoffGate = evaluateApplyHandoffGate();
   return (
     f.hasDraftProposal &&
     f.xlightsConnected &&
@@ -1676,8 +1769,7 @@ function applyEnabled() {
     !f.planOnlyMode &&
     !f.proposalStale &&
     !f.applyInProgress &&
-    hasIntentHandoff &&
-    hasPlanHandoff
+    handoffGate.ok
   );
 }
 
@@ -1691,8 +1783,8 @@ function applyDisabledReason() {
   if (f.planOnlyMode) return "Exit plan-only mode to apply.";
   if (f.proposalStale) return "Refresh proposal before apply.";
   if (!f.hasDraftProposal) return "Generate a proposal first.";
-  if (!getValidHandoff("intent_handoff_v1")) return "Generate proposal to establish intent handoff.";
-  if (!getValidHandoff("plan_handoff_v1")) return "Generate proposal to establish plan handoff.";
+  const handoffGate = evaluateApplyHandoffGate();
+  if (!handoffGate.ok) return handoffGate.message;
   if (!state.ui.applyApprovalChecked) return "Review the plan and check approval before apply.";
   if (f.applyInProgress) return "Apply in progress.";
   return "";
@@ -2069,29 +2161,12 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     setStatusWithDiagnostics("warning", applyDisabledReason());
     return render();
   }
-  if (!getValidHandoff("intent_handoff_v1")) {
-    setStatusWithDiagnostics("warning", "Apply blocked: missing valid intent handoff (intent_handoff_v1).");
+  const handoffGate = evaluateApplyHandoffGate();
+  if (!handoffGate.ok) {
+    setStatusWithDiagnostics("warning", `Apply blocked: ${handoffGate.message}`);
     return render();
   }
-  const planHandoff = getValidHandoff("plan_handoff_v1");
-  if (!planHandoff) {
-    setStatusWithDiagnostics("warning", "Apply blocked: missing valid plan handoff (plan_handoff_v1).");
-    return render();
-  }
-  const handoffBaseRevision = String(planHandoff?.baseRevision || "unknown");
-  if (
-    handoffBaseRevision &&
-    handoffBaseRevision !== "unknown" &&
-    state.draftBaseRevision &&
-    state.draftBaseRevision !== "unknown" &&
-    handoffBaseRevision !== state.draftBaseRevision
-  ) {
-    setStatusWithDiagnostics(
-      "warning",
-      `Apply blocked: plan handoff base revision mismatch (${handoffBaseRevision} vs ${state.draftBaseRevision}). Regenerate proposal.`
-    );
-    return render();
-  }
+  const intentHandoff = getValidHandoff("intent_handoff_v1");
   const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!scopedSource.length) {
     setStatusWithDiagnostics("warning", "No proposed changes available for this apply action.");
@@ -2113,6 +2188,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
 
   state.flags.applyInProgress = true;
   setAgentActiveRole("sequencer_designer");
+  const orchestrationRun = beginOrchestrationRun({ trigger: "apply", role: "sequencer_designer" });
   state.ui.agentThinking = true;
   addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
   setStatus("info", `Applying ${applyLabel} to xLights...`);
@@ -2143,10 +2219,100 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       sourceLines: scopedSource,
       baseRevision: state.draftBaseRevision
     });
-    const plan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
-    if (!plan.length) {
+    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "apply plan built");
+    const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
+    if (!rawPlan.length) {
       throw new Error("sequencer_designer generated no commands for apply.");
     }
+    const timingTrackPolicies =
+      state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
+        ? state.audioAnalysis.timingTrackPolicies
+        : {};
+    const timingGeneratedSignatures =
+      state.audioAnalysis?.timingGeneratedSignatures && typeof state.audioAnalysis.timingGeneratedSignatures === "object"
+        ? state.audioAnalysis.timingGeneratedSignatures
+        : {};
+    const protectedTrackState = new Map();
+    const pendingGenerated = new Map();
+    const blockedTracks = new Set();
+    const nextPlan = [];
+    for (const step of rawPlan) {
+      const cmd = String(step?.cmd || "").trim();
+      const params = step?.params && typeof step.params === "object" ? step.params : {};
+      const trackName = String(params?.trackName || "").trim();
+      if (!isXdTimingTrack(trackName)) {
+        nextPlan.push(step);
+        continue;
+      }
+      const isTrackWriteStep = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
+      if (!isTrackWriteStep) {
+        nextPlan.push(step);
+        continue;
+      }
+      const policyKey = buildGlobalXdTrackPolicyKey(trackName);
+      const existingPolicy = timingTrackPolicies[policyKey] && typeof timingTrackPolicies[policyKey] === "object"
+        ? timingTrackPolicies[policyKey]
+        : null;
+      if (existingPolicy?.manual) {
+        blockedTracks.add(trackName);
+        continue;
+      }
+      if (!protectedTrackState.has(trackName)) {
+        let manualDetected = false;
+        let currentSig = "";
+        try {
+          const marksResp = await getTimingMarks(state.endpoint, trackName);
+          const marks = Array.isArray(marksResp?.data?.marks) ? marksResp.data.marks : [];
+          currentSig = timingMarksSignature(marks);
+        } catch {
+          currentSig = "";
+        }
+        const lastGeneratedSig = String(timingGeneratedSignatures[policyKey] || "").trim();
+        if (lastGeneratedSig && currentSig && currentSig !== lastGeneratedSig) {
+          manualDetected = true;
+          const userOwnedName = deriveUserOwnedTrackNameFromXd(trackName);
+          timingTrackPolicies[policyKey] = {
+            manual: true,
+            trackName: userOwnedName,
+            sourceTrack: trackName,
+            lockedAt: new Date().toISOString()
+          };
+          blockedTracks.add(trackName);
+          pushDiagnostic("info", `Manual edits detected on ${trackName}; marking user-owned and skipping agent overwrite.`);
+        }
+        protectedTrackState.set(trackName, {
+          manualDetected,
+          policyKey
+        });
+      }
+      const stateRow = protectedTrackState.get(trackName);
+      if (stateRow?.manualDetected) {
+        blockedTracks.add(trackName);
+        continue;
+      }
+      if ((cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") && Array.isArray(params?.marks)) {
+        const sig = timingMarksSignature(params.marks);
+        if (sig) {
+          pendingGenerated.set(trackName, {
+            policyKey,
+            signature: sig
+          });
+        }
+      }
+      nextPlan.push(step);
+    }
+    const plan = nextPlan;
+    if (blockedTracks.size) {
+      pushDiagnostic(
+        "warning",
+        `Manual XD track protection active; skipped writes for: ${Array.from(blockedTracks).sort().join(", ")}`
+      );
+    }
+    if (!plan.length) {
+      markOrchestrationStage(orchestrationRun, "xd_protection", "error", "all generated writes were user-locked");
+      throw new Error("Apply blocked: all generated XD track writes are user-locked.");
+    }
+    markOrchestrationStage(orchestrationRun, "xd_protection", "ok", blockedTracks.size ? `blocked=${blockedTracks.size}` : "no locked tracks");
     if (Array.isArray(sequencerPlan?.warnings) && sequencerPlan.warnings.length) {
       pushDiagnostic("warning", `Sequencer apply warnings: ${sequencerPlan.warnings.join(" | ")}`);
     }
@@ -2161,6 +2327,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     });
 
     if (!orchestrated?.ok) {
+      markOrchestrationStage(orchestrationRun, "validate_apply", "error", String(orchestrated?.error || "unknown orchestration error"));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: `apply blocked at ${orchestrated?.stage || "unknown"}` });
       applyAuditEntry = {
         ts: new Date().toISOString(),
         type: "apply",
@@ -2180,6 +2348,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
 
     const executed = Number(orchestrated?.executedCount || 0);
+    markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed}`);
     const jobId = orchestrated?.jobId || null;
     state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
     if (jobId) {
@@ -2193,6 +2362,21 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
     }
     state.draftBaseRevision = state.revision;
+    for (const [trackName, row] of pendingGenerated.entries()) {
+      const key = String(row?.policyKey || "").trim();
+      const sig = String(row?.signature || "").trim();
+      if (!key || !sig) continue;
+      const policy = timingTrackPolicies[key];
+      if (policy?.manual) continue;
+      timingGeneratedSignatures[key] = sig;
+      timingTrackPolicies[key] = {
+        manual: false,
+        trackName,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    state.audioAnalysis.timingTrackPolicies = timingTrackPolicies;
+    state.audioAnalysis.timingGeneratedSignatures = timingGeneratedSignatures;
     state.flags.proposalStale = false;
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
     setStatusWithDiagnostics(
@@ -2211,7 +2395,10 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       revision: state.revision || "unknown",
       ...currentApplyContext()
     };
+    endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });
   } catch (err) {
+    markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: String(err?.message || "apply error") });
     setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
     addChatMessage("agent", `Apply blocked: ${err.message}`);
     applyAuditEntry = {
@@ -2270,6 +2457,7 @@ function onGenerate(intentOverride = "") {
   }
 
   setAgentActiveRole("designer_dialog");
+  const orchestrationRun = beginOrchestrationRun({ trigger: "generate", role: "designer_dialog" });
   state.ui.agentThinking = true;
   addChatMessage("agent", "Working on updated proposal from current chat intent...");
   state.flags.hasDraftProposal = true;
@@ -2291,9 +2479,12 @@ function onGenerate(intentOverride = "") {
     submodels: state.submodels || [],
     metadataAssignments: state.metadata?.assignments || []
   });
+  markOrchestrationStage(orchestrationRun, "intent_normalization", "ok", "planner intent built");
   const intentHandoff = buildIntentHandoffFromPlan(plan, intentText);
   const intentSet = setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
   if (!intentSet.ok) {
+    markOrchestrationStage(orchestrationRun, "intent_handoff", "error", intentSet.errors.join("; "));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "intent handoff invalid" });
     state.ui.agentThinking = false;
     setStatusWithDiagnostics("warning", "Intent handoff invalid. Proposal generation blocked.", intentSet.errors.join("\n"));
     persist();
@@ -2301,6 +2492,7 @@ function onGenerate(intentOverride = "") {
     return;
   }
   setAgentActiveRole("sequencer_designer");
+  markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
   const guidedQuestions = buildGuidedQuestions({
     normalizedIntent: plan.normalizedIntent,
     targets: plan.targets
@@ -2315,7 +2507,9 @@ function onGenerate(intentOverride = "") {
       sourceLines: state.proposed,
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown")
     });
+    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequencer_designer plan built");
   } catch (err) {
+    markOrchestrationStage(orchestrationRun, "sequencer_plan", "error", String(err?.message || err));
     sequencerPlan = {
       planId: `plan-${Date.now()}`,
       summary: `Designer plan from intent "${intentText.slice(0, 90)}${intentText.length > 90 ? "..." : ""}"`,
@@ -2337,10 +2531,20 @@ function onGenerate(intentOverride = "") {
   };
   const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequencer_designer");
   if (!planSet.ok) {
+    markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
     addChatMessage("system", `Plan handoff is incomplete: ${planSet.errors.join("; ")}`);
   } else if (planHandoff.warnings.length) {
+    markOrchestrationStage(orchestrationRun, "plan_handoff", "ok", `warnings=${planHandoff.warnings.length}`);
     pushDiagnostic("warning", `Sequencer plan warnings: ${planHandoff.warnings.join(" | ")}`);
+  } else {
+    markOrchestrationStage(orchestrationRun, "plan_handoff", "ok", "plan_handoff_v1 ready");
   }
+  endOrchestrationRun(orchestrationRun, {
+    status: planSet.ok ? "ok" : "failed",
+    summary: planSet.ok
+      ? `proposal generated with ${state.proposed.length} line${state.proposed.length === 1 ? "" : "s"}`
+      : "proposal generation incomplete"
+  });
   state.ui.agentThinking = false;
   if (guidedQuestions.length) {
     addChatMessage("agent", `Before next pass, consider: ${guidedQuestions.join(" | ")}`);
@@ -3408,6 +3612,7 @@ function buildOrchestrationTestAnalysisHandoff() {
 }
 
 async function onTestAgentOrchestration() {
+  const orchestrationRun = beginOrchestrationRun({ trigger: "orchestration-test", role: "audio_analyst" });
   state.ui.agentThinking = true;
   state.ui.diagnosticsOpen = true;
   state.ui.diagnosticsFilter = "all";
@@ -3418,11 +3623,14 @@ async function onTestAgentOrchestration() {
   try {
     const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
     if (!runtimeReady) {
+      markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "agent runtime unavailable" });
       const msg = `Failed: agent runtime unavailable (${agentRuntime.error || "unknown error"})`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
+    markOrchestrationStage(orchestrationRun, "runtime_load", "ok", "agent runtime loaded");
     clearAgentHandoffs();
 
     setAgentActiveRole("audio_analyst");
@@ -3432,11 +3640,14 @@ async function onTestAgentOrchestration() {
       "audio_analyst"
     );
     if (!analysisSet.ok) {
+      markOrchestrationStage(orchestrationRun, "analysis_handoff", "error", analysisSet.errors.join("; "));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "analysis handoff failed" });
       const msg = `Failed at analysis handoff: ${analysisSet.errors.join("; ")}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
+    markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
 
     setAgentActiveRole("designer_dialog");
     const chatIntent = latestUserIntentText() || "Test intent for orchestration";
@@ -3470,11 +3681,14 @@ async function onTestAgentOrchestration() {
       "designer_dialog"
     );
     if (!intentSet.ok) {
+      markOrchestrationStage(orchestrationRun, "intent_handoff", "error", intentSet.errors.join("; "));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "intent handoff failed" });
       const msg = `Failed at intent handoff: ${intentSet.errors.join("; ")}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
+    markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
 
     setAgentActiveRole("sequencer_designer");
     const planSource = (Array.isArray(state.proposed) && state.proposed.length)
@@ -3503,21 +3717,168 @@ async function onTestAgentOrchestration() {
       "sequencer_designer"
     );
     if (!planSet.ok) {
+      markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "plan handoff failed" });
       const msg = `Failed at plan handoff: ${planSet.errors.join("; ")}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
+    markOrchestrationStage(orchestrationRun, "plan_handoff", "ok", "plan_handoff_v1 ready");
 
     const readyCount = state.health.agentHandoffsReady || "0/3";
     state.ui.agentLastOrchestrationTestStatus = `Passed (${readyCount} handoffs ready).`;
     setStatus("info", `Agent orchestration test passed (${readyCount}).`);
     pushDiagnostic("info", `Agent orchestration test passed (${readyCount}).`);
+    endOrchestrationRun(orchestrationRun, { status: "ok", summary: `orchestration test passed (${readyCount})` });
   } catch (err) {
+    markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "orchestration test error" });
     const msg = String(err?.message || err);
     state.ui.agentLastOrchestrationTestStatus = `Failed: ${msg}`;
     setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
   } finally {
+    state.ui.agentThinking = false;
+    persist();
+    render();
+  }
+}
+
+function cloneHandoffsMap(handoffs = {}) {
+  const out = {};
+  for (const contract of AGENT_HANDOFF_CONTRACTS) {
+    const row = handoffs?.[contract];
+    out[contract] = row && typeof row === "object" ? JSON.parse(JSON.stringify(row)) : null;
+  }
+  return out;
+}
+
+async function onRunOrchestrationMatrix() {
+  const orchestrationRun = beginOrchestrationRun({ trigger: "orchestration-matrix", role: "designer_dialog" });
+  state.ui.agentThinking = true;
+  state.ui.diagnosticsOpen = true;
+  state.ui.diagnosticsFilter = "all";
+  setStatus("info", "Running orchestration acceptance matrix...");
+  render();
+  const previousHandoffs = cloneHandoffsMap(agentRuntime.handoffs);
+  const previousRole = String(agentRuntime.activeRole || "");
+  const results = [];
+  try {
+    const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
+    if (!runtimeReady) {
+      markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "runtime unavailable" });
+      setStatusWithDiagnostics("warning", "Orchestration matrix failed: runtime unavailable.");
+      return;
+    }
+    markOrchestrationStage(orchestrationRun, "runtime_load", "ok", "agent runtime loaded");
+
+    const runScenario = (name, fn) => {
+      clearAgentHandoffs();
+      const startedAt = nowMs();
+      let ok = false;
+      let note = "";
+      try {
+        const out = fn();
+        ok = Boolean(out?.ok);
+        note = String(out?.note || "");
+      } catch (err) {
+        ok = false;
+        note = String(err?.message || err);
+      }
+      const elapsed = Math.max(0, nowMs() - startedAt);
+      results.push({ name, ok, note, elapsedMs: elapsed });
+      markOrchestrationStage(
+        orchestrationRun,
+        `scenario:${name}`,
+        ok ? "ok" : "error",
+        `${note}${note ? " | " : ""}${elapsed}ms`
+      );
+    };
+
+    runScenario("happy-path-gate", () => {
+      const analysis = setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
+      const intent = setAgentHandoff("intent_handoff_v1", {
+        goal: "Matrix happy path intent",
+        mode: "revise",
+        scope: { targetIds: [], tagNames: [], sections: [], timeRangeMs: null },
+        constraints: { changeTolerance: "medium", preserveTimingTracks: true, allowGlobalRewrite: false },
+        directorPreferences: { styleDirection: "", energyArc: "hold", focusElements: [], colorDirection: "" },
+        approvalPolicy: { requiresExplicitApprove: true, elevatedRiskConfirmed: false }
+      }, "designer_dialog");
+      const plan = setAgentHandoff("plan_handoff_v1", {
+        planId: `matrix-plan-${nowMs()}`,
+        summary: "matrix happy path",
+        estimatedImpact: 11,
+        warnings: [],
+        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 2)),
+        baseRevision: String(state.draftBaseRevision || "unknown"),
+        validationReady: true
+      }, "sequencer_designer");
+      const gate = evaluateApplyHandoffGate();
+      return { ok: analysis.ok && intent.ok && plan.ok && gate.ok, note: gate.ok ? "gate open" : gate.message };
+    });
+
+    runScenario("missing-intent-blocked", () => {
+      setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
+      setAgentHandoff("plan_handoff_v1", {
+        planId: `matrix-plan-${nowMs()}`,
+        summary: "missing intent case",
+        estimatedImpact: 11,
+        warnings: [],
+        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
+        baseRevision: String(state.draftBaseRevision || "unknown"),
+        validationReady: true
+      }, "sequencer_designer");
+      const gate = evaluateApplyHandoffGate();
+      return { ok: !gate.ok && gate.reason === "missing-intent-handoff", note: gate.message };
+    });
+
+    runScenario("revision-mismatch-blocked", () => {
+      setAgentHandoff("intent_handoff_v1", {
+        goal: "revision mismatch case",
+        mode: "revise",
+        scope: { targetIds: [], tagNames: [], sections: [], timeRangeMs: null },
+        constraints: { changeTolerance: "medium", preserveTimingTracks: true, allowGlobalRewrite: false },
+        directorPreferences: { styleDirection: "", energyArc: "hold", focusElements: [], colorDirection: "" },
+        approvalPolicy: { requiresExplicitApprove: true, elevatedRiskConfirmed: false }
+      }, "designer_dialog");
+      setAgentHandoff("plan_handoff_v1", {
+        planId: `matrix-plan-${nowMs()}`,
+        summary: "revision mismatch",
+        estimatedImpact: 11,
+        warnings: [],
+        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
+        baseRevision: "__old_revision__",
+        validationReady: true
+      }, "sequencer_designer");
+      const gate = evaluateApplyHandoffGate();
+      return { ok: !gate.ok && gate.reason === "plan-base-revision-mismatch", note: gate.message };
+    });
+
+    const passed = results.filter((r) => r.ok).length;
+    const total = results.length;
+    const failed = total - passed;
+    pushDiagnostic("info", `Orchestration matrix: ${passed}/${total} passed.`);
+    for (const row of results) {
+      const level = row.ok ? "info" : "warning";
+      pushDiagnostic(level, `Orchestration matrix [${row.ok ? "PASS" : "FAIL"}] ${row.name}: ${row.note}`);
+    }
+    const finalOk = failed === 0;
+    endOrchestrationRun(orchestrationRun, {
+      status: finalOk ? "ok" : "failed",
+      summary: `matrix ${passed}/${total} passed`
+    });
+    setStatus(finalOk ? "info" : "warning", `Orchestration matrix complete: ${passed}/${total} passed.`);
+  } catch (err) {
+    markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "matrix run error" });
+    setStatusWithDiagnostics("warning", `Orchestration matrix failed: ${String(err?.message || err)}`);
+  } finally {
+    agentRuntime.handoffs = cloneHandoffsMap(previousHandoffs);
+    agentRuntime.activeRole = previousRole;
+    refreshAgentRuntimeHealth();
+    reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix restore" });
     state.ui.agentThinking = false;
     persist();
     render();
@@ -6779,6 +7140,18 @@ function timingMarksSignature(marks = []) {
   return rows.join("|");
 }
 
+function buildGlobalXdTrackPolicyKey(trackName = "") {
+  const name = String(trackName || "").trim().toLowerCase();
+  if (!name) return "";
+  return `__xd_global__::${name}`;
+}
+
+function deriveUserOwnedTrackNameFromXd(trackName = "") {
+  const raw = String(trackName || "").trim();
+  if (!raw) return "";
+  return raw.replace(/^xd:\s*/i, "").trim() || raw;
+}
+
 async function relabelSectionsWithLlm({
   sections = [],
   lyrics = [],
@@ -8057,12 +8430,16 @@ async function onAnalyzeAudio() {
     return render();
   }
   setAgentActiveRole("audio_analyst");
+  const orchestrationRun = beginOrchestrationRun({ trigger: "analyze-audio", role: "audio_analyst" });
   agentRuntime.handoffs.analysis_handoff_v1 = null;
   refreshAgentRuntimeHealth();
   const serviceReady = await probeAnalysisServiceHealth({ quiet: false, force: true });
   if (!serviceReady) {
+    markOrchestrationStage(orchestrationRun, "service_health", "error", "analysis service unavailable");
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "analysis service unavailable" });
     return;
   }
+  markOrchestrationStage(orchestrationRun, "service_health", "ok", "analysis service reachable");
   state.diagnostics = (state.diagnostics || []).filter(
     (entry) => !String(entry?.text || "").startsWith("Audio analysis:")
   );
@@ -8095,8 +8472,10 @@ async function onAnalyzeAudio() {
   render();
   try {
     const result = await runAudioAnalysisPipeline({ refreshTracks: true });
+    markOrchestrationStage(orchestrationRun, "audio_pipeline", "ok", "analysis pipeline complete");
     const analysisHandoff = buildAnalysisHandoffFromPipelineResult(result);
     setAgentHandoff("analysis_handoff_v1", analysisHandoff, "audio_analyst");
+    markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
     state.audioAnalysis.summary = String(result.summary || buildAudioAnalysisStubSummary());
     for (const row of Array.isArray(result?.diagnostics) ? result.diagnostics : []) {
       pushDiagnostic("warning", `Audio analysis: ${row}`);
@@ -8134,7 +8513,10 @@ async function onAnalyzeAudio() {
     state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
     state.audioAnalysis.pipeline = result.pipeline || null;
     setStatus("info", "Audio analysis pipeline complete.");
+    endOrchestrationRun(orchestrationRun, { status: "ok", summary: "audio analysis complete" });
   } catch (err) {
+    markOrchestrationStage(orchestrationRun, "audio_pipeline", "error", String(err?.message || err));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "audio analysis failed" });
     state.audioAnalysis.summary = buildAudioAnalysisStubSummary();
     state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
     state.audioAnalysis.pipeline = null;
@@ -8758,6 +9140,7 @@ function settingsDrawer() {
           <button id="clear-agent-key" ${state.health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
           <button id="test-agent-cloud">Test Cloud Agent</button>
           <button id="test-agent-orchestration">Test Orchestration</button>
+          <button id="test-agent-orchestration-matrix">Run Orchestration Matrix</button>
         </div>
           <p class="banner">Source: ${state.health.agentConfigSource || "none"} | Stored key: ${state.health.agentHasStoredApiKey ? "yes" : "no"}</p>
           <p class="banner">Last cloud test: ${state.ui.agentLastTestStatus || "not run in this session"}</p>
@@ -8795,6 +9178,9 @@ function settingsDrawer() {
         <div class="kv"><div class="k">Agent Role</div><div>${state.health.agentActiveRole || "idle"}</div></div>
         <div class="kv"><div class="k">Agent Registry</div><div>${state.health.agentRegistryVersion || "unknown"}</div></div>
         <div class="kv"><div class="k">Handoffs Ready</div><div>${state.health.agentHandoffsReady || "0/3"}</div></div>
+        <div class="kv"><div class="k">Orchestration Last Run</div><div>${state.health.orchestrationLastRunId || "none"}</div></div>
+        <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
+        <div class="kv"><div class="k">Orchestration Summary</div><div>${state.health.orchestrationLastSummary || "none"}</div></div>
         <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
         <div class="kv"><div class="k">system.executePlan</div><div>${state.health.hasExecutePlan ? "yes" : "no"}</div></div>
         <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
@@ -9393,6 +9779,8 @@ function bindEvents() {
   if (testAgentCloudBtn) testAgentCloudBtn.addEventListener("click", onTestCloudAgent);
   const testAgentOrchestrationBtn = app.querySelector("#test-agent-orchestration");
   if (testAgentOrchestrationBtn) testAgentOrchestrationBtn.addEventListener("click", onTestAgentOrchestration);
+  const testAgentOrchestrationMatrixBtn = app.querySelector("#test-agent-orchestration-matrix");
+  if (testAgentOrchestrationMatrixBtn) testAgentOrchestrationMatrixBtn.addEventListener("click", onRunOrchestrationMatrix);
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
