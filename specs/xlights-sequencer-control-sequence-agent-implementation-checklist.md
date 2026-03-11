@@ -95,6 +95,7 @@ Boundary summary:
   - [x] common corpus-backed layer/buffer setting acceptance
   - [x] rare-but-documented transition acceptance
   - [x] style-neutral command synthesis when shared settings are not requested
+  - [x] apply path preserves corpus-backed effect settings without reinterpretation
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration

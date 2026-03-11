@@ -146,6 +146,49 @@ test("orchestrator happy path supports handoff-style command graph", async () =>
   assert.equal(res.nextRevision, "rev-11");
 });
 
+test("orchestrator stages corpus-backed effect settings without reinterpretation", async () => {
+  const staged = [];
+  const command = {
+    id: "effect.1",
+    cmd: "effects.create",
+    params: {
+      modelName: "MegaTree",
+      layerIndex: 1,
+      effectName: "Bars",
+      startMs: 0,
+      endMs: 1000,
+      settings: {
+        T_CHOICE_LayerMethod: "Layered",
+        T_CHOICE_In_Transition_Type: "Wipe",
+        T_CHOICE_Out_Transition_Type: "Circle Explode",
+        B_CHOICE_BufferStyle: "Per Preview",
+        B_CHOICE_BufferTransform: "Flip Horizontal",
+        B_CHOICE_PerPreviewCamera: "2D",
+        C_SLIDER_Brightness: 100
+      }
+    }
+  };
+
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [command],
+    expectedRevision: "rev-20",
+    getRevision: okRevision("rev-20"),
+    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
+    beginTransaction: async () => ({ data: { transactionId: "tx-settings" } }),
+    stageTransactionCommand: async (_endpoint, txId, stagedCommand) => {
+      staged.push({ txId, stagedCommand });
+      return { res: 200 };
+    },
+    commitTransaction: async () => ({ data: { newRevision: "rev-21" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(staged.length, 1);
+  assert.deepEqual(staged[0].stagedCommand.params.settings, command.params.settings);
+});
+
 test("orchestrator rolls back staged transaction on runtime failure", async () => {
   const staged = [];
   let rolledBack = false;
