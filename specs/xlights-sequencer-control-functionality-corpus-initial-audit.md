@@ -415,3 +415,4 @@ This corpus should not directly feed:
 - 3D-specific render and camera sequencing should be treated as out of scope for this corpus and gathered separately later.
 - Layer-out transition combinations are present, but a later focused audit could still isolate the most representative stacked-layer examples.
 - The manual documents additional blend/transition behaviors that may not be common in the local corpus, so future eval expansion should include rare-but-documented combinations even if corpus frequency is low.
+- Strand/node sequencing is visibly supported in the xLights sequencer UI, but current automation coverage appears read-only/indirect via `layout.getModelNodes` and `stringIndex`; add a future API audit for explicit strand/node enumeration and mutation support before attempting sequence-agent automation at that level.
