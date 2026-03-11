@@ -184,6 +184,7 @@ const defaultState = {
     chatDraft: "",
     agentThinking: false,
     agentLastTestStatus: "",
+    agentLastOrchestrationTestStatus: "",
     metadataTargetId: "",
     metadataSelectedTags: [],
     metadataNewTag: "",
@@ -3173,6 +3174,173 @@ async function onTestCloudAgent() {
     state.ui.agentLastTestStatus = `Failed: ${errText}`;
     setStatusWithDiagnostics("action-required", "Cloud agent test failed.", errText);
     addChatMessage("system", `Cloud agent test failed: ${errText}`);
+  } finally {
+    state.ui.agentThinking = false;
+    persist();
+    render();
+  }
+}
+
+function buildOrchestrationTestAnalysisHandoff() {
+  const fallbackTitle = basenameOfPath(state.audioPathInput || "") || "Unknown Track";
+  const timingGuess = (() => {
+    const summary = String(state.audioAnalysis?.summary || "");
+    const m = summary.match(/Tempo\/time signature:\s*([0-9.]+)\s*BPM.*?\/\s*([0-9]+\/[0-9]+)/i);
+    if (!m) return { bpm: 120, timeSignature: "4/4" };
+    return {
+      bpm: Number(m[1]) || 120,
+      timeSignature: String(m[2] || "4/4")
+    };
+  })();
+  return {
+    trackIdentity: {
+      title: fallbackTitle,
+      artist: "unknown",
+      isrc: ""
+    },
+    timing: {
+      bpm: timingGuess.bpm,
+      timeSignature: timingGuess.timeSignature,
+      beatsTrack: "XD: Beats",
+      barsTrack: "XD: Bars"
+    },
+    structure: {
+      sections: ["Intro", "Verse 1", "Chorus 1"],
+      source: "orchestration-test",
+      confidence: "medium"
+    },
+    lyrics: {
+      hasSyncedLyrics: false,
+      lyricsTrackName: ""
+    },
+    chords: {
+      hasChords: false,
+      chordsTrackName: "",
+      confidence: "low"
+    },
+    briefSeed: {
+      tone: "orchestration test",
+      mood: "neutral",
+      story: "test flow only",
+      designHints: ["validate handoff pipeline"]
+    },
+    evidence: {
+      serviceSummary: "orchestration-test",
+      webValidationSummary: "orchestration-test",
+      sources: []
+    }
+  };
+}
+
+async function onTestAgentOrchestration() {
+  state.ui.agentThinking = true;
+  state.ui.diagnosticsOpen = true;
+  state.ui.diagnosticsFilter = "all";
+  state.ui.agentLastOrchestrationTestStatus = "Running orchestration test...";
+  setStatus("info", "Testing agent orchestration...");
+  pushDiagnostic("warning", "Agent orchestration test started.");
+  render();
+  try {
+    const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
+    if (!runtimeReady) {
+      const msg = `Failed: agent runtime unavailable (${agentRuntime.error || "unknown error"})`;
+      state.ui.agentLastOrchestrationTestStatus = msg;
+      setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
+      return;
+    }
+    clearAgentHandoffs();
+
+    setAgentActiveRole("audio_analyst");
+    const analysisSet = setAgentHandoff(
+      "analysis_handoff_v1",
+      buildOrchestrationTestAnalysisHandoff(),
+      "audio_analyst"
+    );
+    if (!analysisSet.ok) {
+      const msg = `Failed at analysis handoff: ${analysisSet.errors.join("; ")}`;
+      state.ui.agentLastOrchestrationTestStatus = msg;
+      setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
+      return;
+    }
+
+    setAgentActiveRole("designer_dialog");
+    const chatIntent = latestUserIntentText() || "Test intent for orchestration";
+    const intentSet = setAgentHandoff(
+      "intent_handoff_v1",
+      {
+        goal: chatIntent,
+        mode: inferIntentModeFromGoal(chatIntent),
+        scope: {
+          targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+          tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []),
+          timeRangeMs: null
+        },
+        constraints: {
+          changeTolerance: "medium",
+          preserveTimingTracks: true,
+          allowGlobalRewrite: false
+        },
+        directorPreferences: {
+          styleDirection: String(state.creative?.brief?.mood || "").trim(),
+          energyArc: "hold",
+          focusElements: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+          colorDirection: String(state.creative?.brief?.paletteIntent || "").trim()
+        },
+        approvalPolicy: {
+          requiresExplicitApprove: true,
+          elevatedRiskConfirmed: false
+        }
+      },
+      "designer_dialog"
+    );
+    if (!intentSet.ok) {
+      const msg = `Failed at intent handoff: ${intentSet.errors.join("; ")}`;
+      state.ui.agentLastOrchestrationTestStatus = msg;
+      setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
+      return;
+    }
+
+    setAgentActiveRole("sequencer_designer");
+    const planSource = (Array.isArray(state.proposed) && state.proposed.length)
+      ? state.proposed
+      : buildDemoProposedLines().slice(0, 3);
+    let commands = [];
+    try {
+      commands = buildDesignerPlanCommands(planSource);
+    } catch (err) {
+      const msg = `Failed generating test commands: ${String(err?.message || err)}`;
+      state.ui.agentLastOrchestrationTestStatus = msg;
+      setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
+      return;
+    }
+    const planSet = setAgentHandoff(
+      "plan_handoff_v1",
+      {
+        planId: `orchestration-test-${Date.now()}`,
+        summary: "Orchestration validation plan (non-applied)",
+        estimatedImpact: estimateImpactCount(planSource),
+        warnings: [],
+        commands,
+        baseRevision: String(state.revision || "unknown"),
+        validationReady: true
+      },
+      "sequencer_designer"
+    );
+    if (!planSet.ok) {
+      const msg = `Failed at plan handoff: ${planSet.errors.join("; ")}`;
+      state.ui.agentLastOrchestrationTestStatus = msg;
+      setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
+      return;
+    }
+
+    const readyCount = state.health.agentHandoffsReady || "0/3";
+    state.ui.agentLastOrchestrationTestStatus = `Passed (${readyCount} handoffs ready).`;
+    setStatus("info", `Agent orchestration test passed (${readyCount}).`);
+    pushDiagnostic("info", `Agent orchestration test passed (${readyCount}).`);
+  } catch (err) {
+    const msg = String(err?.message || err);
+    state.ui.agentLastOrchestrationTestStatus = `Failed: ${msg}`;
+    setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
   } finally {
     state.ui.agentThinking = false;
     persist();
@@ -8389,9 +8557,11 @@ function settingsDrawer() {
           <button id="save-agent-config">Save Cloud Config</button>
           <button id="clear-agent-key" ${state.health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
           <button id="test-agent-cloud">Test Cloud Agent</button>
+          <button id="test-agent-orchestration">Test Orchestration</button>
         </div>
           <p class="banner">Source: ${state.health.agentConfigSource || "none"} | Stored key: ${state.health.agentHasStoredApiKey ? "yes" : "no"}</p>
           <p class="banner">Last cloud test: ${state.ui.agentLastTestStatus || "not run in this session"}</p>
+          <p class="banner">Last orchestration test: ${state.ui.agentLastOrchestrationTestStatus || "not run in this session"}</p>
         </section>
         <section class="field">
           <label>Audio Analysis Service</label>
@@ -9021,6 +9191,8 @@ function bindEvents() {
 
   const testAgentCloudBtn = app.querySelector("#test-agent-cloud");
   if (testAgentCloudBtn) testAgentCloudBtn.addEventListener("click", onTestCloudAgent);
+  const testAgentOrchestrationBtn = app.querySelector("#test-agent-orchestration");
+  if (testAgentOrchestrationBtn) testAgentOrchestrationBtn.addEventListener("click", onTestAgentOrchestration);
 
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
