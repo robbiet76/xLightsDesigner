@@ -61,7 +61,7 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution).
 - [ ] Submodels and functionality:
-  - [ ] Pre-gate complete (source + API coverage + approved gaps).
+  - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.
 - [ ] Effects types and settings:
   - [ ] Pre-gate complete (source + API coverage + approved gaps).
