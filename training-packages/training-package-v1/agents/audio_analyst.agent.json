@@ -22,7 +22,7 @@
   "handoff": {
     "to": [
       "designer_dialog",
-      "sequencer_designer"
+      "sequence_agent"
     ],
     "contract": "analysis_handoff_v1"
   }

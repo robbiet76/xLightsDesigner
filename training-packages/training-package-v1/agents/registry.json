@@ -12,8 +12,8 @@
       "status": "active"
     },
     {
-      "id": "sequencer_designer",
-      "path": "agents/sequencer_designer.agent.json",
+      "id": "sequence_agent",
+      "path": "agents/sequence_agent.agent.json",
       "status": "active"
     }
   ]

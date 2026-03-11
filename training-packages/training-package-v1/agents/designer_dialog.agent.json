@@ -21,7 +21,7 @@
   ],
   "handoff": {
     "to": [
-      "sequencer_designer"
+      "sequence_agent"
     ],
     "contract": "intent_handoff_v1"
   }

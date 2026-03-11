@@ -1,4 +1,5 @@
 import { buildDesignerPlanCommands, estimateImpactCount } from "./command-builders.js";
+import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 
 function normText(value = "") {
   return String(value || "").trim();
@@ -39,7 +40,7 @@ function buildExecutionLines({
   return [`${sectionText} / ${targetText} / ${mode} from intent: ${goal || "unspecified"}${toneText}`];
 }
 
-export function buildSequencerDesignerPlan({
+export function buildSequenceAgentPlan({
   analysisHandoff = null,
   intentHandoff = null,
   sourceLines = [],
@@ -47,7 +48,7 @@ export function buildSequencerDesignerPlan({
 } = {}) {
   const warnings = [];
   const hasIntent = Boolean(intentHandoff && typeof intentHandoff === "object");
-  if (!hasIntent) throw new Error("intent_handoff_v1 is required for sequencer_designer planning.");
+  if (!hasIntent) throw new Error("intent_handoff_v1 is required for sequence_agent planning.");
   const hasAnalysis = Boolean(analysisHandoff && typeof analysisHandoff === "object");
   if (!hasAnalysis) {
     warnings.push("analysis_handoff_v1 missing; running reduced-confidence plan synthesis.");
@@ -67,6 +68,8 @@ export function buildSequencerDesignerPlan({
   const commands = buildDesignerPlanCommands(executionLines, { trackName: "XD: Sequencer Plan" });
 
   return {
+    agentRole: SEQUENCE_AGENT_ROLE,
+    contractVersion: SEQUENCE_AGENT_CONTRACT_VERSION,
     planId: `seq-plan-${Date.now()}`,
     summary: buildPlanSummary({ goal, mode, sectionNames }),
     estimatedImpact: estimateImpactCount(executionLines),
@@ -77,6 +80,12 @@ export function buildSequencerDesignerPlan({
     executionLines,
     metadata: {
       mode,
+      scope: {
+        sections: sectionNames,
+        targetIds: normArray(intentHandoff?.scope?.targetIds),
+        tagNames: normArray(intentHandoff?.scope?.tagNames)
+      },
+      degradedMode: !hasAnalysis,
       sectionNames,
       targetIds: normArray(intentHandoff?.scope?.targetIds),
       tagNames: normArray(intentHandoff?.scope?.tagNames)

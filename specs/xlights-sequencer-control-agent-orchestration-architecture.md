@@ -30,8 +30,7 @@ Define how multiple agents and LLM capabilities are coordinated in xLightsDesign
 - Owns plan generation, timing-track creation decisions, validation/apply, readback, rollback, and safety gates.
 
 Transition note:
-- Current runtime may still use `sequencer_designer` naming in some files.
-- Spec target is `sequence_agent` as canonical role name.
+- Runtime and specs use `sequence_agent` as canonical role name.
 
 ## 4) Handoff Contracts
 

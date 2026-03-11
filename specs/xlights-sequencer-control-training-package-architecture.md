@@ -58,7 +58,6 @@ Minimum required agent ids:
 - `sequence_agent`
 
 Transition note:
-- `sequencer_designer` may remain as a temporary runtime alias during migration.
 - Package metadata target is `sequence_agent` as canonical execution role.
 
 ## 4.2) Cross-Role Boundary Contract

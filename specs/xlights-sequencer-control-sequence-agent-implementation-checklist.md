@@ -16,10 +16,10 @@ Boundary summary:
 ## 2) Phase Checklist
 
 ### Phase A: Role Contract and Data Shapes
-- [ ] Define canonical `sequence_agent` input contract.
-- [ ] Define canonical `sequence_agent` output contract (`plan_handoff_v1` + apply result contract).
-- [ ] Define required/optional fields for degraded mode (missing analysis handoff).
-- [ ] Define contract versioning and migration policy.
+- [x] Define canonical `sequence_agent` input contract.
+- [x] Define canonical `sequence_agent` output contract (`plan_handoff_v1` + apply result contract).
+- [x] Define required/optional fields for degraded mode (missing analysis handoff).
+- [x] Define strict contract versioning policy (`1.0` required) with no migration/alias support in pre-release development.
 
 ### Phase B: Deterministic Planning Pipeline
 - [ ] Implement deterministic planning stages:
@@ -67,13 +67,13 @@ Boundary summary:
 - [ ] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration
-- [ ] Add canonical `sequence_agent` profile in training package registry.
+- [x] Add canonical `sequence_agent` profile in training package registry.
 - [ ] Add/update module assets under `modules/xlights_sequencer_execution`:
   - [ ] prompts
   - [ ] fewshot
   - [ ] eval configuration
   - [ ] contracts references
-- [ ] Maintain temporary alias compatibility for `sequencer_designer` during migration.
+- [x] Remove temporary alias compatibility and enforce canonical `sequence_agent` naming.
 
 ## 3) Exit Criteria
 `sequence_agent` implementation is considered complete for v1 when:

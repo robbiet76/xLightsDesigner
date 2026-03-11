@@ -27,7 +27,13 @@ import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
   estimateImpactCount
 } from "./agent/command-builders.js";
-import { buildSequencerDesignerPlan } from "./agent/sequencer-designer.js";
+import { buildSequenceAgentPlan } from "./agent/sequence-agent.js";
+import {
+  buildSequenceAgentApplyResult,
+  buildSequenceAgentInput,
+  classifyOrchestrationFailureReason,
+  validateSequenceAgentContractGate
+} from "./agent/sequence-agent-runtime.js";
 import {
   AGENT_HANDOFF_CONTRACTS,
   validateAgentHandoff
@@ -630,6 +636,20 @@ function endOrchestrationRun(run, { status = "ok", summary = "" } = {}) {
   currentOrchestrationRun = null;
 }
 
+function pushSequenceAgentContractDiagnostic(report = {}) {
+  if (!isPlainObject(report)) return;
+  const stage = String(report.stage || "unknown_contract");
+  const contractName = String(report.contractName || "unknown");
+  const runId = String(report.runId || "");
+  const errors = Array.isArray(report.errors) ? report.errors.filter(Boolean) : [];
+  const prefix = `Sequence-agent contract ${contractName} [${stage}]`;
+  if (errors.length) {
+    pushDiagnostic("warning", `${prefix} invalid${runId ? ` (run=${runId})` : ""}: ${errors.join("; ")}`);
+    return;
+  }
+  pushDiagnostic("info", `${prefix} valid${runId ? ` (run=${runId})` : ""}.`);
+}
+
 function normalizeStringArray(values = []) {
   return Array.from(
     new Set(
@@ -770,7 +790,7 @@ function clearAgentHandoffs() {
     intent_handoff_v1: null,
     plan_handoff_v1: null
   };
-  if (!["audio_analyst", "designer_dialog", "sequencer_designer"].includes(agentRuntime.activeRole)) {
+  if (!["audio_analyst", "designer_dialog", "sequence_agent"].includes(agentRuntime.activeRole)) {
     agentRuntime.activeRole = "";
   }
   refreshAgentRuntimeHealth();
@@ -2147,6 +2167,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     return render();
   }
   const intentHandoff = getValidHandoff("intent_handoff_v1");
+  const planHandoff = getValidHandoff("plan_handoff_v1");
   const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!scopedSource.length) {
     setStatusWithDiagnostics("warning", "No proposed changes available for this apply action.");
@@ -2167,8 +2188,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   }
 
   state.flags.applyInProgress = true;
-  setAgentActiveRole("sequencer_designer");
-  const orchestrationRun = beginOrchestrationRun({ trigger: "apply", role: "sequencer_designer" });
+  setAgentActiveRole("sequence_agent");
+  const orchestrationRun = beginOrchestrationRun({ trigger: "apply", role: "sequence_agent" });
   state.ui.agentThinking = true;
   addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
   setStatus("info", `Applying ${applyLabel} to xLights...`);
@@ -2193,6 +2214,32 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
 
     const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+    const sequenceAgentInput = buildSequenceAgentInput({
+      requestId: `${orchestrationRun.id}-apply`,
+      endpoint: state.endpoint,
+      sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+      intentHandoff,
+      analysisHandoff,
+      planningScope: {
+        sections: getSelectedSections(),
+        targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+        tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+      },
+      manualXdLocks: getManualLockedXdTracks(),
+      allowTimingWrites: true
+    });
+    const inputGate = validateSequenceAgentContractGate("input", sequenceAgentInput, orchestrationRun.id);
+    pushSequenceAgentContractDiagnostic(inputGate.report);
+    if (!inputGate.ok) {
+      markOrchestrationStage(orchestrationRun, inputGate.stage, "error", inputGate.report.errors.join("; "));
+      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "apply blocked: invalid sequence_agent input contract" });
+      setStatusWithDiagnostics(
+        "warning",
+        "Apply blocked: sequence_agent input contract invalid.",
+        inputGate.report.errors.join("\n")
+      );
+      return;
+    }
     const currentFiltered = filteredProposed();
     const canUseHandoffPlan =
       applyLabel === "all proposed changes" &&
@@ -2204,7 +2251,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
           commands: planHandoff.commands,
           warnings: Array.isArray(planHandoff.warnings) ? planHandoff.warnings : []
         }
-      : buildSequencerDesignerPlan({
+      : buildSequenceAgentPlan({
           analysisHandoff,
           intentHandoff,
           sourceLines: scopedSource,
@@ -2218,7 +2265,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     );
     const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
     if (!rawPlan.length) {
-      throw new Error("sequencer_designer generated no commands for apply.");
+      throw new Error("sequence_agent generated no commands for apply.");
     }
     const timingTrackPolicies =
       state.audioAnalysis?.timingTrackPolicies && typeof state.audioAnalysis.timingTrackPolicies === "object"
@@ -2323,6 +2370,24 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     });
 
     if (!orchestrated?.ok) {
+      const applyResult = buildSequenceAgentApplyResult({
+        planId: String(planHandoff?.planId || ""),
+        status: "blocked",
+        failureReason: classifyOrchestrationFailureReason(orchestrated?.stage || ""),
+        currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+        nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
+        verification: {
+          revisionAdvanced: false,
+          expectedMutationsPresent: false,
+          lockedTracksUnchanged: true
+        }
+      });
+      const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
+      pushSequenceAgentContractDiagnostic(applyGate.report);
+      if (!applyGate.ok) {
+        markOrchestrationStage(orchestrationRun, applyGate.stage, "error", applyGate.report.errors.join("; "));
+        pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(orchestrated || {})}`);
+      }
       markOrchestrationStage(orchestrationRun, "validate_apply", "error", String(orchestrated?.error || "unknown orchestration error"));
       endOrchestrationRun(orchestrationRun, { status: "failed", summary: `apply blocked at ${orchestrated?.stage || "unknown"}` });
       applyAuditEntry = {
@@ -2344,6 +2409,25 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
 
     const executed = Number(orchestrated?.executedCount || 0);
+    const applyResult = buildSequenceAgentApplyResult({
+      planId: String(planHandoff?.planId || ""),
+      status: "applied",
+      failureReason: null,
+      currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+      nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
+      verification: {
+        revisionAdvanced: String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || ""),
+        expectedMutationsPresent: executed > 0,
+        lockedTracksUnchanged: true
+      }
+    });
+    const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
+    pushSequenceAgentContractDiagnostic(applyGate.report);
+    if (!applyGate.ok) {
+      markOrchestrationStage(orchestrationRun, applyGate.stage, "error", applyGate.report.errors.join("; "));
+      pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(orchestrated || {})}`);
+      throw new Error(`Apply result contract invalid: ${applyGate.report.errors.join("; ")}`);
+    }
     markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed}`);
     const jobId = orchestrated?.jobId || null;
     state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
@@ -2487,7 +2571,7 @@ function onGenerate(intentOverride = "") {
     render();
     return;
   }
-  setAgentActiveRole("sequencer_designer");
+  setAgentActiveRole("sequence_agent");
   markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
   const guidedQuestions = buildGuidedQuestions({
     normalizedIntent: plan.normalizedIntent,
@@ -2495,15 +2579,44 @@ function onGenerate(intentOverride = "") {
   });
   const proposalSeedLines = mergeCreativeBriefIntoProposal(plan.proposalLines);
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const sequenceAgentInput = buildSequenceAgentInput({
+    requestId: `${orchestrationRun.id}-generate`,
+    endpoint: state.endpoint,
+    sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+    intentHandoff,
+    analysisHandoff,
+    planningScope: {
+      sections: selected,
+      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+      tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+    },
+    manualXdLocks: getManualLockedXdTracks(),
+    allowTimingWrites: true
+  });
+  const inputGate = validateSequenceAgentContractGate("input", sequenceAgentInput, orchestrationRun.id);
+  pushSequenceAgentContractDiagnostic(inputGate.report);
+  if (!inputGate.ok) {
+    markOrchestrationStage(orchestrationRun, inputGate.stage, "error", inputGate.report.errors.join("; "));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "sequence_agent input contract invalid" });
+    state.ui.agentThinking = false;
+    setStatusWithDiagnostics(
+      "warning",
+      "Proposal generation blocked: sequence_agent input contract invalid.",
+      inputGate.report.errors.join("\n")
+    );
+    persist();
+    render();
+    return;
+  }
   let sequencerPlan = null;
   try {
-    sequencerPlan = buildSequencerDesignerPlan({
+    sequencerPlan = buildSequenceAgentPlan({
       analysisHandoff,
       intentHandoff,
       sourceLines: proposalSeedLines,
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown")
     });
-    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequencer_designer plan built");
+    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "sequence_agent plan built");
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "error", String(err?.message || err));
     sequencerPlan = {
@@ -2517,25 +2630,53 @@ function onGenerate(intentOverride = "") {
     };
   }
   const planHandoff = {
+    agentRole: String(sequencerPlan.agentRole || "sequence_agent"),
+    contractVersion: String(sequencerPlan.contractVersion || "1.0"),
     planId: String(sequencerPlan.planId || `plan-${Date.now()}`),
     summary: String(sequencerPlan.summary || `Designer plan from intent "${intentText.slice(0, 90)}${intentText.length > 90 ? "..." : ""}"`),
     estimatedImpact: Number(sequencerPlan.estimatedImpact || estimateImpactCount(state.proposed)),
     warnings: Array.isArray(sequencerPlan.warnings) ? sequencerPlan.warnings : [],
     commands: Array.isArray(sequencerPlan.commands) ? sequencerPlan.commands : [],
     baseRevision: String(sequencerPlan.baseRevision || state.draftBaseRevision || state.revision || "unknown"),
-    validationReady: Boolean(sequencerPlan.validationReady)
+    validationReady: Boolean(sequencerPlan.validationReady),
+    metadata: isPlainObject(sequencerPlan.metadata)
+      ? sequencerPlan.metadata
+      : {
+          mode: String(intentHandoff?.mode || "create"),
+          scope: {
+            sections: selected,
+            targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+            tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+          },
+          degradedMode: !analysisHandoff
+        }
   };
+  const planGate = validateSequenceAgentContractGate("plan", planHandoff, orchestrationRun.id);
+  pushSequenceAgentContractDiagnostic(planGate.report);
+  if (!planGate.ok) {
+    markOrchestrationStage(orchestrationRun, planGate.stage, "error", planGate.report.errors.join("; "));
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "sequence_agent plan contract invalid" });
+    state.ui.agentThinking = false;
+    setStatusWithDiagnostics(
+      "warning",
+      "Proposal generation blocked: sequence_agent plan contract invalid.",
+      planGate.report.errors.join("\n")
+    );
+    persist();
+    render();
+    return;
+  }
   const executionLines = Array.isArray(sequencerPlan?.executionLines)
     ? sequencerPlan.executionLines
     : proposalSeedLines;
   state.proposed = mergeCreativeBriefIntoProposal(executionLines);
   state.agentPlan = {
     createdAt: new Date().toISOString(),
-    source: "sequencer_designer",
+    source: "sequence_agent",
     handoff: planHandoff,
     executionLines
   };
-  const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequencer_designer");
+  const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequence_agent");
   if (!planSet.ok) {
     markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
     addChatMessage("system", `Plan handoff is incomplete: ${planSet.errors.join("; ")}`);
@@ -3717,7 +3858,7 @@ async function onTestAgentOrchestration() {
     }
     markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
 
-    setAgentActiveRole("sequencer_designer");
+    setAgentActiveRole("sequence_agent");
     const planSource = (Array.isArray(state.proposed) && state.proposed.length)
       ? state.proposed
       : buildDemoProposedLines().slice(0, 3);
@@ -3741,7 +3882,7 @@ async function onTestAgentOrchestration() {
         baseRevision: String(state.revision || "unknown"),
         validationReady: true
       },
-      "sequencer_designer"
+      "sequence_agent"
     );
     if (!planSet.ok) {
       markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
@@ -3853,7 +3994,7 @@ async function onRunOrchestrationMatrix() {
         commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 2)),
         baseRevision: String(state.draftBaseRevision || "unknown"),
         validationReady: true
-      }, "sequencer_designer");
+      }, "sequence_agent");
       const gate = evaluateApplyHandoffGate();
       return { ok: analysis.ok && intent.ok && plan.ok && gate.ok, note: gate.ok ? "gate open" : gate.message };
     });
@@ -3868,7 +4009,7 @@ async function onRunOrchestrationMatrix() {
         commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
         baseRevision: String(state.draftBaseRevision || "unknown"),
         validationReady: true
-      }, "sequencer_designer");
+      }, "sequence_agent");
       const gate = evaluateApplyHandoffGate();
       return { ok: !gate.ok && gate.reason === "missing-intent-handoff", note: gate.message };
     });
@@ -3890,7 +4031,7 @@ async function onRunOrchestrationMatrix() {
         commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
         baseRevision: "__old_revision__",
         validationReady: true
-      }, "sequencer_designer");
+      }, "sequence_agent");
       const gate = evaluateApplyHandoffGate();
       return { ok: !gate.ok && gate.reason === "plan-base-revision-mismatch", note: gate.message };
     });
@@ -3912,7 +4053,7 @@ async function onRunOrchestrationMatrix() {
         commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
         baseRevision: String(state.draftBaseRevision || "unknown"),
         validationReady: true
-      }, "sequencer_designer");
+      }, "sequence_agent");
       state.ui.sectionSelections = ["Verse 2"];
       reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix section-change" });
       return {
