@@ -59,6 +59,13 @@ import {
   executeAudioAnalystFlow
 } from "./agent/audio-analyst-runtime.js";
 import {
+  resetAudioAnalysisView,
+  buildPendingAudioAnalysisPipeline,
+  applyPersistedAnalysisArtifactToState,
+  applyAudioAnalystFlowSuccessToState,
+  applyAudioAnalystFlowFailureToState
+} from "./agent/audio-analyst-ui-state.js";
+import {
   normalizeAudioAnalysisProvider
 } from "./agent/audio-provider-adapters.js";
 import { runAudioAnalysisOrchestration } from "./agent/audio-analysis-orchestrator.js";
@@ -690,22 +697,17 @@ function getDesktopAnalysisArtifactBridge() {
 }
 
 function resetDerivedAudioAnalysisState() {
-  state.audioAnalysis.summary = "";
-  state.audioAnalysis.lastAnalyzedAt = "";
-  state.audioAnalysis.pipeline = null;
+  resetAudioAnalysisView(state.audioAnalysis);
 }
 
 function applyPersistedAnalysisArtifact(artifact = null) {
-  if (!artifact || typeof artifact !== "object") return false;
-  const analysisHandoff = buildAnalysisHandoffFromArtifact(artifact, state.creative?.brief || null);
-  const set = setAgentHandoff("analysis_handoff_v1", analysisHandoff, "audio_analyst");
-  if (!set?.ok) return false;
-  state.audioAnalysis.summary = String(artifact?.diagnostics?.summary || "");
-  state.audioAnalysis.lastAnalyzedAt = String(artifact?.provenance?.generatedAt || "");
-  state.audioAnalysis.pipeline = artifact?.provenance?.pipeline && typeof artifact.provenance.pipeline === "object"
-    ? artifact.provenance.pipeline
-    : null;
-  return true;
+  const out = applyPersistedAnalysisArtifactToState({
+    artifact,
+    creativeBrief: state.creative?.brief || null,
+    audioAnalysisState: state.audioAnalysis,
+    setHandoff: (handoff) => setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst")
+  });
+  return out.ok === true;
 }
 
 async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
@@ -1462,24 +1464,6 @@ function buildSequenceSidecarDocument() {
         proposalStale: Boolean(state.flags?.proposalStale)
       }
     },
-    audioAnalysis: state.audioAnalysis && typeof state.audioAnalysis === "object"
-      ? {
-          summary: String(state.audioAnalysis.summary || ""),
-          lastAnalyzedAt: String(state.audioAnalysis.lastAnalyzedAt || ""),
-          pipeline: state.audioAnalysis.pipeline && typeof state.audioAnalysis.pipeline === "object"
-            ? state.audioAnalysis.pipeline
-            : null,
-          structurePolicies: state.audioAnalysis.structurePolicies && typeof state.audioAnalysis.structurePolicies === "object"
-            ? state.audioAnalysis.structurePolicies
-            : {},
-          structureGeneratedSignatures: state.audioAnalysis.structureGeneratedSignatures && typeof state.audioAnalysis.structureGeneratedSignatures === "object"
-            ? state.audioAnalysis.structureGeneratedSignatures
-            : {},
-          structureManualExamples: state.audioAnalysis.structureManualExamples && typeof state.audioAnalysis.structureManualExamples === "object"
-            ? state.audioAnalysis.structureManualExamples
-            : {}
-        }
-      : structuredClone(defaultState.audioAnalysis),
     sequenceAgentRuntime: state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
       ? {
           timingTrackPolicies: getSequenceTimingTrackPoliciesState(),
@@ -1519,44 +1503,16 @@ function applySequenceSidecarDocument(doc) {
     }
   }
   if (doc?.creative && typeof doc.creative === "object") state.creative = { ...state.creative, ...doc.creative };
-  if (doc?.audioAnalysis && typeof doc.audioAnalysis === "object") {
-    state.audioAnalysis = {
-      summary: String(doc.audioAnalysis.summary || ""),
-      lastAnalyzedAt: String(doc.audioAnalysis.lastAnalyzedAt || ""),
-      pipeline: doc.audioAnalysis.pipeline && typeof doc.audioAnalysis.pipeline === "object"
-        ? doc.audioAnalysis.pipeline
-        : null,
-      structurePolicies: doc.audioAnalysis.structurePolicies && typeof doc.audioAnalysis.structurePolicies === "object"
-        ? { ...doc.audioAnalysis.structurePolicies }
-        : {},
-      structureGeneratedSignatures: doc.audioAnalysis.structureGeneratedSignatures && typeof doc.audioAnalysis.structureGeneratedSignatures === "object"
-        ? { ...doc.audioAnalysis.structureGeneratedSignatures }
-        : {},
-      structureManualExamples: doc.audioAnalysis.structureManualExamples && typeof doc.audioAnalysis.structureManualExamples === "object"
-        ? { ...doc.audioAnalysis.structureManualExamples }
-        : {}
-    };
-  } else {
-    state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
-  }
   const runtimeDoc = doc?.sequenceAgentRuntime && typeof doc.sequenceAgentRuntime === "object"
     ? doc.sequenceAgentRuntime
     : {};
-  const legacyTimingTrackPolicies =
-    doc?.audioAnalysis?.timingTrackPolicies && typeof doc.audioAnalysis.timingTrackPolicies === "object"
-      ? doc.audioAnalysis.timingTrackPolicies
-      : {};
-  const legacyTimingGeneratedSignatures =
-    doc?.audioAnalysis?.timingGeneratedSignatures && typeof doc.audioAnalysis.timingGeneratedSignatures === "object"
-      ? doc.audioAnalysis.timingGeneratedSignatures
-      : {};
   state.sequenceAgentRuntime = {
     timingTrackPolicies: runtimeDoc.timingTrackPolicies && typeof runtimeDoc.timingTrackPolicies === "object"
       ? { ...runtimeDoc.timingTrackPolicies }
-      : { ...legacyTimingTrackPolicies },
+      : {},
     timingGeneratedSignatures: runtimeDoc.timingGeneratedSignatures && typeof runtimeDoc.timingGeneratedSignatures === "object"
       ? { ...runtimeDoc.timingGeneratedSignatures }
-      : { ...legacyTimingGeneratedSignatures }
+      : {}
   };
   if (doc?.metadata && typeof doc.metadata === "object") state.metadata = { ...state.metadata, ...doc.metadata };
   if (Array.isArray(doc?.versions) && doc.versions.length) state.versions = doc.versions;
@@ -1815,22 +1771,7 @@ function applyProjectSnapshot(snapshot) {
     ? Math.max(1, Number(snapshot.newSequenceFrameMs))
     : state.newSequenceFrameMs;
   state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
-  // Sequence-specific audio analysis state is loaded from the sequence .xdmeta sidecar.
-  // Keep project snapshot state free of per-sequence analysis metadata.
-  if (snapshot?.audioAnalysis && typeof snapshot.audioAnalysis === "object") {
-    // Backward compatibility for older snapshots that included audioAnalysis.
-    const legacy = snapshot.audioAnalysis;
-    state.audioAnalysis = {
-      summary: String(legacy.summary || ""),
-      lastAnalyzedAt: String(legacy.lastAnalyzedAt || ""),
-      pipeline: legacy.pipeline && typeof legacy.pipeline === "object" ? legacy.pipeline : null,
-      structurePolicies: legacy.structurePolicies && typeof legacy.structurePolicies === "object" ? { ...legacy.structurePolicies } : {},
-      structureGeneratedSignatures: legacy.structureGeneratedSignatures && typeof legacy.structureGeneratedSignatures === "object" ? { ...legacy.structureGeneratedSignatures } : {},
-      structureManualExamples: legacy.structureManualExamples && typeof legacy.structureManualExamples === "object" ? { ...legacy.structureManualExamples } : {}
-    };
-  } else {
-    state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
-  }
+  state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   state.sequenceAgentRuntime = snapshot?.sequenceAgentRuntime && typeof snapshot.sequenceAgentRuntime === "object"
     ? {
         timingTrackPolicies:
@@ -1842,16 +1783,7 @@ function applyProjectSnapshot(snapshot) {
             ? { ...snapshot.sequenceAgentRuntime.timingGeneratedSignatures }
             : {}
       }
-    : {
-        timingTrackPolicies:
-          snapshot?.audioAnalysis?.timingTrackPolicies && typeof snapshot.audioAnalysis.timingTrackPolicies === "object"
-            ? { ...snapshot.audioAnalysis.timingTrackPolicies }
-            : {},
-        timingGeneratedSignatures:
-          snapshot?.audioAnalysis?.timingGeneratedSignatures && typeof snapshot.audioAnalysis.timingGeneratedSignatures === "object"
-            ? { ...snapshot.audioAnalysis.timingGeneratedSignatures }
-            : {}
-      };
+    : structuredClone(defaultState.sequenceAgentRuntime);
   state.savePathInput = snapshot.savePathInput || state.savePathInput;
   state.lastApplyBackupPath = snapshot?.lastApplyBackupPath || "";
   state.recentSequences = Array.isArray(snapshot.recentSequences) ? snapshot.recentSequences : [];
@@ -8755,28 +8687,8 @@ async function onAnalyzeAudio() {
   );
   state.sectionSuggestions = [];
   state.sectionStartByLabel = {};
-  state.audioAnalysis.summary = "";
-  state.audioAnalysis.lastAnalyzedAt = "";
-  state.audioAnalysis.pipeline = {
-    mediaAttached: true,
-    mediaMetadataRead: false,
-    analysisServiceCalled: false,
-    analysisServiceSucceeded: false,
-    beatTrackWritten: false,
-    beatTrackPreserved: false,
-    barTrackWritten: false,
-    barTrackPreserved: false,
-    chordTrackWritten: false,
-    chordTrackPreserved: false,
-    structureTrackWritten: false,
-    structureTrackPreserved: false,
-    lyricsTrackWritten: false,
-    lyricsTrackPreserved: false,
-    structureDerived: false,
-    timingDerived: false,
-    lyricsDetected: false,
-    webContextDerived: false
-  };
+  resetAudioAnalysisView(state.audioAnalysis);
+  state.audioAnalysis.pipeline = buildPendingAudioAnalysisPipeline();
   state.ui.agentThinking = true;
   setStatus("info", "Running audio analysis pipeline...");
   render();
@@ -8824,15 +8736,17 @@ async function onAnalyzeAudio() {
         pushDiagnostic("warning", `Audio analysis: ${row}`);
       }
     }
-    setAgentHandoff("analysis_handoff_v1", flow.handoff, "audio_analyst");
+    const applied = applyAudioAnalystFlowSuccessToState({
+      flow,
+      pipelineResult: result,
+      fallbackSummary: buildAudioAnalysisStubSummary(),
+      audioAnalysisState: state.audioAnalysis,
+      setHandoff: (handoff) => setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst")
+    });
+    if (!applied.ok) {
+      throw new Error("Audio analysis flow did not produce a valid UI projection.");
+    }
     markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
-    state.audioAnalysis.summary = String(
-      persistedArtifact?.diagnostics?.summary ||
-      result.summary ||
-      buildAudioAnalysisStubSummary()
-    );
-    state.audioAnalysis.lastAnalyzedAt = String(persistedArtifact?.provenance?.generatedAt || new Date().toISOString());
-    state.audioAnalysis.pipeline = persistedArtifact?.provenance?.pipeline || result.pipeline || null;
     setStatus("info", flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete.");
     endOrchestrationRun(orchestrationRun, {
       status: flow.result.status === "failed" ? "failed" : "ok",
@@ -8841,9 +8755,10 @@ async function onAnalyzeAudio() {
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "audio_pipeline", "error", String(err?.message || err));
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: "audio analysis failed" });
-    state.audioAnalysis.summary = buildAudioAnalysisStubSummary();
-    state.audioAnalysis.lastAnalyzedAt = new Date().toISOString();
-    state.audioAnalysis.pipeline = null;
+    applyAudioAnalystFlowFailureToState({
+      audioAnalysisState: state.audioAnalysis,
+      fallbackSummary: buildAudioAnalysisStubSummary()
+    });
     setStatusWithDiagnostics("warning", `Audio analysis pipeline failed: ${err.message}`);
   } finally {
     state.ui.agentThinking = false;

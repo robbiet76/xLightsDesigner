@@ -51,7 +51,7 @@ Boundary summary:
   - `analysis/media/<media-id>/analysis.json`
 - [~] Stop treating UI summary/pipeline state as the source of truth.
 - [x] Persist artifact reads/writes through project-root storage only.
-- [ ] Add migration/compatibility handling for any legacy audio-analysis state currently kept in sequence-side documents.
+- [x] Do not carry legacy audio-analysis migration paths forward in the product runtime.
 
 ### Phase C: Audio Analyst Runtime Extraction
 - [~] Extract `audio_analyst` orchestration out of `app.js`.
@@ -216,3 +216,5 @@ Progress note (2026-03-12):
 - `analysis_artifact_v1` now carries explicit per-capability availability/confidence/source fields plus structured web-validation evidence, reducing dependence on summary-line parsing downstream.
 - desktop artifact-store read/write logic is now isolated in `apps/xlightsdesigner-desktop/analysis-artifact-store.mjs` and covered by golden persistence/rehydration tests.
 - provider replaceability and future in-house analyzer extension policy are now formalized in `specs/audio-analyst-provider-framework.md`.
+- sequence-side `audioAnalysis` persistence and snapshot fallback paths were removed; the canonical supported source of truth is the per-media project-root artifact.
+- audio-analysis UI state projection and artifact rehydration helpers now live in `apps/xlightsdesigner-ui/agent/audio-analyst-ui-state.js`, reducing direct audio-state mutation inside `app.js`.
