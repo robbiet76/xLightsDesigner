@@ -116,10 +116,25 @@ function shouldExpandGroupTarget(description = "") {
   ].some((needle) => text.includes(needle));
 }
 
+function hasExplicitMemberExpansionOverride(description = "") {
+  const text = normText(description).toLowerCase();
+  return [
+    "each member",
+    "each prop",
+    "per member",
+    "per prop",
+    "flatten members",
+    "all nested members",
+    "expand nested groups",
+    "direct members"
+  ].some((needle) => text.includes(needle));
+}
+
 function inferGroupDistributionStrategy(description = "") {
   const text = normText(description).toLowerCase();
   return {
     expand: shouldExpandGroupTarget(text),
+    explicitOverride: hasExplicitMemberExpansionOverride(text),
     flatten: text.includes("flatten members") || text.includes("all nested members") || text.includes("expand nested groups"),
     stagger: text.includes("stagger members") || text.includes("fan out") || text.includes("spread across members"),
     fanout: text.includes("fan out members") || text.includes("round robin members") || text.includes("rotate members"),
@@ -154,6 +169,12 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
       out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
+    const renderCategory = normText(group?.renderPolicy?.category).toLowerCase();
+    const preserveNonDefaultGroup = renderCategory && renderCategory !== "default" && !strategy.explicitOverride;
+    if (preserveNonDefaultGroup) {
+      out.push({ modelName: id, sourceGroupId: "" });
+      continue;
+    }
     const sourceMembers = strategy.flatten ? Array.from(group.flattened).filter(Boolean) : Array.from(group.direct).filter(Boolean);
     const orderedMembers = orderDistributedMembers(sourceMembers, strategy, alternationSeed);
     if (!orderedMembers.length) {
@@ -174,6 +195,29 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
     deduped.push(row);
   }
   return deduped;
+}
+
+export function collectGroupRenderPolicyWarnings(sourceLines = [], { groupIds = [], groupsById = {} } = {}) {
+  const lines = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
+  if (!lines.length) return [];
+  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
+  const warnings = [];
+  for (const line of lines) {
+    const parsed = parseProposalLine(line);
+    const strategy = inferGroupDistributionStrategy(parsed.description);
+    if (!strategy.expand || strategy.explicitOverride) continue;
+    for (const modelName of parsed.models) {
+      const id = normText(modelName);
+      const group = groupGraph[id];
+      const renderCategory = normText(group?.renderPolicy?.category).toLowerCase();
+      if (!group || !renderCategory || renderCategory === "default") continue;
+      const defaultBufferStyle = normText(group?.renderPolicy?.defaultBufferStyle) || "non-default";
+      warnings.push(
+        `Preserving group render target ${id} (${defaultBufferStyle}); explicit member override required to expand this non-default group render policy.`
+      );
+    }
+  }
+  return Array.from(new Set(warnings));
 }
 
 function derivePerMemberWindow(window, memberIndex = 0, totalMembers = 1, description = "") {

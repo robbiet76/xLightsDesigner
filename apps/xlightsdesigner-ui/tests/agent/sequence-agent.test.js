@@ -610,7 +610,7 @@ test("sequence_agent expands direct group members when per-member distribution i
         sections: ["Chorus 1"]
       }
     },
-    sourceLines: ["Chorus 1 / Frontline / bars stagger members with brighter accents"],
+    sourceLines: ["Chorus 1 / Frontline / bars per member stagger members with brighter accents"],
     groupIds: ["Frontline"],
     groupsById: sampleGroups(),
     effectCatalog: sampleCatalog(),
@@ -627,6 +627,63 @@ test("sequence_agent expands direct group members when per-member distribution i
   );
 });
 
+test("sequence_agent preserves non-default group render targets for soft distribution phrases and warns", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep the frontline render semantics intact unless expansion is explicit",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Frontline / bars stagger members"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Frontline"]);
+  assert.equal(
+    out.warnings.some((w) => /Preserving group render target Frontline \(Horizontal Per Model\)/i.test(String(w))),
+    true
+  );
+});
+
+test("sequence_agent only expands non-default group render targets with explicit member override", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Distribute the frontline group across member props explicitly",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Frontline / bars per member stagger members"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 500],
+      ["Roofline", 500, 1000]
+    ]
+  );
+  assert.equal(out.warnings.some((w) => /explicit member override required/i.test(String(w))), false);
+});
+
 test("sequence_agent mirrors direct group member order when explicitly requested", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
@@ -639,7 +696,7 @@ test("sequence_agent mirrors direct group member order when explicitly requested
         sections: ["Chorus 1"]
       }
     },
-    sourceLines: ["Chorus 1 / Frontline / bars mirror members and stagger members"],
+    sourceLines: ["Chorus 1 / Frontline / bars per member mirror members and stagger members"],
     groupIds: ["Frontline"],
     groupsById: sampleGroups(),
     effectCatalog: sampleCatalog(),
@@ -699,8 +756,8 @@ test("sequence_agent alternates distributed member order across repeated lines",
       }
     },
     sourceLines: [
-      "Chorus 1 / Frontline / bars stagger members",
-      "Chorus 1 / Frontline / bars stagger members"
+      "Chorus 1 / Frontline / bars per member stagger members",
+      "Chorus 1 / Frontline / bars per member stagger members"
     ],
     groupIds: ["Frontline"],
     groupsById: sampleGroups(),

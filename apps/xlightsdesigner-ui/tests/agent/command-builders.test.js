@@ -327,7 +327,7 @@ test("command builders preserve explicit group targets by default", () => {
 
 test("command builders expand direct group members when request explicitly asks for distribution", () => {
   const commands = buildDesignerPlanCommands([
-    "Chorus 1 / Frontline / bars stagger members with brighter accents"
+    "Chorus 1 / Frontline / bars per member stagger members with brighter accents"
   ], {
     targetIds: ["Frontline", "MegaTree"],
     groupIds: ["Frontline"],
@@ -345,9 +345,46 @@ test("command builders expand direct group members when request explicitly asks 
   );
 });
 
+test("command builders preserve non-default group render targets for soft distribution phrases", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars stagger members"
+  ], {
+    targetIds: ["Frontline"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    ["Frontline"]
+  );
+});
+
+test("command builders only expand non-default group render targets with explicit member override", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars per member stagger members"
+  ], {
+    targetIds: ["Frontline"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 500],
+      ["Roofline", 500, 1000]
+    ]
+  );
+});
+
 test("command builders reverse direct group member order when mirror distribution is requested", () => {
   const commands = buildDesignerPlanCommands([
-    "Chorus 1 / Frontline / bars mirror members and stagger members"
+    "Chorus 1 / Frontline / bars per member mirror members and stagger members"
   ], {
     targetIds: ["Frontline"],
     groupIds: ["Frontline"],
@@ -388,8 +425,8 @@ test("command builders can expand flattened members for nested groups when expli
 
 test("command builders alternate distributed member order across repeated lines", () => {
   const commands = buildDesignerPlanCommands([
-    "Chorus 1 / Frontline / bars stagger members",
-    "Chorus 1 / Frontline / bars stagger members"
+    "Chorus 1 / Frontline / bars per member stagger members",
+    "Chorus 1 / Frontline / bars per member stagger members"
   ], {
     targetIds: ["Frontline"],
     groupIds: ["Frontline"],
