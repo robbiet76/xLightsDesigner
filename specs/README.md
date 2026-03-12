@@ -23,6 +23,8 @@ Implementation-facing specifications that drive development work.
 - `audio-analyst/provider-framework.md`
 - `audio-analyst/end-to-end-audit-2026-03-12.md`
 - `designer-dialog/designer-interaction-contract.md`
+- `designer-dialog/implementation-checklist.md`
+- `designer-dialog/end-to-end-audit-2026-03-12.md`
 - `sequence-agent/xlights-sequencer-control-project-spec.md`
 - `sequence-agent/xlights-sequencer-control-api-surface-contract.md`
 - `sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
