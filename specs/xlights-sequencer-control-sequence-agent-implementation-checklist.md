@@ -16,10 +16,10 @@ Boundary summary:
 ## 2) Phase Checklist
 
 ### Required Pre-Gate (applies to each domain area)
-- [ ] Source audit complete (xLights code references documented).
-- [ ] API coverage map complete (source fields/enums/constraints mapped to automation API).
-- [ ] Gap list approved (missing/partial API surface documented and prioritized).
-- [ ] Domain semantic modeling starts only after source+API audit gate is complete.
+- [x] Source audit complete (xLights code references documented).
+- [x] API coverage map complete (source fields/enums/constraints mapped to automation API).
+- [x] Gap list approved (missing/partial API surface documented and prioritized).
+- [x] Domain semantic modeling starts only after source+API audit gate is complete.
 
 ### Phase A: Role Contract and Data Shapes
 - [x] Define canonical `sequence_agent` input contract.
@@ -52,17 +52,17 @@ Boundary summary:
 - [x] Enforce canonical boundary:
   - all `layout.*` state is read-only planner context
   - sequence/sequencer/effects/timing surfaces are the read/write mutation domain
-- [ ] Show layout and model spatial placement:
+- [x] Show layout and model spatial placement:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Canonical scene graph schema defined in app layer.
   - [x] Spatial query helpers implemented (region/proximity/orientation).
   - [x] Layout mode awareness wired (`2d|3d`) with 3D-operation gating policy while preserving depth semantics in both modes.
-- [ ] Model types and functionality:
+- [x] Model types and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Model type ontology + constraints documented and encoded.
-- [ ] Model groups and functionality:
+- [x] Model groups and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
-  - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution/preserve-vs-expand semantics).
+  - [x] Group behavior rules encoded (fanout/stagger/mirror/distribution/preserve-vs-expand semantics).
   - [x] Initial display-element ordering heuristics encoded for group-first sequencing.
   - [x] Group-first planning uses explicit xLights group identity rather than name heuristics.
   - [x] Nested-group breadth preference uses authoritative direct/flattened membership graph.
@@ -81,7 +81,7 @@ Boundary summary:
     - high-risk render policies (`overlay`, `stack`, `single_line`, `per_model_strand`) require force-style override before expansion
     - forced member expansion carries compatibility warnings into validation
     - v1 keeps layout-derived group render policy read-only and uses it only as planner context
-- [ ] Submodels and functionality:
+- [x] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Baseline parent/submodel overlap rules encoded:
     - same-line parent + submodel overlap collapses to the parent target for broad writes
@@ -89,12 +89,15 @@ Boundary summary:
     - separate lines preserve explicit parent-first then submodel refinement behavior
     - sibling submodels remain valid concurrent precision targets when parent is absent
     - exact sibling overlap collapse uses authoritative submodel node-channel membership from automation
-  - [ ] Deeper submodel inheritance/render override rules encoded.
-- [ ] Effects types and settings:
+  - [x] Deeper submodel inheritance/render override rules encoded to the v1 boundary:
+    - exact overlap detection from authoritative node-channel membership
+    - risky local render-path preservation based on submodel render metadata
+    - planner warnings and apply-time precision verification for parent broadening and sibling bleed
+- [x] Effects types and settings:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Effect catalog + parameter schemas + compatibility rules encoded.
   - [x] Group render-policy compatibility warnings encoded for forced member expansion paths.
-- [ ] Sequence planner integration:
+- [x] Sequence planner integration:
   - [x] Sequence functions mapped to validated command graph templates.
   - [x] Deterministic tests added for mixed model/effect scenarios.
   - [x] Broad group-first coverage heuristic preserved when explicit aggregate targets are provided.
@@ -106,7 +109,7 @@ Boundary summary:
 - [x] Preserve explicit write-disable diagnostics when timing writes are disabled by policy.
 
 ### Phase F: Apply Verification and Readback
-- [ ] Add deterministic post-apply verification checks:
+- [x] Add deterministic post-apply verification checks:
   - [x] revision advanced check
   - [x] expected mutations present (timing marks, effects, display-element order, distributed effect windows, submodel precision safety including parent broadening and overlapping sibling bleed)
 - [x] Add structured apply verification report to diagnostics bundle.
@@ -114,7 +117,7 @@ Boundary summary:
 
 ### Phase G: Acceptance Matrix and Regression Harness
 - [x] Expand in-app orchestration matrix to include sequence-agent execution scenarios.
-- [ ] Add automated scenarios:
+- [x] Add automated scenarios:
   - [x] happy path apply from handoff graph
   - [x] stale revision blocked
   - [x] missing analysis degraded mode with warning
@@ -133,7 +136,7 @@ Boundary summary:
 
 ### Phase H: Training Package Integration
 - [x] Add canonical `sequence_agent` profile in training package registry.
-- [ ] Add/update module assets under `modules/xlights_sequencer_execution`:
+- [x] Add/update module assets under `modules/xlights_sequencer_execution`:
   - [x] prompts
   - [x] fewshot
   - [x] eval configuration
