@@ -203,4 +203,5 @@ Progress note (2026-03-12):
 - `analysis_artifact_v1` contract asset added.
 - media-id derivation and project-root artifact persistence implemented in desktop runtime.
 - `analysis_handoff_v1` now derives from the canonical artifact builder path.
+- persisted analysis artifacts now auto-rehydrate on media change / sequence open / project open when available.
 - `audio_analyst` extraction has started via `apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js`, but orchestration still partly lives in `app.js`.

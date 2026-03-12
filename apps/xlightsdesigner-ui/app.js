@@ -680,6 +680,52 @@ function getDesktopAnalysisArtifactBridge() {
   return bridge;
 }
 
+function resetDerivedAudioAnalysisState() {
+  state.audioAnalysis.summary = "";
+  state.audioAnalysis.lastAnalyzedAt = "";
+  state.audioAnalysis.pipeline = null;
+}
+
+function applyPersistedAnalysisArtifact(artifact = null) {
+  if (!artifact || typeof artifact !== "object") return false;
+  const analysisHandoff = buildAnalysisHandoffFromArtifact(artifact, state.creative?.brief || null);
+  const set = setAgentHandoff("analysis_handoff_v1", analysisHandoff, "audio_analyst");
+  if (!set?.ok) return false;
+  state.audioAnalysis.summary = String(artifact?.diagnostics?.summary || "");
+  state.audioAnalysis.lastAnalyzedAt = String(artifact?.provenance?.generatedAt || "");
+  state.audioAnalysis.pipeline = artifact?.provenance?.pipeline && typeof artifact.provenance.pipeline === "object"
+    ? artifact.provenance.pipeline
+    : null;
+  return true;
+}
+
+async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
+  const silent = options?.silent !== false;
+  const bridge = getDesktopAnalysisArtifactBridge();
+  const projectFilePath = String(state.projectFilePath || "").trim();
+  const mediaFilePath = String(state.audioPathInput || "").trim();
+  if (!bridge || !projectFilePath || !mediaFilePath) return { ok: false, reason: "unavailable" };
+  try {
+    const res = await bridge.readAnalysisArtifact({
+      projectFilePath,
+      mediaFilePath
+    });
+    if (res?.ok !== true || !res.artifact || typeof res.artifact !== "object") {
+      return { ok: false, reason: String(res?.code || "not_found") };
+    }
+    const applied = applyPersistedAnalysisArtifact(res.artifact);
+    if (applied && !silent) {
+      setStatus("info", "Loaded existing audio analysis artifact for current media.");
+    }
+    return { ok: applied, artifact: res.artifact };
+  } catch (err) {
+    if (!silent) {
+      setStatusWithDiagnostics("warning", `Audio analysis artifact load failed: ${err?.message || err}`);
+    }
+    return { ok: false, reason: "read_error" };
+  }
+}
+
 function getDesktopTrainingPackageBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
@@ -5109,6 +5155,16 @@ function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated
   state.audioPathInput = next;
   if (prev !== next) {
     invalidateAnalysisHandoff(reason, { cascadePlan: true });
+    resetDerivedAudioAnalysisState();
+    if (next) {
+      void hydrateAnalysisArtifactForCurrentMedia({ silent: true }).then((res) => {
+        if (res?.ok) {
+          saveCurrentProjectSnapshot();
+          persist();
+          render();
+        }
+      });
+    }
   }
 }
 
@@ -7112,6 +7168,13 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
     setStatus("info", `Opened project: ${state.projectName}`);
     persist();
     render();
+    void hydrateAnalysisArtifactForCurrentMedia({ silent: true }).then((res) => {
+      if (res?.ok) {
+        saveCurrentProjectSnapshot();
+        persist();
+        render();
+      }
+    });
     void onRefreshSequenceCatalog({ silent: true });
     return;
   }
@@ -7144,6 +7207,13 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
   setStatus("info", `Opened project: ${state.projectName}`);
   persist();
   render();
+  void hydrateAnalysisArtifactForCurrentMedia({ silent: true }).then((res) => {
+    if (res?.ok) {
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+    }
+  });
   void onRefreshSequenceCatalog({ silent: true });
 }
 
