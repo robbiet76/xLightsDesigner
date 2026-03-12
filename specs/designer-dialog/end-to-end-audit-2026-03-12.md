@@ -5,12 +5,13 @@ Date: 2026-03-12
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-12
 
-Purpose: assess the current `designer_dialog` implementation as its own specialist domain before starting the next development phase.
+Purpose: assess the current `designer_dialog` implementation as the creative specialist domain under `app_assistant` before starting the next development phase.
 
 ## 1) Scope
 
 This audit covers:
 - the current `designer_dialog` runtime modules
+- the new requirement that unified user-facing chat belongs to `app_assistant`, not to `designer_dialog`
 - the active interaction contract
 - the current app-owned orchestration/UI behavior
 - training-package alignment for `lighting_design_principles`
@@ -164,6 +165,7 @@ There is no dedicated test coverage yet for:
 ### 4.1 Strengths
 
 - domain boundary is now explicit in the repo
+- `designer_dialog` can now be kept focused as a creative specialist instead of absorbing all app-wide chat behavior
 - active designer interaction contract is strong and detailed
 - basic intent normalization and proposal seeding already exist
 - integration with audio and sequencing roles is already conceptually defined
@@ -171,6 +173,7 @@ There is no dedicated test coverage yet for:
 ### 4.2 Weaknesses
 
 - current designer domain is mostly helpers, not a true specialist runtime
+- the conversational shell above specialist roles is not implemented yet
 - too much designer lifecycle logic remains in `app.js`
 - no canonical designer contracts
 - no structured proposal object owned by designer runtime
@@ -180,7 +183,7 @@ There is no dedicated test coverage yet for:
 
 `designer_dialog` is currently:
 - structurally isolated in the repo
-- conceptually well-specified
+- conceptually better-scoped now that app-wide chat is assigned to `app_assistant`
 - partially implemented
 
 But it is not yet end-to-end complete in the way `audio_analyst` and `sequence_agent` now are.

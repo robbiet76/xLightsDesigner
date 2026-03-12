@@ -1,7 +1,7 @@
 {
   "id": "designer_dialog",
   "version": "0.1.0",
-  "purpose": "Guide the director-style conversation, refine intent, and maintain constraints and creative goals.",
+  "purpose": "Operate as a fully conversational lighting-design specialist that collaborates with the director, forms creative assumptions, and turns open-ended discussion into reviewable design intent.",
   "ownedModules": [
     "lighting_design_principles"
   ],
@@ -10,8 +10,11 @@
     "llmUsage": "primary",
     "llmTasks": [
       "guided conversation",
+      "creative memory and preference learning",
+      "open-ended inspiration synthesis",
       "intent normalization",
-      "constraint synthesis"
+      "constraint synthesis",
+      "proposal framing"
     ]
   },
   "outputs": [

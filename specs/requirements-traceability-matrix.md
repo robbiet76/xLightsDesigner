@@ -13,7 +13,8 @@ Map core requirements to implementation surfaces and verification tests.
 | --- | --- | --- | --- |
 | ATL-001 | `audio-timing-lyrics-project-spec.md` | analysis service + UI audio flow | `xlights-sequencer-control-acceptance-test-matrix.md` |
 | XSC-001 | `xlights-sequencer-control-project-spec.md` | API v2 sequence/timing/effects | `xlights-sequencer-control-integration-test-harness.md` |
-| XSC-002 | `designer-dialog/designer-interaction-contract.md` | chat/plan/review/apply UI loop | UI regression and harness evidence |
+| APP-001 | `app-assistant/app-assistant-role-and-boundary.md` | unified chat shell, specialist routing, app-wide guidance | app-assistant runtime and routing tests |
+| XSC-002 | `designer-dialog/designer-interaction-contract.md` | creative design conversation, proposal shaping, intent handoff | designer runtime and handoff tests |
 
 ## Next Step
 Expand this matrix with requirement-level IDs from the active project specs and explicit script/test mappings.

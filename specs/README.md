@@ -9,6 +9,7 @@ Implementation-facing specifications that drive development work.
 
 ## Layout
 - `specs/`: active, authoritative spec set.
+- `specs/app-assistant/`: active unified chat-shell specs and routing boundaries.
 - `specs/audio-analyst/`: active `audio_analyst` specs and audits.
 - `specs/designer-dialog/`: active `designer_dialog` interaction and workflow specs.
 - `specs/sequence-agent/`: active `sequence_agent` and xLights sequencing specs.
@@ -19,6 +20,8 @@ Implementation-facing specifications that drive development work.
 - legacy flat specs are archived under domain-specific or root archive paths
 
 ## Active Entry Points
+- `app-assistant/app-assistant-role-and-boundary.md`
+- `app-assistant/implementation-checklist.md`
 - `audio-analyst/implementation-checklist.md`
 - `audio-analyst/provider-framework.md`
 - `audio-analyst/end-to-end-audit-2026-03-12.md`

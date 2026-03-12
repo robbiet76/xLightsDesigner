@@ -11,9 +11,10 @@ Scope: xLightsDesigner interaction layer above xLights control APIs
 Define how user intent is captured, clarified, and converted into deterministic, reviewable API mutations so sequence design is iterative, not a black-box one-shot generation flow.
 
 This spec defines the contract between:
-- User-facing UI (chat + structured controls),
-- Agent planning/execution layer,
-- Existing xLights v2 control APIs.
+- `app_assistant` as the unified user-facing chat shell,
+- `designer_dialog` as the creative specialist runtime,
+- downstream specialist/runtime layers,
+- existing xLights v2 control APIs.
 
 ## 2) Design Goals
 - Keep user in control with clear scope and constraints.
@@ -87,7 +88,8 @@ This interaction contract assumes three cooperating runtime roles:
 - `sequence_agent`
 
 Boundary rules:
-- `designer_dialog` is the only role that should directly drive user-facing conversation.
+- `app_assistant` is the unified user-facing chat shell across the whole product.
+- `designer_dialog` is the creative specialist that `app_assistant` invokes when the conversation is primarily about design intent, proposal shaping, and creative refinement.
 - `audio_analyst` provides structured analysis context; it does not own apply decisions or timing-track writes.
 - `sequence_agent` owns technical plan construction for apply paths (including timing-track creation decisions); it does not bypass approval or revision gates.
 

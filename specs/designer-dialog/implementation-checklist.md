@@ -5,7 +5,7 @@ Date: 2026-03-12
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-12
 
-Purpose: complete `designer_dialog` as a true specialist runtime that owns creative intent capture, clarification, brief synthesis, proposal generation, and proposal lifecycle up to the `sequence_agent` handoff boundary.
+Purpose: complete `designer_dialog` as the creative specialist runtime under `app_assistant`, owning creative intent capture, clarification, brief synthesis, proposal generation, and proposal lifecycle up to the `sequence_agent` handoff boundary.
 
 ## Role Lock
 
@@ -24,7 +24,8 @@ Purpose: complete `designer_dialog` as a true specialist runtime that owns creat
 ## Locked Boundary
 
 - `audio_analyst` owns media analysis only.
-- `designer_dialog` owns user-facing creative conversation, creative brief, intent normalization, clarification, and proposal lifecycle.
+- `app_assistant` owns the unified app-wide chat experience.
+- `designer_dialog` owns creative design specialization within that chat flow: creative brief, intent normalization, clarification, and proposal lifecycle.
 - `sequence_agent` owns technical sequencing plans and xLights apply behavior.
 - `layout.*` remains read-only context.
 - `sequence_*`, `sequencer.*`, `effects.*`, `timing.*` mutation remains downstream of approved designer intent.
