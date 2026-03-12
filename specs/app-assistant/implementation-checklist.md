@@ -12,6 +12,11 @@ Purpose: implement the unified conversational shell above specialist agents with
 - [x] Define app-assistant session/context contract
 - [x] Define specialist routing result contract
 - [ ] Define action-request contract for bounded app-level actions
+- [ ] Define team-chat identity contract:
+  - canonical role id
+  - display name
+  - optional nickname
+  - handled-by / routed-by metadata
 
 ## Phase B: Session And Routing
 - [x] Add app-assistant runtime/orchestrator
@@ -22,11 +27,15 @@ Purpose: implement the unified conversational shell above specialist agents with
   - `designer_dialog`
   - `sequence_agent`
 - [x] Add tests that prove the user does not need to switch agents manually
+- [ ] Add routing rules that treat direct specialist address as a hint, not a hard dispatch
+- [ ] Add tests for nickname and direct-address routing overrides
 
 ## Phase C: UI Integration
 - [x] Make the main chat panel owned by `app_assistant`
 - [x] Preserve visible specialist context when work is delegated
 - [ ] Surface structured artifacts produced by specialists in the shared chat flow
+- [ ] Show visible speaker identity for delegated specialist responses
+- [ ] Add optional user-defined specialist nicknames in the chat UI
 
 ## Phase D: Training And Diagnostics
 - [ ] Add `app_assistant` training/package assets

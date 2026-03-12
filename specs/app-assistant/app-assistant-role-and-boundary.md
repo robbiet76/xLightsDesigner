@@ -45,6 +45,38 @@ Define the top-level conversational assistant that the user experiences across t
 - The conversation may include practical setup questions, emotional or image-driven design inspiration, technical sequencing questions, and requests for action.
 - `app_assistant` must preserve context across those modes and route work without forcing the user to switch personas manually.
 
+## Team Chat Identity Model
+- The user experience should feel like one team chat, not separate disconnected agent consoles.
+- `app_assistant` is the default front door and coordinating presence in that chat.
+- When specialist work is delegated, the UI should make the responding specialist visible.
+- Canonical specialist identities remain:
+  - `audio_analyst`
+  - `designer_dialog`
+  - `sequence_agent`
+- UI presentation may use human-readable display names and optional user-defined nicknames, but canonical runtime role ids must remain unchanged underneath.
+- Nicknames are cosmetic and conversational. They must not replace canonical role ids in contracts, artifacts, logs, or routing logic.
+
+## Direct Address And Routing Rules
+- The user may address specialists by canonical role, display label, or nickname.
+- Direct address is a routing hint, not a hard dispatch command.
+- `app_assistant` remains responsible for deciding which specialist should actually handle the request.
+- Routing precedence should consider:
+  - current workflow state
+  - available artifacts and revision state
+  - request shape and specificity
+  - direct addressee or nickname as an advisory signal
+- If the addressed specialist is not the best actual handler, `app_assistant` may route the request elsewhere.
+- When routing overrides the named addressee, the UI should make the actual handler visible so the user understands who responded.
+
+## Practical Routing Examples
+- `Hey Patch, make the trees less blinky in Chorus 3`
+  - may route to `sequence_agent` if there is already a concrete proposal or execution draft
+  - may route to `designer_dialog` if the request is still a creative refinement without an execution-ready baseline
+- `Rhythm, analyze this song again`
+  - should normally route to `audio_analyst`
+- `How do I set up my show folder?`
+  - should normally remain with `app_assistant` as setup/help
+
 ## Structured Output Model
 Conversation may remain open-ended, but specialist work must still terminate in explicit structured outputs.
 
