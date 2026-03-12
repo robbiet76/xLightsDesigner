@@ -1,6 +1,6 @@
 {
   "id": "audio_analyst",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "purpose": "Convert media into canonical analysis artifacts and downstream context/timing handoffs for design and sequencing.",
   "ownedModules": [
     "audio_track_analysis"

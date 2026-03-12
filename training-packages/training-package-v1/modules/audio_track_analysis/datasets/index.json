@@ -5,6 +5,18 @@
       "type": "stanza-corpus",
       "path": "datasets/structure_corpus_top50_holiday_keywords.json",
       "description": "Packaged weak-supervision stanza corpus used for runtime few-shot retrieval."
+    },
+    {
+      "id": "audio_analyst_runtime_contracts",
+      "type": "runtime-contract-reference",
+      "paths": [
+        "apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js",
+        "apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js",
+        "apps/xlightsdesigner-ui/agent/audio-analysis-service-runtime.js",
+        "apps/xlightsdesigner-ui/agent/audio-analysis-context-runtime.js",
+        "apps/xlightsdesigner-ui/agent/audio-analysis-orchestrator.js"
+      ],
+      "description": "Canonical runtime contract and orchestration references for the media-analysis specialist."
     }
   ]
 }

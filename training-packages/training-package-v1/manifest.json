@@ -8,7 +8,7 @@
   "modules": [
     {
       "id": "audio_track_analysis",
-      "version": "0.1.2",
+      "version": "0.1.4",
       "path": "modules/audio_track_analysis/module.manifest.json"
     },
     {

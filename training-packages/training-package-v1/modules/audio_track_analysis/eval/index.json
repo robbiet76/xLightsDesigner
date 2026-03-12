@@ -6,6 +6,18 @@
   "metrics": [
     "labelAccuracy",
     "startMaeMs",
-    "endMaeMs"
+    "endMaeMs",
+    "degradedModeClassification",
+    "providerLineagePreserved"
+  ],
+  "plannedCases": [
+    "lyrics-rich stanza relabeling",
+    "partial analysis with no synced lyrics",
+    "meter-aware tempo correction from web evidence",
+    "artifact-to-handoff derivation fidelity"
+  ],
+  "notes": [
+    "Eval should validate artifact/handoff behavior, not sequence mutation behavior.",
+    "Partial analysis is a passing outcome when correctly classified and preserved."
   ]
 }

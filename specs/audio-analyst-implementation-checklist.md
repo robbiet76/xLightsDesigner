@@ -124,10 +124,10 @@ Boundary summary:
 - [ ] Surface degraded-mode outcomes clearly without pretending full success.
 
 ### Phase I: Test and Eval Harness
-- [ ] Add dedicated `audio_analyst` unit tests in `apps/xlightsdesigner-ui/tests/agent/`.
+- [x] Add dedicated `audio_analyst` unit tests in `apps/xlightsdesigner-ui/tests/agent/`.
 - [x] Add artifact schema validation tests.
 - [x] Add handoff validation tests.
-- [ ] Add provider arbitration/normalization tests.
+- [x] Add provider arbitration/normalization tests.
 - [ ] Add golden-case tests for:
   - beats/bars/chords/lyrics/sections presence
   - partial-result handling
@@ -135,13 +135,13 @@ Boundary summary:
 - [ ] Align service eval harness with packaged training assets.
 
 ### Phase J: Training Package Completion
-- [ ] Upgrade `audio_track_analysis` module from partial scaffold to full module parity.
-- [ ] Add/update:
-  - prompts
-  - fewshot
-  - eval configuration
-  - contract references
-  - dataset manifest
+- [~] Upgrade `audio_track_analysis` module from partial scaffold to full module parity.
+- [~] Add/update:
+  - [x] prompts
+  - [x] fewshot
+  - [x] eval configuration
+  - [x] contract references
+  - [x] dataset manifest
 - [ ] Keep training functionality-focused:
   - structure inference
   - timing/chord/lyric evidence usage
@@ -211,3 +211,4 @@ Progress note (2026-03-12):
 - song-context research and web tempo-validation now live partly in `apps/xlightsdesigner-ui/agent/audio-analysis-context-runtime.js`, further shrinking `runAudioAnalysisPipeline()` toward composition logic only.
 - high-level pipeline composition now lives in `apps/xlightsdesigner-ui/agent/audio-analysis-orchestrator.js`, leaving `app.js` to dispatch the runtime and reflect results into UI state.
 - service normalization now uses explicit capability adapters in `apps/xlightsdesigner-ui/agent/audio-analysis-capability-adapters.js` for identity, timing, chords, lyrics, and baseline structure extraction.
+- training assets for `audio_track_analysis` now reflect the artifact/handoff boundary, degraded-mode handling, and media-only role of `audio_analyst` rather than the earlier timing-track-oriented scaffold.

@@ -1,5 +1,44 @@
 {
-  "status": "pending",
-  "notes": "Few-shot examples will be generated from curated corpus + director validated cases.",
-  "selectionPolicy": "nearest-pattern by repetition/title/harmonic evidence"
+  "status": "active",
+  "selectionPolicy": "capability-first; prefer examples matching available lyric, harmonic, and structure evidence",
+  "notes": [
+    "Examples teach evidence usage and degraded-mode honesty, not stylistic sequencing behavior.",
+    "This module is media-only and must not introduce xLights mutation assumptions."
+  ],
+  "examples": [
+    {
+      "id": "lyrics-rich-structure-relabel",
+      "focus": ["structure", "lyrics", "confidence"],
+      "expectedBehavior": [
+        "keep stanza count fixed",
+        "bias recurring title/hook block to Chorus",
+        "return short rationale and explicit confidence"
+      ]
+    },
+    {
+      "id": "partial-no-lyrics",
+      "focus": ["degraded-mode", "artifact honesty"],
+      "expectedBehavior": [
+        "preserve beats/bars/chords when available",
+        "report lyrics unavailable explicitly",
+        "do not fabricate lyric-derived structure confidence"
+      ]
+    },
+    {
+      "id": "tempo-web-correction",
+      "focus": ["tempo", "meter", "evidence arbitration"],
+      "expectedBehavior": [
+        "use meter-aware BPM correction when strong external evidence supports it",
+        "surface mismatch diagnostics when evidence is incoherent"
+      ]
+    },
+    {
+      "id": "provider-lineage-preserved",
+      "focus": ["provenance", "artifact"],
+      "expectedBehavior": [
+        "retain provider lineage in artifact provenance",
+        "keep downstream handoff distilled but artifact-rich"
+      ]
+    }
+  ]
 }
