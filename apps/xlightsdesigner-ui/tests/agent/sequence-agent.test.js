@@ -203,7 +203,8 @@ test("sequence_agent builds validated command plan from handoffs", () => {
       "Chorus 1 / MegaTree / increase pulse contrast and faster motion",
       "Chorus 1 / Roofline / mirror rhythm with delayed accents"
     ],
-    baseRevision: "rev-55"
+    baseRevision: "rev-55",
+    effectCatalog: sampleCatalog()
   });
 
   assert.equal(typeof out.planId, "string");
@@ -219,6 +220,22 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.metadata.mode, "revise");
   assert.equal(out.metadata.degradedMode, false);
   assert.deepEqual(out.metadata.scope.sections, ["Chorus 1"]);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
+});
+
+test("sequence_agent falls back cleanly when effects.alignToTiming capability is unavailable", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sourceLines: ["Chorus 1 / MegaTree / pulse"],
+    baseRevision: "rev-56",
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"],
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(out.validationReady, true);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), false);
+  assert.ok(out.warnings.some((row) => /effects\.alignToTiming capability unavailable/i.test(String(row))));
 });
 
 test("sequence_agent emits reduced-confidence warning when analysis is missing", () => {

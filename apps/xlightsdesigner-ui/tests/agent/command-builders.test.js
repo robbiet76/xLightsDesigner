@@ -172,7 +172,8 @@ test("command builders emit canonical command graph templates with dependencies"
     "Chorus 1 / MegaTree / increase pulse contrast and fade bars accents"
   ], {
     trackName: "XD: Sequencer Plan",
-    effectCatalog: sampleCatalog()
+    effectCatalog: sampleCatalog(),
+    enableEffectTimingAlignment: true
   });
 
   assert.equal(commands[0].id, "timing.track.create");
@@ -183,6 +184,24 @@ test("command builders emit canonical command graph templates with dependencies"
   assert.equal(commands[2].params.effectName, "Bars");
   assert.equal(commands[2].params.settings.T_CHOICE_In_Transition_Type, "Fade");
   assert.equal(commands[2].params.settings.C_SLIDER_Contrast, 35);
+  assert.equal(commands[3].cmd, "effects.alignToTiming");
+  assert.deepEqual(commands[3].dependsOn, ["effect.1"]);
+  assert.equal(commands[3].params.timingTrackName, "XD: Sequencer Plan");
+  assert.equal(commands[3].params.mode, "nearest");
+});
+
+test("command builders can skip explicit timing re-alignment commands when capability is unavailable", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / MegaTree / bars"
+  ], {
+    trackName: "XD: Sequencer Plan",
+    effectCatalog: sampleCatalog(),
+    enableEffectTimingAlignment: false
+  });
+
+  assert.equal(commands.some((row) => row.cmd === "effects.alignToTiming"), false);
+  const effectCommand = commands.find((row) => row.cmd === "effects.create");
+  assert.equal(effectCommand?.anchor?.trackName, "XD: Sequencer Plan");
 });
 
 test("command builders create layered mixed-model effects deterministically", () => {

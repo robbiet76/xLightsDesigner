@@ -103,10 +103,15 @@ function stageCommandGraphSynthesis({
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
+  const advertisedCapabilities = Array.isArray(capabilityCommands) ? capabilityCommands.map((row) => normText(row)).filter(Boolean) : [];
+  const enableEffectTimingAlignment = !advertisedCapabilities.length || advertisedCapabilities.includes("effects.alignToTiming");
   const groupRenderWarnings = collectGroupRenderPolicyWarnings(executionLines, { groupIds, groupsById });
   if (groupRenderWarnings.length) warnings.push(...groupRenderWarnings);
   const submodelRenderWarnings = collectSubmodelRenderWarnings(executionLines, { submodelsById, targetIds });
   if (submodelRenderWarnings.length) warnings.push(...submodelRenderWarnings);
+  if (!enableEffectTimingAlignment) {
+    warnings.push("effects.alignToTiming capability unavailable; effect windows will remain static timing-aligned ranges instead of explicit timing re-alignment commands.");
+  }
   const commands = buildDesignerPlanCommands(executionLines, {
     trackName: "XD: Sequencer Plan",
     targetIds,
@@ -114,7 +119,8 @@ function stageCommandGraphSynthesis({
     displayElements,
     groupIds,
     groupsById,
-    submodelsById
+    submodelsById,
+    enableEffectTimingAlignment
   });
   const filteredCommands = [];
   for (const command of commands) {

@@ -657,7 +657,8 @@ function buildEffectTemplates(
   groupIds = [],
   groupsById = {},
   submodelsById = {},
-  trackName = "XD: Sequencer Plan"
+  trackName = "XD: Sequencer Plan",
+  enableEffectTimingAlignment = true
 ) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
@@ -729,6 +730,23 @@ function buildEffectTemplates(
           sourceGroupRenderRisk: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.riskLevel)
         }
       });
+
+      if (enableEffectTimingAlignment) {
+        const effectNodeId = `effect.${out.length}`;
+        out.push({
+          id: `effect.align.${out.length}`,
+          dependsOn: [effectNodeId],
+          cmd: "effects.alignToTiming",
+          params: {
+            modelName,
+            layerIndex,
+            startMs: scopedWindow.startMs,
+            endMs: scopedWindow.endMs,
+            timingTrackName: normText(trackName) || "XD: Sequencer Plan",
+            mode: "nearest"
+          }
+        });
+      }
     }
   }
 
@@ -737,7 +755,16 @@ function buildEffectTemplates(
 
 export function buildDesignerPlanCommands(
   sourceLines = [],
-  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [], groupIds = [], groupsById = {}, submodelsById = {} } = {}
+  {
+    trackName = "XD:ProposedPlan",
+    targetIds = [],
+    effectCatalog = null,
+    displayElements = [],
+    groupIds = [],
+    groupsById = {},
+    submodelsById = {},
+    enableEffectTimingAlignment = true
+  } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!source.length) {
@@ -775,7 +802,17 @@ export function buildDesignerPlanCommands(
     trackName
   });
 
-  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds, groupsById, submodelsById, trackName).map((row) => {
+  const effectCommands = buildEffectTemplates(
+    source,
+    parsed,
+    targetIds,
+    effectCatalog,
+    groupIds,
+    groupsById,
+    submodelsById,
+    trackName,
+    enableEffectTimingAlignment
+  ).map((row) => {
     if (!displayOrderCommand) return row;
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
     if (!dependsOn.includes(displayOrderCommand.id)) {
