@@ -113,8 +113,8 @@ Exit gate:
 
 - [x] Add `designer-dialog-contracts.js`
 - [x] Add `designer-dialog-runtime.js`
-- [ ] Add `designer-dialog-orchestrator.js`
-- [ ] Add `designer-dialog-ui-state.js`
+- [x] Add `designer-dialog-orchestrator.js`
+- [x] Add `designer-dialog-ui-state.js`
 - [x] Move proposal-generation orchestration out of `app.js`
 - [ ] Move proposal stale/rebase logic out of `app.js`
 - [x] Move creative brief state projection out of `app.js`
@@ -200,9 +200,13 @@ Implemented now:
   - canonical `proposal_bundle_v1` generation with explicit assumptions
   - runtime result envelope + handoff generation
   - focused runtime tests
+- [x] Designer orchestration/ui-state slice:
+  - `designer-dialog-orchestrator.js`
+  - `designer-dialog-ui-state.js`
+  - `onGenerate()` routed through orchestrator + UI projection helpers
+  - focused orchestrator/ui-state tests
 
 Not yet implemented:
-- [ ] dedicated orchestrator/ui-state extraction
 - [ ] stale/rebase proposal lifecycle artifact behavior
 - [ ] dedicated training few-shot/eval assets
 - [ ] broader orchestration and lifecycle test coverage
