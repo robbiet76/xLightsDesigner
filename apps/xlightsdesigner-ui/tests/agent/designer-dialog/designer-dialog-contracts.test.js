@@ -65,6 +65,15 @@ function sampleProposal(overrides = {}) {
       preserveTimingTracks: true,
       allowGlobalRewrite: false
     },
+    lifecycle: {
+      status: "fresh",
+      stale: false,
+      baseRevision: "rev-1",
+      currentRevision: "rev-1",
+      rebasedFrom: null,
+      staleReason: "",
+      updatedAt: new Date().toISOString()
+    },
     proposalLines: ["Chorus 1 / MegaTree / increase pulse contrast and cleaner accents."],
     guidedQuestions: [],
     assumptions: [],

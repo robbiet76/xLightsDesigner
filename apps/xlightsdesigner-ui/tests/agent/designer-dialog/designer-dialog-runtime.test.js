@@ -69,6 +69,7 @@ test("buildProposalBundleArtifact returns canonical proposal with scope and impa
   assert.equal(result.proposalBundle.bundleType, "proposal_bundle_v1");
   assert.equal(result.proposalBundle.baseRevision, "rev-9");
   assert.deepEqual(result.proposalBundle.scope.targetIds, ["MegaTree"]);
+  assert.equal(result.proposalBundle.lifecycle.status, "fresh");
   assert.ok(result.proposalBundle.proposalLines.length > 0);
   assert.ok(Array.isArray(result.proposalBundle.assumptions));
   assert.ok(typeof result.proposalBundle.impact.estimatedImpact === "number");

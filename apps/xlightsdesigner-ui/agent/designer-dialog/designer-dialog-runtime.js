@@ -10,6 +10,7 @@ import {
 import { buildClarificationPlan } from "./guided-dialog.js";
 import { synthesizeCreativeBrief } from "./brief-synthesizer.js";
 import { buildProposalFromIntent } from "./planner.js";
+import { buildProposalLifecycle } from "./designer-dialog-lifecycle.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -230,6 +231,7 @@ export function buildProposalBundleArtifact({
       preserveDisplayOrder: plan.normalizedIntent?.preservationConstraints?.preserveDisplayOrder !== false,
       allowGlobalRewrite: Boolean(plan.normalizedIntent?.preservationConstraints?.allowGlobalRewrite)
     },
+    lifecycle: buildProposalLifecycle(sequenceRevision),
     proposalLines,
     guidedQuestions: arr(clarificationPlan.questions).map((row) => str(row.question)).filter(Boolean),
     assumptions: arr(clarificationPlan.assumptions),

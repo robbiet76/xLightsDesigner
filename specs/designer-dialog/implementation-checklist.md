@@ -103,7 +103,7 @@ Exit gate:
   - risk notes
   - explicit assumption list
   - base revision
-- [ ] Add stale/rebase markers to proposal bundle state
+- [x] Add stale/rebase markers to proposal bundle state
 - [x] Ensure proposal bundle is the only upstream input used to generate sequence-agent plans
 
 Exit gate:
@@ -205,9 +205,13 @@ Implemented now:
   - `designer-dialog-ui-state.js`
   - `onGenerate()` routed through orchestrator + UI projection helpers
   - focused orchestrator/ui-state tests
+- [x] Proposal lifecycle slice:
+  - `designer-dialog-lifecycle.js`
+  - proposal bundle lifecycle state (`fresh`, `stale`, `rebased`)
+  - stale/rebase state derived from proposal artifact instead of only UI flags
+  - focused lifecycle tests
 
 Not yet implemented:
-- [ ] stale/rebase proposal lifecycle artifact behavior
 - [ ] dedicated training few-shot/eval assets
 - [ ] broader orchestration and lifecycle test coverage
 
