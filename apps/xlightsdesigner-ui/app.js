@@ -94,6 +94,7 @@ import {
 } from "./agent/app-assistant/app-assistant-contracts.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
+import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
 import {
   classifyDepthBands,
   collectSpatialNodes,
@@ -9124,29 +9125,14 @@ function bindEvents() {
     btn.addEventListener("click", () => setDiagnosticsFilter(btn.dataset.diagFilter));
   });
 
-  const sendChatBtn = app.querySelector("#send-chat");
-  if (sendChatBtn) sendChatBtn.addEventListener("click", onSendChat);
-
-  const chatInput = app.querySelector("#chat-input");
-  if (chatInput) {
-    chatInput.addEventListener("input", () => {
-      state.ui.chatDraft = chatInput.value;
-      persist();
-    });
-    chatInput.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" && !ev.shiftKey) {
-        ev.preventDefault();
-        onSendChat();
-      }
-    });
-  }
-
-  app.querySelectorAll("[data-quick-prompt]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const idx = Number.parseInt(btn.dataset.quickPrompt, 10);
-      if (!Number.isInteger(idx) || idx < 0 || idx >= CHAT_QUICK_PROMPTS.length) return;
-      onUseQuickPrompt(CHAT_QUICK_PROMPTS[idx]);
-    });
+  bindTeamChatEvents({
+    app,
+    state,
+    quickPrompts: CHAT_QUICK_PROMPTS,
+    persist,
+    render,
+    onSendChat,
+    onUseQuickPrompt
   });
 
   const applySelectedBtn = app.querySelector("#apply-selected");

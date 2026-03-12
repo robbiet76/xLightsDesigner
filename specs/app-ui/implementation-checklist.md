@@ -58,7 +58,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 ## Phase F: UI Runtime Structure
 - [x] Add an `app-ui` runtime/render domain under `apps/xlightsdesigner-ui`
 - [x] Extract shell rendering from `app.js`
-- [ ] Extract chat rendering/binding from `app.js`
+- [x] Extract chat rendering/binding from `app.js`
 - [ ] Extract settings/diagnostics rendering from `app.js`
 - [ ] Extract screen-specific event binding from `app.js`
 
