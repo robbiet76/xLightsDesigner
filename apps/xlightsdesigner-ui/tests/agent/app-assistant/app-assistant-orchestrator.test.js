@@ -84,6 +84,54 @@ test("app assistant routes analysis requests to audio_analyst", async () => {
   assert.equal(result.result.handledBy, "audio_analyst");
 });
 
+test("app assistant biases generic audio-page conversation toward audio_analyst", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "Here is what I found in the current audio artifact.",
+        shouldGenerateProposal: false,
+        responseId: "resp-audio-context"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "What did you find so far?",
+    messages: [],
+    context: { route: "audio", sequenceOpen: true },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "audio_analyst");
+  assert.equal(result.result.handledBy, "audio_analyst");
+});
+
+test("app assistant biases generic review-page conversation toward sequence_agent", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "The current plan is ready for review.",
+        shouldGenerateProposal: false,
+        responseId: "resp-review-context"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "What should I check before I apply this?",
+    messages: [],
+    context: { route: "review", sequenceOpen: true },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "sequence_agent");
+  assert.equal(result.result.handledBy, "sequence_agent");
+});
+
 test("direct specialist address acts as a routing hint, not a hard dispatch", async () => {
   const bridge = {
     async runAgentConversation() {

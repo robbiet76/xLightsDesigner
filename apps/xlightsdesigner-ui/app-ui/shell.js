@@ -18,6 +18,8 @@ export function buildAppShell({ state, screenContent, helpers }) {
     applyEnabled,
     applyDisabledReason,
     chatQuickPrompts,
+    chatPlaceholder,
+    chatContext,
     analysisHeaderBadge,
     buildLabel
   } = helpers;
@@ -80,6 +82,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
     return `
       <aside class="coach-panel card">
         <h3>Team Chat</h3>
+        <div class="banner team-chat-context"><strong>${escapeHtml(String(chatContext?.title || "Team chat"))}</strong> - ${escapeHtml(String(chatContext?.note || ""))}</div>
         <div class="panel-window chat-window">
           <div class="chat-thread">
             ${(state.chat || [])
@@ -124,7 +127,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
     return `
       <div class="global-chat-bar">
         <div class="composer">
-          <input id="chat-input" placeholder="Tell the agent what to change or ask for guidance..." value="${(state.ui.chatDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="chat-input" placeholder="${escapeHtml(String(chatPlaceholder || "Tell the agent what to change or ask for guidance..."))}" value="${(state.ui.chatDraft || "").replace(/\"/g, "&quot;")}" />
           <button id="send-chat">Send</button>
         </div>
       </div>

@@ -36,6 +36,7 @@ function inferAddressedRole({ userMessage = "", context = {} } = {}) {
 function inferRouteDecision({ userMessage = "", context = {}, response = {} } = {}) {
   const text = `${str(userMessage)} ${str(response.assistantMessage)}`.toLowerCase();
   const addressedRole = inferAddressedRole({ userMessage, context });
+  const currentRoute = str(context?.route);
   if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(text)) {
     return "setup_help";
   }
@@ -47,12 +48,24 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   }
   if (
     /(feel|mood|nostalg|cinematic|punchy|smooth|warm|cool|design|chorus|verse|bridge|look|story|inspiration)/.test(text) ||
-    context?.route === "design"
+    currentRoute === "design"
   ) {
     if (addressedRole === "sequence_agent" && /(change|less|more|reduce|increase|make|adjust|revise|rework|chorus|verse|bridge)/.test(text)) {
       return "sequence_agent";
     }
     return "designer_dialog";
+  }
+  if (currentRoute === "project") {
+    return addressedRole || "setup_help";
+  }
+  if (currentRoute === "audio") {
+    return addressedRole && addressedRole !== "designer_dialog" ? addressedRole : "audio_analyst";
+  }
+  if (currentRoute === "review") {
+    return addressedRole && addressedRole !== "audio_analyst" ? addressedRole : "sequence_agent";
+  }
+  if (currentRoute === "sequence") {
+    return addressedRole || "sequence_agent";
   }
   if (addressedRole === "audio_analyst" || addressedRole === "designer_dialog" || addressedRole === "sequence_agent") {
     return addressedRole;

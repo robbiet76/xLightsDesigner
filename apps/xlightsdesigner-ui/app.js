@@ -116,11 +116,48 @@ const ENDPOINT_PROBE_TIMEOUT_MS = 1800;
 const DEFAULT_ANALYSIS_SERVICE_URL = "http://127.0.0.1:5055";
 const DEFAULT_PROPOSED_ROWS = 5;
 const PROPOSED_ROWS_STEP = 5;
-const CHAT_QUICK_PROMPTS = [
-  "Make chorus 2 higher energy on MegaTree and Roofline.",
-  "Keep current look, but reduce twinkle intensity on candy canes.",
-  "Rework bridge section with calmer color transitions."
-];
+const CHAT_QUICK_PROMPTS_BY_ROUTE = {
+  project: [
+    "Help me set up the show folder and project root for this install.",
+    "What should I configure before I start working on a sequence?",
+    "Check whether this project is ready for first use."
+  ],
+  audio: [
+    "Analyze this song and tell me what structure you found.",
+    "Re-run audio analysis and focus on beats, bars, and section boundaries.",
+    "Explain what changed in the current audio artifact."
+  ],
+  sequence: [
+    "Open the working sequence and tell me what context is loaded.",
+    "Refresh the sequence state and show me the current scope.",
+    "What sequence settings matter before I start designing?"
+  ],
+  design: [
+    "Build a first design proposal from the current brief and references.",
+    "Make chorus 2 higher energy on MegaTree and Roofline.",
+    "Rework bridge section with calmer color transitions."
+  ],
+  review: [
+    "Summarize what will change if I apply this plan.",
+    "Tell me what warnings I should review before I apply.",
+    "Hey Patch, make the trees less blinky in Chorus 3."
+  ],
+  metadata: [
+    "Help me tag the focal props for the chorus sections.",
+    "What metadata tags would help the designer and sequencer most?",
+    "Review the current metadata and point out obvious gaps."
+  ],
+  history: [
+    "Summarize the latest apply history for this project.",
+    "Compare the current draft to the last version snapshot.",
+    "Help me understand when I should reapply a prior variant."
+  ],
+  fallback: [
+    "Help me figure out the next step in this project.",
+    "Summarize the current state of the project and what is ready.",
+    "Tell me which specialist should handle my next request."
+  ]
+};
 const INLINE_CHIP_MODEL_FALLBACKS = ["MegaTree", "Roofline", "Candy Canes", "Matrix", "Arches", "CandyCane"];
 const SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS = new Set([
   "mp3", "wav", "ogg", "m4a", "flac",
@@ -4382,6 +4419,73 @@ function getTeamChatSpeakerLabel(roleId = "") {
   return identity.nickname
     ? `${identity.displayName} (${identity.nickname})`
     : identity.displayName;
+}
+
+function getRouteChatQuickPrompts(route = "") {
+  const key = String(route || "").trim();
+  return CHAT_QUICK_PROMPTS_BY_ROUTE[key] || CHAT_QUICK_PROMPTS_BY_ROUTE.fallback;
+}
+
+function getRouteChatPlaceholder(route = "") {
+  const key = String(route || "").trim();
+  if (key === "project") return "Ask for setup help, project guidance, or first-run checks...";
+  if (key === "audio") return "Ask about analysis, tempo, sections, lyrics, or rerunning the audio pass...";
+  if (key === "sequence") return "Ask about sequence context, scope, or loaded xLights state...";
+  if (key === "design") return "Describe the feeling, references, or design direction you want...";
+  if (key === "review") return "Ask what will change, what to review, or request a scoped sequence revision...";
+  if (key === "metadata") return "Ask about tags, targeting, and semantic organization...";
+  if (key === "history") return "Ask about prior versions, applies, or rollback options...";
+  return "Tell the team what to change or ask for guidance...";
+}
+
+function getRouteChatContext() {
+  const route = String(state?.route || "").trim();
+  if (route === "project") {
+    return {
+      title: "Project setup and environment",
+      note: "Use team chat to set up the project root, show folder, and first-run configuration."
+    };
+  }
+  if (route === "audio") {
+    return {
+      title: "Audio analysis workspace",
+      note: "Use team chat to inspect analysis quality, rerun the pipeline, and understand the current audio artifact."
+    };
+  }
+  if (route === "sequence") {
+    return {
+      title: "Sequence context workspace",
+      note: "Use team chat to verify the active sequence, current revision, scope, and sequencing prerequisites."
+    };
+  }
+  if (route === "design") {
+    return {
+      title: "Creative design workspace",
+      note: "Use team chat to shape the concept, refine the brief, and iterate on design proposals."
+    };
+  }
+  if (route === "review") {
+    return {
+      title: "Execution review workspace",
+      note: "Use team chat to review warnings, request scoped revisions, and understand the impact before apply."
+    };
+  }
+  if (route === "metadata") {
+    return {
+      title: "Metadata workspace",
+      note: "Use team chat to organize tags and improve targeting for the designer and sequencer."
+    };
+  }
+  if (route === "history") {
+    return {
+      title: "History and recovery workspace",
+      note: "Use team chat to understand prior versions, compare changes, and choose rollback or variant options."
+    };
+  }
+  return {
+    title: "Team chat workspace",
+    note: "Use team chat for guidance, routing, and specialist collaboration across the whole app."
+  };
 }
 
 function setTeamChatNickname(roleId = "", nickname = "") {
@@ -9514,7 +9618,9 @@ function render() {
       getAgentApplyRolloutMode,
       getManualLockedXdTracks,
       getTeamChatIdentities,
-      chatQuickPrompts: CHAT_QUICK_PROMPTS,
+      chatQuickPrompts: getRouteChatQuickPrompts(state.route),
+      chatPlaceholder: getRouteChatPlaceholder(state.route),
+      chatContext: getRouteChatContext(),
       analysisHeaderBadge,
       buildLabel
     }

@@ -785,6 +785,11 @@ button.danger-action:hover {
   gap: 8px;
 }
 
+.team-chat-context {
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+
 .proposed-window {
   display: flex;
   flex-direction: column;

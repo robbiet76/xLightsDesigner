@@ -29,7 +29,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Keep visible specialist identity polished and consistent
 - [x] Show routed delegation clearly when `app_assistant` overrides a named addressee
 - [x] Add inline artifact cards/messages in chat
-- [ ] Ensure chat works naturally across:
+- [x] Ensure chat works naturally across:
   - setup
   - analysis
   - design
