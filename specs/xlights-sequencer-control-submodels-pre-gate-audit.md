@@ -116,14 +116,14 @@ Need explicit rules for:
 - what can be overridden at submodel granularity,
 - which additional submodel-local buffer/render paths should be treated as materially different from the parent model target beyond the current non-default/subbuffer preservation rule.
 
-### G2: Missing broader apply-time submodel precision verification
+### G2: Remaining broader apply-time submodel precision verification
 Current verification covers:
-- submodel-local writes that must not broaden into parent-wide side effects when the parent was not part of the plan.
+- submodel-local writes that must not broaden into parent-wide side effects when the parent was not part of the plan
+- submodel-local writes that must not bleed into overlapping sibling submodels when those siblings were not part of the plan
 
 Still needed:
-- broader verification when plan scope includes multiple related submodels,
-- stronger checks for overlapping sibling submodels beyond parent broadening,
-- readback fidelity for more submodel-local render distinctions if runtime behavior proves they matter.
+- readback fidelity for more submodel-local render distinctions if runtime behavior proves they matter
+- stronger live verification if xLights apply behavior shows additional precision failure modes beyond parent/sibling bleed
 
 ### G3: Missing planner semantics for submodel precision
 Need sequencing strategy hints to choose:

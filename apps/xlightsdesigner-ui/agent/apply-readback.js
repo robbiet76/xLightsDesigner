@@ -28,12 +28,32 @@ function effectPlanKey(modelName = "", layerIndex = 0, startMs = 0, endMs = 0, e
   ].join("|");
 }
 
+function normalizeSubmodelGraph(submodelsById = {}) {
+  const out = {};
+  if (!submodelsById || typeof submodelsById !== "object" || Array.isArray(submodelsById)) return out;
+  for (const [key, value] of Object.entries(submodelsById)) {
+    const id = String(key || value?.id || "").trim();
+    if (!id) continue;
+    out[id] = {
+      id,
+      parentId: String(value?.parentId || "").trim(),
+      nodeChannels: new Set(
+        Array.isArray(value?.membership?.nodeChannels)
+          ? value.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v))
+          : []
+      )
+    };
+  }
+  return out;
+}
+
 export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
   const commands = Array.isArray(plan) ? plan : [];
   const endpoint = String(deps?.endpoint || "").trim();
   const getTimingMarks = typeof deps?.getTimingMarks === "function" ? deps.getTimingMarks : null;
   const getDisplayElementOrder = typeof deps?.getDisplayElementOrder === "function" ? deps.getDisplayElementOrder : null;
   const listEffects = typeof deps?.listEffects === "function" ? deps.listEffects : null;
+  const submodelGraph = normalizeSubmodelGraph(deps?.submodelsById || {});
   const verification = {
     revisionAdvanced: false,
     expectedMutationsPresent: false,
@@ -134,6 +154,43 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
             detail: broadened ? `${effectName} broadened to parent` : "parent remained unchanged"
           };
         })());
+      }
+      const submodel = submodelGraph[modelName];
+      const parentPlanned = parentId && plannedEffectKeys.has(effectPlanKey(parentId, layerIndex, startMs, endMs, effectName));
+      if (submodel?.parentId && submodel.nodeChannels.size && !parentPlanned) {
+        const overlappingSiblings = Object.values(submodelGraph).filter((candidate) => {
+          if (!candidate || candidate.id === modelName) return false;
+          if (candidate.parentId !== submodel.parentId) return false;
+          if (!candidate.nodeChannels.size) return false;
+          for (const ch of submodel.nodeChannels) {
+            if (candidate.nodeChannels.has(ch)) return true;
+          }
+          return false;
+        });
+        for (const sibling of overlappingSiblings) {
+          if (plannedEffectKeys.has(effectPlanKey(sibling.id, layerIndex, startMs, endMs, effectName))) continue;
+          readbackChecks.push((async () => {
+            const resp = await listEffects(endpoint, {
+              modelName: sibling.id,
+              layerIndex,
+              startMs,
+              endMs
+            });
+            const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+            const broadened = effects.some((row) =>
+              String(row?.effectName || "").trim() === effectName &&
+              Number(row?.startMs) === startMs &&
+              Number(row?.endMs) === endMs &&
+              Number(row?.layerIndex) === layerIndex
+            );
+            return {
+              kind: "submodel-sibling-precision",
+              target: `${modelName}->${sibling.id}@${layerIndex}`,
+              ok: !broadened,
+              detail: broadened ? `${effectName} broadened to overlapping sibling` : "overlapping sibling remained unchanged"
+            };
+          })());
+        }
       }
     }
   }

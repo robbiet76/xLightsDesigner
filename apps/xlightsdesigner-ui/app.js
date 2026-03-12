@@ -2646,7 +2646,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
 
     const executed = Number(orchestrated?.executedCount || 0);
-    const verification = await verifyAppliedPlanReadback(plan);
+    const verification = await verifyAppliedPlanReadback(plan, {
+      submodelsById: state.sceneGraph?.submodelsById || {}
+    });
     verification.revisionAdvanced =
       String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || "");
     const applyResult = buildSequenceAgentApplyResult({

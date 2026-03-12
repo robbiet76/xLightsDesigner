@@ -3,6 +3,31 @@ import assert from "node:assert/strict";
 
 import { verifyAppliedPlanReadback } from "../../agent/apply-readback.js";
 
+function sampleSubmodels() {
+  return {
+    "MegaTree/Star": {
+      id: "MegaTree/Star",
+      parentId: "MegaTree",
+      membership: { nodeChannels: [1, 2, 3] }
+    },
+    "MegaTree/TopHalf": {
+      id: "MegaTree/TopHalf",
+      parentId: "MegaTree",
+      membership: { nodeChannels: [3, 4, 5] }
+    },
+    "Roofline/Left": {
+      id: "Roofline/Left",
+      parentId: "Roofline",
+      membership: { nodeChannels: [21, 22, 23] }
+    },
+    "Roofline/Right": {
+      id: "Roofline/Right",
+      parentId: "Roofline",
+      membership: { nodeChannels: [31, 32, 33] }
+    }
+  };
+}
+
 test("apply readback verifies timing, display order, and distributed effects", async () => {
   const plan = [
     {
@@ -143,6 +168,7 @@ test("apply readback verifies submodel-targeted effect did not broaden to parent
 
   const verification = await verifyAppliedPlanReadback(plan, {
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {
         effects: modelName === "MegaTree/Star"
@@ -157,7 +183,8 @@ test("apply readback verifies submodel-targeted effect did not broaden to parent
     verification.checks.map((row) => [row.kind, row.target, row.ok]),
     [
       ["effect", "MegaTree/Star@0", true],
-      ["submodel-precision", "MegaTree/Star->MegaTree@0", true]
+      ["submodel-precision", "MegaTree/Star->MegaTree@0", true],
+      ["submodel-sibling-precision", "MegaTree/Star->MegaTree/TopHalf@0", true]
     ]
   );
 });
@@ -178,6 +205,7 @@ test("apply readback flags submodel-targeted effect that broadened to parent", a
 
   const verification = await verifyAppliedPlanReadback(plan, {
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {
         effects: [{ modelName, layerIndex, startMs, endMs, effectName: "Bars" }]
@@ -190,7 +218,8 @@ test("apply readback flags submodel-targeted effect that broadened to parent", a
     verification.checks.map((row) => [row.kind, row.target, row.ok]),
     [
       ["effect", "MegaTree/Star@0", true],
-      ["submodel-precision", "MegaTree/Star->MegaTree@0", false]
+      ["submodel-precision", "MegaTree/Star->MegaTree@0", false],
+      ["submodel-sibling-precision", "MegaTree/Star->MegaTree/TopHalf@0", false]
     ]
   );
 });
@@ -221,6 +250,7 @@ test("apply readback does not flag explicit parent-plus-submodel writes as broad
 
   const verification = await verifyAppliedPlanReadback(plan, {
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    submodelsById: sampleSubmodels(),
     listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
       data: {
         effects: [{ modelName, layerIndex, startMs, endMs, effectName: "Bars" }]
@@ -234,6 +264,43 @@ test("apply readback does not flag explicit parent-plus-submodel writes as broad
     [
       ["effect", "MegaTree@0", true],
       ["effect", "MegaTree/Star@0", true]
+    ]
+  );
+});
+
+test("apply readback flags submodel-targeted effect that broadened to overlapping sibling", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree/Star",
+        layerIndex: 0,
+        effectName: "Bars",
+        startMs: 0,
+        endMs: 500
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    submodelsById: sampleSubmodels(),
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: modelName === "MegaTree/Star" || modelName === "MegaTree/TopHalf"
+          ? [{ modelName, layerIndex, startMs, endMs, effectName: "Bars" }]
+          : []
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, false);
+  assert.deepEqual(
+    verification.checks.map((row) => [row.kind, row.target, row.ok]),
+    [
+      ["effect", "MegaTree/Star@0", true],
+      ["submodel-precision", "MegaTree/Star->MegaTree@0", true],
+      ["submodel-sibling-precision", "MegaTree/Star->MegaTree/TopHalf@0", false]
     ]
   );
 });
