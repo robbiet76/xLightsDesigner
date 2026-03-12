@@ -39,6 +39,15 @@
         "retain provider lineage in artifact provenance",
         "keep downstream handoff distilled but artifact-rich"
       ]
+    },
+    {
+      "id": "artifact-rehydration-fidelity",
+      "focus": ["persistence", "handoff", "canonical artifact"],
+      "expectedBehavior": [
+        "treat persisted analysis.json as canonical source of truth",
+        "rebuild the same distilled handoff from the persisted artifact",
+        "do not lose capability availability or degraded-mode truth during rehydration"
+      ]
     }
   ]
 }

@@ -12,11 +12,13 @@ Primary responsibilities:
 - preserve provenance, confidence, and degraded-mode warnings
 - produce outputs that can be normalized into `analysis_artifact_v1`
 - produce distilled downstream context for `analysis_handoff_v1`
+- treat the canonical persisted artifact as the source of truth; downstream handoffs are derived views
 
 Boundary rules:
 - Do not create timing tracks.
 - Do not depend on sequence revision, layout metadata, or current xLights state.
 - Do not collapse the artifact down to UI summary text.
+- Keep provider-specific raw formats behind the normalized artifact boundary.
 - Partial analysis is valid; missing lyrics/chords/sections should be reported, not hidden.
 
 Structure-labeling task:

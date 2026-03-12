@@ -72,9 +72,9 @@ Boundary summary:
   - [x] track identity
   - [~] section labeling/relabeling
 - [~] Separate provider arbitration from provider implementation.
-- [ ] Encode replaceability policy:
+- [x] Encode replaceability policy:
   - providers may be swapped without changing artifact schema
-- [ ] Define extension path for future in-house analyzers/plugins.
+- [x] Define extension path for future in-house analyzers/plugins.
 
 ### Phase E: Canonical Artifact Normalization
 - [~] Normalize all analysis outputs into one stable schema with:
@@ -89,19 +89,18 @@ Boundary summary:
   - provider provenance
   - confidence/quality diagnostics
   - generation timestamp/version
-- [ ] Preserve provider lineage and evidence without leaking provider-specific raw formats downstream.
-- [~] Preserve provider lineage and evidence without leaking provider-specific raw formats downstream.
-- [ ] Ensure artifact is sufficient for both:
+- [x] Preserve provider lineage and evidence without leaking provider-specific raw formats downstream.
+- [x] Ensure artifact is sufficient for both:
   - designer metadata use
   - sequence-agent timing-track generation
 
 ### Phase F: Handoff Derivation
 - [x] Generate `analysis_handoff_v1` directly from canonical artifact, not from ad hoc UI summary state.
-- [ ] Ensure handoff contains enough distilled data for:
+- [x] Ensure handoff contains enough distilled data for:
   - section-aware sequencing
   - lyric/chord-aware design context
   - timing-asset creation by `sequence_agent`
-- [ ] Keep artifact richer than handoff; do not collapse provenance too early.
+- [x] Keep artifact richer than handoff; do not collapse provenance too early.
 
 ### Phase G: Sequence/Xlights Boundary Enforcement
 - [x] Remove remaining xLights/timing-track assumptions from `audio_analyst` runtime.
@@ -114,7 +113,7 @@ Boundary summary:
 
 ### Phase H: Diagnostics and Failure Policy
 - [x] Define deterministic failure taxonomy for `audio_analyst`.
-- [ ] Distinguish:
+- [x] Distinguish:
   - provider unavailable
   - media unreadable
   - identity lookup failed
@@ -122,18 +121,18 @@ Boundary summary:
   - partial analysis success
   - full analysis failure
 - [x] Persist artifact-level provenance and failure diagnostics.
-- [ ] Surface degraded-mode outcomes clearly without pretending full success.
+- [x] Surface degraded-mode outcomes clearly without pretending full success.
 
 ### Phase I: Test and Eval Harness
 - [x] Add dedicated `audio_analyst` unit tests in `apps/xlightsdesigner-ui/tests/agent/`.
 - [x] Add artifact schema validation tests.
 - [x] Add handoff validation tests.
 - [x] Add provider arbitration/normalization tests.
-- [ ] Add golden-case tests for:
-  - beats/bars/chords/lyrics/sections presence
-  - partial-result handling
-  - canonical artifact persistence
-- [ ] Align service eval harness with packaged training assets.
+- [x] Add golden-case tests for:
+  - [x] beats/bars/chords/lyrics/sections presence
+  - [x] partial-result handling
+  - [x] canonical artifact persistence
+- [x] Align service eval harness with packaged training assets.
 
 ### Phase J: Training Package Completion
 - [~] Upgrade `audio_track_analysis` module from partial scaffold to full module parity.
@@ -143,7 +142,7 @@ Boundary summary:
   - [x] eval configuration
   - [x] contract references
   - [x] dataset manifest
-- [ ] Keep training functionality-focused:
+- [x] Keep training functionality-focused:
   - structure inference
   - timing/chord/lyric evidence usage
   - no xLights mutation behavior in this module
@@ -215,3 +214,5 @@ Progress note (2026-03-12):
 - training assets for `audio_track_analysis` now reflect the artifact/handoff boundary, degraded-mode handling, and media-only role of `audio_analyst` rather than the earlier timing-track-oriented scaffold.
 - audio orchestration no longer accepts current sequence timing tracks as input; timing-track creation remains solely downstream in `sequence_agent`.
 - `analysis_artifact_v1` now carries explicit per-capability availability/confidence/source fields plus structured web-validation evidence, reducing dependence on summary-line parsing downstream.
+- desktop artifact-store read/write logic is now isolated in `apps/xlightsdesigner-desktop/analysis-artifact-store.mjs` and covered by golden persistence/rehydration tests.
+- provider replaceability and future in-house analyzer extension policy are now formalized in `specs/audio-analyst-provider-framework.md`.

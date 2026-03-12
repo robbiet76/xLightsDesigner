@@ -1,0 +1,92 @@
+import path from "node:path";
+import fs from "node:fs";
+import crypto from "node:crypto";
+
+const PROJECT_REQUIRED_SUBDIRS = ["analysis", "sequencing", "diagnostics"];
+
+function normalizePathForCompare(filePath) {
+  return path.resolve(String(filePath || "").trim());
+}
+
+export function ensureProjectStructure(projectDir) {
+  fs.mkdirSync(projectDir, { recursive: true });
+  for (const dirName of PROJECT_REQUIRED_SUBDIRS) {
+    fs.mkdirSync(path.join(projectDir, dirName), { recursive: true });
+  }
+}
+
+export function mediaIdFromPathAndStat(mediaFilePath) {
+  const abs = normalizePathForCompare(mediaFilePath);
+  let size = 0;
+  let mtimeMs = 0;
+  try {
+    const stat = fs.statSync(abs);
+    size = Number(stat?.size || 0);
+    mtimeMs = Number(stat?.mtimeMs || 0);
+  } catch {
+    size = 0;
+    mtimeMs = 0;
+  }
+  return crypto.createHash("sha1").update(JSON.stringify({
+    path: abs,
+    size,
+    mtimeMs: Math.round(mtimeMs)
+  })).digest("hex");
+}
+
+export function buildAnalysisArtifactPaths(projectFilePath, mediaFilePath) {
+  const projectPath = normalizePathForCompare(projectFilePath);
+  const mediaPath = normalizePathForCompare(mediaFilePath);
+  const mediaId = mediaIdFromPathAndStat(mediaPath);
+  const projectDir = path.dirname(projectPath);
+  const artifactDir = path.join(projectDir, "analysis", "media", mediaId);
+  const artifactPath = path.join(artifactDir, "analysis.json");
+  return { projectPath, mediaPath, mediaId, artifactDir, artifactPath };
+}
+
+export function readAnalysisArtifactFromProject({ projectFilePath = "", mediaFilePath = "" } = {}) {
+  const projectPath = String(projectFilePath || "").trim();
+  const mediaPath = String(mediaFilePath || "").trim();
+  if (!projectPath) return { ok: false, error: "Missing projectFilePath" };
+  if (!mediaPath) return { ok: false, error: "Missing mediaFilePath" };
+  if (!fs.existsSync(projectPath)) return { ok: false, error: "Project file not found" };
+  const paths = buildAnalysisArtifactPaths(projectPath, mediaPath);
+  if (!fs.existsSync(paths.artifactPath)) {
+    return { ok: false, code: "NOT_FOUND", mediaId: paths.mediaId, artifactPath: paths.artifactPath, error: "Analysis artifact not found" };
+  }
+  const raw = fs.readFileSync(paths.artifactPath, "utf8");
+  const artifact = JSON.parse(raw);
+  return {
+    ok: true,
+    mediaId: paths.mediaId,
+    artifactPath: paths.artifactPath,
+    artifact
+  };
+}
+
+export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFilePath = "", artifact = null } = {}) {
+  const projectPath = String(projectFilePath || "").trim();
+  const mediaPath = String(mediaFilePath || "").trim();
+  if (!projectPath) return { ok: false, error: "Missing projectFilePath" };
+  if (!mediaPath) return { ok: false, error: "Missing mediaFilePath" };
+  if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) return { ok: false, error: "Missing artifact" };
+  if (!fs.existsSync(projectPath)) return { ok: false, error: "Project file not found" };
+  const paths = buildAnalysisArtifactPaths(projectPath, mediaPath);
+  ensureProjectStructure(path.dirname(paths.projectPath));
+  fs.mkdirSync(paths.artifactDir, { recursive: true });
+  const doc = {
+    ...artifact,
+    media: {
+      ...(artifact.media && typeof artifact.media === "object" ? artifact.media : {}),
+      mediaId: paths.mediaId,
+      path: paths.mediaPath
+    }
+  };
+  fs.writeFileSync(paths.artifactPath, JSON.stringify(doc, null, 2), "utf8");
+  return {
+    ok: true,
+    mediaId: paths.mediaId,
+    artifactPath: paths.artifactPath,
+    artifact: doc
+  };
+}

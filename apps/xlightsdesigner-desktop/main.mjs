@@ -5,6 +5,12 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import os from "node:os";
+import {
+  ensureProjectStructure,
+  buildAnalysisArtifactPaths,
+  readAnalysisArtifactFromProject,
+  writeAnalysisArtifactToProject
+} from "./analysis-artifact-store.mjs";
 
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
@@ -27,7 +33,6 @@ const STATE_FILENAME = "xlightsdesigner-state.json";
 const AGENT_APPLY_LOG_FILENAME = "xlightsdesigner-agent-apply-log.jsonl";
 const AGENT_CONFIG_FILENAME = "xlightsdesigner-agent-config.json";
 const PROJECTS_DIRNAME = "projects";
-const PROJECT_REQUIRED_SUBDIRS = ["analysis", "sequencing", "diagnostics"];
 const OPENAI_BASE_URL = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").trim().replace(/\/+$/, "");
 const OPENAI_MODEL = String(process.env.OPENAI_MODEL || "gpt-4.1-mini").trim();
 const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
@@ -678,42 +683,6 @@ function buildProjectPaths(rootPath, projectName) {
   return { projectsRoot, normalizedName, projectDir, filePath };
 }
 
-function ensureProjectStructure(projectDir) {
-  fs.mkdirSync(projectDir, { recursive: true });
-  for (const dirName of PROJECT_REQUIRED_SUBDIRS) {
-    fs.mkdirSync(path.join(projectDir, dirName), { recursive: true });
-  }
-}
-
-function mediaIdFromPathAndStat(mediaFilePath) {
-  const abs = normalizePathForCompare(mediaFilePath);
-  let size = 0;
-  let mtimeMs = 0;
-  try {
-    const stat = fs.statSync(abs);
-    size = Number(stat?.size || 0);
-    mtimeMs = Number(stat?.mtimeMs || 0);
-  } catch {
-    size = 0;
-    mtimeMs = 0;
-  }
-  return crypto.createHash("sha1").update(JSON.stringify({
-    path: abs,
-    size,
-    mtimeMs: Math.round(mtimeMs)
-  })).digest("hex");
-}
-
-function buildAnalysisArtifactPaths(projectFilePath, mediaFilePath) {
-  const projectPath = normalizePathForCompare(projectFilePath);
-  const mediaPath = normalizePathForCompare(mediaFilePath);
-  const mediaId = mediaIdFromPathAndStat(mediaPath);
-  const projectDir = path.dirname(projectPath);
-  const artifactDir = path.join(projectDir, "analysis", "media", mediaId);
-  const artifactPath = path.join(artifactDir, "analysis.json");
-  return { projectPath, mediaPath, mediaId, artifactDir, artifactPath };
-}
-
 function normalizePathForCompare(filePath) {
   return path.resolve(String(filePath || "").trim());
 }
@@ -1226,23 +1195,7 @@ ipcMain.handle("xld:file:stat", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:analysis-artifact:read", async (_event, payload = {}) => {
   try {
-    const projectFilePath = String(payload?.projectFilePath || "").trim();
-    const mediaFilePath = String(payload?.mediaFilePath || "").trim();
-    if (!projectFilePath) return { ok: false, error: "Missing projectFilePath" };
-    if (!mediaFilePath) return { ok: false, error: "Missing mediaFilePath" };
-    if (!fs.existsSync(projectFilePath)) return { ok: false, error: "Project file not found" };
-    const paths = buildAnalysisArtifactPaths(projectFilePath, mediaFilePath);
-    if (!fs.existsSync(paths.artifactPath)) {
-      return { ok: false, code: "NOT_FOUND", mediaId: paths.mediaId, artifactPath: paths.artifactPath, error: "Analysis artifact not found" };
-    }
-    const raw = fs.readFileSync(paths.artifactPath, "utf8");
-    const artifact = JSON.parse(raw);
-    return {
-      ok: true,
-      mediaId: paths.mediaId,
-      artifactPath: paths.artifactPath,
-      artifact
-    };
+    return readAnalysisArtifactFromProject(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -1250,31 +1203,7 @@ ipcMain.handle("xld:analysis-artifact:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:analysis-artifact:write", async (_event, payload = {}) => {
   try {
-    const projectFilePath = String(payload?.projectFilePath || "").trim();
-    const mediaFilePath = String(payload?.mediaFilePath || "").trim();
-    const artifact = payload?.artifact && typeof payload.artifact === "object" ? payload.artifact : null;
-    if (!projectFilePath) return { ok: false, error: "Missing projectFilePath" };
-    if (!mediaFilePath) return { ok: false, error: "Missing mediaFilePath" };
-    if (!artifact) return { ok: false, error: "Missing artifact" };
-    if (!fs.existsSync(projectFilePath)) return { ok: false, error: "Project file not found" };
-    const paths = buildAnalysisArtifactPaths(projectFilePath, mediaFilePath);
-    ensureProjectStructure(path.dirname(paths.projectPath));
-    fs.mkdirSync(paths.artifactDir, { recursive: true });
-    const doc = {
-      ...artifact,
-      media: {
-        ...(artifact.media && typeof artifact.media === "object" ? artifact.media : {}),
-        mediaId: paths.mediaId,
-        path: paths.mediaPath
-      }
-    };
-    fs.writeFileSync(paths.artifactPath, JSON.stringify(doc, null, 2), "utf8");
-    return {
-      ok: true,
-      mediaId: paths.mediaId,
-      artifactPath: paths.artifactPath,
-      artifact: doc
-    };
+    return writeAnalysisArtifactToProject(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
