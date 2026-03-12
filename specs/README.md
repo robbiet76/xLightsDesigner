@@ -10,6 +10,7 @@ Implementation-facing specifications that drive development work.
 ## Layout
 - `specs/`: active, authoritative spec set.
 - `specs/audio-analyst/`: active `audio_analyst` specs and audits.
+- `specs/designer-dialog/`: active `designer_dialog` interaction and workflow specs.
 - `specs/sequence-agent/`: active `sequence_agent` and xLights sequencing specs.
 - `specs/archive/`: historical planning artifacts, prior iterations, and closed work-package docs.
 
@@ -21,9 +22,9 @@ Implementation-facing specifications that drive development work.
 - `audio-analyst/implementation-checklist.md`
 - `audio-analyst/provider-framework.md`
 - `audio-analyst/end-to-end-audit-2026-03-12.md`
+- `designer-dialog/designer-interaction-contract.md`
 - `sequence-agent/xlights-sequencer-control-project-spec.md`
 - `sequence-agent/xlights-sequencer-control-api-surface-contract.md`
-- `sequence-agent/xlights-sequencer-control-designer-interaction-contract.md`
 - `sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
 - `sequence-agent/xlights-sequencer-control-implementation-roadmap.md`
 - `sequence-agent/xlights-sequencer-control-acceptance-test-matrix.md`

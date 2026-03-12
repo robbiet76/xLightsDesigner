@@ -1,6 +1,6 @@
 import { normalizeIntent } from "./intent-normalizer.js";
-import { resolveTargets } from "./sequence-agent/target-resolver.js";
-import { buildSequencingStrategy } from "./sequence-agent/sequencing-strategy.js";
+import { resolveTargets } from "../sequence-agent/target-resolver.js";
+import { buildSequencingStrategy } from "../sequence-agent/sequencing-strategy.js";
 
 export function buildProposalFromIntent(input = {}) {
   const normalizedIntent = normalizeIntent(input);

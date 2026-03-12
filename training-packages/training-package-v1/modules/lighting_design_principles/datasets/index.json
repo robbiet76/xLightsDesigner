@@ -1,10 +1,21 @@
 {
   "sources": [
     {
-      "id": "project-creative-briefs",
-      "type": "app-state-derived",
-      "path": "apps/xlightsdesigner-ui/app.js",
-      "description": "Current app stores and synthesizes creative brief context; structured export path pending."
+      "id": "designer_dialog_runtime",
+      "type": "runtime-contract-reference",
+      "paths": [
+        "apps/xlightsdesigner-ui/agent/designer-dialog/intent-normalizer.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/guided-dialog.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/brief-synthesizer.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/planner.js"
+      ],
+      "description": "Canonical runtime references for intent normalization, guided questioning, creative-brief synthesis, and proposal seeding."
+    },
+    {
+      "id": "designer_dialog_spec",
+      "type": "interaction-contract",
+      "path": "specs/designer-dialog/designer-interaction-contract.md",
+      "description": "Active designer interaction contract and guided workflow boundary."
     }
   ],
   "status": "bootstrap"

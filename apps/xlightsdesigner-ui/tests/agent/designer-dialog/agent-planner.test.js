@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { normalizeIntent } from '../../agent/intent-normalizer.js';
-import { resolveTargets } from '../../agent/sequence-agent/target-resolver.js';
-import { buildProposalFromIntent } from '../../agent/planner.js';
+import { normalizeIntent } from '../../../agent/designer-dialog/intent-normalizer.js';
+import { resolveTargets } from '../../../agent/sequence-agent/target-resolver.js';
+import { buildProposalFromIntent } from '../../../agent/designer-dialog/planner.js';
 
 const models = [
   { id: 'MegaTree', name: 'MegaTree', type: 'Model' },

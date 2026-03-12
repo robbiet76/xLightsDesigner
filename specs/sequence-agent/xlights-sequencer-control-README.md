@@ -15,7 +15,7 @@ Define the full target contract between xLightsDesigner and xLights before furth
 ## Active Spec Set
 - `xlights-sequencer-control-project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
 - `xlights-sequencer-control-api-surface-contract.md`: required endpoint/capability matrix for full sequencer control.
-- `xlights-sequencer-control-designer-interaction-contract.md`: user-to-agent interaction and proposal/apply contract.
+- `../designer-dialog/designer-interaction-contract.md`: user-to-agent interaction and proposal/apply contract.
 - `xlights-sequencer-control-agent-orchestration-architecture.md`: multi-agent role model, handoff contracts, and execution order.
 - `xlights-sequencer-control-sequence-agent-implementation-checklist.md`: implementation checklist for `sequence_agent` planning/execution phases.
 - `xlights-sequencer-control-decision-log.md`: locked decisions to minimize implementation churn.

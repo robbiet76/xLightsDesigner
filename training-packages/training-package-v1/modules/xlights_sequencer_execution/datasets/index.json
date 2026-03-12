@@ -3,7 +3,7 @@
     {
       "id": "agent-contract",
       "type": "spec",
-      "path": "specs/sequence-agent/xlights-sequencer-control-designer-interaction-contract.md"
+      "path": "specs/designer-dialog/designer-interaction-contract.md"
     },
     {
       "id": "api-surface-contract",

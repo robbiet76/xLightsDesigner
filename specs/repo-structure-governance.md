@@ -19,10 +19,13 @@ Keep repository layout purpose-built and predictable so new work lands in the co
 - Domain runtime modules should live under app-owned domain folders when the boundary is stable.
 - Current domain anchors:
   - `apps/xlightsdesigner-ui/agent/audio-analyst/`
+  - `apps/xlightsdesigner-ui/agent/designer-dialog/`
   - `apps/xlightsdesigner-ui/agent/sequence-agent/`
   - `apps/xlightsdesigner-ui/tests/agent/audio-analyst/`
+  - `apps/xlightsdesigner-ui/tests/agent/designer-dialog/`
   - `apps/xlightsdesigner-ui/tests/agent/sequence-agent/`
   - `specs/audio-analyst/`
+  - `specs/designer-dialog/`
   - `specs/sequence-agent/`
 - Shared utilities that are not domain-owned should remain outside domain folders.
 - Historical specs should move to a domain archive folder or `specs/archive/`, not remain mixed with active domain specs.

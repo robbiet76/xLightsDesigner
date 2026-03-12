@@ -30,8 +30,8 @@ import {
   validateCommands,
   pingCapabilities
 } from "./api.js";
-import { buildProposalFromIntent } from "./agent/planner.js";
-import { buildGuidedQuestions } from "./agent/guided-dialog.js";
+import { buildProposalFromIntent } from "./agent/designer-dialog/planner.js";
+import { buildGuidedQuestions } from "./agent/designer-dialog/guided-dialog.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -69,7 +69,7 @@ import {
   normalizeAudioAnalysisProvider
 } from "./agent/audio-analyst/audio-provider-adapters.js";
 import { runAudioAnalysisOrchestration } from "./agent/audio-analyst/audio-analysis-orchestrator.js";
-import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
+import { synthesizeCreativeBrief } from "./agent/designer-dialog/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/sequence-agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/sequence-agent/command-graph.js";
 import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/sequence-agent/apply-readback.js";
