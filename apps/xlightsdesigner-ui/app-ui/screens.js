@@ -407,6 +407,11 @@ export function buildScreenContent({ state, helpers }) {
       : "";
     return `
       <div class="screen-grid design-screen">
+        <section class="card workspace-intro-card workspace-intro-card-design full-span">
+          <div class="artifact-kicker">Design Workspace</div>
+          <h3>Develop the creative direction before moving into execution.</h3>
+          <p class="artifact-body">Use this screen for concept shaping, references, and proposal refinement. Approval and apply are handled separately in Review.</p>
+        </section>
         <section class="artifact-grid">
           ${renderBriefArtifactCard()}
           ${renderProposalArtifactCard()}
@@ -491,6 +496,11 @@ export function buildScreenContent({ state, helpers }) {
       }
 
       <div class="screen-grid review-screen">
+        <section class="card workspace-intro-card workspace-intro-card-review full-span">
+          <div class="artifact-kicker">Review Workspace</div>
+          <h3>Confirm the proposed impact, cross-check safeguards, then apply deliberately.</h3>
+          <p class="artifact-body">This screen is the execution gate. Review warnings, confirm approval, and use backup/verification signals before writing to xLights.</p>
+        </section>
         <section class="artifact-grid">
           ${renderProposalArtifactCard()}
           <section class="card artifact-card artifact-card-review">
@@ -572,11 +582,21 @@ export function buildScreenContent({ state, helpers }) {
             <p class="banner">Scope: ${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`} change${(selectedLines.length || allVisibleLines.length) === 1 ? "" : "s"}</p>
             <p class="banner">Affected targets: ${impact.targetCount}${impact.targets.length ? ` (${escapeHtml(impact.targets.join(", "))})` : ""}</p>
             <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
-            <div class="row">
-              <label style="display:flex;align-items:center;gap:8px;">
+            <section class="approval-gate-card">
+              <div class="approval-gate-header">
+                <div>
+                  <div class="artifact-kicker">Approval Gate</div>
+                  <strong>${approvalChecked ? "Ready for Apply" : "Approval Required"}</strong>
+                </div>
+                <span class="artifact-chip ${approvalChecked ? "artifact-chip-accent" : "artifact-chip-muted"}">${approvalChecked ? "Confirmed" : "Pending"}</span>
+              </div>
+              <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed. Apply actions are enabled when the plan is otherwise valid." : "Confirm approval here before applying any sequence changes."}</p>
+              <label class="approval-gate-toggle">
                 <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
-                I reviewed the plan and approve apply.
+                <span>I reviewed the plan and approve apply.</span>
               </label>
+            </section>
+            <div class="row">
               <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
             </div>
             ${

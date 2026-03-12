@@ -43,11 +43,11 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [ ] Make artifact state inspectable without exposing raw internal payloads by default
 
 ## Phase D: Review And Apply UX
-- [ ] Clarify the difference between design iteration and execution review
+- [x] Clarify the difference between design iteration and execution review
 - [x] Make stale/rebase/apply state more legible
-- [ ] Keep the approval gate prominent and understandable
+- [x] Keep the approval gate prominent and understandable
 - [x] Improve backup/restore visibility
-- [ ] Make the proposal-to-apply transition feel like a deliberate workflow step
+- [x] Make the proposal-to-apply transition feel like a deliberate workflow step
 
 ## Phase E: Settings And Diagnostics
 - [ ] Separate user-facing settings from operator/developer diagnostics

@@ -519,6 +519,52 @@ button:disabled {
   letter-spacing: 0.06em;
 }
 
+.workspace-intro-card {
+  overflow: hidden;
+}
+
+.workspace-intro-card h3 {
+  margin-bottom: 8px;
+}
+
+.workspace-intro-card-design {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(25, 163, 140, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+  border-color: rgba(25, 163, 140, 0.26);
+}
+
+.workspace-intro-card-review {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(243, 183, 95, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+  border-color: rgba(243, 183, 95, 0.24);
+}
+
+.approval-gate-card {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(243, 183, 95, 0.24);
+  background: linear-gradient(180deg, rgba(45, 31, 12, 0.82), rgba(28, 21, 12, 0.72));
+}
+
+.approval-gate-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.approval-gate-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .design-workspace {
   align-items: stretch;
 }
