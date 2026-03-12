@@ -8,6 +8,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
   const {
     escapeHtml,
     renderInlineChipSentence,
+    getTeamChatIdentity,
     getTeamChatSpeakerLabel,
     getSections,
     getSelectedSections,
@@ -35,6 +36,30 @@ export function buildAppShell({ state, screenContent, helpers }) {
   }
 
   function persistentCoachPanel() {
+    function renderIdentityMeta({ role = "system", handledBy = "", addressedTo = "", header = "" }) {
+      if (role !== "agent") return "";
+      const handledIdentity = getTeamChatIdentity(handledBy || "app_assistant");
+      const addressedIdentity = addressedTo ? getTeamChatIdentity(addressedTo) : null;
+      const routeLabel = handledBy === "audio_analyst"
+        ? "Audio"
+        : handledBy === "designer_dialog"
+          ? "Design"
+          : handledBy === "sequence_agent"
+            ? "Review"
+            : "Project";
+      const overrideNote = addressedIdentity && addressedTo !== handledBy
+        ? `<span class="chat-identity-note">Addressed to ${escapeHtml(addressedIdentity.nickname ? `${addressedIdentity.displayName} (${addressedIdentity.nickname})` : addressedIdentity.displayName)}, handled by ${escapeHtml(header)}</span>`
+        : "";
+      return `
+        <div class="chat-identity-row">
+          <span class="chat-identity-pill">${escapeHtml(handledIdentity.displayName)}</span>
+          ${handledIdentity.nickname ? `<span class="chat-identity-pill chat-identity-pill-nickname">${escapeHtml(handledIdentity.nickname)}</span>` : ""}
+          <span class="chat-identity-pill chat-identity-pill-route">${escapeHtml(routeLabel)}</span>
+        </div>
+        ${overrideNote}
+      `;
+    }
+
     function renderChatArtifactCard(artifact) {
       if (!artifact || typeof artifact !== "object") return "";
       const title = escapeHtml(String(artifact.title || "Artifact"));
@@ -66,10 +91,11 @@ export function buildAppShell({ state, screenContent, helpers }) {
                     ? (String(c.displayName || "").trim() || getTeamChatSpeakerLabel(handledBy || "app_assistant"))
                     : "System";
                 const routedByNote = role === "agent" && c.addressedTo && c.addressedTo !== handledBy
-                  ? `<span class="banner">Handled by ${escapeHtml(header)} after routing from ${escapeHtml(getTeamChatSpeakerLabel(String(c.addressedTo || "")))}</span>`
+                  ? `<span class="banner">Routed from ${escapeHtml(getTeamChatSpeakerLabel(String(c.addressedTo || "")))} to ${escapeHtml(header)}</span>`
                   : "";
                 return `<article class="chat-msg ${role}">
                   <header>${escapeHtml(header)}</header>
+                  ${renderIdentityMeta({ role, handledBy, addressedTo: String(c.addressedTo || ""), header })}
                   <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
                   ${renderChatArtifactCard(c.artifact)}
                   ${routedByNote}

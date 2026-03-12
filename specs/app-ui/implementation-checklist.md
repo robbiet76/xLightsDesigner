@@ -26,8 +26,8 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 
 ## Phase B: Team Chat UX
 - [x] Turn the current right-side coach panel into an explicit team-chat panel
-- [ ] Keep visible specialist identity polished and consistent
-- [ ] Show routed delegation clearly when `app_assistant` overrides a named addressee
+- [x] Keep visible specialist identity polished and consistent
+- [x] Show routed delegation clearly when `app_assistant` overrides a named addressee
 - [x] Add inline artifact cards/messages in chat
 - [ ] Ensure chat works naturally across:
   - setup

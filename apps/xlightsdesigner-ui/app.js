@@ -9442,6 +9442,7 @@ function render() {
     helpers: {
       escapeHtml,
       renderInlineChipSentence,
+      getTeamChatIdentity,
       getTeamChatSpeakerLabel,
       getSections,
       getSelectedSections,
