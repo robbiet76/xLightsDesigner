@@ -33,6 +33,31 @@ function sampleCatalog() {
   ]);
 }
 
+function sampleGroups() {
+  return {
+    AllModels: {
+      members: {
+        direct: [
+          { id: "Frontline", name: "Frontline", isGroup: true },
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ],
+        flattenedAll: [
+          { id: "Frontline", name: "Frontline", isGroup: true },
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ]
+      }
+    },
+    Frontline: {
+      members: {
+        direct: [{ id: "MegaTree", name: "MegaTree" }],
+        flattenedAll: [{ id: "MegaTree", name: "MegaTree" }]
+      }
+    }
+  };
+}
+
 test("sequence_agent requires intent handoff", () => {
   assert.throws(
     () => buildSequenceAgentPlan({ analysisHandoff: sampleAnalysis(), intentHandoff: null }),
@@ -407,6 +432,14 @@ test("sequence_agent uses explicit xlights group ids for group-first planning", 
       { id: "Frontline", type: "model" }
     ],
     groupIds: ["Frontline"],
+    groupsById: {
+      Frontline: {
+        members: {
+          direct: [{ id: "MegaTree", name: "MegaTree" }],
+          flattenedAll: [{ id: "MegaTree", name: "MegaTree" }]
+        }
+      }
+    },
     effectCatalog: sampleCatalog(),
     capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
   });
@@ -420,4 +453,50 @@ test("sequence_agent uses explicit xlights group ids for group-first planning", 
     ]
   );
   assert.equal(out.metadata.groupCount, 1);
+});
+
+test("sequence_agent prefers the broadest explicit group target when nested groups are in scope", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Start with broad all-model coverage, then refine inside nested groups",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline", "AllModels", "MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Whole Show / bars",
+      "Chorus 1 / MegaTree / shimmer fade"
+    ],
+    displayElements: [
+      { id: "Beats", type: "timing" },
+      { id: "MegaTree", type: "model" },
+      { id: "Frontline", type: "model" },
+      { id: "AllModels", type: "model" }
+    ],
+    groupIds: ["Frontline", "AllModels"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["AllModels", "Bars"],
+      ["MegaTree", "Shimmer"]
+    ]
+  );
+
+  const reorder = out.commands.find((row) => row.cmd === "sequencer.setDisplayElementOrder");
+  assert.ok(reorder);
+  assert.deepEqual(
+    reorder.params.orderedIds,
+    ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
+  );
+  assert.equal(out.metadata.groupGraphCount, 2);
 });

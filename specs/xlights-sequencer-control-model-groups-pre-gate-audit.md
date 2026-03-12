@@ -50,18 +50,40 @@ Operational constraints reflected in source:
 - Group channel range is derived from grouped models.
 - Groups are treated differently from regular models in manager operations.
 
+Additional source-confirmed details:
+- Direct membership is stored canonically as `modelNames` and resolved pointers in `models`.
+- Nested groups are first-class and cycle-guarded via `ContainsModelGroup(..., visited)`.
+- Active-vs-all membership is distinct:
+  - `Models()` contains resolved direct members,
+  - `ActiveModels()` is the active subset,
+  - `GetFlatModels(removeDuplicates, activeOnly)` is the authoritative recursive flattened view.
+- Submodel-aware containment is explicit:
+  - `ContainsModelOrSubmodel(...)`
+  - `OnlyContainsModel(...)`
+- Group render behavior is not equivalent to naïve member expansion because `ModelGroup` has its own buffer-style set and render-buffer initialization logic.
+
 ## 4) Current Automation API Exposure
 Current API exposure relevant to groups:
 - `layout.getModels`: group rows are included with `type = "ModelGroup"` and basic channel/layout metadata.
 - `layout.getModel`: same basic model row plus attributes.
+- `layout.getModelGroupMembers`: direct, active, flattened-active, and flattened-all membership views for one `ModelGroup`.
 - `layout.getScene`: includes group geometry and transforms as generic model rows.
 - `layout.getDisplayElements`: includes layout tree elements with `type` and `parentId`.
 
-What is not exposed as a first-class contract:
-- explicit group member list in `layout.*` payloads,
+What is still not exposed as a first-class contract:
 - group buffer style setting/state,
 - group flattening policy (`removeDuplicates`, `activeOnly`) and active-model snapshot,
 - cycle/recursion diagnostics for group graphs.
+
+Important nuance from source:
+- `layout.getModels` exposes `groupNames[]`, but that is reverse membership for non-group models and submodels only.
+- For `ModelGroup` rows themselves, reverse expansion is intentionally skipped in automation to avoid unstable discovery and group-assert problems.
+- `layout.getModelGroupMembers` now exposes authoritative direct and flattened membership for one group.
+- Therefore current automation can now identify:
+  - which ids are groups,
+  - which models/submodels belong to one or more groups,
+  - the direct ordered member list of a queried group,
+  - active and flattened membership views for a queried group.
 
 ## 5) Current xLightsDesigner Coverage
 File:
@@ -69,17 +91,28 @@ File:
 
 Current behavior:
 - groups are identified from type and separated into `groupsById`,
-- group ids are now passed into `sequence_agent` planning so group-first ordering/target preservation can use authoritative xLights group identity,
-- no explicit group membership graph is reconstructed,
-- no group behavior semantics (fanout/stagger/mirror/distribution) are encoded yet.
+- direct/active/flattened membership is now fetched per group via `layout.getModelGroupMembers` and attached into `sceneGraph.groupsById[*].members`,
+- group ids and the authoritative group membership graph are passed into `sequence_agent` planning,
+- planner now uses that graph for:
+  - broad-group target preservation on generic-scope lines,
+  - nested-group breadth preference (broadest valid aggregate first),
+  - display-element ordering heuristics that keep broader groups above their refinements,
+- no fanout/stagger/mirror/distribution semantics are encoded yet.
 
 ## 6) Gap List (Model Groups Step)
 
-### G1: Missing explicit group membership graph
-Need deterministic group membership ingest model:
-- direct members (models/submodels/groups),
-- flattened members (cycle-safe),
-- duplicate policy visibility.
+### G1: Missing bulk group graph endpoint
+Need deterministic group membership ingest at scene scale without N-per-group round trips.
+
+Current recovered subset now in use:
+- reverse membership for models and submodels via `groupNames[]`,
+- explicit group identity via `type = "ModelGroup"`,
+- authoritative direct/active/flattened membership per group via `layout.getModelGroupMembers`.
+
+Still missing for full fidelity/performance:
+- full-scene bulk group graph in one call,
+- group render/buffer-style policy exposure,
+- explicit cycle/recursion diagnostics.
 
 ### G2: Missing group behavior ontology
 Need canonical group behavior descriptors for planning:
@@ -92,8 +125,11 @@ Need surfaced group rendering style metadata where available:
 - group buffer style,
 - per-model/per-strand implications.
 
-### G4: Planner not yet group-aware
-`sequence_agent` currently treats targets as ids/tags only; it does not adapt commands based on group composition semantics.
+### G4: Planner only partially group-aware
+`sequence_agent` now adapts broad-target preservation and ordering using authoritative group membership, but it does not yet encode:
+- fanout/distribution strategies,
+- stagger/mirror semantics,
+- expansion-vs-preserve decisions driven by requested group render behavior.
 
 ### G5: Display-element ordering semantics not yet encoded with group behavior
 Group behavior is not only about target expansion. xLights `Edit Display Elements` behavior shows that ordering is part of practical sequencing semantics:
@@ -112,11 +148,18 @@ Pre-gate status for Phase I model groups:
 - semantic implementation: NOT STARTED
 
 ## 8) Recommended Next Implementation Slice
-1. Build group membership graph in scene graph normalization.
-2. Add group semantics utility layer (`directMembers`, `flattenedMembers`, cycle-safe checks).
-3. Encode group behavior rules for planner target expansion and distribution strategies.
+1. Add a group semantics utility layer that distinguishes:
+   - direct members,
+   - active members,
+   - flattened members.
+2. Encode fuller group behavior rules for planner target preservation and ordering using authoritative group identity and membership data.
+3. Defer only the remaining render-policy-specific semantics until automation exposes group buffer-style details, or a dedicated app-side source import is approved.
 4. Encode display-element ordering heuristics for group-first sequencing:
    - keep timing rows pinned at top,
    - prefer broad groups earlier,
    - keep focused model/submodel refinements below when intent calls for layered override behavior.
-5. Add deterministic tests for nested group scenarios and group-first ordering behavior.
+5. Add deterministic tests for:
+   - group-first ordering behavior,
+   - nested-group breadth preference,
+   - reverse-membership aware targeting,
+   - eventual expansion-vs-preserve behavior once render-policy semantics are added.

@@ -21,12 +21,65 @@ function isGenericScopeToken(raw = "") {
   return new Set(["whole show", "whole yard", "global", "all", "all props"]).has(key);
 }
 
-function looksLikeAggregateTarget(name = "", groupIds = []) {
+function normalizeGroupGraph(groupsById = {}, groupIds = []) {
+  const out = {};
+  const ids = new Set(Array.isArray(groupIds) ? groupIds.map((v) => normText(v)).filter(Boolean) : []);
+  if (groupsById && typeof groupsById === "object" && !Array.isArray(groupsById)) {
+    for (const [key, value] of Object.entries(groupsById)) {
+      const id = normText(key);
+      if (!id) continue;
+      ids.add(id);
+      const direct = Array.isArray(value?.members?.direct) ? value.members.direct : [];
+      const flattened = Array.isArray(value?.members?.flattenedAll) ? value.members.flattenedAll
+        : Array.isArray(value?.members?.flattened) ? value.members.flattened
+          : direct;
+      out[id] = {
+        id,
+        direct: new Set(direct.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
+        flattened: new Set(flattened.map((row) => normText(row?.id || row?.name)).filter(Boolean))
+      };
+    }
+  }
+  for (const id of ids) {
+    if (!out[id]) out[id] = { id, direct: new Set(), flattened: new Set() };
+  }
+  return out;
+}
+
+function looksLikeAggregateTarget(name = "", groupIds = [], groupsById = {}) {
   const text = normText(name);
   if (!text) return false;
-  const groups = Array.isArray(groupIds) ? new Set(groupIds.map((v) => normText(v)).filter(Boolean)) : new Set();
-  if (groups.has(text)) return true;
+  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
+  if (groupGraph[text]) return true;
   return /(all|group|props|outlines|borders|greens|floods|wreath|snowflakes|spirals|train|front|upper|bulbs)/i.test(text);
+}
+
+function scoreAggregateTarget(id = "", orderedTargets = [], groupGraph = {}) {
+  const group = groupGraph[id];
+  if (!group) return Number.NEGATIVE_INFINITY;
+  const others = orderedTargets.filter((row) => row !== id);
+  const containedTargets = others.filter((row) => group.flattened.has(row) || group.direct.has(row)).length;
+  const breadth = group.flattened.size || group.direct.size || 0;
+  const positionBias = orderedTargets.indexOf(id) >= 0 ? (orderedTargets.length - orderedTargets.indexOf(id)) / 1000 : 0;
+  return (containedTargets * 1000) + breadth + positionBias;
+}
+
+function choosePrimaryAggregateTarget(orderedTargets = [], groupIds = [], groupsById = {}) {
+  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
+  const aggregateCandidates = orderedTargets.filter((id) => groupGraph[id] || looksLikeAggregateTarget(id, groupIds, groupsById));
+  if (!aggregateCandidates.length) return "";
+  const scored = aggregateCandidates
+    .map((id) => ({ id, score: scoreAggregateTarget(id, orderedTargets, groupGraph) }))
+    .sort((a, b) => b.score - a.score);
+  return scored[0]?.id || aggregateCandidates[0] || "";
+}
+
+function sortAggregateTargets(targetIds = [], groupIds = [], groupsById = {}) {
+  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
+  return targetIds
+    .filter((id) => looksLikeAggregateTarget(id, groupIds, groupsById))
+    .slice()
+    .sort((a, b) => scoreAggregateTarget(b, targetIds, groupGraph) - scoreAggregateTarget(a, targetIds, groupGraph));
 }
 
 function parseProposalLine(line = "") {
@@ -74,6 +127,7 @@ function buildDisplayElementOrderCommand({
   targetIds = [],
   displayElements = [],
   groupIds = [],
+  groupsById = {},
   trackName = ""
 } = {}) {
   const current = Array.isArray(displayElements)
@@ -93,8 +147,8 @@ function buildDisplayElementOrderCommand({
     : [];
   if (!desiredTargets.length) return null;
 
-  const aggregateTargets = desiredTargets.filter((id) => looksLikeAggregateTarget(id, groupIds));
-  const specificTargets = desiredTargets.filter((id) => !looksLikeAggregateTarget(id, groupIds));
+  const aggregateTargets = sortAggregateTargets(desiredTargets, groupIds, groupsById);
+  const specificTargets = desiredTargets.filter((id) => !looksLikeAggregateTarget(id, groupIds, groupsById));
   const prioritized = Array.from(new Set(aggregateTargets.concat(specificTargets)));
   const currentModelSet = new Set(modelIds);
   const prioritizedInCurrent = prioritized.filter((id) => currentModelSet.has(id));
@@ -228,7 +282,7 @@ function buildSectionWindows(source = [], parsed = []) {
   return new Map(sectionOrder.map((section, idx) => [section, { startMs: idx * 1000, endMs: (idx * 1000) + 1000 }]));
 }
 
-function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null, groupIds = []) {
+function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null, groupIds = [], groupsById = {}) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
 
@@ -241,7 +295,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
     let models = row.models.length ? row.models : fallbackTargets;
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
-      const firstAggregate = orderedTargets.find((name) => looksLikeAggregateTarget(name, groupIds));
+      const firstAggregate = choosePrimaryAggregateTarget(orderedTargets, groupIds, groupsById);
       if (firstAggregate) {
         models = [firstAggregate];
       } else {
@@ -280,7 +334,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
 export function buildDesignerPlanCommands(
   sourceLines = [],
-  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [], groupIds = [] } = {}
+  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [], groupIds = [], groupsById = {} } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!source.length) {
@@ -314,10 +368,11 @@ export function buildDesignerPlanCommands(
     targetIds,
     displayElements,
     groupIds,
+    groupsById,
     trackName
   });
 
-  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds).map((row) => {
+  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds, groupsById).map((row) => {
     if (!displayOrderCommand) return row;
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
     if (!dependsOn.includes(displayOrderCommand.id)) {

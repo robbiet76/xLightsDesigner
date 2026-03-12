@@ -344,6 +344,39 @@ Params:
 Response `data`:
 - detailed model metadata.
 
+### `layout.getModelGroupMembers`
+Purpose: return authoritative xLights model-group membership views for one `ModelGroup`.
+
+Params:
+- `name` (string, required): group name; must resolve to a `ModelGroup`.
+
+Response `data`:
+- `group`:
+  - `name`
+  - `type`
+  - `startChannel`
+  - `endChannel`
+  - `layoutGroup`
+  - `groupNames[]`
+- `members`:
+  - `groupName`
+  - `directMembers[]`
+  - `activeMembers[]`
+  - `flattenedMembers[]`
+  - `flattenedAllMembers[]`
+
+Each member entry includes:
+- `id`
+- `name`
+- `type`
+- `isGroup`
+- `isSubmodel`
+- `active`
+
+Validation:
+- `name` is required
+- `name` must resolve to an existing `ModelGroup`
+
 ### `layout.getViews`
 Response `data`:
 - `views` array with model memberships.

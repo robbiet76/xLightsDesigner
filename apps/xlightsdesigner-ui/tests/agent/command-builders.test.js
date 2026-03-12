@@ -12,6 +12,31 @@ function sampleCatalog() {
   ]);
 }
 
+function sampleGroups() {
+  return {
+    AllModels: {
+      members: {
+        direct: [
+          { id: "Frontline", name: "Frontline", isGroup: true },
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ],
+        flattenedAll: [
+          { id: "Frontline", name: "Frontline", isGroup: true },
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ]
+      }
+    },
+    Frontline: {
+      members: {
+        direct: [{ id: "MegaTree", name: "MegaTree" }],
+        flattenedAll: [{ id: "MegaTree", name: "MegaTree" }]
+      }
+    }
+  };
+}
+
 test("command builders emit canonical command graph templates with dependencies", () => {
   const commands = buildDesignerPlanCommands([
     "Chorus 1 / MegaTree / increase pulse contrast and fade bars accents"
@@ -151,6 +176,14 @@ test("command builders treat xlights-known group ids as aggregate targets even w
   ], {
     targetIds: ["Frontline", "MegaTree"],
     groupIds: ["Frontline"],
+    groupsById: {
+      Frontline: {
+        members: {
+          direct: [{ id: "MegaTree", name: "MegaTree" }],
+          flattenedAll: [{ id: "MegaTree", name: "MegaTree" }]
+        }
+      }
+    },
     displayElements: [
       { id: "Beats", type: "timing" },
       { id: "MegaTree", type: "model" },
@@ -173,5 +206,39 @@ test("command builders treat xlights-known group ids as aggregate targets even w
   assert.deepEqual(
     reorder.params.orderedIds,
     ["Beats", "XD:ProposedPlan", "Frontline", "MegaTree"]
+  );
+});
+
+test("command builders prefer the broadest explicit group target for generic-scope lines", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars",
+    "Chorus 1 / MegaTree / shimmer fade"
+  ], {
+    targetIds: ["Frontline", "AllModels", "MegaTree"],
+    groupIds: ["Frontline", "AllModels"],
+    groupsById: sampleGroups(),
+    displayElements: [
+      { id: "Beats", type: "timing" },
+      { id: "MegaTree", type: "model" },
+      { id: "Frontline", type: "model" },
+      { id: "AllModels", type: "model" }
+    ],
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["AllModels", "Bars"],
+      ["MegaTree", "Shimmer"]
+    ]
+  );
+
+  const reorder = commands.find((row) => row.cmd === "sequencer.setDisplayElementOrder");
+  assert.ok(reorder);
+  assert.deepEqual(
+    reorder.params.orderedIds,
+    ["Beats", "XD:ProposedPlan", "AllModels", "Frontline", "MegaTree"]
   );
 });

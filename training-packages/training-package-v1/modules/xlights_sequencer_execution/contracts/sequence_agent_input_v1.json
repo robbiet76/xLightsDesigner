@@ -10,6 +10,7 @@
     "context.endpoint",
     "context.displayElements",
     "context.groupIds",
+    "context.groupsById",
     "intentHandoff",
     "safety.timingOwnership",
     "safety.manualXdLocks",
@@ -19,6 +20,7 @@
     "timingOwnership is informational sequencing state, not a permanent lock policy.",
     "sequence_agent must plan against the latest sequence revision.",
     "displayElements provides the current explicit order state required for deterministic display-element reorder plans.",
-    "groupIds provides authoritative xLights group identity so group-first planning does not rely on name heuristics."
+    "groupIds provides authoritative xLights group identity so group-first planning does not rely on name heuristics.",
+    "groupsById carries authoritative direct and flattened membership so nested-group planning can prefer the broadest valid aggregate target."
   ]
 }

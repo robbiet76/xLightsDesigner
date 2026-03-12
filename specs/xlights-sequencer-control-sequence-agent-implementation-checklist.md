@@ -59,9 +59,10 @@ Boundary summary:
   - [x] Model type ontology + constraints documented and encoded.
 - [ ] Model groups and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
-  - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution/order preservation).
+  - [ ] Group behavior rules encoded (fanout/stagger/mirror/distribution/preserve-vs-expand semantics).
   - [x] Initial display-element ordering heuristics encoded for group-first sequencing.
   - [x] Group-first planning uses explicit xLights group identity rather than name heuristics.
+  - [x] Nested-group breadth preference uses authoritative direct/flattened membership graph.
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.
@@ -99,6 +100,7 @@ Boundary summary:
   - [x] rare-but-documented transition acceptance
   - [x] style-neutral command synthesis when shared settings are not requested
   - [x] apply path preserves corpus-backed effect settings without reinterpretation
+  - [x] nested-group breadth preference and ordering
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration

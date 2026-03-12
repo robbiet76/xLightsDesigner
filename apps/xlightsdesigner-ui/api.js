@@ -103,6 +103,10 @@ export async function getModel(endpoint, name) {
   return postCommand(endpoint, "layout.getModel", { name });
 }
 
+export async function getModelGroupMembers(endpoint, name) {
+  return postCommand(endpoint, "layout.getModelGroupMembers", { name });
+}
+
 export async function getModelGeometry(endpoint, name) {
   return postCommand(endpoint, "layout.getModelGeometry", { name });
 }

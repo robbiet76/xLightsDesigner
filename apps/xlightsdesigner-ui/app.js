@@ -8,6 +8,7 @@ import {
   getMediaStatus,
   getMediaMetadata,
   getDisplayElementOrder,
+  getModelGroupMembers,
   getModels,
   getLayoutScene,
   getOpenSequence,
@@ -2524,7 +2525,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
-      groupIds: Object.keys(state.groupsById || {}),
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
       intentHandoff,
       analysisHandoff,
       planningScope: {
@@ -2592,7 +2594,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         effectCatalog: state.effectCatalog,
         layoutMode: currentLayoutMode(),
         displayElements: state.displayElements,
-        groupIds: Object.keys(state.groupsById || {}),
+        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+        groupsById: state.sceneGraph?.groupsById || {},
         timingOwnership: getSequenceTimingOwnershipRows(),
         allowTimingWrites: true
       });
@@ -2915,7 +2918,8 @@ async function onGenerate(intentOverride = "") {
     sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
     layoutMode: currentLayoutMode(),
     displayElements: state.displayElements,
-    groupIds: Object.keys(state.groupsById || {}),
+    groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+    groupsById: state.sceneGraph?.groupsById || {},
     intentHandoff,
     analysisHandoff,
     planningScope: {
@@ -2953,7 +2957,8 @@ async function onGenerate(intentOverride = "") {
       effectCatalog: state.effectCatalog,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
-      groupIds: Object.keys(state.groupsById || {}),
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
       timingOwnership: getSequenceTimingOwnershipRows(),
       allowTimingWrites: true
     });
@@ -3161,10 +3166,24 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   };
 }
 
+function normalizeGroupMemberEntry(member = {}) {
+  const id = String(member?.id || member?.name || "").trim();
+  return {
+    id,
+    name: String(member?.name || id).trim(),
+    type: normalizeElementType(member?.type || "model") || "model",
+    rawType: String(member?.type || "").trim(),
+    isGroup: Boolean(member?.isGroup),
+    isSubmodel: Boolean(member?.isSubmodel),
+    active: Boolean(member?.active)
+  };
+}
+
 function buildSceneGraphFromData({
   sceneData = {},
   models = [],
   submodels = [],
+  groupMembersById = {},
   source = "",
   warnings = []
 } = {}) {
@@ -3187,7 +3206,18 @@ function buildSceneGraphFromData({
   for (const row of modelRows) {
     const node = normalizeSceneGraphModelNode(row, sceneModels.length ? "layout.getScene" : "layout.getModels");
     if (!node.id) continue;
-    if (node.type === "group") groupsById[node.id] = node;
+    if (node.type === "group") {
+      const membership = isPlainObject(groupMembersById?.[node.id]) ? groupMembersById[node.id] : {};
+      groupsById[node.id] = {
+        ...node,
+        members: {
+          direct: Array.isArray(membership.directMembers) ? membership.directMembers.map(normalizeGroupMemberEntry).filter((row) => row.id) : [],
+          active: Array.isArray(membership.activeMembers) ? membership.activeMembers.map(normalizeGroupMemberEntry).filter((row) => row.id) : [],
+          flattened: Array.isArray(membership.flattenedMembers) ? membership.flattenedMembers.map(normalizeGroupMemberEntry).filter((row) => row.id) : [],
+          flattenedAll: Array.isArray(membership.flattenedAllMembers) ? membership.flattenedAllMembers.map(normalizeGroupMemberEntry).filter((row) => row.id) : []
+        }
+      };
+    }
     else modelsById[node.id] = node;
   }
 
@@ -3257,6 +3287,7 @@ function buildSceneGraphFromData({
     stats: {
       modelCount: Object.keys(modelsById).length,
       groupCount: Object.keys(groupsById).length,
+      groupMembershipCount: Object.values(groupsById).reduce((sum, row) => sum + Number(row?.members?.direct?.length || 0), 0),
       submodelCount: Object.keys(submodelsById).length,
       displayElementCount: displayElements.length,
       hasSpatialTransforms,
@@ -3275,13 +3306,14 @@ function buildSceneGraphFromData({
   };
 }
 
-async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}) {
+async function refreshSceneGraphFromXLights({ models = [], submodels = [], groupMembersById = {} } = {}) {
   try {
     const body = await getLayoutScene(state.endpoint, { includeNodes: false, includeCameras: true });
     const graph = buildSceneGraphFromData({
       sceneData: body?.data && isPlainObject(body.data) ? body.data : {},
       models,
       submodels,
+      groupMembersById,
       source: "layout.getScene",
       warnings: []
     });
@@ -3298,6 +3330,7 @@ async function refreshSceneGraphFromXLights({ models = [], submodels = [] } = {}
       sceneData: {},
       models,
       submodels,
+      groupMembersById,
       source: "fallback.models-submodels",
       warnings: [warning]
     });
@@ -3339,6 +3372,32 @@ async function refreshEffectCatalogFromXLights() {
   }
 }
 
+async function fetchGroupMembershipsFromXLights(models = []) {
+  const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
+  if (!commands.includes("layout.getModelGroupMembers")) {
+    return {};
+  }
+  const groupRows = (Array.isArray(models) ? models : []).filter((row) => String(row?.type || "").trim() === "ModelGroup");
+  if (!groupRows.length) return {};
+
+  const results = await Promise.allSettled(
+    groupRows.map(async (row) => {
+      const name = String(row?.name || "").trim();
+      if (!name) return null;
+      const body = await getModelGroupMembers(state.endpoint, name);
+      const members = isPlainObject(body?.data?.members) ? body.data.members : {};
+      return [name, members];
+    })
+  );
+
+  const out = {};
+  for (const row of results) {
+    if (row.status !== "fulfilled" || !Array.isArray(row.value) || row.value.length !== 2) continue;
+    out[row.value[0]] = row.value[1];
+  }
+  return out;
+}
+
 async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false } = {}) {
   try {
     const open = await getOpenSequence(state.endpoint);
@@ -3349,6 +3408,7 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
 
   const modelBody = await getModels(state.endpoint);
   state.models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
+  const groupMembersById = await fetchGroupMembershipsFromXLights(state.models);
 
   try {
     const submodelBody = await getSubmodels(state.endpoint);
@@ -3367,7 +3427,8 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
 
   await refreshSceneGraphFromXLights({
     models: state.models,
-    submodels: state.submodels
+    submodels: state.submodels,
+    groupMembersById
   });
 
   ensureMetadataTargetSelection();
