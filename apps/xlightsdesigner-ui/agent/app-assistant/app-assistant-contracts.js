@@ -1,5 +1,18 @@
 export const APP_ASSISTANT_ROLE = "app_assistant";
 export const APP_ASSISTANT_CONTRACT_VERSION = "1.0";
+export const TEAM_CHAT_ROLE_IDS = [
+  APP_ASSISTANT_ROLE,
+  "audio_analyst",
+  "designer_dialog",
+  "sequence_agent"
+];
+
+export const DEFAULT_TEAM_CHAT_IDENTITIES = {
+  app_assistant: { roleId: "app_assistant", displayName: "App Assistant", nickname: "" },
+  audio_analyst: { roleId: "audio_analyst", displayName: "Audio Analyst", nickname: "" },
+  designer_dialog: { roleId: "designer_dialog", displayName: "Designer", nickname: "" },
+  sequence_agent: { roleId: "sequence_agent", displayName: "Sequencer", nickname: "" }
+};
 
 const ROUTES = new Set([
   "setup_help",
@@ -21,6 +34,29 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isValidRoleId(value = "") {
+  return TEAM_CHAT_ROLE_IDS.includes(str(value));
+}
+
+export function buildTeamChatIdentities(overrides = {}) {
+  const out = {};
+  for (const roleId of TEAM_CHAT_ROLE_IDS) {
+    const base = DEFAULT_TEAM_CHAT_IDENTITIES[roleId];
+    const override = isPlainObject(overrides?.[roleId]) ? overrides[roleId] : {};
+    out[roleId] = {
+      roleId,
+      displayName: str(override.displayName || base.displayName),
+      nickname: str(override.nickname || "")
+    };
+  }
+  return out;
+}
+
+export function resolveTeamChatIdentity(roleId = "", identities = {}) {
+  const key = isValidRoleId(roleId) ? roleId : APP_ASSISTANT_ROLE;
+  return buildTeamChatIdentities(identities)[key];
+}
+
 export function validateAppAssistantInput(payload = {}) {
   const errors = [];
   const obj = isPlainObject(payload) ? payload : {};
@@ -39,7 +75,10 @@ export function validateAppAssistantResult(payload = {}) {
   if (str(obj.contractVersion) !== APP_ASSISTANT_CONTRACT_VERSION) errors.push(`contractVersion must be ${APP_ASSISTANT_CONTRACT_VERSION}`);
   if (!str(obj.assistantMessage)) errors.push("assistantMessage is required");
   if (!ROUTES.has(str(obj.routeDecision))) errors.push("routeDecision must be setup_help|audio_analyst|designer_dialog|sequence_agent|general");
+  if (obj.handledBy != null && !isValidRoleId(obj.handledBy)) errors.push("handledBy must be app_assistant|audio_analyst|designer_dialog|sequence_agent");
+  if (obj.addressedTo != null && !isValidRoleId(obj.addressedTo)) errors.push("addressedTo must be app_assistant|audio_analyst|designer_dialog|sequence_agent");
   if (obj.diagnostics != null && !isPlainObject(obj.diagnostics)) errors.push("diagnostics must be an object when provided");
+  if (obj.identities != null && !isPlainObject(obj.identities)) errors.push("identities must be an object when provided");
   return errors;
 }
 
@@ -68,6 +107,9 @@ export function buildAppAssistantResult({
   responseId = "",
   provider = "",
   model = "",
+  handledBy = APP_ASSISTANT_ROLE,
+  addressedTo = "",
+  identities = {},
   shouldGenerateProposal = false,
   proposalIntent = "",
   diagnostics = null,
@@ -81,6 +123,9 @@ export function buildAppAssistantResult({
     responseId: str(responseId),
     provider: str(provider),
     model: str(model),
+    handledBy: isValidRoleId(handledBy) ? handledBy : APP_ASSISTANT_ROLE,
+    addressedTo: isValidRoleId(addressedTo) ? addressedTo : undefined,
+    identities: buildTeamChatIdentities(identities),
     shouldGenerateProposal: Boolean(shouldGenerateProposal),
     proposalIntent: str(proposalIntent),
     diagnostics: isPlainObject(diagnostics) ? diagnostics : undefined,

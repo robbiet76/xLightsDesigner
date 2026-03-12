@@ -88,6 +88,11 @@ import { validateCommandGraph } from "./agent/sequence-agent/command-graph.js";
 import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/sequence-agent/apply-readback.js";
 import { executeAppAssistantConversation } from "./agent/app-assistant/app-assistant-orchestrator.js";
 import {
+  DEFAULT_TEAM_CHAT_IDENTITIES,
+  buildTeamChatIdentities,
+  resolveTeamChatIdentity
+} from "./agent/app-assistant/app-assistant-contracts.js";
+import {
   classifyDepthBands,
   collectSpatialNodes,
   computeSceneBounds,
@@ -242,6 +247,9 @@ const defaultState = {
     planOnlyForcedByRollout: false
   },
   chat: [],
+  teamChat: {
+    identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES)
+  },
   proposed: [],
   ui: {
     detailsOpen: false,
@@ -388,6 +396,10 @@ function loadState() {
 
 const state = loadState();
 ensureAnalysisServiceDefaults(state);
+if (!state.teamChat || typeof state.teamChat !== "object") {
+  state.teamChat = { identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES) };
+}
+state.teamChat.identities = buildTeamChatIdentities(state.teamChat.identities || DEFAULT_TEAM_CHAT_IDENTITIES);
 if (!Array.isArray(state.ui?.proposedSelection)) {
   state.ui.proposedSelection = [];
 }
@@ -4298,6 +4310,36 @@ function addChatMessage(who, text) {
   state.chat = [...(state.chat || []), message].slice(-200);
 }
 
+function getTeamChatIdentities() {
+  return buildTeamChatIdentities(state.teamChat?.identities || DEFAULT_TEAM_CHAT_IDENTITIES);
+}
+
+function getTeamChatIdentity(roleId = "") {
+  return resolveTeamChatIdentity(roleId, getTeamChatIdentities());
+}
+
+function getTeamChatSpeakerLabel(roleId = "") {
+  const identity = getTeamChatIdentity(roleId);
+  return identity.nickname
+    ? `${identity.displayName} (${identity.nickname})`
+    : identity.displayName;
+}
+
+function addStructuredChatMessage(who, text, options = {}) {
+  const message = {
+    who,
+    text: String(text || "").trim(),
+    at: new Date().toISOString(),
+    roleId: String(options.roleId || "").trim(),
+    displayName: String(options.displayName || "").trim(),
+    nickname: String(options.nickname || "").trim(),
+    handledBy: String(options.handledBy || "").trim(),
+    addressedTo: String(options.addressedTo || "").trim()
+  };
+  if (!message.text) return;
+  state.chat = [...(state.chat || []), message].slice(-200);
+}
+
 function onUseQuickPrompt(promptText) {
   state.ui.chatDraft = promptText || "";
   persist();
@@ -4332,6 +4374,9 @@ function buildAgentConversationContext() {
     selectedTags,
     creativeBriefReady: Boolean(state.flags.creativeBriefReady),
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    teamChat: {
+      identities: getTeamChatIdentities()
+    },
     agentLayer: {
       loaded: Boolean(state.health.agentLayerReady),
       activeRole: String(state.health.agentActiveRole || ""),
@@ -4982,7 +5027,10 @@ async function onRunOrchestrationMatrix() {
 async function onSendChat() {
   const raw = (state.ui.chatDraft || "").trim();
   if (!raw) return;
-  addChatMessage("user", raw);
+  addStructuredChatMessage("user", raw, {
+    roleId: "user",
+    displayName: "You"
+  });
   setAgentActiveRole("app_assistant");
   state.ui.chatDraft = "";
   state.ui.agentThinking = true;
@@ -4991,7 +5039,11 @@ async function onSendChat() {
   const bridge = getDesktopAgentConversationBridge();
   if (!bridge) {
     state.ui.agentThinking = false;
-    addChatMessage("agent", "Cloud agent is available only in desktop runtime.");
+    addStructuredChatMessage("agent", "Cloud agent is available only in desktop runtime.", {
+      roleId: "app_assistant",
+      displayName: getTeamChatSpeakerLabel("app_assistant"),
+      handledBy: "app_assistant"
+    });
     setStatusWithDiagnostics("warning", "Desktop runtime required for cloud conversation agent.");
     saveCurrentProjectSnapshot();
     persist();
@@ -5019,7 +5071,13 @@ async function onSendChat() {
     const res = shell?.result || null;
     if (!shell?.ok || !res) {
       const errText = String(shell?.error || "Cloud agent request failed.");
-      addChatMessage("agent", String(res?.assistantMessage || `Agent unavailable: ${errText}`));
+      addStructuredChatMessage("agent", String(res?.assistantMessage || `Agent unavailable: ${errText}`), {
+        roleId: String(res?.handledBy || "app_assistant"),
+        displayName: getTeamChatSpeakerLabel(String(res?.handledBy || "app_assistant")),
+        nickname: String(res?.identities?.[String(res?.handledBy || "app_assistant")]?.nickname || ""),
+        handledBy: String(res?.handledBy || "app_assistant"),
+        addressedTo: String(res?.addressedTo || "")
+      });
       setAgentActiveRole(String(res?.routeDecision || "app_assistant"));
       setStatusWithDiagnostics("action-required", "Cloud agent conversation failed.", errText);
       await hydrateAgentHealth();
@@ -5029,7 +5087,13 @@ async function onSendChat() {
       return;
     }
 
-    addChatMessage("agent", String(res.assistantMessage || ""));
+    addStructuredChatMessage("agent", String(res.assistantMessage || ""), {
+      roleId: String(res.handledBy || "app_assistant"),
+      displayName: getTeamChatSpeakerLabel(String(res.handledBy || "app_assistant")),
+      nickname: String(res.identities?.[String(res.handledBy || "app_assistant")]?.nickname || ""),
+      handledBy: String(res.handledBy || "app_assistant"),
+      addressedTo: String(res.addressedTo || "")
+    });
     setAgentActiveRole(["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
       ? String(res.routeDecision)
       : "app_assistant");
@@ -5055,7 +5119,11 @@ async function onSendChat() {
     }
   } catch (err) {
     const errText = String(err?.message || err);
-    addChatMessage("agent", `Agent runtime error: ${errText}`);
+    addStructuredChatMessage("agent", `Agent runtime error: ${errText}`, {
+      roleId: "app_assistant",
+      displayName: getTeamChatSpeakerLabel("app_assistant"),
+      handledBy: "app_assistant"
+    });
     setStatusWithDiagnostics("action-required", "Cloud agent runtime error.", errText);
   } finally {
     state.ui.agentThinking = false;
@@ -9127,13 +9195,23 @@ function persistentCoachPanel() {
           ${(state.chat || [])
             .map((c) => {
               const role = c.who === "user" ? "user" : c.who === "agent" ? "agent" : "system";
+              const handledBy = String(c.handledBy || c.roleId || "").trim();
+              const header = role === "user"
+                ? "You"
+                : role === "agent"
+                  ? (String(c.displayName || "").trim() || getTeamChatSpeakerLabel(handledBy || "app_assistant"))
+                  : "System";
+              const routedByNote = role === "agent" && c.addressedTo && c.addressedTo !== handledBy
+                ? `<span class="banner">Handled by ${escapeHtml(header)} after routing from ${escapeHtml(getTeamChatSpeakerLabel(String(c.addressedTo || "")))}</span>`
+                : "";
               return `<article class="chat-msg ${role}">
-                <header>${role === "user" ? "You" : role === "agent" ? "Designer Agent" : "System"}</header>
+                <header>${escapeHtml(header)}</header>
                 <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                ${routedByNote}
               </article>`;
             })
             .join("")}
-          ${state.ui.agentThinking ? `<div class="chat-typing">Designer Agent is working...</div>` : ""}
+          ${state.ui.agentThinking ? `<div class="chat-typing">${escapeHtml(getTeamChatSpeakerLabel(state.health.agentActiveRole || "app_assistant"))} is working...</div>` : ""}
         </div>
       </div>
       <div class="quick-prompts panel-footer-block">
