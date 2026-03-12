@@ -21,8 +21,8 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Move `Audio` ahead of `Sequence` in the primary nav/workflow
 - [x] Fold `Inspiration` into `Design`
 - [x] Keep `History` as the final top-level screen
-- [ ] Remove or merge screens whose responsibilities are unclear
-- [ ] Define the primary user journey from project setup through apply
+- [x] Remove or merge screens whose responsibilities are unclear
+- [x] Define the primary user journey from project setup through apply
 
 ## Phase B: Team Chat UX
 - [x] Turn the current right-side coach panel into an explicit team-chat panel

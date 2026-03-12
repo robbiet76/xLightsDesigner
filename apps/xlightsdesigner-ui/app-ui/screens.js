@@ -213,6 +213,53 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderJourneyCard(kind = "") {
+    const selectedSequence = String(state.activeSequence || state.sequencePathInput || "").trim();
+    const hasAudioArtifact = Boolean(getValidHandoff("analysis_handoff_v1"));
+    const hasBrief = Boolean(state.creative?.brief);
+    const hasProposal = Boolean(state.creative?.proposalBundle);
+    const hasDraft = Boolean(state.flags?.hasDraftProposal);
+    const reviewReady = Boolean(hasDraft && !state.flags?.proposalStale);
+
+    const definitions = {
+      project: {
+        title: "Primary Journey",
+        summary: "Start by defining the project root, show folder, and media location so the rest of the workflow has a stable home.",
+        next: selectedSequence ? "Project is configured. Move to Audio or Sequence to continue." : "After project setup, continue into Audio to inspect or generate analysis."
+      },
+      audio: {
+        title: "Primary Journey",
+        summary: "Audio is now the first specialist phase. Inspect or generate the analysis artifact before sequencing so timing and structure are grounded in the media.",
+        next: hasAudioArtifact ? "Audio artifact is ready. Continue to Sequence to confirm working context." : "Run or reuse audio analysis, then continue to Sequence."
+      },
+      sequence: {
+        title: "Primary Journey",
+        summary: "Sequence is the context lock-in phase. Open the working sequence, confirm revision and scope, and make sure the right media is attached.",
+        next: selectedSequence ? "Sequence context is loaded. Continue to Design for concept and proposal work." : "Open the working sequence, then continue to Design."
+      },
+      design: {
+        title: "Primary Journey",
+        summary: "Design is where the creative brief and proposal bundle are shaped. Use team chat, references, and the brief to decide what should be built.",
+        next: hasProposal ? "Proposal bundle is ready. Continue to Review for approval and apply." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
+      },
+      review: {
+        title: "Primary Journey",
+        summary: "Review is the execution gate. Confirm impact, warnings, approval, and backup posture before writing changes to xLights.",
+        next: reviewReady ? "Draft is ready for review and apply. Approve only after checking warnings and scope." : "If the draft is stale or incomplete, return to Design or refresh before apply."
+      }
+    };
+
+    const row = definitions[kind];
+    if (!row) return "";
+    return `
+      <section class="card journey-card full-span">
+        <div class="artifact-kicker">${escapeHtml(row.title)}</div>
+        <h3>${escapeHtml(row.summary)}</h3>
+        <p class="artifact-body">${escapeHtml(row.next)}</p>
+      </section>
+    `;
+  }
+
   function projectScreen() {
     const createdAt = state.projectCreatedAt
       ? new Date(state.projectCreatedAt).toLocaleString([], { hour12: false })
@@ -222,6 +269,7 @@ export function buildScreenContent({ state, helpers }) {
       : "(not set)";
     return `
       <div class="screen-grid">
+        ${renderJourneyCard("project")}
         <section class="card">
           <h3>Project Summary</h3>
           <div class="banner">Current Project: <strong>${state.projectName}</strong></div>
@@ -361,6 +409,7 @@ export function buildScreenContent({ state, helpers }) {
     const analysisServiceChecking = Boolean(state.ui.analysisServiceChecking);
     return `
       <div class="screen-grid audio-screen">
+        ${renderJourneyCard("audio")}
         <section class="artifact-grid">
           ${renderAudioAnalysisArtifactCard()}
           ${renderAudioPipelineArtifactCard()}
@@ -456,6 +505,7 @@ export function buildScreenContent({ state, helpers }) {
     const revision = String(state.currentSequenceRevision || "").trim();
     return `
       <div class="screen-grid sequence-screen">
+        ${renderJourneyCard("sequence")}
         <section class="artifact-grid">
           ${renderSequenceContextArtifactCard()}
           ${renderSequenceScopeArtifactCard()}
@@ -628,6 +678,7 @@ export function buildScreenContent({ state, helpers }) {
       : "";
     return `
       <div class="screen-grid design-screen">
+        ${renderJourneyCard("design")}
         <section class="card workspace-intro-card workspace-intro-card-design full-span">
           <div class="artifact-kicker">Design Workspace</div>
           <h3>Develop the creative direction before moving into execution.</h3>
@@ -752,6 +803,7 @@ export function buildScreenContent({ state, helpers }) {
       }
 
       <div class="screen-grid review-screen">
+        ${renderJourneyCard("review")}
         <section class="card workspace-intro-card workspace-intro-card-review full-span">
           <div class="artifact-kicker">Review Workspace</div>
           <h3>Confirm the proposed impact, cross-check safeguards, then apply deliberately.</h3>

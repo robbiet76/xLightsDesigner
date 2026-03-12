@@ -590,6 +590,17 @@ button.danger-action:hover {
   overflow: hidden;
 }
 
+.journey-card {
+  background:
+    linear-gradient(135deg, rgba(44, 72, 108, 0.16), rgba(20, 29, 43, 0.88)),
+    var(--panel);
+  border-color: rgba(126, 147, 255, 0.24);
+}
+
+.journey-card h3 {
+  margin-bottom: 8px;
+}
+
 .workspace-intro-card h3 {
   margin-bottom: 8px;
 }
