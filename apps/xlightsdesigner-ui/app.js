@@ -8694,7 +8694,6 @@ async function runSongContextWebFallback(audioPath = "") {
 async function runAudioAnalysisPipeline() {
   const out = await runAudioAnalysisOrchestration({
     audioPath: String(state.audioPathInput || "").trim(),
-    timingTracks: state.timingTracks || [],
     analysisService: {
       baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
       provider: normalizeAudioAnalysisProvider(state.ui.analysisServiceProvider || "auto"),

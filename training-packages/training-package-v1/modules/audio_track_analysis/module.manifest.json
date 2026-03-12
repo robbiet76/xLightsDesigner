@@ -1,7 +1,7 @@
 {
   "moduleId": "audio_track_analysis",
   "version": "0.1.4",
-  "purpose": "Infer usable music structure and timing scaffolding from attached sequence audio.",
+  "purpose": "Infer canonical media analysis artifacts and downstream timing/context handoffs from attached media.",
   "assets": {
     "prompts": [
       "prompts/song_structure_system.md",

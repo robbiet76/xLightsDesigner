@@ -103,13 +103,13 @@ Boundary summary:
 - [ ] Keep artifact richer than handoff; do not collapse provenance too early.
 
 ### Phase G: Sequence/Xlights Boundary Enforcement
-- [ ] Remove remaining xLights/timing-track assumptions from `audio_analyst` runtime.
-- [ ] Confirm `audio_analyst` does not:
+- [x] Remove remaining xLights/timing-track assumptions from `audio_analyst` runtime.
+- [x] Confirm `audio_analyst` does not:
   - read live xLights sequence revision
   - mutate timing tracks
   - manage timing ownership policy
   - depend on current sequence state
-- [ ] Keep timing-track creation solely in `sequence_agent`.
+- [x] Keep timing-track creation solely in `sequence_agent`.
 
 ### Phase H: Diagnostics and Failure Policy
 - [x] Define deterministic failure taxonomy for `audio_analyst`.
@@ -212,3 +212,4 @@ Progress note (2026-03-12):
 - high-level pipeline composition now lives in `apps/xlightsdesigner-ui/agent/audio-analysis-orchestrator.js`, leaving `app.js` to dispatch the runtime and reflect results into UI state.
 - service normalization now uses explicit capability adapters in `apps/xlightsdesigner-ui/agent/audio-analysis-capability-adapters.js` for identity, timing, chords, lyrics, and baseline structure extraction.
 - training assets for `audio_track_analysis` now reflect the artifact/handoff boundary, degraded-mode handling, and media-only role of `audio_analyst` rather than the earlier timing-track-oriented scaffold.
+- audio orchestration no longer accepts current sequence timing tracks as input; timing-track creation remains solely downstream in `sequence_agent`.

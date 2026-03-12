@@ -21,7 +21,6 @@ function analyzeAudioContextStub({ audioPath = "", sectionSuggestions = [], dete
 test("audio analysis orchestrator composes service and context passes into final analysis", async () => {
   const out = await runAudioAnalysisOrchestration({
     audioPath: "/tmp/Song.mp3",
-    timingTracks: [],
     analysisService: {
       baseUrl: "http://127.0.0.1:5055",
       provider: "auto",

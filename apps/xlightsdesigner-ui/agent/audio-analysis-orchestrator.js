@@ -7,7 +7,6 @@ function str(value = "") {
 
 export async function runAudioAnalysisOrchestration({
   audioPath = "",
-  timingTracks = [],
   analysisService = {},
   analysisBridge = null,
   inferLyricStanzaPlan,
@@ -49,7 +48,7 @@ export async function runAudioAnalysisOrchestration({
       mediaMetadata: null,
       sectionSuggestions: [],
       sectionStartByLabel: {},
-      timingTracks,
+      timingTracks: [],
       trackMarksByName: {},
       songContextSummary: ""
     });
