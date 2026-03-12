@@ -386,6 +386,33 @@ export function collectGroupRenderPolicyWarnings(sourceLines = [], { groupIds = 
   return Array.from(new Set(warnings));
 }
 
+export function collectSubmodelRenderWarnings(sourceLines = [], { submodelsById = {}, targetIds = [] } = {}) {
+  const lines = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
+  if (!lines.length) return [];
+  const submodelGraph = normalizeSubmodelGraph(submodelsById);
+  const warnings = [];
+  for (const line of lines) {
+    const parsed = parseProposalLine(line);
+    const explicitModels = parsed.hasGenericScope && Array.isArray(targetIds) && targetIds.length
+      ? targetIds.map((row) => normText(row)).filter(Boolean)
+      : Array.isArray(parsed.models) ? parsed.models.map((row) => normText(row)).filter(Boolean) : [];
+    if (explicitModels.length < 2) continue;
+    const explicitSet = new Set(explicitModels);
+    for (const modelName of explicitModels) {
+      const entry = submodelGraph[modelName];
+      if (!entry?.parentId) continue;
+      if (!explicitSet.has(entry.parentId)) continue;
+      if (!isMaterialSubmodelRenderOverride(entry)) continue;
+      const bufferStyle = normText(entry?.renderPolicy?.bufferStyle || "Default");
+      const submodelType = normText(entry?.renderPolicy?.submodelType || "ranges");
+      warnings.push(
+        `Preserving submodel target ${modelName} instead of collapsing into parent ${entry.parentId} because its local render path is materially different (${submodelType}, ${bufferStyle}).`
+      );
+    }
+  }
+  return Array.from(new Set(warnings));
+}
+
 function derivePerMemberWindow(window, memberIndex = 0, totalMembers = 1, description = "") {
   const strategy = inferGroupDistributionStrategy(description);
   if (!strategy.stagger || totalMembers <= 1) return window;

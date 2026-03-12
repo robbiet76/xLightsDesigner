@@ -531,6 +531,10 @@ test("sequence_agent preserves submodel precision when same-line submodel uses n
 
   const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
   assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/KeepXY", "Roofline/Left"]);
+  assert.ok(
+    out.warnings.some((row) => /Preserving submodel target MegaTree\/KeepXY/.test(String(row))),
+    "expected submodel precision preservation warning"
+  );
 });
 
 test("sequence_agent preserves submodel precision when same-line submodel uses subbuffer semantics", () => {
@@ -553,6 +557,10 @@ test("sequence_agent preserves submodel precision when same-line submodel uses s
 
   const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
   assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/SubBuffer", "Roofline/Left"]);
+  assert.ok(
+    out.warnings.some((row) => /Preserving submodel target MegaTree\/SubBuffer/.test(String(row))),
+    "expected submodel precision preservation warning"
+  );
 });
 
 test("sequence_agent collapses same-line overlapping sibling submodels to first explicit target", () => {

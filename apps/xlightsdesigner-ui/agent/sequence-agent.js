@@ -1,4 +1,4 @@
-import { buildDesignerPlanCommands, collectGroupRenderPolicyWarnings, estimateImpactCount } from "./command-builders.js";
+import { buildDesignerPlanCommands, collectGroupRenderPolicyWarnings, collectSubmodelRenderWarnings, estimateImpactCount } from "./command-builders.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
@@ -105,6 +105,8 @@ function stageCommandGraphSynthesis({
   const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
   const groupRenderWarnings = collectGroupRenderPolicyWarnings(executionLines, { groupIds, groupsById });
   if (groupRenderWarnings.length) warnings.push(...groupRenderWarnings);
+  const submodelRenderWarnings = collectSubmodelRenderWarnings(executionLines, { submodelsById, targetIds });
+  if (submodelRenderWarnings.length) warnings.push(...submodelRenderWarnings);
   const commands = buildDesignerPlanCommands(executionLines, {
     trackName: "XD: Sequencer Plan",
     targetIds,
