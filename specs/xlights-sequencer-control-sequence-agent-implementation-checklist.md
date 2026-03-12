@@ -49,6 +49,9 @@ Boundary summary:
 - [x] Enforce safety policy on graph and per-node command groups.
 
 ### Phase I: xLights Domain Semantics (layout/models/groups/submodels/effects)
+- [x] Enforce canonical boundary:
+  - all `layout.*` state is read-only planner context
+  - sequence/sequencer/effects/timing surfaces are the read/write mutation domain
 - [ ] Show layout and model spatial placement:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Canonical scene graph schema defined in app layer.
@@ -77,7 +80,7 @@ Boundary summary:
     - non-default group render targets require explicit member override before expansion
     - high-risk render policies (`overlay`, `stack`, `single_line`, `per_model_strand`) require force-style override before expansion
     - forced member expansion carries compatibility warnings into validation
-    - v1 keeps group render policy read-only and uses it only as planner context
+    - v1 keeps layout-derived group render policy read-only and uses it only as planner context
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

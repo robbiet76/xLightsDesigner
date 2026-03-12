@@ -117,9 +117,9 @@ Current behavior:
   - display-element ordering heuristics that keep broader groups above their refinements,
 - richer multi-line fanout/alternation/distribution semantics are not encoded yet.
 - v1 boundary:
-  - group render policy is read-only planner context,
-  - preserve/expand decisions may depend on it,
-  - direct mutation of group render policy is out of scope for v1 automation.
+  - all layout/model/group/submodel state is read-only planner context,
+  - preserve/expand decisions may depend on that context,
+  - direct mutation of group definitions or render policy is out of scope for v1 automation.
 
 ## 6) Gap List (Model Groups Step)
 
