@@ -8,15 +8,17 @@ Last Reviewed: 2026-03-12
 Purpose: turn the current functional shell into a coherent end-user experience that matches the real project workflow and the new team-chat model.
 
 ## Phase A: Information Architecture
-- [ ] Lock the canonical top-level workflow phases
-- [ ] Decide final screen model for:
+- [x] Lock the canonical top-level workflow phases
+- [x] Decide final screen model for:
   - `Project`
-  - `Sequence`
   - `Analysis`
+  - `Sequence`
   - `Design`
   - `Review`
   - `History`
   - `Metadata`
+- [x] Move `Analysis` ahead of `Sequence` in the primary nav/workflow
+- [x] Fold `Inspiration` into `Design`
 - [ ] Remove or merge screens whose responsibilities are unclear
 - [ ] Define the primary user journey from project setup through apply
 

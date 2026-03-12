@@ -53,8 +53,8 @@ These screens expose real capability, but the grouping is inconsistent:
 
 The screens do not yet tell a clear story of:
 1. set up the project,
-2. attach sequence/media,
-3. analyze the media,
+2. attach media and analyze it,
+3. choose/open the sequence context,
 4. shape the design,
 5. review and apply sequencing,
 6. inspect history and diagnostics.
@@ -182,13 +182,43 @@ These are necessary surfaces, but they should not dominate the normal user path.
 ### 1. Workflow-first shell
 The UI should guide the user through these major phases:
 1. Project
-2. Sequence + Media
-3. Analysis
+2. Analysis
+3. Sequence
 4. Design
-5. Review + Apply
-6. History + Diagnostics
+5. Review
+6. History
+7. Metadata
 
 Whether those remain tabs or become a different structure is an implementation detail. The important change is that the information architecture should mirror the real workflow.
+
+Locked high-level screen model:
+- `Project`
+- `Analysis`
+- `Sequence`
+- `Design`
+- `Review`
+- `History`
+- `Metadata`
+
+Locked screen ownership model:
+- `Project`
+  - app shell / project setup
+- `Analysis`
+  - `audio_analyst`
+- `Sequence`
+  - sequence context open/create/select
+- `Design`
+  - `designer_dialog`
+- `Review`
+  - `sequence_agent`
+- `History`
+  - app shell / audit and recovery
+- `Metadata`
+  - shared semantic context editing
+
+Locked consolidation decision:
+- `Inspiration` should not remain a top-level screen
+- reference media, palette direction, and other inspiration inputs should live inside `Design`
 
 ### 2. Team chat as a first-class core panel
 The shared conversation should become visibly central to the product instead of behaving like a legacy sidebar.
@@ -218,8 +248,9 @@ Those should not be hidden only inside raw text, payload previews, or status ban
 
 ### Phase A: Information Architecture
 - lock target screen/phase model
-- decide whether `Sequence` should split into `Sequence` and `Analysis`
-- decide whether `Design` and `Review` should be distinct phases or one workspace with clear states
+- move `Analysis` ahead of `Sequence` in the main workflow
+- make `Design` and `Review` distinct phases
+- fold `Inspiration` into `Design`
 
 ### Phase B: Team Chat Presentation
 - turn the current coach panel into a true team-chat panel
