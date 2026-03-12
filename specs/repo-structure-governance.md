@@ -19,6 +19,7 @@ Keep repository layout purpose-built and predictable so new work lands in the co
 - Domain runtime modules should live under app-owned domain folders when the boundary is stable.
 - Current domain anchors:
   - `apps/xlightsdesigner-ui/agent/app-assistant/`
+  - `specs/app-ui/`
   - `apps/xlightsdesigner-ui/agent/audio-analyst/`
   - `apps/xlightsdesigner-ui/agent/designer-dialog/`
   - `apps/xlightsdesigner-ui/agent/sequence-agent/`
