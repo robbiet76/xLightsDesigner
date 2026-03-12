@@ -395,6 +395,7 @@ function loadState() {
 }
 
 const state = loadState();
+if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 if (!state.teamChat || typeof state.teamChat !== "object") {
   state.teamChat = { identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES) };
@@ -1882,14 +1883,15 @@ function tryLoadProjectSnapshot(projectName, showFolder) {
   return true;
 }
 
-const routes = ["project", "sequence", "inspiration", "design", "history", "metadata"];
+const routes = ["project", "audio", "sequence", "design", "review", "metadata", "history"];
 
 function setRoute(route) {
-  if (!routes.includes(route)) return;
-  state.route = route;
+  const normalizedRoute = route === "inspiration" ? "design" : route;
+  if (!routes.includes(normalizedRoute)) return;
+  state.route = normalizedRoute;
   persist();
   render();
-  if (route === "sequence") {
+  if (normalizedRoute === "sequence") {
     void onRefreshSequenceCatalog({ silent: true });
   }
 }
@@ -8926,11 +8928,12 @@ function onNewSession() {
 function navButton(id, label) {
   const icons = {
     project: "P",
+    audio: "A",
     sequence: "S",
-    inspiration: "I",
     design: "D",
-    history: "H",
-    metadata: "M"
+    review: "R",
+    metadata: "M",
+    history: "H"
   };
   const icon = icons[id] || "•";
   return `<button class="${state.route === id ? "active" : ""}" data-route="${id}" title="${label}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></button>`;
@@ -8958,7 +8961,7 @@ function projectScreen() {
         <div class="field">
           <label>Creative Direction (Project Level)</label>
           <textarea id="project-concept-input" rows="3" placeholder="High-level show concept and tone...">${String(state.projectConcept || "")}</textarea>
-          <p class="banner">Project-level concept only. Sequence-specific inspiration lives in the Inspiration tab.</p>
+          <p class="banner">Project-level concept only. Sequence-specific inspiration lives in the Design workspace.</p>
         </div>
         <div class="field">
           <label>Project Root Folder</label>
@@ -8997,7 +9000,7 @@ function projectScreen() {
   `;
 }
 
-function sequenceScreen() {
+function audioScreen() {
   const audioTrackPath = String(state.audioPathInput || "").trim();
   const audioTrackName = basenameOfPath(audioTrackPath) || audioTrackPath;
   const hasAudioTrack = Boolean(audioTrackPath);
@@ -9023,50 +9026,8 @@ function sequenceScreen() {
   const analysisServiceBadge = getAnalysisServiceHeaderBadgeText();
   const analysisServiceReady = Boolean(state.ui.analysisServiceReady);
   const analysisServiceChecking = Boolean(state.ui.analysisServiceChecking);
-  const creativeBriefText = String(state.creative?.briefText || "");
-  const creativeBriefTextEscaped = creativeBriefText
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  const catalog = Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : [];
-  const catalogHasCurrent = catalog.some((s) => String(s?.path || "") === state.sequencePathInput);
-  const catalogOptions = [
-    ...catalog,
-    ...(!catalogHasCurrent && state.sequencePathInput
-      ? [{ path: state.sequencePathInput, relativePath: state.sequencePathInput, name: state.sequencePathInput.split("/").pop() || "Current" }]
-      : [])
-  ];
-  const briefAt = state.creative.briefUpdatedAt
-    ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : "";
   return `
     <div class="screen-grid">
-      <section class="card">
-        <h3>Sequence Setup</h3>
-        <div class="field">
-          <label>Sequence (from Show Directory)</label>
-          <select id="sequence-catalog-select">
-            ${
-              catalogOptions.length
-                ? catalogOptions
-                    .map((s) => {
-                      const path = String(s?.path || "");
-                      const rel = String(s?.relativePath || path);
-                      const name = String(s?.name || path.split("/").pop() || rel);
-                      return `<option value="${path.replace(/\"/g, "&quot;")}" ${path === state.sequencePathInput ? "selected" : ""}>${name} - ${rel}</option>`;
-                    })
-                    .join("")
-                : `<option value="">No sequences found under Show Directory</option>`
-            }
-          </select>
-          <p class="banner">Show Directory: ${state.showFolder || "(not set)"}</p>
-        </div>
-        <div class="row project-actions">
-          <button id="open-sequence">Open</button>
-        </div>
-        <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
-      </section>
-
       ${
         hasAudioTrack
           ? `
@@ -9097,65 +9058,99 @@ function sequenceScreen() {
       `
           : ""
       }
+    </div>
+  `;
+}
 
+function sequenceScreen() {
+  const catalog = Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : [];
+  const catalogHasCurrent = catalog.some((s) => String(s?.path || "") === state.sequencePathInput);
+  const catalogOptions = [
+    ...catalog,
+    ...(!catalogHasCurrent && state.sequencePathInput
+      ? [{ path: state.sequencePathInput, relativePath: state.sequencePathInput, name: state.sequencePathInput.split("/").pop() || "Current" }]
+      : [])
+  ];
+  const mediaFile = String(state.sequenceMediaFile || state.audioPathInput || "").trim();
+  const revision = String(state.currentSequenceRevision || "").trim();
+  return `
+    <div class="screen-grid">
       <section class="card">
-        <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
+        <h3>Sequence Setup</h3>
         <div class="field">
-          <label>Direction, goals, theme, mood, and other brief notes</label>
-          <textarea id="creative-brief-text" rows="10" placeholder="Write or let the agent build the creative brief for this sequence...">${creativeBriefTextEscaped}</textarea>
+          <label>Sequence (from Show Directory)</label>
+          <select id="sequence-catalog-select">
+            ${
+              catalogOptions.length
+                ? catalogOptions
+                    .map((s) => {
+                      const path = String(s?.path || "");
+                      const rel = String(s?.relativePath || path);
+                      const name = String(s?.name || path.split("/").pop() || rel);
+                      return `<option value="${path.replace(/\"/g, "&quot;")}" ${path === state.sequencePathInput ? "selected" : ""}>${name} - ${rel}</option>`;
+                    })
+                    .join("")
+                : `<option value="">No sequences found under Show Directory</option>`
+            }
+          </select>
+          <p class="banner">Show Directory: ${state.showFolder || "(not set)"}</p>
         </div>
+        <div class="row project-actions">
+          <button id="open-sequence">Open</button>
+        </div>
+        <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
+        <p class="banner">Media: ${mediaFile || "(none attached)"}</p>
+        <p class="banner">Revision: ${revision || "(not loaded)"}</p>
       </section>
     </div>
   `;
 }
 
-function inspirationScreen() {
+function referenceMediaPanel() {
   const refs = Array.isArray(state.creative.references) ? state.creative.references : [];
-  const swatches = Array.isArray(state.inspiration?.paletteSwatches) ? state.inspiration.paletteSwatches : [];
   return `
-    <div class="screen-grid">
-      <section class="card">
-        <h3>Reference Media</h3>
-        <div class="field">
-          <label>Upload images/video for inspiration</label>
-          <input id="reference-upload-input" type="file" multiple accept="image/*,video/*" />
-        </div>
-        <p class="banner">Allowed reference formats: ${referenceFormatSummaryText()}</p>
-        <p class="banner">Sequence-eligible formats: ${sequenceEligibilityFormatSummaryText()}</p>
-        <p class="banner">Max file size: ${formatBytes(REFERENCE_MEDIA_MAX_FILE_BYTES)} | Max references: ${REFERENCE_MEDIA_MAX_ITEMS}</p>
-        <div class="row">
-          <button id="add-reference-media" ${refs.length >= REFERENCE_MEDIA_MAX_ITEMS ? "disabled" : ""}>Add Selected References</button>
-          <button id="refresh-recents">Refresh Recents</button>
-        </div>
-        <div class="media-grid">
-          ${
-            refs.length
-              ? refs.map((ref) => {
-                  const preview = String(ref.previewUrl || "").replace(/\"/g, "&quot;");
-                  const name = String(ref.name || "reference");
-                  const safeName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                  const mime = String(ref.mimeType || "").toLowerCase();
-                  const ext = (name.split(".").pop() || "file").slice(0, 8).toUpperCase();
-                  const media =
-                    preview && mime.startsWith("image/")
-                      ? `<img src="${preview}" alt="${safeName}" loading="lazy" />`
-                      : preview && mime.startsWith("video/")
-                        ? `<video src="${preview}" muted loop playsinline preload="metadata"></video>`
-                        : `<div class="media-fallback">${ext}</div>`;
-                  return `
-                    <article class="media-tile">
-                      <div class="media-thumb">${media}</div>
-                      <div class="media-meta">${safeName}</div>
-                    </article>
-                  `;
-                }).join("")
-              : `<article class="media-tile media-empty"><div class="media-meta">No media uploaded yet.</div></article>`
-          }
-        </div>
-        <ul class="list">
-          ${
-            refs.length
-              ? refs.map((ref) => `
+    <section class="card">
+      <h3>Reference Media</h3>
+      <div class="field">
+        <label>Upload images/video for inspiration</label>
+        <input id="reference-upload-input" type="file" multiple accept="image/*,video/*" />
+      </div>
+      <p class="banner">Allowed reference formats: ${referenceFormatSummaryText()}</p>
+      <p class="banner">Sequence-eligible formats: ${sequenceEligibilityFormatSummaryText()}</p>
+      <p class="banner">Max file size: ${formatBytes(REFERENCE_MEDIA_MAX_FILE_BYTES)} | Max references: ${REFERENCE_MEDIA_MAX_ITEMS}</p>
+      <div class="row">
+        <button id="add-reference-media" ${refs.length >= REFERENCE_MEDIA_MAX_ITEMS ? "disabled" : ""}>Add Selected References</button>
+        <button id="refresh-recents">Refresh Recents</button>
+      </div>
+      <div class="media-grid">
+        ${
+          refs.length
+            ? refs.map((ref) => {
+                const preview = String(ref.previewUrl || "").replace(/\"/g, "&quot;");
+                const name = String(ref.name || "reference");
+                const safeName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const mime = String(ref.mimeType || "").toLowerCase();
+                const ext = (name.split(".").pop() || "file").slice(0, 8).toUpperCase();
+                const media =
+                  preview && mime.startsWith("image/")
+                    ? `<img src="${preview}" alt="${safeName}" loading="lazy" />`
+                    : preview && mime.startsWith("video/")
+                      ? `<video src="${preview}" muted loop playsinline preload="metadata"></video>`
+                      : `<div class="media-fallback">${ext}</div>`;
+                return `
+                  <article class="media-tile">
+                    <div class="media-thumb">${media}</div>
+                    <div class="media-meta">${safeName}</div>
+                  </article>
+                `;
+              }).join("")
+            : `<article class="media-tile media-empty"><div class="media-meta">No media uploaded yet.</div></article>`
+        }
+      </div>
+      <ul class="list">
+        ${
+          refs.length
+            ? refs.map((ref) => `
                     <li>
                       <strong>${ref.name}</strong> (${ref.mimeType || "unknown"}) - ${ref.storedPath}
                       <div class="row">
@@ -9169,40 +9164,44 @@ function inspirationScreen() {
                       </div>
                     </li>
                   `).join("")
-              : "<li>No reference media yet.</li>"
-          }
-        </ul>
-      </section>
+            : "<li>No reference media yet.</li>"
+        }
+      </ul>
+    </section>
+  `;
+}
 
-      <section class="card">
-        <h3>Color Palette</h3>
-        <div class="row">
-          <input id="palette-color-input" type="color" value="${swatches[0] || "#0b3d91"}" />
-          <button id="add-palette-swatch">Add Color</button>
-        </div>
-        <ul class="list">
-          ${
-            swatches.length
-              ? swatches.map((hex, idx) => `
-                  <li>
-                    <span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:${hex};border:1px solid #444;vertical-align:middle;margin-right:8px;"></span>
-                    <code>${hex}</code>
-                    <button data-palette-remove="${idx}">Remove</button>
-                  </li>
-                `).join("")
-              : "<li>No palette colors yet.</li>"
-          }
-        </ul>
-        <p class="banner">Initial placeholder. We will expand this tab later.</p>
-      </section>
-    </div>
+function colorPalettePanel() {
+  const swatches = Array.isArray(state.inspiration?.paletteSwatches) ? state.inspiration.paletteSwatches : [];
+  return `
+    <section class="card">
+      <h3>Color Palette</h3>
+      <div class="row">
+        <input id="palette-color-input" type="color" value="${swatches[0] || "#0b3d91"}" />
+        <button id="add-palette-swatch">Add Color</button>
+      </div>
+      <ul class="list">
+        ${
+          swatches.length
+            ? swatches.map((hex, idx) => `
+                <li>
+                  <span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:${hex};border:1px solid #444;vertical-align:middle;margin-right:8px;"></span>
+                  <code>${hex}</code>
+                  <button data-palette-remove="${idx}">Remove</button>
+                </li>
+              `).join("")
+            : "<li>No palette colors yet.</li>"
+        }
+      </ul>
+      <p class="banner">Initial placeholder. We will expand this panel later.</p>
+    </section>
   `;
 }
 
 function persistentCoachPanel() {
   return `
     <aside class="coach-panel card">
-      <h3>Designer</h3>
+      <h3>Team Chat</h3>
       <div class="panel-window chat-window">
         <div class="chat-thread">
           ${(state.chat || [])
@@ -9251,6 +9250,30 @@ function globalChatBar() {
 }
 
 function designScreen() {
+  const creativeBriefText = String(state.creative?.briefText || "");
+  const creativeBriefTextEscaped = creativeBriefText
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const briefAt = state.creative.briefUpdatedAt
+    ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
+  return `
+    <div class="screen-grid">
+      <section class="card">
+        <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
+        <div class="field">
+          <label>Direction, goals, theme, mood, and other brief notes</label>
+          <textarea id="creative-brief-text" rows="10" placeholder="Write or let the designer build the creative brief for this sequence...">${creativeBriefTextEscaped}</textarea>
+        </div>
+      </section>
+      ${referenceMediaPanel()}
+      ${colorPalettePanel()}
+    </div>
+  `;
+}
+
+function reviewScreen() {
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
   const disabledReason = applyDisabledReason();
@@ -9404,7 +9427,7 @@ function detailsDrawer() {
         <button id="drawer-apply" ${applyEnabled() ? "" : "disabled"}>Apply</button>
         <button id="split-section">Split by Section</button>
         <button id="discard-draft">Discard Draft</button>
-        <button id="close-details">Back to Design</button>
+        <button id="close-details">Back to Review</button>
       </div>
       <div class="banner ${applyEnabled() ? "" : "warning"}">${applyEnabled() ? "" : applyDisabledReason()}</div>
     </section>
@@ -9774,9 +9797,11 @@ function metadataScreen() {
 
 function screenContent() {
   if (state.route === "project") return projectScreen();
+  if (state.route === "audio") return audioScreen();
   if (state.route === "sequence") return sequenceScreen();
-  if (state.route === "inspiration") return inspirationScreen();
   if (state.route === "design") return designScreen();
+  if (state.route === "review") return reviewScreen();
+  if (state.route === "metadata") return metadataScreen();
   if (state.route === "history") return historyScreen();
   return metadataScreen();
 }
@@ -10663,11 +10688,12 @@ function render() {
           </div>
           <div class="nav-links">
             ${navButton("project", "Project")}
+            ${navButton("audio", "Audio")}
             ${navButton("sequence", "Sequence")}
-            ${navButton("inspiration", "Inspiration")}
             ${navButton("design", "Design")}
-            ${navButton("history", "History")}
+            ${navButton("review", "Review")}
             ${navButton("metadata", "Metadata")}
+            ${navButton("history", "History")}
           </div>
         </nav>
 
@@ -10683,7 +10709,7 @@ function render() {
           <div class="main-body">
             <main class="content">
               ${screenContent()}
-              ${state.route === "design" ? detailsDrawer() : ""}
+              ${state.route === "review" ? detailsDrawer() : ""}
               ${settingsDrawer()}
               ${jobsPanel()}
             </main>
