@@ -40,7 +40,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Add visible summary surfaces for `creative_brief_v1`
 - [x] Add visible summary surfaces for `proposal_bundle_v1`
 - [x] Add visible summary surfaces for sequence plan/apply outcomes
-- [ ] Make artifact state inspectable without exposing raw internal payloads by default
+- [x] Make artifact state inspectable without exposing raw internal payloads by default
 
 ## Phase D: Review And Apply UX
 - [x] Clarify the difference between design iteration and execution review

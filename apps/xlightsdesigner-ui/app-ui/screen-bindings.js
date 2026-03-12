@@ -61,7 +61,9 @@ export function bindScreenEvents({
   insertModelIntoDraft,
   onRollbackToVersion,
   onCompareVersion,
-  onReapplyVariant
+  onReapplyVariant,
+  onInspectArtifact,
+  onCloseArtifactDetail
 } = {}) {
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
@@ -148,6 +150,13 @@ export function bindScreenEvents({
 
   const analyzeAudioBtn = app.querySelector("#analyze-audio");
   if (analyzeAudioBtn) analyzeAudioBtn.addEventListener("click", onAnalyzeAudio);
+
+  app.querySelectorAll("[data-inspect-artifact]").forEach((btn) => {
+    btn.addEventListener("click", () => onInspectArtifact?.(btn.dataset.inspectArtifact));
+  });
+
+  const closeArtifactDetailBtn = app.querySelector("[data-close-artifact-detail]");
+  if (closeArtifactDetailBtn) closeArtifactDetailBtn.addEventListener("click", () => onCloseArtifactDetail?.());
 
   const audioAnalysisSummaryInput = app.querySelector("#audio-analysis-summary");
   if (audioAnalysisSummaryInput) {

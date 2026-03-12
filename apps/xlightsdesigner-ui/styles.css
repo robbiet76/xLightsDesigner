@@ -419,6 +419,62 @@ button.danger-action:hover {
   color: var(--muted);
 }
 
+.artifact-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.artifact-detail-card {
+  border-color: rgba(126, 147, 255, 0.24);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(126, 147, 255, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.artifact-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.artifact-detail-grid > div {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.artifact-detail-grid strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.artifact-detail-grid p {
+  margin: 0;
+}
+
+.artifact-detail-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
 .artifact-list {
   margin: 10px 0 0;
   padding-left: 18px;

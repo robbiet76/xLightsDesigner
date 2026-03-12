@@ -297,7 +297,8 @@ const defaultState = {
     analysisServiceChecking: false,
     analysisServiceLastError: "",
     analysisServiceLastCheckedAt: "",
-    agentResponseId: ""
+    agentResponseId: "",
+    inspectedArtifact: ""
   },
   diagnostics: [],
   applyHistory: [],
@@ -1901,11 +1902,24 @@ function setRoute(route) {
   const normalizedRoute = route === "inspiration" ? "design" : route;
   if (!routes.includes(normalizedRoute)) return;
   state.route = normalizedRoute;
+  state.ui.inspectedArtifact = "";
   persist();
   render();
   if (normalizedRoute === "sequence") {
     void onRefreshSequenceCatalog({ silent: true });
   }
+}
+
+function onInspectArtifact(kind) {
+  const next = String(kind || "").trim();
+  state.ui.inspectedArtifact = next;
+  render();
+}
+
+function onCloseArtifactDetail() {
+  if (!state.ui.inspectedArtifact) return;
+  state.ui.inspectedArtifact = "";
+  render();
 }
 
 function setStatus(level, text) {
@@ -9466,7 +9480,9 @@ function bindEvents() {
     insertModelIntoDraft,
     onRollbackToVersion,
     onCompareVersion,
-    onReapplyVariant
+    onReapplyVariant,
+    onInspectArtifact,
+    onCloseArtifactDetail
   });
 }
 
