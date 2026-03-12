@@ -27,6 +27,7 @@
     "files": [
       "main.mjs",
       "preload.mjs",
+      "analysis-artifact-store.mjs",
       "renderer/**/*",
       "package.json"
     ],
