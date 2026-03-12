@@ -11,14 +11,16 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Lock the canonical top-level workflow phases
 - [x] Decide final screen model for:
   - `Project`
-  - `Analysis`
+  - `Audio`
   - `Sequence`
   - `Design`
   - `Review`
-  - `History`
   - `Metadata`
-- [x] Move `Analysis` ahead of `Sequence` in the primary nav/workflow
+  - `History`
+- [x] Use `Audio` as the user-facing label for audio-analysis workflow
+- [x] Move `Audio` ahead of `Sequence` in the primary nav/workflow
 - [x] Fold `Inspiration` into `Design`
+- [x] Keep `History` as the final top-level screen
 - [ ] Remove or merge screens whose responsibilities are unclear
 - [ ] Define the primary user journey from project setup through apply
 

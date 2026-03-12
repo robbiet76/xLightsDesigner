@@ -182,28 +182,28 @@ These are necessary surfaces, but they should not dominate the normal user path.
 ### 1. Workflow-first shell
 The UI should guide the user through these major phases:
 1. Project
-2. Analysis
+2. Audio
 3. Sequence
 4. Design
 5. Review
-6. History
-7. Metadata
+6. Metadata
+7. History
 
 Whether those remain tabs or become a different structure is an implementation detail. The important change is that the information architecture should mirror the real workflow.
 
 Locked high-level screen model:
 - `Project`
-- `Analysis`
+- `Audio`
 - `Sequence`
 - `Design`
 - `Review`
-- `History`
 - `Metadata`
+- `History`
 
 Locked screen ownership model:
 - `Project`
   - app shell / project setup
-- `Analysis`
+- `Audio`
   - `audio_analyst`
 - `Sequence`
   - sequence context open/create/select
@@ -248,9 +248,11 @@ Those should not be hidden only inside raw text, payload previews, or status ban
 
 ### Phase A: Information Architecture
 - lock target screen/phase model
-- move `Analysis` ahead of `Sequence` in the main workflow
+- use `Audio` as the user-facing label for audio-analysis workflow
+- move `Audio` ahead of `Sequence` in the main workflow
 - make `Design` and `Review` distinct phases
 - fold `Inspiration` into `Design`
+- keep `History` as the last top-level screen
 
 ### Phase B: Team Chat Presentation
 - turn the current coach panel into a true team-chat panel
