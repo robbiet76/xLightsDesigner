@@ -185,8 +185,11 @@ Implemented now:
   - `designer-dialog-contracts.js`
   - training-package JSON contracts for input/brief/proposal/result
   - focused contract tests
-- [x] Basic intent normalization helper
-- [x] Basic guided-question helper
+- [x] Phase B bootstrap intent layer:
+  - mode/style/color/focus/tolerance normalization
+  - explicit inferred assumptions
+  - bounded assumption policy
+  - targeted clarification helper
 - [x] Basic creative-brief helper
 - [x] Basic proposal seeding helper
 - [x] Basic determinism/planner tests

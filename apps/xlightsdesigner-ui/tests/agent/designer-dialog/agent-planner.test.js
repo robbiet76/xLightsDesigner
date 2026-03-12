@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { normalizeIntent } from '../../../agent/designer-dialog/intent-normalizer.js';
+import { buildClarificationPlan } from '../../../agent/designer-dialog/guided-dialog.js';
 import { resolveTargets } from '../../../agent/sequence-agent/target-resolver.js';
 import { buildProposalFromIntent } from '../../../agent/designer-dialog/planner.js';
 
@@ -31,12 +32,31 @@ test('normalizeIntent extracts high-level sequencing intent and explicit overrid
   });
 
   assert.equal(normalized.tempoIntent, 'increase');
+  assert.equal(normalized.mode, 'revise');
   assert.equal(normalized.motionIntent, 'punchy');
+  assert.equal(normalized.styleDirection, 'punchy');
   assert.deepEqual(normalized.sections, ['Chorus']);
   assert.deepEqual(normalized.tags, ['focal']);
   assert.deepEqual(normalized.targetIds, ['MegaTree/TopHalf']);
+  assert.equal(normalized.changeTolerance, 'moderate');
+  assert.equal(normalized.focusHierarchy, 'explicit_targets');
   assert.ok(normalized.effectOverrides.includes('twinkle'));
   assert.ok(normalized.effectOverrides.includes('bars'));
+});
+
+test('normalizeIntent carries bounded assumptions for broad but usable prompts', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Give the song a smoother, cooler feel',
+    creativeBrief: {
+      paletteIntent: 'cool'
+    }
+  });
+
+  assert.equal(normalized.motionIntent, 'smooth');
+  assert.equal(normalized.colorDirection, 'cool');
+  assert.equal(normalized.focusHierarchy, 'balanced_full_yard');
+  assert.ok(normalized.assumptions.some((line) => /balanced full-yard/i.test(line)));
+  assert.ok(normalized.assumptions.some((line) => /cool palette direction/i.test(line)));
 });
 
 test('resolveTargets honors explicit target ids and metadata tags', () => {
@@ -108,4 +128,39 @@ test('planner output is deterministic for same input', () => {
   const a = buildProposalFromIntent(input);
   const b = buildProposalFromIntent(input);
   assert.deepEqual(a, b);
+});
+
+test('clarification plan asks when critical fields are missing', () => {
+  const normalized = normalizeIntent({
+    promptText: '',
+    selectedSections: []
+  });
+
+  const plan = buildClarificationPlan({
+    normalizedIntent: normalized,
+    targets: []
+  });
+
+  assert.ok(plan.questions.some((q) => q.field === 'goal'));
+  assert.ok(plan.questions.some((q) => q.field === 'sections'));
+});
+
+test('clarification plan proceeds with bounded assumptions for broad usable prompts', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Make it bigger and more cinematic',
+    selectedSections: ['Chorus 1']
+  });
+
+  const plan = buildClarificationPlan({
+    normalizedIntent: normalized,
+    targets: [],
+    directorPreferences: {
+      motionPreference: 'smooth'
+    }
+  });
+
+  assert.deepEqual(plan.questions, []);
+  assert.ok(plan.assumptions.some((line) => /balanced full-yard/i.test(line)));
+  assert.ok(plan.assumptions.some((line) => /cinematic style direction/i.test(line)));
+  assert.ok(plan.assumptions.some((line) => /motion choices.*smooth|smooth.*preference/i.test(line)));
 });
