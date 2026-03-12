@@ -4325,6 +4325,19 @@ function getTeamChatSpeakerLabel(roleId = "") {
     : identity.displayName;
 }
 
+function setTeamChatNickname(roleId = "", nickname = "") {
+  const key = String(roleId || "").trim();
+  if (!key || !getTeamChatIdentities()[key]) return;
+  const next = String(nickname || "").trim().slice(0, 32);
+  state.teamChat.identities = buildTeamChatIdentities({
+    ...state.teamChat.identities,
+    [key]: {
+      ...(state.teamChat.identities?.[key] || {}),
+      nickname: next
+    }
+  });
+}
+
 function addStructuredChatMessage(who, text, options = {}) {
   const message = {
     who,
@@ -9402,6 +9415,7 @@ function settingsDrawer() {
   if (!state.ui.settingsOpen) return "";
   const rolloutMode = getAgentApplyRolloutMode();
   const manualXdLocks = getManualLockedXdTracks();
+  const teamChatIdentities = getTeamChatIdentities();
   const manualXdLockText = manualXdLocks.length
     ? manualXdLocks.map((row) => row.sourceTrack).join(", ")
     : "none";
@@ -9478,6 +9492,14 @@ function settingsDrawer() {
           <input id="analysis-service-api-key-input" type="password" placeholder="x-api-key (optional)" value="${String(state.ui.analysisServiceApiKeyDraft || "").replace(/\"/g, "&quot;")}" />
           <input id="analysis-service-bearer-input" type="password" placeholder="Bearer token (optional)" value="${String(state.ui.analysisServiceAuthBearerDraft || "").replace(/\"/g, "&quot;")}" />
           <p class="banner">Thin client mode: app sends audio to this service and writes returned beats/bars/sections.</p>
+        </section>
+        <section class="field">
+          <label>Team Chat Names</label>
+          <div class="kv"><div class="k">App Assistant</div><div><input id="nickname-app-assistant" placeholder="Optional nickname" value="${String(teamChatIdentities.app_assistant?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">Audio Analyst</div><div><input id="nickname-audio-analyst" placeholder="Optional nickname" value="${String(teamChatIdentities.audio_analyst?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">Designer</div><div><input id="nickname-designer-dialog" placeholder="Optional nickname" value="${String(teamChatIdentities.designer_dialog?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">Sequencer</div><div><input id="nickname-sequence-agent" placeholder="Optional nickname" value="${String(teamChatIdentities.sequence_agent?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <p class="banner">Nicknames are optional. They affect chat presentation and address hints only. Internal role ids stay fixed.</p>
         </section>
         <div class="row">
           <button id="test-connection">Test Connection</button>
@@ -10076,6 +10098,22 @@ function bindEvents() {
     agentApiKeyInput.addEventListener("input", () => {
       state.ui.agentApiKeyDraft = String(agentApiKeyInput.value || "");
       persist();
+    });
+  }
+
+  const nicknameBindings = [
+    ["#nickname-app-assistant", "app_assistant"],
+    ["#nickname-audio-analyst", "audio_analyst"],
+    ["#nickname-designer-dialog", "designer_dialog"],
+    ["#nickname-sequence-agent", "sequence_agent"]
+  ];
+  for (const [selector, roleId] of nicknameBindings) {
+    const input = app.querySelector(selector);
+    if (!input) continue;
+    input.addEventListener("input", () => {
+      setTeamChatNickname(roleId, input.value);
+      persist();
+      render();
     });
   }
 

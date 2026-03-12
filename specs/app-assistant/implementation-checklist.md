@@ -35,7 +35,7 @@ Purpose: implement the unified conversational shell above specialist agents with
 - [x] Preserve visible specialist context when work is delegated
 - [ ] Surface structured artifacts produced by specialists in the shared chat flow
 - [x] Show visible speaker identity for delegated specialist responses
-- [ ] Add optional user-defined specialist nicknames in the chat UI
+- [x] Add optional user-defined specialist nicknames in the chat UI
 
 ## Phase D: Training And Diagnostics
 - [ ] Add `app_assistant` training/package assets
