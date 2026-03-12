@@ -21,6 +21,8 @@ This spec defines the contract between:
 - Support iterative refinement ("keep X, change Y") without global unintended drift.
 - Preserve deterministic behavior and rollback safety in execution.
 - Let the agent act as a lighting designer that translates director-level intent into executable design choices.
+- Let the agent make bounded creative assumptions autonomously when user direction is broad, as long as those assumptions are traceable in the brief/proposal and remain reviewable before apply.
+- Allow the agent to improve over time by learning the recurring preferences of its user/director without collapsing into a fixed house style.
 - Avoid recreating xLights editing surfaces; xLightsDesigner is a director console, not a sequencer replacement.
 
 ## 3) Core Principles
@@ -31,6 +33,8 @@ This spec defines the contract between:
 5. Every applied change can be traced, reverted, and replayed.
 6. When user intent is incomplete, the agent must proactively ask domain-relevant questions using lighting and audio context.
 7. User and agent are collaborative co-editors; if user edits occur, agent must refresh sequence state before proposing/applying further mutations.
+8. `designer_dialog` is expected to act autonomously as a creative specialist: it should make reasonable lighting-design assumptions and advance the work unless a missing decision would create unacceptable ambiguity or risk.
+9. The user is the director; `designer_dialog` should learn that director's preferences over time and use them as soft steering guidance, not hard stylistic lock-in.
 
 ## 3.1) Sprint 0 Lock: v1 Intent Contract
 
@@ -55,6 +59,13 @@ This spec defines the contract between:
 - Agent should proactively identify missing decisions and present concise choices.
 - Agent owns sequencing craft decisions (effect choice, layering approach, transition technique, model emphasis) while honoring user direction.
 - User is treated as director-level intent owner; agent is responsible for translating intent into concrete sequencing plans.
+- Agent should not stall on every open variable. When enough guidance exists to make a conservative, reviewable creative decision, it should proceed and make the assumption explicit in the brief/proposal.
+- Preference learning is a required behavior:
+  - user likes/dislikes
+  - preferred pacing/motion tendencies
+  - favored emphasis/focus patterns
+  - tolerance for aggressive vs conservative changes
+  These should influence future proposals as soft preferences, not as immutable rules.
 
 ### Agent-assisted settings edits (v1)
 - Agent may read and propose updates to editable app form/settings fields.
@@ -170,6 +181,10 @@ When intent is underspecified, agent must ask targeted questions tied to fields:
 
 Clarification must produce field-level deltas, not free-form hidden state.
 
+Clarification is not the default answer to every gap.
+- If a missing field would materially change safety, scope, or reviewability, ask.
+- If a missing field can be covered by a bounded, conservative designer assumption, proceed and record the assumption in the brief/proposal.
+
 ## 6.5 Initial Creative Analysis (Required for New Sequence Authoring)
 - Before first major proposal in `create` mode, agent performs a creative analysis pass.
 - Creative analysis begins with a short kickoff conversation to capture user goals, desired feel, and inspiration.
@@ -199,6 +214,10 @@ Clarification must produce field-level deltas, not free-form hidden state.
   - current sequence style and effect density,
   - prior user likes/dislikes in session memory.
 - Agent must present concise, high-value questions that reduce ambiguity before proposing mutations.
+- Agent must also be willing to proceed without another question round when:
+  - user direction is broad but usable,
+  - a conservative creative assumption is available,
+  - the resulting proposal stays explicit, scoped, and reviewable.
 
 ## 6.2 Elicitation Fields
 Before significant mutation proposals, agent should attempt to resolve:
@@ -215,6 +234,7 @@ Before significant mutation proposals, agent should attempt to resolve:
 - Ask questions tied to current section context (time range + detected section label).
 - Include a recommended option when confidence is high, but always allow override.
 - If user gives high-level direction only ("make chorus bigger"), agent must still resolve missing critical fields with follow-up questions.
+- Do not over-question. The designer should ask only when the answer materially changes the proposal or prevents a coherent design decision.
 
 ## 6.4 Example Elicitation Prompt Shape
 ```json
@@ -274,6 +294,15 @@ Before significant mutation proposals, agent should attempt to resolve:
   }
 }
 ```
+
+## 7.1.1 Assumption Transparency
+- Proposals must surface important designer assumptions explicitly.
+- Assumptions should be framed in designer terms, for example:
+  - focus hierarchy chosen
+  - motion strategy assumed
+  - palette direction inferred
+  - change tolerance inferred from prior collaboration
+- These assumptions are reviewable and may be corrected by the user without invalidating the overall role autonomy model.
 
 ## 7.2 User Actions on Proposal
 - `approve`

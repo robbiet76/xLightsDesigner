@@ -7,6 +7,20 @@ Last Reviewed: 2026-03-12
 
 Purpose: complete `designer_dialog` as a true specialist runtime that owns creative intent capture, clarification, brief synthesis, proposal generation, and proposal lifecycle up to the `sequence_agent` handoff boundary.
 
+## Role Lock
+
+- `designer_dialog` is not a passive form-filler. It is an autonomous creative specialist.
+- It should make bounded creative assumptions when the user provides enough direction to proceed safely.
+- It should ask questions only when the missing answer materially affects:
+  - scope
+  - safety
+  - reviewability
+  - ability to produce a coherent design direction
+- It must learn and reuse director preferences over time as soft guidance, not as hard stylistic cloning.
+- It must remain review-first:
+  - autonomous in proposal generation
+  - not autonomous in hidden apply
+
 ## Locked Boundary
 
 - `audio_analyst` owns media analysis only.
@@ -36,16 +50,27 @@ Exit gate:
   - focus hierarchy
   - change tolerance
   - preservation constraints
+- [ ] Add explicit assumption policy:
+  - when to ask
+  - when to proceed
+  - how to record assumptions in brief/proposal
+- [ ] Add preference-memory inputs for director tendencies:
+  - likes/dislikes
+  - pacing/motion preference
+  - focus preference
+  - change-tolerance preference
 - [ ] Replace ad hoc guided questions with field-targeted clarification generation
 - [ ] Make question generation context-aware using:
   - audio sections
   - target scope
   - current sequence revision state
   - prior captured brief
+  - prior director preferences
 - [ ] Add deterministic tests for clarification output
 
 Exit gate:
 - Missing critical fields are surfaced through explicit clarification deltas, not hidden app state.
+- Non-critical gaps are handled through explicit, reviewable designer assumptions.
 
 ## Phase C: Creative Brief Runtime
 
@@ -57,6 +82,8 @@ Exit gate:
   - song context
   - reference media
   - user notes/goals/inspiration
+  - inferred designer assumptions
+  - learned director preferences used in the pass
 - [ ] Add fidelity tests for brief generation and update behavior
 
 Exit gate:
@@ -73,6 +100,7 @@ Exit gate:
   - proposed lines/edits
   - impact summary
   - risk notes
+  - explicit assumption list
   - base revision
 - [ ] Add stale/rebase markers to proposal bundle state
 - [ ] Ensure proposal bundle is the only upstream input used to generate sequence-agent plans
@@ -140,6 +168,8 @@ Exit gate:
   - stale rebase
   - handoff validation
 - [ ] Export designer diagnostics in structured form
+- [ ] Add tests that prove the agent proceeds autonomously on broad but usable prompts instead of over-questioning
+- [ ] Add tests that prove learned preferences influence proposals without forcing stylistic cloning
 
 Exit gate:
 - Designer failures are classified, testable, and diagnosable.
