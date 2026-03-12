@@ -260,7 +260,28 @@ Params: none.
 
 Response `data`:
 - `isOpen` (bool)
-- `sequence` (object|null): `{ name, path, durationMs, frameMs, mediaFile }`
+- `sequence` (object|null): `{ name, path, sequenceType, durationMs, frameMs, mediaFile, supportsModelBlending, metadata }`
+
+### `sequence.getSettings`
+Purpose: return active sequence-owned settings without lifecycle/path wrapper fields.
+
+Params: none.
+
+Response `data`:
+- `sequenceType` (`Media|Animation`)
+- `durationMs` (int)
+- `frameMs` (int)
+- `mediaFile` (string)
+- `supportsModelBlending` (bool)
+- `metadata` (object):
+  - `author`
+  - `authorEmail`
+  - `website`
+  - `song`
+  - `artist`
+  - `album`
+  - `musicUrl`
+  - `comment`
 
 ### `sequence.open`
 Purpose: open an existing sequence.
@@ -274,7 +295,7 @@ Validation:
 - file exists and is readable.
 
 Response `data`:
-- sequence metadata `{ name, path, durationMs, frameMs, mediaFile }`
+- sequence metadata `{ name, path, sequenceType, durationMs, frameMs, mediaFile, supportsModelBlending, metadata }`
 
 Dry-run:
 - validates file/permissions only; does not open sequence.
@@ -300,6 +321,35 @@ Response `data`:
 
 Dry-run:
 - validates parameter set and media availability only.
+
+### `sequence.setSettings`
+Purpose: mutate sequence-owned settings only. This is sequence-layer state, not layout/configuration state.
+
+Params:
+- `sequenceType` (`Media|Animation`, optional)
+- `durationMs` (int > 0, optional)
+- `frameMs` (int > 0, optional)
+- `supportsModelBlending` (bool, optional)
+- `metadataAuthor` (string, optional)
+- `metadataAuthorEmail` (string, optional)
+- `metadataWebsite` (string, optional)
+- `metadataSong` (string, optional)
+- `metadataArtist` (string, optional)
+- `metadataAlbum` (string, optional)
+- `metadataMusicUrl` (string, optional)
+- `metadataComment` (string, optional)
+
+Validation:
+- at least one mutable setting must be supplied
+- `sequenceType` must be `Media` or `Animation`
+- `durationMs > 0`
+- `frameMs > 0`
+
+Response `data`:
+- normalized sequence settings payload matching `sequence.getSettings`
+
+Dry-run:
+- validates parameter types and allowed values only.
 
 ### `sequence.save`
 Purpose: save active sequence.

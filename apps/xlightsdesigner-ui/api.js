@@ -58,6 +58,10 @@ export async function getOpenSequence(endpoint) {
   return postCommand(endpoint, "sequence.getOpen", {});
 }
 
+export async function getSequenceSettings(endpoint) {
+  return postCommand(endpoint, "sequence.getSettings", {});
+}
+
 export async function getMediaStatus(endpoint) {
   return postCommand(endpoint, "media.getStatus", {});
 }
@@ -80,6 +84,10 @@ export async function openSequence(endpoint, file, force = true, promptIssues = 
 
 export async function createSequence(endpoint, params = {}) {
   return postCommand(endpoint, "sequence.create", params);
+}
+
+export async function setSequenceSettings(endpoint, params = {}) {
+  return postCommand(endpoint, "sequence.setSettings", params);
 }
 
 export async function saveSequence(endpoint, file = null) {

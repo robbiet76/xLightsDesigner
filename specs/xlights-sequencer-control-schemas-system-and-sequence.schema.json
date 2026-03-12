@@ -14,8 +14,10 @@
         "system.getCapabilities",
         "system.validateCommands",
         "sequence.getOpen",
+        "sequence.getSettings",
         "sequence.open",
         "sequence.create",
+        "sequence.setSettings",
         "sequence.save",
         "sequence.close"
       ]
@@ -23,7 +25,7 @@
     "params": {
       "oneOf": [
         {
-          "description": "system.getCapabilities or sequence.getOpen",
+          "description": "system.getCapabilities, sequence.getOpen, or sequence.getSettings",
           "type": "object",
           "maxProperties": 0
         },
@@ -68,7 +70,6 @@
           "description": "sequence.create",
           "type": "object",
           "required": [
-            "file",
             "frameMs"
           ],
           "properties": {
@@ -97,6 +98,56 @@
               ]
             }
           },
+          "additionalProperties": false
+        },
+        {
+          "description": "sequence.setSettings",
+          "type": "object",
+          "properties": {
+            "sequenceType": {
+              "type": "string",
+              "enum": [
+                "Media",
+                "Animation"
+              ]
+            },
+            "durationMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "frameMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "supportsModelBlending": {
+              "type": "boolean"
+            },
+            "metadataAuthor": {
+              "type": "string"
+            },
+            "metadataAuthorEmail": {
+              "type": "string"
+            },
+            "metadataWebsite": {
+              "type": "string"
+            },
+            "metadataSong": {
+              "type": "string"
+            },
+            "metadataArtist": {
+              "type": "string"
+            },
+            "metadataAlbum": {
+              "type": "string"
+            },
+            "metadataMusicUrl": {
+              "type": "string"
+            },
+            "metadataComment": {
+              "type": "string"
+            }
+          },
+          "minProperties": 1,
           "additionalProperties": false
         },
         {
