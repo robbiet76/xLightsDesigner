@@ -60,7 +60,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Extract shell rendering from `app.js`
 - [x] Extract chat rendering/binding from `app.js`
 - [x] Extract settings/diagnostics rendering from `app.js`
-- [ ] Extract screen-specific event binding from `app.js`
+- [x] Extract screen-specific event binding from `app.js`
 
 ## Exit Gate
 - The app tells a clear workflow story from setup to apply.
