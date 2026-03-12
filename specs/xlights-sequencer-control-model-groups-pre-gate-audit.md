@@ -103,6 +103,7 @@ Current behavior:
     - support deterministic staggered time slicing and mirrored member order for explicit distribution requests,
     - support explicit flattened-member expansion for nested groups when requested,
     - alternate repeated distributed-line member order while keeping the same section window model,
+    - rotate repeated fanout lines round-robin across flattened members when explicitly requested,
   - display-element ordering heuristics that keep broader groups above their refinements,
 - richer multi-line fanout/alternation/distribution semantics are not encoded yet.
 
@@ -135,7 +136,7 @@ Need surfaced group rendering style metadata where available:
 ### G4: Planner only partially group-aware
 `sequence_agent` now adapts broad-target preservation and ordering using authoritative group membership, but it does not yet encode:
 - rich fanout/distribution strategies beyond explicit direct/flattened expansion,
-- cross-line alternation semantics beyond simple repeated-line order reversal,
+- cross-line fanout semantics beyond simple repeated-line order reversal and round-robin rotation,
 - expansion-vs-preserve decisions driven by requested group render behavior.
 
 ### G5: Display-element ordering semantics not yet encoded with group behavior

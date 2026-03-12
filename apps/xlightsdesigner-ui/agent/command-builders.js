@@ -104,6 +104,7 @@ function inferGroupDistributionStrategy(description = "") {
     expand: shouldExpandGroupTarget(text),
     flatten: text.includes("flatten members") || text.includes("all nested members") || text.includes("expand nested groups"),
     stagger: text.includes("stagger members") || text.includes("fan out") || text.includes("spread across members"),
+    fanout: text.includes("fan out members") || text.includes("round robin members") || text.includes("rotate members"),
     mirror: text.includes("mirror members") || text.includes("reverse members"),
     alternate: text.includes("alternate members")
   };
@@ -111,11 +112,15 @@ function inferGroupDistributionStrategy(description = "") {
 
 function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 0) {
   let ordered = members.slice();
+  if (strategy.fanout && ordered.length > 1) {
+    const offset = alternationSeed % ordered.length;
+    ordered = ordered.slice(offset).concat(ordered.slice(0, offset));
+  }
   if (strategy.mirror) ordered = ordered.slice().reverse();
   if (strategy.alternate && ordered.length > 2) {
     ordered = ordered.filter((_, idx) => idx % 2 === 0).concat(ordered.filter((_, idx) => idx % 2 === 1));
   }
-  if (alternationSeed % 2 === 1) ordered = ordered.slice().reverse();
+  if (!strategy.fanout && alternationSeed % 2 === 1) ordered = ordered.slice().reverse();
   return ordered;
 }
 

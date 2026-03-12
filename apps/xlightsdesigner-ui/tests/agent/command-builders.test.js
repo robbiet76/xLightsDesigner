@@ -362,3 +362,26 @@ test("command builders alternate distributed member order across repeated lines"
     ]
   );
 });
+
+test("command builders rotate fanout member order across repeated lines", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / NestedFrontline / bars fan out members flatten members and stagger members",
+    "Chorus 1 / NestedFrontline / bars fan out members flatten members and stagger members",
+    "Chorus 1 / NestedFrontline / bars fan out members flatten members and stagger members"
+  ], {
+    targetIds: ["NestedFrontline"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    [
+      "MegaTree", "Roofline", "WindowLeft",
+      "Roofline", "WindowLeft", "MegaTree",
+      "WindowLeft", "MegaTree", "Roofline"
+    ]
+  );
+});

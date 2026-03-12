@@ -72,6 +72,7 @@ Boundary summary:
   - [x] Nested-group distribution baseline encoded:
     - explicit flattened-member expansion on request
     - repeated-line member-order alternation without changing the section window model
+    - repeated-line fanout round-robin rotation on explicit request
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

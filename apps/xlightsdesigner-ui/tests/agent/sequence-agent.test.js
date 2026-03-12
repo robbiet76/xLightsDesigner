@@ -664,3 +664,37 @@ test("sequence_agent alternates distributed member order across repeated lines",
     ]
   );
 });
+
+test("sequence_agent rotates fanout member order across repeated lines", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Fan out a nested group across repeated lines without repeating member order",
+      mode: "revise",
+      scope: {
+        targetIds: ["NestedFrontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / NestedFrontline / bars fan out members flatten members and stagger members",
+      "Chorus 1 / NestedFrontline / bars fan out members flatten members and stagger members",
+      "Chorus 1 / NestedFrontline / bars fan out members flatten members and stagger members"
+    ],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    [
+      "MegaTree", "Roofline", "WindowLeft",
+      "Roofline", "WindowLeft", "MegaTree",
+      "WindowLeft", "MegaTree", "Roofline"
+    ]
+  );
+});
