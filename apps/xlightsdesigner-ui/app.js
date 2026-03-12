@@ -3058,6 +3058,9 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   const type = normalizeElementType(model?.type || "model") || "model";
   const transform = isPlainObject(model?.transform) ? model.transform : {};
   const dimensions = isPlainObject(model?.dimensions) ? model.dimensions : {};
+  const availableBufferStyles = Array.isArray(model?.availableBufferStyles)
+    ? model.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
+    : [];
   return {
     id,
     name: String(model?.name || id),
@@ -3076,6 +3079,12 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
     groupNames: Array.isArray(model?.groupNames) ? model.groupNames.map((v) => String(v || "").trim()).filter(Boolean) : [],
     startChannel: toFiniteNumberOrNull(model?.startChannel),
     endChannel: toFiniteNumberOrNull(model?.endChannel),
+    renderPolicy: {
+      layout: String(model?.renderLayout || "").trim(),
+      defaultBufferStyle: String(model?.defaultBufferStyle || "Default").trim() || "Default",
+      category: String(model?.renderPolicy || "default").trim() || "default",
+      availableBufferStyles
+    },
     transform: {
       position: normalizeVector3(transform.position),
       rotationDeg: normalizeVector3(transform.rotationDeg),

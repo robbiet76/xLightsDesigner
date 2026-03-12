@@ -15,6 +15,11 @@ function sampleCatalog() {
 function sampleGroups() {
   return {
     AllModels: {
+      renderPolicy: {
+        layout: "minimalGrid",
+        defaultBufferStyle: "Default",
+        category: "default"
+      },
       members: {
         direct: [
           { id: "Frontline", name: "Frontline", isGroup: true },
@@ -29,6 +34,28 @@ function sampleGroups() {
       }
     },
     Frontline: {
+      renderPolicy: {
+        layout: "horizontal",
+        defaultBufferStyle: "Horizontal Per Model",
+        category: "per_model"
+      },
+      members: {
+        direct: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ],
+        flattenedAll: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ]
+      }
+    },
+    FrontlineDefault: {
+      renderPolicy: {
+        layout: "minimalGrid",
+        defaultBufferStyle: "Default",
+        category: "default"
+      },
       members: {
         direct: [
           { id: "MegaTree", name: "MegaTree" },
@@ -41,6 +68,11 @@ function sampleGroups() {
       }
     },
     NestedFrontline: {
+      renderPolicy: {
+        layout: "Overlay - Centered",
+        defaultBufferStyle: "Overlay - Centered",
+        category: "overlay"
+      },
       members: {
         direct: [
           { id: "Frontline", name: "Frontline", isGroup: true },
@@ -110,6 +142,20 @@ test("command builders honor explicit target ids when proposal lines omit model 
     effectCommands.map((row) => row.params.modelName),
     ["MegaTree", "Roofline"]
   );
+});
+
+test("command builders prefer non-default group render targets when breadth is otherwise comparable", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars"
+  ], {
+    targetIds: ["FrontlineDefault", "Frontline"],
+    groupIds: ["FrontlineDefault", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Frontline"]);
 });
 
 test("command builders stay style-neutral when source lines do not request shared settings", () => {

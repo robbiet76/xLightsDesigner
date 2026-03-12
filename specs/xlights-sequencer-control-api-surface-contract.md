@@ -335,14 +335,34 @@ Dry-run:
 
 ### `layout.getModels`
 Response `data`:
-- `models` array with `{ name, type, startChannel, endChannel, groupNames[] }`
+- `models` array with:
+  - `name`
+  - `type`
+  - `startChannel`
+  - `endChannel`
+  - `layoutGroup`
+  - `groupNames[]`
+  - `renderLayout`
+  - `defaultBufferStyle`
+  - `renderPolicy`
+  - `availableBufferStyles[]`
 
 ### `layout.getModel`
 Params:
 - `name` (string, required)
 
 Response `data`:
-- detailed model metadata.
+- detailed model metadata, including:
+  - `name`
+  - `type`
+  - `startChannel`
+  - `endChannel`
+  - `layoutGroup`
+  - `groupNames[]`
+  - `renderLayout`
+  - `defaultBufferStyle`
+  - `renderPolicy`
+  - `availableBufferStyles[]`
 
 ### `layout.getModelGroupMembers`
 Purpose: return authoritative xLights model-group membership views for one `ModelGroup`.
@@ -358,6 +378,10 @@ Response `data`:
   - `endChannel`
   - `layoutGroup`
   - `groupNames[]`
+  - `renderLayout`
+  - `defaultBufferStyle`
+  - `renderPolicy`
+  - `availableBufferStyles[]`
 - `members`:
   - `groupName`
   - `directMembers[]`
@@ -448,7 +472,7 @@ Params:
 - `includeCameras` (bool, default `true`)
 
 Response `data`:
-- `models[]` (same shape as `layout.getModelGeometry`, optionally with `nodes`)
+- `models[]` (same shape as `layout.getModelGeometry`, plus `renderLayout`, `defaultBufferStyle`, `renderPolicy`, `availableBufferStyles[]`, and optionally `nodes`)
 - `views[]`
 - `displayElements[]`
 - `cameras[]` (when requested)

@@ -64,14 +64,17 @@ Additional source-confirmed details:
 
 ## 4) Current Automation API Exposure
 Current API exposure relevant to groups:
-- `layout.getModels`: group rows are included with `type = "ModelGroup"` and basic channel/layout metadata.
-- `layout.getModel`: same basic model row plus attributes.
+- `layout.getModels`: group rows are included with `type = "ModelGroup"` and now expose render-policy metadata:
+  - `renderLayout`
+  - `defaultBufferStyle`
+  - `renderPolicy`
+  - `availableBufferStyles[]`
+- `layout.getModel`: same model row shape, including render-policy metadata.
 - `layout.getModelGroupMembers`: direct, active, flattened-active, and flattened-all membership views for one `ModelGroup`.
-- `layout.getScene`: includes group geometry and transforms as generic model rows.
+- `layout.getScene`: includes group geometry/transforms plus render-policy metadata as generic model rows.
 - `layout.getDisplayElements`: includes layout tree elements with `type` and `parentId`.
 
 What is still not exposed as a first-class contract:
-- group buffer style setting/state,
 - group flattening policy (`removeDuplicates`, `activeOnly`) and active-model snapshot,
 - cycle/recursion diagnostics for group graphs.
 
@@ -79,11 +82,13 @@ Important nuance from source:
 - `layout.getModels` exposes `groupNames[]`, but that is reverse membership for non-group models and submodels only.
 - For `ModelGroup` rows themselves, reverse expansion is intentionally skipped in automation to avoid unstable discovery and group-assert problems.
 - `layout.getModelGroupMembers` now exposes authoritative direct and flattened membership for one group.
+- `layout.getModels` / `layout.getModel` now expose the group’s current render-layout and resolved default buffer style.
 - Therefore current automation can now identify:
   - which ids are groups,
   - which models/submodels belong to one or more groups,
   - the direct ordered member list of a queried group,
   - active and flattened membership views for a queried group.
+  - whether a group is using a non-default render policy that may make preservation preferable to member expansion.
 
 ## 5) Current xLightsDesigner Coverage
 File:
@@ -92,10 +97,12 @@ File:
 Current behavior:
 - groups are identified from type and separated into `groupsById`,
 - direct/active/flattened membership is now fetched per group via `layout.getModelGroupMembers` and attached into `sceneGraph.groupsById[*].members`,
+- group render policy is now carried into `sceneGraph.groupsById[*].renderPolicy`,
 - group ids and the authoritative group membership graph are passed into `sequence_agent` planning,
 - planner now uses that graph for:
   - broad-group target preservation on generic-scope lines,
   - nested-group breadth preference (broadest valid aggregate first),
+  - preference for preserving non-default group render targets when scope is otherwise comparable,
   - preserve-vs-expand baseline semantics:
     - preserve explicit group targets by default,
     - expand only when the request explicitly calls for per-member distribution,
@@ -119,7 +126,6 @@ Current recovered subset now in use:
 
 Still missing for full fidelity/performance:
 - full-scene bulk group graph in one call,
-- group render/buffer-style policy exposure,
 - explicit cycle/recursion diagnostics.
 
 ### G2: Missing group behavior ontology
@@ -129,15 +135,16 @@ Need canonical group behavior descriptors for planning:
 - per-member sequencing strategies.
 
 ### G3: Missing group rendering policy exposure
-Need surfaced group rendering style metadata where available:
-- group buffer style,
-- per-model/per-strand implications.
+Need richer surfaced group rendering style metadata where available:
+- write/update support for group render policy,
+- stronger normalized semantics for per-model/per-strand/overlay implications,
+- explicit warnings for effect/buffer combinations that xLights treats as problematic.
 
 ### G4: Planner only partially group-aware
 `sequence_agent` now adapts broad-target preservation and ordering using authoritative group membership, but it does not yet encode:
 - rich fanout/distribution strategies beyond explicit direct/flattened expansion,
 - cross-line fanout semantics beyond simple repeated-line order reversal and round-robin rotation,
-- expansion-vs-preserve decisions driven by requested group render behavior.
+- deeper expansion-vs-preserve decisions driven by requested group render behavior and effect/render compatibility.
 
 ### G5: Display-element ordering semantics not yet encoded with group behavior
 Group behavior is not only about target expansion. xLights `Edit Display Elements` behavior shows that ordering is part of practical sequencing semantics:

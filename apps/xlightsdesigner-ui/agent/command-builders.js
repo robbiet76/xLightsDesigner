@@ -36,12 +36,28 @@ function normalizeGroupGraph(groupsById = {}, groupIds = []) {
       out[id] = {
         id,
         direct: new Set(direct.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
-        flattened: new Set(flattened.map((row) => normText(row?.id || row?.name)).filter(Boolean))
+        flattened: new Set(flattened.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
+        renderPolicy: {
+          layout: normText(value?.renderPolicy?.layout),
+          defaultBufferStyle: normText(value?.renderPolicy?.defaultBufferStyle || "Default") || "Default",
+          category: normText(value?.renderPolicy?.category || "default") || "default"
+        }
       };
     }
   }
   for (const id of ids) {
-    if (!out[id]) out[id] = { id, direct: new Set(), flattened: new Set() };
+    if (!out[id]) {
+      out[id] = {
+        id,
+        direct: new Set(),
+        flattened: new Set(),
+        renderPolicy: {
+          layout: "",
+          defaultBufferStyle: "Default",
+          category: "default"
+        }
+      };
+    }
   }
   return out;
 }
@@ -61,7 +77,9 @@ function scoreAggregateTarget(id = "", orderedTargets = [], groupGraph = {}) {
   const containedTargets = others.filter((row) => group.flattened.has(row) || group.direct.has(row)).length;
   const breadth = group.flattened.size || group.direct.size || 0;
   const positionBias = orderedTargets.indexOf(id) >= 0 ? (orderedTargets.length - orderedTargets.indexOf(id)) / 1000 : 0;
-  return (containedTargets * 1000) + breadth + positionBias;
+  const renderPolicy = String(group?.renderPolicy?.category || "default").trim() || "default";
+  const renderPolicyBias = renderPolicy === "default" ? 0 : 100;
+  return (containedTargets * 1000) + breadth + renderPolicyBias + positionBias;
 }
 
 function choosePrimaryAggregateTarget(orderedTargets = [], groupIds = [], groupsById = {}) {

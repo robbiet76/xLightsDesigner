@@ -36,6 +36,11 @@ function sampleCatalog() {
 function sampleGroups() {
   return {
     AllModels: {
+      renderPolicy: {
+        layout: "minimalGrid",
+        defaultBufferStyle: "Default",
+        category: "default"
+      },
       members: {
         direct: [
           { id: "Frontline", name: "Frontline", isGroup: true },
@@ -50,6 +55,28 @@ function sampleGroups() {
       }
     },
     Frontline: {
+      renderPolicy: {
+        layout: "horizontal",
+        defaultBufferStyle: "Horizontal Per Model",
+        category: "per_model"
+      },
+      members: {
+        direct: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ],
+        flattenedAll: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ]
+      }
+    },
+    FrontlineDefault: {
+      renderPolicy: {
+        layout: "minimalGrid",
+        defaultBufferStyle: "Default",
+        category: "default"
+      },
       members: {
         direct: [
           { id: "MegaTree", name: "MegaTree" },
@@ -62,6 +89,11 @@ function sampleGroups() {
       }
     },
     NestedFrontline: {
+      renderPolicy: {
+        layout: "Overlay - Centered",
+        defaultBufferStyle: "Overlay - Centered",
+        category: "overlay"
+      },
       members: {
         direct: [
           { id: "Frontline", name: "Frontline", isGroup: true },
@@ -517,7 +549,30 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
     reorder.params.orderedIds,
     ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
   );
-  assert.equal(out.metadata.groupGraphCount, 3);
+  assert.equal(out.metadata.groupGraphCount, 4);
+});
+
+test("sequence_agent prefers non-default group render targets when explicit scope is otherwise comparable", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Use the stronger group render target for broad coverage",
+      mode: "revise",
+      scope: {
+        targetIds: ["FrontlineDefault", "Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / bars"],
+    groupIds: ["FrontlineDefault", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Frontline"]);
 });
 
 test("sequence_agent preserves explicit group targets unless per-member distribution is requested", () => {
