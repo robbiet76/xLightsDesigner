@@ -93,7 +93,7 @@ Boundary summary:
 ### Phase F: Apply Verification and Readback
 - [ ] Add deterministic post-apply verification checks:
   - [x] revision advanced check
-  - [x] expected mutations present (timing marks, effects, display-element order)
+  - [x] expected mutations present (timing marks, effects, display-element order, distributed effect windows)
 - [x] Add structured apply verification report to diagnostics bundle.
 - [ ] Add failure reason taxonomy (`validate|revision|capability|lock|runtime|unknown`).
 

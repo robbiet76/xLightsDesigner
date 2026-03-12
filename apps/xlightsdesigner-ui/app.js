@@ -54,6 +54,7 @@ import { analyzeAudioContext } from "./agent/audio-analyzer.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/command-graph.js";
+import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/apply-readback.js";
 import {
   classifyDepthBands,
   collectSpatialNodes,
@@ -2365,89 +2366,12 @@ function buildDesignerPlanCommands(sourceLines = filteredProposed()) {
 }
 
 async function verifyAppliedPlanReadback(plan = []) {
-  const commands = Array.isArray(plan) ? plan : [];
-  const verification = {
-    revisionAdvanced: false,
-    expectedMutationsPresent: false,
-    lockedTracksUnchanged: true,
-    checks: []
-  };
-
-  const readbackChecks = [];
-  for (const step of commands) {
-    const cmd = String(step?.cmd || "").trim();
-    const params = step?.params && typeof step.params === "object" ? step.params : {};
-    if ((cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") && String(params.trackName || "").trim()) {
-      readbackChecks.push((async () => {
-        const trackName = String(params.trackName || "").trim();
-        const expectedSignature = timingMarksSignature(Array.isArray(params.marks) ? params.marks : []);
-        const resp = await getTimingMarks(state.endpoint, trackName);
-        const actualMarks = Array.isArray(resp?.data?.marks) ? resp.data.marks : [];
-        const actualSignature = timingMarksSignature(actualMarks);
-        const ok = Boolean(expectedSignature) && actualSignature === expectedSignature;
-        return {
-          kind: "timing",
-          target: trackName,
-          ok,
-          detail: ok ? "mark signature matched" : "mark signature mismatch"
-        };
-      })());
-    }
-    if (cmd === "sequencer.setDisplayElementOrder" && Array.isArray(params.orderedIds) && params.orderedIds.length) {
-      readbackChecks.push((async () => {
-        const expectedOrder = params.orderedIds.map((row) => String(row || "").trim()).filter(Boolean);
-        const resp = await getDisplayElementOrder(state.endpoint);
-        const elements = Array.isArray(resp?.data?.elements) ? resp.data.elements : [];
-        const actualOrder = elements.map((row) => String(row?.id || row?.name || "").trim()).filter(Boolean);
-        const ok =
-          expectedOrder.length === actualOrder.length &&
-          expectedOrder.every((id, idx) => id === actualOrder[idx]);
-        return {
-          kind: "display-order",
-          target: "master-view",
-          ok,
-          detail: ok ? "display element order matched" : "display element order mismatch"
-        };
-      })());
-    }
-    if (cmd === "effects.create" && String(params.modelName || "").trim()) {
-      readbackChecks.push((async () => {
-        const modelName = String(params.modelName || "").trim();
-        const layerIndex = Number(params.layerIndex);
-        const startMs = Number(params.startMs);
-        const endMs = Number(params.endMs);
-        const effectName = String(params.effectName || "").trim();
-        const resp = await listEffects(state.endpoint, { modelName, layerIndex, startMs, endMs });
-        const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
-        const ok = effects.some((row) =>
-          String(row?.effectName || "").trim() === effectName &&
-          Number(row?.startMs) === startMs &&
-          Number(row?.endMs) === endMs &&
-          Number(row?.layerIndex) === layerIndex
-        );
-        return {
-          kind: "effect",
-          target: `${modelName}@${layerIndex}`,
-          ok,
-          detail: ok ? `${effectName} present` : `${effectName} missing`
-        };
-      })());
-    }
-  }
-
-  const results = await Promise.allSettled(readbackChecks);
-  verification.checks = results.map((row) => {
-    if (row.status === "fulfilled") return row.value;
-    return {
-      kind: "readback",
-      target: "",
-      ok: false,
-      detail: String(row.reason?.message || row.reason || "readback failed")
-    };
+  return verifyAppliedPlanReadbackWithDeps(plan, {
+    endpoint: state.endpoint,
+    getTimingMarks,
+    getDisplayElementOrder,
+    listEffects
   });
-  verification.expectedMutationsPresent =
-    verification.checks.length > 0 && verification.checks.every((row) => Boolean(row?.ok));
-  return verification;
 }
 
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
