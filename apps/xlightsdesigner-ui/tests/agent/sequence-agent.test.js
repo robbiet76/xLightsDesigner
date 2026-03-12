@@ -105,6 +105,23 @@ function sampleGroups() {
           { id: "WindowLeft", name: "WindowLeft" }
         ]
       }
+    },
+    PixelSpokes: {
+      renderPolicy: {
+        layout: "Per Model Vertical Per Strand",
+        defaultBufferStyle: "Per Model Vertical Per Strand",
+        category: "per_model_strand"
+      },
+      members: {
+        direct: [
+          { id: "Spoke1", name: "Spoke1" },
+          { id: "Spoke2", name: "Spoke2" }
+        ],
+        flattenedAll: [
+          { id: "Spoke1", name: "Spoke1" },
+          { id: "Spoke2", name: "Spoke2" }
+        ]
+      }
     }
   };
 }
@@ -549,7 +566,7 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
     reorder.params.orderedIds,
     ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
   );
-  assert.equal(out.metadata.groupGraphCount, 4);
+  assert.equal(out.metadata.groupGraphCount, 5);
 });
 
 test("sequence_agent prefers non-default group render targets when explicit scope is otherwise comparable", () => {
@@ -737,6 +754,63 @@ test("sequence_agent only expands high-risk overlay group render targets with fo
       ["MegaTree", 0, 333],
       ["Roofline", 333, 666],
       ["WindowLeft", 666, 1000]
+    ]
+  );
+  assert.equal(out.warnings.some((w) => /force member override required/i.test(String(w))), false);
+});
+
+test("sequence_agent preserves high-risk per-model-strand group render targets without force override and warns", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep per-model-strand render semantics intact unless expansion is forced",
+      mode: "revise",
+      scope: {
+        targetIds: ["PixelSpokes"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / PixelSpokes / bars per member stagger members"],
+    groupIds: ["PixelSpokes"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["PixelSpokes"]);
+  assert.equal(
+    out.warnings.some((w) => /Preserving high-risk group render target PixelSpokes \(Per Model Vertical Per Strand\)/i.test(String(w))),
+    true
+  );
+});
+
+test("sequence_agent only expands high-risk per-model-strand group render targets with force override", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Distribute across direct members only when explicitly forced",
+      mode: "revise",
+      scope: {
+        targetIds: ["PixelSpokes"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / PixelSpokes / bars force member expansion direct members and stagger members"],
+    groupIds: ["PixelSpokes"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["Spoke1", 0, 500],
+      ["Spoke2", 500, 1000]
     ]
   );
   assert.equal(out.warnings.some((w) => /force member override required/i.test(String(w))), false);

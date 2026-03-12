@@ -65,6 +65,20 @@
       ]
     },
     {
+      "id": "group_render_policy_preservation",
+      "intent": "Distribute activity across a group, but preserve xLights-native group render semantics unless the request explicitly forces member-level expansion.",
+      "focus": [
+        "treat non-default group buffer/render policies as meaningful sequencing semantics",
+        "preserve overlay, stack, single-line, and per-model-strand group targets unless a stronger override is present",
+        "allow lower-risk per-model policies to expand with explicit per-member phrasing"
+      ],
+      "expectedBehavior": [
+        "soft member-distribution phrases preserve the group render target and emit a warning when semantics would likely be lost",
+        "high-risk group policies require force-style member expansion language before flattening or direct-member fanout",
+        "success is based on semantic correctness, not on maximizing distribution by default"
+      ]
+    },
+    {
       "id": "revision_conflict_block",
       "intent": "Sequence changed in xLights after plan generation and before apply.",
       "focus": [

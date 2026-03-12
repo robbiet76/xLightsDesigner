@@ -84,6 +84,23 @@ function sampleGroups() {
           { id: "WindowLeft", name: "WindowLeft" }
         ]
       }
+    },
+    PixelSpokes: {
+      renderPolicy: {
+        layout: "Per Model Vertical Per Strand",
+        defaultBufferStyle: "Per Model Vertical Per Strand",
+        category: "per_model_strand"
+      },
+      members: {
+        direct: [
+          { id: "Spoke1", name: "Spoke1" },
+          { id: "Spoke2", name: "Spoke2" }
+        ],
+        flattenedAll: [
+          { id: "Spoke1", name: "Spoke1" },
+          { id: "Spoke2", name: "Spoke2" }
+        ]
+      }
     }
   };
 }
@@ -413,6 +430,40 @@ test("command builders only expand high-risk overlay group render targets with f
       ["MegaTree", 0, 333],
       ["Roofline", 333, 666],
       ["WindowLeft", 666, 1000]
+    ]
+  );
+});
+
+test("command builders preserve high-risk per-model-strand group render targets without force override", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / PixelSpokes / bars per member stagger members"
+  ], {
+    targetIds: ["PixelSpokes"],
+    groupIds: ["PixelSpokes"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["PixelSpokes"]);
+});
+
+test("command builders only expand high-risk per-model-strand group render targets with force override", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / PixelSpokes / bars force member expansion direct members and stagger members"
+  ], {
+    targetIds: ["PixelSpokes"],
+    groupIds: ["PixelSpokes"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["Spoke1", 0, 500],
+      ["Spoke2", 500, 1000]
     ]
   );
 });

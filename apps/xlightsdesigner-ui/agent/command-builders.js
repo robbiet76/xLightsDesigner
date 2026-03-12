@@ -157,7 +157,7 @@ function inferGroupDistributionStrategy(description = "") {
 
 function isHighRiskGroupRenderPolicy(category = "") {
   const key = normText(category).toLowerCase();
-  return key === "overlay" || key === "stack" || key === "single_line";
+  return key === "overlay" || key === "stack" || key === "single_line" || key === "per_model_strand";
 }
 
 function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 0) {

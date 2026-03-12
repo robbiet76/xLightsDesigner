@@ -63,6 +63,7 @@
       "timing-track vocabulary variability including Beats, Bars, Note Onsets, metronome tracks, and song-specific names",
       "group and submodel targeting patterns, including dense submodel-heavy props",
       "broad group coverage followed by more specific model targets when explicitly requested",
+      "group render-policy preservation for non-default buffer styles, including overlay and per-model/per-strand variants",
       "per-effect brightness and sparkle modifiers"
     ],
     "rareButDocumentedMechanics": [
@@ -105,6 +106,13 @@
       "asserts": [
         "sequence_agent preserves explicit group-first target ordering when broad coverage plus focused overrides are requested",
         "planning does not collapse specific model targets into a group or reorder them arbitrarily"
+      ]
+    },
+    {
+      "id": "group_render_policy_preservation_support",
+      "asserts": [
+        "sequence_agent preserves non-default group render targets for soft member-distribution phrases",
+        "high-risk render policies such as overlay and per_model_strand require a stronger force-style override before expansion"
       ]
     },
     {
