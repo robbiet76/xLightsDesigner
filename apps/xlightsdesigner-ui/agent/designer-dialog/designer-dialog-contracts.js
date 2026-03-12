@@ -138,6 +138,7 @@ export function validateProposalBundle(payload = {}) {
   pushRequiredObject(errors, obj, "constraints");
   pushRequiredArray(errors, obj, "proposalLines");
   if (!Array.isArray(obj.guidedQuestions)) errors.push("guidedQuestions is required");
+  if (!Array.isArray(obj.assumptions)) errors.push("assumptions is required");
 
   return errors;
 }
@@ -235,6 +236,7 @@ export function buildProposalBundle({
   constraints = {},
   proposalLines = [],
   guidedQuestions = [],
+  assumptions = [],
   riskNotes = [],
   impact = {}
 } = {}) {
@@ -248,6 +250,7 @@ export function buildProposalBundle({
     constraints: isPlainObject(constraints) ? constraints : {},
     proposalLines: arr(proposalLines).map((row) => str(row)).filter(Boolean),
     guidedQuestions: arr(guidedQuestions).map((row) => str(row)).filter(Boolean),
+    assumptions: arr(assumptions).map((row) => str(row)).filter(Boolean),
     riskNotes: arr(riskNotes).map((row) => str(row)).filter(Boolean),
     impact: isPlainObject(impact) ? impact : {}
   };

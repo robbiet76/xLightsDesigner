@@ -32,7 +32,10 @@ import {
 } from "./api.js";
 import { buildProposalFromIntent } from "./agent/designer-dialog/planner.js";
 import { buildGuidedQuestions } from "./agent/designer-dialog/guided-dialog.js";
-import { buildIntentHandoffFromDesignerState } from "./agent/designer-dialog/designer-dialog-contracts.js";
+import {
+  buildCreativeBriefArtifact,
+  executeDesignerDialogFlow
+} from "./agent/designer-dialog/designer-dialog-runtime.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -70,7 +73,6 @@ import {
   normalizeAudioAnalysisProvider
 } from "./agent/audio-analyst/audio-provider-adapters.js";
 import { runAudioAnalysisOrchestration } from "./agent/audio-analyst/audio-analysis-orchestrator.js";
-import { synthesizeCreativeBrief } from "./agent/designer-dialog/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/sequence-agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/sequence-agent/command-graph.js";
 import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/sequence-agent/apply-readback.js";
@@ -324,6 +326,7 @@ const defaultState = {
     briefText: "",
     references: [],
     brief: null,
+    proposalBundle: null,
     briefUpdatedAt: ""
   },
   inspiration: {
@@ -2845,6 +2848,42 @@ async function onGenerate(intentOverride = "") {
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
   const intentText = String(intentOverride || "").trim() || latestUserIntentText();
+  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const designerResult = executeDesignerDialogFlow({
+    requestId: `${orchestrationRun.id}-designer`,
+    sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+    promptText: intentText,
+    selectedSections: selected,
+    selectedTagNames: state.ui.metadataSelectedTags || [],
+    selectedTargetIds: state.ui.metadataSelectionIds || [],
+    goals: state.creative?.goals || "",
+    inspiration: state.creative?.inspiration || "",
+    notes: state.creative?.notes || "",
+    references: state.creative?.references || [],
+    priorBrief: state.creative?.brief || null,
+    analysisHandoff,
+    models: state.models || [],
+    submodels: state.submodels || [],
+    metadataAssignments: state.metadata?.assignments || [],
+    elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+  });
+  if (designerResult.status === "failed" || !designerResult.proposalBundle || !designerResult.handoff) {
+    markOrchestrationStage(orchestrationRun, "designer_dialog", "error", designerResult.summary || "designer flow failed");
+    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "designer flow failed" });
+    state.ui.agentThinking = false;
+    setStatusWithDiagnostics(
+      "warning",
+      "Designer proposal generation blocked.",
+      Array.isArray(designerResult.warnings) ? designerResult.warnings.join("\n") : ""
+    );
+    persist();
+    render();
+    return;
+  }
+  state.creative.brief = designerResult.creativeBrief || state.creative?.brief || null;
+  state.creative.proposalBundle = designerResult.proposalBundle;
+  state.creative.briefUpdatedAt = new Date().toISOString();
+  state.flags.creativeBriefReady = Boolean(state.creative.brief);
   const plan = buildProposalFromIntent({
     promptText: intentText,
     selectedSections: selected,
@@ -2855,8 +2894,8 @@ async function onGenerate(intentOverride = "") {
     submodels: state.submodels || [],
     metadataAssignments: state.metadata?.assignments || []
   });
-  markOrchestrationStage(orchestrationRun, "intent_normalization", "ok", "planner intent built");
-  const intentHandoff = buildIntentHandoffFromPlan(plan, intentText);
+  markOrchestrationStage(orchestrationRun, "intent_normalization", "ok", "designer runtime built brief + proposal");
+  const intentHandoff = designerResult.handoff;
   const intentSet = setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
   if (!intentSet.ok) {
     markOrchestrationStage(orchestrationRun, "intent_handoff", "error", intentSet.errors.join("; "));
@@ -2869,12 +2908,15 @@ async function onGenerate(intentOverride = "") {
   }
   setAgentActiveRole("sequence_agent");
   markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
-  const guidedQuestions = buildGuidedQuestions({
-    normalizedIntent: plan.normalizedIntent,
-    targets: plan.targets
-  });
-  const proposalSeedLines = mergeCreativeBriefIntoProposal(plan.proposalLines);
-  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const guidedQuestions = Array.isArray(designerResult.proposalBundle?.guidedQuestions) && designerResult.proposalBundle.guidedQuestions.length
+    ? designerResult.proposalBundle.guidedQuestions
+    : buildGuidedQuestions({
+        normalizedIntent: plan.normalizedIntent,
+        targets: plan.targets
+      });
+  const proposalSeedLines = Array.isArray(designerResult.proposalBundle?.proposalLines) && designerResult.proposalBundle.proposalLines.length
+    ? designerResult.proposalBundle.proposalLines
+    : mergeCreativeBriefIntoProposal(plan.proposalLines);
   const sequenceAgentInput = buildSequenceAgentInput({
     requestId: `${orchestrationRun.id}-generate`,
     endpoint: state.endpoint,
@@ -4276,15 +4318,6 @@ function inferIntentModeFromGoal(text = "") {
   return "create";
 }
 
-function buildIntentHandoffFromPlan(plan = {}, intentText = "") {
-  return buildIntentHandoffFromDesignerState({
-    normalizedIntent: isPlainObject(plan?.normalizedIntent) ? plan.normalizedIntent : {},
-    intentText,
-    creativeBrief: state.creative?.brief || null,
-    elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
-  });
-}
-
 function buildAgentConversationContext() {
   const selectedSectionNames = hasAllSectionsSelected()
     ? ["all"]
@@ -5360,15 +5393,17 @@ function buildCreativeBrief() {
     ? String(songContextLine).slice("Song context:".length).trim()
     : "";
 
-  return synthesizeCreativeBrief({
+  return buildCreativeBriefArtifact({
+    requestId: `brief-${Date.now()}`,
     goals: state.creative.goals,
     inspiration: state.creative.inspiration,
     notes: state.creative.notes,
     references: state.creative.references || [],
     audioAnalysis,
     songContextSummary,
-    latestIntent: latestUserIntentText()
-  });
+    latestIntent: latestUserIntentText(),
+    priorBrief: state.creative?.brief || null
+  }).brief;
 }
 
 function onRunCreativeAnalysis() {

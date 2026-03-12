@@ -32,42 +32,42 @@ Purpose: complete `designer_dialog` as the creative specialist runtime under `ap
 
 ## Phase A: Contracts
 
-- [ ] Define `designer_dialog_input_v1`
-- [ ] Define `creative_brief_v1`
-- [ ] Define `proposal_bundle_v1`
-- [ ] Define `designer_dialog_result_v1`
-- [ ] Add contract validation gates in runtime code
-- [ ] Add training-package JSON contracts for all four
+- [x] Define `designer_dialog_input_v1`
+- [x] Define `creative_brief_v1`
+- [x] Define `proposal_bundle_v1`
+- [x] Define `designer_dialog_result_v1`
+- [x] Add contract validation gates in runtime code
+- [x] Add training-package JSON contracts for all four
 
 Exit gate:
 - Designer runtime accepts/returns only canonical contract shapes.
 
 ## Phase B: Intent + Clarification
 
-- [ ] Expand intent normalization beyond current prompt heuristics:
+- [x] Expand intent normalization beyond current prompt heuristics:
   - mode
   - style direction
   - color direction
   - focus hierarchy
   - change tolerance
   - preservation constraints
-- [ ] Add explicit assumption policy:
+- [x] Add explicit assumption policy:
   - when to ask
   - when to proceed
   - how to record assumptions in brief/proposal
-- [ ] Add preference-memory inputs for director tendencies:
+- [x] Add preference-memory inputs for director tendencies:
   - likes/dislikes
   - pacing/motion preference
   - focus preference
   - change-tolerance preference
-- [ ] Replace ad hoc guided questions with field-targeted clarification generation
-- [ ] Make question generation context-aware using:
+- [x] Replace ad hoc guided questions with field-targeted clarification generation
+- [x] Make question generation context-aware using:
   - audio sections
   - target scope
   - current sequence revision state
   - prior captured brief
   - prior director preferences
-- [ ] Add deterministic tests for clarification output
+- [x] Add deterministic tests for clarification output
 
 Exit gate:
 - Missing critical fields are surfaced through explicit clarification deltas, not hidden app state.
@@ -75,26 +75,26 @@ Exit gate:
 
 ## Phase C: Creative Brief Runtime
 
-- [ ] Implement canonical `creative_brief_v1`
-- [ ] Extract brief synthesis out of app helpers into designer runtime
+- [x] Implement canonical `creative_brief_v1`
+- [x] Extract brief synthesis out of app helpers into designer runtime
 - [ ] Define brief update/merge rules
-- [ ] Define traceability fields for:
+- [x] Define traceability fields for:
   - audio context
   - song context
   - reference media
   - user notes/goals/inspiration
   - inferred designer assumptions
   - learned director preferences used in the pass
-- [ ] Add fidelity tests for brief generation and update behavior
+- [x] Add fidelity tests for brief generation and update behavior
 
 Exit gate:
 - Designer brief is a real domain artifact, not a loose app object.
 
 ## Phase D: Proposal Bundle Runtime
 
-- [ ] Define canonical `proposal_bundle_v1`
-- [ ] Replace proposal seed-line handling with a structured proposal bundle
-- [ ] Include:
+- [x] Define canonical `proposal_bundle_v1`
+- [x] Replace proposal seed-line handling with a structured proposal bundle
+- [x] Include:
   - summary
   - scope
   - constraints
@@ -104,20 +104,20 @@ Exit gate:
   - explicit assumption list
   - base revision
 - [ ] Add stale/rebase markers to proposal bundle state
-- [ ] Ensure proposal bundle is the only upstream input used to generate sequence-agent plans
+- [x] Ensure proposal bundle is the only upstream input used to generate sequence-agent plans
 
 Exit gate:
 - Proposal lifecycle is explicit and revision-aware.
 
 ## Phase E: Runtime Extraction
 
-- [ ] Add `designer-dialog-contracts.js`
-- [ ] Add `designer-dialog-runtime.js`
+- [x] Add `designer-dialog-contracts.js`
+- [x] Add `designer-dialog-runtime.js`
 - [ ] Add `designer-dialog-orchestrator.js`
 - [ ] Add `designer-dialog-ui-state.js`
-- [ ] Move proposal-generation orchestration out of `app.js`
+- [x] Move proposal-generation orchestration out of `app.js`
 - [ ] Move proposal stale/rebase logic out of `app.js`
-- [ ] Move creative brief state projection out of `app.js`
+- [x] Move creative brief state projection out of `app.js`
 - [ ] Keep `app.js` to UI wiring and action dispatch
 
 Exit gate:
@@ -125,8 +125,8 @@ Exit gate:
 
 ## Phase F: Handoff Integrity
 
-- [ ] Emit canonical `intent_handoff_v1` from the new designer runtime
-- [ ] Ensure `intent_handoff_v1` is derived from the proposal bundle / creative brief, not ad hoc app assembly
+- [x] Emit canonical `intent_handoff_v1` from the new designer runtime
+- [x] Ensure `intent_handoff_v1` is derived from the proposal bundle / creative brief, not ad hoc app assembly
 - [ ] Add tests that prove stable downstream handoff behavior for:
   - new proposal
   - refine proposal
@@ -158,8 +158,8 @@ Exit gate:
 
 ## Phase H: Tests + Diagnostics
 
-- [ ] Add dedicated contract tests
-- [ ] Add runtime tests
+- [x] Add dedicated contract tests
+- [x] Add runtime tests
 - [ ] Add orchestration tests
 - [ ] Add brief fidelity tests
 - [ ] Add proposal lifecycle tests
@@ -169,8 +169,8 @@ Exit gate:
   - stale rebase
   - handoff validation
 - [ ] Export designer diagnostics in structured form
-- [ ] Add tests that prove the agent proceeds autonomously on broad but usable prompts instead of over-questioning
-- [ ] Add tests that prove learned preferences influence proposals without forcing stylistic cloning
+- [x] Add tests that prove the agent proceeds autonomously on broad but usable prompts instead of over-questioning
+- [x] Add tests that prove learned preferences influence proposals without forcing stylistic cloning
 
 Exit gate:
 - Designer failures are classified, testable, and diagnosable.
@@ -194,14 +194,18 @@ Implemented now:
 - [x] Basic creative-brief helper
 - [x] Basic proposal seeding helper
 - [x] Basic determinism/planner tests
+- [x] Canonical brief/proposal runtime slice:
+  - `designer-dialog-runtime.js`
+  - canonical `creative_brief_v1` generation with traceability
+  - canonical `proposal_bundle_v1` generation with explicit assumptions
+  - runtime result envelope + handoff generation
+  - focused runtime tests
 
 Not yet implemented:
-- [ ] canonical designer contracts
-- [ ] dedicated runtime/orchestrator
-- [ ] structured proposal bundle
-- [ ] creative brief artifact contract
+- [ ] dedicated orchestrator/ui-state extraction
+- [ ] stale/rebase proposal lifecycle artifact behavior
 - [ ] dedicated training few-shot/eval assets
-- [ ] broad designer runtime test coverage
+- [ ] broader orchestration and lifecycle test coverage
 
 ## Post-v1 Cleanup
 

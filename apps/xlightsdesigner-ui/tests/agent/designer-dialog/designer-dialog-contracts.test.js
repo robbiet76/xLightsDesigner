@@ -67,6 +67,7 @@ function sampleProposal(overrides = {}) {
     },
     proposalLines: ["Chorus 1 / MegaTree / increase pulse contrast and cleaner accents."],
     guidedQuestions: [],
+    assumptions: [],
     riskNotes: [],
     impact: {
       estimatedImpact: 12
