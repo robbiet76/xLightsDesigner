@@ -1,3 +1,13 @@
+import {
+  AUDIO_ANALYST_ROLE,
+  AUDIO_ANALYST_CONTRACT_VERSION,
+  buildAudioAnalystResult,
+  classifyAudioAnalysisFailureReason,
+  validateAudioAnalystContractGate
+} from "./audio-analyst-contracts.js";
+import { normalizeAudioAnalysisProvider } from "./audio-provider-adapters.js";
+import { validateAgentHandoff } from "./handoff-contracts.js";
+
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -15,8 +25,29 @@ function rows(value) {
   return Array.isArray(value) ? value.filter((row) => isPlainObject(row)) : [];
 }
 
+function getByPath(obj, path) {
+  const keys = Array.isArray(path) ? path : String(path || "").split(".");
+  let cur = obj;
+  for (const key of keys) {
+    if (!isPlainObject(cur) || !(key in cur)) return undefined;
+    cur = cur[key];
+  }
+  return cur;
+}
+
+function deriveFallbackMediaId(audioPath = "") {
+  const normalized = str(audioPath).replace(/\\/g, "/").toLowerCase();
+  if (!normalized) return "";
+  let hash = 2166136261;
+  for (let i = 0; i < normalized.length; i += 1) {
+    hash ^= normalized.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `media-${(hash >>> 0).toString(16)}`;
+}
+
 export const AUDIO_ANALYST_ARTIFACT_TYPE = "analysis_artifact_v1";
-export const AUDIO_ANALYST_ARTIFACT_VERSION = "1.0";
+export const AUDIO_ANALYST_ARTIFACT_VERSION = AUDIO_ANALYST_CONTRACT_VERSION;
 
 export function buildAnalysisArtifactFromPipelineResult({
   audioPath = "",
@@ -41,7 +72,7 @@ export function buildAnalysisArtifactFromPipelineResult({
     artifactType: AUDIO_ANALYST_ARTIFACT_TYPE,
     artifactVersion: AUDIO_ANALYST_ARTIFACT_VERSION,
     media: {
-      mediaId: str(mediaId),
+      mediaId: str(mediaId) || deriveFallbackMediaId(audioPath),
       path: str(audioPath),
       fileName: str(details?.trackName),
       durationMs: finiteOrNull(media?.durationMs),
@@ -90,7 +121,7 @@ export function buildAnalysisArtifactFromPipelineResult({
       },
       pipeline,
       runtime: {
-        audioAnalystRole: "audio_analyst",
+        audioAnalystRole: AUDIO_ANALYST_ROLE,
         artifactVersion: AUDIO_ANALYST_ARTIFACT_VERSION
       },
       evidence: {
@@ -164,5 +195,178 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
       webValidationSummary: str(evidence?.webValidationSummary),
       sources: Array.isArray(evidence?.sources) ? evidence.sources.map((row) => str(row)).filter(Boolean) : []
     }
+  };
+}
+
+export function buildAudioAnalystInput({
+  requestId = "",
+  mediaFilePath = "",
+  mediaRootPath = "",
+  projectFilePath = "",
+  analysisProfile = null,
+  service = {}
+} = {}) {
+  const provider = normalizeAudioAnalysisProvider(service?.provider || "auto");
+  return {
+    agentRole: AUDIO_ANALYST_ROLE,
+    contractVersion: AUDIO_ANALYST_CONTRACT_VERSION,
+    requestId: str(requestId),
+    context: {
+      media: {
+        path: str(mediaFilePath),
+        fileName: str(mediaFilePath).split(/[\\/]/).pop() || ""
+      },
+      project: {
+        mediaRootPath: str(mediaRootPath),
+        projectFilePath: str(projectFilePath)
+      },
+      service: {
+        baseUrl: str(service?.baseUrl),
+        provider,
+        apiKeyPresent: Boolean(str(service?.apiKey)),
+        authBearerPresent: Boolean(str(service?.authBearer))
+      }
+    },
+    analysisProfile: analysisProfile && typeof analysisProfile === "object" && !Array.isArray(analysisProfile)
+      ? analysisProfile
+      : {}
+  };
+}
+
+export async function executeAudioAnalystFlow({
+  input = {},
+  runPipeline,
+  persistArtifact = null,
+  creativeBrief = null,
+  generatedAt = ""
+} = {}) {
+  const inputGate = validateAudioAnalystContractGate("input", input, input?.requestId);
+  if (!inputGate.ok) {
+    const summary = inputGate.report.errors.join("; ");
+    return {
+      ok: false,
+      stage: inputGate.stage,
+      gate: inputGate,
+      artifact: null,
+      handoff: null,
+      result: buildAudioAnalystResult({
+        requestId: input?.requestId,
+        status: "failed",
+        failureReason: classifyAudioAnalysisFailureReason(inputGate.stage, summary),
+        summary
+      })
+    };
+  }
+
+  let pipelineResult;
+  try {
+    pipelineResult = await runPipeline({ input });
+  } catch (err) {
+    const detail = String(err?.message || err);
+    return {
+      ok: false,
+      stage: "pipeline_runtime",
+      gate: null,
+      artifact: null,
+      handoff: null,
+      result: buildAudioAnalystResult({
+        requestId: input?.requestId,
+        status: "failed",
+        failureReason: classifyAudioAnalysisFailureReason("runtime", detail),
+        summary: detail
+      })
+    };
+  }
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: getByPath(input, ["context", "media", "path"]),
+    result: pipelineResult,
+    requestedProvider: getByPath(input, ["context", "service", "provider"]),
+    analysisBaseUrl: getByPath(input, ["context", "service", "baseUrl"]),
+    generatedAt
+  });
+
+  let persistedArtifact = artifact;
+  if (typeof persistArtifact === "function") {
+    const writeRes = await persistArtifact({ artifact, input, pipelineResult });
+    if (writeRes?.ok && writeRes.artifact && typeof writeRes.artifact === "object") {
+      persistedArtifact = writeRes.artifact;
+    } else if (writeRes?.error) {
+      const warnings = Array.isArray(persistedArtifact?.diagnostics?.warnings) ? [...persistedArtifact.diagnostics.warnings] : [];
+      warnings.push(str(writeRes.error));
+      persistedArtifact = {
+        ...persistedArtifact,
+        diagnostics: {
+          ...(persistedArtifact.diagnostics || {}),
+          warnings
+        }
+      };
+    }
+  }
+
+  const artifactGate = validateAudioAnalystContractGate("artifact", persistedArtifact, input?.requestId);
+  if (!artifactGate.ok) {
+    const summary = artifactGate.report.errors.join("; ");
+    return {
+      ok: false,
+      stage: artifactGate.stage,
+      gate: artifactGate,
+      artifact: persistedArtifact,
+      handoff: null,
+      result: buildAudioAnalystResult({
+        requestId: input?.requestId,
+        status: "failed",
+        failureReason: classifyAudioAnalysisFailureReason(artifactGate.stage, summary, persistedArtifact),
+        artifact: persistedArtifact,
+        warnings: persistedArtifact?.diagnostics?.warnings || [],
+        summary
+      })
+    };
+  }
+
+  const handoff = buildAnalysisHandoffFromArtifact(persistedArtifact, creativeBrief);
+  const handoffErrors = validateAgentHandoff("analysis_handoff_v1", handoff);
+  if (handoffErrors.length) {
+    const summary = handoffErrors.join("; ");
+    return {
+      ok: false,
+      stage: "handoff_contract",
+      gate: null,
+      artifact: persistedArtifact,
+      handoff,
+      result: buildAudioAnalystResult({
+        requestId: input?.requestId,
+        status: "failed",
+        failureReason: classifyAudioAnalysisFailureReason("handoff", summary, persistedArtifact),
+        artifact: persistedArtifact,
+        handoff,
+        warnings: persistedArtifact?.diagnostics?.warnings || [],
+        summary
+      })
+    };
+  }
+
+  const warnings = Array.isArray(persistedArtifact?.diagnostics?.warnings) ? persistedArtifact.diagnostics.warnings : [];
+  const failureReason = classifyAudioAnalysisFailureReason("artifact", persistedArtifact?.diagnostics?.summary, persistedArtifact);
+  const status = persistedArtifact?.diagnostics?.degraded ? "partial" : "ok";
+  const result = buildAudioAnalystResult({
+    requestId: input?.requestId,
+    status,
+    failureReason: status === "ok" ? null : failureReason,
+    artifact: persistedArtifact,
+    handoff,
+    warnings,
+    summary: persistedArtifact?.diagnostics?.summary || pipelineResult?.summary || ""
+  });
+  const resultGate = validateAudioAnalystContractGate("result", result, input?.requestId);
+
+  return {
+    ok: resultGate.ok,
+    stage: resultGate.stage,
+    gate: resultGate,
+    artifact: persistedArtifact,
+    handoff,
+    pipelineResult,
+    result
   };
 }

@@ -1,0 +1,17 @@
+{
+  "contract": "audio_analyst_input_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "requestId",
+    "context.media.path",
+    "context.service.baseUrl"
+  ],
+  "notes": [
+    "audio_analyst is media-focused only and must not depend on live xLights sequence or layout state.",
+    "The input may include project/media root references for artifact persistence, but not sequence revision or layout metadata.",
+    "Provider selection is modular and replaceable behind the normalized artifact contract."
+  ]
+}

@@ -5,8 +5,15 @@ import {
   AUDIO_ANALYST_ARTIFACT_TYPE,
   AUDIO_ANALYST_ARTIFACT_VERSION,
   buildAnalysisArtifactFromPipelineResult,
-  buildAnalysisHandoffFromArtifact
+  buildAnalysisHandoffFromArtifact,
+  buildAudioAnalystInput,
+  executeAudioAnalystFlow
 } from "../../agent/audio-analyst-runtime.js";
+import {
+  AUDIO_ANALYST_ROLE,
+  validateAudioAnalystContractGate,
+  classifyAudioAnalysisFailureReason
+} from "../../agent/audio-analyst-contracts.js";
 
 function samplePipelineResult() {
   return {
@@ -108,4 +115,110 @@ test("audio analyst runtime derives analysis handoff from canonical artifact", (
   assert.equal(handoff.chords.hasChords, true);
   assert.equal(handoff.briefSeed.mood, "bright");
   assert.equal(handoff.evidence.sources.length, 1);
+});
+
+test("audio analyst input gate blocks sequence-aware payloads", () => {
+  const input = buildAudioAnalystInput({
+    requestId: "audio-1",
+    mediaFilePath: "/tmp/Song.mp3",
+    projectFilePath: "/tmp/Test/Test.xdproj",
+    service: {
+      baseUrl: "http://127.0.0.1:5055",
+      provider: "auto"
+    }
+  });
+  input.context.sequenceRevision = "rev-1";
+
+  const gate = validateAudioAnalystContractGate("input", input, "audio-1");
+  assert.equal(gate.ok, false);
+  assert.equal(gate.report.stage, "input_contract");
+  assert.ok(gate.report.errors.some((row) => String(row).includes("context.sequenceRevision is not allowed")));
+});
+
+test("audio analyst input builder emits canonical agent role and service shape", () => {
+  const input = buildAudioAnalystInput({
+    requestId: "audio-2",
+    mediaFilePath: "/tmp/Song.mp3",
+    mediaRootPath: "/tmp/media",
+    projectFilePath: "/tmp/project/Test.xdproj",
+    service: {
+      baseUrl: "http://127.0.0.1:5055/",
+      provider: "beatnet",
+      apiKey: "secret"
+    }
+  });
+
+  assert.equal(input.agentRole, AUDIO_ANALYST_ROLE);
+  assert.equal(input.context.media.path, "/tmp/Song.mp3");
+  assert.equal(input.context.project.mediaRootPath, "/tmp/media");
+  assert.equal(input.context.service.provider, "beatnet");
+  assert.equal(input.context.service.apiKeyPresent, true);
+});
+
+test("audio analyst flow returns canonical artifact and handoff", async () => {
+  const input = buildAudioAnalystInput({
+    requestId: "audio-3",
+    mediaFilePath: "/tmp/Song.mp3",
+    projectFilePath: "/tmp/project/Test.xdproj",
+    service: {
+      baseUrl: "http://127.0.0.1:5055",
+      provider: "auto"
+    }
+  });
+
+  const out = await executeAudioAnalystFlow({
+    input,
+    runPipeline: async () => samplePipelineResult(),
+    persistArtifact: async ({ artifact }) => ({
+      ok: true,
+      artifact: {
+        ...artifact,
+        media: {
+          ...artifact.media,
+          mediaId: "persisted-media-1"
+        }
+      }
+    }),
+    creativeBrief: {
+      mood: "bright"
+    },
+    generatedAt: "2026-03-12T12:00:00.000Z"
+  });
+
+  assert.equal(out.ok, true);
+  assert.equal(out.result.status, "ok");
+  assert.equal(out.artifact.media.mediaId, "persisted-media-1");
+  assert.equal(out.handoff.trackIdentity.title, "Song");
+  assert.equal(out.gate.ok, true);
+});
+
+test("audio analyst flow classifies degraded artifact as partial", async () => {
+  const input = buildAudioAnalystInput({
+    requestId: "audio-4",
+    mediaFilePath: "/tmp/Song.mp3",
+    service: {
+      baseUrl: "http://127.0.0.1:5055",
+      provider: "auto"
+    }
+  });
+  const degraded = samplePipelineResult();
+  degraded.pipeline.analysisServiceSucceeded = false;
+  degraded.raw.lyrics = [];
+  degraded.diagnostics.push("Analysis service returned no synced lyrics.");
+
+  const out = await executeAudioAnalystFlow({
+    input,
+    runPipeline: async () => degraded,
+    generatedAt: "2026-03-12T12:00:00.000Z"
+  });
+
+  assert.equal(out.ok, true);
+  assert.equal(out.result.status, "partial");
+  assert.equal(out.result.failureReason, "lyrics_unavailable");
+});
+
+test("audio analyst failure classification distinguishes provider and media failures", () => {
+  assert.equal(classifyAudioAnalysisFailureReason("service_health", "analysis service unavailable"), "provider_unavailable");
+  assert.equal(classifyAudioAnalysisFailureReason("media", "No audio track available"), "media_unreadable");
+  assert.equal(classifyAudioAnalysisFailureReason("identity", "fingerprinted title+artist not available"), "identity_lookup_failed");
 });

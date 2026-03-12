@@ -33,17 +33,17 @@ Boundary summary:
   - full artifact vs downstream handoff
 
 ### Phase A: Role Contract and Artifact Boundary
-- [ ] Define canonical `audio_analyst` input contract.
+- [x] Define canonical `audio_analyst` input contract.
   - media file path/reference
   - media root/project context as needed for storage
   - analysis settings/profile
   - no xLights revision/sequence/layout inputs
 - [x] Define canonical persisted artifact contract:
   - `analysis_artifact_v1`
-- [ ] Define canonical downstream handoff contract:
+- [x] Define canonical downstream handoff contract:
   - either keep and tighten `analysis_handoff_v1`
   - or version it explicitly from the artifact
-- [ ] Define versioning policy for artifact and handoff schemas.
+- [x] Define versioning policy for artifact and handoff schemas.
 
 ### Phase B: Canonical Project-Root Persistence
 - [x] Implement media-id derivation.
@@ -55,23 +55,23 @@ Boundary summary:
 
 ### Phase C: Audio Analyst Runtime Extraction
 - [~] Extract `audio_analyst` orchestration out of `app.js`.
-- [ ] Create dedicated runtime module(s) for:
-  - request normalization
-  - service/provider execution
-  - result normalization
-  - artifact persistence
-  - handoff derivation
+- [~] Create dedicated runtime module(s) for:
+  - [x] request normalization
+  - [ ] service/provider execution
+  - [ ] result normalization
+  - [~] artifact persistence
+  - [x] handoff derivation
 - [ ] Keep `app.js` limited to UI wiring and action dispatch.
 
 ### Phase D: Provider/Tool Framework
-- [ ] Define provider adapter contract for modular analyzers.
+- [x] Define provider adapter contract for modular analyzers.
 - [ ] Implement first-class adapters for current external capabilities:
   - beat analysis
   - chord analysis
   - lyrics retrieval
   - track identity
   - section labeling/relabeling
-- [ ] Separate provider arbitration from provider implementation.
+- [~] Separate provider arbitration from provider implementation.
 - [ ] Encode replaceability policy:
   - providers may be swapped without changing artifact schema
 - [ ] Define extension path for future in-house analyzers/plugins.
@@ -95,7 +95,7 @@ Boundary summary:
   - sequence-agent timing-track generation
 
 ### Phase F: Handoff Derivation
-- [ ] Generate `analysis_handoff_v1` directly from canonical artifact, not from ad hoc UI summary state.
+- [x] Generate `analysis_handoff_v1` directly from canonical artifact, not from ad hoc UI summary state.
 - [ ] Ensure handoff contains enough distilled data for:
   - section-aware sequencing
   - lyric/chord-aware design context
@@ -112,7 +112,7 @@ Boundary summary:
 - [ ] Keep timing-track creation solely in `sequence_agent`.
 
 ### Phase H: Diagnostics and Failure Policy
-- [ ] Define deterministic failure taxonomy for `audio_analyst`.
+- [x] Define deterministic failure taxonomy for `audio_analyst`.
 - [ ] Distinguish:
   - provider unavailable
   - media unreadable
@@ -120,13 +120,13 @@ Boundary summary:
   - lyrics unavailable
   - partial analysis success
   - full analysis failure
-- [ ] Persist artifact-level provenance and failure diagnostics.
+- [x] Persist artifact-level provenance and failure diagnostics.
 - [ ] Surface degraded-mode outcomes clearly without pretending full success.
 
 ### Phase I: Test and Eval Harness
 - [ ] Add dedicated `audio_analyst` unit tests in `apps/xlightsdesigner-ui/tests/agent/`.
-- [ ] Add artifact schema validation tests.
-- [ ] Add handoff validation tests.
+- [x] Add artifact schema validation tests.
+- [x] Add handoff validation tests.
 - [ ] Add provider arbitration/normalization tests.
 - [ ] Add golden-case tests for:
   - beats/bars/chords/lyrics/sections presence
@@ -204,4 +204,6 @@ Progress note (2026-03-12):
 - media-id derivation and project-root artifact persistence implemented in desktop runtime.
 - `analysis_handoff_v1` now derives from the canonical artifact builder path.
 - persisted analysis artifacts now auto-rehydrate on media change / sequence open / project open when available.
-- `audio_analyst` extraction has started via `apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js`, but orchestration still partly lives in `app.js`.
+- `audio_analyst` extraction has started via `apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js`, and contract/gate logic now exists in `apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js`.
+- `app.js` now routes analyze-audio through `executeAudioAnalystFlow(...)`, but provider execution and normalization still partly live in `runAudioAnalysisPipeline()`.
+- provider normalization/arbitration scaffolding now exists in `apps/xlightsdesigner-ui/agent/audio-provider-adapters.js`, but the service pipeline still needs deeper adapter extraction by capability.

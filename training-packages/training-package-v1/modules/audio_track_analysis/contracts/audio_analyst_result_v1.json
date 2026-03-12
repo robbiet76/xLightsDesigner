@@ -1,0 +1,16 @@
+{
+  "contract": "audio_analyst_result_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "requestId",
+    "status"
+  ],
+  "notes": [
+    "The result envelope distinguishes ok, partial, and failed analysis outcomes.",
+    "Partial analysis is a first-class outcome and should preserve artifact provenance and warnings when available.",
+    "analysis_handoff_v1 is derived from the canonical artifact and may be included in the result when contract validation succeeds."
+  ]
+}

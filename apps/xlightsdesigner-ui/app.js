@@ -52,7 +52,17 @@ import {
   validateAgentHandoff
 } from "./agent/handoff-contracts.js";
 import { analyzeAudioContext } from "./agent/audio-analyzer.js";
-import { buildAnalysisArtifactFromPipelineResult, buildAnalysisHandoffFromArtifact } from "./agent/audio-analyst-runtime.js";
+import {
+  buildAnalysisArtifactFromPipelineResult,
+  buildAnalysisHandoffFromArtifact,
+  buildAudioAnalystInput,
+  executeAudioAnalystFlow
+} from "./agent/audio-analyst-runtime.js";
+import {
+  buildAudioAnalysisServiceRequest,
+  normalizeAudioAnalysisProvider,
+  summarizeProviderSelection
+} from "./agent/audio-provider-adapters.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/command-graph.js";
@@ -8715,8 +8725,7 @@ async function runAudioAnalysisPipeline() {
   let webValidation = null;
   let rawAnalysisData = {};
   const analysisBaseUrl = String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "");
-  const analysisProviderRaw = String(state.ui.analysisServiceProvider || "auto").trim().toLowerCase() || "auto";
-  const analysisProvider = ["auto", "beatnet", "librosa"].includes(analysisProviderRaw) ? analysisProviderRaw : "auto";
+  const analysisProvider = normalizeAudioAnalysisProvider(state.ui.analysisServiceProvider || "auto");
   const analysisApiKey = String(state.ui.analysisServiceApiKeyDraft || "").trim();
   const analysisBearer = String(state.ui.analysisServiceAuthBearerDraft || "").trim();
 
@@ -8806,30 +8815,21 @@ async function runAudioAnalysisPipeline() {
   } else {
     try {
       pipeline.analysisServiceCalled = true;
-      const analysisRes = await analysisBridge.runAudioAnalysisService({
+      const analysisRes = await analysisBridge.runAudioAnalysisService(buildAudioAnalysisServiceRequest({
         filePath: audioPath,
         baseUrl: analysisBaseUrl,
         provider: analysisProvider,
         apiKey: analysisApiKey || undefined,
         authBearer: analysisBearer || undefined
-      });
+      }));
       if (!analysisRes?.ok) {
         addDiag(`Audio analysis service failed: ${String(analysisRes?.error || "unknown error")}`);
       } else {
         pipeline.analysisServiceSucceeded = true;
         const data = analysisRes?.data && typeof analysisRes.data === "object" ? analysisRes.data : {};
         const dataMeta = data?.meta && typeof data.meta === "object" ? data.meta : {};
-        if (String(dataMeta?.engine || "").trim()) {
-          addDiag(`Analysis engine selected: ${String(dataMeta.engine).trim()}`);
-        }
-        if (dataMeta?.autoSelection && typeof dataMeta.autoSelection === "object") {
-          const sel = String(dataMeta.autoSelection.selectedProvider || "").trim();
-          const score = Number(dataMeta.autoSelection.selectedScore);
-          if (sel) {
-            addDiag(
-              `Auto provider selection: ${sel}${Number.isFinite(score) ? ` (score ${score.toFixed(3)})` : ""}.`
-            );
-          }
+        for (const line of summarizeProviderSelection(dataMeta)) {
+          addDiag(line);
         }
         detectedTrackIdentity = data?.meta?.trackIdentity && typeof data.meta.trackIdentity === "object"
           ? data.meta.trackIdentity
@@ -9219,45 +9219,63 @@ async function onAnalyzeAudio() {
   setStatus("info", "Running audio analysis pipeline...");
   render();
   try {
-    const result = await runAudioAnalysisPipeline({ refreshTracks: true });
-    markOrchestrationStage(orchestrationRun, "audio_pipeline", "ok", "analysis pipeline complete");
-    const artifact = buildAnalysisArtifactFromPipelineResult({
-      audioPath,
-      result,
-      requestedProvider: String(state.ui.analysisServiceProvider || "auto").trim().toLowerCase() || "auto",
-      analysisBaseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "")
-    });
-    let persistedArtifact = artifact;
-    const artifactBridge = getDesktopAnalysisArtifactBridge();
-    if (artifactBridge && state.projectFilePath && audioPath) {
-      const writeRes = await artifactBridge.writeAnalysisArtifact({
-        projectFilePath: state.projectFilePath,
-        mediaFilePath: audioPath,
-        artifact
-      });
-      if (writeRes?.ok && writeRes.artifact && typeof writeRes.artifact === "object") {
-        persistedArtifact = writeRes.artifact;
-      } else if (writeRes?.error) {
-        pushDiagnostic("warning", `Audio analysis artifact not persisted: ${String(writeRes.error)}`);
+    const analysisRequest = buildAudioAnalystInput({
+      requestId: orchestrationRun.id,
+      mediaFilePath: audioPath,
+      mediaRootPath: String(state.project?.mediaPath || "").trim(),
+      projectFilePath: String(state.projectFilePath || "").trim(),
+      service: {
+        baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
+        provider: String(state.ui.analysisServiceProvider || "auto").trim().toLowerCase() || "auto",
+        apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim(),
+        authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim()
       }
-    } else if (!state.projectFilePath) {
-      pushDiagnostic("warning", "Audio analysis artifact not persisted: project must be saved first.");
+    });
+    const flow = await executeAudioAnalystFlow({
+      input: analysisRequest,
+      runPipeline: async () => runAudioAnalysisPipeline({ refreshTracks: true }),
+      persistArtifact: async ({ artifact }) => {
+        const artifactBridge = getDesktopAnalysisArtifactBridge();
+        if (artifactBridge && state.projectFilePath && audioPath) {
+          return artifactBridge.writeAnalysisArtifact({
+            projectFilePath: state.projectFilePath,
+            mediaFilePath: audioPath,
+            artifact
+          });
+        }
+        if (!state.projectFilePath) {
+          return { ok: false, error: "Audio analysis artifact not persisted: project must be saved first." };
+        }
+        return { ok: false, error: "Audio analysis artifact bridge unavailable in this runtime." };
+      },
+      creativeBrief: state.creative?.brief || null
+    });
+    const result = flow.pipelineResult || null;
+    const persistedArtifact = flow.artifact || null;
+    if (!flow.ok || !persistedArtifact || !flow.handoff) {
+      const failureSummary = String(flow?.result?.summary || "audio analysis failed");
+      throw new Error(failureSummary);
     }
-    const analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifact, state.creative?.brief || null);
-    setAgentHandoff("analysis_handoff_v1", analysisHandoff, "audio_analyst");
+    markOrchestrationStage(orchestrationRun, "audio_pipeline", flow.result.status === "partial" ? "warning" : "ok", "analysis pipeline complete");
+    if (Array.isArray(flow.result.warnings)) {
+      for (const row of flow.result.warnings) {
+        pushDiagnostic("warning", `Audio analysis: ${row}`);
+      }
+    }
+    setAgentHandoff("analysis_handoff_v1", flow.handoff, "audio_analyst");
     markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
     state.audioAnalysis.summary = String(
       persistedArtifact?.diagnostics?.summary ||
       result.summary ||
       buildAudioAnalysisStubSummary()
     );
-    for (const row of Array.isArray(persistedArtifact?.diagnostics?.warnings) ? persistedArtifact.diagnostics.warnings : []) {
-      pushDiagnostic("warning", `Audio analysis: ${row}`);
-    }
     state.audioAnalysis.lastAnalyzedAt = String(persistedArtifact?.provenance?.generatedAt || new Date().toISOString());
     state.audioAnalysis.pipeline = persistedArtifact?.provenance?.pipeline || result.pipeline || null;
-    setStatus("info", "Audio analysis complete.");
-    endOrchestrationRun(orchestrationRun, { status: "ok", summary: "audio analysis complete" });
+    setStatus("info", flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete.");
+    endOrchestrationRun(orchestrationRun, {
+      status: flow.result.status === "failed" ? "failed" : "ok",
+      summary: flow.result.status === "partial" ? "audio analysis complete with warnings" : "audio analysis complete"
+    });
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "audio_pipeline", "error", String(err?.message || err));
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: "audio analysis failed" });
