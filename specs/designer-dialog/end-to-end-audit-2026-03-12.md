@@ -135,16 +135,15 @@ Missing today:
 
 This is the biggest architecture gap.
 
-### 3.7 Training exists only as scaffold
+### 3.7 Training is now active but still early
 
 Current `lighting_design_principles` status:
-- datasets are bootstrap-level references
-- few-shot is `pending`
-- eval is `pending`
+- datasets now point at the canonical designer runtime/spec references
+- few-shot now covers kickoff, clarification, refinement, constrained revise, and degraded mode
+- eval now covers artifact completeness, clarification quality, determinism, handoff completeness, and lifecycle integrity
 
-So the designer training package is much less mature than:
-- `audio_track_analysis`
-- `xlights_sequencer_execution`
+Remaining weakness:
+- training assets are now real, but they still need deeper parity with future designer orchestration and diagnostics as those mature
 
 ### 3.8 Test coverage is narrow
 
@@ -177,7 +176,7 @@ There is no dedicated test coverage yet for:
 - too much designer lifecycle logic remains in `app.js`
 - no canonical designer contracts
 - no structured proposal object owned by designer runtime
-- training/eval assets are largely placeholders
+- training/eval assets are now active, but still early compared with the sequencing package
 
 ### 4.3 Practical conclusion
 

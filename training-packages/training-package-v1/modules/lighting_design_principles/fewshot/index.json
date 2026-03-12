@@ -1,4 +1,88 @@
 {
-  "status": "pending",
-  "notes": "Curated design examples to be extracted from approved proposals and accepted sequence edits."
+  "status": "active",
+  "examples": [
+    {
+      "id": "kickoff_conversational_brief",
+      "scenario": "First-pass creative kickoff from open-ended emotional conversation",
+      "input": {
+        "promptStyle": "open_ended",
+        "themes": ["nostalgia", "warmth", "childhood memory"],
+        "analysisAvailable": true,
+        "selectedSections": ["Chorus 1"],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "proceed_with_bounded_assumptions",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": ["explicit assumptions", "traceable brief summary", "reviewable proposal lines"]
+      }
+    },
+    {
+      "id": "targeted_clarification_round",
+      "scenario": "Prompt is broad but missing a materially important scope decision",
+      "input": {
+        "promptStyle": "broad_but_incomplete",
+        "themes": ["bigger chorus"],
+        "analysisAvailable": true,
+        "selectedSections": [],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "ask_targeted_questions",
+        "outputs": ["guided_questions", "creative_brief_v1"],
+        "mustInclude": ["no more than a few high-value questions", "questions tied to scope or coherence"]
+      }
+    },
+    {
+      "id": "proposal_refinement_with_preferences",
+      "scenario": "Refine an existing proposal using known director preferences",
+      "input": {
+        "promptStyle": "refinement",
+        "directorPreferences": ["smooth motion", "hero-prop-first"],
+        "analysisAvailable": true,
+        "selectedSections": ["Bridge"],
+        "selectedTargets": ["MegaTree"],
+        "selectedTags": ["focal"]
+      },
+      "expectation": {
+        "behavior": "refine_existing_direction",
+        "outputs": ["proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": ["preference-informed assumptions", "scoped proposal changes", "no hard style cloning"]
+      }
+    },
+    {
+      "id": "constrained_surgical_revise",
+      "scenario": "Director asks for a narrow revise with preservation constraints",
+      "input": {
+        "promptStyle": "surgical_revise",
+        "analysisAvailable": true,
+        "selectedSections": ["Verse 2"],
+        "selectedTargets": ["Roofline"],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "proceed_with_reviewable_constraints",
+        "outputs": ["proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": ["change tolerance", "preservation constraints", "base revision"]
+      }
+    },
+    {
+      "id": "degraded_mode_without_analysis",
+      "scenario": "Design conversation proceeds before audio analysis exists",
+      "input": {
+        "promptStyle": "kickoff_without_analysis",
+        "analysisAvailable": false,
+        "selectedSections": [],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "degraded_mode_with_warning",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1"],
+        "mustInclude": ["explicit warning", "conservative assumptions", "reviewable proposal"]
+      }
+    }
+  ]
 }

@@ -5,19 +5,28 @@
       "type": "runtime-contract-reference",
       "paths": [
         "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-contracts.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-runtime.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-orchestrator.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-ui-state.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-lifecycle.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/intent-normalizer.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/guided-dialog.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/brief-synthesizer.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/planner.js"
       ],
-      "description": "Canonical runtime references for intent normalization, guided questioning, creative-brief synthesis, and proposal seeding."
+      "description": "Canonical runtime references for conversational designer intent normalization, clarification, brief synthesis, proposal generation, lifecycle, and handoff behavior."
     },
     {
       "id": "designer_dialog_spec",
       "type": "interaction-contract",
-      "path": "specs/designer-dialog/designer-interaction-contract.md",
-      "description": "Active designer interaction contract and guided workflow boundary."
+      "paths": [
+        "specs/app-assistant/app-assistant-role-and-boundary.md",
+        "specs/designer-dialog/designer-interaction-contract.md",
+        "specs/designer-dialog/implementation-checklist.md",
+        "specs/designer-dialog/end-to-end-audit-2026-03-12.md"
+      ],
+      "description": "Active designer interaction and shell-boundary specifications."
     }
   ],
-  "status": "bootstrap"
+  "status": "active"
 }

@@ -138,20 +138,20 @@ Exit gate:
 
 ## Phase G: Training Package
 
-- [ ] Align `designer_dialog.agent.json` to the real runtime boundary
-- [ ] Upgrade `lighting_design_principles` from scaffold to active module
-- [ ] Add few-shot examples for:
+- [x] Align `designer_dialog.agent.json` to the real runtime boundary
+- [x] Upgrade `lighting_design_principles` from scaffold to active module
+- [x] Add few-shot examples for:
   - first-pass creative kickoff
   - clarification round
   - proposal refinement
   - constrained surgical revise
   - degraded mode without analysis
-- [ ] Add eval cases for:
+- [x] Add eval cases for:
   - brief alignment
   - clarification quality
   - proposal determinism
   - handoff completeness
-- [ ] Point datasets at canonical runtime/spec references
+- [x] Point datasets at canonical runtime/spec references
 
 Exit gate:
 - Designer training assets are at parity with the actual runtime role.
@@ -212,7 +212,6 @@ Implemented now:
   - focused lifecycle tests
 
 Not yet implemented:
-- [ ] dedicated training few-shot/eval assets
 - [ ] broader orchestration and lifecycle test coverage
 
 ## Post-v1 Cleanup

@@ -1,9 +1,40 @@
 {
-  "status": "pending",
+  "status": "active",
+  "cases": [
+    {
+      "id": "brief_alignment_from_conversation",
+      "checks": ["creative_brief_v1 generated", "brief traceability populated", "hypotheses preserved"]
+    },
+    {
+      "id": "clarification_quality",
+      "checks": ["questions only when materially needed", "bounded assumptions otherwise", "question count remains concise"]
+    },
+    {
+      "id": "proposal_bundle_completeness",
+      "checks": ["proposal_bundle_v1 generated", "scope and constraints present", "assumptions present", "lifecycle present"]
+    },
+    {
+      "id": "proposal_determinism",
+      "checks": ["same input yields stable proposal lines", "same input yields stable scope/constraints"]
+    },
+    {
+      "id": "handoff_completeness",
+      "checks": ["intent_handoff_v1 emitted", "handoff derived from brief/proposal", "approval policy preserved"]
+    },
+    {
+      "id": "degraded_mode_without_analysis",
+      "checks": ["designer still produces reviewable output", "warnings preserved", "no analysis dependency crash"]
+    },
+    {
+      "id": "proposal_lifecycle_rebase",
+      "checks": ["proposal bundle marks stale on revision drift", "rebased lifecycle clears stale state", "base revision updates"]
+    }
+  ],
   "plannedMetrics": [
     "brief_alignment_score",
-    "energy_arc_consistency",
-    "color_intent_consistency",
-    "readability_conflict_count"
+    "clarification_quality_score",
+    "proposal_bundle_completeness",
+    "handoff_completeness",
+    "lifecycle_integrity"
   ]
 }
