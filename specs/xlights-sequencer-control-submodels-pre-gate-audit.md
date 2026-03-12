@@ -99,12 +99,13 @@ Current behavior:
 - passes authoritative `submodelsById` into `sequence_agent` planning context.
 - planner now uses deterministic overlap semantics:
   - same-line parent + submodel overlap collapses to the parent target for broad writes,
+  - same-line parent + submodel overlap preserves the submodel target when the submodel has a materially different local render path (non-default buffer style or subbuffer semantics),
   - separate lines preserve explicit parent-first then submodel refinement behavior,
   - sibling submodels remain valid concurrent precision targets when the parent is absent,
   - sibling submodels that truly overlap in node channels collapse deterministically to the first explicit target on the same line.
 
 Not yet implemented:
-- deeper planning semantics for submodel-specific render/buffer behavior beyond target overlap resolution.
+- richer planning semantics for submodel-specific render/buffer behavior beyond the current precision-preservation rule.
 - post-apply verification that submodel-targeted writes did not broaden unexpectedly through parent-wide side effects.
 
 ## 6) Gap List (Submodels Step)
@@ -113,7 +114,7 @@ Not yet implemented:
 Need explicit rules for:
 - what defaults inherit from parent context,
 - what can be overridden at submodel granularity,
-- when a submodel-local buffer/render path should be treated as materially different from the parent model target.
+- which additional submodel-local buffer/render paths should be treated as materially different from the parent model target beyond the current non-default/subbuffer preservation rule.
 
 ### G2: Missing apply-time submodel precision verification
 Need deterministic post-apply behavior checks when plan scope includes:

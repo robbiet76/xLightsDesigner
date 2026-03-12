@@ -47,6 +47,8 @@ function normalizeSubmodelGraph(submodelsById = {}) {
     for (const [key, value] of Object.entries(submodelsById)) {
       const id = normText(key || value?.id);
       if (!id) continue;
+      const submodelType = normText(value?.renderPolicy?.submodelType || value?.submodelType || "ranges").toLowerCase() || "ranges";
+      const bufferStyle = normText(value?.renderPolicy?.bufferStyle || value?.bufferStyle || "Default") || "Default";
       out[id] = {
         id,
         parentId: normText(value?.parentId || parseSubmodelParentId(id)),
@@ -54,11 +56,24 @@ function normalizeSubmodelGraph(submodelsById = {}) {
           Array.isArray(value?.membership?.nodeChannels)
             ? value.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v))
             : []
-        )
+        ),
+        renderPolicy: {
+          submodelType,
+          bufferStyle,
+          availableBufferStyles: Array.isArray(value?.renderPolicy?.availableBufferStyles || value?.availableBufferStyles)
+            ? (value?.renderPolicy?.availableBufferStyles || value?.availableBufferStyles).map((row) => normText(row)).filter(Boolean)
+            : []
+        }
       };
     }
   }
   return out;
+}
+
+function isMaterialSubmodelRenderOverride(entry = null) {
+  const submodelType = normText(entry?.renderPolicy?.submodelType || "ranges").toLowerCase() || "ranges";
+  const bufferStyle = normText(entry?.renderPolicy?.bufferStyle || "Default");
+  return submodelType !== "ranges" || (bufferStyle && bufferStyle.toLowerCase() !== "default");
 }
 
 function isGenericScopeToken(raw = "") {
@@ -243,11 +258,19 @@ function collapseParentSubmodelOverlaps(targets = [], submodelsById = {}) {
   if (!rows.length) return [];
   const submodelGraph = normalizeSubmodelGraph(submodelsById);
   const modelIds = new Set(rows.map((row) => normText(row?.modelName)).filter(Boolean));
+  const riskySubmodelParents = new Set(
+    rows
+      .map((row) => submodelGraph[normText(row?.modelName)])
+      .filter((entry) => entry && entry.parentId && isMaterialSubmodelRenderOverride(entry))
+      .map((entry) => entry.parentId)
+  );
   return rows.filter((row) => {
     const modelName = normText(row?.modelName);
     if (!modelName) return false;
+    if (riskySubmodelParents.has(modelName)) return false;
     const parentId = normText(submodelGraph[modelName]?.parentId || parseSubmodelParentId(modelName));
     if (!parentId) return true;
+    if (isMaterialSubmodelRenderOverride(submodelGraph[modelName])) return true;
     return !modelIds.has(parentId);
   });
 }

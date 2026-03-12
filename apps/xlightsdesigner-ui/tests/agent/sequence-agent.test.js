@@ -149,10 +149,42 @@ function sampleGroups() {
 
 function sampleSubmodels() {
   return {
-    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree", membership: { nodeChannels: [1, 2, 3] } },
-    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree", membership: { nodeChannels: [3, 4, 5] } },
-    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline", membership: { nodeChannels: [21, 22, 23] } },
-    "Roofline/Right": { id: "Roofline/Right", parentId: "Roofline", membership: { nodeChannels: [31, 32, 33] } }
+    "MegaTree/Star": {
+      id: "MegaTree/Star",
+      parentId: "MegaTree",
+      renderPolicy: { submodelType: "ranges", bufferStyle: "Default", availableBufferStyles: ["Default", "Keep XY"] },
+      membership: { nodeChannels: [1, 2, 3] }
+    },
+    "MegaTree/TopHalf": {
+      id: "MegaTree/TopHalf",
+      parentId: "MegaTree",
+      renderPolicy: { submodelType: "ranges", bufferStyle: "Default", availableBufferStyles: ["Default", "Keep XY"] },
+      membership: { nodeChannels: [3, 4, 5] }
+    },
+    "MegaTree/KeepXY": {
+      id: "MegaTree/KeepXY",
+      parentId: "MegaTree",
+      renderPolicy: { submodelType: "ranges", bufferStyle: "Keep XY", availableBufferStyles: ["Default", "Keep XY", "Stacked Strands"] },
+      membership: { nodeChannels: [6, 7, 8] }
+    },
+    "MegaTree/SubBuffer": {
+      id: "MegaTree/SubBuffer",
+      parentId: "MegaTree",
+      renderPolicy: { submodelType: "subbuffer", bufferStyle: "Default", availableBufferStyles: ["Default"] },
+      membership: { nodeChannels: [9, 10, 11] }
+    },
+    "Roofline/Left": {
+      id: "Roofline/Left",
+      parentId: "Roofline",
+      renderPolicy: { submodelType: "ranges", bufferStyle: "Default", availableBufferStyles: ["Default"] },
+      membership: { nodeChannels: [21, 22, 23] }
+    },
+    "Roofline/Right": {
+      id: "Roofline/Right",
+      parentId: "Roofline",
+      renderPolicy: { submodelType: "ranges", bufferStyle: "Default", availableBufferStyles: ["Default"] },
+      membership: { nodeChannels: [31, 32, 33] }
+    }
   };
 }
 
@@ -477,6 +509,50 @@ test("sequence_agent preserves explicit parent then submodel refinement on separ
       ["MegaTree/Star", "Shimmer"]
     ]
   );
+});
+
+test("sequence_agent preserves submodel precision when same-line submodel uses non-default buffer style", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep precision when the submodel uses a materially different local buffer style",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree", "MegaTree/KeepXY", "Roofline/Left"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / bars"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/KeepXY", "Roofline/Left"]);
+});
+
+test("sequence_agent preserves submodel precision when same-line submodel uses subbuffer semantics", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep precision when the submodel uses subbuffer semantics",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree", "MegaTree/SubBuffer", "Roofline/Left"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / bars"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/SubBuffer", "Roofline/Left"]);
 });
 
 test("sequence_agent collapses same-line overlapping sibling submodels to first explicit target", () => {

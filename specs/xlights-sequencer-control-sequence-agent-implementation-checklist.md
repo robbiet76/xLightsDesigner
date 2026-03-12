@@ -85,6 +85,7 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Baseline parent/submodel overlap rules encoded:
     - same-line parent + submodel overlap collapses to the parent target for broad writes
+    - same-line parent + submodel overlap preserves submodel precision when the submodel has a materially different local render path
     - separate lines preserve explicit parent-first then submodel refinement behavior
     - sibling submodels remain valid concurrent precision targets when parent is absent
     - exact sibling overlap collapse uses authoritative submodel node-channel membership from automation
