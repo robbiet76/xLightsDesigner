@@ -116,7 +116,7 @@ Exit gate:
 - [x] Add `designer-dialog-orchestrator.js`
 - [x] Add `designer-dialog-ui-state.js`
 - [x] Move proposal-generation orchestration out of `app.js`
-- [ ] Move proposal stale/rebase logic out of `app.js`
+- [x] Move proposal stale/rebase logic out of `app.js`
 - [x] Move creative brief state projection out of `app.js`
 - [ ] Keep `app.js` to UI wiring and action dispatch
 
@@ -210,6 +210,10 @@ Implemented now:
   - proposal bundle lifecycle state (`fresh`, `stale`, `rebased`)
   - stale/rebase state derived from proposal artifact instead of only UI flags
   - focused lifecycle tests
+- [x] Draft-state extraction slice:
+  - `designer-dialog-draft-state.js`
+  - cancel/rebase/stale/variant restore behavior routed through designer-domain helpers
+  - app draft flags derived from designer artifact lifecycle helpers
 
 Not yet implemented:
 - [ ] broader orchestration and lifecycle test coverage

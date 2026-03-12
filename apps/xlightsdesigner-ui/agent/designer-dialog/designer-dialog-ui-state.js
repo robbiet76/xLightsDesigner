@@ -1,4 +1,5 @@
 import { deriveDesignerDraftState } from "./designer-dialog-lifecycle.js";
+import { applyDesignerDraftSuccessState } from "./designer-dialog-draft-state.js";
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
@@ -9,11 +10,13 @@ export function applyDesignerProposalSuccessToState(state, orchestration = {}) {
 
   state.creative = state.creative || {};
   state.creative.brief = orchestration.creativeBrief || state.creative.brief || null;
-  state.creative.proposalBundle = orchestration.proposalBundle || null;
   state.creative.briefUpdatedAt = new Date().toISOString();
-  state.proposed = arr(orchestration.proposalLines);
+  applyDesignerDraftSuccessState(state, {
+    proposalBundle: orchestration.proposalBundle || null,
+    proposalLines: arr(orchestration.proposalLines)
+  });
   const derived = deriveDesignerDraftState({
-    proposalBundle: state.creative.proposalBundle,
+    proposalBundle: state.creative?.proposalBundle,
     proposed: state.proposed
   });
   state.flags.creativeBriefReady = Boolean(state.creative.brief);

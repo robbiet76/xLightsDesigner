@@ -39,10 +39,13 @@ import {
   buildDesignerGuidedQuestionMessage
 } from "./agent/designer-dialog/designer-dialog-ui-state.js";
 import {
-  deriveDesignerDraftState,
-  markProposalBundleStale,
-  rebaseProposalBundle
 } from "./agent/designer-dialog/designer-dialog-lifecycle.js";
+import {
+  clearDesignerDraft,
+  markDesignerDraftStale,
+  rebaseDesignerDraft,
+  syncDesignerDraftFlags
+} from "./agent/designer-dialog/designer-dialog-draft-state.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -915,16 +918,6 @@ function buildAgentPersistenceContext() {
   };
 }
 
-function syncDraftFlagsFromProposalBundle() {
-  const derived = deriveDesignerDraftState({
-    proposalBundle: state.creative?.proposalBundle || null,
-    proposed: state.proposed
-  });
-  state.draftBaseRevision = derived.draftBaseRevision;
-  state.flags.hasDraftProposal = derived.hasDraftProposal;
-  state.flags.proposalStale = derived.proposalStale;
-}
-
 function setAgentActiveRole(roleId = "") {
   agentRuntime.activeRole = String(roleId || "").trim();
   refreshAgentRuntimeHealth();
@@ -1524,7 +1517,7 @@ function applySequenceSidecarDocument(doc) {
     }
   }
   if (doc?.creative && typeof doc.creative === "object") state.creative = { ...state.creative, ...doc.creative };
-  if (state.creative?.proposalBundle) syncDraftFlagsFromProposalBundle();
+  if (state.creative?.proposalBundle) syncDesignerDraftFlags(state);
   const runtimeDoc = doc?.sequenceAgentRuntime && typeof doc.sequenceAgentRuntime === "object"
     ? doc.sequenceAgentRuntime
     : {};
@@ -3557,11 +3550,10 @@ async function syncLatestSequenceRevision({
       newRevision !== state.draftBaseRevision
     ) {
       if (state.creative?.proposalBundle) {
-        state.creative.proposalBundle = markProposalBundleStale(state.creative.proposalBundle, {
+        markDesignerDraftStale(state, {
           currentRevision: newRevision,
           reason: "sequence_revision_changed"
         });
-        syncDraftFlagsFromProposalBundle();
       }
       state.flags.proposalStale = true;
       staleDetected = true;
@@ -3688,12 +3680,10 @@ async function onRebaseDraft() {
   }
 
   state.proposed = preserved;
-  if (state.creative?.proposalBundle) {
-    state.creative.proposalBundle = rebaseProposalBundle(state.creative.proposalBundle, {
-      newBaseRevision: state.revision
-    });
-  }
-  syncDraftFlagsFromProposalBundle();
+  rebaseDesignerDraft(state, {
+    newBaseRevision: state.revision,
+    preserveLines: preserved
+  });
   saveCurrentProjectSnapshot();
   setStatus(
     "info",
@@ -4217,9 +4207,7 @@ function upsertJob(job) {
 }
 
 function onCancelDraft() {
-  if (state.creative?.proposalBundle) state.creative.proposalBundle = null;
-  state.proposed = [];
-  syncDraftFlagsFromProposalBundle();
+  clearDesignerDraft(state);
   state.ui.detailsOpen = false;
   state.ui.sectionSelections = ["all"];
   invalidateApplyApproval();
@@ -4246,12 +4234,7 @@ function onReapplyVariant() {
   const selected = versionById(state.selectedVersion);
   if (!selected) return;
   state.proposed = [...(selected.proposal || [])];
-  if (state.creative?.proposalBundle) {
-    state.creative.proposalBundle = rebaseProposalBundle(state.creative.proposalBundle, {
-      newBaseRevision: state.revision
-    });
-  }
-  syncDraftFlagsFromProposalBundle();
+  rebaseDesignerDraft(state, { newBaseRevision: state.revision });
   invalidateApplyApproval();
   state.route = "design";
   state.ui.detailsOpen = true;
@@ -4266,12 +4249,7 @@ function onRollbackToVersion() {
   const selected = versionById(state.selectedVersion);
   if (!selected) return;
   state.proposed = [...(selected.proposal || [])];
-  if (state.creative?.proposalBundle) {
-    state.creative.proposalBundle = rebaseProposalBundle(state.creative.proposalBundle, {
-      newBaseRevision: state.revision
-    });
-  }
-  syncDraftFlagsFromProposalBundle();
+  rebaseDesignerDraft(state, { newBaseRevision: state.revision });
   invalidateApplyApproval();
   state.ui.detailsOpen = false;
   bumpVersion(`Rollback to ${selected.id}`, selected.effects || state.proposed.length * 11);
@@ -7384,8 +7362,7 @@ function onResetProjectWorkspace() {
 }
 
 function resetSessionDraftState() {
-  state.creative.proposalBundle = null;
-  syncDraftFlagsFromProposalBundle();
+  clearDesignerDraft(state);
   state.ui.detailsOpen = false;
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
