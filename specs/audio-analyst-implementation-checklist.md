@@ -1,0 +1,200 @@
+# Audio Analyst Implementation Checklist
+
+Status: Active (planning and execution checklist)  
+Date: 2026-03-12  
+Owner: xLightsDesigner Team  
+Last Reviewed: 2026-03-12
+
+## 1) Purpose
+Define the implementation checklist for `audio_analyst` as the canonical media-analysis specialist.
+
+Boundary summary:
+- `audio_analyst` owns audio/media analysis only.
+- `audio_analyst` does not read or mutate xLights sequence/layout state.
+- `designer_dialog` consumes analysis metadata as creative/reference context.
+- `sequence_agent` consumes analysis output to create timing tracks and sequencing structure.
+
+## 2) Exit-State Principles
+- One canonical analysis artifact per media file.
+- Modular provider/tool framework with replaceable adapters.
+- No xLights write logic in `audio_analyst`.
+- Downstream consumers read a stable normalized artifact or a derived handoff from it.
+
+## 3) Phase Checklist
+
+### Required Pre-Gate
+- [ ] Source/runtime audit complete for:
+  - desktop bridge
+  - analysis service
+  - app orchestration
+  - training assets
+- [ ] Current-state gaps approved.
+- [ ] Canonical artifact boundary approved:
+  - full artifact vs downstream handoff
+
+### Phase A: Role Contract and Artifact Boundary
+- [ ] Define canonical `audio_analyst` input contract.
+  - media file path/reference
+  - media root/project context as needed for storage
+  - analysis settings/profile
+  - no xLights revision/sequence/layout inputs
+- [ ] Define canonical persisted artifact contract:
+  - `analysis_artifact_v1`
+- [ ] Define canonical downstream handoff contract:
+  - either keep and tighten `analysis_handoff_v1`
+  - or version it explicitly from the artifact
+- [ ] Define versioning policy for artifact and handoff schemas.
+
+### Phase B: Canonical Project-Root Persistence
+- [ ] Implement media-id derivation.
+- [ ] Implement canonical artifact storage path:
+  - `analysis/media/<media-id>/analysis.json`
+- [ ] Stop treating UI summary/pipeline state as the source of truth.
+- [ ] Persist artifact reads/writes through project-root storage only.
+- [ ] Add migration/compatibility handling for any legacy audio-analysis state currently kept in sequence-side documents.
+
+### Phase C: Audio Analyst Runtime Extraction
+- [ ] Extract `audio_analyst` orchestration out of `app.js`.
+- [ ] Create dedicated runtime module(s) for:
+  - request normalization
+  - service/provider execution
+  - result normalization
+  - artifact persistence
+  - handoff derivation
+- [ ] Keep `app.js` limited to UI wiring and action dispatch.
+
+### Phase D: Provider/Tool Framework
+- [ ] Define provider adapter contract for modular analyzers.
+- [ ] Implement first-class adapters for current external capabilities:
+  - beat analysis
+  - chord analysis
+  - lyrics retrieval
+  - track identity
+  - section labeling/relabeling
+- [ ] Separate provider arbitration from provider implementation.
+- [ ] Encode replaceability policy:
+  - providers may be swapped without changing artifact schema
+- [ ] Define extension path for future in-house analyzers/plugins.
+
+### Phase E: Canonical Artifact Normalization
+- [ ] Normalize all analysis outputs into one stable schema with:
+  - media identity
+  - duration/sample metadata
+  - beats
+  - bars
+  - chords
+  - lyrics
+  - sections
+  - tempo/meter
+  - provider provenance
+  - confidence/quality diagnostics
+  - generation timestamp/version
+- [ ] Preserve provider lineage and evidence without leaking provider-specific raw formats downstream.
+- [ ] Ensure artifact is sufficient for both:
+  - designer metadata use
+  - sequence-agent timing-track generation
+
+### Phase F: Handoff Derivation
+- [ ] Generate `analysis_handoff_v1` directly from canonical artifact, not from ad hoc UI summary state.
+- [ ] Ensure handoff contains enough distilled data for:
+  - section-aware sequencing
+  - lyric/chord-aware design context
+  - timing-asset creation by `sequence_agent`
+- [ ] Keep artifact richer than handoff; do not collapse provenance too early.
+
+### Phase G: Sequence/Xlights Boundary Enforcement
+- [ ] Remove remaining xLights/timing-track assumptions from `audio_analyst` runtime.
+- [ ] Confirm `audio_analyst` does not:
+  - read live xLights sequence revision
+  - mutate timing tracks
+  - manage timing ownership policy
+  - depend on current sequence state
+- [ ] Keep timing-track creation solely in `sequence_agent`.
+
+### Phase H: Diagnostics and Failure Policy
+- [ ] Define deterministic failure taxonomy for `audio_analyst`.
+- [ ] Distinguish:
+  - provider unavailable
+  - media unreadable
+  - identity lookup failed
+  - lyrics unavailable
+  - partial analysis success
+  - full analysis failure
+- [ ] Persist artifact-level provenance and failure diagnostics.
+- [ ] Surface degraded-mode outcomes clearly without pretending full success.
+
+### Phase I: Test and Eval Harness
+- [ ] Add dedicated `audio_analyst` unit tests in `apps/xlightsdesigner-ui/tests/agent/`.
+- [ ] Add artifact schema validation tests.
+- [ ] Add handoff validation tests.
+- [ ] Add provider arbitration/normalization tests.
+- [ ] Add golden-case tests for:
+  - beats/bars/chords/lyrics/sections presence
+  - partial-result handling
+  - canonical artifact persistence
+- [ ] Align service eval harness with packaged training assets.
+
+### Phase J: Training Package Completion
+- [ ] Upgrade `audio_track_analysis` module from partial scaffold to full module parity.
+- [ ] Add/update:
+  - prompts
+  - fewshot
+  - eval configuration
+  - contract references
+  - dataset manifest
+- [ ] Keep training functionality-focused:
+  - structure inference
+  - timing/chord/lyric evidence usage
+  - no xLights mutation behavior in this module
+
+## 4) Recommended Canonical Artifact Shape
+Minimum fields for `analysis_artifact_v1`:
+- `artifactType`
+- `artifactVersion`
+- `media`
+  - `mediaId`
+  - `path`
+  - `fileName`
+  - `durationMs`
+  - `sampleRate`
+  - `channels`
+- `identity`
+  - `title`
+  - `artist`
+  - `album`
+  - `isrc`
+  - `provider`
+- `timing`
+  - `bpm`
+  - `timeSignature`
+  - `beats`
+  - `bars`
+- `harmonic`
+  - `chords`
+- `lyrics`
+  - `hasSyncedLyrics`
+  - `lines`
+  - `source`
+  - `shiftMs`
+- `structure`
+  - `sections`
+  - `source`
+  - `confidence`
+- `provenance`
+  - provider list
+  - arbitration/selection notes
+  - generatedAt
+  - runtime/module versions
+- `diagnostics`
+  - warnings
+  - degraded flags
+  - evidence summaries
+
+## 5) Immediate Next Implementation Slice
+Recommended first slice:
+1. define `analysis_artifact_v1`
+2. implement project-root persistence for one `analysis.json` per media file
+3. extract `audio_analyst` runtime out of `app.js`
+4. derive `analysis_handoff_v1` from the persisted artifact
+
+This is the cleanest path to convert the current partial stack into a real specialist-agent system.
