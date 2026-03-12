@@ -189,6 +189,57 @@ test("orchestrator stages corpus-backed effect settings without reinterpretation
   assert.deepEqual(staged[0].stagedCommand.params.settings, command.params.settings);
 });
 
+test("orchestrator stages forced group-expansion metadata without reinterpretation", async () => {
+  const staged = [];
+  const command = {
+    id: "effect.1",
+    cmd: "effects.create",
+    params: {
+      modelName: "WindowLeft",
+      layerIndex: 0,
+      effectName: "Bars",
+      startMs: 0,
+      endMs: 1000,
+      sourceGroupId: "NestedFrontline",
+      sourceGroupRenderPolicy: "overlay",
+      sourceGroupBufferStyle: "Overlay - Centered",
+      settings: {
+        T_CHOICE_LayerMethod: "Layered"
+      }
+    }
+  };
+
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [command],
+    expectedRevision: "rev-22",
+    getRevision: okRevision("rev-22"),
+    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }] } }),
+    beginTransaction: async () => ({ data: { transactionId: "tx-group-meta" } }),
+    stageTransactionCommand: async (_endpoint, txId, stagedCommand) => {
+      staged.push({ txId, stagedCommand });
+      return { res: 200 };
+    },
+    commitTransaction: async () => ({ data: { newRevision: "rev-23" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(staged.length, 1);
+  assert.deepEqual(
+    {
+      sourceGroupId: staged[0].stagedCommand.params.sourceGroupId,
+      sourceGroupRenderPolicy: staged[0].stagedCommand.params.sourceGroupRenderPolicy,
+      sourceGroupBufferStyle: staged[0].stagedCommand.params.sourceGroupBufferStyle
+    },
+    {
+      sourceGroupId: "NestedFrontline",
+      sourceGroupRenderPolicy: "overlay",
+      sourceGroupBufferStyle: "Overlay - Centered"
+    }
+  );
+});
+
 test("orchestrator rolls back staged transaction on runtime failure", async () => {
   const staged = [];
   let rolledBack = false;

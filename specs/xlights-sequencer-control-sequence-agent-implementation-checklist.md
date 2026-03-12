@@ -117,6 +117,7 @@ Boundary summary:
   - [x] apply path preserves corpus-backed effect settings without reinterpretation
   - [x] nested-group breadth preference and ordering
   - [x] render-policy-aware group preservation and force-override coverage
+  - [x] apply path preserves forced group-expansion provenance metadata without reinterpretation
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration
