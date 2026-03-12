@@ -627,6 +627,13 @@ function getDesktopAppInfoBridge() {
   return bridge;
 }
 
+function getDesktopAppAdminBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.resetAppInstallState !== "function") return null;
+  return bridge;
+}
+
 function getDesktopSidecarBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
@@ -7477,6 +7484,35 @@ function onResetProjectWorkspace() {
   render();
 }
 
+async function onResetAppInstallState() {
+  const bridge = getDesktopAppAdminBridge();
+  if (!bridge) {
+    setStatusWithDiagnostics("warning", "Fresh-install reset requires desktop runtime.");
+    return render();
+  }
+  if (!window.confirm("Reset app state to first-run defaults? This clears app configuration, cloud agent config, recent-project index, and local UI memory, but preserves project folders and analysis artifacts.")) {
+    setStatus("info", "Fresh-install reset canceled.");
+    return render();
+  }
+  try {
+    const res = await bridge.resetAppInstallState({ resetMode: "app-state-only" });
+    if (!res?.ok) {
+      setStatusWithDiagnostics("action-required", "Fresh-install reset failed.", String(res?.error || "Unknown error"));
+      return render();
+    }
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(PROJECTS_KEY);
+    } catch {
+      // ignore local storage cleanup failures
+    }
+    window.location.reload();
+  } catch (err) {
+    setStatusWithDiagnostics("action-required", "Fresh-install reset failed.", String(err?.message || err));
+    render();
+  }
+}
+
 function resetSessionDraftState() {
   clearDesignerDraft(state);
   state.ui.detailsOpen = false;
@@ -9124,6 +9160,9 @@ function bindEvents() {
 
   const clearDiagnosticsBtn = app.querySelector("#clear-diagnostics");
   if (clearDiagnosticsBtn) clearDiagnosticsBtn.addEventListener("click", clearDiagnostics);
+
+  const resetAppInstallStateBtn = app.querySelector("#reset-app-install-state");
+  if (resetAppInstallStateBtn) resetAppInstallStateBtn.addEventListener("click", onResetAppInstallState);
 
   const exportDiagnosticsBtn = app.querySelector("#export-diagnostics");
   if (exportDiagnosticsBtn) exportDiagnosticsBtn.addEventListener("click", onExportDiagnostics);

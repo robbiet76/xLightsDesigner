@@ -54,6 +54,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Reduce settings drawer overload
 - [x] Decide whether diagnostics stays in the footer or moves to a dedicated screen/panel
 - [x] Keep health information available without dominating normal workflow
+- [x] Add an app-level fresh-install reset for brand-new-user testing
 
 ## Phase F: UI Runtime Structure
 - [x] Add an `app-ui` runtime/render domain under `apps/xlightsdesigner-ui`

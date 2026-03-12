@@ -748,6 +748,48 @@ ipcMain.handle("xld:state:write", async (_event, payload = {}) => {
   }
 });
 
+
+function desktopProjectsIndexPath() {
+  return path.join(app.getPath("userData"), PROJECTS_DIRNAME, "index.json");
+}
+
+function removeFileIfExists(filePath) {
+  try {
+    if (!filePath || !fs.existsSync(filePath)) return false;
+    fs.rmSync(filePath, { force: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+ipcMain.handle("xld:app:factory-reset", async (_event, payload = {}) => {
+  try {
+    const deleted = [];
+    const candidates = [
+      ["desktopState", stateFilePath()],
+      ["agentApplyLog", agentApplyLogPath()],
+      ["agentConfig", agentConfigPath()],
+      ["projectsIndex", desktopProjectsIndexPath()]
+    ];
+    for (const [label, filePath] of candidates) {
+      if (removeFileIfExists(filePath)) deleted.push({ label, filePath });
+    }
+    return {
+      ok: true,
+      deleted,
+      preserved: {
+        projectFolders: true,
+        analysisArtifacts: true,
+        projectFiles: true
+      },
+      resetMode: String(payload?.resetMode || "app-state-only")
+    };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
 ipcMain.handle("xld:app:info", async () => {
   try {
     return { ok: true, ...getDesktopAppInfo() };

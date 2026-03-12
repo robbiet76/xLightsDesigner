@@ -1,6 +1,5 @@
 export function buildSettingsDrawer({ state, helpers }) {
   const {
-    escapeHtml,
     getAgentApplyRolloutMode,
     getManualLockedXdTracks,
     getTeamChatIdentities
@@ -100,8 +99,12 @@ export function buildSettingsDrawer({ state, helpers }) {
           <button id="clear-xd-track-locks" ${manualXdLocks.length ? "" : "disabled"}>Clear XD Locks</button>
           <button id="plan-toggle" ${planOnlyToggleForced ? `disabled title="${planOnlyToggleTitle}"` : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
         </div>
+        <div class="row">
+          <button id="reset-app-install-state" class="danger-action">Reset App To First Run</button>
+        </div>
         <p class="banner">Manual XD track locks: ${manualXdLockText}</p>
-        <p class="banner">Operational health, warnings, and recent apply history now live in Diagnostics so this drawer stays focused on user configuration.</p>
+        <p class="banner warning">Fresh-install reset clears app state, agent config, recent-project index, and local UI memory. It does not delete project folders, project files, or analysis artifacts.</p>
+        <p class="banner">Operational health, warnings, and apply history now live in Diagnostics so this drawer stays focused on user configuration.</p>
       </section>
     </section>
   `;
@@ -122,7 +125,7 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
           <h3>Diagnostics</h3>
           <button id="close-diagnostics" aria-label="Close diagnostics">Close</button>
         </div>
-        <p class="banner">Operator surface for health, warnings, exports, and recent apply history.</p>
+        <p class="banner">Operator surface for runtime health, warnings, exports, and recent apply history.</p>
         <div class="row">
           <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${counts.total})</button>
           <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${counts.warning})</button>

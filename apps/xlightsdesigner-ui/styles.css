@@ -63,6 +63,17 @@ button:disabled {
   opacity: 0.5;
 }
 
+button.danger-action {
+  border-color: rgba(239, 106, 106, 0.42);
+  background: linear-gradient(180deg, rgba(239, 106, 106, 0.14), rgba(71, 20, 20, 0.56));
+  color: #ffdede;
+}
+
+button.danger-action:hover {
+  border-color: rgba(239, 106, 106, 0.6);
+  background: linear-gradient(180deg, rgba(239, 106, 106, 0.22), rgba(88, 24, 24, 0.72));
+}
+
 .app-shell {
   --nav-width: 260px;
   --nav-width-collapsed: 72px;
@@ -1048,6 +1059,10 @@ button:disabled {
   overflow: auto;
   border-radius: 0;
   border-left: 1px solid var(--line);
+}
+
+.diagnostics-drawer {
+  width: min(720px, 96vw);
 }
 
 .diagnostics-drawer {
