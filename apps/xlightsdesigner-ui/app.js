@@ -2425,6 +2425,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   setStatus("info", `Applying ${applyLabel} to xLights...`);
   render();
   let applyAuditEntry = null;
+  let applyResult = null;
+  let lastOrchestrated = null;
+  let lastVerification = null;
 
   try {
     const sequencePath = currentSequencePathForSidecar();
@@ -2605,12 +2608,16 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       stageTransactionCommand,
       safetyOptions: { maxCommands: 200 }
     });
+    lastOrchestrated = orchestrated;
 
     if (!orchestrated?.ok) {
-      const applyResult = buildSequenceAgentApplyResult({
+      applyResult = buildSequenceAgentApplyResult({
         planId: String(planHandoff?.planId || ""),
         status: "blocked",
-        failureReason: classifyOrchestrationFailureReason(orchestrated?.stage || ""),
+        failureReason: classifyOrchestrationFailureReason(
+          orchestrated?.stage || "",
+          orchestrated?.error || ""
+        ),
         currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
         nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
         verification: {
@@ -2649,9 +2656,10 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     const verification = await verifyAppliedPlanReadback(plan, {
       submodelsById: state.sceneGraph?.submodelsById || {}
     });
+    lastVerification = verification;
     verification.revisionAdvanced =
       String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || "");
-    const applyResult = buildSequenceAgentApplyResult({
+    applyResult = buildSequenceAgentApplyResult({
       planId: String(planHandoff?.planId || ""),
       status: "applied",
       failureReason: null,
@@ -2732,6 +2740,24 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
+    applyResult = buildSequenceAgentApplyResult({
+      planId: String(planHandoff?.planId || ""),
+      status: "failed",
+      failureReason: classifyOrchestrationFailureReason(
+        lastOrchestrated?.stage || "exception",
+        String(err?.message || err || ""),
+        lastVerification
+      ),
+      currentRevision: String(lastOrchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+      nextRevision: String(lastOrchestrated?.nextRevision || lastOrchestrated?.currentRevision || state.revision || "unknown"),
+      verification: lastVerification && typeof lastVerification === "object" ? lastVerification : undefined
+    });
+    const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
+    pushSequenceAgentContractDiagnostic(applyGate.report);
+    if (!applyGate.ok) {
+      markOrchestrationStage(orchestrationRun, applyGate.stage, "error", applyGate.report.errors.join("; "));
+      pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(applyResult || {})}`);
+    }
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: String(err?.message || "apply error") });
     setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
     addChatMessage("agent", `Apply blocked: ${err.message}`);

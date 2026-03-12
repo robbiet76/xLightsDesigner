@@ -50,14 +50,59 @@ export function buildSequenceAgentInput({
   };
 }
 
-export function classifyOrchestrationFailureReason(stage = "") {
-  const value = String(stage || "").trim().toLowerCase();
-  if (!value) return "unknown";
-  if (value.includes("revision")) return "revision";
-  if (value.includes("validate")) return "validate";
-  if (value.includes("lock")) return "lock";
-  if (value.includes("capability")) return "capability";
-  if (value.includes("runtime")) return "runtime";
+export function classifyOrchestrationFailureReason(stage = "", detail = "", verification = null) {
+  const stageValue = String(stage || "").trim().toLowerCase();
+  const detailValue = String(detail || "").trim().toLowerCase();
+
+  if (verification && typeof verification === "object") {
+    if (verification.revisionAdvanced === false) return "revision";
+    if (verification.expectedMutationsPresent === false) return "validate";
+  }
+
+  const combined = `${stageValue} ${detailValue}`.trim();
+  if (!combined) return "unknown";
+
+  if (
+    combined.includes("revision") ||
+    combined.includes("stale draft") ||
+    combined.includes("did not advance") ||
+    combined.includes("revision mismatch") ||
+    combined.includes("revision conflict")
+  ) {
+    return "revision";
+  }
+  if (
+    combined.includes("capability") ||
+    combined.includes("unsupported command") ||
+    combined.includes("not advertised") ||
+    combined.includes("missing capability")
+  ) {
+    return "capability";
+  }
+  if (combined.includes("lock")) {
+    return "lock";
+  }
+  if (
+    combined.includes("validate") ||
+    combined.includes("validation") ||
+    combined.includes("invalid") ||
+    combined.includes("graph") ||
+    combined.includes("safety") ||
+    combined.includes("expected mutations missing") ||
+    combined.includes("readback")
+  ) {
+    return "validate";
+  }
+  if (
+    combined.includes("runtime") ||
+    combined.includes("exception") ||
+    combined.includes("transaction") ||
+    combined.includes("rollback") ||
+    combined.includes("apply blocked") ||
+    combined.includes("apply failed")
+  ) {
+    return "runtime";
+  }
   return "unknown";
 }
 

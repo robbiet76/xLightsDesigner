@@ -57,7 +57,41 @@ test("classifyOrchestrationFailureReason maps known stages", () => {
   assert.equal(classifyOrchestrationFailureReason("revision"), "revision");
   assert.equal(classifyOrchestrationFailureReason("validate_apply"), "validate");
   assert.equal(classifyOrchestrationFailureReason("xd_lock_gate"), "lock");
+  assert.equal(classifyOrchestrationFailureReason("capability_gate"), "capability");
+  assert.equal(classifyOrchestrationFailureReason("runtime", "transactions.begin returned no transactionId"), "runtime");
   assert.equal(classifyOrchestrationFailureReason("some-other-stage"), "unknown");
+});
+
+test("classifyOrchestrationFailureReason uses verification failures when present", () => {
+  assert.equal(
+    classifyOrchestrationFailureReason("validate_apply", "", {
+      revisionAdvanced: false,
+      expectedMutationsPresent: true
+    }),
+    "revision"
+  );
+  assert.equal(
+    classifyOrchestrationFailureReason("validate_apply", "", {
+      revisionAdvanced: true,
+      expectedMutationsPresent: false
+    }),
+    "validate"
+  );
+});
+
+test("classifyOrchestrationFailureReason uses error detail for blocked cases", () => {
+  assert.equal(
+    classifyOrchestrationFailureReason("graph", "Duplicate write command for timing.createTrack"),
+    "validate"
+  );
+  assert.equal(
+    classifyOrchestrationFailureReason("revision", "Revision mismatch. expected=rev-1 current=rev-2"),
+    "revision"
+  );
+  assert.equal(
+    classifyOrchestrationFailureReason("exception", "Apply blocked by capability gate: unsupported command"),
+    "capability"
+  );
 });
 
 test("sequence agent input gate validates context.layoutMode when provided", () => {
