@@ -1,6 +1,6 @@
 # Audio Analyst Implementation Checklist
 
-Status: Active (planning and execution checklist)  
+Status: Complete for v1 specialist boundary; shared app-shell cleanup deferred  
 Date: 2026-03-12  
 Owner: xLightsDesigner Team  
 Last Reviewed: 2026-03-12
@@ -61,7 +61,8 @@ Boundary summary:
   - [~] result normalization
   - [~] artifact persistence
   - [x] handoff derivation
-- [ ] Keep `app.js` limited to UI wiring and action dispatch.
+- [~] Keep `app.js` limited to UI wiring and action dispatch.
+  - remaining work is shared app-shell cleanup, not an `audio_analyst` architecture blocker
 
 ### Phase D: Provider/Tool Framework
 - [x] Define provider adapter contract for modular analyzers.
@@ -218,3 +219,4 @@ Progress note (2026-03-12):
 - provider replaceability and future in-house analyzer extension policy are now formalized in `specs/audio-analyst-provider-framework.md`.
 - sequence-side `audioAnalysis` persistence and snapshot fallback paths were removed; the canonical supported source of truth is the per-media project-root artifact.
 - audio-analysis UI state projection and artifact rehydration helpers now live in `apps/xlightsdesigner-ui/agent/audio-analyst-ui-state.js`, reducing direct audio-state mutation inside `app.js`.
+- `audio_analyst` is complete for v1; the only remaining related work is the broader post-v1 `app.js` decomposition already tracked elsewhere as shared app cleanup.
