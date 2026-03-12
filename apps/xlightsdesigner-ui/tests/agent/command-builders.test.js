@@ -278,7 +278,30 @@ test("command builders expand direct group members when request explicitly asks 
 
   const effectCommands = commands.filter((row) => row.cmd === "effects.create");
   assert.deepEqual(
-    effectCommands.map((row) => row.params.modelName),
-    ["MegaTree", "Roofline"]
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 500],
+      ["Roofline", 500, 1000]
+    ]
+  );
+});
+
+test("command builders reverse direct group member order when mirror distribution is requested", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars mirror members and stagger members"
+  ], {
+    targetIds: ["Frontline"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["Roofline", 0, 500],
+      ["MegaTree", 500, 1000]
+    ]
   );
 });

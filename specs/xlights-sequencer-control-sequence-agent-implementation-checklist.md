@@ -66,6 +66,9 @@ Boundary summary:
   - [x] Baseline preserve-vs-expand rule encoded:
     - preserve explicit group targets by default
     - expand only on explicit per-member distribution requests
+  - [x] Direct-member distribution baseline encoded:
+    - deterministic staggered time slicing
+    - mirrored member order on explicit request
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

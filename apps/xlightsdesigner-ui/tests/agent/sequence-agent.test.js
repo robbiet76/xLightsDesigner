@@ -551,7 +551,39 @@ test("sequence_agent expands direct group members when per-member distribution i
 
   const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
   assert.deepEqual(
-    effectCommands.map((row) => row.params.modelName),
-    ["MegaTree", "Roofline"]
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 500],
+      ["Roofline", 500, 1000]
+    ]
+  );
+});
+
+test("sequence_agent mirrors direct group member order when explicitly requested", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Reverse the frontline member order while distributing accents",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Frontline / bars mirror members and stagger members"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["Roofline", 0, 500],
+      ["MegaTree", 500, 1000]
+    ]
   );
 });

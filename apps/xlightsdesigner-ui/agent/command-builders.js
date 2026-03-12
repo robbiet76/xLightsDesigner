@@ -98,25 +98,66 @@ function shouldExpandGroupTarget(description = "") {
   ].some((needle) => text.includes(needle));
 }
 
+function inferGroupDistributionStrategy(description = "") {
+  const text = normText(description).toLowerCase();
+  return {
+    expand: shouldExpandGroupTarget(text),
+    stagger: text.includes("stagger members") || text.includes("fan out") || text.includes("spread across members"),
+    mirror: text.includes("mirror members") || text.includes("reverse members"),
+    alternate: text.includes("alternate members")
+  };
+}
+
 function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}) {
   const groupGraph = normalizeGroupGraph(groupsById, groupIds);
+  const strategy = inferGroupDistributionStrategy(description);
   const out = [];
   for (const name of models) {
     const id = normText(name);
     if (!id) continue;
     const group = groupGraph[id];
-    if (!group || !shouldExpandGroupTarget(description)) {
-      out.push(id);
+    if (!group || !strategy.expand) {
+      out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
-    const directMembers = Array.from(group.direct).filter(Boolean);
+    let directMembers = Array.from(group.direct).filter(Boolean);
+    if (strategy.mirror) directMembers = directMembers.slice().reverse();
+    if (strategy.alternate && directMembers.length > 2) {
+      directMembers = directMembers.filter((_, idx) => idx % 2 === 0).concat(directMembers.filter((_, idx) => idx % 2 === 1));
+    }
     if (!directMembers.length) {
-      out.push(id);
+      out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
-    out.push(...directMembers);
+    out.push(...directMembers.map((memberName) => ({
+      modelName: memberName,
+      sourceGroupId: id
+    })));
   }
-  return Array.from(new Set(out));
+  const deduped = [];
+  const seen = new Set();
+  for (const row of out) {
+    const key = `${row.modelName}::${row.sourceGroupId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(row);
+  }
+  return deduped;
+}
+
+function derivePerMemberWindow(window, memberIndex = 0, totalMembers = 1, description = "") {
+  const strategy = inferGroupDistributionStrategy(description);
+  if (!strategy.stagger || totalMembers <= 1) return window;
+  const startMs = Number(window?.startMs || 0);
+  const endMs = Number(window?.endMs || startMs);
+  const duration = Math.max(1, endMs - startMs);
+  const slice = Math.max(1, Math.floor(duration / totalMembers));
+  const memberStart = startMs + (slice * memberIndex);
+  const memberEnd = memberIndex === totalMembers - 1 ? endMs : Math.min(endMs, memberStart + slice);
+  return {
+    startMs: memberStart,
+    endMs: Math.max(memberStart + 1, memberEnd)
+  };
 }
 
 function parseProposalLine(line = "") {
@@ -329,25 +370,32 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
   for (let i = 0; i < parsed.length; i++) {
     const row = parsed[i];
-    let models = row.models.length ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById) : fallbackTargets;
+    let models = row.models.length
+      ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById)
+      : fallbackTargets.map((modelName) => ({ modelName, sourceGroupId: "" }));
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
       const firstAggregate = choosePrimaryAggregateTarget(orderedTargets, groupIds, groupsById);
       if (firstAggregate) {
-        models = [firstAggregate];
+        models = [{ modelName: firstAggregate, sourceGroupId: "" }];
       } else {
-        models = orderedTargets;
+        models = orderedTargets.map((modelName) => ({ modelName, sourceGroupId: "" }));
       }
     }
     const window = sectionWindows.get(row.section) || { startMs: i * 1000, endMs: (i * 1000) + 1000 };
 
-    for (const modelName of models) {
+    for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
+      const target = models[modelIdx];
+      const modelName = target?.modelName;
       const layerKey = `${row.section}::${modelName}`;
       const layerIndex = Number(layerCounts.get(layerKey) || 0);
       layerCounts.set(layerKey, layerIndex + 1);
 
       const effectName = inferEffectNameFromDescription(row.description, effectCatalog);
       if (!effectName) continue;
+      const scopedWindow = target?.sourceGroupId
+        ? derivePerMemberWindow(window, modelIdx, models.length, row.description)
+        : window;
 
       out.push({
         id: `effect.${out.length + 1}`,
@@ -357,8 +405,8 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
           modelName,
           layerIndex,
           effectName,
-          startMs: window.startMs,
-          endMs: window.endMs,
+          startMs: scopedWindow.startMs,
+          endMs: scopedWindow.endMs,
           settings: inferSharedSettings(row.description),
           palette: {}
         }
