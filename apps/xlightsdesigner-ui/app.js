@@ -86,6 +86,7 @@ import { runAudioAnalysisOrchestration } from "./agent/audio-analyst/audio-analy
 import { validateAndApplyPlan } from "./agent/sequence-agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/sequence-agent/command-graph.js";
 import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/sequence-agent/apply-readback.js";
+import { executeAppAssistantConversation } from "./agent/app-assistant/app-assistant-orchestrator.js";
 import {
   classifyDepthBands,
   collectSpatialNodes,
@@ -4982,36 +4983,7 @@ async function onSendChat() {
   const raw = (state.ui.chatDraft || "").trim();
   if (!raw) return;
   addChatMessage("user", raw);
-  setAgentActiveRole("designer_dialog");
-  setAgentHandoff(
-    "intent_handoff_v1",
-    {
-      goal: raw,
-      mode: inferIntentModeFromGoal(raw),
-      scope: {
-        targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-        tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []),
-        sections: hasAllSectionsSelected() ? [] : getSelectedSections(),
-        timeRangeMs: null
-      },
-      constraints: {
-        changeTolerance: "medium",
-        preserveTimingTracks: true,
-        allowGlobalRewrite: false
-      },
-      directorPreferences: {
-        styleDirection: String(state.creative?.brief?.mood || "").trim(),
-        energyArc: "hold",
-        focusElements: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-        colorDirection: String(state.creative?.brief?.paletteIntent || "").trim()
-      },
-      approvalPolicy: {
-        requiresExplicitApprove: true,
-        elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
-      }
-    },
-    "designer_dialog"
-  );
+  setAgentActiveRole("app_assistant");
   state.ui.chatDraft = "";
   state.ui.agentThinking = true;
   render();
@@ -5037,15 +5009,18 @@ async function onSendChat() {
         role: m.who === "agent" ? "assistant" : "user",
         content: String(m.text || "")
       }));
-    const res = await bridge.runAgentConversation({
+    const shell = await executeAppAssistantConversation({
       userMessage: raw,
       messages: history,
       previousResponseId: String(state.ui.agentResponseId || ""),
-      context: buildAgentConversationContext()
+      context: buildAgentConversationContext(),
+      bridge
     });
-    if (!res?.ok) {
-      const errText = String(res?.error || "Cloud agent request failed.");
-      addChatMessage("agent", `Agent unavailable: ${errText}`);
+    const res = shell?.result || null;
+    if (!shell?.ok || !res) {
+      const errText = String(shell?.error || "Cloud agent request failed.");
+      addChatMessage("agent", String(res?.assistantMessage || `Agent unavailable: ${errText}`));
+      setAgentActiveRole(String(res?.routeDecision || "app_assistant"));
       setStatusWithDiagnostics("action-required", "Cloud agent conversation failed.", errText);
       await hydrateAgentHealth();
       saveCurrentProjectSnapshot();
@@ -5055,6 +5030,9 @@ async function onSendChat() {
     }
 
     addChatMessage("agent", String(res.assistantMessage || ""));
+    setAgentActiveRole(["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
+      ? String(res.routeDecision)
+      : "app_assistant");
     state.ui.agentResponseId = String(res.responseId || state.ui.agentResponseId || "");
     state.health.agentProvider = String(res.provider || "openai");
     state.health.agentModel = String(res.model || state.health.agentModel || "");
@@ -5066,6 +5044,12 @@ async function onSendChat() {
     }
     if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
       setStatus("warning", "Open a sequence (or use plan-only mode) for proposal generation.");
+    } else if (res.routeDecision === "audio_analyst") {
+      setStatus("info", "Conversation updated. Audio analysis guidance is ready.");
+    } else if (res.routeDecision === "sequence_agent") {
+      setStatus("info", "Conversation updated. Sequencing guidance is ready.");
+    } else if (res.routeDecision === "setup_help") {
+      setStatus("info", "Conversation updated. Setup guidance is ready.");
     } else {
       setStatus("info", "Conversation updated.");
     }

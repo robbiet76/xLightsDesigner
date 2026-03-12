@@ -8,24 +8,24 @@ Last Reviewed: 2026-03-12
 Purpose: implement the unified conversational shell above specialist agents without collapsing their boundaries.
 
 ## Phase A: Role And Contracts
-- [ ] Define `app_assistant` role and delegation boundary
-- [ ] Define app-assistant session/context contract
-- [ ] Define specialist routing result contract
+- [x] Define `app_assistant` role and delegation boundary
+- [x] Define app-assistant session/context contract
+- [x] Define specialist routing result contract
 - [ ] Define action-request contract for bounded app-level actions
 
 ## Phase B: Session And Routing
-- [ ] Add app-assistant runtime/orchestrator
+- [x] Add app-assistant runtime/orchestrator
 - [ ] Add conversation state model spanning setup, analysis, design, and sequencing
-- [ ] Add specialist-routing rules for:
+- [x] Add specialist-routing rules for:
   - setup/help
   - `audio_analyst`
   - `designer_dialog`
   - `sequence_agent`
-- [ ] Add tests that prove the user does not need to switch agents manually
+- [x] Add tests that prove the user does not need to switch agents manually
 
 ## Phase C: UI Integration
-- [ ] Make the main chat panel owned by `app_assistant`
-- [ ] Preserve visible specialist context when work is delegated
+- [x] Make the main chat panel owned by `app_assistant`
+- [x] Preserve visible specialist context when work is delegated
 - [ ] Surface structured artifacts produced by specialists in the shared chat flow
 
 ## Phase D: Training And Diagnostics
