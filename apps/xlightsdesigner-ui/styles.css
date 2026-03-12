@@ -791,6 +791,35 @@ button:disabled {
   border-color: rgba(243, 183, 95, 0.38);
 }
 
+.chat-artifact-card {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(122, 150, 180, 0.26);
+  background: rgba(9, 16, 24, 0.82);
+}
+
+.chat-artifact-card h4 {
+  margin: 4px 0 6px;
+  font-size: 13px;
+}
+
+.chat-artifact-card .artifact-body {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.chat-msg.user .chat-artifact-card {
+  border-color: rgba(116, 200, 185, 0.28);
+  background: rgba(8, 25, 22, 0.78);
+}
+
+.chat-msg.system .chat-artifact-card {
+  border-color: rgba(243, 183, 95, 0.28);
+  background: rgba(35, 26, 13, 0.82);
+}
+
 .chat-typing {
   font-size: 12px;
   color: var(--muted);

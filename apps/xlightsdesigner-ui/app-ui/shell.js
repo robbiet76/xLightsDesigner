@@ -33,6 +33,22 @@ export function buildAppShell({ state, screenContent, helpers }) {
   }
 
   function persistentCoachPanel() {
+    function renderChatArtifactCard(artifact) {
+      if (!artifact || typeof artifact !== "object") return "";
+      const title = escapeHtml(String(artifact.title || "Artifact"));
+      const summary = escapeHtml(String(artifact.summary || ""));
+      const chips = Array.isArray(artifact.chips) ? artifact.chips.map((v) => escapeHtml(String(v || "").trim())).filter(Boolean).slice(0, 6) : [];
+      const kicker = escapeHtml(String(artifact.artifactType || "artifact"));
+      return `
+        <section class="chat-artifact-card">
+          <div class="artifact-kicker">${kicker}</div>
+          <h4>${title}</h4>
+          ${summary ? `<p class="artifact-body">${summary}</p>` : ""}
+          ${chips.length ? `<div class="artifact-chip-row">${chips.map((chip) => `<span class="artifact-chip">${chip}</span>`).join("")}</div>` : ""}
+        </section>
+      `;
+    }
+
     return `
       <aside class="coach-panel card">
         <h3>Team Chat</h3>
@@ -53,6 +69,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
                 return `<article class="chat-msg ${role}">
                   <header>${escapeHtml(header)}</header>
                   <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                  ${renderChatArtifactCard(c.artifact)}
                   ${routedByNote}
                 </article>`;
               })

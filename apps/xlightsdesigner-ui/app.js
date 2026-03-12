@@ -2762,7 +2762,20 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       "info",
       `Applied via transaction commit (${executed} steps).`
     );
-    addChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`);
+    addStructuredChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`, {
+      roleId: "sequence_agent",
+      displayName: getTeamChatSpeakerLabel("sequence_agent"),
+      handledBy: "sequence_agent",
+      artifact: buildChatArtifactCard("apply_result_v1", {
+        title: "Apply Result",
+        summary: `Revision ${String(state.revision || "unknown")} verified successfully.`,
+        chips: [
+          `${executed} steps`,
+          verification.expectedMutationsPresent ? "verified" : "",
+          verification.revisionAdvanced ? "revision advanced" : ""
+        ]
+      })
+    });
     applyAuditEntry = {
       ts: new Date().toISOString(),
       type: "apply",
@@ -2798,7 +2811,11 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     }
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: String(err?.message || "apply error") });
     setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
-    addChatMessage("agent", `Apply blocked: ${err.message}`);
+    addStructuredChatMessage("agent", `Apply blocked: ${err.message}`, {
+      roleId: "sequence_agent",
+      displayName: getTeamChatSpeakerLabel("sequence_agent"),
+      handledBy: "sequence_agent"
+    });
     applyAuditEntry = {
       ts: new Date().toISOString(),
       type: "apply",
@@ -3089,9 +3106,23 @@ async function onGenerate(intentOverride = "") {
   state.ui.agentThinking = false;
   const guidedMessage = buildDesignerGuidedQuestionMessage(guidedQuestions);
   if (guidedMessage) addChatMessage("agent", guidedMessage);
-  addChatMessage(
+  addStructuredChatMessage(
     "agent",
-    `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`
+    `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`,
+    {
+      roleId: "designer_dialog",
+      displayName: getTeamChatSpeakerLabel("designer_dialog"),
+      handledBy: "designer_dialog",
+      artifact: buildChatArtifactCard("proposal_bundle_v1", {
+        title: String(state.creative?.proposalBundle?.title || "Design Proposal").trim(),
+        summary: String(state.creative?.proposalBundle?.summary || state.creative?.brief?.summary || "").trim(),
+        chips: [
+          state.creative?.proposalBundle?.lifecycle?.status || "",
+          Array.isArray(state.creative?.proposalBundle?.lines) ? `${state.creative.proposalBundle.lines.length} lines` : "",
+          Array.isArray(state.creative?.proposalBundle?.scope?.sections) ? `${state.creative.proposalBundle.scope.sections.length} sections` : ""
+        ]
+      })
+    }
   );
   setStatus("info", `Proposal refreshed from current intent (${state.proposed.length} line${state.proposed.length === 1 ? "" : "s"}).`);
   saveCurrentProjectSnapshot();
@@ -4351,10 +4382,23 @@ function addStructuredChatMessage(who, text, options = {}) {
     displayName: String(options.displayName || "").trim(),
     nickname: String(options.nickname || "").trim(),
     handledBy: String(options.handledBy || "").trim(),
-    addressedTo: String(options.addressedTo || "").trim()
+    addressedTo: String(options.addressedTo || "").trim(),
+    artifact: isPlainObject(options.artifact) ? options.artifact : null
   };
   if (!message.text) return;
   state.chat = [...(state.chat || []), message].slice(-200);
+}
+
+function buildChatArtifactCard(artifactType = "", payload = {}) {
+  const type = String(artifactType || "").trim();
+  const row = isPlainObject(payload) ? payload : {};
+  if (!type) return null;
+  return {
+    artifactType: type,
+    title: String(row.title || "").trim(),
+    summary: String(row.summary || "").trim(),
+    chips: Array.isArray(row.chips) ? row.chips.map((v) => String(v || "").trim()).filter(Boolean).slice(0, 6) : []
+  };
 }
 
 function onUseQuickPrompt(promptText) {
@@ -8818,6 +8862,21 @@ async function onAnalyzeAudio() {
       throw new Error("Audio analysis flow did not produce a valid UI projection.");
     }
     markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
+    addStructuredChatMessage("agent", flow.result.status === "partial" ? "Audio analysis completed with warnings." : "Audio analysis completed.", {
+      roleId: "audio_analyst",
+      displayName: getTeamChatSpeakerLabel("audio_analyst"),
+      handledBy: "audio_analyst",
+      artifact: buildChatArtifactCard("analysis_handoff_v1", {
+        title: String(flow.handoff?.trackIdentity?.title || basenameOfPath(audioPath) || "Audio Analysis").trim(),
+        summary: String(flow.handoff?.summary || state.audioAnalysis?.summary || "").trim(),
+        chips: [
+          flow.handoff?.timing?.bpm != null ? `${flow.handoff.timing.bpm} BPM` : "",
+          String(flow.handoff?.timing?.timeSignature || "").trim(),
+          Array.isArray(flow.handoff?.structure?.sections) ? `${flow.handoff.structure.sections.length} sections` : "",
+          flow.handoff?.chords?.hasChords ? "chords ready" : ""
+        ]
+      })
+    });
     setStatus("info", flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete.");
     endOrchestrationRun(orchestrationRun, {
       status: flow.result.status === "failed" ? "failed" : "ok",
