@@ -684,6 +684,64 @@ test("sequence_agent only expands non-default group render targets with explicit
   assert.equal(out.warnings.some((w) => /explicit member override required/i.test(String(w))), false);
 });
 
+test("sequence_agent preserves high-risk overlay group render targets without force override and warns", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep overlay group render semantics intact unless expansion is forced",
+      mode: "revise",
+      scope: {
+        targetIds: ["NestedFrontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / NestedFrontline / bars per member stagger members"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["NestedFrontline"]);
+  assert.equal(
+    out.warnings.some((w) => /Preserving high-risk group render target NestedFrontline \(Overlay - Centered\)/i.test(String(w))),
+    true
+  );
+});
+
+test("sequence_agent only expands high-risk overlay group render targets with force override", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Distribute across all nested members only when explicitly forced",
+      mode: "revise",
+      scope: {
+        targetIds: ["NestedFrontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / NestedFrontline / bars force member expansion flatten members and stagger members"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 333],
+      ["Roofline", 333, 666],
+      ["WindowLeft", 666, 1000]
+    ]
+  );
+  assert.equal(out.warnings.some((w) => /force member override required/i.test(String(w))), false);
+});
+
 test("sequence_agent mirrors direct group member order when explicitly requested", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

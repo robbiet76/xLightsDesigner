@@ -130,17 +130,34 @@ function hasExplicitMemberExpansionOverride(description = "") {
   ].some((needle) => text.includes(needle));
 }
 
+function hasForceRenderPolicyExpansionOverride(description = "") {
+  const text = normText(description).toLowerCase();
+  return [
+    "flatten members",
+    "all nested members",
+    "expand nested groups",
+    "direct members",
+    "force member expansion"
+  ].some((needle) => text.includes(needle));
+}
+
 function inferGroupDistributionStrategy(description = "") {
   const text = normText(description).toLowerCase();
   return {
     expand: shouldExpandGroupTarget(text),
     explicitOverride: hasExplicitMemberExpansionOverride(text),
+    forceOverride: hasForceRenderPolicyExpansionOverride(text),
     flatten: text.includes("flatten members") || text.includes("all nested members") || text.includes("expand nested groups"),
     stagger: text.includes("stagger members") || text.includes("fan out") || text.includes("spread across members"),
     fanout: text.includes("fan out members") || text.includes("round robin members") || text.includes("rotate members"),
     mirror: text.includes("mirror members") || text.includes("reverse members"),
     alternate: text.includes("alternate members")
   };
+}
+
+function isHighRiskGroupRenderPolicy(category = "") {
+  const key = normText(category).toLowerCase();
+  return key === "overlay" || key === "stack" || key === "single_line";
 }
 
 function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 0) {
@@ -171,7 +188,12 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
     }
     const renderCategory = normText(group?.renderPolicy?.category).toLowerCase();
     const preserveNonDefaultGroup = renderCategory && renderCategory !== "default" && !strategy.explicitOverride;
+    const preserveHighRiskGroup = isHighRiskGroupRenderPolicy(renderCategory) && !strategy.forceOverride;
     if (preserveNonDefaultGroup) {
+      out.push({ modelName: id, sourceGroupId: "" });
+      continue;
+    }
+    if (preserveHighRiskGroup) {
       out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
@@ -205,13 +227,20 @@ export function collectGroupRenderPolicyWarnings(sourceLines = [], { groupIds = 
   for (const line of lines) {
     const parsed = parseProposalLine(line);
     const strategy = inferGroupDistributionStrategy(parsed.description);
-    if (!strategy.expand || strategy.explicitOverride) continue;
+    if (!strategy.expand) continue;
     for (const modelName of parsed.models) {
       const id = normText(modelName);
       const group = groupGraph[id];
       const renderCategory = normText(group?.renderPolicy?.category).toLowerCase();
       if (!group || !renderCategory || renderCategory === "default") continue;
       const defaultBufferStyle = normText(group?.renderPolicy?.defaultBufferStyle) || "non-default";
+      if (isHighRiskGroupRenderPolicy(renderCategory) && !strategy.forceOverride) {
+        warnings.push(
+          `Preserving high-risk group render target ${id} (${defaultBufferStyle}); force member override required to expand this ${renderCategory} render policy.`
+        );
+        continue;
+      }
+      if (strategy.explicitOverride) continue;
       warnings.push(
         `Preserving group render target ${id} (${defaultBufferStyle}); explicit member override required to expand this non-default group render policy.`
       );

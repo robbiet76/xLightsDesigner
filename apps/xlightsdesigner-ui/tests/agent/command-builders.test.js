@@ -382,6 +382,41 @@ test("command builders only expand non-default group render targets with explici
   );
 });
 
+test("command builders preserve high-risk overlay group render targets without force override", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / NestedFrontline / bars per member stagger members"
+  ], {
+    targetIds: ["NestedFrontline"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["NestedFrontline"]);
+});
+
+test("command builders only expand high-risk overlay group render targets with force override", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / NestedFrontline / bars force member expansion flatten members and stagger members"
+  ], {
+    targetIds: ["NestedFrontline"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 333],
+      ["Roofline", 333, 666],
+      ["WindowLeft", 666, 1000]
+    ]
+  );
+});
+
 test("command builders reverse direct group member order when mirror distribution is requested", () => {
   const commands = buildDesignerPlanCommands([
     "Chorus 1 / Frontline / bars per member mirror members and stagger members"
