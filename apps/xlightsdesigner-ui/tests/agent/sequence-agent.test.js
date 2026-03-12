@@ -51,8 +51,14 @@ function sampleGroups() {
     },
     Frontline: {
       members: {
-        direct: [{ id: "MegaTree", name: "MegaTree" }],
-        flattenedAll: [{ id: "MegaTree", name: "MegaTree" }]
+        direct: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ],
+        flattenedAll: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ]
       }
     }
   };
@@ -499,4 +505,53 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
     ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
   );
   assert.equal(out.metadata.groupGraphCount, 2);
+});
+
+test("sequence_agent preserves explicit group targets unless per-member distribution is requested", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep the frontline group as a single render target",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Frontline / bars"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Frontline"]);
+});
+
+test("sequence_agent expands direct group members when per-member distribution is explicitly requested", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Distribute the frontline group across its member props",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Frontline / bars stagger members with brighter accents"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    ["MegaTree", "Roofline"]
+  );
 });

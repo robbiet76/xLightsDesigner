@@ -30,8 +30,14 @@ function sampleGroups() {
     },
     Frontline: {
       members: {
-        direct: [{ id: "MegaTree", name: "MegaTree" }],
-        flattenedAll: [{ id: "MegaTree", name: "MegaTree" }]
+        direct: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ],
+        flattenedAll: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" }
+        ]
       }
     }
   };
@@ -240,5 +246,39 @@ test("command builders prefer the broadest explicit group target for generic-sco
   assert.deepEqual(
     reorder.params.orderedIds,
     ["Beats", "XD:ProposedPlan", "AllModels", "Frontline", "MegaTree"]
+  );
+});
+
+test("command builders preserve explicit group targets by default", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars"
+  ], {
+    targetIds: ["Frontline", "MegaTree"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    ["Frontline"]
+  );
+});
+
+test("command builders expand direct group members when request explicitly asks for distribution", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars stagger members with brighter accents"
+  ], {
+    targetIds: ["Frontline", "MegaTree"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => row.params.modelName),
+    ["MegaTree", "Roofline"]
   );
 });

@@ -63,6 +63,9 @@ Boundary summary:
   - [x] Initial display-element ordering heuristics encoded for group-first sequencing.
   - [x] Group-first planning uses explicit xLights group identity rather than name heuristics.
   - [x] Nested-group breadth preference uses authoritative direct/flattened membership graph.
+  - [x] Baseline preserve-vs-expand rule encoded:
+    - preserve explicit group targets by default
+    - expand only on explicit per-member distribution requests
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

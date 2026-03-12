@@ -96,6 +96,9 @@ Current behavior:
 - planner now uses that graph for:
   - broad-group target preservation on generic-scope lines,
   - nested-group breadth preference (broadest valid aggregate first),
+  - preserve-vs-expand baseline semantics:
+    - preserve explicit group targets by default,
+    - expand only when the request explicitly calls for per-member distribution,
   - display-element ordering heuristics that keep broader groups above their refinements,
 - no fanout/stagger/mirror/distribution semantics are encoded yet.
 
@@ -127,7 +130,7 @@ Need surfaced group rendering style metadata where available:
 
 ### G4: Planner only partially group-aware
 `sequence_agent` now adapts broad-target preservation and ordering using authoritative group membership, but it does not yet encode:
-- fanout/distribution strategies,
+- rich fanout/distribution strategies beyond explicit per-member expansion,
 - stagger/mirror semantics,
 - expansion-vs-preserve decisions driven by requested group render behavior.
 

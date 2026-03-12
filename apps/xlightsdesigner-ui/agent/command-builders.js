@@ -82,6 +82,43 @@ function sortAggregateTargets(targetIds = [], groupIds = [], groupsById = {}) {
     .sort((a, b) => scoreAggregateTarget(b, targetIds, groupGraph) - scoreAggregateTarget(a, targetIds, groupGraph));
 }
 
+function shouldExpandGroupTarget(description = "") {
+  const text = normText(description).toLowerCase();
+  return [
+    "each member",
+    "each prop",
+    "per member",
+    "per prop",
+    "fan out",
+    "spread across members",
+    "distribute across members",
+    "split across members",
+    "stagger members",
+    "alternate members"
+  ].some((needle) => text.includes(needle));
+}
+
+function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}) {
+  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
+  const out = [];
+  for (const name of models) {
+    const id = normText(name);
+    if (!id) continue;
+    const group = groupGraph[id];
+    if (!group || !shouldExpandGroupTarget(description)) {
+      out.push(id);
+      continue;
+    }
+    const directMembers = Array.from(group.direct).filter(Boolean);
+    if (!directMembers.length) {
+      out.push(id);
+      continue;
+    }
+    out.push(...directMembers);
+  }
+  return Array.from(new Set(out));
+}
+
 function parseProposalLine(line = "") {
   const parts = String(line || "").split("/").map((p) => normText(p));
   if (!parts.length) return { section: "General", models: [], description: "" };
@@ -292,7 +329,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
   for (let i = 0; i < parsed.length; i++) {
     const row = parsed[i];
-    let models = row.models.length ? row.models : fallbackTargets;
+    let models = row.models.length ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById) : fallbackTargets;
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
       const firstAggregate = choosePrimaryAggregateTarget(orderedTargets, groupIds, groupsById);
