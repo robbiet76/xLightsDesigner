@@ -159,3 +159,5 @@ Boundary summary:
 - Any scope changes should be reflected in:
   - `specs/xlights-sequencer-control-agent-orchestration-architecture.md`
   - `specs/xlights-sequencer-control-training-package-architecture.md`
+- Post-v1 TODO:
+  - decompose `apps/xlightsdesigner-ui/app.js` into smaller modules for sequence refresh/sync, project storage, orchestration state transitions, and diagnostics/export once `sequence_agent` v1 behavior is stable.
