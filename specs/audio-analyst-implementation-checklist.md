@@ -23,13 +23,13 @@ Boundary summary:
 ## 3) Phase Checklist
 
 ### Required Pre-Gate
-- [ ] Source/runtime audit complete for:
+- [x] Source/runtime audit complete for:
   - desktop bridge
   - analysis service
   - app orchestration
   - training assets
-- [ ] Current-state gaps approved.
-- [ ] Canonical artifact boundary approved:
+- [x] Current-state gaps approved.
+- [x] Canonical artifact boundary approved:
   - full artifact vs downstream handoff
 
 ### Phase A: Role Contract and Artifact Boundary
@@ -38,7 +38,7 @@ Boundary summary:
   - media root/project context as needed for storage
   - analysis settings/profile
   - no xLights revision/sequence/layout inputs
-- [ ] Define canonical persisted artifact contract:
+- [x] Define canonical persisted artifact contract:
   - `analysis_artifact_v1`
 - [ ] Define canonical downstream handoff contract:
   - either keep and tighten `analysis_handoff_v1`
@@ -46,15 +46,15 @@ Boundary summary:
 - [ ] Define versioning policy for artifact and handoff schemas.
 
 ### Phase B: Canonical Project-Root Persistence
-- [ ] Implement media-id derivation.
-- [ ] Implement canonical artifact storage path:
+- [x] Implement media-id derivation.
+- [x] Implement canonical artifact storage path:
   - `analysis/media/<media-id>/analysis.json`
-- [ ] Stop treating UI summary/pipeline state as the source of truth.
-- [ ] Persist artifact reads/writes through project-root storage only.
+- [~] Stop treating UI summary/pipeline state as the source of truth.
+- [x] Persist artifact reads/writes through project-root storage only.
 - [ ] Add migration/compatibility handling for any legacy audio-analysis state currently kept in sequence-side documents.
 
 ### Phase C: Audio Analyst Runtime Extraction
-- [ ] Extract `audio_analyst` orchestration out of `app.js`.
+- [~] Extract `audio_analyst` orchestration out of `app.js`.
 - [ ] Create dedicated runtime module(s) for:
   - request normalization
   - service/provider execution
@@ -198,3 +198,9 @@ Recommended first slice:
 4. derive `analysis_handoff_v1` from the persisted artifact
 
 This is the cleanest path to convert the current partial stack into a real specialist-agent system.
+
+Progress note (2026-03-12):
+- `analysis_artifact_v1` contract asset added.
+- media-id derivation and project-root artifact persistence implemented in desktop runtime.
+- `analysis_handoff_v1` now derives from the canonical artifact builder path.
+- `audio_analyst` extraction has started via `apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js`, but orchestration still partly lives in `app.js`.

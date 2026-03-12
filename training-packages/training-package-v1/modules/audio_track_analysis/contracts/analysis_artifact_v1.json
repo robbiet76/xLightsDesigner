@@ -1,0 +1,24 @@
+{
+  "contract": "analysis_artifact_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js",
+  "requiredFields": [
+    "artifactType",
+    "artifactVersion",
+    "media.mediaId",
+    "media.path",
+    "timing",
+    "harmonic",
+    "lyrics",
+    "structure",
+    "provenance.generatedAt",
+    "provenance.pipeline",
+    "diagnostics"
+  ],
+  "notes": [
+    "One canonical analysis artifact is stored per media file under analysis/media/<media-id>/analysis.json.",
+    "The artifact is the source of truth for downstream audio-analysis persistence.",
+    "analysis_handoff_v1 should be derived from this artifact rather than from ad hoc UI summary state.",
+    "audio_analyst is media-focused only and must not depend on live xLights sequence/layout state."
+  ]
+}

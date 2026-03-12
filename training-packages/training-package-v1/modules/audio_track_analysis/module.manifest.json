@@ -7,6 +7,9 @@
       "prompts/song_structure_system.md",
       "prompts/song_structure_rubric.md"
     ],
+    "contracts": [
+      "contracts/analysis_artifact_v1.json"
+    ],
     "datasets": [
       "datasets/index.json"
     ],

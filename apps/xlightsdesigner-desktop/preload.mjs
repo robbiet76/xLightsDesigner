@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld("xlightsDesignerDesktop", {
   checkAudioAnalysisService: (payload = {}) => ipcRenderer.invoke("xld:analysis:health", payload),
   openProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:open-file", payload),
   writeProjectFile: (payload = {}) => ipcRenderer.invoke("xld:project:write-file", payload),
+  readAnalysisArtifact: (payload = {}) => ipcRenderer.invoke("xld:analysis-artifact:read", payload),
+  writeAnalysisArtifact: (payload = {}) => ipcRenderer.invoke("xld:analysis-artifact:write", payload),
   getFileStat: (payload = {}) => ipcRenderer.invoke("xld:file:stat", payload),
   readTrainingPackageAsset: (payload = {}) => ipcRenderer.invoke("xld:training-package:read", payload),
   getAgentHealth: () => ipcRenderer.invoke("xld:agent:health"),
