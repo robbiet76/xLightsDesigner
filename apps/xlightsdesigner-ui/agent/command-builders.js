@@ -102,13 +102,24 @@ function inferGroupDistributionStrategy(description = "") {
   const text = normText(description).toLowerCase();
   return {
     expand: shouldExpandGroupTarget(text),
+    flatten: text.includes("flatten members") || text.includes("all nested members") || text.includes("expand nested groups"),
     stagger: text.includes("stagger members") || text.includes("fan out") || text.includes("spread across members"),
     mirror: text.includes("mirror members") || text.includes("reverse members"),
     alternate: text.includes("alternate members")
   };
 }
 
-function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}) {
+function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 0) {
+  let ordered = members.slice();
+  if (strategy.mirror) ordered = ordered.slice().reverse();
+  if (strategy.alternate && ordered.length > 2) {
+    ordered = ordered.filter((_, idx) => idx % 2 === 0).concat(ordered.filter((_, idx) => idx % 2 === 1));
+  }
+  if (alternationSeed % 2 === 1) ordered = ordered.slice().reverse();
+  return ordered;
+}
+
+function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}, alternationSeed = 0) {
   const groupGraph = normalizeGroupGraph(groupsById, groupIds);
   const strategy = inferGroupDistributionStrategy(description);
   const out = [];
@@ -120,16 +131,13 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
       out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
-    let directMembers = Array.from(group.direct).filter(Boolean);
-    if (strategy.mirror) directMembers = directMembers.slice().reverse();
-    if (strategy.alternate && directMembers.length > 2) {
-      directMembers = directMembers.filter((_, idx) => idx % 2 === 0).concat(directMembers.filter((_, idx) => idx % 2 === 1));
-    }
-    if (!directMembers.length) {
+    const sourceMembers = strategy.flatten ? Array.from(group.flattened).filter(Boolean) : Array.from(group.direct).filter(Boolean);
+    const orderedMembers = orderDistributedMembers(sourceMembers, strategy, alternationSeed);
+    if (!orderedMembers.length) {
       out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
-    out.push(...directMembers.map((memberName) => ({
+    out.push(...orderedMembers.map((memberName) => ({
       modelName: memberName,
       sourceGroupId: id
     })));
@@ -366,12 +374,17 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
   const sectionWindows = buildSectionWindows(source, parsed);
   const layerCounts = new Map();
+  const distributionCounts = new Map();
   const out = [];
 
   for (let i = 0; i < parsed.length; i++) {
     const row = parsed[i];
+    const sourceTargetKey = row.models.length ? row.models.map((v) => normText(v)).filter(Boolean).join("|") : "__fallback__";
+    const distributionKey = `${row.section}::${sourceTargetKey}::${normText(row.description).toLowerCase()}`;
+    const alternationSeed = Number(distributionCounts.get(distributionKey) || 0);
+    distributionCounts.set(distributionKey, alternationSeed + 1);
     let models = row.models.length
-      ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById)
+      ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById, alternationSeed)
       : fallbackTargets.map((modelName) => ({ modelName, sourceGroupId: "" }));
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);

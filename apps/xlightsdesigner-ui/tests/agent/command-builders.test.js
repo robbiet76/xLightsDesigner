@@ -39,6 +39,19 @@ function sampleGroups() {
           { id: "Roofline", name: "Roofline" }
         ]
       }
+    },
+    NestedFrontline: {
+      members: {
+        direct: [
+          { id: "Frontline", name: "Frontline", isGroup: true },
+          { id: "WindowLeft", name: "WindowLeft" }
+        ],
+        flattenedAll: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" },
+          { id: "WindowLeft", name: "WindowLeft" }
+        ]
+      }
     }
   };
 }
@@ -300,6 +313,50 @@ test("command builders reverse direct group member order when mirror distributio
   assert.deepEqual(
     effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
     [
+      ["Roofline", 0, 500],
+      ["MegaTree", 500, 1000]
+    ]
+  );
+});
+
+test("command builders can expand flattened members for nested groups when explicitly requested", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / NestedFrontline / bars flatten members and stagger members"
+  ], {
+    targetIds: ["NestedFrontline"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 333],
+      ["Roofline", 333, 666],
+      ["WindowLeft", 666, 1000]
+    ]
+  );
+});
+
+test("command builders alternate distributed member order across repeated lines", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars stagger members",
+    "Chorus 1 / Frontline / bars stagger members"
+  ], {
+    targetIds: ["Frontline"],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 500],
+      ["Roofline", 500, 1000],
       ["Roofline", 0, 500],
       ["MegaTree", 500, 1000]
     ]

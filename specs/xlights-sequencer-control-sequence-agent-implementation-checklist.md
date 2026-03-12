@@ -69,6 +69,9 @@ Boundary summary:
   - [x] Direct-member distribution baseline encoded:
     - deterministic staggered time slicing
     - mirrored member order on explicit request
+  - [x] Nested-group distribution baseline encoded:
+    - explicit flattened-member expansion on request
+    - repeated-line member-order alternation without changing the section window model
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

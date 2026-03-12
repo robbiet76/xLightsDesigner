@@ -60,6 +60,19 @@ function sampleGroups() {
           { id: "Roofline", name: "Roofline" }
         ]
       }
+    },
+    NestedFrontline: {
+      members: {
+        direct: [
+          { id: "Frontline", name: "Frontline", isGroup: true },
+          { id: "WindowLeft", name: "WindowLeft" }
+        ],
+        flattenedAll: [
+          { id: "MegaTree", name: "MegaTree" },
+          { id: "Roofline", name: "Roofline" },
+          { id: "WindowLeft", name: "WindowLeft" }
+        ]
+      }
     }
   };
 }
@@ -504,7 +517,7 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
     reorder.params.orderedIds,
     ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
   );
-  assert.equal(out.metadata.groupGraphCount, 2);
+  assert.equal(out.metadata.groupGraphCount, 3);
 });
 
 test("sequence_agent preserves explicit group targets unless per-member distribution is requested", () => {
@@ -582,6 +595,70 @@ test("sequence_agent mirrors direct group member order when explicitly requested
   assert.deepEqual(
     effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
     [
+      ["Roofline", 0, 500],
+      ["MegaTree", 500, 1000]
+    ]
+  );
+});
+
+test("sequence_agent expands flattened nested-group members when explicitly requested", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Distribute across all nested members of the grouped frontage",
+      mode: "revise",
+      scope: {
+        targetIds: ["NestedFrontline"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / NestedFrontline / bars flatten members and stagger members"],
+    groupIds: ["NestedFrontline", "Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 333],
+      ["Roofline", 333, 666],
+      ["WindowLeft", 666, 1000]
+    ]
+  );
+});
+
+test("sequence_agent alternates distributed member order across repeated lines", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Repeat distributed member accents without replaying identical order",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline"],
+        tagNames: [],
+        sections: ["Chorus 1", "Chorus 2"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Frontline / bars stagger members",
+      "Chorus 1 / Frontline / bars stagger members"
+    ],
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.startMs, row.params.endMs]),
+    [
+      ["MegaTree", 0, 500],
+      ["Roofline", 500, 1000],
       ["Roofline", 0, 500],
       ["MegaTree", 500, 1000]
     ]
