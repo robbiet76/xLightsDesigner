@@ -629,7 +629,36 @@ function buildSectionWindows(source = [], parsed = []) {
   return new Map(sectionOrder.map((section, idx) => [section, { startMs: idx * 1000, endMs: (idx * 1000) + 1000 }]));
 }
 
-function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null, groupIds = [], groupsById = {}, submodelsById = {}) {
+function buildEffectAnchor({
+  trackName = "",
+  section = "",
+  window = null,
+  distributed = false
+} = {}) {
+  const normalizedTrackName = normText(trackName) || "XD: Sequencer Plan";
+  const normalizedSection = normText(section) || "General";
+  const startMs = Number(window?.startMs || 0);
+  const endMs = Number(window?.endMs || startMs + 1);
+  return {
+    kind: "timing_track",
+    trackName: normalizedTrackName,
+    markLabel: normalizedSection,
+    startMs,
+    endMs,
+    basis: distributed ? "section_slice" : "section_window"
+  };
+}
+
+function buildEffectTemplates(
+  source = [],
+  parsed = [],
+  targetIds = [],
+  effectCatalog = null,
+  groupIds = [],
+  groupsById = {},
+  submodelsById = {},
+  trackName = "XD: Sequencer Plan"
+) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
 
@@ -679,6 +708,12 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
       out.push({
         id: `effect.${out.length + 1}`,
         dependsOn: ["timing.marks.insert"],
+        anchor: buildEffectAnchor({
+          trackName,
+          section: row.section,
+          window: scopedWindow,
+          distributed: Boolean(target?.sourceGroupId)
+        }),
         cmd: "effects.create",
         params: {
           modelName,
@@ -740,7 +775,7 @@ export function buildDesignerPlanCommands(
     trackName
   });
 
-  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds, groupsById, submodelsById).map((row) => {
+  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds, groupsById, submodelsById, trackName).map((row) => {
     if (!displayOrderCommand) return row;
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
     if (!dependsOn.includes(displayOrderCommand.id)) {

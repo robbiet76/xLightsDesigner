@@ -499,6 +499,17 @@ test("command builders preserve explicit group targets by default", () => {
     effectCommands.map((row) => row.params.modelName),
     ["Frontline"]
   );
+  assert.deepEqual(
+    effectCommands.map((row) => row.anchor),
+    [{
+      kind: "timing_track",
+      trackName: "XD:ProposedPlan",
+      markLabel: "Chorus 1",
+      startMs: 0,
+      endMs: 1000,
+      basis: "section_window"
+    }]
+  );
 });
 
 test("command builders expand direct group members when request explicitly asks for distribution", () => {
@@ -517,6 +528,27 @@ test("command builders expand direct group members when request explicitly asks 
     [
       ["MegaTree", 0, 500],
       ["Roofline", 500, 1000]
+    ]
+  );
+  assert.deepEqual(
+    effectCommands.map((row) => row.anchor),
+    [
+      {
+        kind: "timing_track",
+        trackName: "XD:ProposedPlan",
+        markLabel: "Chorus 1",
+        startMs: 0,
+        endMs: 500,
+        basis: "section_slice"
+      },
+      {
+        kind: "timing_track",
+        trackName: "XD:ProposedPlan",
+        markLabel: "Chorus 1",
+        startMs: 500,
+        endMs: 1000,
+        basis: "section_slice"
+      }
     ]
   );
 });
