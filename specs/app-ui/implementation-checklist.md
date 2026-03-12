@@ -25,7 +25,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [ ] Define the primary user journey from project setup through apply
 
 ## Phase B: Team Chat UX
-- [ ] Turn the current right-side coach panel into an explicit team-chat panel
+- [x] Turn the current right-side coach panel into an explicit team-chat panel
 - [ ] Keep visible specialist identity polished and consistent
 - [ ] Show routed delegation clearly when `app_assistant` overrides a named addressee
 - [ ] Add inline artifact cards/messages in chat
@@ -36,10 +36,10 @@ Purpose: turn the current functional shell into a coherent end-user experience t
   - sequencing review/apply
 
 ## Phase C: Artifact Surfaces
-- [ ] Add visible summary surfaces for `analysis_artifact_v1`
-- [ ] Add visible summary surfaces for `creative_brief_v1`
-- [ ] Add visible summary surfaces for `proposal_bundle_v1`
-- [ ] Add visible summary surfaces for sequence plan/apply outcomes
+- [x] Add visible summary surfaces for `analysis_artifact_v1`
+- [x] Add visible summary surfaces for `creative_brief_v1`
+- [x] Add visible summary surfaces for `proposal_bundle_v1`
+- [x] Add visible summary surfaces for sequence plan/apply outcomes
 - [ ] Make artifact state inspectable without exposing raw internal payloads by default
 
 ## Phase D: Review And Apply UX
@@ -56,8 +56,8 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [ ] Keep health information available without dominating normal workflow
 
 ## Phase F: UI Runtime Structure
-- [ ] Add an `app-ui` runtime/render domain under `apps/xlightsdesigner-ui`
-- [ ] Extract shell rendering from `app.js`
+- [x] Add an `app-ui` runtime/render domain under `apps/xlightsdesigner-ui`
+- [x] Extract shell rendering from `app.js`
 - [ ] Extract chat rendering/binding from `app.js`
 - [ ] Extract settings/diagnostics rendering from `app.js`
 - [ ] Extract screen-specific event binding from `app.js`

@@ -93,6 +93,7 @@ import {
   resolveTeamChatIdentity
 } from "./agent/app-assistant/app-assistant-contracts.js";
 import { buildScreenContent } from "./app-ui/screens.js";
+import { buildAppShell } from "./app-ui/shell.js";
 import {
   classifyDepthBands,
   collectSpatialNodes,
@@ -8926,71 +8927,6 @@ function onNewSession() {
   render();
 }
 
-function navButton(id, label) {
-  const icons = {
-    project: "P",
-    audio: "A",
-    sequence: "S",
-    design: "D",
-    review: "R",
-    metadata: "M",
-    history: "H"
-  };
-  const icon = icons[id] || "•";
-  return `<button class="${state.route === id ? "active" : ""}" data-route="${id}" title="${label}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></button>`;
-}
-
-function persistentCoachPanel() {
-  return `
-    <aside class="coach-panel card">
-      <h3>Team Chat</h3>
-      <div class="panel-window chat-window">
-        <div class="chat-thread">
-          ${(state.chat || [])
-            .map((c) => {
-              const role = c.who === "user" ? "user" : c.who === "agent" ? "agent" : "system";
-              const handledBy = String(c.handledBy || c.roleId || "").trim();
-              const header = role === "user"
-                ? "You"
-                : role === "agent"
-                  ? (String(c.displayName || "").trim() || getTeamChatSpeakerLabel(handledBy || "app_assistant"))
-                  : "System";
-              const routedByNote = role === "agent" && c.addressedTo && c.addressedTo !== handledBy
-                ? `<span class="banner">Handled by ${escapeHtml(header)} after routing from ${escapeHtml(getTeamChatSpeakerLabel(String(c.addressedTo || "")))}</span>`
-                : "";
-              return `<article class="chat-msg ${role}">
-                <header>${escapeHtml(header)}</header>
-                <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                ${routedByNote}
-              </article>`;
-            })
-            .join("")}
-          ${state.ui.agentThinking ? `<div class="chat-typing">${escapeHtml(getTeamChatSpeakerLabel(state.health.agentActiveRole || "app_assistant"))} is working...</div>` : ""}
-        </div>
-      </div>
-      <div class="quick-prompts panel-footer-block">
-        ${CHAT_QUICK_PROMPTS.map((p, idx) => `
-          <article class="quick-suggestion">
-            <div class="quick-suggestion-text">${renderInlineChipSentence(p)}</div>
-            <button data-quick-prompt="${idx}">Use</button>
-          </article>
-        `).join("")}
-      </div>
-    </aside>
-  `;
-}
-
-function globalChatBar() {
-  return `
-    <div class="global-chat-bar">
-      <div class="composer">
-        <input id="chat-input" placeholder="Tell the agent what to change or ask for guidance..." value="${(state.ui.chatDraft || "").replace(/\"/g, "&quot;")}" />
-        <button id="send-chat">Send</button>
-      </div>
-    </div>
-  `;
-}
-
 function screenContent() {
   return buildScreenContent({
     state,
@@ -9093,43 +9029,6 @@ function diagnosticsPanel() {
             : '<p class="banner">No apply history yet.</p>'
         }
       </div>
-    </section>
-  `;
-}
-
-function jobsPanel() {
-  if (!state.ui.jobsOpen) return "";
-  const rows = state.jobs || [];
-  return `
-    <section class="card diagnostics-panel">
-      <div class="row" style="justify-content:space-between;">
-        <h3>Jobs</h3>
-        <div class="row">
-          <button id="close-jobs">Close</button>
-        </div>
-      </div>
-      ${
-        rows.length
-          ? `
-        <ul class="list">
-          ${rows
-            .map(
-              (j) => `
-            <li>
-              <strong>${j.id}</strong> [${j.status || "unknown"}] ${j.source || ""}
-              ${j.progress !== undefined ? ` - ${j.progress}%` : ""}
-              ${j.message ? `<div class="banner">${j.message}</div>` : ""}
-              <div class="row" style="margin-top:4px;">
-                <button data-cancel-job="${j.id}">Cancel</button>
-              </div>
-            </li>
-          `
-            )
-            .join("")}
-        </ul>
-      `
-          : "<p class=\"banner\">No jobs tracked yet.</p>"
-      }
     </section>
   `;
 }
@@ -9885,11 +9784,6 @@ function bindEvents() {
 }
 
 function render() {
-  const diagCounts = getDiagnosticsCounts();
-  const filter = state.ui.diagnosticsFilter;
-  const rows = state.diagnostics || [];
-  const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
-  const footerApplyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 8) : [];
   const buildVersion = String(state.health.desktopAppVersion || "").trim();
   const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
   const buildTimeLabel = buildTimeIso
@@ -9899,129 +9793,28 @@ function render() {
     ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
     : "Build: unknown";
   const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
-
-  app.innerHTML = `
-    <div class="app-shell ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
-      <div class="main-grid ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
-        <nav class="nav ${state.ui.navCollapsed ? "collapsed" : ""}">
-          <div class="nav-header">
-            <button id="toggle-nav" class="nav-toggle-btn" title="${state.ui.navCollapsed ? "Expand navigation" : "Collapse navigation"}"><span class="nav-icon">${state.ui.navCollapsed ? "›" : "‹"}</span></button>
-            <div class="nav-project-name">${state.projectName || "Project"}</div>
-          </div>
-          <div class="nav-links">
-            ${navButton("project", "Project")}
-            ${navButton("audio", "Audio")}
-            ${navButton("sequence", "Sequence")}
-            ${navButton("design", "Design")}
-            ${navButton("review", "Review")}
-            ${navButton("metadata", "Metadata")}
-            ${navButton("history", "History")}
-          </div>
-        </nav>
-
-        <div class="main-shell">
-          <header class="header">
-            <div class="header-sequence"><strong>${state.activeSequence || "No Sequence Open"}</strong></div>
-            <div class="header-badges">
-              <div class="header-badge">xLights: ${state.flags.xlightsConnected ? "Connected" : "Disconnected"}</div>
-              <div class="header-badge">${analysisHeaderBadge}</div>
-            </div>
-          </header>
-
-          <div class="main-body">
-            <main class="content">
-              ${screenContent()}
-              ${state.route === "review" ? detailsDrawer() : ""}
-              ${settingsDrawer()}
-              ${jobsPanel()}
-            </main>
-            ${persistentCoachPanel()}
-          </div>
-
-        </div>
-      </div>
-
-      <div class="bottom-input-row ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
-        <div class="bottom-nav-settings">
-          <button id="open-settings" title="Application Settings"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></button>
-        </div>
-        ${globalChatBar()}
-      </div>
-
-      <footer class="footer">
-        <div class="footer-summary">
-          <button id="toggle-footer-diagnostics">${state.ui.diagnosticsOpen ? "Hide" : "Show"} Diagnostics</button>
-          <span>Diagnostics: ${diagCounts.total} total</span>
-          <span>${diagCounts.warning} warning</span>
-          <span>${diagCounts.actionRequired} action-required</span>
-          <span>${buildLabel}</span>
-        </div>
-        ${
-          state.ui.diagnosticsOpen
-            ? `
-          <div class="footer-diagnostics">
-            <div class="row" style="justify-content:space-between;">
-              <div class="row">
-                <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${diagCounts.total})</button>
-                <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${diagCounts.warning})</button>
-                <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${diagCounts.actionRequired})</button>
-              </div>
-              <div class="row">
-                <button id="export-diagnostics">Export</button>
-                <button id="clear-diagnostics">Clear</button>
-              </div>
-            </div>
-            ${
-              filteredRows.length
-                ? `
-                <ul class="list">
-                  ${filteredRows
-                    .map(
-                      (d) => `
-                    <li>
-                      <strong>[${d.level}]</strong> ${d.text}
-                      ${d.details ? `<pre class="diag-details">${d.details}</pre>` : ""}
-                    </li>
-                  `
-                    )
-                    .join("")}
-                </ul>
-              `
-                : '<p class="banner">No diagnostics for current filter.</p>'
-            }
-            <div style="margin-top:8px;">
-              <h4 style="margin:0 0 6px;">Recent Applies</h4>
-              ${
-                footerApplyHistory.length
-                  ? `
-                  <ul class="list">
-                    ${footerApplyHistory
-                      .map((entry) => {
-                        const status = String(entry?.status || "unknown");
-                        const count = Number(entry?.commandCount || 0);
-                        const ts = entry?.ts
-                          ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                          : "--:--";
-                        return `
-                      <li>
-                        <strong>[${status}]</strong> ${ts} - ${count} cmd${count === 1 ? "" : "s"}
-                        ${entry?.stage ? ` (${entry.stage})` : ""}
-                      </li>
-                    `;
-                      })
-                      .join("")}
-                  </ul>
-                `
-                  : '<p class="banner">No apply history yet.</p>'
-              }
-            </div>
-          </div>
-        `
-            : ""
-        }
-      </footer>
-    </div>
-  `;
+  app.innerHTML = buildAppShell({
+    state,
+    screenContent: screenContent(),
+    helpers: {
+      escapeHtml,
+      renderInlineChipSentence,
+      getTeamChatSpeakerLabel,
+      getSections,
+      getSelectedSections,
+      hasAllSectionsSelected,
+      getSectionName,
+      applyEnabled,
+      applyDisabledReason,
+      getDiagnosticsCounts,
+      getAgentApplyRolloutMode,
+      getManualLockedXdTracks,
+      getTeamChatIdentities,
+      chatQuickPrompts: CHAT_QUICK_PROMPTS,
+      analysisHeaderBadge,
+      buildLabel
+    }
+  });
 
   bindEvents();
 }
