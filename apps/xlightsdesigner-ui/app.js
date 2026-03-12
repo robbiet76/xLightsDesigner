@@ -3197,6 +3197,12 @@ function buildSceneGraphFromData({
       groupNames: Array.isArray(row?.groupNames) ? row.groupNames.map((v) => String(v || "").trim()).filter(Boolean) : [],
       startChannel: toFiniteNumberOrNull(row?.startChannel),
       endChannel: toFiniteNumberOrNull(row?.endChannel),
+      renderPolicy: {
+        renderLayout: String(row?.renderLayout || "").trim(),
+        submodelType: String(row?.submodelType || "").trim(),
+        bufferStyle: String(row?.bufferStyle || "").trim() || "Default",
+        availableBufferStyles: Array.isArray(row?.availableBufferStyles) ? row.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean) : []
+      },
       membership: {
         nodeCount: Number(row?.membership?.nodeCount || 0),
         nodeChannels: Array.isArray(row?.membership?.nodeChannels) ? row.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v)) : [],
@@ -3415,6 +3421,14 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
       return {
         ...row,
         ...submodelDetail,
+        renderLayout: String(submodelDetail?.renderLayout || row?.renderLayout || "").trim(),
+        submodelType: String(submodelDetail?.submodelType || row?.submodelType || "").trim(),
+        bufferStyle: String(submodelDetail?.bufferStyle || row?.bufferStyle || "").trim() || "Default",
+        availableBufferStyles: Array.isArray(submodelDetail?.availableBufferStyles)
+          ? submodelDetail.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
+          : Array.isArray(row?.availableBufferStyles)
+            ? row.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
+            : [],
         membership: {
           nodeCount: Number(membership?.nodeCount || 0),
           nodeChannels: Array.isArray(membership?.nodeChannels) ? membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v)) : [],

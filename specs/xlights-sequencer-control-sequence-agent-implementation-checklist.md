@@ -87,6 +87,7 @@ Boundary summary:
     - same-line parent + submodel overlap collapses to the parent target for broad writes
     - separate lines preserve explicit parent-first then submodel refinement behavior
     - sibling submodels remain valid concurrent precision targets when parent is absent
+    - exact sibling overlap collapse uses authoritative submodel node-channel membership from automation
   - [ ] Deeper submodel inheritance/render override rules encoded.
 - [ ] Effects types and settings:
   - [x] Pre-gate complete (source + API coverage + approved gaps).

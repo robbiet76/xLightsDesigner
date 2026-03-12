@@ -411,6 +411,52 @@ Response `data`:
 Response `data`:
 - `elements` array with `{ id, name, type, orderIndex, parentId }`
 
+### `layout.getSubmodels`
+Response `data`:
+- `submodels[]` with:
+  - `id` (full submodel id, typically `Parent/Submodel`)
+  - `name`
+  - `type` (`submodel`)
+  - `parentId`
+  - `layoutGroup`
+  - `groupNames[]`
+  - `startChannel`
+  - `endChannel`
+
+### `layout.getSubmodelDetail`
+Purpose: return authoritative submodel membership detail for one submodel.
+
+Params:
+- `name` (string, required): full submodel id, typically `Parent/Submodel`
+- `parentId` (string, optional): parent model id; used as a hint when supplied
+
+Response `data`:
+- `submodel`:
+  - `id`
+  - `name`
+  - `type` (`submodel`)
+  - `parentId`
+  - `layoutGroup`
+  - `groupNames[]`
+  - `startChannel`
+  - `endChannel`
+  - `renderLayout`
+  - `submodelType`
+  - `bufferStyle`
+  - `availableBufferStyles[]`
+- `membership`:
+  - `nodeCount`
+  - `nodeChannels[]`
+  - `nodeRefs[]`:
+    - `channel`
+    - `stringIndex`
+    - `coordCount`
+
+Validation:
+- `name` is required
+- `name` must resolve to an existing submodel
+- `name` must refer to a `SubModel`
+
 ### `layout.getModelGeometry`
 Purpose: return structured transform and size metadata for one model for agent-side spatial reconstruction.
 
