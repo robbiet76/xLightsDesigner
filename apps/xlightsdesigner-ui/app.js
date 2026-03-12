@@ -32,6 +32,7 @@ import {
 } from "./api.js";
 import { buildProposalFromIntent } from "./agent/designer-dialog/planner.js";
 import { buildGuidedQuestions } from "./agent/designer-dialog/guided-dialog.js";
+import { buildIntentHandoffFromDesignerState } from "./agent/designer-dialog/designer-dialog-contracts.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -4276,37 +4277,12 @@ function inferIntentModeFromGoal(text = "") {
 }
 
 function buildIntentHandoffFromPlan(plan = {}, intentText = "") {
-  const normalized = isPlainObject(plan?.normalizedIntent) ? plan.normalizedIntent : {};
-  const selectedTargetIds = Array.isArray(normalized?.targetIds) ? normalized.targetIds : [];
-  const selectedTags = Array.isArray(normalized?.tags) ? normalized.tags : [];
-  const selectedSections = Array.isArray(normalized?.sections) ? normalized.sections : [];
-  const goal = String(normalized?.goal || intentText || "").trim();
-  const mode = inferIntentModeFromGoal(goal);
-  return {
-    goal,
-    mode,
-    scope: {
-      targetIds: selectedTargetIds,
-      tagNames: selectedTags,
-      sections: selectedSections,
-      timeRangeMs: selectedSections.length ? null : null
-    },
-    constraints: {
-      changeTolerance: mode === "polish" ? "low" : "medium",
-      preserveTimingTracks: normalized?.preserveTimingTracks !== false,
-      allowGlobalRewrite: mode === "create"
-    },
-    directorPreferences: {
-      styleDirection: String(state.creative?.brief?.mood || "").trim(),
-      energyArc: String(normalized?.tempoIntent || "hold"),
-      focusElements: selectedTargetIds.slice(0, 40),
-      colorDirection: String(state.creative?.brief?.paletteIntent || "").trim()
-    },
-    approvalPolicy: {
-      requiresExplicitApprove: true,
-      elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
-    }
-  };
+  return buildIntentHandoffFromDesignerState({
+    normalizedIntent: isPlainObject(plan?.normalizedIntent) ? plan.normalizedIntent : {},
+    intentText,
+    creativeBrief: state.creative?.brief || null,
+    elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+  });
 }
 
 function buildAgentConversationContext() {

@@ -1,0 +1,22 @@
+{
+  "contract": "creative_brief_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-contracts.js",
+  "requiredFields": [
+    "briefType",
+    "briefVersion",
+    "summary",
+    "goalsSummary",
+    "inspirationSummary",
+    "sections",
+    "moodEnergyArc",
+    "narrativeCues",
+    "visualCues",
+    "hypotheses"
+  ],
+  "notes": [
+    "creative_brief_v1 is the canonical designer-side summary of creative direction before sequencing execution.",
+    "The brief should remain richer than downstream handoffs and preserve traceability to audio, references, and user goals.",
+    "Sections, narrative cues, and visual cues are required because proposal generation depends on them."
+  ]
+}

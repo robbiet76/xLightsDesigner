@@ -1,0 +1,178 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  DESIGNER_DIALOG_ROLE,
+  DESIGNER_DIALOG_CONTRACT_VERSION,
+  validateDesignerDialogInput,
+  validateCreativeBrief,
+  validateProposalBundle,
+  validateDesignerDialogResult,
+  buildCreativeBriefContract,
+  buildIntentHandoffFromDesignerState,
+  validateDesignerDialogContractGate
+} from "../../../agent/designer-dialog/designer-dialog-contracts.js";
+
+function sampleInput(overrides = {}) {
+  return {
+    agentRole: DESIGNER_DIALOG_ROLE,
+    contractVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
+    requestId: "req-1",
+    context: {
+      sequenceRevision: "rev-1",
+      route: "design",
+      selection: {
+        sectionNames: ["Chorus 1"],
+        targetIds: ["MegaTree"],
+        tagNames: ["focal"]
+      }
+    },
+    promptText: "Make chorus bigger and cleaner",
+    ...overrides
+  };
+}
+
+function sampleBrief(overrides = {}) {
+  return {
+    briefType: "creative_brief_v1",
+    briefVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
+    summary: "Punchy chorus with clean focal contrast.",
+    goalsSummary: "Increase chorus impact.",
+    inspirationSummary: "Modern crisp holiday pop.",
+    sections: ["Intro", "Verse", "Chorus"],
+    moodEnergyArc: "Start readable, escalate at chorus, resolve cleanly.",
+    narrativeCues: "Support lyric emphasis in chorus.",
+    visualCues: "Cool white sparkle accents with strong focal contrast.",
+    hypotheses: ["Use focal-target contrast.", "Preserve readable supporting layers."],
+    notes: ""
+  };
+}
+
+function sampleProposal(overrides = {}) {
+  return {
+    bundleType: "proposal_bundle_v1",
+    bundleVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
+    proposalId: "proposal-1",
+    summary: "Increase chorus impact on focal props.",
+    baseRevision: "rev-1",
+    scope: {
+      sections: ["Chorus 1"],
+      targetIds: ["MegaTree"],
+      tagNames: ["focal"]
+    },
+    constraints: {
+      changeTolerance: "medium",
+      preserveTimingTracks: true,
+      allowGlobalRewrite: false
+    },
+    proposalLines: ["Chorus 1 / MegaTree / increase pulse contrast and cleaner accents."],
+    guidedQuestions: [],
+    riskNotes: [],
+    impact: {
+      estimatedImpact: 12
+    },
+    ...overrides
+  };
+}
+
+function sampleResult(overrides = {}) {
+  return {
+    agentRole: DESIGNER_DIALOG_ROLE,
+    contractVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
+    requestId: "req-1",
+    status: "ok",
+    failureReason: null,
+    creativeBrief: sampleBrief(),
+    proposalBundle: sampleProposal(),
+    handoff: buildIntentHandoffFromDesignerState({
+      normalizedIntent: {
+        goal: "Make chorus bigger and cleaner",
+        sections: ["Chorus 1"],
+        targetIds: ["MegaTree"],
+        tags: ["focal"],
+        tempoIntent: "increase",
+        preserveTimingTracks: true
+      },
+      intentText: "Make chorus bigger and cleaner",
+      creativeBrief: {
+        mood: "punchy",
+        paletteIntent: "cool white"
+      },
+      elevatedRiskConfirmed: false
+    }),
+    warnings: [],
+    summary: "Designer proposal prepared.",
+    ...overrides
+  };
+}
+
+test("designer dialog input contract accepts canonical payload", () => {
+  const errors = validateDesignerDialogInput(sampleInput());
+  assert.deepEqual(errors, []);
+});
+
+test("creative brief contract accepts canonical payload", () => {
+  const errors = validateCreativeBrief(sampleBrief());
+  assert.deepEqual(errors, []);
+});
+
+test("proposal bundle contract accepts canonical payload", () => {
+  const errors = validateProposalBundle(sampleProposal());
+  assert.deepEqual(errors, []);
+});
+
+test("designer dialog result contract accepts canonical payload", () => {
+  const errors = validateDesignerDialogResult(sampleResult());
+  assert.deepEqual(errors, []);
+});
+
+test("designer dialog input contract rejects missing required fields", () => {
+  const errors = validateDesignerDialogInput(sampleInput({ requestId: "", context: {} }));
+  assert.ok(errors.some((e) => /requestId is required/i.test(e)));
+  assert.ok(errors.some((e) => /context.sequenceRevision is required/i.test(e)));
+  assert.ok(errors.some((e) => /context.selection is required/i.test(e)));
+});
+
+test("buildCreativeBriefContract normalizes helper output into canonical contract", () => {
+  const brief = buildCreativeBriefContract({
+    summary: "test",
+    goalsSummary: "goals",
+    inspirationSummary: "inspiration",
+    sections: ["Verse", "Chorus"],
+    moodEnergyArc: "rise",
+    narrativeCues: "story",
+    visualCues: "cool white",
+    hypotheses: ["hypothesis"]
+  });
+  assert.equal(brief.briefType, "creative_brief_v1");
+  assert.equal(brief.briefVersion, "1.0");
+  assert.deepEqual(validateCreativeBrief(brief), []);
+});
+
+test("buildIntentHandoffFromDesignerState produces valid intent_handoff_v1", () => {
+  const handoff = buildIntentHandoffFromDesignerState({
+    normalizedIntent: {
+      goal: "Polish chorus",
+      sections: ["Chorus 1"],
+      targetIds: ["MegaTree"],
+      tags: ["focal"],
+      tempoIntent: "hold",
+      preserveTimingTracks: true
+    },
+    intentText: "Polish chorus",
+    creativeBrief: {
+      mood: "cinematic",
+      paletteIntent: "warm gold"
+    },
+    elevatedRiskConfirmed: false
+  });
+
+  const gate = validateDesignerDialogContractGate("result", sampleResult({ handoff }));
+  assert.equal(gate.ok, true);
+});
+
+test("designer dialog contract gate reports unknown kind", () => {
+  const gate = validateDesignerDialogContractGate("unknown", {});
+  assert.equal(gate.ok, false);
+  assert.ok(gate.report.errors.some((e) => /Unknown designer_dialog contract kind/i.test(e)));
+});

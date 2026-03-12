@@ -1,0 +1,16 @@
+{
+  "contract": "designer_dialog_result_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "requestId",
+    "status"
+  ],
+  "notes": [
+    "The result envelope distinguishes ok, partial, and failed designer outcomes.",
+    "A successful result may include creative_brief_v1, proposal_bundle_v1, and intent_handoff_v1 together.",
+    "Designer failure reasons should distinguish clarification, proposal generation, stale rebase, and handoff validation."
+  ]
+}

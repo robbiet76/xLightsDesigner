@@ -1,0 +1,20 @@
+{
+  "contract": "designer_dialog_input_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-contracts.js",
+  "requiredFields": [
+    "agentRole",
+    "contractVersion",
+    "requestId",
+    "context.sequenceRevision",
+    "context.selection.sectionNames",
+    "context.selection.targetIds",
+    "context.selection.tagNames",
+    "promptText"
+  ],
+  "notes": [
+    "designer_dialog is the user-facing creative role and should operate on normalized conversational intent plus current sequence context.",
+    "The input may include upstream analysis and a prior creative brief, but it should not contain downstream xLights mutation plans.",
+    "Selection scope is explicit planner context for clarification and proposal generation."
+  ]
+}

@@ -151,6 +151,10 @@ Implemented now:
   - `apps/xlightsdesigner-ui/agent/designer-dialog/`
   - `apps/xlightsdesigner-ui/tests/agent/designer-dialog/`
   - `specs/designer-dialog/`
+- [x] Initial Phase A contract layer:
+  - `designer-dialog-contracts.js`
+  - training-package JSON contracts for input/brief/proposal/result
+  - focused contract tests
 - [x] Basic intent normalization helper
 - [x] Basic guided-question helper
 - [x] Basic creative-brief helper

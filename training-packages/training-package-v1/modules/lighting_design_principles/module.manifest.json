@@ -6,6 +6,12 @@
     "prompts": [
       "prompts/design_principles_system.md"
     ],
+    "contracts": [
+      "contracts/designer_dialog_input_v1.json",
+      "contracts/creative_brief_v1.json",
+      "contracts/proposal_bundle_v1.json",
+      "contracts/designer_dialog_result_v1.json"
+    ],
     "datasets": [
       "datasets/index.json"
     ],

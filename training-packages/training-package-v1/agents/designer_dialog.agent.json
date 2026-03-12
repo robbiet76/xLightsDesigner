@@ -16,6 +16,8 @@
   },
   "outputs": [
     "intent_handoff_v1",
+    "creative_brief_v1",
+    "proposal_bundle_v1",
     "guided_questions",
     "creative_brief_updates"
   ],

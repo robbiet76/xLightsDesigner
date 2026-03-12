@@ -4,6 +4,7 @@
       "id": "designer_dialog_runtime",
       "type": "runtime-contract-reference",
       "paths": [
+        "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-contracts.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/intent-normalizer.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/guided-dialog.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/brief-synthesizer.js",
