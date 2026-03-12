@@ -32,6 +32,16 @@ function inferRenderRiskLevel(family = "") {
   return "low";
 }
 
+function normalizeSequenceSettings(sequenceSettings = {}) {
+  const row = sequenceSettings && typeof sequenceSettings === "object" && !Array.isArray(sequenceSettings)
+    ? sequenceSettings
+    : {};
+  return {
+    sequenceType: normText(row.sequenceType || "Media") || "Media",
+    supportsModelBlending: Boolean(row.supportsModelBlending)
+  };
+}
+
 function splitModelTokenList(raw = "") {
   const rows = String(raw || "")
     .split(/\+|,|&/)
@@ -527,6 +537,38 @@ function buildDisplayElementOrderCommand({
   };
 }
 
+function shouldEnableModelBlendingForPlan(effectCommands = [], groupIds = []) {
+  const rows = Array.isArray(effectCommands) ? effectCommands : [];
+  const groups = new Set((Array.isArray(groupIds) ? groupIds : []).map((row) => normText(row)).filter(Boolean));
+  let hasGroupTarget = false;
+  let hasSpecificTarget = false;
+  for (const row of rows) {
+    const modelName = normText(row?.params?.modelName);
+    if (!modelName) continue;
+    if (groups.has(modelName)) {
+      hasGroupTarget = true;
+    } else {
+      hasSpecificTarget = true;
+    }
+    if (hasGroupTarget && hasSpecificTarget) return true;
+  }
+  return false;
+}
+
+function buildSequenceSettingsCommand({ effectCommands = [], groupIds = [], sequenceSettings = {} } = {}) {
+  const current = normalizeSequenceSettings(sequenceSettings);
+  if (current.supportsModelBlending) return null;
+  if (!shouldEnableModelBlendingForPlan(effectCommands, groupIds)) return null;
+  return {
+    id: "sequence.settings.update",
+    dependsOn: ["timing.marks.insert"],
+    cmd: "sequence.setSettings",
+    params: {
+      supportsModelBlending: true
+    }
+  };
+}
+
 function inferEffectNameFromDescription(description = "", effectCatalog = null) {
   const byName = normalizeEffectCatalog(effectCatalog);
   const text = normText(description).toLowerCase();
@@ -759,6 +801,7 @@ export function buildDesignerPlanCommands(
     trackName = "XD:ProposedPlan",
     targetIds = [],
     effectCatalog = null,
+    sequenceSettings = {},
     displayElements = [],
     groupIds = [],
     groupsById = {},
@@ -813,9 +856,8 @@ export function buildDesignerPlanCommands(
     trackName,
     enableEffectTimingAlignment
   ).map((row) => {
-    if (!displayOrderCommand) return row;
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
-    if (!dependsOn.includes(displayOrderCommand.id)) {
+    if (displayOrderCommand && !dependsOn.includes(displayOrderCommand.id)) {
       dependsOn.push(displayOrderCommand.id);
     }
     return {
@@ -824,9 +866,28 @@ export function buildDesignerPlanCommands(
     };
   });
 
+  const sequenceSettingsCommand = buildSequenceSettingsCommand({
+    effectCommands,
+    groupIds,
+    sequenceSettings
+  });
+
+  const normalizedEffectCommands = effectCommands.map((row) => {
+    if (!sequenceSettingsCommand) return row;
+    const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
+    if (!dependsOn.includes(sequenceSettingsCommand.id)) {
+      dependsOn.push(sequenceSettingsCommand.id);
+    }
+    return {
+      ...row,
+      dependsOn
+    };
+  });
+
   return baseCommands
+    .concat(sequenceSettingsCommand ? [sequenceSettingsCommand] : [])
     .concat(displayOrderCommand ? [displayOrderCommand] : [])
-    .concat(effectCommands);
+    .concat(normalizedEffectCommands);
 }
 
 export {

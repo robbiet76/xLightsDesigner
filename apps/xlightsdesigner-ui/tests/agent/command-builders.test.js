@@ -256,6 +256,38 @@ test("command builders prefer non-default group render targets when breadth is o
   assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Frontline"]);
 });
 
+test("command builders request model blending when broad group coverage is refined by specific targets", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars",
+    "Chorus 1 / MegaTree / shimmer"
+  ], {
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    sequenceSettings: { supportsModelBlending: false },
+    effectCatalog: sampleCatalog()
+  });
+
+  const settingsCommand = commands.find((row) => row.cmd === "sequence.setSettings");
+  assert.ok(settingsCommand);
+  assert.equal(settingsCommand.params.supportsModelBlending, true);
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.ok(effectCommands.every((row) => row.dependsOn.includes("sequence.settings.update")));
+});
+
+test("command builders do not emit sequence blending update when blending is already enabled", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Frontline / bars",
+    "Chorus 1 / MegaTree / shimmer"
+  ], {
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups(),
+    sequenceSettings: { supportsModelBlending: true },
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(commands.some((row) => row.cmd === "sequence.setSettings"), false);
+});
+
 test("command builders stay style-neutral when source lines do not request shared settings", () => {
   const commands = buildDesignerPlanCommands([
     "Verse 1 / MegaTree / bars"

@@ -2,6 +2,7 @@
   "requiredCapabilities": [
     "system.validateCommands",
     "sequence.getRevision",
+    "sequence.setSettings",
     "transactions.begin",
     "transactions.commit",
     "transactions.rollback",
@@ -15,6 +16,7 @@
   "notes": [
     "Apply execution must use transactions.begin/stage/commit with expectedRevision.",
     "system.executePlan is deprecated for sequence_agent runtime flow.",
-    "Post-apply verification reads back timing marks and effects.list results."
+    "Post-apply verification reads back timing marks and effects.list results.",
+    "sequence.setSettings is required for sequence-level rendering controls such as supportsModelBlending when broad group coverage is refined by more specific targets."
   ]
 }

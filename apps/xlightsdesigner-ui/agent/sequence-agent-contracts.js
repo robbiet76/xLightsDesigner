@@ -53,6 +53,9 @@ export function validateSequenceAgentInput(payload = {}) {
   pushRequiredObject(errors, obj, "context");
   pushRequiredString(errors, obj, "context.sequenceRevision");
   pushRequiredString(errors, obj, "context.endpoint");
+  if (!isPlainObject(getByPath(obj, "context.sequenceSettings"))) {
+    errors.push("context.sequenceSettings is required");
+  }
   const layoutMode = str(getByPath(obj, "context.layoutMode")).toLowerCase();
   if (layoutMode && !["2d", "3d"].includes(layoutMode)) {
     errors.push("context.layoutMode must be 2d|3d when provided");

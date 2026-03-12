@@ -12,6 +12,7 @@ Core rules:
 - Treat xLights group render/buffer policy as sequencing semantics, not cosmetic metadata.
 - Treat all `layout.*` state as read-only planner context.
 - Treat sequence/sequencer/effects/timing surfaces as read/write sequencing state.
+- Treat current sequence settings as required planner context. Use sequence-level settings when they materially affect rendering, including enabling model blending when broad group coverage is refined by more specific targets.
 - For v1:
   - preserve non-default group render targets unless expansion is explicitly justified,
   - require stronger force-style override for high-risk policies such as overlay, stack, single-line, and per-model-strand,

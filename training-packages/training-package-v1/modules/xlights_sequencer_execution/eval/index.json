@@ -116,6 +116,14 @@
       ]
     },
     {
+      "id": "sequence_model_blending_support",
+      "asserts": [
+        "sequence_agent treats supportsModelBlending as required sequence-level planner context",
+        "planner emits sequence.setSettings when broad group coverage is refined by more specific targets and blending is currently disabled",
+        "planner does not emit sequence.setSettings when model blending is already enabled"
+      ]
+    },
+    {
       "id": "rare_but_documented_transition_support",
       "asserts": [
         "documented rare transition settings are treated as valid when requested",

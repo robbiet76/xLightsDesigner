@@ -12,6 +12,7 @@ export function buildSequenceAgentInput({
   requestId = "",
   endpoint = "",
   sequenceRevision = "unknown",
+  sequenceSettings = {},
   layoutMode = "unknown",
   displayElements = [],
   groupIds = [],
@@ -31,6 +32,7 @@ export function buildSequenceAgentInput({
     context: {
       sequenceRevision: String(sequenceRevision || "unknown").trim() || "unknown",
       endpoint: String(endpoint || "").trim(),
+      sequenceSettings: sequenceSettings && typeof sequenceSettings === "object" && !Array.isArray(sequenceSettings) ? sequenceSettings : {},
       layoutMode: ["2d", "3d"].includes(String(layoutMode || "").toLowerCase())
         ? String(layoutMode || "").toLowerCase()
         : "2d",

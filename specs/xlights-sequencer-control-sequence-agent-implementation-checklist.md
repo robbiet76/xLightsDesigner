@@ -97,6 +97,9 @@ Boundary summary:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Effect catalog + parameter schemas + compatibility rules encoded.
   - [x] Group render-policy compatibility warnings encoded for forced member expansion paths.
+- [x] Sequence settings and functionality:
+  - [x] Sequence settings required as planner context.
+  - [x] Model blending is planner-aware and may be enabled via `sequence.setSettings` when layered group refinement requires it.
 - [x] Sequence planner integration:
   - [x] Sequence functions mapped to validated command graph templates.
   - [x] Deterministic tests added for mixed model/effect scenarios.

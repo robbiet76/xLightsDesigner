@@ -104,6 +104,7 @@ test("sequence agent input gate validates context.layoutMode when provided", () 
       context: {
         sequenceRevision: "rev-1",
         endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+        sequenceSettings: {},
         layoutMode: "invalid",
         displayElements: [],
         groupIds: [],
@@ -120,5 +121,34 @@ test("sequence agent input gate validates context.layoutMode when provided", () 
     "orch-layout-mode"
   );
   assert.equal(gate.ok, false);
-  assert.ok(gate.report.errors.some((e) => /context\\.layoutMode must be 2d\\|3d/i.test(String(e))));
+  assert.ok(gate.report.errors.some((e) => String(e).includes("context.layoutMode must be 2d|3d")));
+});
+
+test("sequence agent input gate requires context.sequenceSettings", () => {
+  const gate = validateSequenceAgentContractGate(
+    "input",
+    {
+      agentRole: "sequence_agent",
+      contractVersion: "1.0",
+      requestId: "req-sequence-settings",
+      context: {
+        sequenceRevision: "rev-1",
+        endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+        layoutMode: "2d",
+        displayElements: [],
+        groupIds: [],
+        groupsById: {},
+        submodelsById: {}
+      },
+      intentHandoff: { role: "designer_dialog" },
+      safety: {
+        timingOwnership: [],
+        manualXdLocks: [],
+        allowTimingWrites: true
+      }
+    },
+    "orch-sequence-settings"
+  );
+  assert.equal(gate.ok, false);
+  assert.ok(gate.report.errors.some((e) => String(e).includes("context.sequenceSettings is required")));
 });

@@ -79,6 +79,20 @@
       ]
     },
     {
+      "id": "sequence_model_blending_enablement",
+      "intent": "Refine a broad group bed with more specific focal effects and ensure the sequence-level render setting supports proper blending.",
+      "focus": [
+        "treat supportsModelBlending as sequence-level rendering state, not layout state",
+        "enable model blending when broad group coverage is intentionally refined by more specific targets",
+        "do not mutate unrelated sequence settings"
+      ],
+      "expectedBehavior": [
+        "planner reads current sequenceSettings before deciding whether a mutation is needed",
+        "planner emits sequence.setSettings only when supportsModelBlending must change to preserve intended layered rendering",
+        "effect commands depend on the sequence settings mutation when one is emitted"
+      ]
+    },
+    {
       "id": "revision_conflict_block",
       "intent": "Sequence changed in xLights after plan generation and before apply.",
       "focus": [

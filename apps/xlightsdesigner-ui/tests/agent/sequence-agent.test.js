@@ -223,6 +223,35 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
 });
 
+test("sequence_agent enables model blending when layered group refinement needs it", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Refine a broad group bed with focal prop detail",
+      mode: "revise",
+      scope: {
+        targetIds: ["Frontline", "MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Frontline / bars",
+      "Chorus 1 / MegaTree / shimmer"
+    ],
+    baseRevision: "rev-57",
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "sequence.setSettings", "effects.create", "effects.alignToTiming"],
+    effectCatalog: sampleCatalog(),
+    sequenceSettings: { supportsModelBlending: false },
+    groupIds: ["Frontline"],
+    groupsById: sampleGroups()
+  });
+
+  const settingsCommand = out.commands.find((row) => row.cmd === "sequence.setSettings");
+  assert.ok(settingsCommand);
+  assert.equal(settingsCommand.params.supportsModelBlending, true);
+});
+
 test("sequence_agent falls back cleanly when effects.alignToTiming capability is unavailable", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),
@@ -690,7 +719,7 @@ test("sequence_agent emits explicit display-element ordering plan for group-firs
       { id: "AllModels", type: "model" }
     ],
     effectCatalog: sampleCatalog(),
-    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "sequence.setSettings", "effects.create", "sequencer.setDisplayElementOrder"]
   });
 
   const reorder = out.commands.find((row) => row.cmd === "sequencer.setDisplayElementOrder");
@@ -737,7 +766,7 @@ test("sequence_agent uses explicit xlights group ids for group-first planning", 
       }
     },
     effectCatalog: sampleCatalog(),
-    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "sequence.setSettings", "effects.create", "sequencer.setDisplayElementOrder"]
   });
 
   const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
@@ -776,7 +805,7 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
     groupIds: ["Frontline", "AllModels"],
     groupsById: sampleGroups(),
     effectCatalog: sampleCatalog(),
-    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "sequencer.setDisplayElementOrder"]
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "sequence.setSettings", "effects.create", "sequencer.setDisplayElementOrder"]
   });
 
   const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");

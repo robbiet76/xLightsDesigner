@@ -292,6 +292,10 @@ const defaultState = {
     },
     warnings: []
   },
+  sequenceSettings: {
+    sequenceType: "Media",
+    supportsModelBlending: false
+  },
   timingTracks: [],
   sectionSuggestions: [],
   sectionStartByLabel: {},
@@ -2451,6 +2455,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
       sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+      sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
       groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
@@ -2522,6 +2527,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         baseRevision: state.draftBaseRevision,
         capabilityCommands: state.health.capabilityCommands || [],
         effectCatalog: state.effectCatalog,
+        sequenceSettings: state.sequenceSettings,
         layoutMode: currentLayoutMode(),
         displayElements: state.displayElements,
         groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
@@ -2872,6 +2878,7 @@ async function onGenerate(intentOverride = "") {
     requestId: `${orchestrationRun.id}-generate`,
     endpoint: state.endpoint,
     sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+    sequenceSettings: state.sequenceSettings,
     layoutMode: currentLayoutMode(),
     displayElements: state.displayElements,
     groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
@@ -2913,6 +2920,7 @@ async function onGenerate(intentOverride = "") {
       baseRevision: String(state.draftBaseRevision || state.revision || "unknown"),
       capabilityCommands: state.health.capabilityCommands || [],
       effectCatalog: state.effectCatalog,
+      sequenceSettings: state.sequenceSettings,
       layoutMode: currentLayoutMode(),
       displayElements: state.displayElements,
       groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
@@ -6667,6 +6675,10 @@ function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
   ).trim();
   const mediaFile = sequencePayload?.mediaFile;
   const mediaPath = mediaFile == null ? "" : String(mediaFile).trim();
+  state.sequenceSettings = {
+    sequenceType: String(sequencePayload?.sequenceType || state.sequenceSettings?.sequenceType || "Media").trim() || "Media",
+    supportsModelBlending: Boolean(sequencePayload?.supportsModelBlending)
+  };
 
   if (sequenceName) state.activeSequence = sequenceName;
   if (sequencePath) {

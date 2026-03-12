@@ -1,4 +1,10 @@
 export const SEQUENCE_FUNCTION_CATALOG = {
+  "sequence.setSettings": {
+    id: "sequence.set_settings",
+    category: "sequence",
+    requiredCapabilities: ["sequence.setSettings"],
+    writeScope: "sequence"
+  },
   "timing.createTrack": {
     id: "timing.create_track",
     category: "timing",

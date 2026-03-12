@@ -8,6 +8,7 @@
     "requestId",
     "context.sequenceRevision",
     "context.endpoint",
+    "context.sequenceSettings",
     "context.displayElements",
     "context.groupIds",
     "context.groupsById",
@@ -20,6 +21,7 @@
   "notes": [
     "timingOwnership is informational sequencing state, not a permanent lock policy.",
     "sequence_agent must plan against the latest sequence revision.",
+    "sequenceSettings is required planner context because sequence-level settings such as supportsModelBlending materially affect rendering and may require explicit sequence.setSettings mutations.",
     "displayElements provides the current explicit order state required for deterministic display-element reorder plans.",
     "groupIds provides authoritative xLights group identity so group-first planning does not rely on name heuristics.",
     "groupsById carries authoritative direct and flattened membership so nested-group planning can prefer the broadest valid aggregate target.",
