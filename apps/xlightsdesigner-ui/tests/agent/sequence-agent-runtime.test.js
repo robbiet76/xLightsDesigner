@@ -73,7 +73,8 @@ test("sequence agent input gate validates context.layoutMode when provided", () 
         layoutMode: "invalid",
         displayElements: [],
         groupIds: [],
-        groupsById: {}
+        groupsById: {},
+        submodelsById: {}
       },
       intentHandoff: { role: "designer_dialog" },
       safety: {

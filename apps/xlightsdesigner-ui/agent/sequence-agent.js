@@ -98,6 +98,7 @@ function stageCommandGraphSynthesis({
   displayElements = [],
   groupIds = [],
   groupsById = {},
+  submodelsById = {},
   allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
@@ -110,7 +111,8 @@ function stageCommandGraphSynthesis({
     effectCatalog,
     displayElements,
     groupIds,
-    groupsById
+    groupsById,
+    submodelsById
   });
   const filteredCommands = [];
   for (const command of commands) {
@@ -196,6 +198,7 @@ export function buildSequenceAgentPlan({
   displayElements = [],
   groupIds = [],
   groupsById = {},
+  submodelsById = {},
   timingOwnership = [],
   allowTimingWrites = true,
   stageOverrides = {}
@@ -255,6 +258,7 @@ export function buildSequenceAgentPlan({
           displayElements,
           groupIds,
           groupsById,
+          submodelsById,
           allowTimingWrites
         }))
   });
@@ -276,6 +280,7 @@ export function buildSequenceAgentPlan({
       displayElementCount: Array.isArray(displayElements) ? displayElements.length : 0,
       groupCount: Array.isArray(groupIds) ? groupIds.length : 0,
       groupGraphCount: groupsById && typeof groupsById === "object" ? Object.keys(groupsById).length : 0,
+      submodelGraphCount: submodelsById && typeof submodelsById === "object" ? Object.keys(submodelsById).length : 0,
       mode: scope.mode,
       scope: {
         sections: scope.sectionNames,

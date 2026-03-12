@@ -62,11 +62,15 @@ Current behavior:
 - ingests `layout.getSubmodels` into `state.submodels`.
 - creates `sceneGraph.submodelsById` with parent linkage.
 - supports metadata tagging/filtering and parent-model relationships.
+- passes authoritative `submodelsById` into `sequence_agent` planning context.
+- planner now uses deterministic overlap semantics:
+  - same-line parent + submodel overlap collapses to the parent target for broad writes,
+  - separate lines preserve explicit parent-first then submodel refinement behavior,
+  - sibling submodels remain valid concurrent precision targets when the parent is absent.
 
 Not yet implemented:
-- explicit inheritance rules between parent model and submodel semantics.
-- deterministic override policy for planning when both parent and submodel are in scope.
-- conflict-resolution rules for parent/submodel target overlaps.
+- deeper inheritance semantics for submodel-specific render/buffer behavior beyond target overlap resolution.
+- conflict-resolution rules for genuinely overlapping submodels that share nodes/channels.
 
 ## 6) Gap List (Submodels Step)
 

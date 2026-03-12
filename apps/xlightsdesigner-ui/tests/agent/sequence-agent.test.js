@@ -147,6 +147,14 @@ function sampleGroups() {
   };
 }
 
+function sampleSubmodels() {
+  return {
+    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree" },
+    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree" },
+    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline" }
+  };
+}
+
 test("sequence_agent requires intent handoff", () => {
   assert.throws(
     () => buildSequenceAgentPlan({ analysisHandoff: sampleAnalysis(), intentHandoff: null }),
@@ -414,6 +422,59 @@ test("sequence_agent supports dense submodel-heavy targeting", () => {
   assert.deepEqual(
     effectCommands.map((row) => row.params.modelName),
     ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"]
+  );
+});
+
+test("sequence_agent collapses same-line parent and submodel overlap to the parent target", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Apply broad parent-level coverage without duplicating child overlap",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree", "MegaTree/Star", "Roofline/Left"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / bars"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree", "Roofline/Left"]);
+});
+
+test("sequence_agent preserves explicit parent then submodel refinement on separate lines", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Lay broad model coverage then refine a child submodel",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree", "MegaTree/Star"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / MegaTree / bars",
+      "Chorus 1 / MegaTree/Star / shimmer fade"
+    ],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["MegaTree", "Bars"],
+      ["MegaTree/Star", "Shimmer"]
+    ]
   );
 });
 

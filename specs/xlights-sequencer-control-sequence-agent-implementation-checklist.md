@@ -83,7 +83,11 @@ Boundary summary:
     - v1 keeps layout-derived group render policy read-only and uses it only as planner context
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
-  - [ ] Submodel inheritance/override rules encoded.
+  - [x] Baseline parent/submodel overlap rules encoded:
+    - same-line parent + submodel overlap collapses to the parent target for broad writes
+    - separate lines preserve explicit parent-first then submodel refinement behavior
+    - sibling submodels remain valid concurrent precision targets when parent is absent
+  - [ ] Deeper submodel inheritance/render override rules encoded.
 - [ ] Effects types and settings:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Effect catalog + parameter schemas + compatibility rules encoded.
@@ -122,6 +126,7 @@ Boundary summary:
   - [x] nested-group breadth preference and ordering
   - [x] render-policy-aware group preservation and force-override coverage
   - [x] apply path preserves forced group-expansion provenance metadata without reinterpretation
+  - [x] parent/submodel overlap collapse and refinement preservation
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration

@@ -7,6 +7,13 @@ function normText(value = "") {
   return String(value || "").trim();
 }
 
+function parseSubmodelParentId(targetId = "") {
+  const id = normText(targetId);
+  const slash = id.indexOf("/");
+  if (slash <= 0) return "";
+  return id.slice(0, slash);
+}
+
 function inferBufferStyleFamily(style = "") {
   const key = normText(style).toLowerCase();
   if (!key || key === "default") return "default";
@@ -32,6 +39,21 @@ function splitModelTokenList(raw = "") {
     .filter(Boolean);
   const genericScopes = new Set(["whole show", "whole yard", "global", "all", "all props"]);
   return rows.filter((row) => !genericScopes.has(row.toLowerCase()));
+}
+
+function normalizeSubmodelGraph(submodelsById = {}) {
+  const out = {};
+  if (submodelsById && typeof submodelsById === "object" && !Array.isArray(submodelsById)) {
+    for (const [key, value] of Object.entries(submodelsById)) {
+      const id = normText(key || value?.id);
+      if (!id) continue;
+      out[id] = {
+        id,
+        parentId: normText(value?.parentId || parseSubmodelParentId(id))
+      };
+    }
+  }
+  return out;
 }
 
 function isGenericScopeToken(raw = "") {
@@ -211,7 +233,21 @@ function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 
   return ordered;
 }
 
-function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}, alternationSeed = 0) {
+function collapseParentSubmodelOverlaps(targets = [], submodelsById = {}) {
+  const rows = Array.isArray(targets) ? targets : [];
+  if (!rows.length) return [];
+  const submodelGraph = normalizeSubmodelGraph(submodelsById);
+  const modelIds = new Set(rows.map((row) => normText(row?.modelName)).filter(Boolean));
+  return rows.filter((row) => {
+    const modelName = normText(row?.modelName);
+    if (!modelName) return false;
+    const parentId = normText(submodelGraph[modelName]?.parentId || parseSubmodelParentId(modelName));
+    if (!parentId) return true;
+    return !modelIds.has(parentId);
+  });
+}
+
+function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}, submodelsById = {}, alternationSeed = 0) {
   const groupGraph = normalizeGroupGraph(groupsById, groupIds);
   const strategy = inferGroupDistributionStrategy(description);
   const out = [];
@@ -253,7 +289,7 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
     seen.add(key);
     deduped.push(row);
   }
-  return deduped;
+  return collapseParentSubmodelOverlaps(deduped, submodelsById);
 }
 
 export function collectGroupRenderPolicyWarnings(sourceLines = [], { groupIds = [], groupsById = {} } = {}) {
@@ -302,7 +338,8 @@ function derivePerMemberWindow(window, memberIndex = 0, totalMembers = 1, descri
 }
 
 function parseProposalLine(line = "") {
-  const parts = String(line || "").split("/").map((p) => normText(p));
+  const raw = String(line || "").trim();
+  const parts = raw.split(/\s+\/\s+/).map((p) => normText(p));
   if (!parts.length) return { section: "General", models: [], description: "" };
   const section = parts[0] || "General";
   const modelPart = parts.length > 1 ? parts[1] : "";
@@ -501,7 +538,7 @@ function buildSectionWindows(source = [], parsed = []) {
   return new Map(sectionOrder.map((section, idx) => [section, { startMs: idx * 1000, endMs: (idx * 1000) + 1000 }]));
 }
 
-function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null, groupIds = [], groupsById = {}) {
+function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCatalog = null, groupIds = [], groupsById = {}, submodelsById = {}) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
 
@@ -518,15 +555,16 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
     const alternationSeed = Number(distributionCounts.get(distributionKey) || 0);
     distributionCounts.set(distributionKey, alternationSeed + 1);
     let models = row.models.length
-      ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById, alternationSeed)
+      ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById, submodelsById, alternationSeed)
       : fallbackTargets.map((modelName) => ({ modelName, sourceGroupId: "" }));
+    models = collapseParentSubmodelOverlaps(models, submodelsById);
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
       const firstAggregate = choosePrimaryAggregateTarget(orderedTargets, groupIds, groupsById);
       if (firstAggregate) {
         models = [{ modelName: firstAggregate, sourceGroupId: "" }];
       } else {
-        models = orderedTargets.map((modelName) => ({ modelName, sourceGroupId: "" }));
+        models = collapseParentSubmodelOverlaps(orderedTargets.map((modelName) => ({ modelName, sourceGroupId: "" })), submodelsById);
       }
     }
     const window = sectionWindows.get(row.section) || { startMs: i * 1000, endMs: (i * 1000) + 1000 };
@@ -570,7 +608,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
 
 export function buildDesignerPlanCommands(
   sourceLines = [],
-  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [], groupIds = [], groupsById = {} } = {}
+  { trackName = "XD:ProposedPlan", targetIds = [], effectCatalog = null, displayElements = [], groupIds = [], groupsById = {}, submodelsById = {} } = {}
 ) {
   const source = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!source.length) {
@@ -608,7 +646,7 @@ export function buildDesignerPlanCommands(
     trackName
   });
 
-  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds, groupsById).map((row) => {
+  const effectCommands = buildEffectTemplates(source, parsed, targetIds, effectCatalog, groupIds, groupsById, submodelsById).map((row) => {
     if (!displayOrderCommand) return row;
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
     if (!dependsOn.includes(displayOrderCommand.id)) {

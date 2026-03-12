@@ -126,6 +126,14 @@ function sampleGroups() {
   };
 }
 
+function sampleSubmodels() {
+  return {
+    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree" },
+    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree" },
+    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline" }
+  };
+}
+
 test("command builders emit canonical command graph templates with dependencies", () => {
   const commands = buildDesignerPlanCommands([
     "Chorus 1 / MegaTree / increase pulse contrast and fade bars accents"
@@ -223,6 +231,51 @@ test("command builders preserve explicit dense submodel targets", () => {
     ["Snowman Hat Beads", "Face1-Eyes", "Face2-Nose", "Face3-Mouth"]
   );
   assert.equal(new Set(effectCommands.map((row) => row.params.modelName)).size, 4);
+});
+
+test("command builders collapse same-line parent and submodel overlap to the parent target", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars"
+  ], {
+    targetIds: ["MegaTree", "MegaTree/Star", "Roofline/Left"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree", "Roofline/Left"]);
+});
+
+test("command builders preserve explicit parent then submodel refinement on separate lines", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / MegaTree / bars",
+    "Chorus 1 / MegaTree/Star / shimmer fade"
+  ], {
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.modelName, row.params.effectName]),
+    [
+      ["MegaTree", "Bars"],
+      ["MegaTree/Star", "Shimmer"]
+    ]
+  );
+});
+
+test("command builders preserve sibling submodels when parent target is absent", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / shimmer fade"
+  ], {
+    targetIds: ["MegaTree/Star", "MegaTree/TopHalf"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/Star", "MegaTree/TopHalf"]);
 });
 
 test("command builders preserve explicit group-first then specific target ordering", () => {

@@ -69,6 +69,10 @@ export function validateSequenceAgentInput(payload = {}) {
   if (!isPlainObject(groupsById)) {
     errors.push("context.groupsById is required");
   }
+  const submodelsById = getByPath(obj, "context.submodelsById");
+  if (!isPlainObject(submodelsById)) {
+    errors.push("context.submodelsById is required");
+  }
   pushRequiredObject(errors, obj, "intentHandoff");
   pushRequiredObject(errors, obj, "safety");
 

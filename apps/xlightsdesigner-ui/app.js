@@ -2451,6 +2451,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       displayElements: state.displayElements,
       groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
       groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
       intentHandoff,
       analysisHandoff,
       planningScope: {
@@ -2520,6 +2522,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         displayElements: state.displayElements,
         groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
         groupsById: state.sceneGraph?.groupsById || {},
+        submodelsById: state.sceneGraph?.submodelsById || {},
         timingOwnership: getSequenceTimingOwnershipRows(),
         allowTimingWrites: true
       });
@@ -2844,6 +2847,8 @@ async function onGenerate(intentOverride = "") {
     displayElements: state.displayElements,
     groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
     groupsById: state.sceneGraph?.groupsById || {},
+    submodelsById: state.sceneGraph?.submodelsById || {},
+    submodelsById: state.sceneGraph?.submodelsById || {},
     intentHandoff,
     analysisHandoff,
     planningScope: {
@@ -2883,6 +2888,7 @@ async function onGenerate(intentOverride = "") {
       displayElements: state.displayElements,
       groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
       groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
       timingOwnership: getSequenceTimingOwnershipRows(),
       allowTimingWrites: true
     });
