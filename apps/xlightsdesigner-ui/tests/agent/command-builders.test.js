@@ -397,6 +397,13 @@ test("command builders only expand non-default group render targets with explici
       ["Roofline", 500, 1000]
     ]
   );
+  assert.deepEqual(
+    effectCommands.map((row) => [row.params.sourceGroupId, row.params.sourceGroupRenderPolicy, row.params.sourceGroupBufferStyle]),
+    [
+      ["Frontline", "per_model", "Horizontal Per Model"],
+      ["Frontline", "per_model", "Horizontal Per Model"]
+    ]
+  );
 });
 
 test("command builders preserve high-risk overlay group render targets without force override", () => {
@@ -432,6 +439,7 @@ test("command builders only expand high-risk overlay group render targets with f
       ["WindowLeft", 666, 1000]
     ]
   );
+  assert.equal(effectCommands.every((row) => row.params.sourceGroupRenderPolicy === "overlay"), true);
 });
 
 test("command builders preserve high-risk per-model-strand group render targets without force override", () => {

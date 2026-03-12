@@ -106,11 +106,13 @@ Current behavior:
   - preserve-vs-expand baseline semantics:
     - preserve explicit group targets by default,
     - expand only when the request explicitly calls for per-member distribution,
+    - require a stronger force-style override before expanding high-risk render policies such as `overlay` and `per_model_strand`,
     - use direct members for current per-member distribution,
     - support deterministic staggered time slicing and mirrored member order for explicit distribution requests,
     - support explicit flattened-member expansion for nested groups when requested,
     - alternate repeated distributed-line member order while keeping the same section window model,
     - rotate repeated fanout lines round-robin across flattened members when explicitly requested,
+    - carry compatibility warnings when forced member expansion proceeds against known non-default/high-risk group render semantics,
   - display-element ordering heuristics that keep broader groups above their refinements,
 - richer multi-line fanout/alternation/distribution semantics are not encoded yet.
 

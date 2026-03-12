@@ -117,3 +117,39 @@ test("effect compatibility accepts rare but documented transitions and layer met
   assert.equal(out.ok, true);
   assert.equal(out.warnings.length, 0);
 });
+
+test("effect compatibility warns when expanding from non-default group render targets", () => {
+  const out = evaluateEffectCommandCompatibility({
+    commands: [{
+      cmd: "effects.create",
+      params: {
+        effectName: "Bars",
+        sourceGroupId: "Frontline",
+        sourceGroupRenderPolicy: "per_model",
+        sourceGroupBufferStyle: "Horizontal Per Model",
+        settings: {}
+      }
+    }],
+    effectCatalog: sampleCatalog()
+  });
+  assert.equal(out.ok, true);
+  assert.ok(out.warnings.some((w) => /Expanded member-level effect from non-default group render target Frontline \(Horizontal Per Model\)/i.test(String(w))));
+});
+
+test("effect compatibility warns more strongly when expanding from high-risk group render targets", () => {
+  const out = evaluateEffectCommandCompatibility({
+    commands: [{
+      cmd: "effects.create",
+      params: {
+        effectName: "Bars",
+        sourceGroupId: "NestedFrontline",
+        sourceGroupRenderPolicy: "overlay",
+        sourceGroupBufferStyle: "Overlay - Centered",
+        settings: {}
+      }
+    }],
+    effectCatalog: sampleCatalog()
+  });
+  assert.equal(out.ok, true);
+  assert.ok(out.warnings.some((w) => /high-risk group render target NestedFrontline \(Overlay - Centered\)/i.test(String(w))));
+});

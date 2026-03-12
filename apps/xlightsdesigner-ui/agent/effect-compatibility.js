@@ -15,6 +15,11 @@ function isEffectMutationCommand(cmd = "") {
   return key.startsWith("effects.");
 }
 
+function isHighRiskGroupRenderPolicy(category = "") {
+  const key = normText(category).toLowerCase();
+  return key === "overlay" || key === "stack" || key === "single_line" || key === "per_model_strand";
+}
+
 const SHARED_EFFECT_SETTINGS = {
   B_CHOICE_BufferStyle: {
     type: "enum",
@@ -243,6 +248,21 @@ export function evaluateEffectCommandCompatibility({ commands = [], effectCatalo
       const settings = params.settings;
       if (isPlainObject(settings)) {
         warnings.push(...evaluateSettingsAgainstDefinition(settings, def));
+      }
+
+      const sourceGroupId = normText(params.sourceGroupId);
+      const sourceGroupRenderPolicy = normText(params.sourceGroupRenderPolicy).toLowerCase();
+      const sourceGroupBufferStyle = normText(params.sourceGroupBufferStyle);
+      if (sourceGroupId && sourceGroupRenderPolicy) {
+        if (isHighRiskGroupRenderPolicy(sourceGroupRenderPolicy)) {
+          warnings.push(
+            `Expanded member-level effect from high-risk group render target ${sourceGroupId} (${sourceGroupBufferStyle || sourceGroupRenderPolicy}); xLights group render semantics may differ from member expansion.`
+          );
+        } else if (sourceGroupRenderPolicy !== "default") {
+          warnings.push(
+            `Expanded member-level effect from non-default group render target ${sourceGroupId} (${sourceGroupBufferStyle || sourceGroupRenderPolicy}).`
+          );
+        }
       }
     }
   }

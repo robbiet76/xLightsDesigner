@@ -468,6 +468,7 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
 
+  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
   const sectionWindows = buildSectionWindows(source, parsed);
   const layerCounts = new Map();
   const distributionCounts = new Map();
@@ -517,7 +518,10 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
           startMs: scopedWindow.startMs,
           endMs: scopedWindow.endMs,
           settings: inferSharedSettings(row.description),
-          palette: {}
+          palette: {},
+          sourceGroupId: normText(target?.sourceGroupId),
+          sourceGroupRenderPolicy: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.category),
+          sourceGroupBufferStyle: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.defaultBufferStyle)
         }
       });
     }

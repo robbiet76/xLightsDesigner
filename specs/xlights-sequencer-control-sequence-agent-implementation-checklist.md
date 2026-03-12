@@ -73,12 +73,17 @@ Boundary summary:
     - explicit flattened-member expansion on request
     - repeated-line member-order alternation without changing the section window model
     - repeated-line fanout round-robin rotation on explicit request
+  - [x] Render-policy-aware preserve-vs-expand semantics encoded:
+    - non-default group render targets require explicit member override before expansion
+    - high-risk render policies (`overlay`, `stack`, `single_line`, `per_model_strand`) require force-style override before expansion
+    - forced member expansion carries compatibility warnings into validation
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.
 - [ ] Effects types and settings:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [x] Effect catalog + parameter schemas + compatibility rules encoded.
+  - [x] Group render-policy compatibility warnings encoded for forced member expansion paths.
 - [ ] Sequence planner integration:
   - [x] Sequence functions mapped to validated command graph templates.
   - [x] Deterministic tests added for mixed model/effect scenarios.
@@ -111,6 +116,7 @@ Boundary summary:
   - [x] style-neutral command synthesis when shared settings are not requested
   - [x] apply path preserves corpus-backed effect settings without reinterpretation
   - [x] nested-group breadth preference and ordering
+  - [x] render-policy-aware group preservation and force-override coverage
 - [x] Export matrix results as structured diagnostics artifact.
 
 ### Phase H: Training Package Integration
