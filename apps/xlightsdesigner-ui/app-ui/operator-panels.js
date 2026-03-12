@@ -101,50 +101,130 @@ export function buildSettingsDrawer({ state, helpers }) {
           <button id="plan-toggle" ${planOnlyToggleForced ? `disabled title="${planOnlyToggleTitle}"` : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
         </div>
         <p class="banner">Manual XD track locks: ${manualXdLockText}</p>
-        <hr />
-        <h3>Application Health</h3>
-        <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
-        <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">File Dialog Bridge</div><div>${state.health.desktopFileDialogReady ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
-        <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "not reported"}</div></div>
-        <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
-        <div class="kv"><div class="k">Agent Provider</div><div>${state.health.agentProvider || "openai"}</div></div>
-        <div class="kv"><div class="k">Agent Model</div><div>${state.health.agentModel || "(default env model)"}</div></div>
-        <div class="kv"><div class="k">Agent Cloud Config</div><div>${state.health.agentConfigured ? "configured" : "missing OPENAI_API_KEY"}</div></div>
-        <div class="kv"><div class="k">Agent Layer</div><div>${state.health.agentLayerReady ? "loaded" : "unavailable"}</div></div>
-        <div class="kv"><div class="k">Agent Role</div><div>${state.health.agentActiveRole || "idle"}</div></div>
-        <div class="kv"><div class="k">Agent Registry</div><div>${state.health.agentRegistryVersion || "unknown"}</div></div>
-        <div class="kv"><div class="k">Registry Valid</div><div>${state.health.agentRegistryValid ? "yes" : "no"}</div></div>
-        ${
-          Array.isArray(state.health.agentRegistryErrors) && state.health.agentRegistryErrors.length
-            ? `<p class="banner warning">Registry errors: ${escapeHtml(state.health.agentRegistryErrors.join(" | "))}</p>`
-            : ""
-        }
-        <div class="kv"><div class="k">Handoffs Ready</div><div>${state.health.agentHandoffsReady || "0/3"}</div></div>
-        <div class="kv"><div class="k">Orchestration Last Run</div><div>${state.health.orchestrationLastRunId || "none"}</div></div>
-        <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
-        <div class="kv"><div class="k">Orchestration Summary</div><div>${state.health.orchestrationLastSummary || "none"}</div></div>
-        <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
-        <div class="kv"><div class="k">Effect Catalog</div><div>${state.health.effectCatalogReady ? "ready" : "unavailable"}</div></div>
-        <div class="kv"><div class="k">Effect Definitions</div><div>${Number(state.health.effectDefinitionCount || 0)}</div></div>
-        <div class="kv"><div class="k">Scene Graph</div><div>${state.health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
-        <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
-        <div class="kv"><div class="k">Layout Mode</div><div>${String(state.health.sceneGraphLayoutMode || "2d").toUpperCase()}</div></div>
-        <div class="kv"><div class="k">Spatial Nodes</div><div>${Number(state.health.sceneGraphSpatialNodeCount || 0)}</div></div>
-        ${
-          Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
-            ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`
-            : ""
-        }
-        ${
-          state.health.effectCatalogError
-            ? `<p class="banner warning">Effect catalog: ${escapeHtml(state.health.effectCatalogError)}</p>`
-            : ""
-        }
-        <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
-        <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>
+        <p class="banner">Operational health, warnings, and recent apply history now live in Diagnostics so this drawer stays focused on user configuration.</p>
+      </section>
+    </section>
+  `;
+}
+
+export function buildDiagnosticsDrawer({ state, helpers }) {
+  const { getDiagnosticsCounts, escapeHtml, buildLabel } = helpers;
+  if (!state.ui.diagnosticsOpen) return "";
+  const counts = getDiagnosticsCounts();
+  const filter = state.ui.diagnosticsFilter;
+  const rows = state.diagnostics || [];
+  const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
+  const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 12) : [];
+  return `
+    <section class="settings-overlay" id="diagnostics-overlay">
+      <section class="card settings-drawer diagnostics-drawer">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <h3>Diagnostics</h3>
+          <button id="close-diagnostics" aria-label="Close diagnostics">Close</button>
+        </div>
+        <p class="banner">Operator surface for health, warnings, exports, and recent apply history.</p>
+        <div class="row">
+          <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${counts.total})</button>
+          <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${counts.warning})</button>
+          <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${counts.actionRequired})</button>
+          <button id="export-diagnostics">Export</button>
+          <button id="clear-diagnostics">Clear</button>
+        </div>
+        <section class="field">
+          <h3>Application Health</h3>
+          <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
+          <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">File Dialog Bridge</div><div>${state.health.desktopFileDialogReady ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
+          <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "not reported"}</div></div>
+          <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
+          <div class="kv"><div class="k">Agent Provider</div><div>${state.health.agentProvider || "openai"}</div></div>
+          <div class="kv"><div class="k">Agent Model</div><div>${state.health.agentModel || "(default env model)"}</div></div>
+          <div class="kv"><div class="k">Agent Cloud Config</div><div>${state.health.agentConfigured ? "configured" : "missing OPENAI_API_KEY"}</div></div>
+          <div class="kv"><div class="k">Agent Layer</div><div>${state.health.agentLayerReady ? "loaded" : "unavailable"}</div></div>
+          <div class="kv"><div class="k">Agent Role</div><div>${state.health.agentActiveRole || "idle"}</div></div>
+          <div class="kv"><div class="k">Agent Registry</div><div>${state.health.agentRegistryVersion || "unknown"}</div></div>
+          <div class="kv"><div class="k">Registry Valid</div><div>${state.health.agentRegistryValid ? "yes" : "no"}</div></div>
+          ${
+            Array.isArray(state.health.agentRegistryErrors) && state.health.agentRegistryErrors.length
+              ? `<p class="banner warning">Registry errors: ${escapeHtml(state.health.agentRegistryErrors.join(" | "))}</p>`
+              : ""
+          }
+          <div class="kv"><div class="k">Handoffs Ready</div><div>${state.health.agentHandoffsReady || "0/3"}</div></div>
+          <div class="kv"><div class="k">Orchestration Last Run</div><div>${state.health.orchestrationLastRunId || "none"}</div></div>
+          <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
+          <div class="kv"><div class="k">Orchestration Summary</div><div>${state.health.orchestrationLastSummary || "none"}</div></div>
+          <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
+          <div class="kv"><div class="k">Effect Catalog</div><div>${state.health.effectCatalogReady ? "ready" : "unavailable"}</div></div>
+          <div class="kv"><div class="k">Effect Definitions</div><div>${Number(state.health.effectDefinitionCount || 0)}</div></div>
+          <div class="kv"><div class="k">Scene Graph</div><div>${state.health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
+          <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
+          <div class="kv"><div class="k">Layout Mode</div><div>${String(state.health.sceneGraphLayoutMode || "2d").toUpperCase()}</div></div>
+          <div class="kv"><div class="k">Spatial Nodes</div><div>${Number(state.health.sceneGraphSpatialNodeCount || 0)}</div></div>
+          ${
+            Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
+              ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`
+              : ""
+          }
+          ${
+            state.health.effectCatalogError
+              ? `<p class="banner warning">Effect catalog: ${escapeHtml(state.health.effectCatalogError)}</p>`
+              : ""
+          }
+          <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Build</div><div>${buildLabel}</div></div>
+        </section>
+        <section class="field">
+          <h3>Diagnostics Feed</h3>
+          ${
+            filteredRows.length
+              ? `
+              <ul class="list">
+                ${filteredRows
+                  .map(
+                    (d) => `
+                    <li>
+                      <strong>[${d.level}]</strong> ${escapeHtml(d.text)}
+                      ${d.details ? `<pre class="diag-details">${escapeHtml(d.details)}</pre>` : ""}
+                    </li>
+                  `
+                  )
+                  .join("")}
+              </ul>
+            `
+              : '<p class="banner">No diagnostics for current filter.</p>'
+          }
+        </section>
+        <section class="field">
+          <h3>Recent Applies</h3>
+          ${
+            applyHistory.length
+              ? `
+              <ul class="list">
+                ${applyHistory
+                  .map((entry) => {
+                    const status = String(entry?.status || "unknown");
+                    const count = Number(entry?.commandCount || 0);
+                    const ts = entry?.ts
+                      ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                      : "--:--";
+                    const reason = String(entry?.reason || "").trim();
+                    return `
+                      <li>
+                        <strong>[${status}]</strong> ${ts} - ${count} cmd${count === 1 ? "" : "s"}
+                        ${entry?.stage ? ` (${entry.stage})` : ""}
+                        ${reason ? `<div class="banner">${escapeHtml(reason)}</div>` : ""}
+                      </li>
+                    `;
+                  })
+                  .join("")}
+              </ul>
+            `
+              : '<p class="banner">No apply history yet.</p>'
+          }
+        </section>
       </section>
     </section>
   `;
@@ -190,82 +270,15 @@ export function buildJobsPanel({ state }) {
 export function buildFooterDiagnostics({ state, helpers }) {
   const { getDiagnosticsCounts, buildLabel } = helpers;
   const diagCounts = getDiagnosticsCounts();
-  const filter = state.ui.diagnosticsFilter;
-  const rows = state.diagnostics || [];
-  const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
-  const footerApplyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 8) : [];
   return `
     <footer class="footer">
       <div class="footer-summary">
-        <button id="toggle-footer-diagnostics">${state.ui.diagnosticsOpen ? "Hide" : "Show"} Diagnostics</button>
+        <button id="open-diagnostics">Diagnostics</button>
         <span>Diagnostics: ${diagCounts.total} total</span>
         <span>${diagCounts.warning} warning</span>
         <span>${diagCounts.actionRequired} action-required</span>
         <span>${buildLabel}</span>
       </div>
-      ${
-        state.ui.diagnosticsOpen
-          ? `
-          <div class="footer-diagnostics">
-            <div class="row" style="justify-content:space-between;">
-              <div class="row">
-                <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${diagCounts.total})</button>
-                <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${diagCounts.warning})</button>
-                <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${diagCounts.actionRequired})</button>
-              </div>
-              <div class="row">
-                <button id="export-diagnostics">Export</button>
-                <button id="clear-diagnostics">Clear</button>
-              </div>
-            </div>
-            ${
-              filteredRows.length
-                ? `
-                <ul class="list">
-                  ${filteredRows
-                    .map(
-                      (d) => `
-                      <li>
-                        <strong>[${d.level}]</strong> ${d.text}
-                        ${d.details ? `<pre class="diag-details">${d.details}</pre>` : ""}
-                      </li>
-                    `
-                    )
-                    .join("")}
-                </ul>
-              `
-                : '<p class="banner">No diagnostics for current filter.</p>'
-            }
-            <div style="margin-top:8px;">
-              <h4 style="margin:0 0 6px;">Recent Applies</h4>
-              ${
-                footerApplyHistory.length
-                  ? `
-                  <ul class="list">
-                    ${footerApplyHistory
-                      .map((entry) => {
-                        const status = String(entry?.status || "unknown");
-                        const count = Number(entry?.commandCount || 0);
-                        const ts = entry?.ts
-                          ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                          : "--:--";
-                        return `
-                          <li>
-                            <strong>[${status}]</strong> ${ts} - ${count} cmd${count === 1 ? "" : "s"}
-                            ${entry?.stage ? ` (${entry.stage})` : ""}
-                          </li>
-                        `;
-                      })
-                      .join("")}
-                  </ul>
-                `
-                  : '<p class="banner">No apply history yet.</p>'
-              }
-            </div>
-          </div>
-        `
-          : ""
-      }
     </footer>
   `;
 }

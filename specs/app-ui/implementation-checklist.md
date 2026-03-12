@@ -50,10 +50,10 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Make the proposal-to-apply transition feel like a deliberate workflow step
 
 ## Phase E: Settings And Diagnostics
-- [ ] Separate user-facing settings from operator/developer diagnostics
-- [ ] Reduce settings drawer overload
-- [ ] Decide whether diagnostics stays in the footer or moves to a dedicated screen/panel
-- [ ] Keep health information available without dominating normal workflow
+- [x] Separate user-facing settings from operator/developer diagnostics
+- [x] Reduce settings drawer overload
+- [x] Decide whether diagnostics stays in the footer or moves to a dedicated screen/panel
+- [x] Keep health information available without dominating normal workflow
 
 ## Phase F: UI Runtime Structure
 - [x] Add an `app-ui` runtime/render domain under `apps/xlightsdesigner-ui`

@@ -1,4 +1,5 @@
 import {
+  buildDiagnosticsDrawer,
   buildFooterDiagnostics,
   buildJobsPanel,
   buildSettingsDrawer
@@ -208,6 +209,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
               ${screenContent}
               ${state.route === "review" ? detailsDrawer() : ""}
               ${buildSettingsDrawer({ state, helpers })}
+              ${buildDiagnosticsDrawer({ state, helpers: { getDiagnosticsCounts, escapeHtml, buildLabel } })}
               ${buildJobsPanel({ state })}
             </main>
             ${persistentCoachPanel()}

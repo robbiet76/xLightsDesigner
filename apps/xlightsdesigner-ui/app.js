@@ -9109,9 +9109,14 @@ function bindEvents() {
     });
   }
 
-  const toggleFooterDiagnosticsBtn = app.querySelector("#toggle-footer-diagnostics");
-  if (toggleFooterDiagnosticsBtn) {
-    toggleFooterDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics());
+  const openDiagnosticsBtn = app.querySelector("#open-diagnostics");
+  if (openDiagnosticsBtn) {
+    openDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(true));
+  }
+
+  const closeDiagnosticsBtn = app.querySelector("#close-diagnostics");
+  if (closeDiagnosticsBtn) {
+    closeDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(false));
   }
 
   const closeJobsBtn = app.querySelector("#close-jobs");

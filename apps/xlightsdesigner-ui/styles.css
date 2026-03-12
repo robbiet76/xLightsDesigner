@@ -1050,6 +1050,10 @@ button:disabled {
   border-left: 1px solid var(--line);
 }
 
+.diagnostics-drawer {
+  width: min(720px, 96vw);
+}
+
 .active-chip {
   border-color: rgba(25, 163, 140, 0.55);
   background: linear-gradient(180deg, rgba(25, 163, 140, 0.18), rgba(12, 27, 34, 0.9));
