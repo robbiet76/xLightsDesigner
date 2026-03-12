@@ -444,9 +444,30 @@ button:disabled {
     var(--panel);
 }
 
+.artifact-card-sequence {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(116, 97, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-card-sequence-status {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(87, 120, 207, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
 .artifact-card-review {
   background:
     radial-gradient(circle at 100% 0%, rgba(243, 183, 95, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-card-review-plan {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(215, 131, 64, 0.14), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
     var(--panel);
 }
@@ -463,8 +484,16 @@ button:disabled {
   border-color: rgba(59, 122, 221, 0.18);
 }
 
+.sequence-screen > .card {
+  border-color: rgba(116, 97, 255, 0.18);
+}
+
 .review-screen .artifact-card-review {
   border-color: rgba(243, 183, 95, 0.3);
+}
+
+.review-screen .artifact-card-review-plan {
+  border-color: rgba(215, 131, 64, 0.28);
 }
 
 .design-workspace {

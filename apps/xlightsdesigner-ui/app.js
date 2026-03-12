@@ -9078,7 +9078,11 @@ function sequenceScreen() {
   const mediaFile = String(state.sequenceMediaFile || state.audioPathInput || "").trim();
   const revision = String(state.currentSequenceRevision || "").trim();
   return `
-    <div class="screen-grid">
+    <div class="screen-grid sequence-screen">
+      <section class="artifact-grid">
+        ${renderSequenceContextArtifactCard()}
+        ${renderSequenceScopeArtifactCard()}
+      </section>
       <section class="card">
         <h3>Sequence Setup</h3>
         <div class="field">
@@ -9310,6 +9314,47 @@ function renderAudioPipelineArtifactCard() {
   `;
 }
 
+function renderSequenceContextArtifactCard() {
+  const seqSettings = state.sequenceSettings && typeof state.sequenceSettings === "object" ? state.sequenceSettings : {};
+  const displayElements = Array.isArray(state.sceneGraph?.displayElements) ? state.sceneGraph.displayElements : [];
+  const groupCount = Number(state.sceneGraph?.stats?.groupCount || 0);
+  const submodelCount = Number(state.sceneGraph?.stats?.submodelCount || 0);
+  return `
+    <section class="card artifact-card artifact-card-sequence">
+      <div class="artifact-kicker">Sequence Context</div>
+      <h3>${escapeHtml(String(state.activeSequence || "No sequence open"))}</h3>
+      <div class="artifact-chip-row">
+        <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(state.currentSequenceRevision || "unknown"))}</span>
+        <span class="artifact-chip">${escapeHtml(String(seqSettings.sequenceType || "Media"))}</span>
+        <span class="artifact-chip">${seqSettings.supportsModelBlending ? "blending on" : "blending off"}</span>
+      </div>
+      <p class="artifact-body">${escapeHtml(String(state.sequenceMediaFile || state.audioPathInput || "No media attached"))}</p>
+      <p class="banner">Display elements: ${displayElements.length} | groups: ${groupCount} | submodels: ${submodelCount}</p>
+      <p class="banner">Layout mode: ${escapeHtml(String(state.sceneGraph?.stats?.layoutMode || "2d").toUpperCase())}</p>
+    </section>
+  `;
+}
+
+function renderSequenceScopeArtifactCard() {
+  const sections = getSections();
+  const selectedSections = getSelectedSections();
+  const allSelected = hasAllSectionsSelected();
+  const selectionText = allSelected ? "All sections" : (selectedSections.length ? selectedSections.join(", ") : "No sections selected");
+  const metadataSelectionCount = Array.isArray(state.ui.metadataSelectionIds) ? state.ui.metadataSelectionIds.length : 0;
+  return `
+    <section class="card artifact-card artifact-card-sequence-status">
+      <div class="artifact-kicker">Working Scope</div>
+      <h3>${escapeHtml(selectionText)}</h3>
+      <div class="artifact-chip-row">
+        <span class="artifact-chip">${sections.length} sections</span>
+        <span class="artifact-chip">${metadataSelectionCount} tagged targets selected</span>
+        <span class="artifact-chip">${Array.isArray(state.models) ? state.models.length : 0} models loaded</span>
+      </div>
+      <p class="banner">Use this screen to choose and confirm the active sequence context before design and review.</p>
+    </section>
+  `;
+}
+
 function renderBriefArtifactCard() {
   const brief = state.creative?.brief || null;
   if (!brief) {
@@ -9386,6 +9431,50 @@ function renderProposalArtifactCard() {
         risks.length
           ? `<ul class="artifact-list">${risks.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul>`
           : `<p class="banner">No risk notes captured.</p>`
+      }
+    </section>
+  `;
+}
+
+function renderReviewExecutionArtifactCard() {
+  const lastApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
+  const backupPath = String(state.lastApplyBackupPath || "").trim();
+  const status = String(lastApply?.status || "pending");
+  const commandCount = Number(lastApply?.commandCount || 0);
+  const verification = lastApply?.verification && typeof lastApply.verification === "object" ? lastApply.verification : null;
+  return `
+    <section class="card artifact-card artifact-card-review">
+      <div class="artifact-kicker">Execution State</div>
+      <h3>${escapeHtml(status === "pending" ? "No apply run yet" : `Last apply: ${status}`)}</h3>
+      <div class="artifact-chip-row">
+        <span class="artifact-chip artifact-chip-accent">${commandCount} commands</span>
+        <span class="artifact-chip">${backupPath ? "backup ready" : "no backup"}</span>
+        <span class="artifact-chip">${verification?.revisionAdvanced === false ? "revision blocked" : "revision ok"}</span>
+      </div>
+      <p class="banner">Last run: ${escapeHtml(String(state.health.orchestrationLastSummary || "none"))}</p>
+      <p class="banner">Backup: ${backupPath ? escapeHtml(backupPath) : "none"}</p>
+      <p class="banner">Verification: ${verification ? escapeHtml(verification.expectedMutationsPresent === false ? "expected mutations missing" : "checks recorded") : "not run"}</p>
+    </section>
+  `;
+}
+
+function renderReviewPlanArtifactCard() {
+  const plan = getValidHandoff("plan_handoff_v1");
+  const warnings = Array.isArray(plan?.warnings) ? plan.warnings.slice(0, 3) : [];
+  const commandCount = Array.isArray(plan?.commands) ? plan.commands.length : 0;
+  return `
+    <section class="card artifact-card artifact-card-review-plan">
+      <div class="artifact-kicker">Sequence Plan</div>
+      <h3>${escapeHtml(String(plan?.summary || "No validated plan handoff"))}</h3>
+      <div class="artifact-chip-row">
+        <span class="artifact-chip">${commandCount} commands</span>
+        <span class="artifact-chip">${warnings.length} warnings</span>
+        <span class="artifact-chip">${escapeHtml(String(plan?.planId || "no plan id"))}</span>
+      </div>
+      ${
+        warnings.length
+          ? `<ul class="artifact-list">${warnings.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+          : `<p class="banner">No plan warnings recorded.</p>`
       }
     </section>
   `;
@@ -9483,6 +9572,13 @@ function reviewScreen() {
           <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
           <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed and ready for apply." : "Approval checkbox must be confirmed before apply."}</p>
         </section>
+      </section>
+    </div>
+
+    <div class="screen-grid review-screen">
+      <section class="artifact-grid">
+        ${renderReviewPlanArtifactCard()}
+        ${renderReviewExecutionArtifactCard()}
       </section>
     </div>
 
