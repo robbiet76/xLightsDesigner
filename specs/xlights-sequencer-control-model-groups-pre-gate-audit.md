@@ -103,6 +103,7 @@ Current behavior:
   - broad-group target preservation on generic-scope lines,
   - nested-group breadth preference (broadest valid aggregate first),
   - preference for preserving non-default group render targets when scope is otherwise comparable,
+  - render-policy family/risk inference from `defaultBufferStyle` plus `availableBufferStyles`, not only the coarse `renderPolicy` category string,
   - preserve-vs-expand baseline semantics:
     - preserve explicit group targets by default,
     - expand only when the request explicitly calls for per-member distribution,

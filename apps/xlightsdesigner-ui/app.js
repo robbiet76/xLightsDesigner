@@ -3061,6 +3061,25 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
   const availableBufferStyles = Array.isArray(model?.availableBufferStyles)
     ? model.availableBufferStyles.map((v) => String(v || "").trim()).filter(Boolean)
     : [];
+  const defaultBufferStyle = String(model?.defaultBufferStyle || "Default").trim() || "Default";
+  const renderPolicyCategory = String(model?.renderPolicy || "default").trim() || "default";
+  const inferBufferStyleFamily = (style = "") => {
+    const key = String(style || "").trim().toLowerCase();
+    if (!key || key === "default") return "default";
+    if (key === "overlay" || key.includes("overlay")) return "overlay";
+    if (key === "stack" || key.includes("stack")) return "stack";
+    if (key === "single_line" || key.includes("single line")) return "single_line";
+    if (key === "per_model_strand" || key.includes("per strand")) return "per_model_strand";
+    if (key === "per_model" || key.includes("per model")) return "per_model";
+    return "default";
+  };
+  const currentFamily = inferBufferStyleFamily(renderPolicyCategory !== "default" ? renderPolicyCategory : defaultBufferStyle);
+  const availableStyleFamilies = Array.from(new Set(availableBufferStyles.map((row) => inferBufferStyleFamily(row)).filter(Boolean)));
+  const riskLevel = currentFamily === "overlay" || currentFamily === "stack" || currentFamily === "single_line" || currentFamily === "per_model_strand"
+    ? "high"
+    : currentFamily === "per_model"
+      ? "medium"
+      : "low";
   return {
     id,
     name: String(model?.name || id),
@@ -3081,9 +3100,12 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
     endChannel: toFiniteNumberOrNull(model?.endChannel),
     renderPolicy: {
       layout: String(model?.renderLayout || "").trim(),
-      defaultBufferStyle: String(model?.defaultBufferStyle || "Default").trim() || "Default",
-      category: String(model?.renderPolicy || "default").trim() || "default",
-      availableBufferStyles
+      defaultBufferStyle,
+      category: renderPolicyCategory,
+      currentFamily,
+      riskLevel,
+      availableBufferStyles,
+      availableStyleFamilies
     },
     transform: {
       position: normalizeVector3(transform.position),

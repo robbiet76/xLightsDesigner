@@ -37,7 +37,8 @@ function sampleGroups() {
       renderPolicy: {
         layout: "horizontal",
         defaultBufferStyle: "Horizontal Per Model",
-        category: "per_model"
+        category: "per_model",
+        availableBufferStyles: ["Default", "Horizontal Per Model", "Per Model Vertical Per Strand"]
       },
       members: {
         direct: [
@@ -71,7 +72,8 @@ function sampleGroups() {
       renderPolicy: {
         layout: "Overlay - Centered",
         defaultBufferStyle: "Overlay - Centered",
-        category: "overlay"
+        category: "overlay",
+        availableBufferStyles: ["Overlay - Centered", "Overlay - Scaled", "Default"]
       },
       members: {
         direct: [
@@ -89,7 +91,8 @@ function sampleGroups() {
       renderPolicy: {
         layout: "Per Model Vertical Per Strand",
         defaultBufferStyle: "Per Model Vertical Per Strand",
-        category: "per_model_strand"
+        category: "per_model_strand",
+        availableBufferStyles: ["Per Model Vertical Per Strand", "Per Model Horizontal Per Strand", "Default"]
       },
       members: {
         direct: [
@@ -99,6 +102,24 @@ function sampleGroups() {
         flattenedAll: [
           { id: "Spoke1", name: "Spoke1" },
           { id: "Spoke2", name: "Spoke2" }
+        ]
+      }
+    },
+    StyleOnlyOverlay: {
+      renderPolicy: {
+        layout: "Overlay - Scaled",
+        defaultBufferStyle: "Overlay - Scaled",
+        category: "default",
+        availableBufferStyles: ["Overlay - Centered", "Overlay - Scaled", "Default"]
+      },
+      members: {
+        direct: [
+          { id: "WindowA", name: "WindowA" },
+          { id: "WindowB", name: "WindowB" }
+        ],
+        flattenedAll: [
+          { id: "WindowA", name: "WindowA" },
+          { id: "WindowB", name: "WindowB" }
         ]
       }
     }
@@ -418,6 +439,20 @@ test("command builders preserve high-risk overlay group render targets without f
 
   const effectCommands = commands.filter((row) => row.cmd === "effects.create");
   assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["NestedFrontline"]);
+});
+
+test("command builders infer high-risk policy from buffer-style metadata even when category is default", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / StyleOnlyOverlay / bars per member stagger members"
+  ], {
+    targetIds: ["StyleOnlyOverlay"],
+    groupIds: ["StyleOnlyOverlay"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["StyleOnlyOverlay"]);
 });
 
 test("command builders only expand high-risk overlay group render targets with force override", () => {

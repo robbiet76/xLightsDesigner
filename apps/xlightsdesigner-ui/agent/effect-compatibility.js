@@ -253,12 +253,13 @@ export function evaluateEffectCommandCompatibility({ commands = [], effectCatalo
       const sourceGroupId = normText(params.sourceGroupId);
       const sourceGroupRenderPolicy = normText(params.sourceGroupRenderPolicy).toLowerCase();
       const sourceGroupBufferStyle = normText(params.sourceGroupBufferStyle);
+      const sourceGroupRenderRisk = normText(params.sourceGroupRenderRisk).toLowerCase();
       if (sourceGroupId && sourceGroupRenderPolicy) {
-        if (isHighRiskGroupRenderPolicy(sourceGroupRenderPolicy)) {
+        if (sourceGroupRenderRisk === "high" || isHighRiskGroupRenderPolicy(sourceGroupRenderPolicy)) {
           warnings.push(
             `Expanded member-level effect from high-risk group render target ${sourceGroupId} (${sourceGroupBufferStyle || sourceGroupRenderPolicy}); xLights group render semantics may differ from member expansion.`
           );
-        } else if (sourceGroupRenderPolicy !== "default") {
+        } else if (sourceGroupRenderRisk === "medium" || sourceGroupRenderPolicy !== "default") {
           warnings.push(
             `Expanded member-level effect from non-default group render target ${sourceGroupId} (${sourceGroupBufferStyle || sourceGroupRenderPolicy}).`
           );

@@ -7,6 +7,24 @@ function normText(value = "") {
   return String(value || "").trim();
 }
 
+function inferBufferStyleFamily(style = "") {
+  const key = normText(style).toLowerCase();
+  if (!key || key === "default") return "default";
+  if (key === "overlay" || key.includes("overlay")) return "overlay";
+  if (key === "stack" || key.includes("stack")) return "stack";
+  if (key === "single_line" || key.includes("single line")) return "single_line";
+  if (key === "per_model_strand" || key.includes("per strand")) return "per_model_strand";
+  if (key === "per_model" || key.includes("per model")) return "per_model";
+  return "default";
+}
+
+function inferRenderRiskLevel(family = "") {
+  const key = normText(family).toLowerCase();
+  if (key === "overlay" || key === "stack" || key === "single_line" || key === "per_model_strand") return "high";
+  if (key === "per_model") return "medium";
+  return "low";
+}
+
 function splitModelTokenList(raw = "") {
   const rows = String(raw || "")
     .split(/\+|,|&/)
@@ -37,11 +55,27 @@ function normalizeGroupGraph(groupsById = {}, groupIds = []) {
         id,
         direct: new Set(direct.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
         flattened: new Set(flattened.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
-        renderPolicy: {
-          layout: normText(value?.renderPolicy?.layout),
-          defaultBufferStyle: normText(value?.renderPolicy?.defaultBufferStyle || "Default") || "Default",
-          category: normText(value?.renderPolicy?.category || "default") || "default"
-        }
+        renderPolicy: (() => {
+          const defaultBufferStyle = normText(value?.renderPolicy?.defaultBufferStyle || "Default") || "Default";
+          const availableBufferStyles = Array.isArray(value?.renderPolicy?.availableBufferStyles)
+            ? value.renderPolicy.availableBufferStyles.map((row) => normText(row)).filter(Boolean)
+            : [];
+          const currentFamily = inferBufferStyleFamily(
+            normText(value?.renderPolicy?.category) && normText(value?.renderPolicy?.category) !== "default"
+              ? normText(value?.renderPolicy?.category)
+              : defaultBufferStyle
+          );
+          const availableFamilies = Array.from(new Set(availableBufferStyles.map((row) => inferBufferStyleFamily(row)).filter(Boolean)));
+          return {
+            layout: normText(value?.renderPolicy?.layout),
+            defaultBufferStyle,
+            category: normText(value?.renderPolicy?.category || currentFamily || "default") || "default",
+            currentFamily,
+            riskLevel: inferRenderRiskLevel(currentFamily),
+            availableBufferStyles,
+            availableFamilies
+          };
+        })()
       };
     }
   }
@@ -54,7 +88,11 @@ function normalizeGroupGraph(groupsById = {}, groupIds = []) {
         renderPolicy: {
           layout: "",
           defaultBufferStyle: "Default",
-          category: "default"
+          category: "default",
+          currentFamily: "default",
+          riskLevel: "low",
+          availableBufferStyles: [],
+          availableFamilies: ["default"]
         }
       };
     }
@@ -77,7 +115,7 @@ function scoreAggregateTarget(id = "", orderedTargets = [], groupGraph = {}) {
   const containedTargets = others.filter((row) => group.flattened.has(row) || group.direct.has(row)).length;
   const breadth = group.flattened.size || group.direct.size || 0;
   const positionBias = orderedTargets.indexOf(id) >= 0 ? (orderedTargets.length - orderedTargets.indexOf(id)) / 1000 : 0;
-  const renderPolicy = String(group?.renderPolicy?.category || "default").trim() || "default";
+  const renderPolicy = String(group?.renderPolicy?.currentFamily || group?.renderPolicy?.category || "default").trim() || "default";
   const renderPolicyBias = renderPolicy === "default" ? 0 : 100;
   return (containedTargets * 1000) + breadth + renderPolicyBias + positionBias;
 }
@@ -156,8 +194,7 @@ function inferGroupDistributionStrategy(description = "") {
 }
 
 function isHighRiskGroupRenderPolicy(category = "") {
-  const key = normText(category).toLowerCase();
-  return key === "overlay" || key === "stack" || key === "single_line" || key === "per_model_strand";
+  return inferRenderRiskLevel(category) === "high";
 }
 
 function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 0) {
@@ -186,7 +223,7 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
       out.push({ modelName: id, sourceGroupId: "" });
       continue;
     }
-    const renderCategory = normText(group?.renderPolicy?.category).toLowerCase();
+    const renderCategory = normText(group?.renderPolicy?.currentFamily || group?.renderPolicy?.category).toLowerCase();
     const preserveNonDefaultGroup = renderCategory && renderCategory !== "default" && !strategy.explicitOverride;
     const preserveHighRiskGroup = isHighRiskGroupRenderPolicy(renderCategory) && !strategy.forceOverride;
     if (preserveNonDefaultGroup) {
@@ -231,7 +268,7 @@ export function collectGroupRenderPolicyWarnings(sourceLines = [], { groupIds = 
     for (const modelName of parsed.models) {
       const id = normText(modelName);
       const group = groupGraph[id];
-      const renderCategory = normText(group?.renderPolicy?.category).toLowerCase();
+      const renderCategory = normText(group?.renderPolicy?.currentFamily || group?.renderPolicy?.category).toLowerCase();
       if (!group || !renderCategory || renderCategory === "default") continue;
       const defaultBufferStyle = normText(group?.renderPolicy?.defaultBufferStyle) || "non-default";
       if (isHighRiskGroupRenderPolicy(renderCategory) && !strategy.forceOverride) {
@@ -520,8 +557,9 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
           settings: inferSharedSettings(row.description),
           palette: {},
           sourceGroupId: normText(target?.sourceGroupId),
-          sourceGroupRenderPolicy: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.category),
-          sourceGroupBufferStyle: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.defaultBufferStyle)
+          sourceGroupRenderPolicy: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.currentFamily || groupGraph[target?.sourceGroupId]?.renderPolicy?.category),
+          sourceGroupBufferStyle: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.defaultBufferStyle),
+          sourceGroupRenderRisk: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.riskLevel)
         }
       });
     }

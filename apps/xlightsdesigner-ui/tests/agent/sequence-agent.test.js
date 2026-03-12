@@ -58,7 +58,8 @@ function sampleGroups() {
       renderPolicy: {
         layout: "horizontal",
         defaultBufferStyle: "Horizontal Per Model",
-        category: "per_model"
+        category: "per_model",
+        availableBufferStyles: ["Default", "Horizontal Per Model", "Per Model Vertical Per Strand"]
       },
       members: {
         direct: [
@@ -92,7 +93,8 @@ function sampleGroups() {
       renderPolicy: {
         layout: "Overlay - Centered",
         defaultBufferStyle: "Overlay - Centered",
-        category: "overlay"
+        category: "overlay",
+        availableBufferStyles: ["Overlay - Centered", "Overlay - Scaled", "Default"]
       },
       members: {
         direct: [
@@ -110,7 +112,8 @@ function sampleGroups() {
       renderPolicy: {
         layout: "Per Model Vertical Per Strand",
         defaultBufferStyle: "Per Model Vertical Per Strand",
-        category: "per_model_strand"
+        category: "per_model_strand",
+        availableBufferStyles: ["Per Model Vertical Per Strand", "Per Model Horizontal Per Strand", "Default"]
       },
       members: {
         direct: [
@@ -120,6 +123,24 @@ function sampleGroups() {
         flattenedAll: [
           { id: "Spoke1", name: "Spoke1" },
           { id: "Spoke2", name: "Spoke2" }
+        ]
+      }
+    },
+    StyleOnlyOverlay: {
+      renderPolicy: {
+        layout: "Overlay - Scaled",
+        defaultBufferStyle: "Overlay - Scaled",
+        category: "default",
+        availableBufferStyles: ["Overlay - Centered", "Overlay - Scaled", "Default"]
+      },
+      members: {
+        direct: [
+          { id: "WindowA", name: "WindowA" },
+          { id: "WindowB", name: "WindowB" }
+        ],
+        flattenedAll: [
+          { id: "WindowA", name: "WindowA" },
+          { id: "WindowB", name: "WindowB" }
         ]
       }
     }
@@ -566,7 +587,7 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
     reorder.params.orderedIds,
     ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
   );
-  assert.equal(out.metadata.groupGraphCount, 5);
+  assert.equal(out.metadata.groupGraphCount, 6);
 });
 
 test("sequence_agent prefers non-default group render targets when explicit scope is otherwise comparable", () => {
@@ -724,6 +745,33 @@ test("sequence_agent preserves high-risk overlay group render targets without fo
   assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["NestedFrontline"]);
   assert.equal(
     out.warnings.some((w) => /Preserving high-risk group render target NestedFrontline \(Overlay - Centered\)/i.test(String(w))),
+    true
+  );
+});
+
+test("sequence_agent infers high-risk policy from buffer-style metadata even when category is default", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep overlay semantics inferred from buffer style intact unless expansion is forced",
+      mode: "revise",
+      scope: {
+        targetIds: ["StyleOnlyOverlay"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / StyleOnlyOverlay / bars per member stagger members"],
+    groupIds: ["StyleOnlyOverlay"],
+    groupsById: sampleGroups(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["StyleOnlyOverlay"]);
+  assert.equal(
+    out.warnings.some((w) => /Preserving high-risk group render target StyleOnlyOverlay \(Overlay - Scaled\)/i.test(String(w))),
     true
   );
 });
