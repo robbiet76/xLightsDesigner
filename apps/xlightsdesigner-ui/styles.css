@@ -430,6 +430,20 @@ button:disabled {
     var(--panel);
 }
 
+.artifact-card-audio {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(59, 122, 221, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-card-audio-status {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(25, 163, 140, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
 .artifact-card-review {
   background:
     radial-gradient(circle at 100% 0%, rgba(243, 183, 95, 0.14), transparent 34%),
@@ -443,6 +457,10 @@ button:disabled {
 
 .design-screen > .card {
   border-color: rgba(25, 163, 140, 0.18);
+}
+
+.audio-screen > .card {
+  border-color: rgba(59, 122, 221, 0.18);
 }
 
 .review-screen .artifact-card-review {

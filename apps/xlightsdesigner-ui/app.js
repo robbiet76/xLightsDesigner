@@ -9027,7 +9027,11 @@ function audioScreen() {
   const analysisServiceReady = Boolean(state.ui.analysisServiceReady);
   const analysisServiceChecking = Boolean(state.ui.analysisServiceChecking);
   return `
-    <div class="screen-grid">
+    <div class="screen-grid audio-screen">
+      <section class="artifact-grid">
+        ${renderAudioAnalysisArtifactCard()}
+        ${renderAudioPipelineArtifactCard()}
+      </section>
       ${
         hasAudioTrack
           ? `
@@ -9246,6 +9250,63 @@ function globalChatBar() {
         <button id="send-chat">Send</button>
       </div>
     </div>
+  `;
+}
+
+function renderAudioAnalysisArtifactCard() {
+  const analysis = getValidHandoff("analysis_handoff_v1");
+  const timing = analysis?.timing || {};
+  const structure = analysis?.structure || {};
+  const chords = analysis?.chords || {};
+  const identity = analysis?.trackIdentity || {};
+  const bpm = timing?.bpm != null ? String(timing.bpm) : "unknown";
+  const meter = String(timing?.timeSignature || "unknown");
+  const sections = Array.isArray(structure?.sections) ? structure.sections.slice(0, 5) : [];
+  return `
+    <section class="card artifact-card artifact-card-audio">
+      <div class="artifact-kicker">Analysis Artifact</div>
+      <h3>${escapeHtml(String(identity?.title || basenameOfPath(state.audioPathInput || "") || "No analyzed media"))}</h3>
+      <div class="artifact-chip-row">
+        <span class="artifact-chip artifact-chip-accent">${escapeHtml(`${bpm} BPM`)}</span>
+        <span class="artifact-chip">${escapeHtml(meter)}</span>
+        <span class="artifact-chip">${Array.isArray(structure?.sections) ? structure.sections.length : 0} sections</span>
+        <span class="artifact-chip">${chords?.hasChords ? "chords ready" : "no chords"}</span>
+      </div>
+      <p class="artifact-body">${escapeHtml(String(state.audioAnalysis?.summary || "Audio analysis has not produced a summary yet."))}</p>
+      <p class="banner">Identity: ${escapeHtml([identity?.title, identity?.artist].filter(Boolean).join(" - ") || "pending")}</p>
+      <p class="banner">Structure source: ${escapeHtml(String(structure?.source || "pending"))} | confidence: ${escapeHtml(String(structure?.confidence || "low"))}</p>
+      <div class="artifact-chip-row">
+        ${
+          sections.length
+            ? sections.map((row) => `<span class="artifact-chip">${escapeHtml(String(row?.label || row?.name || "Section"))}</span>`).join("")
+            : `<span class="artifact-chip artifact-chip-muted">No sections labeled yet</span>`
+        }
+      </div>
+    </section>
+  `;
+}
+
+function renderAudioPipelineArtifactCard() {
+  const pipeline = state.audioAnalysis?.pipeline && typeof state.audioAnalysis.pipeline === "object"
+    ? state.audioAnalysis.pipeline
+    : null;
+  const rows = [
+    ["Media attached", Boolean(pipeline?.mediaAttached)],
+    ["Service reached", Boolean(pipeline?.analysisServiceCalled)],
+    ["Service succeeded", Boolean(pipeline?.analysisServiceSucceeded)],
+    ["Timing derived", Boolean(pipeline?.timingDerived)],
+    ["Structure derived", Boolean(pipeline?.structureDerived)],
+    ["Web context derived", Boolean(pipeline?.webContextDerived)]
+  ];
+  return `
+    <section class="card artifact-card artifact-card-audio-status">
+      <div class="artifact-kicker">Analysis Status</div>
+      <h3>${escapeHtml(getAnalysisServiceHeaderBadgeText())}</h3>
+      <ul class="artifact-list">
+        ${rows.map(([label, ok]) => `<li>${ok ? "PASS" : "PENDING"} - ${escapeHtml(label)}</li>`).join("")}
+      </ul>
+      <p class="banner">Last analyzed: ${state.audioAnalysis?.lastAnalyzedAt ? escapeHtml(new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleString([], { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })) : "never"}</p>
+    </section>
   `;
 }
 
