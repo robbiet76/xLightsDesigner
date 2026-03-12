@@ -127,11 +127,11 @@ Exit gate:
 
 - [x] Emit canonical `intent_handoff_v1` from the new designer runtime
 - [x] Ensure `intent_handoff_v1` is derived from the proposal bundle / creative brief, not ad hoc app assembly
-- [ ] Add tests that prove stable downstream handoff behavior for:
+- [x] Add tests that prove stable downstream handoff behavior for:
   - new proposal
   - refine proposal
   - stale proposal regeneration
-- [ ] Add degraded-mode behavior when upstream analysis is missing
+- [x] Add degraded-mode behavior when upstream analysis is missing
 
 Exit gate:
 - `sequence_agent` receives consistent designer handoffs regardless of UI path.
@@ -160,15 +160,15 @@ Exit gate:
 
 - [x] Add dedicated contract tests
 - [x] Add runtime tests
-- [ ] Add orchestration tests
+- [x] Add orchestration tests
 - [ ] Add brief fidelity tests
-- [ ] Add proposal lifecycle tests
-- [ ] Add failure taxonomy for:
+- [x] Add proposal lifecycle tests
+- [x] Add failure taxonomy for:
   - clarification
   - proposal generation
   - stale rebase
   - handoff validation
-- [ ] Export designer diagnostics in structured form
+- [x] Export designer diagnostics in structured form
 - [x] Add tests that prove the agent proceeds autonomously on broad but usable prompts instead of over-questioning
 - [x] Add tests that prove learned preferences influence proposals without forcing stylistic cloning
 

@@ -22,5 +22,6 @@ test("designer orchestrator returns canonical proposal artifacts on success", ()
   assert.equal(result.creativeBrief.briefType, "creative_brief_v1");
   assert.equal(result.proposalBundle.bundleType, "proposal_bundle_v1");
   assert.equal(result.intentHandoff.goal, "Make the chorus warmer and cleaner");
+  assert.equal(result.diagnostics.artifactType, "designer_dialog_diagnostics_v1");
   assert.ok(result.proposalLines.length > 0);
 });

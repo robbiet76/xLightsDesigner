@@ -29,6 +29,22 @@ function makeId(prefix = "designer") {
   return `${prefix}-${suffix}`;
 }
 
+function hasMeaningfulCreativeInput({
+  promptText = "",
+  goals = "",
+  inspiration = "",
+  notes = "",
+  priorBrief = null
+} = {}) {
+  return Boolean(
+    str(promptText) ||
+    str(goals) ||
+    str(inspiration) ||
+    str(notes) ||
+    str(priorBrief?.summary)
+  );
+}
+
 function summarizeScope({ sections = [], targetIds = [], tagNames = [] } = {}) {
   const parts = [];
   if (arr(sections).length) parts.push(`sections: ${arr(sections).slice(0, 3).join(", ")}`);
@@ -281,6 +297,15 @@ export function executeDesignerDialogFlow({
   metadataAssignments = []
 } = {}) {
   try {
+    if (!hasMeaningfulCreativeInput({ promptText, goals, inspiration, notes, priorBrief })) {
+      return buildDesignerDialogResult({
+        requestId,
+        status: "failed",
+        failureReason: "clarification",
+        warnings: ["Designer kickoff needs at least one meaningful creative input before proposal generation can proceed."],
+        summary: "Designer kickoff needs clarification."
+      });
+    }
     const resolvedRequestId = str(requestId || makeId("designer"));
     const { brief, gate: briefGate } = buildCreativeBriefArtifact({
       requestId: resolvedRequestId,
@@ -316,6 +341,9 @@ export function executeDesignerDialogFlow({
     });
 
     const warnings = [];
+    if (!analysisHandoff) {
+      warnings.push("Proceeding without analysis_handoff_v1. Proposal is in degraded mode and should be reviewed more conservatively.");
+    }
     if (!briefGate.ok) warnings.push(...briefGate.report.errors);
     if (!proposal.inputGate.ok) warnings.push(...proposal.inputGate.report.errors);
     if (!proposal.proposalGate.ok) warnings.push(...proposal.proposalGate.report.errors);
