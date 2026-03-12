@@ -208,3 +208,4 @@ Progress note (2026-03-12):
 - `app.js` now routes analyze-audio through `executeAudioAnalystFlow(...)`, but provider execution and normalization still partly live in `runAudioAnalysisPipeline()`.
 - provider normalization/arbitration scaffolding now exists in `apps/xlightsdesigner-ui/agent/audio-provider-adapters.js`, but the service pipeline still needs deeper adapter extraction by capability.
 - external analysis-service execution and service-result normalization now live partly in `apps/xlightsdesigner-ui/agent/audio-analysis-service-runtime.js`, reducing the mixed provider logic inside `runAudioAnalysisPipeline()`.
+- song-context research and web tempo-validation now live partly in `apps/xlightsdesigner-ui/agent/audio-analysis-context-runtime.js`, further shrinking `runAudioAnalysisPipeline()` toward composition logic only.
