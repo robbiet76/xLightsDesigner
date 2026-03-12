@@ -12,6 +12,18 @@ function sampleCatalog() {
         { name: "E_SPEED", type: "int", min: 0, max: 10 },
         { name: "E_MODE", type: "enum", enumValues: ["A", "B"] }
       ]
+    },
+    {
+      effectName: "Pictures",
+      params: [
+        { name: "E_TEXTCTRL_Pictures_Filename", type: "file", required: true }
+      ]
+    },
+    {
+      effectName: "Video",
+      params: [
+        { name: "E_FILEPICKERCTRL_Video_Filename", type: "file", required: true }
+      ]
     }
   ]);
 }
@@ -152,4 +164,38 @@ test("effect compatibility warns more strongly when expanding from high-risk gro
   });
   assert.equal(out.ok, true);
   assert.ok(out.warnings.some((w) => /high-risk group render target NestedFrontline \(Overlay - Centered\)/i.test(String(w))));
+});
+
+test("effect compatibility accepts designer-provided picture file paths", () => {
+  const out = evaluateEffectCommandCompatibility({
+    commands: [{
+      cmd: "effects.create",
+      params: {
+        effectName: "Pictures",
+        settings: {
+          E_TEXTCTRL_Pictures_Filename: "/Users/robterry/Documents/Lights/assets/snowflake.png"
+        }
+      }
+    }],
+    effectCatalog: sampleCatalog()
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.warnings.length, 0);
+});
+
+test("effect compatibility accepts designer-provided video file paths", () => {
+  const out = evaluateEffectCommandCompatibility({
+    commands: [{
+      cmd: "effects.create",
+      params: {
+        effectName: "Video",
+        settings: {
+          E_FILEPICKERCTRL_Video_Filename: "/Users/robterry/Documents/Lights/assets/intro.mp4"
+        }
+      }
+    }],
+    effectCatalog: sampleCatalog()
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.warnings.length, 0);
 });

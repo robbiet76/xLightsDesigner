@@ -240,6 +240,60 @@ test("orchestrator stages forced group-expansion metadata without reinterpretati
   );
 });
 
+test("orchestrator stages picture and video file paths without reinterpretation", async () => {
+  const staged = [];
+  const commands = [
+    {
+      id: "effect.picture.1",
+      cmd: "effects.create",
+      params: {
+        modelName: "MegaTree",
+        layerIndex: 0,
+        effectName: "Pictures",
+        startMs: 0,
+        endMs: 1000,
+        settings: {
+          E_TEXTCTRL_Pictures_Filename: "/Users/robterry/Documents/Lights/assets/snowflake.png"
+        }
+      }
+    },
+    {
+      id: "effect.video.1",
+      cmd: "effects.create",
+      params: {
+        modelName: "Matrix",
+        layerIndex: 1,
+        effectName: "Video",
+        startMs: 1000,
+        endMs: 2500,
+        settings: {
+          E_FILEPICKERCTRL_Video_Filename: "/Users/robterry/Documents/Lights/assets/intro.mp4"
+        }
+      }
+    }
+  ];
+
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands,
+    expectedRevision: "rev-media-1",
+    getRevision: okRevision("rev-media-1"),
+    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }, { index: 1, valid: true }] } }),
+    beginTransaction: async () => ({ data: { transactionId: "tx-media-paths" } }),
+    stageTransactionCommand: async (_endpoint, txId, stagedCommand) => {
+      staged.push({ txId, stagedCommand });
+      return { res: 200 };
+    },
+    commitTransaction: async () => ({ data: { newRevision: "rev-media-2" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(staged.length, 2);
+  assert.equal(staged[0].stagedCommand.params.settings.E_TEXTCTRL_Pictures_Filename, "/Users/robterry/Documents/Lights/assets/snowflake.png");
+  assert.equal(staged[1].stagedCommand.params.settings.E_FILEPICKERCTRL_Video_Filename, "/Users/robterry/Documents/Lights/assets/intro.mp4");
+});
+
 test("orchestrator rolls back staged transaction on runtime failure", async () => {
   const staged = [];
   let rolledBack = false;
