@@ -61,11 +61,7 @@ import {
 import {
   normalizeAudioAnalysisProvider
 } from "./agent/audio-provider-adapters.js";
-import {
-  createAudioAnalysisPipelineState,
-  runAudioAnalysisServicePass
-} from "./agent/audio-analysis-service-runtime.js";
-import { runAudioAnalysisContextPass } from "./agent/audio-analysis-context-runtime.js";
+import { runAudioAnalysisOrchestration } from "./agent/audio-analysis-orchestrator.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/command-graph.js";
@@ -8696,137 +8692,38 @@ async function runSongContextWebFallback(audioPath = "") {
 }
 
 async function runAudioAnalysisPipeline() {
-  const audioPath = String(state.audioPathInput || "").trim();
-  const pipeline = createAudioAnalysisPipelineState();
-  pipeline.mediaAttached = Boolean(audioPath);
-  const trackMarksByName = {};
-  const diagnostics = [];
-  let mediaMetadata = null;
-  let sequenceDurationMs = null;
-  let detectedTimeSignature = "";
-  let detectedTempoBpm = null;
-  let detectedTrackIdentity = null;
-  let serviceWebTempoEvidence = null;
-  let webValidation = null;
-  let rawAnalysisData = {};
-  const analysisBaseUrl = String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "");
-  const analysisProvider = normalizeAudioAnalysisProvider(state.ui.analysisServiceProvider || "auto");
-  const analysisApiKey = String(state.ui.analysisServiceApiKeyDraft || "").trim();
-  const analysisBearer = String(state.ui.analysisServiceAuthBearerDraft || "").trim();
-
-  if (!audioPath) {
-    return {
-      summary: "No audio track available for analysis on this sequence.",
-      pipeline,
-      details: null,
-      diagnostics
-    };
-  }
-
-  const addDiag = (message) => {
-    const text = String(message || "").trim();
-    if (!text) return;
-    diagnostics.push(text);
-  };
-
-  if (!analysisBaseUrl) {
-    const analysis = analyzeAudioContext({
-      audioPath,
-      mediaMetadata,
-      sectionSuggestions: [],
-      sectionStartByLabel: {},
-      timingTracks: state.timingTracks || [],
-      trackMarksByName: {},
-      songContextSummary: ""
-    });
-    diagnostics.push("Audio analysis service URL is required in Settings.");
-    return {
-      summary: formatAudioAnalysisSummary({ analysis, pipeline, webValidation }),
-      pipeline: { ...pipeline },
-      details: analysis,
-      diagnostics
-    };
-  }
-  const analysisBridge = getDesktopAudioAnalysisBridge();
-  const servicePass = await runAudioAnalysisServicePass({
-    audioPath,
-    analysisBridge,
-    baseUrl: analysisBaseUrl,
-    provider: analysisProvider,
-    apiKey: analysisApiKey,
-    authBearer: analysisBearer,
-    mediaMetadata,
-    sequenceDurationMs,
+  const out = await runAudioAnalysisOrchestration({
+    audioPath: String(state.audioPathInput || "").trim(),
+    timingTracks: state.timingTracks || [],
+    analysisService: {
+      baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
+      provider: normalizeAudioAnalysisProvider(state.ui.analysisServiceProvider || "auto"),
+      apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim(),
+      authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim()
+    },
+    analysisBridge: getDesktopAudioAnalysisBridge(),
     inferLyricStanzaPlan,
     relabelSectionsWithLlm,
     audioTrackQueryFromPath,
-    buildSectionSuggestions
-  });
-  Object.assign(pipeline, servicePass.pipeline || {});
-  diagnostics.push(...(Array.isArray(servicePass.diagnostics) ? servicePass.diagnostics : []));
-  Object.assign(trackMarksByName, servicePass.trackMarksByName || {});
-  mediaMetadata = servicePass.mediaMetadata ?? mediaMetadata;
-  sequenceDurationMs = servicePass.sequenceDurationMs ?? sequenceDurationMs;
-  detectedTimeSignature = servicePass.detectedTimeSignature || detectedTimeSignature;
-  detectedTempoBpm = Number.isFinite(servicePass.detectedTempoBpm) ? servicePass.detectedTempoBpm : detectedTempoBpm;
-  detectedTrackIdentity = servicePass.detectedTrackIdentity || detectedTrackIdentity;
-  serviceWebTempoEvidence = servicePass.serviceWebTempoEvidence || serviceWebTempoEvidence;
-  rawAnalysisData = servicePass.rawAnalysisData && typeof servicePass.rawAnalysisData === "object" ? servicePass.rawAnalysisData : rawAnalysisData;
-  if (Array.isArray(servicePass.sectionSuggestions) && servicePass.sectionSuggestions.length) {
-    state.ui.sectionTrackName = servicePass.sectionTrackName || "Analysis: Song Structure";
-    state.sectionSuggestions = servicePass.sectionSuggestions;
-    state.sectionStartByLabel = servicePass.sectionStartByLabel || {};
-  }
-
-  const analysisTracks = (Array.isArray(servicePass.analysisTrackNames) ? servicePass.analysisTrackNames : []).map((name) => ({ name }));
-
-  const contextPass = await runAudioAnalysisContextPass({
-    audioPath,
-    sections: state.sectionSuggestions || [],
-    detectedTrackIdentity,
-    detectedTimeSignature,
-    detectedTempoBpm,
-    serviceWebTempoEvidence,
+    buildSectionSuggestions,
     runSongContextResearch,
     runSongContextWebFallback,
     buildWebValidationFromServiceEvidence,
     areMetersCompatible,
     beatsPerBarFromSignature,
     extractNumericCandidates,
-    medianNumber
+    medianNumber,
+    analyzeAudioContext,
+    formatAudioAnalysisSummary,
+    initialSectionSuggestions: state.sectionSuggestions || [],
+    initialSectionStartByLabel: state.sectionStartByLabel || {}
   });
-  diagnostics.push(...(Array.isArray(contextPass.diagnostics) ? contextPass.diagnostics : []));
-  webValidation = contextPass.webValidation || null;
-  detectedTempoBpm = Number.isFinite(contextPass.detectedTempoBpm) ? contextPass.detectedTempoBpm : detectedTempoBpm;
-  const effectiveSongContext = String(contextPass.effectiveSongContext || "").trim();
-  pipeline.webContextDerived = Boolean(contextPass.webContextDerived);
-
-  const analysis = analyzeAudioContext({
-    audioPath,
-    mediaMetadata,
-    sectionSuggestions: state.sectionSuggestions,
-    sectionStartByLabel: state.sectionStartByLabel,
-    timingTracks: analysisTracks,
-    trackMarksByName,
-    songContextSummary: effectiveSongContext,
-    detectedTimeSignature,
-    detectedTempoBpm
-  });
-  if (detectedTrackIdentity && typeof detectedTrackIdentity === "object") {
-    analysis.trackIdentity = {
-      title: String(detectedTrackIdentity.title || "").trim(),
-      artist: String(detectedTrackIdentity.artist || "").trim(),
-      isrc: String(detectedTrackIdentity.isrc || "").trim()
-    };
+  if (Array.isArray(out.sectionSuggestions) && out.sectionSuggestions.length) {
+    state.ui.sectionTrackName = out.sectionTrackName || "Analysis: Song Structure";
+    state.sectionSuggestions = out.sectionSuggestions;
+    state.sectionStartByLabel = out.sectionStartByLabel || {};
   }
-
-  return {
-    summary: formatAudioAnalysisSummary({ analysis, pipeline, webValidation }),
-    pipeline: { ...pipeline },
-    details: analysis,
-    raw: rawAnalysisData,
-    diagnostics
-  };
+  return out;
 }
 
 function buildAnalysisHandoffFromPipelineResult(result = {}) {

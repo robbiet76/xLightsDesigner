@@ -1,7 +1,7 @@
 {
   "id": "audio_analyst",
   "version": "0.1.0",
-  "purpose": "Convert sequence audio into timing intelligence and context evidence for downstream design/planning.",
+  "purpose": "Convert media into canonical analysis artifacts and downstream context/timing handoffs for design and sequencing.",
   "ownedModules": [
     "audio_track_analysis"
   ],
@@ -13,8 +13,8 @@
     ]
   },
   "outputs": [
-    "audio_summary",
-    "timing_tracks:beats,bars,lyrics,chords,structure",
+    "analysis_artifact_v1",
+    "analysis_handoff_v1",
     "track_identity",
     "web_validation",
     "creative_brief_seed"
