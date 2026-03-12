@@ -57,8 +57,8 @@ Boundary summary:
 - [~] Extract `audio_analyst` orchestration out of `app.js`.
 - [~] Create dedicated runtime module(s) for:
   - [x] request normalization
-  - [ ] service/provider execution
-  - [ ] result normalization
+  - [~] service/provider execution
+  - [~] result normalization
   - [~] artifact persistence
   - [x] handoff derivation
 - [ ] Keep `app.js` limited to UI wiring and action dispatch.
@@ -207,3 +207,4 @@ Progress note (2026-03-12):
 - `audio_analyst` extraction has started via `apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js`, and contract/gate logic now exists in `apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js`.
 - `app.js` now routes analyze-audio through `executeAudioAnalystFlow(...)`, but provider execution and normalization still partly live in `runAudioAnalysisPipeline()`.
 - provider normalization/arbitration scaffolding now exists in `apps/xlightsdesigner-ui/agent/audio-provider-adapters.js`, but the service pipeline still needs deeper adapter extraction by capability.
+- external analysis-service execution and service-result normalization now live partly in `apps/xlightsdesigner-ui/agent/audio-analysis-service-runtime.js`, reducing the mixed provider logic inside `runAudioAnalysisPipeline()`.

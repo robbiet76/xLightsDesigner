@@ -59,10 +59,12 @@ import {
   executeAudioAnalystFlow
 } from "./agent/audio-analyst-runtime.js";
 import {
-  buildAudioAnalysisServiceRequest,
-  normalizeAudioAnalysisProvider,
-  summarizeProviderSelection
+  normalizeAudioAnalysisProvider
 } from "./agent/audio-provider-adapters.js";
+import {
+  createAudioAnalysisPipelineState,
+  runAudioAnalysisServicePass
+} from "./agent/audio-analysis-service-runtime.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
 import { validateAndApplyPlan } from "./agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/command-graph.js";
@@ -8694,26 +8696,8 @@ async function runSongContextWebFallback(audioPath = "") {
 
 async function runAudioAnalysisPipeline() {
   const audioPath = String(state.audioPathInput || "").trim();
-  const pipeline = {
-    mediaAttached: Boolean(audioPath),
-    mediaMetadataRead: false,
-    analysisServiceCalled: false,
-    analysisServiceSucceeded: false,
-    beatTrackWritten: false,
-    beatTrackPreserved: false,
-    barTrackWritten: false,
-    barTrackPreserved: false,
-    chordTrackWritten: false,
-    chordTrackPreserved: false,
-    structureTrackWritten: false,
-    structureTrackPreserved: false,
-    lyricsTrackWritten: false,
-    lyricsTrackPreserved: false,
-    structureDerived: false,
-    timingDerived: false,
-    lyricsDetected: false,
-    webContextDerived: false
-  };
+  const pipeline = createAudioAnalysisPipelineState();
+  pipeline.mediaAttached = Boolean(audioPath);
   const trackMarksByName = {};
   const diagnostics = [];
   let mediaMetadata = null;
@@ -8762,233 +8746,38 @@ async function runAudioAnalysisPipeline() {
       diagnostics
     };
   }
-
-  const normalizeMarksForApi = (marks = []) => {
-    const cap =
-      Number.isFinite(sequenceDurationMs) && sequenceDurationMs > 1
-        ? sequenceDurationMs
-        : (Number.isFinite(Number(mediaMetadata?.durationMs)) && Number(mediaMetadata.durationMs) > 1
-          ? Math.round(Number(mediaMetadata.durationMs))
-          : null);
-    const maxExclusive = cap != null ? Math.max(1, cap) : null;
-    const maxEnd = maxExclusive != null ? Math.max(1, maxExclusive - 1) : null;
-    const out = [];
-    for (const mark of Array.isArray(marks) ? marks : []) {
-      const startMsRaw = Math.round(Number(mark?.startMs));
-      if (!Number.isFinite(startMsRaw)) continue;
-      let startMs = Math.max(0, startMsRaw);
-      if (maxExclusive != null && startMs >= maxExclusive) continue;
-      if (!Number.isFinite(startMs)) continue;
-      const endRaw = Number(mark?.endMs);
-      const label = String(mark?.label || "").trim();
-      const row = { startMs };
-      if (Number.isFinite(endRaw) && endRaw > startMs) row.endMs = Math.round(endRaw);
-      if (maxEnd != null && Number.isFinite(row.endMs)) {
-        row.endMs = Math.min(row.endMs, maxEnd);
-      }
-      if (maxEnd != null && !Number.isFinite(row.endMs)) {
-        row.endMs = Math.min(maxEnd, row.startMs + 1);
-      }
-      if (maxEnd != null && row.endMs <= row.startMs) {
-        row.endMs = Math.min(maxEnd, row.startMs + 1);
-      }
-      if (maxEnd != null && row.endMs <= row.startMs) continue;
-      if (label) row.label = label;
-      out.push(row);
-    }
-    return out;
-  };
-  const analysisTrackNames = [];
-  const addAnalysisTrack = (trackName, marks, pipelineKey = "") => {
-    const name = String(trackName || "").trim();
-    const normalized = normalizeMarksForApi(marks);
-    if (!name || !normalized.length) return;
-    trackMarksByName[name] = normalized;
-    analysisTrackNames.push(name);
-    if (pipelineKey && Object.prototype.hasOwnProperty.call(pipeline, pipelineKey)) {
-      pipeline[pipelineKey] = true;
-    }
-  };
   const analysisBridge = getDesktopAudioAnalysisBridge();
-  if (!analysisBridge) {
-    addDiag("Analysis service bridge unavailable in this runtime.");
-  } else {
-    try {
-      pipeline.analysisServiceCalled = true;
-      const analysisRes = await analysisBridge.runAudioAnalysisService(buildAudioAnalysisServiceRequest({
-        filePath: audioPath,
-        baseUrl: analysisBaseUrl,
-        provider: analysisProvider,
-        apiKey: analysisApiKey || undefined,
-        authBearer: analysisBearer || undefined
-      }));
-      if (!analysisRes?.ok) {
-        addDiag(`Audio analysis service failed: ${String(analysisRes?.error || "unknown error")}`);
-      } else {
-        pipeline.analysisServiceSucceeded = true;
-        const data = analysisRes?.data && typeof analysisRes.data === "object" ? analysisRes.data : {};
-        const dataMeta = data?.meta && typeof data.meta === "object" ? data.meta : {};
-        for (const line of summarizeProviderSelection(dataMeta)) {
-          addDiag(line);
-        }
-        detectedTrackIdentity = data?.meta?.trackIdentity && typeof data.meta.trackIdentity === "object"
-          ? data.meta.trackIdentity
-          : null;
-        serviceWebTempoEvidence = data?.meta?.webTempoEvidence && typeof data.meta.webTempoEvidence === "object"
-          ? data.meta.webTempoEvidence
-          : null;
-        const beats = Array.isArray(data?.beats) ? data.beats : [];
-        const bars = Array.isArray(data?.bars) ? data.bars : [];
-        const chords = Array.isArray(data?.chords) ? data.chords : [];
-        const sections = Array.isArray(data?.sections) ? data.sections : [];
-        const lyrics = Array.isArray(data?.lyrics) ? data.lyrics : [];
-        let effectiveSections = sections;
-        let lyricalSectionIndices = [];
-        const serviceDurationMs = Number(data?.durationMs);
-        if (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1) {
-          const roundedDuration = Math.round(serviceDurationMs);
-          if (!Number.isFinite(sequenceDurationMs) || sequenceDurationMs <= 1) {
-            sequenceDurationMs = roundedDuration;
-          }
-          if (!Number.isFinite(Number(mediaMetadata?.durationMs)) || Number(mediaMetadata?.durationMs) <= 1) {
-            mediaMetadata = { ...(mediaMetadata || {}), durationMs: roundedDuration };
-            pipeline.mediaMetadataRead = true;
-          }
-        }
-        const tempoBpm = Number(data?.bpm);
-        const timeSignature = String(data?.timeSignature || "").trim();
-        detectedTempoBpm = Number.isFinite(tempoBpm) ? tempoBpm : null;
-        detectedTimeSignature = timeSignature;
-        if (Number.isFinite(tempoBpm) || timeSignature) {
-          const note = `${Number.isFinite(tempoBpm) ? `${tempoBpm} BPM` : "BPM?"}${timeSignature ? ` / ${timeSignature}` : ""}`;
-          addDiag(`Service analysis summary: ${note}`);
-        }
-        if (Array.isArray(lyrics) && lyrics.length >= 4) {
-          const durationForSections =
-            (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1 ? Math.round(serviceDurationMs) : null) ||
-            (Number.isFinite(sequenceDurationMs) && sequenceDurationMs > 1 ? Math.round(sequenceDurationMs) : null) ||
-            (Number.isFinite(Number(mediaMetadata?.durationMs)) && Number(mediaMetadata.durationMs) > 1
-              ? Math.round(Number(mediaMetadata.durationMs))
-              : 0);
-          const titleHintForStanzas =
-            String(detectedTrackIdentity?.title || "").trim() ||
-            audioTrackQueryFromPath(audioPath);
-          const stanzaPlan = inferLyricStanzaPlan(lyrics, durationForSections, titleHintForStanzas);
-          if (Array.isArray(stanzaPlan.sections) && stanzaPlan.sections.length) {
-            effectiveSections = stanzaPlan.sections;
-            lyricalSectionIndices = Array.isArray(stanzaPlan.lyricalIndices) ? stanzaPlan.lyricalIndices : [];
-            addDiag(`Lyrics stanza plan: ${effectiveSections.length} sections (${lyricalSectionIndices.length} lyrical).`);
-            if (Number(stanzaPlan?.titleAwareSplits || 0) > 0) {
-              addDiag(`Lyrics stanza title-aware splits: ${Number(stanzaPlan.titleAwareSplits)}.`);
-            }
-          }
-        }
-        if (Array.isArray(effectiveSections) && effectiveSections.length >= 2 && Array.isArray(lyrics) && lyrics.length >= 4 && lyricalSectionIndices.length) {
-          const relabeled = await relabelSectionsWithLlm({
-            sections: effectiveSections,
-            lyrics,
-            chords,
-            lyricalIndices: lyricalSectionIndices,
-            trackIdentity: detectedTrackIdentity,
-            trackTitleHint: audioTrackQueryFromPath(audioPath),
-            userManualStructureHint: null,
-            timeSignature,
-            tempoBpm
-          });
-          if (relabeled?.sections?.length === effectiveSections.length) {
-            effectiveSections = relabeled.sections;
-            if (String(relabeled.confidence || "").trim()) {
-              addDiag(`LLM section relabel: ${String(relabeled.confidence).trim()}`);
-            } else {
-              addDiag("LLM section relabel: applied.");
-            }
-            if (String(relabeled.rationale || "").trim()) {
-              addDiag(`LLM section rationale: ${String(relabeled.rationale).trim()}`);
-            }
-            if (relabeled?.trainingPackage && typeof relabeled.trainingPackage === "object") {
-              const pkgId = String(relabeled.trainingPackage.packageId || "").trim();
-              const pkgVer = String(relabeled.trainingPackage.packageVersion || "").trim();
-              const modId = String(relabeled.trainingPackage.moduleId || "").trim();
-              const modVer = String(relabeled.trainingPackage.moduleVersion || "").trim();
-              const promptCount = Array.isArray(relabeled.trainingPackage.promptPaths)
-                ? relabeled.trainingPackage.promptPaths.length
-                : 0;
-              const fewShotCount = Number(relabeled.trainingPackage.fewShotCount || 0);
-              addDiag(
-                `Training package: ${pkgId || "unknown"}@${pkgVer || "?"} module ${modId || "audio_track_analysis"}@${modVer || "?"} prompts=${promptCount}, fewShot=${fewShotCount}`
-              );
-            } else if (String(relabeled?.trainingPackageError || "").trim()) {
-              addDiag(`Training package fallback: ${String(relabeled.trainingPackageError).trim()}`);
-            }
-          }
-        }
-        if (Array.isArray(effectiveSections) && effectiveSections.length) {
-          const finalLabels = effectiveSections
-            .map((row) => String(row?.label || "").trim())
-            .filter(Boolean);
-          if (finalLabels.length) {
-            addDiag(`Final song structure labels: ${finalLabels.join(", ")}`);
-          }
-        }
-
-        addAnalysisTrack("Analysis: Beats", beats, "beatTrackWritten");
-        addAnalysisTrack("Analysis: Bars", bars, "barTrackWritten");
-        addAnalysisTrack("Analysis: Chords", chords, "chordTrackWritten");
-        addAnalysisTrack("Analysis: Lyrics", lyrics, "lyricsTrackWritten");
-        addAnalysisTrack("Analysis: Song Structure", effectiveSections, "structureTrackWritten");
-        if (Array.isArray(beats) && beats.length) pipeline.timingDerived = true;
-        if (Array.isArray(bars) && bars.length) pipeline.timingDerived = true;
-        if (Array.isArray(chords) && chords.length) pipeline.timingDerived = true;
-        if (Array.isArray(lyrics) && lyrics.length) pipeline.lyricsDetected = true;
-        if (Array.isArray(effectiveSections) && effectiveSections.length) {
-          const built = buildSectionSuggestions(normalizeMarksForApi(effectiveSections));
-          state.ui.sectionTrackName = "Analysis: Song Structure";
-          state.sectionSuggestions = built.labels;
-          state.sectionStartByLabel = built.startByLabel;
-          pipeline.structureDerived = built.labels.length > 0;
-        }
-
-        if (String(dataMeta?.chordAnalysis?.engine || "").trim()) {
-          addDiag(`Chord analysis engine: ${String(dataMeta.chordAnalysis.engine).trim()}`);
-        }
-        if (String(dataMeta?.chordAnalysis?.avgMarginConfidence || "").trim()) {
-          addDiag(`Chord analysis confidence: ${String(dataMeta.chordAnalysis.avgMarginConfidence).trim()}`);
-        }
-        if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
-          addDiag(`Lyrics global shift suggested: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
-        }
-        if (!beats.length) addDiag("Analysis service returned no beats.");
-        if (!bars.length) addDiag("Analysis service returned no bars.");
-        if (!chords.length) {
-          addDiag("Analysis service returned no chords.");
-          if (String(dataMeta?.chordAnalysis?.error || "").trim()) {
-            addDiag(`Chord analysis detail: ${String(dataMeta.chordAnalysis.error).trim()}`);
-          }
-        }
-        if (!effectiveSections.length) addDiag("Analysis service returned no song sections.");
-        if (!lyrics.length) {
-          addDiag("Analysis service returned no synced lyrics.");
-          if (String(dataMeta.lyricsSourceError || "").trim()) {
-            addDiag(`Lyrics source detail: ${String(dataMeta.lyricsSourceError).trim()}`);
-          }
-        }
-        rawAnalysisData = {
-          bpm: Number.isFinite(tempoBpm) ? tempoBpm : null,
-          timeSignature,
-          beats,
-          bars,
-          chords,
-          lyrics,
-          sections: effectiveSections,
-          meta: dataMeta
-        };
-      }
-    } catch (err) {
-      addDiag(`Audio analysis service runtime failure: ${String(err?.message || err)}`);
-    }
+  const servicePass = await runAudioAnalysisServicePass({
+    audioPath,
+    analysisBridge,
+    baseUrl: analysisBaseUrl,
+    provider: analysisProvider,
+    apiKey: analysisApiKey,
+    authBearer: analysisBearer,
+    mediaMetadata,
+    sequenceDurationMs,
+    inferLyricStanzaPlan,
+    relabelSectionsWithLlm,
+    audioTrackQueryFromPath,
+    buildSectionSuggestions
+  });
+  Object.assign(pipeline, servicePass.pipeline || {});
+  diagnostics.push(...(Array.isArray(servicePass.diagnostics) ? servicePass.diagnostics : []));
+  Object.assign(trackMarksByName, servicePass.trackMarksByName || {});
+  mediaMetadata = servicePass.mediaMetadata ?? mediaMetadata;
+  sequenceDurationMs = servicePass.sequenceDurationMs ?? sequenceDurationMs;
+  detectedTimeSignature = servicePass.detectedTimeSignature || detectedTimeSignature;
+  detectedTempoBpm = Number.isFinite(servicePass.detectedTempoBpm) ? servicePass.detectedTempoBpm : detectedTempoBpm;
+  detectedTrackIdentity = servicePass.detectedTrackIdentity || detectedTrackIdentity;
+  serviceWebTempoEvidence = servicePass.serviceWebTempoEvidence || serviceWebTempoEvidence;
+  rawAnalysisData = servicePass.rawAnalysisData && typeof servicePass.rawAnalysisData === "object" ? servicePass.rawAnalysisData : rawAnalysisData;
+  if (Array.isArray(servicePass.sectionSuggestions) && servicePass.sectionSuggestions.length) {
+    state.ui.sectionTrackName = servicePass.sectionTrackName || "Analysis: Song Structure";
+    state.sectionSuggestions = servicePass.sectionSuggestions;
+    state.sectionStartByLabel = servicePass.sectionStartByLabel || {};
   }
 
-  const analysisTracks = analysisTrackNames.map((name) => ({ name }));
+  const analysisTracks = (Array.isArray(servicePass.analysisTrackNames) ? servicePass.analysisTrackNames : []).map((name) => ({ name }));
 
   const songContextResearch = await runSongContextResearch({
     audioPath,
