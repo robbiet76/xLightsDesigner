@@ -2,6 +2,13 @@ import {
   buildAudioAnalysisServiceRequest,
   summarizeProviderSelection
 } from "./audio-provider-adapters.js";
+import {
+  normalizeChordCapability,
+  normalizeIdentityCapability,
+  normalizeLyricsCapability,
+  normalizeStructureCapability,
+  normalizeTimingCapability
+} from "./audio-analysis-capability-adapters.js";
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -168,14 +175,27 @@ export async function runAudioAnalysisServicePass({
     const dataMeta = isPlainObject(data?.meta) ? data.meta : {};
     for (const line of summarizeProviderSelection(dataMeta)) addDiag(line);
 
-    detectedTrackIdentity = isPlainObject(dataMeta?.trackIdentity) ? dataMeta.trackIdentity : null;
-    serviceWebTempoEvidence = isPlainObject(dataMeta?.webTempoEvidence) ? dataMeta.webTempoEvidence : null;
-
-    const beats = Array.isArray(data?.beats) ? data.beats : [];
-    const bars = Array.isArray(data?.bars) ? data.bars : [];
-    const chords = Array.isArray(data?.chords) ? data.chords : [];
-    const sections = Array.isArray(data?.sections) ? data.sections : [];
-    const lyrics = Array.isArray(data?.lyrics) ? data.lyrics : [];
+    const identityCapability = normalizeIdentityCapability(data);
+    const timingCapability = normalizeTimingCapability(data);
+    const chordCapability = normalizeChordCapability(data);
+    const lyricsCapability = normalizeLyricsCapability(data);
+    const structureCapability = normalizeStructureCapability(data);
+    detectedTrackIdentity = identityCapability.title || identityCapability.artist || identityCapability.isrc
+      ? {
+          title: identityCapability.title,
+          artist: identityCapability.artist,
+          album: identityCapability.album,
+          isrc: identityCapability.isrc,
+          provider: identityCapability.provider
+        }
+      : null;
+    serviceWebTempoEvidence = identityCapability.webTempoEvidence;
+    const beats = timingCapability.beats;
+    const bars = timingCapability.bars;
+    const chords = chordCapability.chords;
+    const sections = structureCapability.sections;
+    const lyrics = lyricsCapability.lyrics;
+    diagnostics.push(...identityCapability.diagnostics, ...timingCapability.diagnostics, ...chordCapability.diagnostics, ...lyricsCapability.diagnostics, ...structureCapability.diagnostics);
     let effectiveSections = sections;
     let lyricalSectionIndices = [];
 
@@ -191,8 +211,8 @@ export async function runAudioAnalysisServicePass({
       }
     }
 
-    const tempoBpm = Number(data?.bpm);
-    const timeSignature = str(data?.timeSignature);
+    const tempoBpm = Number(timingCapability.bpm);
+    const timeSignature = str(timingCapability.timeSignature);
     detectedTempoBpm = Number.isFinite(tempoBpm) ? tempoBpm : null;
     detectedTimeSignature = timeSignature;
     if (Number.isFinite(tempoBpm) || timeSignature) {
@@ -271,23 +291,6 @@ export async function runAudioAnalysisServicePass({
       sectionSuggestions = Array.isArray(built?.labels) ? built.labels : [];
       sectionStartByLabel = isPlainObject(built?.startByLabel) ? built.startByLabel : {};
       pipeline.structureDerived = sectionSuggestions.length > 0;
-    }
-
-    if (str(dataMeta?.chordAnalysis?.engine)) addDiag(`Chord analysis engine: ${str(dataMeta.chordAnalysis.engine)}`);
-    if (str(dataMeta?.chordAnalysis?.avgMarginConfidence)) addDiag(`Chord analysis confidence: ${str(dataMeta.chordAnalysis.avgMarginConfidence)}`);
-    if (Number.isFinite(Number(dataMeta.lyricsGlobalShiftMs)) && Number(dataMeta.lyricsGlobalShiftMs) !== 0) {
-      addDiag(`Lyrics global shift suggested: ${Math.round(Number(dataMeta.lyricsGlobalShiftMs))}ms.`);
-    }
-    if (!beats.length) addDiag("Analysis service returned no beats.");
-    if (!bars.length) addDiag("Analysis service returned no bars.");
-    if (!chords.length) {
-      addDiag("Analysis service returned no chords.");
-      if (str(dataMeta?.chordAnalysis?.error)) addDiag(`Chord analysis detail: ${str(dataMeta.chordAnalysis.error)}`);
-    }
-    if (!effectiveSections.length) addDiag("Analysis service returned no song sections.");
-    if (!lyrics.length) {
-      addDiag("Analysis service returned no synced lyrics.");
-      if (str(dataMeta?.lyricsSourceError)) addDiag(`Lyrics source detail: ${str(dataMeta.lyricsSourceError)}`);
     }
 
     rawAnalysisData = {

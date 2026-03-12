@@ -65,12 +65,12 @@ Boundary summary:
 
 ### Phase D: Provider/Tool Framework
 - [x] Define provider adapter contract for modular analyzers.
-- [ ] Implement first-class adapters for current external capabilities:
-  - beat analysis
-  - chord analysis
-  - lyrics retrieval
-  - track identity
-  - section labeling/relabeling
+- [~] Implement first-class adapters for current external capabilities:
+  - [x] beat analysis
+  - [x] chord analysis
+  - [x] lyrics retrieval
+  - [x] track identity
+  - [~] section labeling/relabeling
 - [~] Separate provider arbitration from provider implementation.
 - [ ] Encode replaceability policy:
   - providers may be swapped without changing artifact schema
@@ -210,3 +210,4 @@ Progress note (2026-03-12):
 - external analysis-service execution and service-result normalization now live partly in `apps/xlightsdesigner-ui/agent/audio-analysis-service-runtime.js`, reducing the mixed provider logic inside `runAudioAnalysisPipeline()`.
 - song-context research and web tempo-validation now live partly in `apps/xlightsdesigner-ui/agent/audio-analysis-context-runtime.js`, further shrinking `runAudioAnalysisPipeline()` toward composition logic only.
 - high-level pipeline composition now lives in `apps/xlightsdesigner-ui/agent/audio-analysis-orchestrator.js`, leaving `app.js` to dispatch the runtime and reflect results into UI state.
+- service normalization now uses explicit capability adapters in `apps/xlightsdesigner-ui/agent/audio-analysis-capability-adapters.js` for identity, timing, chords, lyrics, and baseline structure extraction.
