@@ -67,6 +67,12 @@ export function buildAnalysisArtifactFromPipelineResult({
   const rawMeta = isPlainObject(raw?.meta) ? raw.meta : {};
   const summaryLines = Array.isArray(details?.summaryLines) ? details.summaryLines.map((row) => str(row)).filter(Boolean) : [];
   const artifactGeneratedAt = str(generatedAt) || new Date().toISOString();
+  const beats = rows(raw?.beats);
+  const bars = rows(raw?.bars);
+  const chords = rows(raw?.chords);
+  const lyricsLines = rows(raw?.lyrics);
+  const sections = rows(raw?.sections);
+  const webTempoEvidence = isPlainObject(rawMeta?.webTempoEvidence) ? rawMeta.webTempoEvidence : {};
 
   return {
     artifactType: AUDIO_ANALYST_ARTIFACT_TYPE,
@@ -89,24 +95,50 @@ export function buildAnalysisArtifactFromPipelineResult({
     timing: {
       bpm: finiteOrNull(timing?.tempoEstimate ?? raw?.bpm),
       timeSignature: str(timing?.timeSignature || raw?.timeSignature || "unknown"),
-      beats: rows(raw?.beats),
-      bars: rows(raw?.bars)
+      beats,
+      bars
     },
     harmonic: {
-      chords: rows(raw?.chords),
+      chords,
       confidence: str(rawMeta?.chordAnalysis?.avgMarginConfidence)
     },
     lyrics: {
-      hasSyncedLyrics: Boolean(timing?.hasLyricsTrack || rows(raw?.lyrics).length),
-      lines: rows(raw?.lyrics),
+      hasSyncedLyrics: Boolean(timing?.hasLyricsTrack || lyricsLines.length),
+      lines: lyricsLines,
       source: str(rawMeta?.lyricsSource || "none"),
       sourceError: str(rawMeta?.lyricsSourceError),
       shiftMs: finiteOrNull(rawMeta?.lyricsGlobalShiftMs)
     },
     structure: {
-      sections: rows(raw?.sections),
+      sections,
       source: str(rawMeta?.sectionSource || (pipeline.structureDerived ? "service+llm" : "pending")),
       confidence: pipeline.structureDerived ? "medium" : "low"
+    },
+    capabilities: {
+      identity: {
+        available: Boolean(str(identity?.title) || str(identity?.artist) || str(identity?.isrc)),
+        provider: str(identity?.provider || rawMeta?.trackIdentity?.provider)
+      },
+      timing: {
+        available: beats.length > 0 || bars.length > 0 || finiteOrNull(timing?.tempoEstimate ?? raw?.bpm) != null,
+        confidence: beats.length > 0 && bars.length > 0 ? "high" : ((beats.length > 0 || bars.length > 0) ? "medium" : "low"),
+        source: "analysis-service"
+      },
+      harmonic: {
+        available: chords.length > 0,
+        confidence: str(rawMeta?.chordAnalysis?.avgMarginConfidence || (chords.length ? "medium" : "low")),
+        source: str(rawMeta?.chordAnalysis?.engine || "analysis-service")
+      },
+      lyrics: {
+        available: lyricsLines.length > 0,
+        confidence: lyricsLines.length ? "high" : "low",
+        source: str(rawMeta?.lyricsSource || "none")
+      },
+      structure: {
+        available: sections.length > 0,
+        confidence: str(rawMeta?.sectionConfidence || (pipeline.structureDerived ? "medium" : "low")),
+        source: str(rawMeta?.sectionSource || (pipeline.structureDerived ? "service+llm" : "pending"))
+      }
     },
     briefSeed: {
       summaryLines,
@@ -127,6 +159,12 @@ export function buildAnalysisArtifactFromPipelineResult({
       evidence: {
         serviceSummary: summaryLines.find((line) => line.toLowerCase().startsWith("tempo/time signature:")) || "",
         webValidationSummary: summaryLines.find((line) => line.toLowerCase().startsWith("web validation:")) || "",
+        webValidation: {
+          confidence: str(webTempoEvidence?.confidence),
+          timeSignature: str(webTempoEvidence?.timeSignature),
+          tempoBpm: finiteOrNull(webTempoEvidence?.tempoBpm),
+          chosenBeatBpm: finiteOrNull(webTempoEvidence?.chosenBeatBpm)
+        },
         sources: diagnostics
           .filter((line) => /^Web source \d+:/i.test(line))
           .map((line) => line.replace(/^Web source \d+:\s*/i, "").trim())

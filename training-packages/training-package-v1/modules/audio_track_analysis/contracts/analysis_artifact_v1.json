@@ -11,8 +11,10 @@
     "harmonic",
     "lyrics",
     "structure",
+    "capabilities",
     "provenance.generatedAt",
     "provenance.pipeline",
+    "provenance.evidence",
     "diagnostics"
   ],
   "notes": [

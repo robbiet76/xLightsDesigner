@@ -14,7 +14,8 @@
     "lyrics-rich stanza relabeling",
     "partial analysis with no synced lyrics",
     "meter-aware tempo correction from web evidence",
-    "artifact-to-handoff derivation fidelity"
+    "artifact-to-handoff derivation fidelity",
+    "capability evidence and confidence preservation"
   ],
   "notes": [
     "Eval should validate artifact/handoff behavior, not sequence mutation behavior.",

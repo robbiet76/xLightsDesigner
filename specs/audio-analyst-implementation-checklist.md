@@ -77,7 +77,7 @@ Boundary summary:
 - [ ] Define extension path for future in-house analyzers/plugins.
 
 ### Phase E: Canonical Artifact Normalization
-- [ ] Normalize all analysis outputs into one stable schema with:
+- [~] Normalize all analysis outputs into one stable schema with:
   - media identity
   - duration/sample metadata
   - beats
@@ -90,6 +90,7 @@ Boundary summary:
   - confidence/quality diagnostics
   - generation timestamp/version
 - [ ] Preserve provider lineage and evidence without leaking provider-specific raw formats downstream.
+- [~] Preserve provider lineage and evidence without leaking provider-specific raw formats downstream.
 - [ ] Ensure artifact is sufficient for both:
   - designer metadata use
   - sequence-agent timing-track generation
@@ -213,3 +214,4 @@ Progress note (2026-03-12):
 - service normalization now uses explicit capability adapters in `apps/xlightsdesigner-ui/agent/audio-analysis-capability-adapters.js` for identity, timing, chords, lyrics, and baseline structure extraction.
 - training assets for `audio_track_analysis` now reflect the artifact/handoff boundary, degraded-mode handling, and media-only role of `audio_analyst` rather than the earlier timing-track-oriented scaffold.
 - audio orchestration no longer accepts current sequence timing tracks as input; timing-track creation remains solely downstream in `sequence_agent`.
+- `analysis_artifact_v1` now carries explicit per-capability availability/confidence/source fields plus structured web-validation evidence, reducing dependence on summary-line parsing downstream.
