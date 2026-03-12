@@ -340,6 +340,115 @@ button:disabled {
   gap: 14px;
 }
 
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.artifact-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.artifact-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  opacity: 0.9;
+}
+
+.artifact-card h3 {
+  margin-top: 4px;
+}
+
+.artifact-kicker {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.artifact-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.artifact-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.artifact-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.artifact-chip-accent {
+  border-color: rgba(25, 163, 140, 0.45);
+  background: rgba(25, 163, 140, 0.16);
+  color: #dffbf5;
+}
+
+.artifact-chip-muted {
+  color: var(--muted);
+}
+
+.artifact-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.artifact-card-brief {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(25, 163, 140, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-card-proposal {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(28, 106, 134, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-card-review {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(243, 183, 95, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)),
+    var(--panel);
+}
+
+.artifact-card-empty::before {
+  opacity: 0.45;
+}
+
+.design-screen > .card {
+  border-color: rgba(25, 163, 140, 0.18);
+}
+
+.review-screen .artifact-card-review {
+  border-color: rgba(243, 183, 95, 0.3);
+}
+
 .design-workspace {
   align-items: stretch;
 }
@@ -976,6 +1085,10 @@ button:disabled {
 }
 
 @media (max-width: 950px) {
+  .artifact-grid {
+    grid-template-columns: 1fr;
+  }
+
   .main-grid {
     grid-template-columns: 78px 1fr;
   }

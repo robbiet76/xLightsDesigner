@@ -9249,6 +9249,87 @@ function globalChatBar() {
   `;
 }
 
+function renderBriefArtifactCard() {
+  const brief = state.creative?.brief || null;
+  if (!brief) {
+    return `
+      <section class="card artifact-card artifact-card-empty">
+        <div class="artifact-kicker">Creative Brief</div>
+        <h3>No brief yet</h3>
+        <p class="banner">Start the design conversation in Team Chat or write direction notes below to generate the first creative brief.</p>
+      </section>
+    `;
+  }
+  const sections = Array.isArray(brief.sections) ? brief.sections.slice(0, 4) : [];
+  const hypotheses = Array.isArray(brief.hypotheses) ? brief.hypotheses.slice(0, 3) : [];
+  return `
+    <section class="card artifact-card artifact-card-brief">
+      <div class="artifact-kicker">Creative Brief</div>
+      <h3>${escapeHtml(String(brief.summary || "Creative direction ready."))}</h3>
+      <p class="artifact-body">${escapeHtml(String(brief.goalsSummary || ""))}</p>
+      <div class="artifact-chip-row">
+        ${sections.length ? sections.map((section) => `<span class="artifact-chip">${escapeHtml(section)}</span>`).join("") : `<span class="artifact-chip artifact-chip-muted">No sections tagged yet</span>`}
+      </div>
+      <p class="banner">Mood arc: ${escapeHtml(String(brief.moodEnergyArc || "Not defined"))}</p>
+      <p class="banner">Visual cues: ${escapeHtml(String(brief.visualCues || "No visual cues yet"))}</p>
+      ${
+        hypotheses.length
+          ? `<ul class="artifact-list">${hypotheses.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul>`
+          : `<p class="banner">No hypotheses captured yet.</p>`
+      }
+    </section>
+  `;
+}
+
+function renderProposalArtifactCard() {
+  const bundle = state.creative?.proposalBundle || null;
+  if (!bundle) {
+    return `
+      <section class="card artifact-card artifact-card-empty">
+        <div class="artifact-kicker">Proposal Bundle</div>
+        <h3>No proposal generated</h3>
+        <p class="banner">Generate a design pass to produce a structured proposal bundle for review and sequencing.</p>
+      </section>
+    `;
+  }
+  const scope = bundle.scope || {};
+  const lifecycle = bundle.lifecycle || {};
+  const assumptions = Array.isArray(bundle.assumptions) ? bundle.assumptions.slice(0, 3) : [];
+  const questions = Array.isArray(bundle.guidedQuestions) ? bundle.guidedQuestions.slice(0, 3) : [];
+  const risks = Array.isArray(bundle.riskNotes) ? bundle.riskNotes.slice(0, 3) : [];
+  const impact = bundle.impact || {};
+  const scopeSummary = String(scope.summary || "").trim();
+  const lifecycleStatus = String(lifecycle.status || "fresh").trim() || "fresh";
+  return `
+    <section class="card artifact-card artifact-card-proposal">
+      <div class="artifact-kicker">Proposal Bundle</div>
+      <h3>${escapeHtml(String(bundle.summary || "Proposal ready for review."))}</h3>
+      <div class="artifact-chip-row">
+        <span class="artifact-chip artifact-chip-accent">${escapeHtml(lifecycleStatus)}</span>
+        <span class="artifact-chip">Base ${escapeHtml(String(bundle.baseRevision || "unknown"))}</span>
+        <span class="artifact-chip">${escapeHtml(String((bundle.proposalLines || []).length))} lines</span>
+      </div>
+      <p class="artifact-body">${escapeHtml(scopeSummary || "No scope summary available.")}</p>
+      <p class="banner">Impact estimate: ${escapeHtml(String(impact.estimatedEffectTouches || impact.estimatedChanges || "n/a"))}</p>
+      ${
+        assumptions.length
+          ? `<p class="banner">Assumptions: ${escapeHtml(assumptions.join(" | "))}</p>`
+          : `<p class="banner">Assumptions: none recorded</p>`
+      }
+      ${
+        questions.length
+          ? `<p class="banner">Open questions: ${escapeHtml(questions.join(" | "))}</p>`
+          : `<p class="banner">Open questions: none</p>`
+      }
+      ${
+        risks.length
+          ? `<ul class="artifact-list">${risks.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul>`
+          : `<p class="banner">No risk notes captured.</p>`
+      }
+    </section>
+  `;
+}
+
 function designScreen() {
   const creativeBriefText = String(state.creative?.briefText || "");
   const creativeBriefTextEscaped = creativeBriefText
@@ -9259,7 +9340,11 @@ function designScreen() {
     ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
   return `
-    <div class="screen-grid">
+    <div class="screen-grid design-screen">
+      <section class="artifact-grid">
+        ${renderBriefArtifactCard()}
+        ${renderProposalArtifactCard()}
+      </section>
       <section class="card">
         <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
         <div class="field">
@@ -9321,6 +9406,24 @@ function reviewScreen() {
     `
         : ""
     }
+
+    <div class="screen-grid review-screen">
+      <section class="artifact-grid">
+        ${renderProposalArtifactCard()}
+        <section class="card artifact-card artifact-card-review">
+          <div class="artifact-kicker">Execution Review</div>
+          <h3>${escapeHtml(planSummary)}</h3>
+          <div class="artifact-chip-row">
+            <span class="artifact-chip">${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`}</span>
+            <span class="artifact-chip">${impact.targetCount} targets</span>
+            <span class="artifact-chip">${impact.sectionWindows.length || 0} windows</span>
+          </div>
+          <p class="banner">Affected targets: ${impact.targets.length ? escapeHtml(impact.targets.join(", ")) : "none"}</p>
+          <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
+          <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed and ready for apply." : "Approval checkbox must be confirmed before apply."}</p>
+        </section>
+      </section>
+    </div>
 
     <div class="screen-grid design-workspace design-workspace-fill">
       <section class="card design-column full-span">
