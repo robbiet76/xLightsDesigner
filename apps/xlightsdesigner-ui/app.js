@@ -13,6 +13,7 @@ import {
   getLayoutScene,
   getOpenSequence,
   getRevision,
+  getSubmodelDetail,
   getSubmodels,
   getSystemVersion,
   saveSequence,
@@ -3195,7 +3196,12 @@ function buildSceneGraphFromData({
       layoutGroup: String(row?.layoutGroup || "").trim(),
       groupNames: Array.isArray(row?.groupNames) ? row.groupNames.map((v) => String(v || "").trim()).filter(Boolean) : [],
       startChannel: toFiniteNumberOrNull(row?.startChannel),
-      endChannel: toFiniteNumberOrNull(row?.endChannel)
+      endChannel: toFiniteNumberOrNull(row?.endChannel),
+      membership: {
+        nodeCount: Number(row?.membership?.nodeCount || 0),
+        nodeChannels: Array.isArray(row?.membership?.nodeChannels) ? row.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v)) : [],
+        nodeRefs: Array.isArray(row?.membership?.nodeRefs) ? row.membership.nodeRefs : []
+      }
     };
   }
 
@@ -3359,6 +3365,32 @@ async function fetchGroupMembershipsFromXLights(models = []) {
   return out;
 }
 
+async function fetchSubmodelDetailsFromXLights(submodels = []) {
+  const commands = Array.isArray(state.health?.capabilityCommands) ? state.health.capabilityCommands : [];
+  if (!commands.includes("layout.getSubmodelDetail")) {
+    return {};
+  }
+  const rows = Array.isArray(submodels) ? submodels : [];
+  if (!rows.length) return {};
+
+  const results = await Promise.allSettled(
+    rows.map(async (row) => {
+      const id = String(row?.id || "").trim();
+      if (!id) return null;
+      const body = await getSubmodelDetail(state.endpoint, id, row?.parentId || "");
+      const detail = isPlainObject(body?.data) ? body.data : {};
+      return [id, detail];
+    })
+  );
+
+  const out = {};
+  for (const row of results) {
+    if (row.status !== "fulfilled" || !Array.isArray(row.value) || row.value.length !== 2) continue;
+    out[row.value[0]] = row.value[1];
+  }
+  return out;
+}
+
 async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false } = {}) {
   try {
     const open = await getOpenSequence(state.endpoint);
@@ -3374,6 +3406,22 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
   try {
     const submodelBody = await getSubmodels(state.endpoint);
     state.submodels = Array.isArray(submodelBody?.data?.submodels) ? submodelBody.data.submodels : [];
+    const submodelDetailsById = await fetchSubmodelDetailsFromXLights(state.submodels);
+    state.submodels = state.submodels.map((row) => {
+      const id = String(row?.id || "").trim();
+      const detail = isPlainObject(submodelDetailsById[id]) ? submodelDetailsById[id] : {};
+      const submodelDetail = isPlainObject(detail?.submodel) ? detail.submodel : {};
+      const membership = isPlainObject(detail?.membership) ? detail.membership : {};
+      return {
+        ...row,
+        ...submodelDetail,
+        membership: {
+          nodeCount: Number(membership?.nodeCount || 0),
+          nodeChannels: Array.isArray(membership?.nodeChannels) ? membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v)) : [],
+          nodeRefs: Array.isArray(membership?.nodeRefs) ? membership.nodeRefs : []
+        }
+      };
+    });
     state.health.submodelDiscoveryError = "";
   } catch (err) {
     state.submodels = [];

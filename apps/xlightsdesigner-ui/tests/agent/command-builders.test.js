@@ -128,9 +128,10 @@ function sampleGroups() {
 
 function sampleSubmodels() {
   return {
-    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree" },
-    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree" },
-    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline" }
+    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree", membership: { nodeChannels: [1, 2, 3] } },
+    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree", membership: { nodeChannels: [3, 4, 5] } },
+    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline", membership: { nodeChannels: [21, 22, 23] } },
+    "Roofline/Right": { id: "Roofline/Right", parentId: "Roofline", membership: { nodeChannels: [31, 32, 33] } }
   };
 }
 
@@ -269,13 +270,39 @@ test("command builders preserve sibling submodels when parent target is absent",
   const commands = buildDesignerPlanCommands([
     "Chorus 1 / Whole Show / shimmer fade"
   ], {
-    targetIds: ["MegaTree/Star", "MegaTree/TopHalf"],
+    targetIds: ["Roofline/Left", "Roofline/Right"],
     submodelsById: sampleSubmodels(),
     effectCatalog: sampleCatalog()
   });
 
   const effectCommands = commands.filter((row) => row.cmd === "effects.create");
-  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/Star", "MegaTree/TopHalf"]);
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Roofline/Left", "Roofline/Right"]);
+});
+
+test("command builders collapse same-line overlapping sibling submodels to first explicit target", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars"
+  ], {
+    targetIds: ["MegaTree/Star", "MegaTree/TopHalf", "Roofline/Left"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/Star", "Roofline/Left"]);
+});
+
+test("command builders preserve non-overlapping sibling submodels on same line", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Whole Show / bars"
+  ], {
+    targetIds: ["Roofline/Left", "Roofline/Right"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog()
+  });
+
+  const effectCommands = commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Roofline/Left", "Roofline/Right"]);
 });
 
 test("command builders preserve explicit group-first then specific target ordering", () => {

@@ -139,6 +139,12 @@ export async function getSubmodels(endpoint) {
   return postCommand(endpoint, "layout.getSubmodels", {});
 }
 
+export async function getSubmodelDetail(endpoint, name, parentId = "") {
+  const params = { name };
+  if (String(parentId || "").trim()) params.parentId = String(parentId).trim();
+  return postCommand(endpoint, "layout.getSubmodelDetail", params);
+}
+
 export async function getTimingTracks(endpoint) {
   return postCommand(endpoint, "timing.getTracks", {});
 }

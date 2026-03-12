@@ -149,9 +149,10 @@ function sampleGroups() {
 
 function sampleSubmodels() {
   return {
-    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree" },
-    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree" },
-    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline" }
+    "MegaTree/Star": { id: "MegaTree/Star", parentId: "MegaTree", membership: { nodeChannels: [1, 2, 3] } },
+    "MegaTree/TopHalf": { id: "MegaTree/TopHalf", parentId: "MegaTree", membership: { nodeChannels: [3, 4, 5] } },
+    "Roofline/Left": { id: "Roofline/Left", parentId: "Roofline", membership: { nodeChannels: [21, 22, 23] } },
+    "Roofline/Right": { id: "Roofline/Right", parentId: "Roofline", membership: { nodeChannels: [31, 32, 33] } }
   };
 }
 
@@ -476,6 +477,50 @@ test("sequence_agent preserves explicit parent then submodel refinement on separ
       ["MegaTree/Star", "Shimmer"]
     ]
   );
+});
+
+test("sequence_agent collapses same-line overlapping sibling submodels to first explicit target", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Avoid duplicate broad writes across overlapping sibling submodels",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree/Star", "MegaTree/TopHalf", "Roofline/Left"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / bars"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["MegaTree/Star", "Roofline/Left"]);
+});
+
+test("sequence_agent preserves non-overlapping sibling submodels on same line", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: {
+      goal: "Keep non-overlapping sibling submodels available as concurrent precision targets",
+      mode: "revise",
+      scope: {
+        targetIds: ["Roofline/Left", "Roofline/Right"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Whole Show / bars"],
+    submodelsById: sampleSubmodels(),
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.deepEqual(effectCommands.map((row) => row.params.modelName), ["Roofline/Left", "Roofline/Right"]);
 });
 
 test("sequence_agent preserves group-first then specific-target ordering", () => {

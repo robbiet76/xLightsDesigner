@@ -49,7 +49,12 @@ function normalizeSubmodelGraph(submodelsById = {}) {
       if (!id) continue;
       out[id] = {
         id,
-        parentId: normText(value?.parentId || parseSubmodelParentId(id))
+        parentId: normText(value?.parentId || parseSubmodelParentId(id)),
+        nodeChannels: new Set(
+          Array.isArray(value?.membership?.nodeChannels)
+            ? value.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v))
+            : []
+        )
       };
     }
   }
@@ -247,6 +252,42 @@ function collapseParentSubmodelOverlaps(targets = [], submodelsById = {}) {
   });
 }
 
+function collapseSiblingSubmodelOverlaps(targets = [], submodelsById = {}) {
+  const rows = Array.isArray(targets) ? targets : [];
+  if (!rows.length) return [];
+  const submodelGraph = normalizeSubmodelGraph(submodelsById);
+  const out = [];
+  const keptByParent = new Map();
+  for (const row of rows) {
+    const modelName = normText(row?.modelName);
+    if (!modelName) continue;
+    const entry = submodelGraph[modelName];
+    if (!entry) {
+      out.push(row);
+      continue;
+    }
+    const parentId = normText(entry.parentId);
+    const nodeChannels = entry.nodeChannels;
+    if (!parentId || !nodeChannels.size) {
+      out.push(row);
+      continue;
+    }
+    const kept = keptByParent.get(parentId) || [];
+    const overlaps = kept.some((other) => {
+      if (!other?.nodeChannels?.size) return false;
+      for (const ch of nodeChannels) {
+        if (other.nodeChannels.has(ch)) return true;
+      }
+      return false;
+    });
+    if (overlaps) continue;
+    kept.push({ modelName, nodeChannels });
+    keptByParent.set(parentId, kept);
+    out.push(row);
+  }
+  return out;
+}
+
 function resolveExplicitTargetModels(models = [], description = "", groupIds = [], groupsById = {}, submodelsById = {}, alternationSeed = 0) {
   const groupGraph = normalizeGroupGraph(groupsById, groupIds);
   const strategy = inferGroupDistributionStrategy(description);
@@ -289,7 +330,7 @@ function resolveExplicitTargetModels(models = [], description = "", groupIds = [
     seen.add(key);
     deduped.push(row);
   }
-  return collapseParentSubmodelOverlaps(deduped, submodelsById);
+  return collapseSiblingSubmodelOverlaps(collapseParentSubmodelOverlaps(deduped, submodelsById), submodelsById);
 }
 
 export function collectGroupRenderPolicyWarnings(sourceLines = [], { groupIds = [], groupsById = {} } = {}) {
@@ -557,14 +598,17 @@ function buildEffectTemplates(source = [], parsed = [], targetIds = [], effectCa
     let models = row.models.length
       ? resolveExplicitTargetModels(row.models, row.description, groupIds, groupsById, submodelsById, alternationSeed)
       : fallbackTargets.map((modelName) => ({ modelName, sourceGroupId: "" }));
-    models = collapseParentSubmodelOverlaps(models, submodelsById);
+    models = collapseSiblingSubmodelOverlaps(collapseParentSubmodelOverlaps(models, submodelsById), submodelsById);
     if (row.hasGenericScope && Array.isArray(targetIds) && targetIds.length) {
       const orderedTargets = targetIds.map((v) => normText(v)).filter(Boolean);
       const firstAggregate = choosePrimaryAggregateTarget(orderedTargets, groupIds, groupsById);
       if (firstAggregate) {
         models = [{ modelName: firstAggregate, sourceGroupId: "" }];
       } else {
-        models = collapseParentSubmodelOverlaps(orderedTargets.map((modelName) => ({ modelName, sourceGroupId: "" })), submodelsById);
+        models = collapseSiblingSubmodelOverlaps(
+          collapseParentSubmodelOverlaps(orderedTargets.map((modelName) => ({ modelName, sourceGroupId: "" })), submodelsById),
+          submodelsById
+        );
       }
     }
     const window = sectionWindows.get(row.section) || { startMs: i * 1000, endMs: (i * 1000) + 1000 };
