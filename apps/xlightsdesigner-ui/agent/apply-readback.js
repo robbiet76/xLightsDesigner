@@ -11,6 +11,23 @@ function timingMarksSignature(marks = []) {
   return rows.join("|");
 }
 
+function parseSubmodelParentId(target = "") {
+  const name = String(target || "").trim();
+  const idx = name.indexOf("/");
+  if (idx <= 0) return "";
+  return name.slice(0, idx);
+}
+
+function effectPlanKey(modelName = "", layerIndex = 0, startMs = 0, endMs = 0, effectName = "") {
+  return [
+    String(modelName || "").trim(),
+    Number(layerIndex),
+    Number(startMs),
+    Number(endMs),
+    String(effectName || "").trim()
+  ].join("|");
+}
+
 export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
   const commands = Array.isArray(plan) ? plan : [];
   const endpoint = String(deps?.endpoint || "").trim();
@@ -23,6 +40,17 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
     lockedTracksUnchanged: true,
     checks: []
   };
+  const plannedEffectKeys = new Set(
+    commands
+      .filter((step) => String(step?.cmd || "").trim() === "effects.create")
+      .map((step) => effectPlanKey(
+        step?.params?.modelName,
+        step?.params?.layerIndex,
+        step?.params?.startMs,
+        step?.params?.endMs,
+        step?.params?.effectName
+      ))
+  );
 
   const readbackChecks = [];
   for (const step of commands) {
@@ -62,12 +90,13 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
       })());
     }
     if (cmd === "effects.create" && String(params.modelName || "").trim() && listEffects) {
+      const modelName = String(params.modelName || "").trim();
+      const parentId = parseSubmodelParentId(modelName);
+      const layerIndex = Number(params.layerIndex);
+      const startMs = Number(params.startMs);
+      const endMs = Number(params.endMs);
+      const effectName = String(params.effectName || "").trim();
       readbackChecks.push((async () => {
-        const modelName = String(params.modelName || "").trim();
-        const layerIndex = Number(params.layerIndex);
-        const startMs = Number(params.startMs);
-        const endMs = Number(params.endMs);
-        const effectName = String(params.effectName || "").trim();
         const resp = await listEffects(endpoint, { modelName, layerIndex, startMs, endMs });
         const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
         const ok = effects.some((row) =>
@@ -83,6 +112,29 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
           detail: ok ? `${effectName} present` : `${effectName} missing`
         };
       })());
+      if (parentId && !plannedEffectKeys.has(effectPlanKey(parentId, layerIndex, startMs, endMs, effectName))) {
+        readbackChecks.push((async () => {
+          const resp = await listEffects(endpoint, {
+            modelName: parentId,
+            layerIndex,
+            startMs,
+            endMs
+          });
+          const effects = Array.isArray(resp?.data?.effects) ? resp.data.effects : [];
+          const broadened = effects.some((row) =>
+            String(row?.effectName || "").trim() === effectName &&
+            Number(row?.startMs) === startMs &&
+            Number(row?.endMs) === endMs &&
+            Number(row?.layerIndex) === layerIndex
+          );
+          return {
+            kind: "submodel-precision",
+            target: `${modelName}->${parentId}@${layerIndex}`,
+            ok: !broadened,
+            detail: broadened ? `${effectName} broadened to parent` : "parent remained unchanged"
+          };
+        })());
+      }
     }
   }
 

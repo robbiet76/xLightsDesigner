@@ -106,7 +106,7 @@ Current behavior:
 
 Not yet implemented:
 - richer planning semantics for submodel-specific render/buffer behavior beyond the current precision-preservation rule.
-- post-apply verification that submodel-targeted writes did not broaden unexpectedly through parent-wide side effects.
+- broader post-apply verification beyond the current parent-broadening guard.
 
 ## 6) Gap List (Submodels Step)
 
@@ -116,11 +116,14 @@ Need explicit rules for:
 - what can be overridden at submodel granularity,
 - which additional submodel-local buffer/render paths should be treated as materially different from the parent model target beyond the current non-default/subbuffer preservation rule.
 
-### G2: Missing apply-time submodel precision verification
-Need deterministic post-apply behavior checks when plan scope includes:
-- parent model and one/more of its submodels,
-- multiple submodels that overlap in channels/nodes,
-- submodel-local writes that must not broaden into parent-wide side effects.
+### G2: Missing broader apply-time submodel precision verification
+Current verification covers:
+- submodel-local writes that must not broaden into parent-wide side effects when the parent was not part of the plan.
+
+Still needed:
+- broader verification when plan scope includes multiple related submodels,
+- stronger checks for overlapping sibling submodels beyond parent broadening,
+- readback fidelity for more submodel-local render distinctions if runtime behavior proves they matter.
 
 ### G3: Missing planner semantics for submodel precision
 Need sequencing strategy hints to choose:
