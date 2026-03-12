@@ -60,13 +60,13 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
   - `apps/xlightsdesigner-ui/agent/intent-normalizer.js` (new)
   - `apps/xlightsdesigner-ui/agent/target-resolver.js` (new)
 - [x] Add command-building adapters:
-  - `apps/xlightsdesigner-ui/agent/command-builders.js` (new)
+  - `apps/xlightsdesigner-ui/agent/sequence-agent/command-builders.js` (new)
 - [x] Wire planner into UI state flow:
   - `apps/xlightsdesigner-ui/app.js`
 - [ ] Add endpoint helpers if missing:
   - `apps/xlightsdesigner-ui/api.js`
 - [x] Add analysis service modules:
-  - `apps/xlightsdesigner-ui/agent/audio-analyzer.js` (new)
+  - `apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyzer.js` (new)
   - `apps/xlightsdesigner-ui/agent/brief-synthesizer.js` (new)
 - [x] Add guided elicitation module:
   - `apps/xlightsdesigner-ui/agent/guided-dialog.js` (new)
@@ -77,7 +77,7 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
   - `apps/xlightsdesigner-ui/agent/intent-normalizer.js`
 - [ ] Add explicit override handling for user low-level effect constraints:
 - [x] Add explicit override handling for user low-level effect constraints:
-  - `apps/xlightsdesigner-ui/agent/command-builders.js`
+  - `apps/xlightsdesigner-ui/agent/sequence-agent/command-builders.js`
 - [x] Add deterministic fixtures for intent/plan snapshots:
   - `specs/xlights-sequencer-control-test-fixtures.manifest.json`
 
@@ -106,7 +106,7 @@ Ship a safe, deterministic, metadata-aware agent loop in xLightsDesigner:
 
 ### Tasks (xLightsDesigner)
 - [x] Add orchestrator state machine:
-  - `apps/xlightsdesigner-ui/agent/orchestrator.js` (new)
+  - `apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js` (new)
 - [x] Integrate validation + revision guards:
   - `apps/xlightsdesigner-ui/app.js`
   - `apps/xlightsdesigner-ui/api.js`

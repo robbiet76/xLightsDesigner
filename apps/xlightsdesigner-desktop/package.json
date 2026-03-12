@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
-    "test:agent-ui": "node --test ../xlightsdesigner-ui/tests/agent/*.test.js",
+    "test:agent-ui": "node --test ../xlightsdesigner-ui/tests/agent/*.test.js ../xlightsdesigner-ui/tests/agent/audio-analyst/*.test.js ../xlightsdesigner-ui/tests/agent/sequence-agent/*.test.js",
     "prepare:renderer": "node scripts/prepare-renderer.mjs",
     "dist:dir": "npm run prepare:renderer && electron-builder --dir",
     "dist:mac": "npm run prepare:renderer && electron-builder --mac zip && node scripts/install-mac-app.mjs",

@@ -1,7 +1,7 @@
 {
   "contract": "audio_analyst_result_v1",
   "version": "1.0",
-  "source": "apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js",
+  "source": "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-contracts.js",
   "requiredFields": [
     "agentRole",
     "contractVersion",

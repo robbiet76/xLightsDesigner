@@ -1,7 +1,7 @@
 {
   "contract": "analysis_artifact_v1",
   "version": "1.0",
-  "source": "apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js",
+  "source": "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js",
   "requiredFields": [
     "artifactType",
     "artifactVersion",

@@ -36,49 +36,49 @@ import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
   estimateImpactCount
-} from "./agent/command-builders.js";
-import { buildSequenceAgentPlan } from "./agent/sequence-agent.js";
-import { evaluateSequencePlanCapabilities } from "./agent/sequence-capability-gate.js";
-import { classifyModelDisplayType } from "./agent/model-type-catalog.js";
-import { buildEffectDefinitionCatalog, emptyEffectDefinitionCatalog } from "./agent/effect-definition-catalog.js";
+} from "./agent/sequence-agent/command-builders.js";
+import { buildSequenceAgentPlan } from "./agent/sequence-agent/sequence-agent.js";
+import { evaluateSequencePlanCapabilities } from "./agent/sequence-agent/sequence-capability-gate.js";
+import { classifyModelDisplayType } from "./agent/sequence-agent/model-type-catalog.js";
+import { buildEffectDefinitionCatalog, emptyEffectDefinitionCatalog } from "./agent/sequence-agent/effect-definition-catalog.js";
 import {
   buildSequenceAgentApplyResult,
   buildSequenceAgentInput,
   classifyOrchestrationFailureReason,
   validateSequenceAgentContractGate
-} from "./agent/sequence-agent-runtime.js";
+} from "./agent/sequence-agent/sequence-agent-runtime.js";
 import {
   AGENT_HANDOFF_CONTRACTS,
   validateAgentHandoff
 } from "./agent/handoff-contracts.js";
-import { analyzeAudioContext } from "./agent/audio-analyzer.js";
+import { analyzeAudioContext } from "./agent/audio-analyst/audio-analyzer.js";
 import {
   buildAnalysisArtifactFromPipelineResult,
   buildAnalysisHandoffFromArtifact,
   buildAudioAnalystInput,
   executeAudioAnalystFlow
-} from "./agent/audio-analyst-runtime.js";
+} from "./agent/audio-analyst/audio-analyst-runtime.js";
 import {
   resetAudioAnalysisView,
   buildPendingAudioAnalysisPipeline,
   applyPersistedAnalysisArtifactToState,
   applyAudioAnalystFlowSuccessToState,
   applyAudioAnalystFlowFailureToState
-} from "./agent/audio-analyst-ui-state.js";
+} from "./agent/audio-analyst/audio-analyst-ui-state.js";
 import {
   normalizeAudioAnalysisProvider
-} from "./agent/audio-provider-adapters.js";
-import { runAudioAnalysisOrchestration } from "./agent/audio-analysis-orchestrator.js";
+} from "./agent/audio-analyst/audio-provider-adapters.js";
+import { runAudioAnalysisOrchestration } from "./agent/audio-analyst/audio-analysis-orchestrator.js";
 import { synthesizeCreativeBrief } from "./agent/brief-synthesizer.js";
-import { validateAndApplyPlan } from "./agent/orchestrator.js";
-import { validateCommandGraph } from "./agent/command-graph.js";
-import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/apply-readback.js";
+import { validateAndApplyPlan } from "./agent/sequence-agent/orchestrator.js";
+import { validateCommandGraph } from "./agent/sequence-agent/command-graph.js";
+import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/sequence-agent/apply-readback.js";
 import {
   classifyDepthBands,
   collectSpatialNodes,
   computeSceneBounds,
   inferLayoutMode
-} from "./agent/scene-graph-queries.js";
+} from "./agent/sequence-agent/scene-graph-queries.js";
 
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";

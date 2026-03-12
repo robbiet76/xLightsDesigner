@@ -9,26 +9,26 @@ Implementation-facing specifications that drive development work.
 
 ## Layout
 - `specs/`: active, authoritative spec set.
+- `specs/audio-analyst/`: active `audio_analyst` specs and audits.
+- `specs/sequence-agent/`: active `sequence_agent` and xLights sequencing specs.
 - `specs/archive/`: historical planning artifacts, prior iterations, and closed work-package docs.
 
 ## Naming Convention
-- `audio-timing-lyrics-*`: audio analysis/timing/lyrics specs.
-- `xlights-sequencer-control-*`: sequencer-control and agent system specs.
+- domain directories own current active specs
+- legacy flat specs are archived under domain-specific or root archive paths
 
 ## Active Entry Points
-- `audio-timing-lyrics-project-spec.md`
-- `audio-timing-lyrics-api-contract.md`
-- `audio-timing-lyrics-decision-log.md`
-- `audio-timing-lyrics-implementation-checklist.md`
-- `xlights-sequencer-control-project-spec.md`
-- `xlights-sequencer-control-api-surface-contract.md`
-- `xlights-sequencer-control-designer-interaction-contract.md`
-- `xlights-sequencer-control-agent-orchestration-architecture.md`
-- `xlights-sequencer-control-implementation-roadmap.md`
-- `xlights-sequencer-control-acceptance-test-matrix.md`
-- `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`
-- `xlights-sequencer-control-training-package-architecture.md`
-- `xlights-sequencer-control-integration-test-harness.md`
+- `audio-analyst/implementation-checklist.md`
+- `audio-analyst/provider-framework.md`
+- `audio-analyst/end-to-end-audit-2026-03-12.md`
+- `sequence-agent/xlights-sequencer-control-project-spec.md`
+- `sequence-agent/xlights-sequencer-control-api-surface-contract.md`
+- `sequence-agent/xlights-sequencer-control-designer-interaction-contract.md`
+- `sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
+- `sequence-agent/xlights-sequencer-control-implementation-roadmap.md`
+- `sequence-agent/xlights-sequencer-control-acceptance-test-matrix.md`
+- `sequence-agent/xlights-sequencer-control-training-package-architecture.md`
+- `sequence-agent/xlights-sequencer-control-integration-test-harness.md`
 - `repo-structure-governance.md`
 
 ## Consolidation Record

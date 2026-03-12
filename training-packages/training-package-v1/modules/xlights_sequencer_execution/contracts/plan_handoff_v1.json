@@ -1,7 +1,7 @@
 {
   "contract": "plan_handoff_v1",
   "version": "1.0",
-  "source": "apps/xlightsdesigner-ui/agent/sequence-agent-contracts.js",
+  "source": "apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-contracts.js",
   "requiredFields": [
     "agentRole",
     "contractVersion",

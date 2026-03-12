@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { normalizeIntent } from '../../agent/intent-normalizer.js';
-import { resolveTargets } from '../../agent/target-resolver.js';
+import { resolveTargets } from '../../agent/sequence-agent/target-resolver.js';
 import { buildProposalFromIntent } from '../../agent/planner.js';
 
 const models = [

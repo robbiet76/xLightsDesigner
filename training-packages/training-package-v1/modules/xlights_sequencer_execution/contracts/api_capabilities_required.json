@@ -12,7 +12,7 @@
   ],
   "requiredApiVersion": 2,
   "applyModel": "transactions-only",
-  "sourceSpec": "specs/xlights-sequencer-control-api-surface-contract.md",
+  "sourceSpec": "specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md",
   "notes": [
     "Apply execution must use transactions.begin/stage/commit with expectedRevision.",
     "system.executePlan is deprecated for sequence_agent runtime flow.",

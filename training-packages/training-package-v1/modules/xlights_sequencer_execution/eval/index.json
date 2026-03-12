@@ -9,7 +9,7 @@
   "automatedCoverage": [
     {
       "id": "happy_path_apply_from_handoff_graph",
-      "source": "apps/xlightsdesigner-ui/tests/agent/orchestrator.test.js",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent/orchestrator.test.js",
       "asserts": [
         "handoff-style command graph applies successfully",
         "transaction path advances revision"
@@ -17,7 +17,7 @@
     },
     {
       "id": "stale_revision_blocked",
-      "source": "apps/xlightsdesigner-ui/tests/agent/orchestrator.test.js",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent/orchestrator.test.js",
       "asserts": [
         "revision mismatch blocks apply",
         "blocked stage classified as revision"
@@ -25,7 +25,7 @@
     },
     {
       "id": "missing_analysis_degraded_mode",
-      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent.test.js",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent/sequence-agent.test.js",
       "asserts": [
         "reduced-confidence warning emitted",
         "validation-ready plan still produced"
@@ -33,7 +33,7 @@
     },
     {
       "id": "cumulative_timing_edits_remain_writable",
-      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent.test.js",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent/sequence-agent.test.js",
       "asserts": [
         "prior manual timing ownership does not suppress later timing writes",
         "timing edits are cumulative sequence state"
@@ -41,7 +41,7 @@
     },
     {
       "id": "partial_scope_apply",
-      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent.test.js",
+      "source": "apps/xlightsdesigner-ui/tests/agent/sequence-agent/sequence-agent.test.js",
       "asserts": [
         "partial scope planning remains deterministic",
         "scope metadata narrows to selected target/section"

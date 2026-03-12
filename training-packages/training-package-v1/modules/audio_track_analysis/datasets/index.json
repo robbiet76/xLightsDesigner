@@ -10,11 +10,11 @@
       "id": "audio_analyst_runtime_contracts",
       "type": "runtime-contract-reference",
       "paths": [
-        "apps/xlightsdesigner-ui/agent/audio-analyst-contracts.js",
-        "apps/xlightsdesigner-ui/agent/audio-analyst-runtime.js",
-        "apps/xlightsdesigner-ui/agent/audio-analysis-service-runtime.js",
-        "apps/xlightsdesigner-ui/agent/audio-analysis-context-runtime.js",
-        "apps/xlightsdesigner-ui/agent/audio-analysis-orchestrator.js"
+        "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-contracts.js",
+        "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js",
+        "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analysis-service-runtime.js",
+        "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analysis-context-runtime.js",
+        "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analysis-orchestrator.js"
       ],
       "description": "Canonical runtime contract and orchestration references for the media-analysis specialist."
     }

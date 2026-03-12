@@ -15,6 +15,18 @@ Keep repository layout purpose-built and predictable so new work lands in the co
 - `docs/`: architecture and supporting reference material.
 - `scripts/`: developer automation and build/validation helpers.
 
+## Domain Structure
+- Domain runtime modules should live under app-owned domain folders when the boundary is stable.
+- Current domain anchors:
+  - `apps/xlightsdesigner-ui/agent/audio-analyst/`
+  - `apps/xlightsdesigner-ui/agent/sequence-agent/`
+  - `apps/xlightsdesigner-ui/tests/agent/audio-analyst/`
+  - `apps/xlightsdesigner-ui/tests/agent/sequence-agent/`
+  - `specs/audio-analyst/`
+  - `specs/sequence-agent/`
+- Shared utilities that are not domain-owned should remain outside domain folders.
+- Historical specs should move to a domain archive folder or `specs/archive/`, not remain mixed with active domain specs.
+
 ## Placement Rules
 - App runtime code belongs under `apps/*`.
 - Experimental/eval scripts tied to one app belong under that app in `eval/` or `tests/`.
