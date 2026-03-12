@@ -92,6 +92,7 @@ Baseline error codes:
 - Bulk operations require explicit filter parameters.
 - Layer addressing must use explicit target (`layerIndex` or stable layer id).
 - Layout namespace endpoints are read-only by contract.
+- Group render/buffer policy discovered through `layout.*` is read-only in v1 and is planner context only, not a mutable sequencing target.
 - Controllers namespace is excluded from this program.
 - Long-running operations should support async job semantics (`jobId`, progress, cancel).
 - Sequence mutations should support optimistic concurrency controls (`revisionToken`).

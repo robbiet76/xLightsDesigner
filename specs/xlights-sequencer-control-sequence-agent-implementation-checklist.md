@@ -77,6 +77,7 @@ Boundary summary:
     - non-default group render targets require explicit member override before expansion
     - high-risk render policies (`overlay`, `stack`, `single_line`, `per_model_strand`) require force-style override before expansion
     - forced member expansion carries compatibility warnings into validation
+    - v1 keeps group render policy read-only and uses it only as planner context
 - [ ] Submodels and functionality:
   - [x] Pre-gate complete (source + API coverage + approved gaps).
   - [ ] Submodel inheritance/override rules encoded.

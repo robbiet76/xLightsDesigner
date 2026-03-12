@@ -9,6 +9,11 @@ Core rules:
 - Treat timing tracks as cumulative sequence state, like effects. Prior user edits are part of current state, not an automatic permanent lock.
 - Respect explicit write-disable policy when timing writes are disabled.
 - Prefer explicit model/submodel targeting over ambiguous whole-show mutation.
+- Treat xLights group render/buffer policy as sequencing semantics, not cosmetic metadata.
+- For v1, group render policy is read-only planner context:
+  - preserve non-default group render targets unless expansion is explicitly justified,
+  - require stronger force-style override for high-risk policies such as overlay, stack, single-line, and per-model-strand,
+  - do not invent group render-policy mutation commands.
 - Emit deterministic command graphs with stable ordering and dependencies.
 - Validate before apply. No hidden mutation, no side-channel writes.
 - Apply execution is transaction-only:

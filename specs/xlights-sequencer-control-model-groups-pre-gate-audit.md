@@ -103,7 +103,7 @@ Current behavior:
   - broad-group target preservation on generic-scope lines,
   - nested-group breadth preference (broadest valid aggregate first),
   - preference for preserving non-default group render targets when scope is otherwise comparable,
-  - render-policy family/risk inference from `defaultBufferStyle` plus `availableBufferStyles`, not only the coarse `renderPolicy` category string,
+- render-policy family/risk inference from `defaultBufferStyle` plus `availableBufferStyles`, not only the coarse `renderPolicy` category string,
   - preserve-vs-expand baseline semantics:
     - preserve explicit group targets by default,
     - expand only when the request explicitly calls for per-member distribution,
@@ -116,6 +116,10 @@ Current behavior:
     - carry compatibility warnings when forced member expansion proceeds against known non-default/high-risk group render semantics,
   - display-element ordering heuristics that keep broader groups above their refinements,
 - richer multi-line fanout/alternation/distribution semantics are not encoded yet.
+- v1 boundary:
+  - group render policy is read-only planner context,
+  - preserve/expand decisions may depend on it,
+  - direct mutation of group render policy is out of scope for v1 automation.
 
 ## 6) Gap List (Model Groups Step)
 
