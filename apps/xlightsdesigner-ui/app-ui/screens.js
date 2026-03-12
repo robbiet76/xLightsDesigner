@@ -451,6 +451,19 @@ export function buildScreenContent({ state, helpers }) {
     const canApplySelected = selectedCount > 0 && !state.flags.applyInProgress && applyReady && approvalChecked;
     const canApplyAll = list.length > 0 && !state.flags.applyInProgress && applyReady && approvalChecked;
     const impact = summarizeImpactForLines(previewLines);
+    const verification = state.lastApplyVerification && typeof state.lastApplyVerification === "object"
+      ? state.lastApplyVerification
+      : null;
+    const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
+    const lastApply = applyHistory.length ? applyHistory[applyHistory.length - 1] : null;
+    const backupReady = Boolean(String(state.lastApplyBackupPath || "").trim());
+    const reviewStateLabel = state.flags.applyInProgress
+      ? "Applying"
+      : state.flags.proposalStale
+        ? "Stale"
+        : approvalChecked
+          ? "Approved"
+          : "Needs Approval";
     const planSummary = previewCommands.length
       ? `${previewCommands.length} command${previewCommands.length === 1 ? "" : "s"} ready for execution`
       : previewError || "No command preview available.";
@@ -462,6 +475,10 @@ export function buildScreenContent({ state, helpers }) {
         <section class="card stale-card">
           <h3>Draft Is Stale</h3>
           <p class="banner warning">Sequence changed since this draft was created. Refresh/rebase before apply.</p>
+          <div class="artifact-chip-row">
+            <span class="artifact-chip artifact-chip-muted">base ${escapeHtml(String(state.draftBaseRevision || "unknown"))}</span>
+            <span class="artifact-chip artifact-chip-accent">current ${escapeHtml(String(state.revision || "unknown"))}</span>
+          </div>
           <div class="row">
             <button id="stale-rebase">Rebase Draft</button>
             <button id="stale-refresh-regenerate">Refresh + Regenerate</button>
@@ -480,6 +497,7 @@ export function buildScreenContent({ state, helpers }) {
             <div class="artifact-kicker">Execution Review</div>
             <h3>${escapeHtml(planSummary)}</h3>
             <div class="artifact-chip-row">
+              <span class="artifact-chip artifact-chip-accent">${escapeHtml(reviewStateLabel)}</span>
               <span class="artifact-chip">${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`}</span>
               <span class="artifact-chip">${impact.targetCount} targets</span>
               <span class="artifact-chip">${impact.sectionWindows.length || 0} windows</span>
@@ -487,6 +505,20 @@ export function buildScreenContent({ state, helpers }) {
             <p class="banner">Affected targets: ${impact.targets.length ? escapeHtml(impact.targets.join(", ")) : "none"}</p>
             <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
             <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed and ready for apply." : "Approval checkbox must be confirmed before apply."}</p>
+            <div class="review-status-grid">
+              <div class="review-status-item">
+                <span class="review-status-label">Backup</span>
+                <strong>${backupReady ? "Available" : "None yet"}</strong>
+              </div>
+              <div class="review-status-item">
+                <span class="review-status-label">Last Apply</span>
+                <strong>${escapeHtml(String(lastApply?.status || "none"))}</strong>
+              </div>
+              <div class="review-status-item">
+                <span class="review-status-label">Verification</span>
+                <strong>${verification ? (verification.expectedMutationsPresent ? "Verified" : "Needs review") : "Not run"}</strong>
+              </div>
+            </div>
           </section>
         </section>
       </div>
@@ -547,6 +579,11 @@ export function buildScreenContent({ state, helpers }) {
               </label>
               <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
             </div>
+            ${
+              backupReady
+                ? `<p class="banner">Backup ready: ${escapeHtml(String(state.lastApplyBackupPath || "").trim())}</p>`
+                : `<p class="banner warning">No restore point has been captured in this session yet.</p>`
+            }
             <pre class="proposed-payload">${payloadPreview}</pre>
           </details>
           <div class="row panel-footer-block proposed-actions">

@@ -44,9 +44,9 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 
 ## Phase D: Review And Apply UX
 - [ ] Clarify the difference between design iteration and execution review
-- [ ] Make stale/rebase/apply state more legible
+- [x] Make stale/rebase/apply state more legible
 - [ ] Keep the approval gate prominent and understandable
-- [ ] Improve backup/restore visibility
+- [x] Improve backup/restore visibility
 - [ ] Make the proposal-to-apply transition feel like a deliberate workflow step
 
 ## Phase E: Settings And Diagnostics

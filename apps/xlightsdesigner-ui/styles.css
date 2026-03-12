@@ -496,6 +496,29 @@ button:disabled {
   border-color: rgba(215, 131, 64, 0.28);
 }
 
+.review-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.review-status-item {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(161, 128, 71, 0.22);
+  background: rgba(29, 22, 13, 0.72);
+}
+
+.review-status-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .design-workspace {
   align-items: stretch;
 }
@@ -557,6 +580,10 @@ button:disabled {
   padding: 8px;
   gap: 10px;
   align-items: center;
+}
+
+.stale-card .artifact-chip-row {
+  margin: 8px 0 10px;
 }
 
 .card {
