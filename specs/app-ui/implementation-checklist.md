@@ -64,10 +64,10 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Extract screen-specific event binding from `app.js`
 
 ## Phase G: History And Live Dashboards
-- [ ] Add immutable artifact ids across design, sequence, scene, music, and apply artifacts
-- [ ] Rebuild `Sequence` as a live translation dashboard parallel to `Design`
-- [ ] Capture unified apply snapshots that reference design and sequencing artifacts together
-- [ ] Build `History` from artifact-referenced revision entries instead of ad hoc logs
+- [x] Add immutable artifact ids across design, sequence, scene, music, and apply artifacts
+- [x] Rebuild `Sequence` as a live translation dashboard parallel to `Design`
+- [x] Capture unified apply snapshots that reference design and sequencing artifacts together
+- [x] Build `History` from artifact-referenced revision entries instead of ad hoc logs
 
 ## Exit Gate
 - The app tells a clear workflow story from setup to apply.
