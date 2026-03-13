@@ -7,6 +7,26 @@ export function buildSequencingStrategy(normalizedIntent, targets = []) {
   const targetNames = targets.map((t) => String(t?.name || t?.id || "").trim()).filter(Boolean);
   const targetText = targetNames.length ? targetNames.join(" + ") : "Whole Show";
   const sections = Array.isArray(intent.sections) && intent.sections.length ? intent.sections : ["General"];
+  const goal = String(intent.goal || "").trim();
+  const lowerGoal = goal.toLowerCase();
+
+  const isDirectEffectRequest =
+    /(apply|set|make|put|add)\b/.test(lowerGoal) &&
+    targetNames.length > 0 &&
+    Array.isArray(intent.effectOverrides) &&
+    intent.effectOverrides.length > 0;
+
+  if (isDirectEffectRequest) {
+    const effectName = String(intent.effectOverrides[0] || "").trim();
+    const colorText = String(intent.explicitColor || "").trim();
+    const durationMs = Number.isFinite(Number(intent.durationMs)) ? Math.max(1, Number(intent.durationMs)) : null;
+    const startText = String(intent.startHint || "").trim() === "track_start" ? "starting at 0 ms" : "using the current target timing";
+    const durationText = durationMs ? `for ${durationMs} ms` : "for the requested duration";
+    const colorClause = colorText ? ` in ${colorText}` : "";
+    return clampLines([
+      `${sections[0]} / ${targetText} / apply ${effectName} effect${colorClause} ${durationText} ${startText}`
+    ], 4);
+  }
 
   const directives = [];
   for (const section of sections.slice(0, 3)) {

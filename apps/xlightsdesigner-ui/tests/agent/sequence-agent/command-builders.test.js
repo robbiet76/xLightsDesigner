@@ -190,6 +190,33 @@ test("command builders emit canonical command graph templates with dependencies"
   assert.equal(commands[3].params.mode, "nearest");
 });
 
+test("command builders preserve direct imperative effect timing and color", () => {
+  const commands = buildDesignerPlanCommands([
+    "General / Border-01 / apply On effect in green for 30000 ms starting at 0 ms"
+  ], {
+    trackName: "XD: Sequencer Plan",
+    effectCatalog: sampleCatalog(),
+    enableEffectTimingAlignment: true
+  });
+
+  const marks = commands.find((row) => row.cmd === "timing.insertMarks");
+  assert.equal(marks.params.marks.length, 1);
+  assert.equal(marks.params.marks[0].startMs, 0);
+  assert.equal(marks.params.marks[0].endMs, 30000);
+
+  const effect = commands.find((row) => row.cmd === "effects.create");
+  assert.equal(effect.params.modelName, "Border-01");
+  assert.equal(effect.params.effectName, "On");
+  assert.equal(effect.params.startMs, 0);
+  assert.equal(effect.params.endMs, 30000);
+  assert.equal(effect.params.palette.C_BUTTON_Palette1, "#00ff00");
+  assert.equal(effect.params.palette.C_CHECKBOX_Palette1, "1");
+
+  const align = commands.find((row) => row.cmd === "effects.alignToTiming");
+  assert.equal(align.params.startMs, 0);
+  assert.equal(align.params.endMs, 30000);
+});
+
 test("command builders can skip explicit timing re-alignment commands when capability is unavailable", () => {
   const commands = buildDesignerPlanCommands([
     "Chorus 1 / MegaTree / bars"

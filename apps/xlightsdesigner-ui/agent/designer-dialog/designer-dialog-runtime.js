@@ -147,13 +147,23 @@ export function buildCreativeBriefArtifact({
 
 function mergeCreativeBriefIntoProposalLines(lines = [], creativeBrief = null) {
   const base = arr(lines).map((row) => str(row)).filter(Boolean);
+  if (base.some((row) => /\/\s+apply\s+.+\s+effect\b/i.test(row))) {
+    return base.slice(0, 8);
+  }
   if (!isPlainObject(creativeBrief)) return base;
   const additions = [];
+  const goalsSummary = str(creativeBrief.goalsSummary);
+  const visualCues = str(creativeBrief.visualCues);
+  const sections = arr(creativeBrief.sections).map((row) => str(row)).filter(Boolean);
 
-  if (str(creativeBrief.goalsSummary)) additions.push(`Anchor design changes to brief goal: ${creativeBrief.goalsSummary}`);
-  if (str(creativeBrief.visualCues)) additions.push(`Use visual direction cues: ${creativeBrief.visualCues}`);
-  if (arr(creativeBrief.sections).length) {
-    additions.push(`Focus first pass on brief sections: ${arr(creativeBrief.sections).slice(0, 3).join(", ")}`);
+  if (goalsSummary && !/^no explicit goals captured\.?$/i.test(goalsSummary)) {
+    additions.push(`Anchor design changes to brief goal: ${goalsSummary}`);
+  }
+  if (visualCues && !/^no uploaded references\.?$/i.test(visualCues)) {
+    additions.push(`Use visual direction cues: ${visualCues}`);
+  }
+  if (sections.length && sections.join(", ").toLowerCase() !== "intro, verse, chorus") {
+    additions.push(`Focus first pass on brief sections: ${sections.slice(0, 3).join(", ")}`);
   }
 
   return [...additions, ...base].filter(Boolean).slice(0, 8);

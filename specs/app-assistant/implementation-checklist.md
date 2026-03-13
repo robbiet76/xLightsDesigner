@@ -26,6 +26,10 @@ Purpose: implement the unified conversational shell above specialist agents with
   - `audio_analyst`
   - `designer_dialog`
   - `sequence_agent`
+- [ ] Add explicit routing + normalization rules for direct technical sequencing requests:
+  - route to `sequence_agent`
+  - bypass designer-only proposal scaffolding
+  - still emit canonical `intent_handoff_v1`
 - [x] Add tests that prove the user does not need to switch agents manually
 - [x] Add routing rules that treat direct specialist address as a hint, not a hard dispatch
 - [x] Add tests for nickname and direct-address routing overrides

@@ -164,7 +164,9 @@ export async function executeAppAssistantConversation({
   }
 
   const routeDecision = inferRouteDecision({ userMessage, context, response });
-  const allowDesignerProposal = routeDecision === "designer_dialog" && (Boolean(context?.sequenceOpen) || Boolean(context?.planOnlyMode));
+  const allowProposalGeneration =
+    (routeDecision === "designer_dialog" || routeDecision === "sequence_agent") &&
+    (Boolean(context?.sequenceOpen) || Boolean(context?.planOnlyMode));
   return {
     ok: true,
     result: buildAppAssistantResult({
@@ -176,7 +178,7 @@ export async function executeAppAssistantConversation({
       handledBy: routeDecision === "general" || routeDecision === "setup_help" ? APP_ASSISTANT_ROLE : routeDecision,
       addressedTo,
       identities: input.context?.teamChat?.identities || input.context?.teamIdentities || DEFAULT_TEAM_CHAT_IDENTITIES,
-      shouldGenerateProposal: allowDesignerProposal && Boolean(response.shouldGenerateProposal),
+      shouldGenerateProposal: allowProposalGeneration && Boolean(response.shouldGenerateProposal),
       proposalIntent: str(response.proposalIntent || userMessage),
       diagnostics: buildDiagnostics({
         routeDecision,

@@ -769,7 +769,6 @@ ipcMain.handle("xld:app:factory-reset", async (_event, payload = {}) => {
     const candidates = [
       ["desktopState", stateFilePath()],
       ["agentApplyLog", agentApplyLogPath()],
-      ["agentConfig", agentConfigPath()],
       ["projectsIndex", desktopProjectsIndexPath()]
     ];
     for (const [label, filePath] of candidates) {
@@ -779,6 +778,7 @@ ipcMain.handle("xld:app:factory-reset", async (_event, payload = {}) => {
       ok: true,
       deleted,
       preserved: {
+        agentConfig: true,
         projectFolders: true,
         analysisArtifacts: true,
         projectFiles: true
@@ -1077,14 +1077,22 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
     };
     if (previousResponseId) body.previous_response_id = previousResponseId;
 
-    const response = await fetch(`${cfg.baseUrl}/responses`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    let response = null;
+    try {
+      response = await fetch(`${cfg.baseUrl}/responses`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
     const raw = await response.text();
     let parsed = null;
     try {
@@ -1127,7 +1135,7 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
   } catch (err) {
     return {
       ok: false,
-      code: "AGENT_RUNTIME_ERROR",
+      code: String(err?.name || "") === "AbortError" ? "AGENT_TIMEOUT" : "AGENT_RUNTIME_ERROR",
       error: String(err?.message || err)
     };
   }
@@ -1295,7 +1303,6 @@ ipcMain.handle("xld:project:write-file", async (_event, payload = {}) => {
     const mode = modeRaw === "rename" || modeRaw === "save-as" ? modeRaw : "save";
     const snapshot = payload?.snapshot && typeof payload.snapshot === "object" ? payload.snapshot : null;
     if (!projectName) return { ok: false, error: "Missing projectName" };
-    if (!showFolder) return { ok: false, error: "Missing showFolder" };
     if (!snapshot) return { ok: false, error: "Missing snapshot" };
     const { normalizedName, projectDir, filePath } = buildProjectPaths(rootPath, projectName);
     if (!normalizedName) return { ok: false, code: "INVALID_PROJECT_NAME", error: "Project name is required." };

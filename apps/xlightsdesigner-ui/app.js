@@ -34,13 +34,13 @@ import {
   buildCreativeBriefArtifact
 } from "./agent/designer-dialog/designer-dialog-runtime.js";
 import { executeDesignerProposalOrchestration } from "./agent/designer-dialog/designer-dialog-orchestrator.js";
+import { executeDirectSequenceRequestOrchestration } from "./agent/sequence-agent/direct-sequence-orchestrator.js";
 import {
   applyDesignerProposalSuccessToState,
   buildDesignerGuidedQuestionMessage
 } from "./agent/designer-dialog/designer-dialog-ui-state.js";
 import {
-} from "./agent/designer-dialog/designer-dialog-lifecycle.js";
-import {
+  applyDesignerDraftSuccessState,
   clearDesignerDraft,
   markDesignerDraftStale,
   rebaseDesignerDraft,
@@ -96,7 +96,6 @@ import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
 import { bindScreenEvents } from "./app-ui/screen-bindings.js";
-import { bindScreenEvents } from "./app-ui/screen-bindings.js";
 import {
   classifyDepthBands,
   collectSpatialNodes,
@@ -107,6 +106,7 @@ import {
 const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
+const RESET_PRESERVE_KEY = "xlightsdesigner.ui.reset-preserve.v1";
 const PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
 const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
 const CONNECTIVITY_POLL_MS = 10000;
@@ -146,6 +146,11 @@ const CHAT_QUICK_PROMPTS_BY_ROUTE = {
     "Help me tag the focal props for the chorus sections.",
     "What metadata tags would help the designer and sequencer most?",
     "Review the current metadata and point out obvious gaps."
+  ],
+  settings: [
+    "Help me connect xLights and explain what endpoint settings matter.",
+    "Check whether cloud chat and audio analysis services are configured correctly.",
+    "Explain what Save, Save As, and project root mean in this app."
   ],
   history: [
     "Summarize the latest apply history for this project.",
@@ -195,9 +200,9 @@ function buildDemoProposedLines() {
 }
 
 const defaultState = {
-  route: "project",
+  route: "settings",
   endpoint: PREFERRED_XLIGHTS_ENDPOINT,
-  projectName: "Holiday 2026",
+  projectName: "",
   projectConcept: "",
   showFolder: "",
   mediaPath: "",
@@ -275,7 +280,7 @@ const defaultState = {
     desktopBuildTime: ""
   },
   draftBaseRevision: "unknown",
-  status: { level: "info", text: "Ready. Start in Design or open a sequence." },
+  status: { level: "info", text: "Welcome. Start in Settings, then create or open a project." },
   flags: {
     xlightsConnected: false,
     xlightsCompatible: true,
@@ -335,7 +340,13 @@ const defaultState = {
     analysisServiceLastError: "",
     analysisServiceLastCheckedAt: "",
     agentResponseId: "",
-    inspectedArtifact: ""
+    inspectedArtifact: "",
+    projectNameDialogOpen: false,
+    projectNameDialogMode: "",
+    projectNameDialogTitle: "",
+    projectNameDialogValue: "",
+    projectNameDialogError: "",
+    firstRunMode: true
   },
   diagnostics: [],
   applyHistory: [],
@@ -419,6 +430,94 @@ function normalizeConfiguredEndpoint(endpoint) {
   return raw;
 }
 
+function normalizeProjectIdentityFields(target) {
+  if (!target || typeof target !== "object") return;
+  const projectFilePath = String(target.projectFilePath || "").trim();
+  if (projectFilePath) return;
+  target.projectName = "";
+  target.projectCreatedAt = "";
+  target.projectUpdatedAt = "";
+}
+
+function looksLikeDemoProposedLines(lines = []) {
+  const current = Array.isArray(lines) ? lines : [];
+  const demo = buildDemoProposedLines();
+  if (!current.length || current.length !== demo.length) return false;
+  for (let i = 0; i < demo.length; i += 1) {
+    if (String(current[i] || "") !== String(demo[i] || "")) return false;
+  }
+  return true;
+}
+
+function normalizeDraftState(target) {
+  if (!target || typeof target !== "object") return;
+  if (!Array.isArray(target.proposed)) {
+    target.proposed = [];
+  }
+  const hasBundle = Boolean(target.creative?.proposalBundle);
+  if (!hasBundle && looksLikeDemoProposedLines(target.proposed)) {
+    target.proposed = [];
+  }
+  target.flags = {
+    ...(target.flags || {}),
+    hasDraftProposal: Array.isArray(target.proposed) && target.proposed.length > 0
+  };
+}
+
+function clearActiveProjectReference(target) {
+  if (!target || typeof target !== "object") return;
+  target.projectFilePath = "";
+  target.projectName = "";
+  target.projectCreatedAt = "";
+  target.projectUpdatedAt = "";
+  target.projectConcept = "";
+}
+
+async function pruneInvalidPersistedProjects() {
+  const bridge = getDesktopFileStatBridge();
+  if (!bridge) return false;
+  let changed = false;
+  const store = loadProjectsStore();
+  for (const [key, snapshot] of Object.entries(store)) {
+    const projectFilePath = String(snapshot?.projectFilePath || "").trim();
+    if (!projectFilePath) {
+      delete store[key];
+      changed = true;
+      continue;
+    }
+    try {
+      const res = await bridge.getFileStat({ filePath: projectFilePath });
+      if (!res?.ok || !res?.exists) {
+        delete store[key];
+        changed = true;
+      }
+    } catch {
+      // Non-fatal. Keep the entry if the file system probe itself fails.
+    }
+  }
+  if (changed) persistProjectsStore(store);
+  return changed;
+}
+
+async function validateActiveProjectReference() {
+  const bridge = getDesktopFileStatBridge();
+  const projectFilePath = String(state.projectFilePath || "").trim();
+  if (!bridge || !projectFilePath) {
+    normalizeProjectIdentityFields(state);
+    return;
+  }
+  try {
+    const res = await bridge.getFileStat({ filePath: projectFilePath });
+    if (!res?.ok || !res?.exists) {
+      clearActiveProjectReference(state);
+      persist();
+    }
+  } catch {
+    // Non-fatal. Keep the current state if the probe itself fails.
+  }
+  normalizeProjectIdentityFields(state);
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -431,6 +530,8 @@ function loadState() {
       ui: { ...defaultState.ui, ...(parsed.ui || {}) }
     };
     merged.endpoint = normalizeConfiguredEndpoint(merged.endpoint);
+    normalizeProjectIdentityFields(merged);
+    normalizeDraftState(merged);
     return merged;
   } catch {
     return structuredClone(defaultState);
@@ -561,10 +662,6 @@ if (!["2d", "3d"].includes(String(state.sceneGraph?.stats?.layoutMode || "").toL
 state.sceneGraph.stats.depthPlanningEnabled = state.sceneGraph.stats.layoutMode === "3d";
 if (!isPlainObject(state.sceneGraph?.stats?.modelTypeCategoryCounts)) {
   state.sceneGraph.stats.modelTypeCategoryCounts = {};
-}
-if (!Array.isArray(state.proposed) || state.proposed.length === 0) {
-  state.proposed = buildDemoProposedLines();
-  state.flags.hasDraftProposal = true;
 }
 let desktopStatePersistTimer = null;
 let desktopStateHydrated = false;
@@ -1349,30 +1446,49 @@ function getAnalysisServiceHeaderBadgeText() {
 async function probeAnalysisServiceHealth({ quiet = true, force = false } = {}) {
   const bridge = getDesktopAudioAnalysisBridge();
   const baseUrl = normalizeAnalysisServiceBaseUrl(state.ui.analysisServiceUrlDraft);
+  const commitIfChanged = (mutate) => {
+    const before = JSON.stringify({
+      ready: Boolean(state.ui.analysisServiceReady),
+      checking: Boolean(state.ui.analysisServiceChecking),
+      error: String(state.ui.analysisServiceLastError || "")
+    });
+    mutate();
+    const after = JSON.stringify({
+      ready: Boolean(state.ui.analysisServiceReady),
+      checking: Boolean(state.ui.analysisServiceChecking),
+      error: String(state.ui.analysisServiceLastError || "")
+    });
+    if (before !== after) {
+      persist();
+      render();
+    }
+  };
   if (!bridge || typeof bridge.checkAudioAnalysisService !== "function") {
-    state.ui.analysisServiceReady = false;
-    state.ui.analysisServiceChecking = false;
-    state.ui.analysisServiceLastError = "Desktop analysis health bridge unavailable.";
-    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    commitIfChanged(() => {
+      state.ui.analysisServiceReady = false;
+      state.ui.analysisServiceChecking = false;
+      state.ui.analysisServiceLastError = "Desktop analysis health bridge unavailable.";
+      state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    });
     if (!quiet) setStatusWithDiagnostics("warning", state.ui.analysisServiceLastError);
-    persist();
-    render();
     return false;
   }
   if (!baseUrl) {
-    state.ui.analysisServiceReady = false;
-    state.ui.analysisServiceChecking = false;
-    state.ui.analysisServiceLastError = "Audio analysis service URL is required.";
-    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
-    persist();
-    render();
+    commitIfChanged(() => {
+      state.ui.analysisServiceReady = false;
+      state.ui.analysisServiceChecking = false;
+      state.ui.analysisServiceLastError = "Audio analysis service URL is required.";
+      state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    });
     return false;
   }
   if (analysisServiceProbeInFlight && !force) return Boolean(state.ui.analysisServiceReady);
   analysisServiceProbeInFlight = true;
-  state.ui.analysisServiceChecking = true;
-  persist();
-  render();
+  if (!quiet) {
+    commitIfChanged(() => {
+      state.ui.analysisServiceChecking = true;
+    });
+  }
   try {
     const res = await bridge.checkAudioAnalysisService({
       baseUrl,
@@ -1389,27 +1505,34 @@ async function probeAnalysisServiceHealth({ quiet = true, force = false } = {}) 
       if (dir) detailBits.push(`dir=${dir}`);
     }
     const detail = detailBits.length ? ` (${detailBits.join(", ")})` : "";
-    state.ui.analysisServiceLastError = ok
-      ? ""
-      : `${String(res?.error || "Analysis service unavailable.")}${detail}`;
-    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    commitIfChanged(() => {
+      state.ui.analysisServiceReady = ok;
+      state.ui.analysisServiceLastError = ok
+        ? ""
+        : `${String(res?.error || "Analysis service unavailable.")}${detail}`;
+      state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    });
     if (!ok && !quiet) {
       setStatusWithDiagnostics("warning", `Audio analysis service unavailable: ${state.ui.analysisServiceLastError}`);
     }
     return ok;
   } catch (err) {
-    state.ui.analysisServiceReady = false;
-    state.ui.analysisServiceLastError = String(err?.message || err);
-    state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    commitIfChanged(() => {
+      state.ui.analysisServiceReady = false;
+      state.ui.analysisServiceLastError = String(err?.message || err);
+      state.ui.analysisServiceLastCheckedAt = new Date().toISOString();
+    });
     if (!quiet) {
       setStatusWithDiagnostics("warning", `Audio analysis service unavailable: ${state.ui.analysisServiceLastError}`);
     }
     return false;
   } finally {
-    state.ui.analysisServiceChecking = false;
     analysisServiceProbeInFlight = false;
-    persist();
-    render();
+    if (!quiet) {
+      commitIfChanged(() => {
+        state.ui.analysisServiceChecking = false;
+      });
+    }
   }
 }
 
@@ -1452,6 +1575,49 @@ function queueDesktopStatePersist() {
   }, DESKTOP_STATE_SYNC_DEBOUNCE_MS);
 }
 
+function captureRenderFocusState() {
+  if (typeof document === "undefined") return null;
+  const active = document.activeElement;
+  if (!active || !(active instanceof HTMLElement)) return null;
+  if (!app.contains(active)) return null;
+  const id = String(active.id || "").trim();
+  if (!id) return null;
+  const tag = String(active.tagName || "").toLowerCase();
+  const isTextInput = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement;
+  return {
+    id,
+    tag,
+    selectionStart: isTextInput && Number.isInteger(active.selectionStart) ? active.selectionStart : null,
+    selectionEnd: isTextInput && Number.isInteger(active.selectionEnd) ? active.selectionEnd : null
+  };
+}
+
+function restoreRenderFocusState(snapshot) {
+  if (!snapshot || typeof document === "undefined") return;
+  const next = document.getElementById(snapshot.id);
+  if (!next || !(next instanceof HTMLElement)) return;
+  if (typeof next.focus === "function") {
+    next.focus({ preventScroll: true });
+  }
+  if ((next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement)
+      && Number.isInteger(snapshot.selectionStart)
+      && Number.isInteger(snapshot.selectionEnd)) {
+    try {
+      next.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);
+    } catch {
+      // Ignore selection restore failures for non-text input types.
+    }
+  }
+}
+
+function isFirstRunMode() {
+  return Boolean(state.ui?.firstRunMode);
+}
+
+function normalizeUiRoute() {
+  if (state.route === "setup") state.route = "settings";
+}
+
 async function hydrateStateFromDesktop() {
   const bridge = getDesktopStateBridge();
   if (!bridge) {
@@ -1486,10 +1652,16 @@ async function hydrateStateFromDesktop() {
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state, hydrated);
       ensureAnalysisServiceDefaults(state);
+      normalizeProjectIdentityFields(state);
+      normalizeDraftState(state);
     }
+    await pruneInvalidPersistedProjects();
+    await validateActiveProjectReference();
   } catch {
     // Non-fatal. Continue with localStorage state.
   } finally {
+    normalizeProjectIdentityFields(state);
+    normalizeDraftState(state);
     desktopStateHydrated = true;
     queueDesktopStatePersist();
   }
@@ -1799,6 +1971,18 @@ function buildProjectSequencesIndex() {
 
 function extractProjectSnapshot() {
   state.projectSequences = buildProjectSequencesIndex();
+  const handoffs = {};
+  for (const contract of AGENT_HANDOFF_CONTRACTS) {
+    const row = agentRuntime.handoffs?.[contract];
+    if (!row?.valid || !isPlainObject(row.payload)) continue;
+    handoffs[contract] = {
+      contract,
+      producer: String(row.producer || "").trim(),
+      payload: row.payload,
+      context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+      at: String(row.at || "")
+    };
+  }
   return {
     projectMetadataRoot: state.projectMetadataRoot,
     projectFilePath: state.projectFilePath,
@@ -1821,6 +2005,18 @@ function extractProjectSnapshot() {
     inspiration: state.inspiration,
     activeSequence: state.activeSequence,
     projectSequences: state.projectSequences,
+    proposed: Array.isArray(state.proposed) ? [...state.proposed] : [],
+    agentPlan: state.agentPlan && typeof state.agentPlan === "object" ? structuredClone(state.agentPlan) : null,
+    creative: state.creative && typeof state.creative === "object" ? structuredClone(state.creative) : structuredClone(defaultState.creative),
+    agentRuntime: {
+      activeRole: String(agentRuntime.activeRole || "").trim(),
+      handoffs
+    },
+    draft: {
+      draftBaseRevision: String(state.draftBaseRevision || "unknown"),
+      hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
+      proposalStale: Boolean(state.flags?.proposalStale)
+    },
     flags: {
       planOnlyMode: state.flags.planOnlyMode
     },
@@ -1889,6 +2085,49 @@ function applyProjectSnapshot(snapshot) {
     };
   }
   state.activeSequence = snapshot.activeSequence || state.activeSequence;
+  state.proposed = Array.isArray(snapshot?.proposed) ? [...snapshot.proposed] : [];
+  state.agentPlan = snapshot?.agentPlan && typeof snapshot.agentPlan === "object"
+    ? structuredClone(snapshot.agentPlan)
+    : null;
+  if (snapshot?.creative && typeof snapshot.creative === "object") {
+    state.creative = { ...structuredClone(defaultState.creative), ...snapshot.creative };
+  }
+  if (snapshot?.draft && typeof snapshot.draft === "object") {
+    state.draftBaseRevision = String(snapshot.draft.draftBaseRevision || state.draftBaseRevision || "unknown");
+    state.flags.hasDraftProposal = Boolean(snapshot.draft.hasDraftProposal);
+    state.flags.proposalStale = Boolean(snapshot.draft.proposalStale);
+  }
+  clearAgentHandoffs();
+  if (snapshot?.agentRuntime && isPlainObject(snapshot.agentRuntime)) {
+    const runtimeRole = String(snapshot.agentRuntime.activeRole || "").trim();
+    if (runtimeRole) {
+      setAgentActiveRole(runtimeRole);
+    }
+    const persisted = isPlainObject(snapshot.agentRuntime.handoffs) ? snapshot.agentRuntime.handoffs : {};
+    for (const contract of AGENT_HANDOFF_CONTRACTS) {
+      const row = isPlainObject(persisted[contract]) ? persisted[contract] : null;
+      if (!row || !isPlainObject(row.payload)) continue;
+      const errors = validateAgentHandoff(contract, row.payload);
+      if (errors.length) continue;
+      agentRuntime.handoffs[contract] = {
+        contract,
+        producer: String(row.producer || "").trim(),
+        payload: row.payload,
+        context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+        valid: true,
+        errors: [],
+        at: String(row.at || new Date().toISOString())
+      };
+    }
+    refreshAgentRuntimeHealth();
+    reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "project snapshot hydrate" });
+  }
+  if (!getValidHandoff("intent_handoff_v1") && isPlainObject(state.creative?.intentHandoff)) {
+    setAgentHandoff("intent_handoff_v1", state.creative.intentHandoff, "designer_dialog");
+  }
+  if (!getValidHandoff("plan_handoff_v1") && isPlainObject(state.agentPlan?.handoff)) {
+    setAgentHandoff("plan_handoff_v1", state.agentPlan.handoff, "sequence_agent");
+  }
   state.flags.planOnlyMode = Boolean(snapshot?.flags?.planOnlyMode);
   state.safety = { ...state.safety, ...(snapshot.safety || {}) };
   state.ui.sequenceMode = snapshot?.ui?.sequenceMode || "existing";
@@ -1904,7 +2143,9 @@ function applyProjectSnapshot(snapshot) {
     state.projectSequences = [];
   }
   ensureMetadataTargetSelection();
-  state.flags.hasDraftProposal = state.proposed.length > 0;
+  if (!state.flags.hasDraftProposal) {
+    state.flags.hasDraftProposal = state.proposed.length > 0;
+  }
 }
 
 function saveCurrentProjectSnapshot() {
@@ -1933,10 +2174,14 @@ function tryLoadProjectSnapshot(projectName, showFolder) {
   return true;
 }
 
-const routes = ["project", "audio", "sequence", "design", "review", "metadata", "history"];
+const routes = ["settings", "project", "audio", "sequence", "design", "review", "metadata", "history"];
 
 function setRoute(route) {
-  const normalizedRoute = route === "inspiration" ? "design" : route;
+  const normalizedRoute = route === "inspiration"
+    ? "design"
+    : route === "setup"
+      ? "settings"
+      : route;
   if (!routes.includes(normalizedRoute)) return;
   state.route = normalizedRoute;
   state.ui.inspectedArtifact = "";
@@ -2067,6 +2312,10 @@ function evaluateApplyHandoffGate() {
 }
 
 function applyEnabled() {
+  return applyReadyForApprovalGate() && Boolean(state.ui.applyApprovalChecked);
+}
+
+function applyReadyForApprovalGate() {
   const f = state.flags;
   const handoffGate = evaluateApplyHandoffGate();
   return (
@@ -2081,6 +2330,13 @@ function applyEnabled() {
 }
 
 function applyDisabledReason() {
+  if (applyReadyForApprovalGate() && !state.ui.applyApprovalChecked) {
+    return "Review the plan and check approval before apply.";
+  }
+  return applyPlanReadinessReason();
+}
+
+function applyPlanReadinessReason() {
   const f = state.flags;
   const rolloutMode = getAgentApplyRolloutMode();
   if (!f.xlightsConnected) return "Connect to xLights to apply.";
@@ -2092,7 +2348,6 @@ function applyDisabledReason() {
   if (!f.hasDraftProposal) return "Generate a proposal first.";
   const handoffGate = evaluateApplyHandoffGate();
   if (!handoffGate.ok) return handoffGate.message;
-  if (!state.ui.applyApprovalChecked) return "Review the plan and check approval before apply.";
   if (f.applyInProgress) return "Apply in progress.";
   return "";
 }
@@ -2429,7 +2684,10 @@ function getSections() {
 function filteredProposed() {
   if (hasAllSectionsSelected()) return state.proposed;
   const selected = new Set(getSelectedSections());
-  return state.proposed.filter((item) => selected.has(getSectionName(item)));
+  return state.proposed.filter((item) => {
+    const section = getSectionName(item);
+    return section === "General" || selected.has(section);
+  });
 }
 
 function bumpVersion(summary = "Applied draft proposal", effects = 28) {
@@ -2472,6 +2730,33 @@ async function verifyAppliedPlanReadback(plan = []) {
   });
 }
 
+async function preflightSequenceFileForApply() {
+  const sequencePath = currentSequencePathForSidecar();
+  if (!sequencePath) {
+    return { ok: false, message: "Open or create a sequence before apply." };
+  }
+  const bridge = getDesktopFileStatBridge();
+  if (!bridge) {
+    return { ok: true };
+  }
+  try {
+    const stat = await bridge.getFileStat({ filePath: sequencePath });
+    if (!stat?.ok || !stat?.exists) {
+      return { ok: false, message: "The open sequence file is missing on disk. Save or reopen the sequence in xLights first." };
+    }
+    const size = Number(stat.size || 0);
+    if (!Number.isFinite(size) || size <= 0) {
+      return { ok: false, message: "The open sequence file is empty on disk. Save the sequence in xLights first." };
+    }
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Unable to verify the open sequence file before apply: ${String(err?.message || err || "unknown error")}`
+    };
+  }
+}
+
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
   if (!applyEnabled()) {
     setStatusWithDiagnostics("warning", applyDisabledReason());
@@ -2479,10 +2764,19 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   }
   const revisionState = await syncLatestSequenceRevision({
     onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
-    onUnknownMessage: "Unable to confirm current xLights revision. Refresh before apply."
+    onUnknownMessage: "Unable to confirm current xLights revision. Continuing with reduced safety for apply."
   });
-  if (!revisionState.ok || revisionState.revision === "unknown") {
-    return render();
+  if (!revisionState.ok) {
+    pushDiagnostic(
+      "warning",
+      "Proceeding with apply despite revision sync failure.",
+      String(revisionState.error || "revision sync failed")
+    );
+  } else if (revisionState.revision === "unknown") {
+    pushDiagnostic(
+      "warning",
+      "Proceeding with apply despite unknown xLights revision."
+    );
   }
   if (state.flags.proposalStale) {
     setStatusWithDiagnostics("warning", "Apply blocked: draft is stale against the latest xLights revision.");
@@ -2502,6 +2796,11 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   }
   if (!state.ui.applyApprovalChecked) {
     setStatusWithDiagnostics("warning", "Review the plan and check approval before apply.");
+    return render();
+  }
+  const sequencePreflight = await preflightSequenceFileForApply();
+  if (!sequencePreflight.ok) {
+    setStatusWithDiagnostics("warning", sequencePreflight.message);
     return render();
   }
   const scopedImpactCount = scopedSource.length * 11;
@@ -2525,6 +2824,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   let applyResult = null;
   let lastOrchestrated = null;
   let lastVerification = null;
+  let clearApprovalAfterApply = false;
 
   try {
     const sequencePath = currentSequencePathForSidecar();
@@ -2849,6 +3149,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       verification,
       ...currentApplyContext()
     };
+    clearApprovalAfterApply = true;
     endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });
   } catch (err) {
     markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
@@ -2888,7 +3189,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       ...currentApplyContext()
     };
   } finally {
-    state.ui.applyApprovalChecked = false;
+    if (clearApprovalAfterApply) {
+      state.ui.applyApprovalChecked = false;
+    }
     if (applyAuditEntry) {
       pushApplyHistory(applyAuditEntry);
       await appendDesktopApplyLog(applyAuditEntry);
@@ -2910,7 +3213,12 @@ function selectedProposedLinesForApply() {
     .filter((row) => selected.has(row.idx));
   if (hasAllSectionsSelected()) return all.map((row) => row.line);
   const sectionSet = new Set(getSelectedSections());
-  return all.filter((row) => sectionSet.has(getSectionName(row.line))).map((row) => row.line);
+  return all
+    .filter((row) => {
+      const section = getSectionName(row.line);
+      return section === "General" || sectionSet.has(section);
+    })
+    .map((row) => row.line);
 }
 
 async function onApplySelected() {
@@ -2926,7 +3234,12 @@ async function onApplyAll() {
   await onApply(filteredProposed(), "all proposed changes");
 }
 
-async function onGenerate(intentOverride = "") {
+async function onGenerate(intentOverride = "", options = {}) {
+  const requestedRole = String(options?.requestedRole || "").trim();
+  const proposalRole = ["sequence_agent", "designer_dialog"].includes(requestedRole)
+    ? requestedRole
+    : "designer_dialog";
+  const directSequenceMode = proposalRole === "sequence_agent";
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
     return render();
@@ -2934,17 +3247,31 @@ async function onGenerate(intentOverride = "") {
   if (state.flags.xlightsConnected && !state.flags.planOnlyMode) {
     const revisionState = await syncLatestSequenceRevision({
       onStaleMessage: "Detected newer xLights sequence revision. Regenerating against latest sequence state.",
-      onUnknownMessage: "Unable to confirm current xLights revision. Refresh before generating a new proposal."
+      onUnknownMessage: "Unable to confirm current xLights revision. Continuing with a draft against the current loaded state."
     });
-    if (!revisionState.ok || revisionState.revision === "unknown") {
-      return render();
+    if (!revisionState.ok) {
+      pushDiagnostic(
+        "warning",
+        "Proceeding with proposal generation despite revision sync failure.",
+        String(revisionState.error || "revision sync failed")
+      );
     }
   }
 
-  setAgentActiveRole("designer_dialog");
-  const orchestrationRun = beginOrchestrationRun({ trigger: "generate", role: "designer_dialog" });
+  setAgentActiveRole(proposalRole);
+  const orchestrationRun = beginOrchestrationRun({ trigger: "generate", role: proposalRole });
   state.ui.agentThinking = true;
-  addChatMessage("agent", "Working on updated proposal from current chat intent...");
+  addStructuredChatMessage(
+    "agent",
+    proposalRole === "sequence_agent"
+      ? "Working on an updated sequencing draft from your current request..."
+      : "Working on updated proposal from current chat intent...",
+    {
+      roleId: proposalRole,
+      displayName: getTeamChatSpeakerLabel(proposalRole),
+      handledBy: proposalRole
+    }
+  );
   state.flags.hasDraftProposal = true;
   state.flags.proposalStale = false;
   state.draftBaseRevision = state.revision;
@@ -2955,41 +3282,83 @@ async function onGenerate(intentOverride = "") {
     : getSelectedSections().filter((s) => s !== "all");
   const intentText = String(intentOverride || "").trim() || latestUserIntentText();
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
-  const designerOrchestration = executeDesignerProposalOrchestration({
-    requestId: `${orchestrationRun.id}-designer`,
-    sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
-    promptText: intentText,
-    selectedSections: selected,
-    selectedTagNames: state.ui.metadataSelectedTags || [],
-    selectedTargetIds: state.ui.metadataSelectionIds || [],
-    goals: state.creative?.goals || "",
-    inspiration: state.creative?.inspiration || "",
-    notes: state.creative?.notes || "",
-    references: state.creative?.references || [],
-    priorBrief: state.creative?.brief || null,
-    analysisHandoff,
-    models: state.models || [],
-    submodels: state.submodels || [],
-    metadataAssignments: state.metadata?.assignments || [],
-    elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
-  });
-  if (!designerOrchestration.ok) {
-    markOrchestrationStage(orchestrationRun, "designer_dialog", "error", designerOrchestration.summary || "designer flow failed");
-    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "designer flow failed" });
+  const proposalOrchestration = directSequenceMode
+    ? executeDirectSequenceRequestOrchestration({
+        requestId: `${orchestrationRun.id}-direct-sequence`,
+        sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+        promptText: intentText,
+        selectedSections: selected,
+        selectedTagNames: state.ui.metadataSelectedTags || [],
+        selectedTargetIds: state.ui.metadataSelectionIds || [],
+        analysisHandoff,
+        models: state.models || [],
+        submodels: state.submodels || [],
+        metadataAssignments: state.metadata?.assignments || [],
+        elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+      })
+    : executeDesignerProposalOrchestration({
+        requestId: `${orchestrationRun.id}-designer`,
+        sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+        promptText: intentText,
+        selectedSections: selected,
+        selectedTagNames: state.ui.metadataSelectedTags || [],
+        selectedTargetIds: state.ui.metadataSelectionIds || [],
+        goals: state.creative?.goals || "",
+        inspiration: state.creative?.inspiration || "",
+        notes: state.creative?.notes || "",
+        references: state.creative?.references || [],
+        priorBrief: state.creative?.brief || null,
+        analysisHandoff,
+        models: state.models || [],
+        submodels: state.submodels || [],
+        metadataAssignments: state.metadata?.assignments || [],
+        elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+      });
+  if (!proposalOrchestration.ok) {
+    markOrchestrationStage(
+      orchestrationRun,
+      directSequenceMode ? "direct_sequence_request" : "designer_dialog",
+      "error",
+      proposalOrchestration.summary || (directSequenceMode ? "direct sequence flow failed" : "designer flow failed")
+    );
+    endOrchestrationRun(orchestrationRun, {
+      status: "failed",
+      summary: directSequenceMode ? "direct sequence flow failed" : "designer flow failed"
+    });
     state.ui.agentThinking = false;
     setStatusWithDiagnostics(
       "warning",
-      "Designer proposal generation blocked.",
-      Array.isArray(designerOrchestration.warnings) ? designerOrchestration.warnings.join("\n") : ""
+      directSequenceMode ? "Direct sequence proposal generation blocked." : "Designer proposal generation blocked.",
+      Array.isArray(proposalOrchestration.warnings) ? proposalOrchestration.warnings.join("\n") : ""
     );
     persist();
     render();
     return;
   }
-  applyDesignerProposalSuccessToState(state, designerOrchestration);
-  markOrchestrationStage(orchestrationRun, "intent_normalization", "ok", "designer runtime built brief + proposal");
-  const intentHandoff = designerOrchestration.intentHandoff;
-  const intentSet = setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
+  if (directSequenceMode) {
+    applyDesignerDraftSuccessState(state, {
+      proposalBundle: proposalOrchestration.proposalBundle || null,
+      proposalLines: Array.isArray(proposalOrchestration.proposalLines) ? proposalOrchestration.proposalLines : []
+    });
+  } else {
+    applyDesignerProposalSuccessToState(state, proposalOrchestration);
+  }
+  markOrchestrationStage(
+    orchestrationRun,
+    "intent_normalization",
+    "ok",
+    directSequenceMode
+      ? "direct technical sequencing request normalized into canonical intent handoff"
+      : "designer runtime built brief + proposal"
+  );
+  const intentHandoff = proposalOrchestration.intentHandoff;
+  state.creative = state.creative || {};
+  state.creative.intentHandoff = isPlainObject(intentHandoff) ? structuredClone(intentHandoff) : null;
+  const intentSet = setAgentHandoff(
+    "intent_handoff_v1",
+    intentHandoff,
+    directSequenceMode ? "app_assistant" : "designer_dialog"
+  );
   if (!intentSet.ok) {
     markOrchestrationStage(orchestrationRun, "intent_handoff", "error", intentSet.errors.join("; "));
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: "intent handoff invalid" });
@@ -3001,8 +3370,8 @@ async function onGenerate(intentOverride = "") {
   }
   setAgentActiveRole("sequence_agent");
   markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
-  const guidedQuestions = designerOrchestration.guidedQuestions;
-  const proposalSeedLines = designerOrchestration.proposalLines;
+  const guidedQuestions = proposalOrchestration.guidedQuestions;
+  const proposalSeedLines = proposalOrchestration.proposalLines;
   const sequenceAgentInput = buildSequenceAgentInput({
     requestId: `${orchestrationRun.id}-generate`,
     endpoint: state.endpoint,
@@ -3165,24 +3534,38 @@ async function onGenerate(intentOverride = "") {
       : "proposal generation incomplete"
   });
   state.ui.agentThinking = false;
-  const guidedMessage = buildDesignerGuidedQuestionMessage(guidedQuestions);
+  const guidedMessage = proposalRole === "designer_dialog"
+    ? buildDesignerGuidedQuestionMessage(guidedQuestions)
+    : "";
   if (guidedMessage) addChatMessage("agent", guidedMessage);
   addStructuredChatMessage(
     "agent",
-    `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`,
+    proposalRole === "sequence_agent"
+      ? `Sequencing draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} ready for review.`
+      : `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`,
     {
-      roleId: "designer_dialog",
-      displayName: getTeamChatSpeakerLabel("designer_dialog"),
-      handledBy: "designer_dialog",
-      artifact: buildChatArtifactCard("proposal_bundle_v1", {
-        title: String(state.creative?.proposalBundle?.title || "Design Proposal").trim(),
-        summary: String(state.creative?.proposalBundle?.summary || state.creative?.brief?.summary || "").trim(),
-        chips: [
-          state.creative?.proposalBundle?.lifecycle?.status || "",
-          Array.isArray(state.creative?.proposalBundle?.lines) ? `${state.creative.proposalBundle.lines.length} lines` : "",
-          Array.isArray(state.creative?.proposalBundle?.scope?.sections) ? `${state.creative.proposalBundle.scope.sections.length} sections` : ""
-        ]
-      })
+      roleId: proposalRole,
+      displayName: getTeamChatSpeakerLabel(proposalRole),
+      handledBy: proposalRole,
+      artifact: proposalRole === "sequence_agent"
+        ? buildChatArtifactCard("plan_handoff_v1", {
+            title: String(state.agentPlan?.handoff?.summary || "Sequence Draft").trim(),
+            summary: String(state.agentPlan?.handoff?.summary || "").trim(),
+            chips: [
+              state.creative?.proposalBundle?.lifecycle?.status || "",
+              Array.isArray(state.agentPlan?.handoff?.commands) ? `${state.agentPlan.handoff.commands.length} commands` : "",
+              Number.isFinite(Number(state.agentPlan?.handoff?.estimatedImpact)) ? `${Number(state.agentPlan.handoff.estimatedImpact)} impact` : ""
+            ]
+          })
+        : buildChatArtifactCard("proposal_bundle_v1", {
+            title: String(state.creative?.proposalBundle?.title || "Design Proposal").trim(),
+            summary: String(state.creative?.proposalBundle?.summary || state.creative?.brief?.summary || "").trim(),
+            chips: [
+              state.creative?.proposalBundle?.lifecycle?.status || "",
+              Array.isArray(state.creative?.proposalBundle?.lines) ? `${state.creative.proposalBundle.lines.length} lines` : "",
+              Array.isArray(state.creative?.proposalBundle?.scope?.sections) ? `${state.creative.proposalBundle.scope.sections.length} sections` : ""
+            ]
+          })
     }
   );
   setStatus("info", `Proposal refreshed from current intent (${state.proposed.length} line${state.proposed.length === 1 ? "" : "s"}).`);
@@ -3644,11 +4027,15 @@ async function syncLatestSequenceRevision({
     const previousRevision = String(state.revision || "unknown");
     const newRevision = String(rev?.data?.revision ?? "unknown");
     const revisionChanged = newRevision !== previousRevision;
+    const knownToKnownRevisionChange =
+      previousRevision !== "unknown" &&
+      newRevision !== "unknown" &&
+      newRevision !== previousRevision;
     let staleDetected = false;
 
     state.revision = newRevision;
 
-    if (revisionChanged) {
+    if (knownToKnownRevisionChange) {
       invalidatePlanHandoff("sequence revision changed");
     }
 
@@ -3697,6 +4084,7 @@ async function syncLatestSequenceRevision({
 }
 
 async function onRefresh() {
+  state.ui.firstRunMode = false;
   try {
     await hydrateAgentHealth();
     applyRolloutPolicy();
@@ -3803,6 +4191,7 @@ async function onRebaseDraft() {
 }
 
 async function onTestConnection() {
+  state.ui.firstRunMode = false;
   const endpointInput = app.querySelector("#endpoint-input");
   const requestedEndpoint = endpointInput
     ? normalizeConfiguredEndpoint(endpointInput.value)
@@ -3896,6 +4285,7 @@ async function onCheckHealth() {
 }
 
 async function pollRevision() {
+  if (isFirstRunMode()) return;
   if (!state.flags.xlightsConnected || state.flags.applyInProgress) return;
   try {
     const result = await syncLatestSequenceRevision({
@@ -3912,6 +4302,7 @@ async function pollRevision() {
 }
 
 async function pollJobs() {
+  if (isFirstRunMode()) return;
   if (!state.flags.xlightsConnected) return;
   const active = (state.jobs || []).filter((j) =>
     !["done", "completed", "failed", "canceled", "cancelled"].includes((j.status || "").toLowerCase())
@@ -3950,6 +4341,7 @@ async function pollJobs() {
 }
 
 async function pollCompatibilityStatus() {
+  if (isFirstRunMode()) return;
   if (state.flags.applyInProgress) return;
   if (!state.flags.xlightsConnected) {
     try {
@@ -4026,6 +4418,7 @@ async function pollCompatibilityStatus() {
 }
 
 async function syncOpenSequenceOnFocusReturn() {
+  if (isFirstRunMode()) return;
   if (focusSyncInFlight) return;
   if (!state.flags.xlightsConnected) return;
   const now = Date.now();
@@ -4434,6 +4827,7 @@ function getRouteChatPlaceholder(route = "") {
   if (key === "design") return "Describe the feeling, references, or design direction you want...";
   if (key === "review") return "Ask what will change, what to review, or request a scoped sequence revision...";
   if (key === "metadata") return "Ask about tags, targeting, and semantic organization...";
+  if (key === "settings") return "Ask about connection, cloud chat, analysis services, and app configuration...";
   if (key === "history") return "Ask about prior versions, applies, or rollback options...";
   return "Tell the team what to change or ask for guidance...";
 }
@@ -4474,6 +4868,12 @@ function getRouteChatContext() {
     return {
       title: "Metadata workspace",
       note: "Use team chat to organize tags and improve targeting for the designer and sequencer."
+    };
+  }
+  if (route === "settings") {
+    return {
+      title: "Application settings workspace",
+      note: "Use team chat to configure xLights connection, cloud chat, audio services, and app-level behavior."
     };
   }
   if (route === "history") {
@@ -5283,6 +5683,16 @@ async function onSendChat() {
       handledBy: String(res.handledBy || "app_assistant"),
       addressedTo: String(res.addressedTo || "")
     });
+    if (
+      res.routeDecision === "sequence_agent" ||
+      res.shouldGenerateProposal ||
+      res.routeDecision === "designer_dialog"
+    ) {
+      addStructuredChatMessage(
+        "system",
+        "Draft only. No changes have been written to xLights yet. Review the proposal and use Apply from the Review workflow to execute changes."
+      );
+    }
     setAgentActiveRole(["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
       ? String(res.routeDecision)
       : "app_assistant");
@@ -5291,8 +5701,10 @@ async function onSendChat() {
     state.health.agentModel = String(res.model || state.health.agentModel || "");
     state.health.agentConfigured = true;
 
-    if ((state.flags.activeSequenceLoaded || state.flags.planOnlyMode) && res.shouldGenerateProposal) {
-      await onGenerate(String(res.proposalIntent || raw));
+    if (shouldAutoGenerateProposalFromChatResult(res, raw)) {
+      await onGenerate(String(res.proposalIntent || raw), {
+        requestedRole: String(res.routeDecision || "")
+      });
       return;
     }
     if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
@@ -5704,6 +6116,19 @@ function latestUserIntentText() {
   return "";
 }
 
+function shouldAutoGenerateProposalFromChatResult(res = {}, raw = "") {
+  const routeDecision = String(res?.routeDecision || "").trim();
+  if (!(state.flags.activeSequenceLoaded || state.flags.planOnlyMode)) return false;
+  if (Boolean(res?.shouldGenerateProposal)) return true;
+  if (!["designer_dialog", "sequence_agent"].includes(routeDecision)) return false;
+  const text = String(raw || "").trim().toLowerCase();
+  if (!text) return false;
+  const isQuestionOnly = /^(can you|could you|would you|will you|do you|does this|is this|what|why|how)\b/.test(text)
+    && !/(apply|change|make|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
+  if (isQuestionOnly) return false;
+  return /(apply|change|make|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
+}
+
 function inferProposalLinesFromIntent(intentText, sections = []) {
   const text = String(intentText || "").trim();
   const normalized = text.toLowerCase();
@@ -5752,14 +6177,24 @@ function inferProposalLinesFromIntent(intentText, sections = []) {
 
 function mergeCreativeBriefIntoProposal(lines) {
   const base = Array.isArray(lines) ? [...lines] : [];
+  if (base.some((row) => /\/\s+apply\s+.+\s+effect\b/i.test(String(row || "")))) {
+    return base.slice(0, 6);
+  }
   if (!state.flags.creativeBriefReady || !state.creative?.brief) return base;
   const brief = state.creative.brief;
   const additions = [];
+  const goalsSummary = String(brief.goalsSummary || "").trim();
+  const visualCues = String(brief.visualCues || "").trim();
+  const sections = Array.isArray(brief.sections) ? brief.sections.map((row) => String(row || "").trim()).filter(Boolean) : [];
 
-  if (brief.goalsSummary) additions.push(`Anchor design changes to brief goal: ${brief.goalsSummary}`);
-  if (brief.visualCues) additions.push(`Use visual direction cues: ${brief.visualCues}`);
-  if (Array.isArray(brief.sections) && brief.sections.length) {
-    additions.push(`Focus first pass on brief sections: ${brief.sections.slice(0, 3).join(", ")}`);
+  if (goalsSummary && !/^no explicit goals captured\.?$/i.test(goalsSummary)) {
+    additions.push(`Anchor design changes to brief goal: ${goalsSummary}`);
+  }
+  if (visualCues && !/^no uploaded references\.?$/i.test(visualCues)) {
+    additions.push(`Use visual direction cues: ${visualCues}`);
+  }
+  if (sections.length && sections.join(", ").toLowerCase() !== "intro, verse, chorus") {
+    additions.push(`Focus first pass on brief sections: ${sections.slice(0, 3).join(", ")}`);
   }
 
   return [...additions, ...base].filter(Boolean).slice(0, 6);
@@ -6397,11 +6832,9 @@ function onEditSelectedProposed() {
 }
 
 function syncProjectSummaryInputs() {
-  const projectNameInput = app.querySelector("#project-name-input");
   const showFolderInput = app.querySelector("#showfolder-input");
   const mediaPathInput = app.querySelector("#mediapath-input");
   const metadataRootInput = app.querySelector("#project-metadata-root-input");
-  if (projectNameInput) state.projectName = projectNameInput.value.trim() || state.projectName;
   if (showFolderInput) state.showFolder = showFolderInput.value.trim() || state.showFolder;
   if (mediaPathInput) state.mediaPath = mediaPathInput.value.trim() || "";
   if (metadataRootInput) state.projectMetadataRoot = metadataRootInput.value.trim();
@@ -6470,6 +6903,94 @@ async function saveProjectToCurrentFile(options = {}) {
   state.projectCreatedAt = String(res?.project?.createdAt || state.projectCreatedAt || "");
   state.projectUpdatedAt = String(res?.project?.updatedAt || state.projectUpdatedAt || "");
   return { ok: true, filePath: state.projectFilePath };
+}
+
+function openProjectNameDialog({ mode, title, initialName = "" }) {
+  state.ui.projectNameDialogOpen = true;
+  state.ui.projectNameDialogMode = String(mode || "").trim();
+  state.ui.projectNameDialogTitle = String(title || "Project name");
+  state.ui.projectNameDialogValue = String(initialName || "");
+  state.ui.projectNameDialogError = "";
+  persist();
+  render();
+}
+
+function closeProjectNameDialog() {
+  state.ui.projectNameDialogOpen = false;
+  state.ui.projectNameDialogMode = "";
+  state.ui.projectNameDialogTitle = "";
+  state.ui.projectNameDialogValue = "";
+  state.ui.projectNameDialogError = "";
+  persist();
+  render();
+}
+
+async function confirmProjectNameDialog() {
+  const mode = String(state.ui.projectNameDialogMode || "").trim();
+  const normalizedName = normalizeProjectDisplayName(state.ui.projectNameDialogValue || "");
+  if (!normalizedName) {
+    state.ui.projectNameDialogError = "Project name is required.";
+    persist();
+    render();
+    return;
+  }
+
+  const previousName = String(state.projectName || "").trim();
+  state.projectName = normalizedName;
+
+  if (mode === "create") {
+    state.projectFilePath = "";
+    resetSessionDraftState();
+    resetCreativeState();
+    state.flags.activeSequenceLoaded = false;
+    state.activeSequence = "";
+    state.sequencePathInput = "";
+    state.newSequencePathInput = "";
+    state.audioPathInput = "";
+    state.mediaPath = "";
+    state.savePathInput = "";
+    state.recentSequences = [];
+    state.projectSequences = [];
+    state.projectCreatedAt = "";
+    state.projectUpdatedAt = "";
+
+    const saved = await saveProjectToCurrentFile({ saveAs: false });
+    if (!saved?.ok) {
+      state.ui.projectNameDialogError = "";
+      closeProjectNameDialog();
+      setStatusWithDiagnostics("warning", `Created new project but initial save failed: ${saved?.error || "unknown error"}`);
+    } else {
+      state.ui.firstRunMode = false;
+      state.ui.projectNameDialogError = "";
+      closeProjectNameDialog();
+      setStatus("info", `Created new project: ${state.projectName}`);
+    }
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+    return;
+  }
+
+  if (mode === "saveAs") {
+    const saved = await saveProjectToCurrentFile({ saveAs: true });
+    if (saved?.ok) {
+      state.ui.projectNameDialogError = "";
+      closeProjectNameDialog();
+      setStatus("info", `Saved project as: ${saved.filePath}`);
+    } else if (saved?.code === "CANCELED") {
+      state.projectName = previousName;
+      closeProjectNameDialog();
+      setStatus("info", "Save As canceled.");
+    } else {
+      state.projectName = previousName;
+      state.ui.projectNameDialogError = "";
+      closeProjectNameDialog();
+      setStatusWithDiagnostics("action-required", `Save As failed: ${saved?.error || "unknown error"}`);
+    }
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+  }
 }
 
 async function onSaveProjectSettings() {
@@ -7366,7 +7887,7 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
   }
 
   const { projectName, showFolder } = parseProjectKey(selectedKey);
-  if (!projectName || !showFolder) {
+  if (!projectName) {
     setStatus("warning", "Selected project key is invalid.");
     return render();
   }
@@ -7406,109 +7927,28 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
 function onCreateNewProject() {
   syncProjectSummaryInputs();
   const bridge = getDesktopProjectBridge();
-  const openNew = async () => {
-    if (!bridge) {
-      setStatusWithDiagnostics("warning", "New project requires desktop runtime.");
-      return render();
-    }
-    const normalizedProjectName = normalizeProjectDisplayName(state.projectName);
-    if (!normalizedProjectName) {
-      setStatus("warning", "Project name is required.");
-      return render();
-    }
-    state.projectName = normalizedProjectName;
-    state.projectFilePath = "";
-
-    resetSessionDraftState();
-    resetCreativeState();
-    state.flags.activeSequenceLoaded = false;
-    state.activeSequence = "";
-    state.sequencePathInput = "";
-    state.newSequencePathInput = "";
-    state.audioPathInput = "";
-    state.mediaPath = "";
-    state.savePathInput = "";
-    state.recentSequences = [];
-    state.projectSequences = [];
-    state.projectCreatedAt = "";
-    state.projectUpdatedAt = "";
-
-    const saved = await saveProjectToCurrentFile({ saveAs: false });
-    if (!saved?.ok) {
-      setStatusWithDiagnostics("warning", `Created new project but initial save failed: ${saved?.error || "unknown error"}`);
-    } else {
-      setStatus("info", `Created new project: ${state.projectName}`);
-    }
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  };
-  void openNew();
+  if (!bridge) {
+    setStatusWithDiagnostics("warning", "New project requires desktop runtime.");
+    return render();
+  }
+  openProjectNameDialog({
+    mode: "create",
+    title: "Create New Project",
+    initialName: ""
+  });
 }
 
 async function onSaveProjectAs() {
   syncProjectSummaryInputs();
   const previousName = String(state.projectName || "").trim();
-  const proposedName = window.prompt("Save project as", previousName || "Project");
-  if (proposedName == null) {
-    setStatus("info", "Save As canceled.");
-    render();
-    return;
+  if (!previousName && !String(state.projectFilePath || "").trim()) {
+    // Keep empty when there is no current project, but still let the user continue.
   }
-  const nextName = normalizeProjectDisplayName(proposedName);
-  if (!nextName) {
-    setStatus("warning", "Project name is required.");
-    render();
-    return;
-  }
-  state.projectName = nextName;
-  const saved = await saveProjectToCurrentFile({ saveAs: true });
-  if (saved?.ok) {
-    setStatus("info", `Saved project as: ${saved.filePath}`);
-  } else if (saved?.code === "CANCELED") {
-    setStatus("info", "Save As canceled.");
-  } else {
-    state.projectName = previousName;
-    setStatusWithDiagnostics("action-required", `Save As failed: ${saved?.error || "unknown error"}`);
-  }
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
-}
-
-async function onRenameProject() {
-  const previousProjectName = String(projectNameFromPath(state.projectFilePath) || state.projectName || "").trim();
-  const previousShowFolder = String(state.showFolder || "").trim();
-  const originalDisplayName = String(state.projectName || "").trim();
-  syncProjectSummaryInputs();
-  if (!state.projectFilePath) {
-    setStatus("warning", "Save the project once before renaming it.");
-    render();
-    return;
-  }
-  const normalizedProjectName = normalizeProjectDisplayName(state.projectName);
-  if (!normalizedProjectName) {
-    setStatus("warning", "Project name is required.");
-    render();
-    return;
-  }
-  if (normalizedProjectName === projectNameFromPath(state.projectFilePath)) {
-    setStatus("info", "Project name is already current.");
-    render();
-    return;
-  }
-  state.projectName = normalizedProjectName;
-  const saved = await saveProjectToCurrentFile({ rename: true });
-  if (saved?.ok) {
-    deleteProjectSnapshot(previousProjectName, previousShowFolder || state.showFolder);
-    setStatus("info", `Project renamed: ${state.projectName}`);
-  } else {
-    state.projectName = originalDisplayName;
-    setStatusWithDiagnostics("warning", `Project rename failed: ${saved?.error || "unknown error"}`);
-  }
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
+  openProjectNameDialog({
+    mode: "saveAs",
+    title: "Save Project As",
+    initialName: previousName || "Project"
+  });
 }
 
 async function onRefreshModels() {
@@ -7608,7 +8048,7 @@ async function onResetAppInstallState() {
     setStatusWithDiagnostics("warning", "Fresh-install reset requires desktop runtime.");
     return render();
   }
-  if (!window.confirm("Reset app state to first-run defaults? This clears app configuration, cloud agent config, recent-project index, and local UI memory, but preserves project folders and analysis artifacts.")) {
+  if (!window.confirm("Reset app state to first-run defaults? This clears local app state, recent-project index, chat history, and UI memory, but preserves stored API keys, project folders, and analysis artifacts.")) {
     setStatus("info", "Fresh-install reset canceled.");
     return render();
   }
@@ -7618,12 +8058,65 @@ async function onResetAppInstallState() {
       setStatusWithDiagnostics("action-required", "Fresh-install reset failed.", String(res?.error || "Unknown error"));
       return render();
     }
+    const preservedState = structuredClone(defaultState);
+    preservedState.route = "settings";
+    preservedState.projectName = "";
+    preservedState.projectConcept = "";
+    preservedState.showFolder = "";
+    preservedState.mediaPath = "";
+    preservedState.projectFilePath = "";
+    preservedState.activeSequence = "";
+    preservedState.sequencePathInput = "";
+    preservedState.newSequencePathInput = "";
+    preservedState.audioPathInput = "";
+    preservedState.savePathInput = "";
+    preservedState.lastApplyBackupPath = "";
+    preservedState.recentSequences = [];
+    preservedState.projectCreatedAt = "";
+    preservedState.projectUpdatedAt = "";
+    preservedState.revision = "unknown";
+    preservedState.status = {
+      level: "info",
+      text: "Welcome. Start in Settings, then create or open a project when you are ready."
+    };
+    preservedState.flags.xlightsConnected = false;
+    preservedState.flags.activeSequenceLoaded = false;
+    preservedState.health.sequenceOpen = false;
+    preservedState.ui.firstRunMode = true;
+    preservedState.ui.agentModelDraft = String(state.ui.agentModelDraft || "");
+    preservedState.ui.agentBaseUrlDraft = String(state.ui.agentBaseUrlDraft || "");
+    preservedState.ui.analysisServiceUrlDraft = String(state.ui.analysisServiceUrlDraft || "");
+    preservedState.ui.analysisServiceApiKeyDraft = String(state.ui.analysisServiceApiKeyDraft || "");
+    preservedState.ui.analysisServiceAuthBearerDraft = String(state.ui.analysisServiceAuthBearerDraft || "");
+    preservedState.chat = [];
+    preservedState.ui.chatDraft = "";
+    preservedState.teamChat = {
+      identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES)
+    };
+    const preservedRaw = JSON.stringify(preservedState);
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(PROJECTS_KEY);
+      localStorage.setItem(STORAGE_KEY, preservedRaw);
+      localStorage.setItem(PROJECTS_KEY, "");
+      sessionStorage.setItem(RESET_PRESERVE_KEY, preservedRaw);
     } catch {
       // ignore local storage cleanup failures
     }
+    try {
+      const stateBridge = getDesktopStateBridge();
+      if (stateBridge && typeof stateBridge.writeAppState === "function") {
+        await stateBridge.writeAppState({
+          localStateRaw: preservedRaw,
+          projectsStoreRaw: ""
+        });
+      }
+    } catch {
+      // Best effort. Reload will still use local/session storage fallback.
+    }
+    state.chat = [];
+    state.ui.chatDraft = "";
+    persist();
     window.location.reload();
   } catch (err) {
     setStatusWithDiagnostics("action-required", "Fresh-install reset failed.", String(err?.message || err));
@@ -8590,19 +9083,6 @@ function buildTrackIdentityKey(trackIdentity = null, trackTitleHint = "") {
   return `title:${title}|artist:${artist || "unknown"}`;
 }
 
-function timingMarksSignature(marks = []) {
-  const rows = (Array.isArray(marks) ? marks : [])
-    .map((m) => {
-      const s = Math.max(0, Math.round(Number(m?.startMs || 0)));
-      const e = Math.max(s + 1, Math.round(Number(m?.endMs || (s + 1))));
-      const l = String(m?.label || "").trim();
-      return `${s}:${e}:${l}`;
-    })
-    .filter(Boolean)
-    .sort();
-  return rows.join("|");
-}
-
 function buildGlobalXdTrackPolicyKey(trackName = "") {
   const name = String(trackName || "").trim().toLowerCase();
   if (!name) return "";
@@ -9167,6 +9647,8 @@ function screenContent() {
       getSectionName,
       renderProposedLineHtml,
       applyDisabledReason,
+      applyPlanReadinessReason,
+      applyReadyForApprovalGate,
       applyEnabled,
       getMetadataOrphans,
       getMetadataTagRecords,
@@ -9175,7 +9657,10 @@ function screenContent() {
       normalizeMetadataSelectionIds,
       normalizeMetadataSelectedTags,
       ensureVersionSnapshots,
-      versionById
+      versionById,
+      getAgentApplyRolloutMode,
+      getManualLockedXdTracks,
+      getTeamChatIdentities
     }
   });
 }
@@ -9273,6 +9758,43 @@ function bindEvents() {
     closeDiagnosticsBtn.addEventListener("click", () => toggleDiagnostics(false));
   }
 
+  const projectNameDialogCancelBtn = app.querySelector("#project-name-dialog-cancel");
+  if (projectNameDialogCancelBtn) {
+    projectNameDialogCancelBtn.addEventListener("click", () => {
+      if (state.ui.projectNameDialogMode === "create") {
+        setStatus("info", "Create project canceled.");
+      } else if (state.ui.projectNameDialogMode === "saveAs") {
+        setStatus("info", "Save As canceled.");
+      }
+      closeProjectNameDialog();
+    });
+  }
+
+  const projectNameDialogConfirmBtn = app.querySelector("#project-name-dialog-confirm");
+  if (projectNameDialogConfirmBtn) {
+    projectNameDialogConfirmBtn.addEventListener("click", () => {
+      void confirmProjectNameDialog();
+    });
+  }
+
+  const projectNameDialogInput = app.querySelector("#project-name-dialog-input");
+  if (projectNameDialogInput) {
+    projectNameDialogInput.addEventListener("input", () => {
+      state.ui.projectNameDialogValue = projectNameDialogInput.value;
+      state.ui.projectNameDialogError = "";
+      persist();
+    });
+    projectNameDialogInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void confirmProjectNameDialog();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        closeProjectNameDialog();
+      }
+    });
+  }
+
   const closeJobsBtn = app.querySelector("#close-jobs");
   if (closeJobsBtn) closeJobsBtn.addEventListener("click", () => toggleJobs(false));
 
@@ -9292,7 +9814,7 @@ function bindEvents() {
   bindTeamChatEvents({
     app,
     state,
-    quickPrompts: CHAT_QUICK_PROMPTS,
+    quickPrompts: getRouteChatQuickPrompts(state.route),
     persist,
     render,
     onSendChat,
@@ -9340,39 +9862,6 @@ function bindEvents() {
 
   const planBtn = app.querySelector("#plan-toggle");
   if (planBtn) planBtn.addEventListener("click", onTogglePlanOnly);
-
-  const openSettingsBtn = app.querySelector("#open-settings");
-  if (openSettingsBtn) {
-    openSettingsBtn.addEventListener("click", async () => {
-      state.ui.settingsOpen = true;
-      await hydrateAgentConfigDraft();
-      persist();
-      render();
-      if (state.flags.xlightsConnected && !String(state.health.xlightsVersion || "").trim()) {
-        await onCheckHealth();
-      }
-    });
-  }
-
-  const closeSettingsBtn = app.querySelector("#close-settings");
-  if (closeSettingsBtn) {
-    closeSettingsBtn.addEventListener("click", () => {
-      state.ui.settingsOpen = false;
-      persist();
-      render();
-    });
-  }
-
-  const settingsOverlay = app.querySelector("#settings-overlay");
-  if (settingsOverlay) {
-    settingsOverlay.addEventListener("click", (event) => {
-      if (event.target === settingsOverlay) {
-        state.ui.settingsOpen = false;
-        persist();
-        render();
-      }
-    });
-  }
 
   const connectionBtn = app.querySelector("#test-connection");
   if (connectionBtn) connectionBtn.addEventListener("click", onTestConnection);
@@ -9529,15 +10018,12 @@ function bindEvents() {
     setStatus,
     saveCurrentProjectSnapshot,
     setAudioPathWithAgentPolicy,
-    openFilePicker,
-    onSequenceFilePicked,
-    onAudioFilePicked,
     onSaveProjectSettings,
     onOpenSelectedProject,
     onCreateNewProject,
     onSaveProjectAs,
-    onRenameProject,
     onResetProjectWorkspace,
+    onBrowseProjectMetadataRoot,
     onOpenSelectedSequence,
     onSelectCatalogSequence,
     onBrowseShowFolder,
@@ -9591,6 +10077,8 @@ function bindEvents() {
 }
 
 function render() {
+  normalizeUiRoute();
+  const focusSnapshot = captureRenderFocusState();
   const buildVersion = String(state.health.desktopAppVersion || "").trim();
   const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
   const buildTimeLabel = buildTimeIso
@@ -9612,6 +10100,7 @@ function render() {
       getSelectedSections,
       hasAllSectionsSelected,
       getSectionName,
+      applyReadyForApprovalGate,
       applyEnabled,
       applyDisabledReason,
       getDiagnosticsCounts,
@@ -9627,6 +10116,11 @@ function render() {
   });
 
   bindEvents();
+  restoreRenderFocusState(focusSnapshot);
+  const chatThread = app.querySelector(".chat-thread");
+  if (chatThread) {
+    chatThread.scrollTop = chatThread.scrollHeight;
+  }
 }
 
 async function bootstrapLiveData() {
@@ -9672,6 +10166,15 @@ async function bootstrapLiveData() {
 
 render();
 (async () => {
+  try {
+    const preservedRaw = sessionStorage.getItem(RESET_PRESERVE_KEY);
+    if (preservedRaw) {
+      localStorage.setItem(STORAGE_KEY, preservedRaw);
+      sessionStorage.removeItem(RESET_PRESERVE_KEY);
+    }
+  } catch {
+    // Ignore temporary reset-preserve storage failures.
+  }
   await hydrateStateFromDesktop();
   await hydrateDesktopAppInfo();
   await hydrateAgentHealth();
@@ -9681,7 +10184,18 @@ render();
   applyRolloutPolicy();
   await refreshApplyHistoryFromDesktop(40);
   render();
-  await bootstrapLiveData();
+  if (!state.ui.firstRunMode) {
+    await bootstrapLiveData();
+  } else {
+    state.route = "settings";
+    state.flags.xlightsConnected = false;
+    state.flags.activeSequenceLoaded = false;
+    state.activeSequence = "";
+    state.health.sequenceOpen = false;
+    setStatus("info", "Welcome. Start in Settings, then create or open a project when you are ready.");
+    persist();
+    render();
+  }
 })();
 setInterval(pollRevision, 8000);
 setInterval(pollJobs, 3000);

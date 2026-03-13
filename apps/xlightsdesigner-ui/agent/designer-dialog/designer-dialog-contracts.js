@@ -1,4 +1,5 @@
 import { validateAgentHandoff } from "../handoff-contracts.js";
+import { buildCanonicalSequenceIntentHandoff } from "../sequence-agent/sequence-intent-handoff.js";
 
 export const DESIGNER_DIALOG_ROLE = "designer_dialog";
 export const DESIGNER_DIALOG_CONTRACT_VERSION = "1.0";
@@ -47,6 +48,11 @@ function pushRequiredString(errors, obj, path, label = "") {
 
 function pushRequiredObject(errors, obj, path, label = "") {
   if (!isPlainObject(getByPath(obj, path))) errors.push(`${label || path} is required`);
+}
+
+function strOrDefault(value = "", fallback = "") {
+  const out = str(value);
+  return out || fallback;
 }
 
 export function validateDesignerDialogInput(payload = {}) {
@@ -265,36 +271,15 @@ export function buildIntentHandoffFromDesignerState({
   creativeBrief = null,
   elevatedRiskConfirmed = false
 } = {}) {
-  const selectedTargetIds = Array.isArray(normalizedIntent?.targetIds) ? normalizedIntent.targetIds : [];
-  const selectedTags = Array.isArray(normalizedIntent?.tags) ? normalizedIntent.tags : [];
-  const selectedSections = Array.isArray(normalizedIntent?.sections) ? normalizedIntent.sections : [];
-  const goal = str(normalizedIntent?.goal || intentText);
-  const mode = inferIntentModeFromGoal(goal);
-  return {
-    goal,
-    mode,
-    scope: {
-      targetIds: selectedTargetIds,
-      tagNames: selectedTags,
-      sections: selectedSections,
-      timeRangeMs: null
+  return buildCanonicalSequenceIntentHandoff({
+    normalizedIntent: {
+      ...normalizedIntent,
+      changeTolerance: strOrDefault(normalizedIntent?.changeTolerance, inferIntentModeFromGoal(str(normalizedIntent?.goal || intentText)) === "polish" ? "low" : "medium")
     },
-    constraints: {
-      changeTolerance: mode === "polish" ? "low" : "medium",
-      preserveTimingTracks: normalizedIntent?.preserveTimingTracks !== false,
-      allowGlobalRewrite: mode === "create"
-    },
-    directorPreferences: {
-      styleDirection: str(creativeBrief?.mood || creativeBrief?.styleDirection || ""),
-      energyArc: str(normalizedIntent?.tempoIntent || "hold"),
-      focusElements: selectedTargetIds.slice(0, 40),
-      colorDirection: str(creativeBrief?.paletteIntent || creativeBrief?.colorDirection || "")
-    },
-    approvalPolicy: {
-      requiresExplicitApprove: true,
-      elevatedRiskConfirmed: Boolean(elevatedRiskConfirmed)
-    }
-  };
+    intentText,
+    creativeBrief,
+    elevatedRiskConfirmed
+  });
 }
 
 export function buildDesignerDialogResult({

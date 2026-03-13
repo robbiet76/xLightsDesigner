@@ -6,15 +6,12 @@ export function bindScreenEvents({
   setStatus,
   saveCurrentProjectSnapshot,
   setAudioPathWithAgentPolicy,
-  openFilePicker,
-  onSequenceFilePicked,
-  onAudioFilePicked,
   onSaveProjectSettings,
   onOpenSelectedProject,
   onCreateNewProject,
   onSaveProjectAs,
-  onRenameProject,
   onResetProjectWorkspace,
+  onBrowseProjectMetadataRoot,
   onOpenSelectedSequence,
   onSelectCatalogSequence,
   onBrowseShowFolder,
@@ -77,11 +74,11 @@ export function bindScreenEvents({
   const saveProjectAsBtn = app.querySelector("#save-project-as");
   if (saveProjectAsBtn) saveProjectAsBtn.addEventListener("click", onSaveProjectAs);
 
-  const renameProjectBtn = app.querySelector("#rename-project");
-  if (renameProjectBtn) renameProjectBtn.addEventListener("click", onRenameProject);
-
   const resetProjectBtn = app.querySelector("#reset-project");
   if (resetProjectBtn) resetProjectBtn.addEventListener("click", onResetProjectWorkspace);
+
+  const browseProjectRootBtn = app.querySelector("#browse-project-root");
+  if (browseProjectRootBtn) browseProjectRootBtn.addEventListener("click", onBrowseProjectMetadataRoot);
 
   const projectConceptInput = app.querySelector("#project-concept-input");
   if (projectConceptInput) {
@@ -375,48 +372,6 @@ export function bindScreenEvents({
     audioPathInput.addEventListener("change", () => {
       setAudioPathWithAgentPolicy(audioPathInput.value.trim() || "", "audio path edited");
       persist();
-    });
-  }
-
-  const pickSequencePathBtn = app.querySelector("#pick-sequence-path");
-  if (pickSequencePathBtn) {
-    pickSequencePathBtn.addEventListener("click", () => openFilePicker("sequence-path-picker"));
-  }
-
-  const sequencePathPicker = app.querySelector("#sequence-path-picker");
-  if (sequencePathPicker) {
-    sequencePathPicker.addEventListener("change", () => {
-      const [file] = sequencePathPicker.files || [];
-      if (file) onSequenceFilePicked(file, "existing");
-      sequencePathPicker.value = "";
-    });
-  }
-
-  const pickNewSequencePathBtn = app.querySelector("#pick-new-sequence-path");
-  if (pickNewSequencePathBtn) {
-    pickNewSequencePathBtn.addEventListener("click", () => openFilePicker("new-sequence-path-picker"));
-  }
-
-  const newSequencePathPicker = app.querySelector("#new-sequence-path-picker");
-  if (newSequencePathPicker) {
-    newSequencePathPicker.addEventListener("change", () => {
-      const [file] = newSequencePathPicker.files || [];
-      if (file) onSequenceFilePicked(file, "new");
-      newSequencePathPicker.value = "";
-    });
-  }
-
-  const pickAudioPathBtn = app.querySelector("#pick-audio-path");
-  if (pickAudioPathBtn) {
-    pickAudioPathBtn.addEventListener("click", () => openFilePicker("audio-path-picker"));
-  }
-
-  const audioPathPicker = app.querySelector("#audio-path-picker");
-  if (audioPathPicker) {
-    audioPathPicker.addEventListener("change", () => {
-      const [file] = audioPathPicker.files || [];
-      if (file) onAudioFilePicked(file);
-      audioPathPicker.value = "";
     });
   }
 

@@ -64,6 +64,29 @@ function extractEffectOverrides(text) {
   return known.filter((name) => lower.includes(name));
 }
 
+function extractExplicitColor(text = "") {
+  const lower = String(text || "").toLowerCase();
+  const known = ["red", "green", "blue", "white", "amber", "gold", "yellow", "purple", "pink", "orange", "cyan"];
+  return known.find((name) => new RegExp(`\\b${name}\\b`, "i").test(lower)) || "";
+}
+
+function extractDurationMs(text = "") {
+  const lower = String(text || "").toLowerCase();
+  const secondMatch = lower.match(/\b(\d+(?:\.\d+)?)\s*(second|seconds|sec|secs)\b/);
+  if (secondMatch) return Math.round(Number(secondMatch[1]) * 1000);
+  const minuteMatch = lower.match(/\b(\d+(?:\.\d+)?)\s*(minute|minutes|min|mins)\b/);
+  if (minuteMatch) return Math.round(Number(minuteMatch[1]) * 60000);
+  return null;
+}
+
+function extractStartHint(text = "") {
+  const lower = String(text || "").toLowerCase();
+  if (/(at the beginning|from the beginning|start of the track|at the start|from the start)/.test(lower)) {
+    return "track_start";
+  }
+  return "";
+}
+
 function extractSafetyConstraints(text = "") {
   const lower = String(text || "").toLowerCase();
   const out = [];
@@ -154,6 +177,9 @@ export function normalizeIntent({
   const changeTolerance = extractChangeTolerance(goal, mode);
   const focusHierarchy = inferFocusHierarchy({ targetIds, tags, brief });
   const effectOverrides = extractEffectOverrides(goal);
+  const explicitColor = extractExplicitColor(goal);
+  const durationMs = extractDurationMs(goal);
+  const startHint = extractStartHint(goal);
   const safetyConstraints = extractSafetyConstraints(goal);
   const preserveTimingTracks = !hasAnyText(goal, [/(rebuild timing|replace timing|rewrite timing)/]);
   const preservationConstraints = {
@@ -197,6 +223,9 @@ export function normalizeIntent({
     focusHierarchy,
     changeTolerance,
     effectOverrides,
+    explicitColor,
+    durationMs,
+    startHint,
     safetyConstraints,
     preservationConstraints,
     preserveTimingTracks,

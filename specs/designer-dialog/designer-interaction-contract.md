@@ -100,6 +100,25 @@ Required upstream context for `sequence_agent` execution quality:
 - `intent_handoff_v1` from `designer_dialog`.
 - `analysis_handoff_v1` from `audio_analyst` for timing/context-aware sequencing.
 
+## 3.3) Direct Technical Sequencing Exception
+`designer_dialog` is the preferred/default path for creative sequencing work.
+
+However, xLightsDesigner must also support direct technical sequencing requests from the user when the request is already specific enough to execute, for example:
+- exact target/model requests
+- explicit effect changes
+- narrow revise/apply asks
+- timing/shift/scope corrections
+
+Rules:
+- direct technical sequencing requests may bypass `designer_dialog`
+- they must still be normalized into the same canonical `intent_handoff_v1` shape before `sequence_agent`
+- `sequence_agent` must not receive ad hoc free-form user text as its only contract input
+- direct technical sequencing is a secondary/expert path, not the long-term primary creative workflow
+
+Practical consequence:
+- broad creative/design requests should still go through `designer_dialog`
+- explicit technical sequencing requests may go `app_assistant -> handoff normalizer -> sequence_agent`
+
 ## 4) Interaction Model
 
 ### 4.1 Modes
@@ -117,6 +136,13 @@ Required upstream context for `sequence_agent` execution quality:
 6. Apply via API
 7. Readback + Summary
 8. Continue Iteration
+
+Direct technical sequencing requests use the same review/apply model after normalization.
+They do not bypass:
+- explicit draft visibility
+- approval gating
+- sequence revision safety
+- apply/readback checks
 
 ### 4.3 Required Pre-Apply Check
 No mutating apply can execute unless these are known:

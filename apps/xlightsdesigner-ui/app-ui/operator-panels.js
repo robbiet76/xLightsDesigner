@@ -1,10 +1,9 @@
-export function buildSettingsDrawer({ state, helpers }) {
+export function buildSettingsContent({ state, helpers, includeClose = false }) {
   const {
     getAgentApplyRolloutMode,
     getManualLockedXdTracks,
     getTeamChatIdentities
   } = helpers;
-  if (!state.ui.settingsOpen) return "";
   const rolloutMode = getAgentApplyRolloutMode();
   const manualXdLocks = getManualLockedXdTracks();
   const teamChatIdentities = getTeamChatIdentities();
@@ -18,12 +17,19 @@ export function buildSettingsDrawer({ state, helpers }) {
       ? "Forced by rollout policy"
       : "";
   return `
-    <section class="settings-overlay" id="settings-overlay">
-      <section class="card settings-drawer">
+      <section class="card settings-screen-card">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <h3>Settings</h3>
-          <button id="close-settings" aria-label="Close settings">Close</button>
+          ${includeClose ? '<button id="close-settings" aria-label="Close settings">Close</button>' : ""}
         </div>
+        <section class="field" style="margin-top:8px;">
+          <label>Application Project Root</label>
+          <div class="row">
+            <input id="project-metadata-root-input" value="${state.projectMetadataRoot || ""}" placeholder="Default: app data folder" />
+            <button id="browse-project-root">Browse...</button>
+          </div>
+          <p class="banner">This is the app-owned root where xLightsDesigner stores projects and analysis artifacts.</p>
+        </section>
         <section class="field" style="margin-top:8px;">
           <label>xLights Endpoint</label>
           <input id="endpoint-input" value="${state.endpoint}" />
@@ -103,9 +109,17 @@ export function buildSettingsDrawer({ state, helpers }) {
           <button id="reset-app-install-state" class="danger-action">Reset App To First Run</button>
         </div>
         <p class="banner">Manual XD track locks: ${manualXdLockText}</p>
-        <p class="banner warning">Fresh-install reset clears app state, agent config, recent-project index, and local UI memory. It does not delete project folders, project files, or analysis artifacts.</p>
+        <p class="banner warning">Fresh-install reset clears app state, recent-project index, chat history, and local UI memory. It preserves stored API keys, project files, and analysis artifacts.</p>
         <p class="banner">Operational health, warnings, and apply history now live in Diagnostics so this drawer stays focused on user configuration.</p>
       </section>
+  `;
+}
+
+export function buildSettingsDrawer({ state, helpers }) {
+  if (!state.ui.settingsOpen) return "";
+  return `
+    <section class="settings-overlay" id="settings-overlay">
+      ${buildSettingsContent({ state, helpers, includeClose: true })}
     </section>
   `;
 }

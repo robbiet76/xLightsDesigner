@@ -27,6 +27,8 @@ Purpose: complete `designer_dialog` as the creative specialist runtime under `ap
 - `app_assistant` owns the unified app-wide chat experience.
 - `designer_dialog` owns creative design specialization within that chat flow: creative brief, intent normalization, clarification, and proposal lifecycle.
 - `sequence_agent` owns technical sequencing plans and xLights apply behavior.
+- `designer_dialog` is the default path for broad creative sequencing requests.
+- explicit technical sequencing requests may bypass `designer_dialog`, but only after normalization into the same canonical `intent_handoff_v1` shape used downstream.
 - `layout.*` remains read-only context.
 - `sequence_*`, `sequencer.*`, `effects.*`, `timing.*` mutation remains downstream of approved designer intent.
 
@@ -127,6 +129,7 @@ Exit gate:
 
 - [x] Emit canonical `intent_handoff_v1` from the new designer runtime
 - [x] Ensure `intent_handoff_v1` is derived from the proposal bundle / creative brief, not ad hoc app assembly
+- [ ] Clarify and test the bypass boundary so direct technical sequencing requests do not run through designer-only proposal scaffolding
 - [x] Add tests that prove stable downstream handoff behavior for:
   - new proposal
   - refine proposal

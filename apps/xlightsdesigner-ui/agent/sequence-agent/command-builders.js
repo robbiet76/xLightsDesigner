@@ -454,6 +454,54 @@ function parseProposalLine(line = "") {
   };
 }
 
+function extractRequestedDurationMs(description = "") {
+  const text = normText(description).toLowerCase();
+  const msMatch = text.match(/\bfor\s+(\d{1,9})\s*ms\b/);
+  if (msMatch) return Math.max(1, Number(msMatch[1]));
+  const secMatch = text.match(/\bfor\s+(\d{1,6})\s*(seconds?|secs?|s)\b/);
+  if (secMatch) return Math.max(1, Number(secMatch[1]) * 1000);
+  return null;
+}
+
+function extractRequestedStartMs(description = "") {
+  const text = normText(description).toLowerCase();
+  if (text.includes("starting at 0 ms") || text.includes("start at 0 ms") || text.includes("at the beginning of the track")) {
+    return 0;
+  }
+  const msMatch = text.match(/\bstarting at\s+(\d{1,9})\s*ms\b/);
+  if (msMatch) return Math.max(0, Number(msMatch[1]));
+  const secMatch = text.match(/\bstarting at\s+(\d{1,6})\s*(seconds?|secs?|s)\b/);
+  if (secMatch) return Math.max(0, Number(secMatch[1]) * 1000);
+  return null;
+}
+
+function inferPalette(description = "") {
+  const text = normText(description).toLowerCase();
+  const colorMap = {
+    red: "#ff0000",
+    green: "#00ff00",
+    blue: "#0000ff",
+    white: "#ffffff",
+    warmwhite: "#ffd39b",
+    warm: "#ffd39b",
+    coolwhite: "#dff6ff",
+    cool: "#dff6ff",
+    yellow: "#ffff00",
+    orange: "#ff7f00",
+    purple: "#8000ff",
+    pink: "#ff4fa3"
+  };
+  for (const [name, hex] of Object.entries(colorMap)) {
+    if (text.includes(` in ${name}`) || text.includes(`${name} please`) || text.endsWith(name)) {
+      return {
+        C_BUTTON_Palette1: hex,
+        C_CHECKBOX_Palette1: "1"
+      };
+    }
+  }
+  return {};
+}
+
 function normalizeEffectCatalog(effectCatalog = null) {
   return effectCatalog && typeof effectCatalog === "object" && effectCatalog.byName && typeof effectCatalog.byName === "object"
     ? effectCatalog.byName
@@ -573,6 +621,7 @@ function inferEffectNameFromDescription(description = "", effectCatalog = null) 
   const byName = normalizeEffectCatalog(effectCatalog);
   const text = normText(description).toLowerCase();
   const aliases = [
+    { effectName: "On", patterns: [" on effect", "apply on", "make on", "simple on", "effect on"] },
     { effectName: "Bars", patterns: ["bars", "bar hits", "striped"] },
     { effectName: "Shimmer", patterns: ["shimmer", "sparkle", "twinkle", "glitter"] },
     { effectName: "Color Wash", patterns: ["wash", "color wash", "sweep"] },
@@ -650,25 +699,30 @@ function inferSharedSettings(description = "") {
 
 function buildTimingMarks(source = []) {
   return source.slice(0, 24).map((label, idx) => {
-    const startMs = idx * 1000;
+    const parsed = parseProposalLine(label);
+    const requestedStartMs = extractRequestedStartMs(parsed.description);
+    const requestedDurationMs = extractRequestedDurationMs(parsed.description);
+    const startMs = requestedStartMs != null ? requestedStartMs : idx * 1000;
     return {
       startMs,
-      endMs: startMs + 1000,
+      endMs: startMs + (requestedDurationMs != null ? requestedDurationMs : 1000),
       label
     };
   });
 }
 
 function buildSectionWindows(source = [], parsed = []) {
-  const sectionOrder = [];
-  const seen = new Set();
+  const windows = new Map();
   for (let i = 0; i < source.length; i++) {
     const section = normText(parsed[i]?.section) || `Section ${i + 1}`;
-    if (seen.has(section)) continue;
-    seen.add(section);
-    sectionOrder.push(section);
+    if (windows.has(section)) continue;
+    const requestedStartMs = extractRequestedStartMs(parsed[i]?.description);
+    const requestedDurationMs = extractRequestedDurationMs(parsed[i]?.description);
+    const startMs = requestedStartMs != null ? requestedStartMs : i * 1000;
+    const endMs = startMs + (requestedDurationMs != null ? requestedDurationMs : 1000);
+    windows.set(section, { startMs, endMs });
   }
-  return new Map(sectionOrder.map((section, idx) => [section, { startMs: idx * 1000, endMs: (idx * 1000) + 1000 }]));
+  return windows;
 }
 
 function buildEffectAnchor({
@@ -765,7 +819,7 @@ function buildEffectTemplates(
           startMs: scopedWindow.startMs,
           endMs: scopedWindow.endMs,
           settings: inferSharedSettings(row.description),
-          palette: {},
+          palette: inferPalette(row.description),
           sourceGroupId: normText(target?.sourceGroupId),
           sourceGroupRenderPolicy: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.currentFamily || groupGraph[target?.sourceGroupId]?.renderPolicy?.category),
           sourceGroupBufferStyle: normText(groupGraph[target?.sourceGroupId]?.renderPolicy?.defaultBufferStyle),

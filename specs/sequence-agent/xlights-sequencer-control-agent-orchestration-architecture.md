@@ -48,7 +48,7 @@ Required fields:
 - `evidence` (`serviceSummary`, `webValidationSummary`, `sources[]`)
 
 ### 4.2 `intent_handoff_v1`
-Producer: `designer_dialog`  
+Producer: `designer_dialog` or direct-sequence handoff normalizer  
 Consumer: `sequence_agent`
 
 Required fields:
@@ -89,10 +89,25 @@ Boundary rule:
 - `designer_dialog` defines "what"; `sequence_agent` defines "how".
 - If intent is ambiguous, `sequence_agent` must request clarification instead of inventing creative direction silently.
 
+Direct technical sequencing rule:
+- `sequence_agent` may accept sequencing work that originates directly from the user
+- but only after that request has been normalized into the same canonical `intent_handoff_v1` contract
+- `sequence_agent` must not depend on whether intent came from `designer_dialog` or a direct user technical request
+- creative interpretation still belongs to `designer_dialog`; direct user requests are for already-specific technical sequencing asks
+
 ## 5) Orchestration Order
+### Default creative path
 1. Sequence open/select.
 2. Run `audio_analyst` to produce `analysis_handoff_v1`.
 3. Run `designer_dialog` for guided intent + `intent_handoff_v1`.
+4. Run `sequence_agent` for `plan_handoff_v1`.
+5. Validate and apply using orchestration/safety contract.
+6. Readback and diagnostics capture.
+
+### Direct technical sequencing path
+1. Sequence open/select.
+2. Use `analysis_handoff_v1` when available.
+3. Normalize the direct technical user request into `intent_handoff_v1`.
 4. Run `sequence_agent` for `plan_handoff_v1`.
 5. Validate and apply using orchestration/safety contract.
 6. Readback and diagnostics capture.
@@ -103,6 +118,7 @@ Boundary rule:
 - Failed validation blocks apply.
 - Stale revision blocks apply and requires refresh/reproposal.
 - Missing/ambiguous creative intent blocks sequence execution until clarified by `designer_dialog`.
+- Explicit technical sequencing requests that already contain sufficient scope/intent may proceed without `designer_dialog`, as long as canonical handoff normalization succeeds.
 
 ## 7) Training Package Binding
 - Training package modules stay as-is (`audio_track_analysis`, `lighting_design_principles`, `xlights_sequencer_execution`).

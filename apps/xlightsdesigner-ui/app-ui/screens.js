@@ -1,3 +1,5 @@
+import { buildSettingsContent } from "./operator-panels.js";
+
 export function buildScreenContent({ state, helpers }) {
   const {
     basenameOfPath,
@@ -19,6 +21,7 @@ export function buildScreenContent({ state, helpers }) {
     getProposedPayloadPreviewText,
     getSectionName,
     renderProposedLineHtml,
+    applyReadyForApprovalGate,
     applyDisabledReason,
     applyEnabled,
     getMetadataOrphans,
@@ -246,6 +249,11 @@ export function buildScreenContent({ state, helpers }) {
         title: "Primary Journey",
         summary: "Review is the execution gate. Confirm impact, warnings, approval, and backup posture before writing changes to xLights.",
         next: reviewReady ? "Draft is ready for review and apply. Approve only after checking warnings and scope." : "If the draft is stale or incomplete, return to Design or refresh before apply."
+      },
+      settings: {
+        title: "Application Settings",
+        summary: "Settings controls the environment around the workflow: xLights connection, cloud chat, audio services, team identities, and safety policy.",
+        next: "Use Settings first on a new install. Project-specific work belongs on the Project screen."
       }
     };
 
@@ -267,19 +275,25 @@ export function buildScreenContent({ state, helpers }) {
     const updatedAt = state.projectUpdatedAt
       ? new Date(state.projectUpdatedAt).toLocaleString([], { hour12: false })
       : "(not set)";
+    const hasSavedProject = Boolean(String(state.projectFilePath || "").trim());
     return `
       <div class="screen-grid">
         ${renderJourneyCard("project")}
         <section class="card">
-          <h3>Project Summary</h3>
-          <div class="banner">Current Project: <strong>${state.projectName}</strong></div>
-          <div class="field">
-            <label>Project Name</label>
-            <div class="row">
-              <input id="project-name-input" value="${state.projectName || ""}" placeholder="Project name" />
-              <button id="rename-project">Rename Project</button>
-            </div>
+          <h3>Project Lifecycle</h3>
+          <div class="banner">${hasSavedProject ? `Current Project: ${escapeHtml(String(state.projectName || "(unnamed)"))}` : "No project file is open yet."}</div>
+          <p class="artifact-body">Use this screen to create a new project, open an existing project, and explicitly save the project workspace. Background app persistence protects session continuity, but Save writes the durable project file.</p>
+          <div class="row">
+            <button id="new-project">Create New Project</button>
+            <button id="open-selected-project">Open Project</button>
+            <button id="save-project" ${hasSavedProject ? "" : "disabled"}>Save</button>
+            <button id="save-project-as">Save As</button>
           </div>
+          <p class="banner">Save writes the current project definition and workspace snapshot to the project file. Save As creates a new project copy under the app project root.</p>
+        </section>
+        <section class="card">
+          <h3>Project Summary</h3>
+          <div class="banner">${hasSavedProject ? `Current Project: ${escapeHtml(String(state.projectName || "(unnamed)"))}` : "Create a project to assign a project name."}</div>
           <div class="field">
             <label>Creative Direction (Project Level)</label>
             <textarea id="project-concept-input" rows="3" placeholder="High-level show concept and tone...">${String(state.projectConcept || "")}</textarea>
@@ -287,15 +301,7 @@ export function buildScreenContent({ state, helpers }) {
           </div>
           <div class="field">
             <label>Project Root Folder</label>
-            <div class="row">
-              <input id="project-metadata-root-input" value="${state.projectMetadataRoot || ""}" placeholder="Default: app data folder" />
-            </div>
-          </div>
-          <div class="row">
-            <button id="new-project">New</button>
-            <button id="open-selected-project">Open</button>
-            <button id="save-project">Save</button>
-            <button id="save-project-as">Save As</button>
+            <p class="banner">Configured in Settings. This is the app-owned root where xLightsDesigner stores projects.</p>
           </div>
           <div style="height: 10px;"></div>
           <div class="field">
@@ -318,6 +324,15 @@ export function buildScreenContent({ state, helpers }) {
             <button id="reset-project">Reset Project Workspace</button>
           </div>
         </section>
+      </div>
+    `;
+  }
+
+  function settingsScreen() {
+    return `
+      <div class="screen-grid settings-screen">
+        ${renderJourneyCard("settings")}
+        ${buildSettingsContent({ state, helpers, includeClose: false })}
       </div>
     `;
   }
@@ -740,11 +755,15 @@ export function buildScreenContent({ state, helpers }) {
     const selectedSections = getSelectedSections();
     const allSelected = hasAllSectionsSelected();
     const disabledReason = applyDisabledReason();
-    const applyReady = applyEnabled();
+    const applyReady = applyReadyForApprovalGate();
     sanitizeProposedSelection();
     const filtered = state.proposed
       .map((line, idx) => ({ line, idx }))
-      .filter((x) => (allSelected ? true : selectedSections.includes(getSectionName(x.line))));
+      .filter((x) => {
+        if (allSelected) return true;
+        const section = getSectionName(x.line);
+        return section === "General" || selectedSections.includes(section);
+      });
     const list = filtered;
     const allVisibleLines = list.map((item) => item.line);
     const selectedLines = selectedProposedLinesForApply();
@@ -847,6 +866,20 @@ export function buildScreenContent({ state, helpers }) {
           ${renderReviewPlanArtifactCard()}
           ${renderReviewExecutionArtifactCard()}
         </section>
+        <section class="card approval-gate-card full-span">
+          <div class="approval-gate-header">
+            <div>
+              <div class="artifact-kicker">Approval Gate</div>
+              <strong>${approvalChecked ? "Ready for Apply" : "Approval Required"}</strong>
+            </div>
+            <span class="artifact-chip ${approvalChecked ? "artifact-chip-accent" : "artifact-chip-muted"}">${approvalChecked ? "Confirmed" : "Pending"}</span>
+          </div>
+          <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed and apply is enabled when the plan is otherwise valid." : "Confirm approval here before applying any sequence changes."}</p>
+          <label class="approval-gate-toggle">
+            <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
+            <span>I reviewed the plan and approve apply.</span>
+          </label>
+        </section>
       </div>
 
       <div class="screen-grid design-workspace design-workspace-fill">
@@ -891,20 +924,6 @@ export function buildScreenContent({ state, helpers }) {
             <p class="banner">Scope: ${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`} change${(selectedLines.length || allVisibleLines.length) === 1 ? "" : "s"}</p>
             <p class="banner">Affected targets: ${impact.targetCount}${impact.targets.length ? ` (${escapeHtml(impact.targets.join(", "))})` : ""}</p>
             <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
-            <section class="approval-gate-card">
-              <div class="approval-gate-header">
-                <div>
-                  <div class="artifact-kicker">Approval Gate</div>
-                  <strong>${approvalChecked ? "Ready for Apply" : "Approval Required"}</strong>
-                </div>
-                <span class="artifact-chip ${approvalChecked ? "artifact-chip-accent" : "artifact-chip-muted"}">${approvalChecked ? "Confirmed" : "Pending"}</span>
-              </div>
-              <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed. Apply actions are enabled when the plan is otherwise valid." : "Confirm approval here before applying any sequence changes."}</p>
-              <label class="approval-gate-toggle">
-                <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
-                <span>I reviewed the plan and approve apply.</span>
-              </label>
-            </section>
             <div class="row">
               <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
             </div>
@@ -1150,6 +1169,7 @@ export function buildScreenContent({ state, helpers }) {
   if (state.route === "sequence") return sequenceScreen();
   if (state.route === "design") return designScreen();
   if (state.route === "review") return reviewScreen();
+  if (state.route === "settings") return settingsScreen();
   if (state.route === "metadata") return metadataScreen();
   if (state.route === "history") return historyScreen();
   return metadataScreen();

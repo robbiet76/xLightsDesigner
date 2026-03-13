@@ -33,6 +33,28 @@ Define the top-level conversational assistant that the user experiences across t
 - `sequence_agent`
   - owns technical xLights sequencing plans and apply behavior
 
+## Sequencing Request Modes
+There are two valid ways sequencing work can enter the system:
+
+1. `designer-led sequencing`
+- the normal/default path
+- user speaks in director or lighting-design terms
+- `app_assistant` routes to `designer_dialog`
+- `designer_dialog` produces creative artifacts and normalized sequencing intent
+- `sequence_agent` turns that intent into a technical xLights plan
+
+2. `direct technical sequencing request`
+- supported as a secondary/expert path
+- user gives a specific, execution-oriented sequencing ask
+- `app_assistant` may route straight to `sequence_agent`
+- the request must still be normalized into the same canonical sequencing handoff shape before planning
+- this path must not force the request through designer-only proposal scaffolding
+
+Boundary rule:
+- direct technical sequencing is allowed
+- it is not the preferred primary user workflow long-term
+- it exists so specific technical requests can be handled cleanly without requiring the user to wait on `designer_dialog` maturity
+
 ## Boundary Rules
 - `app_assistant` is the only role that should present as the unified chat companion across the whole app.
 - `designer_dialog` is a specialist invoked when the conversation is primarily about creative design intent, design refinement, or proposal shaping.
@@ -89,6 +111,18 @@ Required specialist artifacts remain:
 - sequence-agent plan/apply result contracts
 
 `app_assistant` may maintain its own conversation/session state, but it must not bypass structured artifacts for downstream specialist work.
+
+### Canonical Sequence Handoff Rule
+`sequence_agent` must receive one canonical sequencing handoff shape regardless of origin.
+
+That means:
+- `designer_dialog` output may be normalized into `intent_handoff_v1`
+- direct technical sequencing requests may also be normalized into `intent_handoff_v1`
+- `sequence_agent` must not branch on whether the source was `designer_dialog` or the user directly
+
+`app_assistant` owns routing.
+The middle normalization layer owns contract shaping.
+`sequence_agent` owns technical realization only.
 
 ## Preference And Memory Model
 - `app_assistant` should maintain broad conversational continuity and user-facing preference memory.

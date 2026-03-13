@@ -1,8 +1,7 @@
 import {
   buildDiagnosticsDrawer,
   buildFooterDiagnostics,
-  buildJobsPanel,
-  buildSettingsDrawer
+  buildJobsPanel
 } from "./operator-panels.js";
 
 export function buildAppShell({ state, screenContent, helpers }) {
@@ -17,6 +16,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
     getSectionName,
     applyEnabled,
     applyDisabledReason,
+    getDiagnosticsCounts,
     chatQuickPrompts,
     chatPlaceholder,
     chatContext,
@@ -32,7 +32,8 @@ export function buildAppShell({ state, screenContent, helpers }) {
       design: "D",
       review: "R",
       metadata: "M",
-      history: "H"
+      history: "H",
+      settings: "⚙"
     };
     const icon = icons[id] || "•";
     return `<button class="${state.route === id ? "active" : ""}" data-route="${id}" title="${label}"><span class="nav-icon">${icon}</span><span class="nav-label">${label}</span></button>`;
@@ -134,6 +135,31 @@ export function buildAppShell({ state, screenContent, helpers }) {
     `;
   }
 
+  function projectNameDialog() {
+    if (!state.ui?.projectNameDialogOpen) return "";
+    const title = escapeHtml(String(state.ui.projectNameDialogTitle || "Project Name"));
+    const value = escapeHtml(String(state.ui.projectNameDialogValue || ""));
+    const error = String(state.ui.projectNameDialogError || "").trim();
+    return `
+      <section class="modal-overlay">
+        <div class="modal-card">
+          <div class="artifact-kicker">Project</div>
+          <h3>${title}</h3>
+          <p class="banner">Projects are always created under the configured Application Project Root.</p>
+          <label class="field">
+            <span>Project Name</span>
+            <input id="project-name-dialog-input" value="${value}" placeholder="Project name" autofocus />
+          </label>
+          ${error ? `<p class="banner warning">${escapeHtml(error)}</p>` : ""}
+          <div class="modal-actions">
+            <button id="project-name-dialog-cancel">Cancel</button>
+            <button id="project-name-dialog-confirm">Continue</button>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
   function detailsDrawer() {
     if (!state.ui.detailsOpen) return "";
     const sections = getSections();
@@ -211,7 +237,6 @@ export function buildAppShell({ state, screenContent, helpers }) {
             <main class="content">
               ${screenContent}
               ${state.route === "review" ? detailsDrawer() : ""}
-              ${buildSettingsDrawer({ state, helpers })}
               ${buildDiagnosticsDrawer({ state, helpers: { getDiagnosticsCounts, escapeHtml, buildLabel } })}
               ${buildJobsPanel({ state })}
             </main>
@@ -222,12 +247,13 @@ export function buildAppShell({ state, screenContent, helpers }) {
 
       <div class="bottom-input-row ${state.ui.navCollapsed ? "nav-collapsed" : ""}">
         <div class="bottom-nav-settings">
-          <button id="open-settings" title="Application Settings"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></button>
+          ${navButton("settings", "Settings")}
         </div>
         ${globalChatBar()}
       </div>
 
       ${buildFooterDiagnostics({ state, helpers: { getDiagnosticsCounts, buildLabel } })}
+      ${projectNameDialog()}
     </div>
   `;
 }

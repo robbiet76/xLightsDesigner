@@ -71,7 +71,16 @@ export async function getMediaMetadata(endpoint) {
 }
 
 export async function getRevision(endpoint) {
-  return postCommand(endpoint, "sequence.getRevision", {});
+  const res = await postCommand(endpoint, "sequence.getRevision", {});
+  if (res?.ok !== true || !res?.data || typeof res.data !== "object") return res;
+  const revision = String(res.data.revision ?? res.data.revisionToken ?? "").trim();
+  return {
+    ...res,
+    data: {
+      ...res.data,
+      revision: revision || "unknown"
+    }
+  };
 }
 
 export async function openSequence(endpoint, file, force = true, promptIssues = false) {
