@@ -46,6 +46,8 @@ import {
   rebaseDesignerDraft,
   syncDesignerDraftFlags
 } from "./agent/designer-dialog/designer-dialog-draft-state.js";
+import { buildDesignSceneContext } from "./agent/designer-dialog/design-scene-context.js";
+import { buildMusicDesignContext } from "./agent/designer-dialog/music-design-context.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -3389,6 +3391,9 @@ async function onGenerate(intentOverride = "", options = {}) {
         references: state.creative?.references || [],
         priorBrief: state.creative?.brief || null,
         analysisHandoff,
+        analysisArtifact: state.audioAnalysis?.artifact || null,
+        designSceneContext: buildCurrentDesignSceneContext(),
+        musicDesignContext: buildCurrentMusicDesignContext(),
         models: state.models || [],
         submodels: state.submodels || [],
         displayElements: state.displayElements || [],
@@ -6195,6 +6200,20 @@ function latestUserIntentText() {
     if (messages[i]?.who === "user" && messages[i]?.text) return String(messages[i].text);
   }
   return "";
+}
+
+function buildCurrentDesignSceneContext() {
+  return buildDesignSceneContext({
+    sceneGraph: state.sceneGraph || {},
+    revision: String(state.revision || "unknown")
+  });
+}
+
+function buildCurrentMusicDesignContext() {
+  return buildMusicDesignContext({
+    analysisArtifact: state.audioAnalysis?.artifact || null,
+    analysisHandoff: getValidHandoff("analysis_handoff_v1")
+  });
 }
 
 function shouldAutoGenerateProposalFromChatResult(res = {}, raw = "") {
