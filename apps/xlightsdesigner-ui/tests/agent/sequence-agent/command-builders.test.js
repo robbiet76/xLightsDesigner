@@ -8,7 +8,8 @@ function sampleCatalog() {
   return buildEffectDefinitionCatalog([
     { effectName: "Bars", params: [] },
     { effectName: "Shimmer", params: [] },
-    { effectName: "On", params: [] }
+    { effectName: "On", params: [] },
+    { effectName: "Color Wash", params: [] }
   ]);
 }
 
@@ -215,6 +216,31 @@ test("command builders preserve direct imperative effect timing and color", () =
   const align = commands.find((row) => row.cmd === "effects.alignToTiming");
   assert.equal(align.params.startMs, 0);
   assert.equal(align.params.endMs, 30000);
+});
+
+test("command builders parse direct Color Wash request with explicit minute range", () => {
+  const commands = buildDesignerPlanCommands([
+    "General / Border-01 / add a Color Wash effect from 1 minute to the 2 minute mark"
+  ], {
+    effectCatalog: sampleCatalog(),
+    enableEffectTimingAlignment: true
+  });
+
+  const marks = commands.find((row) => row.cmd === "timing.insertMarks");
+  assert.equal(marks.params.marks.length, 1);
+  assert.equal(marks.params.marks[0].startMs, 60000);
+  assert.equal(marks.params.marks[0].endMs, 120000);
+
+  const effect = commands.find((row) => row.cmd === "effects.create");
+  assert.equal(effect.params.modelName, "Border-01");
+  assert.equal(effect.params.effectName, "Color Wash");
+  assert.equal(effect.params.startMs, 60000);
+  assert.equal(effect.params.endMs, 120000);
+  assert.deepEqual(effect.params.palette, {});
+
+  const align = commands.find((row) => row.cmd === "effects.alignToTiming");
+  assert.equal(align.params.startMs, 60000);
+  assert.equal(align.params.endMs, 120000);
 });
 
 test("command builders can skip explicit timing re-alignment commands when capability is unavailable", () => {

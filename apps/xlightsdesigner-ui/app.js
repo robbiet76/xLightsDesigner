@@ -3372,6 +3372,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         models: state.models || [],
         submodels: state.submodels || [],
         displayElements: state.displayElements || [],
+        effectCatalog: state.effectCatalog,
         metadataAssignments: state.metadata?.assignments || [],
         elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
       })

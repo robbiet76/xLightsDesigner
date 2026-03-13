@@ -60,8 +60,19 @@ function extractChangeTolerance(text = "", mode = "revise") {
 
 function extractEffectOverrides(text) {
   const lower = String(text || "").toLowerCase();
-  const known = ["on", "off", "twinkle", "bars", "pinwheel", "butterfly", "spirals", "meteors", "colorwash", "shimmer"];
-  return known.filter((name) => lower.includes(name));
+  const known = ["on", "off", "twinkle", "bars", "pinwheel", "butterfly", "spirals", "meteors", "color wash", "colorwash", "shimmer"];
+  return known.filter((name) => {
+    if (name === "on") {
+      return /\b(on effect|apply on(?: effect)?|make (?:it )?on|set (?:it )?on|put (?:an? )?on effect|use on(?: effect)?)\b/i.test(lower);
+    }
+    if (name === "off") {
+      return /\b(off effect|apply off(?: effect)?|make (?:it )?off|set (?:it )?off|put (?:an? )?off effect|use off(?: effect)?)\b/i.test(lower);
+    }
+    if (name.includes(" ")) {
+      return lower.includes(name);
+    }
+    return new RegExp(`\\b${name.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\b`, "i").test(lower);
+  });
 }
 
 function extractExplicitColor(text = "") {

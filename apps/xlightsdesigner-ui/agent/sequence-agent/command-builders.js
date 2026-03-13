@@ -454,22 +454,75 @@ function parseProposalLine(line = "") {
   };
 }
 
+function parseRequestedTimeValue(raw = "") {
+  const text = normText(raw)
+    .toLowerCase()
+    .replace(/\bthe\b/g, " ")
+    .replace(/\bmark\b/g, " ")
+    .replace(/\bat\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return null;
+
+  const clockMatch = text.match(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/);
+  if (clockMatch) {
+    const hours = clockMatch[3] != null ? Number(clockMatch[1]) : 0;
+    const minutes = clockMatch[3] != null ? Number(clockMatch[2]) : Number(clockMatch[1]);
+    const seconds = clockMatch[3] != null ? Number(clockMatch[3]) : Number(clockMatch[2]);
+    return Math.max(0, ((hours * 3600) + (minutes * 60) + seconds) * 1000);
+  }
+
+  const msMatch = text.match(/\b(\d{1,9})\s*ms\b/);
+  if (msMatch) return Math.max(0, Number(msMatch[1]));
+
+  const minuteSecondMatch = text.match(/\b(\d{1,4})\s*(minutes?|mins?|m)\s+(and\s+)?(\d{1,2})\s*(seconds?|secs?|s)\b/);
+  if (minuteSecondMatch) {
+    return Math.max(0, ((Number(minuteSecondMatch[1]) * 60) + Number(minuteSecondMatch[4])) * 1000);
+  }
+
+  const minuteMatch = text.match(/\b(\d{1,4})\s*(minutes?|mins?|m)\b/);
+  if (minuteMatch) return Math.max(0, Number(minuteMatch[1]) * 60000);
+
+  const secMatch = text.match(/\b(\d{1,6})\s*(seconds?|secs?|s)\b/);
+  if (secMatch) return Math.max(0, Number(secMatch[1]) * 1000);
+
+  return null;
+}
+
+function extractRequestedTimeRange(description = "") {
+  const text = normText(description).toLowerCase();
+  const rangeMatch = text.match(/\b(?:from|between)\s+(.+?)\s+(?:to|through|until|-)\s+(.+)$/);
+  if (!rangeMatch) return null;
+  const startMs = parseRequestedTimeValue(rangeMatch[1]);
+  const endMs = parseRequestedTimeValue(rangeMatch[2]);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+  return { startMs, endMs };
+}
+
 function extractRequestedDurationMs(description = "") {
+  const range = extractRequestedTimeRange(description);
+  if (range) return Math.max(1, range.endMs - range.startMs);
   const text = normText(description).toLowerCase();
   const msMatch = text.match(/\bfor\s+(\d{1,9})\s*ms\b/);
   if (msMatch) return Math.max(1, Number(msMatch[1]));
+  const minuteMatch = text.match(/\bfor\s+(\d{1,4})\s*(minutes?|mins?|m)\b/);
+  if (minuteMatch) return Math.max(1, Number(minuteMatch[1]) * 60000);
   const secMatch = text.match(/\bfor\s+(\d{1,6})\s*(seconds?|secs?|s)\b/);
   if (secMatch) return Math.max(1, Number(secMatch[1]) * 1000);
   return null;
 }
 
 function extractRequestedStartMs(description = "") {
+  const range = extractRequestedTimeRange(description);
+  if (range) return range.startMs;
   const text = normText(description).toLowerCase();
   if (text.includes("starting at 0 ms") || text.includes("start at 0 ms") || text.includes("at the beginning of the track")) {
     return 0;
   }
   const msMatch = text.match(/\bstarting at\s+(\d{1,9})\s*ms\b/);
   if (msMatch) return Math.max(0, Number(msMatch[1]));
+  const minuteMatch = text.match(/\bstarting at\s+(\d{1,4})\s*(minutes?|mins?|m)\b/);
+  if (minuteMatch) return Math.max(0, Number(minuteMatch[1]) * 60000);
   const secMatch = text.match(/\bstarting at\s+(\d{1,6})\s*(seconds?|secs?|s)\b/);
   if (secMatch) return Math.max(0, Number(secMatch[1]) * 1000);
   return null;

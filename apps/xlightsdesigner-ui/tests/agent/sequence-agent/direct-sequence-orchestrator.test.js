@@ -3,6 +3,14 @@ import assert from "node:assert/strict";
 
 import { validateAgentHandoff } from "../../../agent/handoff-contracts.js";
 import { executeDirectSequenceRequestOrchestration } from "../../../agent/sequence-agent/direct-sequence-orchestrator.js";
+import { buildEffectDefinitionCatalog } from "../../../agent/sequence-agent/effect-definition-catalog.js";
+
+function sampleCatalog() {
+  return buildEffectDefinitionCatalog([
+    { effectName: "On", params: [] },
+    { effectName: "Color Wash", params: [] }
+  ]);
+}
 
 test("direct sequence orchestrator bypasses designer scaffolding and emits canonical handoff", () => {
   const result = executeDirectSequenceRequestOrchestration({
@@ -15,6 +23,7 @@ test("direct sequence orchestrator bypasses designer scaffolding and emits canon
     models: [{ id: "Border-01", name: "Border-01", type: "Model" }],
     submodels: [],
     displayElements: [{ id: "Border-01", name: "Border-01", type: "model" }],
+    effectCatalog: sampleCatalog(),
     metadataAssignments: [],
     analysisHandoff: null
   });
@@ -38,6 +47,7 @@ test("direct sequence orchestrator blocks non-writable layout-only targets", () 
     models: [{ id: "Border-01", name: "Border-01", type: "Model", groupNames: ["Outlines"] }],
     submodels: [],
     displayElements: [{ id: "Outlines", name: "Outlines", type: "model" }],
+    effectCatalog: sampleCatalog(),
     metadataAssignments: [],
     analysisHandoff: null
   });
@@ -46,4 +56,26 @@ test("direct sequence orchestrator blocks non-writable layout-only targets", () 
   assert.deepEqual(result.proposalLines, []);
   assert.ok(result.guidedQuestions.some((row) => /visible sequencer target/i.test(row)));
   assert.ok(result.warnings.some((row) => /not a writable sequencer element/i.test(row)));
+});
+
+test("direct sequence orchestrator asks for clarification when effect name is not in live catalog", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-3",
+    sequenceRevision: "rev-1",
+    promptText: "Add a rainbow effect on Border-01 from 1 minute to 2 minutes",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Border-01", name: "Border-01", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Border-01", name: "Border-01", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: null
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.proposalLines, []);
+  assert.ok(result.guidedQuestions.some((row) => /loaded xlights effect name/i.test(row)));
+  assert.ok(result.warnings.some((row) => /does not match a loaded xlights effect name/i.test(row)));
 });
