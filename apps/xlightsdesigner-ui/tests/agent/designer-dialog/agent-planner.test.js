@@ -140,6 +140,40 @@ test('planner output is deterministic for same input', () => {
   assert.deepEqual(a, b);
 });
 
+test('planner uses scene and music context to shape first-pass proposal lines', () => {
+  const result = buildProposalFromIntent({
+    promptText: 'Make the chorus feel bigger and more cinematic',
+    selectedSections: ['Chorus'],
+    models,
+    submodels,
+    metadataAssignments,
+    displayElements,
+    designSceneContext: {
+      focalCandidates: ['MegaTree', 'Roofline'],
+      coverageDomains: {
+        broad: ['AllModels'],
+        detail: ['MegaTree/TopHalf']
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: 'Intro', energy: 'low', density: 'sparse' },
+        { label: 'Chorus', energy: 'high', density: 'dense' }
+      ],
+      designCues: {
+        revealMoments: ['Verse->Chorus'],
+        holdMoments: ['Intro']
+      }
+    }
+  });
+
+  const combined = result.proposalLines.join('\n');
+  assert.match(combined, /AllModels.*broad base coverage/i);
+  assert.match(combined, /MegaTree.*focal clarity|MegaTree.*visual anchor/i);
+  assert.match(combined, /Chorus.*stronger visual payoff|Chorus.*impact section/i);
+  assert.match(combined, /Intro.*calmer hold section|Intro.*restrained/i);
+});
+
 test('clarification plan asks when critical fields are missing', () => {
   const normalized = normalizeIntent({
     promptText: '',

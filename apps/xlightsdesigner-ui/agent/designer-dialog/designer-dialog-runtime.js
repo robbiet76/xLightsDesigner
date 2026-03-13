@@ -140,7 +140,9 @@ export function buildCreativeBriefArtifact({
     references,
     audioAnalysis,
     songContextSummary,
-    latestIntent
+    latestIntent,
+    designSceneContext,
+    musicDesignContext
   });
 
   const hypotheses = [
@@ -287,6 +289,8 @@ export function buildProposalBundleArtifact({
     selectedTagNames,
     selectedTargetIds,
     directorPreferences,
+    designSceneContext: resolvedSceneContext,
+    musicDesignContext: resolvedMusicContext,
     models,
     submodels,
     displayElements,

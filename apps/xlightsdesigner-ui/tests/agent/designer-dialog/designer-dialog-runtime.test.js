@@ -73,6 +73,10 @@ test("buildCreativeBriefArtifact returns canonical brief with traceability", () 
   assert.deepEqual(result.brief.traceability.designSceneSignals.detailCoverageDomains, ["MegaTree/Star"]);
   assert.equal(result.brief.traceability.musicDesignSignals.sectionArc[1].label, "Chorus");
   assert.equal(result.brief.traceability.musicDesignSignals.sectionArc[1].energy, "high");
+  assert.ok(result.brief.visualCues.includes("MegaTree"));
+  assert.ok(result.brief.narrativeCues.includes("Chorus"));
+  assert.ok(result.brief.moodEnergyArc.includes("Chorus: high"));
+  assert.ok(result.brief.hypotheses.some((line) => /broad coverage first/i.test(line)));
 });
 
 test("buildProposalBundleArtifact returns canonical proposal with scope and impact", () => {
@@ -133,6 +137,8 @@ test("buildProposalBundleArtifact returns canonical proposal with scope and impa
   assert.deepEqual(result.proposalBundle.traceability.designSceneSignals.detailCoverageDomains, ["MegaTree/Star"]);
   assert.equal(result.proposalBundle.traceability.musicDesignSignals.sectionArc[0].label, "Chorus");
   assert.equal(result.proposalBundle.traceability.musicDesignSignals.revealMoments[0], "Chorus");
+  assert.ok(result.proposalBundle.proposalLines.some((line) => /AllModels|General \/ General|build stronger visual payoff/i.test(line)));
+  assert.ok(result.proposalBundle.proposalLines.some((line) => /MegaTree|focal clarity|visual anchor/i.test(line)));
 });
 
 test("executeDesignerDialogFlow returns canonical result with brief, proposal, and handoff", () => {
