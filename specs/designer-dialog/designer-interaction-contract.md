@@ -72,6 +72,7 @@ Rules:
 - it must remain soft steering guidance, not hard rules
 - it may bias choices within the space allowed by good design practice
 - it must not collapse the designer into fixed style imitation
+- it must be applied at the narrowest reasonable scope unless stronger evidence justifies broader reuse
 
 ### Required balance
 - core design knowledge determines principled design quality
@@ -175,6 +176,11 @@ Required artifact boundary:
 - user-specific preferences belong in a dedicated `director_profile_v1` artifact
 - `creative_brief_v1` and `proposal_bundle_v1` may reference which profile signals influenced the current pass
 - `director_profile_v1` must remain separate from the stable design-principles corpus
+
+Scope rule:
+- preferences may be sequence-local, project/show-local, or broader director tendencies
+- the system should default to project/show-local preference memory in early versions
+- sequence-specific directions should not be promoted into broader preference memory without repeated supporting evidence
 
 ## 4) Interaction Model
 

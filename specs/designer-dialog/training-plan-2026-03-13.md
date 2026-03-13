@@ -53,6 +53,12 @@ It must remain:
 - weighted
 - explainable
 - soft, not absolute
+- scoped conservatively
+
+Preference scope rule:
+- current automatic learning should be treated as project/show-scoped by default
+- sequence-local direction should remain in the current brief/proposal unless there is repeated evidence that it reflects broader taste
+- truly global cross-project preference memory should be deferred until the evidence model and UX are stronger
 
 ## 2.1) Required Designer Context Layers
 
@@ -125,6 +131,8 @@ Define how `director_profile_v1` should evolve from:
 Initial requirement:
 - do not auto-learn silently without traceability
 - record evidence used to adjust preference weights
+- treat single-sequence evidence as weak by default
+- require stronger repeated evidence before broadening preference scope
 
 ### Workstream 3: Runtime integration
 
