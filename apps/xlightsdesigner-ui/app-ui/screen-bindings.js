@@ -13,6 +13,9 @@ export function bindScreenEvents({
   onResetProjectWorkspace,
   onBrowseProjectMetadataRoot,
   onOpenSelectedSequence,
+  onNewSequence,
+  onSaveSequenceCurrent,
+  onSaveSequenceAs,
   onSelectCatalogSequence,
   onBrowseShowFolder,
   onNewSession,
@@ -92,6 +95,15 @@ export function bindScreenEvents({
 
   const openSequenceBtn = app.querySelector("#open-sequence");
   if (openSequenceBtn) openSequenceBtn.addEventListener("click", onOpenSelectedSequence);
+
+  const newSequenceBtn = app.querySelector("#new-sequence");
+  if (newSequenceBtn) newSequenceBtn.addEventListener("click", onNewSequence);
+
+  const saveSequenceBtn = app.querySelector("#save-sequence");
+  if (saveSequenceBtn) saveSequenceBtn.addEventListener("click", onSaveSequenceCurrent);
+
+  const saveSequenceAsBtn = app.querySelector("#save-sequence-as");
+  if (saveSequenceAsBtn) saveSequenceAsBtn.addEventListener("click", onSaveSequenceAs);
 
   const sequenceCatalogSelect = app.querySelector("#sequence-catalog-select");
   if (sequenceCatalogSelect) sequenceCatalogSelect.addEventListener("change", onSelectCatalogSequence);

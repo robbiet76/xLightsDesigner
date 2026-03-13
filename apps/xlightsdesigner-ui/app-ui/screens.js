@@ -303,23 +303,23 @@ export function buildScreenContent({ state, helpers }) {
     const definitions = {
       project: {
         title: "Primary Journey",
-        summary: "Start by defining the project root, show folder, and media location so the rest of the workflow has a stable home.",
-        next: selectedSequence ? "Project is configured. Move to Audio or Sequence to continue." : "After project setup, continue into Audio to inspect or generate analysis."
+        summary: "Start by defining the working context: project file, show folder, media path, and active sequence.",
+        next: selectedSequence ? "Project context is configured. Continue into Audio to inspect analysis or Design to start shaping the sequence." : "Create or open the project, then choose the active sequence before moving into Audio or Design."
       },
       audio: {
         title: "Primary Journey",
         summary: "Audio is now the first specialist phase. Inspect or generate the analysis artifact before sequencing so timing and structure are grounded in the media.",
-        next: hasAudioArtifact ? "Audio artifact is ready. Continue to Sequence to confirm working context." : "Run or reuse audio analysis, then continue to Sequence."
-      },
-      sequence: {
-        title: "Primary Journey",
-        summary: "Sequence is the context lock-in phase. Open the working sequence, confirm revision and scope, and make sure the right media is attached.",
-        next: selectedSequence ? "Sequence context is loaded. Continue to Design for concept and proposal work." : "Open the working sequence, then continue to Design."
+        next: hasAudioArtifact ? "Audio artifact is ready. Continue to Design to shape the creative direction." : "Run or reuse audio analysis, then continue to Design."
       },
       design: {
         title: "Primary Journey",
         summary: "Design is where the creative brief and proposal bundle are shaped. Use team chat, references, and the brief to decide what should be built.",
-        next: hasProposal ? "Proposal bundle is ready. Continue to Review for approval and apply." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
+        next: hasProposal ? "Proposal bundle is ready. Continue to Sequence to inspect the technical translation." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
+      },
+      sequence: {
+        title: "Primary Journey",
+        summary: "Sequence is the live technical translation view. Confirm that the current design is being turned into the right targets, sections, and planned sequence changes.",
+        next: hasProposal ? "Translation is visible. Continue to Review to approve and apply the current change set." : "Develop the design first, then inspect the sequence translation here before apply."
       },
       review: {
         title: "Primary Journey",
@@ -352,6 +352,16 @@ export function buildScreenContent({ state, helpers }) {
       ? new Date(state.projectUpdatedAt).toLocaleString([], { hour12: false })
       : "(not set)";
     const hasSavedProject = Boolean(String(state.projectFilePath || "").trim());
+    const catalog = Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : [];
+    const catalogHasCurrent = catalog.some((s) => String(s?.path || "") === state.sequencePathInput);
+    const catalogOptions = [
+      ...catalog,
+      ...(!catalogHasCurrent && state.sequencePathInput
+        ? [{ path: state.sequencePathInput, relativePath: state.sequencePathInput, name: state.sequencePathInput.split("/").pop() || "Current" }]
+        : [])
+    ];
+    const mediaFile = String(state.sequenceMediaFile || state.audioPathInput || "").trim();
+    const revision = String(state.currentSequenceRevision || "").trim();
     return `
       <div class="screen-grid">
         ${renderJourneyCard("project")}
@@ -399,6 +409,36 @@ export function buildScreenContent({ state, helpers }) {
           <div class="row">
             <button id="reset-project">Reset Project Workspace</button>
           </div>
+        </section>
+        <section class="card">
+          <h3>Active Sequence Context</h3>
+          <p class="artifact-body">Choose or create the working sequence here. Once the context is set, use the Sequence page to inspect the live translation of the design into technical sequencing changes.</p>
+          <div class="field">
+            <label>Sequence (from Show Directory)</label>
+            <select id="sequence-catalog-select">
+              ${
+                catalogOptions.length
+                  ? catalogOptions
+                      .map((s) => {
+                        const path = String(s?.path || "");
+                        const rel = String(s?.relativePath || path);
+                        const name = String(s?.name || path.split("/").pop() || rel);
+                        return `<option value="${path.replace(/\"/g, "&quot;")}" ${path === state.sequencePathInput ? "selected" : ""}>${name} - ${rel}</option>`;
+                      })
+                      .join("")
+                  : `<option value="">No sequences found under Show Directory</option>`
+              }
+            </select>
+          </div>
+          <div class="row project-actions">
+            <button id="open-sequence">Open</button>
+            <button id="new-sequence">Create New Sequence</button>
+            <button id="save-sequence" ${state.flags?.activeSequenceLoaded ? "" : "disabled"}>Save Sequence</button>
+            <button id="save-sequence-as" ${state.flags?.activeSequenceLoaded ? "" : "disabled"}>Save Sequence As</button>
+          </div>
+          <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
+          <p class="banner">Media: ${mediaFile || "(none attached)"}</p>
+          <p class="banner">Revision: ${revision || "(not loaded)"}</p>
         </section>
       </div>
     `;
@@ -683,16 +723,6 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function sequenceScreen() {
-    const catalog = Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : [];
-    const catalogHasCurrent = catalog.some((s) => String(s?.path || "") === state.sequencePathInput);
-    const catalogOptions = [
-      ...catalog,
-      ...(!catalogHasCurrent && state.sequencePathInput
-        ? [{ path: state.sequencePathInput, relativePath: state.sequencePathInput, name: state.sequencePathInput.split("/").pop() || "Current" }]
-        : [])
-    ];
-    const mediaFile = String(state.sequenceMediaFile || state.audioPathInput || "").trim();
-    const revision = String(state.currentSequenceRevision || "").trim();
     return `
       <div class="screen-grid sequence-screen">
         ${renderJourneyCard("sequence")}
@@ -703,33 +733,6 @@ export function buildScreenContent({ state, helpers }) {
           ${renderSequenceIntentArtifactCard()}
         </section>
         ${renderArtifactDetailPanel()}
-        <section class="card">
-          <h3>Sequence Setup</h3>
-          <div class="field">
-            <label>Sequence (from Show Directory)</label>
-            <select id="sequence-catalog-select">
-              ${
-                catalogOptions.length
-                  ? catalogOptions
-                      .map((s) => {
-                        const path = String(s?.path || "");
-                        const rel = String(s?.relativePath || path);
-                        const name = String(s?.name || path.split("/").pop() || rel);
-                        return `<option value="${path.replace(/\"/g, "&quot;")}" ${path === state.sequencePathInput ? "selected" : ""}>${name} - ${rel}</option>`;
-                      })
-                      .join("")
-                  : `<option value="">No sequences found under Show Directory</option>`
-              }
-            </select>
-            <p class="banner">Show Directory: ${state.showFolder || "(not set)"}</p>
-          </div>
-          <div class="row project-actions">
-            <button id="open-sequence">Open</button>
-          </div>
-          <p class="banner">Active: ${state.activeSequence || "(none)"}</p>
-          <p class="banner">Media: ${mediaFile || "(none attached)"}</p>
-          <p class="banner">Revision: ${revision || "(not loaded)"}</p>
-        </section>
       </div>
     `;
   }
