@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   applyDesignerProposalSuccessToState,
+  buildDesignerCompletionMessage,
   buildDesignerGuidedQuestionMessage
 } from "../../../agent/designer-dialog/designer-dialog-ui-state.js";
 
@@ -46,7 +47,38 @@ test("designer ui-state builds concise guided-question chat message", () => {
     "Should the chorus stay focused on the megatree?",
     "Do you want warmer whites or amber?"
   ]);
-  assert.match(message, /Before next pass, consider:/);
+  assert.match(message, /Before I refine the next pass, I need these decisions from you:/);
   assert.match(message, /megatree/i);
   assert.match(message, /amber/i);
+});
+
+test("designer ui-state builds contextual completion message from proposal traceability", () => {
+  const message = buildDesignerCompletionMessage({
+    creativeBrief: {
+      summary: "Nostalgic first pass with a cleaner chorus payoff."
+    },
+    proposalBundle: {
+      summary: "Nostalgic first pass with a cleaner chorus payoff.",
+      assumptions: [
+        "Start with a balanced full-yard pass before introducing focal overrides."
+      ],
+      traceability: {
+        designSceneSignals: {
+          broadCoverageDomains: ["AllModels"],
+          focalCandidates: ["MegaTree"]
+        },
+        musicDesignSignals: {
+          revealMoments: ["Verse->Chorus"],
+          holdMoments: ["Intro"]
+        }
+      }
+    }
+  });
+
+  assert.match(message, /Nostalgic first pass/);
+  assert.match(message, /broad coverage on AllModels/i);
+  assert.match(message, /keeping MegaTree as a focal anchor/i);
+  assert.match(message, /contrast into Verse->Chorus/i);
+  assert.match(message, /preserving restraint through Intro/i);
+  assert.match(message, /Assumptions:/i);
 });

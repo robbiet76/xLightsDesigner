@@ -28,5 +28,46 @@ export function applyDesignerProposalSuccessToState(state, orchestration = {}) {
 export function buildDesignerGuidedQuestionMessage(guidedQuestions = []) {
   const lines = arr(guidedQuestions).map((row) => String(row || "").trim()).filter(Boolean);
   if (!lines.length) return "";
-  return `Before next pass, consider: ${lines.join(" | ")}`;
+  if (lines.length === 1) {
+    return `Before I refine the next pass, I need one decision from you: ${lines[0]}`;
+  }
+  return `Before I refine the next pass, I need these decisions from you: ${lines.join(" | ")}`;
+}
+
+function str(value = "") {
+  return String(value || "").trim();
+}
+
+function summarizeList(values = [], count = 2) {
+  return arr(values).map((row) => str(row)).filter(Boolean).slice(0, count).join(", ");
+}
+
+export function buildDesignerCompletionMessage({
+  proposalBundle = null,
+  creativeBrief = null
+} = {}) {
+  const summary = str(proposalBundle?.summary || creativeBrief?.summary || "Designer draft ready.");
+  const assumptions = arr(proposalBundle?.assumptions).map((row) => str(row)).filter(Boolean);
+  const sceneSignals = proposalBundle?.traceability?.designSceneSignals || {};
+  const musicSignals = proposalBundle?.traceability?.musicDesignSignals || {};
+  const rationale = [];
+
+  const broad = summarizeList(sceneSignals.broadCoverageDomains, 1);
+  const focal = summarizeList(sceneSignals.focalCandidates, 1);
+  const reveals = summarizeList(musicSignals.revealMoments, 2);
+  const holds = summarizeList(musicSignals.holdMoments, 2);
+
+  if (broad) rationale.push(`starting from broad coverage on ${broad}`);
+  if (focal) rationale.push(`keeping ${focal} as a focal anchor`);
+  if (reveals) rationale.push(`building more contrast into ${reveals}`);
+  if (holds) rationale.push(`preserving restraint through ${holds}`);
+
+  const parts = [summary];
+  if (rationale.length) {
+    parts.push(`I shaped this pass by ${rationale.join(", ")}.`);
+  }
+  if (assumptions.length) {
+    parts.push(`Assumptions: ${assumptions.slice(0, 2).join(" | ")}`);
+  }
+  return parts.join(" ");
 }

@@ -37,6 +37,7 @@ import { executeDesignerProposalOrchestration } from "./agent/designer-dialog/de
 import { executeDirectSequenceRequestOrchestration } from "./agent/sequence-agent/direct-sequence-orchestrator.js";
 import {
   applyDesignerProposalSuccessToState,
+  buildDesignerCompletionMessage,
   buildDesignerGuidedQuestionMessage
 } from "./agent/designer-dialog/designer-dialog-ui-state.js";
 import {
@@ -3663,7 +3664,10 @@ async function onGenerate(intentOverride = "", options = {}) {
     "agent",
     proposalRole === "sequence_agent"
       ? `Sequencing draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} ready for review.`
-      : `Draft ready: ${state.proposed.length} proposed change${state.proposed.length === 1 ? "" : "s"} summarized from your intent.`,
+      : buildDesignerCompletionMessage({
+          proposalBundle: state.creative?.proposalBundle || null,
+          creativeBrief: state.creative?.brief || null
+        }),
     {
       roleId: proposalRole,
       displayName: getTeamChatSpeakerLabel(proposalRole),
