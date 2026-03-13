@@ -7,7 +7,6 @@ import {
 export function buildAppShell({ state, screenContent, helpers }) {
   const {
     escapeHtml,
-    renderInlineChipSentence,
     getTeamChatIdentity,
     getTeamChatSpeakerLabel,
     getSections,
@@ -17,7 +16,6 @@ export function buildAppShell({ state, screenContent, helpers }) {
     applyEnabled,
     applyDisabledReason,
     getDiagnosticsCounts,
-    chatQuickPrompts,
     chatPlaceholder,
     chatContext,
     analysisHeaderBadge,
@@ -82,7 +80,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
 
     return `
       <aside class="coach-panel card">
-        <h3>Team Chat</h3>
+        <h3>Design Team Chat</h3>
         <div class="banner team-chat-context"><strong>${escapeHtml(String(chatContext?.title || "Team chat"))}</strong> - ${escapeHtml(String(chatContext?.note || ""))}</div>
         <div class="panel-window chat-window">
           <div class="chat-thread">
@@ -109,16 +107,6 @@ export function buildAppShell({ state, screenContent, helpers }) {
               .join("")}
             ${state.ui.agentThinking ? `<div class="chat-typing">${escapeHtml(getTeamChatSpeakerLabel(state.health.agentActiveRole || "app_assistant"))} is working...</div>` : ""}
           </div>
-        </div>
-        <div class="quick-prompts panel-footer-block">
-          ${(chatQuickPrompts || [])
-            .map((p, idx) => `
-              <article class="quick-suggestion">
-                <div class="quick-suggestion-text">${renderInlineChipSentence(p)}</div>
-                <button data-quick-prompt="${idx}">Use</button>
-              </article>
-            `)
-            .join("")}
         </div>
       </aside>
     `;

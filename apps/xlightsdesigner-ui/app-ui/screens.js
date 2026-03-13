@@ -303,32 +303,32 @@ export function buildScreenContent({ state, helpers }) {
     const definitions = {
       project: {
         title: "Primary Journey",
-        summary: "Start by defining the working context: project file, show folder, media path, and active sequence.",
+        summary: "Set the project context: project file, show folder, media path, and active sequence.",
         next: selectedSequence ? "Project context is configured. Continue into Audio to inspect analysis or Design to start shaping the sequence." : "Create or open the project, then choose the active sequence before moving into Audio or Design."
       },
       audio: {
         title: "Primary Journey",
-        summary: "Audio is now the first specialist phase. Inspect or generate the analysis artifact before sequencing so timing and structure are grounded in the media.",
+        summary: "Analyze the song and capture the timing and structure the rest of the workflow will use.",
         next: hasAudioArtifact ? "Audio artifact is ready. Continue to Design to shape the creative direction." : "Run or reuse audio analysis, then continue to Design."
       },
       design: {
         title: "Primary Journey",
-        summary: "Design is where the creative brief and proposal bundle are shaped. Use team chat, references, and the brief to decide what should be built.",
+        summary: "Shape the creative direction and let the designer capture the sequence brief live from conversation.",
         next: hasProposal ? "Proposal bundle is ready. Continue to Sequence to inspect the technical translation." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
       },
       sequence: {
         title: "Primary Journey",
-        summary: "Sequence is the live technical translation view. Confirm that the current design is being turned into the right targets, sections, and planned sequence changes.",
+        summary: "Inspect how the current design is being translated into actual sequencing changes.",
         next: hasProposal ? "Translation is visible. Continue to Review to approve and apply the current change set." : "Develop the design first, then inspect the sequence translation here before apply."
       },
       review: {
         title: "Primary Journey",
-        summary: "Review is the execution gate. Confirm impact, warnings, approval, and backup posture before writing changes to xLights.",
+        summary: "Review the current design and sequence snapshot, then approve and apply it deliberately.",
         next: reviewReady ? "Draft is ready for review and apply. Approve only after checking warnings and scope." : "If the draft is stale or incomplete, return to Design or refresh before apply."
       },
       settings: {
         title: "Application Settings",
-        summary: "Settings controls the environment around the workflow: xLights connection, cloud chat, audio services, team identities, and safety policy.",
+        summary: "Manage app-level connections, services, identities, and safety controls.",
         next: "Use Settings first on a new install. Project-specific work belongs on the Project screen."
       }
     };
@@ -337,9 +337,7 @@ export function buildScreenContent({ state, helpers }) {
     if (!row) return "";
     return `
       <section class="card journey-card full-span">
-        <div class="artifact-kicker">${escapeHtml(row.title)}</div>
-        <h3>${escapeHtml(row.summary)}</h3>
-        <p class="artifact-body">${escapeHtml(row.next)}</p>
+        <p class="artifact-body">${escapeHtml(row.summary)}</p>
       </section>
     `;
   }
@@ -809,16 +807,52 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderSequenceTranslationGrid() {
+    const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
+    const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1") || null;
+    const sectionScope = Array.isArray(intent?.scope?.sections) ? intent.scope.sections.filter(Boolean) : [];
+    const selectedTargets = Array.isArray(intent?.scope?.targetIds) ? intent.scope.targetIds.filter(Boolean) : [];
+    return `
+      <section class="card full-span">
+        <h3>Sequence Change Grid</h3>
+        <p class="artifact-body">This is the live technical translation of the current design conversation. It should scale to large change sets without collapsing into unreadable cards.</p>
+        <div class="artifact-chip-row">
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(proposalLines.length || 0))} change lines</span>
+          <span class="artifact-chip">${escapeHtml(String(selectedTargets.length || 0))} targets in scope</span>
+          <span class="artifact-chip">${escapeHtml(String(sectionScope.length || 0))} sections in scope</span>
+        </div>
+        <div class="metadata-grid-wrap proposed-grid-wrap">
+          <table class="metadata-grid proposed-grid">
+            <thead>
+              <tr>
+                <th style="width:72px;">#</th>
+                <th>Translated Sequence Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                proposalLines.length
+                  ? proposalLines.map((line, idx) => `
+                    <tr>
+                      <td>${idx + 1}</td>
+                      <td>${renderProposedLineHtml(line)}</td>
+                    </tr>
+                  `).join("")
+                  : `<tr><td colspan="2" class="banner">No translated sequence changes yet.</td></tr>`
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
   function sequenceScreen() {
     return `
       <div class="screen-grid sequence-screen">
         ${renderJourneyCard("sequence")}
         ${renderSequenceTranslationDashboardCard()}
-        <section class="artifact-grid">
-          ${renderSequenceContextArtifactCard()}
-          ${renderSequenceScopeArtifactCard()}
-          ${renderSequenceIntentArtifactCard()}
-        </section>
+        ${renderSequenceTranslationGrid()}
         ${renderArtifactDetailPanel()}
       </div>
     `;
@@ -987,6 +1021,8 @@ export function buildScreenContent({ state, helpers }) {
     const runtime = state.creative?.runtime || null;
     const bundle = state.creative?.proposalBundle || null;
     const brief = state.creative?.brief || null;
+    const references = Array.isArray(state.creative?.references) ? state.creative.references : [];
+    const swatches = Array.isArray(state.inspiration?.paletteSwatches) ? state.inspiration.paletteSwatches.filter(Boolean) : [];
     const assumptions = Array.isArray(bundle?.assumptions) ? bundle.assumptions.filter(Boolean).slice(0, 3) : [];
     const guidedQuestions = Array.isArray(bundle?.guidedQuestions) ? bundle.guidedQuestions.filter(Boolean).slice(0, 3) : [];
     const warnings = Array.isArray(runtime?.warnings) ? runtime.warnings.slice(0, 3) : [];
@@ -1031,6 +1067,16 @@ export function buildScreenContent({ state, helpers }) {
             <div class="artifact-kicker">Needs From Director</div>
             ${guidedQuestions.length ? `<ul>${guidedQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No blocking questions right now.</p>"}
           </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Reference Media</div>
+            <p>${references.length ? `${escapeHtml(String(references.length))} reference item(s) attached.` : "No reference media attached."}</p>
+            <p>${references.length ? escapeHtml(String(references.slice(0, 3).map((ref) => ref?.name || ref?.id || "reference").join(", "))) : "Attach visual references later if needed."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Color Palette</div>
+            <p>${swatches.length ? `${escapeHtml(String(swatches.length))} swatch(es) captured.` : "No palette locked yet."}</p>
+            <p>${swatches.length ? escapeHtml(String(swatches.slice(0, 5).join(", "))) : "Palette direction can emerge during design conversation."}</p>
+          </div>
         </div>
         ${warnings.length ? `<div class="banner banner-warning">${escapeHtml(warnings.join(" | "))}</div>` : ""}
       </section>
@@ -1038,14 +1084,6 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function designScreen() {
-    const creativeBriefText = String(state.creative?.briefText || "");
-    const creativeBriefTextEscaped = creativeBriefText
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    const briefAt = state.creative.briefUpdatedAt
-      ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : "";
     const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
     const lastApply = applyHistory.length ? applyHistory[0] : null;
     const lastAppliedSnapshot =
@@ -1056,16 +1094,9 @@ export function buildScreenContent({ state, helpers }) {
     return `
       <div class="screen-grid design-screen">
         ${renderJourneyCard("design")}
-        <section class="card workspace-intro-card workspace-intro-card-design full-span">
-          <div class="artifact-kicker">Design Workspace</div>
-          <h3>Develop the creative direction before moving into execution.</h3>
-          <p class="artifact-body">Use this screen for concept shaping, references, and proposal refinement. Approval and apply are handled separately in Review.</p>
-        </section>
         ${renderDesignerLiveDashboardCard()}
         <section class="artifact-grid">
           ${renderBriefArtifactCard()}
-          ${renderProposalArtifactCard()}
-          ${renderDirectorProfileArtifactCard()}
         </section>
         ${
           lastAppliedSnapshot
@@ -1097,15 +1128,6 @@ export function buildScreenContent({ state, helpers }) {
             : ""
         }
         ${renderArtifactDetailPanel()}
-        <section class="card">
-          <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
-          <div class="field">
-            <label>Direction, goals, theme, mood, and other brief notes</label>
-            <textarea id="creative-brief-text" rows="10" placeholder="Write or let the designer build the creative brief for this sequence...">${creativeBriefTextEscaped}</textarea>
-          </div>
-        </section>
-        ${referenceMediaPanel()}
-        ${colorPalettePanel()}
       </div>
     `;
   }

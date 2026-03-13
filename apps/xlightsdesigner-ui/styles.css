@@ -598,10 +598,13 @@ button.danger-action:hover {
     linear-gradient(135deg, rgba(44, 72, 108, 0.16), rgba(20, 29, 43, 0.88)),
     var(--panel);
   border-color: rgba(126, 147, 255, 0.24);
+  padding: 10px 14px;
 }
 
-.journey-card h3 {
-  margin-bottom: 8px;
+.journey-card .artifact-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .workspace-intro-card h3 {
@@ -819,6 +822,15 @@ button.danger-action:hover {
   flex: 1;
   min-height: 220px;
   max-height: 100%;
+}
+
+.sequence-screen .proposed-grid-wrap {
+  min-height: 320px;
+  max-height: 560px;
+}
+
+.sequence-screen .proposed-grid td {
+  vertical-align: top;
 }
 
 .proposed-grid td[data-proposed-focus] {
