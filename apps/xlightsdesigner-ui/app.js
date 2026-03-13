@@ -108,6 +108,10 @@ const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
 const RESET_PRESERVE_KEY = "xlightsdesigner.ui.reset-preserve.v1";
 const PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const FALLBACK_XLIGHTS_ENDPOINTS = [
+  "http://127.0.0.1:49913/xlDoAutomation",
+  "http://127.0.0.1:49914/xlDoAutomation"
+];
 const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
 const CONNECTIVITY_POLL_MS = 10000;
 const FOCUS_SYNC_COOLDOWN_MS = 1200;
@@ -1871,6 +1875,71 @@ async function updateSequenceFileMtime(sequencePath = "") {
   return Number(sequenceFileMtimeByPath.get(targetPath) || 0);
 }
 
+async function getSequenceFileStat(sequencePath = "") {
+  const targetPath = String(sequencePath || "").trim();
+  if (!targetPath) return null;
+  const bridge = getDesktopFileStatBridge();
+  if (!bridge) return null;
+  try {
+    const res = await bridge.getFileStat({ filePath: targetPath });
+    if (!res?.ok || !res?.exists) {
+      return {
+        filePath: targetPath,
+        exists: false,
+        size: 0,
+        mtimeMs: 0,
+        mtimeIso: ""
+      };
+    }
+    return {
+      filePath: String(res.filePath || targetPath),
+      exists: true,
+      size: Number(res.size || 0),
+      mtimeMs: Number(res.mtimeMs || 0),
+      mtimeIso: String(res.mtimeIso || "")
+    };
+  } catch (err) {
+    pushDiagnostic("warning", `Sequence file stat failed for ${targetPath}: ${String(err?.message || err)}`);
+    return null;
+  }
+}
+
+function describeSequenceFileStat(stat = null) {
+  if (!stat) return "stat unavailable";
+  if (!stat.exists) return "missing";
+  return `size=${Number(stat.size || 0)} mtime=${String(stat.mtimeIso || "unknown")}`;
+}
+
+async function traceSequenceFileLifecycle(label = "", sequencePath = "", op) {
+  const targetPath = String(sequencePath || "").trim();
+  const before = await getSequenceFileStat(targetPath);
+  if (targetPath) {
+    pushDiagnostic("info", `${label}: before ${targetPath} (${describeSequenceFileStat(before)})`);
+  }
+  const result = await op();
+  const after = await getSequenceFileStat(targetPath);
+  if (targetPath) {
+    pushDiagnostic("info", `${label}: after ${targetPath} (${describeSequenceFileStat(after)})`);
+    if (before?.exists && Number(before.size || 0) > 0 && after?.exists && Number(after.size || 0) <= 0) {
+      pushDiagnostic("error", `${label}: sequence file became empty on disk after operation`, targetPath);
+      setStatusWithDiagnostics(
+        "action-required",
+        "Sequence file became empty after a sequence operation. Stop and inspect the file before continuing.",
+        targetPath
+      );
+    }
+  }
+  return result;
+}
+
+async function assertSequenceFileSafeAfterSave(sequencePath = "", label = "sequence save") {
+  const stat = await getSequenceFileStat(sequencePath);
+  if (!stat?.exists || Number(stat.size || 0) <= 0) {
+    throw new Error(`${label} did not leave a valid non-empty .xsq on disk.`);
+  }
+  return stat;
+}
+
 async function maybeFlushSidecarAfterExternalSave(sequencePath = "") {
   const targetPath = String(sequencePath || "").trim();
   if (!targetPath) return;
@@ -1915,18 +1984,27 @@ function uniqueEndpoints(endpoints) {
 }
 
 async function resolveReachableEndpoint(preferredEndpoint) {
-  const endpoint = normalizeConfiguredEndpoint(
+  const preferred = normalizeConfiguredEndpoint(
     String(preferredEndpoint || state.endpoint || PREFERRED_XLIGHTS_ENDPOINT).trim()
   );
-  if (!endpoint) {
+  const endpoints = uniqueEndpoints([preferred, ...FALLBACK_XLIGHTS_ENDPOINTS]);
+  if (!endpoints.length) {
     throw new Error("No xLights endpoint configured.");
   }
-  const caps = await withTimeout(
-    pingCapabilities(endpoint),
-    ENDPOINT_PROBE_TIMEOUT_MS,
-    `Endpoint probe ${endpoint}`
-  );
-  return { endpoint, caps };
+  let lastError = null;
+  for (const endpoint of endpoints) {
+    try {
+      const caps = await withTimeout(
+        pingCapabilities(endpoint),
+        ENDPOINT_PROBE_TIMEOUT_MS,
+        `Endpoint probe ${endpoint}`
+      );
+      return { endpoint, caps };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("No reachable xLights endpoint found.");
 }
 
 function sidecarPathForSequencePath(sequencePath) {
@@ -7500,7 +7578,14 @@ async function onOpenSequence() {
           durationMs,
           frameMs: state.newSequenceFrameMs
         })
-      : await openSequence(state.endpoint, targetPath, false, false);
+      : await traceSequenceFileLifecycle("sequence.open", targetPath, () => openSequence(state.endpoint, targetPath, false, false));
+    if (state.ui.sequenceMode === "new") {
+      await traceSequenceFileLifecycle("sequence.create+save", targetPath, async () => {
+        await saveSequence(state.endpoint, targetPath);
+        await assertSequenceFileSafeAfterSave(targetPath, "New sequence save");
+        return body;
+      });
+    }
     const seq = body?.data?.sequence || body?.data || {};
     applyOpenSequenceState(seq, targetPath);
     if (targetPath !== previousPath) {
@@ -7563,7 +7648,7 @@ async function onOpenExistingSequence(targetPathInput = "") {
   render();
   try {
     await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
-    const body = await openSequence(state.endpoint, targetPath, false, false);
+    const body = await traceSequenceFileLifecycle("sequence.open", targetPath, () => openSequence(state.endpoint, targetPath, false, false));
     const seq = body?.data?.sequence || body?.data || {};
     applyOpenSequenceState(seq, targetPath);
     if (targetPath !== previousPath) {
@@ -7650,7 +7735,7 @@ async function onNewSequence() {
   setStatus("info", "Creating sequence...");
   render();
   try {
-    await closeActiveSequenceForSwitch();
+    await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
     const isAnimation = state.newSequenceType === "animation";
     const mediaFile = isAnimation ? null : (state.audioPathInput || null);
     const durationMs = isAnimation || !mediaFile ? state.newSequenceDurationMs : undefined;
@@ -7659,6 +7744,11 @@ async function onNewSequence() {
       mediaFile,
       durationMs,
       frameMs: state.newSequenceFrameMs
+    });
+    await traceSequenceFileLifecycle("sequence.create+save", targetPath, async () => {
+      await saveSequence(state.endpoint, targetPath);
+      await assertSequenceFileSafeAfterSave(targetPath, "New sequence save");
+      return true;
     });
     const seq = body?.data?.sequence || body?.data || {};
     state.sequencePathInput = targetPath;
@@ -7691,7 +7781,10 @@ async function onSaveSequenceCurrent() {
   }
   try {
     const targetPath = String(state.sequencePathInput || "").trim();
-    await saveSequence(state.endpoint, targetPath || null);
+    await traceSequenceFileLifecycle("sequence.save", targetPath || currentSequencePathForSidecar(), () => saveSequence(state.endpoint, targetPath || null));
+    if (targetPath) {
+      await assertSequenceFileSafeAfterSave(targetPath, "Sequence save");
+    }
     await flushSidecarPersistIfDirty(targetPath || currentSequencePathForSidecar());
     setStatus("info", "Sequence saved.");
     saveCurrentProjectSnapshot();
@@ -7730,7 +7823,8 @@ async function onSaveSequenceAs() {
   if (!targetPath) return;
 
   try {
-    await saveSequence(state.endpoint, targetPath);
+    await traceSequenceFileLifecycle("sequence.saveAs", targetPath, () => saveSequence(state.endpoint, targetPath));
+    await assertSequenceFileSafeAfterSave(targetPath, "Sequence Save As");
     state.sequencePathInput = targetPath;
     state.savePathInput = targetPath;
     await flushSidecarPersistIfDirty(targetPath);
