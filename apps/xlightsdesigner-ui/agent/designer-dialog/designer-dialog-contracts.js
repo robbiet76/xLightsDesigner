@@ -75,6 +75,9 @@ export function validateDesignerDialogInput(payload = {}) {
   if (obj.analysisHandoff != null && !isPlainObject(obj.analysisHandoff)) {
     errors.push("analysisHandoff must be an object when provided");
   }
+  if (obj.directorProfile != null && !isPlainObject(obj.directorProfile)) {
+    errors.push("directorProfile must be an object when provided");
+  }
   if (obj.creativeBrief != null && !isPlainObject(obj.creativeBrief)) {
     errors.push("creativeBrief must be an object when provided");
   }
@@ -196,7 +199,8 @@ export function buildDesignerDialogInput({
   selection = {},
   promptText = "",
   creativeBrief = null,
-  analysisHandoff = null
+  analysisHandoff = null,
+  directorProfile = null
 } = {}) {
   return {
     agentRole: DESIGNER_DIALOG_ROLE,
@@ -213,7 +217,8 @@ export function buildDesignerDialogInput({
     },
     promptText: str(promptText),
     creativeBrief: isPlainObject(creativeBrief) ? creativeBrief : undefined,
-    analysisHandoff: isPlainObject(analysisHandoff) ? analysisHandoff : undefined
+    analysisHandoff: isPlainObject(analysisHandoff) ? analysisHandoff : undefined,
+    directorProfile: isPlainObject(directorProfile) ? directorProfile : undefined
   };
 }
 

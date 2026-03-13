@@ -28,6 +28,21 @@
     {
       "id": "proposal_lifecycle_rebase",
       "checks": ["proposal bundle marks stale on revision drift", "rebased lifecycle clears stale state", "base revision updates"]
+    },
+    {
+      "id": "preference_aware_without_style_lock",
+      "checks": [
+        "proposal reflects stable design principles first",
+        "director preferences influence proposal softly",
+        "response avoids rigid style cloning"
+      ]
+    },
+    {
+      "id": "preference_traceability",
+      "checks": [
+        "brief or proposal can explain which preference signals influenced the pass",
+        "absence of a director profile does not break output generation"
+      ]
     }
   ],
   "plannedMetrics": [
@@ -35,6 +50,7 @@
     "clarification_quality_score",
     "proposal_bundle_completeness",
     "handoff_completeness",
-    "lifecycle_integrity"
+    "lifecycle_integrity",
+    "preference_balance_score"
   ]
 }

@@ -53,6 +53,23 @@
       }
     },
     {
+      "id": "principles_plus_profile_balance",
+      "scenario": "Use stable design principles first, then bias choices with director preferences",
+      "input": {
+        "promptStyle": "broad_creative_direction",
+        "analysisAvailable": true,
+        "directorPreferences": ["prefers calmer motion", "likes strong focal hierarchy"],
+        "selectedSections": ["Chorus 1"],
+        "selectedTargets": [],
+        "selectedTags": ["focal"]
+      },
+      "expectation": {
+        "behavior": "proceed_with_principled_bias",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": ["core design rationale", "soft preference influence", "variation preserved", "no style cloning"]
+      }
+    },
+    {
       "id": "constrained_surgical_revise",
       "scenario": "Director asks for a narrow revise with preservation constraints",
       "input": {

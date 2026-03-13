@@ -15,6 +15,8 @@
   "notes": [
     "designer_dialog is the user-facing creative role and should operate on normalized conversational intent plus current sequence context.",
     "The input may include upstream analysis and a prior creative brief, but it should not contain downstream xLights mutation plans.",
-    "Selection scope is explicit planner context for clarification and proposal generation."
+    "Selection scope is explicit planner context for clarification and proposal generation.",
+    "An optional director_profile_v1 may be present as user-specific soft preference context.",
+    "Stable design-principles knowledge and director preference knowledge are separate inputs and must not be merged into one undifferentiated knowledge bucket."
   ]
 }
