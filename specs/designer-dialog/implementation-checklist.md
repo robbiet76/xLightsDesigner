@@ -144,9 +144,14 @@ Exit gate:
 - [x] Align `designer_dialog.agent.json` to the real runtime boundary
 - [x] Upgrade `lighting_design_principles` from scaffold to active module
 - [ ] Define `director_profile_v1` as a separate user-specific preference artifact
+- [ ] Define `design_scene_context_v1` as a normalized designer-facing layout artifact
+- [ ] Define `music_design_context_v1` as a designer-facing music-structure artifact derived from audio analysis
 - [ ] Explicitly separate:
   - stable design-principles knowledge
   - learned director preferences
+- [ ] Explicitly separate:
+  - stable knowledge buckets
+  - stable context layers (`design_scene_context_v1`, `music_design_context_v1`)
 - [ ] Define how accepted/rejected proposals update director preference weights
 - [ ] Ensure preference learning is treated as soft guidance, not stylistic lock-in
 - [x] Add few-shot examples for:
@@ -167,6 +172,9 @@ Exit gate:
 - [ ] Add eval cases for:
   - preference-aware proposal steering without style cloning
   - explicit explanation of when learned preferences influenced a proposal
+- [ ] Add eval cases for:
+  - scene-aware design reasoning
+  - music-structure-aware design reasoning
 - [x] Point datasets at canonical runtime/spec references
 
 Exit gate:
@@ -245,10 +253,16 @@ Not yet implemented:
 ## Next Training Foundation
 
 - [ ] Add `director_profile_v1` runtime contract and training-package JSON schema
+- [ ] Add `design_scene_context_v1` runtime contract and training-package JSON schema
+- [ ] Add `music_design_context_v1` runtime contract and training-package JSON schema
 - [ ] Define profile update inputs from:
   - accepted proposals
   - rejected proposals
   - repeated revision patterns
   - explicit user statements of taste/preferences
 - [ ] Define weighting rules so core design knowledge stays primary and director preferences stay secondary
+- [ ] Define how designer uses:
+  - scene/layout spatial semantics
+  - music structure semantics
+  as stable context rather than preference data
 - [ ] Execute the training plan in [training-plan-2026-03-13.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/training-plan-2026-03-13.md)

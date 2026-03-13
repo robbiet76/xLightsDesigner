@@ -21,6 +21,7 @@
       "type": "interaction-contract",
       "paths": [
         "specs/app-assistant/app-assistant-role-and-boundary.md",
+        "specs/designer-dialog/conversational-training-seed-notes.md",
         "specs/designer-dialog/designer-interaction-contract.md",
         "specs/designer-dialog/director-profile-v1.md",
         "specs/designer-dialog/training-plan-2026-03-13.md",

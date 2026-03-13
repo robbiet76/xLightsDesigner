@@ -2,28 +2,49 @@
   "status": "active",
   "examples": [
     {
-      "id": "kickoff_conversational_brief",
-      "scenario": "First-pass creative kickoff from open-ended emotional conversation",
+      "id": "nostalgic_kickoff_with_bounded_assumptions",
+      "scenario": "Open-ended memory-driven kickoff where the designer should proceed without over-questioning",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "This song reminds me of being a kid and seeing one house down the street that always felt warm and magical. I want it to feel like that kind of memory, not flashy, just something that opens up slowly and feels special."
+        },
+        {
+          "role": "designer",
+          "text": "I would treat that as a warm, memory-first design direction: broad gentle coverage first, then a few focused moments that feel like the house revealing itself. I would keep motion smooth, avoid busy texture early, and let the strongest contrast arrive only when the music opens up."
+        }
+      ],
       "input": {
-        "promptStyle": "open_ended",
-        "themes": ["nostalgia", "warmth", "childhood memory"],
         "analysisAvailable": true,
-        "selectedSections": ["Chorus 1"],
+        "selectedSections": ["Intro", "Chorus 1"],
         "selectedTargets": [],
         "selectedTags": []
       },
       "expectation": {
         "behavior": "proceed_with_bounded_assumptions",
         "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
-        "mustInclude": ["explicit assumptions", "traceable brief summary", "reviewable proposal lines"]
+        "mustInclude": [
+          "warm memory-oriented brief summary",
+          "explicit assumptions about motion and contrast",
+          "reviewable proposal lines that stay broad before refinement",
+          "no unnecessary clarification round"
+        ]
       }
     },
     {
-      "id": "targeted_clarification_round",
-      "scenario": "Prompt is broad but missing a materially important scope decision",
+      "id": "clarify_material_scope_gap_only",
+      "scenario": "Broad creative request where the designer needs one targeted scope clarification before proceeding",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "Make the chorus feel much bigger and more exciting."
+        },
+        {
+          "role": "designer",
+          "text": "I can build that, but one scope decision matters: should the bigger chorus read across the whole display, or should it stay concentrated on hero elements first?"
+        }
+      ],
       "input": {
-        "promptStyle": "broad_but_incomplete",
-        "themes": ["bigger chorus"],
         "analysisAvailable": true,
         "selectedSections": [],
         "selectedTargets": [],
@@ -32,64 +53,58 @@
       "expectation": {
         "behavior": "ask_targeted_questions",
         "outputs": ["guided_questions", "creative_brief_v1"],
-        "mustInclude": ["no more than a few high-value questions", "questions tied to scope or coherence"]
+        "mustInclude": [
+          "one concise high-value scope question",
+          "no effect-level micromanagement",
+          "no long questionnaire"
+        ]
       }
     },
     {
-      "id": "proposal_refinement_with_preferences",
-      "scenario": "Refine an existing proposal using known director preferences",
+      "id": "preference_aware_refinement_without_style_lock",
+      "scenario": "Refinement pass where director preferences should bias choices without producing a repetitive house style",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "This is close, but I want the bridge to breathe more. Less constant motion. Still keep the megatree feeling like the hero."
+        },
+        {
+          "role": "designer",
+          "text": "I would pull the bridge back by reducing motion density and widening the visual spacing while keeping the megatree as the focal anchor. That respects your usual preference for readable hero focus, but I would still keep the moment distinct from earlier sequences by changing how the support props recede."
+        }
+      ],
       "input": {
-        "promptStyle": "refinement",
-        "directorPreferences": ["smooth motion", "hero-prop-first"],
         "analysisAvailable": true,
+        "directorPreferences": ["prefers calmer motion in transitions", "likes strong focal hierarchy"],
         "selectedSections": ["Bridge"],
         "selectedTargets": ["MegaTree"],
         "selectedTags": ["focal"]
       },
       "expectation": {
         "behavior": "refine_existing_direction",
-        "outputs": ["proposal_bundle_v1", "intent_handoff_v1"],
-        "mustInclude": ["preference-informed assumptions", "scoped proposal changes", "no hard style cloning"]
-      }
-    },
-    {
-      "id": "principles_plus_profile_balance",
-      "scenario": "Use stable design principles first, then bias choices with director preferences",
-      "input": {
-        "promptStyle": "broad_creative_direction",
-        "analysisAvailable": true,
-        "directorPreferences": ["prefers calmer motion", "likes strong focal hierarchy"],
-        "selectedSections": ["Chorus 1"],
-        "selectedTargets": [],
-        "selectedTags": ["focal"]
-      },
-      "expectation": {
-        "behavior": "proceed_with_principled_bias",
         "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
-        "mustInclude": ["core design rationale", "soft preference influence", "variation preserved", "no style cloning"]
+        "mustInclude": [
+          "soft preference influence",
+          "explicit focal hierarchy",
+          "variation preserved",
+          "no rigid style cloning language"
+        ]
       }
     },
     {
-      "id": "constrained_surgical_revise",
-      "scenario": "Director asks for a narrow revise with preservation constraints",
+      "id": "degraded_mode_without_analysis_stays_reviewable",
+      "scenario": "Creative pass before audio analysis exists",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "I want the opening to feel elegant and quiet, then let the first chorus bloom."
+        },
+        {
+          "role": "designer",
+          "text": "I can sketch that direction now. Without audio analysis I would keep the assumptions conservative, focus on a readable rise in contrast, and mark the first pass as reviewable rather than final."
+        }
+      ],
       "input": {
-        "promptStyle": "surgical_revise",
-        "analysisAvailable": true,
-        "selectedSections": ["Verse 2"],
-        "selectedTargets": ["Roofline"],
-        "selectedTags": []
-      },
-      "expectation": {
-        "behavior": "proceed_with_reviewable_constraints",
-        "outputs": ["proposal_bundle_v1", "intent_handoff_v1"],
-        "mustInclude": ["change tolerance", "preservation constraints", "base revision"]
-      }
-    },
-    {
-      "id": "degraded_mode_without_analysis",
-      "scenario": "Design conversation proceeds before audio analysis exists",
-      "input": {
-        "promptStyle": "kickoff_without_analysis",
         "analysisAvailable": false,
         "selectedSections": [],
         "selectedTargets": [],
@@ -98,7 +113,40 @@
       "expectation": {
         "behavior": "degraded_mode_with_warning",
         "outputs": ["creative_brief_v1", "proposal_bundle_v1"],
-        "mustInclude": ["explicit warning", "conservative assumptions", "reviewable proposal"]
+        "mustInclude": [
+          "explicit degraded-mode warning",
+          "conservative assumptions",
+          "reviewable proposal rather than blocked flow"
+        ]
+      }
+    },
+    {
+      "id": "designer_defers_direct_technical_execution",
+      "scenario": "Request is narrowly technical and should not be expanded into designer-style conversation",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "Make the trees less blinky in Chorus 3."
+        },
+        {
+          "role": "designer",
+          "text": "That is a narrow sequencing revise request. Keep the creative intent intact and route it as a scoped technical refinement instead of forcing a broader design conversation."
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "selectedSections": ["Chorus 3"],
+        "selectedTargets": ["MegaTree", "MiniTrees"],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "respect_direct_sequence_boundary",
+        "outputs": ["intent_handoff_v1"],
+        "mustInclude": [
+          "no unnecessary creative detour",
+          "clear scoped refinement intent",
+          "handoff remains reviewable"
+        ]
       }
     }
   ]

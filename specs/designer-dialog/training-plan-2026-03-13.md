@@ -54,6 +54,46 @@ It must remain:
 - explainable
 - soft, not absolute
 
+## 2.1) Required Designer Context Layers
+
+In addition to the two knowledge buckets, `designer_dialog` must consume two stable context layers:
+
+### A. Design scene context
+Designer-facing spatial/layout understanding derived from xLights layout:
+- group, model, submodel, and later node/strand structure
+- left / center / right
+- foreground / midground / background
+- high / low
+- focal candidates
+- perimeter / interior zones
+- symmetry / asymmetry relationships
+- broad coverage zones vs dense detail zones
+
+This should be normalized into a dedicated artifact such as:
+- `design_scene_context_v1`
+
+This context is:
+- read-only
+- relatively stable
+- refreshed only when the layout changes
+
+### B. Music design context
+Designer-facing musical structure derived from audio analysis:
+- section map
+- energy arc
+- rhythmic density
+- lyrical emphasis
+- harmonic tension / release cues
+- phrasing / transition points
+
+This should be derived from the audio analysis artifact into a designer-usable context layer such as:
+- `music_design_context_v1`
+
+This context is:
+- derived from `analysis_artifact_v1`
+- richer than raw analysis tracks alone
+- focused on how a lighting designer should reason over the music
+
 ## 3) Training Workstreams
 
 ### Workstream 1: Core design conversation corpus
@@ -90,6 +130,8 @@ Initial requirement:
 
 Integrate profile-aware reasoning into `designer_dialog` runtime:
 - input includes optional `director_profile_v1`
+- input includes `design_scene_context_v1`
+- input includes designer-facing music context derived from audio analysis
 - brief/proposal records which preference signals influenced the pass
 - preference influence stays subordinate to core design principles
 
@@ -108,6 +150,8 @@ Add designer-specific evals that measure:
 ### Phase A: Training architecture lock
 
 - define `director_profile_v1` contract usage in runtime
+- define `design_scene_context_v1`
+- define `music_design_context_v1`
 - update designer training docs and prompts to reflect the two-bucket model
 - ensure current few-shot/eval assets reference the split explicitly
 
@@ -129,6 +173,7 @@ Exit gate:
 ### Phase C: Preference profile integration
 
 - add `director_profile_v1` input plumbing to designer runtime
+- add scene/music context plumbing to designer runtime
 - add traceability fields showing which preferences influenced the output
 - add tests proving preference influence is soft, not mandatory
 
@@ -174,6 +219,13 @@ Most useful inputs:
 - avoid unnecessary clutter
 - align with timing where practical
 - use layering efficiently
+
+5. Spatial / staging rules that matter most
+- how to think about left vs right
+- foreground vs background
+- focal priorities
+- perimeter vs interior coverage
+- when group-level design is preferred over finer-grain detail
 
 ## 6) Non-Goals
 
