@@ -221,6 +221,10 @@ Needed:
 - real eval cases
 - prompt alignment with current role boundary
 - runtime-contract-backed dataset references
+- explicit separation between:
+  - stable design-principles knowledge
+  - user-specific director preference knowledge
+- a dedicated `director_profile_v1` artifact so preference learning does not pollute the core design corpus
 
 ### 5.5 Testing parity
 
@@ -234,6 +238,11 @@ Needed:
 ## 6) Audit Conclusion
 
 `designer_dialog` is the next agent that needs full end-to-end hardening.
+
+The most important training architecture rule is now explicit:
+- core design knowledge and learned director preferences must not share the same bucket
+- design-principles training should remain clean and user-independent
+- preference learning should live in a separate profile artifact and bias proposals only as soft steering guidance
 
 The implementation pattern should follow the same successful path used for:
 - `audio_analyst`

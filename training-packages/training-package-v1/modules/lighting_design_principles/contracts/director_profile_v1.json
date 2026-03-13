@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "director_profile_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifactType",
+    "artifactVersion",
+    "directorId",
+    "preferences",
+    "evidence"
+  ],
+  "properties": {
+    "artifactType": {
+      "const": "director_profile_v1"
+    },
+    "artifactVersion": {
+      "const": "1.0"
+    },
+    "directorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/preferenceSignal"
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "acceptedProposalIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rejectedProposalIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "explicitPreferenceNotes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "preferenceSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "weight",
+        "confidence",
+        "evidenceCount",
+        "lastUpdatedAt"
+      ],
+      "properties": {
+        "weight": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidenceCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastUpdatedAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

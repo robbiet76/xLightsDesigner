@@ -143,17 +143,30 @@ Exit gate:
 
 - [x] Align `designer_dialog.agent.json` to the real runtime boundary
 - [x] Upgrade `lighting_design_principles` from scaffold to active module
+- [ ] Define `director_profile_v1` as a separate user-specific preference artifact
+- [ ] Explicitly separate:
+  - stable design-principles knowledge
+  - learned director preferences
+- [ ] Define how accepted/rejected proposals update director preference weights
+- [ ] Ensure preference learning is treated as soft guidance, not stylistic lock-in
 - [x] Add few-shot examples for:
   - first-pass creative kickoff
   - clarification round
   - proposal refinement
   - constrained surgical revise
   - degraded mode without analysis
+- [ ] Add few-shot examples that demonstrate the balance between:
+  - principled design decisions
+  - user-specific preference bias
+  - preserving novelty/freshness
 - [x] Add eval cases for:
   - brief alignment
   - clarification quality
   - proposal determinism
   - handoff completeness
+- [ ] Add eval cases for:
+  - preference-aware proposal steering without style cloning
+  - explicit explanation of when learned preferences influenced a proposal
 - [x] Point datasets at canonical runtime/spec references
 
 Exit gate:
@@ -220,7 +233,21 @@ Implemented now:
 
 Not yet implemented:
 - [ ] broader orchestration and lifecycle test coverage
+- [ ] Add tests for:
+  - preference profile influence on proposals
+  - preference influence remaining soft rather than mandatory
+  - artifact traceability of which preference signals were used
 
 ## Post-v1 Cleanup
 
 - [ ] Decompose remaining shared designer lifecycle code in `app.js` once designer runtime is stable.
+
+## Next Training Foundation
+
+- [ ] Add `director_profile_v1` runtime contract and training-package JSON schema
+- [ ] Define profile update inputs from:
+  - accepted proposals
+  - rejected proposals
+  - repeated revision patterns
+  - explicit user statements of taste/preferences
+- [ ] Define weighting rules so core design knowledge stays primary and director preferences stay secondary

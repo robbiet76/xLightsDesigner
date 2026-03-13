@@ -37,6 +37,48 @@ This spec defines the contract between:
 8. `designer_dialog` is expected to act autonomously as a creative specialist: it should make reasonable lighting-design assumptions and advance the work unless a missing decision would create unacceptable ambiguity or risk.
 9. The user is the director; `designer_dialog` should learn that director's preferences over time and use them as soft steering guidance, not hard stylistic lock-in.
 
+## 3.4) Dual-Knowledge Model
+
+`designer_dialog` must operate from two distinct knowledge buckets that remain separate in both runtime design and training strategy.
+
+### Core design knowledge
+Stable, user-independent professional knowledge:
+- artistic principles
+- composition
+- lighting design craft
+- visual storytelling
+- pacing and rhythm
+- focus and contrast
+- color theory
+- staging, layering, and reveal logic
+
+Rules:
+- this is the designer's professional baseline
+- it must not be rewritten by user preference learning
+- it should improve only through curated training, explicit spec updates, and deliberate external corpus refinement
+
+### Director preference knowledge
+Adaptive, user-specific soft guidance:
+- preferred motion density
+- preferred pacing intensity
+- focus/emphasis tendencies
+- palette tendencies
+- tolerance for complexity
+- tolerance for aggressive vs conservative changes
+- recurring likes/dislikes inferred from accepted and rejected work
+
+Rules:
+- this must be stored separately from core design knowledge
+- it must remain soft steering guidance, not hard rules
+- it may bias choices within the space allowed by good design practice
+- it must not collapse the designer into fixed style imitation
+
+### Required balance
+- core design knowledge determines principled design quality
+- director preferences bias choices within that principled space
+- the system must preserve freshness, novelty, and variation while still converging toward the director's taste over time
+- preference learning must never override safety, readability, or other hard design-quality constraints
+
 ## 3.1) Sprint 0 Lock: v1 Intent Contract
 
 ### Supported v1 intent verbs
@@ -118,6 +160,21 @@ Rules:
 Practical consequence:
 - broad creative/design requests should still go through `designer_dialog`
 - explicit technical sequencing requests may go `app_assistant -> handoff normalizer -> sequence_agent`
+
+## 3.5) Preference Memory Contract
+
+Preference learning must be explicit and inspectable.
+
+Required behavior:
+- accepted proposals and retained sequencing choices may strengthen preference signals
+- repeated revision requests may weaken or counter prior preference signals
+- preferences must be represented as weighted tendencies, not as binary absolutes
+- `designer_dialog` must be able to explain when a proposal is being influenced by learned preferences
+
+Required artifact boundary:
+- user-specific preferences belong in a dedicated `director_profile_v1` artifact
+- `creative_brief_v1` and `proposal_bundle_v1` may reference which profile signals influenced the current pass
+- `director_profile_v1` must remain separate from the stable design-principles corpus
 
 ## 4) Interaction Model
 
