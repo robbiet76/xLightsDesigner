@@ -11,6 +11,8 @@ import { buildClarificationPlan } from "./guided-dialog.js";
 import { synthesizeCreativeBrief } from "./brief-synthesizer.js";
 import { buildProposalFromIntent } from "./planner.js";
 import { buildProposalLifecycle } from "./designer-dialog-lifecycle.js";
+import { buildDesignSceneContext } from "./design-scene-context.js";
+import { buildMusicDesignContext } from "./music-design-context.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -204,8 +206,28 @@ export function buildProposalBundleArtifact({
   models = [],
   submodels = [],
   displayElements = [],
-  metadataAssignments = []
+  metadataAssignments = [],
+  directorProfile = null,
+  designSceneContext = null,
+  musicDesignContext = null
 } = {}) {
+  const resolvedSceneContext = isPlainObject(designSceneContext)
+    ? designSceneContext
+    : buildDesignSceneContext({
+        sceneGraph: {
+          modelsById: Object.fromEntries(arr(models).map((row) => [str(row?.id || row?.name), row])),
+          groupsById: {},
+          submodelsById: Object.fromEntries(arr(submodels).map((row) => [str(row?.id || row?.name), row])),
+          stats: { layoutMode: "unknown" }
+        },
+        revision: "unknown"
+      });
+  const resolvedMusicContext = isPlainObject(musicDesignContext)
+    ? musicDesignContext
+    : buildMusicDesignContext({
+        analysisArtifact: null,
+        analysisHandoff
+      });
   const input = buildDesignerDialogInput({
     requestId,
     sequenceRevision,
@@ -217,7 +239,10 @@ export function buildProposalBundleArtifact({
     },
     promptText,
     creativeBrief,
-    analysisHandoff
+    analysisHandoff,
+    directorProfile,
+    designSceneContext: resolvedSceneContext,
+    musicDesignContext: resolvedMusicContext
   });
   const inputGate = validateDesignerDialogContractGate("input", input, requestId);
   const plan = buildProposalFromIntent({
