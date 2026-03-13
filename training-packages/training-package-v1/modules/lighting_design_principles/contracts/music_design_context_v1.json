@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "music_design_context_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifactType",
+    "artifactVersion"
+  ],
+  "properties": {
+    "artifactType": {
+      "const": "music_design_context_v1"
+    },
+    "artifactVersion": {
+      "const": "1.0"
+    },
+    "mediaId": {
+      "type": "string"
+    },
+    "sectionArc": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": { "type": "string" },
+          "energy": { "type": "string" },
+          "density": { "type": "string" }
+        }
+      }
+    },
+    "designCues": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    }
+  }
+}

@@ -17,6 +17,8 @@
     "The input may include upstream analysis and a prior creative brief, but it should not contain downstream xLights mutation plans.",
     "Selection scope is explicit planner context for clarification and proposal generation.",
     "An optional director_profile_v1 may be present as user-specific soft preference context.",
+    "An optional design_scene_context_v1 may be present as designer-facing spatial/layout context.",
+    "An optional music_design_context_v1 may be present as designer-facing musical structure context.",
     "Stable design-principles knowledge and director preference knowledge are separate inputs and must not be merged into one undifferentiated knowledge bucket."
   ]
 }

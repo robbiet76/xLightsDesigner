@@ -78,6 +78,12 @@ export function validateDesignerDialogInput(payload = {}) {
   if (obj.directorProfile != null && !isPlainObject(obj.directorProfile)) {
     errors.push("directorProfile must be an object when provided");
   }
+  if (obj.designSceneContext != null && !isPlainObject(obj.designSceneContext)) {
+    errors.push("designSceneContext must be an object when provided");
+  }
+  if (obj.musicDesignContext != null && !isPlainObject(obj.musicDesignContext)) {
+    errors.push("musicDesignContext must be an object when provided");
+  }
   if (obj.creativeBrief != null && !isPlainObject(obj.creativeBrief)) {
     errors.push("creativeBrief must be an object when provided");
   }
@@ -200,7 +206,9 @@ export function buildDesignerDialogInput({
   promptText = "",
   creativeBrief = null,
   analysisHandoff = null,
-  directorProfile = null
+  directorProfile = null,
+  designSceneContext = null,
+  musicDesignContext = null
 } = {}) {
   return {
     agentRole: DESIGNER_DIALOG_ROLE,
@@ -218,7 +226,9 @@ export function buildDesignerDialogInput({
     promptText: str(promptText),
     creativeBrief: isPlainObject(creativeBrief) ? creativeBrief : undefined,
     analysisHandoff: isPlainObject(analysisHandoff) ? analysisHandoff : undefined,
-    directorProfile: isPlainObject(directorProfile) ? directorProfile : undefined
+    directorProfile: isPlainObject(directorProfile) ? directorProfile : undefined,
+    designSceneContext: isPlainObject(designSceneContext) ? designSceneContext : undefined,
+    musicDesignContext: isPlainObject(musicDesignContext) ? musicDesignContext : undefined
   };
 }
 
