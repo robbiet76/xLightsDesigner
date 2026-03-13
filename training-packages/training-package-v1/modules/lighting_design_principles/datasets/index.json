@@ -9,12 +9,15 @@
         "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-orchestrator.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-ui-state.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-lifecycle.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/director-profile.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/design-scene-context.js",
+        "apps/xlightsdesigner-ui/agent/designer-dialog/music-design-context.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/intent-normalizer.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/guided-dialog.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/brief-synthesizer.js",
         "apps/xlightsdesigner-ui/agent/designer-dialog/planner.js"
       ],
-      "description": "Canonical runtime references for conversational designer intent normalization, clarification, brief synthesis, proposal generation, lifecycle, handoff behavior, and future director-profile-aware steering."
+      "description": "Canonical runtime references for conversational designer intent normalization, clarification, brief synthesis, proposal generation, lifecycle, scene/music-context use, handoff behavior, and project-scoped director-profile steering."
     },
     {
       "id": "designer_dialog_spec",

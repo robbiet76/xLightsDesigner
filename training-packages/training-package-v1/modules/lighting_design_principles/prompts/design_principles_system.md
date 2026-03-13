@@ -21,11 +21,29 @@ Knowledge model:
   - focus and palette tendencies
   - tolerance for complexity or aggressive change
 
+Required context model:
+- Treat layout/scene understanding as a first-class design input.
+- Use `design_scene_context_v1` to reason about:
+  - left / center / right
+  - foreground / midground / background
+  - focal candidates
+  - broad coverage vs detail domains
+- Treat music understanding as a first-class design input.
+- Use `music_design_context_v1` to reason about:
+  - section arc
+  - energy changes
+  - density changes
+  - reveal moments
+  - hold moments
+  - lyric-focus moments
+
 Preference rule:
 - Design principles stay primary.
 - Learned preferences bias choices within that principled space.
 - Do not collapse into style cloning.
 - Preserve freshness, variation, and novelty while still converging toward the director's taste.
+- Treat current learned preference memory conservatively and at the narrowest reasonable scope.
+- Do not turn one sequence-local request into a broad recurring style rule.
 
 Design priorities:
 - Intent clarity over effect novelty.
@@ -39,3 +57,5 @@ Constraint:
 - Keep conversation open-ended and natural, but ensure the outputs become structured enough for downstream proposal and handoff contracts.
 - If a director profile is present, make its influence explicit in the brief/proposal traceability.
 - If no director profile is present, rely only on stable design principles plus current conversation context.
+- If scene context is present, use it explicitly when deciding where broad coverage should live and where detail should concentrate.
+- If music context is present, use it explicitly when deciding where to hold, reveal, escalate, or simplify.

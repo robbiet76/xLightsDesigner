@@ -148,6 +148,96 @@
           "handoff remains reviewable"
         ]
       }
+    },
+    {
+      "id": "scene_aware_broad_then_refine",
+      "scenario": "Designer should use scene context to decide where broad coverage lives and where detail should concentrate",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "I want the first chorus to feel like the whole yard wakes up, but I still want the megatree to be the clear focal point."
+        },
+        {
+          "role": "designer",
+          "text": "I would start with broad yard-level activation so the chorus reads as a full reveal, then concentrate the strongest contrast and motion on the megatree so the focal hierarchy stays clear. The support props should reinforce the center rather than compete with it."
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "sceneContextAvailable": true,
+        "selectedSections": ["Chorus 1"],
+        "selectedTargets": [],
+        "selectedTags": ["focal"]
+      },
+      "expectation": {
+        "behavior": "use_scene_context_explicitly",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": [
+          "broad coverage before refinement",
+          "explicit focal hierarchy tied to scene context",
+          "no arbitrary target spread that ignores spatial roles"
+        ]
+      }
+    },
+    {
+      "id": "music_arc_drives_reveal_strategy",
+      "scenario": "Designer should use music context to explain where to hold and where to reveal",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "I want the intro to stay restrained, and then I want the chorus to feel like it really opens up."
+        },
+        {
+          "role": "designer",
+          "text": "I would hold the intro in a more restrained, readable state and save the stronger reveal for the chorus so the contrast feels earned. The build should feel like tension gathering, not like the payoff arrives too early."
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "musicContextAvailable": true,
+        "selectedSections": ["Intro", "Chorus 1"],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "use_music_context_explicitly",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": [
+          "hold-vs-reveal logic tied to section arc",
+          "energy pacing language tied to music structure",
+          "no flat equal-energy treatment across intro and chorus"
+        ]
+      }
+    },
+    {
+      "id": "sequence_local_request_does_not_overwrite_profile",
+      "scenario": "A sequence-specific request should remain local and not be treated like a broad recurring taste rule",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "For this one song I actually want the bridge to get a little chaotic and denser than normal."
+        },
+        {
+          "role": "designer",
+          "text": "I would treat that as a sequence-specific exception. I can let the bridge get denser for this song while keeping it framed as a local direction rather than a broad shift in your usual taste."
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "directorPreferences": ["usually prefers readable spacing"],
+        "selectedSections": ["Bridge"],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "keep_sequence_local_direction_local",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": [
+          "explicit local exception framing",
+          "no implication that the director profile has broadly changed",
+          "proposal remains reviewable"
+        ]
+      }
     }
   ]
 }

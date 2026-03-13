@@ -24,6 +24,9 @@ Purpose: capture the quality bar for the first curated `designer_dialog` convers
 3. How to use learned preferences softly
 4. How to stay reviewable in degraded mode
 5. When to avoid unnecessary designer detours and defer to direct technical sequencing
+6. How to use scene/layout context to decide where broad coverage should live and where detail should focus
+7. How to use music structure to decide where to hold, reveal, escalate, or simplify
+8. How to keep sequence-local exceptions from silently rewriting broader preference memory
 
 ## Things To Avoid
 
@@ -41,3 +44,5 @@ A strong designer response should:
 - preserve novelty
 - respect user taste without becoming repetitive
 - remain concrete enough to produce a real brief and proposal
+- use the spatial scene model intentionally rather than treating all props as interchangeable
+- use the music arc intentionally rather than treating all sections as equal

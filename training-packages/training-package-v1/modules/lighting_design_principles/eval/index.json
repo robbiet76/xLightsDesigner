@@ -43,6 +43,27 @@
         "brief or proposal can explain which preference signals influenced the pass",
         "absence of a director profile does not break output generation"
       ]
+    },
+    {
+      "id": "scene_context_usage",
+      "checks": [
+        "designer uses design_scene_context_v1 to reason about broad coverage vs focal refinement",
+        "designer references spatial roles without flattening all targets into one undifferentiated pass"
+      ]
+    },
+    {
+      "id": "music_context_usage",
+      "checks": [
+        "designer uses music_design_context_v1 to reason about hold, reveal, escalation, and release",
+        "designer proposal avoids flat equal-energy treatment when the music arc is differentiated"
+      ]
+    },
+    {
+      "id": "preference_scope_discipline",
+      "checks": [
+        "sequence-specific requests remain local when evidence is weak",
+        "designer does not imply that one local exception rewrites the broader director profile"
+      ]
     }
   ],
   "plannedMetrics": [
@@ -51,6 +72,9 @@
     "proposal_bundle_completeness",
     "handoff_completeness",
     "lifecycle_integrity",
-    "preference_balance_score"
+    "preference_balance_score",
+    "scene_context_usage_score",
+    "music_context_usage_score",
+    "preference_scope_discipline_score"
   ]
 }
