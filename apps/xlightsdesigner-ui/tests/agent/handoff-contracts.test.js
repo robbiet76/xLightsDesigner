@@ -26,6 +26,8 @@ test("analysis handoff requires structure sections", () => {
 
 test("intent handoff validates mode enum", () => {
   const errors = validateAgentHandoff("intent_handoff_v1", {
+    artifactId: "intent_handoff_v1-1234",
+    createdAt: "2026-03-13T12:00:00.000Z",
     goal: "test",
     mode: "invalid-mode",
     scope: {},
@@ -34,6 +36,19 @@ test("intent handoff validates mode enum", () => {
     approvalPolicy: {}
   });
   assert.ok(errors.some((e) => /mode must be create\|revise\|polish\|analyze/i.test(e)));
+});
+
+test("intent handoff requires artifact identity fields", () => {
+  const errors = validateAgentHandoff("intent_handoff_v1", {
+    goal: "test",
+    mode: "revise",
+    scope: {},
+    constraints: {},
+    directorPreferences: {},
+    approvalPolicy: {}
+  });
+  assert.ok(errors.some((e) => /artifactId is required/i.test(e)));
+  assert.ok(errors.some((e) => /createdAt is required/i.test(e)));
 });
 
 test("plan handoff requires validationReady true and commands", () => {

@@ -1,3 +1,5 @@
+import { finalizeArtifact } from "../shared/artifact-ids.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -25,7 +27,9 @@ export function buildCanonicalSequenceIntentHandoff({
   const selectedSections = Array.isArray(normalizedIntent?.sections) ? normalizedIntent.sections : [];
   const goal = str(normalizedIntent?.goal || intentText);
   const mode = inferIntentModeFromGoal(goal);
-  return {
+  return finalizeArtifact({
+    artifactType: "intent_handoff_v1",
+    artifactVersion: "1.0",
     goal,
     mode,
     scope: {
@@ -52,5 +56,5 @@ export function buildCanonicalSequenceIntentHandoff({
       requiresExplicitApprove: true,
       elevatedRiskConfirmed: Boolean(elevatedRiskConfirmed)
     }
-  };
+  });
 }

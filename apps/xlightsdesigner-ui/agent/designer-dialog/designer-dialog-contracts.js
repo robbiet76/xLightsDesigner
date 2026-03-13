@@ -1,5 +1,6 @@
 import { validateAgentHandoff } from "../handoff-contracts.js";
 import { buildCanonicalSequenceIntentHandoff } from "../sequence-agent/sequence-intent-handoff.js";
+import { finalizeArtifact } from "../shared/artifact-ids.js";
 
 export const DESIGNER_DIALOG_ROLE = "designer_dialog";
 export const DESIGNER_DIALOG_CONTRACT_VERSION = "1.0";
@@ -114,6 +115,8 @@ export function validateCreativeBrief(payload = {}) {
     errors.push(`briefVersion must be ${DESIGNER_DIALOG_CONTRACT_VERSION}`);
   }
 
+  pushRequiredString(errors, obj, "artifactId");
+  pushRequiredString(errors, obj, "createdAt");
   pushRequiredString(errors, obj, "summary");
   pushRequiredString(errors, obj, "goalsSummary");
   pushRequiredString(errors, obj, "inspirationSummary");
@@ -146,6 +149,8 @@ export function validateProposalBundle(payload = {}) {
     errors.push(`bundleVersion must be ${DESIGNER_DIALOG_CONTRACT_VERSION}`);
   }
 
+  pushRequiredString(errors, obj, "artifactId");
+  pushRequiredString(errors, obj, "createdAt");
   pushRequiredString(errors, obj, "proposalId");
   pushRequiredString(errors, obj, "summary");
   pushRequiredString(errors, obj, "baseRevision");
@@ -237,7 +242,9 @@ export function buildDesignerDialogInput({
 
 export function buildCreativeBriefContract(brief = {}, traceability = null) {
   const obj = isPlainObject(brief) ? brief : {};
-  return {
+  return finalizeArtifact({
+    artifactType: DESIGNER_DIALOG_BRIEF_CONTRACT,
+    artifactVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
     briefType: DESIGNER_DIALOG_BRIEF_CONTRACT,
     briefVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
     summary: str(obj.summary || "Design direction inferred from audio + user intent."),
@@ -250,7 +257,7 @@ export function buildCreativeBriefContract(brief = {}, traceability = null) {
     hypotheses: arr(obj.hypotheses).map((row) => str(row)).filter(Boolean),
     notes: str(obj.notes || ""),
     traceability: isPlainObject(traceability) ? traceability : undefined
-  };
+  });
 }
 
 export function buildProposalBundle({
@@ -267,7 +274,9 @@ export function buildProposalBundle({
   impact = {},
   traceability = null
 } = {}) {
-  return {
+  return finalizeArtifact({
+    artifactType: DESIGNER_DIALOG_PROPOSAL_CONTRACT,
+    artifactVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
     bundleType: DESIGNER_DIALOG_PROPOSAL_CONTRACT,
     bundleVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
     proposalId: str(proposalId),
@@ -282,7 +291,7 @@ export function buildProposalBundle({
     riskNotes: arr(riskNotes).map((row) => str(row)).filter(Boolean),
     impact: isPlainObject(impact) ? impact : {},
     traceability: isPlainObject(traceability) ? traceability : undefined
-  };
+  });
 }
 
 export function buildIntentHandoffFromDesignerState({

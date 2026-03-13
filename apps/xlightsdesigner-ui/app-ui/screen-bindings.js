@@ -59,6 +59,7 @@ export function bindScreenEvents({
   onRollbackToVersion,
   onCompareVersion,
   onReapplyVariant,
+  onSelectHistoryEntry,
   onInspectArtifact,
   onCloseArtifactDetail
 } = {}) {
@@ -463,9 +464,13 @@ export function bindScreenEvents({
     );
   });
 
-  app.querySelectorAll("[data-version]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      state.selectedVersion = btn.dataset.version;
+  app.querySelectorAll("[data-history-entry]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (typeof onSelectHistoryEntry === "function") {
+        await onSelectHistoryEntry(btn.dataset.historyEntry || "");
+        return;
+      }
+      state.ui.selectedHistoryEntry = btn.dataset.historyEntry || "";
       persist();
       render();
     });
@@ -483,14 +488,11 @@ export function bindScreenEvents({
     btn.addEventListener("click", () => insertModelIntoDraft(btn.dataset.insertModel));
   });
 
-  const rollbackBtn = app.querySelector("#rollback");
-  if (rollbackBtn) {
-    rollbackBtn.addEventListener("click", onRollbackToVersion);
-  }
-
-  const compareBtn = app.querySelector("#compare");
-  if (compareBtn) compareBtn.addEventListener("click", onCompareVersion);
-
-  const variantBtn = app.querySelector("#variant");
-  if (variantBtn) variantBtn.addEventListener("click", onReapplyVariant);
+  app.querySelectorAll("[data-version]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.selectedVersion = btn.dataset.version;
+      persist();
+      render();
+    });
+  });
 }

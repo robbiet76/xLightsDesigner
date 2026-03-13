@@ -11,6 +11,11 @@ import {
   readAnalysisArtifactFromProject,
   writeAnalysisArtifactToProject
 } from "./analysis-artifact-store.mjs";
+import {
+  readProjectArtifact,
+  writeProjectArtifact,
+  writeProjectArtifacts
+} from "./project-artifact-store.mjs";
 
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
@@ -559,6 +564,90 @@ function inferProposalIntent({ userMessage = "", assistantMessage = "", context 
   return true;
 }
 
+async function callOpenAIResponses({
+  cfg,
+  systemPrompt = "",
+  userMessage = "",
+  messages = [],
+  previousResponseId = "",
+  maxOutputTokens = 900
+} = {}) {
+  const input = [
+    {
+      role: "system",
+      content: [{ type: "input_text", text: String(systemPrompt || "") }]
+    },
+    ...normalizeConversationMessages(messages || []),
+    {
+      role: "user",
+      content: [{ type: "input_text", text: String(userMessage || "") }]
+    }
+  ];
+
+  const body = {
+    model: cfg.model,
+    input,
+    max_output_tokens: maxOutputTokens
+  };
+  if (previousResponseId) body.previous_response_id = previousResponseId;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  let response = null;
+  try {
+    response = await fetch(`${cfg.baseUrl}/responses`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cfg.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+  const raw = await response.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = null;
+  }
+  if (!response.ok) {
+    const errMsg = parsed?.error?.message || raw || `HTTP ${response.status}`;
+    return {
+      ok: false,
+      code: "AGENT_UPSTREAM_ERROR",
+      error: String(errMsg)
+    };
+  }
+  return {
+    ok: true,
+    parsed: parsed || {},
+    modelText: extractResponseText(parsed || {}),
+    responseId: String(parsed?.id || "").trim()
+  };
+}
+
+function buildDesignerSystemPrompt(context = {}) {
+  const c = context && typeof context === "object" ? context : {};
+  return [
+    "You are the xLightsDesigner Designer specialist.",
+    "Hold an open-ended creative lighting design conversation while reasoning over the provided local project context.",
+    "The user may speak indirectly, emotionally, narratively, or iteratively. Preserve that conversational style.",
+    "Use the provided local context to understand what actually exists in the current project: scene/layout, available targets, and music structure.",
+    "Do not invent models, groups, submodels, sections, or effects that are not supported by the provided context.",
+    "Make bounded creative assumptions when the request is broad but usable. Ask targeted questions only when the missing answer materially affects the next useful pass.",
+    "Respect project-scoped director preferences as soft guidance only. Do not turn one local preference into a global rule.",
+    "Return JSON only, using this exact shape: {\"responseType\":\"designer_cloud_response_v1\",\"responseVersion\":\"1.0\",\"assistantMessage\":\"...\",\"summary\":\"...\",\"guidedQuestions\":[...],\"assumptions\":[...],\"warnings\":[...],\"brief\":{...},\"proposal\":{...}}",
+    "The brief object should contain summary, goalsSummary, inspirationSummary, sections, moodEnergyArc, narrativeCues, visualCues, hypotheses, notes.",
+    "The proposal object should contain summary and proposalLines at minimum. Proposal lines must stay human-reviewable and should use real target names from context where possible.",
+    "Keep the assistantMessage natural and conversational. The JSON is for application handling, not the end-user voice.",
+    `Context: ${JSON.stringify(c)}`
+  ].join("\n");
+}
+
 function normalizeConversationMessages(messages = []) {
   const rows = Array.isArray(messages) ? messages : [];
   const out = [];
@@ -1057,65 +1146,29 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
     if (!userMessage) return { ok: false, error: "Missing userMessage" };
     const context = payload?.context && typeof payload.context === "object" ? payload.context : {};
     const previousResponseId = String(payload?.previousResponseId || "").trim();
-    const messages = normalizeConversationMessages(payload?.messages || []);
-    const input = [
-      {
-        role: "system",
-        content: [{ type: "input_text", text: buildAgentSystemPrompt(context) }]
-      },
-      ...messages,
-      {
-        role: "user",
-        content: [{ type: "input_text", text: userMessage }]
-      }
-    ];
-
-    const body = {
-      model: cfg.model,
-      input,
-      max_output_tokens: 900
-    };
-    if (previousResponseId) body.previous_response_id = previousResponseId;
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
-    let response = null;
-    try {
-      response = await fetch(`${cfg.baseUrl}/responses`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${cfg.apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
-    const raw = await response.text();
-    let parsed = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      parsed = null;
-    }
+    const response = await callOpenAIResponses({
+      cfg,
+      systemPrompt: buildAgentSystemPrompt(context),
+      userMessage,
+      messages: payload?.messages || [],
+      previousResponseId,
+      maxOutputTokens: 900
+    });
     if (!response.ok) {
-      const errMsg = parsed?.error?.message || raw || `HTTP ${response.status}`;
       return {
         ok: false,
-        code: "AGENT_UPSTREAM_ERROR",
-        error: String(errMsg)
+        code: response.code,
+        error: response.error
       };
     }
-    const modelText = extractResponseText(parsed || {});
+    const modelText = response.modelText;
     const json = parseAgentJson(modelText) || {};
     const assistantMessage = String(json?.assistantMessage || modelText || "I can continue from here. Tell me what you want to design next.").trim();
     const shouldGenerateProposal = typeof json?.shouldGenerateProposal === "boolean"
       ? Boolean(json.shouldGenerateProposal)
       : inferProposalIntent({ userMessage, assistantMessage, context });
     const proposalIntent = String(json?.proposalIntent || userMessage).trim();
-    const responseId = String(parsed?.id || "").trim();
+    const responseId = String(response.responseId || "").trim();
     if (!assistantMessage) {
       return {
         ok: false,
@@ -1131,6 +1184,53 @@ ipcMain.handle("xld:agent:chat", async (_event, payload = {}) => {
       shouldGenerateProposal,
       proposalIntent,
       responseId
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      code: String(err?.name || "") === "AbortError" ? "AGENT_TIMEOUT" : "AGENT_RUNTIME_ERROR",
+      error: String(err?.message || err)
+    };
+  }
+});
+
+ipcMain.handle("xld:designer:chat", async (_event, payload = {}) => {
+  try {
+    const cfg = getAgentConfig();
+    if (!cfg.configured) {
+      return {
+        ok: false,
+        code: "AGENT_NOT_CONFIGURED",
+        error: "OPENAI_API_KEY is not set in desktop app environment."
+      };
+    }
+    const userMessage = String(payload?.userMessage || "").trim();
+    if (!userMessage) {
+      return { ok: false, code: "AGENT_EMPTY_MESSAGE", error: "Missing userMessage" };
+    }
+    const response = await callOpenAIResponses({
+      cfg,
+      systemPrompt: buildDesignerSystemPrompt(payload?.context || {}),
+      userMessage,
+      messages: payload?.messages || [],
+      previousResponseId: String(payload?.previousResponseId || "").trim(),
+      maxOutputTokens: 1400
+    });
+    if (!response.ok) {
+      return {
+        ok: false,
+        code: response.code,
+        error: response.error
+      };
+    }
+    const json = parseAgentJson(response.modelText) || {};
+    return {
+      ok: true,
+      provider: "openai",
+      model: cfg.model,
+      responseId: String(response.responseId || ""),
+      assistantMessage: String(json?.assistantMessage || response.modelText || "").trim(),
+      designerCloudResponse: json
     };
   } catch (err) {
     return {
@@ -1258,6 +1358,30 @@ ipcMain.handle("xld:analysis-artifact:read", async (_event, payload = {}) => {
 ipcMain.handle("xld:analysis-artifact:write", async (_event, payload = {}) => {
   try {
     return writeAnalysisArtifactToProject(payload);
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:project-artifact:write", async (_event, payload = {}) => {
+  try {
+    return writeProjectArtifact(payload);
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:project-artifacts:write", async (_event, payload = {}) => {
+  try {
+    return writeProjectArtifacts(payload);
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:project-artifact:read", async (_event, payload = {}) => {
+  try {
+    return readProjectArtifact(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }

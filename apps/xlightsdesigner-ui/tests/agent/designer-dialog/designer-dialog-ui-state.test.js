@@ -16,6 +16,11 @@ test("designer ui-state applies canonical proposal artifacts to app state", () =
 
   applyDesignerProposalSuccessToState(state, {
     ok: true,
+    source: "cloud_normalized",
+    summary: "Warm restrained intro with stronger chorus payoff.",
+    assistantMessage: "I’m starting broad, keeping the intro calm, and saving the focal push for the chorus.",
+    warnings: ["Proceeding without full lyric alignment."],
+    diagnostics: { artifactType: "designer_dialog_diagnostics_v1" },
     creativeBrief: { briefType: "creative_brief_v1" },
     proposalBundle: {
       bundleType: "proposal_bundle_v1",
@@ -40,6 +45,10 @@ test("designer ui-state applies canonical proposal artifacts to app state", () =
   assert.equal(state.flags.proposalStale, false);
   assert.equal(state.draftBaseRevision, "rev-5");
   assert.deepEqual(state.proposed, ["Chorus / MegaTree / warm up palette and reduce clutter."]);
+  assert.equal(state.creative.runtime.source, "cloud_normalized");
+  assert.equal(state.creative.runtime.status, "ok");
+  assert.match(state.creative.runtime.assistantMessage, /saving the focal push/i);
+  assert.deepEqual(state.creative.runtime.warnings, ["Proceeding without full lyric alignment."]);
 });
 
 test("designer ui-state builds concise guided-question chat message", () => {

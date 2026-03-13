@@ -1482,7 +1482,37 @@ button.danger-action:hover {
     display: flex;
   }
 
-  .pipeline-list {
-    grid-template-columns: 1fr;
-  }
+.pipeline-list {
+  grid-template-columns: 1fr;
+}
+}
+
+.designer-dashboard-card .artifact-body {
+  max-width: 96ch;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dashboard-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.dashboard-panel p,
+.dashboard-panel li {
+  color: var(--text-muted, #b9c2d0);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboard-panel ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
 }

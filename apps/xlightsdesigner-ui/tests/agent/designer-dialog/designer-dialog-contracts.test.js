@@ -34,6 +34,8 @@ function sampleInput(overrides = {}) {
 
 function sampleBrief(overrides = {}) {
   return {
+    artifactId: "creative_brief_v1-12345678",
+    createdAt: new Date().toISOString(),
     briefType: "creative_brief_v1",
     briefVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
     summary: "Punchy chorus with clean focal contrast.",
@@ -50,6 +52,8 @@ function sampleBrief(overrides = {}) {
 
 function sampleProposal(overrides = {}) {
   return {
+    artifactId: "proposal_bundle_v1-12345678",
+    createdAt: new Date().toISOString(),
     bundleType: "proposal_bundle_v1",
     bundleVersion: DESIGNER_DIALOG_CONTRACT_VERSION,
     proposalId: "proposal-1",
@@ -156,6 +160,8 @@ test("buildCreativeBriefContract normalizes helper output into canonical contrac
   });
   assert.equal(brief.briefType, "creative_brief_v1");
   assert.equal(brief.briefVersion, "1.0");
+  assert.equal(typeof brief.artifactId, "string");
+  assert.equal(typeof brief.createdAt, "string");
   assert.deepEqual(validateCreativeBrief(brief), []);
 });
 

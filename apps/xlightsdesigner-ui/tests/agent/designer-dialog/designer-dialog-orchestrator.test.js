@@ -25,3 +25,45 @@ test("designer orchestrator returns canonical proposal artifacts on success", ()
   assert.equal(result.diagnostics.artifactType, "designer_dialog_diagnostics_v1");
   assert.ok(result.proposalLines.length > 0);
 });
+
+test("designer orchestrator can normalize cloud response while preserving local handoff", () => {
+  const result = executeDesignerProposalOrchestration({
+    requestId: "req-cloud-orch",
+    sequenceRevision: "rev-3",
+    promptText: "Make the chorus feel nostalgic and cleaner.",
+    selectedSections: ["Chorus"],
+    goals: "Make the chorus feel nostalgic and cleaner.",
+    models,
+    cloudResponse: {
+      responseType: "designer_cloud_response_v1",
+      responseVersion: "1.0",
+      assistantMessage: "I want to keep the intro restrained and let the chorus bloom more warmly.",
+      summary: "Restrained intro with a warmer chorus bloom.",
+      guidedQuestions: ["Should the chorus spread beyond the focal props?"],
+      assumptions: ["Keep the intro restrained."],
+      brief: {
+        summary: "Restrained intro with a warmer chorus bloom.",
+        sections: ["Intro", "Chorus"],
+        moodEnergyArc: "Intro: low -> Chorus: high",
+        narrativeCues: "Hold back the intro and reveal into the chorus.",
+        visualCues: "Start broad, then refine the focal props.",
+        hypotheses: ["Use a broad base pass and reserve the focal props for the payoff."]
+      },
+      proposal: {
+        proposalId: "proposal-cloud-2",
+        summary: "Restrained intro with a warmer chorus bloom.",
+        baseRevision: "rev-3",
+        proposalLines: [
+          "Intro / AllModels / keep the pass restrained and readable to preserve space",
+          "Chorus / MegaTree / preserve focal clarity as the lead visual anchor"
+        ]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.creativeBrief.summary, "Restrained intro with a warmer chorus bloom.");
+  assert.equal(result.proposalBundle.proposalId, "proposal-cloud-2");
+  assert.equal(result.intentHandoff.goal, "Make the chorus feel nostalgic and cleaner.");
+  assert.deepEqual(result.guidedQuestions, ["Should the chorus spread beyond the focal props?"]);
+});

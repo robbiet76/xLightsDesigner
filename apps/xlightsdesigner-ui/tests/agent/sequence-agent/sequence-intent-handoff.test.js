@@ -21,6 +21,9 @@ test("canonical sequence intent handoff validates for direct technical requests"
     elevatedRiskConfirmed: false
   });
 
+  assert.equal(handoff.artifactType, "intent_handoff_v1");
+  assert.equal(typeof handoff.artifactId, "string");
+  assert.equal(typeof handoff.createdAt, "string");
   assert.equal(handoff.goal, "Put a green On effect on Border-01 for 30 seconds from the start");
   assert.equal(handoff.mode, "revise");
   assert.deepEqual(handoff.scope.targetIds, ["Border-01"]);

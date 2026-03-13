@@ -24,6 +24,7 @@ export function buildScreenContent({ state, helpers }) {
     applyReadyForApprovalGate,
     applyDisabledReason,
     applyEnabled,
+    buildCurrentReviewSnapshotSummary,
     getMetadataOrphans,
     getMetadataTagRecords,
     buildMetadataTargets,
@@ -122,6 +123,49 @@ export function buildScreenContent({ state, helpers }) {
         <h4>Available Sections</h4>
         ${list(sections, "No sections are available yet.")}
       `;
+    } else if (inspected === "sequence-intent") {
+      const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1");
+      title = "Intent Handoff Detail";
+      kicker = "Sequence Intent";
+      body = intent
+        ? `
+          <p class="artifact-body">${escapeHtml(String(intent.goal || "No sequencing goal captured."))}</p>
+          <div class="artifact-detail-grid">
+            <div><strong>Mode</strong><p>${escapeHtml(String(intent.mode || "unknown"))}</p></div>
+            <div><strong>Change Tolerance</strong><p>${escapeHtml(String(intent.constraints?.changeTolerance || "unknown"))}</p></div>
+            <div><strong>Preserve Timing</strong><p>${intent.constraints?.preserveTimingTracks !== false ? "Yes" : "No"}</p></div>
+            <div><strong>Allow Global Rewrite</strong><p>${intent.constraints?.allowGlobalRewrite ? "Yes" : "No"}</p></div>
+          </div>
+          <h4>Target Scope</h4>
+          ${list(intent.scope?.targetIds || [], "No target scope captured.")}
+          <h4>Section Scope</h4>
+          ${list(intent.scope?.sections || [], "No section scope captured.")}
+          <h4>Director Preferences</h4>
+          ${list([
+            intent.directorPreferences?.styleDirection ? `Style: ${intent.directorPreferences.styleDirection}` : "",
+            intent.directorPreferences?.energyArc ? `Energy: ${intent.directorPreferences.energyArc}` : "",
+            intent.directorPreferences?.colorDirection ? `Color: ${intent.directorPreferences.colorDirection}` : ""
+          ], "No sequencing preference cues captured.")}
+        `
+        : `<p class="banner">No canonical intent handoff is available yet.</p>`;
+    } else if (inspected === "sequence-translation") {
+      const plan = state.agentPlan || {};
+      const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
+      title = "Sequence Translation Detail";
+      kicker = "Translation";
+      body = `
+        <p class="artifact-body">${escapeHtml(String(plan.summary || "No sequence translation summary yet."))}</p>
+        <div class="artifact-detail-grid">
+          <div><strong>Plan Status</strong><p>${escapeHtml(String(plan.status || state.health?.orchestrationLastStatus || "unknown"))}</p></div>
+          <div><strong>Warnings</strong><p>${escapeHtml(String((plan.warnings || []).length || 0))}</p></div>
+          <div><strong>Proposal Lines</strong><p>${escapeHtml(String(proposalLines.length || 0))}</p></div>
+          <div><strong>Apply Ready</strong><p>${applyReadyForApprovalGate() ? "Yes" : "No"}</p></div>
+        </div>
+        <h4>Current Proposal Lines</h4>
+        ${list(proposalLines, "No translated proposal lines yet.")}
+        <h4>Plan Warnings</h4>
+        ${list(plan.warnings || [], "No plan warnings.")}
+      `;
     } else if (inspected === "creative-brief") {
       const brief = state.creative?.brief || null;
       title = "Creative Brief Detail";
@@ -213,7 +257,7 @@ export function buildScreenContent({ state, helpers }) {
     } else if (inspected === "review-execution") {
       const verification = state.lastApplyVerification || {};
       const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
-      const lastApply = applyHistory.length ? applyHistory[applyHistory.length - 1] : null;
+      const lastApply = applyHistory.length ? applyHistory[0] : null;
       title = "Execution Result Detail";
       kicker = "Apply Result";
       body = `
@@ -539,6 +583,65 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderSequenceIntentArtifactCard() {
+    const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1");
+    return `
+      <section class="card artifact-card artifact-card-sequence-status">
+        <div class="artifact-kicker">Intent Handoff</div>
+        <h3>${escapeHtml(String(intent?.goal || "No sequencing goal captured"))}</h3>
+        <div class="artifact-chip-row">
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(intent?.mode || "unknown"))}</span>
+          <span class="artifact-chip">${escapeHtml(String((intent?.scope?.targetIds || []).length || 0))} targets</span>
+          <span class="artifact-chip">${escapeHtml(String((intent?.scope?.sections || []).length || 0))} sections</span>
+        </div>
+        <p class="artifact-body">${escapeHtml(String(intent?.directorPreferences?.styleDirection || "The normalized sequencing intent from the current conversation will appear here."))}</p>
+        ${buildArtifactInspectActions("sequence-intent")}
+      </section>
+    `;
+  }
+
+  function renderSequenceTranslationDashboardCard() {
+    const plan = state.agentPlan || {};
+    const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
+    const warnings = Array.isArray(plan?.warnings) ? plan.warnings.slice(0, 4) : [];
+    const lastApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
+    return `
+      <section class="card full-span designer-dashboard-card">
+        <div class="artifact-kicker">Sequence Translation Dashboard</div>
+        <h3>${escapeHtml(String(plan.summary || "Live translation from design intent into sequencing changes will appear here."))}</h3>
+        <div class="artifact-chip-row">
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(plan.status || state.health?.orchestrationLastStatus || "idle"))}</span>
+          <span class="artifact-chip">${escapeHtml(String(proposalLines.length || 0))} proposal lines</span>
+          <span class="artifact-chip">${escapeHtml(String((plan.warnings || []).length || 0))} warnings</span>
+          <span class="artifact-chip">${lastApply ? escapeHtml(String(lastApply.status || "unknown")) : "no apply yet"}</span>
+        </div>
+        <p class="artifact-body">This page shows how the current conversation and design state are being translated into sequencing intent, targets, and planned implementation.</p>
+        <div class="dashboard-grid">
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Current Translation</div>
+            <p>${proposalLines.length ? escapeHtml(String(proposalLines[0])) : "No translated sequence lines yet."}</p>
+            <p>${proposalLines.length > 1 ? escapeHtml(`${proposalLines.length - 1} additional line(s) pending.`) : "No additional translated lines yet."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Targets + Scope</div>
+            <p>${escapeHtml(String((state.creative?.intentHandoff?.scope?.targetIds || getValidHandoff("intent_handoff_v1")?.scope?.targetIds || []).join(", ") || "No targets resolved yet."))}</p>
+            <p>${escapeHtml(String((state.creative?.intentHandoff?.scope?.sections || getValidHandoff("intent_handoff_v1")?.scope?.sections || []).join(", ") || "No sections scoped yet."))}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Plan Health</div>
+            ${warnings.length ? `<ul>${warnings.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No plan warnings right now.</p>"}
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Last Apply Snapshot</div>
+            <p>${lastApply ? escapeHtml(String(lastApply.summary || "Latest apply captured.")) : "No apply snapshot yet."}</p>
+            <p>${lastApply?.snapshotSummary?.applySummary?.status ? `Status: ${escapeHtml(String(lastApply.snapshotSummary.applySummary.status))}` : "No apply status yet."}</p>
+          </div>
+        </div>
+        ${buildArtifactInspectActions("sequence-translation", "Inspect Translation")}
+      </section>
+    `;
+  }
+
   function sequenceScreen() {
     const catalog = Array.isArray(state.sequenceCatalog) ? state.sequenceCatalog : [];
     const catalogHasCurrent = catalog.some((s) => String(s?.path || "") === state.sequencePathInput);
@@ -553,9 +656,11 @@ export function buildScreenContent({ state, helpers }) {
     return `
       <div class="screen-grid sequence-screen">
         ${renderJourneyCard("sequence")}
+        ${renderSequenceTranslationDashboardCard()}
         <section class="artifact-grid">
           ${renderSequenceContextArtifactCard()}
           ${renderSequenceScopeArtifactCard()}
+          ${renderSequenceIntentArtifactCard()}
         </section>
         ${renderArtifactDetailPanel()}
         <section class="card">
@@ -748,6 +853,60 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderDesignerLiveDashboardCard() {
+    const runtime = state.creative?.runtime || null;
+    const bundle = state.creative?.proposalBundle || null;
+    const brief = state.creative?.brief || null;
+    const assumptions = Array.isArray(bundle?.assumptions) ? bundle.assumptions.filter(Boolean).slice(0, 3) : [];
+    const guidedQuestions = Array.isArray(bundle?.guidedQuestions) ? bundle.guidedQuestions.filter(Boolean).slice(0, 3) : [];
+    const warnings = Array.isArray(runtime?.warnings) ? runtime.warnings.slice(0, 3) : [];
+    const designSignals = bundle?.traceability?.designSceneSignals || {};
+    const musicSignals = bundle?.traceability?.musicDesignSignals || {};
+    const focal = Array.isArray(designSignals?.focalCandidates) ? designSignals.focalCandidates.filter(Boolean).slice(0, 3) : [];
+    const broad = Array.isArray(designSignals?.broadCoverageDomains) ? designSignals.broadCoverageDomains.filter(Boolean).slice(0, 3) : [];
+    const reveals = Array.isArray(musicSignals?.revealMoments) ? musicSignals.revealMoments.filter(Boolean).slice(0, 3) : [];
+    const holds = Array.isArray(musicSignals?.holdMoments) ? musicSignals.holdMoments.filter(Boolean).slice(0, 3) : [];
+    const sourceLabel = runtime?.source === "cloud_normalized"
+      ? "Cloud Designer"
+      : runtime?.source === "local_runtime"
+        ? "Local Fallback"
+        : "Idle";
+    return `
+      <section class="card full-span designer-dashboard-card">
+        <div class="artifact-kicker">Designer Live Dashboard</div>
+        <h3>${escapeHtml(String(runtime?.summary || brief?.summary || "Conversation-driven design state will appear here as the designer works."))}</h3>
+        <div class="artifact-chip-row">
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(sourceLabel))}</span>
+          <span class="artifact-chip">${escapeHtml(String(runtime?.status || "idle"))}</span>
+          <span class="artifact-chip">${escapeHtml(String((bundle?.proposalLines || []).length || 0))} proposal lines</span>
+          <span class="artifact-chip">${escapeHtml(String((guidedQuestions || []).length || 0))} open questions</span>
+        </div>
+        <p class="artifact-body">${escapeHtml(String(runtime?.assistantMessage || "The designer’s current reasoning, assumptions, and active focus will be summarized here."))}</p>
+        <div class="dashboard-grid">
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Captured Focus</div>
+            <p>${focal.length ? escapeHtml(focal.join(", ")) : "No focal hierarchy captured yet."}</p>
+            <p>${broad.length ? `Broad coverage: ${escapeHtml(broad.join(", "))}` : "No broad coverage domains captured yet."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Music Cues</div>
+            <p>${reveals.length ? `Reveals: ${escapeHtml(reveals.join(", "))}` : "No reveal moments captured yet."}</p>
+            <p>${holds.length ? `Holds: ${escapeHtml(holds.join(", "))}` : "No hold moments captured yet."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Active Assumptions</div>
+            ${assumptions.length ? `<ul>${assumptions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No explicit assumptions captured yet.</p>"}
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Needs From Director</div>
+            ${guidedQuestions.length ? `<ul>${guidedQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No blocking questions right now.</p>"}
+          </div>
+        </div>
+        ${warnings.length ? `<div class="banner banner-warning">${escapeHtml(warnings.join(" | "))}</div>` : ""}
+      </section>
+    `;
+  }
+
   function designScreen() {
     const creativeBriefText = String(state.creative?.briefText || "");
     const creativeBriefTextEscaped = creativeBriefText
@@ -757,6 +916,13 @@ export function buildScreenContent({ state, helpers }) {
     const briefAt = state.creative.briefUpdatedAt
       ? new Date(state.creative.briefUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       : "";
+    const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
+    const lastApply = applyHistory.length ? applyHistory[0] : null;
+    const lastAppliedSnapshot =
+      state.ui?.reviewHistorySnapshot &&
+      state.ui.reviewHistorySnapshot.historyEntryId === String(lastApply?.historyEntryId || "").trim()
+        ? state.ui.reviewHistorySnapshot
+        : null;
     return `
       <div class="screen-grid design-screen">
         ${renderJourneyCard("design")}
@@ -765,11 +931,41 @@ export function buildScreenContent({ state, helpers }) {
           <h3>Develop the creative direction before moving into execution.</h3>
           <p class="artifact-body">Use this screen for concept shaping, references, and proposal refinement. Approval and apply are handled separately in Review.</p>
         </section>
+        ${renderDesignerLiveDashboardCard()}
         <section class="artifact-grid">
           ${renderBriefArtifactCard()}
           ${renderProposalArtifactCard()}
           ${renderDirectorProfileArtifactCard()}
         </section>
+        ${
+          lastAppliedSnapshot
+            ? `
+        <section class="card full-span designer-dashboard-card">
+          <div class="artifact-kicker">Last Applied Snapshot</div>
+          <h3>The most recently implemented design state for this sequence.</h3>
+          <div class="dashboard-grid">
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Applied Brief</div>
+              <p>${escapeHtml(String(lastAppliedSnapshot.creativeBrief?.summary || lastApply?.summary || "No applied brief summary."))}</p>
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Applied Proposal</div>
+              ${
+                Array.isArray(lastAppliedSnapshot.proposalBundle?.proposalLines) && lastAppliedSnapshot.proposalBundle.proposalLines.length
+                  ? `<ul>${lastAppliedSnapshot.proposalBundle.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>No applied proposal lines loaded.</p>"
+              }
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Applied Context</div>
+              <p>${escapeHtml(String(lastAppliedSnapshot.analysisArtifact?.trackIdentity?.title || "Unknown audio"))}</p>
+              <p>${escapeHtml(String(lastAppliedSnapshot.designSceneContext?.layoutMode || "unknown"))} layout context</p>
+            </div>
+          </div>
+        </section>
+          `
+            : ""
+        }
         ${renderArtifactDetailPanel()}
         <section class="card">
           <h3>Creative Brief ${briefAt ? `<span class="banner">(${briefAt})</span>` : ""}</h3>
@@ -802,7 +998,7 @@ export function buildScreenContent({ state, helpers }) {
 
   function renderReviewExecutionArtifactCard() {
     const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
-    const lastApply = applyHistory.length ? applyHistory[applyHistory.length - 1] : null;
+    const lastApply = applyHistory.length ? applyHistory[0] : null;
     const verification = state.lastApplyVerification || {};
     return `
       <section class="card artifact-card artifact-card-review-execution">
@@ -852,8 +1048,14 @@ export function buildScreenContent({ state, helpers }) {
     const verification = state.lastApplyVerification && typeof state.lastApplyVerification === "object"
       ? state.lastApplyVerification
       : null;
+    const currentSnapshot = buildCurrentReviewSnapshotSummary();
     const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
-    const lastApply = applyHistory.length ? applyHistory[applyHistory.length - 1] : null;
+    const lastApply = applyHistory.length ? applyHistory[0] : null;
+    const lastAppliedSnapshot =
+      state.ui?.reviewHistorySnapshot &&
+      state.ui.reviewHistorySnapshot.historyEntryId === String(lastApply?.historyEntryId || "").trim()
+        ? state.ui.reviewHistorySnapshot
+        : null;
     const backupReady = Boolean(String(state.lastApplyBackupPath || "").trim());
     const reviewStateLabel = state.flags.applyInProgress
       ? "Applying"
@@ -918,12 +1120,17 @@ export function buildScreenContent({ state, helpers }) {
                 <span class="review-status-label">Last Apply</span>
                 <strong>${escapeHtml(String(lastApply?.status || "none"))}</strong>
               </div>
-              <div class="review-status-item">
-                <span class="review-status-label">Verification</span>
-                <strong>${verification ? (verification.expectedMutationsPresent ? "Verified" : "Needs review") : "Not run"}</strong>
-              </div>
+            <div class="review-status-item">
+              <span class="review-status-label">Verification</span>
+              <strong>${verification ? (verification.expectedMutationsPresent ? "Verified" : "Needs review") : "Not run"}</strong>
             </div>
-          </section>
+          </div>
+          ${
+            lastAppliedSnapshot
+              ? `<p class="banner">Last applied design: ${escapeHtml(String(lastAppliedSnapshot.creativeBrief?.summary || lastApply?.summary || "Snapshot available"))}</p>`
+              : ""
+          }
+        </section>
         </section>
         ${renderArtifactDetailPanel()}
       </div>
@@ -933,6 +1140,73 @@ export function buildScreenContent({ state, helpers }) {
           ${renderReviewPlanArtifactCard()}
           ${renderReviewExecutionArtifactCard()}
         </section>
+        <section class="card full-span designer-dashboard-card">
+          <div class="artifact-kicker">Current Apply Snapshot</div>
+          <h3>Applying design intent into concrete sequence changes.</h3>
+          <div class="dashboard-grid">
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Design Snapshot</div>
+              <p>${escapeHtml(String(currentSnapshot?.designSummary?.title || "No design snapshot title."))}</p>
+              ${
+                Array.isArray(currentSnapshot?.designSummary?.goals) && currentSnapshot.designSummary.goals.length
+                  ? `<ul>${currentSnapshot.designSummary.goals.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>No design goals captured.</p>"
+              }
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Sequence Snapshot</div>
+              ${
+                Array.isArray(currentSnapshot?.sequenceSummary?.proposalLines) && currentSnapshot.sequenceSummary.proposalLines.length
+                  ? `<ul>${currentSnapshot.sequenceSummary.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>No sequence proposal lines captured.</p>"
+              }
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Apply Snapshot</div>
+              <p>Status: ${escapeHtml(String(currentSnapshot?.applySummary?.status || "pending"))}</p>
+              <p>Commands: ${escapeHtml(String(currentSnapshot?.applySummary?.commandCount || 0))}</p>
+              <p>Impacts: ${escapeHtml(String(currentSnapshot?.applySummary?.impactCount || 0))}</p>
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Verification Basis</div>
+              ${
+                Array.isArray(currentSnapshot?.verificationSummary?.checked) && currentSnapshot.verificationSummary.checked.length
+                  ? `<ul>${currentSnapshot.verificationSummary.checked.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>Verification details will appear after apply.</p>"
+              }
+            </div>
+          </div>
+        </section>
+        ${
+          lastAppliedSnapshot
+            ? `
+        <section class="card full-span designer-dashboard-card">
+          <div class="artifact-kicker">Last Applied Snapshot</div>
+          <h3>Most recent implemented design and sequence state.</h3>
+          <div class="dashboard-grid">
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Design</div>
+              <p>${escapeHtml(String(lastAppliedSnapshot.creativeBrief?.summary || lastApply?.summary || "No applied design summary."))}</p>
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Sequence</div>
+              ${
+                Array.isArray(lastAppliedSnapshot.proposalBundle?.proposalLines) && lastAppliedSnapshot.proposalBundle.proposalLines.length
+                  ? `<ul>${lastAppliedSnapshot.proposalBundle.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>No applied proposal lines loaded.</p>"
+              }
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Execution</div>
+              <p>Status: ${escapeHtml(String(lastAppliedSnapshot.applyResult?.status || lastApply?.status || "unknown"))}</p>
+              <p>Commands: ${escapeHtml(String(lastAppliedSnapshot.applyResult?.commandCount || lastApply?.commandCount || 0))}</p>
+              <p>Impacts: ${escapeHtml(String(lastAppliedSnapshot.applyResult?.impactCount || lastApply?.impactCount || 0))}</p>
+            </div>
+          </div>
+        </section>
+          `
+            : ""
+        }
         <section class="card approval-gate-card full-span">
           <div class="approval-gate-header">
             <div>
@@ -1018,55 +1292,107 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function historyScreen() {
-    ensureVersionSnapshots();
-    const selected = state.versions.find((v) => v.id === state.selectedVersion) || state.versions[0];
-    const currentHead = state.versions[0] || null;
-    const compare = state.compareVersion ? versionById(state.compareVersion) : null;
-    const compareProposal = compare?.proposal || [];
-    const added = compare ? compareProposal.filter((p) => !currentHead.proposal.includes(p)) : [];
-    const removed = compare ? currentHead.proposal.filter((p) => !compareProposal.includes(p)) : [];
+    const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
+    const selectedId = String(state.ui?.selectedHistoryEntry || "").trim();
+    const selected = applyHistory.find((entry) => entry.historyEntryId === selectedId) || applyHistory[0] || null;
+    const selectedSnapshot =
+      state.ui?.selectedHistorySnapshot &&
+      state.ui.selectedHistorySnapshot.historyEntryId === String(selected?.historyEntryId || "").trim()
+        ? state.ui.selectedHistorySnapshot
+        : null;
     return `
       <div class="screen-grid">
         <section class="card">
-          <h3>Version Timeline</h3>
-          <ul class="list">
-            ${state.versions
-              .map(
-                (v) => `<li><button data-version="${v.id}">${v.id}</button> ${v.summary} | approx ${v.effects} effects | ${v.time}</li>`
-              )
-              .join("")}
-          </ul>
+          <div class="artifact-kicker">History</div>
+          <h3>Applied Snapshots</h3>
+          ${
+            applyHistory.length
+              ? `
+              <ul class="list">
+                ${applyHistory
+                  .map((entry) => {
+                    const active = entry.historyEntryId === selected?.historyEntryId ? "active-chip" : "";
+                    const ts = entry.createdAt
+                      ? new Date(entry.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                      : "Unknown time";
+                    return `
+                      <li>
+                        <button data-history-entry="${escapeHtml(String(entry.historyEntryId || ""))}" class="${active}">
+                          ${escapeHtml(String(entry.summary || "Unnamed apply snapshot"))}
+                        </button>
+                        <div class="banner">${escapeHtml(ts)} | ${escapeHtml(String(entry.status || "unknown"))}${entry.applyStage ? ` | ${escapeHtml(String(entry.applyStage))}` : ""}</div>
+                      </li>
+                    `;
+                  })
+                  .join("")}
+              </ul>
+            `
+              : `<p class="banner">No applied history yet.</p>`
+          }
         </section>
         <section class="card">
-          <h3>Selected Version</h3>
-          <p><strong>${selected.id}</strong> ${selected.summary}</p>
-          <p class="banner">Scope: chorus-focused | Models: CandyCanes, Roofline | Labels: XD:Mood</p>
-          <div class="row">
-            <button id="rollback">Rollback to This Version</button>
-            <button id="compare">Compare</button>
-            <button id="variant">Reapply as Variant</button>
-          </div>
+          <div class="artifact-kicker">Snapshot Detail</div>
+          <h3>${escapeHtml(String(selected?.summary || "Select an apply snapshot"))}</h3>
+          ${
+            selected
+              ? `
+              <div class="artifact-chip-row">
+                <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(selected.status || "unknown"))}</span>
+                <span class="artifact-chip">${escapeHtml(String(selected.commandCount || 0))} commands</span>
+                <span class="artifact-chip">${escapeHtml(String(selected.impactCount || 0))} impacts</span>
+              </div>
+              <div class="artifact-detail-grid">
+                <div><strong>Revision Before</strong><p>${escapeHtml(String(selected.xlightsRevisionBefore || "unknown"))}</p></div>
+                <div><strong>Revision After</strong><p>${escapeHtml(String(selected.xlightsRevisionAfter || "unknown"))}</p></div>
+                <div><strong>Sequence</strong><p>${escapeHtml(String(selected.sequencePath || "unknown"))}</p></div>
+                <div><strong>Created</strong><p>${escapeHtml(selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "unknown")}</p></div>
+              </div>
+              <h4>Design Snapshot</h4>
+              <p class="artifact-body">${escapeHtml(String(selectedSnapshot?.creativeBrief?.summary || selected.snapshotSummary?.designSummary?.title || "No design snapshot title"))}</p>
+              ${list(
+                selectedSnapshot?.creativeBrief?.goals ||
+                  selected.snapshotSummary?.designSummary?.goals ||
+                  [],
+                "No design goals captured."
+              )}
+              <h4>Sequence Snapshot</h4>
+              ${list(
+                selectedSnapshot?.proposalBundle?.proposalLines ||
+                  selected.snapshotSummary?.sequenceSummary?.proposalLines ||
+                  [],
+                "No proposal lines captured."
+              )}
+              <h4>Apply Snapshot</h4>
+              ${list([
+                selectedSnapshot?.applyResult?.status ? `Status: ${selectedSnapshot.applyResult.status}` : (selected.snapshotSummary?.applySummary?.status ? `Status: ${selected.snapshotSummary.applySummary.status}` : ""),
+                Number.isFinite(selectedSnapshot?.applyResult?.commandCount) ? `Commands: ${selectedSnapshot.applyResult.commandCount}` : (Number.isFinite(selected.snapshotSummary?.applySummary?.commandCount) ? `Commands: ${selected.snapshotSummary.applySummary.commandCount}` : ""),
+                Number.isFinite(selectedSnapshot?.applyResult?.impactCount) ? `Impacts: ${selectedSnapshot.applyResult.impactCount}` : (Number.isFinite(selected.snapshotSummary?.applySummary?.impactCount) ? `Impacts: ${selected.snapshotSummary.applySummary.impactCount}` : ""),
+                selectedSnapshot?.applyResult?.failureReason ? `Failure: ${selectedSnapshot.applyResult.failureReason}` : (selected.snapshotSummary?.applySummary?.failureReason ? `Failure: ${selected.snapshotSummary.applySummary.failureReason}` : "")
+              ], "No apply summary captured.")}
+              <h4>Audio + Scene Context</h4>
+              ${list([
+                selectedSnapshot?.analysisArtifact?.trackIdentity?.title ? `Audio: ${selectedSnapshot.analysisArtifact.trackIdentity.title}` : "",
+                selectedSnapshot?.analysisArtifact?.trackIdentity?.artist ? `Artist: ${selectedSnapshot.analysisArtifact.trackIdentity.artist}` : "",
+                selectedSnapshot?.designSceneContext?.layoutMode ? `Layout: ${selectedSnapshot.designSceneContext.layoutMode}` : "",
+                Array.isArray(selectedSnapshot?.designSceneContext?.focalCandidates) && selectedSnapshot.designSceneContext.focalCandidates.length
+                  ? `Focal candidates: ${selectedSnapshot.designSceneContext.focalCandidates.slice(0, 4).join(", ")}`
+                  : "",
+                Array.isArray(selectedSnapshot?.musicDesignContext?.sectionArc) && selectedSnapshot.musicDesignContext.sectionArc.length
+                  ? `Section arc: ${selectedSnapshot.musicDesignContext.sectionArc.join(" -> ")}`
+                  : ""
+              ], "Persisted scene/audio context has not been loaded yet.")}
+              <h4>Artifact References</h4>
+              ${list(
+                Object.entries(selected.artifactRefs || {})
+                  .filter(([, value]) => String(value || "").trim())
+                  .map(([key, value]) => `${key}: ${value}`),
+                "No artifact references captured."
+              )}
+            `
+              : `<p class="banner">No history snapshot selected.</p>`
+          }
         </section>
       </div>
-      ${
-        compare
-          ? `
-        <section class="card" style="margin-top:12px;">
-          <h3>Compare ${compare.id} vs ${currentHead.id}</h3>
-          <div class="screen-grid">
-            <div>
-              <h4>Added In ${compare.id}</h4>
-              <ul class="list">${added.length ? added.map((p) => `<li>${p}</li>`).join("") : "<li>None</li>"}</ul>
-            </div>
-            <div>
-              <h4>Missing From ${compare.id}</h4>
-              <ul class="list">${removed.length ? removed.map((p) => `<li>${p}</li>`).join("") : "<li>None</li>"}</ul>
-            </div>
-          </div>
-        </section>
-      `
-          : ""
-      }
     `;
   }
 

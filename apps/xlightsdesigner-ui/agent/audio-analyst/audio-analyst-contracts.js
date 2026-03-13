@@ -105,6 +105,8 @@ export function validateAnalysisArtifact(payload = {}) {
     errors.push(`artifactVersion must be ${AUDIO_ANALYST_CONTRACT_VERSION}`);
   }
 
+  pushRequiredString(errors, obj, "artifactId");
+  pushRequiredString(errors, obj, "createdAt");
   pushRequiredObject(errors, obj, "media");
   pushRequiredString(errors, obj, "media.path");
   pushRequiredString(errors, obj, "media.mediaId");

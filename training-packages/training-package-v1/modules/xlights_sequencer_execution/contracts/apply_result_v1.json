@@ -3,6 +3,8 @@
   "version": "1.0",
   "source": "apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-contracts.js",
   "requiredFields": [
+    "artifactId",
+    "createdAt",
     "agentRole",
     "contractVersion",
     "planId",

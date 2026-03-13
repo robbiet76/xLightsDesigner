@@ -113,6 +113,8 @@ export function validateSequenceAgentPlanOutput(payload = {}) {
     errors.push(`contractVersion must be ${SEQUENCE_AGENT_CONTRACT_VERSION}`);
   }
 
+  pushRequiredString(errors, obj, "artifactId");
+  pushRequiredString(errors, obj, "createdAt");
   pushRequiredString(errors, obj, "planId");
   pushRequiredString(errors, obj, "summary");
   pushRequiredString(errors, obj, "baseRevision");
@@ -152,6 +154,8 @@ export function validateSequenceAgentApplyResult(payload = {}) {
     errors.push(`contractVersion must be ${SEQUENCE_AGENT_CONTRACT_VERSION}`);
   }
 
+  pushRequiredString(errors, obj, "artifactId");
+  pushRequiredString(errors, obj, "createdAt");
   pushRequiredString(errors, obj, "planId");
 
   const status = str(obj.status);

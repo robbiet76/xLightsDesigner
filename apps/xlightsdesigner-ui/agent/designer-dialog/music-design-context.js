@@ -1,3 +1,5 @@
+import { finalizeArtifact } from "../shared/artifact-ids.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -76,7 +78,7 @@ export function buildMusicDesignContext({
     .map((row) => row.label)
     .slice(0, 8);
 
-  return {
+  return finalizeArtifact({
     artifactType: "music_design_context_v1",
     artifactVersion: "1.0",
     mediaId: str(analysisArtifact?.mediaId || analysisHandoff?.mediaId || ""),
@@ -86,5 +88,5 @@ export function buildMusicDesignContext({
       holdMoments,
       lyricFocusMoments
     }
-  };
+  });
 }

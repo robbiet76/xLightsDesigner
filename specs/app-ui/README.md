@@ -17,3 +17,5 @@ Scope:
 Active Entry Points:
 - `end-to-end-audit-2026-03-12.md`
 - `implementation-checklist.md`
+- `history-and-live-dashboards-plan-2026-03-13.md`
+- `history-implementation-checklist.md`

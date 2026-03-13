@@ -28,6 +28,7 @@
       "main.mjs",
       "preload.mjs",
       "analysis-artifact-store.mjs",
+      "project-artifact-store.mjs",
       "renderer/**/*",
       "package.json"
     ],

@@ -54,6 +54,11 @@ import {
   buildDefaultDirectorProfile,
   normalizeDirectorProfile
 } from "./agent/designer-dialog/director-profile.js";
+import {
+  buildArtifactRefs,
+  buildHistoryEntry,
+  buildHistorySnapshotSummary
+} from "./agent/shared/history-entry.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -353,6 +358,9 @@ const defaultState = {
     analysisServiceLastCheckedAt: "",
     agentResponseId: "",
     inspectedArtifact: "",
+    selectedHistoryEntry: "",
+    selectedHistorySnapshot: null,
+    reviewHistorySnapshot: null,
     projectNameDialogOpen: false,
     projectNameDialogMode: "",
     projectNameDialogTitle: "",
@@ -412,7 +420,8 @@ const defaultState = {
     references: [],
     brief: null,
     proposalBundle: null,
-    briefUpdatedAt: ""
+    briefUpdatedAt: "",
+    runtime: null
   },
   directorProfile: buildDefaultDirectorProfile(),
   inspiration: {
@@ -579,6 +588,15 @@ if (!Array.isArray(state.ui?.metadataSelectedTags)) {
 }
 if (typeof state.ui?.applyApprovalChecked !== "boolean") {
   state.ui.applyApprovalChecked = false;
+}
+if (typeof state.ui?.selectedHistoryEntry !== "string") {
+  state.ui.selectedHistoryEntry = "";
+}
+if (!state.ui?.selectedHistorySnapshot || typeof state.ui.selectedHistorySnapshot !== "object") {
+  state.ui.selectedHistorySnapshot = null;
+}
+if (!state.ui?.reviewHistorySnapshot || typeof state.ui.reviewHistorySnapshot !== "object") {
+  state.ui.reviewHistorySnapshot = null;
 }
 if (!["auto", "beatnet", "librosa"].includes(String(state.ui?.analysisServiceProvider || "").toLowerCase())) {
   state.ui.analysisServiceProvider = "auto";
@@ -888,6 +906,18 @@ function getDesktopAnalysisArtifactBridge() {
   if (
     typeof bridge.readAnalysisArtifact !== "function" ||
     typeof bridge.writeAnalysisArtifact !== "function"
+  ) {
+    return null;
+  }
+  return bridge;
+}
+
+function getDesktopProjectArtifactBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (
+    typeof bridge.writeProjectArtifacts !== "function" ||
+    typeof bridge.readProjectArtifact !== "function"
   ) {
     return null;
   }
@@ -2313,6 +2343,10 @@ function onCloseArtifactDetail() {
   render();
 }
 
+async function onSelectHistoryEntry(entryId = "") {
+  await selectHistoryEntry(entryId, { forReview: true });
+}
+
 function setStatus(level, text) {
   state.status = { level, text };
 }
@@ -3143,16 +3177,18 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       }
       markOrchestrationStage(orchestrationRun, "validate_apply", "error", String(orchestrated?.error || "unknown orchestration error"));
       endOrchestrationRun(orchestrationRun, { status: "failed", summary: `apply blocked at ${orchestrated?.stage || "unknown"}` });
-      applyAuditEntry = {
-        ts: new Date().toISOString(),
-        type: "apply",
+      applyAuditEntry = buildApplyHistoryEntry({
         status: "blocked",
         stage: orchestrated?.stage || "unknown",
         commandCount: plan.length,
         impactCount: scopedImpactCount,
-        reason: orchestrated?.error || "Unknown orchestration error.",
-        ...currentApplyContext()
-      };
+        currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+        nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
+        planHandoff,
+        applyResult,
+        summary: orchestrated?.error || "Unknown orchestration error.",
+        verification: applyResult?.verification || null
+      });
       setStatusWithDiagnostics(
         "action-required",
         `Apply blocked at ${orchestrated?.stage || "unknown"} stage.`,
@@ -3252,18 +3288,21 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         ]
       })
     });
-    applyAuditEntry = {
-      ts: new Date().toISOString(),
-      type: "apply",
+    applyAuditEntry = buildApplyHistoryEntry({
       status: "success",
+      stage: "validate_apply",
       commandCount: plan.length,
       impactCount: scopedImpactCount,
-      executedCount: executed,
-      jobId: jobId || "",
-      revision: state.revision || "unknown",
+      currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+      nextRevision: String(state.revision || orchestrated?.nextRevision || orchestrated?.currentRevision || "unknown"),
       verification,
-      ...currentApplyContext()
-    };
+      planHandoff,
+      applyResult,
+      summary: `Applied ${executed} command${executed === 1 ? "" : "s"} successfully.`
+    });
+    applyAuditEntry.executedCount = executed;
+    applyAuditEntry.jobId = jobId || "";
+    applyAuditEntry.revision = state.revision || "unknown";
     clearApprovalAfterApply = true;
     endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });
   } catch (err) {
@@ -3293,22 +3332,29 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
       displayName: getTeamChatSpeakerLabel("sequence_agent"),
       handledBy: "sequence_agent"
     });
-    applyAuditEntry = {
-      ts: new Date().toISOString(),
-      type: "apply",
+    applyAuditEntry = buildApplyHistoryEntry({
       status: "failed",
       stage: "exception",
       commandCount: Array.isArray(scopedSource) ? scopedSource.length : 0,
       impactCount: scopedImpactCount,
-      reason: String(err?.message || "Unknown apply error"),
-      ...currentApplyContext()
-    };
+      currentRevision: String(lastOrchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+      nextRevision: String(lastOrchestrated?.nextRevision || lastOrchestrated?.currentRevision || state.revision || "unknown"),
+      verification: lastVerification && typeof lastVerification === "object" ? lastVerification : undefined,
+      planHandoff,
+      applyResult,
+      summary: String(err?.message || "Unknown apply error")
+    });
   } finally {
     if (clearApprovalAfterApply) {
       state.ui.applyApprovalChecked = false;
     }
     if (applyAuditEntry) {
-      pushApplyHistory(applyAuditEntry);
+      await persistCurrentArtifactsForHistory({
+        planHandoff,
+        applyResult,
+        historyEntry: applyAuditEntry
+      });
+      pushApplyHistory(applyAuditEntry, { planHandoff, applyResult });
       await appendDesktopApplyLog(applyAuditEntry);
       await refreshApplyHistoryFromDesktop(40);
     }
@@ -3397,6 +3443,31 @@ async function onGenerate(intentOverride = "", options = {}) {
     : getSelectedSections().filter((s) => s !== "all");
   const intentText = String(intentOverride || "").trim() || latestUserIntentText();
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const designSceneContext = buildCurrentDesignSceneContext();
+  const musicDesignContext = buildCurrentMusicDesignContext();
+  let designerCloudResponse = null;
+  if (!directSequenceMode && bridge && typeof bridge.runDesignerConversation === "function") {
+    const cloud = await bridge.runDesignerConversation({
+      userMessage: intentText,
+      messages: buildRecentChatHistory(),
+      context: buildDesignerCloudConversationContext({
+        intentText,
+        selectedSections: selected,
+        analysisHandoff,
+        designSceneContext,
+        musicDesignContext
+      })
+    });
+    if (cloud?.ok && isPlainObject(cloud?.designerCloudResponse)) {
+      designerCloudResponse = cloud.designerCloudResponse;
+    } else if (cloud?.error) {
+      pushDiagnostic(
+        "warning",
+        "Designer cloud response unavailable. Falling back to local designer runtime.",
+        String(cloud.error)
+      );
+    }
+  }
   const proposalOrchestration = directSequenceMode
     ? executeDirectSequenceRequestOrchestration({
         requestId: `${orchestrationRun.id}-direct-sequence`,
@@ -3428,8 +3499,9 @@ async function onGenerate(intentOverride = "", options = {}) {
         analysisHandoff,
         analysisArtifact: state.audioAnalysis?.artifact || null,
         directorProfile: state.directorProfile || null,
-        designSceneContext: buildCurrentDesignSceneContext(),
-        musicDesignContext: buildCurrentMusicDesignContext(),
+        designSceneContext,
+        musicDesignContext,
+        cloudResponse: designerCloudResponse,
         models: state.models || [],
         submodels: state.submodels || [],
         displayElements: state.displayElements || [],
@@ -4733,8 +4805,195 @@ function currentApplyContext() {
   };
 }
 
-function pushApplyHistory(entry) {
+function currentArtifactRefs({ planHandoff = null, applyResult = null } = {}) {
+  return buildArtifactRefs({
+    analysisArtifact: state.audioAnalysis?.artifact || null,
+    designSceneContext: buildCurrentDesignSceneContext(),
+    musicDesignContext: buildCurrentMusicDesignContext(),
+    directorProfile: state.directorProfile || null,
+    creativeBrief: state.creative?.brief || null,
+    proposalBundle: state.creative?.proposalBundle || null,
+    intentHandoff: state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1"),
+    planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
+    applyResult
+  });
+}
+
+async function persistCurrentArtifactsForHistory({ planHandoff = null, applyResult = null, historyEntry = null } = {}) {
+  const bridge = getDesktopProjectArtifactBridge();
+  const projectFilePath = String(state.projectFilePath || "").trim();
+  if (!bridge || !projectFilePath) return { ok: false, reason: "unavailable" };
+  const artifacts = [
+    state.audioAnalysis?.artifact || null,
+    buildCurrentDesignSceneContext(),
+    buildCurrentMusicDesignContext(),
+    state.directorProfile || null,
+    state.creative?.brief || null,
+    state.creative?.proposalBundle || null,
+    state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1"),
+    planHandoff || getValidHandoff("plan_handoff_v1"),
+    applyResult,
+    historyEntry
+  ].filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
+  if (!artifacts.length) return { ok: false, reason: "no_artifacts" };
+  try {
+    return await bridge.writeProjectArtifacts({
+      projectFilePath,
+      artifacts
+    });
+  } catch (err) {
+    pushDiagnostic("warning", "Project artifact persistence failed.", String(err?.message || err));
+    return { ok: false, reason: "write_failed" };
+  }
+}
+
+async function readProjectArtifactById(artifactType = "", artifactId = "") {
+  const bridge = getDesktopProjectArtifactBridge();
+  const projectFilePath = String(state.projectFilePath || "").trim();
+  if (!bridge || !projectFilePath) return null;
+  const normalizedType = String(artifactType || "").trim();
+  const normalizedId = String(artifactId || "").trim();
+  if (!normalizedType || !normalizedId) return null;
+  try {
+    const res = await bridge.readProjectArtifact({
+      projectFilePath,
+      artifactType: normalizedType,
+      artifactId: normalizedId
+    });
+    return res?.ok === true && res.artifact && typeof res.artifact === "object" ? res.artifact : null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadHistoryEntrySnapshot(entry = null) {
+  if (!entry || typeof entry !== "object") return null;
+  const refs = entry.artifactRefs || {};
+  const [
+    analysisArtifact,
+    designSceneContext,
+    musicDesignContext,
+    directorProfile,
+    creativeBrief,
+    proposalBundle,
+    intentHandoff,
+    planHandoff,
+    applyResult
+  ] = await Promise.all([
+    readProjectArtifactById("analysis_artifact_v1", refs.analysisArtifactId),
+    readProjectArtifactById("design_scene_context_v1", refs.sceneContextId),
+    readProjectArtifactById("music_design_context_v1", refs.musicContextId),
+    readProjectArtifactById("director_profile_v1", refs.directorProfileId),
+    readProjectArtifactById("creative_brief_v1", refs.briefId),
+    readProjectArtifactById("proposal_bundle_v1", refs.proposalId),
+    readProjectArtifactById("intent_handoff_v1", refs.intentHandoffId),
+    readProjectArtifactById("plan_handoff_v1", refs.planId),
+    readProjectArtifactById("apply_result_v1", refs.applyResultId)
+  ]);
+  return {
+    historyEntryId: String(entry.historyEntryId || "").trim(),
+    analysisArtifact,
+    designSceneContext,
+    musicDesignContext,
+    directorProfile,
+    creativeBrief,
+    proposalBundle,
+    intentHandoff,
+    planHandoff,
+    applyResult
+  };
+}
+
+async function selectHistoryEntry(entryId = "", options = {}) {
+  const normalizedId = String(entryId || "").trim();
+  state.ui.selectedHistoryEntry = normalizedId;
+  const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
+  const selectedEntry = applyHistory.find((entry) => String(entry?.historyEntryId || "") === normalizedId) || null;
+  if (!selectedEntry) {
+    state.ui.selectedHistorySnapshot = null;
+    if (options.forReview) state.ui.reviewHistorySnapshot = null;
+    persist();
+    render();
+    return null;
+  }
+  const snapshot = await loadHistoryEntrySnapshot(selectedEntry);
+  state.ui.selectedHistorySnapshot = snapshot;
+  if (options.forReview) {
+    state.ui.reviewHistorySnapshot = snapshot;
+  }
+  persist();
+  render();
+  return snapshot;
+}
+
+function buildApplyHistoryEntry({
+  status = "",
+  summary = "",
+  stage = "",
+  commandCount = 0,
+  impactCount = 0,
+  currentRevision = "",
+  nextRevision = "",
+  verification = null,
+  planHandoff = null,
+  applyResult = null
+} = {}) {
+  const context = currentApplyContext();
+  return {
+    ...buildHistoryEntry({
+      createdAt: new Date().toISOString(),
+      projectId: context.projectKey,
+      projectKey: context.projectKey,
+      sequencePath: context.sequencePath,
+      xlightsRevisionBefore: String(currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+      xlightsRevisionAfter: String(nextRevision || currentRevision || state.revision || "unknown"),
+      status,
+      summary,
+      artifactRefs: currentArtifactRefs({ planHandoff, applyResult }),
+      snapshotSummary: buildHistorySnapshotSummary({
+        creativeBrief: state.creative?.brief || null,
+        proposalBundle: state.creative?.proposalBundle || null,
+        planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
+        applyResult,
+        selectedSections: getSelectedSections(),
+        selectedTargets: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || [])
+      }),
+      applyStage: stage,
+      commandCount,
+      impactCount,
+      verification
+    }),
+    endpoint: context.endpoint
+  };
+}
+
+function buildCurrentReviewSnapshotSummary() {
+  return buildHistorySnapshotSummary({
+    creativeBrief: state.creative?.brief || null,
+    proposalBundle: state.creative?.proposalBundle || null,
+    planHandoff: getValidHandoff("plan_handoff_v1"),
+    applyResult: null
+  });
+}
+
+function pushApplyHistory(entry, options = {}) {
+  const applyResult = options?.applyResult && typeof options.applyResult === "object" ? options.applyResult : null;
+  const planHandoff = options?.planHandoff && typeof options.planHandoff === "object" ? options.planHandoff : null;
   state.applyHistory = [entry, ...(state.applyHistory || [])].slice(0, 80);
+  state.ui.selectedHistoryEntry = String(entry?.historyEntryId || "").trim();
+  state.ui.reviewHistorySnapshot = {
+    historyEntryId: String(entry?.historyEntryId || "").trim(),
+    analysisArtifact: state.audioAnalysis?.artifact || null,
+    designSceneContext: buildCurrentDesignSceneContext(),
+    musicDesignContext: buildCurrentMusicDesignContext(),
+    directorProfile: state.directorProfile || null,
+    creativeBrief: state.creative?.brief || null,
+    proposalBundle: state.creative?.proposalBundle || null,
+    intentHandoff: state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1"),
+    planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
+    applyResult
+  };
+  state.ui.selectedHistorySnapshot = state.ui.reviewHistorySnapshot;
 }
 
 async function appendDesktopApplyLog(entry) {
@@ -4759,6 +5018,17 @@ async function refreshApplyHistoryFromDesktop(limit = 40) {
     });
     if (!res?.ok || !Array.isArray(res?.rows)) return;
     state.applyHistory = res.rows.slice(0, limit);
+    const selectedId = String(state.ui.selectedHistoryEntry || "").trim();
+    const nextSelectedId =
+      selectedId && state.applyHistory.some((entry) => String(entry?.historyEntryId || "") === selectedId)
+        ? selectedId
+        : String(state.applyHistory[0]?.historyEntryId || "").trim();
+    if (nextSelectedId) {
+      await selectHistoryEntry(nextSelectedId, { forReview: true });
+      return;
+    }
+    state.ui.selectedHistorySnapshot = null;
+    state.ui.reviewHistorySnapshot = null;
   } catch {
     // Non-fatal history read failure.
   }
@@ -6253,6 +6523,46 @@ function buildCurrentMusicDesignContext() {
     analysisArtifact: state.audioAnalysis?.artifact || null,
     analysisHandoff: getValidHandoff("analysis_handoff_v1")
   });
+}
+
+function buildRecentChatHistory(limit = 30) {
+  return (Array.isArray(state.chat) ? state.chat : [])
+    .filter((m) => m && (m.who === "user" || m.who === "agent"))
+    .slice(-limit)
+    .map((m) => ({
+      role: m.who === "agent" ? "assistant" : "user",
+      content: String(m.text || "")
+    }));
+}
+
+function buildDesignerCloudConversationContext({
+  intentText = "",
+  selectedSections = [],
+  analysisHandoff = null,
+  designSceneContext = null,
+  musicDesignContext = null
+} = {}) {
+  return {
+    route: "design",
+    projectName: String(state.projectName || "").trim(),
+    sequenceName: String(state.sequenceName || "").trim(),
+    activeSequenceLoaded: Boolean(state.flags.activeSequenceLoaded),
+    selection: {
+      sectionNames: selectedSections,
+      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
+      tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+    },
+    promptText: String(intentText || "").trim(),
+    analysisAvailable: Boolean(analysisHandoff),
+    directorProfile: state.directorProfile || null,
+    designSceneContext: designSceneContext || null,
+    musicDesignContext: musicDesignContext || null,
+    targetInventory: {
+      groups: Object.keys(state.sceneGraph?.groupsById || {}).slice(0, 200),
+      models: (state.models || []).map((row) => String(row?.id || row?.name || "").trim()).filter(Boolean).slice(0, 400),
+      submodels: Object.keys(state.sceneGraph?.submodelsById || {}).slice(0, 400)
+    }
+  };
 }
 
 function shouldAutoGenerateProposalFromChatResult(res = {}, raw = "") {
@@ -9805,6 +10115,7 @@ function screenContent() {
       applyPlanReadinessReason,
       applyReadyForApprovalGate,
       applyEnabled,
+      buildCurrentReviewSnapshotSummary,
       getMetadataOrphans,
       getMetadataTagRecords,
       buildMetadataTargets,
@@ -9867,15 +10178,17 @@ function diagnosticsPanel() {
           <ul class="list">
             ${applyHistory
               .map((entry) => {
-                const ts = entry?.ts ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:--";
+                const ts = entry?.createdAt
+                  ? new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+                  : "--:--:--";
                 const status = String(entry?.status || "unknown");
                 const count = Number(entry?.commandCount || 0);
-                const reason = String(entry?.reason || "").trim();
+                const summary = String(entry?.summary || "").trim();
                 return `
                 <li>
                   <strong>[${status}]</strong> ${ts} - ${count} command${count === 1 ? "" : "s"}
-                  ${entry?.stage ? ` (${entry.stage})` : ""}
-                  ${reason ? `<div class="banner">${escapeHtml(reason)}</div>` : ""}
+                  ${entry?.applyStage ? ` (${escapeHtml(String(entry.applyStage))})` : ""}
+                  ${summary ? `<div class="banner">${escapeHtml(summary)}</div>` : ""}
                 </li>
               `;
               })
@@ -10226,6 +10539,7 @@ function bindEvents() {
     onRollbackToVersion,
     onCompareVersion,
     onReapplyVariant,
+    onSelectHistoryEntry,
     onInspectArtifact,
     onCloseArtifactDetail
   });

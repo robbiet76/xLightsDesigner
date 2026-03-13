@@ -1,3 +1,5 @@
+import { finalizeArtifact } from "../shared/artifact-ids.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -54,8 +56,6 @@ export function buildDefaultDirectorProfile({
   displayName = "Director"
 } = {}) {
   const profile = {
-    artifactType: "director_profile_v1",
-    artifactVersion: "1.0",
     directorId: str(directorId || "default-director"),
     displayName: str(displayName || "Director"),
     preferences: {},
@@ -66,7 +66,11 @@ export function buildDefaultDirectorProfile({
     }
   };
   profile.summary = summarizeDirectorProfile(profile);
-  return profile;
+  return finalizeArtifact({
+    artifactType: "director_profile_v1",
+    artifactVersion: "1.0",
+    ...profile
+  });
 }
 
 export function normalizeDirectorProfile(profile = null, fallback = {}) {
@@ -90,7 +94,12 @@ export function normalizeDirectorProfile(profile = null, fallback = {}) {
     normalized.preferences[key] = normalizePreferenceSignal(value);
   }
   normalized.summary = str(profile?.summary || summarizeDirectorProfile(normalized));
-  return normalized;
+  return finalizeArtifact({
+    artifactType: "director_profile_v1",
+    artifactVersion: "1.0",
+    createdAt: str(profile?.createdAt || base.createdAt),
+    ...normalized
+  });
 }
 
 function updateSignal(signal = {}, observedWeight = 0, note = "") {

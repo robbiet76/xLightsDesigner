@@ -7,6 +7,7 @@ import {
   validateSequenceAgentPlanOutput,
   validateSequenceAgentApplyResult
 } from "./sequence-agent-contracts.js";
+import { buildArtifactId } from "../shared/artifact-ids.js";
 
 export function buildSequenceAgentInput({
   requestId = "",
@@ -116,7 +117,7 @@ export function buildSequenceAgentApplyResult({
   nextRevision = "",
   verification = null
 } = {}) {
-  return {
+  const result = {
     agentRole: "sequence_agent",
     contractVersion: SEQUENCE_AGENT_CONTRACT_VERSION,
     planId: String(planId || "").trim(),
@@ -124,8 +125,11 @@ export function buildSequenceAgentApplyResult({
     failureReason,
     currentRevision: String(currentRevision || "").trim() || undefined,
     nextRevision: String(nextRevision || "").trim() || undefined,
-    verification: verification && typeof verification === "object" ? verification : undefined
+    verification: verification && typeof verification === "object" ? verification : undefined,
+    createdAt: new Date().toISOString()
   };
+  result.artifactId = buildArtifactId(SEQUENCE_AGENT_APPLY_RESULT_CONTRACT, result);
+  return result;
 }
 
 export function validateSequenceAgentContractGate(kind = "", payload = {}, runId = "") {

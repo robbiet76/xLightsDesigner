@@ -6,7 +6,7 @@ export const HANDOFF_SCHEMAS = {
     requiredArrayFields: [["structure", "sections"]]
   },
   intent_handoff_v1: {
-    requiredStringFields: ["goal"],
+    requiredStringFields: ["artifactId", "createdAt", "goal"],
     enumFields: [["mode", ["create", "revise", "polish", "analyze"]]],
     requiredObjectFields: ["scope", "constraints", "directorPreferences", "approvalPolicy"]
   },

@@ -3,6 +3,8 @@
   "version": "1.0",
   "source": "apps/xlightsdesigner-ui/agent/designer-dialog/designer-dialog-contracts.js",
   "requiredFields": [
+    "artifactId",
+    "createdAt",
     "briefType",
     "briefVersion",
     "summary",

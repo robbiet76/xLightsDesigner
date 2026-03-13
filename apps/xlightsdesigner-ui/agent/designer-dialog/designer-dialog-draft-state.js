@@ -46,6 +46,7 @@ export function rebaseDesignerDraft(state, { newBaseRevision = "unknown", preser
 export function clearDesignerDraft(state) {
   state.creative = state.creative || {};
   state.creative.proposalBundle = null;
+  state.creative.runtime = null;
   state.proposed = [];
   syncFlags(state);
 }

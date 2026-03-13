@@ -1,6 +1,7 @@
 import { executeDesignerDialogFlow } from "./designer-dialog-runtime.js";
 import { buildDesignerDiagnosticsArtifact } from "./designer-dialog-diagnostics.js";
 import { classifyDesignerOrchestrationFailure } from "./designer-dialog-failures.js";
+import { normalizeDesignerCloudResponse } from "./designer-cloud-response.js";
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
@@ -11,7 +12,22 @@ function str(value = "") {
 }
 
 export function executeDesignerProposalOrchestration(input = {}) {
-  const result = executeDesignerDialogFlow(input);
+  const localResult = executeDesignerDialogFlow(input);
+  const cloudResult = input?.cloudResponse
+    ? normalizeDesignerCloudResponse({
+        cloudResponse: input.cloudResponse,
+        fallback: {
+          requestId: localResult?.requestId || input?.requestId,
+          creativeBrief: localResult?.creativeBrief || null,
+          proposalBundle: localResult?.proposalBundle || null,
+          warnings: localResult?.warnings || []
+        },
+        requestId: localResult?.requestId || input?.requestId,
+        handoff: localResult?.handoff || null
+      })
+    : null;
+  const result = cloudResult || localResult;
+  const source = cloudResult ? "cloud_normalized" : "local_runtime";
   const proposalBundle = result?.proposalBundle || null;
   const handoff = result?.handoff || null;
   const degradedMode = !input?.analysisHandoff;
@@ -38,6 +54,7 @@ export function executeDesignerProposalOrchestration(input = {}) {
 
   return {
     ok: true,
+    source,
     result,
     diagnostics: buildDesignerDiagnosticsArtifact({
       requestId: result?.requestId || input?.requestId,
@@ -54,6 +71,7 @@ export function executeDesignerProposalOrchestration(input = {}) {
     intentHandoff: handoff,
     proposalLines: arr(proposalBundle.proposalLines),
     guidedQuestions: arr(proposalBundle.guidedQuestions),
+    assistantMessage: str(result?.assistantMessage || ""),
     warnings: arr(result?.warnings),
     summary: str(result?.summary || proposalBundle.summary || "")
   };

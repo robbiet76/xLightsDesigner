@@ -3,8 +3,10 @@
   "version": "1.0",
   "source": "apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js",
   "requiredFields": [
+    "artifactId",
     "artifactType",
     "artifactVersion",
+    "createdAt",
     "media.mediaId",
     "media.path",
     "timing",

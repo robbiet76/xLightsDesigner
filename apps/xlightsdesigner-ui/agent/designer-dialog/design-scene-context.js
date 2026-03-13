@@ -1,3 +1,5 @@
+import { finalizeArtifact } from "../shared/artifact-ids.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -130,7 +132,7 @@ export function buildDesignSceneContext({
     .map((row) => str(row?.id || row?.name))
     .filter(Boolean);
 
-  return {
+  return finalizeArtifact({
     artifactType: "design_scene_context_v1",
     artifactVersion: "1.0",
     layoutRevision: str(revision || stats.layoutMode || "unknown"),
@@ -146,5 +148,5 @@ export function buildDesignSceneContext({
       groupCount: Number(stats.groupCount || 0),
       submodelCount: Number(stats.submodelCount || 0)
     }
-  };
+  });
 }

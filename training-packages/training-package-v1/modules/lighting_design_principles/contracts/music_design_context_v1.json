@@ -4,6 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "artifactId",
+    "createdAt",
     "artifactType",
     "artifactVersion"
   ],
@@ -11,8 +13,16 @@
     "artifactType": {
       "const": "music_design_context_v1"
     },
+    "artifactId": {
+      "type": "string",
+      "minLength": 1
+    },
     "artifactVersion": {
       "const": "1.0"
+    },
+    "createdAt": {
+      "type": "string",
+      "minLength": 1
     },
     "mediaId": {
       "type": "string"

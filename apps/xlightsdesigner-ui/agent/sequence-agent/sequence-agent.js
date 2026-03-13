@@ -1,7 +1,8 @@
 import { buildDesignerPlanCommands, collectGroupRenderPolicyWarnings, collectSubmodelRenderWarnings, estimateImpactCount } from "./command-builders.js";
-import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
+import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
+import { buildArtifactId } from "../shared/artifact-ids.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -275,7 +276,7 @@ export function buildSequenceAgentPlan({
         }))
   });
 
-  return {
+  const plan = {
     agentRole: SEQUENCE_AGENT_ROLE,
     contractVersion: SEQUENCE_AGENT_CONTRACT_VERSION,
     planId: `seq-plan-${Date.now()}`,
@@ -307,4 +308,7 @@ export function buildSequenceAgentPlan({
       stageOrder: STAGE_ORDER.slice()
     }
   };
+  plan.createdAt = new Date().toISOString();
+  plan.artifactId = buildArtifactId(SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, plan);
+  return plan;
 }

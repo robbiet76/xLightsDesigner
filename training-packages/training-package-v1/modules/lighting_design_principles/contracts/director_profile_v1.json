@@ -4,6 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "artifactId",
+    "createdAt",
     "artifactType",
     "artifactVersion",
     "directorId",
@@ -14,8 +16,16 @@
     "artifactType": {
       "const": "director_profile_v1"
     },
+    "artifactId": {
+      "type": "string",
+      "minLength": 1
+    },
     "artifactVersion": {
       "const": "1.0"
+    },
+    "createdAt": {
+      "type": "string",
+      "minLength": 1
     },
     "directorId": {
       "type": "string",

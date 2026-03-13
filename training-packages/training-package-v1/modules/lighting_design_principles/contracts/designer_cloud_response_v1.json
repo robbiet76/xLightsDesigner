@@ -1,0 +1,23 @@
+{
+  "contract": "designer_cloud_response_v1",
+  "version": "1.0",
+  "source": "apps/xlightsdesigner-ui/agent/designer-dialog/designer-cloud-response.js",
+  "requiredFields": [
+    "responseType",
+    "responseVersion",
+    "assistantMessage",
+    "summary"
+  ],
+  "optionalFields": [
+    "brief",
+    "proposal",
+    "guidedQuestions",
+    "assumptions",
+    "warnings"
+  ],
+  "notes": [
+    "designer_cloud_response_v1 is the free-form cloud designer response shape before normalization into canonical app artifacts.",
+    "Conversation may remain open-ended, but downstream application state must still be normalized into creative_brief_v1, proposal_bundle_v1, and intent_handoff_v1.",
+    "Unknown or partial cloud responses should degrade safely through the normalizer rather than bypassing artifact contracts."
+  ]
+}

@@ -7,6 +7,7 @@ import {
 } from "./audio-analyst-contracts.js";
 import { normalizeAudioAnalysisProvider } from "./audio-provider-adapters.js";
 import { validateAgentHandoff } from "../handoff-contracts.js";
+import { finalizeArtifact } from "../shared/artifact-ids.js";
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -74,9 +75,10 @@ export function buildAnalysisArtifactFromPipelineResult({
   const sections = rows(raw?.sections);
   const webTempoEvidence = isPlainObject(rawMeta?.webTempoEvidence) ? rawMeta.webTempoEvidence : {};
 
-  return {
+  return finalizeArtifact({
     artifactType: AUDIO_ANALYST_ARTIFACT_TYPE,
     artifactVersion: AUDIO_ANALYST_ARTIFACT_VERSION,
+    createdAt: artifactGeneratedAt,
     media: {
       mediaId: str(mediaId) || deriveFallbackMediaId(audioPath),
       path: str(audioPath),
@@ -177,7 +179,7 @@ export function buildAnalysisArtifactFromPipelineResult({
       degraded: !Boolean(pipeline.analysisServiceSucceeded),
       summary: str(result?.summary)
     }
-  };
+  });
 }
 
 export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = null) {

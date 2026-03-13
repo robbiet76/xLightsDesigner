@@ -224,15 +224,15 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
                   .map((entry) => {
                     const status = String(entry?.status || "unknown");
                     const count = Number(entry?.commandCount || 0);
-                    const ts = entry?.ts
-                      ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    const ts = entry?.createdAt
+                      ? new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                       : "--:--";
-                    const reason = String(entry?.reason || "").trim();
+                    const summary = String(entry?.summary || "").trim();
                     return `
                       <li>
                         <strong>[${status}]</strong> ${ts} - ${count} cmd${count === 1 ? "" : "s"}
-                        ${entry?.stage ? ` (${entry.stage})` : ""}
-                        ${reason ? `<div class="banner">${escapeHtml(reason)}</div>` : ""}
+                        ${entry?.applyStage ? ` (${escapeHtml(String(entry.applyStage))})` : ""}
+                        ${summary ? `<div class="banner">${escapeHtml(summary)}</div>` : ""}
                       </li>
                     `;
                   })

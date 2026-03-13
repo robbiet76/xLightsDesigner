@@ -11,6 +11,17 @@ export function applyDesignerProposalSuccessToState(state, orchestration = {}) {
   state.creative = state.creative || {};
   state.creative.brief = orchestration.creativeBrief || state.creative.brief || null;
   state.creative.briefUpdatedAt = new Date().toISOString();
+  state.creative.runtime = {
+    source: String(orchestration.source || "local_runtime"),
+    status: String(orchestration.result?.status || "ok"),
+    summary: String(orchestration.summary || orchestration.proposalBundle?.summary || "").trim(),
+    assistantMessage: String(orchestration.assistantMessage || "").trim(),
+    warnings: Array.isArray(orchestration.warnings) ? orchestration.warnings.map((row) => String(row || "").trim()).filter(Boolean) : [],
+    diagnostics: orchestration.diagnostics && typeof orchestration.diagnostics === "object"
+      ? structuredClone(orchestration.diagnostics)
+      : null,
+    updatedAt: new Date().toISOString()
+  };
   applyDesignerDraftSuccessState(state, {
     proposalBundle: orchestration.proposalBundle || null,
     proposalLines: arr(orchestration.proposalLines)

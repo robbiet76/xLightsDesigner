@@ -45,6 +45,8 @@ function samplePlan(overrides = {}) {
   return {
     agentRole: SEQUENCE_AGENT_ROLE,
     contractVersion: SEQUENCE_AGENT_CONTRACT_VERSION,
+    artifactId: "plan_handoff_v1-12345678",
+    createdAt: new Date().toISOString(),
     planId: "plan-1",
     summary: "revise plan for chorus",
     baseRevision: "rev-1",
@@ -66,6 +68,8 @@ function sampleApplyResult(overrides = {}) {
   return {
     agentRole: SEQUENCE_AGENT_ROLE,
     contractVersion: SEQUENCE_AGENT_CONTRACT_VERSION,
+    artifactId: "apply_result_v1-12345678",
+    createdAt: new Date().toISOString(),
     planId: "plan-1",
     status: "applied",
     failureReason: null,
