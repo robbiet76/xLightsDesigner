@@ -48,6 +48,11 @@ import {
 } from "./agent/designer-dialog/designer-dialog-draft-state.js";
 import { buildDesignSceneContext } from "./agent/designer-dialog/design-scene-context.js";
 import { buildMusicDesignContext } from "./agent/designer-dialog/music-design-context.js";
+import {
+  applyAcceptedProposalToDirectorProfile,
+  buildDefaultDirectorProfile,
+  normalizeDirectorProfile
+} from "./agent/designer-dialog/director-profile.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -408,6 +413,7 @@ const defaultState = {
     proposalBundle: null,
     briefUpdatedAt: ""
   },
+  directorProfile: buildDefaultDirectorProfile(),
   inspiration: {
     paletteSwatches: ["#0b3d91", "#2a9d8f", "#f4a261", "#e76f51"]
   },
@@ -443,6 +449,14 @@ function normalizeProjectIdentityFields(target) {
   target.projectName = "";
   target.projectCreatedAt = "";
   target.projectUpdatedAt = "";
+}
+
+function normalizeDirectorProfileState(target) {
+  if (!target || typeof target !== "object") return;
+  target.directorProfile = normalizeDirectorProfile(target.directorProfile, {
+    directorId: "default-director",
+    displayName: "Director"
+  });
 }
 
 function looksLikeDemoProposedLines(lines = []) {
@@ -537,6 +551,7 @@ function loadState() {
     };
     merged.endpoint = normalizeConfiguredEndpoint(merged.endpoint);
     normalizeProjectIdentityFields(merged);
+    normalizeDirectorProfileState(merged);
     normalizeDraftState(merged);
     return merged;
   } catch {
@@ -547,6 +562,7 @@ function loadState() {
 const state = loadState();
 if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
+normalizeDirectorProfileState(state);
 if (!state.teamChat || typeof state.teamChat !== "object") {
   state.teamChat = { identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES) };
 }
@@ -1116,6 +1132,11 @@ function setAgentHandoff(contract = "", payload = {}, producer = "") {
 function getValidHandoff(contract = "") {
   const row = agentRuntime.handoffs?.[String(contract || "").trim()];
   return row?.valid ? row.payload : null;
+}
+
+function getValidHandoffRecord(contract = "") {
+  const row = agentRuntime.handoffs?.[String(contract || "").trim()];
+  return row?.valid ? row : null;
 }
 
 function clearAgentHandoff(contract = "", reason = "", { pushLog = true } = {}) {
@@ -2088,6 +2109,9 @@ function extractProjectSnapshot() {
     proposed: Array.isArray(state.proposed) ? [...state.proposed] : [],
     agentPlan: state.agentPlan && typeof state.agentPlan === "object" ? structuredClone(state.agentPlan) : null,
     creative: state.creative && typeof state.creative === "object" ? structuredClone(state.creative) : structuredClone(defaultState.creative),
+    directorProfile: state.directorProfile && typeof state.directorProfile === "object"
+      ? structuredClone(state.directorProfile)
+      : structuredClone(defaultState.directorProfile),
     agentRuntime: {
       activeRole: String(agentRuntime.activeRole || "").trim(),
       handoffs
@@ -2172,6 +2196,10 @@ function applyProjectSnapshot(snapshot) {
   if (snapshot?.creative && typeof snapshot.creative === "object") {
     state.creative = { ...structuredClone(defaultState.creative), ...snapshot.creative };
   }
+  state.directorProfile = normalizeDirectorProfile(snapshot?.directorProfile, {
+    directorId: state.projectName ? normalizeProjectDisplayName(state.projectName).toLowerCase().replace(/\s+/g, "-") : "default-director",
+    displayName: state.projectName || "Director"
+  });
   if (snapshot?.draft && typeof snapshot.draft === "object") {
     state.draftBaseRevision = String(snapshot.draft.draftBaseRevision || state.draftBaseRevision || "unknown");
     state.flags.hasDraftProposal = Boolean(snapshot.draft.hasDraftProposal);
@@ -2867,7 +2895,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     setStatusWithDiagnostics("warning", `Apply blocked: ${handoffGate.message}`);
     return render();
   }
-  const intentHandoff = getValidHandoff("intent_handoff_v1");
+  const intentHandoffRecord = getValidHandoffRecord("intent_handoff_v1");
+  const intentHandoff = intentHandoffRecord?.payload || null;
   const planHandoff = getValidHandoff("plan_handoff_v1");
   const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!scopedSource.length) {
@@ -3198,6 +3227,11 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     setSequenceTimingTrackPoliciesState(timingTrackPolicies);
     setSequenceTimingGeneratedSignaturesState(timingGeneratedSignatures);
     state.flags.proposalStale = false;
+    if (String(intentHandoffRecord?.producer || "") === "designer_dialog" && isPlainObject(state.creative?.proposalBundle)) {
+      state.directorProfile = applyAcceptedProposalToDirectorProfile(state.directorProfile, {
+        proposalBundle: state.creative.proposalBundle
+      });
+    }
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
     setStatusWithDiagnostics(
       "info",
@@ -3392,6 +3426,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         priorBrief: state.creative?.brief || null,
         analysisHandoff,
         analysisArtifact: state.audioAnalysis?.artifact || null,
+        directorProfile: state.directorProfile || null,
         designSceneContext: buildCurrentDesignSceneContext(),
         musicDesignContext: buildCurrentMusicDesignContext(),
         models: state.models || [],

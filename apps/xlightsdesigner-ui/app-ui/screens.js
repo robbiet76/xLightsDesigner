@@ -164,6 +164,38 @@ export function buildScreenContent({ state, helpers }) {
           ${list(bundle.riskNotes, "No risk notes captured.")}
         `
         : `<p class="banner">No proposal bundle is available yet.</p>`;
+    } else if (inspected === "director-profile") {
+      const profile = state.directorProfile || null;
+      const preferences = profile?.preferences && typeof profile.preferences === "object"
+        ? Object.entries(profile.preferences)
+        : [];
+      title = "Director Profile Detail";
+      kicker = "Preference Memory";
+      body = profile
+        ? `
+          <p class="artifact-body">${escapeHtml(String(profile.summary || "No learned preference summary yet."))}</p>
+          <div class="artifact-detail-grid">
+            <div><strong>Director</strong><p>${escapeHtml(String(profile.displayName || profile.directorId || "Director"))}</p></div>
+            <div><strong>Accepted Evidence</strong><p>${escapeHtml(String((profile?.evidence?.acceptedProposalIds || []).length || 0))}</p></div>
+            <div><strong>Rejected Evidence</strong><p>${escapeHtml(String((profile?.evidence?.rejectedProposalIds || []).length || 0))}</p></div>
+            <div><strong>Explicit Notes</strong><p>${escapeHtml(String((profile?.evidence?.explicitPreferenceNotes || []).length || 0))}</p></div>
+          </div>
+          <h4>Preference Signals</h4>
+          ${
+            preferences.length
+              ? `<ul class="artifact-detail-list">${preferences.map(([key, signal]) => `
+                  <li>
+                    <strong>${escapeHtml(String(key))}</strong> -
+                    weight ${escapeHtml(String(Number(signal?.weight ?? 0).toFixed(2)))},
+                    confidence ${escapeHtml(String(Number(signal?.confidence ?? 0).toFixed(2)))},
+                    evidence ${escapeHtml(String(signal?.evidenceCount ?? 0))}
+                    ${String(signal?.notes || "").trim() ? `<div class="banner">${escapeHtml(String(signal.notes))}</div>` : ""}
+                  </li>
+                `).join("")}</ul>`
+              : `<p class="banner">No learned preference signals yet.</p>`
+          }
+        `
+        : `<p class="banner">No director profile is available yet.</p>`;
     } else if (inspected === "review-plan") {
       const plan = state.agentPlan || {};
       title = "Execution Plan Detail";
@@ -682,6 +714,40 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderDirectorProfileArtifactCard() {
+    const profile = state.directorProfile || null;
+    const signalEntries = profile?.preferences && typeof profile.preferences === "object"
+      ? Object.entries(profile.preferences)
+      : [];
+    const topSignals = signalEntries
+      .slice()
+      .sort((a, b) => {
+        const aScore = Math.abs(Number(a?.[1]?.weight || 0)) * Number(a?.[1]?.confidence || 0);
+        const bScore = Math.abs(Number(b?.[1]?.weight || 0)) * Number(b?.[1]?.confidence || 0);
+        return bScore - aScore;
+      })
+      .slice(0, 3);
+    return `
+      <section class="card artifact-card artifact-card-design">
+        <div class="artifact-kicker">Director Profile</div>
+        <h3>${escapeHtml(String(profile?.summary || "No learned preference profile yet"))}</h3>
+        <div class="artifact-chip-row">
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(signalEntries.length || 0))} signals</span>
+          <span class="artifact-chip">${escapeHtml(String((profile?.evidence?.acceptedProposalIds || []).length || 0))} accepted</span>
+        </div>
+        <p class="artifact-body">Project-scoped preference memory used as soft guidance for designer passes. It should bias proposals without locking the show into a repeated style.</p>
+        <div class="artifact-chip-row">
+          ${
+            topSignals.length
+              ? topSignals.map(([key]) => `<span class="artifact-chip">${escapeHtml(String(key))}</span>`).join("")
+              : `<span class="artifact-chip artifact-chip-muted">No strong learned signals yet</span>`
+          }
+        </div>
+        ${buildArtifactInspectActions("director-profile")}
+      </section>
+    `;
+  }
+
   function designScreen() {
     const creativeBriefText = String(state.creative?.briefText || "");
     const creativeBriefTextEscaped = creativeBriefText
@@ -702,6 +768,7 @@ export function buildScreenContent({ state, helpers }) {
         <section class="artifact-grid">
           ${renderBriefArtifactCard()}
           ${renderProposalArtifactCard()}
+          ${renderDirectorProfileArtifactCard()}
         </section>
         ${renderArtifactDetailPanel()}
         <section class="card">
