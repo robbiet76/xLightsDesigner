@@ -65,6 +65,9 @@ function buildBriefTraceability({
   audioAnalysis = null,
   songContextSummary = "",
   directorPreferences = null,
+  directorProfile = null,
+  designSceneContext = null,
+  musicDesignContext = null,
   priorBrief = null
 } = {}) {
   return {
@@ -85,6 +88,32 @@ function buildBriefTraceability({
     },
     songContextSummary: str(songContextSummary),
     directorPreferencesUsed: isPlainObject(directorPreferences) ? { ...directorPreferences } : undefined,
+    directorProfileSignals: isPlainObject(directorProfile?.preferences)
+      ? {
+          preferenceKeys: Object.keys(directorProfile.preferences),
+          summary: str(directorProfile?.summary || directorProfile?.profileSummary)
+        }
+      : undefined,
+    designSceneSignals: isPlainObject(designSceneContext)
+      ? {
+          layoutMode: str(designSceneContext?.metadata?.layoutMode),
+          focalCandidates: arr(designSceneContext.focalCandidates).slice(0, 8),
+          broadCoverageDomains: arr(designSceneContext?.coverageDomains?.broad).slice(0, 8),
+          detailCoverageDomains: arr(designSceneContext?.coverageDomains?.detail).slice(0, 8)
+        }
+      : undefined,
+    musicDesignSignals: isPlainObject(musicDesignContext)
+      ? {
+          sectionArc: arr(musicDesignContext?.sectionArc).slice(0, 8).map((row) => ({
+            label: str(row?.label),
+            energy: str(row?.energy),
+            density: str(row?.density)
+          })),
+          revealMoments: arr(musicDesignContext?.designCues?.revealMoments).slice(0, 8),
+          holdMoments: arr(musicDesignContext?.designCues?.holdMoments).slice(0, 8),
+          lyricFocusMoments: arr(musicDesignContext?.designCues?.lyricFocusMoments).slice(0, 8)
+        }
+      : undefined,
     priorBriefSummary: str(priorBrief?.summary)
   };
 }
@@ -99,6 +128,9 @@ export function buildCreativeBriefArtifact({
   songContextSummary = "",
   latestIntent = "",
   directorPreferences = null,
+  directorProfile = null,
+  designSceneContext = null,
+  musicDesignContext = null,
   priorBrief = null
 } = {}) {
   const synthesized = synthesizeCreativeBrief({
@@ -137,6 +169,9 @@ export function buildCreativeBriefArtifact({
       audioAnalysis,
       songContextSummary,
       directorPreferences,
+      directorProfile,
+      designSceneContext,
+      musicDesignContext,
       priorBrief
     })
   );
@@ -299,6 +334,33 @@ export function buildProposalBundleArtifact({
       estimatedImpact: estimateImpact({ proposalLines, targets: plan.targets }),
       resolvedTargetCount: arr(plan.targets).length,
       assumptionCount: arr(clarificationPlan.assumptions).length
+    },
+    traceability: {
+      directorProfileSignals: isPlainObject(directorProfile?.preferences)
+        ? {
+            preferenceKeys: Object.keys(directorProfile.preferences),
+            summary: str(directorProfile?.summary || directorProfile?.profileSummary)
+          }
+        : {
+            preferenceKeys: [],
+            summary: ""
+          },
+      designSceneSignals: {
+        layoutMode: str(resolvedSceneContext?.metadata?.layoutMode),
+        focalCandidates: arr(resolvedSceneContext?.focalCandidates).slice(0, 8),
+        broadCoverageDomains: arr(resolvedSceneContext?.coverageDomains?.broad).slice(0, 8),
+        detailCoverageDomains: arr(resolvedSceneContext?.coverageDomains?.detail).slice(0, 8)
+      },
+      musicDesignSignals: {
+        sectionArc: arr(resolvedMusicContext?.sectionArc).slice(0, 8).map((row) => ({
+          label: str(row?.label),
+          energy: str(row?.energy),
+          density: str(row?.density)
+        })),
+        revealMoments: arr(resolvedMusicContext?.designCues?.revealMoments).slice(0, 8),
+        holdMoments: arr(resolvedMusicContext?.designCues?.holdMoments).slice(0, 8),
+        lyricFocusMoments: arr(resolvedMusicContext?.designCues?.lyricFocusMoments).slice(0, 8)
+      }
     }
   });
 
@@ -328,6 +390,7 @@ export function executeDesignerDialogFlow({
   analysisHandoff = null,
   analysisArtifact = null,
   directorPreferences = null,
+  directorProfile = null,
   designSceneContext = null,
   musicDesignContext = null,
   priorBrief = null,
@@ -358,6 +421,9 @@ export function executeDesignerDialogFlow({
       songContextSummary,
       latestIntent: promptText,
       directorPreferences,
+      directorProfile,
+      designSceneContext,
+      musicDesignContext,
       priorBrief
     });
     const proposal = buildProposalBundleArtifact({
@@ -371,6 +437,7 @@ export function executeDesignerDialogFlow({
       selectedTagNames,
       selectedTargetIds,
       directorPreferences,
+      directorProfile,
       designSceneContext,
       musicDesignContext,
       models,

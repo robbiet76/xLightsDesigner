@@ -155,6 +155,9 @@ export function validateProposalBundle(payload = {}) {
   pushRequiredObject(errors, obj, "lifecycle");
   if (!Array.isArray(obj.guidedQuestions)) errors.push("guidedQuestions is required");
   if (!Array.isArray(obj.assumptions)) errors.push("assumptions is required");
+  if (obj.traceability != null && !isPlainObject(obj.traceability)) {
+    errors.push("traceability must be an object when provided");
+  }
 
   return errors;
 }
@@ -261,7 +264,8 @@ export function buildProposalBundle({
   guidedQuestions = [],
   assumptions = [],
   riskNotes = [],
-  impact = {}
+  impact = {},
+  traceability = null
 } = {}) {
   return {
     bundleType: DESIGNER_DIALOG_PROPOSAL_CONTRACT,
@@ -276,7 +280,8 @@ export function buildProposalBundle({
     guidedQuestions: arr(guidedQuestions).map((row) => str(row)).filter(Boolean),
     assumptions: arr(assumptions).map((row) => str(row)).filter(Boolean),
     riskNotes: arr(riskNotes).map((row) => str(row)).filter(Boolean),
-    impact: isPlainObject(impact) ? impact : {}
+    impact: isPlainObject(impact) ? impact : {},
+    traceability: isPlainObject(traceability) ? traceability : undefined
   };
 }
 
