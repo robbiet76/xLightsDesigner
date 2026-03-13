@@ -174,6 +174,29 @@ test('planner uses scene and music context to shape first-pass proposal lines', 
   assert.match(combined, /Intro.*calmer hold section|Intro.*restrained/i);
 });
 
+test('planner uses strong director profile signals as soft proposal bias only', () => {
+  const result = buildProposalFromIntent({
+    promptText: 'Make the chorus feel bigger and more cinematic',
+    selectedSections: ['Chorus'],
+    models,
+    submodels,
+    metadataAssignments,
+    displayElements,
+    directorProfile: {
+      preferences: {
+        focusBias: { weight: 0.7, confidence: 0.8, evidenceCount: 4 },
+        changeTolerance: { weight: -0.5, confidence: 0.7, evidenceCount: 3 },
+        complexityTolerance: { weight: -0.6, confidence: 0.75, evidenceCount: 5 }
+      }
+    }
+  });
+
+  const combined = result.proposalLines.join('\n');
+  assert.match(combined, /clear focal hierarchy|focal/i);
+  assert.match(combined, /incremental|preserve more of the current look/i);
+  assert.match(combined, /cleaner readable choices|readable/i);
+});
+
 test('clarification plan asks when critical fields are missing', () => {
   const normalized = normalizeIntent({
     promptText: '',

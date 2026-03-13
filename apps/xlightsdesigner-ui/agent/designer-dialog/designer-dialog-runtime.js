@@ -289,6 +289,7 @@ export function buildProposalBundleArtifact({
     selectedTagNames,
     selectedTargetIds,
     directorPreferences,
+    directorProfile,
     designSceneContext: resolvedSceneContext,
     musicDesignContext: resolvedMusicContext,
     models,

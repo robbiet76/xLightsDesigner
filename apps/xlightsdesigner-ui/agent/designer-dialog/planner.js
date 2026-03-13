@@ -22,6 +22,17 @@ function prependUnique(lines = [], additions = []) {
   return [...merged, ...arr(lines).map((row) => str(row)).filter(Boolean)];
 }
 
+function readProfileSignal(profile = null, key = "") {
+  const signal = profile?.preferences?.[key];
+  if (!signal || typeof signal !== "object") return null;
+  const weight = Number(signal.weight);
+  const confidence = Number(signal.confidence);
+  const evidenceCount = Number(signal.evidenceCount);
+  if (!Number.isFinite(weight) || !Number.isFinite(confidence) || !Number.isFinite(evidenceCount)) return null;
+  if (confidence < 0.35 || evidenceCount < 2 || Math.abs(weight) < 0.2) return null;
+  return { weight, confidence, evidenceCount, notes: str(signal.notes) };
+}
+
 function buildSceneGuidanceLines({ designSceneContext = null, sections = [] } = {}) {
   const scene = designSceneContext && typeof designSceneContext === "object" ? designSceneContext : {};
   const broad = arr(scene?.coverageDomains?.broad).filter(Boolean);
@@ -72,16 +83,47 @@ function buildMusicGuidanceLines({ musicDesignContext = null, sections = [] } = 
   return lines;
 }
 
+function buildPreferenceGuidanceLines({ directorProfile = null, normalizedIntent = null } = {}) {
+  const sections = arr(normalizedIntent?.sections).filter(Boolean);
+  const scope = sections.join(", ") || "General";
+  const lines = [];
+  const focusBias = readProfileSignal(directorProfile, "focusBias");
+  const changeTolerance = readProfileSignal(directorProfile, "changeTolerance");
+  const complexityTolerance = readProfileSignal(directorProfile, "complexityTolerance");
+
+  if (focusBias?.weight > 0) {
+    lines.push(`${scope} / General / keep the pass anchored around a clear focal hierarchy before broad expansion`);
+  } else if (focusBias?.weight < 0) {
+    lines.push(`${scope} / General / allow broader coverage to read before isolating focal accents`);
+  }
+
+  if (changeTolerance?.weight < 0) {
+    lines.push(`${scope} / General / keep this pass incremental and preserve more of the current look`);
+  } else if (changeTolerance?.weight > 0) {
+    lines.push(`${scope} / General / allow a bolder revision pass where the design needs a stronger reset`);
+  }
+
+  if (complexityTolerance?.weight < 0) {
+    lines.push(`${scope} / General / prefer cleaner readable choices over dense layering unless the moment demands it`);
+  } else if (complexityTolerance?.weight > 0) {
+    lines.push(`${scope} / General / tolerate denser layering when it strengthens the moment without losing clarity`);
+  }
+
+  return lines;
+}
+
 function applyDesignerContextToProposalLines({
   proposalLines = [],
   normalizedIntent = null,
   designSceneContext = null,
-  musicDesignContext = null
+  musicDesignContext = null,
+  directorProfile = null
 } = {}) {
   const sections = arr(normalizedIntent?.sections).filter(Boolean);
   const sceneLines = buildSceneGuidanceLines({ designSceneContext, sections });
   const musicLines = buildMusicGuidanceLines({ musicDesignContext, sections });
-  return prependUnique(proposalLines, [...sceneLines, ...musicLines]).slice(0, 8);
+  const preferenceLines = buildPreferenceGuidanceLines({ directorProfile, normalizedIntent });
+  return prependUnique(proposalLines, [...sceneLines, ...musicLines, ...preferenceLines]).slice(0, 8);
 }
 
 export function buildProposalFromIntent(input = {}) {
@@ -98,7 +140,8 @@ export function buildProposalFromIntent(input = {}) {
     proposalLines: buildSequencingStrategy(normalizedIntent, targets),
     normalizedIntent,
     designSceneContext: input.designSceneContext,
-    musicDesignContext: input.musicDesignContext
+    musicDesignContext: input.musicDesignContext,
+    directorProfile: input.directorProfile
   });
 
   return {
