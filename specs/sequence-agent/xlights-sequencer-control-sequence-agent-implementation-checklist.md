@@ -161,4 +161,4 @@ Boundary summary:
   - `specs/sequence-agent/xlights-sequencer-control-training-package-architecture.md`
 - Post-v1 TODO:
   - decompose `apps/xlightsdesigner-ui/app.js` into smaller modules for sequence refresh/sync, project storage, orchestration state transitions, and diagnostics/export once `sequence_agent` v1 behavior is stable.
-  - refactor xLights automation integration so xLightsDesigner-owned API code lives in a dedicated automation folder instead of continuing to grow the existing `xLightsAutomations.cpp`/legacy V1-V2 structure; restore the legacy entry file toward its original scope and keep the xLightsDesigner API surface isolated from existing automation processes.
+  - rebuild the xLights integration on a clean upstream baseline so xLightsDesigner-owned API code lives in a dedicated custom automation subtree built specifically for xLightsDesigner needs, with `xLightsAutomations.cpp` reduced to thin registration/routing only. Do not continue expanding the legacy V1/V2 structure as a generic public API surface; keep the xLightsDesigner automation contract isolated, owned, and maintainable.

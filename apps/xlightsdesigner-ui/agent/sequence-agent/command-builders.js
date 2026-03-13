@@ -620,6 +620,7 @@ function buildSequenceSettingsCommand({ effectCommands = [], groupIds = [], sequ
 function inferEffectNameFromDescription(description = "", effectCatalog = null) {
   const byName = normalizeEffectCatalog(effectCatalog);
   const text = normText(description).toLowerCase();
+  const hasCatalog = Object.keys(byName).length > 0;
   const aliases = [
     { effectName: "On", patterns: [" on effect", "apply on", "make on", "simple on", "effect on"] },
     { effectName: "Bars", patterns: ["bars", "bar hits", "striped"] },
@@ -629,7 +630,7 @@ function inferEffectNameFromDescription(description = "", effectCatalog = null) 
     { effectName: "On", patterns: ["hold", "solid", "steady", "glow"] }
   ];
   for (const row of aliases) {
-    if (!Object.prototype.hasOwnProperty.call(byName, row.effectName)) continue;
+    if (hasCatalog && !Object.prototype.hasOwnProperty.call(byName, row.effectName)) continue;
     if (row.patterns.some((pattern) => text.includes(pattern))) return row.effectName;
   }
   return chooseTemplateEffectName(effectCatalog);
