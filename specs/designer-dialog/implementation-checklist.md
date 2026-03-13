@@ -251,3 +251,4 @@ Not yet implemented:
   - repeated revision patterns
   - explicit user statements of taste/preferences
 - [ ] Define weighting rules so core design knowledge stays primary and director preferences stay secondary
+- [ ] Execute the training plan in [training-plan-2026-03-13.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/training-plan-2026-03-13.md)
