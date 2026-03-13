@@ -605,13 +605,40 @@ export function buildScreenContent({ state, helpers }) {
     const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
     const warnings = Array.isArray(plan?.warnings) ? plan.warnings.slice(0, 4) : [];
     const lastApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
+    const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1") || null;
+    const planHandoff = getValidHandoff("plan_handoff_v1");
+    const selectedTargets = Array.isArray(intent?.scope?.targetIds) ? intent.scope.targetIds.filter(Boolean) : [];
+    const selectedSections = Array.isArray(intent?.scope?.sections) ? intent.scope.sections.filter(Boolean) : [];
+    const sequencingConstraints = intent?.constraints && typeof intent.constraints === "object" ? intent.constraints : {};
+    const pendingQuestions = Array.isArray(state.creative?.proposalBundle?.guidedQuestions)
+      ? state.creative.proposalBundle.guidedQuestions.filter(Boolean).slice(0, 3)
+      : [];
+    const currentAssumptions = Array.isArray(state.creative?.proposalBundle?.assumptions)
+      ? state.creative.proposalBundle.assumptions.filter(Boolean).slice(0, 3)
+      : [];
+    const translationSource = plan?.source === "cloud_normalized"
+      ? "Cloud-Normalized Plan"
+      : planHandoff?.artifactId
+        ? "Canonical Plan"
+        : "Pending";
+    const commandCount = Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0;
+    const timingAnchorCount = Array.isArray(planHandoff?.commands)
+      ? planHandoff.commands.filter((command) => String(command?.command || "").trim() === "effects.alignToTiming").length
+      : 0;
+    const lastAppliedSnapshot =
+      state.ui?.reviewHistorySnapshot &&
+      state.ui.reviewHistorySnapshot.historyEntryId === String(lastApply?.historyEntryId || "").trim()
+        ? state.ui.reviewHistorySnapshot
+        : null;
     return `
       <section class="card full-span designer-dashboard-card">
         <div class="artifact-kicker">Sequence Translation Dashboard</div>
         <h3>${escapeHtml(String(plan.summary || "Live translation from design intent into sequencing changes will appear here."))}</h3>
         <div class="artifact-chip-row">
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(plan.status || state.health?.orchestrationLastStatus || "idle"))}</span>
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(translationSource))}</span>
+          <span class="artifact-chip">${escapeHtml(String(plan.status || state.health?.orchestrationLastStatus || "idle"))}</span>
           <span class="artifact-chip">${escapeHtml(String(proposalLines.length || 0))} proposal lines</span>
+          <span class="artifact-chip">${escapeHtml(String(commandCount || 0))} commands</span>
           <span class="artifact-chip">${escapeHtml(String((plan.warnings || []).length || 0))} warnings</span>
           <span class="artifact-chip">${lastApply ? escapeHtml(String(lastApply.status || "unknown")) : "no apply yet"}</span>
         </div>
@@ -624,17 +651,30 @@ export function buildScreenContent({ state, helpers }) {
           </div>
           <div class="dashboard-panel">
             <div class="artifact-kicker">Targets + Scope</div>
-            <p>${escapeHtml(String((state.creative?.intentHandoff?.scope?.targetIds || getValidHandoff("intent_handoff_v1")?.scope?.targetIds || []).join(", ") || "No targets resolved yet."))}</p>
-            <p>${escapeHtml(String((state.creative?.intentHandoff?.scope?.sections || getValidHandoff("intent_handoff_v1")?.scope?.sections || []).join(", ") || "No sections scoped yet."))}</p>
+            <p>${escapeHtml(String(selectedTargets.join(", ") || "No targets resolved yet."))}</p>
+            <p>${escapeHtml(String(selectedSections.join(", ") || "No sections scoped yet."))}</p>
           </div>
           <div class="dashboard-panel">
             <div class="artifact-kicker">Plan Health</div>
             ${warnings.length ? `<ul>${warnings.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No plan warnings right now.</p>"}
           </div>
           <div class="dashboard-panel">
+            <div class="artifact-kicker">Translation Readiness</div>
+            <p>${timingAnchorCount ? `${escapeHtml(String(timingAnchorCount))} timing anchors planned.` : "No explicit timing anchors yet."}</p>
+            <p>${sequencingConstraints?.preserveTimingTracks !== false ? "Timing tracks preserved." : "Timing tracks may be rewritten."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Current Assumptions</div>
+            ${currentAssumptions.length ? `<ul>${currentAssumptions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No translation assumptions captured.</p>"}
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Needs Clarification</div>
+            ${pendingQuestions.length ? `<ul>${pendingQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No open sequencing questions right now.</p>"}
+          </div>
+          <div class="dashboard-panel">
             <div class="artifact-kicker">Last Apply Snapshot</div>
             <p>${lastApply ? escapeHtml(String(lastApply.summary || "Latest apply captured.")) : "No apply snapshot yet."}</p>
-            <p>${lastApply?.snapshotSummary?.applySummary?.status ? `Status: ${escapeHtml(String(lastApply.snapshotSummary.applySummary.status))}` : "No apply status yet."}</p>
+            <p>${lastAppliedSnapshot?.applyResult?.status ? `Status: ${escapeHtml(String(lastAppliedSnapshot.applyResult.status))}` : (lastApply?.snapshotSummary?.applySummary?.status ? `Status: ${escapeHtml(String(lastApply.snapshotSummary.applySummary.status))}` : "No apply status yet.")}</p>
           </div>
         </div>
         ${buildArtifactInspectActions("sequence-translation", "Inspect Translation")}
