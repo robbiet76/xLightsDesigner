@@ -3371,6 +3371,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         analysisHandoff,
         models: state.models || [],
         submodels: state.submodels || [],
+        displayElements: state.displayElements || [],
         metadataAssignments: state.metadata?.assignments || [],
         elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
       })
@@ -3389,6 +3390,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         analysisHandoff,
         models: state.models || [],
         submodels: state.submodels || [],
+        displayElements: state.displayElements || [],
         metadataAssignments: state.metadata?.assignments || [],
         elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
       });

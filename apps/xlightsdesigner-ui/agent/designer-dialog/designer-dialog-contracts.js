@@ -269,7 +269,8 @@ export function buildIntentHandoffFromDesignerState({
   normalizedIntent = {},
   intentText = "",
   creativeBrief = null,
-  elevatedRiskConfirmed = false
+  elevatedRiskConfirmed = false,
+  resolvedTargetIds = []
 } = {}) {
   return buildCanonicalSequenceIntentHandoff({
     normalizedIntent: {
@@ -278,7 +279,8 @@ export function buildIntentHandoffFromDesignerState({
     },
     intentText,
     creativeBrief,
-    elevatedRiskConfirmed
+    elevatedRiskConfirmed,
+    resolvedTargetIds
   });
 }
 

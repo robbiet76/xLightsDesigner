@@ -33,6 +33,7 @@ export function executeDirectSequenceRequestOrchestration({
   analysisHandoff = null,
   models = [],
   submodels = [],
+  displayElements = [],
   metadataAssignments = [],
   elevatedRiskConfirmed = false
 } = {}) {
@@ -45,8 +46,21 @@ export function executeDirectSequenceRequestOrchestration({
     directorPreferences: null,
     models,
     submodels,
+    displayElements,
     metadataAssignments
   });
+
+  const unresolvedTargets = arr(plan.unresolvedTargets);
+  const unresolvedWarnings = unresolvedTargets.map((target) => {
+    const name = str(target?.name || target?.id);
+    return `Requested target ${name} is not a writable sequencer element in the current sequence. Add it to the sequence display elements or choose a visible sequencer target instead.`;
+  });
+  const proposalLines = unresolvedTargets.length && !arr(plan.targets).length
+    ? []
+    : arr(plan.proposalLines);
+  const guidedQuestions = unresolvedTargets.length && !arr(plan.targets).length
+    ? ["Choose a visible sequencer target for this request before applying changes."]
+    : [];
 
   const proposalBundle = buildProposalBundle({
     proposalId: `proposal-${Date.now()}`,
@@ -69,12 +83,15 @@ export function executeDirectSequenceRequestOrchestration({
       allowGlobalRewrite: Boolean(plan.normalizedIntent?.preservationConstraints?.allowGlobalRewrite)
     },
     lifecycle: buildProposalLifecycle(sequenceRevision),
-    proposalLines: arr(plan.proposalLines),
-    guidedQuestions: [],
+    proposalLines,
+    guidedQuestions,
     assumptions: arr(plan.normalizedIntent?.assumptions),
-    riskNotes: !analysisHandoff
-      ? ["Proceeding without analysis_handoff_v1. This direct technical request is in degraded mode."]
-      : [],
+    riskNotes: [
+      ...(!analysisHandoff
+        ? ["Proceeding without analysis_handoff_v1. This direct technical request is in degraded mode."]
+        : []),
+      ...unresolvedWarnings
+    ],
     impact: {
       summary: "Direct technical sequencing request normalized for review/apply.",
       estimatedImpact: estimateImpact(plan.proposalLines)
@@ -85,7 +102,8 @@ export function executeDirectSequenceRequestOrchestration({
     normalizedIntent: plan.normalizedIntent,
     intentText: promptText,
     creativeBrief: null,
-    elevatedRiskConfirmed
+    elevatedRiskConfirmed,
+    resolvedTargetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
   });
 
   return {
@@ -94,10 +112,13 @@ export function executeDirectSequenceRequestOrchestration({
     proposalBundle,
     intentHandoff,
     proposalLines: arr(proposalBundle.proposalLines),
-    guidedQuestions: [],
-    warnings: !analysisHandoff
-      ? ["Proceeding without analysis_handoff_v1. Direct sequencing request should be reviewed conservatively."]
-      : [],
+    guidedQuestions,
+    warnings: [
+      ...(!analysisHandoff
+        ? ["Proceeding without analysis_handoff_v1. Direct sequencing request should be reviewed conservatively."]
+        : []),
+      ...unresolvedWarnings
+    ],
     summary: proposalBundle.summary,
     mode: "direct_sequence_request"
   };

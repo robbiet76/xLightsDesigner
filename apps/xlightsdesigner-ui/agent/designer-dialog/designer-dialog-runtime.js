@@ -203,6 +203,7 @@ export function buildProposalBundleArtifact({
   directorPreferences = null,
   models = [],
   submodels = [],
+  displayElements = [],
   metadataAssignments = []
 } = {}) {
   const input = buildDesignerDialogInput({
@@ -228,6 +229,7 @@ export function buildProposalBundleArtifact({
     directorPreferences,
     models,
     submodels,
+    displayElements,
     metadataAssignments
   });
   const clarificationPlan = buildClarificationPlan({
@@ -304,6 +306,7 @@ export function executeDesignerDialogFlow({
   elevatedRiskConfirmed = false,
   models = [],
   submodels = [],
+  displayElements = [],
   metadataAssignments = []
 } = {}) {
   try {
@@ -341,13 +344,15 @@ export function executeDesignerDialogFlow({
       directorPreferences,
       models,
       submodels,
+      displayElements,
       metadataAssignments
     });
     const handoff = buildIntentHandoffFromDesignerState({
       normalizedIntent: proposal.plan.normalizedIntent,
       intentText: promptText,
       creativeBrief: brief,
-      elevatedRiskConfirmed
+      elevatedRiskConfirmed,
+      resolvedTargetIds: arr(proposal.plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
     });
 
     const warnings = [];

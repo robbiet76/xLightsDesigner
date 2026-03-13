@@ -15,9 +15,12 @@ export function buildCanonicalSequenceIntentHandoff({
   normalizedIntent = {},
   intentText = "",
   creativeBrief = null,
-  elevatedRiskConfirmed = false
+  elevatedRiskConfirmed = false,
+  resolvedTargetIds = null
 } = {}) {
-  const selectedTargetIds = Array.isArray(normalizedIntent?.targetIds) ? normalizedIntent.targetIds : [];
+  const selectedTargetIds = Array.isArray(resolvedTargetIds) && resolvedTargetIds.length
+    ? resolvedTargetIds
+    : (Array.isArray(normalizedIntent?.targetIds) ? normalizedIntent.targetIds : []);
   const selectedTags = Array.isArray(normalizedIntent?.tags) ? normalizedIntent.tags : [];
   const selectedSections = Array.isArray(normalizedIntent?.sections) ? normalizedIntent.sections : [];
   const goal = str(normalizedIntent?.goal || intentText);

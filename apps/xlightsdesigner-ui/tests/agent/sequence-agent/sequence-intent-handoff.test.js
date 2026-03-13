@@ -27,3 +27,19 @@ test("canonical sequence intent handoff validates for direct technical requests"
   assert.equal(handoff.approvalPolicy.requiresExplicitApprove, true);
   assert.deepEqual(validateAgentHandoff("intent_handoff_v1", handoff), []);
 });
+
+test("canonical sequence intent handoff prefers resolved writable targets when provided", () => {
+  const handoff = buildCanonicalSequenceIntentHandoff({
+    normalizedIntent: {
+      goal: "Put a green On effect on Border-01 for 30 seconds from the start",
+      mode: "revise",
+      targetIds: ["Outlines"],
+      sections: ["General"],
+      tags: []
+    },
+    intentText: "Put a green On effect on Border-01 for 30 seconds from the start",
+    resolvedTargetIds: ["Border-01"]
+  });
+
+  assert.deepEqual(handoff.scope.targetIds, ["Border-01"]);
+});

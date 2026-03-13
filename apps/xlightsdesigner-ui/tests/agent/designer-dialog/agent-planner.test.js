@@ -23,6 +23,12 @@ const metadataAssignments = [
   { targetId: 'Roofline', tags: ['ambient-fill'] }
 ];
 
+const displayElements = [
+  { id: 'MegaTree', name: 'MegaTree', type: 'model' },
+  { id: 'Roofline', name: 'Roofline', type: 'model' },
+  { id: 'Arches', name: 'Arches', type: 'model' }
+];
+
 test('normalizeIntent extracts high-level sequencing intent and explicit overrides', () => {
   const normalized = normalizeIntent({
     promptText: 'Make chorus punchy with higher energy and use twinkle + bars accents',
@@ -70,7 +76,8 @@ test('resolveTargets honors explicit target ids and metadata tags', () => {
     normalizedIntent,
     models,
     submodels,
-    metadataAssignments
+    metadataAssignments,
+    displayElements
   });
 
   const ids = targets.map((t) => t.id);
@@ -86,7 +93,8 @@ test('planner produces concrete first-pass sequencing lines from director-level 
     selectedTagNames: ['focal'],
     models,
     submodels,
-    metadataAssignments
+    metadataAssignments,
+    displayElements
   });
 
   assert.ok(result.targets.length > 0);
@@ -106,7 +114,8 @@ test('planner includes explicit low-level effect preferences as override constra
     selectedTargetIds: ['MegaTree'],
     models,
     submodels,
-    metadataAssignments
+    metadataAssignments,
+    displayElements
   });
 
   const combined = result.proposalLines.join('\n').toLowerCase();
@@ -122,7 +131,8 @@ test('planner output is deterministic for same input', () => {
     selectedTagNames: ['focal'],
     models,
     submodels,
-    metadataAssignments
+    metadataAssignments,
+    displayElements
   };
 
   const a = buildProposalFromIntent(input);
@@ -163,4 +173,17 @@ test('clarification plan proceeds with bounded assumptions for broad usable prom
   assert.ok(plan.assumptions.some((line) => /balanced full-yard/i.test(line)));
   assert.ok(plan.assumptions.some((line) => /cinematic style direction/i.test(line)));
   assert.ok(plan.assumptions.some((line) => /motion choices.*smooth|smooth.*preference/i.test(line)));
+});
+
+test('planner records unresolved targets when a layout model is not a writable sequencer element', () => {
+  const result = buildProposalFromIntent({
+    promptText: 'Put a green On effect on MegaTree for 30 seconds from the start',
+    models,
+    submodels,
+    metadataAssignments,
+    displayElements: [{ id: 'Roofline', name: 'Roofline', type: 'model' }]
+  });
+
+  assert.deepEqual(result.targets, []);
+  assert.ok(result.unresolvedTargets.some((row) => row.id === 'MegaTree'));
 });
