@@ -344,6 +344,93 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderSnapshotDashboard({
+    kicker = "Snapshot",
+    title = "Snapshot Detail",
+    brief = null,
+    proposalLines = [],
+    applyResult = null,
+    analysisArtifact = null,
+    sceneContext = null,
+    musicContext = null,
+    artifactRefs = null,
+    emptyText = "No snapshot loaded."
+  } = {}) {
+    const safeProposalLines = Array.isArray(proposalLines)
+      ? proposalLines.map((row) => String(row || "").trim()).filter(Boolean)
+      : [];
+    const safeArtifactRefs = artifactRefs && typeof artifactRefs === "object"
+      ? Object.entries(artifactRefs).filter(([, value]) => String(value || "").trim())
+      : [];
+    const focalCandidates = Array.isArray(sceneContext?.focalCandidates)
+      ? sceneContext.focalCandidates.filter(Boolean).slice(0, 4)
+      : [];
+    const sectionArc = Array.isArray(musicContext?.sectionArc)
+      ? musicContext.sectionArc.filter(Boolean).slice(0, 6)
+      : [];
+    const hasContent =
+      brief ||
+      safeProposalLines.length ||
+      applyResult ||
+      analysisArtifact ||
+      sceneContext ||
+      musicContext ||
+      safeArtifactRefs.length;
+    if (!hasContent) {
+      return `
+        <section class="card full-span designer-dashboard-card">
+          <div class="artifact-kicker">${escapeHtml(kicker)}</div>
+          <h3>${escapeHtml(title)}</h3>
+          <p class="artifact-body">${escapeHtml(emptyText)}</p>
+        </section>
+      `;
+    }
+    return `
+      <section class="card full-span designer-dashboard-card">
+        <div class="artifact-kicker">${escapeHtml(kicker)}</div>
+        <h3>${escapeHtml(title)}</h3>
+        <div class="dashboard-grid">
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Design</div>
+            <p>${escapeHtml(String(brief?.summary || "No design summary loaded."))}</p>
+            ${
+              Array.isArray(brief?.goals) && brief.goals.length
+                ? `<ul>${brief.goals.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                : "<p>No design goals captured.</p>"
+            }
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Sequence</div>
+            ${
+              safeProposalLines.length
+                ? `<ul>${safeProposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                : "<p>No translated proposal lines loaded.</p>"
+            }
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Execution</div>
+            <p>Status: ${escapeHtml(String(applyResult?.status || "pending"))}</p>
+            <p>Commands: ${escapeHtml(String(applyResult?.commandCount || 0))}</p>
+            <p>Impacts: ${escapeHtml(String(applyResult?.impactCount || 0))}</p>
+            ${String(applyResult?.failureReason || "").trim() ? `<p>Failure: ${escapeHtml(String(applyResult.failureReason))}</p>` : ""}
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Audio + Scene</div>
+            <p>${escapeHtml(String(analysisArtifact?.trackIdentity?.title || "Unknown audio"))}</p>
+            <p>${escapeHtml(String(sceneContext?.layoutMode || "unknown"))} layout context</p>
+            <p>${focalCandidates.length ? `Focal: ${escapeHtml(focalCandidates.join(", "))}` : "No focal candidates loaded."}</p>
+            <p>${sectionArc.length ? `Arc: ${escapeHtml(sectionArc.join(" -> "))}` : "No section arc loaded."}</p>
+          </div>
+        </div>
+        ${
+          safeArtifactRefs.length
+            ? `<div class="artifact-chip-row">${safeArtifactRefs.slice(0, 6).map(([key, value]) => `<span class="artifact-chip">${escapeHtml(String(key))}: ${escapeHtml(String(value))}</span>`).join("")}</div>`
+            : ""
+        }
+      </section>
+    `;
+  }
+
   function projectScreen() {
     const createdAt = state.projectCreatedAt
       ? new Date(state.projectCreatedAt).toLocaleString([], { hour12: false })
@@ -1183,71 +1270,40 @@ export function buildScreenContent({ state, helpers }) {
           ${renderReviewPlanArtifactCard()}
           ${renderReviewExecutionArtifactCard()}
         </section>
-        <section class="card full-span designer-dashboard-card">
-          <div class="artifact-kicker">Current Apply Snapshot</div>
-          <h3>Applying design intent into concrete sequence changes.</h3>
-          <div class="dashboard-grid">
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Design Snapshot</div>
-              <p>${escapeHtml(String(currentSnapshot?.designSummary?.title || "No design snapshot title."))}</p>
-              ${
-                Array.isArray(currentSnapshot?.designSummary?.goals) && currentSnapshot.designSummary.goals.length
-                  ? `<ul>${currentSnapshot.designSummary.goals.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                  : "<p>No design goals captured.</p>"
-              }
-            </div>
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Sequence Snapshot</div>
-              ${
-                Array.isArray(currentSnapshot?.sequenceSummary?.proposalLines) && currentSnapshot.sequenceSummary.proposalLines.length
-                  ? `<ul>${currentSnapshot.sequenceSummary.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                  : "<p>No sequence proposal lines captured.</p>"
-              }
-            </div>
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Apply Snapshot</div>
-              <p>Status: ${escapeHtml(String(currentSnapshot?.applySummary?.status || "pending"))}</p>
-              <p>Commands: ${escapeHtml(String(currentSnapshot?.applySummary?.commandCount || 0))}</p>
-              <p>Impacts: ${escapeHtml(String(currentSnapshot?.applySummary?.impactCount || 0))}</p>
-            </div>
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Verification Basis</div>
-              ${
-                Array.isArray(currentSnapshot?.verificationSummary?.checked) && currentSnapshot.verificationSummary.checked.length
-                  ? `<ul>${currentSnapshot.verificationSummary.checked.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                  : "<p>Verification details will appear after apply.</p>"
-              }
-            </div>
-          </div>
-        </section>
+        ${renderSnapshotDashboard({
+          kicker: "Current Apply Snapshot",
+          title: "Applying design intent into concrete sequence changes.",
+          brief: {
+            summary: currentSnapshot?.designSummary?.title || "",
+            goals: currentSnapshot?.designSummary?.goals || []
+          },
+          proposalLines: currentSnapshot?.sequenceSummary?.proposalLines || [],
+          applyResult: {
+            status: currentSnapshot?.applySummary?.status || "pending",
+            commandCount: currentSnapshot?.applySummary?.commandCount || 0,
+            impactCount: currentSnapshot?.applySummary?.impactCount || 0,
+            failureReason: currentSnapshot?.applySummary?.failureReason || ""
+          },
+          analysisArtifact: state.audioAnalysis?.artifact || null,
+          sceneContext: state.creative?.runtime?.designSceneContext || state.creative?.designSceneContext || null,
+          musicContext: state.creative?.runtime?.musicDesignContext || state.creative?.musicDesignContext || null,
+          artifactRefs: currentSnapshot?.artifactRefs || null,
+          emptyText: "No current apply snapshot is available."
+        })}
         ${
           lastAppliedSnapshot
-            ? `
-        <section class="card full-span designer-dashboard-card">
-          <div class="artifact-kicker">Last Applied Snapshot</div>
-          <h3>Most recent implemented design and sequence state.</h3>
-          <div class="dashboard-grid">
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Design</div>
-              <p>${escapeHtml(String(lastAppliedSnapshot.creativeBrief?.summary || lastApply?.summary || "No applied design summary."))}</p>
-            </div>
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Sequence</div>
-              ${
-                Array.isArray(lastAppliedSnapshot.proposalBundle?.proposalLines) && lastAppliedSnapshot.proposalBundle.proposalLines.length
-                  ? `<ul>${lastAppliedSnapshot.proposalBundle.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                  : "<p>No applied proposal lines loaded.</p>"
-              }
-            </div>
-            <div class="dashboard-panel">
-              <div class="artifact-kicker">Execution</div>
-              <p>Status: ${escapeHtml(String(lastAppliedSnapshot.applyResult?.status || lastApply?.status || "unknown"))}</p>
-              <p>Commands: ${escapeHtml(String(lastAppliedSnapshot.applyResult?.commandCount || lastApply?.commandCount || 0))}</p>
-              <p>Impacts: ${escapeHtml(String(lastAppliedSnapshot.applyResult?.impactCount || lastApply?.impactCount || 0))}</p>
-            </div>
-          </div>
-        </section>
-          `
+            ? renderSnapshotDashboard({
+                kicker: "Last Applied Snapshot",
+                title: "Most recent implemented design and sequence state.",
+                brief: lastAppliedSnapshot.creativeBrief || null,
+                proposalLines: lastAppliedSnapshot.proposalBundle?.proposalLines || [],
+                applyResult: lastAppliedSnapshot.applyResult || lastApply || null,
+                analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
+                sceneContext: lastAppliedSnapshot.designSceneContext || null,
+                musicContext: lastAppliedSnapshot.musicDesignContext || null,
+                artifactRefs: lastApply?.artifactRefs || null,
+                emptyText: "No applied snapshot is available yet."
+              })
             : ""
         }
         <section class="card approval-gate-card full-span">
@@ -1390,40 +1446,6 @@ export function buildScreenContent({ state, helpers }) {
                 <div><strong>Sequence</strong><p>${escapeHtml(String(selected.sequencePath || "unknown"))}</p></div>
                 <div><strong>Created</strong><p>${escapeHtml(selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "unknown")}</p></div>
               </div>
-              <h4>Design Snapshot</h4>
-              <p class="artifact-body">${escapeHtml(String(selectedSnapshot?.creativeBrief?.summary || selected.snapshotSummary?.designSummary?.title || "No design snapshot title"))}</p>
-              ${list(
-                selectedSnapshot?.creativeBrief?.goals ||
-                  selected.snapshotSummary?.designSummary?.goals ||
-                  [],
-                "No design goals captured."
-              )}
-              <h4>Sequence Snapshot</h4>
-              ${list(
-                selectedSnapshot?.proposalBundle?.proposalLines ||
-                  selected.snapshotSummary?.sequenceSummary?.proposalLines ||
-                  [],
-                "No proposal lines captured."
-              )}
-              <h4>Apply Snapshot</h4>
-              ${list([
-                selectedSnapshot?.applyResult?.status ? `Status: ${selectedSnapshot.applyResult.status}` : (selected.snapshotSummary?.applySummary?.status ? `Status: ${selected.snapshotSummary.applySummary.status}` : ""),
-                Number.isFinite(selectedSnapshot?.applyResult?.commandCount) ? `Commands: ${selectedSnapshot.applyResult.commandCount}` : (Number.isFinite(selected.snapshotSummary?.applySummary?.commandCount) ? `Commands: ${selected.snapshotSummary.applySummary.commandCount}` : ""),
-                Number.isFinite(selectedSnapshot?.applyResult?.impactCount) ? `Impacts: ${selectedSnapshot.applyResult.impactCount}` : (Number.isFinite(selected.snapshotSummary?.applySummary?.impactCount) ? `Impacts: ${selected.snapshotSummary.applySummary.impactCount}` : ""),
-                selectedSnapshot?.applyResult?.failureReason ? `Failure: ${selectedSnapshot.applyResult.failureReason}` : (selected.snapshotSummary?.applySummary?.failureReason ? `Failure: ${selected.snapshotSummary.applySummary.failureReason}` : "")
-              ], "No apply summary captured.")}
-              <h4>Audio + Scene Context</h4>
-              ${list([
-                selectedSnapshot?.analysisArtifact?.trackIdentity?.title ? `Audio: ${selectedSnapshot.analysisArtifact.trackIdentity.title}` : "",
-                selectedSnapshot?.analysisArtifact?.trackIdentity?.artist ? `Artist: ${selectedSnapshot.analysisArtifact.trackIdentity.artist}` : "",
-                selectedSnapshot?.designSceneContext?.layoutMode ? `Layout: ${selectedSnapshot.designSceneContext.layoutMode}` : "",
-                Array.isArray(selectedSnapshot?.designSceneContext?.focalCandidates) && selectedSnapshot.designSceneContext.focalCandidates.length
-                  ? `Focal candidates: ${selectedSnapshot.designSceneContext.focalCandidates.slice(0, 4).join(", ")}`
-                  : "",
-                Array.isArray(selectedSnapshot?.musicDesignContext?.sectionArc) && selectedSnapshot.musicDesignContext.sectionArc.length
-                  ? `Section arc: ${selectedSnapshot.musicDesignContext.sectionArc.join(" -> ")}`
-                  : ""
-              ], "Persisted scene/audio context has not been loaded yet.")}
               <h4>Artifact References</h4>
               ${list(
                 Object.entries(selected.artifactRefs || {})
@@ -1435,6 +1457,34 @@ export function buildScreenContent({ state, helpers }) {
               : `<p class="banner">No history snapshot selected.</p>`
           }
         </section>
+        ${
+          selected
+            ? renderSnapshotDashboard({
+                kicker: "Applied Snapshot",
+                title: String(selected.summary || "Applied snapshot"),
+                brief: selectedSnapshot?.creativeBrief
+                  ? selectedSnapshot.creativeBrief
+                  : {
+                      summary: selected.snapshotSummary?.designSummary?.title || "",
+                      goals: selected.snapshotSummary?.designSummary?.goals || []
+                    },
+                proposalLines: selectedSnapshot?.proposalBundle?.proposalLines || selected.snapshotSummary?.sequenceSummary?.proposalLines || [],
+                applyResult: selectedSnapshot?.applyResult
+                  ? selectedSnapshot.applyResult
+                  : {
+                      status: selected.snapshotSummary?.applySummary?.status || selected.status || "unknown",
+                      commandCount: selected.snapshotSummary?.applySummary?.commandCount || selected.commandCount || 0,
+                      impactCount: selected.snapshotSummary?.applySummary?.impactCount || selected.impactCount || 0,
+                      failureReason: selected.snapshotSummary?.applySummary?.failureReason || selected.failureReason || ""
+                    },
+                analysisArtifact: selectedSnapshot?.analysisArtifact || null,
+                sceneContext: selectedSnapshot?.designSceneContext || null,
+                musicContext: selectedSnapshot?.musicDesignContext || null,
+                artifactRefs: selected.artifactRefs || null,
+                emptyText: "No applied snapshot is available."
+              })
+            : ""
+        }
       </div>
     `;
   }
