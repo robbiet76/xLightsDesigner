@@ -3405,6 +3405,7 @@ async function onGenerate(intentOverride = "", options = {}) {
     ? requestedRole
     : "designer_dialog";
   const directSequenceMode = proposalRole === "sequence_agent";
+  const bridge = getDesktopBridge();
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
     return render();
@@ -6132,22 +6133,29 @@ async function onSendChat() {
       return;
     }
 
-    addStructuredChatMessage("agent", String(res.assistantMessage || ""), {
-      roleId: String(res.handledBy || "app_assistant"),
-      displayName: getTeamChatSpeakerLabel(String(res.handledBy || "app_assistant")),
-      nickname: String(res.identities?.[String(res.handledBy || "app_assistant")]?.nickname || ""),
-      handledBy: String(res.handledBy || "app_assistant"),
-      addressedTo: String(res.addressedTo || "")
-    });
-    setAgentActiveRole(["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
+    const nextRole = ["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
       ? String(res.routeDecision)
-      : "app_assistant");
+      : "app_assistant";
+    const shouldAutoGenerate = shouldAutoGenerateProposalFromChatResult(res, raw);
+    const suppressShellBubble =
+      shouldAutoGenerate ||
+      (nextRole === "sequence_agent" && Boolean(res?.shouldGenerateProposal));
+    if (!suppressShellBubble) {
+      addStructuredChatMessage("agent", String(res.assistantMessage || ""), {
+        roleId: String(res.handledBy || "app_assistant"),
+        displayName: getTeamChatSpeakerLabel(String(res.handledBy || "app_assistant")),
+        nickname: String(res.identities?.[String(res.handledBy || "app_assistant")]?.nickname || ""),
+        handledBy: String(res.handledBy || "app_assistant"),
+        addressedTo: String(res.addressedTo || "")
+      });
+    }
+    setAgentActiveRole(nextRole);
     state.ui.agentResponseId = String(res.responseId || state.ui.agentResponseId || "");
     state.health.agentProvider = String(res.provider || "openai");
     state.health.agentModel = String(res.model || state.health.agentModel || "");
     state.health.agentConfigured = true;
 
-    if (shouldAutoGenerateProposalFromChatResult(res, raw)) {
+    if (shouldAutoGenerate) {
       await onGenerate(String(res.proposalIntent || raw), {
         requestedRole: String(res.routeDecision || "")
       });

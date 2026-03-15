@@ -38,11 +38,33 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   const assistantText = str(response.assistantMessage).toLowerCase();
   const addressedRole = inferAddressedRole({ userMessage, context });
   const currentRoute = str(context?.route);
+  const directSequencingRequest =
+    (
+      /\b(add|put|place|apply|set|make|use)\b/.test(userText) &&
+      /\b(on|to|during|from|for)\b/.test(userText) &&
+      (
+        /\beffect\b/.test(userText) ||
+        /\bcolor wash\b/.test(userText) ||
+        /\bshimmer\b/.test(userText) ||
+        /\bon\b/.test(userText)
+      )
+    ) ||
+    (
+      /\b(during|from|for)\b/.test(userText) &&
+      /\b(chorus|verse|intro|bridge|outro|section)\b/.test(userText) &&
+      (
+        /\bcolor wash\b/.test(userText) ||
+        /\beffect\b/.test(userText)
+      )
+    );
   if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(userText)) {
     return "setup_help";
   }
   if (/(analyz|analysis|tempo|beats|bars|lyrics|chords|re-analy|reanaly)/.test(userText)) {
     return "audio_analyst";
+  }
+  if (directSequencingRequest) {
+    return "sequence_agent";
   }
   if (/(apply|generate plan|regenerate|refresh proposal|rebase draft|timing track|xlights apply)/.test(userText)) {
     return "sequence_agent";

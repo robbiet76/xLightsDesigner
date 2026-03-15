@@ -222,3 +222,29 @@ test("broad design kickoff stays with designer even if assistant text mentions s
   assert.equal(result.result.routeDecision, "designer_dialog");
   assert.equal(result.result.handledBy, "designer_dialog");
 });
+
+test("explicit effect request routes to sequence agent", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "I can add that Color Wash to Snowman during Chorus 1.",
+        shouldGenerateProposal: true,
+        proposalIntent: "Add a Color Wash effect on Snowman during Chorus 1.",
+        responseId: "resp-direct-sequence"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Add a Color Wash effect on Snowman during Chorus 1.",
+    messages: [],
+    context: { route: "design", sequenceOpen: true, planOnlyMode: false },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "sequence_agent");
+  assert.equal(result.result.handledBy, "sequence_agent");
+  assert.equal(result.result.shouldGenerateProposal, true);
+});
