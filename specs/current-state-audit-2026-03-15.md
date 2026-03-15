@@ -221,10 +221,23 @@ Recommended sequence:
 2. validate it against simple real prompts
 3. only then move to broader conversational and preference sophistication
 
+## Current Next Move
+
+The staged baseline through Stage 7 is now in place.
+
+Immediate next move:
+1. stop adding more synthetic baseline tests
+2. run a real live evaluation session in the installed app
+3. record observed gaps using:
+   - [live-evaluation-script-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/live-evaluation-script-2026-03-15.md)
+4. use those observations to decide whether the next work should be:
+   - prompt/training quality
+   - runtime normalization refinement
+   - cloud-first quality tuning
+
 ## Decision
 
 Proceed with a staged training-and-validation checklist where:
 - each stage is intentionally small
 - each stage has a pass/fail gate
 - no later step starts until the current one is working
-

@@ -36,6 +36,9 @@ Required:
   - app-assistant tests
   - sequence-agent tests
 
+Live validation script:
+- [live-evaluation-script-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/live-evaluation-script-2026-03-15.md)
+
 Exit gate:
 - training work can proceed without concurrent major UI/runtime instability
 
