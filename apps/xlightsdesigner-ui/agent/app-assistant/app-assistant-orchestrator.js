@@ -34,26 +34,42 @@ function inferAddressedRole({ userMessage = "", context = {} } = {}) {
 }
 
 function inferRouteDecision({ userMessage = "", context = {}, response = {} } = {}) {
-  const text = `${str(userMessage)} ${str(response.assistantMessage)}`.toLowerCase();
+  const userText = str(userMessage).toLowerCase();
+  const assistantText = str(response.assistantMessage).toLowerCase();
   const addressedRole = inferAddressedRole({ userMessage, context });
   const currentRoute = str(context?.route);
-  if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(text)) {
+  if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(userText)) {
     return "setup_help";
   }
-  if (/(analyz|analysis|tempo|beats|bars|lyrics|chords|re-analy|reanaly)/.test(text)) {
+  if (/(analyz|analysis|tempo|beats|bars|lyrics|chords|re-analy|reanaly)/.test(userText)) {
     return "audio_analyst";
   }
-  if (/(apply|generate plan|regenerate|refresh proposal|rebase draft|sequence|timing track|xlights apply)/.test(text)) {
+  if (/(apply|generate plan|regenerate|refresh proposal|rebase draft|timing track|xlights apply)/.test(userText)) {
     return "sequence_agent";
   }
   if (
-    /(feel|mood|nostalg|cinematic|punchy|smooth|warm|cool|design|chorus|verse|bridge|look|story|inspiration)/.test(text) ||
+    /(feel|mood|nostalg|cinematic|punchy|smooth|warm|cool|design|chorus|verse|bridge|look|story|inspiration)/.test(userText) ||
     currentRoute === "design"
   ) {
-    if (addressedRole === "sequence_agent" && /(change|less|more|reduce|increase|make|adjust|revise|rework|chorus|verse|bridge)/.test(text)) {
+    if (addressedRole === "sequence_agent" && /(change|less|more|reduce|increase|make|adjust|revise|rework|chorus|verse|bridge)/.test(userText)) {
       return "sequence_agent";
     }
     return "designer_dialog";
+  }
+  if (/(sequence|sequenc|timing track|xlights apply|apply)/.test(userText)) {
+    return "sequence_agent";
+  }
+  if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(assistantText)) {
+    return "setup_help";
+  }
+  if (/(analyz|analysis|tempo|beats|bars|lyrics|chords|re-analy|reanaly)/.test(assistantText)) {
+    return "audio_analyst";
+  }
+  if (/(feel|mood|nostalg|cinematic|punchy|smooth|warm|cool|design|chorus|verse|bridge|look|story|inspiration)/.test(assistantText)) {
+    return "designer_dialog";
+  }
+  if (/(apply|generate plan|regenerate|refresh proposal|rebase draft|sequence|timing track|xlights apply)/.test(assistantText)) {
+    return "sequence_agent";
   }
   if (currentRoute === "project") {
     return addressedRole || "setup_help";

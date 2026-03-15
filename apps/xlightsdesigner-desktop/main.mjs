@@ -16,6 +16,7 @@ import {
   writeProjectArtifact,
   writeProjectArtifacts
 } from "./project-artifact-store.mjs";
+import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs";
 
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
@@ -638,8 +639,13 @@ function buildDesignerSystemPrompt(context = {}) {
     "The user may speak indirectly, emotionally, narratively, or iteratively. Preserve that conversational style.",
     "Use the provided local context to understand what actually exists in the current project: scene/layout, available targets, and music structure.",
     "Do not invent models, groups, submodels, sections, or effects that are not supported by the provided context.",
+    "Do not name specific xLights effects unless the user explicitly asked for one or the effect exists in the provided context.",
+    "Do not use placeholder or improvised effect names like 'rainbow effect' unless that exact effect exists in context.",
     "Make bounded creative assumptions when the request is broad but usable. Ask targeted questions only when the missing answer materially affects the next useful pass.",
     "Respect project-scoped director preferences as soft guidance only. Do not turn one local preference into a global rule.",
+    "Stay in designer mode. Do not speak as if you are already editing, applying, marking sections, or changing the sequence from chat alone.",
+    "Do not ask whether you should apply changes now. Review and apply are separate downstream workflow steps.",
+    "When ending a response, prefer either a concise design summary or one narrow design question. Do not present menu-like implementation options.",
     "Return JSON only, using this exact shape: {\"responseType\":\"designer_cloud_response_v1\",\"responseVersion\":\"1.0\",\"assistantMessage\":\"...\",\"summary\":\"...\",\"guidedQuestions\":[...],\"assumptions\":[...],\"warnings\":[...],\"brief\":{...},\"proposal\":{...}}",
     "The brief object should contain summary, goalsSummary, inspirationSummary, sections, moodEnergyArc, narrativeCues, visualCues, hypotheses, notes.",
     "The proposal object should contain summary and proposalLines at minimum. Proposal lines must stay human-reviewable and should use real target names from context where possible.",
@@ -681,8 +687,10 @@ function buildAgentSystemPrompt(context = {}) {
     "Be concise, practical, and collaborative. Ask targeted follow-up questions only when missing information materially affects the next useful step.",
     "Default to making bounded assumptions and moving the workflow forward when the request is broad but still usable.",
     "Do not require the user to specify low-level xLights effects unless they are expressing a concrete constraint.",
+    "Do not invent specific effect names that are not supplied by the user or present in the local context.",
     "When relevant, mention concrete next actions you can perform in the app.",
     "Keep specialist boundaries intact: audio analysis is media-only, design proposals are review-first, and sequence execution must remain explicit.",
+    "For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.",
     "Do not output JSON unless explicitly asked by the user.",
     `Context: ${JSON.stringify(c)}`
   ].join("\n");
@@ -1229,7 +1237,7 @@ ipcMain.handle("xld:designer:chat", async (_event, payload = {}) => {
       provider: "openai",
       model: cfg.model,
       responseId: String(response.responseId || ""),
-      assistantMessage: String(json?.assistantMessage || response.modelText || "").trim(),
+      assistantMessage: sanitizeDesignerAssistantMessage(String(json?.assistantMessage || response.modelText || "").trim()),
       designerCloudResponse: json
     };
   } catch (err) {

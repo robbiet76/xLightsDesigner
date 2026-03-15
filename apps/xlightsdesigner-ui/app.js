@@ -3446,6 +3446,9 @@ async function onGenerate(intentOverride = "", options = {}) {
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
   const intentText = String(intentOverride || "").trim() || latestUserIntentText();
+  const includeDesignerSelection = shouldCarryDesignerSelectionContext(intentText);
+  const designerSelectedTags = includeDesignerSelection ? (state.ui.metadataSelectedTags || []) : [];
+  const designerSelectedTargetIds = includeDesignerSelection ? (state.ui.metadataSelectionIds || []) : [];
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
   const designSceneContext = buildCurrentDesignSceneContext();
   const musicDesignContext = buildCurrentMusicDesignContext();
@@ -3493,8 +3496,8 @@ async function onGenerate(intentOverride = "", options = {}) {
         sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
         promptText: intentText,
         selectedSections: selected,
-        selectedTagNames: state.ui.metadataSelectedTags || [],
-        selectedTargetIds: state.ui.metadataSelectionIds || [],
+        selectedTagNames: designerSelectedTags,
+        selectedTargetIds: designerSelectedTargetIds,
         goals: state.creative?.goals || "",
         inspiration: state.creative?.inspiration || "",
         notes: state.creative?.notes || "",
@@ -5383,12 +5386,25 @@ function inferIntentModeFromGoal(text = "") {
   return "create";
 }
 
-function buildAgentConversationContext() {
+function shouldCarryDesignerSelectionContext(promptText = "") {
+  const text = String(promptText || "").trim().toLowerCase();
+  const selectedTargets = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []);
+  const selectedTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []);
+  if (!selectedTargets.length && !selectedTags.length) return false;
+  if (!text) return false;
+  if (/\b(selected|these|those)\b/.test(text)) return true;
+  if (selectedTargets.some((id) => text.includes(String(id || "").toLowerCase()))) return true;
+  if (selectedTags.some((tag) => text.includes(String(tag || "").toLowerCase()))) return true;
+  return false;
+}
+
+function buildAgentConversationContext(userMessage = "") {
   const selectedSectionNames = hasAllSectionsSelected()
     ? ["all"]
     : getSelectedSections();
-  const selectedTargets = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []);
-  const selectedTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []);
+  const includeDesignerSelection = shouldCarryDesignerSelectionContext(userMessage);
+  const selectedTargets = includeDesignerSelection ? normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []) : [];
+  const selectedTags = includeDesignerSelection ? normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []) : [];
   return {
     projectName: state.projectName || "",
     sequenceName: state.activeSequence || "",
@@ -6093,8 +6109,8 @@ async function onSendChat() {
     const shell = await executeAppAssistantConversation({
       userMessage: raw,
       messages: history,
-      previousResponseId: String(state.ui.agentResponseId || ""),
-      context: buildAgentConversationContext(),
+      previousResponseId: "",
+      context: buildAgentConversationContext(raw),
       bridge
     });
     const res = shell?.result || null;
@@ -6123,16 +6139,6 @@ async function onSendChat() {
       handledBy: String(res.handledBy || "app_assistant"),
       addressedTo: String(res.addressedTo || "")
     });
-    if (
-      res.routeDecision === "sequence_agent" ||
-      res.shouldGenerateProposal ||
-      res.routeDecision === "designer_dialog"
-    ) {
-      addStructuredChatMessage(
-        "system",
-        "Draft only. No changes have been written to xLights yet. Review the proposal and use Apply from the Review workflow to execute changes."
-      );
-    }
     setAgentActiveRole(["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
       ? String(res.routeDecision)
       : "app_assistant");
@@ -6587,6 +6593,7 @@ function buildDesignerCloudConversationContext({
   designSceneContext = null,
   musicDesignContext = null
 } = {}) {
+  const includeDesignerSelection = shouldCarryDesignerSelectionContext(intentText);
   return {
     route: "design",
     projectName: String(state.projectName || "").trim(),
@@ -6594,8 +6601,8 @@ function buildDesignerCloudConversationContext({
     activeSequenceLoaded: Boolean(state.flags.activeSequenceLoaded),
     selection: {
       sectionNames: selectedSections,
-      targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-      tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
+      targetIds: includeDesignerSelection ? normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []) : [],
+      tagNames: includeDesignerSelection ? normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []) : []
     },
     promptText: String(intentText || "").trim(),
     analysisAvailable: Boolean(analysisHandoff),
@@ -6613,14 +6620,41 @@ function buildDesignerCloudConversationContext({
 function shouldAutoGenerateProposalFromChatResult(res = {}, raw = "") {
   const routeDecision = String(res?.routeDecision || "").trim();
   if (!(state.flags.activeSequenceLoaded || state.flags.planOnlyMode)) return false;
-  if (Boolean(res?.shouldGenerateProposal)) return true;
-  if (!["designer_dialog", "sequence_agent"].includes(routeDecision)) return false;
   const text = String(raw || "").trim().toLowerCase();
   if (!text) return false;
+
+  const explicitGenerateIntent =
+    /(generate|draft|proposal|plan|go ahead|proceed|show me a draft|build a draft|put together a pass|make a pass)/.test(text);
+  const explicitTechnicalIntent =
+    /(apply|change|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
+  const isBroadCreativeKickoff =
+    routeDecision === "designer_dialog" &&
+    /(i want|i'd like|it should feel|this should feel|feel|mood|nostalg|cinematic|warm|cool|magical|welcoming|story|inspiration)/.test(text) &&
+    !explicitGenerateIntent &&
+    !explicitTechnicalIntent;
+  const hasExistingDesignContext =
+    Boolean(state.creative?.brief?.summary) ||
+    Boolean(state.creative?.proposalBundle?.summary) ||
+    Array.isArray(state.proposed) && state.proposed.length > 0;
+
+  if (Boolean(res?.shouldGenerateProposal)) {
+    if (routeDecision === "sequence_agent") return true;
+    if (routeDecision === "designer_dialog") {
+      if (explicitGenerateIntent) return true;
+      if (hasExistingDesignContext && !isBroadCreativeKickoff) return true;
+      return false;
+    }
+    return false;
+  }
+  if (!["designer_dialog", "sequence_agent"].includes(routeDecision)) return false;
   const isQuestionOnly = /^(can you|could you|would you|will you|do you|does this|is this|what|why|how)\b/.test(text)
     && !/(apply|change|make|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
   if (isQuestionOnly) return false;
-  return /(apply|change|make|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
+  if (routeDecision === "designer_dialog") {
+    if (explicitGenerateIntent) return true;
+    return hasExistingDesignContext && explicitTechnicalIntent && !isBroadCreativeKickoff;
+  }
+  return explicitTechnicalIntent;
 }
 
 function inferProposalLinesFromIntent(intentText, sections = []) {
@@ -8537,6 +8571,8 @@ function onResetProjectWorkspace() {
   state.ui.metadataFilterType = "";
   state.ui.metadataFilterTags = "";
   state.ui.detailsOpen = false;
+  state.chat = [];
+  state.ui.chatDraft = "";
   state.diagnostics = [];
   state.jobs = [];
   state.sectionStartByLabel = {};

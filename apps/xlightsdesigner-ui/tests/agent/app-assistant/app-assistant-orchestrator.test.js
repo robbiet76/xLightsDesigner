@@ -197,3 +197,28 @@ test("direct sequencer address can bias ambiguous revise requests toward sequenc
   assert.equal(result.result.routeDecision, "sequence_agent");
   assert.equal(result.result.handledBy, "sequence_agent");
 });
+
+test("broad design kickoff stays with designer even if assistant text mentions sequencing", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "I can turn that design intent into sequence changes after we shape the direction.",
+        shouldGenerateProposal: true,
+        proposalIntent: "I want this sequence to feel warm, welcoming, and a little magical.",
+        responseId: "resp-design-kickoff"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "I want this sequence to feel warm, welcoming, and a little magical.",
+    messages: [],
+    context: { route: "design", sequenceOpen: true, planOnlyMode: false },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.handledBy, "designer_dialog");
+});
