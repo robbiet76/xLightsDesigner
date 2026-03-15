@@ -86,12 +86,18 @@ function buildIntentGuidanceLines({ normalizedIntent = null } = {}) {
   return lines;
 }
 
-function buildMusicGuidanceLines({ musicDesignContext = null, sections = [] } = {}) {
+function buildMusicGuidanceLines({ musicDesignContext = null, sections = [], normalizedIntent = null } = {}) {
   const music = musicDesignContext && typeof musicDesignContext === "object" ? musicDesignContext : {};
+  const intent = normalizedIntent && typeof normalizedIntent === "object" ? normalizedIntent : {};
   const sectionArc = arr(music.sectionArc);
   const reveals = arr(music?.designCues?.revealMoments).filter(Boolean);
   const holds = arr(music?.designCues?.holdMoments).filter(Boolean);
   const targetSections = arr(sections).filter(Boolean);
+  const safety = new Set(arr(intent.safetyConstraints).map((row) => str(row)));
+  const isReadabilityRefinement =
+    safety.has("preserve_readability") &&
+    str(intent.tempoIntent) !== "increase" &&
+    str(intent.styleDirection) !== "punchy";
   const lines = [];
 
   for (const section of sectionArc) {
@@ -100,14 +106,20 @@ function buildMusicGuidanceLines({ musicDesignContext = null, sections = [] } = 
     if (targetSections.length && !targetSections.includes(label)) continue;
     const energy = str(section?.energy);
     if (energy === "high") {
-      lines.push(`${label} / General / build stronger visual payoff and clearer contrast at this impact section`);
+      if (isReadabilityRefinement) {
+        lines.push(`${label} / General / keep the impact legible by tightening the moment instead of adding more noise`);
+      } else {
+        lines.push(`${label} / General / build stronger visual payoff and clearer contrast at this impact section`);
+      }
     } else if (energy === "low") {
       lines.push(`${label} / General / keep the pass restrained and readable to preserve space`);
     }
   }
 
-  for (const reveal of reveals.slice(0, 2)) {
-    lines.push(`General / General / shape a reveal around ${str(reveal)} with clearer escalation into the moment`);
+  if (!isReadabilityRefinement) {
+    for (const reveal of reveals.slice(0, 2)) {
+      lines.push(`General / General / shape a reveal around ${str(reveal)} with clearer escalation into the moment`);
+    }
   }
   for (const hold of holds.slice(0, 2)) {
     lines.push(`General / General / protect ${str(hold)} as a calmer hold section without extra clutter`);
@@ -155,7 +167,7 @@ function applyDesignerContextToProposalLines({
   const sections = arr(normalizedIntent?.sections).filter(Boolean);
   const intentLines = buildIntentGuidanceLines({ normalizedIntent });
   const sceneLines = buildSceneGuidanceLines({ designSceneContext, sections });
-  const musicLines = buildMusicGuidanceLines({ musicDesignContext, sections });
+  const musicLines = buildMusicGuidanceLines({ musicDesignContext, sections, normalizedIntent });
   const preferenceLines = buildPreferenceGuidanceLines({ directorProfile, normalizedIntent });
   return prependUnique(proposalLines, [...intentLines, ...sceneLines, ...musicLines, ...preferenceLines]).slice(0, 8);
 }
