@@ -179,6 +179,8 @@ test("stage1 simple refinement keeps narrow target scope in the handoff", () => 
   assert.equal(result.intentHandoff.mode, "revise");
   assert.ok(result.proposalLines.some((line) => /Snowman/.test(line)));
   assert.ok(result.proposalLines.some((line) => /simplify the pass|tighten the focal read/i.test(line)));
-  assert.ok(result.proposalLines.some((line) => /keep the impact legible|tightening the moment/i.test(line)));
   assert.ok(result.proposalLines.every((line) => !/shape a reveal around/i.test(line)));
+  assert.ok(result.proposalLines.every((line) => !/balance focal effects and ambient beds/i.test(line)));
+  assert.ok(result.proposalLines.every((line) => !/preserve groove and improve clarity/i.test(line)));
+  assert.ok(result.proposalLines.every((line) => !/align palette and texture choices to brief visual cues/i.test(line)));
 });

@@ -22,6 +22,42 @@ function prependUnique(lines = [], additions = []) {
   return [...merged, ...arr(lines).map((row) => str(row)).filter(Boolean)];
 }
 
+function classifyGuidanceConcept(line = "") {
+  const lower = str(line).toLowerCase();
+  if (!lower) return "";
+  if (/(warm welcoming base|little wonder|palette cool and crisp)/.test(lower)) return "mood";
+  if (/(simplify the pass|tighten the focal read|keep the impact legible|adding more noise)/.test(lower)) return "readability_refine";
+  if (/(focal clarity|lead visual anchor|clear focal hierarchy|focal accents)/.test(lower)) return "focal";
+  if (/(broad base coverage|detail refinement)/.test(lower)) return "structure";
+  if (/(stronger visual payoff|impact section|shape a reveal|escalation into the moment|lift feel bigger)/.test(lower)) return "impact";
+  if (/(restrained and readable|calmer hold section|without extra clutter)/.test(lower)) return "hold";
+  if (/(preserve groove|tighter transition timing|balance focal effects and ambient beds)/.test(lower)) return "generic_balance";
+  return "";
+}
+
+function pruneRedundantLines(lines = [], normalizedIntent = null) {
+  const intent = normalizedIntent && typeof normalizedIntent === "object" ? normalizedIntent : {};
+  const isReadabilityRefinement =
+    arr(intent.safetyConstraints).map((row) => str(row)).includes("preserve_readability") &&
+    str(intent.tempoIntent) !== "increase";
+  const seenConcepts = new Set();
+  const out = [];
+
+  for (const line of arr(lines).map((row) => str(row)).filter(Boolean)) {
+    const concept = classifyGuidanceConcept(line);
+    if (isReadabilityRefinement && concept === "generic_balance") {
+      continue;
+    }
+    if (concept && seenConcepts.has(concept)) {
+      continue;
+    }
+    if (concept) seenConcepts.add(concept);
+    out.push(line);
+  }
+
+  return out;
+}
+
 function readProfileSignal(profile = null, key = "") {
   const signal = profile?.preferences?.[key];
   if (!signal || typeof signal !== "object") return null;
@@ -169,7 +205,10 @@ function applyDesignerContextToProposalLines({
   const sceneLines = buildSceneGuidanceLines({ designSceneContext, sections });
   const musicLines = buildMusicGuidanceLines({ musicDesignContext, sections, normalizedIntent });
   const preferenceLines = buildPreferenceGuidanceLines({ directorProfile, normalizedIntent });
-  return prependUnique(proposalLines, [...intentLines, ...sceneLines, ...musicLines, ...preferenceLines]).slice(0, 8);
+  return pruneRedundantLines(
+    prependUnique(proposalLines, [...intentLines, ...sceneLines, ...musicLines, ...preferenceLines]),
+    normalizedIntent
+  ).slice(0, 8);
 }
 
 export function buildProposalFromIntent(input = {}) {

@@ -47,9 +47,6 @@ export function buildSequencingStrategy(normalizedIntent, targets = []) {
     }
   }
 
-  if (intent.creativeBrief?.visualCues) {
-    directives.push(`Global / ${targetText} / align palette and texture choices to brief visual cues: ${intent.creativeBrief.visualCues}`);
-  }
   if (Array.isArray(intent.effectOverrides) && intent.effectOverrides.length) {
     directives.push(`Global / ${targetText} / honor explicit user effect preferences: ${intent.effectOverrides.join(", ")}`);
   }
