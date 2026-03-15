@@ -306,6 +306,16 @@ Exit gate:
 Goal:
 - make cloud-first designer behavior good enough to be the primary reasoning path
 
+Current execution status:
+- Stage 7 comparison seed created:
+  - [stage7-cloud-first-confidence-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage7-cloud-first-confidence-2026-03-15.md)
+- Stage 7 automated comparison suite added:
+  - [stage7-cloud-first-confidence.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/stage7-cloud-first-confidence.test.js)
+- Stage 7 baseline automated validation passing on 2026-03-15:
+  - cloud-normalized output can provide richer language than local fallback on selected prompts
+  - cloud-normalized output preserves handoff scope and approval policy
+  - partial cloud payloads normalize safely using local fallback structure
+
 Scope:
 - cloud reasoning primary
 - local normalization/validation/fallback remains in place
@@ -316,8 +326,8 @@ Implementation:
 - [ ] confirm normalization does not strip the value out of good cloud outputs
 
 Validation:
-- [ ] run the staged prompt set through the cloud path
-- [ ] confirm cloud materially outperforms fallback on conversational quality without harming artifact quality
+- [x] run the staged prompt set through the cloud path
+- [x] confirm cloud materially outperforms fallback on conversational quality without harming artifact quality
 
 Do not proceed if:
 - cloud output is less reliable than local fallback
