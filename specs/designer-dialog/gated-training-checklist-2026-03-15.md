@@ -187,6 +187,17 @@ Exit gate:
 Goal:
 - teach the designer when to ask and when to proceed
 
+Current execution status:
+- Stage 4 prompt seed created:
+  - [stage4-clarification-discipline-prompts-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage4-clarification-discipline-prompts-2026-03-15.md)
+- Stage 4 automated contract suite added:
+  - [stage4-clarification-discipline.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/stage4-clarification-discipline.test.js)
+- Stage 4 baseline automated validation passing on 2026-03-15:
+  - broad usable prompts proceed without clarification
+  - ambiguous but salvageable prompts ask at most one focused clarification
+  - empty kickoffs fail cleanly into clarification mode
+  - explicit refinements proceed without clarification
+
 Scope:
 - missing but non-critical information should become explicit assumptions
 - only materially blocking gaps should trigger clarification
@@ -199,8 +210,8 @@ Implementation:
   - avoid unnecessary questioning
 
 Validation:
-- [ ] run ambiguous prompt set
-- [ ] confirm designer asks less, but asks better
+- [x] run ambiguous prompt set
+- [x] confirm designer asks less, but asks better
 
 Do not proceed if:
 - designer asks broad vague questions
