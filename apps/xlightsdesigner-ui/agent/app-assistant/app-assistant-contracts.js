@@ -8,10 +8,10 @@ export const TEAM_CHAT_ROLE_IDS = [
 ];
 
 export const DEFAULT_TEAM_CHAT_IDENTITIES = {
-  app_assistant: { roleId: "app_assistant", displayName: "App Assistant", nickname: "" },
-  audio_analyst: { roleId: "audio_analyst", displayName: "Audio Analyst", nickname: "" },
-  designer_dialog: { roleId: "designer_dialog", displayName: "Designer", nickname: "" },
-  sequence_agent: { roleId: "sequence_agent", displayName: "Sequencer", nickname: "" }
+  app_assistant: { roleId: "app_assistant", displayName: "App Assistant", nickname: "Clover" },
+  audio_analyst: { roleId: "audio_analyst", displayName: "Audio Analyst", nickname: "Lyric" },
+  designer_dialog: { roleId: "designer_dialog", displayName: "Designer", nickname: "Mira" },
+  sequence_agent: { roleId: "sequence_agent", displayName: "Sequencer", nickname: "Patch" }
 };
 
 const ROUTES = new Set([
@@ -43,10 +43,12 @@ export function buildTeamChatIdentities(overrides = {}) {
   for (const roleId of TEAM_CHAT_ROLE_IDS) {
     const base = DEFAULT_TEAM_CHAT_IDENTITIES[roleId];
     const override = isPlainObject(overrides?.[roleId]) ? overrides[roleId] : {};
+    const overrideDisplayName = str(override.displayName);
+    const overrideNickname = str(override.nickname);
     out[roleId] = {
       roleId,
-      displayName: str(override.displayName || base.displayName),
-      nickname: str(override.nickname || "")
+      displayName: overrideDisplayName || base.displayName,
+      nickname: overrideNickname || base.nickname
     };
   }
   return out;

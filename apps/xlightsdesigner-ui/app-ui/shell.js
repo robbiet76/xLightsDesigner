@@ -38,50 +38,10 @@ export function buildAppShell({ state, screenContent, helpers }) {
   }
 
   function persistentCoachPanel() {
-    function renderIdentityMeta({ role = "system", handledBy = "", addressedTo = "", header = "" }) {
-      if (role !== "agent") return "";
-      const handledIdentity = getTeamChatIdentity(handledBy || "app_assistant");
-      const addressedIdentity = addressedTo ? getTeamChatIdentity(addressedTo) : null;
-      const routeLabel = handledBy === "audio_analyst"
-        ? "Audio"
-        : handledBy === "designer_dialog"
-          ? "Design"
-          : handledBy === "sequence_agent"
-            ? "Review"
-            : "Project";
-      const overrideNote = addressedIdentity && addressedTo !== handledBy
-        ? `<span class="chat-identity-note">Addressed to ${escapeHtml(addressedIdentity.nickname ? `${addressedIdentity.displayName} (${addressedIdentity.nickname})` : addressedIdentity.displayName)}, handled by ${escapeHtml(header)}</span>`
-        : "";
-      return `
-        <div class="chat-identity-row">
-          <span class="chat-identity-pill">${escapeHtml(handledIdentity.displayName)}</span>
-          ${handledIdentity.nickname ? `<span class="chat-identity-pill chat-identity-pill-nickname">${escapeHtml(handledIdentity.nickname)}</span>` : ""}
-          <span class="chat-identity-pill chat-identity-pill-route">${escapeHtml(routeLabel)}</span>
-        </div>
-        ${overrideNote}
-      `;
-    }
-
-    function renderChatArtifactCard(artifact) {
-      if (!artifact || typeof artifact !== "object") return "";
-      const title = escapeHtml(String(artifact.title || "Artifact"));
-      const summary = escapeHtml(String(artifact.summary || ""));
-      const chips = Array.isArray(artifact.chips) ? artifact.chips.map((v) => escapeHtml(String(v || "").trim())).filter(Boolean).slice(0, 6) : [];
-      const kicker = escapeHtml(String(artifact.artifactType || "artifact"));
-      return `
-        <section class="chat-artifact-card">
-          <div class="artifact-kicker">${kicker}</div>
-          <h4>${title}</h4>
-          ${summary ? `<p class="artifact-body">${summary}</p>` : ""}
-          ${chips.length ? `<div class="artifact-chip-row">${chips.map((chip) => `<span class="artifact-chip">${chip}</span>`).join("")}</div>` : ""}
-        </section>
-      `;
-    }
-
     return `
       <aside class="coach-panel card">
         <h3>Design Team Chat</h3>
-        <div class="banner team-chat-context"><strong>${escapeHtml(String(chatContext?.title || "Team chat"))}</strong> - ${escapeHtml(String(chatContext?.note || ""))}</div>
+        <p class="team-chat-context">${escapeHtml(String(chatContext?.note || "Use chat to direct the design team and review the active conversation."))}</p>
         <div class="panel-window chat-window">
           <div class="chat-thread">
             ${(state.chat || [])
@@ -93,15 +53,11 @@ export function buildAppShell({ state, screenContent, helpers }) {
                   : role === "agent"
                     ? (String(c.displayName || "").trim() || getTeamChatSpeakerLabel(handledBy || "app_assistant"))
                     : "System";
-                const routedByNote = role === "agent" && c.addressedTo && c.addressedTo !== handledBy
-                  ? `<span class="banner">Routed from ${escapeHtml(getTeamChatSpeakerLabel(String(c.addressedTo || "")))} to ${escapeHtml(header)}</span>`
-                  : "";
-                return `<article class="chat-msg ${role}">
+                const agentClassKey = String(handledBy || "").trim().replace(/[^a-z0-9_-]+/gi, "-").toLowerCase();
+                const agentClass = role === "agent" && agentClassKey ? ` chat-msg-agent-${agentClassKey}` : "";
+                return `<article class="chat-msg ${role}${agentClass}">
                   <header>${escapeHtml(header)}</header>
-                  ${renderIdentityMeta({ role, handledBy, addressedTo: String(c.addressedTo || ""), header })}
-                  <div>${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                  ${renderChatArtifactCard(c.artifact)}
-                  ${routedByNote}
+                  <div class="chat-msg-body">${String(c.text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
                 </article>`;
               })
               .join("")}

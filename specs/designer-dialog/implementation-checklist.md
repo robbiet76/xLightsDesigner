@@ -250,6 +250,12 @@ Not yet implemented:
 
 - [ ] Decompose remaining shared designer lifecycle code in `app.js` once designer runtime is stable.
 
+## Gated Execution Path
+
+- [ ] Execute staged designer capability work from:
+  - [gated-training-checklist-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/gated-training-checklist-2026-03-15.md)
+- [ ] Do not advance past a stage until its exit gate is demonstrably passing in real usage.
+
 ## Next Training Foundation
 
 - [ ] Add `director_profile_v1` runtime contract and training-package JSON schema

@@ -25,7 +25,6 @@ export function buildScreenContent({ state, helpers }) {
     applyDisabledReason,
     applyEnabled,
     buildCurrentReviewSnapshotSummary,
-    getMetadataOrphans,
     getMetadataTagRecords,
     buildMetadataTargets,
     matchesMetadataFilterValue,
@@ -44,16 +43,16 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
+  function renderDetailList(items = [], emptyText = "Nothing available yet.") {
+    const rows = Array.isArray(items) ? items.map((row) => String(row || "").trim()).filter(Boolean) : [];
+    return rows.length
+      ? `<ul class="artifact-detail-list">${rows.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul>`
+      : `<p class="banner">${escapeHtml(emptyText)}</p>`;
+  }
+
   function renderArtifactDetailPanel() {
     const inspected = String(state.ui?.inspectedArtifact || "").trim();
     if (!inspected) return "";
-
-    function list(items = [], emptyText = "Nothing available yet.") {
-      const rows = Array.isArray(items) ? items.map((row) => String(row || "").trim()).filter(Boolean) : [];
-      return rows.length
-        ? `<ul class="artifact-detail-list">${rows.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul>`
-        : `<p class="banner">${escapeHtml(emptyText)}</p>`;
-    }
 
     let title = "Artifact Detail";
     let kicker = "Artifact";
@@ -75,7 +74,7 @@ export function buildScreenContent({ state, helpers }) {
           <div><strong>Meter</strong><p>${escapeHtml(String(timing?.timeSignature || "unknown"))}</p></div>
         </div>
         <h4>Sections</h4>
-        ${list((structure?.sections || []).map((row) => `${row?.label || row?.name || "Section"}${row?.startMs != null && row?.endMs != null ? ` (${row.startMs}-${row.endMs} ms)` : ""}`), "No detected sections yet.")}
+        ${renderDetailList((structure?.sections || []).map((row) => `${row?.label || row?.name || "Section"}${row?.startMs != null && row?.endMs != null ? ` (${row.startMs}-${row.endMs} ms)` : ""}`), "No detected sections yet.")}
       `;
     } else if (inspected === "audio-pipeline") {
       const pipeline = state.audioAnalysis?.pipeline || {};
@@ -119,9 +118,9 @@ export function buildScreenContent({ state, helpers }) {
       body = `
         <p class="artifact-body">The current working scope is what the downstream designer and sequencer will use as the active target boundary.</p>
         <h4>Selected Sections</h4>
-        ${list(selectedSections, "All sections are currently in scope.")}
+        ${renderDetailList(selectedSections, "All sections are currently in scope.")}
         <h4>Available Sections</h4>
-        ${list(sections, "No sections are available yet.")}
+        ${renderDetailList(sections, "No sections are available yet.")}
       `;
     } else if (inspected === "sequence-intent") {
       const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1");
@@ -137,11 +136,11 @@ export function buildScreenContent({ state, helpers }) {
             <div><strong>Allow Global Rewrite</strong><p>${intent.constraints?.allowGlobalRewrite ? "Yes" : "No"}</p></div>
           </div>
           <h4>Target Scope</h4>
-          ${list(intent.scope?.targetIds || [], "No target scope captured.")}
+          ${renderDetailList(intent.scope?.targetIds || [], "No target scope captured.")}
           <h4>Section Scope</h4>
-          ${list(intent.scope?.sections || [], "No section scope captured.")}
+          ${renderDetailList(intent.scope?.sections || [], "No section scope captured.")}
           <h4>Director Preferences</h4>
-          ${list([
+          ${renderDetailList([
             intent.directorPreferences?.styleDirection ? `Style: ${intent.directorPreferences.styleDirection}` : "",
             intent.directorPreferences?.energyArc ? `Energy: ${intent.directorPreferences.energyArc}` : "",
             intent.directorPreferences?.colorDirection ? `Color: ${intent.directorPreferences.colorDirection}` : ""
@@ -162,9 +161,9 @@ export function buildScreenContent({ state, helpers }) {
           <div><strong>Apply Ready</strong><p>${applyReadyForApprovalGate() ? "Yes" : "No"}</p></div>
         </div>
         <h4>Current Proposal Lines</h4>
-        ${list(proposalLines, "No translated proposal lines yet.")}
+        ${renderDetailList(proposalLines, "No translated proposal lines yet.")}
         <h4>Plan Warnings</h4>
-        ${list(plan.warnings || [], "No plan warnings.")}
+        ${renderDetailList(plan.warnings || [], "No plan warnings.")}
       `;
     } else if (inspected === "creative-brief") {
       const brief = state.creative?.brief || null;
@@ -180,9 +179,9 @@ export function buildScreenContent({ state, helpers }) {
             <div><strong>Visual Cues</strong><p>${escapeHtml(String(brief.visualCues || "Not set"))}</p></div>
           </div>
           <h4>Brief Sections</h4>
-          ${list(brief.sections, "No brief sections yet.")}
+          ${renderDetailList(brief.sections, "No brief sections yet.")}
           <h4>Design Hypotheses</h4>
-          ${list(brief.hypotheses, "No design hypotheses captured yet.")}
+          ${renderDetailList(brief.hypotheses, "No design hypotheses captured yet.")}
         `
         : `<p class="banner">No creative brief has been generated yet.</p>`;
     } else if (inspected === "proposal-bundle") {
@@ -199,13 +198,13 @@ export function buildScreenContent({ state, helpers }) {
             <div><strong>Allow Global Rewrite</strong><p>${bundle.constraints?.allowGlobalRewrite ? "Yes" : "No"}</p></div>
           </div>
           <h4>Proposal Lines</h4>
-          ${list(bundle.proposalLines, "No proposal lines available.")}
+          ${renderDetailList(bundle.proposalLines, "No proposal lines available.")}
           <h4>Assumptions</h4>
-          ${list(bundle.assumptions, "No assumptions captured.")}
+          ${renderDetailList(bundle.assumptions, "No assumptions captured.")}
           <h4>Open Questions</h4>
-          ${list(bundle.guidedQuestions, "No guided questions remain.")}
+          ${renderDetailList(bundle.guidedQuestions, "No guided questions remain.")}
           <h4>Risk Notes</h4>
-          ${list(bundle.riskNotes, "No risk notes captured.")}
+          ${renderDetailList(bundle.riskNotes, "No risk notes captured.")}
         `
         : `<p class="banner">No proposal bundle is available yet.</p>`;
     } else if (inspected === "director-profile") {
@@ -268,7 +267,7 @@ export function buildScreenContent({ state, helpers }) {
           <div><strong>Failure Reason</strong><p>${escapeHtml(String(lastApply?.failureReason || "none"))}</p></div>
         </div>
         <h4>Verification Notes</h4>
-        ${list([
+        ${renderDetailList([
           verification?.revisionAdvanced ? "Revision advanced after apply." : "",
           verification?.expectedMutationsPresent ? "Expected mutations confirmed." : "",
           verification?.displayOrderVerified ? "Display element ordering confirmed." : ""
@@ -302,32 +301,30 @@ export function buildScreenContent({ state, helpers }) {
 
     const definitions = {
       project: {
-        title: "Primary Journey",
         summary: "Set the project context: project file, show folder, media path, and active sequence.",
         next: selectedSequence ? "Project context is configured. Continue into Audio to inspect analysis or Design to start shaping the sequence." : "Create or open the project, then choose the active sequence before moving into Audio or Design."
       },
       audio: {
-        title: "Primary Journey",
         summary: "Analyze the song and capture the timing and structure the rest of the workflow will use.",
         next: hasAudioArtifact ? "Audio artifact is ready. Continue to Design to shape the creative direction." : "Run or reuse audio analysis, then continue to Design."
       },
       design: {
-        title: "Primary Journey",
         summary: "Shape the creative direction and let the designer capture the sequence brief live from conversation.",
         next: hasProposal ? "Proposal bundle is ready. Continue to Sequence to inspect the technical translation." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
       },
       sequence: {
-        title: "Primary Journey",
         summary: "Inspect how the current design is being translated into actual sequencing changes.",
         next: hasProposal ? "Translation is visible. Continue to Review to approve and apply the current change set." : "Develop the design first, then inspect the sequence translation here before apply."
       },
       review: {
-        title: "Primary Journey",
         summary: "Review the current design and sequence snapshot, then approve and apply it deliberately.",
         next: reviewReady ? "Draft is ready for review and apply. Approve only after checking warnings and scope." : "If the draft is stale or incomplete, return to Design or refresh before apply."
       },
+      history: {
+        summary: "Audit what design and sequence state was actually implemented at each applied revision.",
+        next: "Open a snapshot to inspect the design, translation, and execution state captured at apply time."
+      },
       settings: {
-        title: "Application Settings",
         summary: "Manage app-level connections, services, identities, and safety controls.",
         next: "Use Settings first on a new install. Project-specific work belongs on the Project screen."
       }
@@ -337,9 +334,71 @@ export function buildScreenContent({ state, helpers }) {
     if (!row) return "";
     return `
       <section class="card journey-card full-span">
-        <p class="artifact-body">${escapeHtml(row.summary)}</p>
+        <h3>${escapeHtml(row.summary)}</h3>
       </section>
     `;
+  }
+
+  function parseTranslatedTarget(line = "") {
+    const text = String(line || "").trim();
+    if (!text) return "";
+    const parts = text.split("/").map((part) => String(part || "").trim()).filter(Boolean);
+    return parts.length >= 2 ? parts[1] : "";
+  }
+
+  function parseProposalLineParts(line = "") {
+    const text = String(line || "").trim();
+    const parts = text.split(/\s+\/\s+/).map((part) => String(part || "").trim()).filter(Boolean);
+    return {
+      section: parts[0] || "General",
+      target: parts[1] || "General",
+      summary: parts.length > 2 ? parts.slice(2).join(" / ") : ""
+    };
+  }
+
+  function inferTargetLevel(target = "") {
+    const id = String(target || "").trim();
+    if (!id || id === "General" || id === "AllModels") return "Group";
+    if (state.sceneGraph?.submodelsById && state.sceneGraph.submodelsById[id]) return "Submodel";
+    if (state.sceneGraph?.groupsById && state.sceneGraph.groupsById[id]) return "Group";
+    if (state.sceneGraph?.modelsById && state.sceneGraph.modelsById[id]) return "Model";
+    if (id.includes("/")) return "Submodel";
+    return "Model";
+  }
+
+  function inferTimingTrackName(commands = []) {
+    const rows = Array.isArray(commands) ? commands : [];
+    const timingWrite = rows.find((row) => String(row?.cmd || "").trim() === "timing.createTrack");
+    if (timingWrite?.params?.name) return String(timingWrite.params.name);
+    const align = rows.find((row) => String(row?.cmd || "").trim() === "effects.alignToTiming");
+    if (align?.params?.timingTrackName) return String(align.params.timingTrackName);
+    return "XD: Sequencer Plan";
+  }
+
+  function summarizeSequenceGridRow(line = "") {
+    const parsed = parseProposalLineParts(line);
+    let commands = [];
+    try {
+      commands = buildDesignerPlanCommands([line], {
+        displayElements: state.displayElements || [],
+        targetIds: Array.isArray(state.creative?.intentHandoff?.scope?.targetIds) ? state.creative.intentHandoff.scope.targetIds : [],
+        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+        groupsById: state.sceneGraph?.groupsById || {},
+        submodelsById: state.sceneGraph?.submodelsById || {}
+      });
+    } catch {
+      commands = [];
+    }
+    const effectCount = commands.filter((row) => String(row?.cmd || "").trim() === "effects.create").length;
+    const alignCount = commands.filter((row) => String(row?.cmd || "").trim() === "effects.alignToTiming").length;
+    return {
+      timing: inferTimingTrackName(commands),
+      section: parsed.section || "General",
+      target: parsed.target || "General",
+      level: inferTargetLevel(parsed.target),
+      summary: parsed.summary || "Pending translation detail",
+      effects: effectCount + alignCount
+    };
   }
 
   function renderSnapshotDashboard({
@@ -725,123 +784,67 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
-  function renderSequenceTranslationDashboardCard() {
-    const plan = state.agentPlan || {};
+  function renderSequenceTranslationGrid() {
     const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
-    const warnings = Array.isArray(plan?.warnings) ? plan.warnings.slice(0, 4) : [];
-    const lastApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
+    const plan = state.agentPlan || {};
     const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1") || null;
     const planHandoff = getValidHandoff("plan_handoff_v1");
+    const sectionScope = Array.isArray(intent?.scope?.sections) ? intent.scope.sections.filter(Boolean) : [];
     const selectedTargets = Array.isArray(intent?.scope?.targetIds) ? intent.scope.targetIds.filter(Boolean) : [];
-    const selectedSections = Array.isArray(intent?.scope?.sections) ? intent.scope.sections.filter(Boolean) : [];
-    const sequencingConstraints = intent?.constraints && typeof intent.constraints === "object" ? intent.constraints : {};
-    const pendingQuestions = Array.isArray(state.creative?.proposalBundle?.guidedQuestions)
-      ? state.creative.proposalBundle.guidedQuestions.filter(Boolean).slice(0, 3)
-      : [];
-    const currentAssumptions = Array.isArray(state.creative?.proposalBundle?.assumptions)
-      ? state.creative.proposalBundle.assumptions.filter(Boolean).slice(0, 3)
-      : [];
     const translationSource = plan?.source === "cloud_normalized"
       ? "Cloud-Normalized Plan"
       : planHandoff?.artifactId
         ? "Canonical Plan"
         : "Pending";
     const commandCount = Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0;
-    const timingAnchorCount = Array.isArray(planHandoff?.commands)
-      ? planHandoff.commands.filter((command) => String(command?.command || "").trim() === "effects.alignToTiming").length
-      : 0;
-    const lastAppliedSnapshot =
-      state.ui?.reviewHistorySnapshot &&
-      state.ui.reviewHistorySnapshot.historyEntryId === String(lastApply?.historyEntryId || "").trim()
-        ? state.ui.reviewHistorySnapshot
-        : null;
+    const warningCount = Array.isArray(plan?.warnings) ? plan.warnings.length : 0;
     return `
-      <section class="card full-span designer-dashboard-card">
-        <div class="artifact-kicker">Sequence Translation Dashboard</div>
-        <h3>${escapeHtml(String(plan.summary || "Live translation from design intent into sequencing changes will appear here."))}</h3>
+      <section class="card full-span sequence-translation-card">
+        <div class="artifact-kicker">Sequence Translation</div>
+        <h3>${escapeHtml(String(plan.summary || "Live technical translation of the current design conversation."))}</h3>
+        <p class="artifact-body">The grid below is the current sequence-side interpretation of the design conversation and should scale cleanly to large change sets.</p>
         <div class="artifact-chip-row">
           <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(translationSource))}</span>
-          <span class="artifact-chip">${escapeHtml(String(plan.status || state.health?.orchestrationLastStatus || "idle"))}</span>
-          <span class="artifact-chip">${escapeHtml(String(proposalLines.length || 0))} proposal lines</span>
-          <span class="artifact-chip">${escapeHtml(String(commandCount || 0))} commands</span>
-          <span class="artifact-chip">${escapeHtml(String((plan.warnings || []).length || 0))} warnings</span>
-          <span class="artifact-chip">${lastApply ? escapeHtml(String(lastApply.status || "unknown")) : "no apply yet"}</span>
-        </div>
-        <p class="artifact-body">This page shows how the current conversation and design state are being translated into sequencing intent, targets, and planned implementation.</p>
-        <div class="dashboard-grid">
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Current Translation</div>
-            <p>${proposalLines.length ? escapeHtml(String(proposalLines[0])) : "No translated sequence lines yet."}</p>
-            <p>${proposalLines.length > 1 ? escapeHtml(`${proposalLines.length - 1} additional line(s) pending.`) : "No additional translated lines yet."}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Targets + Scope</div>
-            <p>${escapeHtml(String(selectedTargets.join(", ") || "No targets resolved yet."))}</p>
-            <p>${escapeHtml(String(selectedSections.join(", ") || "No sections scoped yet."))}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Plan Health</div>
-            ${warnings.length ? `<ul>${warnings.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No plan warnings right now.</p>"}
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Translation Readiness</div>
-            <p>${timingAnchorCount ? `${escapeHtml(String(timingAnchorCount))} timing anchors planned.` : "No explicit timing anchors yet."}</p>
-            <p>${sequencingConstraints?.preserveTimingTracks !== false ? "Timing tracks preserved." : "Timing tracks may be rewritten."}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Current Assumptions</div>
-            ${currentAssumptions.length ? `<ul>${currentAssumptions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No translation assumptions captured.</p>"}
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Needs Clarification</div>
-            ${pendingQuestions.length ? `<ul>${pendingQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No open sequencing questions right now.</p>"}
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Last Apply Snapshot</div>
-            <p>${lastApply ? escapeHtml(String(lastApply.summary || "Latest apply captured.")) : "No apply snapshot yet."}</p>
-            <p>${lastAppliedSnapshot?.applyResult?.status ? `Status: ${escapeHtml(String(lastAppliedSnapshot.applyResult.status))}` : (lastApply?.snapshotSummary?.applySummary?.status ? `Status: ${escapeHtml(String(lastApply.snapshotSummary.applySummary.status))}` : "No apply status yet.")}</p>
-          </div>
-        </div>
-        ${buildArtifactInspectActions("sequence-translation", "Inspect Translation")}
-      </section>
-    `;
-  }
-
-  function renderSequenceTranslationGrid() {
-    const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
-    const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1") || null;
-    const sectionScope = Array.isArray(intent?.scope?.sections) ? intent.scope.sections.filter(Boolean) : [];
-    const selectedTargets = Array.isArray(intent?.scope?.targetIds) ? intent.scope.targetIds.filter(Boolean) : [];
-    return `
-      <section class="card full-span">
-        <h3>Sequence Change Grid</h3>
-        <p class="artifact-body">This is the live technical translation of the current design conversation. It should scale to large change sets without collapsing into unreadable cards.</p>
-        <div class="artifact-chip-row">
           <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(proposalLines.length || 0))} change lines</span>
+          <span class="artifact-chip">${escapeHtml(String(commandCount || 0))} commands</span>
+          <span class="artifact-chip">${escapeHtml(String(warningCount || 0))} warnings</span>
           <span class="artifact-chip">${escapeHtml(String(selectedTargets.length || 0))} targets in scope</span>
           <span class="artifact-chip">${escapeHtml(String(sectionScope.length || 0))} sections in scope</span>
         </div>
-        <div class="metadata-grid-wrap proposed-grid-wrap">
+        <div class="metadata-grid-wrap proposed-grid-wrap sequence-grid-wrap">
           <table class="metadata-grid proposed-grid">
-            <thead>
-              <tr>
-                <th style="width:72px;">#</th>
-                <th>Translated Sequence Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
+                <thead>
+                  <tr>
+                <th style="width:52px;">#</th>
+                <th style="width:124px;">Timing</th>
+                <th style="width:124px;">Section</th>
+                <th style="width:148px;">Target</th>
+                <th style="width:92px;">Level</th>
+                <th>Summary</th>
+                <th style="width:72px;">Effects</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
                 proposalLines.length
-                  ? proposalLines.map((line, idx) => `
+                  ? proposalLines.map((line, idx) => {
+                      const row = summarizeSequenceGridRow(line);
+                      return `
                     <tr>
                       <td>${idx + 1}</td>
-                      <td>${renderProposedLineHtml(line)}</td>
+                      <td>${escapeHtml(String(row.timing || "XD: Sequencer Plan"))}</td>
+                      <td>${escapeHtml(String(row.section || getSectionName(line) || "General"))}</td>
+                      <td>${escapeHtml(String(row.target || parseTranslatedTarget(line) || "Unresolved"))}</td>
+                      <td>${escapeHtml(String(row.level || "Model"))}</td>
+                      <td data-proposed-focus="${idx}" class="sequence-summary-cell" title="${escapeHtml(String(row.summary || "Pending translation detail"))}">${escapeHtml(String(row.summary || "Pending translation detail"))}</td>
+                      <td>${escapeHtml(String(row.effects || 0))}</td>
                     </tr>
-                  `).join("")
-                  : `<tr><td colspan="2" class="banner">No translated sequence changes yet.</td></tr>`
+                  `;
+                    }).join("")
+                  : `<tr><td colspan="7" class="banner">No translated sequence changes yet.</td></tr>`
               }
-            </tbody>
-          </table>
+                </tbody>
+              </table>
         </div>
       </section>
     `;
@@ -851,9 +854,7 @@ export function buildScreenContent({ state, helpers }) {
     return `
       <div class="screen-grid sequence-screen">
         ${renderJourneyCard("sequence")}
-        ${renderSequenceTranslationDashboardCard()}
         ${renderSequenceTranslationGrid()}
-        ${renderArtifactDetailPanel()}
       </div>
     `;
   }
@@ -950,22 +951,6 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
-  function renderBriefArtifactCard() {
-    const brief = state.creative?.brief || null;
-    return `
-      <section class="card artifact-card artifact-card-design">
-        <div class="artifact-kicker">Creative Brief</div>
-        <h3>${escapeHtml(String(brief?.summary || "No brief yet"))}</h3>
-        <div class="artifact-chip-row">
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String((brief?.sections || []).length || 0))} sections</span>
-          <span class="artifact-chip">${escapeHtml(String((brief?.hypotheses || []).length || 0))} hypotheses</span>
-        </div>
-        <p class="artifact-body">${escapeHtml(String(brief?.goalsSummary || "Generate a creative brief to define direction, mood, and section priorities."))}</p>
-        ${buildArtifactInspectActions("creative-brief")}
-      </section>
-    `;
-  }
-
   function renderProposalArtifactCard() {
     const bundle = state.creative?.proposalBundle || null;
     return `
@@ -1048,6 +1033,16 @@ export function buildScreenContent({ state, helpers }) {
           <span class="artifact-chip">${escapeHtml(String((guidedQuestions || []).length || 0))} open questions</span>
         </div>
         <p class="artifact-body">${escapeHtml(String(runtime?.assistantMessage || "The designer’s current reasoning, assumptions, and active focus will be summarized here."))}</p>
+        <div class="dashboard-brief-block">
+          <div class="artifact-kicker">Creative Brief</div>
+          <h3>${escapeHtml(String(brief?.summary || "No creative brief captured yet."))}</h3>
+          <p class="artifact-body">${escapeHtml(String(brief?.goalsSummary || "The designer will capture the overall sequence goal, mood, and section priorities here as the conversation develops."))}</p>
+          <div class="artifact-chip-row">
+            <span class="artifact-chip artifact-chip-accent">${escapeHtml(String((brief?.sections || []).length || 0))} sections</span>
+            <span class="artifact-chip">${escapeHtml(String((brief?.hypotheses || []).length || 0))} hypotheses</span>
+          </div>
+          ${buildArtifactInspectActions("creative-brief")}
+        </div>
         <div class="dashboard-grid">
           <div class="dashboard-panel">
             <div class="artifact-kicker">Captured Focus</div>
@@ -1067,16 +1062,28 @@ export function buildScreenContent({ state, helpers }) {
             <div class="artifact-kicker">Needs From Director</div>
             ${guidedQuestions.length ? `<ul>${guidedQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No blocking questions right now.</p>"}
           </div>
+          ${
+            references.length
+              ? `
           <div class="dashboard-panel">
             <div class="artifact-kicker">Reference Media</div>
-            <p>${references.length ? `${escapeHtml(String(references.length))} reference item(s) attached.` : "No reference media attached."}</p>
-            <p>${references.length ? escapeHtml(String(references.slice(0, 3).map((ref) => ref?.name || ref?.id || "reference").join(", "))) : "Attach visual references later if needed."}</p>
+            <p>${escapeHtml(String(references.length))} reference item(s) attached.</p>
+            <p>${escapeHtml(String(references.slice(0, 3).map((ref) => ref?.name || ref?.id || "reference").join(", ")))}</p>
           </div>
+          `
+              : ""
+          }
+          ${
+            swatches.length
+              ? `
           <div class="dashboard-panel">
             <div class="artifact-kicker">Color Palette</div>
-            <p>${swatches.length ? `${escapeHtml(String(swatches.length))} swatch(es) captured.` : "No palette locked yet."}</p>
-            <p>${swatches.length ? escapeHtml(String(swatches.slice(0, 5).join(", "))) : "Palette direction can emerge during design conversation."}</p>
+            <p>${escapeHtml(String(swatches.length))} swatch(es) captured.</p>
+            <p>${escapeHtml(String(swatches.slice(0, 5).join(", ")))}</p>
           </div>
+          `
+              : ""
+          }
         </div>
         ${warnings.length ? `<div class="banner banner-warning">${escapeHtml(warnings.join(" | "))}</div>` : ""}
       </section>
@@ -1095,9 +1102,6 @@ export function buildScreenContent({ state, helpers }) {
       <div class="screen-grid design-screen">
         ${renderJourneyCard("design")}
         ${renderDesignerLiveDashboardCard()}
-        <section class="artifact-grid">
-          ${renderBriefArtifactCard()}
-        </section>
         ${
           lastAppliedSnapshot
             ? `
@@ -1244,110 +1248,53 @@ export function buildScreenContent({ state, helpers }) {
 
       <div class="screen-grid review-screen">
         ${renderJourneyCard("review")}
-        <section class="card workspace-intro-card workspace-intro-card-review full-span">
-          <div class="artifact-kicker">Review Workspace</div>
-          <h3>Confirm the proposed impact, cross-check safeguards, then apply deliberately.</h3>
-          <p class="artifact-body">This screen is the execution gate. Review warnings, confirm approval, and use backup/verification signals before writing to xLights.</p>
-        </section>
-        <section class="artifact-grid">
-          ${renderProposalArtifactCard()}
-          <section class="card artifact-card artifact-card-review">
-            <div class="artifact-kicker">Execution Review</div>
-            <h3>${escapeHtml(planSummary)}</h3>
-            <div class="artifact-chip-row">
-              <span class="artifact-chip artifact-chip-accent">${escapeHtml(reviewStateLabel)}</span>
-              <span class="artifact-chip">${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`}</span>
-              <span class="artifact-chip">${impact.targetCount} targets</span>
-              <span class="artifact-chip">${impact.sectionWindows.length || 0} windows</span>
-            </div>
-            <p class="banner">Affected targets: ${impact.targets.length ? escapeHtml(impact.targets.join(", ")) : "none"}</p>
-            <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
-            <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed and ready for apply." : "Approval checkbox must be confirmed before apply."}</p>
-            <div class="review-status-grid">
-              <div class="review-status-item">
-                <span class="review-status-label">Backup</span>
-                <strong>${backupReady ? "Available" : "None yet"}</strong>
-              </div>
-              <div class="review-status-item">
-                <span class="review-status-label">Last Apply</span>
-                <strong>${escapeHtml(String(lastApply?.status || "none"))}</strong>
-              </div>
-            <div class="review-status-item">
-              <span class="review-status-label">Verification</span>
-              <strong>${verification ? (verification.expectedMutationsPresent ? "Verified" : "Needs review") : "Not run"}</strong>
-            </div>
-          </div>
-          ${
-            lastAppliedSnapshot
-              ? `<p class="banner">Last applied design: ${escapeHtml(String(lastAppliedSnapshot.creativeBrief?.summary || lastApply?.summary || "Snapshot available"))}</p>`
-              : ""
-          }
-        </section>
-        </section>
         ${renderArtifactDetailPanel()}
       </div>
 
       <div class="screen-grid review-screen">
-        <section class="artifact-grid">
-          ${renderReviewPlanArtifactCard()}
-          ${renderReviewExecutionArtifactCard()}
-        </section>
-        ${renderSnapshotDashboard({
-          kicker: "Current Apply Snapshot",
-          title: "Applying design intent into concrete sequence changes.",
-          brief: {
-            summary: currentSnapshot?.designSummary?.title || "",
-            goals: currentSnapshot?.designSummary?.goals || []
-          },
-          proposalLines: currentSnapshot?.sequenceSummary?.proposalLines || [],
-          applyResult: {
-            status: currentSnapshot?.applySummary?.status || "pending",
-            commandCount: currentSnapshot?.applySummary?.commandCount || 0,
-            impactCount: currentSnapshot?.applySummary?.impactCount || 0,
-            failureReason: currentSnapshot?.applySummary?.failureReason || ""
-          },
-          analysisArtifact: state.audioAnalysis?.artifact || null,
-          sceneContext: state.creative?.runtime?.designSceneContext || state.creative?.designSceneContext || null,
-          musicContext: state.creative?.runtime?.musicDesignContext || state.creative?.musicDesignContext || null,
-          artifactRefs: currentSnapshot?.artifactRefs || null,
-          emptyText: "No current apply snapshot is available."
-        })}
-        ${
-          lastAppliedSnapshot
-            ? renderSnapshotDashboard({
-                kicker: "Last Applied Snapshot",
-                title: "Most recent implemented design and sequence state.",
-                brief: lastAppliedSnapshot.creativeBrief || null,
-                proposalLines: lastAppliedSnapshot.proposalBundle?.proposalLines || [],
-                applyResult: lastAppliedSnapshot.applyResult || lastApply || null,
-                analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
-                sceneContext: lastAppliedSnapshot.designSceneContext || null,
-                musicContext: lastAppliedSnapshot.musicDesignContext || null,
-                artifactRefs: lastApply?.artifactRefs || null,
-                emptyText: "No applied snapshot is available yet."
-              })
-            : ""
-        }
-        <section class="card approval-gate-card full-span">
-          <div class="approval-gate-header">
-            <div>
-              <div class="artifact-kicker">Approval Gate</div>
-              <strong>${approvalChecked ? "Ready for Apply" : "Approval Required"}</strong>
-            </div>
-            <span class="artifact-chip ${approvalChecked ? "artifact-chip-accent" : "artifact-chip-muted"}">${approvalChecked ? "Confirmed" : "Pending"}</span>
+        <section class="card full-span artifact-card artifact-card-review">
+          <div class="artifact-kicker">Review</div>
+          <h3>${escapeHtml(String(currentSnapshot?.designSummary?.title || "Ready to apply current design changes"))}</h3>
+          <p class="artifact-body">${escapeHtml(planSummary)}</p>
+          <div class="artifact-chip-row">
+            <span class="artifact-chip artifact-chip-accent">${escapeHtml(reviewStateLabel)}</span>
+            <span class="artifact-chip">${escapeHtml(String(allVisibleLines.length || 0))} pending changes</span>
+            <span class="artifact-chip">${escapeHtml(String(impact.targetCount || 0))} targets</span>
+            <span class="artifact-chip">${escapeHtml(String(impact.sectionWindows.length || 0))} windows</span>
+            <span class="artifact-chip">${escapeHtml(String(previewCommands.length || 0))} commands</span>
+            <span class="artifact-chip">${verification ? (verification.expectedMutationsPresent ? "last apply verified" : "last apply needs review") : "not yet applied"}</span>
           </div>
-          <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed and apply is enabled when the plan is otherwise valid." : "Confirm approval here before applying any sequence changes."}</p>
-          <label class="approval-gate-toggle">
-            <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
-            <span>I reviewed the plan and approve apply.</span>
-          </label>
-        </section>
-      </div>
-
-      <div class="screen-grid design-workspace design-workspace-fill">
-        <section class="card design-column full-span">
-          <h3>Proposed Changes</h3>
-          <div class="field panel-window proposed-window"><label>Proposed Next Write</label>
+          <div class="dashboard-grid">
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Design</div>
+              <p>${escapeHtml(String(currentSnapshot?.designSummary?.title || "No current design summary."))}</p>
+              ${
+                Array.isArray(currentSnapshot?.designSummary?.goals) && currentSnapshot.designSummary.goals.length
+                  ? `<ul>${currentSnapshot.designSummary.goals.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>No design goals captured.</p>"
+              }
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Sequence</div>
+              ${
+                Array.isArray(currentSnapshot?.sequenceSummary?.proposalLines) && currentSnapshot.sequenceSummary.proposalLines.length
+                  ? `<ul>${currentSnapshot.sequenceSummary.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                  : "<p>No pending sequence translation lines.</p>"
+              }
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Apply State</div>
+              <p>Status: ${escapeHtml(String(currentSnapshot?.applySummary?.status || "pending"))}</p>
+              <p>${backupReady ? `Backup ready: ${escapeHtml(String(state.lastApplyBackupPath || "").trim())}` : "No restore point captured yet."}</p>
+              <label class="approval-gate-toggle">
+                <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
+                <span>I reviewed the pending changes and approve apply.</span>
+              </label>
+              <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed. Apply is enabled when the plan is otherwise valid." : "Confirm approval before applying changes to xLights."}</p>
+            </div>
+          </div>
+          ${previewError ? `<p class="banner warning">${escapeHtml(previewError)}</p>` : ""}
+          <div class="field panel-window proposed-window">
             <div class="metadata-grid-wrap proposed-grid-wrap">
               <table class="metadata-grid proposed-grid">
                 <thead>
@@ -1380,29 +1327,35 @@ export function buildScreenContent({ state, helpers }) {
               </table>
             </div>
           </div>
-          <details class="panel-footer-block proposed-payload-footer" ${state.ui.proposedPayloadOpen ? "open" : ""}>
-            <summary id="toggle-proposed-payload">Selected Change Payload Preview</summary>
-            <p class="banner">${escapeHtml(planSummary)}</p>
-            <p class="banner">Scope: ${selectedLines.length ? `${selectedLines.length} selected` : `${allVisibleLines.length} visible`} change${(selectedLines.length || allVisibleLines.length) === 1 ? "" : "s"}</p>
-            <p class="banner">Affected targets: ${impact.targetCount}${impact.targets.length ? ` (${escapeHtml(impact.targets.join(", "))})` : ""}</p>
-            <p class="banner">Affected windows: ${impact.sectionWindows.length ? escapeHtml(impact.sectionWindows.join(" | ")) : "No section timing context yet."}</p>
-            <div class="row">
-              <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
-            </div>
-            ${
-              backupReady
-                ? `<p class="banner">Backup ready: ${escapeHtml(String(state.lastApplyBackupPath || "").trim())}</p>`
-                : `<p class="banner warning">No restore point has been captured in this session yet.</p>`
-            }
-            <pre class="proposed-payload">${payloadPreview}</pre>
-          </details>
           <div class="row panel-footer-block proposed-actions">
               <button id="remove-selected-proposed" ${selectedCount ? "" : "disabled"}>Delete Selected</button>
               <button id="remove-all-proposed" ${list.length ? "" : "disabled"}>Delete All</button>
+              <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
               <button id="apply-selected" class="proposed-apply-btn proposed-apply-start" ${canApplySelected ? "" : "disabled"}>Apply Selected</button>
               <button id="apply-all" class="proposed-apply-btn" ${canApplyAll ? "" : "disabled"}>Apply All</button>
           </div>
+          ${
+            backupReady
+              ? `<p class="banner">Backup ready: ${escapeHtml(String(state.lastApplyBackupPath || "").trim())}</p>`
+              : `<p class="banner warning">No restore point has been captured in this session yet.</p>`
+          }
         </section>
+        ${
+          lastAppliedSnapshot
+            ? renderSnapshotDashboard({
+                kicker: "Last Applied Snapshot",
+                title: "Most recent implemented design and sequence state.",
+                brief: lastAppliedSnapshot.creativeBrief || null,
+                proposalLines: lastAppliedSnapshot.proposalBundle?.proposalLines || [],
+                applyResult: lastAppliedSnapshot.applyResult || lastApply || null,
+                analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
+                sceneContext: lastAppliedSnapshot.designSceneContext || null,
+                musicContext: lastAppliedSnapshot.musicDesignContext || null,
+                artifactRefs: lastApply?.artifactRefs || null,
+                emptyText: "No applied snapshot is available yet."
+              })
+            : ""
+        }
       </div>
 
       <div class="mobile-apply-bar">
@@ -1413,19 +1366,33 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function historyScreen() {
-    const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
-    const selectedId = String(state.ui?.selectedHistoryEntry || "").trim();
-    const selected = applyHistory.find((entry) => entry.historyEntryId === selectedId) || applyHistory[0] || null;
-    const selectedSnapshot =
-      state.ui?.selectedHistorySnapshot &&
-      state.ui.selectedHistorySnapshot.historyEntryId === String(selected?.historyEntryId || "").trim()
-        ? state.ui.selectedHistorySnapshot
-        : null;
-    return `
+    try {
+      const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.filter((entry) => entry && typeof entry === "object") : [];
+      const selectedId = String(state.ui?.selectedHistoryEntry || "").trim();
+      const selected = applyHistory.find((entry) => String(entry?.historyEntryId || "") === selectedId) || applyHistory[0] || null;
+      const selectedSnapshot =
+        state.ui?.selectedHistorySnapshot &&
+        typeof state.ui.selectedHistorySnapshot === "object" &&
+        state.ui.selectedHistorySnapshot.historyEntryId === String(selected?.historyEntryId || "").trim()
+          ? state.ui.selectedHistorySnapshot
+          : null;
+      return `
       <div class="screen-grid">
+        ${renderJourneyCard("history")}
+        ${
+          !applyHistory.length
+            ? `
+        <section class="card full-span">
+          <div class="artifact-kicker">History</div>
+          <h3>No applied snapshots yet</h3>
+          <p class="artifact-body">History is populated only after an approved apply writes design changes into the sequence. Use Review to apply a change set, then return here to audit the captured snapshot.</p>
+        </section>
+        `
+            : ""
+        }
         <section class="card">
           <div class="artifact-kicker">History</div>
-          <h3>Applied Snapshots</h3>
+          <h3>Applied Revisions</h3>
           ${
             applyHistory.length
               ? `
@@ -1451,16 +1418,18 @@ export function buildScreenContent({ state, helpers }) {
               : `<p class="banner">No applied history yet.</p>`
           }
         </section>
-        <section class="card">
-          <div class="artifact-kicker">Snapshot Detail</div>
-          <h3>${escapeHtml(String(selected?.summary || "Select an apply snapshot"))}</h3>
+        <section class="card full-span designer-dashboard-card">
+          <div class="artifact-kicker">Applied Revision</div>
+          <h3>${escapeHtml(String(selected?.summary || "Select an applied revision"))}</h3>
           ${
             selected
               ? `
+              <p class="artifact-body">This is the applied design and sequence state captured when the revision was written to xLights.</p>
               <div class="artifact-chip-row">
                 <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(selected.status || "unknown"))}</span>
                 <span class="artifact-chip">${escapeHtml(String(selected.commandCount || 0))} commands</span>
                 <span class="artifact-chip">${escapeHtml(String(selected.impactCount || 0))} impacts</span>
+                <span class="artifact-chip">${escapeHtml(selected.createdAt ? new Date(selected.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "unknown time")}</span>
               </div>
               <div class="artifact-detail-grid">
                 <div><strong>Revision Before</strong><p>${escapeHtml(String(selected.xlightsRevisionBefore || "unknown"))}</p></div>
@@ -1468,47 +1437,60 @@ export function buildScreenContent({ state, helpers }) {
                 <div><strong>Sequence</strong><p>${escapeHtml(String(selected.sequencePath || "unknown"))}</p></div>
                 <div><strong>Created</strong><p>${escapeHtml(selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "unknown")}</p></div>
               </div>
-              <h4>Artifact References</h4>
-              ${list(
-                Object.entries(selected.artifactRefs || {})
-                  .filter(([, value]) => String(value || "").trim())
-                  .map(([key, value]) => `${key}: ${value}`),
-                "No artifact references captured."
-              )}
+              <div class="dashboard-grid">
+                <div class="dashboard-panel">
+                  <div class="artifact-kicker">Design</div>
+                  <p>${escapeHtml(String(selectedSnapshot?.creativeBrief?.summary || selected.snapshotSummary?.designSummary?.title || "No applied design summary."))}</p>
+                  ${
+                    Array.isArray(selectedSnapshot?.creativeBrief?.goals)
+                      ? `<ul>${selectedSnapshot.creativeBrief.goals.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                      : Array.isArray(selected.snapshotSummary?.designSummary?.goals) && selected.snapshotSummary.designSummary.goals.length
+                        ? `<ul>${selected.snapshotSummary.designSummary.goals.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                        : "<p>No applied design goals captured.</p>"
+                  }
+                </div>
+                <div class="dashboard-panel">
+                  <div class="artifact-kicker">Sequence</div>
+                  ${
+                    Array.isArray(selectedSnapshot?.proposalBundle?.proposalLines) && selectedSnapshot.proposalBundle.proposalLines.length
+                      ? `<ul>${selectedSnapshot.proposalBundle.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                      : Array.isArray(selected.snapshotSummary?.sequenceSummary?.proposalLines) && selected.snapshotSummary.sequenceSummary.proposalLines.length
+                        ? `<ul>${selected.snapshotSummary.sequenceSummary.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                        : "<p>No applied sequence lines captured.</p>"
+                  }
+                </div>
+                <div class="dashboard-panel">
+                  <div class="artifact-kicker">Execution</div>
+                  <p>Status: ${escapeHtml(String(selectedSnapshot?.applyResult?.status || selected.snapshotSummary?.applySummary?.status || selected.status || "unknown"))}</p>
+                  <p>Commands: ${escapeHtml(String(selectedSnapshot?.applyResult?.commandCount || selected.snapshotSummary?.applySummary?.commandCount || selected.commandCount || 0))}</p>
+                  <p>Impacts: ${escapeHtml(String(selectedSnapshot?.applyResult?.impactCount || selected.snapshotSummary?.applySummary?.impactCount || selected.impactCount || 0))}</p>
+                </div>
+                <div class="dashboard-panel">
+                  <div class="artifact-kicker">Audio + Scene</div>
+                  <p>${escapeHtml(String(selectedSnapshot?.analysisArtifact?.trackIdentity?.title || "Unknown audio"))}</p>
+                  <p>${escapeHtml(String(selectedSnapshot?.designSceneContext?.layoutMode || "unknown"))} layout context</p>
+                  <p>${escapeHtml(String(selectedSnapshot?.musicDesignContext?.summary || "No applied music context summary."))}</p>
+                </div>
+              </div>
             `
               : `<p class="banner">No history snapshot selected.</p>`
           }
         </section>
-        ${
-          selected
-            ? renderSnapshotDashboard({
-                kicker: "Applied Snapshot",
-                title: String(selected.summary || "Applied snapshot"),
-                brief: selectedSnapshot?.creativeBrief
-                  ? selectedSnapshot.creativeBrief
-                  : {
-                      summary: selected.snapshotSummary?.designSummary?.title || "",
-                      goals: selected.snapshotSummary?.designSummary?.goals || []
-                    },
-                proposalLines: selectedSnapshot?.proposalBundle?.proposalLines || selected.snapshotSummary?.sequenceSummary?.proposalLines || [],
-                applyResult: selectedSnapshot?.applyResult
-                  ? selectedSnapshot.applyResult
-                  : {
-                      status: selected.snapshotSummary?.applySummary?.status || selected.status || "unknown",
-                      commandCount: selected.snapshotSummary?.applySummary?.commandCount || selected.commandCount || 0,
-                      impactCount: selected.snapshotSummary?.applySummary?.impactCount || selected.impactCount || 0,
-                      failureReason: selected.snapshotSummary?.applySummary?.failureReason || selected.failureReason || ""
-                    },
-                analysisArtifact: selectedSnapshot?.analysisArtifact || null,
-                sceneContext: selectedSnapshot?.designSceneContext || null,
-                musicContext: selectedSnapshot?.musicDesignContext || null,
-                artifactRefs: selected.artifactRefs || null,
-                emptyText: "No applied snapshot is available."
-              })
-            : ""
-        }
       </div>
     `;
+    } catch (err) {
+      return `
+        <div class="screen-grid">
+          ${renderJourneyCard("history")}
+          <section class="card full-span">
+            <div class="artifact-kicker">History</div>
+            <h3>History is temporarily unavailable</h3>
+            <p class="artifact-body">Stored history data could not be rendered safely in the current session.</p>
+            <p class="banner warning">${escapeHtml(String(err?.message || err || "Unknown history render error."))}</p>
+          </section>
+        </div>
+      `;
+    }
   }
 
   function metadataScreen() {
@@ -1519,7 +1501,6 @@ export function buildScreenContent({ state, helpers }) {
       .map((target) => ({ id: target.id, name: target.displayName, raw: target }))
       .filter((target) => target.id);
     const assignments = state.metadata?.assignments || [];
-    const orphans = getMetadataOrphans();
     const tags = getMetadataTagRecords();
     const assignmentByTargetId = new Map(assignments.map((a) => [String(a.targetId), a]));
     const nameFilter = String(state.ui.metadataFilterName || "");
@@ -1542,62 +1523,78 @@ export function buildScreenContent({ state, helpers }) {
     const selectedIds = new Set(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds));
     const selectedCount = selectedIds.size;
     const selectedEditorTags = normalizeMetadataSelectedTags(state.ui.metadataSelectedTags);
+    const draftTagName = String(state.ui.metadataNewTag || "").trim();
+    const hasVisibleTargets = filteredModels.length > 0;
+    const hasSelectedTargets = selectedCount > 0;
+    const hasSelectedTags = selectedEditorTags.length > 0;
     return `
       <div class="screen-grid metadata-workspace">
+        ${renderJourneyCard("metadata")}
         <section class="card metadata-panel">
-          <h3>Tag Manager</h3>
-          <div class="field" style="margin-top:10px;">
-            <label>Operation Tags</label>
-            <div class="metadata-grid-wrap metadata-tag-grid-wrap">
-              <table class="metadata-grid metadata-tag-grid">
-                <thead>
-                  <tr>
-                    <th style="width:42px;">Use</th>
-                    <th style="width:220px;">Tag</th>
-                    <th>Description</th>
-                    <th style="width:70px;"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="new-tag-row">
-                    <td></td>
-                    <td><input id="metadata-new-tag" value="${(state.ui.metadataNewTag || "").replace(/"/g, "&quot;")}" placeholder="new tag" /></td>
-                    <td><input id="metadata-new-tag-description" value="${(state.ui.metadataNewTagDescription || "").replace(/"/g, "&quot;")}" placeholder="description (optional)" /></td>
-                    <td><button id="metadata-add-tag">Add</button></td>
-                  </tr>
-                  ${
-                    tags.length
-                      ? tags
-                          .map((tag) => {
-                            const safeTag = String(tag.name).replace(/\"/g, "&quot;");
-                            const checked = selectedEditorTags.includes(String(tag.name)) ? "checked" : "";
-                            return `<tr>
-                              <td><input type="checkbox" data-metadata-tag-toggle="${safeTag}" ${checked} /></td>
-                              <td>${String(tag.name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-                              <td><input data-metadata-tag-description="${safeTag}" value="${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="description" /></td>
-                              <td><button data-remove-tag="${safeTag}">Delete</button></td>
-                            </tr>`;
-                          })
-                          .join("")
-                      : `<tr><td colspan="4">No tags yet.</td></tr>`
-                  }
-                </tbody>
-              </table>
+          <div class="metadata-panel-header">
+            <div>
+              <div class="artifact-kicker">Metadata</div>
+              <h3>Tag Application Grid</h3>
             </div>
-          </div>
-          <div class="row">
-            <button id="metadata-apply-selected-tags">Apply Tags To Selected</button>
-            <button id="metadata-remove-selected-tags">Remove Tags From Selected</button>
-            <button id="metadata-clear-tags">Clear Tag Picks</button>
-            <span class="banner">Selected: ${selectedCount}</span>
-          </div>
-          <hr />
-          <h3>Element Metadata Grid</h3>
-          <div class="row">
-            <button id="refresh-models">Refresh Models</button>
-            <button id="metadata-select-visible">Select Visible</button>
-            <button id="metadata-clear-selection">Clear Selection</button>
             <span class="banner">Targets: ${modelOptions.length} total (${submodelCount} submodels)</span>
+          </div>
+          <details class="metadata-tag-manager">
+            <summary>
+              <span>Tag Library</span>
+              <span class="banner">${tags.length} tags</span>
+            </summary>
+            <div class="field metadata-tag-manager-body">
+              <div class="metadata-grid-wrap metadata-tag-grid-wrap">
+                <table class="metadata-grid metadata-tag-grid">
+                  <thead>
+                    <tr>
+                      <th style="width:42px;">Use</th>
+                      <th style="width:220px;">Tag</th>
+                      <th>Description</th>
+                      <th style="width:70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="new-tag-row">
+                      <td></td>
+                      <td><input id="metadata-new-tag" value="${(state.ui.metadataNewTag || "").replace(/"/g, "&quot;")}" placeholder="new tag" /></td>
+                      <td><input id="metadata-new-tag-description" value="${(state.ui.metadataNewTagDescription || "").replace(/"/g, "&quot;")}" placeholder="description (optional)" /></td>
+                      <td><button id="metadata-add-tag" ${draftTagName ? "" : "disabled"}>Add</button></td>
+                    </tr>
+                    ${
+                      tags.length
+                        ? tags
+                            .map((tag) => {
+                              const safeTag = String(tag.name).replace(/\"/g, "&quot;");
+                              const checked = selectedEditorTags.includes(String(tag.name)) ? "checked" : "";
+                              return `<tr>
+                                <td><input type="checkbox" data-metadata-tag-toggle="${safeTag}" ${checked} /></td>
+                                <td>${String(tag.name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                                <td><input data-metadata-tag-description="${safeTag}" value="${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="description" /></td>
+                                <td><button data-remove-tag="${safeTag}">Delete</button></td>
+                              </tr>`;
+                            })
+                            .join("")
+                        : `<tr><td colspan="4">No tags yet.</td></tr>`
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <div class="metadata-toolbar row">
+                <button id="metadata-clear-tags" ${hasSelectedTags ? "" : "disabled"}>Clear Tag Picks</button>
+                <span class="banner">Active tags: ${selectedEditorTags.length}</span>
+              </div>
+            </div>
+          </details>
+          <div class="metadata-toolbar row">
+            <span class="banner">Selected targets: ${selectedCount}</span>
+            <span class="banner">Active tags: ${selectedEditorTags.length ? selectedEditorTags.join(", ") : "none"}</span>
+          </div>
+          <div class="metadata-toolbar row">
+            <button id="metadata-select-visible" ${hasVisibleTargets ? "" : "disabled"}>Select Visible</button>
+            <button id="metadata-clear-selection" ${hasSelectedTargets ? "" : "disabled"}>Clear Selection</button>
+            <button id="metadata-apply-selected-tags" ${(hasSelectedTargets && hasSelectedTags) ? "" : "disabled"}>Apply Tags To Selected</button>
+            <button id="metadata-remove-selected-tags" ${(hasSelectedTargets && hasSelectedTags) ? "" : "disabled"}>Remove Tags From Selected</button>
           </div>
           ${submodelsAvailable ? "" : `<p class="banner">${submodelBanner.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}
           <div class="metadata-grid-wrap metadata-targets-wrap">
@@ -1641,34 +1638,6 @@ export function buildScreenContent({ state, helpers }) {
           </div>
         </section>
       </div>
-      <section class="card" style="margin-top:12px;">
-        <h3>Orphaned Metadata</h3>
-        ${
-          orphans.length
-            ? `<p class="warning">${orphans.length} entr${orphans.length === 1 ? "y" : "ies"} need mapping to current model identities.</p>`
-            : `<p class="banner">No active orphans.</p>`
-        }
-        <ul class="list">
-          ${
-            orphans.length
-              ? orphans
-                  .map(
-                    (o) => `
-                <li>
-                  <strong>${o.targetName || o.targetId}</strong>
-                  <select data-orphan-remap="${String(o.targetId).replace(/\"/g, "&quot;")}">
-                    <option value="">Re-map to model...</option>
-                    ${modelOptions.map((m) => `<option value="${m.id.replace(/\"/g, "&quot;")}">${m.name}</option>`).join("")}
-                  </select>
-                  <button data-orphan-ignore="${String(o.targetId).replace(/\"/g, "&quot;")}">Ignore</button>
-                  <button data-remove-assignment="${String(o.targetId).replace(/\"/g, "&quot;")}">Delete</button>
-                </li>`
-                  )
-                  .join("")
-              : "<li>No orphaned assignments.</li>"
-          }
-        </ul>
-      </section>
     `;
   }
 

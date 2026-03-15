@@ -312,7 +312,8 @@ const defaultState = {
   },
   chat: [],
   teamChat: {
-    identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES)
+    identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES),
+    introducedRoleIds: []
   },
   proposed: [],
   ui: {
@@ -574,9 +575,12 @@ if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
 if (!state.teamChat || typeof state.teamChat !== "object") {
-  state.teamChat = { identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES) };
+  state.teamChat = { identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES), introducedRoleIds: [] };
 }
 state.teamChat.identities = buildTeamChatIdentities(state.teamChat.identities || DEFAULT_TEAM_CHAT_IDENTITIES);
+if (!Array.isArray(state.teamChat.introducedRoleIds)) {
+  state.teamChat.introducedRoleIds = [];
+}
 if (!Array.isArray(state.ui?.proposedSelection)) {
   state.ui.proposedSelection = [];
 }
@@ -5209,6 +5213,28 @@ function getTeamChatSpeakerLabel(roleId = "") {
     : identity.displayName;
 }
 
+function getTeamChatIntroText(roleId = "") {
+  const label = getTeamChatSpeakerLabel(roleId);
+  if (roleId === "app_assistant") return `${label} here. I coordinate the team and help move the work forward.`;
+  if (roleId === "designer_dialog") return `${label} here. I shape the creative direction for the sequence.`;
+  if (roleId === "sequence_agent") return `${label} here. I turn design intent into concrete sequence changes.`;
+  if (roleId === "audio_analyst") return `${label} here. I read the music and surface structure the team can design against.`;
+  return "";
+}
+
+function hasTeamChatRoleIntroduction(roleId = "") {
+  const key = String(roleId || "").trim();
+  return Boolean(key) && Array.isArray(state.teamChat?.introducedRoleIds) && state.teamChat.introducedRoleIds.includes(key);
+}
+
+function markTeamChatRoleIntroduction(roleId = "") {
+  const key = String(roleId || "").trim();
+  if (!key) return;
+  const current = Array.isArray(state.teamChat?.introducedRoleIds) ? state.teamChat.introducedRoleIds : [];
+  if (current.includes(key)) return;
+  state.teamChat.introducedRoleIds = [...current, key];
+}
+
 function getRouteChatQuickPrompts(route = "") {
   const key = String(route || "").trim();
   return CHAT_QUICK_PROMPTS_BY_ROUTE[key] || CHAT_QUICK_PROMPTS_BY_ROUTE.fallback;
@@ -5297,6 +5323,25 @@ function setTeamChatNickname(roleId = "", nickname = "") {
 }
 
 function addStructuredChatMessage(who, text, options = {}) {
+  const handledBy = String(options.handledBy || options.roleId || "").trim();
+  if (who === "agent" && handledBy && !hasTeamChatRoleIntroduction(handledBy)) {
+    const introText = getTeamChatIntroText(handledBy);
+    if (introText) {
+      const introIdentity = getTeamChatIdentity(handledBy);
+      state.chat = [...(state.chat || []), {
+        who: "agent",
+        text: introText,
+        at: new Date().toISOString(),
+        roleId: handledBy,
+        displayName: introIdentity.displayName,
+        nickname: introIdentity.nickname,
+        handledBy,
+        addressedTo: "",
+        artifact: null
+      }].slice(-200);
+      markTeamChatRoleIntroduction(handledBy);
+    }
+  }
   const message = {
     who,
     text: String(text || "").trim(),
