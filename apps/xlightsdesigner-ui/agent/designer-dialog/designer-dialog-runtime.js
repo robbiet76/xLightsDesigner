@@ -189,23 +189,7 @@ function mergeCreativeBriefIntoProposalLines(lines = [], creativeBrief = null) {
   if (base.some((row) => /\/\s+apply\s+.+\s+effect\b/i.test(row))) {
     return base.slice(0, 8);
   }
-  if (!isPlainObject(creativeBrief)) return base;
-  const additions = [];
-  const goalsSummary = str(creativeBrief.goalsSummary);
-  const visualCues = str(creativeBrief.visualCues);
-  const sections = arr(creativeBrief.sections).map((row) => str(row)).filter(Boolean);
-
-  if (goalsSummary && !/^no explicit goals captured\.?$/i.test(goalsSummary)) {
-    additions.push(`Anchor design changes to brief goal: ${goalsSummary}`);
-  }
-  if (visualCues && !/^no uploaded references\.?$/i.test(visualCues)) {
-    additions.push(`Use visual direction cues: ${visualCues}`);
-  }
-  if (sections.length && sections.join(", ").toLowerCase() !== "intro, verse, chorus") {
-    additions.push(`Focus first pass on brief sections: ${sections.slice(0, 3).join(", ")}`);
-  }
-
-  return [...additions, ...base].filter(Boolean).slice(0, 8);
+  return base.slice(0, 8);
 }
 
 function buildProposalRiskNotes({ clarificationPlan = null, normalizedIntent = null } = {}) {
@@ -455,7 +439,9 @@ export function executeDesignerDialogFlow({
       intentText: promptText,
       creativeBrief: brief,
       elevatedRiskConfirmed,
-      resolvedTargetIds: arr(proposal.plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
+      resolvedTargetIds: proposal.plan.resolutionSource === "fallback"
+        ? []
+        : arr(proposal.plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
     });
 
     const warnings = [];

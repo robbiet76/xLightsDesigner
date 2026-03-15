@@ -60,6 +60,7 @@ export function resolveTargetSelection({
   const displayByName = mapDisplayElements(displayElements);
   const chosen = new Map();
   const unresolved = new Map();
+  let resolutionSource = "none";
 
   const isWritableTarget = (target) => {
     if (!target) return false;
@@ -80,6 +81,7 @@ export function resolveTargetSelection({
     const target = byId.get(id);
     if (isWritableTarget(target)) {
       chosen.set(id, target);
+      resolutionSource = "explicit";
     } else {
       recordUnresolved(target);
     }
@@ -96,6 +98,7 @@ export function resolveTargetSelection({
       const target = byId.get(id);
       if (isWritableTarget(target)) {
         chosen.set(id, target);
+        if (resolutionSource === "none") resolutionSource = "tag";
       } else {
         recordUnresolved(target);
       }
@@ -111,6 +114,7 @@ export function resolveTargetSelection({
       matchedGoalTarget = true;
       if (isWritableTarget(target)) {
         chosen.set(target.id, target);
+        if (resolutionSource === "none") resolutionSource = "goal_match";
       } else {
         recordUnresolved(target);
       }
@@ -122,11 +126,13 @@ export function resolveTargetSelection({
       ? liveTargets.filter((target) => isWritableTarget(target))
       : liveTargets;
     for (const target of fallbackTargets.slice(0, 4)) chosen.set(target.id, target);
+    if (chosen.size) resolutionSource = "fallback";
   }
 
   return {
     targets: Array.from(chosen.values()),
-    unresolvedTargets: Array.from(unresolved.values())
+    unresolvedTargets: Array.from(unresolved.values()),
+    resolutionSource
   };
 }
 

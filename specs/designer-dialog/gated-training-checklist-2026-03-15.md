@@ -21,11 +21,17 @@ This checklist is intentionally incremental. We are not trying to predict every 
 Goal:
 - freeze the current architecture and confirm the baseline is stable enough to begin capability training
 
+Current execution status:
+- automated baseline validation completed on 2026-03-15:
+  - `designer-dialog` tests: passing
+  - `app-assistant` tests: passing
+  - `sequence-agent` tests: passing
+
 Required:
 - [ ] confirm UI/workflow is stable enough for training validation sessions
-- [ ] confirm direct technical sequencing path still works
-- [ ] confirm designer cloud seam and local normalization/fallback still work
-- [ ] confirm current test baseline is green for:
+- [ ] confirm direct technical sequencing path still works in a real xLights session
+- [ ] confirm designer cloud seam and local normalization/fallback still work in a real designer-led session
+- [x] confirm current test baseline is green for:
   - designer-dialog tests
   - app-assistant tests
   - sequence-agent tests
@@ -37,6 +43,22 @@ Exit gate:
 
 Goal:
 - teach the designer the minimum needed to handle simple broad creative prompts credibly
+
+Current execution status:
+- Stage 1 baseline prompt seed created:
+  - [stage1-minimum-viable-designer-prompts-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage1-minimum-viable-designer-prompts-2026-03-15.md)
+- Stage 1 few-shot and eval cases added to the active training assets
+- Stage 1 automated contract suite added:
+  - [stage1-minimum-viable.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/stage1-minimum-viable.test.js)
+- Stage 1 fixture vocabulary now uses real `HolidayRoad` layout models from persisted app state:
+  - `Border-01`
+  - `Outlines`
+  - `CandyCanes`
+  - `SpiralTrees`
+  - `Snowflakes`
+  - `PorchTree`
+  - `Snowman`
+  - `NorthPoleMatrix`
 
 Scope:
 - simple creative kickoff prompts
@@ -55,7 +77,7 @@ Implementation:
 - [ ] define expected `proposal_bundle_v1` qualities for these cases
 
 Validation:
-- [ ] 5-10 simple designer prompts tested end to end
+- [x] 5 simple designer prompts tested through the automated orchestration/contract suite
 - [ ] designer should ask only necessary clarification questions
 - [ ] designer should produce a coherent brief
 - [ ] proposal should be reviewable and relevant
@@ -269,4 +291,3 @@ That means:
 1. confirm the current baseline is stable
 2. build the minimum viable designer training set for simple broad prompts
 3. do not touch the more advanced stages until that basic capability works
-

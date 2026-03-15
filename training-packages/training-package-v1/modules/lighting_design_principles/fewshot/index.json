@@ -2,6 +2,93 @@
   "status": "active",
   "examples": [
     {
+      "id": "stage1_warm_welcoming_kickoff",
+      "scenario": "Minimum viable broad creative kickoff with no unnecessary clarification",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "I want this sequence to feel warm, welcoming, and a little magical."
+        },
+        {
+          "role": "designer",
+          "text": "I would treat that as a warm, readable opening direction with gentle breadth first and only a few stronger moments of lift. The goal would be invitation and atmosphere, not constant activity."
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "selectedSections": [],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "proceed_with_bounded_assumptions",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": [
+          "warm welcoming brief summary",
+          "readable broad-first design direction",
+          "no unnecessary clarification"
+        ]
+      }
+    },
+    {
+      "id": "stage1_quiet_intro_open_chorus",
+      "scenario": "Minimum viable music-aware broad prompt with clear hold-versus-reveal behavior",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "Keep the intro calm, then let the first chorus feel like it opens up."
+        },
+        {
+          "role": "designer",
+          "text": "I would keep the intro restrained and readable, then save the stronger reveal for the first chorus so the lift feels earned. The contrast should come from widening coverage and stronger focal emphasis, not from clutter."
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "selectedSections": ["Intro", "Chorus 1"],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "proceed_with_bounded_assumptions",
+        "outputs": ["creative_brief_v1", "proposal_bundle_v1", "intent_handoff_v1"],
+        "mustInclude": [
+          "clear intro restraint",
+          "clear chorus reveal",
+          "no equal-energy treatment across both sections"
+        ]
+      }
+    },
+    {
+      "id": "stage1_single_material_scope_question",
+      "scenario": "Minimum viable clarification behavior where one concise question is justified",
+      "conversation": [
+        {
+          "role": "user",
+          "text": "Make this much more exciting."
+        },
+        {
+          "role": "designer",
+          "text": "I can build that, but one scope decision matters first: should that bigger energy read across the whole display, or should it stay concentrated on hero elements?"
+        }
+      ],
+      "input": {
+        "analysisAvailable": true,
+        "selectedSections": [],
+        "selectedTargets": [],
+        "selectedTags": []
+      },
+      "expectation": {
+        "behavior": "ask_targeted_questions",
+        "outputs": ["guided_questions", "creative_brief_v1"],
+        "mustInclude": [
+          "one concise scope question",
+          "no long questionnaire",
+          "no effect-level micromanagement"
+        ]
+      }
+    },
+    {
       "id": "nostalgic_kickoff_with_bounded_assumptions",
       "scenario": "Open-ended memory-driven kickoff where the designer should proceed without over-questioning",
       "conversation": [

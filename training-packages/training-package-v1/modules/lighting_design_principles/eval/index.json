@@ -2,6 +2,28 @@
   "status": "active",
   "cases": [
     {
+      "id": "stage1_minimum_viable_broad_prompt",
+      "checks": [
+        "simple broad prompts produce a usable creative_brief_v1",
+        "simple broad prompts produce a reviewable proposal_bundle_v1",
+        "response avoids generic filler and unnecessary clarification"
+      ]
+    },
+    {
+      "id": "stage1_hold_vs_reveal_baseline",
+      "checks": [
+        "intro restraint and chorus reveal are distinguished when prompted",
+        "designer does not flatten differentiated music sections into equal-energy treatment"
+      ]
+    },
+    {
+      "id": "stage1_single_question_discipline",
+      "checks": [
+        "materially ambiguous broad prompts trigger at most one concise high-value clarification",
+        "designer avoids multi-question questionnaires at the minimum viable stage"
+      ]
+    },
+    {
       "id": "brief_alignment_from_conversation",
       "checks": ["creative_brief_v1 generated", "brief traceability populated", "hypotheses preserved"]
     },

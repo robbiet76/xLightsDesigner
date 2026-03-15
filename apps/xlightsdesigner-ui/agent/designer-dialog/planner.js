@@ -53,6 +53,39 @@ function buildSceneGuidanceLines({ designSceneContext = null, sections = [] } = 
   return lines;
 }
 
+function buildIntentGuidanceLines({ normalizedIntent = null } = {}) {
+  const intent = normalizedIntent && typeof normalizedIntent === "object" ? normalizedIntent : {};
+  const sections = arr(intent.sections).filter(Boolean);
+  const scope = sections.join(", ") || "General";
+  const lines = [];
+  const goal = str(intent.goal).toLowerCase();
+  const colorDirection = str(intent.colorDirection);
+  const styleDirection = str(intent.styleDirection);
+  const motionIntent = str(intent.motionIntent);
+  const tempoIntent = str(intent.tempoIntent);
+  const safety = new Set(arr(intent.safetyConstraints).map((row) => str(row)));
+
+  if (colorDirection === "warm" || /warm|welcoming|magical/.test(goal)) {
+    lines.push(`${scope} / General / build a warm welcoming base that still leaves room for a little wonder`);
+  } else if (colorDirection === "cool") {
+    lines.push(`${scope} / General / keep the palette cool and crisp without flattening the musical lift`);
+  }
+
+  if (safety.has("preserve_readability") || /cleaner|focused|focus/.test(goal)) {
+    lines.push(`${scope} / General / simplify the pass and tighten the focal read so the moment lands more clearly`);
+  }
+
+  if (styleDirection === "cinematic") {
+    lines.push(`${scope} / General / let the phrasing breathe with broader cinematic transitions instead of busy accents`);
+  } else if (styleDirection === "punchy" || motionIntent === "punchy" || tempoIntent === "increase") {
+    lines.push(`${scope} / General / let the lift feel bigger through sharper contrast without turning chaotic`);
+  } else if (styleDirection === "smooth" || motionIntent === "smooth") {
+    lines.push(`${scope} / General / favor smooth motion and connected transitions over choppy texture changes`);
+  }
+
+  return lines;
+}
+
 function buildMusicGuidanceLines({ musicDesignContext = null, sections = [] } = {}) {
   const music = musicDesignContext && typeof musicDesignContext === "object" ? musicDesignContext : {};
   const sectionArc = arr(music.sectionArc);
@@ -120,10 +153,11 @@ function applyDesignerContextToProposalLines({
   directorProfile = null
 } = {}) {
   const sections = arr(normalizedIntent?.sections).filter(Boolean);
+  const intentLines = buildIntentGuidanceLines({ normalizedIntent });
   const sceneLines = buildSceneGuidanceLines({ designSceneContext, sections });
   const musicLines = buildMusicGuidanceLines({ musicDesignContext, sections });
   const preferenceLines = buildPreferenceGuidanceLines({ directorProfile, normalizedIntent });
-  return prependUnique(proposalLines, [...sceneLines, ...musicLines, ...preferenceLines]).slice(0, 8);
+  return prependUnique(proposalLines, [...intentLines, ...sceneLines, ...musicLines, ...preferenceLines]).slice(0, 8);
 }
 
 export function buildProposalFromIntent(input = {}) {
@@ -148,6 +182,7 @@ export function buildProposalFromIntent(input = {}) {
     normalizedIntent,
     targets,
     proposalLines,
-    unresolvedTargets: selection.unresolvedTargets
+    unresolvedTargets: selection.unresolvedTargets,
+    resolutionSource: selection.resolutionSource || "none"
   };
 }

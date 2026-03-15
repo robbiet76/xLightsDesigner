@@ -35,6 +35,12 @@ export function buildClarificationPlan({
   const hasTags = Array.isArray(intent.tags) && intent.tags.length > 0;
   const hasResolvedTargets = Array.isArray(targets) && targets.length > 0;
   const hasAnalysisSections = Array.isArray(analysisHandoff?.structure?.sections) && analysisHandoff.structure.sections.length > 0;
+  const hasBroadCreativeDirection = Boolean(
+    String(intent.styleDirection || "").trim() ||
+    String(intent.colorDirection || "").trim() ||
+    String(intent.motionIntent || "").trim() !== "balanced" ||
+    String(intent.tempoIntent || "").trim() !== "hold"
+  );
 
   if (!String(intent.goal || "").trim()) {
     questions.push(normalizeQuestion({
@@ -45,7 +51,7 @@ export function buildClarificationPlan({
     }));
   }
 
-  if (!hasSections && !hasAnalysisSections) {
+  if (!hasSections && !hasAnalysisSections && !hasBroadCreativeDirection) {
     questions.push(normalizeQuestion({
       field: "sections",
       question: "Which section should lead this pass?",
