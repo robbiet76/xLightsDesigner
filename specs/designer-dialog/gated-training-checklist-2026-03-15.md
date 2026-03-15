@@ -150,6 +150,16 @@ Exit gate:
 Goal:
 - ensure the designer actually reasons from musical structure, not just prompt text
 
+Current execution status:
+- Stage 3 prompt seed created:
+  - [stage3-music-aware-prompts-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage3-music-aware-prompts-2026-03-15.md)
+- Stage 3 automated contract suite added:
+  - [stage3-music-aware.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/stage3-music-aware.test.js)
+- Stage 3 baseline automated validation passing on 2026-03-15:
+  - intro restraint vs chorus reveal
+  - verse lyric emphasis vs chorus lift
+  - output changes when reveal structure changes
+
 Scope:
 - chorus/verse/bridge handling
 - reveal/hold behavior
@@ -161,8 +171,8 @@ Implementation:
 - [ ] verify designer uses hold/reveal/restraint/escalation in sensible ways
 
 Validation:
-- [ ] test prompts tied to chorus focus, impact moments, holds, and transitions
-- [ ] confirm proposal behavior changes when the music context changes
+- [x] test prompts tied to chorus focus, impact moments, holds, and transitions
+- [x] confirm proposal behavior changes when the music context changes
 
 Do not proceed if:
 - music context is ignored
