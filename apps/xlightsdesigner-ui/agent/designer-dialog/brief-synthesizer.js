@@ -45,6 +45,12 @@ export function synthesizeCreativeBrief({
   if (/(warm|welcoming|magical)/.test(lowerPrompt)) {
     narrativeParts.push("Keep the overall read warm and inviting, then let the magic come through in the details rather than noise.");
   }
+  if (/(department store holiday window|elegant|glowing|theatrical)/.test(lowerPrompt)) {
+    narrativeParts.push("Treat the picture like an elegant holiday window: glowing, composed, and slightly theatrical without becoming busy.");
+  }
+  if (/(breath|pauses for a breath|pause for a breath|opens up)/.test(lowerPrompt)) {
+    narrativeParts.push("Let the held section feel like a real breath before the release opens into the next impact moment.");
+  }
   if (/(bigger|bigger,|don['’]t let it get messy|messy)/.test(lowerPrompt)) {
     narrativeParts.push("Let the key impact section expand with confidence while keeping the picture readable and controlled.");
   }
@@ -78,6 +84,12 @@ export function synthesizeCreativeBrief({
       : []),
     ...(/(warm|welcoming|magical)/.test(lowerPrompt)
       ? ["Use warmth and gentle wonder as the emotional frame instead of defaulting to bigger motion."]
+      : []),
+    ...(/(department store holiday window|elegant|glowing|theatrical)/.test(lowerPrompt)
+      ? ["Translate the reference into elegant glow, composed framing, and a lightly theatrical reveal rather than literal mimicry."]
+      : []),
+    ...(/(breath|pauses for a breath|pause for a breath|opens up)/.test(lowerPrompt)
+      ? ["Use a real hold-and-release shape so the quieter section feels suspended before the next opening moment lands."]
       : []),
     ...(/(bigger|messy)/.test(lowerPrompt)
       ? ["Push expansion through contrast and scale, but keep the chorus readable instead of overcrowded."]

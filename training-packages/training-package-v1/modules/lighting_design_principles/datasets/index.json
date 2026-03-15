@@ -35,6 +35,7 @@
         "specs/designer-dialog/stage2-scene-aware-prompts-2026-03-15.md",
         "specs/designer-dialog/stage3-music-aware-prompts-2026-03-15.md",
         "specs/designer-dialog/stage4-clarification-discipline-prompts-2026-03-15.md",
+        "specs/designer-dialog/stage5-reference-memory-prompts-2026-03-15.md",
         "specs/designer-dialog/training-plan-2026-03-13.md",
         "specs/designer-dialog/implementation-checklist.md",
         "specs/designer-dialog/end-to-end-audit-2026-03-12.md"

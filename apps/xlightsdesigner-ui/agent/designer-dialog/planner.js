@@ -127,6 +127,14 @@ function buildIntentGuidanceLines({ normalizedIntent = null } = {}) {
     lines.push(`${scope} / General / keep the palette cool and crisp without flattening the musical lift`);
   }
 
+  if (/(department store holiday window|elegant|glowing|theatrical)/.test(goal)) {
+    lines.push(`${scope} / General / keep the picture elegant and glowing with a composed theatrical frame instead of busy motion`);
+  }
+
+  if (/(breath|pauses for a breath|pause for a breath|opens up)/.test(goal)) {
+    lines.push(`${scope} / General / shape the phrase as a held breath before the next section opens with clearer release`);
+  }
+
   if (safety.has("preserve_readability") || /cleaner|focused|focus/.test(goal)) {
     lines.push(`${scope} / General / simplify the pass and tighten the focal read so the moment lands more clearly`);
   }
