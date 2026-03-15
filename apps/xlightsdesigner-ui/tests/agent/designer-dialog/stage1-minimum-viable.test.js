@@ -102,6 +102,9 @@ test("stage1 warm kickoff produces a valid handoff against real show models", ()
   assertCanonicalStage1Result(result, { promptText });
   assert.equal(result.intentHandoff.mode, "revise");
   assert.equal(result.intentHandoff.directorPreferences.colorDirection, "warm");
+  assert.match(result.creativeBrief.summary, /warm|welcoming|magical/i);
+  assert.match(result.creativeBrief.narrativeCues, /wonder|welcome|warm/i);
+  assert.ok(result.creativeBrief.hypotheses.some((line) => /warm|wonder|gentle glow|welcome/i.test(line)));
   assert.ok(result.proposalLines.some((line) => /Snowman|NorthPoleMatrix|PorchTree/.test(line)));
   assert.ok(result.proposalLines.some((line) => /warm welcoming base|little wonder/i.test(line)));
   assert.ok(result.proposalLines.every((line) => !/^Anchor design changes to brief goal:/i.test(line)));
@@ -144,6 +147,9 @@ test("stage1 bigger but not messy keeps explicit real targets in the handoff", (
     expectedTargetIds: selectedTargetIds
   });
   assert.equal(result.guidedQuestions.length, 0);
+  assert.match(result.creativeBrief.summary, /bigger|messy/i);
+  assert.match(result.creativeBrief.narrativeCues, /open up|expand|readable|clarity/i);
+  assert.ok(result.creativeBrief.hypotheses.some((line) => /readab|without clutter|clarity|bigger|overcrowd/i.test(line)));
   assert.ok(result.proposalLines.some((line) => /focal clarity|visual payoff|contrast/i.test(line)));
 });
 
@@ -177,6 +183,9 @@ test("stage1 simple refinement keeps narrow target scope in the handoff", () => 
     expectedTargetIds: ["Snowman"]
   });
   assert.equal(result.intentHandoff.mode, "revise");
+  assert.match(result.creativeBrief.summary, /cleaner|focused|close/i);
+  assert.match(result.creativeBrief.narrativeCues, /refin|tighten|clarity|focus/i);
+  assert.ok(result.creativeBrief.hypotheses.some((line) => /refin|cleaner|focus|preserve successful/i.test(line)));
   assert.ok(result.proposalLines.some((line) => /Snowman/.test(line)));
   assert.ok(result.proposalLines.some((line) => /simplify the pass|tighten the focal read/i.test(line)));
   assert.ok(result.proposalLines.every((line) => !/shape a reveal around/i.test(line)));

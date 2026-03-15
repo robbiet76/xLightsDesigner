@@ -9,6 +9,8 @@ export function synthesizeCreativeBrief({
   designSceneContext = null,
   musicDesignContext = null
 } = {}) {
+  const promptSeed = String(goals || latestIntent || inspiration || "").trim();
+  const lowerPrompt = promptSeed.toLowerCase();
   const refs = Array.isArray(references) ? references : [];
   const sectionMap = Array.isArray(audioAnalysis?.structure) ? audioAnalysis.structure : [];
   const refNames = refs.slice(0, 5).map((r) => String(r?.name || "").trim()).filter(Boolean);
@@ -40,6 +42,15 @@ export function synthesizeCreativeBrief({
 
   const narrativeParts = [];
   if (songContextSummary) narrativeParts.push(String(songContextSummary));
+  if (/(warm|welcoming|magical)/.test(lowerPrompt)) {
+    narrativeParts.push("Keep the overall read warm and inviting, then let the magic come through in the details rather than noise.");
+  }
+  if (/(bigger|bigger,|don['’]t let it get messy|messy)/.test(lowerPrompt)) {
+    narrativeParts.push("Let the key impact section expand with confidence while keeping the picture readable and controlled.");
+  }
+  if (/(cleaner|focused|this is close|close,)/.test(lowerPrompt)) {
+    narrativeParts.push("Treat this as a refinement pass: tighten the focus, remove clutter, and preserve what is already working.");
+  }
   if (revealMoments.length) narrativeParts.push(`Treat reveal moments around ${revealMoments.slice(0, 3).join(", ")}.`);
   if (holdMoments.length) narrativeParts.push(`Preserve restraint through ${holdMoments.slice(0, 3).join(", ")}.`);
   if (lyricFocusMoments.length) narrativeParts.push(`Let lyrical emphasis lead focus in ${lyricFocusMoments.slice(0, 3).join(", ")}.`);
@@ -49,6 +60,32 @@ export function synthesizeCreativeBrief({
   if (focalCandidates.length) visualParts.push(`Favor focal candidates such as ${focalCandidates.slice(0, 3).join(", ")}.`);
   if (broadDomains.length) visualParts.push(`Use broad coverage domains like ${broadDomains.slice(0, 3).join(", ")} for base passes.`);
   if (detailDomains.length) visualParts.push(`Reserve detail domains like ${detailDomains.slice(0, 3).join(", ")} for refinement.`);
+
+  const hypotheses = [
+    "Use focal-target contrast to clarify musical hierarchy.",
+    "Preserve successful motifs and iterate surgically by section.",
+    ...(broadDomains.length && detailDomains.length
+      ? ["Establish broad coverage first, then refine with more detailed targets."]
+      : []),
+    ...(focalCandidates.length
+      ? [`Keep focal hierarchy readable around ${focalCandidates.slice(0, 2).join(" and ")}.`]
+      : []),
+    ...(revealMoments.length
+      ? [`Build contrast into reveal moments such as ${revealMoments.slice(0, 2).join(" and ")}.`]
+      : []),
+    ...(holdMoments.length
+      ? [`Protect quieter hold sections such as ${holdMoments.slice(0, 2).join(" and ")} from unnecessary density.`]
+      : []),
+    ...(/(warm|welcoming|magical)/.test(lowerPrompt)
+      ? ["Use warmth and gentle wonder as the emotional frame instead of defaulting to bigger motion."]
+      : []),
+    ...(/(bigger|messy)/.test(lowerPrompt)
+      ? ["Push expansion through contrast and scale, but keep the chorus readable instead of overcrowded."]
+      : []),
+    ...(/(cleaner|focused|this is close|close,)/.test(lowerPrompt)
+      ? ["Treat this pass as refinement: remove excess noise and strengthen the focal read before adding anything new."]
+      : [])
+  ];
 
   return {
     summary: String(goals || inspiration || latestIntent || "Design direction inferred from audio + user intent."),
@@ -63,22 +100,7 @@ export function synthesizeCreativeBrief({
     visualCues: visualParts.length
       ? visualParts.join(" ")
       : "No uploaded references.",
-    hypotheses: [
-      "Use focal-target contrast to clarify musical hierarchy.",
-      "Preserve successful motifs and iterate surgically by section.",
-      ...(broadDomains.length && detailDomains.length
-        ? ["Establish broad coverage first, then refine with more detailed targets."]
-        : []),
-      ...(focalCandidates.length
-        ? [`Keep focal hierarchy readable around ${focalCandidates.slice(0, 2).join(" and ")}.`]
-        : []),
-      ...(revealMoments.length
-        ? [`Build contrast into reveal moments such as ${revealMoments.slice(0, 2).join(" and ")}.`]
-        : []),
-      ...(holdMoments.length
-        ? [`Protect quieter hold sections such as ${holdMoments.slice(0, 2).join(" and ")} from unnecessary density.`]
-        : [])
-    ],
+    hypotheses,
     notes: String(notes || "")
   };
 }
