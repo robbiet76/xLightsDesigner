@@ -74,8 +74,28 @@ function buildSceneGuidanceLines({ designSceneContext = null, sections = [] } = 
   const broad = arr(scene?.coverageDomains?.broad).filter(Boolean);
   const detail = arr(scene?.coverageDomains?.detail).filter(Boolean);
   const focal = arr(scene?.focalCandidates).filter(Boolean);
+  const zones = scene?.spatialZones && typeof scene.spatialZones === "object" ? scene.spatialZones : {};
   const scope = arr(sections).filter(Boolean).join(", ") || "General";
   const lines = [];
+  const lowerGoal = str(scene?.goalHint).toLowerCase();
+
+  const firstForeground = arr(zones.foreground).filter(Boolean)[0] || "";
+  const firstBackground = arr(zones.background).filter(Boolean)[0] || "";
+  const firstLeft = arr(zones.left).filter(Boolean)[0] || "";
+  const firstRight = arr(zones.right).filter(Boolean)[0] || "";
+
+  if (/foreground/.test(lowerGoal) && firstForeground) {
+    lines.push(`${scope} / ${firstForeground} / keep the foreground calmer so the nearer layer does not crowd the frame`);
+  }
+  if (/background/.test(lowerGoal) && firstBackground) {
+    lines.push(`${scope} / ${firstBackground} / let the background open up with broader support to add depth behind the focal layer`);
+  }
+  if (/left side|left\b/.test(lowerGoal) && firstLeft) {
+    lines.push(`${scope} / ${firstLeft} / keep the left side gentler and less pushy in the opening read`);
+  }
+  if (/right side|right\b/.test(lowerGoal) && firstRight) {
+    lines.push(`${scope} / ${firstRight} / let the right side carry more lift and definition than the left`);
+  }
 
   if (broad.length) {
     lines.push(`${scope} / ${broad[0]} / establish broad base coverage before detail refinement`);
@@ -193,26 +213,85 @@ function buildPreferenceGuidanceLines({ directorProfile = null, normalizedIntent
   return lines;
 }
 
+function normalizeName(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], metadataAssignments = [] } = {}) {
+  const intent = normalizedIntent && typeof normalizedIntent === "object" ? normalizedIntent : {};
+  const scope = arr(intent.sections).filter(Boolean).join(", ") || "General";
+  const tagNames = arr(intent.tags).map((row) => str(row)).filter(Boolean);
+  if (!tagNames.length) return [];
+
+  const tagsByTargetId = new Map();
+  for (const assignment of metadataAssignments || []) {
+    const targetId = str(assignment?.targetId);
+    if (!targetId) continue;
+    const tags = arr(assignment?.tags).map((row) => normalizeName(row)).filter(Boolean);
+    if (tags.length) tagsByTargetId.set(targetId, tags);
+  }
+
+  const lines = [];
+  for (const tagName of tagNames) {
+    const normalizedTag = normalizeName(tagName);
+    const target = arr(targets).find((row) => {
+      const id = str(row?.id || row?.name);
+      return id && arr(tagsByTargetId.get(id)).includes(normalizedTag);
+    });
+    if (!target) continue;
+    const targetName = str(target?.name || target?.id);
+    if (!targetName) continue;
+
+    if (normalizedTag === "character") {
+      lines.push(`${scope} / ${targetName} / let the character props carry the primary visual story without losing readability`);
+    } else if (normalizedTag === "support") {
+      lines.push(`${scope} / ${targetName} / keep the support props subtle so they frame the moment without competing`);
+    } else if (normalizedTag === "lyric") {
+      lines.push(`${scope} / ${targetName} / use the lyric props to underline the words with cleaner emphasis`);
+    } else if (normalizedTag === "rhythm") {
+      lines.push(`${scope} / ${targetName} / let the rhythm props carry the lift and pulse of the section`);
+    } else if (normalizedTag === "focal" || normalizedTag === "hero" || normalizedTag === "lead") {
+      lines.push(`${scope} / ${targetName} / preserve this tagged focal element as the clearest lead read`);
+    } else {
+      lines.push(`${scope} / ${targetName} / honor the ${tagName} tag as a real semantic role in the pass`);
+    }
+  }
+
+  return lines;
+}
+
 function applyDesignerContextToProposalLines({
   proposalLines = [],
   normalizedIntent = null,
   designSceneContext = null,
   musicDesignContext = null,
-  directorProfile = null
+  directorProfile = null,
+  metadataAssignments = [],
+  targets = []
 } = {}) {
   const sections = arr(normalizedIntent?.sections).filter(Boolean);
   const intentLines = buildIntentGuidanceLines({ normalizedIntent });
-  const sceneLines = buildSceneGuidanceLines({ designSceneContext, sections });
+  const sceneLines = buildSceneGuidanceLines({
+    designSceneContext: {
+      ...(designSceneContext && typeof designSceneContext === "object" ? designSceneContext : {}),
+      goalHint: str(normalizedIntent?.goal)
+    },
+    sections
+  });
   const musicLines = buildMusicGuidanceLines({ musicDesignContext, sections, normalizedIntent });
   const preferenceLines = buildPreferenceGuidanceLines({ directorProfile, normalizedIntent });
+  const metadataLines = buildMetadataGuidanceLines({ normalizedIntent, targets, metadataAssignments });
   return pruneRedundantLines(
-    prependUnique(proposalLines, [...intentLines, ...sceneLines, ...musicLines, ...preferenceLines]),
+    prependUnique(proposalLines, [...intentLines, ...sceneLines, ...musicLines, ...preferenceLines, ...metadataLines]),
     normalizedIntent
   ).slice(0, 8);
 }
 
 export function buildProposalFromIntent(input = {}) {
-  const normalizedIntent = normalizeIntent(input);
+  const normalizedIntent = normalizeIntent({
+    ...input,
+    metadataAssignments: input.metadataAssignments
+  });
   const selection = resolveTargetSelection({
     normalizedIntent,
     models: input.models,
@@ -227,6 +306,9 @@ export function buildProposalFromIntent(input = {}) {
     designSceneContext: input.designSceneContext,
     musicDesignContext: input.musicDesignContext,
     directorProfile: input.directorProfile
+    ,
+    metadataAssignments: input.metadataAssignments,
+    targets
   });
 
   return {

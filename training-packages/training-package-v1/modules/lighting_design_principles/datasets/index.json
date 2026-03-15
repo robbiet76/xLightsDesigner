@@ -31,6 +31,8 @@
         "specs/designer-dialog/director-profile-v1.md",
         "specs/designer-dialog/music-design-context-v1.md",
         "specs/designer-dialog/stage1-minimum-viable-designer-prompts-2026-03-15.md",
+        "specs/designer-dialog/stage2-metadata-aware-prompts-2026-03-15.md",
+        "specs/designer-dialog/stage2-scene-aware-prompts-2026-03-15.md",
         "specs/designer-dialog/training-plan-2026-03-13.md",
         "specs/designer-dialog/implementation-checklist.md",
         "specs/designer-dialog/end-to-end-audit-2026-03-12.md"

@@ -95,25 +95,50 @@ Exit gate:
 Goal:
 - ensure the designer actually uses the layout/model scene context
 
+Current execution status:
+- Stage 2 prompt seed created:
+  - [stage2-scene-aware-prompts-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage2-scene-aware-prompts-2026-03-15.md)
+- Stage 2 metadata prompt seed created:
+  - [stage2-metadata-aware-prompts-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage2-metadata-aware-prompts-2026-03-15.md)
+- Stage 2 automated contract suite added:
+  - [stage2-scene-aware.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/stage2-scene-aware.test.js)
+- Stage 2 metadata-aware contract suite added:
+  - [stage2-metadata-aware.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/stage2-metadata-aware.test.js)
+- Stage 2 baseline automated validation passing on 2026-03-15:
+  - real named target emphasis
+  - foreground/background reasoning
+  - left/right reasoning
+  - output changes when scene context changes
+  - tag-aware semantic reasoning from metadata assignments
+  - output changes when metadata assignments change
+
 Scope:
 - model/group/submodel awareness
 - focal vs broad coverage reasoning
 - left/right/foreground/background reasoning where appropriate
+- metadata-tag semantic awareness where tags exist
 
 Implementation:
 - [ ] add targeted few-shot/eval cases that require use of `design_scene_context_v1`
+- [ ] add targeted few-shot/eval cases that require use of metadata tag semantics
 - [ ] verify designer references valid targets and valid scene structure
+- [ ] verify designer can use metadata tags as semantic context instead of only UI-selected filters
 - [ ] verify designer does not invent missing layout elements
 
 Validation:
-- [ ] test prompts such as:
+- [x] test prompts such as:
   - focal-object emphasis
   - broad coverage vs focal isolation
   - left/right or foreground/background direction
-- [ ] confirm output changes when scene context changes
+- [x] test prompts such as:
+  - character vs support tagged props
+  - lyric vs rhythm tagged props
+- [x] confirm output changes when scene context changes
+- [x] confirm output changes when metadata assignments change
 
 Do not proceed if:
 - designer ignores the scene context
+- designer ignores metadata semantics
 - designer invents nonexistent targets
 - scene-aware reasoning is cosmetic rather than real
 

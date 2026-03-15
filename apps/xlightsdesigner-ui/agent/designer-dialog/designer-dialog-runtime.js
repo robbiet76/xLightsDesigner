@@ -293,13 +293,13 @@ export function buildProposalBundleArtifact({
     summary: str(promptText || plan.normalizedIntent?.goal || "Designer proposal generated from current conversation."),
     baseRevision: str(sequenceRevision || "unknown"),
     scope: {
-      sections: arr(selectedSections),
-      targetIds: arr(selectedTargetIds),
-      tagNames: arr(selectedTagNames),
+      sections: arr(plan.normalizedIntent?.sections),
+      targetIds: arr(plan.normalizedIntent?.targetIds),
+      tagNames: arr(plan.normalizedIntent?.tags),
       summary: summarizeScope({
-        sections: selectedSections,
-        targetIds: selectedTargetIds,
-        tagNames: selectedTagNames
+        sections: plan.normalizedIntent?.sections,
+        targetIds: plan.normalizedIntent?.targetIds,
+        tagNames: plan.normalizedIntent?.tags
       })
     },
     constraints: {

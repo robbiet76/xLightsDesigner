@@ -2,9 +2,42 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function normalizeName(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function uniqueStrings(values = []) {
+  const seen = new Set();
+  const out = [];
+  for (const value of values) {
+    const text = cleanText(value);
+    const key = normalizeName(text);
+    if (!text || seen.has(key)) continue;
+    seen.add(key);
+    out.push(text);
+  }
+  return out;
+}
+
 function hasAnyText(value = "", patterns = []) {
   const lower = String(value || "").toLowerCase();
   return patterns.some((pattern) => pattern.test(lower));
+}
+
+function escapeRegex(value = "") {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildTagPatterns(tag = "") {
+  const key = normalizeName(tag);
+  if (!key) return [];
+  const variants = [key];
+  if (key === "support") variants.push("supporting", "supportive");
+  if (key === "character") variants.push("characters");
+  if (key === "lyric") variants.push("lyrics", "lyrical");
+  if (key === "rhythm") variants.push("rhythmic");
+  if (key === "focal") variants.push("focus", "focused");
+  return uniqueStrings(variants).map((value) => normalizeName(value));
 }
 
 function inferMode(text = "") {
@@ -106,6 +139,45 @@ function extractSafetyConstraints(text = "") {
   return out;
 }
 
+function collectKnownMetadataTags(metadataAssignments = []) {
+  const tags = [];
+  for (const assignment of metadataAssignments || []) {
+    for (const tag of Array.isArray(assignment?.tags) ? assignment.tags : []) {
+      tags.push(tag);
+    }
+  }
+  return uniqueStrings(tags);
+}
+
+function collectPromptInferredTags(text = "", metadataAssignments = []) {
+  const lower = normalizeName(text);
+  const matches = [];
+  const knownTags = collectKnownMetadataTags(metadataAssignments);
+
+  for (const tag of knownTags) {
+    const key = normalizeName(tag);
+    if (!key) continue;
+    const variants = buildTagPatterns(tag);
+    const patterns = variants.flatMap((variant) => ([
+      new RegExp(`\\b${escapeRegex(variant)}\\b`, "i"),
+      new RegExp(`\\b${escapeRegex(variant)}\\s+(?:prop|props|model|models|element|elements|items?)\\b`, "i")
+    ]));
+    let index = Number.POSITIVE_INFINITY;
+    for (const pattern of patterns) {
+      const match = lower.match(pattern);
+      if (!match || typeof match.index !== "number") continue;
+      index = Math.min(index, match.index);
+    }
+    if (Number.isFinite(index)) {
+      matches.push({ tag, index });
+    }
+  }
+
+  return matches
+    .sort((a, b) => a.index - b.index || normalizeName(a.tag).localeCompare(normalizeName(b.tag)))
+    .map((row) => row.tag);
+}
+
 function inferFocusHierarchy({ targetIds = [], tags = [], brief = {} } = {}) {
   if (targetIds.length) return "explicit_targets";
   if (tags.some((tag) => /focal|hero|lead/i.test(tag))) return "focal_first";
@@ -172,11 +244,14 @@ export function normalizeIntent({
   creativeBrief = null,
   selectedTagNames = [],
   selectedTargetIds = [],
-  directorPreferences = null
+  directorPreferences = null,
+  metadataAssignments = []
 } = {}) {
   const goal = cleanText(promptText);
   const sections = Array.isArray(selectedSections) ? selectedSections.filter(Boolean) : [];
-  const tags = Array.isArray(selectedTagNames) ? selectedTagNames.filter(Boolean) : [];
+  const selectedTags = Array.isArray(selectedTagNames) ? selectedTagNames.filter(Boolean) : [];
+  const inferredTags = collectPromptInferredTags(goal, metadataAssignments);
+  const tags = uniqueStrings([...selectedTags, ...inferredTags]);
   const targetIds = Array.isArray(selectedTargetIds) ? selectedTargetIds.filter(Boolean) : [];
   const brief = creativeBrief && typeof creativeBrief === "object" ? creativeBrief : {};
   const preferences = directorPreferences && typeof directorPreferences === "object" ? directorPreferences : {};
