@@ -42,6 +42,10 @@ Live validation script:
 Exit gate:
 - training work can proceed without concurrent major UI/runtime instability
 
+Parallel validation track:
+- clean-sequence effect creation should be validated separately using:
+  - [clean-sequence-validation-plan-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/clean-sequence-validation-plan-2026-03-15.md)
+
 ## Stage 1: Minimum Viable Designer Skill
 
 Goal:

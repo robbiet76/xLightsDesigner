@@ -22,6 +22,7 @@ Recommended next focus:
 1. stop broad feature expansion
 2. build designer capability in small gated steps
 3. validate each step against real usage before proceeding
+4. validate actual effect creation quality separately on a clean blank sequence
 
 ## What Is In Good Shape
 
@@ -56,6 +57,9 @@ Known caveat:
 Assessment:
 - sufficient for current application-side sequencing work
 - xLights-side autosave root cause remains a separate follow-up
+
+Remaining validation need:
+- actual effect creation quality should now be tested on a clean blank sequence, not only against existing worked sequences
 
 ### 3. Sequence-agent architecture
 
@@ -207,6 +211,14 @@ Do not prioritize next:
 
 Reason:
 - these are not the primary blockers to product capability right now
+
+## Immediate Next Validation Track
+
+The next major validation track should be:
+- clean-sequence effect-creation validation
+
+Reference:
+- [clean-sequence-validation-plan-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/clean-sequence-validation-plan-2026-03-15.md)
 
 ## Recommended Next Program
 
