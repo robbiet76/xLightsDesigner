@@ -265,6 +265,17 @@ Exit gate:
 Goal:
 - make project-scoped preference memory useful without style lock-in
 
+Current execution status:
+- Stage 6 prompt seed created:
+  - [stage6-conservative-preference-learning-prompts-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/stage6-conservative-preference-learning-prompts-2026-03-15.md)
+- Stage 6 automated validation added to:
+  - [director-profile.test.js](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/tests/agent/designer-dialog/director-profile.test.js)
+- Stage 6 baseline automated validation passing on 2026-03-15:
+  - single accepted proposal remains weak evidence
+  - repeated accepted evidence strengthens gradually
+  - explicit broad preference statements weigh more than one local accept
+  - sequence-local exceptions do not rewrite the baseline summary
+
 Scope:
 - soft steering only
 - project-level baseline only
@@ -280,8 +291,8 @@ Implementation:
 - [ ] verify traceability of preference influence
 
 Validation:
-- [ ] compare proposals with and without profile signals
-- [ ] confirm influence is visible but not dominant
+- [x] compare proposals with and without profile signals
+- [x] confirm influence is visible but not dominant
 
 Do not proceed if:
 - proposals collapse into repeated style

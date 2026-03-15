@@ -117,6 +117,30 @@ function updateSignal(signal = {}, observedWeight = 0, note = "") {
   };
 }
 
+function inferExplicitPreferenceSignals(note = "") {
+  const lower = str(note).toLowerCase();
+  const signals = [];
+
+  if (/(cleaner|more focused|more focus|tighter focus|clearer)/.test(lower)) {
+    signals.push(["focusBias", 0.7, "Explicit broad preference for clearer focal hierarchy."]);
+    signals.push(["complexityTolerance", -0.55, "Explicit broad preference for cleaner lower-density work."]);
+  }
+
+  if (/(denser|busier|more layered|more complexity)/.test(lower)) {
+    signals.push(["complexityTolerance", 0.55, "Explicit broad preference for denser layering when appropriate."]);
+  }
+
+  if (/(bolder|more aggressive|bigger rewrite)/.test(lower)) {
+    signals.push(["changeTolerance", 0.6, "Explicit broad preference for bolder revisions."]);
+  }
+
+  if (/(subtler|smaller change|incremental|preserve more)/.test(lower)) {
+    signals.push(["changeTolerance", -0.6, "Explicit broad preference for restrained revision scope."]);
+  }
+
+  return signals;
+}
+
 function inferAcceptedProposalSignals(proposalBundle = {}) {
   const scopeTargets = arr(proposalBundle?.scope?.targetIds).filter(Boolean);
   const focalCandidates = arr(proposalBundle?.traceability?.designSceneSignals?.focalCandidates).filter(Boolean);
@@ -160,6 +184,42 @@ export function applyAcceptedProposalToDirectorProfile(profile = null, { proposa
 
   for (const [key, observedWeight, note] of inferAcceptedProposalSignals(proposalBundle)) {
     next.preferences[key] = updateSignal(next.preferences[key], observedWeight, note);
+  }
+
+  next.summary = summarizeDirectorProfile(next);
+  return next;
+}
+
+export function applyExplicitPreferenceNoteToDirectorProfile(
+  profile = null,
+  { note = "", scope = "project", strength = "medium" } = {}
+) {
+  const normalized = normalizeDirectorProfile(profile);
+  const next = normalizeDirectorProfile(normalized);
+  const cleanedNote = str(note);
+  const scopeValue = str(scope || "project").toLowerCase();
+  const strengthValue = str(strength || "medium").toLowerCase();
+
+  if (!cleanedNote) return next;
+
+  next.evidence.explicitPreferenceNotes = [
+    `${scopeValue}:${strengthValue}:${cleanedNote}`,
+    ...next.evidence.explicitPreferenceNotes
+  ].slice(0, 100);
+
+  if (scopeValue !== "project") {
+    next.summary = summarizeDirectorProfile(next);
+    return next;
+  }
+
+  const multiplier = strengthValue === "strong" ? 2 : strengthValue === "weak" ? 0.75 : 1;
+  for (const [key, observedWeight, inferredNote] of inferExplicitPreferenceSignals(cleanedNote)) {
+    let updated = next.preferences[key];
+    const iterations = Math.max(1, Math.round(multiplier));
+    for (let i = 0; i < iterations; i += 1) {
+      updated = updateSignal(updated, observedWeight, inferredNote);
+    }
+    next.preferences[key] = updated;
   }
 
   next.summary = summarizeDirectorProfile(next);
