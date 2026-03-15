@@ -18,14 +18,21 @@ Using an existing worked sequence makes it harder to tell:
 
 This validation track is separate from conversational quality.
 
+It depends on upstream audio validation.
+
 ## Preconditions
 
 - xLights is running and connected
+- audio analysis validation has already been completed for the chosen song
 - the layout is loaded correctly
 - a clean new blank sequence is created specifically for validation
 - the media/song for the validation pass is selected
 - timing tracks are in a known state before generation begins
 - app starts cleanly and the current project is loaded
+
+Required upstream references:
+- [audio-analysis-validation-plan-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/audio-analysis-validation-plan-2026-03-15.md)
+- [audio-handoff-validation-plan-2026-03-15.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/audio-handoff-validation-plan-2026-03-15.md)
 
 ## Operating Rule
 
