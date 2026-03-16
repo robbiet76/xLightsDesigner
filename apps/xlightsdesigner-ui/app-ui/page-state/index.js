@@ -1,10 +1,12 @@
 import { buildAudioDashboardState } from "./audio-dashboard-state.js";
 import { buildDesignDashboardState } from "./design-dashboard-state.js";
+import { buildDiagnosticsDashboardState } from "./diagnostics-dashboard-state.js";
 import { buildHistoryDashboardState } from "./history-dashboard-state.js";
 import { buildMetadataDashboardState } from "./metadata-dashboard-state.js";
 import { buildProjectDashboardState } from "./project-dashboard-state.js";
 import { buildReviewDashboardState } from "./review-dashboard-state.js";
 import { buildSequenceDashboardState } from "./sequence-dashboard-state.js";
+import { buildSettingsDashboardState } from "./settings-dashboard-state.js";
 
 export function buildPageStates({
   state = {},
@@ -20,6 +22,10 @@ export function buildPageStates({
     design: buildDesignDashboardState({
       state
     }),
+    diagnostics: buildDiagnosticsDashboardState({
+      state,
+      helpers
+    }),
     history: buildHistoryDashboardState({
       state
     }),
@@ -31,6 +37,10 @@ export function buildPageStates({
       state
     }),
     review: buildReviewDashboardState({
+      state,
+      helpers
+    }),
+    settings: buildSettingsDashboardState({
       state,
       helpers
     }),

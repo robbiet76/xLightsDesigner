@@ -581,7 +581,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     return `
       <div class="screen-grid settings-screen">
         ${renderJourneyCard("settings")}
-        ${buildSettingsContent({ state, helpers, includeClose: false })}
+        ${buildSettingsContent({ state, helpers, pageState: pageStates?.settings || null, includeClose: false })}
       </div>
     `;
   }

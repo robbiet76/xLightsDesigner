@@ -1,21 +1,18 @@
-export function buildSettingsContent({ state, helpers, includeClose = false }) {
+export function buildSettingsContent({ state, helpers, pageState = null, includeClose = false }) {
   const {
     getAgentApplyRolloutMode,
     getManualLockedXdTracks,
     getTeamChatIdentities
   } = helpers;
-  const rolloutMode = getAgentApplyRolloutMode();
-  const manualXdLocks = getManualLockedXdTracks();
-  const teamChatIdentities = getTeamChatIdentities();
-  const manualXdLockText = manualXdLocks.length
+  const data = pageState?.data || {};
+  const rolloutMode = data.rolloutMode || getAgentApplyRolloutMode();
+  const manualXdLocks = Array.isArray(data.manualXdLocks) ? data.manualXdLocks : getManualLockedXdTracks();
+  const teamChatIdentities = data.teamChatIdentities || getTeamChatIdentities();
+  const manualXdLockText = data.manualXdLockText || (manualXdLocks.length
     ? manualXdLocks.map((row) => row.sourceTrack).join(", ")
-    : "none";
-  const planOnlyToggleForced = state.flags.planOnlyForcedByConnectivity || state.flags.planOnlyForcedByRollout;
-  const planOnlyToggleTitle = state.flags.planOnlyForcedByConnectivity
-    ? "Forced while xLights is unavailable"
-    : state.flags.planOnlyForcedByRollout
-      ? "Forced by rollout policy"
-      : "";
+    : "none");
+  const planOnlyToggleForced = Boolean(data.planOnlyToggleForced);
+  const planOnlyToggleTitle = String(data.planOnlyToggleTitle || "");
   return `
       <section class="card settings-screen-card">
         <div class="row" style="justify-content:space-between; align-items:center;">
@@ -82,21 +79,17 @@ export function buildSettingsContent({ state, helpers, includeClose = false }) {
         <section class="field">
           <label>Audio Analysis Service</label>
           <input id="analysis-service-url-input" placeholder="Service base URL (e.g. http://127.0.0.1:5055)" value="${String(state.ui.analysisServiceUrlDraft || "").replace(/\"/g, "&quot;")}" />
-          <select id="analysis-service-provider-input">
-            <option value="auto" ${state.ui.analysisServiceProvider === "auto" ? "selected" : ""}>Auto (Best)</option>
-            <option value="beatnet" ${state.ui.analysisServiceProvider === "beatnet" ? "selected" : ""}>BeatNet</option>
-            <option value="librosa" ${state.ui.analysisServiceProvider === "librosa" ? "selected" : ""}>Librosa</option>
-          </select>
+          <p class="banner">Provider: Librosa only.</p>
           <input id="analysis-service-api-key-input" type="password" placeholder="x-api-key (optional)" value="${String(state.ui.analysisServiceApiKeyDraft || "").replace(/\"/g, "&quot;")}" />
           <input id="analysis-service-bearer-input" type="password" placeholder="Bearer token (optional)" value="${String(state.ui.analysisServiceAuthBearerDraft || "").replace(/\"/g, "&quot;")}" />
           <p class="banner">Thin client mode: app sends audio to this service and writes returned beats/bars/sections.</p>
         </section>
         <section class="field">
           <label>Team Chat Names</label>
-          <div class="kv"><div class="k">App Assistant</div><div><input id="nickname-app-assistant" placeholder="Optional nickname" value="${String(teamChatIdentities.app_assistant?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
-          <div class="kv"><div class="k">Audio Analyst</div><div><input id="nickname-audio-analyst" placeholder="Optional nickname" value="${String(teamChatIdentities.audio_analyst?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
-          <div class="kv"><div class="k">Designer</div><div><input id="nickname-designer-dialog" placeholder="Optional nickname" value="${String(teamChatIdentities.designer_dialog?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
-          <div class="kv"><div class="k">Sequencer</div><div><input id="nickname-sequence-agent" placeholder="Optional nickname" value="${String(teamChatIdentities.sequence_agent?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">App Assistant</div><div><input id="nickname-app-assistant" placeholder="Optional nickname" value="${String(teamChatIdentities.app_assistant || teamChatIdentities.app_assistant?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">Audio Analyst</div><div><input id="nickname-audio-analyst" placeholder="Optional nickname" value="${String(teamChatIdentities.audio_analyst || teamChatIdentities.audio_analyst?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">Designer</div><div><input id="nickname-designer-dialog" placeholder="Optional nickname" value="${String(teamChatIdentities.designer_dialog || teamChatIdentities.designer_dialog?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
+          <div class="kv"><div class="k">Sequencer</div><div><input id="nickname-sequence-agent" placeholder="Optional nickname" value="${String(teamChatIdentities.sequence_agent || teamChatIdentities.sequence_agent?.nickname || "").replace(/\"/g, "&quot;")}" /></div></div>
           <p class="banner">Nicknames are optional. They affect chat presentation and address hints only. Internal role ids stay fixed.</p>
         </section>
         <div class="row">
@@ -119,7 +112,7 @@ export function buildSettingsDrawer({ state, helpers }) {
   if (!state.ui.settingsOpen) return "";
   return `
     <section class="settings-overlay" id="settings-overlay">
-      ${buildSettingsContent({ state, helpers, includeClose: true })}
+      ${buildSettingsContent({ state, helpers, pageState: helpers.pageStates?.settings || null, includeClose: true })}
     </section>
   `;
 }
@@ -127,11 +120,13 @@ export function buildSettingsDrawer({ state, helpers }) {
 export function buildDiagnosticsDrawer({ state, helpers }) {
   const { getDiagnosticsCounts, escapeHtml, buildLabel } = helpers;
   if (!state.ui.diagnosticsOpen) return "";
-  const counts = getDiagnosticsCounts();
-  const filter = state.ui.diagnosticsFilter;
-  const rows = state.diagnostics || [];
-  const filteredRows = filter === "all" ? rows : rows.filter((d) => d.level === filter);
-  const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 12) : [];
+  const dashboard = helpers.pageStates?.diagnostics || null;
+  const data = dashboard?.data || {};
+  const counts = data.counts || getDiagnosticsCounts();
+  const filter = data.filter || state.ui.diagnosticsFilter;
+  const filteredRows = Array.isArray(data.filteredRows) ? data.filteredRows : [];
+  const applyHistory = Array.isArray(data.recentApplies) ? data.recentApplies : [];
+  const health = data.health || {};
   return `
     <section class="settings-overlay" id="diagnostics-overlay">
       <section class="card settings-drawer diagnostics-drawer">
@@ -149,49 +144,49 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
         </div>
         <section class="field">
           <h3>Application Health</h3>
-          <div class="kv"><div class="k">Last Check</div><div>${state.health.lastCheckedAt ? new Date(state.health.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never"}</div></div>
-          <div class="kv"><div class="k">Runtime Ready</div><div>${state.health.runtimeReady ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">File Dialog Bridge</div><div>${state.health.desktopFileDialogReady ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${state.health.desktopBridgeApiCount}</div></div>
-          <div class="kv"><div class="k">xLights Version</div><div>${state.health.xlightsVersion || "not reported"}</div></div>
-          <div class="kv"><div class="k">Compatibility</div><div>${state.health.compatibilityStatus}</div></div>
-          <div class="kv"><div class="k">Agent Provider</div><div>${state.health.agentProvider || "openai"}</div></div>
-          <div class="kv"><div class="k">Agent Model</div><div>${state.health.agentModel || "(default env model)"}</div></div>
-          <div class="kv"><div class="k">Agent Cloud Config</div><div>${state.health.agentConfigured ? "configured" : "missing OPENAI_API_KEY"}</div></div>
-          <div class="kv"><div class="k">Agent Layer</div><div>${state.health.agentLayerReady ? "loaded" : "unavailable"}</div></div>
-          <div class="kv"><div class="k">Agent Role</div><div>${state.health.agentActiveRole || "idle"}</div></div>
-          <div class="kv"><div class="k">Agent Registry</div><div>${state.health.agentRegistryVersion || "unknown"}</div></div>
-          <div class="kv"><div class="k">Registry Valid</div><div>${state.health.agentRegistryValid ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Last Check</div><div>${health.lastCheckedAt || "Never"}</div></div>
+          <div class="kv"><div class="k">Runtime Ready</div><div>${health.runtimeReady ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">File Dialog Bridge</div><div>${health.desktopFileDialogReady ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Desktop Bridge APIs</div><div>${health.desktopBridgeApiCount || 0}</div></div>
+          <div class="kv"><div class="k">xLights Version</div><div>${health.xlightsVersion || "not reported"}</div></div>
+          <div class="kv"><div class="k">Compatibility</div><div>${health.compatibilityStatus || ""}</div></div>
+          <div class="kv"><div class="k">Agent Provider</div><div>${health.agentProvider || "openai"}</div></div>
+          <div class="kv"><div class="k">Agent Model</div><div>${health.agentModel || "(default env model)"}</div></div>
+          <div class="kv"><div class="k">Agent Cloud Config</div><div>${health.agentConfigured ? "configured" : "missing OPENAI_API_KEY"}</div></div>
+          <div class="kv"><div class="k">Agent Layer</div><div>${health.agentLayerReady ? "loaded" : "unavailable"}</div></div>
+          <div class="kv"><div class="k">Agent Role</div><div>${health.agentActiveRole || "idle"}</div></div>
+          <div class="kv"><div class="k">Agent Registry</div><div>${health.agentRegistryVersion || "unknown"}</div></div>
+          <div class="kv"><div class="k">Registry Valid</div><div>${health.agentRegistryValid ? "yes" : "no"}</div></div>
           ${
-            Array.isArray(state.health.agentRegistryErrors) && state.health.agentRegistryErrors.length
-              ? `<p class="banner warning">Registry errors: ${escapeHtml(state.health.agentRegistryErrors.join(" | "))}</p>`
+            Array.isArray(health.agentRegistryErrors) && health.agentRegistryErrors.length
+              ? `<p class="banner warning">Registry errors: ${escapeHtml(health.agentRegistryErrors.join(" | "))}</p>`
               : ""
           }
-          <div class="kv"><div class="k">Handoffs Ready</div><div>${state.health.agentHandoffsReady || "0/3"}</div></div>
-          <div class="kv"><div class="k">Orchestration Last Run</div><div>${state.health.orchestrationLastRunId || "none"}</div></div>
-          <div class="kv"><div class="k">Orchestration Status</div><div>${state.health.orchestrationLastStatus || "none"}</div></div>
-          <div class="kv"><div class="k">Orchestration Summary</div><div>${state.health.orchestrationLastSummary || "none"}</div></div>
-          <div class="kv"><div class="k">Capabilities</div><div>${state.health.capabilitiesCount}</div></div>
-          <div class="kv"><div class="k">Effect Catalog</div><div>${state.health.effectCatalogReady ? "ready" : "unavailable"}</div></div>
-          <div class="kv"><div class="k">Effect Definitions</div><div>${Number(state.health.effectDefinitionCount || 0)}</div></div>
-          <div class="kv"><div class="k">Scene Graph</div><div>${state.health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
-          <div class="kv"><div class="k">Scene Source</div><div>${state.health.sceneGraphSource || "unknown"}</div></div>
-          <div class="kv"><div class="k">Layout Mode</div><div>${String(state.health.sceneGraphLayoutMode || "2d").toUpperCase()}</div></div>
-          <div class="kv"><div class="k">Spatial Nodes</div><div>${Number(state.health.sceneGraphSpatialNodeCount || 0)}</div></div>
+          <div class="kv"><div class="k">Handoffs Ready</div><div>${health.agentHandoffsReady || "0/3"}</div></div>
+          <div class="kv"><div class="k">Orchestration Last Run</div><div>${health.orchestrationLastRunId || "none"}</div></div>
+          <div class="kv"><div class="k">Orchestration Status</div><div>${health.orchestrationLastStatus || "none"}</div></div>
+          <div class="kv"><div class="k">Orchestration Summary</div><div>${health.orchestrationLastSummary || "none"}</div></div>
+          <div class="kv"><div class="k">Capabilities</div><div>${health.capabilitiesCount || 0}</div></div>
+          <div class="kv"><div class="k">Effect Catalog</div><div>${health.effectCatalogReady ? "ready" : "unavailable"}</div></div>
+          <div class="kv"><div class="k">Effect Definitions</div><div>${health.effectDefinitionCount || 0}</div></div>
+          <div class="kv"><div class="k">Scene Graph</div><div>${health.sceneGraphReady ? "ready" : "unavailable"}</div></div>
+          <div class="kv"><div class="k">Scene Source</div><div>${health.sceneGraphSource || "unknown"}</div></div>
+          <div class="kv"><div class="k">Layout Mode</div><div>${health.sceneGraphLayoutMode || "2D"}</div></div>
+          <div class="kv"><div class="k">Spatial Nodes</div><div>${health.sceneGraphSpatialNodeCount || 0}</div></div>
           ${
-            Array.isArray(state.health.sceneGraphWarnings) && state.health.sceneGraphWarnings.length
-              ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(state.health.sceneGraphWarnings.join(" | "))}</p>`
+            Array.isArray(health.sceneGraphWarnings) && health.sceneGraphWarnings.length
+              ? `<p class="banner warning">Scene graph warnings: ${escapeHtml(health.sceneGraphWarnings.join(" | "))}</p>`
               : ""
           }
           ${
-            state.health.effectCatalogError
-              ? `<p class="banner warning">Effect catalog: ${escapeHtml(state.health.effectCatalogError)}</p>`
+            health.effectCatalogError
+              ? `<p class="banner warning">Effect catalog: ${escapeHtml(health.effectCatalogError)}</p>`
               : ""
           }
-          <div class="kv"><div class="k">system.validateCommands</div><div>${state.health.hasValidateCommands ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">jobs.get</div><div>${state.health.hasJobsGet ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">Sequence Open</div><div>${state.health.sequenceOpen ? "yes" : "no"}</div></div>
-          <div class="kv"><div class="k">Build</div><div>${buildLabel}</div></div>
+          <div class="kv"><div class="k">system.validateCommands</div><div>${health.hasValidateCommands ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">jobs.get</div><div>${health.hasJobsGet ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Sequence Open</div><div>${health.sequenceOpen ? "yes" : "no"}</div></div>
+          <div class="kv"><div class="k">Build</div><div>${health.buildLabel || buildLabel}</div></div>
         </section>
         <section class="field">
           <h3>Diagnostics Feed</h3>
@@ -203,7 +198,7 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
                   .map(
                     (d) => `
                     <li>
-                      <strong>[${d.level}]</strong> ${escapeHtml(d.text)}
+                      <strong>[${d.level}]</strong> ${d.timeLabel ? `${escapeHtml(d.timeLabel)} - ` : ""}${escapeHtml(d.text)}
                       ${d.details ? `<pre class="diag-details">${escapeHtml(d.details)}</pre>` : ""}
                     </li>
                   `
@@ -224,9 +219,7 @@ export function buildDiagnosticsDrawer({ state, helpers }) {
                   .map((entry) => {
                     const status = String(entry?.status || "unknown");
                     const count = Number(entry?.commandCount || 0);
-                    const ts = entry?.createdAt
-                      ? new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                      : "--:--";
+                    const ts = String(entry?.timeLabel || "--:--");
                     const summary = String(entry?.summary || "").trim();
                     return `
                       <li>
@@ -286,7 +279,8 @@ export function buildJobsPanel({ state }) {
 
 export function buildFooterDiagnostics({ state, helpers }) {
   const { getDiagnosticsCounts, buildLabel } = helpers;
-  const diagCounts = getDiagnosticsCounts();
+  const diagnosticsState = helpers.pageStates?.diagnostics || null;
+  const diagCounts = diagnosticsState?.data?.counts || getDiagnosticsCounts();
   return `
     <footer class="footer">
       <div class="footer-summary">

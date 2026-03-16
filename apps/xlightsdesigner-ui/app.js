@@ -10489,8 +10489,8 @@ function onNewSession() {
   render();
 }
 
-function screenContent() {
-  const pageStates = buildPageStates({
+function getPageStates() {
+  return buildPageStates({
     state,
     handoffs: {
       analysisHandoff: getValidHandoff("analysis_handoff_v1"),
@@ -10512,9 +10512,17 @@ function screenContent() {
       buildMetadataTargets,
       matchesMetadataFilterValue,
       normalizeMetadataSelectionIds,
-      normalizeMetadataSelectedTags
+      normalizeMetadataSelectedTags,
+      getAgentApplyRolloutMode,
+      getManualLockedXdTracks,
+      getTeamChatIdentities,
+      getDiagnosticsCounts,
+      buildLabel: BUILD_LABEL
     }
   });
+}
+
+function screenContent(pageStates = getPageStates()) {
   return buildScreenContent({
     state,
     pageStates,
@@ -10981,9 +10989,10 @@ function render() {
     ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
     : "Build: unknown";
   const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
+  const pageStates = getPageStates();
   app.innerHTML = buildAppShell({
     state,
-    screenContent: screenContent(),
+    screenContent: screenContent(pageStates),
     helpers: {
       escapeHtml,
       renderInlineChipSentence,
@@ -11004,7 +11013,8 @@ function render() {
       chatPlaceholder: getRouteChatPlaceholder(state.route),
       chatContext: getRouteChatContext(),
       analysisHeaderBadge,
-      buildLabel
+      buildLabel,
+      pageStates
     }
   });
 
