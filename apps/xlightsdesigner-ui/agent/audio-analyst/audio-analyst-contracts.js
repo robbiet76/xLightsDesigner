@@ -64,8 +64,8 @@ export function validateAudioAnalystInput(payload = {}) {
   pushRequiredString(errors, obj, "context.service.baseUrl");
 
   const provider = str(getByPath(obj, "context.service.provider")).toLowerCase();
-  if (provider && !["auto", "beatnet", "librosa"].includes(provider)) {
-    errors.push("context.service.provider must be auto|beatnet|librosa when provided");
+  if (provider && provider !== "librosa") {
+    errors.push("context.service.provider must be librosa when provided");
   }
 
   const mediaRootPath = getByPath(obj, "context.project.mediaRootPath");

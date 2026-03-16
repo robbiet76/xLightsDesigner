@@ -8,6 +8,8 @@ export function resetAudioAnalysisView(audioAnalysisState = {}) {
   audioAnalysisState.summary = "";
   audioAnalysisState.lastAnalyzedAt = "";
   audioAnalysisState.pipeline = null;
+  audioAnalysisState.progress = null;
+  audioAnalysisState.artifact = null;
 }
 
 export function buildPendingAudioAnalysisPipeline() {
@@ -33,6 +35,15 @@ export function buildPendingAudioAnalysisPipeline() {
   };
 }
 
+export function setAudioAnalysisProgress(audioAnalysisState = {}, { stage = "", message = "" } = {}) {
+  if (!audioAnalysisState || typeof audioAnalysisState !== "object") return;
+  audioAnalysisState.progress = {
+    stage: str(stage),
+    message: str(message),
+    updatedAt: new Date().toISOString()
+  };
+}
+
 export function applyPersistedAnalysisArtifactToState({
   artifact = null,
   creativeBrief = null,
@@ -49,6 +60,7 @@ export function applyPersistedAnalysisArtifactToState({
 
   audioAnalysisState.summary = str(artifact?.diagnostics?.summary);
   audioAnalysisState.lastAnalyzedAt = str(artifact?.provenance?.generatedAt);
+  audioAnalysisState.artifact = artifact;
   audioAnalysisState.pipeline = artifact?.provenance?.pipeline && typeof artifact.provenance.pipeline === "object"
     ? artifact.provenance.pipeline
     : null;
@@ -85,7 +97,12 @@ export function applyAudioAnalystFlowSuccessToState({
     persistedArtifact?.provenance?.generatedAt ||
     new Date().toISOString()
   );
+  audioAnalysisState.artifact = persistedArtifact;
   audioAnalysisState.pipeline = persistedArtifact?.provenance?.pipeline || pipelineResult?.pipeline || null;
+  setAudioAnalysisProgress(audioAnalysisState, {
+    stage: flow.result.status === "partial" ? "complete_with_warnings" : "complete",
+    message: flow.result.status === "partial" ? "Analysis completed with warnings." : "Analysis completed."
+  });
 
   return { ok: true };
 }
@@ -100,6 +117,11 @@ export function applyAudioAnalystFlowFailureToState({
   }
   audioAnalysisState.summary = str(fallbackSummary);
   audioAnalysisState.lastAnalyzedAt = str(at || new Date().toISOString());
+  audioAnalysisState.artifact = null;
   audioAnalysisState.pipeline = null;
+  setAudioAnalysisProgress(audioAnalysisState, {
+    stage: "failed",
+    message: "Audio analysis failed."
+  });
   return { ok: true };
 }

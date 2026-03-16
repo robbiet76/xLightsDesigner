@@ -162,7 +162,7 @@ function resolveAnalysisPythonCommand() {
   return ["python3"];
 }
 
-async function probeAnalysisService(baseUrl, timeoutMs = 1500, headers = {}) {
+async function probeAnalysisService(baseUrl, timeoutMs = 15000, headers = {}) {
   if (!baseUrl) return { ok: false, status: 0, error: "Missing analysis service baseUrl", data: null };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -226,12 +226,12 @@ function buildAnalysisServiceEnv() {
 }
 
 async function ensureAnalysisServiceRunning(baseUrl, headers = {}) {
-  const current = await probeAnalysisService(baseUrl, 1200, headers);
+  const current = await probeAnalysisService(baseUrl, 15000, headers);
   if (current.ok) return current;
   logStartup(`analysis:self-heal probe failed baseUrl=${baseUrl} err=${current.error || "unknown"}`);
   if (analysisServiceStarting) {
     await analysisServiceStarting;
-    return probeAnalysisService(baseUrl, 2000, headers);
+    return probeAnalysisService(baseUrl, 15000, headers);
   }
   analysisServiceStarting = (async () => {
     try {
@@ -255,13 +255,13 @@ async function ensureAnalysisServiceRunning(baseUrl, headers = {}) {
       });
       child.unref();
       analysisServiceProcess = child;
-      for (let i = 0; i < 20; i += 1) {
-        const probe = await probeAnalysisService(baseUrl, 1200, headers);
+      for (let i = 0; i < 30; i += 1) {
+        const probe = await probeAnalysisService(baseUrl, 5000, headers);
         if (probe.ok) {
           logStartup("analysis:self-heal ready");
           return;
         }
-        await sleep(500);
+        await sleep(1000);
       }
       logStartup("analysis:self-heal timeout waiting-for-health");
     } catch {
@@ -273,7 +273,7 @@ async function ensureAnalysisServiceRunning(baseUrl, headers = {}) {
   } finally {
     analysisServiceStarting = null;
   }
-  return probeAnalysisService(baseUrl, 2500, headers);
+  return probeAnalysisService(baseUrl, 15000, headers);
 }
 
 function createWindow() {
@@ -921,7 +921,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
   try {
     const filePath = String(payload?.filePath || "").trim();
     const baseUrl = String(payload?.baseUrl || "").trim().replace(/\/+$/, "");
-    const requestedProvider = String(payload?.provider || "beatnet").trim();
+    const requestedProvider = "librosa";
     let provider = requestedProvider;
     const apiKey = String(payload?.apiKey || "").trim();
     const authBearer = String(payload?.authBearer || "").trim();
@@ -985,15 +985,6 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
           };
         }
         const detail = String(parsed?.detail || "").trim();
-        const unsupportedAuto =
-          response.status === 422 &&
-          provider.toLowerCase() === "auto" &&
-          /unsupported provider/i.test(detail || raw);
-        if (unsupportedAuto) {
-          provider = "beatnet";
-          lastError = "Analysis service does not support provider=auto; retried with beatnet.";
-          continue;
-        }
         lastError = String(parsed?.error || parsed?.message || raw || `HTTP ${response.status}`);
         const canRetry = transientHttp.has(response.status);
         if (!canRetry || attempt >= retryAttempts) {
@@ -1028,8 +1019,8 @@ ipcMain.handle("xld:analysis:health", async (_event, payload = {}) => {
     const baseUrl = String(payload?.baseUrl || "").trim().replace(/\/+$/, "");
     const apiKey = String(payload?.apiKey || "").trim();
     const authBearer = String(payload?.authBearer || "").trim();
-    const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "5000"), 10);
-    const timeoutMs = Number.isFinite(timeoutMsRaw) ? Math.max(1000, Math.min(30000, timeoutMsRaw)) : 5000;
+    const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "20000"), 10);
+    const timeoutMs = Number.isFinite(timeoutMsRaw) ? Math.max(3000, Math.min(60000, timeoutMsRaw)) : 20000;
     if (!baseUrl) return { ok: false, reachable: false, error: "Missing analysis service baseUrl" };
 
     const analysisServiceDir = resolveAnalysisServiceDir();
@@ -1598,6 +1589,57 @@ function listSequenceFilesRecursive(rootFolder) {
   );
 }
 
+function listMediaFilesRecursive(rootFolder, extensions = []) {
+  const root = String(rootFolder || "").trim();
+  if (!root) return [];
+  if (!fs.existsSync(root)) return [];
+
+  const allowed = new Set(
+    (Array.isArray(extensions) ? extensions : [])
+      .map((ext) => String(ext || "").trim().toLowerCase().replace(/^\./, ""))
+      .filter(Boolean)
+  );
+
+  const results = [];
+  const stack = [root];
+
+  while (stack.length) {
+    const current = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const abs = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        const dirName = String(entry.name || "").toLowerCase();
+        if (dirName === "backup" || dirName === ".xlightsdesigner-backups") continue;
+        stack.push(abs);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const ext = path.extname(entry.name).toLowerCase().replace(/^\./, "");
+      if (allowed.size && !allowed.has(ext)) continue;
+      const relativePath = path.relative(root, abs) || entry.name;
+      results.push({
+        path: abs,
+        relativePath,
+        fileName: path.basename(abs),
+        extension: ext
+      });
+    }
+  }
+
+  return results.sort((a, b) =>
+    String(a.relativePath || "").localeCompare(String(b.relativePath || ""), undefined, {
+      sensitivity: "base"
+    })
+  );
+}
+
 function countShowArtifactsRecursive(rootFolder) {
   const root = String(rootFolder || "").trim();
   if (!root) return { xsqCount: 0, xdmetaCount: 0 };
@@ -1736,6 +1778,18 @@ ipcMain.handle("xld:sequence:list", async (_event, payload = {}) => {
     const sequences = listSequenceFilesRecursive(showFolder);
     const stats = countShowArtifactsRecursive(showFolder);
     return { ok: true, showFolder, sequences, stats };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:media:list", async (_event, payload = {}) => {
+  try {
+    const mediaFolder = String(payload?.mediaFolder || "").trim();
+    if (!mediaFolder) return { ok: false, error: "Missing mediaFolder" };
+    const extensions = Array.isArray(payload?.extensions) ? payload.extensions : [];
+    const mediaFiles = listMediaFilesRecursive(mediaFolder, extensions);
+    return { ok: true, mediaFolder, mediaFiles };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }

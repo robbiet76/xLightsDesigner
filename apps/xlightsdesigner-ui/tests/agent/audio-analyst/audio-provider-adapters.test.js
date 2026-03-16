@@ -8,9 +8,9 @@ import {
 } from "../../../agent/audio-analyst/audio-provider-adapters.js";
 
 test("normalizeAudioAnalysisProvider constrains provider ids", () => {
-  assert.equal(normalizeAudioAnalysisProvider("beatnet"), "beatnet");
+  assert.equal(normalizeAudioAnalysisProvider("beatnet"), "librosa");
   assert.equal(normalizeAudioAnalysisProvider("LIBROSA"), "librosa");
-  assert.equal(normalizeAudioAnalysisProvider("unknown"), "auto");
+  assert.equal(normalizeAudioAnalysisProvider("unknown"), "librosa");
 });
 
 test("buildAudioAnalysisServiceRequest normalizes fields for service bridge", () => {
@@ -24,7 +24,7 @@ test("buildAudioAnalysisServiceRequest normalizes fields for service bridge", ()
 
   assert.equal(request.filePath, "/tmp/Song.mp3");
   assert.equal(request.baseUrl, "http://127.0.0.1:5055");
-  assert.equal(request.provider, "auto");
+  assert.equal(request.provider, "librosa");
   assert.equal(request.apiKey, "key");
   assert.equal(request.authBearer, undefined);
 });

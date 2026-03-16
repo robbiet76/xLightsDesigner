@@ -18,6 +18,8 @@ export function bindScreenEvents({
   onSaveSequenceAs,
   onSelectCatalogSequence,
   onBrowseShowFolder,
+  onBrowseMediaFolder,
+  onRefreshMediaCatalog,
   onNewSession,
   onReferenceMediaSelected,
   addPaletteSwatch,
@@ -111,6 +113,20 @@ export function bindScreenEvents({
   const browseShowFolderBtn = app.querySelector("#browse-showfolder");
   if (browseShowFolderBtn) browseShowFolderBtn.addEventListener("click", onBrowseShowFolder);
 
+  const browseMediaPathBtn = app.querySelector("#browse-mediapath");
+  if (browseMediaPathBtn) browseMediaPathBtn.addEventListener("click", onBrowseMediaFolder);
+
+  const mediaPathInput = app.querySelector("#mediapath-input");
+  if (mediaPathInput) {
+    mediaPathInput.addEventListener("change", () => {
+      state.mediaPath = mediaPathInput.value.trim() || "";
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+      void onRefreshMediaCatalog?.({ silent: true });
+    });
+  }
+
   const newSessionBtn = app.querySelector("#new-session");
   if (newSessionBtn) newSessionBtn.addEventListener("click", onNewSession);
 
@@ -161,20 +177,22 @@ export function bindScreenEvents({
   const analyzeAudioBtn = app.querySelector("#analyze-audio");
   if (analyzeAudioBtn) analyzeAudioBtn.addEventListener("click", onAnalyzeAudio);
 
+  const audioTrackSelect = app.querySelector("#audio-track-select");
+  if (audioTrackSelect) {
+    audioTrackSelect.addEventListener("change", () => {
+      setAudioPathWithAgentPolicy(audioTrackSelect.value.trim() || "", "audio track selected");
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+    });
+  }
+
   app.querySelectorAll("[data-inspect-artifact]").forEach((btn) => {
     btn.addEventListener("click", () => onInspectArtifact?.(btn.dataset.inspectArtifact));
   });
 
   const closeArtifactDetailBtn = app.querySelector("[data-close-artifact-detail]");
   if (closeArtifactDetailBtn) closeArtifactDetailBtn.addEventListener("click", () => onCloseArtifactDetail?.());
-
-  const audioAnalysisSummaryInput = app.querySelector("#audio-analysis-summary");
-  if (audioAnalysisSummaryInput) {
-    audioAnalysisSummaryInput.addEventListener("input", () => {
-      state.audioAnalysis.summary = audioAnalysisSummaryInput.value;
-      persist();
-    });
-  }
 
   const regenerateCreativeBriefBtn = app.querySelector("#regenerate-creative-brief");
   if (regenerateCreativeBriefBtn) regenerateCreativeBriefBtn.addEventListener("click", onRegenerateCreativeBrief);

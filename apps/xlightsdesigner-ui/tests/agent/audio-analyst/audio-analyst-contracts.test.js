@@ -62,7 +62,7 @@ test("audio analyst input validator accepts media-focused payload", () => {
     context: {
       media: { path: "/tmp/Song.mp3" },
       project: { projectFilePath: "/tmp/Test.xdproj" },
-      service: { baseUrl: "http://127.0.0.1:5055", provider: "auto" }
+      service: { baseUrl: "http://127.0.0.1:5055", provider: "librosa" }
     },
     analysisProfile: {}
   });

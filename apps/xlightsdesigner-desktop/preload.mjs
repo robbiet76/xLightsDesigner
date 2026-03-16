@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld("xlightsDesignerDesktop", {
   createSequenceBackup: (payload = {}) => ipcRenderer.invoke("xld:backup:create", payload),
   restoreSequenceBackup: (payload = {}) => ipcRenderer.invoke("xld:backup:restore", payload),
   listSequencesInShowFolder: (payload = {}) => ipcRenderer.invoke("xld:sequence:list", payload),
+  listMediaFilesInFolder: (payload = {}) => ipcRenderer.invoke("xld:media:list", payload),
   exportDiagnosticsBundle: (payload = {}) => ipcRenderer.invoke("xld:diagnostics:export", payload),
   resetAppInstallState: (payload = {}) => ipcRenderer.invoke("xld:app:factory-reset", payload)
 });

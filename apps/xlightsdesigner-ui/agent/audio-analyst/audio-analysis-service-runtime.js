@@ -18,6 +18,35 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function buildFallbackSectionMarks({ durationMs = 0 } = {}) {
+  const total = Math.round(Number(durationMs));
+  if (!Number.isFinite(total) || total < 15000) return [];
+
+  const templates =
+    total >= 150000
+      ? ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"]
+      : total >= 105000
+        ? ["Intro", "Verse 1", "Chorus 1", "Bridge", "Chorus 2", "Outro"]
+        : ["Intro", "Verse", "Chorus", "Bridge", "Outro"];
+  const count = templates.length;
+  const rows = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const startMs = Math.round((total * index) / count);
+    const endMs =
+      index === count - 1
+        ? Math.max(startMs + 1, total - 1)
+        : Math.max(startMs + 1, Math.round((total * (index + 1)) / count) - 1);
+    rows.push({
+      label: templates[index],
+      startMs,
+      endMs
+    });
+  }
+
+  return rows;
+}
+
 export function createAudioAnalysisPipelineState() {
   return {
     mediaAttached: false,
@@ -83,7 +112,8 @@ export async function runAudioAnalysisServicePass({
   inferLyricStanzaPlan,
   relabelSectionsWithLlm,
   audioTrackQueryFromPath,
-  buildSectionSuggestions
+  buildSectionSuggestions,
+  onProgress = null
 } = {}) {
   const pipeline = createAudioAnalysisPipelineState();
   const diagnostics = [];
@@ -103,6 +133,9 @@ export async function runAudioAnalysisServicePass({
   const addDiag = (message) => {
     const text = str(message);
     if (text) diagnostics.push(text);
+  };
+  const emitProgress = (stage, message) => {
+    if (typeof onProgress === "function") onProgress({ stage: str(stage), message: str(message) });
   };
 
   const normalizeMarks = (marks = []) => normalizeAnalysisMarksForApi(marks, {
@@ -143,6 +176,7 @@ export async function runAudioAnalysisServicePass({
 
   try {
     pipeline.analysisServiceCalled = true;
+    emitProgress("service_request", "Submitting the selected track to the analysis backend.");
     const analysisRes = await analysisBridge.runAudioAnalysisService(buildAudioAnalysisServiceRequest({
       filePath: audioPath,
       baseUrl,
@@ -171,6 +205,7 @@ export async function runAudioAnalysisServicePass({
     }
 
     pipeline.analysisServiceSucceeded = true;
+    emitProgress("service_response", "Backend analysis returned raw timing and structure data.");
     const data = isPlainObject(analysisRes?.data) ? analysisRes.data : {};
     const dataMeta = isPlainObject(data?.meta) ? data.meta : {};
     for (const line of summarizeProviderSelection(dataMeta)) addDiag(line);
@@ -272,11 +307,26 @@ export async function runAudioAnalysisServicePass({
       }
     }
 
+    if ((!Array.isArray(effectiveSections) || !effectiveSections.length)) {
+      const durationForFallback =
+        (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1 ? Math.round(serviceDurationMs) : null) ||
+        (Number.isFinite(nextSequenceDurationMs) && nextSequenceDurationMs > 1 ? Math.round(nextSequenceDurationMs) : null) ||
+        (Number.isFinite(Number(nextMediaMetadata?.durationMs)) && Number(nextMediaMetadata.durationMs) > 1
+          ? Math.round(Number(nextMediaMetadata.durationMs))
+          : 0);
+      const heuristicSections = buildFallbackSectionMarks({ durationMs: durationForFallback });
+      if (heuristicSections.length) {
+        effectiveSections = heuristicSections;
+        addDiag(`Generated heuristic song sections from track duration (${heuristicSections.length} sections).`);
+      }
+    }
+
     if (Array.isArray(effectiveSections) && effectiveSections.length) {
       const finalLabels = effectiveSections.map((row) => str(row?.label)).filter(Boolean);
       if (finalLabels.length) addDiag(`Final song structure labels: ${finalLabels.join(", ")}`);
     }
 
+    emitProgress("service_normalize", "Building beats, bars, sections, chords, and lyric tracks.");
     addAnalysisTrack("Analysis: Beats", beats, "beatTrackWritten");
     addAnalysisTrack("Analysis: Bars", bars, "barTrackWritten");
     addAnalysisTrack("Analysis: Chords", chords, "chordTrackWritten");

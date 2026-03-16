@@ -198,6 +198,40 @@ test("direct sequencer address can bias ambiguous revise requests toward sequenc
   assert.equal(result.result.handledBy, "sequence_agent");
 });
 
+test("addressed Lyric structure follow-up stays with audio analyst", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "The first lift happens when the chorus opens up.",
+        shouldGenerateProposal: false,
+        responseId: "resp-audio-followup"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Lyric, where does the first real lift happen in this song?",
+    messages: [],
+    context: {
+      route: "design",
+      sequenceOpen: true,
+      teamChat: {
+        identities: {
+          audio_analyst: { roleId: "audio_analyst", displayName: "Audio Analyst", nickname: "Lyric" },
+          designer_dialog: { roleId: "designer_dialog", displayName: "Designer", nickname: "Mira" }
+        }
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.addressedTo, "audio_analyst");
+  assert.equal(result.result.routeDecision, "audio_analyst");
+  assert.equal(result.result.handledBy, "audio_analyst");
+});
+
 test("broad design kickoff stays with designer even if assistant text mentions sequencing", async () => {
   const bridge = {
     async runAgentConversation() {

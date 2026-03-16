@@ -23,11 +23,15 @@ export async function runAudioAnalysisOrchestration({
   analyzeAudioContext,
   formatAudioAnalysisSummary,
   initialSectionSuggestions = [],
-  initialSectionStartByLabel = {}
+  initialSectionStartByLabel = {},
+  onProgress = null
 } = {}) {
   const pipeline = createAudioAnalysisPipelineState();
   pipeline.mediaAttached = Boolean(str(audioPath));
   const diagnostics = [];
+  const emitProgress = (stage, message) => {
+    if (typeof onProgress === "function") onProgress({ stage: str(stage), message: str(message) });
+  };
 
   if (!pipeline.mediaAttached) {
     return {
@@ -76,7 +80,8 @@ export async function runAudioAnalysisOrchestration({
     inferLyricStanzaPlan,
     relabelSectionsWithLlm,
     audioTrackQueryFromPath,
-    buildSectionSuggestions
+    buildSectionSuggestions,
+    onProgress: emitProgress
   });
   Object.assign(pipeline, servicePass.pipeline || {});
   diagnostics.push(...(Array.isArray(servicePass.diagnostics) ? servicePass.diagnostics : []));
@@ -89,6 +94,7 @@ export async function runAudioAnalysisOrchestration({
     : (initialSectionStartByLabel && typeof initialSectionStartByLabel === "object" ? initialSectionStartByLabel : {});
 
   const analysisTracks = (Array.isArray(servicePass.analysisTrackNames) ? servicePass.analysisTrackNames : []).map((name) => ({ name }));
+  emitProgress("context_research", "Deriving song context and validating musical structure.");
   const contextPass = await runAudioAnalysisContextPass({
     audioPath,
     sections: nextSectionSuggestions,
@@ -127,6 +133,7 @@ export async function runAudioAnalysisOrchestration({
       isrc: str(servicePass.detectedTrackIdentity.isrc)
     };
   }
+  emitProgress("summary_ready", "Audio analysis summary and handoff are ready.");
 
   return {
     summary: formatAudioAnalysisSummary({ analysis, pipeline, webValidation: contextPass.webValidation || null }),

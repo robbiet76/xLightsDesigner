@@ -7,6 +7,7 @@ import json
 import time
 import re
 import math
+import importlib.util
 from urllib.parse import quote_plus
 import collections
 import collections.abc
@@ -25,23 +26,14 @@ for _name in ("MutableSequence", "MutableMapping", "MutableSet", "Sequence", "Ma
     if not hasattr(collections, _name) and hasattr(collections.abc, _name):
         setattr(collections, _name, getattr(collections.abc, _name))
 
-try:
-    import librosa  # type: ignore
-except Exception:  # pragma: no cover
-    librosa = None
-
-try:
-    from BeatNet.BeatNet import BeatNet as BeatNetEstimator  # type: ignore
-except Exception:  # pragma: no cover
-    BeatNetEstimator = None
-
-try:
-    from madmom.features.chords import CNNChordFeatureProcessor, CRFChordRecognitionProcessor  # type: ignore
-    from madmom.audio.signal import Signal as MadmomSignal  # type: ignore
-except Exception:  # pragma: no cover
-    CNNChordFeatureProcessor = None
-    CRFChordRecognitionProcessor = None
-    MadmomSignal = None
+librosa = None
+BeatNetEstimator = None
+CNNChordFeatureProcessor = None
+CRFChordRecognitionProcessor = None
+MadmomSignal = None
+_LIBROSA_IMPORT_ATTEMPTED = False
+_BEATNET_IMPORT_ATTEMPTED = False
+_MADMOM_IMPORT_ATTEMPTED = False
 
 
 APP_API_KEY = os.getenv("ANALYSIS_API_KEY", "").strip()
@@ -53,12 +45,72 @@ LRCLIB_API_BASE = os.getenv("LRCLIB_API_BASE", "https://lrclib.net/api").strip()
 ENABLE_LYRICS_AUTO_SHIFT = (
     str(os.getenv("ENABLE_LYRICS_AUTO_SHIFT", "0")).strip().lower() in {"1", "true", "yes", "on"}
 )
+ENABLE_MADMOM_CHORDS = (
+    str(os.getenv("ENABLE_MADMOM_CHORDS", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
+ENABLE_REMOTE_IDENTITY_LOOKUP = (
+    str(os.getenv("ENABLE_REMOTE_IDENTITY_LOOKUP", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
+ENABLE_WEB_TEMPO_LOOKUP = (
+    str(os.getenv("ENABLE_WEB_TEMPO_LOOKUP", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
+ENABLE_LYRICS_LOOKUP = (
+    str(os.getenv("ENABLE_LYRICS_LOOKUP", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
 IDENTITY_CACHE_PATH = os.getenv(
     "ANALYSIS_IDENTITY_CACHE_PATH",
     os.path.join(os.path.dirname(__file__), ".cache", "track-identity-cache.json"),
 ).strip()
 
 app = FastAPI(title="xLightsDesigner Analysis Service", version="0.1.0")
+
+
+def _module_available(name: str) -> bool:
+    try:
+        return importlib.util.find_spec(name) is not None
+    except Exception:
+        return False
+
+
+def _ensure_librosa():
+    global librosa, _LIBROSA_IMPORT_ATTEMPTED
+    if not _LIBROSA_IMPORT_ATTEMPTED:
+        try:
+            import librosa as _librosa  # type: ignore
+            librosa = _librosa
+        except Exception:
+            librosa = None
+        _LIBROSA_IMPORT_ATTEMPTED = True
+    return librosa
+
+
+def _ensure_beatnet():
+    global BeatNetEstimator, _BEATNET_IMPORT_ATTEMPTED
+    if not _BEATNET_IMPORT_ATTEMPTED:
+        try:
+            from BeatNet.BeatNet import BeatNet as _BeatNetEstimator  # type: ignore
+            BeatNetEstimator = _BeatNetEstimator
+        except Exception:
+            BeatNetEstimator = None
+        _BEATNET_IMPORT_ATTEMPTED = True
+    return BeatNetEstimator
+
+
+def _ensure_madmom_chords():
+    global CNNChordFeatureProcessor, CRFChordRecognitionProcessor, MadmomSignal, _MADMOM_IMPORT_ATTEMPTED
+    if not _MADMOM_IMPORT_ATTEMPTED:
+        try:
+            from madmom.features.chords import CNNChordFeatureProcessor as _CNNChordFeatureProcessor, CRFChordRecognitionProcessor as _CRFChordRecognitionProcessor  # type: ignore
+            from madmom.audio.signal import Signal as _MadmomSignal  # type: ignore
+            CNNChordFeatureProcessor = _CNNChordFeatureProcessor
+            CRFChordRecognitionProcessor = _CRFChordRecognitionProcessor
+            MadmomSignal = _MadmomSignal
+        except Exception:
+            CNNChordFeatureProcessor = None
+            CRFChordRecognitionProcessor = None
+            MadmomSignal = None
+        _MADMOM_IMPORT_ATTEMPTED = True
+    return CNNChordFeatureProcessor, CRFChordRecognitionProcessor, MadmomSignal
 
 
 def _ensure_auth(x_api_key: Optional[str]) -> None:
@@ -94,10 +146,14 @@ def _sanitize_marks(marks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 def _provider_config_state() -> Dict[str, Any]:
     missing = []
-    if not AUDD_API_TOKEN:
+    if ENABLE_REMOTE_IDENTITY_LOOKUP and not AUDD_API_TOKEN:
         missing.append("AUDD_API_TOKEN")
     return {
         "auddConfigured": bool(AUDD_API_TOKEN),
+        "remoteIdentityLookupEnabled": bool(ENABLE_REMOTE_IDENTITY_LOOKUP),
+        "webTempoLookupEnabled": bool(ENABLE_WEB_TEMPO_LOOKUP),
+        "lyricsLookupEnabled": bool(ENABLE_LYRICS_LOOKUP),
+        "madmomChordsEnabled": bool(ENABLE_MADMOM_CHORDS),
         "dspFallbackEnabled": bool(ENABLE_DSP_SECTION_FALLBACK),
         "identityCachePath": IDENTITY_CACHE_PATH,
         "missing": missing,
@@ -525,6 +581,8 @@ def _first_lrc_timestamp_ms(lrc_text: str) -> Optional[int]:
 
 
 def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+    if not ENABLE_LYRICS_LOOKUP:
+        return [], "lrclib skipped: lookup disabled", {}
     title = str(identity.get("title", "")).strip()
     artist = str(identity.get("artist", "")).strip()
     album = str(identity.get("album", "")).strip()
@@ -620,6 +678,8 @@ def _identify_track_with_audd(path: str) -> tuple[Dict[str, Any], bool]:
     # repeated AudD usage on subsequent analyses of the same track.
     if cached:
         return cached, True
+    if not ENABLE_REMOTE_IDENTITY_LOOKUP:
+        return {}, False
     if not AUDD_API_TOKEN:
         return {}, False
     with open(path, "rb") as fh:
@@ -762,6 +822,8 @@ def _detect_chords_madmom(
     sr: int,
     duration_ms: int,
 ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    _ensure_madmom_chords()
+    _ensure_librosa()
     if CNNChordFeatureProcessor is None or CRFChordRecognitionProcessor is None or MadmomSignal is None:
         return [], {"engine": "none", "error": "madmom chord processors unavailable"}
     if not isinstance(y, np.ndarray) or y.size == 0:
@@ -818,6 +880,11 @@ def _detect_chords(
     sr: int,
     duration_ms: int,
 ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    if not ENABLE_MADMOM_CHORDS:
+        chords_fb, meta_fb = _detect_chords_independent(y, sr, duration_ms)
+        meta_fb["engine"] = str(meta_fb.get("engine") or "librosa-chroma-template")
+        meta_fb["madmomDisabled"] = True
+        return chords_fb, meta_fb
     # Preferred path: madmom CRF chord recognizer from WAV (better full-song stability).
     chords, meta = _detect_chords_madmom(y, sr, duration_ms)
     if chords:
@@ -1432,7 +1499,7 @@ def _resolve_identity_and_web(path: str) -> tuple[Dict[str, Any], bool, Dict[str
         identity, identity_cache_hit = _identify_track_with_audd(path)
     except Exception as err:
         error = f"audd identify failed: {err}"
-    if identity:
+    if identity and ENABLE_WEB_TEMPO_LOOKUP:
         try:
             web_tempo_evidence = _fetch_songbpm_evidence(identity)
         except Exception as err:
@@ -1731,6 +1798,8 @@ def _label_song_sections(
 
 
 def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
+    _ensure_librosa()
+    _ensure_beatnet()
     if BeatNetEstimator is None:
         raise RuntimeError("BeatNet is not installed in this runtime.")
     if librosa is None:
@@ -1950,6 +2019,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
 
 
 def _analyze_with_librosa(path: str) -> Dict[str, Any]:
+    _ensure_librosa()
     if librosa is None:
         raise RuntimeError("librosa is not installed in this runtime.")
     y, sr = librosa.load(path, sr=22050, mono=True)
@@ -2098,14 +2168,10 @@ def _analyze_auto(path: str) -> Dict[str, Any]:
 
 
 def _analyze(path: str, provider: str) -> Dict[str, Any]:
-    p = (provider or "beatnet").strip().lower()
-    if p == "auto":
-        return _analyze_auto(path)
-    if p == "beatnet":
-        return _analyze_with_beatnet(path)
+    p = (provider or "librosa").strip().lower()
     if p == "librosa":
         return _analyze_with_librosa(path)
-    raise HTTPException(status_code=422, detail=f"Unsupported provider: {provider}")
+    raise HTTPException(status_code=422, detail=f"Unsupported provider: {provider}. Only librosa is enabled.")
 
 
 @app.get("/health")
@@ -2113,9 +2179,9 @@ def health() -> Dict[str, Any]:
     return {
         "ok": True,
         "service": "xlightsdesigner-analysis",
-        "librosaAvailable": bool(librosa is not None),
-        "beatnetAvailable": bool(BeatNetEstimator is not None),
-        "madmomChordAvailable": bool(CNNChordFeatureProcessor is not None and CRFChordRecognitionProcessor is not None and MadmomSignal is not None),
+        "librosaAvailable": _module_available("librosa"),
+        "beatnetAvailable": _module_available("BeatNet.BeatNet"),
+        "madmomChordAvailable": _module_available("madmom.features.chords") and _module_available("madmom.audio.signal"),
         "lyricsAutoShiftEnabled": bool(ENABLE_LYRICS_AUTO_SHIFT),
         "sectionProviders": _provider_config_state(),
     }
@@ -2124,7 +2190,7 @@ def health() -> Dict[str, Any]:
 @app.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
-    provider: str = Form("beatnet"),
+    provider: str = Form("librosa"),
     fileName: str = Form(""),
     x_api_key: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:

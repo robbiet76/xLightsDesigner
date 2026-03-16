@@ -1,4 +1,4 @@
-export const AUDIO_ANALYSIS_PROVIDER_IDS = ["auto", "beatnet", "librosa"];
+export const AUDIO_ANALYSIS_PROVIDER_IDS = ["librosa"];
 
 function str(value = "") {
   return String(value || "").trim();
@@ -11,13 +11,13 @@ function finiteOrNull(value) {
 
 export function normalizeAudioAnalysisProvider(value = "") {
   const normalized = str(value).toLowerCase();
-  return AUDIO_ANALYSIS_PROVIDER_IDS.includes(normalized) ? normalized : "auto";
+  return AUDIO_ANALYSIS_PROVIDER_IDS.includes(normalized) ? normalized : "librosa";
 }
 
 export function buildAudioAnalysisServiceRequest({
   filePath = "",
   baseUrl = "",
-  provider = "auto",
+  provider = "librosa",
   apiKey = "",
   authBearer = ""
 } = {}) {

@@ -57,8 +57,17 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
         /\beffect\b/.test(userText)
       )
     );
+  const addressedAudioQuestion =
+    addressedRole === "audio_analyst" &&
+    (
+      /(main sections|section|first real lift|first lift|beats|bars|tempo|lyrics|chords|analysis|analyz)/.test(userText) ||
+      (/\b(where does|tell me where|what parts)\b/.test(userText) && /\b(chorus|verse|bridge|intro|outro|lift|hold back|open up)\b/.test(userText))
+    );
   if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(userText)) {
     return "setup_help";
+  }
+  if (addressedAudioQuestion) {
+    return "audio_analyst";
   }
   if (/(analyz|analysis|tempo|beats|bars|lyrics|chords|re-analy|reanaly)/.test(userText)) {
     return "audio_analyst";
