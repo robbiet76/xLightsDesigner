@@ -751,22 +751,54 @@ function inferSharedSettings(description = "") {
   return settings;
 }
 
-function buildTimingMarks(source = []) {
-  return source.slice(0, 24).map((label, idx) => {
-    const parsed = parseProposalLine(label);
-    const requestedStartMs = extractRequestedStartMs(parsed.description);
-    const requestedDurationMs = extractRequestedDurationMs(parsed.description);
-    const startMs = requestedStartMs != null ? requestedStartMs : idx * 1000;
-    return {
+function buildTimingMarks(source = [], parsed = [], sectionWindows = null, { useAllKnownSections = false } = {}) {
+  if (useAllKnownSections && sectionWindows instanceof Map && sectionWindows.size) {
+    return Array.from(sectionWindows.entries())
+      .map(([label, window]) => ({
+        startMs: Number(window?.startMs),
+        endMs: Number(window?.endMs),
+        label: normText(label)
+      }))
+      .filter((row) => row.label && Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs)
+      .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
+      .slice(0, 48);
+  }
+  const marks = [];
+  const seenSections = new Set();
+  for (let i = 0; i < source.length && marks.length < 24; i += 1) {
+    const row = parsed[i] || parseProposalLine(source[i]);
+    const section = normText(row?.section) || `Section ${i + 1}`;
+    if (seenSections.has(section)) continue;
+    seenSections.add(section);
+    const requestedStartMs = extractRequestedStartMs(row?.description);
+    const requestedDurationMs = extractRequestedDurationMs(row?.description);
+    const knownWindow = sectionWindows instanceof Map ? sectionWindows.get(section) : null;
+    const startMs = requestedStartMs != null
+      ? requestedStartMs
+      : Number(knownWindow?.startMs ?? (i * 1000));
+    const endMs = requestedDurationMs != null
+      ? startMs + requestedDurationMs
+      : Number(knownWindow?.endMs ?? (startMs + 1000));
+    marks.push({
       startMs,
-      endMs: startMs + (requestedDurationMs != null ? requestedDurationMs : 1000),
-      label
-    };
-  });
+      endMs,
+      label: section
+    });
+  }
+  return marks;
 }
 
-function buildSectionWindows(source = [], parsed = []) {
+function buildSectionWindows(source = [], parsed = [], sectionWindowsByName = null) {
   const windows = new Map();
+  if (sectionWindowsByName instanceof Map) {
+    for (const [section, window] of sectionWindowsByName.entries()) {
+      const name = normText(section);
+      const startMs = Number(window?.startMs);
+      const endMs = Number(window?.endMs);
+      if (!name || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+      windows.set(name, { startMs, endMs });
+    }
+  }
   for (let i = 0; i < source.length; i++) {
     const section = normText(parsed[i]?.section) || `Section ${i + 1}`;
     if (windows.has(section)) continue;
@@ -808,13 +840,14 @@ function buildEffectTemplates(
   groupsById = {},
   submodelsById = {},
   trackName = "XD: Sequencer Plan",
+  sectionWindows = null,
   enableEffectTimingAlignment = true
 ) {
   const fallbackTargets = inferTargets(source, targetIds);
   if (!fallbackTargets.length) return [];
 
   const groupGraph = normalizeGroupGraph(groupsById, groupIds);
-  const sectionWindows = buildSectionWindows(source, parsed);
+  const resolvedSectionWindows = sectionWindows instanceof Map ? sectionWindows : buildSectionWindows(source, parsed);
   const layerCounts = new Map();
   const distributionCounts = new Map();
   const out = [];
@@ -841,7 +874,7 @@ function buildEffectTemplates(
         );
       }
     }
-    const window = sectionWindows.get(row.section) || { startMs: i * 1000, endMs: (i * 1000) + 1000 };
+    const window = resolvedSectionWindows.get(row.section) || { startMs: i * 1000, endMs: (i * 1000) + 1000 };
 
     for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
       const target = models[modelIdx];
@@ -914,6 +947,7 @@ export function buildDesignerPlanCommands(
     groupIds = [],
     groupsById = {},
     submodelsById = {},
+    sectionWindowsByName = null,
     enableEffectTimingAlignment = true
   } = {}
 ) {
@@ -923,7 +957,10 @@ export function buildDesignerPlanCommands(
   }
 
   const parsed = source.map((line) => parseProposalLine(line));
-  const marks = buildTimingMarks(source);
+  const sectionWindows = buildSectionWindows(source, parsed, sectionWindowsByName);
+  const marks = buildTimingMarks(source, parsed, sectionWindows, {
+    useAllKnownSections: normText(trackName) === "XD: Song Structure"
+  });
 
   const baseCommands = [
     {
@@ -962,6 +999,7 @@ export function buildDesignerPlanCommands(
     groupsById,
     submodelsById,
     trackName,
+    sectionWindows,
     enableEffectTimingAlignment
   ).map((row) => {
     const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];

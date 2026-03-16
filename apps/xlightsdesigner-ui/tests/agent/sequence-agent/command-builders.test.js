@@ -243,6 +243,28 @@ test("command builders parse direct Color Wash request with explicit minute rang
   assert.equal(align.params.endMs, 120000);
 });
 
+test("command builders use the full analyzed section set for XD Song Structure timing marks", () => {
+  const commands = buildDesignerPlanCommands([
+    "Chorus 1 / Snowman / add a Color Wash effect"
+  ], {
+    trackName: "XD: Song Structure",
+    effectCatalog: sampleCatalog(),
+    sectionWindowsByName: new Map([
+      ["Intro", { startMs: 0, endMs: 8000 }],
+      ["Verse 1", { startMs: 8000, endMs: 26000 }],
+      ["Chorus 1", { startMs: 44000, endMs: 62000 }]
+    ]),
+    enableEffectTimingAlignment: true
+  });
+
+  const marks = commands.find((row) => row.cmd === "timing.insertMarks");
+  assert.deepEqual(marks.params.marks, [
+    { startMs: 0, endMs: 8000, label: "Intro" },
+    { startMs: 8000, endMs: 26000, label: "Verse 1" },
+    { startMs: 44000, endMs: 62000, label: "Chorus 1" }
+  ]);
+});
+
 test("command builders can skip explicit timing re-alignment commands when capability is unavailable", () => {
   const commands = buildDesignerPlanCommands([
     "Chorus 1 / MegaTree / bars"
