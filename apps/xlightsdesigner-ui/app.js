@@ -10507,7 +10507,12 @@ function screenContent() {
       buildDesignerPlanCommands,
       applyReadyForApprovalGate,
       applyDisabledReason,
-      buildCurrentReviewSnapshotSummary
+      buildCurrentReviewSnapshotSummary,
+      getMetadataTagRecords,
+      buildMetadataTargets,
+      matchesMetadataFilterValue,
+      normalizeMetadataSelectionIds,
+      normalizeMetadataSelectedTags
     }
   });
   return buildScreenContent({
