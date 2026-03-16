@@ -111,7 +111,7 @@ test("audio analyst ui state applies success and failure flow projections", () =
   const audioAnalysisState = { summary: "", lastAnalyzedAt: "", pipeline: null };
 
   const success = applyAudioAnalystFlowSuccessToState({
-    flow: { artifact, handoff },
+    flow: { artifact, handoff, result: { status: "completed" } },
     pipelineResult: samplePipelineResult(),
     fallbackSummary: "fallback",
     audioAnalysisState,

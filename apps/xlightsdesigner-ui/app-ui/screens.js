@@ -1,6 +1,6 @@
 import { buildSettingsContent } from "./operator-panels.js";
 
-export function buildScreenContent({ state, helpers }) {
+export function buildScreenContent({ state, pageStates = {}, helpers }) {
   const {
     basenameOfPath,
     getAnalysisServiceHeaderBadgeText,
@@ -542,9 +542,10 @@ export function buildScreenContent({ state, helpers }) {
             </div>
           </div>
           <div class="field">
-            <label>Media Path</label>
+            <label>Media Directory</label>
             <div class="row">
-              <input id="mediapath-input" value="${state.mediaPath || ""}" placeholder="Optional default media root or reference path" />
+              <input id="mediapath-input" value="${state.mediaPath || ""}" placeholder="Folder containing media files for this project" />
+              <button id="browse-mediapath">Browse...</button>
             </div>
           </div>
           <p class="banner">Show Directory inventory: ${state.showDirectoryStats?.xsqCount || 0} .xsq | ${state.showDirectoryStats?.xdmetaCount || 0} .xdmeta</p>
@@ -597,125 +598,99 @@ export function buildScreenContent({ state, helpers }) {
     `;
   }
 
-  function renderAudioAnalysisArtifactCard() {
-    const analysis = getValidHandoff("analysis_handoff_v1");
-    const timing = analysis?.timing || {};
-    const structure = analysis?.structure || {};
-    const chords = analysis?.chords || {};
-    const identity = analysis?.trackIdentity || {};
-    const bpm = timing?.bpm != null ? String(timing.bpm) : "unknown";
-    const meter = String(timing?.timeSignature || "unknown");
-    const sections = Array.isArray(structure?.sections) ? structure.sections.slice(0, 5) : [];
+  function renderAudioLiveDashboardCard() {
+    const dashboard = pageStates?.audio || {};
+    const data = dashboard?.data || {};
+    const options = Array.isArray(data.options) ? data.options : [];
+    const chips = data.chips || {};
+    const progress = data.progress || {};
+    const trackContext = data.trackContext || {};
+    const analysisSummary = data.analysisSummary || {};
+    const structure = data.structure || {};
+    const cues = data.cues || {};
+    const downstream = data.downstream || {};
     return `
-      <section class="card artifact-card artifact-card-audio">
-        <div class="artifact-kicker">Analysis Artifact</div>
-        <h3>${escapeHtml(String(identity?.title || basenameOfPath(state.audioPathInput || "") || "No analyzed media"))}</h3>
+      <section class="card full-span designer-dashboard-card audio-dashboard-card">
+        <div class="artifact-kicker">Lyric Live Dashboard</div>
+        <h3>${escapeHtml(String(dashboard?.summary || "Lyric's song understanding will appear here once analysis runs."))}</h3>
         <div class="artifact-chip-row">
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(`${bpm} BPM`)}</span>
-          <span class="artifact-chip">${escapeHtml(meter)}</span>
-          <span class="artifact-chip">${Array.isArray(structure?.sections) ? structure.sections.length : 0} sections</span>
-          <span class="artifact-chip">${chords?.hasChords ? "chords ready" : "no chords"}</span>
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(trackContext.title || "No media loaded"))}</span>
+          <span class="artifact-chip">${escapeHtml(String(chips.bpm || "BPM pending"))}</span>
+          <span class="artifact-chip">${escapeHtml(String(chips.timeSignature || "meter pending"))}</span>
+          <span class="artifact-chip">${escapeHtml(String(chips.sectionsCount || 0))} sections</span>
+          <span class="artifact-chip">${chips.chordsReady ? "chords ready" : "chords pending"}</span>
         </div>
-        <p class="artifact-body">${escapeHtml(String(state.audioAnalysis?.summary || "Audio analysis has not produced a summary yet."))}</p>
-        <p class="banner">Identity: ${escapeHtml([identity?.title, identity?.artist].filter(Boolean).join(" - ") || "pending")}</p>
-        <p class="banner">Structure source: ${escapeHtml(String(structure?.source || "pending"))} | confidence: ${escapeHtml(String(structure?.confidence || "low"))}</p>
-        <div class="artifact-chip-row">
-          ${
-            sections.length
-              ? sections.map((row) => `<span class="artifact-chip">${escapeHtml(String(row?.label || row?.name || "Section"))}</span>`).join("")
-              : `<span class="artifact-chip artifact-chip-muted">No sections labeled yet</span>`
-          }
+        <div class="banner">
+          ${escapeHtml(String(progress.message || "Idle. Select a track and run analysis."))}
+          ${progress.updatedLabel ? ` Updated ${escapeHtml(String(progress.updatedLabel))}.` : ""}
         </div>
-        ${buildArtifactInspectActions("audio-analysis")}
-      </section>
-    `;
-  }
-
-  function renderAudioPipelineArtifactCard() {
-    const pipeline = state.audioAnalysis?.pipeline && typeof state.audioAnalysis.pipeline === "object"
-      ? state.audioAnalysis.pipeline
-      : null;
-    const rows = [
-      ["Media attached", Boolean(pipeline?.mediaAttached)],
-      ["Service reached", Boolean(pipeline?.analysisServiceCalled)],
-      ["Service succeeded", Boolean(pipeline?.analysisServiceSucceeded)],
-      ["Timing derived", Boolean(pipeline?.timingDerived)],
-      ["Structure derived", Boolean(pipeline?.structureDerived)],
-      ["Web context derived", Boolean(pipeline?.webContextDerived)]
-    ];
-    return `
-      <section class="card artifact-card artifact-card-audio-status">
-        <div class="artifact-kicker">Analysis Status</div>
-        <h3>${escapeHtml(getAnalysisServiceHeaderBadgeText())}</h3>
-        <ul class="artifact-list">
-          ${rows.map(([label, ok]) => `<li>${ok ? "PASS" : "PENDING"} - ${escapeHtml(label)}</li>`).join("")}
-        </ul>
-        <p class="banner">Last analyzed: ${state.audioAnalysis?.lastAnalyzedAt ? escapeHtml(new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleString([], { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })) : "never"}</p>
-        ${buildArtifactInspectActions("audio-pipeline")}
+        <div class="row">
+          <select id="audio-track-select">
+            ${
+              options.length
+                ? options.map((row) => {
+                    const path = String(row?.path || "").trim();
+                    const detail = String(row?.detail || "").trim();
+                    const label = String(row?.label || detail || path).trim();
+                    return `<option value="${escapeHtml(path)}" ${row?.selected ? "selected" : ""}>${escapeHtml(label)} - ${escapeHtml(detail || label)}</option>`;
+                  }).join("")
+                : `<option value="">No media files found in Media Directory</option>`
+            }
+          </select>
+          <button id="analyze-audio" ${data.hasTrack ? "" : "disabled"}>Analyze Audio</button>
+        </div>
+        <div class="dashboard-grid">
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Track Context</div>
+            <p>${escapeHtml(String(trackContext.title || "No audio track attached"))}</p>
+            <p>${escapeHtml(String(trackContext.subtitle || "Attach or load sequence media to begin analysis."))}</p>
+            <p>Last analyzed: ${escapeHtml(String(trackContext.lastAnalyzedLabel || "never"))}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Analysis Summary</div>
+            <p>${escapeHtml(String(analysisSummary.summary || "No analysis summary yet."))}</p>
+            <p>${escapeHtml(String(analysisSummary.tone || "No high-level music framing captured yet."))}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Structure</div>
+            ${
+              Array.isArray(structure.visibleSections) && structure.visibleSections.length
+                ? `<ul>${structure.visibleSections.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                : "<p>No main sections have been identified yet.</p>"
+            }
+            <p>Source: ${escapeHtml(String(structure.source || "pending"))} | confidence: ${escapeHtml(String(structure.confidence || "low"))}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Music Cues</div>
+            <p>${cues.holdCue ? `Hold back around ${escapeHtml(String(cues.holdCue))}.` : "No hold cue identified yet."}</p>
+            <p>${cues.firstLift ? `First real lift appears around ${escapeHtml(String(cues.firstLift))}.` : "No lift cue identified yet."}</p>
+            <p>${escapeHtml(String(cues.validationSummary || "No additional music cue validation yet."))}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Downstream Readiness</div>
+            <p>${escapeHtml(String(downstream.summary || "Analysis is still partial. Downstream work may rely on assumptions."))}</p>
+            <p>${downstream.structureReady ? "Sections are usable." : "Sections still need work."}</p>
+            <p>${downstream.timingReady ? "Timing context is usable." : "Timing context still needs work."}</p>
+          </div>
+        </div>
       </section>
     `;
   }
 
   function audioScreen() {
-    const audioTrackPath = String(state.audioPathInput || "").trim();
-    const audioTrackName = basenameOfPath(audioTrackPath) || audioTrackPath;
-    const hasAudioTrack = Boolean(audioTrackPath);
-    const audioSummary = String(state.audioAnalysis?.summary || "");
-    const audioPipeline = state.audioAnalysis?.pipeline && typeof state.audioAnalysis.pipeline === "object"
-      ? state.audioAnalysis.pipeline
-      : null;
-    const pipelineRows = [
-      ["Media attached", Boolean(audioPipeline?.mediaAttached)],
-      ["Metadata read", Boolean(audioPipeline?.mediaMetadataRead)],
-      ["Analysis service reached", Boolean(audioPipeline?.analysisServiceCalled)],
-      ["Analysis service succeeded", Boolean(audioPipeline?.analysisServiceSucceeded)],
-      ["Beat markers ready", Boolean(audioPipeline?.beatTrackWritten)],
-      ["Bar markers ready", Boolean(audioPipeline?.barTrackWritten)],
-      ["Chord markers ready", Boolean(audioPipeline?.chordTrackWritten)],
-      ["Structure markers ready", Boolean(audioPipeline?.structureTrackWritten)],
-      ["Lyrics markers ready", Boolean(audioPipeline?.lyricsTrackWritten)],
-      ["Song context derived", Boolean(audioPipeline?.webContextDerived)]
-    ];
-    const audioAnalyzedAt = state.audioAnalysis?.lastAnalyzedAt
-      ? new Date(state.audioAnalysis.lastAnalyzedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : "";
-    const analysisServiceBadge = getAnalysisServiceHeaderBadgeText();
-    const analysisServiceReady = Boolean(state.ui.analysisServiceReady);
-    const analysisServiceChecking = Boolean(state.ui.analysisServiceChecking);
+    const dashboard = pageStates?.audio || {};
+    const emptyState = dashboard?.data?.emptyState || null;
     return `
       <div class="screen-grid audio-screen">
         ${renderJourneyCard("audio")}
-        <section class="artifact-grid">
-          ${renderAudioAnalysisArtifactCard()}
-          ${renderAudioPipelineArtifactCard()}
-        </section>
+        ${renderAudioLiveDashboardCard()}
         ${renderArtifactDetailPanel()}
         ${
-          hasAudioTrack
+          emptyState
             ? `
         <section class="card">
-          <h3>Audio Analysis ${audioAnalyzedAt ? `<span class="banner">(${audioAnalyzedAt})</span>` : ""}</h3>
-          <div class="field">
-            <label>Audio Track (from open sequence)</label>
-            <input value="${audioTrackName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}" readonly />
-            <p class="banner">${audioTrackPath.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
-          </div>
-          <div class="row">
-            <button id="analyze-audio" ${analysisServiceReady && !analysisServiceChecking ? "" : "disabled"}>
-              ${analysisServiceChecking ? "Checking Service..." : "Analyze Audio"}
-            </button>
-          </div>
-          <p class="banner">${analysisServiceBadge}</p>
-          <div class="field">
-            <label>Pipeline Stages</label>
-            <ul class="list pipeline-list">
-              ${pipelineRows.map(([label, done]) => `<li><strong>${done ? "PASS" : "PENDING"}</strong> - ${label}</li>`).join("")}
-            </ul>
-          </div>
-          <div class="field">
-            <label>Analysis Summary</label>
-            <textarea id="audio-analysis-summary" rows="5" placeholder="Agent audio analysis summary will appear here...">${audioSummary.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</textarea>
-          </div>
+          <h3>${escapeHtml(String(emptyState.title || "No Media Loaded"))}</h3>
+          <p class="artifact-body">${escapeHtml(String(emptyState.summary || ""))}</p>
         </section>
         `
             : ""
@@ -785,32 +760,28 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function renderSequenceTranslationGrid() {
-    const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
-    const plan = state.agentPlan || {};
-    const intent = state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1") || null;
-    const planHandoff = getValidHandoff("plan_handoff_v1");
-    const sectionScope = Array.isArray(intent?.scope?.sections) ? intent.scope.sections.filter(Boolean) : [];
-    const selectedTargets = Array.isArray(intent?.scope?.targetIds) ? intent.scope.targetIds.filter(Boolean) : [];
-    const translationSource = plan?.source === "cloud_normalized"
-      ? "Cloud-Normalized Plan"
-      : planHandoff?.artifactId
-        ? "Canonical Plan"
-        : "Pending";
-    const commandCount = Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0;
-    const warningCount = Array.isArray(plan?.warnings) ? plan.warnings.length : 0;
+    const dashboard = pageStates?.sequence || {};
+    const data = dashboard?.data || {};
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    const timingDependency = data.timingDependency || {};
     return `
       <section class="card full-span sequence-translation-card">
         <div class="artifact-kicker">Sequence Translation</div>
-        <h3>${escapeHtml(String(plan.summary || "Live technical translation of the current design conversation."))}</h3>
+        <h3>${escapeHtml(String(dashboard.summary || "Live technical translation of the current design conversation."))}</h3>
         <p class="artifact-body">The grid below is the current sequence-side interpretation of the design conversation and should scale cleanly to large change sets.</p>
         <div class="artifact-chip-row">
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(translationSource))}</span>
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(proposalLines.length || 0))} change lines</span>
-          <span class="artifact-chip">${escapeHtml(String(commandCount || 0))} commands</span>
-          <span class="artifact-chip">${escapeHtml(String(warningCount || 0))} warnings</span>
-          <span class="artifact-chip">${escapeHtml(String(selectedTargets.length || 0))} targets in scope</span>
-          <span class="artifact-chip">${escapeHtml(String(sectionScope.length || 0))} sections in scope</span>
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.translationSource || "Pending"))}</span>
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.changeLineCount || 0))} change lines</span>
+          <span class="artifact-chip">${escapeHtml(String(data.commandCount || 0))} commands</span>
+          <span class="artifact-chip">${escapeHtml(String(data.warningCount || 0))} warnings</span>
+          <span class="artifact-chip">${escapeHtml(String(data.targetCount || 0))} targets in scope</span>
+          <span class="artifact-chip">${escapeHtml(String(data.sectionCount || 0))} sections in scope</span>
         </div>
+        ${
+          timingDependency.summary
+            ? `<div class="banner ${timingDependency.ready ? "" : "banner-warning"}">${escapeHtml(String(timingDependency.summary))}</div>`
+            : ""
+        }
         <div class="metadata-grid-wrap proposed-grid-wrap sequence-grid-wrap">
           <table class="metadata-grid proposed-grid">
                 <thead>
@@ -826,15 +797,14 @@ export function buildScreenContent({ state, helpers }) {
                 </thead>
                 <tbody>
                   ${
-                proposalLines.length
-                  ? proposalLines.map((line, idx) => {
-                      const row = summarizeSequenceGridRow(line);
+                rows.length
+                  ? rows.map((row, idx) => {
                       return `
                     <tr>
                       <td>${idx + 1}</td>
                       <td>${escapeHtml(String(row.timing || "XD: Sequencer Plan"))}</td>
-                      <td>${escapeHtml(String(row.section || getSectionName(line) || "General"))}</td>
-                      <td>${escapeHtml(String(row.target || parseTranslatedTarget(line) || "Unresolved"))}</td>
+                      <td>${escapeHtml(String(row.section || "General"))}</td>
+                      <td>${escapeHtml(String(row.target || "Unresolved"))}</td>
                       <td>${escapeHtml(String(row.level || "Model"))}</td>
                       <td data-proposed-focus="${idx}" class="sequence-summary-cell" title="${escapeHtml(String(row.summary || "Pending translation detail"))}">${escapeHtml(String(row.summary || "Pending translation detail"))}</td>
                       <td>${escapeHtml(String(row.effects || 0))}</td>
@@ -1003,101 +973,84 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function renderDesignerLiveDashboardCard() {
-    const runtime = state.creative?.runtime || null;
-    const bundle = state.creative?.proposalBundle || null;
-    const brief = state.creative?.brief || null;
-    const references = Array.isArray(state.creative?.references) ? state.creative.references : [];
-    const swatches = Array.isArray(state.inspiration?.paletteSwatches) ? state.inspiration.paletteSwatches.filter(Boolean) : [];
-    const assumptions = Array.isArray(bundle?.assumptions) ? bundle.assumptions.filter(Boolean).slice(0, 3) : [];
-    const guidedQuestions = Array.isArray(bundle?.guidedQuestions) ? bundle.guidedQuestions.filter(Boolean).slice(0, 3) : [];
-    const warnings = Array.isArray(runtime?.warnings) ? runtime.warnings.slice(0, 3) : [];
-    const designSignals = bundle?.traceability?.designSceneSignals || {};
-    const musicSignals = bundle?.traceability?.musicDesignSignals || {};
-    const focal = Array.isArray(designSignals?.focalCandidates) ? designSignals.focalCandidates.filter(Boolean).slice(0, 3) : [];
-    const broad = Array.isArray(designSignals?.broadCoverageDomains) ? designSignals.broadCoverageDomains.filter(Boolean).slice(0, 3) : [];
-    const reveals = Array.isArray(musicSignals?.revealMoments) ? musicSignals.revealMoments.filter(Boolean).slice(0, 3) : [];
-    const holds = Array.isArray(musicSignals?.holdMoments) ? musicSignals.holdMoments.filter(Boolean).slice(0, 3) : [];
-    const sourceLabel = runtime?.source === "cloud_normalized"
-      ? "Cloud Designer"
-      : runtime?.source === "local_runtime"
-        ? "Local Fallback"
-        : "Idle";
+    const dashboard = pageStates?.design || {};
+    const data = dashboard?.data || {};
+    const brief = data.brief || {};
+    const focus = data.focus || {};
+    const musicCues = data.musicCues || {};
+    const references = data.references || {};
+    const palette = data.palette || {};
     return `
       <section class="card full-span designer-dashboard-card">
         <div class="artifact-kicker">Designer Live Dashboard</div>
-        <h3>${escapeHtml(String(runtime?.summary || brief?.summary || "Conversation-driven design state will appear here as the designer works."))}</h3>
+        <h3>${escapeHtml(String(dashboard.summary || "Conversation-driven design state will appear here as the designer works."))}</h3>
         <div class="artifact-chip-row">
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(sourceLabel))}</span>
-          <span class="artifact-chip">${escapeHtml(String(runtime?.status || "idle"))}</span>
-          <span class="artifact-chip">${escapeHtml(String((bundle?.proposalLines || []).length || 0))} proposal lines</span>
-          <span class="artifact-chip">${escapeHtml(String((guidedQuestions || []).length || 0))} open questions</span>
+          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.sourceLabel || "Idle"))}</span>
+          <span class="artifact-chip">${escapeHtml(String(data.runtime?.status || "idle"))}</span>
+          <span class="artifact-chip">${escapeHtml(String(data.counts?.proposalLines || 0))} proposal lines</span>
+          <span class="artifact-chip">${escapeHtml(String(data.counts?.openQuestions || 0))} open questions</span>
         </div>
-        <p class="artifact-body">${escapeHtml(String(runtime?.assistantMessage || "The designer’s current reasoning, assumptions, and active focus will be summarized here."))}</p>
+        <p class="artifact-body">${escapeHtml(String(data.runtime?.assistantMessage || "The designer’s current reasoning, assumptions, and active focus will be summarized here."))}</p>
         <div class="dashboard-brief-block">
           <div class="artifact-kicker">Creative Brief</div>
-          <h3>${escapeHtml(String(brief?.summary || "No creative brief captured yet."))}</h3>
-          <p class="artifact-body">${escapeHtml(String(brief?.goalsSummary || "The designer will capture the overall sequence goal, mood, and section priorities here as the conversation develops."))}</p>
+          <h3>${escapeHtml(String(brief.summary || "No creative brief captured yet."))}</h3>
+          <p class="artifact-body">${escapeHtml(String(brief.goalsSummary || "The designer will capture the overall sequence goal, mood, and section priorities here as the conversation develops."))}</p>
           <div class="artifact-chip-row">
-            <span class="artifact-chip artifact-chip-accent">${escapeHtml(String((brief?.sections || []).length || 0))} sections</span>
-            <span class="artifact-chip">${escapeHtml(String((brief?.hypotheses || []).length || 0))} hypotheses</span>
+            <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(brief.sectionsCount || 0))} sections</span>
+            <span class="artifact-chip">${escapeHtml(String(brief.hypothesesCount || 0))} hypotheses</span>
           </div>
           ${buildArtifactInspectActions("creative-brief")}
         </div>
         <div class="dashboard-grid">
           <div class="dashboard-panel">
             <div class="artifact-kicker">Captured Focus</div>
-            <p>${focal.length ? escapeHtml(focal.join(", ")) : "No focal hierarchy captured yet."}</p>
-            <p>${broad.length ? `Broad coverage: ${escapeHtml(broad.join(", "))}` : "No broad coverage domains captured yet."}</p>
+            <p>${focus.focal?.length ? escapeHtml(focus.focal.join(", ")) : "No focal hierarchy captured yet."}</p>
+            <p>${focus.broad?.length ? `Broad coverage: ${escapeHtml(focus.broad.join(", "))}` : "No broad coverage domains captured yet."}</p>
           </div>
           <div class="dashboard-panel">
             <div class="artifact-kicker">Music Cues</div>
-            <p>${reveals.length ? `Reveals: ${escapeHtml(reveals.join(", "))}` : "No reveal moments captured yet."}</p>
-            <p>${holds.length ? `Holds: ${escapeHtml(holds.join(", "))}` : "No hold moments captured yet."}</p>
+            <p>${musicCues.reveals?.length ? `Reveals: ${escapeHtml(musicCues.reveals.join(", "))}` : "No reveal moments captured yet."}</p>
+            <p>${musicCues.holds?.length ? `Holds: ${escapeHtml(musicCues.holds.join(", "))}` : "No hold moments captured yet."}</p>
           </div>
           <div class="dashboard-panel">
             <div class="artifact-kicker">Active Assumptions</div>
-            ${assumptions.length ? `<ul>${assumptions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No explicit assumptions captured yet.</p>"}
+            ${data.assumptions?.length ? `<ul>${data.assumptions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No explicit assumptions captured yet.</p>"}
           </div>
           <div class="dashboard-panel">
             <div class="artifact-kicker">Needs From Director</div>
-            ${guidedQuestions.length ? `<ul>${guidedQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No blocking questions right now.</p>"}
+            ${data.guidedQuestions?.length ? `<ul>${data.guidedQuestions.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>` : "<p>No blocking questions right now.</p>"}
           </div>
           ${
-            references.length
+            references.count
               ? `
           <div class="dashboard-panel">
             <div class="artifact-kicker">Reference Media</div>
-            <p>${escapeHtml(String(references.length))} reference item(s) attached.</p>
-            <p>${escapeHtml(String(references.slice(0, 3).map((ref) => ref?.name || ref?.id || "reference").join(", ")))}</p>
+            <p>${escapeHtml(String(references.count))} reference item(s) attached.</p>
+            <p>${escapeHtml(String((references.names || []).join(", ")))}</p>
           </div>
           `
               : ""
           }
           ${
-            swatches.length
+            palette.count
               ? `
           <div class="dashboard-panel">
             <div class="artifact-kicker">Color Palette</div>
-            <p>${escapeHtml(String(swatches.length))} swatch(es) captured.</p>
-            <p>${escapeHtml(String(swatches.slice(0, 5).join(", ")))}</p>
+            <p>${escapeHtml(String(palette.count))} swatch(es) captured.</p>
+            <p>${escapeHtml(String((palette.swatches || []).join(", ")))}</p>
           </div>
           `
               : ""
           }
         </div>
-        ${warnings.length ? `<div class="banner banner-warning">${escapeHtml(warnings.join(" | "))}</div>` : ""}
+        ${dashboard.warnings?.length ? `<div class="banner banner-warning">${escapeHtml(dashboard.warnings.join(" | "))}</div>` : ""}
       </section>
     `;
   }
 
   function designScreen() {
-    const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
-    const lastApply = applyHistory.length ? applyHistory[0] : null;
-    const lastAppliedSnapshot =
-      state.ui?.reviewHistorySnapshot &&
-      state.ui.reviewHistorySnapshot.historyEntryId === String(lastApply?.historyEntryId || "").trim()
-        ? state.ui.reviewHistorySnapshot
-        : null;
+    const dashboard = pageStates?.design || {};
+    const lastAppliedSnapshot = dashboard?.data?.lastAppliedSnapshot || null;
     return `
       <div class="screen-grid design-screen">
         ${renderJourneyCard("design")}
@@ -1111,20 +1064,20 @@ export function buildScreenContent({ state, helpers }) {
           <div class="dashboard-grid">
             <div class="dashboard-panel">
               <div class="artifact-kicker">Applied Brief</div>
-              <p>${escapeHtml(String(lastAppliedSnapshot.creativeBrief?.summary || lastApply?.summary || "No applied brief summary."))}</p>
+              <p>${escapeHtml(String(lastAppliedSnapshot.briefSummary || "No applied brief summary."))}</p>
             </div>
             <div class="dashboard-panel">
               <div class="artifact-kicker">Applied Proposal</div>
               ${
-                Array.isArray(lastAppliedSnapshot.proposalBundle?.proposalLines) && lastAppliedSnapshot.proposalBundle.proposalLines.length
-                  ? `<ul>${lastAppliedSnapshot.proposalBundle.proposalLines.slice(0, 4).map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
+                Array.isArray(lastAppliedSnapshot.proposalLines) && lastAppliedSnapshot.proposalLines.length
+                  ? `<ul>${lastAppliedSnapshot.proposalLines.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
                   : "<p>No applied proposal lines loaded.</p>"
               }
             </div>
             <div class="dashboard-panel">
               <div class="artifact-kicker">Applied Context</div>
-              <p>${escapeHtml(String(lastAppliedSnapshot.analysisArtifact?.trackIdentity?.title || "Unknown audio"))}</p>
-              <p>${escapeHtml(String(lastAppliedSnapshot.designSceneContext?.layoutMode || "unknown"))} layout context</p>
+              <p>${escapeHtml(String(lastAppliedSnapshot.audioTitle || "Unknown audio"))}</p>
+              <p>${escapeHtml(String(lastAppliedSnapshot.layoutMode || "unknown"))} layout context</p>
             </div>
           </div>
         </section>
@@ -1171,69 +1124,25 @@ export function buildScreenContent({ state, helpers }) {
   }
 
   function reviewScreen() {
-    const selectedSections = getSelectedSections();
-    const allSelected = hasAllSectionsSelected();
-    const disabledReason = applyDisabledReason();
-    const applyReady = applyReadyForApprovalGate();
-    sanitizeProposedSelection();
-    const filtered = state.proposed
-      .map((line, idx) => ({ line, idx }))
-      .filter((x) => {
-        if (allSelected) return true;
-        const section = getSectionName(x.line);
-        return section === "General" || selectedSections.includes(section);
-      });
-    const list = filtered;
-    const allVisibleLines = list.map((item) => item.line);
-    const selectedLines = selectedProposedLinesForApply();
-    const previewLines = selectedLines.length ? selectedLines : allVisibleLines;
-    let previewCommands = [];
-    let previewError = "";
-    if (previewLines.length) {
-      try {
-        previewCommands = buildDesignerPlanCommands(previewLines);
-      } catch (err) {
-        previewError = String(err?.message || "Unable to build command preview.");
-      }
-    }
-    const selectedCount = (state.ui.proposedSelection || []).filter((idx) => list.some((item) => item.idx === idx)).length;
-    const approvalChecked = Boolean(state.ui.applyApprovalChecked);
-    const canApplySelected = selectedCount > 0 && !state.flags.applyInProgress && applyReady && approvalChecked;
-    const canApplyAll = list.length > 0 && !state.flags.applyInProgress && applyReady && approvalChecked;
-    const impact = summarizeImpactForLines(previewLines);
-    const verification = state.lastApplyVerification && typeof state.lastApplyVerification === "object"
-      ? state.lastApplyVerification
-      : null;
-    const currentSnapshot = buildCurrentReviewSnapshotSummary();
-    const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory : [];
-    const lastApply = applyHistory.length ? applyHistory[0] : null;
-    const lastAppliedSnapshot =
-      state.ui?.reviewHistorySnapshot &&
-      state.ui.reviewHistorySnapshot.historyEntryId === String(lastApply?.historyEntryId || "").trim()
-        ? state.ui.reviewHistorySnapshot
-        : null;
-    const backupReady = Boolean(String(state.lastApplyBackupPath || "").trim());
-    const reviewStateLabel = state.flags.applyInProgress
-      ? "Applying"
-      : state.flags.proposalStale
-        ? "Stale"
-        : approvalChecked
-          ? "Approved"
-          : "Needs Approval";
-    const planSummary = previewCommands.length
-      ? `${previewCommands.length} command${previewCommands.length === 1 ? "" : "s"} ready for execution`
-      : previewError || "No command preview available.";
-    const payloadPreview = escapeHtml(getProposedPayloadPreviewText());
+    const dashboard = pageStates?.review || {};
+    const data = dashboard?.data || {};
+    const stale = data.stale || {};
+    const approvalChecked = Boolean(data.approvalChecked);
+    const currentSnapshot = data.currentSnapshot || {};
+    const lastAppliedSnapshot = data.lastAppliedSnapshot || null;
+    const counts = data.counts || {};
+    const verification = data.verification || null;
+    const rows = Array.isArray(data.rows) ? data.rows : [];
     return `
       ${
-        state.flags.proposalStale
+        stale.active
           ? `
         <section class="card stale-card">
           <h3>Draft Is Stale</h3>
           <p class="banner warning">Sequence changed since this draft was created. Refresh/rebase before apply.</p>
           <div class="artifact-chip-row">
-            <span class="artifact-chip artifact-chip-muted">base ${escapeHtml(String(state.draftBaseRevision || "unknown"))}</span>
-            <span class="artifact-chip artifact-chip-accent">current ${escapeHtml(String(state.revision || "unknown"))}</span>
+            <span class="artifact-chip artifact-chip-muted">base ${escapeHtml(String(stale.draftBaseRevision || "unknown"))}</span>
+            <span class="artifact-chip artifact-chip-accent">current ${escapeHtml(String(stale.revision || "unknown"))}</span>
           </div>
           <div class="row">
             <button id="stale-rebase">Rebase Draft</button>
@@ -1254,14 +1163,14 @@ export function buildScreenContent({ state, helpers }) {
       <div class="screen-grid review-screen">
         <section class="card full-span artifact-card artifact-card-review">
           <div class="artifact-kicker">Review</div>
-          <h3>${escapeHtml(String(currentSnapshot?.designSummary?.title || "Ready to apply current design changes"))}</h3>
-          <p class="artifact-body">${escapeHtml(planSummary)}</p>
+          <h3>${escapeHtml(String(dashboard.summary || "Ready to apply current design changes"))}</h3>
+          <p class="artifact-body">${escapeHtml(String(data.planSummary || "No command preview available."))}</p>
           <div class="artifact-chip-row">
-            <span class="artifact-chip artifact-chip-accent">${escapeHtml(reviewStateLabel)}</span>
-            <span class="artifact-chip">${escapeHtml(String(allVisibleLines.length || 0))} pending changes</span>
-            <span class="artifact-chip">${escapeHtml(String(impact.targetCount || 0))} targets</span>
-            <span class="artifact-chip">${escapeHtml(String(impact.sectionWindows.length || 0))} windows</span>
-            <span class="artifact-chip">${escapeHtml(String(previewCommands.length || 0))} commands</span>
+            <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.reviewStateLabel || "Needs Approval"))}</span>
+            <span class="artifact-chip">${escapeHtml(String(counts.pendingChanges || 0))} pending changes</span>
+            <span class="artifact-chip">${escapeHtml(String(counts.targets || 0))} targets</span>
+            <span class="artifact-chip">${escapeHtml(String(counts.windows || 0))} windows</span>
+            <span class="artifact-chip">${escapeHtml(String(counts.commands || 0))} commands</span>
             <span class="artifact-chip">${verification ? (verification.expectedMutationsPresent ? "last apply verified" : "last apply needs review") : "not yet applied"}</span>
           </div>
           <div class="dashboard-grid">
@@ -1285,7 +1194,7 @@ export function buildScreenContent({ state, helpers }) {
             <div class="dashboard-panel">
               <div class="artifact-kicker">Apply State</div>
               <p>Status: ${escapeHtml(String(currentSnapshot?.applySummary?.status || "pending"))}</p>
-              <p>${backupReady ? `Backup ready: ${escapeHtml(String(state.lastApplyBackupPath || "").trim())}` : "No restore point captured yet."}</p>
+              <p>${data.backupReady ? `Backup ready: ${escapeHtml(String(dashboard.refs?.backupPath || "").trim())}` : "No restore point captured yet."}</p>
               <label class="approval-gate-toggle">
                 <input id="apply-approval-checkbox" type="checkbox" ${approvalChecked ? "checked" : ""} />
                 <span>I reviewed the pending changes and approve apply.</span>
@@ -1293,7 +1202,7 @@ export function buildScreenContent({ state, helpers }) {
               <p class="banner ${approvalChecked ? "impact" : "warning"}">${approvalChecked ? "Approval confirmed. Apply is enabled when the plan is otherwise valid." : "Confirm approval before applying changes to xLights."}</p>
             </div>
           </div>
-          ${previewError ? `<p class="banner warning">${escapeHtml(previewError)}</p>` : ""}
+          ${data.previewError ? `<p class="banner warning">${escapeHtml(String(data.previewError))}</p>` : ""}
           <div class="field panel-window proposed-window">
             <div class="metadata-grid-wrap proposed-grid-wrap">
               <table class="metadata-grid proposed-grid">
@@ -1306,10 +1215,9 @@ export function buildScreenContent({ state, helpers }) {
                 </thead>
                 <tbody>
                   ${
-                    list.length
-                      ? list
-                          .map(({ line, idx }) => {
-                            const selected = (state.ui.proposedSelection || []).includes(idx);
+                    rows.length
+                      ? rows
+                          .map(({ line, idx, selected }) => {
                             return `
                       <tr class="${selected ? "proposed-row-selected" : ""}">
                         <td>
@@ -1328,15 +1236,15 @@ export function buildScreenContent({ state, helpers }) {
             </div>
           </div>
           <div class="row panel-footer-block proposed-actions">
-              <button id="remove-selected-proposed" ${selectedCount ? "" : "disabled"}>Delete Selected</button>
-              <button id="remove-all-proposed" ${list.length ? "" : "disabled"}>Delete All</button>
-              <button id="restore-last-backup" ${state.lastApplyBackupPath ? "" : "disabled"}>Restore Last Backup</button>
-              <button id="apply-selected" class="proposed-apply-btn proposed-apply-start" ${canApplySelected ? "" : "disabled"}>Apply Selected</button>
-              <button id="apply-all" class="proposed-apply-btn" ${canApplyAll ? "" : "disabled"}>Apply All</button>
+              <button id="remove-selected-proposed" ${counts.selectedCount ? "" : "disabled"}>Delete Selected</button>
+              <button id="remove-all-proposed" ${rows.length ? "" : "disabled"}>Delete All</button>
+              <button id="restore-last-backup" ${data.backupReady ? "" : "disabled"}>Restore Last Backup</button>
+              <button id="apply-selected" class="proposed-apply-btn proposed-apply-start" ${data.apply?.canApplySelected ? "" : "disabled"}>Apply Selected</button>
+              <button id="apply-all" class="proposed-apply-btn" ${data.apply?.canApplyAll ? "" : "disabled"}>Apply All</button>
           </div>
           ${
-            backupReady
-              ? `<p class="banner">Backup ready: ${escapeHtml(String(state.lastApplyBackupPath || "").trim())}</p>`
+            data.backupReady
+              ? `<p class="banner">Backup ready: ${escapeHtml(String(dashboard.refs?.backupPath || "").trim())}</p>`
               : `<p class="banner warning">No restore point has been captured in this session yet.</p>`
           }
         </section>
@@ -1359,8 +1267,8 @@ export function buildScreenContent({ state, helpers }) {
       </div>
 
       <div class="mobile-apply-bar">
-        <button id="mobile-apply-all" ${canApplyAll ? "" : "disabled"}>Apply All</button>
-        <span class="banner ${applyReady ? "" : "warning"}">${applyReady ? (approvalChecked ? "Ready" : "Awaiting approval") : disabledReason}</span>
+        <button id="mobile-apply-all" ${data.apply?.canApplyAll ? "" : "disabled"}>Apply All</button>
+        <span class="banner ${data.applyReady ? "" : "warning"}">${escapeHtml(String(data.mobileStatusText || ""))}</span>
       </div>
     `;
   }

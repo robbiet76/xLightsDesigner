@@ -59,6 +59,7 @@ import {
   buildHistoryEntry,
   buildHistorySnapshotSummary
 } from "./agent/shared/history-entry.js";
+import { buildArtifactId } from "./agent/shared/artifact-ids.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -88,6 +89,7 @@ import {
 import {
   resetAudioAnalysisView,
   buildPendingAudioAnalysisPipeline,
+  setAudioAnalysisProgress,
   applyPersistedAnalysisArtifactToState,
   applyAudioAnalystFlowSuccessToState,
   applyAudioAnalystFlowFailureToState
@@ -105,6 +107,7 @@ import {
   buildTeamChatIdentities,
   resolveTeamChatIdentity
 } from "./agent/app-assistant/app-assistant-contracts.js";
+import { buildPageStates } from "./app-ui/page-state/index.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -182,9 +185,10 @@ const CHAT_QUICK_PROMPTS_BY_ROUTE = {
 };
 const INLINE_CHIP_MODEL_FALLBACKS = ["MegaTree", "Roofline", "Candy Canes", "Matrix", "Arches", "CandyCane"];
 const SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS = new Set([
-  "mp3", "wav", "ogg", "m4a", "flac",
-  "mp4", "m4v", "mov", "avi", "mpg", "mpeg",
-  "jpg", "jpeg", "png", "gif", "webp"
+  "mp3", "ogg", "m4p", "mp4", "m4a", "aac",
+  "wav", "flac", "wma", "au", "avi",
+  "mid", "mkv", "mov", "mpg", "asf",
+  "flv", "mpeg", "wmv"
 ]);
 const REFERENCE_MEDIA_ALLOWED_EXTENSIONS = new Set([
   "jpg", "jpeg", "png", "gif", "webp",
@@ -238,6 +242,7 @@ const defaultState = {
   newSequenceDurationMs: 180000,
   newSequenceFrameMs: 50,
   audioPathInput: "",
+  sequenceMediaFile: "",
   audioAnalysis: {
     summary: "",
     lastAnalyzedAt: "",
@@ -253,6 +258,7 @@ const defaultState = {
   savePathInput: "",
   lastApplyBackupPath: "",
   recentSequences: [],
+  mediaCatalog: [],
   showDirectoryStats: { xsqCount: 0, xdmetaCount: 0 },
   projectCreatedAt: "",
   projectUpdatedAt: "",
@@ -350,7 +356,7 @@ const defaultState = {
     agentModelDraft: "",
     agentBaseUrlDraft: "",
     analysisServiceUrlDraft: DEFAULT_ANALYSIS_SERVICE_URL,
-    analysisServiceProvider: "auto",
+    analysisServiceProvider: "librosa",
     analysisServiceApiKeyDraft: "",
     analysisServiceAuthBearerDraft: "",
     analysisServiceReady: false,
@@ -602,9 +608,7 @@ if (!state.ui?.selectedHistorySnapshot || typeof state.ui.selectedHistorySnapsho
 if (!state.ui?.reviewHistorySnapshot || typeof state.ui.reviewHistorySnapshot !== "object") {
   state.ui.reviewHistorySnapshot = null;
 }
-if (!["auto", "beatnet", "librosa"].includes(String(state.ui?.analysisServiceProvider || "").toLowerCase())) {
-  state.ui.analysisServiceProvider = "auto";
-}
+state.ui.analysisServiceProvider = "librosa";
 if (typeof state.ui?.analysisServiceReady !== "boolean") {
   state.ui.analysisServiceReady = false;
 }
@@ -858,6 +862,13 @@ function getDesktopSequenceBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
   if (typeof bridge.listSequencesInShowFolder !== "function") return null;
+  return bridge;
+}
+
+function getDesktopMediaCatalogBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.listMediaFilesInFolder !== "function") return null;
   return bridge;
 }
 
@@ -2330,6 +2341,9 @@ function setRoute(route) {
   state.ui.inspectedArtifact = "";
   persist();
   render();
+  if (normalizedRoute === "audio") {
+    void onRefreshMediaCatalog({ silent: true });
+  }
   if (normalizedRoute === "sequence") {
     void onRefreshSequenceCatalog({ silent: true });
   }
@@ -3405,6 +3419,15 @@ async function onGenerate(intentOverride = "", options = {}) {
     ? requestedRole
     : "designer_dialog";
   const directSequenceMode = proposalRole === "sequence_agent";
+  const postGenerateFailureMessage = (text = "") => {
+    const message = String(text || "").trim();
+    if (!message) return;
+    addStructuredChatMessage("agent", message, {
+      roleId: proposalRole,
+      displayName: getTeamChatSpeakerLabel(proposalRole),
+      handledBy: proposalRole
+    });
+  };
   const bridge = getDesktopBridge();
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
@@ -3423,11 +3446,11 @@ async function onGenerate(intentOverride = "", options = {}) {
       );
     }
   }
-
-  setAgentActiveRole(proposalRole);
-  const orchestrationRun = beginOrchestrationRun({ trigger: "generate", role: proposalRole });
-  state.ui.agentThinking = true;
-  addStructuredChatMessage(
+  try {
+    setAgentActiveRole(proposalRole);
+    const orchestrationRun = beginOrchestrationRun({ trigger: "generate", role: proposalRole });
+    state.ui.agentThinking = true;
+    addStructuredChatMessage(
     "agent",
     proposalRole === "sequence_agent"
       ? "Working on an updated sequencing draft from your current request..."
@@ -3533,6 +3556,11 @@ async function onGenerate(intentOverride = "", options = {}) {
       directSequenceMode ? "Direct sequence proposal generation blocked." : "Designer proposal generation blocked.",
       Array.isArray(proposalOrchestration.warnings) ? proposalOrchestration.warnings.join("\n") : ""
     );
+    postGenerateFailureMessage(
+      directSequenceMode
+        ? "I couldn't turn that request into a sequencing draft yet. Review the warning state and try narrowing the target, section, or effect."
+        : "I couldn't turn that request into a design draft yet. Review the warning state and try refining the request."
+    );
     persist();
     render();
     return;
@@ -3566,6 +3594,11 @@ async function onGenerate(intentOverride = "", options = {}) {
     endOrchestrationRun(orchestrationRun, { status: "failed", summary: "intent handoff invalid" });
     state.ui.agentThinking = false;
     setStatusWithDiagnostics("warning", "Intent handoff invalid. Proposal generation blocked.", intentSet.errors.join("\n"));
+    postGenerateFailureMessage(
+      directSequenceMode
+        ? "I hit an intent-handoff problem while building the sequencing draft. Review the warning state and try again."
+        : "I hit an intent-handoff problem while building the design draft. Review the warning state and try again."
+    );
     persist();
     render();
     return;
@@ -3607,6 +3640,7 @@ async function onGenerate(intentOverride = "", options = {}) {
       "Proposal generation blocked: sequence_agent input contract invalid.",
       inputGate.report.errors.join("\n")
     );
+    postGenerateFailureMessage("I couldn't build a valid sequencer input from that request. Review the warning state and try again.");
     persist();
     render();
     return;
@@ -3679,6 +3713,8 @@ async function onGenerate(intentOverride = "", options = {}) {
           degradedMode: !analysisHandoff
         }
   };
+  planHandoff.createdAt = new Date().toISOString();
+  planHandoff.artifactId = buildArtifactId("plan_handoff_v1", planHandoff);
   const planGraphGate = validateCommandGraph(planHandoff.commands);
   if (!planGraphGate.ok) {
     markOrchestrationStage(orchestrationRun, "graph_validation", "error", planGraphGate.errors.join("; "));
@@ -3689,6 +3725,7 @@ async function onGenerate(intentOverride = "", options = {}) {
       "Proposal generation blocked: sequence_agent command graph invalid.",
       planGraphGate.errors.join("\n")
     );
+    postGenerateFailureMessage("I built an invalid sequencing graph from that request. Review the warning state and try refining the scope.");
     persist();
     render();
     return;
@@ -3705,6 +3742,7 @@ async function onGenerate(intentOverride = "", options = {}) {
       "Proposal generation blocked: sequence_agent plan contract invalid.",
       planGate.report.errors.join("\n")
     );
+    postGenerateFailureMessage("I couldn't finalize a valid sequencing draft from that request. Review the warning state and try again.");
     persist();
     render();
     return;
@@ -3777,6 +3815,18 @@ async function onGenerate(intentOverride = "", options = {}) {
   saveCurrentProjectSnapshot();
   persist();
   render();
+  } catch (err) {
+    state.ui.agentThinking = false;
+    const detail = String(err?.message || err);
+    postGenerateFailureMessage(
+      directSequenceMode
+        ? `I hit an unexpected error while building the sequencing draft: ${detail}`
+        : `I hit an unexpected error while building the design draft: ${detail}`
+    );
+    setStatusWithDiagnostics("warning", "Proposal generation failed unexpectedly.", detail);
+    persist();
+    render();
+  }
 }
 
 function onTogglePlanOnly() {
@@ -4674,7 +4724,7 @@ async function syncOpenSequenceOnFocusReturn() {
     if (prevLoaded || prevPath || prevAudioPath) {
       state.flags.activeSequenceLoaded = false;
       state.activeSequence = "";
-      setAudioPathWithAgentPolicy("", "sequence closed");
+      state.sequenceMediaFile = "";
       setStatus("info", "Updated from xLights: no sequence is currently open.");
       saveCurrentProjectSnapshot();
       persist();
@@ -6136,9 +6186,16 @@ async function onSendChat() {
     const nextRole = ["audio_analyst", "designer_dialog", "sequence_agent"].includes(String(res.routeDecision || ""))
       ? String(res.routeDecision)
       : "app_assistant";
+    if (nextRole === "audio_analyst" && !hasUsableCurrentAudioAnalysis()) {
+      await hydrateAnalysisArtifactForCurrentMedia({ silent: true });
+    }
     const shouldAutoGenerate = shouldAutoGenerateProposalFromChatResult(res, raw);
+    const shouldAutoRunAudio = shouldAutoRunAudioAnalysisFromChatResult(res, raw);
+    const shouldAnswerExistingAudio = shouldAnswerAudioFromExistingAnalysis(res, raw);
     const suppressShellBubble =
       shouldAutoGenerate ||
+      shouldAnswerExistingAudio ||
+      shouldAutoRunAudio ||
       (nextRole === "sequence_agent" && Boolean(res?.shouldGenerateProposal));
     if (!suppressShellBubble) {
       addStructuredChatMessage("agent", String(res.assistantMessage || ""), {
@@ -6159,6 +6216,20 @@ async function onSendChat() {
       await onGenerate(String(res.proposalIntent || raw), {
         requestedRole: String(res.routeDecision || "")
       });
+      return;
+    }
+    if (shouldAnswerExistingAudio) {
+      const analysis = getValidHandoff("analysis_handoff_v1");
+      addStructuredChatMessage("agent", buildAudioAnalystChatReply(raw, analysis), {
+        roleId: "audio_analyst",
+        displayName: getTeamChatSpeakerLabel("audio_analyst"),
+        handledBy: "audio_analyst"
+      });
+      setStatus("info", "Conversation updated. Audio analysis guidance is ready.");
+      return;
+    }
+    if (shouldAutoRunAudio) {
+      await onAnalyzeAudio({ userPrompt: raw });
       return;
     }
     if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
@@ -6221,14 +6292,20 @@ function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated
 function applySequenceMediaToAudioPath(sequenceData) {
   if (!sequenceData || typeof sequenceData !== "object") return;
   const mediaFile = String(sequenceData.mediaFile || "").trim();
-  setAudioPathWithAgentPolicy(mediaFile || "", "sequence media changed");
+  state.sequenceMediaFile = mediaFile || "";
+  if (!String(state.audioPathInput || "").trim() && mediaFile) {
+    setAudioPathWithAgentPolicy(mediaFile, "sequence media adopted as initial analysis track");
+  }
 }
 
 async function syncAudioPathFromMediaStatus() {
   try {
     const mediaBody = await getMediaStatus(state.endpoint);
     const mediaFile = String(mediaBody?.data?.mediaFile || "").trim();
-    setAudioPathWithAgentPolicy(mediaFile || "", "media status changed");
+    state.sequenceMediaFile = mediaFile || "";
+    if (!String(state.audioPathInput || "").trim() && mediaFile) {
+      setAudioPathWithAgentPolicy(mediaFile, "media status adopted as initial analysis track");
+    }
   } catch {
     // Fallback for builds without media.getStatus.
     try {
@@ -6584,6 +6661,19 @@ function buildCurrentMusicDesignContext() {
   });
 }
 
+function hasUsableCurrentAudioAnalysis() {
+  const currentAudioPath = String(state.audioPathInput || "").trim();
+  if (!currentAudioPath) return false;
+  const handoffRecord = getValidHandoffRecord("analysis_handoff_v1");
+  const handoff = handoffRecord?.payload || null;
+  const handoffAudioPath = String(handoffRecord?.context?.audioPath || "").trim();
+  const sameTrack = handoffAudioPath && handoffAudioPath === currentAudioPath;
+  if (!sameTrack) return false;
+  const sections = Array.isArray(handoff?.structure?.sections) ? handoff.structure.sections : [];
+  const bpm = Number(handoff?.timing?.bpm);
+  return sections.length > 0 || Number.isFinite(bpm);
+}
+
 function buildRecentChatHistory(limit = 30) {
   return (Array.isArray(state.chat) ? state.chat : [])
     .filter((m) => m && (m.who === "user" || m.who === "agent"))
@@ -6663,6 +6753,106 @@ function shouldAutoGenerateProposalFromChatResult(res = {}, raw = "") {
     return hasExistingDesignContext && explicitTechnicalIntent && !isBroadCreativeKickoff;
   }
   return explicitTechnicalIntent;
+}
+
+function shouldAutoRunAudioAnalysisFromChatResult(res = {}, raw = "") {
+  const routeDecision = String(res?.routeDecision || "").trim();
+  if (routeDecision !== "audio_analyst") return false;
+  const hasAudioPath = Boolean(String(state.audioPathInput || "").trim());
+  if (!hasAudioPath) return false;
+  const text = String(raw || "").trim().toLowerCase();
+  if (!text) return false;
+  const explicitRerun = /(re-?analy|analyze again|run analysis|refresh the beat map|refresh analysis|rerun)/.test(text);
+  if (explicitRerun) return true;
+  return !hasUsableCurrentAudioAnalysis() &&
+    /(analyz|analysis|main sections|section|beat map|beats|bars|lift|hold back|open up|chorus|verse|bridge)/.test(text);
+}
+
+function formatAudioSectionStart(section = {}) {
+  const startMs = Number(section?.startMs);
+  if (!Number.isFinite(startMs) || startMs < 0) return "";
+  const totalSeconds = Math.floor(startMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function buildAudioAnalystChatReply(userPrompt = "", handoff = {}) {
+  const text = String(userPrompt || "").trim().toLowerCase();
+  const structureRows = Array.isArray(handoff?.structure?.sections) ? handoff.structure.sections : [];
+  const sectionLabels = structureRows
+    .map((row) => String(row?.label || row?.name || "").trim())
+    .filter(Boolean);
+  const timing = handoff?.timing || {};
+  const bpm = Number(timing?.bpm);
+  const signature = String(timing?.timeSignature || "").trim();
+
+  if (/main sections|where.*sections|tell me where the main sections are|what.*sections/.test(text)) {
+    if (!structureRows.length) {
+      return "I finished the analysis, but I still do not have usable section markers for this track.";
+    }
+    const parts = structureRows.slice(0, 8).map((row) => {
+      const label = String(row?.label || row?.name || "").trim() || "Section";
+      const start = formatAudioSectionStart(row);
+      return start ? `${label} at ${start}` : label;
+    });
+    return `The main sections I found are ${parts.join(", ")}.`;
+  }
+
+  if (/first real lift|where does the first lift happen|first lift/.test(text)) {
+    const lift = structureRows.find((row) => /chorus|bridge|hook/i.test(String(row?.label || row?.name || "").trim()));
+    if (lift) {
+      const label = String(lift?.label || lift?.name || "").trim() || "the first lift";
+      const start = formatAudioSectionStart(lift);
+      return start
+        ? `The first real lift looks like ${label}, starting around ${start}.`
+        : `The first real lift looks like ${label}.`;
+    }
+    return "I finished the analysis, but I do not have a clear lift marker yet.";
+  }
+
+  if (/hold back|open up|hold vs open|where.*hold|where.*open/.test(text)) {
+    const hold = structureRows.find((row) => /intro|verse/i.test(String(row?.label || row?.name || "").trim()));
+    const open = structureRows.find((row) => /chorus|bridge|hook/i.test(String(row?.label || row?.name || "").trim()));
+    const clauses = [];
+    if (hold) {
+      const holdLabel = String(hold?.label || hold?.name || "").trim();
+      const holdStart = formatAudioSectionStart(hold);
+      clauses.push(holdStart ? `hold back through ${holdLabel} starting around ${holdStart}` : `hold back through ${holdLabel}`);
+    }
+    if (open) {
+      const openLabel = String(open?.label || open?.name || "").trim();
+      const openStart = formatAudioSectionStart(open);
+      clauses.push(openStart ? `open up at ${openLabel} around ${openStart}` : `open up at ${openLabel}`);
+    }
+    if (clauses.length) {
+      return `From the structure I found, I would ${clauses.join(", and ")}.`;
+    }
+  }
+
+  const summaryBits = [];
+  if (sectionLabels.length) summaryBits.push(`${sectionLabels.length} main sections`);
+  if (Number.isFinite(bpm)) summaryBits.push(`${bpm} BPM`);
+  if (signature) summaryBits.push(signature);
+  if (summaryBits.length) {
+    return `I finished the analysis and found ${summaryBits.join(", ")}.`;
+  }
+  return "I finished the analysis and updated the song structure for the team.";
+}
+
+function shouldAnswerAudioFromExistingAnalysis(res = {}, raw = "") {
+  const routeDecision = String(res?.routeDecision || "").trim();
+  if (routeDecision !== "audio_analyst") return false;
+  const analysis = getValidHandoff("analysis_handoff_v1");
+  if (!hasUsableCurrentAudioAnalysis() || !analysis) {
+    return false;
+  }
+  const text = String(raw || "").trim().toLowerCase();
+  if (!text) return false;
+  if (/(re-?analy|analyze again|run analysis|refresh the beat map|refresh analysis|rerun)/.test(text)) {
+    return false;
+  }
+  return /(main sections|section|first real lift|first lift|hold back|open up|chorus|verse|bridge|where does|tell me where)/.test(text);
 }
 
 function inferProposalLinesFromIntent(intentText, sections = []) {
@@ -7782,6 +7972,20 @@ async function onBrowseShowFolder() {
   void onRefreshSequenceCatalog({ silent: true });
 }
 
+async function onBrowseMediaFolder() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Select Media Directory",
+    directory: true,
+    defaultPath: String(state.mediaPath || state.showFolder || "").trim() || undefined
+  });
+  if (!selected) return;
+  state.mediaPath = selected;
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+  void onRefreshMediaCatalog({ silent: true });
+}
+
 async function onBrowseProjectMetadataRoot() {
   const selected = await pickFilePathFromDesktop({
     title: "Choose Project Root Folder",
@@ -7841,6 +8045,63 @@ async function onRefreshSequenceCatalog(options = {}) {
         err.stack || ""
       );
     }
+    render();
+  }
+}
+
+async function onRefreshMediaCatalog(options = {}) {
+  const silent = options?.silent === true;
+  const mediaFolder = String(state.mediaPath || "").trim();
+  if (!mediaFolder) {
+    state.mediaCatalog = [];
+    if (!silent) setStatus("warning", "Set Media Directory first.");
+    persist();
+    render();
+    return;
+  }
+  const bridge = getDesktopMediaCatalogBridge();
+  if (!bridge) {
+    if (!silent) setStatus("warning", "Media catalog requires desktop runtime.");
+    render();
+    return;
+  }
+  try {
+    const res = await bridge.listMediaFilesInFolder({
+      mediaFolder,
+      extensions: Array.from(SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS)
+    });
+    if (!res?.ok) throw new Error(res?.error || "Unable to list media files.");
+    const mediaFiles = Array.isArray(res.mediaFiles) ? res.mediaFiles : [];
+    state.mediaCatalog = mediaFiles;
+
+    const currentAudioPath = String(state.audioPathInput || "").trim();
+    const sequenceMediaPath = String(state.sequenceMediaFile || "").trim();
+    const preferred =
+      mediaFiles.find((row) => String(row?.path || "") === currentAudioPath) ||
+      mediaFiles.find((row) => String(row?.path || "") === sequenceMediaPath) ||
+      null;
+
+    if (preferred) {
+      if (String(preferred.path || "").trim() !== currentAudioPath) {
+        setAudioPathWithAgentPolicy(String(preferred.path || "").trim(), "media catalog preferred track");
+      }
+    } else if (currentAudioPath) {
+      // Keep current external selection if it is outside the media library.
+    } else if (mediaFiles.length === 1) {
+      setAudioPathWithAgentPolicy(String(mediaFiles[0].path || "").trim(), "single media file selected");
+    }
+
+    if (!silent) {
+      setStatus("info", `Media catalog refreshed: ${mediaFiles.length} file${mediaFiles.length === 1 ? "" : "s"} found.`);
+    }
+    persist();
+    render();
+  } catch (err) {
+    state.mediaCatalog = [];
+    if (!silent) {
+      setStatusWithDiagnostics("warning", `Media catalog refresh failed: ${err?.message || err}`);
+    }
+    persist();
     render();
   }
 }
@@ -7955,9 +8216,9 @@ async function onOpenSequenceFromDialog() {
 
 async function onBrowseAudioPath() {
   const selected = await pickFilePathFromDesktop({
-    title: "Choose Sequence Audio (optional)",
+    title: "Choose Sequence Media (optional)",
     filters: [
-      { name: "Audio", extensions: ["mp3", "wav", "m4a", "ogg", "flac", "aac"] },
+      { name: "Sequence Media", extensions: Array.from(SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS) },
       { name: "All Files", extensions: ["*"] }
     ]
   });
@@ -7999,8 +8260,10 @@ function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
     state.ui.sequenceMode = "existing";
     addRecentSequence(sequencePath);
   }
-  // Keep UI synced to the currently-open sequence in xLights.
-  setAudioPathWithAgentPolicy(mediaPath, "open sequence media changed");
+  state.sequenceMediaFile = mediaPath;
+  if (!String(state.audioPathInput || "").trim() && mediaPath) {
+    setAudioPathWithAgentPolicy(mediaPath, "open sequence media adopted as initial analysis track");
+  }
 }
 
 async function onOpenSequence() {
@@ -8435,6 +8698,7 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
       }
     });
     void onRefreshSequenceCatalog({ silent: true });
+    void onRefreshMediaCatalog({ silent: true });
     return;
   }
 
@@ -8474,6 +8738,7 @@ async function onOpenSelectedProject(selectedKeyArg = "") {
     }
   });
   void onRefreshSequenceCatalog({ silent: true });
+  void onRefreshMediaCatalog({ silent: true });
 }
 
 function onCreateNewProject() {
@@ -8553,6 +8818,7 @@ function onResetProjectWorkspace() {
   state.newSequenceFrameMs = defaultState.newSequenceFrameMs;
   state.audioPathInput = defaultState.audioPathInput;
   state.mediaPath = defaultState.mediaPath;
+  state.mediaCatalog = [];
   state.savePathInput = defaultState.savePathInput;
   state.lastApplyBackupPath = defaultState.lastApplyBackupPath;
   state.recentSequences = [];
@@ -9930,11 +10196,12 @@ async function runSongContextWebFallback(audioPath = "") {
 }
 
 async function runAudioAnalysisPipeline() {
+  const resolvedProvider = "librosa";
   const out = await runAudioAnalysisOrchestration({
     audioPath: String(state.audioPathInput || "").trim(),
     analysisService: {
       baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
-      provider: normalizeAudioAnalysisProvider(state.ui.analysisServiceProvider || "auto"),
+      provider: resolvedProvider,
       apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim(),
       authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim()
     },
@@ -9953,7 +10220,11 @@ async function runAudioAnalysisPipeline() {
     analyzeAudioContext,
     formatAudioAnalysisSummary,
     initialSectionSuggestions: state.sectionSuggestions || [],
-    initialSectionStartByLabel: state.sectionStartByLabel || {}
+    initialSectionStartByLabel: state.sectionStartByLabel || {},
+    onProgress: ({ stage, message } = {}) => {
+      setAudioAnalysisProgress(state.audioAnalysis, { stage, message });
+      render();
+    }
   });
   if (Array.isArray(out.sectionSuggestions) && out.sectionSuggestions.length) {
     state.ui.sectionTrackName = out.sectionTrackName || "Analysis: Song Structure";
@@ -9961,6 +10232,38 @@ async function runAudioAnalysisPipeline() {
     state.sectionStartByLabel = out.sectionStartByLabel || {};
   }
   return out;
+}
+
+function startAudioAnalysisProgressTicker() {
+  const timeline = [
+    { stage: "service_request", message: "Submitting the selected track to the Librosa analysis backend." },
+    { stage: "timing_analysis", message: "Analyzing beat and bar timing with Librosa." },
+    { stage: "structure_derivation", message: "Deriving song sections from timing and track duration." },
+    { stage: "result_normalize", message: "Normalizing the analysis result for Lyric's dashboard." }
+  ];
+  let index = 0;
+  let stopped = false;
+
+  const applyStep = () => {
+    if (stopped) return;
+    const current = timeline[Math.min(index, timeline.length - 1)];
+    setAudioAnalysisProgress(state.audioAnalysis, current);
+    render();
+  };
+
+  applyStep();
+  const intervalId = window.setInterval(() => {
+    if (stopped) return;
+    if (index < timeline.length - 1) index += 1;
+    applyStep();
+  }, 4000);
+
+  return {
+    stop() {
+      stopped = true;
+      window.clearInterval(intervalId);
+    }
+  };
 }
 
 function buildAnalysisHandoffFromPipelineResult(result = {}) {
@@ -9971,7 +10274,7 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
   return buildAnalysisHandoffFromArtifact(artifact, state.creative?.brief || null);
 }
 
-async function onAnalyzeAudio() {
+async function onAnalyzeAudio({ userPrompt = "" } = {}) {
   const audioPath = String(state.audioPathInput || "").trim();
   if (!audioPath) {
     setStatus("warning", "No audio track available for analysis on this sequence.");
@@ -9981,13 +10284,7 @@ async function onAnalyzeAudio() {
   const orchestrationRun = beginOrchestrationRun({ trigger: "analyze-audio", role: "audio_analyst" });
   agentRuntime.handoffs.analysis_handoff_v1 = null;
   refreshAgentRuntimeHealth();
-  const serviceReady = await probeAnalysisServiceHealth({ quiet: false, force: true });
-  if (!serviceReady) {
-    markOrchestrationStage(orchestrationRun, "service_health", "error", "analysis service unavailable");
-    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "analysis service unavailable" });
-    return;
-  }
-  markOrchestrationStage(orchestrationRun, "service_health", "ok", "analysis service reachable");
+  markOrchestrationStage(orchestrationRun, "service_health", "ok", "service preflight skipped; analyze call will self-heal backend");
   state.diagnostics = (state.diagnostics || []).filter(
     (entry) => !String(entry?.text || "").startsWith("Audio analysis:")
   );
@@ -9995,10 +10292,16 @@ async function onAnalyzeAudio() {
   state.sectionStartByLabel = {};
   resetAudioAnalysisView(state.audioAnalysis);
   state.audioAnalysis.pipeline = buildPendingAudioAnalysisPipeline();
+  setAudioAnalysisProgress(state.audioAnalysis, {
+    stage: "pipeline_start",
+    message: "Preparing the audio analysis pipeline."
+  });
   state.ui.agentThinking = true;
   setStatus("info", "Running audio analysis pipeline...");
   render();
+  const progressTicker = startAudioAnalysisProgressTicker();
   try {
+    const resolvedProvider = "librosa";
     const analysisRequest = buildAudioAnalystInput({
       requestId: orchestrationRun.id,
       mediaFilePath: audioPath,
@@ -10006,7 +10309,7 @@ async function onAnalyzeAudio() {
       projectFilePath: String(state.projectFilePath || "").trim(),
       service: {
         baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
-        provider: String(state.ui.analysisServiceProvider || "auto").trim().toLowerCase() || "auto",
+        provider: resolvedProvider,
         apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim(),
         authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim()
       }
@@ -10052,8 +10355,12 @@ async function onAnalyzeAudio() {
     if (!applied.ok) {
       throw new Error("Audio analysis flow did not produce a valid UI projection.");
     }
+    setAudioAnalysisProgress(state.audioAnalysis, {
+      stage: "handoff_ready",
+      message: "Analysis finished and handoff is ready."
+    });
     markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
-    addStructuredChatMessage("agent", flow.result.status === "partial" ? "Audio analysis completed with warnings." : "Audio analysis completed.", {
+    addStructuredChatMessage("agent", buildAudioAnalystChatReply(userPrompt, flow.handoff), {
       roleId: "audio_analyst",
       displayName: getTeamChatSpeakerLabel("audio_analyst"),
       handledBy: "audio_analyst",
@@ -10080,8 +10387,13 @@ async function onAnalyzeAudio() {
       audioAnalysisState: state.audioAnalysis,
       fallbackSummary: buildAudioAnalysisStubSummary()
     });
+    setAudioAnalysisProgress(state.audioAnalysis, {
+      stage: "failed",
+      message: `Analysis failed: ${String(err?.message || err)}`
+    });
     setStatusWithDiagnostics("warning", `Audio analysis pipeline failed: ${err.message}`);
   } finally {
+    progressTicker.stop();
     state.ui.agentThinking = false;
   }
   saveCurrentProjectSnapshot();
@@ -10178,8 +10490,29 @@ function onNewSession() {
 }
 
 function screenContent() {
+  const pageStates = buildPageStates({
+    state,
+    handoffs: {
+      analysisHandoff: getValidHandoff("analysis_handoff_v1"),
+      intentHandoff: getValidHandoff("intent_handoff_v1"),
+      planHandoff: getValidHandoff("plan_handoff_v1")
+    },
+    helpers: {
+      basenameOfPath,
+      getSelectedSections,
+      hasAllSectionsSelected,
+      getSectionName,
+      selectedProposedLinesForApply,
+      summarizeImpactForLines,
+      buildDesignerPlanCommands,
+      applyReadyForApprovalGate,
+      applyDisabledReason,
+      buildCurrentReviewSnapshotSummary
+    }
+  });
   return buildScreenContent({
     state,
+    pageStates,
     helpers: {
       basenameOfPath,
       getAnalysisServiceHeaderBadgeText,
@@ -10527,14 +10860,6 @@ function bindEvents() {
     });
   }
 
-  const analysisServiceProviderInput = app.querySelector("#analysis-service-provider-input");
-  if (analysisServiceProviderInput) {
-    analysisServiceProviderInput.addEventListener("change", () => {
-      const raw = String(analysisServiceProviderInput.value || "").trim().toLowerCase();
-      state.ui.analysisServiceProvider = ["auto", "beatnet", "librosa"].includes(raw) ? raw : "auto";
-      persist();
-    });
-  }
   const analysisServiceApiKeyInput = app.querySelector("#analysis-service-api-key-input");
   if (analysisServiceApiKeyInput) {
     analysisServiceApiKeyInput.addEventListener("input", () => {
@@ -10587,6 +10912,8 @@ function bindEvents() {
     onSaveSequenceAs,
     onSelectCatalogSequence,
     onBrowseShowFolder,
+    onBrowseMediaFolder,
+    onRefreshMediaCatalog,
     onNewSession,
     onReferenceMediaSelected,
     addPaletteSwatch,
@@ -10744,6 +11071,9 @@ render();
   await probeAnalysisServiceHealth({ quiet: true, force: true });
   applyRolloutPolicy();
   await refreshApplyHistoryFromDesktop(40);
+  if (String(state.mediaPath || "").trim()) {
+    await onRefreshMediaCatalog({ silent: true });
+  }
   render();
   if (!state.ui.firstRunMode) {
     await bootstrapLiveData();
@@ -10768,12 +11098,18 @@ if (typeof window !== "undefined") {
   window.addEventListener("focus", () => {
     void syncOpenSequenceOnFocusReturn();
     void probeAnalysisServiceHealth({ quiet: true });
+    if (state.route === "audio" || state.route === "project") {
+      void onRefreshMediaCatalog({ silent: true });
+    }
   });
 }
 if (typeof document !== "undefined") {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
       void syncOpenSequenceOnFocusReturn();
+      if (state.route === "audio" || state.route === "project") {
+        void onRefreshMediaCatalog({ silent: true });
+      }
     }
   });
 }

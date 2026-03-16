@@ -69,6 +69,23 @@ Purpose: turn the current functional shell into a coherent end-user experience t
 - [x] Capture unified apply snapshots that reference design and sequencing artifacts together
 - [x] Build `History` from artifact-referenced revision entries instead of ad hoc logs
 
+## Phase H: Audio Page Refresh
+- [ ] Audit the `Audio` page against the newer dashboard pattern
+- [ ] Replace the legacy artifact/pipeline-heavy layout with one primary Lyric dashboard
+- [ ] Make audio analysis summary read-oriented instead of textarea-oriented
+- [ ] Show downstream readiness for Mira and Patch explicitly
+- [ ] Keep service/pipeline detail available but visually secondary
+
+## Phase I: Formal Validation Layer
+- [ ] Add canonical page-state builders under `app-ui/page-state/`
+- [ ] Migrate `Audio` to `audio_dashboard_state_v1`
+- [ ] Migrate `Sequence` to `sequence_dashboard_state_v1`
+- [ ] Migrate `Review` to `review_dashboard_state_v1`
+- [ ] Migrate `Design` to `design_dashboard_state_v1`
+- [ ] Migrate `History` to `history_dashboard_state_v1`
+- [ ] Ensure workflow pages render only from page-state contracts, not raw app state
+- [ ] Add backend page-state tests so UI meaning can be validated without opening the UI
+
 ## Exit Gate
 - The app tells a clear workflow story from setup to apply.
 - Team chat feels like the core collaboration surface, not a bolted-on sidebar.
