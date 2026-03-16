@@ -108,6 +108,7 @@ import {
   resolveTeamChatIdentity
 } from "./agent/app-assistant/app-assistant-contracts.js";
 import { buildPageStates } from "./app-ui/page-state/index.js";
+import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -4278,36 +4279,30 @@ async function syncLatestSequenceRevision({
   onUnknownMessage = ""
 } = {}) {
   try {
-    const rev = await getRevision(state.endpoint);
     const previousRevision = String(state.revision || "unknown");
-    const newRevision = String(rev?.data?.revision ?? "unknown");
-    const revisionChanged = newRevision !== previousRevision;
-    const knownToKnownRevisionChange =
-      previousRevision !== "unknown" &&
-      newRevision !== "unknown" &&
-      newRevision !== previousRevision;
-    let staleDetected = false;
+    const newRevision = await fetchXLightsRevisionState(state.endpoint, { getRevision });
+    const revisionState = syncXLightsRevisionState({
+      previousRevision,
+      nextRevision: newRevision,
+      hasDraftProposal: Boolean(state.flags.hasDraftProposal),
+      draftBaseRevision: String(state.draftBaseRevision || "unknown"),
+      hasCreativeProposal: Boolean(state.creative?.proposalBundle)
+    });
 
-    state.revision = newRevision;
+    state.revision = revisionState.revision;
 
-    if (knownToKnownRevisionChange) {
+    if (revisionState.shouldInvalidatePlanHandoff) {
       invalidatePlanHandoff("sequence revision changed");
     }
 
-    if (
-      state.flags.hasDraftProposal &&
-      state.draftBaseRevision !== "unknown" &&
-      newRevision !== "unknown" &&
-      newRevision !== state.draftBaseRevision
-    ) {
-      if (state.creative?.proposalBundle) {
-        markDesignerDraftStale(state, {
-          currentRevision: newRevision,
-          reason: "sequence_revision_changed"
-        });
-      }
+    if (revisionState.shouldMarkDesignerDraftStale) {
+      markDesignerDraftStale(state, {
+        currentRevision: newRevision,
+        reason: "sequence_revision_changed"
+      });
+    }
+    if (revisionState.staleDetected) {
       state.flags.proposalStale = true;
-      staleDetected = true;
       if (onStaleMessage) {
         setStatusWithDiagnostics("warning", onStaleMessage);
       }
@@ -4319,9 +4314,9 @@ async function syncLatestSequenceRevision({
 
     return {
       ok: true,
-      revision: newRevision,
-      revisionChanged,
-      staleDetected
+      revision: revisionState.revision,
+      revisionChanged: revisionState.revisionChanged,
+      staleDetected: revisionState.staleDetected
     };
   } catch (err) {
     state.revision = "unknown";

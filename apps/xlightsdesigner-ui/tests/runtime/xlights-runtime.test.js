@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { collectXLightsRuntimeSnapshot } from "../../runtime/xlights-runtime.js";
+import {
+  collectXLightsRuntimeSnapshot,
+  syncXLightsRevisionState,
+  fetchXLightsRevisionState
+} from "../../runtime/xlights-runtime.js";
 
 test("collectXLightsRuntimeSnapshot aggregates live sequence state and capabilities", async () => {
   const snapshot = await collectXLightsRuntimeSnapshot("http://127.0.0.1:49914/xlDoAutomation", {
@@ -18,4 +22,26 @@ test("collectXLightsRuntimeSnapshot aggregates live sequence state and capabilit
   assert.equal(snapshot.sequenceState.sequence.name, "Test.xsq");
   assert.equal(snapshot.capabilities.commandCount, 2);
   assert.equal(snapshot.capabilities.rawVersion, "2026.10");
+});
+
+test("syncXLightsRevisionState marks stale drafts and handoff invalidation", () => {
+  const result = syncXLightsRevisionState({
+    previousRevision: "rev-1",
+    nextRevision: "rev-2",
+    hasDraftProposal: true,
+    draftBaseRevision: "rev-1",
+    hasCreativeProposal: true
+  });
+
+  assert.equal(result.revisionChanged, true);
+  assert.equal(result.shouldInvalidatePlanHandoff, true);
+  assert.equal(result.shouldMarkDesignerDraftStale, true);
+  assert.equal(result.staleDetected, true);
+});
+
+test("fetchXLightsRevisionState normalizes revision from xlights api", async () => {
+  const revision = await fetchXLightsRevisionState("http://127.0.0.1:49914/xlDoAutomation", {
+    getRevision: async () => ({ data: { revisionToken: "rev-44" } })
+  });
+  assert.equal(revision, "rev-44");
 });
