@@ -110,6 +110,7 @@ import {
 import { buildPageStates } from "./app-ui/page-state/index.js";
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
 import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
+import { executeApplyCore } from "./runtime/review-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -2930,16 +2931,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     onUnknownMessage: "Unable to confirm current xLights revision. Continuing with reduced safety for apply."
   });
   if (!revisionState.ok) {
-    pushDiagnostic(
-      "warning",
-      "Proceeding with apply despite revision sync failure.",
-      String(revisionState.error || "revision sync failed")
-    );
+    pushDiagnostic("warning", "Proceeding with apply despite revision sync failure.", String(revisionState.error || "revision sync failed"));
   } else if (revisionState.revision === "unknown") {
-    pushDiagnostic(
-      "warning",
-      "Proceeding with apply despite unknown xLights revision."
-    );
+    pushDiagnostic("warning", "Proceeding with apply despite unknown xLights revision.");
   }
   if (state.flags.proposalStale) {
     setStatusWithDiagnostics("warning", "Apply blocked: draft is stale against the latest xLights revision.");
@@ -2984,396 +2978,86 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
   setStatus("info", `Applying ${applyLabel} to xLights...`);
   render();
+
   let applyAuditEntry = null;
   let applyResult = null;
-  let lastOrchestrated = null;
-  let lastVerification = null;
   let clearApprovalAfterApply = false;
 
   try {
-    const sequencePath = currentSequencePathForSidecar();
-    const backupBridge = getDesktopBackupBridge();
-    if (backupBridge && sequencePath) {
-      const backup = await backupBridge.createSequenceBackup({ sequencePath });
-      if (backup?.ok !== true) {
-        setStatusWithDiagnostics(
-          "action-required",
-          `Apply blocked: failed to create pre-apply backup.`,
-          backup?.error || "Unknown backup error"
-        );
-        return;
-      }
-      state.lastApplyBackupPath = String(backup.backupPath || "");
-      setStatusWithDiagnostics("info", `Pre-apply backup created: ${backup.backupPath || "ok"}`);
-    }
-
-    const analysisHandoff = getValidHandoff("analysis_handoff_v1");
-    const sequenceAgentInput = buildSequenceAgentInput({
-      requestId: `${orchestrationRun.id}-apply`,
-      endpoint: state.endpoint,
-      sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
-      sequenceSettings: state.sequenceSettings,
-      layoutMode: currentLayoutMode(),
-      displayElements: state.displayElements,
-      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-      groupsById: state.sceneGraph?.groupsById || {},
-      submodelsById: state.sceneGraph?.submodelsById || {},
-      submodelsById: state.sceneGraph?.submodelsById || {},
-      intentHandoff,
-      analysisHandoff,
-      planningScope: {
-        sections: getSelectedSections(),
-        targetIds: normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || []),
-        tagNames: normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || [])
-      },
-      timingOwnership: getSequenceTimingOwnershipRows(),
-      manualXdLocks: getManualLockedXdTracks(),
-      allowTimingWrites: true
-    });
-    const inputGate = validateSequenceAgentContractGate("input", sequenceAgentInput, orchestrationRun.id);
-    pushSequenceAgentContractDiagnostic(inputGate.report);
-    if (!inputGate.ok) {
-      markOrchestrationStage(orchestrationRun, inputGate.stage, "error", inputGate.report.errors.join("; "));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "apply blocked: invalid sequence_agent input contract" });
-      setStatusWithDiagnostics(
-        "warning",
-        "Apply blocked: sequence_agent input contract invalid.",
-        inputGate.report.errors.join("\n")
-      );
-      return;
-    }
-    const currentFiltered = filteredProposed();
-    const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
-    const hasHandoffGraph = handoffCommands.length > 0;
-    const fullScopeApply =
-      applyLabel === "all proposed changes" &&
-      arraysEqualOrdered(scopedSource, currentFiltered);
-    const shouldUseHandoffByDefault = hasHandoffGraph;
-
-    let planSource = "generated";
-    let fallbackReason = "";
-    let sequencerPlan = null;
-
-    if (shouldUseHandoffByDefault && fullScopeApply) {
-      const graphGate = validateCommandGraph(handoffCommands);
-      if (graphGate.ok) {
-        planSource = "handoff_graph";
-        markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=plan_handoff_v1 nodes=${graphGate.nodeCount}`);
-        sequencerPlan = {
-          commands: handoffCommands,
-          warnings: Array.isArray(planHandoff.warnings) ? planHandoff.warnings : []
-        };
-      } else {
-        fallbackReason = `handoff graph invalid (${graphGate.errors.join(" | ")})`;
-        markOrchestrationStage(orchestrationRun, "graph_validation", "error", fallbackReason);
-      }
-    } else if (shouldUseHandoffByDefault && !fullScopeApply) {
-      fallbackReason = "non-default partial-scope apply requested";
-      markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
-    } else {
-      fallbackReason = "plan_handoff_v1 commands unavailable";
-      markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
-    }
-
-    if (!sequencerPlan) {
-      planSource = "generated";
-      sequencerPlan = buildSequenceAgentPlan({
-        analysisHandoff,
-        intentHandoff,
-        sourceLines: scopedSource,
-        baseRevision: state.draftBaseRevision,
-        capabilityCommands: state.health.capabilityCommands || [],
-        effectCatalog: state.effectCatalog,
-        sequenceSettings: state.sequenceSettings,
-        layoutMode: currentLayoutMode(),
-        displayElements: state.displayElements,
-        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-        groupsById: state.sceneGraph?.groupsById || {},
-        submodelsById: state.sceneGraph?.submodelsById || {},
-        timingOwnership: getSequenceTimingOwnershipRows(),
-        allowTimingWrites: true
-      });
-      emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
-      if (fallbackReason) {
-        pushDiagnostic("warning", `Apply fallback from handoff graph to generated plan: ${fallbackReason}`);
-      }
-    }
-    markOrchestrationStage(
+    const result = await executeApplyCore({
+      state,
+      sourceLines: scopedSource,
+      applyLabel,
+      scopedImpactCount,
       orchestrationRun,
-      "sequencer_plan",
-      "ok",
-      planSource === "handoff_graph" ? "using plan_handoff_v1 command graph" : "apply plan built"
-    );
-    const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
-    if (!rawPlan.length) {
-      throw new Error("sequence_agent generated no commands for apply.");
-    }
-    const capabilityGate = evaluateSequencePlanCapabilities({
-      commands: rawPlan,
-      capabilityCommands: state.health.capabilityCommands || []
-    });
-    if (!capabilityGate.ok) {
-      markOrchestrationStage(orchestrationRun, "capability_gate", "error", capabilityGate.errors.join(" | "));
-      throw new Error(`Apply blocked by capability gate: ${capabilityGate.errors.join("; ")}`);
-    }
-    if (capabilityGate.skipped) {
-      markOrchestrationStage(orchestrationRun, "capability_gate", "warning", capabilityGate.warnings.join(" | "));
-    } else {
-      markOrchestrationStage(
-        orchestrationRun,
-        "capability_gate",
-        "ok",
-        `required=${capabilityGate.requiredCapabilities.length}`
-      );
-    }
-    if (planSource !== "handoff_graph") {
-      const generatedGraph = validateCommandGraph(rawPlan);
-      if (!generatedGraph.ok) {
-        markOrchestrationStage(orchestrationRun, "graph_validation", "error", generatedGraph.errors.join(" | "));
-        throw new Error(`Generated command graph invalid: ${generatedGraph.errors.join("; ")}`);
+      intentHandoffRecord,
+      intentHandoff,
+      planHandoff,
+      deps: {
+        currentSequencePathForSidecar,
+        getDesktopBackupBridge,
+        getValidHandoff,
+        buildSequenceAgentInput,
+        currentLayoutMode,
+        getSelectedSections,
+        normalizeMetadataSelectionIds,
+        normalizeMetadataSelectedTags,
+        getSequenceTimingOwnershipRows,
+        getManualLockedXdTracks,
+        validateSequenceAgentContractGate,
+        filteredProposed,
+        arraysEqualOrdered,
+        validateCommandGraph,
+        buildSequenceAgentPlan,
+        emitSequenceAgentStageTelemetry,
+        evaluateSequencePlanCapabilities,
+        isXdTimingTrack,
+        timingMarksSignature,
+        buildGlobalXdTrackPolicyKey,
+        validateAndApplyPlan,
+        verifyAppliedPlanReadback,
+        buildSequenceAgentApplyResult,
+        classifyOrchestrationFailureReason,
+        getSequenceTimingTrackPoliciesState,
+        getSequenceTimingGeneratedSignaturesState,
+        setSequenceTimingTrackPoliciesState,
+        setSequenceTimingGeneratedSignaturesState,
+        applyAcceptedProposalToDirectorProfile,
+        buildApplyHistoryEntry,
+        buildChatArtifactCard,
+        getTeamChatSpeakerLabel,
+        getRevision,
+        validateCommands,
+        beginTransaction,
+        commitTransaction,
+        rollbackTransaction,
+        stageTransactionCommand
+      },
+      callbacks: {
+        pushSequenceAgentContractDiagnostic,
+        markOrchestrationStage,
+        endOrchestrationRun,
+        pushDiagnostic,
+        upsertJob,
+        bumpVersion,
+        setStatusWithDiagnostics,
+        addStructuredChatMessage
       }
-      markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=generated nodes=${generatedGraph.nodeCount}`);
-    }
-    const pendingGenerated = new Map();
-    for (const step of rawPlan) {
-      const cmd = String(step?.cmd || "").trim();
-      const params = step?.params && typeof step.params === "object" ? step.params : {};
-      const trackName = String(params?.trackName || "").trim();
-      const isTrackWriteStep = cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks";
-      if (isXdTimingTrack(trackName) && (cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") && Array.isArray(params?.marks)) {
-        const sig = timingMarksSignature(params.marks);
-        if (sig) {
-          pendingGenerated.set(trackName, {
-            policyKey: buildGlobalXdTrackPolicyKey(trackName),
-            signature: sig
-          });
-        }
-      }
-    }
-    const plan = rawPlan;
-    if (!plan.length) {
-      markOrchestrationStage(orchestrationRun, "xd_protection", "error", "sequence_agent emitted no executable commands");
-      throw new Error("Apply blocked: sequence_agent emitted no executable commands.");
-    }
-    markOrchestrationStage(orchestrationRun, "xd_protection", "ok", "timing ownership resolved by sequence_agent");
-    if (Array.isArray(sequencerPlan?.warnings) && sequencerPlan.warnings.length) {
-      pushDiagnostic("warning", `Sequencer apply warnings: ${sequencerPlan.warnings.join(" | ")}`);
-    }
-    const orchestrated = await validateAndApplyPlan({
-      endpoint: state.endpoint,
-      commands: plan,
-      expectedRevision: state.draftBaseRevision,
-      getRevision,
-      validateCommands,
-      beginTransaction,
-      commitTransaction,
-      rollbackTransaction,
-      stageTransactionCommand,
-      safetyOptions: { maxCommands: 200 }
     });
-    lastOrchestrated = orchestrated;
 
-    if (!orchestrated?.ok) {
-      applyResult = buildSequenceAgentApplyResult({
-        planId: String(planHandoff?.planId || ""),
-        status: "blocked",
-        failureReason: classifyOrchestrationFailureReason(
-          orchestrated?.stage || "",
-          orchestrated?.error || ""
-        ),
-        currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
-        nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
-        verification: {
-          revisionAdvanced: false,
-          expectedMutationsPresent: false,
-          lockedTracksUnchanged: true
-        }
-      });
-      const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
-      pushSequenceAgentContractDiagnostic(applyGate.report);
-      if (!applyGate.ok) {
-        markOrchestrationStage(orchestrationRun, applyGate.stage, "error", applyGate.report.errors.join("; "));
-        pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(orchestrated || {})}`);
-      }
-      markOrchestrationStage(orchestrationRun, "validate_apply", "error", String(orchestrated?.error || "unknown orchestration error"));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: `apply blocked at ${orchestrated?.stage || "unknown"}` });
-      applyAuditEntry = buildApplyHistoryEntry({
-        status: "blocked",
-        stage: orchestrated?.stage || "unknown",
-        commandCount: plan.length,
-        impactCount: scopedImpactCount,
-        currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
-        nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
-        planHandoff,
-        applyResult,
-        summary: orchestrated?.error || "Unknown orchestration error.",
-        verification: applyResult?.verification || null
-      });
-      setStatusWithDiagnostics(
-        "action-required",
-        `Apply blocked at ${orchestrated?.stage || "unknown"} stage.`,
-        orchestrated?.error || "Unknown orchestration error."
-      );
+    applyAuditEntry = result.applyAuditEntry || null;
+    applyResult = result.applyResult || null;
+    clearApprovalAfterApply = Boolean(result.clearApprovalAfterApply);
+    if (result.blocked) {
+      setStatusWithDiagnostics("action-required", result.message || "Apply blocked.", result.details || "");
       return;
     }
-
-    const executed = Number(orchestrated?.executedCount || 0);
-    const verification = await verifyAppliedPlanReadback(plan, {
-      submodelsById: state.sceneGraph?.submodelsById || {}
-    });
-    lastVerification = verification;
-    verification.revisionAdvanced =
-      String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || "");
-    applyResult = buildSequenceAgentApplyResult({
-      planId: String(planHandoff?.planId || ""),
-      status: "applied",
-      failureReason: null,
-      currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
-      nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
-      verification
-    });
-    const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
-    pushSequenceAgentContractDiagnostic(applyGate.report);
-    if (!applyGate.ok) {
-      markOrchestrationStage(orchestrationRun, applyGate.stage, "error", applyGate.report.errors.join("; "));
-      pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(orchestrated || {})}`);
-      throw new Error(`Apply result contract invalid: ${applyGate.report.errors.join("; ")}`);
-    }
-    if (!verification.revisionAdvanced) {
-      markOrchestrationStage(orchestrationRun, "validate_apply", "error", "revision did not advance");
-      throw new Error("Apply verification failed: revision did not advance.");
-    }
-    if (!verification.expectedMutationsPresent) {
-      const failedChecks = verification.checks.filter((row) => !row.ok).map((row) => `${row.kind}:${row.target} ${row.detail}`);
-      markOrchestrationStage(orchestrationRun, "validate_apply", "error", failedChecks.join(" | ") || "expected mutations missing");
-      throw new Error(`Apply verification failed: ${failedChecks.join("; ") || "expected mutations missing"}`);
-    }
-    pushDiagnostic(
-      "info",
-      `Apply verification passed: revision advanced, ${verification.checks.length} readback check${verification.checks.length === 1 ? "" : "s"}.`
-    );
-    markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed} verified=${verification.checks.length}`);
-    const jobId = orchestrated?.jobId || null;
-    state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
-    if (jobId) {
-      upsertJob({
-        id: jobId,
-        source: "transactions.commit",
-        status: "running",
-        progress: 0,
-        updatedAt: new Date().toISOString()
-      });
-      setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
-    }
-    state.draftBaseRevision = state.revision;
-    const timingTrackPolicies = getSequenceTimingTrackPoliciesState();
-    const timingGeneratedSignatures = getSequenceTimingGeneratedSignaturesState();
-    for (const [trackName, row] of pendingGenerated.entries()) {
-      const key = String(row?.policyKey || "").trim();
-      const sig = String(row?.signature || "").trim();
-      if (!key || !sig) continue;
-      const policy = timingTrackPolicies[key];
-      if (policy?.manual) continue;
-      timingGeneratedSignatures[key] = sig;
-      timingTrackPolicies[key] = {
-        manual: false,
-        trackName,
-        updatedAt: new Date().toISOString()
-      };
-    }
-    setSequenceTimingTrackPoliciesState(timingTrackPolicies);
-    setSequenceTimingGeneratedSignaturesState(timingGeneratedSignatures);
-    state.flags.proposalStale = false;
-    if (String(intentHandoffRecord?.producer || "") === "designer_dialog" && isPlainObject(state.creative?.proposalBundle)) {
-      state.directorProfile = applyAcceptedProposalToDirectorProfile(state.directorProfile, {
-        proposalBundle: state.creative.proposalBundle
-      });
-    }
-    bumpVersion("Applied draft proposal", state.proposed.length * 11);
-    setStatusWithDiagnostics(
-      "info",
-      `Applied via transaction commit (${executed} steps).`
-    );
-    addStructuredChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`, {
-      roleId: "sequence_agent",
-      displayName: getTeamChatSpeakerLabel("sequence_agent"),
-      handledBy: "sequence_agent",
-      artifact: buildChatArtifactCard("apply_result_v1", {
-        title: "Apply Result",
-        summary: `Revision ${String(state.revision || "unknown")} verified successfully.`,
-        chips: [
-          `${executed} steps`,
-          verification.expectedMutationsPresent ? "verified" : "",
-          verification.revisionAdvanced ? "revision advanced" : ""
-        ]
-      })
-    });
-    applyAuditEntry = buildApplyHistoryEntry({
-      status: "success",
-      stage: "validate_apply",
-      commandCount: plan.length,
-      impactCount: scopedImpactCount,
-      currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
-      nextRevision: String(state.revision || orchestrated?.nextRevision || orchestrated?.currentRevision || "unknown"),
-      verification,
-      planHandoff,
-      applyResult,
-      summary: `Applied ${executed} command${executed === 1 ? "" : "s"} successfully.`
-    });
-    applyAuditEntry.executedCount = executed;
-    applyAuditEntry.jobId = jobId || "";
-    applyAuditEntry.revision = state.revision || "unknown";
-    clearApprovalAfterApply = true;
-    endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });
-  } catch (err) {
-    markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
-    applyResult = buildSequenceAgentApplyResult({
-      planId: String(planHandoff?.planId || ""),
-      status: "failed",
-      failureReason: classifyOrchestrationFailureReason(
-        lastOrchestrated?.stage || "exception",
-        String(err?.message || err || ""),
-        lastVerification
-      ),
-      currentRevision: String(lastOrchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
-      nextRevision: String(lastOrchestrated?.nextRevision || lastOrchestrated?.currentRevision || state.revision || "unknown"),
-      verification: lastVerification && typeof lastVerification === "object" ? lastVerification : undefined
-    });
-    const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
-    pushSequenceAgentContractDiagnostic(applyGate.report);
-    if (!applyGate.ok) {
-      markOrchestrationStage(orchestrationRun, applyGate.stage, "error", applyGate.report.errors.join("; "));
-      pushDiagnostic("warning", `Sequence-agent apply raw result: ${JSON.stringify(applyResult || {})}`);
-    }
-    endOrchestrationRun(orchestrationRun, { status: "failed", summary: String(err?.message || "apply error") });
-    setStatusWithDiagnostics("action-required", `Apply blocked: ${err.message}`, err.stack || "");
-    addStructuredChatMessage("agent", `Apply blocked: ${err.message}`, {
-      roleId: "sequence_agent",
-      displayName: getTeamChatSpeakerLabel("sequence_agent"),
-      handledBy: "sequence_agent"
-    });
-    applyAuditEntry = buildApplyHistoryEntry({
-      status: "failed",
-      stage: "exception",
-      commandCount: Array.isArray(scopedSource) ? scopedSource.length : 0,
-      impactCount: scopedImpactCount,
-      currentRevision: String(lastOrchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
-      nextRevision: String(lastOrchestrated?.nextRevision || lastOrchestrated?.currentRevision || state.revision || "unknown"),
-      verification: lastVerification && typeof lastVerification === "object" ? lastVerification : undefined,
-      planHandoff,
-      applyResult,
-      summary: String(err?.message || "Unknown apply error")
-    });
   } finally {
     if (clearApprovalAfterApply) {
       state.ui.applyApprovalChecked = false;
     }
     if (applyAuditEntry) {
-      await persistCurrentArtifactsForHistory({
-        planHandoff,
-        applyResult,
-        historyEntry: applyAuditEntry
-      });
+      await persistCurrentArtifactsForHistory({ planHandoff, applyResult, historyEntry: applyAuditEntry });
       pushApplyHistory(applyAuditEntry, { planHandoff, applyResult });
       await appendDesktopApplyLog(applyAuditEntry);
       await refreshApplyHistoryFromDesktop(40);
@@ -3386,21 +3070,6 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   }
 }
 
-function selectedProposedLinesForApply() {
-  const selected = new Set(selectedProposedIndexesFromPicker());
-  if (!selected.size) return [];
-  const all = (state.proposed || [])
-    .map((line, idx) => ({ line, idx }))
-    .filter((row) => selected.has(row.idx));
-  if (hasAllSectionsSelected()) return all.map((row) => row.line);
-  const sectionSet = new Set(getSelectedSections());
-  return all
-    .filter((row) => {
-      const section = getSectionName(row.line);
-      return section === "General" || sectionSet.has(section);
-    })
-    .map((row) => row.line);
-}
 
 async function onApplySelected() {
   const selectedLines = selectedProposedLinesForApply();
