@@ -146,6 +146,110 @@ test("orchestrator happy path supports handoff-style command graph", async () =>
   assert.equal(res.nextRevision, "rev-11");
 });
 
+test("orchestrator prefers owned sequencing batch plan when command graph is compressible", async () => {
+  let applyCalls = 0;
+  let ownedJobCalls = 0;
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [
+      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+      {
+        id: "timing.marks.insert",
+        dependsOn: ["timing.track.create"],
+        cmd: "timing.insertMarks",
+        params: {
+          trackName: "XD: Song Structure",
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 1000, endMs: 2000, label: "Verse 1" }
+          ]
+        }
+      },
+      {
+        id: "effect.1",
+        dependsOn: ["timing.marks.insert"],
+        cmd: "effects.create",
+        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+      }
+    ],
+    expectedRevision: "rev-owned-1",
+    getRevision: okRevision("rev-owned-1"),
+    validateCommands: async () => ({ data: { valid: true, results: [] } }),
+    beginTransaction: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
+    stageTransactionCommand: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
+    commitTransaction: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
+    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    applySequencingBatchPlan: async (_endpoint, payload) => {
+      applyCalls += 1;
+      assert.equal(payload.track, "XD: Song Structure");
+      assert.equal(payload.marks.length, 2);
+      assert.equal(payload.effects.length, 1);
+      return { data: { jobId: "owned-job-1" } };
+    },
+    getOwnedJob: async () => {
+      ownedJobCalls += 1;
+      return { data: { state: "succeeded" } };
+    }
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, "owned_batch_plan");
+  assert.equal(applyCalls, 1);
+  assert.equal(ownedJobCalls, 1);
+});
+
+test("orchestrator falls back to legacy transactions when owned sequencing batch plan is unavailable", async () => {
+  let staged = 0;
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [
+      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+      {
+        id: "timing.marks.insert",
+        dependsOn: ["timing.track.create"],
+        cmd: "timing.insertMarks",
+        params: {
+          trackName: "XD: Song Structure",
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 1000, endMs: 2000, label: "Verse 1" }
+          ]
+        }
+      },
+      {
+        id: "effect.1",
+        dependsOn: ["timing.marks.insert"],
+        cmd: "effects.create",
+        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+      }
+    ],
+    expectedRevision: "rev-fallback-1",
+    getRevision: okRevision("rev-fallback-1"),
+    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }, { index: 1, valid: true }, { index: 2, valid: true }] } }),
+    beginTransaction: async () => ({ data: { transactionId: "tx-fallback-1" } }),
+    stageTransactionCommand: async () => {
+      staged += 1;
+      return { res: 200 };
+    },
+    commitTransaction: async () => ({ data: { newRevision: "rev-fallback-2" } }),
+    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    applySequencingBatchPlan: async () => {
+      throw new Error("POST http://127.0.0.1:49915/xlightsdesigner/api/sequencing/apply-batch-plan failed (NOT_FOUND): Not found.");
+    },
+    getOwnedJob: async () => ({ data: { state: "failed" } })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, "legacy_transactions");
+  assert.equal(staged, 3);
+});
+
 test("orchestrator stages corpus-backed effect settings without reinterpretation", async () => {
   const staged = [];
   const command = {

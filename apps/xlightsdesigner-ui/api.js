@@ -1,4 +1,5 @@
 const DEFAULT_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const DEFAULT_OWNED_ENDPOINT_BASE = "http://127.0.0.1:49915/xlightsdesigner/api";
 
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");
@@ -9,8 +10,79 @@ function sanitizeEndpoint(endpoint) {
   return String(endpoint || "").trim();
 }
 
+function sanitizeOwnedBase(endpoint) {
+  return String(endpoint || "").trim().replace(/\/+$/, "");
+}
+
+function readTextWithXHR(targetEndpoint, bodyText) {
+  return new Promise((resolve, reject) => {
+    if (typeof XMLHttpRequest !== "function") {
+      reject(new Error("XMLHttpRequest unavailable"));
+      return;
+    }
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", targetEndpoint, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onload = () => resolve(String(xhr.responseText || ""));
+    xhr.onerror = () => reject(new Error(`XHR request failed for ${targetEndpoint}`));
+    xhr.ontimeout = () => reject(new Error(`XHR request timed out for ${targetEndpoint}`));
+    xhr.send(bodyText);
+  });
+}
+
+async function readResponseText(targetEndpoint, bodyText) {
+  try {
+    const response = await fetch(targetEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: bodyText
+    });
+    return await response.text();
+  } catch (err) {
+    if (typeof XMLHttpRequest === "function") {
+      return readTextWithXHR(targetEndpoint, bodyText);
+    }
+    throw err;
+  }
+}
+
+async function readOwnedJson(targetEndpoint, { method = "GET", body = null } = {}) {
+  const response = await fetch(targetEndpoint, {
+    method,
+    headers: body == null ? undefined : { "Content-Type": "application/json" },
+    body: body == null ? undefined : JSON.stringify(body)
+  });
+  const text = await response.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`Invalid JSON from xLights owned endpoint ${targetEndpoint} (${err.message})`);
+  }
+  if (json?.ok !== true) {
+    const code = json?.error?.code || "UNKNOWN";
+    const message = json?.error?.message || "Request failed";
+    throw new Error(`${method} ${targetEndpoint} failed (${code}): ${message}`);
+  }
+  return json;
+}
+
 export function getDefaultEndpoint() {
   return DEFAULT_ENDPOINT;
+}
+
+export function deriveOwnedEndpointBase(endpoint) {
+  const raw = sanitizeEndpoint(endpoint);
+  if (!raw) return DEFAULT_OWNED_ENDPOINT_BASE;
+  if (raw.includes("/xlightsdesigner/api")) {
+    return sanitizeOwnedBase(raw);
+  }
+  try {
+    const url = new URL(raw);
+    return `${url.protocol}//${url.hostname}:49915/xlightsdesigner/api`;
+  } catch {
+    return DEFAULT_OWNED_ENDPOINT_BASE;
+  }
 }
 
 export async function postCommand(endpoint, cmd, params = {}, options = {}) {
@@ -21,14 +93,7 @@ export async function postCommand(endpoint, cmd, params = {}, options = {}) {
     options
   };
   const targetEndpoint = sanitizeEndpoint(endpoint);
-
-  const response = await fetch(targetEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  const text = await response.text();
+  const text = await readResponseText(targetEndpoint, JSON.stringify(payload));
   const normalized = normalizeBody(text);
   let json;
   try {
@@ -256,5 +321,19 @@ export async function getJob(endpoint, jobId) {
 export async function cancelJob(endpoint, jobId) {
   return postCommand(endpoint, "jobs.cancel", {
     jobId
+  });
+}
+
+export async function getOwnedJob(endpoint, jobId) {
+  const base = deriveOwnedEndpointBase(endpoint);
+  const target = `${base}/jobs/get?jobId=${encodeURIComponent(String(jobId || "").trim())}`;
+  return readOwnedJson(target, { method: "GET" });
+}
+
+export async function applySequencingBatchPlan(endpoint, payload = {}) {
+  const base = deriveOwnedEndpointBase(endpoint);
+  return readOwnedJson(`${base}/sequencing/apply-batch-plan`, {
+    method: "POST",
+    body: payload
   });
 }

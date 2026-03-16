@@ -4,7 +4,9 @@ import {
   commitTransaction,
   cancelJob,
   createSequence,
+  applySequencingBatchPlan,
   getJob,
+  getOwnedJob,
   getMediaStatus,
   getMediaMetadata,
   getDisplayElementOrder,
@@ -199,6 +201,22 @@ const REFERENCE_MEDIA_ALLOWED_EXTENSIONS = new Set([
 ]);
 const REFERENCE_MEDIA_MAX_FILE_BYTES = 250 * 1024 * 1024;
 const REFERENCE_MEDIA_MAX_ITEMS = 40;
+
+window.addEventListener("error", (event) => {
+  const message = String(event?.message || "Unknown renderer error");
+  const source = String(event?.filename || "unknown");
+  const line = Number(event?.lineno || 0);
+  const column = Number(event?.colno || 0);
+  console.error(`[renderer:error] ${message} @ ${source}:${line}:${column}`);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  const reason = event?.reason;
+  const message = typeof reason === "string"
+    ? reason
+    : String(reason?.stack || reason?.message || reason || "Unknown unhandled rejection");
+  console.error(`[renderer:unhandledrejection] ${message}`);
+});
 
 function buildDemoProposedLines() {
   return [
@@ -981,6 +999,17 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
     }
     return { ok: false, reason: "read_error" };
   }
+}
+
+async function ensureCurrentAnalysisHandoff(options = {}) {
+  if (hasUsableCurrentAudioAnalysis()) {
+    return getValidHandoff("analysis_handoff_v1");
+  }
+  const hydrated = await hydrateAnalysisArtifactForCurrentMedia(options);
+  if (hydrated?.ok) {
+    return getValidHandoff("analysis_handoff_v1");
+  }
+  return getValidHandoff("analysis_handoff_v1");
 }
 
 function getDesktopTrainingPackageBridge() {
@@ -3031,7 +3060,9 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         beginTransaction,
         commitTransaction,
         rollbackTransaction,
-        stageTransactionCommand
+        stageTransactionCommand,
+        applySequencingBatchPlan,
+        getOwnedJob
       },
       callbacks: {
         pushSequenceAgentContractDiagnostic,
@@ -3070,6 +3101,17 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
   }
 }
 
+
+function selectedProposedLinesForApply() {
+  const selectedIndexes = Array.isArray(state.ui?.proposedSelection)
+    ? state.ui.proposedSelection.filter((idx) => Number.isInteger(idx))
+    : [];
+  if (!selectedIndexes.length) return [];
+  const rows = Array.isArray(state.proposed) ? state.proposed : [];
+  return selectedIndexes
+    .map((idx) => rows[idx])
+    .filter((line) => typeof line === "string" && line.trim());
+}
 
 async function onApplySelected() {
   const selectedLines = selectedProposedLinesForApply();
@@ -3144,7 +3186,9 @@ async function onGenerate(intentOverride = "", options = {}) {
   const includeDesignerSelection = shouldCarryDesignerSelectionContext(intentText);
   const designerSelectedTags = includeDesignerSelection ? (state.ui.metadataSelectedTags || []) : [];
   const designerSelectedTargetIds = includeDesignerSelection ? (state.ui.metadataSelectionIds || []) : [];
-  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const analysisHandoff = directSequenceMode
+    ? await ensureCurrentAnalysisHandoff({ silent: true })
+    : getValidHandoff("analysis_handoff_v1");
   const designSceneContext = buildCurrentDesignSceneContext();
   const musicDesignContext = buildCurrentMusicDesignContext();
   let designerCloudResponse = null;
@@ -10154,8 +10198,19 @@ function buildPageStateHelpers() {
     getManualLockedXdTracks,
     getTeamChatIdentities,
     getDiagnosticsCounts,
-    buildLabel: BUILD_LABEL
+    buildLabel: getBuildLabel()
   };
+}
+
+function getBuildLabel() {
+  const buildVersion = String(state.health.desktopAppVersion || "").trim();
+  const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
+  const buildTimeLabel = buildTimeIso
+    ? new Date(buildTimeIso).toLocaleString([], { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+    : "";
+  return buildVersion
+    ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
+    : "Build: unknown";
 }
 
 async function runCurrentDirectSequenceValidation(expected = {}) {
@@ -10175,9 +10230,54 @@ async function runCurrentDirectSequenceValidation(expected = {}) {
   });
 }
 
+function getCurrentDirectSequenceValidationSnapshot() {
+  return {
+    endpoint: state.endpoint,
+    pageStates: getPageStates(),
+    activeSequence: state.activeSequence || "",
+    handoffs: {
+      analysisHandoff: getValidHandoff("analysis_handoff_v1"),
+      intentHandoff: getValidHandoff("intent_handoff_v1"),
+      planHandoff: getValidHandoff("plan_handoff_v1")
+    }
+  };
+}
+
+async function dispatchAutomationPrompt(prompt = "") {
+  const text = String(prompt || "").trim();
+  if (!text) {
+    return { ok: false, error: "Prompt is required." };
+  }
+  state.ui.chatDraft = text;
+  await onSendChat();
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null
+  };
+}
+
+async function applyAutomationCurrentProposal() {
+  state.ui.applyApprovalChecked = true;
+  await onApplyAll();
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    reviewReady: applyReadyForApprovalGate(),
+    lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null
+  };
+}
+
 function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
-    runDirectSequenceValidation: runCurrentDirectSequenceValidation
+    dispatchPrompt: dispatchAutomationPrompt,
+    applyCurrentProposal: applyAutomationCurrentProposal,
+    runDirectSequenceValidation: runCurrentDirectSequenceValidation,
+    getDirectSequenceValidationSnapshot: getCurrentDirectSequenceValidationSnapshot
   };
 }
 
@@ -10651,14 +10751,7 @@ function bindEvents() {
 function render() {
   normalizeUiRoute();
   const focusSnapshot = captureRenderFocusState();
-  const buildVersion = String(state.health.desktopAppVersion || "").trim();
-  const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
-  const buildTimeLabel = buildTimeIso
-    ? new Date(buildTimeIso).toLocaleString([], { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
-    : "";
-  const buildLabel = buildVersion
-    ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
-    : "Build: unknown";
+  const buildLabel = getBuildLabel();
   const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
   const pageStates = getPageStates();
   app.innerHTML = buildAppShell({
