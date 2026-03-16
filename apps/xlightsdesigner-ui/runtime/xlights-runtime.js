@@ -61,3 +61,96 @@ export async function collectXLightsRuntimeSnapshot(endpoint, deps = {}) {
     }
   };
 }
+
+
+export async function executeXLightsRefreshCycle({
+  state = {},
+  endpoint = "",
+  deps = {},
+  callbacks = {}
+} = {}) {
+  const {
+    getOpen = getOpenSequence,
+    syncRevision = async () => ({ ok: true, staleDetected: false }),
+    refreshMetadata = async () => {},
+    refreshEffects = async () => {},
+    refreshSections = async () => {},
+    refreshHistory = async () => {}
+  } = deps;
+  const {
+    applyRolloutPolicy = () => {},
+    releaseConnectivityPlanOnly = () => false,
+    enforceConnectivityPlanOnly = () => false,
+    isSequenceAllowed = () => true,
+    currentSequencePath = () => "",
+    clearIgnoredExternalSequenceNote = () => {},
+    applyOpenSequenceState = () => {},
+    syncAudioPathFromMediaStatus = async () => {},
+    hydrateSidecarForCurrentSequence = async () => {},
+    updateSequenceFileMtime = async () => {},
+    maybeFlushSidecarAfterExternalSave = async () => {},
+    noteIgnoredExternalSequence = () => {},
+    onWarning = () => {},
+    onInfo = () => {}
+  } = callbacks;
+
+  applyRolloutPolicy();
+  const releasedForce = releaseConnectivityPlanOnly();
+  state.flags.xlightsConnected = true;
+
+  const open = await getOpen(endpoint);
+  const seq = open?.data?.sequence;
+  const seqAllowed = Boolean(open?.data?.isOpen && seq && isSequenceAllowed(seq));
+  state.flags.activeSequenceLoaded = seqAllowed;
+  state.health.sequenceOpen = Boolean(open?.data?.isOpen);
+  const prevPath = currentSequencePath();
+
+  if (seqAllowed) {
+    clearIgnoredExternalSequenceNote();
+    applyOpenSequenceState(seq);
+    if (open?.data?.isOpen) {
+      await syncAudioPathFromMediaStatus();
+    }
+    const nextPath = currentSequencePath();
+    if (nextPath && nextPath !== prevPath) {
+      await hydrateSidecarForCurrentSequence();
+    }
+    await updateSequenceFileMtime(currentSequencePath());
+    await maybeFlushSidecarAfterExternalSave(currentSequencePath());
+  } else if (open?.data?.isOpen && seq) {
+    noteIgnoredExternalSequence(seq);
+  }
+
+  const revisionState = await syncRevision();
+
+  try {
+    await refreshMetadata();
+  } catch (err) {
+    onWarning(`Model refresh failed: ${err.message}`, err.stack || "");
+  }
+
+  await refreshEffects();
+
+  try {
+    await refreshSections();
+  } catch (err) {
+    onWarning(`Section refresh failed: ${err.message}`, err.stack || "");
+  }
+
+  await refreshHistory();
+
+  if (!revisionState?.staleDetected) {
+    onInfo("Refreshed from xLights.");
+  }
+  if (releasedForce && !revisionState?.staleDetected) {
+    onInfo("xLights reachable again. Plan-only remains enabled until you turn it off.");
+  }
+
+  return {
+    releasedForce,
+    staleDetected: Boolean(revisionState?.staleDetected),
+    revisionState,
+    openSequenceAllowed: seqAllowed,
+    openSequence: seq || null
+  };
+}

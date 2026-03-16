@@ -108,7 +108,8 @@ import {
   resolveTeamChatIdentity
 } from "./agent/app-assistant/app-assistant-contracts.js";
 import { buildPageStates } from "./app-ui/page-state/index.js";
-import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
+import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
+import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -4337,58 +4338,37 @@ async function onRefresh() {
   state.ui.firstRunMode = false;
   try {
     await hydrateAgentHealth();
-    applyRolloutPolicy();
-    let staleDetected = false;
-    const releasedForce = releaseConnectivityPlanOnly();
-    state.flags.xlightsConnected = true;
-    const open = await getOpenSequence(state.endpoint);
-    const seq = open?.data?.sequence;
-    const seqAllowed = Boolean(open?.data?.isOpen && seq && isSequenceAllowedInActiveShowFolder(seq));
-    state.flags.activeSequenceLoaded = seqAllowed;
-    state.health.sequenceOpen = Boolean(open?.data?.isOpen);
-    const prevPath = currentSequencePathForSidecar();
-    if (seqAllowed) {
-      clearIgnoredExternalSequenceNote();
-      applyOpenSequenceState(seq);
-      if (open?.data?.isOpen) {
-        await syncAudioPathFromMediaStatus();
+    await executeXLightsRefreshCycle({
+      state,
+      endpoint: state.endpoint,
+      deps: {
+        getOpen: getOpenSequence,
+        syncRevision: () => syncLatestSequenceRevision({
+          onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
+          onUnknownMessage: ""
+        }),
+        refreshMetadata: refreshMetadataTargetsFromXLights,
+        refreshEffects: refreshEffectCatalogFromXLights,
+        refreshSections: fetchSectionSuggestions,
+        refreshHistory: () => refreshApplyHistoryFromDesktop(40)
+      },
+      callbacks: {
+        applyRolloutPolicy,
+        releaseConnectivityPlanOnly,
+        enforceConnectivityPlanOnly,
+        isSequenceAllowed: isSequenceAllowedInActiveShowFolder,
+        currentSequencePath: currentSequencePathForSidecar,
+        clearIgnoredExternalSequenceNote,
+        applyOpenSequenceState,
+        syncAudioPathFromMediaStatus,
+        hydrateSidecarForCurrentSequence,
+        updateSequenceFileMtime,
+        maybeFlushSidecarAfterExternalSave,
+        noteIgnoredExternalSequence,
+        onWarning: (text, details = "") => setStatusWithDiagnostics("warning", text, details),
+        onInfo: (text) => setStatus("info", text)
       }
-      const nextPath = currentSequencePathForSidecar();
-      if (nextPath && nextPath !== prevPath) {
-        await hydrateSidecarForCurrentSequence();
-      }
-      await updateSequenceFileMtime(currentSequencePathForSidecar());
-      await maybeFlushSidecarAfterExternalSave(currentSequencePathForSidecar());
-    } else if (open?.data?.isOpen && seq) {
-      noteIgnoredExternalSequence(seq);
-    }
-
-    const revisionState = await syncLatestSequenceRevision({
-      onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
-      onUnknownMessage: ""
     });
-    staleDetected = staleDetected || revisionState.staleDetected;
-
-    try {
-      await refreshMetadataTargetsFromXLights();
-    } catch (err) {
-      setStatusWithDiagnostics("warning", `Model refresh failed: ${err.message}`);
-    }
-    await refreshEffectCatalogFromXLights();
-
-    try {
-      await fetchSectionSuggestions();
-    } catch (err) {
-      setStatusWithDiagnostics("warning", `Section refresh failed: ${err.message}`);
-    }
-    await refreshApplyHistoryFromDesktop(40);
-
-    if (!staleDetected) {
-      setStatus("info", "Refreshed from xLights.");
-    }
-    if (releasedForce && !staleDetected) {
-      setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
-    }
   } catch (err) {
     state.flags.xlightsConnected = false;
     enforceConnectivityPlanOnly();
@@ -10484,6 +10464,54 @@ function onNewSession() {
   render();
 }
 
+function buildPageStateHelpers() {
+  return {
+    basenameOfPath,
+    getSelectedSections,
+    hasAllSectionsSelected,
+    getSectionName,
+    selectedProposedLinesForApply,
+    summarizeImpactForLines,
+    buildDesignerPlanCommands,
+    applyReadyForApprovalGate,
+    applyDisabledReason,
+    buildCurrentReviewSnapshotSummary,
+    getMetadataTagRecords,
+    buildMetadataTargets,
+    matchesMetadataFilterValue,
+    normalizeMetadataSelectionIds,
+    normalizeMetadataSelectedTags,
+    getAgentApplyRolloutMode,
+    getManualLockedXdTracks,
+    getTeamChatIdentities,
+    getDiagnosticsCounts,
+    buildLabel: BUILD_LABEL
+  };
+}
+
+async function runCurrentDirectSequenceValidation(expected = {}) {
+  return runDirectSequenceValidation({
+    endpoint: state.endpoint,
+    state,
+    handoffs: {
+      analysisHandoff: getValidHandoff("analysis_handoff_v1"),
+      intentHandoff: getValidHandoff("intent_handoff_v1"),
+      planHandoff: getValidHandoff("plan_handoff_v1")
+    },
+    helpers: buildPageStateHelpers(),
+    expected,
+    deps: {
+      listEffects
+    }
+  });
+}
+
+function exposeRuntimeValidationHooks() {
+  window.xLightsDesignerRuntime = {
+    runDirectSequenceValidation: runCurrentDirectSequenceValidation
+  };
+}
+
 function getPageStates() {
   return buildPageStates({
     state,
@@ -10492,28 +10520,7 @@ function getPageStates() {
       intentHandoff: getValidHandoff("intent_handoff_v1"),
       planHandoff: getValidHandoff("plan_handoff_v1")
     },
-    helpers: {
-      basenameOfPath,
-      getSelectedSections,
-      hasAllSectionsSelected,
-      getSectionName,
-      selectedProposedLinesForApply,
-      summarizeImpactForLines,
-      buildDesignerPlanCommands,
-      applyReadyForApprovalGate,
-      applyDisabledReason,
-      buildCurrentReviewSnapshotSummary,
-      getMetadataTagRecords,
-      buildMetadataTargets,
-      matchesMetadataFilterValue,
-      normalizeMetadataSelectionIds,
-      normalizeMetadataSelectedTags,
-      getAgentApplyRolloutMode,
-      getManualLockedXdTracks,
-      getTeamChatIdentities,
-      getDiagnosticsCounts,
-      buildLabel: BUILD_LABEL
-    }
+    helpers: buildPageStateHelpers()
   });
 }
 
@@ -11020,6 +11027,8 @@ function render() {
     chatThread.scrollTop = chatThread.scrollHeight;
   }
 }
+
+exposeRuntimeValidationHooks();
 
 async function bootstrapLiveData() {
   try {

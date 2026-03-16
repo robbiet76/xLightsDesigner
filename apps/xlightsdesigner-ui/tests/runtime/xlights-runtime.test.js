@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import {
   collectXLightsRuntimeSnapshot,
   syncXLightsRevisionState,
-  fetchXLightsRevisionState
+  fetchXLightsRevisionState,
+  executeXLightsRefreshCycle
 } from "../../runtime/xlights-runtime.js";
 
 test("collectXLightsRuntimeSnapshot aggregates live sequence state and capabilities", async () => {
@@ -44,4 +45,43 @@ test("fetchXLightsRevisionState normalizes revision from xlights api", async () 
     getRevision: async () => ({ data: { revisionToken: "rev-44" } })
   });
   assert.equal(revision, "rev-44");
+});
+
+
+test("executeXLightsRefreshCycle delegates open-sequence refresh flow", async () => {
+  const state = { flags: {}, health: {} };
+  let applied = "";
+  const result = await executeXLightsRefreshCycle({
+    state,
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    deps: {
+      getOpen: async () => ({ data: { isOpen: true, sequence: { file: "/show/Test.xsq" } } }),
+      syncRevision: async () => ({ staleDetected: false }),
+      refreshMetadata: async () => {},
+      refreshEffects: async () => {},
+      refreshSections: async () => {},
+      refreshHistory: async () => {}
+    },
+    callbacks: {
+      applyRolloutPolicy: () => {},
+      releaseConnectivityPlanOnly: () => false,
+      isSequenceAllowed: () => true,
+      currentSequencePath: () => "/show/Test.xsq",
+      clearIgnoredExternalSequenceNote: () => {},
+      applyOpenSequenceState: (seq) => { applied = seq.file; },
+      syncAudioPathFromMediaStatus: async () => {},
+      hydrateSidecarForCurrentSequence: async () => {},
+      updateSequenceFileMtime: async () => {},
+      maybeFlushSidecarAfterExternalSave: async () => {},
+      noteIgnoredExternalSequence: () => {},
+      onWarning: () => {},
+      onInfo: () => {}
+    }
+  });
+
+  assert.equal(state.flags.xlightsConnected, true);
+  assert.equal(state.flags.activeSequenceLoaded, true);
+  assert.equal(state.health.sequenceOpen, true);
+  assert.equal(applied, "/show/Test.xsq");
+  assert.equal(result.openSequenceAllowed, true);
 });
