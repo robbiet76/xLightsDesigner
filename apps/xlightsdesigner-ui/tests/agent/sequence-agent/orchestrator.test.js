@@ -250,6 +250,64 @@ test("orchestrator falls back to legacy transactions when owned sequencing batch
   assert.equal(staged, 3);
 });
 
+test("orchestrator still compresses plans that include alignToTiming commands", async () => {
+  let applyCalls = 0;
+  const res = await validateAndApplyPlan({
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    commands: [
+      { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+      {
+        id: "timing.marks.insert",
+        dependsOn: ["timing.track.create"],
+        cmd: "timing.insertMarks",
+        params: {
+          trackName: "XD: Song Structure",
+          marks: [
+            { startMs: 0, endMs: 1000, label: "Intro" },
+            { startMs: 1000, endMs: 2000, label: "Verse 1" }
+          ]
+        }
+      },
+      {
+        id: "effect.1",
+        dependsOn: ["timing.marks.insert"],
+        cmd: "effects.create",
+        params: { modelName: "Snowman", layerIndex: 0, effectName: "Color Wash", startMs: 1000, endMs: 2000, settings: "", palette: "" }
+      },
+      {
+        id: "effect.align.1",
+        dependsOn: ["effect.1"],
+        cmd: "effects.alignToTiming",
+        params: { modelName: "Snowman", layerIndex: 0, startMs: 1000, endMs: 2000, timingTrackName: "XD: Song Structure", mode: "nearest" }
+      }
+    ],
+    expectedRevision: "rev-align-1",
+    getRevision: okRevision("rev-align-1"),
+    validateCommands: async () => ({ data: { valid: true, results: [] } }),
+    beginTransaction: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
+    stageTransactionCommand: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
+    commitTransaction: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
+    rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    applySequencingBatchPlan: async (_endpoint, payload) => {
+      applyCalls += 1;
+      assert.equal(payload.track, "XD: Song Structure");
+      assert.equal(payload.effects.length, 1);
+      return { data: { jobId: "owned-job-align-1" } };
+    },
+    getOwnedJob: async () => ({ data: { state: "succeeded" } })
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.applyPath, "owned_batch_plan");
+  assert.equal(applyCalls, 1);
+});
+
 test("orchestrator stages corpus-backed effect settings without reinterpretation", async () => {
   const staged = [];
   const command = {

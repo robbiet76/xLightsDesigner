@@ -50,6 +50,11 @@ function buildOwnedSequencingBatchPlan(commands = []) {
       });
       continue;
     }
+    if (cmd === "effects.alignToTiming") {
+      const timingTrackName = str(params.timingTrackName);
+      if (timingTrackName && trackName && timingTrackName !== trackName) return null;
+      continue;
+    }
     return null;
   }
 
