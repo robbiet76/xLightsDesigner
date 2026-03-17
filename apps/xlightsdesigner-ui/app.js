@@ -3323,6 +3323,8 @@ async function onGenerate(intentOverride = "", options = {}) {
     state.agentPlan = null;
     state.creative = state.creative || {};
     state.creative.intentHandoff = null;
+    clearAgentHandoff("intent_handoff_v1", "proposal generation blocked", { pushLog: false });
+    clearAgentHandoff("plan_handoff_v1", "proposal generation blocked", { pushLog: false });
     state.ui.agentThinking = false;
     setStatusWithDiagnostics(
       "warning",
