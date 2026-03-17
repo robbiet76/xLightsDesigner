@@ -189,6 +189,7 @@ test("orchestrator prefers owned sequencing batch plan when command graph is com
     applySequencingBatchPlan: async (_endpoint, payload) => {
       applyCalls += 1;
       assert.equal(payload.track, "XD: Song Structure");
+      assert.equal(payload.replaceExistingMarks, true);
       assert.equal(payload.marks.length, 2);
       assert.equal(payload.effects.length, 1);
       return { data: { jobId: "owned-job-1" } };
@@ -244,11 +245,9 @@ test("orchestrator blocks when owned sequencing batch plan is unavailable", asyn
       throw new Error("legacy transaction path should not run");
     },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    getOwnedHealth: async () => {
-      throw new Error("connect ECONNREFUSED 127.0.0.1:49915");
-    },
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
     applySequencingBatchPlan: async () => {
-      throw new Error("owned apply should not run");
+      throw new Error("POST http://127.0.0.1:49915/xlightsdesigner/api/sequencing/apply-batch-plan failed (NOT_FOUND): Not found.");
     },
     getOwnedJob: async () => {
       throw new Error("owned job poll should not run");
@@ -257,7 +256,7 @@ test("orchestrator blocks when owned sequencing batch plan is unavailable", asyn
 
   assert.equal(res.ok, false);
   assert.equal(res.stage, "runtime");
-  assert.match(String(res.error || ""), /owned xLights API unavailable/i);
+  assert.match(String(res.error || ""), /owned sequencing\.applyBatchPlan failed/i);
 });
 
 test("orchestrator still compresses plans that include alignToTiming commands", async () => {

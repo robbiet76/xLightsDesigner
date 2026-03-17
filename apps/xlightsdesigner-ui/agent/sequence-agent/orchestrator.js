@@ -5,6 +5,10 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function norm(value = "") {
+  return str(value).toLowerCase();
+}
+
 function toInt(value, fallback = -1) {
   const n = Number(value);
   return Number.isFinite(n) ? Math.round(n) : fallback;
@@ -70,7 +74,7 @@ export function buildOwnedSequencingBatchPlan(commands = []) {
 
   return {
     track: trackName,
-    replaceExistingMarks: markCommand.cmd === "timing.replaceMarks",
+    replaceExistingMarks: markCommand.cmd === "timing.replaceMarks" || norm(trackName) === "xd: song structure",
     marks: normalizedMarks,
     effects
   };
