@@ -131,6 +131,131 @@ test("sequence dashboard aggregates multiple effects on the same target into one
   assert.equal(dashboard.data.rows[0].effects, 2);
 });
 
+test("sequence dashboard counts duplicate same-type placements as separate effects", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: [],
+      agentPlan: {
+        summary: "Stacked duplicate placements.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [{ name: "XD: Song Structure" }]
+    },
+    intentHandoff: {
+      artifactId: "intent-duplicate-count",
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      artifactId: "plan-duplicate-count",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Color Wash",
+            startMs: 0,
+            endMs: 1000,
+            layerIndex: 0
+          }
+        },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 250, endMs: 750 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Color Wash",
+            startMs: 250,
+            endMs: 750,
+            layerIndex: 1
+          }
+        },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Shimmer",
+            startMs: 0,
+            endMs: 1000,
+            layerIndex: 2
+          }
+        }
+      ]
+    }
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].section, "Chorus 1");
+  assert.equal(dashboard.data.rows[0].target, "Snowman");
+  assert.equal(dashboard.data.rows[0].summary, "Color Wash, Shimmer");
+  assert.equal(dashboard.data.rows[0].effects, 3);
+});
+
+test("sequence dashboard counts ten same-row placements correctly", () => {
+  const start = 78230;
+  const end = 97120;
+  const span = end - start;
+  const slot = Math.floor(span / 10);
+  const effectNames = ["Color Wash", "Shimmer", "Bars", "Butterfly", "Meteors", "Pinwheel", "Spirals", "Wave", "Candle", "Morph"];
+
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: [],
+      agentPlan: {
+        summary: "Ten effects in one target/section/layer.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [{ name: "XD: Song Structure" }]
+    },
+    intentHandoff: {
+      artifactId: "intent-ten-count",
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      artifactId: "plan-ten-count",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: start, endMs: end, label: "Chorus 1" }] } },
+        ...effectNames.map((effectName, i) => ({
+          cmd: "effects.create",
+          anchor: {
+            trackName: "XD: Song Structure",
+            markLabel: "Chorus 1",
+            startMs: start + (i * slot),
+            endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot)
+          },
+          params: {
+            modelName: "Snowman",
+            effectName,
+            startMs: start + (i * slot),
+            endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
+            layerIndex: 0
+          }
+        }))
+      ]
+    }
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].section, "Chorus 1");
+  assert.equal(dashboard.data.rows[0].target, "Snowman");
+  assert.equal(dashboard.data.rows[0].summary, "Color Wash, Shimmer +8 more");
+  assert.equal(dashboard.data.rows[0].effects, 10);
+});
+
 test("sequence dashboard state surfaces missing timing dependency", () => {
   const dashboard = buildSequenceDashboardState({
     state: {
