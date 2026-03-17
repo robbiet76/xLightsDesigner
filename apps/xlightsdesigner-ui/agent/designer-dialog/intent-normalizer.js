@@ -193,6 +193,29 @@ function collectPromptInferredTags(text = "", metadataAssignments = []) {
     .map((row) => row.tag);
 }
 
+function collectPromptScopedTags(text = "", metadataAssignments = []) {
+  const lower = normalizeName(text);
+  const knownTags = collectKnownMetadataTags(metadataAssignments);
+  const matches = [];
+  for (const tag of knownTags) {
+    const patterns = buildTagPatterns(tag).map((variant) => (
+      new RegExp(`\\b${escapeRegex(variant)}\\s+(?:prop|props|model|models|element|elements|items?)\\b`, "i")
+    ));
+    let index = Number.POSITIVE_INFINITY;
+    for (const pattern of patterns) {
+      const match = lower.match(pattern);
+      if (!match || typeof match.index !== "number") continue;
+      index = Math.min(index, match.index);
+    }
+    if (Number.isFinite(index)) {
+      matches.push({ tag, index });
+    }
+  }
+  return matches
+    .sort((a, b) => a.index - b.index || normalizeName(a.tag).localeCompare(normalizeName(b.tag)))
+    .map((row) => row.tag);
+}
+
 function inferSectionsFromPrompt(text = "", availableSectionNames = []) {
   const goal = cleanText(text).toLowerCase();
   if (!goal) return [];
@@ -219,6 +242,7 @@ function buildFieldSources({
   sections = [],
   targetIds = [],
   tags = [],
+  explicitTags = [],
   styleDirection = "",
   colorDirection = "",
   changeTolerance = "",
@@ -229,7 +253,7 @@ function buildFieldSources({
     goal: goal ? "explicit" : "missing",
     sections: sections.length ? "explicit" : "missing",
     targetIds: targetIds.length ? "explicit" : "missing",
-    tags: tags.length ? "explicit" : "missing",
+    tags: explicitTags.length ? "explicit" : tags.length ? "inferred" : "missing",
     styleDirection: styleDirection ? "inferred" : "missing",
     colorDirection: colorDirection ? "inferred" : "missing",
     changeTolerance: changeTolerance ? "inferred" : "missing",
@@ -294,7 +318,9 @@ export function normalizeIntent({
     : mergedSections;
   const selectedTags = Array.isArray(selectedTagNames) ? selectedTagNames.filter(Boolean) : [];
   const inferredTags = collectPromptInferredTags(goal, metadataAssignments);
+  const scopedPromptTags = collectPromptScopedTags(goal, metadataAssignments);
   const tags = uniqueStrings([...selectedTags, ...inferredTags]);
+  const tagScopeMode = selectedTags.length || scopedPromptTags.length ? "explicit" : inferredTags.length ? "inferred" : "none";
   const targetIds = Array.isArray(selectedTargetIds) ? selectedTargetIds.filter(Boolean) : [];
   const brief = creativeBrief && typeof creativeBrief === "object" ? creativeBrief : {};
   const preferences = directorPreferences && typeof directorPreferences === "object" ? directorPreferences : {};
@@ -324,6 +350,7 @@ export function normalizeIntent({
     sections,
     targetIds,
     tags,
+    explicitTags: selectedTags,
     styleDirection,
     colorDirection,
     changeTolerance,
@@ -352,6 +379,7 @@ export function normalizeIntent({
     styleDirection,
     colorDirection,
     focusHierarchy,
+    tagScopeMode,
     changeTolerance,
     effectOverrides,
     explicitColor,

@@ -208,6 +208,20 @@ function extractMetrics(result = {}) {
   const placements = arr(executionPlan.effectPlacements);
   const sectionPlans = arr(executionPlan.sectionPlans);
   const effectFamilies = uniq(placements.map((row) => row?.effectName));
+  const placementsByTarget = new Map();
+  for (const placement of placements) {
+    const targetId = str(placement?.targetId);
+    if (!targetId) continue;
+    if (!placementsByTarget.has(targetId)) placementsByTarget.set(targetId, []);
+    placementsByTarget.get(targetId).push(placement);
+  }
+  const layeredTargetIds = [];
+  for (const [targetId, rows] of placementsByTarget.entries()) {
+    const layerKeys = uniq(rows.map((row) => `${Number(row?.layerIndex)}`));
+    if (layerKeys.length >= 2) layeredTargetIds.push(targetId);
+  }
+  const overlayPlacements = placements.filter((row) => Number(row?.layerIndex) >= 1);
+  const focusedOverlayPlacements = overlayPlacements.filter((row) => /focused|partial/i.test(str(row?.settingsIntent?.coverage)));
   return {
     proposalLineCount: arr(proposalBundle.proposalLines).length,
     designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
@@ -219,6 +233,9 @@ function extractMetrics(result = {}) {
       ...arr(result?.intentHandoff?.scope?.targetIds),
       ...placements.map((row) => row?.targetId)
     ]),
+    layeredTargetIds,
+    overlayPlacementCount: overlayPlacements.length,
+    focusedOverlayPlacementCount: focusedOverlayPlacements.length,
     tagNames: uniq(result?.intentHandoff?.scope?.tagNames),
     sections: uniq(result?.intentHandoff?.scope?.sections)
   };
@@ -670,6 +687,18 @@ function evaluateCase(result, testCase) {
   }
   if (expect.mustIncludeAlignmentModes) {
     check("missing_required_alignment_modes", includesAll(metrics.alignmentModes, expect.mustIncludeAlignmentModes));
+  }
+  if (expect.minLayeredTargetCount != null) {
+    check("insufficient_layered_targets", metrics.layeredTargetIds.length >= Number(expect.minLayeredTargetCount));
+  }
+  if (expect.mustLayerTargetIds) {
+    check("missing_required_layered_targets", includesAll(metrics.layeredTargetIds, expect.mustLayerTargetIds));
+  }
+  if (expect.minOverlayPlacementCount != null) {
+    check("insufficient_overlay_placements", metrics.overlayPlacementCount >= Number(expect.minOverlayPlacementCount));
+  }
+  if (expect.minFocusedOverlayPlacementCount != null) {
+    check("insufficient_focused_overlay_placements", metrics.focusedOverlayPlacementCount >= Number(expect.minFocusedOverlayPlacementCount));
   }
 
   const score = structuralScore({

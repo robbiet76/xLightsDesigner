@@ -45,7 +45,7 @@ By the end of the deep-training phase:
 - [ ] Improve user-guided metadata capture so tag refinement can affect later concepts
 - [x] Improve setting/layout-aware concept selection based on prop position and visibility
 - [x] Improve palette and motion-language consistency across a whole song
-- [ ] Improve focal vs support balance within and across concepts
+- [x] Improve focal vs support balance within and across concepts
 - [x] Improve the designer's use of stage-lighting concepts where they materially improve sequencing choices
 - [x] Improve the designer's use of composition principles where they materially improve sequencing choices
 
@@ -54,8 +54,8 @@ By the end of the deep-training phase:
 - [ ] Increase use of explicit `effectPlacements[]` as the primary authored output
 - [ ] Improve exact timing-window quality within sections
 - [x] Improve timing-window quality from beat, chord, phrase, and transition cues when section labels are insufficient
-- [ ] Improve multi-effect same-target layering quality
-- [ ] Improve per-effect settings intent quality
+- [x] Improve multi-effect same-target layering quality
+- [x] Improve per-effect settings intent quality
 - [ ] Improve layer/render intent quality
 
 ### D. Revision Quality

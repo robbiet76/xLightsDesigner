@@ -133,6 +133,10 @@
       "selectedSections": ["Chorus 1"],
       "expect": {
         "mustIncludeTargetIds": ["Snowman", "Border-01"],
+        "mustLayerTargetIds": ["Snowman"],
+        "minLayeredTargetCount": 1,
+        "minOverlayPlacementCount": 1,
+        "minFocusedOverlayPlacementCount": 1,
         "proposalLinePatternsAny": ["focus", "gentle fill", "support"]
       }
     },
@@ -168,6 +172,8 @@
       "promptText": "Let the centerpiece props carry the eye while perimeter props frame the chorus more softly.",
       "selectedSections": ["Chorus 1"],
       "expect": {
+        "minLayeredTargetCount": 1,
+        "minFocusedOverlayPlacementCount": 1,
         "proposalLinePatternsAny": ["frame", "centerpiece", "perimeter", "focal"]
       }
     },
@@ -289,8 +295,10 @@
       "promptText": "Design the full song more like a stage-lighting cue stack with restrained washes, clearer key-vs-fill hierarchy, and stronger finale punch.",
       "expect": {
         "minEffectPlacementCount": 12,
-        "minDistinctEffectFamilies": 3,
-        "minDesignConceptCount": 4
+        "minDistinctEffectFamilies": 4,
+        "minDesignConceptCount": 4,
+        "minLayeredTargetCount": 2,
+        "minFocusedOverlayPlacementCount": 2
       }
     },
 

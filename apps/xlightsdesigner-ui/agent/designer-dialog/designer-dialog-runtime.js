@@ -618,26 +618,27 @@ function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex 
   };
 }
 
-function inferPlacementSettingsIntent({ effectName = "", energy = "", density = "", effectIndex = 0 } = {}) {
+function inferPlacementSettingsIntent({ effectName = "", energy = "", density = "", effectIndex = 0, targetRole = "primary" } = {}) {
   const effect = str(effectName).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
+  const supportTarget = targetRole === "support";
   if (["shimmer", "twinkle", "galaxy", "fireworks"].includes(effect)) {
     return {
-      intensity: normalizedEnergy === "high" ? "high" : "medium_high",
+      intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium_high"),
       speed: normalizedEnergy === "high" ? "fast" : "medium",
       density: normalizedDensity === "dense" ? "medium" : "light",
-      coverage: effectIndex === 0 ? "full" : "partial",
+      coverage: supportTarget ? "focused" : (effectIndex === 0 ? "full" : "partial"),
       motion: "sparkle",
       variation: normalizedEnergy === "high" ? "medium" : "low"
     };
   }
   if (["bars", "shockwave", "warp", "marquee", "singlestrand", "wave"].includes(effect)) {
     return {
-      intensity: normalizedEnergy === "high" ? "high" : "medium",
+      intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium"),
       speed: normalizedEnergy === "high" ? "medium_fast" : "medium",
       density: normalizedDensity === "wide" ? "medium" : "light",
-      coverage: effectIndex === 0 ? "partial" : "focused",
+      coverage: supportTarget ? "focused" : (effectIndex === 0 ? "partial" : "focused"),
       motion: "rhythmic",
       direction: "forward",
       thickness: normalizedDensity === "wide" ? "medium" : "thin"
@@ -645,10 +646,10 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
   }
   if (["pinwheel", "spirals", "butterfly", "circles", "fan", "morph", "ripple", "spirograph"].includes(effect)) {
     return {
-      intensity: normalizedEnergy === "low" ? "medium" : "medium_high",
+      intensity: supportTarget ? "medium" : (normalizedEnergy === "low" ? "medium" : "medium_high"),
       speed: normalizedEnergy === "high" ? "fast" : "medium_fast",
       density: normalizedDensity === "dense" ? "medium" : "light",
-      coverage: effectIndex === 0 ? "full" : "partial",
+      coverage: supportTarget ? "partial" : (effectIndex === 0 ? "full" : "partial"),
       motion: "wash",
       direction: normalizedDensity === "wide" ? "outward" : "forward",
       thickness: normalizedDensity === "dense" ? "medium" : "thin",
@@ -657,10 +658,10 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
   }
   if (["meteors", "fire", "lightning", "snowflakes", "snowstorm", "candle", "tendril"].includes(effect)) {
     return {
-      intensity: normalizedEnergy === "high" ? "high" : "medium",
+      intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium"),
       speed: normalizedEnergy === "high" ? "fast" : "medium",
       density: normalizedDensity === "dense" ? "dense" : "medium",
-      coverage: effectIndex === 0 ? "full" : "focused",
+      coverage: supportTarget ? "focused" : (effectIndex === 0 ? "full" : "focused"),
       motion: "rhythmic",
       direction: "reverse",
       thickness: "medium",
@@ -668,21 +669,40 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
     };
   }
   return {
-    intensity: normalizedEnergy === "low" ? "medium" : "medium_high",
+    intensity: supportTarget ? "medium" : (normalizedEnergy === "low" ? "medium" : "medium_high"),
     speed: normalizedEnergy === "low" ? "slow" : "medium",
     density: normalizedDensity === "dense" ? "medium" : "light",
-    coverage: effectIndex === 0 ? "full" : "partial",
+    coverage: supportTarget ? "focused" : (effectIndex === 0 ? "full" : "partial"),
     motion: "wash",
     variation: "low"
   };
 }
 
-function inferPlacementLayerIntent({ effectIndex = 0, effectName = "" } = {}) {
+function inferTargetRole({ goal = "", targetIndex = 0, singleScope = false } = {}) {
+  const lowerGoal = str(goal).toLowerCase();
+  const leadWeighted = /key light|focal|focus|centerpiece|hero|lead/.test(lowerGoal);
+  const supportWeighted = /fill|support|perimeter|frame\b|framing\b|background|negative space/.test(lowerGoal);
+  if (targetIndex === 0) return leadWeighted || singleScope ? "lead" : "primary";
+  if (supportWeighted) return "support";
+  return "secondary";
+}
+
+function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {
+  const lowerGoal = str(goal).toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const lightingOrCompositionScoped = /key light|fill|support|focal|centerpiece|perimeter|frame\b|framing\b|negative space|foreground|background/.test(lowerGoal);
+  if (targetIndex === 0) return true;
+  if (lightingOrCompositionScoped) return !singleScope && normalizedEnergy === "high" && targetIndex === 1;
+  if (singleScope && targetIndex >= 1) return false;
+  return normalizedEnergy === "high" && targetIndex === 1;
+}
+
+function inferPlacementLayerIntent({ effectIndex = 0, effectName = "", targetRole = "primary" } = {}) {
   const lower = str(effectName).toLowerCase();
   if (effectIndex === 0) {
     return {
-      priority: "base",
-      blendRole: "foundation",
+      priority: targetRole === "support" ? "support" : "base",
+      blendRole: targetRole === "support" ? "support_fill" : "foundation",
       overlayPolicy: "allow_overlay",
       mixAmount: "default"
     };
@@ -728,7 +748,7 @@ function buildPlacementWindow({ startMs = 0, endMs = 0, effectIndex = 0, effectC
   };
 }
 
-function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), goal = "", musicDesignContext = null } = {}) {
+function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), goal = "", musicDesignContext = null, passScope = "" } = {}) {
   const placements = [];
   const plans = arr(sectionPlans);
   const sectionCount = plans.length;
@@ -748,7 +768,17 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
     if (!targets.length || !effectHints.length) continue;
     for (let targetIndex = 0; targetIndex < targets.length; targetIndex += 1) {
       const targetId = targets[targetIndex];
-      const perTargetEffectHints = targetIndex < 2
+      const targetRole = inferTargetRole({
+        goal,
+        targetIndex,
+        singleScope: passScope === "single_section"
+      });
+      const perTargetEffectHints = shouldLayerTarget({
+        goal,
+        energy: plan?.energy,
+        targetIndex,
+        singleScope: passScope === "single_section"
+      })
         ? effectHints.slice(0, Math.min(2, effectHints.length))
         : effectHints.slice(0, 1);
       for (let effectIndex = 0; effectIndex < perTargetEffectHints.length; effectIndex += 1) {
@@ -781,7 +811,9 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             alignmentMode: cueWindow ? `${anchorMode}_window` : effectIndex === 0 ? "section_span" : "within_section"
           },
           creative: {
-            role: effectIndex === 0 ? "section_foundation" : "section_accent",
+            role: effectIndex === 0
+              ? (targetRole === "support" ? "section_support" : "section_foundation")
+              : "section_accent",
             purpose: str(plan?.intentSummary),
             notes: effectIndex === 0
               ? `Primary ${effectName} layer for ${section}.`
@@ -791,7 +823,8 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             effectName,
             energy: plan?.energy,
             density: plan?.density,
-            effectIndex
+            effectIndex,
+            targetRole
           }),
           paletteIntent: inferPlacementPaletteIntent({
             goal,
@@ -801,7 +834,8 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
           }),
           layerIntent: inferPlacementLayerIntent({
             effectIndex,
-            effectName
+            effectName,
+            targetRole
           }),
           renderIntent: inferPlacementRenderIntent({
             targetId
@@ -855,7 +889,8 @@ function buildDesignerExecutionPlan({
   const resolvedTargetIds = arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
   const lowerGoal = str(intent.goal).toLowerCase();
   const hasSpatialDirective = /foreground|background|left side|right side|perimeter|frame\b|framing\b|centerpiece|center props|negative space/.test(lowerGoal);
-  const scopedTargetIds = targetIds.length ? targetIds : (tagNames.length && !hasSpatialDirective ? resolvedTargetIds : []);
+  const explicitTagScope = str(intent?.tagScopeMode).toLowerCase() === "explicit";
+  const scopedTargetIds = targetIds.length ? targetIds : (explicitTagScope && tagNames.length && !hasSpatialDirective ? resolvedTargetIds : []);
   const timedSections = buildTimedSectionMap(analysisHandoff);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
   const passScope = allowGlobalRewrite
@@ -918,7 +953,8 @@ function buildDesignerExecutionPlan({
     sectionPlans,
     timedSections,
     goal: intent.goal || "",
-    musicDesignContext
+    musicDesignContext,
+    passScope
   });
 
   return {

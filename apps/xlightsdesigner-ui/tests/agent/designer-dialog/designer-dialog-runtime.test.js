@@ -501,6 +501,62 @@ test("designer runtime broad whole-sequence passes now use multiple supported ef
   assert.ok(effectNames.length >= 5);
 });
 
+test("designer runtime does not treat inferred focal language as explicit metadata scope in broad passes", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-8d",
+    sequenceRevision: "rev-8d",
+    promptText: "Rework the whole show into a warmer, more cinematic pass with clear section contrast, stronger focal moments, and more varied effects across the song.",
+    goals: "Create a full-song cinematic holiday treatment with stronger focal moments.",
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" },
+      { id: "Border-01", name: "Border-01", type: "Model" },
+      { id: "PorchTree", name: "PorchTree", type: "Model" },
+      { id: "Wreathes", name: "Wreathes", type: "Model" }
+    ],
+    submodels,
+    metadataAssignments: [
+      { targetId: "Snowman", tags: ["focal"] },
+      { targetId: "Star", tags: ["focal"] },
+      { targetId: "Border-01", tags: ["support"] },
+      { targetId: "PorchTree", tags: ["support"] },
+      { targetId: "Wreathes", tags: ["support"] }
+    ],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000, energy: "low", density: "sparse" },
+          { label: "Verse 1", startMs: 10000, endMs: 25000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 25000, endMs: 45000, energy: "high", density: "dense" },
+          { label: "Bridge", startMs: 45000, endMs: 65000, energy: "medium", density: "wide" },
+          { label: "Outro", startMs: 65000, endMs: 80000, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Snowman", "Star"],
+      coverageDomains: {
+        broad: ["Border-01", "PorchTree", "Wreathes"],
+        detail: ["Snowman", "Star"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "wide" },
+        { label: "Outro", energy: "low", density: "sparse" }
+      ]
+    }
+  });
+
+  const placementTargets = Array.from(new Set(result.proposalBundle.executionPlan.effectPlacements.map((row) => row.targetId)));
+  assert.ok(placementTargets.includes("Snowman"));
+  assert.ok(placementTargets.length >= 2);
+});
+
 test("designer runtime constrains tag-driven execution plans to resolved metadata targets when prompt has no explicit target ids", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-9",
@@ -597,4 +653,78 @@ test("designer runtime preserves spatial layout selection when prompts mention f
   const placementTargets = Array.from(new Set(result.proposalBundle.executionPlan.effectPlacements.map((row) => row.targetId))).sort();
   assert.ok(placementTargets.includes("Border-01"));
   assert.ok(placementTargets.includes("Wreathes"));
+});
+
+test("designer runtime layers the lead target before support targets for lighting-language concepts", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-12",
+    sequenceRevision: "rev-12",
+    promptText: "Treat Snowman like the key light focus and let the border props act more like gentle fill in Chorus 1.",
+    goals: "Treat Snowman like the key light focus and let the border props act more like gentle fill in Chorus 1.",
+    selectedSections: ["Chorus 1"],
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "Border-01", name: "Border-01", type: "Model" },
+      { id: "Border-02", name: "Border-02", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [
+      { targetId: "Snowman", tags: ["focal", "character"] },
+      { targetId: "Border-01", tags: ["support", "perimeter"] },
+      { targetId: "Border-02", tags: ["support", "perimeter"] }
+    ],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  const snowmanLayers = Array.from(new Set(placements.filter((row) => row.targetId === "Snowman").map((row) => row.layerIndex))).sort();
+  const borderLayers = Array.from(new Set(placements.filter((row) => row.targetId === "Border-01").map((row) => row.layerIndex))).sort();
+  assert.deepEqual(snowmanLayers, [0, 1]);
+  assert.deepEqual(borderLayers, [0]);
+  assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => /focused|partial/i.test(String(row?.settingsIntent?.coverage || ""))));
+  assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => row.layerIntent?.blendRole === "support_fill"));
+});
+
+test("designer runtime keeps support targets lighter for single-section focal concepts", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-13",
+    sequenceRevision: "rev-13",
+    promptText: "Design a single Chorus 1 concept with Snowman leading and Star supporting softly.",
+    goals: "Design a single Chorus 1 concept with Snowman leading and Star supporting softly.",
+    selectedSections: ["Chorus 1"],
+    selectedTargetIds: ["Snowman", "Star"],
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  assert.equal(placements.filter((row) => row.targetId === "Snowman").length, 2);
+  assert.equal(placements.filter((row) => row.targetId === "Star").length, 1);
 });
