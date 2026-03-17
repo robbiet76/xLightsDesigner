@@ -22,6 +22,11 @@ By the end of the deep-training phase:
 - [x] Finalize whole-sequence pass rubric
 - [ ] Build eval sets for:
   - concept clarity
+  - prop understanding from xLights source data and metadata tags
+  - setting/layout awareness
+  - musical understanding beyond section labels
+  - stage-lighting reasoning
+  - composition reasoning
   - section contrast
   - focal hierarchy
   - target reuse balance
@@ -36,13 +41,19 @@ By the end of the deep-training phase:
 - [ ] Improve concept summaries so they are concise and actionable
 - [ ] Improve anchors so concepts can target sections, beats, chords, or global ranges appropriately
 - [ ] Improve target-group selection quality
+- [ ] Improve use of xLights source structure and metadata tags in concept selection
+- [ ] Improve user-guided metadata capture so tag refinement can affect later concepts
+- [ ] Improve setting/layout-aware concept selection based on prop position and visibility
 - [ ] Improve palette and motion-language consistency across a whole song
 - [ ] Improve focal vs support balance within and across concepts
+- [ ] Improve the designer's use of stage-lighting concepts where they materially improve sequencing choices
+- [ ] Improve the designer's use of composition principles where they materially improve sequencing choices
 
 ### C. Placement Quality
 
 - [ ] Increase use of explicit `effectPlacements[]` as the primary authored output
 - [ ] Improve exact timing-window quality within sections
+- [ ] Improve timing-window quality from beat, chord, phrase, and transition cues when section labels are insufficient
 - [ ] Improve multi-effect same-target layering quality
 - [ ] Improve per-effect settings intent quality
 - [ ] Improve layer/render intent quality
@@ -61,6 +72,7 @@ By the end of the deep-training phase:
 - [ ] Improve thematic continuity across the full pass
 - [ ] Improve restraint so the designer does not overfill dense sections
 - [ ] Improve escalation into late-song peaks and finales
+- [ ] Improve translation from musical structure into whole-song pacing and contrast
 
 ### F. Preference and Director Adaptation
 
@@ -69,7 +81,14 @@ By the end of the deep-training phase:
 - [ ] Make preference influence legible in review artifacts
 - [ ] Add evals for preference-aware but still fresh proposals
 
-### G. Live Validation Cadence
+### G. Knowledge and Context Inputs
+
+- [ ] Verify metadata tags needed for design reasoning are available from xLights source data or user dialog capture
+- [ ] Identify gaps where the app needs better musical-analysis outputs for training and eval
+- [ ] Identify which stage-lighting terms are allowed vocabulary versus unsupported stylistic noise
+- [ ] Identify which composition principles should be actively evaluated versus treated as optional language
+
+### H. Live Validation Cadence
 
 - [ ] Run concept-only review validations without apply
 - [ ] Run concept apply validations on selected concepts

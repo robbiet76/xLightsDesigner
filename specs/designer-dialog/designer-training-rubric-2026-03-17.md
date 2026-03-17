@@ -46,6 +46,13 @@ Core whole-pass categories:
 - Palette Continuity
 - Escalation and Restraint
 
+Cross-cutting evaluation lenses:
+- Prop Understanding
+- Setting and Layout Awareness
+- Musical Understanding
+- Stage Lighting Reasoning
+- Composition Reasoning
+
 ## Concept-Quality Rubric
 
 ### 1. Concept Clarity
@@ -152,6 +159,85 @@ Failure examples:
 - concept identity is replaced by command-like implementation notes
 - design review cannot be understood without Sequence detail
 
+## Cross-Cutting Evaluation Lenses
+
+These lenses apply across both concept-only and whole-sequence evals. They do not replace the main rubric categories; they explain how a reviewer should judge whether the designer is using the available information well.
+
+### 1. Prop Understanding
+
+Question:
+- does the designer demonstrate understanding of what the props are, how they are grouped, and what metadata tags imply about their role?
+
+Expected evidence:
+- xLights source structure and metadata tags influence target selection
+- target groups reflect real prop categories rather than arbitrary buckets
+- user-created or refined metadata is reflected in later concept choices
+
+Failure examples:
+- props are treated as interchangeable when source data clearly distinguishes them
+- metadata tags exist but do not influence design reasoning
+- concepts ignore obvious prop-role differences such as focal props vs perimeter props
+
+### 2. Setting and Layout Awareness
+
+Question:
+- does the designer understand where props live in the layout and how their physical position should affect use?
+
+Expected evidence:
+- layout position influences focal vs support decisions
+- high-visibility props are used differently from peripheral props
+- vertical, horizontal, center-stage, edge, and background roles are used intentionally
+
+Failure examples:
+- center/focal props are used like anonymous filler
+- edge props dominate when the concept calls for concentrated focus
+- spatial composition ignores the actual layout
+
+### 3. Musical Understanding
+
+Question:
+- does the designer demonstrate that musical structure is driving the design rather than acting as a loose label source?
+
+Expected evidence:
+- anchor choice matches the musical behavior requested
+- energy, phrasing, rhythm, harmonic movement, and transitions affect concept decisions
+- timing-window quality reflects actual musical events rather than arbitrary slices
+
+Failure examples:
+- concepts use section labels mechanically without musical justification
+- beat or chord-sensitive requests stay section-only
+- placement timing does not respond to musical changes
+
+### 4. Stage Lighting Reasoning
+
+Question:
+- can the designer relate stage-lighting concepts and best practices to sequencing decisions in a meaningful way?
+
+Expected evidence:
+- concepts use recognizable ideas such as key/fill contrast, backlight-style support, silhouette, punch, wash, accent, build, and blackout-style restraint appropriately
+- focal hierarchy and layering reflect lighting logic, not just random effect stacking
+- terminology is applied correctly and improves the design rather than decorating the explanation
+
+Failure examples:
+- lighting terms are used superficially or incorrectly
+- concept language references lighting ideas but the target/layer choices do not support them
+- every concept behaves like a flat wash regardless of stated lighting intent
+
+### 5. Composition Reasoning
+
+Question:
+- can the designer relate visual composition principles to the design in a way that changes what gets sequenced?
+
+Expected evidence:
+- concepts reflect balance, contrast, rhythm, repetition, emphasis, negative space, framing, and progression where appropriate
+- target selection and coverage density show compositional restraint
+- palette and motion decisions reinforce visual composition rather than compete with it
+
+Failure examples:
+- composition language is absent from the resulting choices
+- everything is treated as equally important
+- the pass lacks framing, balance, or intentional negative space
+
 ## Whole-Sequence Pass Rubric
 
 ### 1. Section Contrast
@@ -217,6 +303,14 @@ Each eval set should intentionally include:
 - one global or cross-section case
 - one concept revision case where only one concept should change
 - one broad pass where restraint matters more than density
+- one metadata-sensitive prop-selection case
+- one layout-sensitive focal-composition case
+- one music-driven accent case where section labels alone are insufficient
+- one case that explicitly references stage-lighting terminology
+- one case that explicitly references composition principles
+
+Review note:
+- each eval sample should record which cross-cutting lenses are materially in play so scores can be explained against the same expectations
 
 ## Promotion Thresholds
 
