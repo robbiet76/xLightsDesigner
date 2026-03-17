@@ -470,6 +470,8 @@ const defaultState = {
   compareVersion: null
 };
 
+const CHAT_HISTORY_LIMIT = 100;
+
 function normalizeConfiguredEndpoint(endpoint) {
   const raw = String(endpoint || "").trim();
   if (!raw) return PREFERRED_XLIGHTS_ENDPOINT;
@@ -4978,7 +4980,7 @@ function addChatMessage(who, text) {
     at: new Date().toISOString()
   };
   if (!message.text) return;
-  state.chat = [...(state.chat || []), message].slice(-200);
+  state.chat = [...(state.chat || []), message].slice(-CHAT_HISTORY_LIMIT);
 }
 
 function getTeamChatIdentities() {
@@ -5121,7 +5123,7 @@ function addStructuredChatMessage(who, text, options = {}) {
         handledBy,
         addressedTo: "",
         artifact: null
-      }].slice(-200);
+      }].slice(-CHAT_HISTORY_LIMIT);
       markTeamChatRoleIntroduction(handledBy);
     }
   }
@@ -5137,7 +5139,7 @@ function addStructuredChatMessage(who, text, options = {}) {
     artifact: isPlainObject(options.artifact) ? options.artifact : null
   };
   if (!message.text) return;
-  state.chat = [...(state.chat || []), message].slice(-200);
+  state.chat = [...(state.chat || []), message].slice(-CHAT_HISTORY_LIMIT);
 }
 
 function buildChatArtifactCard(artifactType = "", payload = {}) {
