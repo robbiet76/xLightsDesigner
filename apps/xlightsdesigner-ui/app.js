@@ -1042,6 +1042,19 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function hydrateIntentHandoffExecutionStrategy(intentHandoff = null, proposalBundle = null) {
+  if (!isPlainObject(intentHandoff)) return intentHandoff;
+  if (isPlainObject(intentHandoff.executionStrategy)) return intentHandoff;
+  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === "object"
+    ? proposalBundle.executionPlan
+    : null;
+  if (!executionPlan) return intentHandoff;
+  return {
+    ...intentHandoff,
+    executionStrategy: structuredClone(executionPlan)
+  };
+}
+
 function getAgentHandoffReadyCount() {
   let count = 0;
   for (const contract of AGENT_HANDOFF_CONTRACTS) {
@@ -3314,7 +3327,10 @@ async function onGenerate(intentOverride = "", options = {}) {
       ? "direct technical sequencing request normalized into canonical intent handoff"
       : "designer runtime built brief + proposal"
   );
-  const intentHandoff = proposalOrchestration.intentHandoff;
+  const intentHandoff = hydrateIntentHandoffExecutionStrategy(
+    proposalOrchestration.intentHandoff,
+    proposalOrchestration.proposalBundle
+  );
   state.creative = state.creative || {};
   state.creative.intentHandoff = isPlainObject(intentHandoff) ? structuredClone(intentHandoff) : null;
   const intentSet = setAgentHandoff(
@@ -10626,6 +10642,22 @@ async function analyzeAutomationAudio(payload = {}) {
 }
 
 function getAutomationAgentRuntimeSnapshot() {
+  const summarizeExecutionStrategy = (payload = null) => {
+    const strategy = isPlainObject(payload?.executionStrategy) ? payload.executionStrategy : null;
+    if (!strategy) return null;
+    const sectionPlans = Array.isArray(strategy.sectionPlans) ? strategy.sectionPlans : [];
+    const effectPlacements = Array.isArray(strategy.effectPlacements) ? strategy.effectPlacements : [];
+    const distinctEffects = Array.from(new Set(
+      effectPlacements.map((row) => String(row?.effectName || "").trim()).filter(Boolean)
+    ));
+    return {
+      passScope: String(strategy.passScope || "").trim(),
+      sectionPlanCount: sectionPlans.length,
+      effectPlacementCount: effectPlacements.length,
+      distinctEffects
+    };
+  };
+
   const summarizeHandoff = (contract = "") => {
     const row = agentRuntime.handoffs?.[String(contract || "").trim()] || null;
     return row ? {
@@ -10640,7 +10672,8 @@ function getAutomationAgentRuntimeSnapshot() {
             goal: String(row.payload.goal || row.payload.summary || ""),
             sections: Array.isArray(row.payload?.scope?.sections)
               ? row.payload.scope.sections
-              : (Array.isArray(row.payload?.structure?.sections) ? row.payload.structure.sections.length : 0)
+              : (Array.isArray(row.payload?.structure?.sections) ? row.payload.structure.sections.length : 0),
+            executionStrategy: summarizeExecutionStrategy(row.payload)
           }
         : null
     } : null;
