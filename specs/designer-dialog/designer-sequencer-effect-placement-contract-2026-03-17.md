@@ -524,6 +524,17 @@ The current implementation now covers:
   - `Shimmer`
   - `Bars`
   - `On`
+  - `Butterfly`
+  - `Circles`
+  - `Curtain`
+  - `Fan`
+  - `Fire`
+  - `Morph`
+  - `Meteors`
+  - `Pinwheel`
+  - `Snowflakes`
+  - `Spirals`
+  - `VU Meter`
 
 Current translation coverage includes:
 - exact placement windows
@@ -535,6 +546,8 @@ Current translation coverage includes:
 - selected effect-specific parameters where the effect definition catalog exposes matching fields
 
 This is enough to continue designer-led implementation work, but it is not yet full-library coverage.
+
+The live xLights effect-definition catalog was re-audited on 2026-03-17 before expanding this list. The added families above are all backed by real `effects.getDefinition` parameter shapes from the running xLights instance.
 
 Still required for complete coverage:
 - expand effect-family mappings beyond the initial high-value set
