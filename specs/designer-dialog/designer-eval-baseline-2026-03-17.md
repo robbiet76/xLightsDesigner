@@ -20,9 +20,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `28`
-- supported by current offline runner: `28`
-- passed: `28`
+- total cases: `32`
+- supported by current offline runner: `32`
+- passed: `32`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -37,11 +37,12 @@ Interpretation:
 
 Current artistic averages from the same corpus:
 - motion language: `3.00`
-- stage-lighting quality: `3.00`
+- stage-lighting quality: `2.91`
 - composition quality: `3.00`
 - settings/render plausibility: `3.00`
 - concept-summary quality: `3.00`
 - target-selection quality: `3.00`
+- thematic continuity: `2.83`
 
 Interpretation:
 - the current offline heuristic layer is fully green on the canonical corpus
@@ -59,6 +60,9 @@ The runner and designer logic now cover:
 - richer broad-pass family diversity for rhythm/layout/lighting prompts
 - offline revise-case scoring through the same merge semantics used by the app revision path
 - beat-, chord-, and phrase-anchored concept cases with cue-window placements
+- metadata-refinement sensitivity where changed tags produce changed target choices
+- explicit `effectPlacements[]` as the primary authored output
+- overlay-window shaping and same-target multi-effect layering checks
 
 ## Current Meaning Of A Pass
 
@@ -76,9 +80,28 @@ It does **not** yet mean:
 - settings/render choices are fully tuned
 - live applied whole-sequence output is artistically complete
 
+## Live Validation Promotion Gate
+
+Live validation status on the current promoted baseline:
+- concept-only review validation: passed
+- concept apply validation on selected concept: passed
+  - `D1.0`
+  - anchor: `Chorus 1`
+  - targets: `Snowman`, `Star`
+  - families: `Bars`, `Meteors`
+- whole-sequence apply validation on fresh sequence: passed
+  - sequence: `API-Whole-Sequence-Validation-20260317-193350`
+  - applied owned batch plan steps: `49`
+  - validated placements: `47/47`
+
+Interpretation:
+- the current promoted baseline is now green on both the offline corpus and the live apply cadence
+- stable improvements from the recent training slices are promoted into the baseline
+- the next work should focus on deeper artistic tuning, not more framework churn
+
 ## Next Training Priorities
 
-1. keep the current `25/25` corpus as the structural regression gate
+1. keep the current `32/32` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

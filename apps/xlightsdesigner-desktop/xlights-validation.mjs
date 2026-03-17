@@ -112,11 +112,16 @@ export function buildXLightsSequenceState({
 }
 
 function normalizeQuery(query = {}) {
+  const normalizeOptionalNumber = (value) => {
+    if (value == null || value === "") return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  };
   return {
     modelName: str(query?.modelName),
-    layerIndex: Number.isFinite(Number(query?.layerIndex)) ? Number(query.layerIndex) : null,
-    startMs: Number.isFinite(Number(query?.startMs)) ? Number(query.startMs) : null,
-    endMs: Number.isFinite(Number(query?.endMs)) ? Number(query.endMs) : null,
+    layerIndex: normalizeOptionalNumber(query?.layerIndex),
+    startMs: normalizeOptionalNumber(query?.startMs),
+    endMs: normalizeOptionalNumber(query?.endMs),
     effectName: str(query?.effectName)
   };
 }
@@ -141,8 +146,18 @@ function normalizeEffect(effect = {}) {
   };
 }
 
+function modelNamesMatch(queryName = "", effectName = "") {
+  const left = str(queryName);
+  const right = str(effectName);
+  if (!left || !right) return left === right;
+  if (left === right) return true;
+  const leftLeaf = left.split("/").pop();
+  const rightLeaf = right.split("/").pop();
+  return leftLeaf === rightLeaf;
+}
+
 function matchesEffect(query, effect) {
-  if (query.modelName && query.modelName !== effect.modelName) return false;
+  if (query.modelName && !modelNamesMatch(query.modelName, effect.modelName)) return false;
   if (query.layerIndex != null && query.layerIndex !== effect.layerIndex) return false;
   if (query.effectName && query.effectName !== effect.effectName) return false;
   if (query.startMs != null && query.startMs !== effect.startMs) return false;
@@ -364,6 +379,78 @@ export function validateDesignConceptState({
     summary: issues.length === 0
       ? "Design concept validation checks passed."
       : `${issues.length} design concept validation issue${issues.length === 1 ? "" : "s"} detected.`,
+    issues,
+    refs: {
+      designDashboard: design?.contract || null,
+      reviewDashboard: review?.contract || null,
+      sequenceDashboard: sequence?.contract || null,
+      xlightsSequenceState: xlightsSequenceState?.contract || null,
+      xlightsEffectOccupancyState: xlightsEffectOccupancyState?.contract || null
+    }
+  };
+}
+
+export function validateWholeSequenceApplyState({
+  expected = {},
+  pageStates = {},
+  xlightsSequenceState = null,
+  xlightsEffectOccupancyState = null,
+  effectPlacementCount = 0
+} = {}) {
+  const design = pageStates?.design || {};
+  const review = pageStates?.review || {};
+  const sequence = pageStates?.sequence || {};
+  const project = pageStates?.project || {};
+  const issues = [];
+
+  const expectedSequenceName = str(expected.sequenceName);
+  if (
+    expectedSequenceName &&
+    normalizeSequenceName(project?.data?.sequenceContext?.activeSequence) !== normalizeSequenceName(expectedSequenceName)
+  ) {
+    issues.push({ code: "wrong_active_sequence", message: `Active sequence mismatch: expected ${expectedSequenceName}.` });
+  }
+
+  const conceptRows = arr(design?.data?.executionPlan?.conceptRows);
+  const reviewRows = arr(review?.data?.rows);
+  const sequenceRows = arr(sequence?.data?.rows);
+  const minConceptCount = Math.max(1, Number(expected?.minConceptCount || 1));
+  const minPlacementCount = Math.max(1, Number(expected?.minPlacementCount || 1));
+
+  if (conceptRows.length < minConceptCount) {
+    issues.push({ code: "insufficient_design_concepts", message: `Expected at least ${minConceptCount} design concepts.` });
+  }
+  if (reviewRows.length < minConceptCount) {
+    issues.push({ code: "insufficient_review_groups", message: `Expected at least ${minConceptCount} review groups.` });
+  }
+  if (!sequenceRows.length) {
+    issues.push({ code: "missing_sequence_rows", message: "Sequence dashboard has no translated rows." });
+  }
+  if (Number(effectPlacementCount || 0) < minPlacementCount) {
+    issues.push({ code: "insufficient_effect_placements", message: `Expected at least ${minPlacementCount} effect placements.` });
+  }
+
+  if (xlightsSequenceState && !xlightsSequenceState.sequence?.isOpen) {
+    issues.push({ code: "no_open_sequence", message: "xLights reports no open sequence." });
+  }
+
+  if (xlightsEffectOccupancyState) {
+    const queryCount = Number(xlightsEffectOccupancyState?.queryCount || 0);
+    const matchedCount = Number(xlightsEffectOccupancyState?.matchedCount || 0);
+    if (queryCount <= 0) {
+      issues.push({ code: "missing_occupancy_queries", message: "No xLights occupancy queries were generated for the whole-sequence validation." });
+    } else if (matchedCount < queryCount) {
+      issues.push({ code: "whole_sequence_effects_not_fully_present_in_xlights", message: `xLights matched ${matchedCount}/${queryCount} expected placements.` });
+    }
+  }
+
+  return {
+    contract: "whole_sequence_apply_validation_state_v1",
+    version: "1.0",
+    ok: issues.length === 0,
+    summary: issues.length === 0
+      ? "Whole-sequence apply validation checks passed."
+      : `${issues.length} whole-sequence apply validation issue${issues.length === 1 ? "" : "s"} detected.`,
     issues,
     refs: {
       designDashboard: design?.contract || null,

@@ -20,6 +20,7 @@ import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs"
 import {
   validateDirectSequencePromptState,
   validateDesignConceptState,
+  validateWholeSequenceApplyState,
   buildXLightsSequenceState,
   buildXLightsTimingState,
   buildXLightsEffectOccupancyState
@@ -172,6 +173,18 @@ function buildEffectQueriesFromSequenceRows(rows = [], expected = {}) {
     .filter((row) => row.modelName && row.effectName);
 }
 
+function buildEffectQueriesFromPlacements(placements = []) {
+  return arr(placements)
+    .map((row) => ({
+      modelName: str(row?.targetId || row?.modelName),
+      layerIndex: Number.isFinite(Number(row?.layerIndex)) ? Number(row.layerIndex) : null,
+      effectName: str(row?.effectName),
+      startMs: Number.isFinite(Number(row?.startMs)) ? Number(row.startMs) : null,
+      endMs: Number.isFinite(Number(row?.endMs)) ? Number(row.endMs) : null
+    }))
+    .filter((row) => row.modelName && row.effectName);
+}
+
 async function readXLightsSequenceStateViaCurl(endpoint = "") {
   const [openResp, revisionResp, settingsResp, modelsResp, submodelsResp, displayResp, tracksResp] = await Promise.all([
     postXLightsCommand(endpoint, "sequence.getOpen", {}),
@@ -291,6 +304,34 @@ async function runDesignConceptValidationFromDesktop(expected = {}) {
   };
 }
 
+async function runWholeSequenceApplyValidationFromDesktop(expected = {}) {
+  const snapshot = await getRendererValidationSnapshot();
+  const endpoint = str(snapshot?.endpoint);
+  const pageStates = snapshot?.pageStates || {};
+  const xlightsSequenceState = await readXLightsSequenceStateViaCurl(endpoint);
+  const placements = arr(snapshot?.handoffs?.intentHandoff?.executionStrategy?.effectPlacements);
+  const queries = buildEffectQueriesFromPlacements(placements);
+  const xlightsEffectOccupancyState = queries.length
+    ? await readXLightsEffectOccupancyStateViaCurl(endpoint, queries)
+    : null;
+  const validation = validateWholeSequenceApplyState({
+    expected,
+    pageStates,
+    xlightsSequenceState,
+    xlightsEffectOccupancyState,
+    effectPlacementCount: placements.length
+  });
+  return {
+    contract: "whole_sequence_apply_validation_run_v1",
+    version: "1.0",
+    pageStates,
+    effectPlacementCount: placements.length,
+    xlightsSequenceState,
+    xlightsEffectOccupancyState,
+    validation
+  };
+}
+
 async function invokeRendererAutomation(action = "", payload = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
@@ -337,6 +378,9 @@ async function processAutomationRequests() {
       }
       if (action === "runDesignConceptValidation") {
         return runDesignConceptValidationFromDesktop(request?.payload || {});
+      }
+      if (action === "runWholeSequenceApplyValidation") {
+        return runWholeSequenceApplyValidationFromDesktop(request?.payload || {});
       }
       throw new Error(`Unknown automation action: ${action || "missing"}`);
     }
