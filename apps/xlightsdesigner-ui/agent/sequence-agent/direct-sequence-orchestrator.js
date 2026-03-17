@@ -39,6 +39,7 @@ function makeUserDesignId(existingDesignIds = []) {
 
 function buildUserExecutionStrategy({
   designId = "",
+  designRevision = 0,
   sections = [],
   targetIds = []
 } = {}) {
@@ -47,6 +48,7 @@ function buildUserExecutionStrategy({
   const passScope = normalizedSections.length > 1 ? "multi_section" : "single_section";
   const sectionPlans = (normalizedSections.length ? normalizedSections : ["General"]).map((section) => ({
     designId,
+    designRevision: Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0,
     designAuthor: "user",
     section,
     energy: "",
@@ -343,6 +345,7 @@ export function executeDirectSequenceRequestOrchestration({
 
   const requestedEffectPhrase = detectRequestedEffectPhrase(promptText);
   const designId = str(designIdOverride) || makeUserDesignId(existingDesignIds);
+  const designRevision = 0;
   const compoundRequest = detectCompoundDirectRequest({
     promptText,
     explicitSections,
@@ -450,6 +453,7 @@ export function executeDirectSequenceRequestOrchestration({
     },
     executionPlan: buildUserExecutionStrategy({
       designId,
+      designRevision,
       sections: effectiveSections,
       targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
     })

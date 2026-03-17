@@ -561,6 +561,7 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
         placements.push({
           placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}`,
           designId: str(plan?.designId),
+          designRevision: Number.isInteger(Number(plan?.designRevision)) ? Number(plan.designRevision) : 0,
           designAuthor: str(plan?.designAuthor || "designer"),
           targetId,
           layerIndex: effectIndex,
@@ -661,6 +662,7 @@ function buildDesignerExecutionPlan({
       const density = str(match?.density);
       return {
         designId: `DES-${String(idx + 1).padStart(3, "0")}`,
+        designRevision: 0,
         designAuthor: "designer",
         section: str(label),
         energy,

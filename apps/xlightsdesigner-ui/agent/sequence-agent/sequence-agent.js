@@ -66,6 +66,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
     implementationMode: normText(strategy.implementationMode),
     routePreference: normText(strategy.routePreference),
     designId: normText(strategy.designId),
+    designRevision: Number.isInteger(Number(strategy.designRevision)) ? Number(strategy.designRevision) : 0,
     designAuthor: normText(strategy.designAuthor),
     shouldUseFullSongStructureTrack: Boolean(strategy.shouldUseFullSongStructureTrack),
     sectionCount: Number(strategy.sectionCount || 0),
@@ -84,6 +85,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
         return {
           placementId: normText(row?.placementId) || `placement-${index + 1}`,
           designId: normText(row?.designId),
+          designRevision: Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0,
           designAuthor: normText(row?.designAuthor),
           targetId,
           layerIndex,
@@ -112,6 +114,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
     sectionPlans: normArray(strategy.sectionPlans)
       .map((row) => ({
         designId: normText(row?.designId),
+        designRevision: Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0,
         designAuthor: normText(row?.designAuthor),
         section: normText(row?.section),
         energy: normText(row?.energy),
@@ -137,19 +140,23 @@ function decorateCommandsWithDesignMetadata(commands = [], executionStrategy = {
     ...normArray(executionStrategy?.effectPlacements).map((row) => normText(row?.designAuthor))
   ].filter(Boolean)));
   const designId = defaultDesignIds.length === 1 ? defaultDesignIds[0] : "";
+  const designRevision = Number.isInteger(Number(executionStrategy?.designRevision)) ? Number(executionStrategy.designRevision) : 0;
   const designAuthor = defaultDesignAuthors.length === 1 ? defaultDesignAuthors[0] : "";
-  if (!designId && !designAuthor) return normalized;
+  if (!designId && !designAuthor && designRevision === 0) return normalized;
   return normalized.map((command) => {
     const currentDesignId = normText(command?.designId);
+    const currentDesignRevision = Number.isInteger(Number(command?.designRevision)) ? Number(command.designRevision) : 0;
     const currentIntent = command?.intent && typeof command.intent === "object" ? command.intent : {};
     const currentDesignAuthor = normText(command?.designAuthor || currentIntent?.designAuthor);
     return {
       ...command,
       designId: currentDesignId || designId,
+      designRevision: currentDesignRevision || designRevision,
       designAuthor: currentDesignAuthor || designAuthor,
       intent: {
         ...currentIntent,
         designId: normText(currentIntent?.designId) || currentDesignId || designId,
+        designRevision: Number.isInteger(Number(currentIntent?.designRevision)) ? Number(currentIntent.designRevision) : (currentDesignRevision || designRevision),
         designAuthor: normText(currentIntent?.designAuthor) || currentDesignAuthor || designAuthor
       }
     };
@@ -408,6 +415,7 @@ function buildCommandsFromEffectPlacements({
     return {
       id: placement.placementId || `effect.${index + 1}`,
       designId: normText(placement?.designId),
+      designRevision: Number.isInteger(Number(placement?.designRevision)) ? Number(placement.designRevision) : 0,
       designAuthor: normText(placement?.designAuthor),
       dependsOn: [
         ...(marks.length ? ["timing.marks.insert"] : []),
@@ -433,6 +441,7 @@ function buildCommandsFromEffectPlacements({
       },
       intent: {
         designId: normText(placement?.designId),
+        designRevision: Number.isInteger(Number(placement?.designRevision)) ? Number(placement.designRevision) : 0,
         designAuthor: normText(placement?.designAuthor),
         settingsIntent: placement.settingsIntent,
         paletteIntent: placement.paletteIntent,

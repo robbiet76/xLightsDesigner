@@ -33,7 +33,7 @@ Exit gate:
 - [x] Carry stable `designId` through designer, review, and sequence flows
 - [x] Carry `designAuthor` through the same chain
 - [x] Use compact display labels in the UI
-- [ ] Add first-class `designRevision`
+- [x] Add first-class `designRevision`
 - [ ] Add derived `designLabel` based on true revision state, not default `0`
 - [ ] Define numeric sort rules for concept id + revision everywhere the UI sorts concepts
 

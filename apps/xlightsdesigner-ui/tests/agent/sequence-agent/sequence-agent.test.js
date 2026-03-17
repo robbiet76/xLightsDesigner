@@ -1626,13 +1626,17 @@ test("sequence_agent honors explicit effect placements over section-level infere
   );
   assert.equal(effectCommands[0].intent.settingsIntent.intensity, "high");
   assert.equal(effectCommands[0].designId, "DES-001");
+  assert.equal(effectCommands[0].designRevision, 0);
   assert.equal(effectCommands[0].designAuthor, "designer");
   assert.equal(effectCommands[0].intent.designId, "DES-001");
+  assert.equal(effectCommands[0].intent.designRevision, 0);
   assert.equal(effectCommands[0].intent.designAuthor, "designer");
   assert.equal(effectCommands[0].intent.layerIntent.priority, "foreground");
   assert.equal(effectCommands[1].designId, "DES-002");
+  assert.equal(effectCommands[1].designRevision, 0);
   assert.equal(effectCommands[1].designAuthor, "designer");
   assert.equal(effectCommands[1].intent.designId, "DES-002");
+  assert.equal(effectCommands[1].intent.designRevision, 0);
   assert.equal(effectCommands[1].intent.designAuthor, "designer");
   assert.equal(effectCommands[1].intent.renderIntent.groupPolicy, "preserve_group_rendering");
   assert.equal(effectCommands[0].params.settings.C_SLIDER_Brightness, 125);
@@ -1705,8 +1709,10 @@ test("sequence_agent decorates direct synthesized commands with user design meta
   assert.ok(effectCommands.length >= 1);
   for (const command of effectCommands) {
     assert.equal(command.designId, "DES-USER-001");
+    assert.equal(command.designRevision, 0);
     assert.equal(command.designAuthor, "user");
     assert.equal(command.intent.designId, "DES-USER-001");
+    assert.equal(command.intent.designRevision, 0);
     assert.equal(command.intent.designAuthor, "user");
   }
 });

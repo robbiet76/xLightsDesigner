@@ -47,7 +47,9 @@ test("direct sequence orchestrator bypasses designer scaffolding and emits canon
   assert.ok(result.proposalBundle.executionPlan);
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designAuthor, "user");
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designId, "DES-001");
+  assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designRevision, 0);
   assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designAuthor, "user");
+  assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designRevision, 0);
   assert.equal(result.proposalBundle.guidedQuestions.length, 0);
   assert.match(result.proposalLines[0], /General \/ Border-01 \/ apply On effect in green for 30000 ms starting at 0 ms/i);
   assert.deepEqual(validateAgentHandoff("intent_handoff_v1", result.intentHandoff), []);
@@ -72,7 +74,9 @@ test("direct sequence orchestrator allocates the next short design id from exist
 
   assert.equal(result.ok, true);
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designId, "DES-010");
+  assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designRevision, 0);
   assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designId, "DES-010");
+  assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designRevision, 0);
 });
 
 test("direct sequence orchestrator blocks non-writable layout-only targets", () => {

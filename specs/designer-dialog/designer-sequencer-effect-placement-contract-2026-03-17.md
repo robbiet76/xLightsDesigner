@@ -283,6 +283,7 @@ Each placement should include:
 Every `effectPlacements[]` item must provide:
 - `placementId`
 - `designId`
+- `designRevision`
 - `designAuthor`
 - `targetId`
 - `layerIndex`
@@ -344,6 +345,7 @@ The contract must allow multiple placements that share:
 ### Design IDs tie conceptual design to execution
 
 Every conceptual design group must have a stable `designId`.
+Every conceptual design group must also carry a numeric `designRevision`.
 Every conceptual design group must also carry a `designAuthor`.
 
 `designId` is a stable concept identifier, not a timestamp-derived event id.
@@ -354,7 +356,7 @@ The visible/current label should remain short and human-readable, for example:
 
 Recommended split:
 - `designId`: stable internal concept identity
-- `designRevision`: separate integer revision field
+- `designRevision`: separate integer revision field starting at `0`
 - `designLabel`: derived display label such as `D1.0`
 
 Revision history must not be encoded by changing the `designId` format.

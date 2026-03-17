@@ -281,7 +281,9 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.deepEqual(sectionPlans[0].targetIds.slice(0, 2), ["AllModels", "AllModels_NoFloods"]);
   assert.ok(sectionPlans[0].targetIds.length >= 2);
   assert.equal(sectionPlans[0].designId, "DES-001");
+  assert.equal(sectionPlans[0].designRevision, 0);
   assert.equal(sectionPlans[2].designId, "DES-003");
+  assert.equal(sectionPlans[2].designRevision, 0);
   assert.ok(sectionPlans[2].targetIds.includes("Snowman"));
   assert.ok(sectionPlans[2].targetIds.includes("PorchTree"));
   assert.deepEqual(sectionPlans[0].effectHints, ["Color Wash", "Candle"]);
@@ -336,7 +338,9 @@ test("designer runtime emits exact effect placements when analyzed section timin
   const introPrimary = placements.find((row) => row.timingContext?.anchorLabel === "Intro" && row.layerIndex === 0);
   const chorusOverlay = placements.find((row) => row.timingContext?.anchorLabel === "Chorus 1" && row.layerIndex === 1);
   assert.equal(introPrimary.designId, "DES-001");
+  assert.equal(introPrimary.designRevision, 0);
   assert.equal(chorusOverlay.designId, "DES-002");
+  assert.equal(chorusOverlay.designRevision, 0);
   assert.equal(introPrimary.startMs, 0);
   assert.equal(introPrimary.endMs, 10000);
   assert.equal(introPrimary.timingContext.alignmentMode, "section_span");
