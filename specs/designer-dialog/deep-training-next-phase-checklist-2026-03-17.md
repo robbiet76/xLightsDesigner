@@ -94,7 +94,7 @@ By the end of the deep-training phase:
 - [ ] Run concept-only review validations without apply
 - [ ] Run concept apply validations on selected concepts
 - [ ] Run whole-sequence apply validations on fresh sequences
-- [ ] Score outputs against the rubric after each training slice
+- [x] Score outputs against the rubric after each training slice
 - [ ] Promote only stable improvements into the training baseline
 
 ## Principle

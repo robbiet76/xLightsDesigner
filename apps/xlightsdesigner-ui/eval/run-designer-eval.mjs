@@ -337,6 +337,197 @@ function structuralScore({ ok, failures = [], checksPassed = 0, checksTotal = 0 
   return 1;
 }
 
+function normalizeSpeedValue(speed = "") {
+  const lookup = {
+    slow: 1,
+    medium: 2,
+    medium_high: 2,
+    medium_fast: 3,
+    fast: 4
+  };
+  return lookup[str(speed)] || 0;
+}
+
+function average(values = []) {
+  const nums = arr(values).map((value) => Number(value)).filter((value) => Number.isFinite(value));
+  if (!nums.length) return 0;
+  return nums.reduce((sum, value) => sum + value, 0) / nums.length;
+}
+
+function sectionOrderIndex(label = "") {
+  const normalized = str(label).toLowerCase();
+  if (!normalized) return 999;
+  if (normalized.includes("intro")) return 0;
+  if (normalized.includes("verse")) return 1;
+  if (normalized.includes("chorus 1")) return 2;
+  if (normalized.includes("bridge")) return 3;
+  if (normalized.includes("final chorus")) return 4;
+  if (normalized.includes("outro")) return 5;
+  return 999;
+}
+
+function buildArtisticContext({ summary = "", proposalLines = [], executionPlan = null, lenses = [], promptText = "" }) {
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : {};
+  const placements = arr(plan.effectPlacements);
+  const sectionPlans = arr(plan.sectionPlans);
+  const text = `${str(promptText)}\n${str(summary)}\n${arr(proposalLines).join("\n")}`.toLowerCase();
+  const motionValues = uniq(placements.map((row) => row?.settingsIntent?.motion));
+  const effectFamilies = uniq(placements.map((row) => row?.effectName));
+  const layerCount = uniq(placements.map((row) => `${str(row?.targetId)}:${Number(row?.layerIndex)}`)).length;
+  const designIds = uniq(sectionPlans.map((row) => row?.designId));
+  const sectionLabels = uniq(sectionPlans.map((row) => row?.section));
+  const renderPolicies = uniq(placements.map((row) => row?.renderIntent?.expansionPolicy || row?.renderIntent?.groupPolicy));
+  const coverageValues = uniq(placements.map((row) => row?.settingsIntent?.coverage));
+  const speedBySection = {};
+  for (const placement of placements) {
+    const label = str(placement?.timingContext?.anchorLabel);
+    if (!label) continue;
+    if (!speedBySection[label]) speedBySection[label] = [];
+    speedBySection[label].push(normalizeSpeedValue(placement?.settingsIntent?.speed));
+  }
+  const sortedSections = Object.keys(speedBySection)
+    .sort((a, b) => sectionOrderIndex(a) - sectionOrderIndex(b));
+  const sectionSpeedAverages = sortedSections.map((label) => ({
+    section: label,
+    averageSpeed: Number(average(speedBySection[label]).toFixed(2))
+  }));
+  return {
+    text,
+    placements,
+    sectionPlans,
+    motionValues,
+    effectFamilies,
+    layerCount,
+    designIds,
+    sectionLabels,
+    renderPolicies,
+    coverageValues,
+    sectionSpeedAverages,
+    lenses: new Set(arr(lenses).map((value) => str(value)))
+  };
+}
+
+function scoreThresholds({ value, weak = 1, acceptable = 2, strong = 3 }) {
+  if (value >= strong) return 3;
+  if (value >= acceptable) return 2;
+  if (value >= weak) return 1;
+  return 0;
+}
+
+function scoreMotionLanguage(context) {
+  const applicable = context.lenses.has("Musical Understanding") || /rhythm|pulse|motion|rise|build|escalat/.test(context.text);
+  if (!applicable) return null;
+  const singleAnchor = context.sectionLabels.length <= 1;
+  const compactMultiSection = context.sectionLabels.length === 2;
+  const rhythmicDemand = context.lenses.has("Musical Understanding") || /rhythm|pulse|rise|build|escalat|drive/.test(context.text);
+  let signal = 0;
+  if (context.motionValues.length >= 2) signal += 1;
+  if (context.motionValues.some((value) => /rhythmic|sweep|wash/.test(value))) signal += 1;
+  const introSpeed = context.sectionSpeedAverages.find((row) => /intro/i.test(row.section))?.averageSpeed || 0;
+  const finalSpeed = context.sectionSpeedAverages.find((row) => /final chorus|chorus/i.test(row.section))?.averageSpeed || 0;
+  if (rhythmicDemand) {
+    if (finalSpeed > introSpeed || context.motionValues.some((value) => /rhythmic/.test(value))) signal += 1;
+    if (compactMultiSection && context.effectFamilies.length >= 3) signal += 1;
+  } else if (singleAnchor) {
+    if (context.effectFamilies.length >= 2) signal += 1;
+  } else if (context.sectionSpeedAverages.length > 1) {
+    const averages = context.sectionSpeedAverages.map((row) => row.averageSpeed);
+    if (Math.max(...averages) > Math.min(...averages)) signal += 1;
+  }
+  if (context.effectFamilies.length >= (singleAnchor ? 2 : compactMultiSection ? 3 : 4)) signal += 1;
+  return {
+    applicable: true,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: singleAnchor || compactMultiSection ? 3 : 4 }),
+    signals: {
+      singleAnchor,
+      compactMultiSection,
+      rhythmicDemand,
+      motionModes: context.motionValues,
+      sectionSpeedAverages: context.sectionSpeedAverages,
+      effectFamilyCount: context.effectFamilies.length
+    }
+  };
+}
+
+function scoreStageLighting(context) {
+  const applicable = context.lenses.has("Stage Lighting Reasoning") || /key|fill|wash|punch|silhouette|lighting/.test(context.text);
+  if (!applicable) return null;
+  let signal = 0;
+  if (/key|fill|support|focus|wash|punch/.test(context.text)) signal += 1;
+  if (context.layerCount >= Math.max(2, context.designIds.length)) signal += 1;
+  if (context.effectFamilies.some((value) => /Color Wash|Candle|Shimmer|Wave/.test(value))) signal += 1;
+  if (context.coverageValues.some((value) => /focused|partial/.test(value))) signal += 1;
+  return {
+    applicable: true,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    signals: {
+      layerCount: context.layerCount,
+      effectFamilies: context.effectFamilies,
+      coverageValues: context.coverageValues
+    }
+  };
+}
+
+function scoreComposition(context) {
+  const applicable = context.lenses.has("Composition Reasoning") || /negative space|frame|framing|perimeter|centerpiece|balance|contrast|left side|right side|foreground|background|depth/.test(context.text);
+  if (!applicable) return null;
+  let signal = 0;
+  if (/negative space|frame|framing|perimeter|centerpiece|balance|contrast|left side|right side|foreground|background|depth/.test(context.text)) signal += 1;
+  if (context.coverageValues.some((value) => /focused|partial/.test(value))) signal += 1;
+  if (context.renderPolicies.some((value) => /no_expand|preserve/.test(value))) signal += 1;
+  const selectiveTargets = context.placements.filter((row) => !/AllModels/.test(str(row?.targetId))).length;
+  if (selectiveTargets >= Math.max(2, context.placements.length * 0.25)) signal += 1;
+  return {
+    applicable: true,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    signals: {
+      renderPolicies: context.renderPolicies,
+      coverageValues: context.coverageValues,
+      selectiveTargetPlacements: selectiveTargets
+    }
+  };
+}
+
+function scoreSettingsRenderPlausibility(context) {
+  const applicable = true;
+  const placements = context.placements;
+  const completePlacements = placements.filter((row) => row?.settingsIntent && row?.paletteIntent && row?.renderIntent);
+  let signal = 0;
+  if (placements.length && completePlacements.length === placements.length) signal += 1;
+  if (context.renderPolicies.length >= 1) signal += 1;
+  if (context.coverageValues.length >= 1) signal += 1;
+  if (placements.some((row) => str(row?.paletteIntent?.accentUsage))) signal += 1;
+  return {
+    applicable,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    signals: {
+      placementCount: placements.length,
+      completePlacementCount: completePlacements.length,
+      renderPolicies: context.renderPolicies,
+      coverageValues: context.coverageValues
+    }
+  };
+}
+
+function evaluateArtisticScores({ summary = "", proposalLines = [], executionPlan = null, lenses = [], promptText = "" }) {
+  const context = buildArtisticContext({ summary, proposalLines, executionPlan, lenses, promptText });
+  const categories = {
+    motionLanguage: scoreMotionLanguage(context),
+    stageLighting: scoreStageLighting(context),
+    composition: scoreComposition(context),
+    settingsRenderPlausibility: scoreSettingsRenderPlausibility(context)
+  };
+  const applicableScores = Object.values(categories)
+    .filter((entry) => entry?.applicable)
+    .map((entry) => Number(entry.score || 0));
+  return {
+    categories,
+    average: applicableScores.length
+      ? Number((applicableScores.reduce((sum, value) => sum + value, 0) / applicableScores.length).toFixed(2))
+      : null
+  };
+}
+
 function evaluateCase(result, testCase) {
   const failures = [];
   const proposalLines = arr(result?.proposalLines);
@@ -452,6 +643,13 @@ function runCase(testCase, metadataFixture) {
       status: evaluation.failures.length ? "failed" : "passed",
       summary: str(revisedResult?.summary || testCase.promptText),
       structuralScore: evaluation.score,
+      artisticScores: evaluateArtisticScores({
+        summary: revisedResult?.summary,
+        proposalLines: revisedResult?.proposalLines,
+        executionPlan: mergedExecutionPlan,
+        lenses: testCase.lenses,
+        promptText: testCase.promptText
+      }),
       failures: evaluation.failures,
       checksPassed: evaluation.checksPassed,
       checksTotal: evaluation.checksTotal,
@@ -485,6 +683,13 @@ function runCase(testCase, metadataFixture) {
     status: evaluation.failures.length ? "failed" : "passed",
     summary: str(result?.summary),
     structuralScore: evaluation.score,
+    artisticScores: evaluateArtisticScores({
+      summary: result?.summary,
+      proposalLines: result?.proposalLines,
+      executionPlan: getExecutionPlanFromResult(result),
+      lenses: testCase.lenses,
+      promptText: testCase.promptText
+    }),
     failures: evaluation.failures,
     checksPassed: evaluation.checksPassed,
     checksTotal: evaluation.checksTotal,
@@ -500,13 +705,28 @@ function summarizeResults(results = []) {
   const avgScore = supported.length
     ? supported.reduce((sum, row) => sum + Number(row.structuralScore || 0), 0) / supported.length
     : 0;
+  const collectArtisticAverages = (key) => {
+    const scores = supported
+      .map((row) => row?.artisticScores?.categories?.[key])
+      .filter((entry) => entry?.applicable)
+      .map((entry) => Number(entry.score || 0));
+    return scores.length
+      ? Number((scores.reduce((sum, value) => sum + value, 0) / scores.length).toFixed(2))
+      : null;
+  };
   return {
     total: arr(results).length,
     supported: supported.length,
     passed: passed.length,
     failed: failed.length,
     deferred: deferred.length,
-    averageStructuralScore: Number(avgScore.toFixed(2))
+    averageStructuralScore: Number(avgScore.toFixed(2)),
+    artisticAverages: {
+      motionLanguage: collectArtisticAverages("motionLanguage"),
+      stageLighting: collectArtisticAverages("stageLighting"),
+      composition: collectArtisticAverages("composition"),
+      settingsRenderPlausibility: collectArtisticAverages("settingsRenderPlausibility")
+    }
   };
 }
 

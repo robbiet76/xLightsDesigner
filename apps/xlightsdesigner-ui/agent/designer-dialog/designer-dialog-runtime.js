@@ -359,19 +359,40 @@ function chooseExecutionTargets({
   ]).slice(0, 8);
 }
 
-function buildSectionEffectHints({ section = "", energy = "", density = "", goal = "", sectionIndex = 0, sectionCount = 0 } = {}) {
+function buildSectionEffectHints({
+  section = "",
+  energy = "",
+  density = "",
+  goal = "",
+  sectionIndex = 0,
+  sectionCount = 0,
+  directorPreferences = null,
+  directorProfile = null
+} = {}) {
   const lowerSection = str(section).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
+  const motionPreference = str(
+    directorPreferences?.motionPreference
+    || directorProfile?.preferences?.motionPreference
+  ).toLowerCase();
+  const focusPreference = str(
+    directorPreferences?.focusPreference
+    || directorProfile?.preferences?.focusPreference
+  ).toLowerCase();
   const count = Number.isFinite(Number(sectionCount)) ? Math.max(0, Number(sectionCount)) : 0;
   const idx = Number.isFinite(Number(sectionIndex)) ? Math.max(0, Number(sectionIndex)) : 0;
-  const nearStart = count > 0 ? idx <= Math.max(0, Math.floor(count * 0.2)) : idx === 0;
-  const nearPeak = count > 0 ? idx >= Math.floor(count * 0.35) && idx <= Math.floor(count * 0.7) : false;
-  const nearEnd = count > 0 ? idx >= Math.max(0, count - 2) : false;
+  const nearStart = count > 1 ? idx === 0 : idx === 0;
+  const nearPeak = count > 2 ? idx >= 1 && idx <= Math.max(1, count - 2) : false;
+  const nearEnd = count > 1 ? idx === count - 1 : idx === 0;
+  const crispBias = motionPreference === "controlled" || focusPreference === "crisp-focal" || /clarity|clean read|focused/.test(lowerGoal);
+  const smoothBias = !crispBias && (motionPreference === "smooth" || /cinematic|emotionally open|glow/.test(lowerGoal));
   if (/key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return pickDistinctEffects(["Color Wash", "Shimmer"], ["Pinwheel", "Fireworks", "Meteors"]);
+      return smoothBias
+        ? pickDistinctEffects(["Color Wash", "Wave"], nearEnd ? ["Spirals", "Shimmer"] : ["Candle", "Shimmer"])
+        : pickDistinctEffects(["Color Wash", "Shimmer"], crispBias ? ["Bars", "Pinwheel"] : ["Pinwheel", "Fireworks", "Meteors"]);
     }
     if (/bridge/.test(lowerSection)) {
       return pickDistinctEffects(["Bars", "Spirals"], ["Shockwave", "Wave"]);
@@ -383,7 +404,9 @@ function buildSectionEffectHints({ section = "", energy = "", density = "", goal
   }
   if (/rhythm|pulse|groove|drive/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return pickDistinctEffects(["Meteors", "Pinwheel"], ["Shimmer", "Bars"]);
+      return nearEnd
+        ? pickDistinctEffects(["Bars", "Shockwave"], ["Meteors", "Pinwheel"])
+        : pickDistinctEffects(["Meteors", "Pinwheel"], ["Shimmer", "Bars"]);
     }
     if (/bridge/.test(lowerSection)) {
       return pickDistinctEffects(["Bars", "Shockwave"], ["Wave", "Warp"]);
@@ -400,7 +423,19 @@ function buildSectionEffectHints({ section = "", energy = "", density = "", goal
     return pickDistinctEffects(["Wave", "Butterfly"], ["Bars", "Circles"]);
   }
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
-    return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
+    if (smoothBias) {
+      return nearEnd
+        ? pickDistinctEffects(["Spirals", "Wave"], ["Color Wash", "Shimmer"])
+        : pickDistinctEffects(["Color Wash", "Wave"], ["Shimmer", "Butterfly"]);
+    }
+    if (crispBias) {
+      return nearEnd
+        ? pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"])
+        : pickDistinctEffects(["Shimmer", "Bars"], ["Pinwheel", "Color Wash"]);
+    }
+    return nearEnd
+      ? pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Fireworks", "Pinwheel"])
+      : pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
   }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
@@ -706,7 +741,9 @@ function buildDesignerExecutionPlan({
   analysisHandoff = null,
   musicDesignContext = null,
   designSceneContext = null,
-  targets = []
+  targets = [],
+  directorPreferences = null,
+  directorProfile = null
 } = {}) {
   const intent = isPlainObject(normalizedIntent) ? normalizedIntent : {};
   const targetIds = arr(intent.targetIds).filter(Boolean);
@@ -782,7 +819,9 @@ function buildDesignerExecutionPlan({
               density,
               goal: intent.goal || "",
               sectionIndex: idx,
-              sectionCount: normalizedSections.length
+              sectionCount: normalizedSections.length,
+              directorPreferences,
+              directorProfile
             })
       };
     });
@@ -885,7 +924,9 @@ export function buildProposalBundleArtifact({
     analysisHandoff,
     musicDesignContext: resolvedMusicContext,
     designSceneContext: resolvedSceneContext,
-    targets: plan.targets
+    targets: plan.targets,
+    directorPreferences,
+    directorProfile
   });
   const proposalBundle = buildProposalBundle({
     proposalId: makeId("proposal"),

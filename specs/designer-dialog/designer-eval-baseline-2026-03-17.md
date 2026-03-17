@@ -33,6 +33,19 @@ Interpretation:
 - the current bottleneck is no longer structural correctness
 - the next bottleneck is richer artistic scoring and deeper quality tuning
 
+## Current Artistic Baseline
+
+Current artistic averages from the same corpus:
+- motion language: `3.00`
+- stage-lighting quality: `2.86`
+- composition quality: `3.00`
+- settings/render plausibility: `3.00`
+
+Interpretation:
+- motion language is now strong enough on the current offline corpus to stop being the main training bottleneck
+- composition and settings/render plausibility are stable on the current heuristic layer
+- stage-lighting reasoning remains the softest artistic category, especially on broad cinematic whole-pass prompts
+
 ## What Changed Since The First Baseline
 
 The runner and designer logic now cover:
@@ -58,10 +71,10 @@ It does **not** yet mean:
 
 ## Next Training Priorities
 
-1. add richer non-structural scoring for:
-   - motion language quality
-   - stage-lighting quality
-   - composition quality
-   - settings/render plausibility
-2. keep the current `25/25` corpus as the structural regression gate
-3. start tuning designer quality against the richer scoring layer instead of changing framework behavior
+1. keep the current `25/25` corpus as the structural regression gate
+2. keep the current artistic baseline fixed while training against:
+   - stage-lighting quality on broad cinematic passes
+   - concept-summary quality
+   - target-group selection quality
+   - per-effect settings/render nuance
+3. promote only changes that improve the artistic layer without regressing structural results
