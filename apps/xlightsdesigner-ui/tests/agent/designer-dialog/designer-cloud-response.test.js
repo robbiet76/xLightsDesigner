@@ -70,6 +70,7 @@ test("normalizeDesignerCloudResponse maps cloud output into canonical designer r
         lifecycle: { status: "fresh", stale: false, baseRevision: "rev-9", currentRevision: "rev-9", rebasedFrom: null, staleReason: "", updatedAt: new Date().toISOString() },
         riskNotes: [],
         impact: { estimatedImpact: 16, resolvedTargetCount: 0, assumptionCount: 1 },
+        executionPlan: { passScope: "single_section", primarySections: ["Intro", "Chorus"], sectionPlans: [] },
         traceability: {}
       },
       warnings: []
@@ -84,4 +85,53 @@ test("normalizeDesignerCloudResponse maps cloud output into canonical designer r
   assert.equal(result.proposalBundle.summary, "Calm intro with broader chorus payoff.");
   assert.deepEqual(result.proposalBundle.guidedQuestions, ["Should the chorus spread to the whole yard?"]);
   assert.deepEqual(result.proposalBundle.assumptions, ["Keep the intro restrained."]);
+  assert.equal(result.proposalBundle.executionPlan.passScope, "single_section");
+});
+
+test("normalizeDesignerCloudResponse preserves fallback scope fields when cloud scope is partial", () => {
+  const result = normalizeDesignerCloudResponse({
+    requestId: "req-cloud-2",
+    cloudResponse: {
+      responseType: "designer_cloud_response_v1",
+      responseVersion: "1.0",
+      assistantMessage: "Focus only on the named chorus props.",
+      summary: "Tight chorus concept.",
+      proposal: {
+        summary: "Tight chorus concept.",
+        scope: { sections: ["Chorus 1"] },
+        proposalLines: ["Chorus 1 / Snowman / keep the pulse clean and direct"]
+      }
+    },
+    fallback: {
+      creativeBrief: {
+        goalsSummary: "Keep scope narrow.",
+        inspirationSummary: "N/A",
+        sections: ["Chorus 1"],
+        moodEnergyArc: "Chorus 1: high",
+        narrativeCues: "Stay narrow.",
+        visualCues: "Snowman and Star only.",
+        hypotheses: ["Preserve explicit targets."]
+      },
+      proposalBundle: {
+        scope: { sections: ["Chorus 1"], targetIds: ["Snowman", "Star"], tagNames: [], summary: "sections: Chorus 1 | targets: Snowman, Star" },
+        constraints: { changeTolerance: "moderate", preserveTimingTracks: true, preserveDisplayOrder: true, allowGlobalRewrite: false },
+        lifecycle: { status: "fresh", stale: false, baseRevision: "rev-10", currentRevision: "rev-10", rebasedFrom: null, staleReason: "", updatedAt: new Date().toISOString() },
+        riskNotes: [],
+        impact: { estimatedImpact: 8, resolvedTargetCount: 2, assumptionCount: 0 },
+        executionPlan: {
+          passScope: "single_section",
+          primarySections: ["Chorus 1"],
+          sectionPlans: [{ section: "Chorus 1", targetIds: ["Snowman", "Star"] }],
+          effectPlacements: [{ targetId: "Snowman" }, { targetId: "Star" }]
+        },
+        traceability: {}
+      },
+      warnings: []
+    }
+  });
+
+  assert.deepEqual(result.proposalBundle.scope.sections, ["Chorus 1"]);
+  assert.deepEqual(result.proposalBundle.scope.targetIds, ["Snowman", "Star"]);
+  assert.equal(result.proposalBundle.executionPlan.passScope, "single_section");
+  assert.deepEqual(result.proposalBundle.executionPlan.sectionPlans[0].targetIds, ["Snowman", "Star"]);
 });

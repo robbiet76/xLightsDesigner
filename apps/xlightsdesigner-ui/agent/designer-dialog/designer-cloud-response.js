@@ -64,18 +64,43 @@ function buildNormalizedBrief(cloud = {}, fallback = {}) {
 
 function buildNormalizedProposal(cloud = {}, fallback = {}) {
   const proposal = isPlainObject(cloud?.proposal) ? cloud.proposal : {};
+  const fallbackScope = isPlainObject(fallback.scope) ? fallback.scope : {};
+  const cloudScope = isPlainObject(proposal.scope) ? proposal.scope : {};
+  const fallbackConstraints = isPlainObject(fallback.constraints) ? fallback.constraints : {};
+  const cloudConstraints = isPlainObject(proposal.constraints) ? proposal.constraints : {};
+  const fallbackLifecycle = isPlainObject(fallback.lifecycle) ? fallback.lifecycle : {};
+  const cloudLifecycle = isPlainObject(proposal.lifecycle) ? proposal.lifecycle : {};
+  const fallbackImpact = isPlainObject(fallback.impact) ? fallback.impact : {};
+  const cloudImpact = isPlainObject(proposal.impact) ? proposal.impact : {};
   return buildProposalBundle({
     proposalId: str(proposal.proposalId || fallback.proposalId || `proposal-${Date.now()}`),
     summary: str(proposal.summary || cloud.summary || fallback.summary),
     baseRevision: str(proposal.baseRevision || fallback.baseRevision || "unknown"),
-    scope: isPlainObject(proposal.scope) ? proposal.scope : (fallback.scope || {}),
-    constraints: isPlainObject(proposal.constraints) ? proposal.constraints : (fallback.constraints || {}),
-    lifecycle: isPlainObject(proposal.lifecycle) ? proposal.lifecycle : (fallback.lifecycle || {}),
+    scope: {
+      ...fallbackScope,
+      ...cloudScope,
+      sections: arr(cloudScope.sections).length ? cloudScope.sections : arr(fallbackScope.sections),
+      targetIds: arr(cloudScope.targetIds).length ? cloudScope.targetIds : arr(fallbackScope.targetIds),
+      tagNames: arr(cloudScope.tagNames).length ? cloudScope.tagNames : arr(fallbackScope.tagNames),
+      summary: str(cloudScope.summary || fallbackScope.summary)
+    },
+    constraints: {
+      ...fallbackConstraints,
+      ...cloudConstraints
+    },
+    lifecycle: {
+      ...fallbackLifecycle,
+      ...cloudLifecycle
+    },
     proposalLines: arr(proposal.proposalLines).length ? proposal.proposalLines : arr(fallback.proposalLines),
     guidedQuestions: arr(cloud.guidedQuestions).length ? cloud.guidedQuestions : arr(fallback.guidedQuestions),
     assumptions: arr(cloud.assumptions).length ? cloud.assumptions : arr(fallback.assumptions),
     riskNotes: arr(proposal.riskNotes).length ? proposal.riskNotes : arr(fallback.riskNotes),
-    impact: isPlainObject(proposal.impact) ? proposal.impact : (fallback.impact || {}),
+    impact: {
+      ...fallbackImpact,
+      ...cloudImpact
+    },
+    executionPlan: isPlainObject(proposal.executionPlan) ? proposal.executionPlan : (isPlainObject(fallback.executionPlan) ? fallback.executionPlan : null),
     traceability: isPlainObject(fallback.traceability) ? fallback.traceability : null
   });
 }
