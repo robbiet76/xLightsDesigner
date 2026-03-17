@@ -30,43 +30,74 @@ These effects are already on the correct model boundary:
 - live owned-API apply/readback has been validated
 
 Effects:
-- `Color Wash`
-- `Shimmer`
+- `On`
+- `Adjust`
 - `Bars`
 - `Butterfly`
+- `Candle`
+- `Circles`
+- `Color Wash`
+- `Curtain`
+- `Duplicate`
+- `Fan`
+- `Fill`
+- `Fire`
+- `Fireworks`
+- `Galaxy`
+- `Garlands`
+- `Kaleidoscope`
+- `Lightning`
+- `Lines`
+- `Liquid`
+- `Marquee`
 - `Meteors`
+- `Morph`
 - `Pinwheel`
+- `Plasma`
+- `Ripple`
+- `Shimmer`
+- `Shockwave`
+- `SingleStrand`
+- `Snowflakes`
+- `Snowstorm`
 - `Spirals`
+- `Spirograph`
+- `State`
+- `Strobe`
+- `Tendril`
+- `Tree`
+- `Twinkle`
+- `VU Meter`
+- `Warp`
+- `Wave`
 
 Notes:
 - `Color Wash`, `Shimmer`, and `Bars` were validated in earlier owned apply and app-driven passes.
-- `Butterfly`, `Meteors`, `Pinwheel`, and `Spirals` were validated directly through owned `effects.applyBatch` in this audit pass.
+- `Butterfly`, `Meteors`, `Pinwheel`, and `Spirals` were validated directly through owned `effects.applyBatch` with translated intent.
+- A full live generic sweep was then run on `2026-03-17` against all non-specialized families using:
+  - fresh owned `sequence.create`
+  - owned `effects.applyBatch`
+  - owned `effects.getWindow`
+- Result:
+  - `40` effects applied and read back successfully
+  - `0` generic effects failed in that sweep
+
+Important limit:
+- this proves structural creation/readback support for the generic placement model
+- it does **not** mean every family already has fully hand-tuned semantic intent mapping
 
 ## Tier 2
 
-These effects are mapped into the current capability / translation structure and fit the placement-first model, but they still need live spot validation before we should call them production-ready.
+Reserved for:
+- generic placement families that have capability metadata and translation coverage
+- but have **not yet** been live applied/read back
 
-Effects:
-- `On`
-- `Circles`
-- `Curtain`
-- `Fan`
-- `Fire`
-- `Morph`
-- `Snowflakes`
-- `VU Meter`
-
-Why they are Tier 2:
-- their live xLights parameter shapes fit the current taxonomy well enough to map into:
-  - `settingsIntent`
-  - `paletteIntent`
-  - `layerIntent`
-  - `renderIntent`
-- but we have not yet live-validated each family through owned apply/readback in this pass
+Current status:
+- empty after the full live generic sweep on `2026-03-17`
 
 ## Tier 3
 
-These effects are not blocked by architecture, but they need dedicated semantic mapping work before they are safe to expose as generic designer-authored placement families.
+These effects are not blocked by architecture, but they still need deeper family-specific semantic mapping work before we should claim polished designer authorship quality.
 
 Effects:
 - `Adjust`
@@ -96,7 +127,8 @@ Effects:
 - `Wave`
 
 Why they are Tier 3:
-- they are visual effect families that can still fit the placement model
+- they are structurally supported by the placement model
+- many of them already apply successfully with generic/default payloads
 - but their real parameter surfaces are more specialized than the current generic intent taxonomy
 - many need dedicated treatment for things like:
   - geometry
@@ -106,8 +138,8 @@ Why they are Tier 3:
   - family-specific motion concepts
 
 Practical rule:
-- do not advertise generic designer support for these yet
-- add them family by family with real semantic mapping and live validation
+- it is safe to execute them generically
+- it is **not** yet safe to claim that designer-authored intent for these families is semantically rich or fully tuned
 
 ## Tier 4
 
@@ -196,8 +228,8 @@ Audio-reactive / track-reactive families:
 Correct current claim:
 - the placement-first contract is in place
 - the sequencer translation layer is working
-- support is real for Tier 1
-- support is structurally present but not yet fully proven for Tier 2
+- support is real for all current Tier 1 families
+- Tier 4 remains intentionally outside the generic contract
 
 Incorrect claim:
 - that the designer can now safely author all xLights effects through one generic intent schema
@@ -207,14 +239,7 @@ That would be false.
 ## Recommended Expansion Order
 
 1. Finish Tier 2 live validation
-- `On`
-- `Circles`
-- `Curtain`
-- `Fan`
-- `Fire`
-- `Morph`
-- `Snowflakes`
-- `VU Meter`
+- complete
 
 2. Add Tier 3 families in subgroups
 - motion / geometric families:
