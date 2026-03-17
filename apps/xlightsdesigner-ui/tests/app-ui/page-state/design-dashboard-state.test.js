@@ -99,6 +99,7 @@ test("design dashboard state summarizes active designer state", () => {
   assert.equal(dashboard.data.executionPlan.designConceptCount, 1);
   assert.equal(dashboard.data.executionPlan.effectPlacementCount, 2);
   assert.equal(dashboard.data.executionPlan.conceptRows[0].designId, "DES-001");
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].designLabel, "D1.0");
   assert.equal(dashboard.data.executionPlan.conceptRows[0].anchor, "Chorus 1");
   assert.equal(dashboard.data.executionPlan.conceptRows[0].placementCount, 2);
   assert.deepEqual(dashboard.data.executionPlan.conceptRows[0].palette.colors, ["#ffcc88", "#fff3d1"]);
@@ -193,4 +194,5 @@ test("design dashboard state falls back to intent handoff execution strategy whe
 
   assert.equal(dashboard.data.executionPlan.designConceptCount, 1);
   assert.equal(dashboard.data.executionPlan.conceptRows[0].designId, "DES-001");
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].designLabel, "D1.0");
 });

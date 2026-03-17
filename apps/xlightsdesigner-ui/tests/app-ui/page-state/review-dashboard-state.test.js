@@ -82,6 +82,7 @@ test("review dashboard state reports blocked when draft exists but approval gate
   assert.equal(dashboard.data.apply.canApplyAll, false);
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.rows[0].designId, "DES-001");
+  assert.equal(dashboard.data.rows[0].designLabel, "D1.0");
   assert.equal(dashboard.data.rows[0].designAuthor, "designer");
   assert.equal(dashboard.data.rows[0].effectCount, 1);
 });
@@ -193,6 +194,7 @@ test("review dashboard state falls back to intent handoff execution strategy for
 
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.rows[0].designId, "DES-001");
+  assert.equal(dashboard.data.rows[0].designLabel, "D1.0");
   assert.equal(dashboard.data.rows[0].designAuthor, "user");
   assert.equal(dashboard.data.rows[0].effectCount, 1);
 });

@@ -10,6 +10,32 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
 }
 
+function buildDesignDisplay(designId = "", designRevision = 0) {
+  const raw = str(designId);
+  const revision = Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0;
+  const desMatch = raw.match(/^DES-(\d+)$/i);
+  if (desMatch) {
+    return {
+      designNumber: Number(desMatch[1]),
+      designRevision: revision,
+      designLabel: `D${Number(desMatch[1])}.${revision}`
+    };
+  }
+  const dMatch = raw.match(/^D(\d+)$/i);
+  if (dMatch) {
+    return {
+      designNumber: Number(dMatch[1]),
+      designRevision: revision,
+      designLabel: `D${Number(dMatch[1])}.${revision}`
+    };
+  }
+  return {
+    designNumber: 0,
+    designRevision: revision,
+    designLabel: raw || ""
+  };
+}
+
 function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes = [] } = {}) {
   const executionPlan = state.creative?.proposalBundle?.executionPlan && typeof state.creative.proposalBundle.executionPlan === "object"
     ? state.creative.proposalBundle.executionPlan
@@ -26,6 +52,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
     if (!conceptMeta.has(designId)) {
       conceptMeta.set(designId, {
         designId,
+        designRevision: Number(row?.designRevision || 0),
         designAuthor: str(row?.designAuthor || "designer"),
         sections: [],
         summaries: [],
@@ -48,6 +75,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       return {
         idx: index,
         designId,
+        ...buildDesignDisplay(designId, meta.designRevision),
         designAuthor: str(meta.designAuthor || "designer"),
         anchor: uniqueStrings(meta.sections).join(", ") || "General",
         summary: uniqueStrings(meta.summaries)[0] || "Pending design change",
@@ -78,6 +106,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
         : 0;
       grouped.set(key, {
         designId: matchedDesignId,
+        designRevision: Number(meta?.designRevision || 0),
         designAuthor: str(meta?.designAuthor || "designer"),
         sections: uniqueStrings(meta?.sections || (section ? [section] : [])),
         summaries: uniqueStrings(meta?.summaries || [line]),
@@ -94,6 +123,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
     return {
       idx: index,
       designId: str(row.designId || ""),
+      ...buildDesignDisplay(row.designId || "", row.designRevision || 0),
       designAuthor: str(row.designAuthor || ""),
       anchor: row.sections.length ? row.sections.join(", ") : "General",
       summary: row.summaries[0] || "Pending design change",

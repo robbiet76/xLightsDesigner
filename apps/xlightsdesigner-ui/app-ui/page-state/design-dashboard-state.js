@@ -10,6 +10,32 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
 }
 
+function buildDesignDisplay(designId = "", designRevision = 0) {
+  const raw = str(designId);
+  const revision = Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0;
+  const desMatch = raw.match(/^DES-(\d+)$/i);
+  if (desMatch) {
+    return {
+      designNumber: Number(desMatch[1]),
+      designRevision: revision,
+      designLabel: `D${Number(desMatch[1])}.${revision}`
+    };
+  }
+  const dMatch = raw.match(/^D(\d+)$/i);
+  if (dMatch) {
+    return {
+      designNumber: Number(dMatch[1]),
+      designRevision: revision,
+      designLabel: `D${Number(dMatch[1])}.${revision}`
+    };
+  }
+  return {
+    designNumber: 0,
+    designRevision: revision,
+    designLabel: raw || ""
+  };
+}
+
 function summarizePalette(colors = []) {
   const list = uniqueStrings(colors);
   return {
@@ -39,6 +65,7 @@ function buildConceptRows(executionPlan = null) {
       return {
         index: index + 1,
         designId,
+        ...buildDesignDisplay(designId, sectionPlan?.designRevision),
         designAuthor: str(sectionPlan?.designAuthor || "designer"),
         anchor: str(sectionPlan?.section || "General"),
         intent: str(sectionPlan?.intentSummary || "No design intent summary yet."),

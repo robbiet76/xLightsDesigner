@@ -6,6 +6,32 @@ function norm(value = "") {
   return str(value).toLowerCase();
 }
 
+function buildDesignDisplay(designId = "", designRevision = 0) {
+  const raw = str(designId);
+  const revision = Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0;
+  const desMatch = raw.match(/^DES-(\d+)$/i);
+  if (desMatch) {
+    return {
+      designNumber: Number(desMatch[1]),
+      designRevision: revision,
+      designLabel: `D${Number(desMatch[1])}.${revision}`
+    };
+  }
+  const dMatch = raw.match(/^D(\d+)$/i);
+  if (dMatch) {
+    return {
+      designNumber: Number(dMatch[1]),
+      designRevision: revision,
+      designLabel: `D${Number(dMatch[1])}.${revision}`
+    };
+  }
+  return {
+    designNumber: 0,
+    designRevision: revision,
+    designLabel: raw || ""
+  };
+}
+
 function parseTranslatedTarget(line = "") {
   const parts = String(line || "").split("/").map((part) => part.trim()).filter(Boolean);
   if (!parts.length) return "";
@@ -107,6 +133,7 @@ function summarizeEffectRow(command = null, timingMarks = new Map(), sceneGraph 
   const detail = [palette, settings].filter(Boolean).join(" / ");
   return {
     designId,
+    ...buildDesignDisplay(designId, command?.designRevision || intent?.designRevision),
     designAuthor,
     timing,
     section,
@@ -134,6 +161,9 @@ function buildAggregatedEffectRows(commands = [], timingMarks = new Map(), scene
     if (!buckets.has(key)) {
       buckets.set(key, {
         designId: row.designId,
+        designNumber: row.designNumber,
+        designRevision: row.designRevision,
+        designLabel: row.designLabel,
         designAuthor: row.designAuthor,
         timing: row.timing,
         section: row.section,
@@ -150,6 +180,9 @@ function buildAggregatedEffectRows(commands = [], timingMarks = new Map(), scene
   }
   return [...buckets.values()].map((bucket) => ({
     designId: bucket.designId,
+    designNumber: bucket.designNumber,
+    designRevision: bucket.designRevision,
+    designLabel: bucket.designLabel,
     designAuthor: bucket.designAuthor,
     timing: bucket.timing,
     section: bucket.section,
@@ -172,6 +205,9 @@ function buildTimingOnlyRows(commands = []) {
     for (const mark of marks) {
       rows.push({
         designId: "",
+        designNumber: 0,
+        designRevision: 0,
+        designLabel: "",
         designAuthor: "",
         timing,
         section: str(mark?.label || "Unnamed Mark"),
@@ -215,6 +251,7 @@ function buildDashboardRows({
     return {
       index: idx + 1,
       designId: str(row.designId || ""),
+      ...buildDesignDisplay(row.designId || "", row.designRevision || 0),
       designAuthor: str(row.designAuthor || ""),
       timing: str(row.timing || "XD: Sequencer Plan"),
       section: str(row.section || getSectionNameFromLine(line) || "General"),

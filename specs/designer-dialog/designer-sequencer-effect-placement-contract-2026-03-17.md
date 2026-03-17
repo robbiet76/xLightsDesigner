@@ -347,14 +347,22 @@ Every conceptual design group must have a stable `designId`.
 Every conceptual design group must also carry a `designAuthor`.
 
 `designId` is a stable concept identifier, not a timestamp-derived event id.
-The visible/current format should remain short and human-readable, for example:
-- `DES-001`
-- `DES-002`
+The visible/current label should remain short and human-readable, for example:
+- `D1.0`
+- `D1.1`
+- `D2.0`
+
+Recommended split:
+- `designId`: stable internal concept identity
+- `designRevision`: separate integer revision field
+- `designLabel`: derived display label such as `D1.0`
 
 Revision history must not be encoded by changing the `designId` format.
 If revision tracking is needed, it must be carried separately via a future field such as:
 - `designRevision`
 - `supersedesRevision`
+
+Sorting must use numeric concept/revision fields, not lexical sorting of `designLabel`.
 
 Current supported `designAuthor` values:
 - `designer`

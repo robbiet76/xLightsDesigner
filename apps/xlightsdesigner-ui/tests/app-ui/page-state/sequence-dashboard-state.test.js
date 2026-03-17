@@ -69,6 +69,7 @@ test("sequence dashboard state exposes direct technical draft rows", () => {
   assert.equal(dashboard.data.rows[0].section, "Chorus 1");
   assert.equal(dashboard.data.rows[0].target, "Snowman");
   assert.equal(dashboard.data.rows[0].designId, "DES-001");
+  assert.equal(dashboard.data.rows[0].designLabel, "D1.0");
   assert.equal(dashboard.data.rows[0].timing, "XD: Song Structure");
   assert.equal(dashboard.data.rows[0].summary, "Color Wash");
   assert.equal(dashboard.data.commandCount, 3);
@@ -132,6 +133,7 @@ test("sequence dashboard aggregates multiple effects on the same target into one
   assert.equal(dashboard.data.rows[0].section, "Chorus 1");
   assert.equal(dashboard.data.rows[0].target, "Snowman");
   assert.equal(dashboard.data.rows[0].designId, "DES-001");
+  assert.equal(dashboard.data.rows[0].designLabel, "D1.0");
   assert.equal(dashboard.data.rows[0].summary, "Color Wash, Shimmer");
   assert.equal(dashboard.data.rows[0].effects, 2);
 });
@@ -190,6 +192,7 @@ test("sequence dashboard keeps separate rows for different design ids on the sam
 
   assert.equal(dashboard.data.rows.length, 2);
   assert.deepEqual(dashboard.data.rows.map((row) => row.designId), ["DES-001", "DES-002"]);
+  assert.deepEqual(dashboard.data.rows.map((row) => row.designLabel), ["D1.0", "D2.0"]);
 });
 
 test("sequence dashboard counts duplicate same-type placements as separate effects", () => {

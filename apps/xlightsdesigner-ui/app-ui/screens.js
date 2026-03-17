@@ -791,7 +791,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       return `
                     <tr>
                       <td>${idx + 1}</td>
-                      <td>${escapeHtml(String(row.designId || "—"))}</td>
+                      <td>${escapeHtml(String(row.designLabel || row.designId || "—"))}</td>
                       <td>${escapeHtml(String(row.timing || "XD: Sequencer Plan"))}</td>
                       <td>${escapeHtml(String(row.section || "General"))}</td>
                       <td>${escapeHtml(String(row.target || "Unresolved"))}</td>
@@ -1067,7 +1067,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   conceptRows.length
                     ? conceptRows.map((row) => `
                       <tr>
-                        <td>${escapeHtml(String(row.designId || "—"))}</td>
+                        <td>${escapeHtml(String(row.designLabel || row.designId || "—"))}</td>
                         <td>${escapeHtml(String(row.anchor || "General"))}</td>
                         <td title="${escapeHtml(String(row.intent || ""))}">${escapeHtml(String(row.intent || "No design intent summary yet."))}</td>
                         <td>${escapeHtml(String((row.focus || []).join(", ") || "No focus targets"))}</td>
@@ -1261,14 +1261,14 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     rows.length
                       ? rows
-                          .map(({ designId, designAuthor, summary, anchor, targetSummary, effectCount, indexes, selected }) => {
+                          .map(({ designId, designLabel, designAuthor, summary, anchor, targetSummary, effectCount, indexes, selected }) => {
                             const indexCsv = Array.isArray(indexes) ? indexes.join(",") : "";
                             return `
                       <tr class="${selected ? "proposed-row-selected" : ""}">
                         <td>
                           <input type="checkbox" data-proposed-group-select="${escapeHtml(indexCsv)}" ${selected ? "checked" : ""} />
                         </td>
-                        <td>${escapeHtml(String(designId || "—"))}</td>
+                        <td>${escapeHtml(String(designLabel || designId || "—"))}</td>
                         <td>${escapeHtml(String(designAuthor || "designer"))}</td>
                         <td>${escapeHtml(String(summary || "Pending design change"))}</td>
                         <td>${escapeHtml(String(anchor || "General"))}</td>
