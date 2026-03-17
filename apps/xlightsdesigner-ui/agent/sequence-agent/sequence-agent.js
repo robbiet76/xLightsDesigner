@@ -44,6 +44,24 @@ function deriveSectionNames({ analysisHandoff = {}, intentHandoff = {} } = {}) {
   return fromScope.length ? fromScope : fromAnalysis;
 }
 
+function deriveSectionWindowsByName({ analysisHandoff = {}, sectionNames = [], includeAll = false } = {}) {
+  const requested = includeAll ? new Set() : new Set(normArray(sectionNames).map((row) => normText(row)).filter(Boolean));
+  const windows = new Map();
+  const rows = Array.isArray(analysisHandoff?.structure?.sections) ? analysisHandoff.structure.sections : [];
+  for (const row of rows) {
+    const label = typeof row === "string"
+      ? normText(row)
+      : normText(row?.label || row?.name || "");
+    if (!label) continue;
+    if (requested.size && !requested.has(label)) continue;
+    const startMs = Number(row?.startMs);
+    const endMs = Number(row?.endMs);
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+    windows.set(label, { startMs, endMs });
+  }
+  return windows;
+}
+
 function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {} } = {}) {
   const mode = normText(intentHandoff?.mode) || "create";
   const goal = normText(intentHandoff?.goal);
@@ -67,6 +85,7 @@ function stageTimingAssetDecision({ hasAnalysis = false, scope = {} } = {}) {
     strategy,
     degradedMode: !hasAnalysis,
     useSections: hasScopedSections,
+    trackName: hasScopedSections ? "XD: Song Structure" : "XD: Sequencer Plan",
     detail: `strategy=${strategy}${!hasAnalysis ? " reduced-confidence" : ""}`
   };
 }
@@ -101,6 +120,8 @@ function stageCommandGraphSynthesis({
   groupIds = [],
   groupsById = {},
   submodelsById = {},
+  sectionWindowsByName = null,
+  trackName = "XD: Sequencer Plan",
   allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
@@ -115,7 +136,7 @@ function stageCommandGraphSynthesis({
     warnings.push("effects.alignToTiming capability unavailable; effect windows will remain static timing-aligned ranges instead of explicit timing re-alignment commands.");
   }
   const commands = buildDesignerPlanCommands(executionLines, {
-    trackName: "XD: Sequencer Plan",
+    trackName,
     targetIds,
     effectCatalog,
     sequenceSettings,
@@ -123,6 +144,7 @@ function stageCommandGraphSynthesis({
     groupIds,
     groupsById,
     submodelsById,
+    sectionWindowsByName,
     enableEffectTimingAlignment
   });
   const filteredCommands = [];
@@ -272,6 +294,12 @@ export function buildSequenceAgentPlan({
           groupIds,
           groupsById,
           submodelsById,
+          sectionWindowsByName: deriveSectionWindowsByName({
+            analysisHandoff: safeAnalysis,
+            sectionNames: scope.sectionNames,
+            includeAll: timing.trackName === "XD: Song Structure"
+          }),
+          trackName: timing.trackName,
           allowTimingWrites
         }))
   });

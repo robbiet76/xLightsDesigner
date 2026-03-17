@@ -216,11 +216,52 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.ok(out.commands.length > 0);
   assert.equal(out.commands[0].cmd, "timing.createTrack");
   assert.equal(out.commands[1].cmd, "timing.insertMarks");
-  assert.equal(out.commands[0].params.trackName, "XD: Sequencer Plan");
+  assert.equal(out.commands[0].params.trackName, "XD: Song Structure");
   assert.equal(out.metadata.mode, "revise");
   assert.equal(out.metadata.degradedMode, false);
   assert.deepEqual(out.metadata.scope.sections, ["Chorus 1"]);
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
+});
+
+test("sequence_agent uses analyzed section windows for scoped effect timing", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Verse 1", startMs: 10000, endMs: 44000 },
+          { label: "Chorus 1", startMs: 44000, endMs: 62000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Add a Color Wash effect on Snowman during Chorus 1.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      }
+    },
+    sourceLines: ["Chorus 1 / Snowman / apply Color Wash effect for the requested duration using the current target timing"],
+    effectCatalog: buildEffectDefinitionCatalog([{ effectName: "Color Wash", params: [] }])
+  });
+
+  const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
+  const trackCreate = out.commands.find((row) => row.cmd === "timing.createTrack");
+  const effectCreate = out.commands.find((row) => row.cmd === "effects.create");
+
+  assert.equal(trackCreate.params.trackName, "XD: Song Structure");
+  assert.deepEqual(markInsert.params.marks, [
+    { startMs: 0, endMs: 10000, label: "Intro" },
+    { startMs: 10000, endMs: 44000, label: "Verse 1" },
+    { startMs: 44000, endMs: 62000, label: "Chorus 1" }
+  ]);
+  assert.equal(markInsert.params.trackName, "XD: Song Structure");
+  assert.equal(effectCreate.params.startMs, 44000);
+  assert.equal(effectCreate.params.endMs, 62000);
+  assert.equal(effectCreate.anchor.markLabel, "Chorus 1");
 });
 
 test("sequence_agent enables model blending when layered group refinement needs it", () => {
@@ -726,7 +767,7 @@ test("sequence_agent emits explicit display-element ordering plan for group-firs
   assert.ok(reorder);
   assert.deepEqual(
     reorder.params.orderedIds,
-    ["Lyrics", "XD: Sequencer Plan", "AllModels", "MegaTree", "Roofline"]
+    ["Lyrics", "XD: Song Structure", "AllModels", "MegaTree", "Roofline"]
   );
   assert.equal(out.metadata.displayElementCount, 4);
 });
@@ -821,7 +862,7 @@ test("sequence_agent prefers the broadest explicit group target when nested grou
   assert.ok(reorder);
   assert.deepEqual(
     reorder.params.orderedIds,
-    ["Beats", "XD: Sequencer Plan", "AllModels", "Frontline", "MegaTree"]
+    ["Beats", "XD: Song Structure", "AllModels", "Frontline", "MegaTree"]
   );
   assert.equal(out.metadata.groupGraphCount, 6);
 });
