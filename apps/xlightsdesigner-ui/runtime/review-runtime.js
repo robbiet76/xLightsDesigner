@@ -310,6 +310,9 @@ export async function executeApplyCore({
     markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed} verified=${verification.checks.length}`);
     const jobId = orchestrated?.jobId || null;
     const applyPath = String(orchestrated?.applyPath || "").trim();
+    const applyPathLabel = applyPath === "owned_batch_plan"
+      ? "owned batch plan"
+      : "transaction commit";
     state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
     if (jobId && applyPath === "legacy_transactions") {
       upsertJob({ id: jobId, source: "transactions.commit", status: "running", progress: 0, updatedAt: new Date().toISOString() });
@@ -334,15 +337,15 @@ export async function executeApplyCore({
       state.directorProfile = applyAcceptedProposalToDirectorProfile(state.directorProfile, { proposalBundle: state.creative.proposalBundle });
     }
     bumpVersion("Applied draft proposal", state.proposed.length * 11);
-    setStatusWithDiagnostics("info", `Applied via transaction commit (${executed} steps).`);
-    addStructuredChatMessage("agent", `Apply complete. Executed ${executed} step${executed === 1 ? "" : "s"}.`, {
+    setStatusWithDiagnostics("info", `Applied via ${applyPathLabel} (${executed} steps).`);
+    addStructuredChatMessage("agent", `Apply complete via ${applyPathLabel}. Executed ${executed} step${executed === 1 ? "" : "s"}.`, {
       roleId: "sequence_agent",
       displayName: getTeamChatSpeakerLabel("sequence_agent"),
       handledBy: "sequence_agent",
       artifact: buildChatArtifactCard("apply_result_v1", {
         title: "Apply Result",
-        summary: `Revision ${String(state.revision || "unknown")} verified successfully.`,
-        chips: [`${executed} steps`, verification.expectedMutationsPresent ? "verified" : "", verification.revisionAdvanced ? "revision advanced" : ""]
+        summary: `Revision ${String(state.revision || "unknown")} verified successfully via ${applyPathLabel}.`,
+        chips: [applyPath || "unknown", `${executed} steps`, verification.expectedMutationsPresent ? "verified" : "", verification.revisionAdvanced ? "revision advanced" : ""]
       })
     });
     applyAuditEntry = buildApplyHistoryEntry({
@@ -355,10 +358,11 @@ export async function executeApplyCore({
       verification,
       planHandoff,
       applyResult,
-      summary: `Applied ${executed} command${executed === 1 ? "" : "s"} successfully.`
+      summary: `Applied ${executed} command${executed === 1 ? "" : "s"} successfully via ${applyPathLabel}.`
     });
     applyAuditEntry.executedCount = executed;
     applyAuditEntry.jobId = jobId || "";
+    applyAuditEntry.applyPath = applyPath;
     applyAuditEntry.revision = state.revision || "unknown";
     clearApprovalAfterApply = true;
     endOrchestrationRun(orchestrationRun, { status: "ok", summary: `apply succeeded (${executed} command${executed === 1 ? "" : "s"})` });
