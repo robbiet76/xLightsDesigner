@@ -264,6 +264,42 @@ test("sequence_agent uses analyzed section windows for scoped effect timing", ()
   assert.equal(effectCreate.anchor.markLabel, "Chorus 1");
 });
 
+test("sequence_agent allows decomposed multi-line direct requests", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Chorus 1", startMs: 44000, endMs: 62000 },
+          { label: "Chorus 2", startMs: 78000, endMs: 96000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Add a Color Wash effect on Snowman during Chorus 1 and a Shimmer effect on PorchTree during Chorus 2.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman", "PorchTree"],
+        tagNames: [],
+        sections: ["Chorus 1", "Chorus 2"]
+      }
+    },
+    sourceLines: [
+      "Chorus 1 / Snowman / apply Color Wash effect for the requested duration using the current target timing",
+      "Chorus 2 / PorchTree / apply Shimmer effect for the requested duration using the current target timing"
+    ],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] }
+    ])
+  });
+
+  assert.equal(out.validationReady, true);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.effectName === "Color Wash"), true);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.effectName === "Shimmer"), true);
+});
+
 test("sequence_agent enables model blending when layered group refinement needs it", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: sampleAnalysis(),

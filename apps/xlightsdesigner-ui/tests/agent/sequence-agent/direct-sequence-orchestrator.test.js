@@ -136,7 +136,7 @@ test("direct sequence orchestrator fails closed when prompt names a section with
   assert.ok(result.warnings.some((row) => /analyze the track first/i.test(row)));
 });
 
-test("direct sequence orchestrator blocks mixed effect and section clauses", () => {
+test("direct sequence orchestrator decomposes clear mixed effect and section clauses", () => {
   const result = executeDirectSequenceRequestOrchestration({
     requestId: "req-direct-6",
     sequenceRevision: "rev-1",
@@ -158,9 +158,38 @@ test("direct sequence orchestrator blocks mixed effect and section clauses", () 
     analysisHandoff: sampleAnalysis()
   });
 
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.intentHandoff.scope.sections, ["Chorus 1", "Chorus 2"]);
+  assert.deepEqual(result.intentHandoff.scope.targetIds, ["Snowman", "PorchTree"]);
+  assert.equal(result.proposalLines.length, 2);
+  assert.match(result.proposalLines[0], /Chorus 1 \/ Snowman \/ apply Color Wash effect/i);
+  assert.match(result.proposalLines[1], /Chorus 2 \/ PorchTree \/ apply Shimmer effect/i);
+});
+
+test("direct sequence orchestrator still blocks ambiguous mixed clauses", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-7",
+    sequenceRevision: "rev-1",
+    promptText: "Add a Color Wash effect on Snowman during Chorus 1 and Shimmer on PorchTree during Chorus 2.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "PorchTree", name: "PorchTree", type: "Model" }
+    ],
+    submodels: [],
+    displayElements: [
+      { id: "Snowman", name: "Snowman", type: "model" },
+      { id: "PorchTree", name: "PorchTree", type: "model" }
+    ],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: sampleAnalysis()
+  });
+
   assert.equal(result.ok, false);
   assert.equal(result.intentHandoff, null);
   assert.deepEqual(result.proposalLines, []);
   assert.ok(result.warnings.some((row) => /multiple sequencing clauses/i.test(row)));
-  assert.ok(result.guidedQuestions.some((row) => /split this into separate requests/i.test(row)));
 });

@@ -38,9 +38,11 @@ function buildPlanSummary({ goal = "", mode = "", sectionNames = [] } = {}) {
   return `${mode || "create"} plan for ${base}${sectionText}`.trim();
 }
 
-function isCompoundScopedDirectRequest({ goal = "", sectionNames = [] } = {}) {
+function isCompoundScopedDirectRequest({ goal = "", sectionNames = [], sourceLines = [] } = {}) {
   const lowerGoal = normText(goal).toLowerCase();
   if (!lowerGoal) return false;
+  const normalizedSource = normArray(sourceLines).map((row) => normText(row)).filter(Boolean);
+  if (normalizedSource.length > 1) return false;
   const isDirectRequest = /\b(add|apply|put|make|set)\b/.test(lowerGoal);
   const hasJoiner = /\b(and|then|also)\b|,/.test(lowerGoal);
   const hasSecondActionVerb = /\b(and|then|also)\b[^.]*\b(add|apply|put|make|set)\b/.test(lowerGoal);
@@ -71,13 +73,13 @@ function deriveSectionWindowsByName({ analysisHandoff = {}, sectionNames = [], i
   return windows;
 }
 
-function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {} } = {}) {
+function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sourceLines = [] } = {}) {
   const mode = normText(intentHandoff?.mode) || "create";
   const goal = normText(intentHandoff?.goal);
   const sectionNames = deriveSectionNames({ analysisHandoff, intentHandoff });
   const targetIds = normArray(intentHandoff?.scope?.targetIds);
   const tagNames = normArray(intentHandoff?.scope?.tagNames);
-  if (isCompoundScopedDirectRequest({ goal, sectionNames })) {
+  if (isCompoundScopedDirectRequest({ goal, sectionNames, sourceLines })) {
     const err = new Error("Compound direct sequencing requests must be split into one effect/section instruction per request.");
     err.failureCategory = "scope";
     throw err;
@@ -271,8 +273,8 @@ export function buildSequenceAgentPlan({
     stage: STAGE_ORDER[0],
     stageTelemetry,
     fn: () => (typeof stageOverrides.scope_resolution === "function"
-      ? stageOverrides.scope_resolution({ analysisHandoff: safeAnalysis, intentHandoff: safeIntent })
-      : stageScopeResolution({ analysisHandoff: safeAnalysis, intentHandoff: safeIntent }))
+      ? stageOverrides.scope_resolution({ analysisHandoff: safeAnalysis, intentHandoff: safeIntent, sourceLines })
+      : stageScopeResolution({ analysisHandoff: safeAnalysis, intentHandoff: safeIntent, sourceLines }))
   });
 
   const timing = runStage({

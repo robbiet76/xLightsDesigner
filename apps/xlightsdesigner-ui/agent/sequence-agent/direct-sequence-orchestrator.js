@@ -77,6 +77,45 @@ function inferPromptSections(promptText = "", analysisHandoff = null) {
   return matches;
 }
 
+function splitExplicitSequencingClauses(promptText = "") {
+  const text = str(promptText).replace(/[.?!]+$/g, "");
+  if (!text) return [];
+  return text
+    .split(/\s+\b(?:and|then|also)\b\s+(?=(?:(?:add|apply|put|make|set)\b|(?:a|an)\b))/i)
+    .map((row) => str(row))
+    .filter(Boolean);
+}
+
+function matchSectionLabel(text = "", analysisHandoff = null) {
+  const value = str(text).replace(/[.?!,]+$/g, "");
+  if (!value) return "";
+  const labels = extractSectionLabels(analysisHandoff)
+    .slice()
+    .sort((a, b) => b.length - a.length);
+  const exact = labels.find((label) => label.toLowerCase() === value.toLowerCase());
+  return exact || "";
+}
+
+function tryDecomposeExplicitSequencingClauses(promptText = "", analysisHandoff = null) {
+  const clauses = splitExplicitSequencingClauses(promptText);
+  if (clauses.length < 2) return [];
+  const out = [];
+  for (const clause of clauses) {
+    const match = clause.match(/^(?:(?:add|apply|put|make|set)\s+)?(?:a|an)?\s*([a-z0-9][a-z0-9 +_-]{0,40}?)\s+effect\s+on\s+(.+?)\s+during\s+(.+)$/i);
+    if (!match) return [];
+    const effectPhrase = str(match[1]);
+    const targetPhrase = str(match[2]);
+    const sectionPhrase = str(match[3]);
+    const section = matchSectionLabel(sectionPhrase, analysisHandoff);
+    if (!effectPhrase || !targetPhrase || !section) return [];
+    out.push({
+      promptText: `Add a ${effectPhrase} effect on ${targetPhrase} during ${section}.`,
+      selectedSections: [section]
+    });
+  }
+  return out;
+}
+
 function detectCompoundDirectRequest({
   promptText = "",
   explicitSections = [],
@@ -104,6 +143,26 @@ function detectCompoundDirectRequest({
   return { compound: false, reason: "" };
 }
 
+function mergeUniqueStrings(values = []) {
+  return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
+}
+
+function buildBlockedDirectResponse(reason = "") {
+  return {
+    ok: false,
+    creativeBrief: null,
+    proposalBundle: null,
+    intentHandoff: null,
+    proposalLines: [],
+    guidedQuestions: [
+      "Split this into separate requests, for example one prompt per effect/section pair."
+    ],
+    warnings: [reason],
+    summary: "direct sequence flow blocked",
+    mode: "direct_sequence_request"
+  };
+}
+
 export function executeDirectSequenceRequestOrchestration({
   requestId = "",
   sequenceRevision = "unknown",
@@ -119,6 +178,88 @@ export function executeDirectSequenceRequestOrchestration({
   metadataAssignments = [],
   elevatedRiskConfirmed = false
 } = {}) {
+  const decomposedClauses = tryDecomposeExplicitSequencingClauses(promptText, analysisHandoff);
+  if (decomposedClauses.length > 1) {
+    const clauseResults = decomposedClauses.map((clause) =>
+      executeDirectSequenceRequestOrchestration({
+        requestId,
+        sequenceRevision,
+        promptText: clause.promptText,
+        selectedSections: clause.selectedSections,
+        selectedTagNames,
+        selectedTargetIds,
+        analysisHandoff,
+        models,
+        submodels,
+        displayElements,
+        effectCatalog,
+        metadataAssignments,
+        elevatedRiskConfirmed
+      })
+    );
+    const failed = clauseResults.find((row) => !row?.ok);
+    if (failed) return failed;
+    const proposalLines = clauseResults.flatMap((row) => arr(row?.proposalLines));
+    const warnings = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.warnings)));
+    const guidedQuestions = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.guidedQuestions)));
+    const mergedSections = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.sections)));
+    const mergedTargets = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.targetIds)));
+    const mergedTags = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.tagNames)));
+    const proposalBundle = buildProposalBundle({
+      proposalId: `proposal-${Date.now()}`,
+      summary: str(promptText || "Sequence draft generated from direct technical request."),
+      baseRevision: str(sequenceRevision || "unknown"),
+      scope: {
+        sections: mergedSections,
+        targetIds: mergedTargets,
+        tagNames: mergedTags,
+        summary: summarizeScope({
+          sections: mergedSections,
+          targetIds: mergedTargets,
+          tagNames: mergedTags
+        })
+      },
+      constraints: {
+        changeTolerance: "moderate",
+        preserveTimingTracks: true,
+        preserveDisplayOrder: true,
+        allowGlobalRewrite: false
+      },
+      lifecycle: buildProposalLifecycle(sequenceRevision),
+      proposalLines,
+      guidedQuestions,
+      assumptions: [],
+      riskNotes: warnings,
+      impact: {
+        summary: "Direct technical sequencing request normalized for review/apply.",
+        estimatedImpact: estimateImpact(proposalLines)
+      }
+    });
+    const intentHandoff = buildCanonicalSequenceIntentHandoff({
+      normalizedIntent: {
+        goal: promptText,
+        sections: mergedSections,
+        targetIds: mergedTargets,
+        tags: mergedTags
+      },
+      intentText: promptText,
+      creativeBrief: null,
+      elevatedRiskConfirmed,
+      resolvedTargetIds: mergedTargets
+    });
+    return {
+      ok: true,
+      creativeBrief: null,
+      proposalBundle,
+      intentHandoff,
+      proposalLines: arr(proposalBundle.proposalLines),
+      guidedQuestions,
+      warnings,
+      summary: proposalBundle.summary,
+      mode: "direct_sequence_request"
+    };
+  }
+
   const explicitSections = arr(selectedSections).map((row) => str(row)).filter(Boolean);
   const inferredSections = explicitSections.length ? [] : inferPromptSections(promptText, analysisHandoff);
   const effectiveSections = explicitSections.length ? explicitSections : inferredSections;
@@ -149,19 +290,7 @@ export function executeDirectSequenceRequestOrchestration({
     normalizedEffectOverrides: requestedEffectPhrase ? [requestedEffectPhrase] : []
   });
   if (compoundRequest.compound) {
-    return {
-      ok: false,
-      creativeBrief: null,
-      proposalBundle: null,
-      intentHandoff: null,
-      proposalLines: [],
-      guidedQuestions: [
-        "Split this into separate requests, for example one prompt per effect/section pair."
-      ],
-      warnings: [compoundRequest.reason],
-      summary: "direct sequence flow blocked",
-      mode: "direct_sequence_request"
-    };
+    return buildBlockedDirectResponse(compoundRequest.reason);
   }
 
   const plan = buildProposalFromIntent({
@@ -185,19 +314,7 @@ export function executeDirectSequenceRequestOrchestration({
     normalizedEffectOverrides
   });
   if (compoundNormalizedRequest.compound) {
-    return {
-      ok: false,
-      creativeBrief: null,
-      proposalBundle: null,
-      intentHandoff: null,
-      proposalLines: [],
-      guidedQuestions: [
-        "Split this into separate requests, for example one prompt per effect/section pair."
-      ],
-      warnings: [compoundNormalizedRequest.reason],
-      summary: "direct sequence flow blocked",
-      mode: "direct_sequence_request"
-    };
+    return buildBlockedDirectResponse(compoundNormalizedRequest.reason);
   }
 
   const resolvedRequestedEffectPhrase = str(normalizedEffectOverrides[0] || requestedEffectPhrase);
