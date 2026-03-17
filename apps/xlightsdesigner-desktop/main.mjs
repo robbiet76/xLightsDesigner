@@ -281,6 +281,9 @@ async function processAutomationRequests() {
       if (action === "refreshFromXLights") {
         return invokeRendererAutomation("refreshFromXLights", request?.payload || {});
       }
+      if (action === "analyzeAudio") {
+        return invokeRendererAutomation("analyzeAudio", request?.payload || {});
+      }
       if (action === "applyCurrentProposal") {
         return invokeRendererAutomation("applyCurrentProposal", request?.payload || {});
       }

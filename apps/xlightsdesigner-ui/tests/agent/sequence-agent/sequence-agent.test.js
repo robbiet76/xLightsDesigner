@@ -1426,10 +1426,138 @@ test("sequence_agent synthesizes execution lines from designer section plans whe
   });
 
   assert.deepEqual(out.executionLines, [
-    "Intro / MegaTree / keep the pass restrained",
-    "Chorus 1 / MegaTree / build stronger visual payoff"
+    "Intro / MegaTree / apply Color Wash effect for the requested duration using the current target timing",
+    "Chorus 1 / MegaTree / apply Shimmer effect for the requested duration using the current target timing"
   ]);
   assert.deepEqual(out.metadata.scope.sections, ["Intro", "Chorus 1"]);
   assert.equal(out.metadata.executionStrategy.passScope, "multi_section");
   assert.equal(out.commands.some((row) => row.cmd === "effects.create"), true);
+});
+
+test("sequence_agent turns designer whole-sequence section plans into effect commands", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Chorus 1", startMs: 44000, endMs: 62000 },
+          { label: "Bridge", startMs: 90000, endMs: 108000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Rework the whole show into a warmer, more cinematic pass.",
+      mode: "revise",
+      scope: {
+        targetIds: [],
+        tagNames: [],
+        sections: ["all"]
+      },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        shouldUseFullSongStructureTrack: true,
+        primarySections: ["Intro", "Chorus 1", "Bridge"],
+        sectionPlans: [
+          {
+            section: "Intro",
+            energy: "low",
+            density: "sparse",
+            intentSummary: "keep the pass restrained with warm cinematic color and glow control",
+            targetIds: ["AllModels", "AllModels_NoFloods"],
+            effectHints: []
+          },
+          {
+            section: "Chorus 1",
+            energy: "high",
+            density: "dense",
+            intentSummary: "build stronger visual payoff with warm cinematic color and glow control",
+            targetIds: ["AllModels", "Snowman", "PorchTree"],
+            effectHints: []
+          },
+          {
+            section: "Bridge",
+            energy: "medium",
+            density: "wide",
+            intentSummary: "widen the picture with smoother transitions and controlled contrast lift",
+            targetIds: ["AllModels", "Star"],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    sourceLines: [],
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.alignToTiming"],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Bars", params: [] }
+    ])
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.ok(effectCommands.length >= 3);
+  assert.equal(effectCommands.some((row) => row.params.modelName === "AllModels" && row.params.effectName === "Color Wash"), true);
+  assert.equal(effectCommands.some((row) => row.params.modelName === "Snowman" && row.params.effectName === "Shimmer"), true);
+  assert.equal(effectCommands.some((row) => row.params.modelName === "Star" && row.params.effectName === "Bars"), true);
+});
+
+test("sequence_agent prefers synthesized effect lines over non-executable designer prose lines", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Section 1", startMs: 0, endMs: 10000 },
+          { label: "Section 2", startMs: 10000, endMs: 20000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Create a broad cinematic warm pass.",
+      mode: "revise",
+      scope: { targetIds: [], tagNames: [], sections: ["all"] },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        shouldUseFullSongStructureTrack: true,
+        primarySections: ["Section 1", "Section 2"],
+        sectionPlans: [
+          {
+            section: "Section 1",
+            energy: "low",
+            density: "sparse",
+            intentSummary: "keep the pass restrained with warm cinematic color and glow control",
+            targetIds: ["AllModels"],
+            effectHints: []
+          },
+          {
+            section: "Section 2",
+            energy: "high",
+            density: "dense",
+            intentSummary: "build stronger visual payoff with warm cinematic color and glow control",
+            targetIds: ["Snowman"],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    sourceLines: [
+      "Section 1 / General / keep the pass restrained with warm cinematic color and glow control",
+      "Section 2 / General / build stronger visual payoff with warm cinematic color and glow control"
+    ],
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create", "effects.alignToTiming"],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Shimmer", params: [] }
+    ])
+  });
+
+  assert.deepEqual(out.executionLines, [
+    "Section 1 / AllModels / apply Color Wash effect in warm amber and gold tones for the requested duration using the current target timing",
+    "Section 2 / Snowman / apply Shimmer effect in warm amber and gold tones for the requested duration using the current target timing"
+  ]);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "AllModels"), true);
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create" && row.params.modelName === "Snowman"), true);
 });

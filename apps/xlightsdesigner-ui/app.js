@@ -10585,6 +10585,17 @@ async function refreshAutomationFromXLights() {
   };
 }
 
+async function analyzeAutomationAudio(payload = {}) {
+  await onAnalyzeAudio({ userPrompt: String(payload?.prompt || "").trim() });
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    analysisReady: Boolean(getValidHandoff("analysis_handoff_v1")),
+    lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null
+  };
+}
+
 function getAutomationAgentRuntimeSnapshot() {
   const summarizeHandoff = (contract = "") => {
     const row = agentRuntime.handoffs?.[String(contract || "").trim()] || null;
@@ -10632,6 +10643,7 @@ function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
     refreshFromXLights: refreshAutomationFromXLights,
+    analyzeAudio: analyzeAutomationAudio,
     applyCurrentProposal: applyAutomationCurrentProposal,
     diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
     getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,

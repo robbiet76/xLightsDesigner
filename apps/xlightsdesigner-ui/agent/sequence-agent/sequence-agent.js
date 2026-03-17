@@ -155,18 +155,68 @@ function isGenericExecutionLine(line = "") {
   return /^general\s*\//i.test(text);
 }
 
+function isExecutableSequencingLine(line = "") {
+  const text = normText(line);
+  if (!text) return false;
+  if (!/^[^/]+\s*\/\s*[^/]+\s*\/.+/.test(text)) return false;
+  const lower = text.toLowerCase();
+  if (/\bapply\b.+\beffect\b/.test(lower)) return true;
+  if (/\b(color wash|shimmer|bars|butterfly|on effect|apply on)\b/.test(lower)) return true;
+  return false;
+}
+
+function inferEffectNameFromSectionPlan({ section = "", energy = "", density = "", intentSummary = "", effectHints = [] } = {}) {
+  const hinted = normArray(effectHints).map((row) => normText(row)).find(Boolean);
+  if (hinted) return hinted;
+  const summary = `${normText(intentSummary)} ${normText(section)}`.toLowerCase();
+  const normalizedEnergy = normText(energy).toLowerCase();
+  const normalizedDensity = normText(density).toLowerCase();
+  if (/shimmer|sparkle|twinkle|glitter/.test(summary)) return "Shimmer";
+  if (/bars|pulse|strobe|rhythm|chop/.test(summary)) return "Bars";
+  if (/\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary)) return "On";
+  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) return "Shimmer";
+  if (normalizedDensity === "dense" || /bridge/.test(summary)) return "Bars";
+  return "Color Wash";
+}
+
+function buildStructuredExecutionLine({
+  section = "",
+  targetIds = [],
+  fallbackTargetIds = [],
+  intentSummary = "",
+  effectName = ""
+} = {}) {
+  const sectionText = normText(section) || "General";
+  const targets = normArray(targetIds).length ? normArray(targetIds) : normArray(fallbackTargetIds);
+  const targetText = targets.length ? targets.slice(0, 8).join(" + ") : "AllModels";
+  const effectText = normText(effectName) || "Color Wash";
+  const summary = normText(intentSummary).toLowerCase();
+  const paletteClause = /warm|amber|gold|red/.test(summary)
+    ? " in warm amber and gold tones"
+    : (/cool|blue|icy/.test(summary) ? " in cool blue and white tones" : "");
+  return `${sectionText} / ${targetText} / apply ${effectText} effect${paletteClause} for the requested duration using the current target timing`;
+}
+
 function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
-        const sectionText = normText(row?.section) || "General";
-        const targetText = normArray(row?.targetIds).length
-          ? normArray(row?.targetIds).slice(0, 8).join(" + ")
-          : (Array.isArray(scope.targetIds) && scope.targetIds.length ? scope.targetIds.slice(0, 8).join(" + ") : "General");
-        const summary = normText(row?.intentSummary || scope.goal || `${scope.mode || "create"} from intent`);
-        return `${sectionText} / ${targetText} / ${summary}${toneText}`;
+        const effectName = inferEffectNameFromSectionPlan({
+          section: row?.section,
+          energy: row?.energy,
+          density: row?.density,
+          intentSummary: row?.intentSummary || scope.goal,
+          effectHints: row?.effectHints
+        });
+        return buildStructuredExecutionLine({
+          section: row?.section,
+          targetIds: row?.targetIds,
+          fallbackTargetIds: scope.targetIds,
+          intentSummary: `${normText(row?.intentSummary || scope.goal)}${toneText}`,
+          effectName
+        });
       })
     : [(() => {
         const sectionText = Array.isArray(scope.sectionNames) && scope.sectionNames.length
@@ -180,6 +230,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } =
   return {
     toneHint,
     executionSeedLines,
+    preferSynthesized: strategySectionPlans.length > 0,
     strategy: timing.strategy,
     detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy}`
   };
@@ -203,7 +254,11 @@ function stageCommandGraphSynthesis({
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const synthesized = normArray(effect.executionSeedLines).filter(Boolean);
-  const shouldPreferSynthesized = synthesized.length && proposed.length && proposed.every((line) => isGenericExecutionLine(line));
+  const shouldPreferSynthesized = Boolean(effect?.preferSynthesized) && synthesized.length && (
+    !proposed.length
+    || proposed.every((line) => isGenericExecutionLine(line))
+    || proposed.some((line) => !isExecutableSequencingLine(line))
+  );
   const executionLines = shouldPreferSynthesized
     ? synthesized
     : (proposed.length ? proposed : synthesized);
