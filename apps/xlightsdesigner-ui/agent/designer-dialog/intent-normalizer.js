@@ -37,6 +37,10 @@ function escapeRegex(value = "") {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function looksGenericSectionLabel(value = "") {
+  return /^section\s+\d+$/i.test(cleanText(value));
+}
+
 function buildTagPatterns(tag = "") {
   const key = normalizeName(tag);
   if (!key) return [];
@@ -284,7 +288,10 @@ export function normalizeIntent({
       })
     : [];
   const inferredSections = globalScopeRequested ? [] : inferSectionsFromPrompt(goal, availableSectionNames);
-  const sections = uniqueStrings([...explicitSections, ...inferredSections]);
+  const mergedSections = uniqueStrings([...explicitSections, ...inferredSections]);
+  const sections = mergedSections.some((row) => !looksGenericSectionLabel(row))
+    ? mergedSections.filter((row) => !looksGenericSectionLabel(row))
+    : mergedSections;
   const selectedTags = Array.isArray(selectedTagNames) ? selectedTagNames.filter(Boolean) : [];
   const inferredTags = collectPromptInferredTags(goal, metadataAssignments);
   const tags = uniqueStrings([...selectedTags, ...inferredTags]);

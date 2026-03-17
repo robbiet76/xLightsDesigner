@@ -65,6 +65,16 @@ test('normalizeIntent carries bounded assumptions for broad but usable prompts',
   assert.ok(normalized.assumptions.some((line) => /cool palette direction/i.test(line)));
 });
 
+test('normalizeIntent drops generic section labels when semantic labels are present', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Design a single Chorus 1 concept with beat accents',
+    selectedSections: ['Section 1', 'Section 2', 'Section 3'],
+    availableSectionNames: ['Intro', 'Verse 1', 'Chorus 1', 'Bridge']
+  });
+
+  assert.deepEqual(normalized.sections, ['Chorus 1']);
+});
+
 test('resolveTargets honors explicit target ids and metadata tags', () => {
   const normalizedIntent = normalizeIntent({
     promptText: 'Bring up energy on focal rhythm-driver elements',
