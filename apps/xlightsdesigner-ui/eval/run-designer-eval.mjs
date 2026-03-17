@@ -892,6 +892,74 @@ function runCase(testCase, metadataFixture) {
   };
 }
 
+function runPairedPreferenceCase(testCase, metadataFixture) {
+  const fixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const promptText = str(testCase.promptText);
+  const baseArgs = {
+    sequenceRevision: "eval-rev-1",
+    promptText,
+    goals: promptText,
+    selectedSections: arr(testCase.selectedSections),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext
+  };
+  const warmResult = executeDesignerProposalOrchestration({
+    requestId: `eval-${testCase.id}-warm`,
+    ...baseArgs,
+    directorProfile: buildDirectorProfile("warm_cinematic")
+  });
+  const crispResult = executeDesignerProposalOrchestration({
+    requestId: `eval-${testCase.id}-crisp`,
+    ...baseArgs,
+    directorProfile: buildDirectorProfile("crisp_focal")
+  });
+  const warmMetrics = extractMetrics(warmResult);
+  const crispMetrics = extractMetrics(crispResult);
+  const warmFamilies = uniq(warmMetrics.distinctEffectFamilies).sort();
+  const crispFamilies = uniq(crispMetrics.distinctEffectFamilies).sort();
+  const warmChorusSpeed = Number(warmMetrics.perSectionAverageSpeeds?.["Chorus 1"] || 0);
+  const crispChorusSpeed = Number(crispMetrics.perSectionAverageSpeeds?.["Chorus 1"] || 0);
+  const failures = [];
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+  check("preference_family_sets_identical", JSON.stringify(warmFamilies) !== JSON.stringify(crispFamilies));
+  check("preference_speed_not_shifted", crispChorusSpeed > warmChorusSpeed);
+  check("warm_missing_soft_families", warmFamilies.some((name) => /Color Wash|Wave|Spirals|Candle/i.test(name)));
+  check("crisp_missing_crisp_families", crispFamilies.some((name) => /Bars|Shimmer|Meteors|Pinwheel/i.test(name)));
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    runnerMode: "paired_preference",
+    lenses: arr(testCase.lenses),
+    status: failures.length ? "failed" : "passed",
+    summary: promptText,
+    structuralScore: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    artisticScores: null,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      warmFamilies,
+      crispFamilies,
+      warmChorusSpeed,
+      crispChorusSpeed
+    }
+  };
+}
+
 function summarizeResults(results = []) {
   const supported = arr(results).filter((row) => row.status !== "deferred");
   const passed = supported.filter((row) => row.status === "passed");
@@ -930,7 +998,11 @@ function summarizeResults(results = []) {
 function main() {
   const corpus = readJson(casesPath);
   const metadataFixture = readJson(metadataFixturePath);
-  const results = arr(corpus.cases).map((testCase) => runCase(testCase, metadataFixture));
+  const results = arr(corpus.cases).map((testCase) => (
+    str(testCase.runnerMode) === "paired_preference"
+      ? runPairedPreferenceCase(testCase, metadataFixture)
+      : runCase(testCase, metadataFixture)
+  ));
   const report = {
     corpusType: corpus.corpusType,
     version: corpus.version,

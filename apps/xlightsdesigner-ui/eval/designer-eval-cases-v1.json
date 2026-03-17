@@ -374,6 +374,15 @@
         "minDistinctEffectFamilies": 1,
         "proposalLinePatternsAny": ["warm", "controlled", "restrained", "intimate"]
       }
+    },
+    {
+      "id": "pref-paired-divergence-chorus",
+      "kind": "preference",
+      "runnerMode": "paired_preference",
+      "lenses": ["Preference Adaptation"],
+      "fixtureVariant": "default",
+      "promptText": "Build a broad chorus payoff that feels warm, cinematic, and emotionally open.",
+      "selectedSections": ["Chorus 1", "Final Chorus"]
     }
   ]
 }
