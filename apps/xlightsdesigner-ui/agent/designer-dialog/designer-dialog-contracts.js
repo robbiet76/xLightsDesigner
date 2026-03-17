@@ -160,6 +160,9 @@ export function validateProposalBundle(payload = {}) {
   pushRequiredObject(errors, obj, "lifecycle");
   if (!Array.isArray(obj.guidedQuestions)) errors.push("guidedQuestions is required");
   if (!Array.isArray(obj.assumptions)) errors.push("assumptions is required");
+  if (obj.executionPlan != null && !isPlainObject(obj.executionPlan)) {
+    errors.push("executionPlan must be an object when provided");
+  }
   if (obj.traceability != null && !isPlainObject(obj.traceability)) {
     errors.push("traceability must be an object when provided");
   }
@@ -272,6 +275,7 @@ export function buildProposalBundle({
   assumptions = [],
   riskNotes = [],
   impact = {},
+  executionPlan = null,
   traceability = null
 } = {}) {
   return finalizeArtifact({
@@ -290,6 +294,7 @@ export function buildProposalBundle({
     assumptions: arr(assumptions).map((row) => str(row)).filter(Boolean),
     riskNotes: arr(riskNotes).map((row) => str(row)).filter(Boolean),
     impact: isPlainObject(impact) ? impact : {},
+    executionPlan: isPlainObject(executionPlan) ? executionPlan : undefined,
     traceability: isPlainObject(traceability) ? traceability : undefined
   });
 }
@@ -299,7 +304,8 @@ export function buildIntentHandoffFromDesignerState({
   intentText = "",
   creativeBrief = null,
   elevatedRiskConfirmed = false,
-  resolvedTargetIds = []
+  resolvedTargetIds = [],
+  executionStrategy = null
 } = {}) {
   return buildCanonicalSequenceIntentHandoff({
     normalizedIntent: {
@@ -309,7 +315,8 @@ export function buildIntentHandoffFromDesignerState({
     intentText,
     creativeBrief,
     elevatedRiskConfirmed,
-    resolvedTargetIds
+    resolvedTargetIds,
+    executionStrategy
   });
 }
 

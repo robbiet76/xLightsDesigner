@@ -25,8 +25,10 @@ export function buildDesignerDiagnosticsArtifact({
     warnings: arr(warnings).map((row) => str(row)).filter(Boolean),
     proposalLifecycle: proposalBundle?.lifecycle || null,
     proposalSummary: str(proposalBundle?.summary),
+    proposalExecutionPlan: proposalBundle?.executionPlan || null,
     briefSummary: str(creativeBrief?.summary),
     handoffGoal: str(handoff?.goal),
+    handoffExecutionStrategy: handoff?.executionStrategy || null,
     generatedAt: new Date().toISOString()
   };
 }

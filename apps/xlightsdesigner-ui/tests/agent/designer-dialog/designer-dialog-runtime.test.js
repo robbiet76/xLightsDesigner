@@ -132,6 +132,9 @@ test("buildProposalBundleArtifact returns canonical proposal with scope and impa
   assert.ok(result.proposalBundle.proposalLines.length > 0);
   assert.ok(Array.isArray(result.proposalBundle.assumptions));
   assert.ok(typeof result.proposalBundle.impact.estimatedImpact === "number");
+  assert.equal(result.proposalBundle.executionPlan.passScope, "single_section");
+  assert.equal(result.proposalBundle.executionPlan.implementationMode, "section_pass");
+  assert.deepEqual(result.proposalBundle.executionPlan.primarySections, ["Chorus"]);
   assert.equal(result.proposalBundle.traceability.directorProfileSignals.summary, "Prefers strong focal moments without clutter.");
   assert.equal(result.proposalBundle.traceability.designSceneSignals.layoutMode, "2d");
   assert.deepEqual(result.proposalBundle.traceability.designSceneSignals.detailCoverageDomains, ["MegaTree/Star"]);
@@ -161,6 +164,8 @@ test("executeDesignerDialogFlow returns canonical result with brief, proposal, a
   assert.equal(result.creativeBrief.briefType, "creative_brief_v1");
   assert.equal(result.proposalBundle.bundleType, "proposal_bundle_v1");
   assert.equal(result.handoff.goal, "Make the chorus feel bigger and cleaner");
+  assert.equal(result.handoff.executionStrategy.passScope, "single_section");
+  assert.equal(result.handoff.executionStrategy.implementationMode, "section_pass");
 });
 
 test("executeDesignerDialogFlow proceeds on broad usable prompts with explicit assumptions", () => {
@@ -180,4 +185,46 @@ test("executeDesignerDialogFlow proceeds on broad usable prompts with explicit a
 
   assert.ok(result.creativeBrief.hypotheses.some((line) => /smooth motion preference|hero-prop-first/i.test(line)));
   assert.ok(result.proposalBundle.proposalLines.length > 0);
+});
+
+test("designer runtime marks whole-sequence passes explicitly for broad rewrites", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-5",
+    sequenceRevision: "rev-5",
+    promptText: "Rework the whole show into a warmer, more cinematic pass.",
+    goals: "Create a full-song cinematic holiday treatment.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro" },
+          { label: "Verse 1" },
+          { label: "Chorus 1" },
+          { label: "Bridge" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "high", density: "wide" }
+      ],
+      designCues: {
+        revealMoments: ["Chorus 1"],
+        holdMoments: ["Intro"],
+        lyricFocusMoments: []
+      }
+    }
+  });
+
+  assert.ok(["ok", "partial"].includes(result.status));
+  assert.equal(result.proposalBundle.executionPlan.passScope, "whole_sequence");
+  assert.equal(result.proposalBundle.executionPlan.implementationMode, "whole_sequence_pass");
+  assert.ok(result.proposalBundle.executionPlan.sectionPlans.length >= 4);
+  assert.equal(result.handoff.executionStrategy.passScope, "whole_sequence");
+  assert.equal(result.handoff.executionStrategy.shouldUseFullSongStructureTrack, true);
 });

@@ -135,6 +135,19 @@ test("proposal bundle contract accepts canonical payload", () => {
   assert.deepEqual(errors, []);
 });
 
+test("proposal bundle contract accepts optional execution plan", () => {
+  const errors = validateProposalBundle(sampleProposal({
+    executionPlan: {
+      passScope: "whole_sequence",
+      implementationMode: "whole_sequence_pass",
+      routePreference: "designer_to_sequence_agent",
+      sectionCount: 3,
+      primarySections: ["Intro", "Verse 1", "Chorus 1"]
+    }
+  }));
+  assert.deepEqual(errors, []);
+});
+
 test("designer dialog result contract accepts canonical payload", () => {
   const errors = validateDesignerDialogResult(sampleResult());
   assert.deepEqual(errors, []);
@@ -180,11 +193,20 @@ test("buildIntentHandoffFromDesignerState produces valid intent_handoff_v1", () 
       mood: "cinematic",
       paletteIntent: "warm gold"
     },
-    elevatedRiskConfirmed: false
+    elevatedRiskConfirmed: false,
+    executionStrategy: {
+      passScope: "whole_sequence",
+      implementationMode: "whole_sequence_pass",
+      routePreference: "designer_to_sequence_agent",
+      shouldUseFullSongStructureTrack: true,
+      sectionCount: 4,
+      primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"]
+    }
   });
 
   const gate = validateDesignerDialogContractGate("result", sampleResult({ handoff }));
   assert.equal(gate.ok, true);
+  assert.equal(handoff.executionStrategy.passScope, "whole_sequence");
 });
 
 test("designer dialog contract gate reports unknown kind", () => {

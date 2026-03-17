@@ -13,12 +13,40 @@ function inferIntentModeFromGoal(goal = "") {
   return "revise";
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function buildDefaultExecutionStrategy(normalizedIntent = {}, selectedSections = []) {
+  const sections = Array.isArray(selectedSections) ? selectedSections.filter(Boolean) : [];
+  const allowGlobalRewrite = Boolean(
+    normalizedIntent?.preservationConstraints?.allowGlobalRewrite ??
+    normalizedIntent?.allowGlobalRewrite
+  );
+  const passScope = allowGlobalRewrite
+    ? "whole_sequence"
+    : sections.length > 1
+      ? "multi_section"
+      : sections.length === 1
+        ? "single_section"
+        : "whole_sequence";
+  return {
+    passScope,
+    implementationMode: passScope === "whole_sequence" ? "whole_sequence_pass" : "section_pass",
+    routePreference: "designer_to_sequence_agent",
+    shouldUseFullSongStructureTrack: true,
+    sectionCount: sections.length,
+    primarySections: sections.slice(0, 24)
+  };
+}
+
 export function buildCanonicalSequenceIntentHandoff({
   normalizedIntent = {},
   intentText = "",
   creativeBrief = null,
   elevatedRiskConfirmed = false,
-  resolvedTargetIds = null
+  resolvedTargetIds = null,
+  executionStrategy = null
 } = {}) {
   const selectedTargetIds = Array.isArray(resolvedTargetIds) && resolvedTargetIds.length
     ? resolvedTargetIds
@@ -27,6 +55,9 @@ export function buildCanonicalSequenceIntentHandoff({
   const selectedSections = Array.isArray(normalizedIntent?.sections) ? normalizedIntent.sections : [];
   const goal = str(normalizedIntent?.goal || intentText);
   const mode = inferIntentModeFromGoal(goal);
+  const normalizedExecutionStrategy = isPlainObject(executionStrategy)
+    ? executionStrategy
+    : buildDefaultExecutionStrategy(normalizedIntent, selectedSections);
   return finalizeArtifact({
     artifactType: "intent_handoff_v1",
     artifactVersion: "1.0",
@@ -52,6 +83,7 @@ export function buildCanonicalSequenceIntentHandoff({
       focusElements: selectedTargetIds.slice(0, 40),
       colorDirection: str(creativeBrief?.paletteIntent || creativeBrief?.colorDirection || normalizedIntent?.colorDirection || "")
     },
+    executionStrategy: normalizedExecutionStrategy,
     approvalPolicy: {
       requiresExplicitApprove: true,
       elevatedRiskConfirmed: Boolean(elevatedRiskConfirmed)

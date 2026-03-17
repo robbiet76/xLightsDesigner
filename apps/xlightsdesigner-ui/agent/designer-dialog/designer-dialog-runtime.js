@@ -214,6 +214,66 @@ function estimateImpact({ proposalLines = [], targets = [] } = {}) {
   return Math.max(arr(proposalLines).length * 8, arr(targets).length * 5);
 }
 
+function buildDesignerExecutionPlan({
+  normalizedIntent = null,
+  analysisHandoff = null,
+  musicDesignContext = null,
+  targets = []
+} = {}) {
+  const intent = isPlainObject(normalizedIntent) ? normalizedIntent : {};
+  const targetIds = arr(intent.targetIds).filter(Boolean);
+  const explicitSections = arr(intent.sections).filter(Boolean);
+  const sectionArc = arr(musicDesignContext?.sectionArc)
+    .map((row) => ({
+      label: str(row?.label),
+      energy: str(row?.energy),
+      density: str(row?.density)
+    }))
+    .filter((row) => row.label);
+  const analyzedSections = arr(analysisHandoff?.structure?.sections)
+    .map((row) => ({
+      label: str(row?.label || row?.name),
+      energy: str(row?.energy),
+      density: str(row?.density)
+    }))
+    .filter((row) => row.label);
+  const availableSections = sectionArc.length ? sectionArc : analyzedSections;
+  const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
+  const passScope = allowGlobalRewrite
+    ? "whole_sequence"
+    : explicitSections.length > 1
+      ? "multi_section"
+      : explicitSections.length === 1
+        ? "single_section"
+        : "whole_sequence";
+  const primarySections = (explicitSections.length ? explicitSections : availableSections.map((row) => row.label)).slice(0, 24);
+  const sectionPlans = (primarySections.length ? primarySections : availableSections.map((row) => row.label))
+    .slice(0, 24)
+    .map((label) => {
+      const match = availableSections.find((row) => str(row.label) === str(label));
+      return {
+        section: str(label),
+        energy: str(match?.energy),
+        density: str(match?.density),
+        intentSummary: str(intent.goal || ""),
+        targetIds: (targetIds.length ? targetIds : arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean)).slice(0, 40),
+        effectHints: arr(intent.effectOverrides).map((row) => str(row)).filter(Boolean)
+      };
+    });
+
+  return {
+    passScope,
+    implementationMode: passScope === "whole_sequence" ? "whole_sequence_pass" : "section_pass",
+    routePreference: "designer_to_sequence_agent",
+    reviewMode: "designer_review_required",
+    shouldUseFullSongStructureTrack: true,
+    sectionCount: primarySections.length,
+    targetCount: (targetIds.length ? targetIds : arr(targets)).length,
+    primarySections,
+    sectionPlans
+  };
+}
+
 export function buildProposalBundleArtifact({
   requestId = "",
   sequenceRevision = "unknown",
@@ -288,6 +348,12 @@ export function buildProposalBundleArtifact({
     directorPreferences
   });
   const proposalLines = mergeCreativeBriefIntoProposalLines(plan.proposalLines, creativeBrief);
+  const executionPlan = buildDesignerExecutionPlan({
+    normalizedIntent: plan.normalizedIntent,
+    analysisHandoff,
+    musicDesignContext: resolvedMusicContext,
+    targets: plan.targets
+  });
   const proposalBundle = buildProposalBundle({
     proposalId: makeId("proposal"),
     summary: str(promptText || plan.normalizedIntent?.goal || "Designer proposal generated from current conversation."),
@@ -324,6 +390,7 @@ export function buildProposalBundleArtifact({
       resolvedTargetCount: arr(plan.targets).length,
       assumptionCount: arr(clarificationPlan.assumptions).length
     },
+    executionPlan,
     traceability: {
       directorProfileSignals: isPlainObject(directorProfile?.preferences)
         ? {
@@ -439,6 +506,7 @@ export function executeDesignerDialogFlow({
       intentText: promptText,
       creativeBrief: brief,
       elevatedRiskConfirmed,
+      executionStrategy: proposal.proposalBundle?.executionPlan || null,
       resolvedTargetIds: proposal.plan.resolutionSource === "fallback"
         ? []
         : arr(proposal.plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
