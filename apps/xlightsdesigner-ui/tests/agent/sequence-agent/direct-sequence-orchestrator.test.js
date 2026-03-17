@@ -46,11 +46,33 @@ test("direct sequence orchestrator bypasses designer scaffolding and emits canon
   assert.equal(result.proposalBundle.bundleType, "proposal_bundle_v1");
   assert.ok(result.proposalBundle.executionPlan);
   assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designAuthor, "user");
-  assert.match(result.proposalBundle.executionPlan.sectionPlans[0].designId, /^DES-/);
+  assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designId, "DES-001");
   assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designAuthor, "user");
   assert.equal(result.proposalBundle.guidedQuestions.length, 0);
   assert.match(result.proposalLines[0], /General \/ Border-01 \/ apply On effect in green for 30000 ms starting at 0 ms/i);
   assert.deepEqual(validateAgentHandoff("intent_handoff_v1", result.intentHandoff), []);
+});
+
+test("direct sequence orchestrator allocates the next short design id from existing concepts", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-next-id",
+    sequenceRevision: "rev-1",
+    promptText: "Add a Color Wash effect on Snowman during Chorus 1.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Snowman", name: "Snowman", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Snowman", name: "Snowman", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    existingDesignIds: ["DES-001", "DES-002", "DES-009"],
+    analysisHandoff: sampleAnalysis()
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designId, "DES-010");
+  assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designId, "DES-010");
 });
 
 test("direct sequence orchestrator blocks non-writable layout-only targets", () => {

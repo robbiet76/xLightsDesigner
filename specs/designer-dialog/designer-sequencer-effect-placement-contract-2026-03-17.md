@@ -346,6 +346,16 @@ The contract must allow multiple placements that share:
 Every conceptual design group must have a stable `designId`.
 Every conceptual design group must also carry a `designAuthor`.
 
+`designId` is a stable concept identifier, not a timestamp-derived event id.
+The visible/current format should remain short and human-readable, for example:
+- `DES-001`
+- `DES-002`
+
+Revision history must not be encoded by changing the `designId` format.
+If revision tracking is needed, it must be carried separately via a future field such as:
+- `designRevision`
+- `supersedesRevision`
+
 Current supported `designAuthor` values:
 - `designer`
 - `user`

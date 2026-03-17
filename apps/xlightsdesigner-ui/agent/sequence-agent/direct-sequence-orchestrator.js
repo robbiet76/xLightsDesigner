@@ -24,8 +24,17 @@ function estimateImpact(proposalLines = []) {
   return Math.max(arr(proposalLines).length * 8, 0);
 }
 
-function makeUserDesignId() {
-  return `DES-${Date.now()}`;
+function parseDesignIdNumber(designId = "") {
+  const match = str(designId).match(/^DES-(\d{3,})$/i);
+  return match ? Number(match[1]) : NaN;
+}
+
+function makeUserDesignId(existingDesignIds = []) {
+  const maxId = arr(existingDesignIds)
+    .map((row) => parseDesignIdNumber(row))
+    .filter((row) => Number.isFinite(row))
+    .reduce((max, row) => Math.max(max, row), 0);
+  return `DES-${String(maxId + 1).padStart(3, "0")}`;
 }
 
 function buildUserExecutionStrategy({
@@ -202,6 +211,7 @@ export function executeDirectSequenceRequestOrchestration({
   requestId = "",
   sequenceRevision = "unknown",
   promptText = "",
+  designIdOverride = "",
   selectedSections = [],
   selectedTagNames = [],
   selectedTargetIds = [],
@@ -211,6 +221,7 @@ export function executeDirectSequenceRequestOrchestration({
   displayElements = [],
   effectCatalog = null,
   metadataAssignments = [],
+  existingDesignIds = [],
   elevatedRiskConfirmed = false
 } = {}) {
   const decomposedClauses = tryDecomposeExplicitSequencingClauses(promptText, analysisHandoff);
@@ -220,6 +231,7 @@ export function executeDirectSequenceRequestOrchestration({
         requestId,
         sequenceRevision,
         promptText: clause.promptText,
+        designIdOverride,
         selectedSections: clause.selectedSections,
         selectedTagNames,
         selectedTargetIds,
@@ -330,7 +342,7 @@ export function executeDirectSequenceRequestOrchestration({
   }
 
   const requestedEffectPhrase = detectRequestedEffectPhrase(promptText);
-  const designId = makeUserDesignId();
+  const designId = str(designIdOverride) || makeUserDesignId(existingDesignIds);
   const compoundRequest = detectCompoundDirectRequest({
     promptText,
     explicitSections,

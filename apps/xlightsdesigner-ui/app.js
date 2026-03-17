@@ -3259,6 +3259,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         displayElements: state.displayElements || [],
         effectCatalog: state.effectCatalog,
         metadataAssignments: state.metadata?.assignments || [],
+        existingDesignIds: collectCurrentDesignIds(),
         elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
       })
     : executeDesignerProposalOrchestration({
@@ -6699,6 +6700,26 @@ function shouldAnswerAudioFromExistingAnalysis(res = {}, raw = "") {
   return /(main sections|section|first real lift|first lift|hold back|open up|chorus|verse|bridge|where does|tell me where)/.test(text);
 }
 
+function collectCurrentDesignIds() {
+  const ids = new Set();
+  const candidatePlans = [
+    state.creative?.proposalBundle?.executionPlan,
+    state.creative?.intentHandoff?.executionStrategy
+  ];
+  for (const plan of candidatePlans) {
+    if (!plan || typeof plan !== "object") continue;
+    for (const row of Array.isArray(plan.sectionPlans) ? plan.sectionPlans : []) {
+      const designId = String(row?.designId || "").trim();
+      if (designId) ids.add(designId);
+    }
+    for (const row of Array.isArray(plan.effectPlacements) ? plan.effectPlacements : []) {
+      const designId = String(row?.designId || "").trim();
+      if (designId) ids.add(designId);
+    }
+  }
+  return [...ids];
+}
+
 function seedTechnicalIntentHandoffFromChatPrompt(promptText = "", producer = "app_assistant") {
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
   const explicitSections = hasAllSectionsSelected()
@@ -6717,6 +6738,7 @@ function seedTechnicalIntentHandoffFromChatPrompt(promptText = "", producer = "a
     displayElements: state.displayElements || [],
     effectCatalog: state.effectCatalog,
     metadataAssignments: state.metadata?.assignments || [],
+    existingDesignIds: collectCurrentDesignIds(),
     elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
   });
   if (!directIntent?.ok || !isPlainObject(directIntent.intentHandoff)) {
@@ -11135,6 +11157,18 @@ function getAutomationAgentRuntimeSnapshot() {
   };
 }
 
+function getAutomationPageStatesSnapshot() {
+  const pageStates = getPageStates();
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    review: pageStates?.review || null,
+    design: pageStates?.design || null,
+    sequence: pageStates?.sequence || null
+  };
+}
+
 function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
@@ -11145,6 +11179,7 @@ function exposeRuntimeValidationHooks() {
     showTenEffectGridDemo: showAutomationTenEffectGridDemo,
     showSplitEffectGridDemo: showAutomationSplitEffectGridDemo,
     getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,
+    getPageStatesSnapshot: getAutomationPageStatesSnapshot,
     runDirectSequenceValidation: runCurrentDirectSequenceValidation,
     getDirectSequenceValidationSnapshot: getCurrentDirectSequenceValidationSnapshot
   };
