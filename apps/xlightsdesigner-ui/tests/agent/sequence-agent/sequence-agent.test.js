@@ -1550,7 +1550,9 @@ test("sequence_agent honors explicit effect placements over section-level infere
               intensity: "high"
             },
             layerIntent: {
-              priority: "foreground"
+              priority: "foreground",
+              blendRole: "accent_overlay",
+              mixAmount: "medium"
             }
           },
           {
@@ -1570,8 +1572,14 @@ test("sequence_agent honors explicit effect placements over section-level infere
             palette: {
               C_BUTTON_Palette1: "#ffd39b"
             },
+            settingsIntent: {
+              motion: "rhythmic",
+              direction: "forward",
+              thickness: "medium"
+            },
             renderIntent: {
-              groupPolicy: "preserve_group_rendering"
+              groupPolicy: "preserve_group_rendering",
+              bufferStyle: "overlay"
             }
           }
         ]
@@ -1615,6 +1623,11 @@ test("sequence_agent honors explicit effect placements over section-level infere
   assert.equal(effectCommands[0].intent.settingsIntent.intensity, "high");
   assert.equal(effectCommands[0].intent.layerIntent.priority, "foreground");
   assert.equal(effectCommands[1].intent.renderIntent.groupPolicy, "preserve_group_rendering");
+  assert.equal(effectCommands[0].params.settings.C_SLIDER_Brightness, 125);
+  assert.equal(effectCommands[0].params.settings.T_CHOICE_LayerMethod, "Highlight");
+  assert.equal(effectCommands[0].params.settings.T_SLIDER_EffectLayerMix, 60);
+  assert.equal(effectCommands[1].params.settings.T_CHOICE_In_Transition_Type, "Slide Bars");
+  assert.equal(effectCommands[1].params.settings.B_CHOICE_BufferStyle, "Overlay - Scaled");
   assert.equal(out.metadata.effectPlacementCount, 2);
   const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
   assert.deepEqual(markInsert.params.marks, [

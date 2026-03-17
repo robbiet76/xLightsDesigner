@@ -9,6 +9,7 @@ import {
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
+import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
@@ -318,7 +319,8 @@ function buildCommandsFromEffectPlacements({
   sequenceSettings = {},
   groupIds = [],
   displayElements = [],
-  groupsById = {}
+  groupsById = {},
+  effectCatalog = null
 } = {}) {
   const placements = normArray(effectPlacements);
   if (!placements.length) {
@@ -360,38 +362,44 @@ function buildCommandsFromEffectPlacements({
     groupsById,
     trackName
   });
-  const effectCommands = placements.map((placement, index) => ({
-    id: placement.placementId || `effect.${index + 1}`,
-    dependsOn: [
-      ...(marks.length ? ["timing.marks.insert"] : []),
-      ...(displayOrderCommand ? [displayOrderCommand.id] : [])
-    ],
-    anchor: {
-      kind: "timing_track",
-      trackName: normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan",
-      markLabel: normText(placement?.timingContext?.anchorLabel),
-      startMs: Number(placement.startMs),
-      endMs: Number(placement.endMs),
-      basis: normText(placement?.timingContext?.alignmentMode || "explicit_window") || "explicit_window"
-    },
-    cmd: "effects.create",
-    params: {
-      modelName: normText(placement.targetId),
-      layerIndex: Number(placement.layerIndex),
-      effectName: normText(placement.effectName),
-      startMs: Number(placement.startMs),
-      endMs: Number(placement.endMs),
-      settings: placement.settings && typeof placement.settings === "object" ? placement.settings : {},
-      palette: placement.palette && typeof placement.palette === "object" ? placement.palette : {}
-    },
-    intent: {
-      settingsIntent: placement.settingsIntent,
-      paletteIntent: placement.paletteIntent,
-      layerIntent: placement.layerIntent,
-      renderIntent: placement.renderIntent,
-      constraints: placement.constraints
-    }
-  }));
+  const effectCommands = placements.map((placement, index) => {
+    const translated = translatePlacementIntentToXlights({
+      placement,
+      effectCatalog
+    });
+    return {
+      id: placement.placementId || `effect.${index + 1}`,
+      dependsOn: [
+        ...(marks.length ? ["timing.marks.insert"] : []),
+        ...(displayOrderCommand ? [displayOrderCommand.id] : [])
+      ],
+      anchor: {
+        kind: "timing_track",
+        trackName: normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan",
+        markLabel: normText(placement?.timingContext?.anchorLabel),
+        startMs: Number(placement.startMs),
+        endMs: Number(placement.endMs),
+        basis: normText(placement?.timingContext?.alignmentMode || "explicit_window") || "explicit_window"
+      },
+      cmd: "effects.create",
+      params: {
+        modelName: normText(placement.targetId),
+        layerIndex: Number(placement.layerIndex),
+        effectName: normText(placement.effectName),
+        startMs: Number(placement.startMs),
+        endMs: Number(placement.endMs),
+        settings: translated.settings,
+        palette: translated.palette
+      },
+      intent: {
+        settingsIntent: placement.settingsIntent,
+        paletteIntent: placement.paletteIntent,
+        layerIntent: placement.layerIntent,
+        renderIntent: placement.renderIntent,
+        constraints: placement.constraints
+      }
+    };
+  });
   const sequenceSettingsCommand = buildSequenceSettingsCommand({
     effectCommands,
     groupIds,
@@ -451,7 +459,8 @@ function stageCommandGraphSynthesis({
       sequenceSettings,
       groupIds,
       displayElements,
-      groupsById
+      groupsById,
+      effectCatalog
     });
     const capabilityGate = evaluateSequencePlanCapabilities({ commands: placementGraph.commands, capabilityCommands });
     if (!capabilityGate.ok) {
