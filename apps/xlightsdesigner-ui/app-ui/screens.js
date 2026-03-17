@@ -809,8 +809,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     }).join("")
                   : `<tr><td colspan="8" class="banner">${
                     activeDesignFilter
-                      ? `No translated sequence changes found for ${escapeHtml(String(activeDesignFilter.designLabel || activeDesignFilter.designId || "this design concept"))}.`
-                      : "No translated sequence changes yet."
+                      ? `No translated sequence changes are linked to ${escapeHtml(String(activeDesignFilter.designLabel || activeDesignFilter.designId || "this design concept"))} in the current draft.`
+                      : "No active translated sequence changes yet. Generate or revise a design concept to populate this view."
                   }</td></tr>`
               }
                 </tbody>
@@ -1092,7 +1092,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         </td>
                       </tr>
                     `).join("")
-                    : `<tr><td colspan="7" class="banner">No design concepts available yet.</td></tr>`
+                    : `<tr><td colspan="7" class="banner">No active design concepts yet. Generate a proposal in Design chat to populate this view.</td></tr>`
                 }
               </tbody>
             </table>
@@ -1306,7 +1306,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     `;
                           })
                           .join("")
-                      : `<tr><td colspan="8" class="banner">No proposed changes yet. Ask the designer in chat.</td></tr>`
+                      : `<tr><td colspan="8" class="banner">No active proposed concepts yet. Generate or revise a concept in Design before reviewing apply scope.</td></tr>`
                   }
                 </tbody>
               </table>

@@ -1,6 +1,6 @@
 # Pre-Training Framework Checklist
 
-Status: Active
+Status: Complete
 Date: 2026-03-17
 Owner: xLightsDesigner Team
 
@@ -23,7 +23,7 @@ Before deep designer training starts:
 - [x] Remove temporary grid/demo validation work from committed product behavior
 - [x] Remove temporary desktop diagnostics hooks used only for live validation
 - [x] Remove generated renderer artifacts from repo state
-- [ ] Start training from a clean git worktree
+- [x] Start training from a clean git worktree
 
 Exit gate:
 - the app framework is clean enough that training work is not mixed with ad hoc validation hooks
@@ -57,7 +57,7 @@ Exit gate:
 - [x] Make Review grouped by concept instead of raw proposal lines
 - [x] Keep Sequence as the technical execution view
 - [x] Add a compact concept-to-sequence drill-down path that does not duplicate Sequence detail on Design
-- [ ] Add concept-level empty states / stale states where the current UI is still ambiguous
+- [x] Add concept-level empty states / stale states where the current UI is still ambiguous
 - [x] Confirm the Review page action model is final enough for training-driven iteration
 
 Exit gate:
