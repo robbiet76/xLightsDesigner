@@ -10,7 +10,7 @@ function toInt(value, fallback = -1) {
   return Number.isFinite(n) ? Math.round(n) : fallback;
 }
 
-function buildOwnedSequencingBatchPlan(commands = []) {
+export function buildOwnedSequencingBatchPlan(commands = []) {
   const rows = Array.isArray(commands) ? commands : [];
   let trackName = "";
   let markCommand = null;
@@ -100,6 +100,7 @@ export async function validateAndApplyPlan({
   applySequencingBatchPlan = null,
   getOwnedJob = null,
   getOwnedHealth = null,
+  getOwnedRevision = null,
   safetyOptions = {}
 } = {}) {
   if (!endpoint) throw new Error('endpoint is required');
@@ -130,8 +131,34 @@ export async function validateAndApplyPlan({
     };
   }
 
-  const rev = await getRevision(endpoint);
-  const currentRevision = rev?.data?.revision ?? 'unknown';
+  const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
+  let currentRevision = 'unknown';
+
+  if (ownedBatchPlan && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
+    if (typeof getOwnedHealth !== "function") {
+      return {
+        ok: false,
+        stage: "runtime",
+        error: "owned xLights API health probe is required for compressible apply plans"
+      };
+    }
+    try {
+      if (typeof getOwnedRevision === 'function') {
+        const rev = await getOwnedRevision(endpoint).catch(() => ({ data: { revision: 'unknown' } }));
+        currentRevision = str(rev?.data?.revision || rev?.data?.revisionToken || 'unknown') || 'unknown';
+      }
+    } catch (err) {
+      return {
+        ok: false,
+        stage: "runtime",
+        error: `owned xLights API unavailable: ${str(err?.message || err)}`
+      };
+    }
+  } else {
+    const rev = await getRevision(endpoint);
+    currentRevision = rev?.data?.revision ?? 'unknown';
+  }
+
   if (
     expectedRevision &&
     expectedRevision !== 'unknown' &&
@@ -146,7 +173,6 @@ export async function validateAndApplyPlan({
     };
   }
 
-  const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
   if (ownedBatchPlan && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
     if (typeof getOwnedHealth !== "function") {
       return {
@@ -156,16 +182,6 @@ export async function validateAndApplyPlan({
       };
     }
     try {
-      const health = await getOwnedHealth(endpoint);
-      const ownedState = str(health?.data?.state).toLowerCase();
-      if (ownedState !== "ready") {
-        return {
-          ok: false,
-          stage: "runtime",
-          error: `owned xLights API not ready (state=${ownedState || "unknown"})`,
-          details: health
-        };
-      }
     } catch (err) {
       return {
         ok: false,
@@ -194,8 +210,10 @@ export async function validateAndApplyPlan({
           details: settled
         };
       }
-      const postRev = await getRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }));
-      const nextRevision = postRev?.data?.revision ?? currentRevision;
+      const postRev = typeof getOwnedRevision === 'function'
+        ? await getOwnedRevision(endpoint).catch(() => ({ data: { revision: currentRevision } }))
+        : { data: { revision: currentRevision } };
+      const nextRevision = str(postRev?.data?.revision || postRev?.data?.revisionToken || currentRevision) || currentRevision;
       return {
         ok: true,
         stage: "done",
@@ -208,13 +226,11 @@ export async function validateAndApplyPlan({
       };
     } catch (err) {
       const message = str(err?.message || err);
-      if (!/NOT_FOUND|Failed to fetch|NetworkError|404|owned endpoint/i.test(message)) {
-        return {
-          ok: false,
-          stage: "runtime",
-          error: message
-        };
-      }
+      return {
+        ok: false,
+        stage: "runtime",
+        error: `owned sequencing.applyBatchPlan failed: ${message}`
+      };
     }
   }
 

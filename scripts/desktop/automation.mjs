@@ -11,7 +11,7 @@ fs.mkdirSync(requestsDir, { recursive: true });
 fs.mkdirSync(responsesDir, { recursive: true });
 
 function usage() {
-  console.error("usage: automation.mjs ping | dispatch-prompt <prompt> | apply-current-proposal | run-direct-sequence-validation <json-payload>");
+  console.error("usage: automation.mjs ping | refresh-from-xlights | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload>");
   process.exit(2);
 }
 
@@ -29,8 +29,14 @@ if (command === "dispatch-prompt") {
 } else if (command === "ping") {
   action = "ping";
   payload = {};
+} else if (command === "refresh-from-xlights") {
+  action = "refreshFromXLights";
+  payload = {};
 } else if (command === "apply-current-proposal") {
   action = "applyCurrentProposal";
+  payload = {};
+} else if (command === "diagnose-current-proposal") {
+  action = "diagnoseCurrentProposal";
   payload = {};
 } else if (command === "run-direct-sequence-validation") {
   action = "runDirectSequenceValidation";

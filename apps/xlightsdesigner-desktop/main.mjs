@@ -278,8 +278,12 @@ async function processAutomationRequests() {
         result = await invokeRendererAutomation('dispatchPrompt', String(request?.payload?.prompt || ''));
       } else if (action === 'ping') {
         result = { ok: true, appReady: true };
+      } else if (action === 'refreshFromXLights') {
+        result = await invokeRendererAutomation('refreshFromXLights', request?.payload || {});
       } else if (action === 'applyCurrentProposal') {
         result = await invokeRendererAutomation('applyCurrentProposal', request?.payload || {});
+      } else if (action === 'diagnoseCurrentProposal') {
+        result = await invokeRendererAutomation('diagnoseCurrentProposal', request?.payload || {});
       } else if (action == 'runDirectSequenceValidation') {
         result = await runDirectSequenceValidationFromDesktop(request?.payload || {});
       } else {

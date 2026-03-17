@@ -6,6 +6,7 @@ import {
   createSequence,
   applySequencingBatchPlan,
   getOwnedHealth,
+  getOwnedSequenceRevision,
   getJob,
   getOwnedJob,
   getMediaStatus,
@@ -101,7 +102,7 @@ import {
   normalizeAudioAnalysisProvider
 } from "./agent/audio-analyst/audio-provider-adapters.js";
 import { runAudioAnalysisOrchestration } from "./agent/audio-analyst/audio-analysis-orchestrator.js";
-import { validateAndApplyPlan } from "./agent/sequence-agent/orchestrator.js";
+import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from "./agent/sequence-agent/orchestrator.js";
 import { validateCommandGraph } from "./agent/sequence-agent/command-graph.js";
 import { timingMarksSignature, verifyAppliedPlanReadback as verifyAppliedPlanReadbackWithDeps } from "./agent/sequence-agent/apply-readback.js";
 import { executeAppAssistantConversation } from "./agent/app-assistant/app-assistant-orchestrator.js";
@@ -3064,7 +3065,8 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         stageTransactionCommand,
         applySequencingBatchPlan,
         getOwnedHealth,
-        getOwnedJob
+        getOwnedJob,
+        getOwnedSequenceRevision
       },
       callbacks: {
         pushSequenceAgentContractDiagnostic,
@@ -10274,6 +10276,82 @@ async function applyAutomationCurrentProposal() {
   };
 }
 
+async function diagnoseAutomationCurrentProposal() {
+  const sourceLines = filteredProposed();
+  const intentHandoff = getValidHandoff("intent_handoff_v1");
+  const planHandoff = getValidHandoff("plan_handoff_v1");
+  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
+  const currentFiltered = filteredProposed();
+  const fullScopeApply = arraysEqualOrdered(sourceLines, currentFiltered);
+  let planSource = "generated";
+  let fallbackReason = "";
+  let rawPlan = [];
+  let graph = null;
+
+  if (handoffCommands.length > 0 && fullScopeApply) {
+    graph = validateCommandGraph(handoffCommands);
+    if (graph.ok) {
+      planSource = "handoff_graph";
+      rawPlan = handoffCommands;
+    } else {
+      fallbackReason = `handoff graph invalid (${graph.errors.join(" | ")})`;
+    }
+  } else if (handoffCommands.length > 0 && !fullScopeApply) {
+    fallbackReason = "non-default partial-scope apply requested";
+  } else {
+    fallbackReason = "plan_handoff_v1 commands unavailable";
+  }
+
+  if (!rawPlan.length) {
+    const generated = buildSequenceAgentPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines,
+      baseRevision: state.draftBaseRevision,
+      capabilityCommands: state.health.capabilityCommands || [],
+      effectCatalog: state.effectCatalog,
+      sequenceSettings: state.sequenceSettings,
+      layoutMode: currentLayoutMode(),
+      displayElements: state.displayElements,
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      timingOwnership: getSequenceTimingOwnershipRows(),
+      allowTimingWrites: true
+    });
+    rawPlan = Array.isArray(generated?.commands) ? generated.commands : [];
+    graph = validateCommandGraph(rawPlan);
+  }
+
+  const ownedBatchPlan = buildOwnedSequencingBatchPlan(rawPlan);
+  let ownedHealth = null;
+  let ownedHealthError = "";
+  try {
+    ownedHealth = await getOwnedHealth(state.endpoint);
+  } catch (err) {
+    ownedHealthError = String(err?.message || err || "");
+  }
+
+  return {
+    ok: true,
+    endpoint: state.endpoint,
+    activeSequence: state.activeSequence || "",
+    status: state.status || null,
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    planSource,
+    fallbackReason,
+    handoffCommandCount: handoffCommands.length,
+    rawPlanCount: rawPlan.length,
+    rawPlan,
+    graph,
+    ownedBatchCompressible: Boolean(ownedBatchPlan),
+    ownedBatchPlan,
+    ownedHealth,
+    ownedHealthError
+  };
+}
+
 async function refreshAutomationFromXLights() {
   await onRefresh();
   return {
@@ -10290,6 +10368,7 @@ function exposeRuntimeValidationHooks() {
     dispatchPrompt: dispatchAutomationPrompt,
     refreshFromXLights: refreshAutomationFromXLights,
     applyCurrentProposal: applyAutomationCurrentProposal,
+    diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
     runDirectSequenceValidation: runCurrentDirectSequenceValidation,
     getDirectSequenceValidationSnapshot: getCurrentDirectSequenceValidationSnapshot
   };

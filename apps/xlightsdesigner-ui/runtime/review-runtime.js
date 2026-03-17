@@ -227,6 +227,10 @@ export async function executeApplyCore({
       commitTransaction: deps.commitTransaction,
       rollbackTransaction: deps.rollbackTransaction,
       stageTransactionCommand: deps.stageTransactionCommand,
+      applySequencingBatchPlan: deps.applySequencingBatchPlan,
+      getOwnedJob: deps.getOwnedJob,
+      getOwnedHealth: deps.getOwnedHealth,
+      getOwnedRevision: deps.getOwnedSequenceRevision,
       safetyOptions: { maxCommands: 200 }
     });
     lastOrchestrated = orchestrated;

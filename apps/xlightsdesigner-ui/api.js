@@ -335,6 +335,11 @@ export async function getOwnedHealth(endpoint) {
   return readOwnedJson(`${base}/health`, { method: "GET" });
 }
 
+export async function getOwnedSequenceRevision(endpoint) {
+  const base = deriveOwnedEndpointBase(endpoint);
+  return readOwnedJson(`${base}/sequence/revision`, { method: "GET" });
+}
+
 export async function applySequencingBatchPlan(endpoint, payload = {}) {
   const base = deriveOwnedEndpointBase(endpoint);
   return readOwnedJson(`${base}/sequencing/apply-batch-plan`, {
