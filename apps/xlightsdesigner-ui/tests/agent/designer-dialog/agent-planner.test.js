@@ -178,6 +178,36 @@ test('goal matching does not resolve unrelated generic submodel names', () => {
   assert.ok(result.proposalLines.every((line) => !/\/\s*PorchTree \+ Tree\s*\//i.test(line)));
 });
 
+test('planner promotes prompt-matched targets into explicit intent scope for narrow prompts', () => {
+  const scopedModels = [
+    { id: 'Snowman', name: 'Snowman', type: 'Model' },
+    { id: 'Star', name: 'Star', type: 'Model' },
+    { id: 'Border_Segments', name: 'Border_Segments', type: 'Model' },
+    { id: 'CandyCane-01/Fill', name: 'CandyCane-01/Fill', type: 'Model' }
+  ];
+  const scopedDisplayElements = scopedModels.map((row) => ({ id: row.id, name: row.name, type: 'model' }));
+
+  const result = buildProposalFromIntent({
+    promptText: 'Design a single Chorus 1 concept anchored to the beat grid for Snowman and Star. Do not rewrite the whole show.',
+    models: scopedModels,
+    submodels: [],
+    metadataAssignments: [],
+    displayElements: scopedDisplayElements,
+    musicDesignContext: {
+      sectionArc: [
+        { label: 'Verse 1', energy: 'medium', density: 'moderate' },
+        { label: 'Chorus 1', energy: 'high', density: 'dense' }
+      ]
+    }
+  });
+
+  assert.deepEqual(result.normalizedIntent.sections, ['Chorus 1']);
+  assert.deepEqual(result.normalizedIntent.targetIds.sort(), ['Snowman', 'Star']);
+  assert.equal(result.normalizedIntent.focusHierarchy, 'explicit_targets');
+  assert.equal(result.resolutionSource, 'goal_match');
+  assert.deepEqual(result.targets.map((row) => row.id).sort(), ['Snowman', 'Star']);
+});
+
 test('planner uses scene and music context to shape first-pass proposal lines', () => {
   const result = buildProposalFromIntent({
     promptText: 'Make the chorus feel bigger and more cinematic',

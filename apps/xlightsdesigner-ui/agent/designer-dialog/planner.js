@@ -325,18 +325,34 @@ export function buildProposalFromIntent(input = {}) {
     ...arr(input?.musicDesignContext?.sectionArc).map((row) => str(row?.label)).filter(Boolean),
     ...arr(input?.analysisHandoff?.structure?.sections).map((row) => str(typeof row === "string" ? row : (row?.label || row?.name))).filter(Boolean)
   ];
-  const normalizedIntent = normalizeIntent({
+  const baseNormalizedIntent = normalizeIntent({
     ...input,
     availableSectionNames,
     metadataAssignments: input.metadataAssignments
   });
   const selection = resolveTargetSelection({
-    normalizedIntent,
+    normalizedIntent: baseNormalizedIntent,
     models: input.models,
     submodels: input.submodels,
     metadataAssignments: input.metadataAssignments,
     displayElements: input.displayElements
   });
+  const inferredTargetIds = !arr(baseNormalizedIntent?.targetIds).length
+    && selection.resolutionSource === "goal_match"
+    ? arr(selection.targets).map((row) => str(row?.id)).filter(Boolean)
+    : [];
+  const normalizedIntent = inferredTargetIds.length
+    ? {
+        ...baseNormalizedIntent,
+        targetIds: inferredTargetIds,
+        focusHierarchy: "explicit_targets",
+        fieldSources: {
+          ...(baseNormalizedIntent?.fieldSources || {}),
+          targetIds: "explicit"
+        },
+        assumptions: arr(baseNormalizedIntent?.assumptions).filter((line) => !/balanced full-yard/i.test(str(line)))
+      }
+    : baseNormalizedIntent;
   const targets = selection.targets;
   const proposalLines = applyDesignerContextToProposalLines({
     proposalLines: buildSequencingStrategy(normalizedIntent, targets),
