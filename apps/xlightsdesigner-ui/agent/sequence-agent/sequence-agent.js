@@ -467,6 +467,7 @@ function buildCommandsFromEffectPlacements({
 function stageCommandGraphSynthesis({
   sourceLines = [],
   effect = {},
+  executionStrategy = {},
   warnings = [],
   capabilityCommands = [],
   effectCatalog = null,
@@ -523,7 +524,7 @@ function stageCommandGraphSynthesis({
       warnings.push(...effectCompat.warnings);
     }
     return {
-      commands: decorateCommandsWithDesignMetadata(placementGraph.commands, effect),
+      commands: decorateCommandsWithDesignMetadata(placementGraph.commands, executionStrategy),
       executionLines: [],
       estimatedImpact: Number(placementGraph.estimatedImpact || 0),
       warnings,
@@ -563,7 +564,7 @@ function stageCommandGraphSynthesis({
     }
     filteredCommands.push(command);
   }
-  const commandsOut = decorateCommandsWithDesignMetadata(filteredCommands, effect);
+  const commandsOut = decorateCommandsWithDesignMetadata(filteredCommands, executionStrategy);
   const capabilityGate = evaluateSequencePlanCapabilities({ commands: commandsOut, capabilityCommands });
   if (!capabilityGate.ok) {
     const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
@@ -688,6 +689,7 @@ export function buildSequenceAgentPlan({
         : stageCommandGraphSynthesis({
           sourceLines,
           effect,
+          executionStrategy: scope.executionStrategy,
           warnings,
           capabilityCommands,
           effectCatalog,

@@ -1649,6 +1649,68 @@ test("sequence_agent honors explicit effect placements over section-level infere
   ]);
 });
 
+test("sequence_agent decorates direct synthesized commands with user design metadata", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Section 1", startMs: 0, endMs: 10000 },
+          { label: "Section 2", startMs: 10000, endMs: 20000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Add a Color Wash effect on Snowman during Chorus 1.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Section 1", "Section 2"]
+      },
+      executionStrategy: {
+        passScope: "multi_section",
+        implementationMode: "section_pass",
+        routePreference: "designer_to_sequence_agent",
+        shouldUseFullSongStructureTrack: true,
+        primarySections: ["Section 1", "Section 2"],
+        sectionPlans: [
+          {
+            designId: "DES-USER-001",
+            designAuthor: "user",
+            section: "Section 1",
+            intentSummary: "User-directed sequence change.",
+            targetIds: ["Snowman"],
+            effectHints: ["Color Wash"]
+          },
+          {
+            designId: "DES-USER-001",
+            designAuthor: "user",
+            section: "Section 2",
+            intentSummary: "User-directed sequence change.",
+            targetIds: ["Snowman"],
+            effectHints: ["Color Wash"]
+          }
+        ],
+        effectPlacements: []
+      }
+    },
+    sourceLines: [
+      "Section 1 / Snowman / apply Color Wash effect for the requested duration using the current target timing"
+    ],
+    effectCatalog: buildEffectDefinitionCatalog([{ effectName: "Color Wash", params: [] }])
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.ok(effectCommands.length >= 1);
+  for (const command of effectCommands) {
+    assert.equal(command.designId, "DES-USER-001");
+    assert.equal(command.designAuthor, "user");
+    assert.equal(command.intent.designId, "DES-USER-001");
+    assert.equal(command.intent.designAuthor, "user");
+  }
+});
+
 test("sequence_agent prefers synthesized effect lines over non-executable designer prose lines", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {
