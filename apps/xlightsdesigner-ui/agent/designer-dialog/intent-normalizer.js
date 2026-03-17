@@ -32,11 +32,13 @@ function buildTagPatterns(tag = "") {
   const key = normalizeName(tag);
   if (!key) return [];
   const variants = [key];
-  if (key === "support") variants.push("supporting", "supportive");
+  if (key === "support") variants.push("supporting", "supportive", "fill", "fill light");
   if (key === "character") variants.push("characters");
   if (key === "lyric") variants.push("lyrics", "lyrical");
-  if (key === "rhythm") variants.push("rhythmic");
-  if (key === "focal") variants.push("focus", "focused");
+  if (key === "rhythm") variants.push("rhythmic", "pulse");
+  if (key === "focal") variants.push("focus", "focused", "key light", "key-light");
+  if (key === "perimeter") variants.push("border props", "perimeter props", "edges");
+  if (key === "centerpiece") variants.push("centerpiece props", "center props", "center");
   return uniqueStrings(variants).map((value) => normalizeName(value));
 }
 

@@ -267,9 +267,11 @@ function chooseExecutionTargets({
   broadCoverageDomains = [],
   focalCandidates = [],
   detailCoverageDomains = [],
+  spatialZones = {},
   energy = "",
   density = "",
-  section = ""
+  section = "",
+  goal = ""
 } = {}) {
   const explicit = uniqueStrings(explicitTargetIds);
   if (explicit.length) return explicit.slice(0, 8);
@@ -277,12 +279,55 @@ function chooseExecutionTargets({
   const focal = rotateStrings(focalCandidates, `${section}:focal`);
   const detail = rotateStrings(detailCoverageDomains, `${section}:detail`);
   const fallback = rotateStrings(fallbackTargetIds, `${section}:fallback`);
+  const zones = spatialZones && typeof spatialZones === "object" ? spatialZones : {};
+  const foreground = uniqueStrings(arr(zones.foreground));
+  const background = uniqueStrings(arr(zones.background));
+  const left = uniqueStrings(arr(zones.left));
+  const right = uniqueStrings(arr(zones.right));
+  const center = uniqueStrings(arr(zones.center));
   const key = str(section).toLowerCase();
+  const lowerGoal = str(goal).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
+  if (/foreground/.test(lowerGoal) || /background/.test(lowerGoal)) {
+    return uniqueStrings([
+      ...foreground.slice(0, 1),
+      ...background.slice(0, 2),
+      ...center.slice(0, 1),
+      ...focal.slice(0, 1),
+      ...broad.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (/left side|left\b|right side|right\b/.test(lowerGoal)) {
+    return uniqueStrings([
+      ...left.slice(0, 2),
+      ...right.slice(0, 2),
+      ...center.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (/perimeter/.test(lowerGoal) || /frame\b|framing\b/.test(lowerGoal)) {
+    return uniqueStrings([
+      ...left.slice(0, 1),
+      ...right.slice(0, 1),
+      ...foreground.slice(0, 2),
+      ...center.slice(0, 1),
+      ...focal.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (/centerpiece|center props|key light|focal/.test(lowerGoal)) {
+    return uniqueStrings([
+      ...center.slice(0, 2),
+      ...focal.slice(0, 2),
+      ...detail.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
   if (isPeak) {
     return uniqueStrings([
       ...focal.slice(0, 2),
@@ -315,7 +360,8 @@ function chooseExecutionTargets({
 }
 
 function buildSectionEffectHints({ section = "", energy = "", density = "", goal = "", sectionIndex = 0, sectionCount = 0 } = {}) {
-  const lower = `${str(section)} ${str(goal)}`.toLowerCase();
+  const lowerSection = str(section).toLowerCase();
+  const lowerGoal = str(goal).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const count = Number.isFinite(Number(sectionCount)) ? Math.max(0, Number(sectionCount)) : 0;
@@ -323,14 +369,44 @@ function buildSectionEffectHints({ section = "", energy = "", density = "", goal
   const nearStart = count > 0 ? idx <= Math.max(0, Math.floor(count * 0.2)) : idx === 0;
   const nearPeak = count > 0 ? idx >= Math.floor(count * 0.35) && idx <= Math.floor(count * 0.7) : false;
   const nearEnd = count > 0 ? idx >= Math.max(0, count - 2) : false;
-  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lower)) {
+  if (/key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
+    if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
+      return pickDistinctEffects(["Color Wash", "Shimmer"], ["Pinwheel", "Fireworks", "Meteors"]);
+    }
+    if (/bridge/.test(lowerSection)) {
+      return pickDistinctEffects(["Bars", "Spirals"], ["Shockwave", "Wave"]);
+    }
+    if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
+      return pickDistinctEffects(["Color Wash", "Candle"], ["On", "Wave"]);
+    }
+    return pickDistinctEffects(["Color Wash", "Wave"], ["Butterfly", "Circles"]);
+  }
+  if (/rhythm|pulse|groove|drive/.test(lowerGoal)) {
+    if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
+      return pickDistinctEffects(["Meteors", "Pinwheel"], ["Shimmer", "Bars"]);
+    }
+    if (/bridge/.test(lowerSection)) {
+      return pickDistinctEffects(["Bars", "Shockwave"], ["Wave", "Warp"]);
+    }
+    return pickDistinctEffects(["Wave", "Circles"], ["Butterfly", "Twinkle"]);
+  }
+  if (/perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
+    if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
+      return pickDistinctEffects(["Color Wash", "Pinwheel"], ["Shimmer", "Spirals"]);
+    }
+    if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
+      return pickDistinctEffects(["Color Wash", "Candle"], ["Snowflakes", "On"]);
+    }
+    return pickDistinctEffects(["Wave", "Butterfly"], ["Bars", "Circles"]);
+  }
+  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
   }
-  if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lower)) {
+  if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
   }
-  if (normalizedEnergy === "low" || /intro|outro/.test(lower)) {
-    return pickDistinctEffects(/outro/.test(lower) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
+  if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
+    return pickDistinctEffects(/outro/.test(lowerSection) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
   }
   if (nearPeak) {
     return pickDistinctEffects(FAMILY_POOLS.dense, FAMILY_POOLS.chorus);
@@ -341,7 +417,7 @@ function buildSectionEffectHints({ section = "", energy = "", density = "", goal
   if (nearStart) {
     return pickDistinctEffects(FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
   }
-  if (/pulse|rhythm|drive|movement/.test(lower)) {
+  if (/pulse|rhythm|drive|movement/.test(lowerGoal)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.default);
   }
   return pickDistinctEffects(FAMILY_POOLS.verse, FAMILY_POOLS.default);
@@ -349,19 +425,31 @@ function buildSectionEffectHints({ section = "", energy = "", density = "", goal
 
 function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {
   const label = str(section);
-  const lower = label.toLowerCase();
+  const lowerSection = label.toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
   const warm = /warm|amber|gold|red|cinematic|glow|theatrical/.test(lowerGoal);
   const warmClause = warm ? ' with warm cinematic color and glow control' : '';
-  if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lower)) {
+  if (/key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
+    if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
+      return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
+    }
+    if (/intro|outro/.test(lowerSection) || normalizedEnergy === 'low') {
+      return `hold the lighting stack back${warmClause} with restrained washes and cleaner negative space`;
+    }
+    return `shape the section like a lighting cue${warmClause} with readable support and controlled depth`;
+  }
+  if (/negative space|frame|framing|centerpiece|perimeter/.test(lowerGoal)) {
+    return `use cleaner framing${warmClause} with more negative space and clearer focal boundaries`;
+  }
+  if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lowerSection)) {
     return `build stronger visual payoff${warmClause} using layered shimmer, glow, and clearer focal emphasis`;
   }
-  if (/bridge/.test(lower)) {
+  if (/bridge/.test(lowerSection)) {
     return `widen the picture${warmClause} with smoother transitions and controlled contrast lift`;
   }
-  if (normalizedEnergy === 'low' || /intro|outro/.test(lower)) {
+  if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
     return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;
   }
   if (normalizedDensity === 'dense') {
@@ -642,6 +730,7 @@ function buildDesignerExecutionPlan({
   const broadCoverageDomains = arr(scene?.coverageDomains?.broad).map((row) => str(row)).filter(Boolean);
   const detailCoverageDomains = arr(scene?.coverageDomains?.detail).map((row) => str(row)).filter(Boolean);
   const focalCandidates = arr(scene?.focalCandidates).map((row) => str(row)).filter(Boolean);
+  const spatialZones = scene?.spatialZones && typeof scene.spatialZones === "object" ? scene.spatialZones : {};
   const resolvedTargetIds = arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
   const timedSections = buildTimedSectionMap(analysisHandoff);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
@@ -679,9 +768,11 @@ function buildDesignerExecutionPlan({
           broadCoverageDomains,
           detailCoverageDomains,
           focalCandidates,
+          spatialZones,
           energy,
           density,
-          section: label
+          section: label,
+          goal: intent.goal || ""
         }).slice(0, 40),
         effectHints: arr(intent.effectOverrides).length
           ? arr(intent.effectOverrides).map((row) => str(row)).filter(Boolean)

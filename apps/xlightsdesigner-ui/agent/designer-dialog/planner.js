@@ -228,6 +228,7 @@ function normalizeName(value = "") {
 function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], metadataAssignments = [] } = {}) {
   const intent = normalizedIntent && typeof normalizedIntent === "object" ? normalizedIntent : {};
   const scope = arr(intent.sections).filter(Boolean).join(", ") || "General";
+  const lowerGoal = str(intent.goal).toLowerCase();
   const tagNames = arr(intent.tags).map((row) => str(row)).filter(Boolean);
   if (!tagNames.length) return [];
 
@@ -253,13 +254,27 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
     if (normalizedTag === "character") {
       lines.push(`${scope} / ${targetName} / let the character props carry the primary visual story without losing readability`);
     } else if (normalizedTag === "support") {
-      lines.push(`${scope} / ${targetName} / keep the support props subtle so they frame the moment without competing`);
+      if (/fill|key light|key-light/.test(lowerGoal)) {
+        lines.push(`${scope} / ${targetName} / keep this support prop in a gentle fill role so it frames the lead read without competing`);
+      } else {
+        lines.push(`${scope} / ${targetName} / keep the support props subtle so they frame the moment without competing`);
+      }
     } else if (normalizedTag === "lyric") {
       lines.push(`${scope} / ${targetName} / use the lyric props to underline the words with cleaner emphasis`);
     } else if (normalizedTag === "rhythm") {
       lines.push(`${scope} / ${targetName} / let the rhythm props carry the lift and pulse of the section`);
     } else if (normalizedTag === "focal" || normalizedTag === "hero" || normalizedTag === "lead") {
-      lines.push(`${scope} / ${targetName} / preserve this tagged focal element as the clearest lead read`);
+      if (/key light|key-light/.test(lowerGoal)) {
+        lines.push(`${scope} / ${targetName} / treat this focal prop like the key-light lead so the main read stays dominant`);
+      } else {
+        lines.push(`${scope} / ${targetName} / preserve this tagged focal element as the clearest lead read`);
+      }
+    } else if (normalizedTag === "perimeter") {
+      if (/fill|frame|framing|key light|key-light/.test(lowerGoal)) {
+        lines.push(`${scope} / ${targetName} / let the perimeter props act as soft fill and framing rather than stealing focus`);
+      } else {
+        lines.push(`${scope} / ${targetName} / use the perimeter props to frame the scene without taking over the focal read`);
+      }
     } else {
       lines.push(`${scope} / ${targetName} / honor the ${tagName} tag as a real semantic role in the pass`);
     }
