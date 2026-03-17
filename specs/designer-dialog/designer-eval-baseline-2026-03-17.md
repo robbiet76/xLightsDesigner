@@ -37,12 +37,12 @@ Interpretation:
 
 Current artistic averages from the same corpus:
 - motion language: `3.00`
-- stage-lighting quality: `2.91`
+- stage-lighting quality: `3.00`
 - composition quality: `3.00`
 - settings/render plausibility: `3.00`
 - concept-summary quality: `3.00`
 - target-selection quality: `3.00`
-- thematic continuity: `2.83`
+- thematic continuity: `3.00`
 
 Interpretation:
 - the current offline heuristic layer is fully green on the canonical corpus
@@ -51,6 +51,7 @@ Interpretation:
   - per-effect settings/render nuance
   - exact timing-window quality beyond section anchors
   - live validation cadence against real sequence output
+  - richer artistic taste and comparative quality, not basic rubric coverage
 
 ## What Changed Since The First Baseline
 

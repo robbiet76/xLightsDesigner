@@ -413,12 +413,15 @@ function buildSectionEffectHints({
         : pickDistinctEffects(["Color Wash", "Shimmer"], crispBias ? ["Bars", "Pinwheel"] : ["Pinwheel", "Fireworks", "Meteors"]);
     }
     if (/bridge/.test(lowerSection)) {
-      return pickDistinctEffects(["Bars", "Spirals"], ["Shockwave", "Wave"]);
+      return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
     }
     if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
       return pickDistinctEffects(["Color Wash", "Candle"], ["On", "Wave"]);
     }
     return pickDistinctEffects(["Color Wash", "Wave"], ["Butterfly", "Circles"]);
+  }
+  if (/\b(phrase|transition|release|breath)\b/.test(lowerGoal) && /bridge/.test(lowerSection)) {
+    return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
   }
   if (/rhythm|pulse|groove|drive/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
@@ -434,6 +437,9 @@ function buildSectionEffectHints({
   if (/perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return pickDistinctEffects(["Color Wash", "Pinwheel"], ["Shimmer", "Spirals"]);
+    }
+    if (/bridge/.test(lowerSection)) {
+      return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
     }
     if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
       return pickDistinctEffects(["Color Wash", "Candle"], ["Snowflakes", "On"]);
