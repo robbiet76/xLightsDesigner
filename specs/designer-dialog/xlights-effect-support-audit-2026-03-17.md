@@ -259,6 +259,46 @@ That would be false.
   - `Garlands`
   - `Tree`
 
+## Deferred TODO
+
+These items are intentionally deferred. They are not blocking the current designer-to-sequencer rollout.
+
+1. Expand full semantic settings coverage for Tier 3 families
+- add family-specific intent mapping beyond generic defaults
+- validate richer parameter translation against live xLights definitions
+- tune direction, geometry, density, procedural mode, and family-specific motion semantics
+
+2. Add dedicated contract branches for Tier 4 families
+- do not force these into the generic placement-first schema
+- define separate workflows for:
+  - hardware / channel-driven effects
+  - media / file-backed effects
+  - lyric / face / notation / character systems
+  - specialized simulation / control effects
+
+3. Add full live settings validation for promoted families
+- verify not just create/readback
+- also confirm settings, palette, layer, and render fields are materially correct in xLights
+
+4. Revisit product support policy before enabling specialized families in designer output
+- require explicit approval before the designer can author:
+  - `DMX`
+  - `Moving Head`
+  - `Servo`
+  - `Text`
+  - `Video`
+  - `Pictures`
+  - `Faces`
+  - `Music Effect`
+  - `Piano`
+  - `Guitar`
+  - `Shader`
+  - `Sketch`
+  - `Shape`
+  - `Life`
+  - `Glediator`
+  - `Off`
+
 3. Leave Tier 4 behind dedicated feature gates
 - do not force them into the generic designer placement contract
 
