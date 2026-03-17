@@ -500,3 +500,101 @@ test("designer runtime broad whole-sequence passes now use multiple supported ef
   assert.ok(effectNames.includes("Morph"));
   assert.ok(effectNames.length >= 5);
 });
+
+test("designer runtime constrains tag-driven execution plans to resolved metadata targets when prompt has no explicit target ids", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-9",
+    sequenceRevision: "rev-9",
+    promptText: "Use the lyric props for verse emphasis.",
+    goals: "Use the lyric props for verse emphasis.",
+    selectedSections: ["Verse 1"],
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "Border-01", name: "Border-01", type: "Model" },
+      { id: "Border-02", name: "Border-02", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [
+      { targetId: "Snowman", tags: ["lyric"] },
+      { targetId: "Border-01", tags: ["support"] },
+      { targetId: "Border-02", tags: ["support"] }
+    ],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" }
+      ],
+      designCues: {
+        revealMoments: [],
+        holdMoments: [],
+        lyricFocusMoments: ["Verse 1"]
+      }
+    }
+  });
+
+  const placementTargets = Array.from(new Set(result.proposalBundle.executionPlan.effectPlacements.map((row) => row.targetId)));
+  assert.deepEqual(placementTargets, ["Snowman"]);
+  assert.deepEqual(result.handoff.scope.targetIds, ["Snowman"]);
+});
+
+test("designer runtime preserves spatial layout selection when prompts mention foreground and background", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-10",
+    sequenceRevision: "rev-10",
+    promptText: "Keep the foreground calmer while the background opens up in Chorus 1.",
+    goals: "Keep the foreground calmer while the background opens up in Chorus 1.",
+    selectedSections: ["Chorus 1"],
+    models: [
+      { id: "Border-01", name: "Border-01", type: "Model" },
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "Wreathes", name: "Wreathes", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [
+      { targetId: "Wreathes", tags: ["background"] }
+    ],
+    designSceneContext: {
+      spatialZones: {
+        foreground: ["Border-01"],
+        midground: ["Snowman"],
+        background: ["Wreathes"],
+        left: ["Border-01"],
+        center: ["Snowman"],
+        right: ["Wreathes"]
+      },
+      focalCandidates: ["Snowman"],
+      coverageDomains: {
+        broad: ["AllModels_NoFloods"],
+        detail: ["Snowman"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ],
+      designCues: {
+        revealMoments: ["Chorus 1"],
+        holdMoments: [],
+        lyricFocusMoments: []
+      }
+    }
+  });
+
+  const placementTargets = Array.from(new Set(result.proposalBundle.executionPlan.effectPlacements.map((row) => row.targetId))).sort();
+  assert.ok(placementTargets.includes("Border-01"));
+  assert.ok(placementTargets.includes("Wreathes"));
+});

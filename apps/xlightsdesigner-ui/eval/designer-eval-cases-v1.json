@@ -87,6 +87,20 @@
       }
     },
     {
+      "id": "concept-explicit-target-beat-grid",
+      "kind": "concept",
+      "lenses": ["Musical Understanding", "Focal Hierarchy"],
+      "fixtureVariant": "default",
+      "promptText": "Design a single Chorus 1 concept anchored to the beat grid for Snowman and Star. Do not rewrite the whole show.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "mustOnlyIncludeTargetIds": ["Snowman", "Star"],
+        "mustIncludeTrackNames": ["XD: Beat Grid"],
+        "mustIncludeAlignmentModes": ["beat_window"],
+        "maxTargetCount": 2
+      }
+    },
+    {
       "id": "concept-chord-anchored-verse",
       "kind": "concept",
       "lenses": ["Musical Understanding"],
@@ -142,7 +156,8 @@
       "selectedSections": ["Verse 1"],
       "expect": {
         "mustIncludeTagNames": ["lyric"],
-        "mustIncludeTargetIds": ["Snowman"]
+        "mustOnlyIncludeTargetIds": ["Snowman"],
+        "maxTargetCount": 1
       }
     },
     {

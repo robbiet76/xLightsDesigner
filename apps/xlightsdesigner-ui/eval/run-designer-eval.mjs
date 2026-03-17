@@ -638,6 +638,18 @@ function evaluateCase(result, testCase) {
   if (expect.mustIncludeTargetIds) {
     check("missing_required_targets", includesAll(metrics.targetIds, expect.mustIncludeTargetIds));
   }
+  if (expect.mustOnlyIncludeTargetIds) {
+    const actual = uniq(metrics.targetIds).sort();
+    const expected = uniq(expect.mustOnlyIncludeTargetIds).sort();
+    check("unexpected_targets_present", JSON.stringify(actual) === JSON.stringify(expected));
+  }
+  if (expect.mustExcludeTargetIds) {
+    const actualSet = new Set(arr(metrics.targetIds).map((row) => str(row)));
+    check("forbidden_targets_present", !arr(expect.mustExcludeTargetIds).some((row) => actualSet.has(str(row))));
+  }
+  if (expect.maxTargetCount != null) {
+    check("too_many_targets", metrics.targetIds.length <= Number(expect.maxTargetCount));
+  }
   if (expect.mustIncludeSections) {
     check("missing_required_sections", includesAll(metrics.sections, expect.mustIncludeSections));
   }

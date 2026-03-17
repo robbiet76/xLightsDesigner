@@ -853,6 +853,9 @@ function buildDesignerExecutionPlan({
   const focalCandidates = arr(scene?.focalCandidates).map((row) => str(row)).filter(Boolean);
   const spatialZones = scene?.spatialZones && typeof scene.spatialZones === "object" ? scene.spatialZones : {};
   const resolvedTargetIds = arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
+  const lowerGoal = str(intent.goal).toLowerCase();
+  const hasSpatialDirective = /foreground|background|left side|right side|perimeter|frame\b|framing\b|centerpiece|center props|negative space/.test(lowerGoal);
+  const scopedTargetIds = targetIds.length ? targetIds : (tagNames.length && !hasSpatialDirective ? resolvedTargetIds : []);
   const timedSections = buildTimedSectionMap(analysisHandoff);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
   const passScope = allowGlobalRewrite
@@ -884,7 +887,7 @@ function buildDesignerExecutionPlan({
           goal: intent.goal || ""
         }),
         targetIds: chooseExecutionTargets({
-          explicitTargetIds: targetIds,
+          explicitTargetIds: scopedTargetIds,
           fallbackTargetIds: resolvedTargetIds,
           broadCoverageDomains,
           detailCoverageDomains,
