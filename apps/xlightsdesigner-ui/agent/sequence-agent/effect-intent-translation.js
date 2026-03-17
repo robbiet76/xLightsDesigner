@@ -1,3 +1,5 @@
+import { getEffectIntentCapability } from "./effect-intent-capabilities.js";
+
 function normText(value = "") {
   return String(value || "").trim();
 }
@@ -157,7 +159,7 @@ function writeEffectSpecificSetting(settings, effectDefinition, value, patterns 
   }
 }
 
-function buildSharedSettingsFromIntent(settingsIntent = {}, effectDefinition = null) {
+function buildSharedSettingsFromIntent(settingsIntent = {}, effectDefinition = null, capability = null) {
   const out = {};
   const intensity = mapScale(settingsIntent?.intensity, {
     low: 70,
@@ -184,23 +186,24 @@ function buildSharedSettingsFromIntent(settingsIntent = {}, effectDefinition = n
     out.T_CHOICE_In_Transition_Type = "Slide Bars";
     out.T_CHOICE_Out_Transition_Type = "Slide Bars";
   }
-  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.speed, [/speed/, /velocity/, /rate/], null, {
+  const patterns = capability?.effectParamPatterns || {};
+  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.speed, patterns.speed || [/speed/, /velocity/, /rate/], null, {
     slow: 2,
     medium: 5,
     medium_fast: 7,
     fast: 9
   });
-  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.density, [/dens/, /count/, /repeat/], null, {
+  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.density, patterns.density || [/dens/, /count/, /repeat/], null, {
     light: 2,
     medium: 5,
     dense: 8
   });
-  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.thickness, [/thick/, /width/, /bars/], null, {
+  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.thickness, patterns.thickness || [/thick/, /width/, /bars/], null, {
     thin: 20,
     medium: 50,
     thick: 80
   });
-  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.direction, [/dir/, /mode/], {
+  writeEffectSpecificSetting(out, effectDefinition, settingsIntent?.direction, patterns.direction || [/dir/, /mode/], {
     forward: "Forward",
     reverse: "Reverse",
     inward: "Inward",
@@ -215,8 +218,9 @@ export function translatePlacementIntentToXlights({
 } = {}) {
   const effectName = normText(placement?.effectName);
   const effectDefinition = normalizeCatalog(effectCatalog)[effectName] || null;
+  const capability = getEffectIntentCapability(effectName);
   const translatedSettings = {
-    ...buildSharedSettingsFromIntent(asObject(placement?.settingsIntent), effectDefinition),
+    ...buildSharedSettingsFromIntent(asObject(placement?.settingsIntent), effectDefinition, capability),
     ...buildLayerSettingsFromIntent(asObject(placement?.layerIntent)),
     ...buildRenderSettingsFromIntent(asObject(placement?.renderIntent))
   };

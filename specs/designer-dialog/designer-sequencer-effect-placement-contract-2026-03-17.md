@@ -514,6 +514,34 @@ Therefore:
 - do not keep expanding section-plan execution as the long-term model
 - move next to explicit placement-based designer handoffs
 
+## Current Implementation Coverage
+
+The current implementation now covers:
+- explicit designer `effectPlacements[]`
+- sequencer-side placement execution
+- translation of placement intent into raw xLights fields for high-value effect families:
+  - `Color Wash`
+  - `Shimmer`
+  - `Bars`
+  - `On`
+
+Current translation coverage includes:
+- exact placement windows
+- layer assignment
+- palette colors/brightness/contrast/saturation
+- layer blend method + layer mix
+- render buffer style
+- shared transition / brightness / contrast settings
+- selected effect-specific parameters where the effect definition catalog exposes matching fields
+
+This is enough to continue designer-led implementation work, but it is not yet full-library coverage.
+
+Still required for complete coverage:
+- expand effect-family mappings beyond the initial high-value set
+- validate more raw parameter families against the real xLights effect catalog
+- extend translation rules for additional effect-specific controls
+- add live apply/readback validation for richer raw settings payloads
+
 ## Implementation Gate
 
 Do not implement broad whole-sequence designer authoring on top of the current section-hint contract as the final model.
