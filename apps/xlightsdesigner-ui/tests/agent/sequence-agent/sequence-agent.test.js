@@ -1531,6 +1531,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
         effectPlacements: [
           {
             placementId: "p1",
+            designId: "DES-001",
             targetId: "MegaTree",
             layerIndex: 1,
             effectName: "Shimmer",
@@ -1557,6 +1558,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
           },
           {
             placementId: "p2",
+            designId: "DES-002",
             targetId: "Roofline",
             layerIndex: 0,
             effectName: "Bars",
@@ -1621,7 +1623,11 @@ test("sequence_agent honors explicit effect placements over section-level infere
     ]
   );
   assert.equal(effectCommands[0].intent.settingsIntent.intensity, "high");
+  assert.equal(effectCommands[0].designId, "DES-001");
+  assert.equal(effectCommands[0].intent.designId, "DES-001");
   assert.equal(effectCommands[0].intent.layerIntent.priority, "foreground");
+  assert.equal(effectCommands[1].designId, "DES-002");
+  assert.equal(effectCommands[1].intent.designId, "DES-002");
   assert.equal(effectCommands[1].intent.renderIntent.groupPolicy, "preserve_group_rendering");
   assert.equal(effectCommands[0].params.settings.C_SLIDER_Brightness, 125);
   assert.equal(effectCommands[0].params.settings.T_CHOICE_LayerMethod, "Highlight");
@@ -1629,6 +1635,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
   assert.equal(effectCommands[1].params.settings.T_CHOICE_In_Transition_Type, "Slide Bars");
   assert.equal(effectCommands[1].params.settings.B_CHOICE_BufferStyle, "Overlay - Scaled");
   assert.equal(out.metadata.effectPlacementCount, 2);
+  assert.deepEqual(out.metadata.designIds, ["DES-001", "DES-002"]);
   const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
   assert.deepEqual(markInsert.params.marks, [
     { label: "Chorus 1", startMs: 30000, endMs: 50000 },

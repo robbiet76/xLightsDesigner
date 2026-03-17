@@ -159,6 +159,7 @@ test("proposal bundle contract accepts placement-first execution plan metadata",
       effectPlacements: [
         {
           placementId: "p1",
+          designId: "DES-001",
           targetId: "MegaTree",
           layerIndex: 1,
           effectName: "Shimmer",

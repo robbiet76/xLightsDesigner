@@ -560,6 +560,7 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
         });
         placements.push({
           placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}`,
+          designId: str(plan?.designId),
           targetId,
           layerIndex: effectIndex,
           effectName,
@@ -658,6 +659,7 @@ function buildDesignerExecutionPlan({
       const energy = str(match?.energy);
       const density = str(match?.density);
       return {
+        designId: `DES-${String(idx + 1).padStart(3, "0")}`,
         section: str(label),
         energy,
         density,

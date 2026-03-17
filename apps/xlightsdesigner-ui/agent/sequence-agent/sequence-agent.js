@@ -81,6 +81,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
         if (!Number.isFinite(layerIndex) || layerIndex < 0) return null;
         return {
           placementId: normText(row?.placementId) || `placement-${index + 1}`,
+          designId: normText(row?.designId),
           targetId,
           layerIndex,
           effectName,
@@ -107,6 +108,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
       .filter(Boolean),
     sectionPlans: normArray(strategy.sectionPlans)
       .map((row) => ({
+        designId: normText(row?.designId),
         section: normText(row?.section),
         energy: normText(row?.energy),
         density: normText(row?.density),
@@ -369,6 +371,7 @@ function buildCommandsFromEffectPlacements({
     });
     return {
       id: placement.placementId || `effect.${index + 1}`,
+      designId: normText(placement?.designId),
       dependsOn: [
         ...(marks.length ? ["timing.marks.insert"] : []),
         ...(displayOrderCommand ? [displayOrderCommand.id] : [])
@@ -392,6 +395,7 @@ function buildCommandsFromEffectPlacements({
         palette: translated.palette
       },
       intent: {
+        designId: normText(placement?.designId),
         settingsIntent: placement.settingsIntent,
         paletteIntent: placement.paletteIntent,
         layerIntent: placement.layerIntent,
@@ -695,8 +699,8 @@ export function buildSequenceAgentPlan({
       targetIds: scope.targetIds,
       tagNames: scope.tagNames,
       stageOrder: STAGE_ORDER.slice(),
-      executionStrategy: scope.executionStrategy
-      ,
+      executionStrategy: scope.executionStrategy,
+      designIds: Array.from(new Set(normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designId)).filter(Boolean))),
       effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
         ? scope.executionStrategy.effectPlacements.length
         : 0

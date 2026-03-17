@@ -282,6 +282,7 @@ Each placement should include:
 
 Every `effectPlacements[]` item must provide:
 - `placementId`
+- `designId`
 - `targetId`
 - `layerIndex`
 - `effectName`
@@ -338,6 +339,21 @@ But it is not the execution unit.
 
 The contract must allow multiple placements that share:
 - target
+
+### Design IDs tie conceptual design to execution
+
+Every conceptual design group must have a stable `designId`.
+
+That `designId` must be propagated through:
+- conceptual design rows/groupings
+- `sectionPlans[]` when used for review context
+- `effectPlacements[]`
+- sequencer command outputs derived from those placements
+
+This enables:
+- one-to-many linkage from a conceptual design row to exact sequence items
+- concept-level removal/regeneration
+- clear drill-down from Design page to Sequence page
 - section
 - timing track
 
