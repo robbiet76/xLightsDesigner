@@ -11058,6 +11058,9 @@ async function diagnoseAutomationCurrentProposal() {
   const intentHandoff = getValidHandoff("intent_handoff_v1");
   const planHandoff = getValidHandoff("plan_handoff_v1");
   const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const proposalBundle = state.creative?.proposalBundle || null;
+  const executionPlan = proposalBundle?.executionPlan || null;
+  const musicDesignContext = buildCurrentMusicDesignContext();
   const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
   const currentFiltered = filteredProposed();
   const fullScopeApply = arraysEqualOrdered(sourceLines, currentFiltered);
@@ -11118,6 +11121,34 @@ async function diagnoseAutomationCurrentProposal() {
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
     planSource,
     fallbackReason,
+    proposalScope: proposalBundle?.scope || null,
+    executionPlanSummary: executionPlan
+      ? {
+          passScope: executionPlan.passScope || "",
+          implementationMode: executionPlan.implementationMode || "",
+          primarySections: Array.isArray(executionPlan.primarySections) ? executionPlan.primarySections : [],
+          sectionPlanCount: Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans.length : 0,
+          effectPlacementCount: Array.isArray(executionPlan.effectPlacements) ? executionPlan.effectPlacements.length : 0
+        }
+      : null,
+    liveMusicDesignContext: {
+      sectionArc: Array.isArray(musicDesignContext?.sectionArc) ? musicDesignContext.sectionArc : [],
+      cueWindowSections: Object.keys(musicDesignContext?.designCues?.cueWindowsBySection || {})
+    },
+    intentHandoffSummary: intentHandoff
+      ? {
+          goal: intentHandoff.goal || "",
+          scope: intentHandoff.scope || null,
+          executionStrategy: intentHandoff.executionStrategy
+            ? {
+                passScope: intentHandoff.executionStrategy.passScope || "",
+                implementationMode: intentHandoff.executionStrategy.implementationMode || "",
+                primarySections: Array.isArray(intentHandoff.executionStrategy.primarySections) ? intentHandoff.executionStrategy.primarySections : [],
+                effectPlacementCount: Array.isArray(intentHandoff.executionStrategy.effectPlacements) ? intentHandoff.executionStrategy.effectPlacements.length : 0
+              }
+            : null
+        }
+      : null,
     handoffCommandCount: handoffCommands.length,
     rawPlanCount: rawPlan.length,
     rawPlan,

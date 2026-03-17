@@ -321,8 +321,13 @@ function applyDesignerContextToProposalLines({
 }
 
 export function buildProposalFromIntent(input = {}) {
+  const availableSectionNames = [
+    ...arr(input?.musicDesignContext?.sectionArc).map((row) => str(row?.label)).filter(Boolean),
+    ...arr(input?.analysisHandoff?.structure?.sections).map((row) => str(typeof row === "string" ? row : (row?.label || row?.name))).filter(Boolean)
+  ];
   const normalizedIntent = normalizeIntent({
     ...input,
+    availableSectionNames,
     metadataAssignments: input.metadataAssignments
   });
   const selection = resolveTargetSelection({

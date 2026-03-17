@@ -24,6 +24,15 @@ function hasAnyText(value = "", patterns = []) {
   return patterns.some((pattern) => pattern.test(lower));
 }
 
+function hasNegatedGlobalRewrite(text = "") {
+  return hasAnyText(text, [
+    /\b(do not|don't|dont|avoid|instead of)\s+(?:rewrite|rework|redo|change)\s+(?:the\s+)?(?:whole show|whole sequence|entire sequence|full show)\b/,
+    /\bdo not rewrite the whole show\b/,
+    /\bnot a whole[- ]show rewrite\b/,
+    /\bdo not rewrite the whole sequence\b/
+  ]);
+}
+
 function escapeRegex(value = "") {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -180,6 +189,20 @@ function collectPromptInferredTags(text = "", metadataAssignments = []) {
     .map((row) => row.tag);
 }
 
+function inferSectionsFromPrompt(text = "", availableSectionNames = []) {
+  const goal = cleanText(text).toLowerCase();
+  if (!goal) return [];
+  const available = uniqueStrings(availableSectionNames).filter(Boolean);
+  const matched = [];
+  for (const label of available) {
+    const escaped = escapeRegex(label.toLowerCase());
+    if (new RegExp(`\\b${escaped}\\b`, "i").test(goal)) {
+      matched.push(label);
+    }
+  }
+  return uniqueStrings(matched);
+}
+
 function inferFocusHierarchy({ targetIds = [], tags = [], brief = {} } = {}) {
   if (targetIds.length) return "explicit_targets";
   if (tags.some((tag) => /focal|hero|lead/i.test(tag))) return "focal_first";
@@ -243,6 +266,7 @@ function buildAssumptions({
 export function normalizeIntent({
   promptText = "",
   selectedSections = [],
+  availableSectionNames = [],
   creativeBrief = null,
   selectedTagNames = [],
   selectedTargetIds = [],
@@ -250,7 +274,17 @@ export function normalizeIntent({
   metadataAssignments = []
 } = {}) {
   const goal = cleanText(promptText);
-  const sections = Array.isArray(selectedSections) ? selectedSections.filter(Boolean) : [];
+  const globalScopeRequested =
+    !hasNegatedGlobalRewrite(goal) &&
+    hasAnyText(goal, [/(whole show|whole sequence|entire sequence|full rewrite|global rewrite|across the song|throughout the song)/]);
+  const explicitSections = Array.isArray(selectedSections)
+    ? selectedSections.filter((row) => {
+        const text = cleanText(row);
+        return Boolean(text) && text.toLowerCase() !== "all";
+      })
+    : [];
+  const inferredSections = globalScopeRequested ? [] : inferSectionsFromPrompt(goal, availableSectionNames);
+  const sections = uniqueStrings([...explicitSections, ...inferredSections]);
   const selectedTags = Array.isArray(selectedTagNames) ? selectedTagNames.filter(Boolean) : [];
   const inferredTags = collectPromptInferredTags(goal, metadataAssignments);
   const tags = uniqueStrings([...selectedTags, ...inferredTags]);
@@ -273,7 +307,9 @@ export function normalizeIntent({
   const preservationConstraints = {
     preserveTimingTracks,
     preserveDisplayOrder: true,
-    allowGlobalRewrite: mode === "create" || hasAnyText(goal, [/(whole show|entire sequence|full rewrite|global rewrite)/]),
+    allowGlobalRewrite:
+      !hasNegatedGlobalRewrite(goal) &&
+      (mode === "create" || hasAnyText(goal, [/(whole show|entire sequence|full rewrite|global rewrite)/])),
     keepSuccessfulMoments: !hasAnyText(goal, [/(replace everything|completely different|start over)/])
   };
   const fieldSources = buildFieldSources({
