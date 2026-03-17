@@ -2,6 +2,10 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function norm(value = "") {
+  return str(value).toLowerCase();
+}
+
 function parseTranslatedTarget(line = "") {
   const parts = String(line || "").split("/").map((part) => part.trim()).filter(Boolean);
   if (!parts.length) return "";
@@ -13,6 +17,17 @@ function parseTranslatedTarget(line = "") {
 function getSectionNameFromLine(line = "") {
   const parts = String(line || "").split("/").map((part) => part.trim()).filter(Boolean);
   return parts.length ? parts[0] : "";
+}
+
+function inferTargetLevel(target = "", sceneGraph = null) {
+  const id = str(target);
+  if (!id) return "Model";
+  if (id === "AllModels" || id === "Global" || /^all/i.test(id)) return "Group";
+  if (sceneGraph?.submodelsById && sceneGraph.submodelsById[id]) return "Submodel";
+  if (sceneGraph?.groupsById && sceneGraph.groupsById[id]) return "Group";
+  if (sceneGraph?.modelsById && sceneGraph.modelsById[id]) return "Model";
+  if (/[\\/]/.test(id)) return "Submodel";
+  return "Model";
 }
 
 function summarizeSequenceGridRow(line = "") {
@@ -43,6 +58,122 @@ function summarizeSequenceGridRow(line = "") {
     summary,
     effects
   };
+}
+
+function getPlanCommands(planHandoff = null, state = {}) {
+  if (Array.isArray(planHandoff?.commands)) return planHandoff.commands;
+  if (Array.isArray(state?.agentPlan?.handoff?.commands)) return state.agentPlan.handoff.commands;
+  return [];
+}
+
+function buildTimingMarkLookup(commands = []) {
+  const lookup = new Map();
+  for (const command of Array.isArray(commands) ? commands : []) {
+    const cmd = str(command?.cmd);
+    if (cmd !== "timing.insertMarks" && cmd !== "timing.replaceMarks") continue;
+    const params = command?.params && typeof command.params === "object" ? command.params : {};
+    const trackName = str(params.trackName);
+    if (!trackName) continue;
+    const marks = Array.isArray(params.marks) ? params.marks : [];
+    for (const mark of marks) {
+      const label = str(mark?.label);
+      const startMs = Number(mark?.startMs);
+      const endMs = Number(mark?.endMs);
+      if (!label || !Number.isFinite(startMs) || !Number.isFinite(endMs)) continue;
+      lookup.set(`${trackName}|${startMs}|${endMs}`, label);
+    }
+  }
+  return lookup;
+}
+
+function summarizeEffectRow(command = null, timingMarks = new Map(), sceneGraph = null) {
+  const params = command?.params && typeof command.params === "object" ? command.params : {};
+  const anchor = command?.anchor && typeof command.anchor === "object" ? command.anchor : {};
+  const effectName = str(params.effectName || "Unknown Effect");
+  const target = str(params.modelName || "Unresolved");
+  const timing = str(anchor.trackName || "XD: Sequencer Plan");
+  const startMs = Number(params.startMs);
+  const endMs = Number(params.endMs);
+  const anchorSection = str(anchor.markLabel);
+  const section =
+    anchorSection ||
+    timingMarks.get(`${timing}|${startMs}|${endMs}`) ||
+    "General";
+  const palette = str(typeof params.palette === "string" ? params.palette : "");
+  const settings = str(typeof params.settings === "string" ? params.settings : "");
+  const detail = [palette, settings].filter(Boolean).join(" / ");
+  return {
+    timing,
+    section,
+    target,
+    level: inferTargetLevel(target, sceneGraph),
+    summary: detail ? `${effectName} / ${detail}` : effectName,
+    effects: 1,
+    sourceLine: ""
+  };
+}
+
+function buildTimingOnlyRows(commands = []) {
+  const rows = [];
+  for (const command of Array.isArray(commands) ? commands : []) {
+    const cmd = str(command?.cmd);
+    if (cmd !== "timing.insertMarks" && cmd !== "timing.replaceMarks") continue;
+    const params = command?.params && typeof command.params === "object" ? command.params : {};
+    const timing = str(params.trackName || "XD: Sequencer Plan");
+    const marks = Array.isArray(params.marks) ? params.marks : [];
+    for (const mark of marks) {
+      rows.push({
+        timing,
+        section: str(mark?.label || "Unnamed Mark"),
+        target: "Timing Track",
+        level: "Track",
+        summary: cmd === "timing.replaceMarks" ? "Replace timing mark" : "Add timing mark",
+        effects: 0,
+        sourceLine: ""
+      });
+    }
+  }
+  return rows;
+}
+
+function buildDashboardRows({
+  state = {},
+  proposalLines = [],
+  planCommands = []
+} = {}) {
+  const effectCommands = (Array.isArray(planCommands) ? planCommands : []).filter((command) => str(command?.cmd) === "effects.create");
+  if (effectCommands.length) {
+    const timingMarks = buildTimingMarkLookup(planCommands);
+    return effectCommands.map((command, idx) => {
+      const row = summarizeEffectRow(command, timingMarks, state?.sceneGraph || null);
+      return {
+        index: idx + 1,
+        ...row
+      };
+    });
+  }
+
+  const timingRows = buildTimingOnlyRows(planCommands);
+  if (timingRows.length) {
+    return timingRows.map((row, idx) => ({
+      index: idx + 1,
+      ...row
+    }));
+  }
+
+  return (Array.isArray(proposalLines) ? proposalLines : []).map((line, idx) => {
+    const row = summarizeSequenceGridRow(line);
+    return {
+      index: idx + 1,
+      timing: str(row.timing || "XD: Sequencer Plan"),
+      section: str(row.section || getSectionNameFromLine(line) || "General"),
+      target: str(row.target || parseTranslatedTarget(line) || "Unresolved"),
+      level: str(row.level || "Model"),
+      summary: str(row.summary || "Pending translation detail"),
+      effects: Number.isFinite(Number(row.effects)) ? Number(row.effects) : 0,
+      sourceLine: str(line)
+    };
+  });
 }
 
 function getTimingTrackNames(tracks = []) {
@@ -96,6 +227,7 @@ export function buildSequenceDashboardState({
   planHandoff = null
 } = {}) {
   const proposalLines = Array.isArray(state.proposed) ? state.proposed : [];
+  const planCommands = getPlanCommands(planHandoff, state);
   const plan = state.agentPlan && typeof state.agentPlan === "object" ? state.agentPlan : {};
   const intent = intentHandoff && typeof intentHandoff === "object"
     ? intentHandoff
@@ -107,25 +239,17 @@ export function buildSequenceDashboardState({
     : planHandoff?.artifactId
       ? "Canonical Plan"
       : "Pending";
-  const commandCount = Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0;
+  const commandCount = planCommands.length;
   const warningList = Array.isArray(plan?.warnings) ? plan.warnings.filter(Boolean) : [];
   const timingDependency = inferTimingDependency({
     sections: sectionScope,
     timingTracks: Array.isArray(state.timingTracks) ? state.timingTracks : [],
-    planCommands: Array.isArray(planHandoff?.commands) ? planHandoff.commands : []
+    planCommands
   });
-  const rows = proposalLines.map((line, idx) => {
-    const row = summarizeSequenceGridRow(line);
-    return {
-      index: idx + 1,
-      timing: str(row.timing || "XD: Sequencer Plan"),
-      section: str(row.section || getSectionNameFromLine(line) || "General"),
-      target: str(row.target || parseTranslatedTarget(line) || "Unresolved"),
-      level: str(row.level || "Model"),
-      summary: str(row.summary || "Pending translation detail"),
-      effects: Number.isFinite(Number(row.effects)) ? Number(row.effects) : 0,
-      sourceLine: str(line)
-    };
+  const rows = buildDashboardRows({
+    state,
+    proposalLines,
+    planCommands
   });
 
   let status = "idle";
