@@ -42,7 +42,7 @@ By the end of the deep-training phase:
 - [x] Improve anchors so concepts can target sections, beats, chords, or global ranges appropriately
 - [x] Improve target-group selection quality
 - [x] Improve use of xLights source structure and metadata tags in concept selection
-- [ ] Improve user-guided metadata capture so tag refinement can affect later concepts
+- [x] Improve user-guided metadata capture so tag refinement can affect later concepts
 - [x] Improve setting/layout-aware concept selection based on prop position and visibility
 - [x] Improve palette and motion-language consistency across a whole song
 - [x] Improve focal vs support balance within and across concepts

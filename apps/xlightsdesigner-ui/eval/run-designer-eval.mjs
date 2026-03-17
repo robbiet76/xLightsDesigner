@@ -1123,6 +1123,72 @@ function runRepeatedPreferenceCase(testCase, metadataFixture) {
   };
 }
 
+function runPairedMetadataCase(testCase, metadataFixture) {
+  const promptText = str(testCase.promptText);
+  const defaultFixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const overrideFixture = buildFixture({
+    variant: str(testCase.overrideFixtureVariant || "metadata_change_sensitivity"),
+    metadataFixture
+  });
+  const buildArgs = (fixture, requestId) => ({
+    requestId,
+    sequenceRevision: "eval-rev-1",
+    promptText,
+    goals: promptText,
+    selectedSections: arr(testCase.selectedSections),
+    selectedTagNames: arr(testCase.selectedTagNames),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext
+  });
+  const defaultResult = executeDesignerProposalOrchestration(buildArgs(defaultFixture, `eval-${testCase.id}-default`));
+  const overrideResult = executeDesignerProposalOrchestration(buildArgs(overrideFixture, `eval-${testCase.id}-override`));
+  const defaultMetrics = extractMetrics(defaultResult);
+  const overrideMetrics = extractMetrics(overrideResult);
+  const defaultTargets = uniq(defaultMetrics.targetIds).sort();
+  const overrideTargets = uniq(overrideMetrics.targetIds).sort();
+  const failures = [];
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+  check("metadata_refinement_no_effect", JSON.stringify(defaultTargets) !== JSON.stringify(overrideTargets));
+  if (testCase.expect?.defaultMustIncludeTargetIds) {
+    check("default_metadata_targets_missing", includesAll(defaultTargets, testCase.expect.defaultMustIncludeTargetIds));
+  }
+  if (testCase.expect?.overrideMustOnlyIncludeTargetIds) {
+    const expected = uniq(testCase.expect.overrideMustOnlyIncludeTargetIds).sort();
+    check("override_metadata_targets_wrong", JSON.stringify(overrideTargets) === JSON.stringify(expected));
+  }
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    runnerMode: "paired_metadata",
+    lenses: arr(testCase.lenses),
+    status: failures.length ? "failed" : "passed",
+    summary: promptText,
+    structuralScore: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    artisticScores: null,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      defaultTargets,
+      overrideTargets
+    }
+  };
+}
+
 function summarizeResults(results = []) {
   const supported = arr(results).filter((row) => row.status !== "deferred");
   const passed = supported.filter((row) => row.status === "passed");
@@ -1167,7 +1233,9 @@ function main() {
       ? runPairedPreferenceCase(testCase, metadataFixture)
       : str(testCase.runnerMode) === "repeated_preference"
         ? runRepeatedPreferenceCase(testCase, metadataFixture)
-      : runCase(testCase, metadataFixture)
+      : str(testCase.runnerMode) === "paired_metadata"
+        ? runPairedMetadataCase(testCase, metadataFixture)
+        : runCase(testCase, metadataFixture)
   ));
   const report = {
     corpusType: corpus.corpusType,

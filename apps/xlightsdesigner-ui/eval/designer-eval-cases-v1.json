@@ -401,6 +401,20 @@
       "directorProfileVariant": "warm_cinematic",
       "promptText": "Build a broad chorus payoff that feels warm, cinematic, and emotionally open.",
       "selectedSections": ["Chorus 1", "Final Chorus"]
+    },
+    {
+      "id": "metadata-refinement-lyric-shift",
+      "kind": "concept",
+      "runnerMode": "paired_metadata",
+      "lenses": ["Prop Understanding"],
+      "fixtureVariant": "default",
+      "overrideFixtureVariant": "metadata_change_sensitivity",
+      "promptText": "Use the lyric props for verse emphasis.",
+      "selectedSections": ["Verse 1"],
+      "expect": {
+        "defaultMustIncludeTargetIds": ["NorthPoleSign"],
+        "overrideMustOnlyIncludeTargetIds": ["Snowman"]
+      }
     }
   ]
 }
