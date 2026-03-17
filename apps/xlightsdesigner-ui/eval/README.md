@@ -11,8 +11,12 @@ Current policy:
 - use the frozen pre-training framework and handoff contract
 - prefer offline validation over live apply during iterative designer training
 - treat structural scorer output as the automated gate
-- treat artistic quality notes as human-review input until richer scorers exist
+- use comparative quality cases to ensure the scorer prefers stronger outputs over flatter but still valid alternatives
 
-Notes:
-- revise-existing-concept cases are defined in the corpus now, but the first runner treats them as `framework_assisted` and does not fully auto-score concept identity preservation through the app revision flow yet
-- promotion decisions should use the scored subset plus targeted human review on the deferred revise slice until revise scoring is automated
+Runner modes:
+- `default`: normal single-output pass/fail eval
+- `framework_assisted`: revise-in-place eval using app-equivalent merge semantics
+- `paired_preference`: compare two director profiles on the same prompt
+- `repeated_preference`: confirm stability across repeated preference-aware runs
+- `paired_metadata`: confirm metadata changes actually change target selection
+- `paired_quality`: compare a stronger prompt against a flatter alternative and require the scorer to prefer the stronger result

@@ -35,6 +35,7 @@ By the end of the deep-training phase:
   - layer usage quality
   - revise behavior on existing concepts
 - [x] Define failure classes for unacceptable designer outputs
+- [x] Add comparative quality evals that distinguish stronger outputs from flatter but still valid alternatives
 
 ### B. Concept Authoring Quality
 

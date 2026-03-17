@@ -311,6 +311,7 @@ Each eval set should intentionally include:
 
 Review note:
 - each eval sample should record which cross-cutting lenses are materially in play so scores can be explained against the same expectations
+- once category floors are saturated, add comparative evals that require the scorer to prefer a stronger output over a flatter but still structurally valid alternative
 
 ## Promotion Thresholds
 

@@ -421,6 +421,33 @@
         "defaultMustIncludeTargetIds": ["NorthPoleSign"],
         "overrideMustOnlyIncludeTargetIds": ["Snowman"]
       }
+    },
+    {
+      "id": "quality-compare-whole-contrast",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Focal Hierarchy", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Build the whole song with strong section contrast, clear focal hierarchy, and clear escalation into the final chorus.",
+      "altPromptText": "Keep the whole song flat and uniform: rely on the same broad full-coverage look in every section, avoid meaningful contrast changes, and do not build a stronger final chorus payoff.",
+      "expect": {
+        "minComparativeMargin": 0.2
+      }
+    },
+    {
+      "id": "quality-compare-concept-lighting",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Stage Lighting Reasoning", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Treat Snowman as the key light focus in Chorus 1 and let perimeter props act as restrained fill and framing.",
+      "altPromptText": "Treat all chorus targets evenly with the same broad full-coverage look, no real focal hierarchy, and no restrained fill or framing roles.",
+      "selectedSections": ["Chorus 1"],
+      "altSelectedSections": ["Chorus 1"],
+      "altSelectedTargetIds": ["AllModels"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

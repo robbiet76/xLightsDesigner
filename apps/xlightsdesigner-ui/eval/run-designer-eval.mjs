@@ -1298,6 +1298,142 @@ function runPairedMetadataCase(testCase, metadataFixture) {
   };
 }
 
+function artisticCompositeScore(artisticScores = null) {
+  const categories = artisticScores?.categories || {};
+  const values = Object.values(categories)
+    .filter((entry) => entry?.applicable)
+    .map((entry) => Number(entry.score || 0))
+    .filter((value) => Number.isFinite(value));
+  if (!values.length) return 0;
+  return Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2));
+}
+
+function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } = {}) {
+  const lowerPrompt = str(promptText).toLowerCase();
+  const lensSet = new Set(arr(lenses).map((value) => str(value)));
+  let score = 0;
+
+  score += Number(metrics.distinctSectionFamilySignatures || 0) * 0.35;
+  score += Number(arr(metrics.recurringEffectFamilies).length || 0) * 0.12;
+  score += Number(arr(metrics.layeredTargetIds).length || 0) * 0.2;
+  score += Number(metrics.focusedOverlayPlacementCount || 0) * 0.12;
+  score += Number(metrics.wellShapedOverlayCount || 0) * 0.18;
+
+  const speeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
+  if (speeds.length >= 2) {
+    score += (Math.max(...speeds) - Math.min(...speeds)) * 0.35;
+  }
+
+  if (lensSet.has("Stage Lighting Reasoning")) {
+    score += Number(arr(metrics.layeredTargetIds).length || 0) * 0.2;
+    score += Number(metrics.focusedOverlayPlacementCount || 0) * 0.15;
+  }
+  if (lensSet.has("Composition Reasoning")) {
+    score += Number(metrics.peakSectionImpactShare || 0) * 1.5;
+  }
+  if (/\b(contrast|escalat|final chorus|whole song|whole sequence|full song)\b/.test(lowerPrompt)) {
+    score += Number(metrics.distinctSectionFamilySignatures || 0) * 0.4;
+  }
+  if (/\b(key light|fill|framing|perimeter|focal hierarchy)\b/.test(lowerPrompt)) {
+    score += Number(metrics.wellShapedOverlayCount || 0) * 0.25;
+  }
+
+  return Number(score.toFixed(2));
+}
+
+function runPairedQualityCase(testCase, metadataFixture) {
+  const fixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const strongPrompt = str(testCase.promptText);
+  const weakPrompt = str(testCase.altPromptText);
+  const buildArgs = (promptText, requestId, overrides = {}) => ({
+    requestId,
+    sequenceRevision: "eval-rev-1",
+    promptText,
+    goals: promptText,
+    selectedSections: arr(overrides.selectedSections ?? testCase.selectedSections),
+    selectedTargetIds: arr(overrides.selectedTargetIds ?? testCase.selectedTargetIds),
+    selectedTagNames: arr(overrides.selectedTagNames ?? testCase.selectedTagNames),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext,
+    directorProfile: buildDirectorProfile(testCase.directorProfileVariant)
+  });
+  const strongResult = executeDesignerProposalOrchestration(buildArgs(strongPrompt, `eval-${testCase.id}-strong`));
+  const weakResult = executeDesignerProposalOrchestration(buildArgs(weakPrompt, `eval-${testCase.id}-weak`, {
+    selectedSections: testCase.altSelectedSections,
+    selectedTargetIds: testCase.altSelectedTargetIds,
+    selectedTagNames: testCase.altSelectedTagNames
+  }));
+  const strongEval = evaluateCase(strongResult, testCase, fixture);
+  const weakEval = evaluateCase(weakResult, {
+    ...testCase,
+    promptText: weakPrompt,
+    expect: {}
+  }, fixture);
+  const strongArtistic = evaluateArtisticScores({
+    summary: strongResult?.summary,
+    proposalLines: strongResult?.proposalLines,
+    executionPlan: getExecutionPlanFromResult(strongResult),
+    lenses: testCase.lenses,
+    promptText: strongPrompt
+  });
+  const weakArtistic = evaluateArtisticScores({
+    summary: weakResult?.summary,
+    proposalLines: weakResult?.proposalLines,
+    executionPlan: getExecutionPlanFromResult(weakResult),
+    lenses: testCase.lenses,
+    promptText: weakPrompt
+  });
+  const strongMetrics = extractMetrics(strongResult, { designSceneContext: fixture.designSceneContext });
+  const weakMetrics = extractMetrics(weakResult, { designSceneContext: fixture.designSceneContext });
+  const strongComposite = artisticCompositeScore(strongArtistic);
+  const weakComposite = artisticCompositeScore(weakArtistic);
+  const strongPreference = comparativeQualityScore({ metrics: strongMetrics, lenses: testCase.lenses, promptText: strongPrompt });
+  const weakPreference = comparativeQualityScore({ metrics: weakMetrics, lenses: testCase.lenses, promptText: strongPrompt });
+  const failures = [];
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+  check("strong_variant_failed_structure", !strongEval.failures.length);
+  check("strong_variant_not_preferred", (strongPreference > weakPreference) || (strongComposite > weakComposite));
+  if (testCase.expect?.minComparativeMargin != null) {
+    const margin = Math.max(strongPreference - weakPreference, strongComposite - weakComposite);
+    check("comparative_margin_too_small", margin >= Number(testCase.expect.minComparativeMargin));
+  }
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    runnerMode: "paired_quality",
+    lenses: arr(testCase.lenses),
+    status: failures.length ? "failed" : "passed",
+    summary: strongPrompt,
+    structuralScore: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    artisticScores: null,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      strongComposite,
+      weakComposite,
+      strongPreference,
+      weakPreference,
+      strongSummary: str(strongResult?.summary),
+      weakSummary: str(weakResult?.summary)
+    }
+  };
+}
+
 function summarizeResults(results = []) {
   const supported = arr(results).filter((row) => row.status !== "deferred");
   const passed = supported.filter((row) => row.status === "passed");
@@ -1344,6 +1480,8 @@ function main() {
         ? runRepeatedPreferenceCase(testCase, metadataFixture)
       : str(testCase.runnerMode) === "paired_metadata"
         ? runPairedMetadataCase(testCase, metadataFixture)
+        : str(testCase.runnerMode) === "paired_quality"
+          ? runPairedQualityCase(testCase, metadataFixture)
         : runCase(testCase, metadataFixture)
   ));
   const report = {
