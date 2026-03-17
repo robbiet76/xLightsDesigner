@@ -10506,7 +10506,17 @@ async function dispatchAutomationPrompt(prompt = "") {
 
 async function applyAutomationCurrentProposal() {
   state.ui.applyApprovalChecked = true;
-  await onApplyAll();
+  const previousConfirmMode = state.safety?.applyConfirmMode;
+  if (state.safety && typeof state.safety === "object") {
+    state.safety.applyConfirmMode = "never";
+  }
+  try {
+    await onApplyAll();
+  } finally {
+    if (state.safety && typeof state.safety === "object") {
+      state.safety.applyConfirmMode = previousConfirmMode || "large-only";
+    }
+  }
   return {
     ok: true,
     status: state.status || null,
