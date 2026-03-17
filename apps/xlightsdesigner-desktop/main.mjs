@@ -287,6 +287,9 @@ async function processAutomationRequests() {
       if (action === "diagnoseCurrentProposal") {
         return invokeRendererAutomation("diagnoseCurrentProposal", request?.payload || {});
       }
+      if (action === "getAgentRuntimeSnapshot") {
+        return invokeRendererAutomation("getAgentRuntimeSnapshot", request?.payload || {});
+      }
       if (action === "runDirectSequenceValidation") {
         return runDirectSequenceValidationFromDesktop(request?.payload || {});
       }

@@ -4298,16 +4298,30 @@ async function pollJobs() {
   let changed = false;
   for (const job of active) {
     try {
-      const body = await getJob(state.endpoint, job.id);
+      const isOwnedJob =
+        String(job?.source || "").trim() === "owned_batch_plan" ||
+        String(job?.id || "").trim().startsWith("xld-job-");
+      const body = isOwnedJob
+        ? await getOwnedJob(state.endpoint, job.id)
+        : await getJob(state.endpoint, job.id);
       const data = body?.data || {};
-      const next = {
-        id: job.id,
-        source: job.source || "unknown",
-        status: data.status || job.status || "running",
-        progress: Number.isFinite(data.progress) ? data.progress : job.progress || 0,
-        message: data.message || job.message || "",
-        updatedAt: new Date().toISOString()
-      };
+      const next = isOwnedJob
+        ? {
+            id: job.id,
+            source: job.source || "owned_batch_plan",
+            status: String(data.state || job.status || "running"),
+            progress: Number.isFinite(data.progress) ? data.progress : job.progress || 0,
+            message: String(data?.result?.error?.message || data.message || job.message || ""),
+            updatedAt: new Date().toISOString()
+          }
+        : {
+            id: job.id,
+            source: job.source || "unknown",
+            status: data.status || job.status || "running",
+            progress: Number.isFinite(data.progress) ? data.progress : job.progress || 0,
+            message: data.message || job.message || "",
+            updatedAt: new Date().toISOString()
+          };
       upsertJob(next);
       changed = true;
       const status = (next.status || "").toLowerCase();
@@ -5923,10 +5937,18 @@ async function onSendChat() {
     const shouldAutoGenerate = shouldAutoGenerateProposalFromChatResult(res, raw);
     const shouldAutoRunAudio = shouldAutoRunAudioAnalysisFromChatResult(res, raw);
     const shouldAnswerExistingAudio = shouldAnswerAudioFromExistingAnalysis(res, raw);
+    const continueToProposal = shouldContinueToProposalAfterAudio(res, raw);
+    const shouldContinueFromExistingAudio =
+      !shouldAutoRunAudio &&
+      !shouldAnswerExistingAudio &&
+      String(res?.routeDecision || "").trim() === "audio_analyst" &&
+      hasUsableCurrentAudioAnalysis() &&
+      continueToProposal;
     const suppressShellBubble =
       shouldAutoGenerate ||
       shouldAnswerExistingAudio ||
       shouldAutoRunAudio ||
+      shouldContinueFromExistingAudio ||
       (nextRole === "sequence_agent" && Boolean(res?.shouldGenerateProposal));
     if (!suppressShellBubble) {
       addStructuredChatMessage("agent", String(res.assistantMessage || ""), {
@@ -5959,8 +5981,39 @@ async function onSendChat() {
       setStatus("info", "Conversation updated. Audio analysis guidance is ready.");
       return;
     }
+    if (shouldContinueFromExistingAudio) {
+      pushDiagnostic("info", "audio-first route: using existing analysis to enter proposal generation");
+      const seeded = seedTechnicalIntentHandoffFromChatPrompt(String(res.proposalIntent || raw), "app_assistant");
+      if (seeded?.ok) {
+        pushDiagnostic("info", "audio-first route: intent_handoff_v1 seeded from existing analysis");
+      } else {
+        pushDiagnostic("warning", "audio-first route: existing-analysis intent seeding failed");
+      }
+      pushDiagnostic("info", "audio-first route: entering onGenerate(sequence_agent) from existing analysis");
+      await onGenerate(String(res.proposalIntent || raw), {
+        requestedRole: "sequence_agent"
+      });
+      return;
+    }
     if (shouldAutoRunAudio) {
+      pushDiagnostic(
+        "info",
+        `audio-first route: continueToProposal=${continueToProposal ? "true" : "false"} route=${String(res.routeDecision || "")} addressedTo=${String(res.addressedTo || "")}`
+      );
       await onAnalyzeAudio({ userPrompt: raw });
+      if (continueToProposal) {
+        pushDiagnostic("info", "audio-first route: seeding technical intent handoff before generate");
+        const seeded = seedTechnicalIntentHandoffFromChatPrompt(String(res.proposalIntent || raw), "app_assistant");
+        if (seeded?.ok) {
+          pushDiagnostic("info", "audio-first route: intent_handoff_v1 seeded");
+        } else {
+          pushDiagnostic("warning", "audio-first route: direct intent orchestration did not produce a valid intent handoff");
+        }
+        pushDiagnostic("info", "audio-first route: entering onGenerate(sequence_agent)");
+        await onGenerate(String(res.proposalIntent || raw), {
+          requestedRole: "sequence_agent"
+        });
+      }
       return;
     }
     if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
@@ -6580,10 +6633,77 @@ function shouldAnswerAudioFromExistingAnalysis(res = {}, raw = "") {
   }
   const text = String(raw || "").trim().toLowerCase();
   if (!text) return false;
+  const explicitGenerateIntent =
+    /(generate|draft|proposal|plan|go ahead|proceed|show me a draft|build a draft|put together a pass|make a pass)/.test(text);
+  const explicitTechnicalIntent =
+    /(apply|change|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
+  if (explicitGenerateIntent || explicitTechnicalIntent) {
+    return false;
+  }
   if (/(re-?analy|analyze again|run analysis|refresh the beat map|refresh analysis|rerun)/.test(text)) {
     return false;
   }
   return /(main sections|section|first real lift|first lift|hold back|open up|chorus|verse|bridge|where does|tell me where)/.test(text);
+}
+
+function seedTechnicalIntentHandoffFromChatPrompt(promptText = "", producer = "app_assistant") {
+  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const explicitSections = hasAllSectionsSelected()
+    ? getSectionChoiceList()
+    : getSelectedSections().filter((s) => s !== "all");
+  const directIntent = executeDirectSequenceRequestOrchestration({
+    requestId: `chat-intent-${Date.now()}`,
+    sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+    promptText: String(promptText || ""),
+    selectedSections: explicitSections,
+    selectedTagNames: state.ui.metadataSelectedTags || [],
+    selectedTargetIds: state.ui.metadataSelectionIds || [],
+    analysisHandoff,
+    models: state.models || [],
+    submodels: state.submodels || [],
+    displayElements: state.displayElements || [],
+    effectCatalog: state.effectCatalog,
+    metadataAssignments: state.metadata?.assignments || [],
+    elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+  });
+  if (!directIntent?.ok || !isPlainObject(directIntent.intentHandoff)) {
+    return { ok: false, directIntent };
+  }
+  state.creative = state.creative || {};
+  state.creative.intentHandoff = structuredClone(directIntent.intentHandoff);
+  return setAgentHandoff("intent_handoff_v1", directIntent.intentHandoff, producer);
+}
+
+function shouldContinueToProposalAfterAudio(res = {}, raw = "") {
+  const hasSequenceContext =
+    Boolean(String(state.sequencePathInput || "").trim()) ||
+    Boolean(state.flags.activeSequenceLoaded) ||
+    Boolean(state.flags.planOnlyMode);
+  if (!hasSequenceContext) return false;
+  const text = String(raw || "").trim().toLowerCase();
+  if (!text) return false;
+
+  const explicitGenerateIntent =
+    /(generate|draft|proposal|plan|go ahead|proceed|show me a draft|build a draft|put together a pass|make a pass)/.test(text);
+  const explicitTechnicalIntent =
+    /(apply|change|add|remove|reduce|increase|adjust|revise|rework|update|set|turn|put)\b/.test(text);
+  const isQuestionOnly =
+    /^(can you|could you|would you|will you|do you|does this|is this|what|why|how|where does|tell me where)\b/.test(text) &&
+    !explicitTechnicalIntent &&
+    !explicitGenerateIntent;
+  if (isQuestionOnly) return false;
+
+  if (explicitTechnicalIntent) return true;
+
+  const addressedTo = String(res?.addressedTo || "").trim();
+  const routeDecision = String(res?.routeDecision || "").trim();
+  const proposalRole = ["designer_dialog", "sequence_agent"].includes(addressedTo)
+    ? addressedTo
+    : (["designer_dialog", "sequence_agent"].includes(routeDecision) ? routeDecision : "");
+
+  if (proposalRole === "sequence_agent") return explicitGenerateIntent;
+  if (proposalRole === "designer_dialog") return explicitGenerateIntent;
+  return explicitGenerateIntent && Boolean(res?.shouldGenerateProposal);
 }
 
 function inferProposalLinesFromIntent(intentText, sections = []) {
@@ -10402,12 +10522,56 @@ async function refreshAutomationFromXLights() {
   };
 }
 
+function getAutomationAgentRuntimeSnapshot() {
+  const summarizeHandoff = (contract = "") => {
+    const row = agentRuntime.handoffs?.[String(contract || "").trim()] || null;
+    return row ? {
+      valid: Boolean(row.valid),
+      producer: String(row.producer || ""),
+      errors: Array.isArray(row.errors) ? row.errors : [],
+      at: String(row.at || ""),
+      context: isPlainObject(row.context) ? row.context : null,
+      payloadSummary: row.valid && isPlainObject(row.payload)
+        ? {
+            artifactId: String(row.payload.artifactId || ""),
+            goal: String(row.payload.goal || row.payload.summary || ""),
+            sections: Array.isArray(row.payload?.scope?.sections)
+              ? row.payload.scope.sections
+              : (Array.isArray(row.payload?.structure?.sections) ? row.payload.structure.sections.length : 0)
+          }
+        : null
+    } : null;
+  };
+
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    sequencePathInput: state.sequencePathInput || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    agentThinking: Boolean(state.ui?.agentThinking),
+    activeRole: String(agentRuntime.activeRole || ""),
+    creativeIntentHandoff: isPlainObject(state.creative?.intentHandoff)
+      ? {
+          artifactId: String(state.creative.intentHandoff.artifactId || ""),
+          goal: String(state.creative.intentHandoff.goal || "")
+        }
+      : null,
+    handoffs: {
+      analysis_handoff_v1: summarizeHandoff("analysis_handoff_v1"),
+      intent_handoff_v1: summarizeHandoff("intent_handoff_v1"),
+      plan_handoff_v1: summarizeHandoff("plan_handoff_v1")
+    }
+  };
+}
+
 function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
     refreshFromXLights: refreshAutomationFromXLights,
     applyCurrentProposal: applyAutomationCurrentProposal,
     diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
+    getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,
     runDirectSequenceValidation: runCurrentDirectSequenceValidation,
     getDirectSequenceValidationSnapshot: getCurrentDirectSequenceValidationSnapshot
   };

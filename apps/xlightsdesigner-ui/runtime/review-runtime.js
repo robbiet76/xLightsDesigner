@@ -309,8 +309,9 @@ export async function executeApplyCore({
     pushDiagnostic("info", `Apply verification passed: revision advanced, ${verification.checks.length} readback check${verification.checks.length === 1 ? "" : "s"}.`);
     markOrchestrationStage(orchestrationRun, "validate_apply", "ok", `executed=${executed} verified=${verification.checks.length}`);
     const jobId = orchestrated?.jobId || null;
+    const applyPath = String(orchestrated?.applyPath || "").trim();
     state.revision = orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision;
-    if (jobId) {
+    if (jobId && applyPath === "legacy_transactions") {
       upsertJob({ id: jobId, source: "transactions.commit", status: "running", progress: 0, updatedAt: new Date().toISOString() });
       setStatusWithDiagnostics("info", `Plan accepted as async job ${jobId}.`);
     }
