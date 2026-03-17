@@ -140,6 +140,34 @@ test('planner output is deterministic for same input', () => {
   assert.deepEqual(a, b);
 });
 
+test('goal matching does not resolve unrelated generic submodel names', () => {
+  const scopedModels = [
+    { id: 'PorchTree', name: 'PorchTree', type: 'Model' },
+    { id: 'Train_Gondola', name: 'Train_Gondola', type: 'Model' }
+  ];
+  const scopedSubmodels = [
+    { id: 'Train_Gondola/Tree', name: 'Tree', parentId: 'Train_Gondola' }
+  ];
+  const scopedDisplayElements = [
+    { id: 'PorchTree', name: 'PorchTree', type: 'model' },
+    { id: 'Train_Gondola', name: 'Train_Gondola', type: 'model' }
+  ];
+
+  const result = buildProposalFromIntent({
+    promptText: 'Add a Color Wash effect on PorchTree during Chorus 2.',
+    selectedSections: ['Chorus 2'],
+    models: scopedModels,
+    submodels: scopedSubmodels,
+    metadataAssignments: [],
+    displayElements: scopedDisplayElements
+  });
+
+  const targetIds = result.targets.map((target) => target.id);
+  assert.ok(targetIds.includes('PorchTree'));
+  assert.ok(!targetIds.includes('Train_Gondola/Tree'));
+  assert.ok(result.proposalLines.every((line) => !/\/\s*PorchTree \+ Tree\s*\//i.test(line)));
+});
+
 test('planner uses scene and music context to shape first-pass proposal lines', () => {
   const result = buildProposalFromIntent({
     promptText: 'Make the chorus feel bigger and more cinematic',

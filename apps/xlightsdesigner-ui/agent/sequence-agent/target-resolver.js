@@ -48,6 +48,44 @@ function mapLiveTargets(models = [], submodels = []) {
   return uniqueById(rows);
 }
 
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildNameCounts(targets = []) {
+  const counts = new Map();
+  for (const target of targets || []) {
+    const name = normalizeName(target?.name);
+    if (!name) continue;
+    counts.set(name, Number(counts.get(name) || 0) + 1);
+  }
+  return counts;
+}
+
+function goalMentionsTarget(goal = "", target = null, nameCounts = new Map()) {
+  const normalizedGoal = normalizeName(goal);
+  const name = normalizeName(target?.name);
+  if (!normalizedGoal || !name) return false;
+  const id = normalizeName(target?.id);
+  const parentId = normalizeName(target?.parentId);
+
+  if (id && normalizedGoal.includes(id)) return true;
+  if (parentId && name && normalizedGoal.includes(`${parentId}/${name}`)) return true;
+  if (parentId && name && normalizedGoal.includes(`${parentId} ${name}`)) return true;
+
+  const exactNamePattern = new RegExp(`(^|[^a-z0-9])${escapeRegex(name)}([^a-z0-9]|$)`, "i");
+  if (!exactNamePattern.test(normalizedGoal)) return false;
+
+  if (target?.type === "submodel") {
+    const nameCount = Number(nameCounts.get(name) || 0);
+    if (nameCount > 1) return false;
+    if (name.length <= 4) return false;
+    if (!parentId) return false;
+  }
+
+  return true;
+}
+
 export function resolveTargetSelection({
   normalizedIntent,
   models = [],
@@ -57,6 +95,7 @@ export function resolveTargetSelection({
 } = {}) {
   const liveTargets = mapLiveTargets(models, submodels);
   const byId = new Map(liveTargets.map((row) => [row.id, row]));
+  const nameCounts = buildNameCounts(liveTargets);
   const displayByName = mapDisplayElements(displayElements);
   const chosen = new Map();
   const unresolved = new Map();
@@ -109,8 +148,7 @@ export function resolveTargetSelection({
   if (!chosen.size && intent.goal) {
     const goal = normalizeName(intent.goal);
     for (const target of liveTargets) {
-      const name = normalizeName(target.name);
-      if (!name || !goal.includes(name)) continue;
+      if (!goalMentionsTarget(goal, target, nameCounts)) continue;
       matchedGoalTarget = true;
       if (isWritableTarget(target)) {
         chosen.set(target.id, target);

@@ -17,6 +17,7 @@ function copyUi() {
   if (!fs.existsSync(sourceDir)) {
     throw new Error(`UI source directory not found: ${sourceDir}`);
   }
+  fs.rmSync(outDir, { recursive: true, force: true });
   ensureDir(outDir);
   fs.cpSync(sourceDir, outDir, { recursive: true, force: true });
 }
