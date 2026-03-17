@@ -34,7 +34,7 @@ Exit gate:
 - [x] Carry `designAuthor` through the same chain
 - [x] Use compact display labels in the UI
 - [x] Add first-class `designRevision`
-- [ ] Add derived `designLabel` based on true revision state, not default `0`
+- [x] Add derived `designLabel` based on true revision state, not default `0`
 - [ ] Define numeric sort rules for concept id + revision everywhere the UI sorts concepts
 
 Exit gate:
@@ -43,8 +43,8 @@ Exit gate:
 ### C. Concept Lifecycle Operations
 
 - [x] Support concept-level delete by `designId`
-- [ ] Support revise-in-place for an existing concept
-- [ ] Support supersede semantics for revised concepts
+- [x] Support revise-in-place for an existing concept
+- [x] Support supersede semantics for revised concepts in the active draft
 - [ ] Ensure Sequence rows can distinguish current vs superseded concept revisions
 - [ ] Ensure Review can compare a current concept revision against the previous one
 
@@ -68,8 +68,8 @@ Exit gate:
 - [x] Use placement-first handoff structure
 - [x] Preserve `designId` into derived sequence commands
 - [x] Preserve direct-user concepts through the same grouped review model
-- [ ] Add `designRevision` to handoff contracts
-- [ ] Define revise/supersede handoff semantics explicitly in spec
+- [x] Add `designRevision` to handoff contracts
+- [x] Define revise/supersede handoff semantics explicitly in spec
 - [ ] Freeze the pre-training handoff contract version for the training phase
 
 Exit gate:

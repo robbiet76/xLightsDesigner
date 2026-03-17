@@ -364,6 +364,12 @@ If revision tracking is needed, it must be carried separately via a future field
 - `designRevision`
 - `supersedesRevision`
 
+Current pre-training workflow semantics:
+- revising a concept must keep the same `designId`
+- revising a concept must increment `designRevision`
+- the active draft supersedes the prior revision in place rather than creating a second active concept row
+- derived sequencer commands for the revised concept must carry the updated `designRevision`
+
 Sorting must use numeric concept/revision fields, not lexical sorting of `designLabel`.
 
 Current supported `designAuthor` values:

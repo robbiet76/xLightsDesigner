@@ -54,6 +54,7 @@ export function bindScreenEvents({
   onRebaseDraft,
   setSectionFilter,
   setDesignTab,
+  onReviseDesignConcept,
   onRemoveDesignConcept,
   onRemoveSelectedProposed,
   onRemoveAllProposed,
@@ -439,6 +440,10 @@ export function bindScreenEvents({
 
   app.querySelectorAll("[data-design-remove]").forEach((btn) => {
     btn.addEventListener("click", () => onRemoveDesignConcept(btn.dataset.designRemove));
+  });
+
+  app.querySelectorAll("[data-design-revise]").forEach((btn) => {
+    btn.addEventListener("click", () => onReviseDesignConcept(btn.dataset.designRevise));
   });
 
   const removeSelectedProposedBtn = app.querySelector("#remove-selected-proposed");

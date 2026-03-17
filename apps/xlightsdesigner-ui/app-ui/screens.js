@@ -1059,7 +1059,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th style="width:168px;">Focus</th>
                   <th style="width:168px;">Palette</th>
                   <th style="width:80px;">Linked</th>
-                  <th style="width:88px;">Action</th>
+                  <th style="width:148px;">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1073,7 +1073,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <td>${escapeHtml(String((row.focus || []).join(", ") || "No focus targets"))}</td>
                         <td>${renderPaletteSwatches(row.palette?.colors || [])}</td>
                         <td>${escapeHtml(String(row.placementCount || 0))}</td>
-                        <td><button data-design-remove="${escapeHtml(String(row.designId || ""))}">Delete</button></td>
+                        <td>
+                          <div class="row">
+                            <button data-design-revise="${escapeHtml(String(row.designId || ""))}">Revise</button>
+                            <button data-design-remove="${escapeHtml(String(row.designId || ""))}">Delete</button>
+                          </div>
+                        </td>
                       </tr>
                     `).join("")
                     : `<tr><td colspan="7" class="banner">No design concepts available yet.</td></tr>`
@@ -1254,7 +1259,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <th style="width:140px;">Anchor</th>
                     <th style="width:148px;">Focus</th>
                     <th style="width:72px;">Effects</th>
-                    <th style="width:84px;">Action</th>
+                    <th style="width:148px;">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1274,7 +1279,11 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <td>${escapeHtml(String(anchor || "General"))}</td>
                         <td>${escapeHtml(String(targetSummary || "Current scope"))}</td>
                         <td>${escapeHtml(String(effectCount || 0))}</td>
-                        <td>${designId ? `<button data-design-remove="${escapeHtml(String(designId))}">Delete</button>` : `<button data-proposed-delete="${escapeHtml(indexCsv.split(",")[0] || "")}">Delete</button>`}</td>
+                        <td>${
+                          designId
+                            ? `<div class="row"><button data-design-revise="${escapeHtml(String(designId))}">Revise</button><button data-design-remove="${escapeHtml(String(designId))}">Delete</button></div>`
+                            : `<button data-proposed-delete="${escapeHtml(indexCsv.split(",")[0] || "")}">Delete</button>`
+                        }</td>
                       </tr>
                     `;
                           })
