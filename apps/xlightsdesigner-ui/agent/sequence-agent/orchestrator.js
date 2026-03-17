@@ -99,6 +99,7 @@ export async function validateAndApplyPlan({
   stageTransactionCommand,
   applySequencingBatchPlan = null,
   getOwnedJob = null,
+  getOwnedHealth = null,
   safetyOptions = {}
 } = {}) {
   if (!endpoint) throw new Error('endpoint is required');
@@ -147,6 +148,31 @@ export async function validateAndApplyPlan({
 
   const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
   if (ownedBatchPlan && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
+    if (typeof getOwnedHealth !== "function") {
+      return {
+        ok: false,
+        stage: "runtime",
+        error: "owned xLights API health probe is required for compressible apply plans"
+      };
+    }
+    try {
+      const health = await getOwnedHealth(endpoint);
+      const ownedState = str(health?.data?.state).toLowerCase();
+      if (ownedState !== "ready") {
+        return {
+          ok: false,
+          stage: "runtime",
+          error: `owned xLights API not ready (state=${ownedState || "unknown"})`,
+          details: health
+        };
+      }
+    } catch (err) {
+      return {
+        ok: false,
+        stage: "runtime",
+        error: `owned xLights API unavailable: ${str(err?.message || err)}`
+      };
+    }
     try {
       const accepted = await applySequencingBatchPlan(endpoint, ownedBatchPlan);
       const jobId = str(accepted?.data?.jobId);

@@ -185,6 +185,7 @@ test("orchestrator prefers owned sequencing batch plan when command graph is com
       throw new Error("legacy transaction path should not run");
     },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
     applySequencingBatchPlan: async (_endpoint, payload) => {
       applyCalls += 1;
       assert.equal(payload.track, "XD: Song Structure");
@@ -204,8 +205,7 @@ test("orchestrator prefers owned sequencing batch plan when command graph is com
   assert.equal(ownedJobCalls, 1);
 });
 
-test("orchestrator falls back to legacy transactions when owned sequencing batch plan is unavailable", async () => {
-  let staged = 0;
+test("orchestrator blocks when owned sequencing batch plan is unavailable", async () => {
   const res = await validateAndApplyPlan({
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
     commands: [
@@ -231,23 +231,33 @@ test("orchestrator falls back to legacy transactions when owned sequencing batch
     ],
     expectedRevision: "rev-fallback-1",
     getRevision: okRevision("rev-fallback-1"),
-    validateCommands: async () => ({ data: { valid: true, results: [{ index: 0, valid: true }, { index: 1, valid: true }, { index: 2, valid: true }] } }),
-    beginTransaction: async () => ({ data: { transactionId: "tx-fallback-1" } }),
+    validateCommands: async () => {
+      throw new Error("legacy validation path should not run");
+    },
+    beginTransaction: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
     stageTransactionCommand: async () => {
-      staged += 1;
-      return { res: 200 };
+      throw new Error("legacy transaction path should not run");
     },
-    commitTransaction: async () => ({ data: { newRevision: "rev-fallback-2" } }),
+    commitTransaction: async () => {
+      throw new Error("legacy transaction path should not run");
+    },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
-    applySequencingBatchPlan: async () => {
-      throw new Error("POST http://127.0.0.1:49915/xlightsdesigner/api/sequencing/apply-batch-plan failed (NOT_FOUND): Not found.");
+    getOwnedHealth: async () => {
+      throw new Error("connect ECONNREFUSED 127.0.0.1:49915");
     },
-    getOwnedJob: async () => ({ data: { state: "failed" } })
+    applySequencingBatchPlan: async () => {
+      throw new Error("owned apply should not run");
+    },
+    getOwnedJob: async () => {
+      throw new Error("owned job poll should not run");
+    }
   });
 
-  assert.equal(res.ok, true);
-  assert.equal(res.applyPath, "legacy_transactions");
-  assert.equal(staged, 3);
+  assert.equal(res.ok, false);
+  assert.equal(res.stage, "runtime");
+  assert.match(String(res.error || ""), /owned xLights API unavailable/i);
 });
 
 test("orchestrator still compresses plans that include alignToTiming commands", async () => {
@@ -294,6 +304,7 @@ test("orchestrator still compresses plans that include alignToTiming commands", 
       throw new Error("legacy transaction path should not run");
     },
     rollbackTransaction: async () => ({ data: { rolledBack: true } }),
+    getOwnedHealth: async () => ({ ok: true, data: { state: "ready" } }),
     applySequencingBatchPlan: async (_endpoint, payload) => {
       applyCalls += 1;
       assert.equal(payload.track, "XD: Song Structure");

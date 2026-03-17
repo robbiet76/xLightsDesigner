@@ -5,6 +5,7 @@ import {
   cancelJob,
   createSequence,
   applySequencingBatchPlan,
+  getOwnedHealth,
   getJob,
   getOwnedJob,
   getMediaStatus,
@@ -3062,6 +3063,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         rollbackTransaction,
         stageTransactionCommand,
         applySequencingBatchPlan,
+        getOwnedHealth,
         getOwnedJob
       },
       callbacks: {
@@ -10272,9 +10274,21 @@ async function applyAutomationCurrentProposal() {
   };
 }
 
+async function refreshAutomationFromXLights() {
+  await onRefresh();
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    sequencePathInput: state.sequencePathInput || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
+  };
+}
+
 function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
+    refreshFromXLights: refreshAutomationFromXLights,
     applyCurrentProposal: applyAutomationCurrentProposal,
     runDirectSequenceValidation: runCurrentDirectSequenceValidation,
     getDirectSequenceValidationSnapshot: getCurrentDirectSequenceValidationSnapshot

@@ -330,6 +330,11 @@ export async function getOwnedJob(endpoint, jobId) {
   return readOwnedJson(target, { method: "GET" });
 }
 
+export async function getOwnedHealth(endpoint) {
+  const base = deriveOwnedEndpointBase(endpoint);
+  return readOwnedJson(`${base}/health`, { method: "GET" });
+}
+
 export async function applySequencingBatchPlan(endpoint, payload = {}) {
   const base = deriveOwnedEndpointBase(endpoint);
   return readOwnedJson(`${base}/sequencing/apply-batch-plan`, {
