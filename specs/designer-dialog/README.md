@@ -12,3 +12,4 @@ Related domains:
 - `sequence_agent` turns approved intent into validated xLights mutation plans
 
 - `designer-sequencer-effect-placement-contract-2026-03-17.md`: placement-first contract for designer-to-sequencer handoff, including effect/layer/render responsibility boundaries.
+- `xlights-effect-support-audit-2026-03-17.md`: full live audit of the current xLights effect catalog, including Tier 1/2/3/4 support boundaries.
