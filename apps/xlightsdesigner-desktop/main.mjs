@@ -23,6 +23,10 @@ import {
   buildXLightsTimingState,
   buildXLightsEffectOccupancyState
 } from "./xlights-validation.mjs";
+import {
+  processAutomationRequestsOnce,
+  createSingleFlightAutomationProcessor
+} from "./automation-request-processor.mjs";
 
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
@@ -55,6 +59,7 @@ const AUTOMATION_ROOT = "/tmp/xld-automation";
 const AUTOMATION_REQUESTS_DIR = path.join(AUTOMATION_ROOT, "requests");
 const AUTOMATION_RESPONSES_DIR = path.join(AUTOMATION_ROOT, "responses");
 let automationPollTimer = null;
+let automationRequestProcessor = null;
 const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
@@ -263,50 +268,46 @@ async function invokeRendererAutomation(action = "", payload = {}) {
 
 async function processAutomationRequests() {
   ensureAutomationDirs();
-  const files = fs.readdirSync(AUTOMATION_REQUESTS_DIR)
-    .filter((name) => name.endsWith('.json'))
-    .sort();
-  for (const name of files) {
-    const fullPath = path.join(AUTOMATION_REQUESTS_DIR, name);
-    let request = null;
-    try {
-      request = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
-      const id = String(request?.id || path.basename(name, '.json')).trim() || path.basename(name, '.json');
-      const action = String(request?.action || '').trim();
-      let result = null;
-      if (action === 'dispatchPrompt') {
-        result = await invokeRendererAutomation('dispatchPrompt', String(request?.payload?.prompt || ''));
-      } else if (action === 'ping') {
-        result = { ok: true, appReady: true };
-      } else if (action === 'refreshFromXLights') {
-        result = await invokeRendererAutomation('refreshFromXLights', request?.payload || {});
-      } else if (action === 'applyCurrentProposal') {
-        result = await invokeRendererAutomation('applyCurrentProposal', request?.payload || {});
-      } else if (action === 'diagnoseCurrentProposal') {
-        result = await invokeRendererAutomation('diagnoseCurrentProposal', request?.payload || {});
-      } else if (action == 'runDirectSequenceValidation') {
-        result = await runDirectSequenceValidationFromDesktop(request?.payload || {});
-      } else {
-        throw new Error(`Unknown automation action: ${action || 'missing'}`);
+  return processAutomationRequestsOnce({
+    requestsDir: AUTOMATION_REQUESTS_DIR,
+    responsePathForId: automationResponsePath,
+    invokeAction: async ({ action, request }) => {
+      if (action === "dispatchPrompt") {
+        return invokeRendererAutomation("dispatchPrompt", String(request?.payload?.prompt || ""));
       }
-      fs.writeFileSync(automationResponsePath(id), JSON.stringify({ ok: true, id, action, result }, null, 2), 'utf8');
-    } catch (err) {
-      const id = String(request?.id || path.basename(name, '.json')).trim() || path.basename(name, '.json');
-      const action = String(request?.action || '').trim();
-      fs.writeFileSync(automationResponsePath(id), JSON.stringify({ ok: false, id, action, error: String(err?.message || err) }, null, 2), 'utf8');
-    } finally {
-      try { fs.unlinkSync(fullPath); } catch {}
+      if (action === "ping") {
+        return { ok: true, appReady: true };
+      }
+      if (action === "refreshFromXLights") {
+        return invokeRendererAutomation("refreshFromXLights", request?.payload || {});
+      }
+      if (action === "applyCurrentProposal") {
+        return invokeRendererAutomation("applyCurrentProposal", request?.payload || {});
+      }
+      if (action === "diagnoseCurrentProposal") {
+        return invokeRendererAutomation("diagnoseCurrentProposal", request?.payload || {});
+      }
+      if (action === "runDirectSequenceValidation") {
+        return runDirectSequenceValidationFromDesktop(request?.payload || {});
+      }
+      throw new Error(`Unknown automation action: ${action || "missing"}`);
     }
-  }
+  });
 }
 
 function startAutomationPolling() {
   ensureAutomationDirs();
   if (automationPollTimer) return;
-  automationPollTimer = setInterval(() => {
-    processAutomationRequests().catch((err) => {
-      logStartup(`automation:poll error=${String(err?.message || err)}`);
+  if (!automationRequestProcessor) {
+    automationRequestProcessor = createSingleFlightAutomationProcessor({
+      processOnce: processAutomationRequests,
+      onError: (err) => {
+        logStartup(`automation:poll error=${String(err?.message || err)}`);
+      }
     });
+  }
+  automationPollTimer = setInterval(() => {
+    automationRequestProcessor.processPending();
   }, 500);
 }
 
