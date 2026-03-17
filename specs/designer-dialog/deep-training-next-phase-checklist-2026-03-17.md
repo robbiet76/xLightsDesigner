@@ -39,7 +39,7 @@ By the end of the deep-training phase:
 ### B. Concept Authoring Quality
 
 - [x] Improve concept summaries so they are concise and actionable
-- [ ] Improve anchors so concepts can target sections, beats, chords, or global ranges appropriately
+- [x] Improve anchors so concepts can target sections, beats, chords, or global ranges appropriately
 - [x] Improve target-group selection quality
 - [ ] Improve use of xLights source structure and metadata tags in concept selection
 - [ ] Improve user-guided metadata capture so tag refinement can affect later concepts
@@ -53,7 +53,7 @@ By the end of the deep-training phase:
 
 - [ ] Increase use of explicit `effectPlacements[]` as the primary authored output
 - [ ] Improve exact timing-window quality within sections
-- [ ] Improve timing-window quality from beat, chord, phrase, and transition cues when section labels are insufficient
+- [x] Improve timing-window quality from beat, chord, phrase, and transition cues when section labels are insufficient
 - [ ] Improve multi-effect same-target layering quality
 - [ ] Improve per-effect settings intent quality
 - [ ] Improve layer/render intent quality

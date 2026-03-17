@@ -52,6 +52,28 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
     { label: "Final Chorus", startMs: 120000, endMs: 156000, energy: "high", density: "dense" },
     { label: "Outro", startMs: 156000, endMs: 176000, energy: "low", density: "sparse" }
   ];
+  const cueWindowsBySection = {
+    "Verse 1": {
+      chord: [
+        { label: "Chord A", trackName: "XD: Chord Changes", startMs: 22000, endMs: 30000 },
+        { label: "Chord B", trackName: "XD: Chord Changes", startMs: 30000, endMs: 38000 },
+        { label: "Chord C", trackName: "XD: Chord Changes", startMs: 38000, endMs: 46000 }
+      ]
+    },
+    "Chorus 1": {
+      beat: [
+        { label: "Beat Pulse 1", trackName: "XD: Beat Grid", startMs: 56000, endMs: 61000 },
+        { label: "Beat Pulse 2", trackName: "XD: Beat Grid", startMs: 66000, endMs: 71000 },
+        { label: "Beat Pulse 3", trackName: "XD: Beat Grid", startMs: 76000, endMs: 81000 }
+      ]
+    },
+    "Bridge": {
+      phrase: [
+        { label: "Phrase Hold", trackName: "XD: Phrase Cues", startMs: 96000, endMs: 104000 },
+        { label: "Phrase Release", trackName: "XD: Phrase Cues", startMs: 104000, endMs: 112000 }
+      ]
+    }
+  };
   const sceneGraph = {
     modelsById: {
       "Border-01": { id: "Border-01", name: "Border-01", type: "Line", nodes: [{ coords: { world: { x: 1, y: 1, z: foregroundZ } } }] },
@@ -139,7 +161,8 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
       designCues: {
         revealMoments: ["Verse 1->Chorus 1", "Bridge->Final Chorus"],
         holdMoments: ["Intro", "Outro"],
-        lyricFocusMoments: ["Verse 1"]
+        lyricFocusMoments: ["Verse 1"],
+        cueWindowsBySection
       }
     }
   };
@@ -190,6 +213,8 @@ function extractMetrics(result = {}) {
     designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
     effectPlacementCount: placements.length,
     distinctEffectFamilies: effectFamilies,
+    trackNames: uniq(placements.map((row) => row?.timingContext?.trackName)),
+    alignmentModes: uniq(placements.map((row) => row?.timingContext?.alignmentMode)),
     targetIds: uniq([
       ...arr(result?.intentHandoff?.scope?.targetIds),
       ...placements.map((row) => row?.targetId)
@@ -296,7 +321,7 @@ function evaluateRevisionCase(baseResult, revisedResult, mergedExecutionPlan, re
   const mergedNonTarget = comparableNonTargetRows(revisedExecution, target.designId);
   const revisedSections = uniq([
     ...revisedRows.sectionPlans.map((row) => row?.section),
-    ...revisedRows.effectPlacements.map((row) => row?.timingContext?.anchorLabel)
+    ...revisedRows.effectPlacements.map((row) => row?.sourceSectionLabel || row?.timingContext?.anchorLabel)
   ]);
 
   let checksTotal = 0;
@@ -627,6 +652,12 @@ function evaluateCase(result, testCase) {
   }
   if (expect.minDesignConceptCount != null) {
     check("insufficient_design_concepts", metrics.designConceptCount >= Number(expect.minDesignConceptCount));
+  }
+  if (expect.mustIncludeTrackNames) {
+    check("missing_required_track_names", includesAll(metrics.trackNames, expect.mustIncludeTrackNames));
+  }
+  if (expect.mustIncludeAlignmentModes) {
+    check("missing_required_alignment_modes", includesAll(metrics.alignmentModes, expect.mustIncludeAlignmentModes));
   }
 
   const score = structuralScore({

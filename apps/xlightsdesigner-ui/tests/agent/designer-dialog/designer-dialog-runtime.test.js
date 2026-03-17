@@ -355,6 +355,101 @@ test("designer runtime emits exact effect placements when analyzed section timin
   assert.deepEqual(result.handoff.executionStrategy.effectPlacements, placements);
 });
 
+test("designer runtime aligns placements to beat, chord, and phrase cue windows when requested", () => {
+  const musicDesignContext = {
+    sectionArc: [
+      { label: "Verse 1", energy: "medium", density: "moderate" },
+      { label: "Chorus 1", energy: "high", density: "dense" },
+      { label: "Bridge", energy: "medium", density: "moderate" }
+    ],
+    designCues: {
+      cueWindowsBySection: {
+        "Verse 1": {
+          chord: [
+            { label: "Chord A", trackName: "XD: Chord Changes", startMs: 22000, endMs: 30000 }
+          ]
+        },
+        "Chorus 1": {
+          beat: [
+            { label: "Beat Pulse 1", trackName: "XD: Beat Grid", startMs: 56000, endMs: 61000 }
+          ]
+        },
+        Bridge: {
+          phrase: [
+            { label: "Phrase Hold", trackName: "XD: Phrase Cues", startMs: 96000, endMs: 104000 }
+          ]
+        }
+      }
+    }
+  };
+
+  const beatResult = executeDesignerDialogFlow({
+    requestId: "req-8a",
+    sequenceRevision: "rev-8a",
+    promptText: "Use beat-driven accents in Chorus 1 so the pulse lands on the beat grid.",
+    goals: "Accent the beat grid in Chorus 1.",
+    selectedSections: ["Chorus 1"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext
+  });
+  const beatPlacement = beatResult.proposalBundle.executionPlan.effectPlacements[0];
+  assert.equal(beatPlacement.timingContext.trackName, "XD: Beat Grid");
+  assert.equal(beatPlacement.timingContext.alignmentMode, "beat_window");
+
+  const chordResult = executeDesignerDialogFlow({
+    requestId: "req-8b",
+    sequenceRevision: "rev-8b",
+    promptText: "Follow the chord changes in Verse 1 with cleaner harmonic pivots.",
+    goals: "Follow chord changes in Verse 1.",
+    selectedSections: ["Verse 1"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" }
+        ]
+      }
+    },
+    musicDesignContext
+  });
+  const chordPlacement = chordResult.proposalBundle.executionPlan.effectPlacements[0];
+  assert.equal(chordPlacement.timingContext.trackName, "XD: Chord Changes");
+  assert.equal(chordPlacement.timingContext.alignmentMode, "chord_window");
+
+  const phraseResult = executeDesignerDialogFlow({
+    requestId: "req-8c",
+    sequenceRevision: "rev-8c",
+    promptText: "Shape the Bridge transition by holding the breath before the phrase release.",
+    goals: "Use phrase cues in Bridge.",
+    selectedSections: ["Bridge"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 90000, endMs: 120000, energy: "medium", density: "moderate" }
+        ]
+      }
+    },
+    musicDesignContext
+  });
+  const phrasePlacement = phraseResult.proposalBundle.executionPlan.effectPlacements[0];
+  assert.equal(phrasePlacement.timingContext.trackName, "XD: Phrase Cues");
+  assert.equal(phrasePlacement.timingContext.alignmentMode, "phrase_window");
+});
+
 test("designer runtime broad whole-sequence passes now use multiple supported effect families", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-8",

@@ -75,6 +75,42 @@
       }
     },
     {
+      "id": "concept-beat-anchored-chorus",
+      "kind": "concept",
+      "lenses": ["Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Use beat-driven accents in Chorus 1 so the pulse lands on the beat grid instead of washing the full section.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "mustIncludeTrackNames": ["XD: Beat Grid"],
+        "mustIncludeAlignmentModes": ["beat_window"]
+      }
+    },
+    {
+      "id": "concept-chord-anchored-verse",
+      "kind": "concept",
+      "lenses": ["Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Follow the chord changes in Verse 1 with cleaner harmonic pivots instead of treating the verse as one flat span.",
+      "selectedSections": ["Verse 1"],
+      "expect": {
+        "mustIncludeTrackNames": ["XD: Chord Changes"],
+        "mustIncludeAlignmentModes": ["chord_window"]
+      }
+    },
+    {
+      "id": "concept-phrase-anchored-bridge",
+      "kind": "concept",
+      "lenses": ["Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Shape the Bridge transition by holding the breath before the phrase release rather than filling the entire section evenly.",
+      "selectedSections": ["Bridge"],
+      "expect": {
+        "mustIncludeTrackNames": ["XD: Phrase Cues"],
+        "mustIncludeAlignmentModes": ["phrase_window"]
+      }
+    },
+    {
       "id": "concept-lighting-key-fill",
       "kind": "concept",
       "lenses": ["Stage Lighting Reasoning", "Focal Hierarchy"],

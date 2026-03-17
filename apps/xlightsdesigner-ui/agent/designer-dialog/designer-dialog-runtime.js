@@ -551,6 +551,42 @@ function buildTimedSectionMap(analysisHandoff = null) {
   return map;
 }
 
+function inferPlacementAnchorMode(goal = "") {
+  const lowerGoal = str(goal).toLowerCase();
+  if (/\b(beat|downbeat|upbeat|pulse|beat grid)\b/.test(lowerGoal)) return "beat";
+  if (/\b(chord|harmon(?:y|ic)|changes?)\b/.test(lowerGoal)) return "chord";
+  if (/\b(phrase|transition|release|breath)\b/.test(lowerGoal)) return "phrase";
+  return "section";
+}
+
+function buildCueWindowIndex(musicDesignContext = null) {
+  const cues = musicDesignContext?.designCues?.cueWindowsBySection;
+  const modes = {
+    beat: new Map(),
+    chord: new Map(),
+    phrase: new Map()
+  };
+  if (!cues || typeof cues !== "object") return modes;
+  for (const [section, sectionCues] of Object.entries(cues)) {
+    const key = str(section);
+    if (!key || !sectionCues || typeof sectionCues !== "object") continue;
+    for (const mode of Object.keys(modes)) {
+      const rows = arr(sectionCues?.[mode])
+        .map((row) => ({
+          label: str(row?.label),
+          trackName: str(row?.trackName),
+          startMs: Number(row?.startMs),
+          endMs: Number(row?.endMs)
+        }))
+        .filter((row) => row.label && row.trackName && Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs);
+      if (rows.length) {
+        modes[mode].set(key, rows);
+      }
+    }
+  }
+  return modes;
+}
+
 function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
@@ -692,15 +728,18 @@ function buildPlacementWindow({ startMs = 0, endMs = 0, effectIndex = 0, effectC
   };
 }
 
-function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), goal = "" } = {}) {
+function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), goal = "", musicDesignContext = null } = {}) {
   const placements = [];
   const plans = arr(sectionPlans);
   const sectionCount = plans.length;
+  const anchorMode = inferPlacementAnchorMode(goal);
+  const cueWindowIndex = buildCueWindowIndex(musicDesignContext);
   for (let sectionIndex = 0; sectionIndex < plans.length; sectionIndex += 1) {
     const plan = plans[sectionIndex];
     const section = str(plan?.section);
     const timed = timedSections.get(section);
     if (!timed) continue;
+    const cueWindows = anchorMode === "section" ? [] : arr(cueWindowIndex?.[anchorMode]?.get(section));
     const targets = arr(plan?.targetIds).map((row) => str(row)).filter(Boolean).slice(0, inferTargetLimitForSection({
       energy: plan?.energy,
       density: plan?.density
@@ -714,13 +753,16 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
         : effectHints.slice(0, 1);
       for (let effectIndex = 0; effectIndex < perTargetEffectHints.length; effectIndex += 1) {
         const effectName = perTargetEffectHints[effectIndex];
-        const window = buildPlacementWindow({
-          startMs: timed.startMs,
-          endMs: timed.endMs,
-          effectIndex,
-          effectCount: perTargetEffectHints.length,
-          energy: plan?.energy
-        });
+        const cueWindow = cueWindows.length ? cueWindows[Math.min(effectIndex, cueWindows.length - 1)] : null;
+        const window = cueWindow
+          ? { startMs: cueWindow.startMs, endMs: cueWindow.endMs }
+          : buildPlacementWindow({
+              startMs: timed.startMs,
+              endMs: timed.endMs,
+              effectIndex,
+              effectCount: perTargetEffectHints.length,
+              energy: plan?.energy
+            });
         placements.push({
           placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}`,
           designId: str(plan?.designId),
@@ -732,11 +774,11 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
           startMs: window.startMs,
           endMs: window.endMs,
           timingContext: {
-            trackName: "XD: Song Structure",
-            anchorLabel: section,
-            anchorStartMs: timed.startMs,
-            anchorEndMs: timed.endMs,
-            alignmentMode: effectIndex === 0 ? "section_span" : "within_section"
+            trackName: cueWindow?.trackName || "XD: Song Structure",
+            anchorLabel: cueWindow?.label || section,
+            anchorStartMs: cueWindow?.startMs || timed.startMs,
+            anchorEndMs: cueWindow?.endMs || timed.endMs,
+            alignmentMode: cueWindow ? `${anchorMode}_window` : effectIndex === 0 ? "section_span" : "within_section"
           },
           creative: {
             role: effectIndex === 0 ? "section_foundation" : "section_accent",
@@ -768,7 +810,8 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             mustAlignToTiming: true,
             preserveExistingEffects: false,
             mustNotOverlap: false
-          }
+          },
+          sourceSectionLabel: section
         });
       }
     }
@@ -871,7 +914,8 @@ function buildDesignerExecutionPlan({
   const effectPlacements = buildEffectPlacements({
     sectionPlans,
     timedSections,
-    goal: intent.goal || ""
+    goal: intent.goal || "",
+    musicDesignContext
   });
 
   return {

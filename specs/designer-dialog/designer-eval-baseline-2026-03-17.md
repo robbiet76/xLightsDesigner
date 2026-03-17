@@ -20,9 +20,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `25`
-- supported by current offline runner: `25`
-- passed: `25`
+- total cases: `28`
+- supported by current offline runner: `28`
+- passed: `28`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -58,6 +58,7 @@ The runner and designer logic now cover:
 - stage-lighting-language concepts
 - richer broad-pass family diversity for rhythm/layout/lighting prompts
 - offline revise-case scoring through the same merge semantics used by the app revision path
+- beat-, chord-, and phrase-anchored concept cases with cue-window placements
 
 ## Current Meaning Of A Pass
 
@@ -67,6 +68,7 @@ The current offline pass means:
 - unrelated concepts remain unchanged during revise merges
 - concept summaries stay on the design side of the boundary
 - whole-pass prompts produce enough placements and family diversity for the current structural gate
+- beat/chord/phrase-sensitive prompts can now produce explicit cue-window placement timing instead of collapsing to section spans
 
 It does **not** yet mean:
 - motion language is artistically strong
