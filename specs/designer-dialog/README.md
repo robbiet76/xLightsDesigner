@@ -19,3 +19,4 @@ Related domains:
 - `pre-training-handoff-freeze-2026-03-17.md`: frozen pre-training handoff/version boundary for deep designer training.
 - `designer-training-rubric-2026-03-17.md`: concept-quality and whole-sequence-quality rubric for the deep training phase.
 - `designer-diagnostics-snapshots-2026-03-17.md`: stable inspection snapshot definitions for concepts, linked sequence rows, and apply results.
+- `synthetic-metadata-fixtures-2026-03-17.md`: synthetic metadata vocabulary and fixture policy for metadata-aware training evals before real project metadata is available.

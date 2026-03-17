@@ -1,0 +1,121 @@
+{
+  "fixtureType": "synthetic_metadata_fixture_v1",
+  "version": "1.0",
+  "description": "Synthetic metadata assignments for metadata-aware designer training evals.",
+  "tags": [
+    {
+      "name": "character",
+      "description": "Props that can carry personality or narrative focus."
+    },
+    {
+      "name": "support",
+      "description": "Props intended to reinforce rather than lead."
+    },
+    {
+      "name": "lyric",
+      "description": "Props suitable for phrase or lyric emphasis."
+    },
+    {
+      "name": "rhythm",
+      "description": "Props suitable for pulse or groove-driven motion."
+    },
+    {
+      "name": "focal",
+      "description": "Props that can act as a primary attention anchor."
+    },
+    {
+      "name": "accent",
+      "description": "Props suited to short hits, reveals, and punctuation."
+    },
+    {
+      "name": "wash",
+      "description": "Props suited to broad color-field support."
+    },
+    {
+      "name": "perimeter",
+      "description": "Props that frame the scene or edges."
+    },
+    {
+      "name": "centerpiece",
+      "description": "Props near the visual center or strongest compositional emphasis."
+    },
+    {
+      "name": "background",
+      "description": "Props best used as depth or support rather than lead."
+    },
+    {
+      "name": "vertical",
+      "description": "Props whose geometry supports vertical motion or rise/fall reads."
+    },
+    {
+      "name": "horizontal",
+      "description": "Props whose geometry supports sweeps, framing, or horizon-style reads."
+    }
+  ],
+  "assignments": [
+    {
+      "targetId": "Snowman",
+      "tags": ["character", "focal", "centerpiece", "accent"]
+    },
+    {
+      "targetId": "Star",
+      "tags": ["focal", "accent", "centerpiece"]
+    },
+    {
+      "targetId": "NorthPoleSign",
+      "tags": ["lyric", "character", "accent"]
+    },
+    {
+      "targetId": "PorchTree",
+      "tags": ["support", "wash", "vertical"]
+    },
+    {
+      "targetId": "SpiralTrees",
+      "tags": ["rhythm", "support", "vertical"]
+    },
+    {
+      "targetId": "Border-01",
+      "tags": ["support", "perimeter", "horizontal", "wash"]
+    },
+    {
+      "targetId": "Border-02",
+      "tags": ["support", "perimeter", "horizontal", "wash"]
+    },
+    {
+      "targetId": "Border-03",
+      "tags": ["support", "perimeter", "horizontal"]
+    },
+    {
+      "targetId": "Wreathes",
+      "tags": ["support", "background", "accent"]
+    },
+    {
+      "targetId": "Train_Outlines",
+      "tags": ["support", "perimeter", "horizontal"]
+    },
+    {
+      "targetId": "Train_Rings",
+      "tags": ["rhythm", "support", "accent"]
+    },
+    {
+      "targetId": "Train_Wheels",
+      "tags": ["rhythm", "support", "accent"]
+    },
+    {
+      "targetId": "AllModels_NoFloods",
+      "tags": ["wash", "background"]
+    }
+  ],
+  "evalOverrides": {
+    "metadata_change_sensitivity": [
+      {
+        "targetId": "NorthPoleSign",
+        "tags": ["support", "background"]
+      },
+      {
+        "targetId": "Snowman",
+        "tags": ["character", "focal", "lyric", "centerpiece"]
+      }
+    ]
+  }
+}
