@@ -10,6 +10,20 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
 }
 
+function buildPreferenceCue(profile = null) {
+  const preferences = profile?.preferences && typeof profile.preferences === "object"
+    ? profile.preferences
+    : {};
+  const parts = [];
+  const palette = str(preferences.palettePreference);
+  const motion = str(preferences.motionPreference);
+  const focus = str(preferences.focusPreference);
+  if (palette) parts.push(palette.replace(/_/g, " "));
+  if (motion) parts.push(motion);
+  if (focus) parts.push(focus.replace(/_/g, " "));
+  return parts.slice(0, 3).join(" / ");
+}
+
 function buildDesignDisplay(designId = "", designRevision = 0) {
   const raw = str(designId);
   const revision = Number.isInteger(Number(designRevision)) ? Number(designRevision) : 0;
@@ -47,6 +61,7 @@ function compareDesignEntries(a = {}, b = {}) {
 }
 
 function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes = [] } = {}) {
+  const preferenceCue = buildPreferenceCue(state.directorProfile || null);
   const executionPlan = state.creative?.proposalBundle?.executionPlan && typeof state.creative.proposalBundle.executionPlan === "object"
     ? state.creative.proposalBundle.executionPlan
     : (state.creative?.intentHandoff?.executionStrategy && typeof state.creative.intentHandoff.executionStrategy === "object"
@@ -116,6 +131,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
         anchor: uniqueStrings(meta.sections).join(", ") || "General",
         summary: uniqueStrings(meta.summaries)[0] || "Pending design change",
         targetSummary: uniqueStrings(meta.targetIds).slice(0, 3).join(", ") || "Current scope",
+        preferenceCue,
         effectCount: linkedEffectCount,
         indexes: matchingIndexes,
         selected: matchingIndexes.length ? matchingIndexes.every((idx) => selectedIndexes.includes(idx)) : false
@@ -167,6 +183,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       anchor: row.sections.length ? row.sections.join(", ") : "General",
       summary: row.summaries[0] || "Pending design change",
       targetSummary: row.targetIds.length ? row.targetIds.slice(0, 3).join(", ") : "Current scope",
+      preferenceCue,
       effectCount: Number(row.linkedEffectCount || 0),
       indexes,
       selected: indexes.length ? indexes.every((idx) => selectedIndexes.includes(idx)) : false
@@ -189,6 +206,7 @@ export function buildReviewDashboardState({
     applyDisabledReason = () => "",
     buildCurrentReviewSnapshotSummary = () => ({})
   } = helpers;
+  const preferenceCue = buildPreferenceCue(state.directorProfile || null);
 
   const selectedSections = getSelectedSections();
   const allSelected = hasAllSectionsSelected();
@@ -322,6 +340,7 @@ export function buildReviewDashboardState({
       reviewStateLabel,
       backupReady,
       previewError,
+      preferenceCue,
       planSummary,
       impact,
       verification,

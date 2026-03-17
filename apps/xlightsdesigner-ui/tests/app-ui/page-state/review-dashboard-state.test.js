@@ -45,6 +45,13 @@ test("review dashboard state reports blocked when draft exists but approval gate
   const dashboard = buildReviewDashboardState({
     state: {
       proposed: ["Chorus 1 / Snowman / add Color Wash"],
+      directorProfile: {
+        preferences: {
+          palettePreference: "warm_cinematic",
+          motionPreference: "smooth",
+          focusPreference: "hero-prop-first"
+        }
+      },
       creative: {
         proposalBundle: {
           executionPlan: {
@@ -84,6 +91,7 @@ test("review dashboard state reports blocked when draft exists but approval gate
   assert.equal(dashboard.data.rows[0].designId, "DES-001");
   assert.equal(dashboard.data.rows[0].designLabel, "D1.0");
   assert.equal(dashboard.data.rows[0].designAuthor, "designer");
+  assert.equal(dashboard.data.rows[0].preferenceCue, "warm cinematic / smooth / hero-prop-first");
   assert.equal(dashboard.data.rows[0].effectCount, 1);
 });
 

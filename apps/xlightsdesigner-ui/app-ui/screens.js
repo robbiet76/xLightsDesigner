@@ -1226,6 +1226,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <span class="artifact-chip">${escapeHtml(String(counts.targets || 0))} targets</span>
             <span class="artifact-chip">${escapeHtml(String(counts.windows || 0))} windows</span>
             <span class="artifact-chip">${escapeHtml(String(counts.commands || 0))} commands</span>
+            ${data.preferenceCue ? `<span class="artifact-chip">${escapeHtml(String(data.preferenceCue))}</span>` : ""}
             <span class="artifact-chip">${verification ? (verification.expectedMutationsPresent ? "last apply verified" : "last apply needs review") : "not yet applied"}</span>
           </div>
           <div class="dashboard-grid">
@@ -1266,6 +1267,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <th style="width:48px;">Pick</th>
                     <th style="width:92px;">Design ID</th>
                     <th style="width:84px;">Author</th>
+                    <th style="width:168px;">Preference</th>
                     <th>Change</th>
                     <th style="width:140px;">Anchor</th>
                     <th style="width:148px;">Focus</th>
@@ -1277,7 +1279,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     rows.length
                       ? rows
-                          .map(({ designId, designLabel, designAuthor, summary, anchor, targetSummary, effectCount, previousRevision, indexes, selected }) => {
+                          .map(({ designId, designLabel, designAuthor, preferenceCue, summary, anchor, targetSummary, effectCount, previousRevision, indexes, selected }) => {
                             const indexCsv = Array.isArray(indexes) ? indexes.join(",") : "";
                             return `
                       <tr class="${selected ? "proposed-row-selected" : ""}">
@@ -1286,6 +1288,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         </td>
                         <td>${escapeHtml(String(designLabel || designId || "—"))}</td>
                         <td>${escapeHtml(String(designAuthor || "designer"))}</td>
+                        <td>${escapeHtml(String(preferenceCue || "—"))}</td>
                         <td>
                           <div>${escapeHtml(String(summary || "Pending design change"))}</div>
                           ${

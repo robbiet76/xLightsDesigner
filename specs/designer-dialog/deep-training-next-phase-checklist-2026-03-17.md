@@ -79,7 +79,7 @@ By the end of the deep-training phase:
 
 - [x] Use director preferences as soft guidance, not hard style cloning
 - [x] Improve consistency across multiple passes with the same director
-- [ ] Make preference influence legible in review artifacts
+- [x] Make preference influence legible in review artifacts
 - [x] Add evals for preference-aware but still fresh proposals
 
 ### G. Knowledge and Context Inputs
