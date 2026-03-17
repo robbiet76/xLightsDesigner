@@ -3339,7 +3339,12 @@ async function onGenerate(intentOverride = "", options = {}) {
   setAgentActiveRole("sequence_agent");
   markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
   const guidedQuestions = proposalOrchestration.guidedQuestions;
-  const proposalSeedLines = proposalOrchestration.proposalLines;
+  const designerExecutionSeedLines = buildDesignerExecutionSeedLines(proposalOrchestration);
+  const proposalSeedLines = designerExecutionSeedLines.length
+    ? designerExecutionSeedLines
+    : (shouldUseExecutionStrategySeedLines({ directSequenceMode, proposalOrchestration })
+        ? []
+        : proposalOrchestration.proposalLines);
   const sequenceAgentInput = buildSequenceAgentInput({
     requestId: `${orchestrationRun.id}-generate`,
     endpoint: state.endpoint,
@@ -6763,6 +6768,51 @@ function inferProposalLinesFromIntent(intentText, sections = []) {
   }
 
   return lines.slice(0, 5);
+}
+
+function isStructuredSequencingProposalLine(line = "") {
+  const text = String(line || "").trim();
+  if (!text) return false;
+  return /^[^/]+\s*\/\s*[^/]+\s*\/.+/.test(text);
+}
+
+function shouldUseExecutionStrategySeedLines({ directSequenceMode = false, proposalOrchestration = null } = {}) {
+  if (directSequenceMode) return false;
+  const bundle = proposalOrchestration?.proposalBundle && typeof proposalOrchestration.proposalBundle === "object"
+    ? proposalOrchestration.proposalBundle
+    : null;
+  const executionPlan = bundle?.executionPlan && typeof bundle.executionPlan === "object"
+    ? bundle.executionPlan
+    : null;
+  const passScope = String(executionPlan?.passScope || "").trim();
+  const sectionPlans = Array.isArray(executionPlan?.sectionPlans) ? executionPlan.sectionPlans.filter(Boolean) : [];
+  const proposalLines = Array.isArray(proposalOrchestration?.proposalLines) ? proposalOrchestration.proposalLines.filter(Boolean) : [];
+  if (!sectionPlans.length) return false;
+  if (!(passScope === "whole_sequence" || passScope === "multi_section")) return false;
+  return !proposalLines.length || proposalLines.some((line) => !isStructuredSequencingProposalLine(line));
+}
+
+function buildDesignerExecutionSeedLines(proposalOrchestration = null) {
+  const bundle = proposalOrchestration?.proposalBundle && typeof proposalOrchestration.proposalBundle === "object"
+    ? proposalOrchestration.proposalBundle
+    : null;
+  const executionPlan = bundle?.executionPlan && typeof bundle.executionPlan === "object"
+    ? bundle.executionPlan
+    : null;
+  const passScope = String(executionPlan?.passScope || "").trim();
+  const sectionPlans = Array.isArray(executionPlan?.sectionPlans) ? executionPlan.sectionPlans.filter(Boolean) : [];
+  const fallbackTargets = Array.isArray(bundle?.scope?.targetIds) ? bundle.scope.targetIds.filter(Boolean) : [];
+  if (!(passScope === "whole_sequence" || passScope === "multi_section")) return [];
+  return sectionPlans
+    .map((row) => {
+      const section = String(row?.section || "").trim();
+      const targetIds = Array.isArray(row?.targetIds) ? row.targetIds.filter(Boolean) : [];
+      const targetText = (targetIds.length ? targetIds : fallbackTargets).slice(0, 8).join(' + ').trim() || 'General';
+      const summary = String(row?.intentSummary || '').trim();
+      if (!section || !summary) return '';
+      return `${section} / ${targetText} / ${summary}`;
+    })
+    .filter(Boolean);
 }
 
 function mergeCreativeBriefIntoProposal(lines) {

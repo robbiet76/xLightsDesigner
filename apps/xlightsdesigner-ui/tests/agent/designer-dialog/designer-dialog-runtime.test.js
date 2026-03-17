@@ -228,3 +228,60 @@ test("designer runtime marks whole-sequence passes explicitly for broad rewrites
   assert.equal(result.handoff.executionStrategy.passScope, "whole_sequence");
   assert.equal(result.handoff.executionStrategy.shouldUseFullSongStructureTrack, true);
 });
+
+test("designer runtime builds actionable whole-sequence section plans instead of prompt-text repeats", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-6",
+    sequenceRevision: "rev-6",
+    promptText: "Rework the whole show into a warmer, more cinematic pass.",
+    goals: "Create a full-song cinematic holiday treatment.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro" },
+          { label: "Verse 1" },
+          { label: "Chorus 1" },
+          { label: "Bridge" },
+          { label: "Outro" }
+        ]
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Snowman", "PorchTree"],
+      coverageDomains: {
+        broad: ["AllModels", "AllModels_NoFloods"],
+        detail: ["Border-01/Segments", "Snowman/Face2-Head"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "wide" },
+        { label: "Outro", energy: "low", density: "sparse" }
+      ],
+      designCues: {
+        revealMoments: ["Chorus 1"],
+        holdMoments: ["Intro"],
+        lyricFocusMoments: []
+      }
+    }
+  });
+
+  const sectionPlans = result.proposalBundle.executionPlan.sectionPlans;
+  assert.equal(sectionPlans.length, 5);
+  assert.match(sectionPlans[0].intentSummary, /restrained|slower fades|readable atmosphere/i);
+  assert.match(sectionPlans[2].intentSummary, /stronger visual payoff|layered shimmer|focal emphasis/i);
+  assert.notEqual(sectionPlans[0].intentSummary, result.handoff.goal);
+  assert.deepEqual(sectionPlans[0].targetIds.slice(0, 2), ["AllModels", "AllModels_NoFloods"]);
+  assert.ok(sectionPlans[0].targetIds.length >= 2);
+  assert.ok(sectionPlans[2].targetIds.includes("AllModels"));
+  assert.ok(sectionPlans[2].targetIds.includes("AllModels_NoFloods"));
+  assert.ok(sectionPlans[2].targetIds.includes("Snowman"));
+  assert.ok(sectionPlans[2].targetIds.includes("PorchTree"));
+});

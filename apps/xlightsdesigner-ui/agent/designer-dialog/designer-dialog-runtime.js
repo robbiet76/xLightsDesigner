@@ -214,10 +214,72 @@ function estimateImpact({ proposalLines = [], targets = [] } = {}) {
   return Math.max(arr(proposalLines).length * 8, arr(targets).length * 5);
 }
 
+function uniqueStrings(values = []) {
+  const seen = new Set();
+  const out = [];
+  for (const value of arr(values).map((row) => str(row)).filter(Boolean)) {
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
+}
+
+function chooseExecutionTargets({
+  explicitTargetIds = [],
+  fallbackTargetIds = [],
+  broadCoverageDomains = [],
+  focalCandidates = [],
+  energy = "",
+  section = ""
+} = {}) {
+  const explicit = uniqueStrings(explicitTargetIds);
+  if (explicit.length) return explicit.slice(0, 8);
+  const broad = uniqueStrings(broadCoverageDomains);
+  const focal = uniqueStrings(focalCandidates);
+  const fallback = uniqueStrings(fallbackTargetIds);
+  const key = str(section).toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
+  const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
+  if (isPeak) {
+    return uniqueStrings([...broad.slice(0, 2), ...focal.slice(0, 2), ...fallback.slice(0, 2)]).slice(0, 8);
+  }
+  if (isGentle) {
+    return uniqueStrings([...broad.slice(0, 2), ...fallback.slice(0, 2)]).slice(0, 8);
+  }
+  return uniqueStrings([...broad.slice(0, 2), ...focal.slice(0, 1), ...fallback.slice(0, 2)]).slice(0, 8);
+}
+
+function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {
+  const label = str(section);
+  const lower = label.toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
+  const lowerGoal = str(goal).toLowerCase();
+  const warm = /warm|amber|gold|red|cinematic|glow|theatrical/.test(lowerGoal);
+  const warmClause = warm ? ' with warm cinematic color and glow control' : '';
+  if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lower)) {
+    return `build stronger visual payoff${warmClause} using layered shimmer, glow, and clearer focal emphasis`;
+  }
+  if (/bridge/.test(lower)) {
+    return `widen the picture${warmClause} with smoother transitions and controlled contrast lift`;
+  }
+  if (normalizedEnergy === 'low' || /intro|outro/.test(lower)) {
+    return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;
+  }
+  if (normalizedDensity === 'dense') {
+    return `develop the section${warmClause} with richer layering while keeping the read controlled`;
+  }
+  return `develop warmth and continuity${warmClause} with smooth motion and balanced supporting texture`;
+}
+
 function buildDesignerExecutionPlan({
   normalizedIntent = null,
   analysisHandoff = null,
   musicDesignContext = null,
+  designSceneContext = null,
   targets = []
 } = {}) {
   const intent = isPlainObject(normalizedIntent) ? normalizedIntent : {};
@@ -238,6 +300,10 @@ function buildDesignerExecutionPlan({
     }))
     .filter((row) => row.label);
   const availableSections = sectionArc.length ? sectionArc : analyzedSections;
+  const scene = isPlainObject(designSceneContext) ? designSceneContext : {};
+  const broadCoverageDomains = arr(scene?.coverageDomains?.broad).map((row) => str(row)).filter(Boolean);
+  const focalCandidates = arr(scene?.focalCandidates).map((row) => str(row)).filter(Boolean);
+  const resolvedTargetIds = arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
   const passScope = allowGlobalRewrite
     ? "whole_sequence"
@@ -251,12 +317,26 @@ function buildDesignerExecutionPlan({
     .slice(0, 24)
     .map((label) => {
       const match = availableSections.find((row) => str(row.label) === str(label));
+      const energy = str(match?.energy);
+      const density = str(match?.density);
       return {
         section: str(label),
-        energy: str(match?.energy),
-        density: str(match?.density),
-        intentSummary: str(intent.goal || ""),
-        targetIds: (targetIds.length ? targetIds : arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean)).slice(0, 40),
+        energy,
+        density,
+        intentSummary: buildSectionIntentSummary({
+          section: label,
+          energy,
+          density,
+          goal: intent.goal || ""
+        }),
+        targetIds: chooseExecutionTargets({
+          explicitTargetIds: targetIds,
+          fallbackTargetIds: resolvedTargetIds,
+          broadCoverageDomains,
+          focalCandidates,
+          energy,
+          section: label
+        }).slice(0, 40),
         effectHints: arr(intent.effectOverrides).map((row) => str(row)).filter(Boolean)
       };
     });
@@ -352,6 +432,7 @@ export function buildProposalBundleArtifact({
     normalizedIntent: plan.normalizedIntent,
     analysisHandoff,
     musicDesignContext: resolvedMusicContext,
+    designSceneContext: resolvedSceneContext,
     targets: plan.targets
   });
   const proposalBundle = buildProposalBundle({
