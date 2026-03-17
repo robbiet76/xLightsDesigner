@@ -45,6 +45,28 @@ test("review dashboard state reports blocked when draft exists but approval gate
   const dashboard = buildReviewDashboardState({
     state: {
       proposed: ["Chorus 1 / Snowman / add Color Wash"],
+      creative: {
+        proposalBundle: {
+          executionPlan: {
+            sectionPlans: [
+              {
+                designId: "DES-001",
+                designAuthor: "designer",
+                section: "Chorus 1",
+                intentSummary: "Warm focal chorus change.",
+                targetIds: ["Snowman"]
+              }
+            ]
+          }
+        }
+      },
+      agentPlan: {
+        handoff: {
+          commands: [
+            { cmd: "effects.create", designId: "DES-001", params: { effectName: "Color Wash" }, intent: { designId: "DES-001", designAuthor: "designer" } }
+          ]
+        }
+      },
       ui: { proposedSelection: [0], applyApprovalChecked: false },
       flags: { applyInProgress: false, proposalStale: false }
     },
@@ -58,12 +80,31 @@ test("review dashboard state reports blocked when draft exists but approval gate
   assert.equal(dashboard.readiness.ok, false);
   assert.match(dashboard.validationIssues.map((issue) => issue.code).join(","), /apply_not_ready/);
   assert.equal(dashboard.data.apply.canApplyAll, false);
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].designId, "DES-001");
+  assert.equal(dashboard.data.rows[0].designAuthor, "designer");
+  assert.equal(dashboard.data.rows[0].effectCount, 1);
 });
 
 test("review dashboard state reports ready when apply gate and approval are satisfied", () => {
   const dashboard = buildReviewDashboardState({
     state: {
       proposed: ["Chorus 1 / Snowman / add Color Wash"],
+      creative: {
+        proposalBundle: {
+          executionPlan: {
+            sectionPlans: [
+              {
+                designId: "DES-001",
+                designAuthor: "designer",
+                section: "Chorus 1",
+                intentSummary: "Warm focal chorus change.",
+                targetIds: ["Snowman"]
+              }
+            ]
+          }
+        }
+      },
       ui: { proposedSelection: [0], applyApprovalChecked: true },
       flags: { applyInProgress: false, proposalStale: false },
       lastApplyBackupPath: "/tmp/backup.xsq"
@@ -78,6 +119,7 @@ test("review dashboard state reports ready when apply gate and approval are sati
   assert.equal(dashboard.readiness.ok, true);
   assert.equal(dashboard.data.apply.canApplyAll, true);
   assert.equal(dashboard.data.backupReady, true);
+  assert.equal(dashboard.data.counts.designGroups, 1);
 });
 
 test("review dashboard state carries last applied snapshot when loaded", () => {

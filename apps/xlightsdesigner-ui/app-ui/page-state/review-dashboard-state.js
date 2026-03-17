@@ -6,6 +6,82 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
+}
+
+function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes = [] } = {}) {
+  const executionPlan = state.creative?.proposalBundle?.executionPlan && typeof state.creative.proposalBundle.executionPlan === "object"
+    ? state.creative.proposalBundle.executionPlan
+    : null;
+  const sectionPlans = arr(executionPlan?.sectionPlans);
+  const planCommands = arr(state.agentPlan?.handoff?.commands);
+  const effectCommands = planCommands.filter((command) => str(command?.cmd) === "effects.create");
+  const conceptMeta = new Map();
+  for (const row of sectionPlans) {
+    const designId = str(row?.designId);
+    if (!designId) continue;
+    if (!conceptMeta.has(designId)) {
+      conceptMeta.set(designId, {
+        designId,
+        designAuthor: str(row?.designAuthor || "designer"),
+        sections: [],
+        summaries: [],
+        targetIds: []
+      });
+    }
+    const bucket = conceptMeta.get(designId);
+    if (str(row?.section)) bucket.sections.push(str(row.section));
+    if (str(row?.intentSummary)) bucket.summaries.push(str(row.intentSummary));
+    bucket.targetIds.push(...arr(row?.targetIds));
+  }
+
+  const grouped = new Map();
+  for (const entry of filteredRows) {
+    const line = str(entry?.line);
+    const section = str(entry?.section);
+    let matchedDesignId = "";
+    for (const [designId, meta] of conceptMeta.entries()) {
+      if (meta.sections.includes(section)) {
+        matchedDesignId = designId;
+        break;
+      }
+    }
+    const key = matchedDesignId || `line-${entry.idx}`;
+    if (!grouped.has(key)) {
+      const meta = matchedDesignId ? conceptMeta.get(matchedDesignId) : null;
+      const linkedEffectCount = matchedDesignId
+        ? effectCommands.filter((command) => str(command?.designId || command?.intent?.designId) === matchedDesignId).length
+        : 0;
+      grouped.set(key, {
+        designId: matchedDesignId,
+        designAuthor: str(meta?.designAuthor || "designer"),
+        sections: uniqueStrings(meta?.sections || (section ? [section] : [])),
+        summaries: uniqueStrings(meta?.summaries || [line]),
+        targetIds: uniqueStrings(meta?.targetIds || []),
+        indexes: [],
+        linkedEffectCount
+      });
+    }
+    grouped.get(key).indexes.push(entry.idx);
+  }
+
+  return [...grouped.values()].map((row, index) => {
+    const indexes = Array.from(new Set(arr(row.indexes).filter((value) => Number.isInteger(value)))).sort((a, b) => a - b);
+    return {
+      idx: index,
+      designId: str(row.designId || ""),
+      designAuthor: str(row.designAuthor || ""),
+      anchor: row.sections.length ? row.sections.join(", ") : "General",
+      summary: row.summaries[0] || "Pending design change",
+      targetSummary: row.targetIds.length ? row.targetIds.slice(0, 3).join(", ") : "Current scope",
+      effectCount: Number(row.linkedEffectCount || 0),
+      indexes,
+      selected: indexes.length ? indexes.every((idx) => selectedIndexes.includes(idx)) : false
+    };
+  });
+}
+
 export function buildReviewDashboardState({
   state = {},
   helpers = {}
@@ -35,7 +111,12 @@ export function buildReviewDashboardState({
       return section === "General" || selectedSections.includes(section);
     });
   const selectedIndexes = arr(state.ui?.proposedSelection).filter((idx) => Number.isInteger(idx));
-  const selectedCount = selectedIndexes.filter((idx) => filteredRows.some((row) => row.idx === idx)).length;
+  const reviewRows = buildReviewGroupRows({
+    state,
+    filteredRows: filteredRows.map((row) => ({ ...row, section: str(getSectionName(row.line)) })),
+    selectedIndexes
+  });
+  const selectedCount = reviewRows.filter((row) => row.selected).length;
   const allVisibleLines = filteredRows.map((row) => row.line);
   const selectedLines = arr(selectedProposedLinesForApply()).map((row) => str(row)).filter(Boolean);
   const previewLines = selectedLines.length ? selectedLines : allVisibleLines;
@@ -154,6 +235,7 @@ export function buildReviewDashboardState({
       verification,
       counts: {
         pendingChanges: allVisibleLines.length,
+        designGroups: reviewRows.length,
         targets: Number(impact?.targetCount || 0),
         windows: arr(impact?.sectionWindows).length,
         commands: previewCommands.length,
@@ -164,11 +246,7 @@ export function buildReviewDashboardState({
         canApplyAll
       },
       currentSnapshot,
-      rows: filteredRows.map(({ line, idx }) => ({
-        idx,
-        line,
-        selected: selectedIndexes.includes(idx)
-      })),
+      rows: reviewRows,
       lastAppliedSnapshot: lastAppliedSnapshot
         ? {
             brief: lastAppliedSnapshot.creativeBrief || null,

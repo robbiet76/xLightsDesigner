@@ -283,6 +283,7 @@ Each placement should include:
 Every `effectPlacements[]` item must provide:
 - `placementId`
 - `designId`
+- `designAuthor`
 - `targetId`
 - `layerIndex`
 - `effectName`
@@ -343,6 +344,11 @@ The contract must allow multiple placements that share:
 ### Design IDs tie conceptual design to execution
 
 Every conceptual design group must have a stable `designId`.
+Every conceptual design group must also carry a `designAuthor`.
+
+Current supported `designAuthor` values:
+- `designer`
+- `user`
 
 That `designId` must be propagated through:
 - conceptual design rows/groupings
@@ -350,10 +356,13 @@ That `designId` must be propagated through:
 - `effectPlacements[]`
 - sequencer command outputs derived from those placements
 
+That `designAuthor` must be propagated through the same chain.
+
 This enables:
 - one-to-many linkage from a conceptual design row to exact sequence items
 - concept-level removal/regeneration
 - clear drill-down from Design page to Sequence page
+- consistent review grouping for both designer-originated and user-originated changes
 - section
 - timing track
 

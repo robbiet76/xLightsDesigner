@@ -1248,7 +1248,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <thead>
                   <tr>
                     <th style="width:48px;">Pick</th>
+                    <th style="width:92px;">Design ID</th>
+                    <th style="width:84px;">Author</th>
                     <th>Change</th>
+                    <th style="width:140px;">Anchor</th>
+                    <th style="width:148px;">Focus</th>
+                    <th style="width:72px;">Effects</th>
                     <th style="width:84px;">Action</th>
                   </tr>
                 </thead>
@@ -1256,19 +1261,25 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     rows.length
                       ? rows
-                          .map(({ line, idx, selected }) => {
+                          .map(({ designId, designAuthor, summary, anchor, targetSummary, effectCount, indexes, selected }) => {
+                            const indexCsv = Array.isArray(indexes) ? indexes.join(",") : "";
                             return `
                       <tr class="${selected ? "proposed-row-selected" : ""}">
                         <td>
-                          <input type="checkbox" data-proposed-select="${idx}" ${selected ? "checked" : ""} />
+                          <input type="checkbox" data-proposed-group-select="${escapeHtml(indexCsv)}" ${selected ? "checked" : ""} />
                         </td>
-                        <td data-proposed-focus="${idx}">${renderProposedLineHtml(line)}</td>
-                        <td><button data-proposed-delete="${idx}">Delete</button></td>
+                        <td>${escapeHtml(String(designId || "—"))}</td>
+                        <td>${escapeHtml(String(designAuthor || "designer"))}</td>
+                        <td>${escapeHtml(String(summary || "Pending design change"))}</td>
+                        <td>${escapeHtml(String(anchor || "General"))}</td>
+                        <td>${escapeHtml(String(targetSummary || "Current scope"))}</td>
+                        <td>${escapeHtml(String(effectCount || 0))}</td>
+                        <td>${designId ? `<button data-design-remove="${escapeHtml(String(designId))}">Delete</button>` : `<button data-proposed-delete="${escapeHtml(indexCsv.split(",")[0] || "")}">Delete</button>`}</td>
                       </tr>
                     `;
                           })
                           .join("")
-                      : `<tr><td colspan="3" class="banner">No proposed changes yet. Ask the designer in chat.</td></tr>`
+                      : `<tr><td colspan="8" class="banner">No proposed changes yet. Ask the designer in chat.</td></tr>`
                   }
                 </tbody>
               </table>

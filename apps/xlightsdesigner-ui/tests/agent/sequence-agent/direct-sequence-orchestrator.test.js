@@ -44,6 +44,10 @@ test("direct sequence orchestrator bypasses designer scaffolding and emits canon
   assert.equal(result.ok, true);
   assert.equal(result.creativeBrief, null);
   assert.equal(result.proposalBundle.bundleType, "proposal_bundle_v1");
+  assert.ok(result.proposalBundle.executionPlan);
+  assert.equal(result.proposalBundle.executionPlan.sectionPlans[0].designAuthor, "user");
+  assert.match(result.proposalBundle.executionPlan.sectionPlans[0].designId, /^DES-/);
+  assert.equal(result.intentHandoff.executionStrategy.sectionPlans[0].designAuthor, "user");
   assert.equal(result.proposalBundle.guidedQuestions.length, 0);
   assert.match(result.proposalLines[0], /General \/ Border-01 \/ apply On effect in green for 30000 ms starting at 0 ms/i);
   assert.deepEqual(validateAgentHandoff("intent_handoff_v1", result.intentHandoff), []);

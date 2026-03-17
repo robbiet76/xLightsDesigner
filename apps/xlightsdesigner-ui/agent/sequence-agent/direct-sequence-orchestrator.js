@@ -24,6 +24,41 @@ function estimateImpact(proposalLines = []) {
   return Math.max(arr(proposalLines).length * 8, 0);
 }
 
+function makeUserDesignId() {
+  return `DES-${Date.now()}`;
+}
+
+function buildUserExecutionStrategy({
+  designId = "",
+  sections = [],
+  targetIds = []
+} = {}) {
+  const normalizedSections = arr(sections).map((row) => str(row)).filter(Boolean);
+  const normalizedTargets = arr(targetIds).map((row) => str(row)).filter(Boolean);
+  const passScope = normalizedSections.length > 1 ? "multi_section" : "single_section";
+  const sectionPlans = (normalizedSections.length ? normalizedSections : ["General"]).map((section) => ({
+    designId,
+    designAuthor: "user",
+    section,
+    energy: "",
+    density: "",
+    intentSummary: "User-directed sequence change.",
+    targetIds: normalizedTargets,
+    effectHints: []
+  }));
+  return {
+    passScope,
+    implementationMode: passScope === "multi_section" ? "section_pass" : "single_section_pass",
+    routePreference: "designer_to_sequence_agent",
+    shouldUseFullSongStructureTrack: normalizedSections.length > 0,
+    sectionCount: normalizedSections.length,
+    targetCount: normalizedTargets.length,
+    primarySections: normalizedSections,
+    sectionPlans,
+    effectPlacements: []
+  };
+}
+
 function normalizeCatalog(effectCatalog = null) {
   return effectCatalog && typeof effectCatalog === "object" && effectCatalog.byName && typeof effectCatalog.byName === "object"
     ? effectCatalog.byName
@@ -205,6 +240,17 @@ export function executeDirectSequenceRequestOrchestration({
     const mergedSections = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.sections)));
     const mergedTargets = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.targetIds)));
     const mergedTags = mergeUniqueStrings(clauseResults.flatMap((row) => arr(row?.intentHandoff?.scope?.tagNames)));
+    const mergedExecutionPlan = {
+      passScope: mergedSections.length > 1 ? "multi_section" : "single_section",
+      implementationMode: "section_pass",
+      routePreference: "designer_to_sequence_agent",
+      shouldUseFullSongStructureTrack: mergedSections.length > 0,
+      sectionCount: mergedSections.length,
+      targetCount: mergedTargets.length,
+      primarySections: mergedSections,
+      sectionPlans: clauseResults.flatMap((row) => arr(row?.proposalBundle?.executionPlan?.sectionPlans)),
+      effectPlacements: []
+    };
     const proposalBundle = buildProposalBundle({
       proposalId: `proposal-${Date.now()}`,
       summary: str(promptText || "Sequence draft generated from direct technical request."),
@@ -233,7 +279,8 @@ export function executeDirectSequenceRequestOrchestration({
       impact: {
         summary: "Direct technical sequencing request normalized for review/apply.",
         estimatedImpact: estimateImpact(proposalLines)
-      }
+      },
+      executionPlan: mergedExecutionPlan
     });
     const intentHandoff = buildCanonicalSequenceIntentHandoff({
       normalizedIntent: {
@@ -245,7 +292,8 @@ export function executeDirectSequenceRequestOrchestration({
       intentText: promptText,
       creativeBrief: null,
       elevatedRiskConfirmed,
-      resolvedTargetIds: mergedTargets
+      resolvedTargetIds: mergedTargets,
+      executionStrategy: mergedExecutionPlan
     });
     return {
       ok: true,
@@ -282,6 +330,7 @@ export function executeDirectSequenceRequestOrchestration({
   }
 
   const requestedEffectPhrase = detectRequestedEffectPhrase(promptText);
+  const designId = makeUserDesignId();
   const compoundRequest = detectCompoundDirectRequest({
     promptText,
     explicitSections,
@@ -386,7 +435,12 @@ export function executeDirectSequenceRequestOrchestration({
     impact: {
       summary: "Direct technical sequencing request normalized for review/apply.",
       estimatedImpact: estimateImpact(plan.proposalLines)
-    }
+    },
+    executionPlan: buildUserExecutionStrategy({
+      designId,
+      sections: effectiveSections,
+      targetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
+    })
   });
 
   const intentHandoff = buildCanonicalSequenceIntentHandoff({
@@ -394,7 +448,8 @@ export function executeDirectSequenceRequestOrchestration({
     intentText: promptText,
     creativeBrief: null,
     elevatedRiskConfirmed,
-    resolvedTargetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
+    resolvedTargetIds: arr(plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean),
+    executionStrategy: proposalBundle.executionPlan
   });
 
   return {

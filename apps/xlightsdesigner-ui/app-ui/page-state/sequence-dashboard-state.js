@@ -93,6 +93,7 @@ function summarizeEffectRow(command = null, timingMarks = new Map(), sceneGraph 
   const effectName = str(params.effectName || "Unknown Effect");
   const target = str(params.modelName || "Unresolved");
   const designId = str(command?.designId || intent?.designId);
+  const designAuthor = str(command?.designAuthor || intent?.designAuthor);
   const timing = str(anchor.trackName || "XD: Sequencer Plan");
   const startMs = Number(params.startMs);
   const endMs = Number(params.endMs);
@@ -106,6 +107,7 @@ function summarizeEffectRow(command = null, timingMarks = new Map(), sceneGraph 
   const detail = [palette, settings].filter(Boolean).join(" / ");
   return {
     designId,
+    designAuthor,
     timing,
     section,
     target,
@@ -132,6 +134,7 @@ function buildAggregatedEffectRows(commands = [], timingMarks = new Map(), scene
     if (!buckets.has(key)) {
       buckets.set(key, {
         designId: row.designId,
+        designAuthor: row.designAuthor,
         timing: row.timing,
         section: row.section,
         target: row.target,
@@ -147,6 +150,7 @@ function buildAggregatedEffectRows(commands = [], timingMarks = new Map(), scene
   }
   return [...buckets.values()].map((bucket) => ({
     designId: bucket.designId,
+    designAuthor: bucket.designAuthor,
     timing: bucket.timing,
     section: bucket.section,
     target: bucket.target,
@@ -168,6 +172,7 @@ function buildTimingOnlyRows(commands = []) {
     for (const mark of marks) {
       rows.push({
         designId: "",
+        designAuthor: "",
         timing,
         section: str(mark?.label || "Unnamed Mark"),
         target: "Timing Track",
@@ -210,6 +215,7 @@ function buildDashboardRows({
     return {
       index: idx + 1,
       designId: str(row.designId || ""),
+      designAuthor: str(row.designAuthor || ""),
       timing: str(row.timing || "XD: Sequencer Plan"),
       section: str(row.section || getSectionNameFromLine(line) || "General"),
       target: str(row.target || parseTranslatedTarget(line) || "Unresolved"),

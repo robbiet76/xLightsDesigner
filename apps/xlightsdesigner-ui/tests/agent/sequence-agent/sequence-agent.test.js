@@ -1532,6 +1532,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
           {
             placementId: "p1",
             designId: "DES-001",
+            designAuthor: "designer",
             targetId: "MegaTree",
             layerIndex: 1,
             effectName: "Shimmer",
@@ -1559,6 +1560,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
           {
             placementId: "p2",
             designId: "DES-002",
+            designAuthor: "designer",
             targetId: "Roofline",
             layerIndex: 0,
             effectName: "Bars",
@@ -1624,10 +1626,14 @@ test("sequence_agent honors explicit effect placements over section-level infere
   );
   assert.equal(effectCommands[0].intent.settingsIntent.intensity, "high");
   assert.equal(effectCommands[0].designId, "DES-001");
+  assert.equal(effectCommands[0].designAuthor, "designer");
   assert.equal(effectCommands[0].intent.designId, "DES-001");
+  assert.equal(effectCommands[0].intent.designAuthor, "designer");
   assert.equal(effectCommands[0].intent.layerIntent.priority, "foreground");
   assert.equal(effectCommands[1].designId, "DES-002");
+  assert.equal(effectCommands[1].designAuthor, "designer");
   assert.equal(effectCommands[1].intent.designId, "DES-002");
+  assert.equal(effectCommands[1].intent.designAuthor, "designer");
   assert.equal(effectCommands[1].intent.renderIntent.groupPolicy, "preserve_group_rendering");
   assert.equal(effectCommands[0].params.settings.C_SLIDER_Brightness, 125);
   assert.equal(effectCommands[0].params.settings.T_CHOICE_LayerMethod, "Highlight");

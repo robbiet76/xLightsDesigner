@@ -65,6 +65,8 @@ function deriveExecutionStrategy(intentHandoff = {}) {
     passScope: normText(strategy.passScope),
     implementationMode: normText(strategy.implementationMode),
     routePreference: normText(strategy.routePreference),
+    designId: normText(strategy.designId),
+    designAuthor: normText(strategy.designAuthor),
     shouldUseFullSongStructureTrack: Boolean(strategy.shouldUseFullSongStructureTrack),
     sectionCount: Number(strategy.sectionCount || 0),
     targetCount: Number(strategy.targetCount || 0),
@@ -82,6 +84,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
         return {
           placementId: normText(row?.placementId) || `placement-${index + 1}`,
           designId: normText(row?.designId),
+          designAuthor: normText(row?.designAuthor),
           targetId,
           layerIndex,
           effectName,
@@ -109,6 +112,7 @@ function deriveExecutionStrategy(intentHandoff = {}) {
     sectionPlans: normArray(strategy.sectionPlans)
       .map((row) => ({
         designId: normText(row?.designId),
+        designAuthor: normText(row?.designAuthor),
         section: normText(row?.section),
         energy: normText(row?.energy),
         density: normText(row?.density),
@@ -118,6 +122,38 @@ function deriveExecutionStrategy(intentHandoff = {}) {
       }))
       .filter((row) => row.section)
   };
+}
+
+function decorateCommandsWithDesignMetadata(commands = [], executionStrategy = {}) {
+  const normalized = normArray(commands);
+  const defaultDesignIds = Array.from(new Set([
+    normText(executionStrategy?.designId),
+    ...normArray(executionStrategy?.sectionPlans).map((row) => normText(row?.designId)),
+    ...normArray(executionStrategy?.effectPlacements).map((row) => normText(row?.designId))
+  ].filter(Boolean)));
+  const defaultDesignAuthors = Array.from(new Set([
+    normText(executionStrategy?.designAuthor),
+    ...normArray(executionStrategy?.sectionPlans).map((row) => normText(row?.designAuthor)),
+    ...normArray(executionStrategy?.effectPlacements).map((row) => normText(row?.designAuthor))
+  ].filter(Boolean)));
+  const designId = defaultDesignIds.length === 1 ? defaultDesignIds[0] : "";
+  const designAuthor = defaultDesignAuthors.length === 1 ? defaultDesignAuthors[0] : "";
+  if (!designId && !designAuthor) return normalized;
+  return normalized.map((command) => {
+    const currentDesignId = normText(command?.designId);
+    const currentIntent = command?.intent && typeof command.intent === "object" ? command.intent : {};
+    const currentDesignAuthor = normText(command?.designAuthor || currentIntent?.designAuthor);
+    return {
+      ...command,
+      designId: currentDesignId || designId,
+      designAuthor: currentDesignAuthor || designAuthor,
+      intent: {
+        ...currentIntent,
+        designId: normText(currentIntent?.designId) || currentDesignId || designId,
+        designAuthor: normText(currentIntent?.designAuthor) || currentDesignAuthor || designAuthor
+      }
+    };
+  });
 }
 
 function deriveSectionNames({ analysisHandoff = {}, intentHandoff = {}, executionStrategy = {} } = {}) {
@@ -372,6 +408,7 @@ function buildCommandsFromEffectPlacements({
     return {
       id: placement.placementId || `effect.${index + 1}`,
       designId: normText(placement?.designId),
+      designAuthor: normText(placement?.designAuthor),
       dependsOn: [
         ...(marks.length ? ["timing.marks.insert"] : []),
         ...(displayOrderCommand ? [displayOrderCommand.id] : [])
@@ -396,6 +433,7 @@ function buildCommandsFromEffectPlacements({
       },
       intent: {
         designId: normText(placement?.designId),
+        designAuthor: normText(placement?.designAuthor),
         settingsIntent: placement.settingsIntent,
         paletteIntent: placement.paletteIntent,
         layerIntent: placement.layerIntent,
@@ -485,7 +523,7 @@ function stageCommandGraphSynthesis({
       warnings.push(...effectCompat.warnings);
     }
     return {
-      commands: placementGraph.commands,
+      commands: decorateCommandsWithDesignMetadata(placementGraph.commands, effect),
       executionLines: [],
       estimatedImpact: Number(placementGraph.estimatedImpact || 0),
       warnings,
@@ -525,7 +563,7 @@ function stageCommandGraphSynthesis({
     }
     filteredCommands.push(command);
   }
-  const commandsOut = filteredCommands;
+  const commandsOut = decorateCommandsWithDesignMetadata(filteredCommands, effect);
   const capabilityGate = evaluateSequencePlanCapabilities({ commands: commandsOut, capabilityCommands });
   if (!capabilityGate.ok) {
     const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
@@ -701,6 +739,11 @@ export function buildSequenceAgentPlan({
       stageOrder: STAGE_ORDER.slice(),
       executionStrategy: scope.executionStrategy,
       designIds: Array.from(new Set(normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designId)).filter(Boolean))),
+      designAuthors: Array.from(new Set([
+        normText(scope?.executionStrategy?.designAuthor),
+        ...normArray(scope?.executionStrategy?.sectionPlans).map((row) => normText(row?.designAuthor)),
+        ...normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designAuthor))
+      ].filter(Boolean))),
       effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
         ? scope.executionStrategy.effectPlacements.length
         : 0

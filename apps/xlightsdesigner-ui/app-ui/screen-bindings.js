@@ -58,6 +58,7 @@ export function bindScreenEvents({
   onRemoveSelectedProposed,
   onRemoveAllProposed,
   toggleProposedSelection,
+  toggleProposedSelectionGroup,
   removeProposedLine,
   updateProposedLine,
   onCancelJob,
@@ -456,6 +457,10 @@ export function bindScreenEvents({
 
   app.querySelectorAll("[data-proposed-select]").forEach((input) => {
     input.addEventListener("change", () => toggleProposedSelection(input.dataset.proposedSelect));
+  });
+
+  app.querySelectorAll("[data-proposed-group-select]").forEach((input) => {
+    input.addEventListener("change", () => toggleProposedSelectionGroup(input.dataset.proposedGroupSelect));
   });
 
   app.querySelectorAll("[data-proposed-delete]").forEach((btn) => {

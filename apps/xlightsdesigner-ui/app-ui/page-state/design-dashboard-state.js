@@ -39,6 +39,7 @@ function buildConceptRows(executionPlan = null) {
       return {
         index: index + 1,
         designId,
+        designAuthor: str(sectionPlan?.designAuthor || "designer"),
         anchor: str(sectionPlan?.section || "General"),
         intent: str(sectionPlan?.intentSummary || "No design intent summary yet."),
         focus: focusTargets,

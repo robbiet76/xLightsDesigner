@@ -7009,6 +7009,25 @@ function toggleProposedSelection(index) {
   render();
 }
 
+function toggleProposedSelectionGroup(serializedIndexes = "") {
+  const indexes = String(serializedIndexes || "")
+    .split(",")
+    .map((value) => Number.parseInt(value, 10))
+    .filter((value) => Number.isInteger(value) && value >= 0 && value < state.proposed.length);
+  if (!indexes.length) return;
+  const selected = new Set(state.ui.proposedSelection || []);
+  const allSelected = indexes.every((idx) => selected.has(idx));
+  if (allSelected) {
+    for (const idx of indexes) selected.delete(idx);
+  } else {
+    for (const idx of indexes) selected.add(idx);
+  }
+  state.ui.proposedSelection = Array.from(selected).sort((a, b) => a - b);
+  invalidateApplyApproval();
+  persist();
+  render();
+}
+
 function modelStableId(model) {
   const raw = model?.id ?? model?.modelId ?? model?.name ?? "";
   return String(raw || "");
@@ -7508,9 +7527,14 @@ function onRemoveAllProposed() {
     setStatus("warning", "No proposed changes to delete.");
     return render();
   }
+  state.creative.proposalBundle = null;
+  state.creative.intentHandoff = null;
+  state.agentPlan = null;
   state.proposed = [];
   state.ui.proposedSelection = [];
   state.flags.hasDraftProposal = false;
+  clearAgentHandoff("intent_handoff_v1", "draft cleared", { pushLog: false });
+  clearAgentHandoff("plan_handoff_v1", "draft cleared", { pushLog: false });
   invalidateApplyApproval();
   setStatus("info", "Deleted all proposed changes.");
   saveCurrentProjectSnapshot();
@@ -7523,6 +7547,32 @@ function onRemoveSelectedProposed() {
   if (!selected.length) {
     setStatus("warning", "Select one or more proposed lines first.");
     return render();
+  }
+  const executionPlan = state.creative?.proposalBundle?.executionPlan && typeof state.creative.proposalBundle.executionPlan === "object"
+    ? state.creative.proposalBundle.executionPlan
+    : null;
+  const selectedSections = Array.from(new Set(selected.map((idx) => getSectionName(state.proposed[idx] || "")).filter(Boolean)));
+  const selectedDesignIds = executionPlan
+    ? Array.from(new Set(
+        (Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans : [])
+          .filter((row) => selectedSections.includes(String(row?.section || "").trim()))
+          .map((row) => String(row?.designId || "").trim())
+          .filter(Boolean)
+      ))
+    : [];
+  if (selectedDesignIds.length) {
+    let removedCount = 0;
+    for (const designId of selectedDesignIds) {
+      const before = Array.isArray(state.creative?.proposalBundle?.executionPlan?.sectionPlans)
+        ? state.creative.proposalBundle.executionPlan.sectionPlans.length
+        : 0;
+      onRemoveDesignConcept(designId);
+      const after = Array.isArray(state.creative?.proposalBundle?.executionPlan?.sectionPlans)
+        ? state.creative.proposalBundle.executionPlan.sectionPlans.length
+        : 0;
+      if (after < before) removedCount += 1;
+    }
+    if (removedCount > 0) return;
   }
   const uniqueDesc = Array.from(new Set(selected)).sort((a, b) => b - a);
   for (const idx of uniqueDesc) state.proposed.splice(idx, 1);
@@ -11555,6 +11605,7 @@ function bindEvents() {
     onRemoveSelectedProposed,
     onRemoveAllProposed,
     toggleProposedSelection,
+    toggleProposedSelectionGroup,
     removeProposedLine,
     updateProposedLine,
     onCancelJob,
