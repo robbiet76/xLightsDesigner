@@ -18,8 +18,8 @@ By the end of the deep-training phase:
 
 ### A. Training Rubric and Eval Set
 
-- [ ] Finalize concept-quality rubric
-- [ ] Finalize whole-sequence pass rubric
+- [x] Finalize concept-quality rubric
+- [x] Finalize whole-sequence pass rubric
 - [ ] Build eval sets for:
   - concept clarity
   - section contrast
@@ -29,7 +29,7 @@ By the end of the deep-training phase:
   - effect-family diversity
   - layer usage quality
   - revise behavior on existing concepts
-- [ ] Define failure classes for unacceptable designer outputs
+- [x] Define failure classes for unacceptable designer outputs
 
 ### B. Concept Authoring Quality
 

@@ -14,6 +14,38 @@ Use a 0-3 scale for each category:
 - `2`: acceptable
 - `3`: strong
 
+Operational meaning:
+- `0`: wrong enough that the sample should not be promoted without direct correction
+- `1`: partially usable, but still requires obvious repair or leaves the wrong impression
+- `2`: good enough to keep moving without changing framework assumptions
+- `3`: strong enough to serve as a positive training reference
+
+## General Evaluation Rules
+
+- score concept samples and whole-sequence samples separately
+- use the same frozen handoff contract for all samples in one training slice
+- record both category scores and hard-failure classes
+- do not promote a slice based on average score alone if a hard-failure class appears
+
+Core gating rule:
+- a sample fails if any hard-failure class is present
+- a concept sample is promotable only when all core concept categories score at least `2`
+- a whole-sequence sample is promotable only when all core whole-pass categories score at least `2`
+
+Core concept categories:
+- Concept Clarity
+- Anchor Quality
+- Target Coherence
+- Palette Coherence
+- Effect-Family Choice
+
+Core whole-pass categories:
+- Section Contrast
+- Focal Hierarchy
+- Target Reuse Balance
+- Palette Continuity
+- Escalation and Restraint
+
 ## Concept-Quality Rubric
 
 ### 1. Concept Clarity
@@ -105,6 +137,21 @@ Failure examples:
 - every concept sits on one layer with no distinction
 - unnecessary layer complexity
 
+### 7. Design/Sequence Boundary Quality
+
+Question:
+- does the concept remain conceptual instead of leaking into raw sequence-command detail?
+
+Strong signals:
+- summary stays readable in Design and Review
+- concept can be understood without reading exact effect rows
+- technical detail remains on the Sequence page
+
+Failure examples:
+- concept summary is basically raw sequencing text
+- concept identity is replaced by command-like implementation notes
+- design review cannot be understood without Sequence detail
+
 ## Whole-Sequence Pass Rubric
 
 ### 1. Section Contrast
@@ -128,6 +175,21 @@ Failure examples:
 ### 7. Placement Plausibility
 - do exact windows/layers feel musically and visually plausible?
 
+### 8. Coverage Discipline
+
+Question:
+- does the pass put effects where they matter instead of filling space mechanically?
+
+Strong signals:
+- dense moments are not overfilled
+- quieter moments still have enough visual intent
+- broad passes leave room for contrast and later refinement
+
+Failure examples:
+- blanket coverage on every section
+- empty sections with no purposeful reason
+- mechanical overpopulation of all available targets
+
 ## Failure Classes
 
 Mark a sample as failed even if some category scores are acceptable when any of these occur:
@@ -138,6 +200,39 @@ Mark a sample as failed even if some category scores are acceptable when any of 
 - palette incoherence: no legible color direction
 - repetitive flattening: whole pass collapses to a trivial repeated family pattern
 - sequencing leakage: concept summaries become raw sequence-command mirrors
+- coverage collapse: the pass floods too much of the show without restraint or leaves major gaps without purpose
+- revision leakage: a revised concept is no longer clearly distinguishable from unrelated concepts
+
+## Eval Set Composition
+
+The initial deep-training eval set should include at minimum:
+- `10` concept-only samples
+- `6` revise-existing-concept samples
+- `6` broad whole-sequence pass samples
+- `3` preference-aware samples for the same director profile
+
+Each eval set should intentionally include:
+- one beat-anchored case
+- one chord-anchored case
+- one global or cross-section case
+- one concept revision case where only one concept should change
+- one broad pass where restraint matters more than density
+
+## Promotion Thresholds
+
+Promote a concept-training slice only when:
+- no hard failure classes appear
+- all core concept categories are `>= 2`
+- average concept score is `>= 2.2`
+
+Promote a whole-sequence training slice only when:
+- no hard failure classes appear
+- all core whole-pass categories are `>= 2`
+- average whole-pass score is `>= 2.1`
+
+Use `3`-score samples as:
+- positive references
+- candidate exemplars for future training examples
 
 ## Promotion Rule
 
