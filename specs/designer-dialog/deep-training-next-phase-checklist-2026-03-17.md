@@ -51,8 +51,8 @@ By the end of the deep-training phase:
 
 ### C. Placement Quality
 
-- [ ] Increase use of explicit `effectPlacements[]` as the primary authored output
-- [ ] Improve exact timing-window quality within sections
+- [x] Increase use of explicit `effectPlacements[]` as the primary authored output
+- [x] Improve exact timing-window quality within sections
 - [x] Improve timing-window quality from beat, chord, phrase, and transition cues when section labels are insufficient
 - [x] Improve multi-effect same-target layering quality
 - [x] Improve per-effect settings intent quality

@@ -207,6 +207,8 @@ function extractMetrics(result = {}) {
   const executionPlan = proposalBundle?.executionPlan || {};
   const placements = arr(executionPlan.effectPlacements);
   const sectionPlans = arr(executionPlan.sectionPlans);
+  const conceptIds = uniq(sectionPlans.map((row) => row?.designId));
+  const placementConceptIds = uniq(placements.map((row) => row?.designId));
   const effectFamilies = uniq(placements.map((row) => row?.effectName));
   const placementsByTarget = new Map();
   for (const placement of placements) {
@@ -263,9 +265,47 @@ function extractMetrics(result = {}) {
     .filter(([, count]) => Number(count) >= 2)
     .map(([family]) => family)
     .sort();
+  let wellShapedOverlayCount = 0;
+  const baseByGroup = new Map();
+  for (const placement of placements) {
+    const groupKey = [
+      str(placement?.designId),
+      str(placement?.targetId),
+      str(placement?.sourceSectionLabel || placement?.timingContext?.anchorLabel)
+    ].join("::");
+    if (Number(placement?.layerIndex) === 0) {
+      baseByGroup.set(groupKey, placement);
+    }
+  }
+  for (const placement of placements) {
+    if (Number(placement?.layerIndex) < 1) continue;
+    const groupKey = [
+      str(placement?.designId),
+      str(placement?.targetId),
+      str(placement?.sourceSectionLabel || placement?.timingContext?.anchorLabel)
+    ].join("::");
+    const base = baseByGroup.get(groupKey);
+    if (!base) continue;
+    const baseDuration = Number(base?.endMs) - Number(base?.startMs);
+    const overlayDuration = Number(placement?.endMs) - Number(placement?.startMs);
+    if (
+      Number.isFinite(baseDuration)
+      && Number.isFinite(overlayDuration)
+      && overlayDuration > 0
+      && baseDuration > 0
+      && Number(placement?.startMs) >= Number(base?.startMs)
+      && Number(placement?.endMs) <= Number(base?.endMs)
+      && overlayDuration < baseDuration
+    ) {
+      wellShapedOverlayCount += 1;
+    }
+  }
   return {
     proposalLineCount: arr(proposalBundle.proposalLines).length,
     designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
+    designConceptIds: conceptIds,
+    placementConceptIds,
+    conceptsWithoutPlacements: conceptIds.filter((designId) => !placementConceptIds.includes(designId)),
     effectPlacementCount: placements.length,
     distinctEffectFamilies: effectFamilies,
     trackNames: uniq(placements.map((row) => row?.timingContext?.trackName)),
@@ -283,6 +323,7 @@ function extractMetrics(result = {}) {
     perSectionAverageSpeeds,
     distinctSectionFamilySignatures,
     recurringEffectFamilies,
+    wellShapedOverlayCount,
     tagNames: uniq(result?.intentHandoff?.scope?.tagNames),
     sections: uniq(result?.intentHandoff?.scope?.sections)
   };
@@ -764,6 +805,12 @@ function evaluateCase(result, testCase) {
   if (/effects\.create|layerindex|startms|endms/i.test(`${summary}\n${proposalLines.join("\n")}`)) {
     failures.push("sequencing_leakage");
   }
+  if (metrics.designConceptCount > 0 && metrics.effectPlacementCount === 0) {
+    failures.push("missing_primary_effect_placements");
+  }
+  if (arr(metrics.conceptsWithoutPlacements).length) {
+    failures.push("concept_without_effect_placements");
+  }
 
   const check = (name, ok) => {
     checksTotal += 1;
@@ -824,6 +871,9 @@ function evaluateCase(result, testCase) {
   }
   if (expect.minFocusedOverlayPlacementCount != null) {
     check("insufficient_focused_overlay_placements", metrics.focusedOverlayPlacementCount >= Number(expect.minFocusedOverlayPlacementCount));
+  }
+  if (expect.minWellShapedOverlayCount != null) {
+    check("insufficient_well_shaped_overlays", Number(metrics.wellShapedOverlayCount || 0) >= Number(expect.minWellShapedOverlayCount));
   }
   if (expect.mustIncludeBlendRoles) {
     const actual = new Set(arr(result?.proposalBundle?.executionPlan?.effectPlacements).map((row) => str(row?.layerIntent?.blendRole)));

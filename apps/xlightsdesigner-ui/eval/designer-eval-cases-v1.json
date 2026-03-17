@@ -137,6 +137,7 @@
         "minLayeredTargetCount": 1,
         "minOverlayPlacementCount": 1,
         "minFocusedOverlayPlacementCount": 1,
+        "minWellShapedOverlayCount": 1,
         "mustIncludeBlendRoles": ["support_fill", "accent_overlay"],
         "proposalLinePatternsAny": ["focus", "gentle fill", "support"]
       }
@@ -330,6 +331,7 @@
         "minDesignConceptCount": 4,
         "minLayeredTargetCount": 2,
         "minFocusedOverlayPlacementCount": 2,
+        "minWellShapedOverlayCount": 2,
         "mustIncludeBlendRoles": ["support_fill", "foundation", "accent_overlay"],
         "mustIncludeBufferStyles": ["overlay_scaled", "inherit"],
         "minDistinctSectionFamilySignatures": 3,
