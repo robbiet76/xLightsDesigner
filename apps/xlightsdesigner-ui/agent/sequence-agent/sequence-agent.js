@@ -1,4 +1,11 @@
-import { buildDesignerPlanCommands, collectGroupRenderPolicyWarnings, collectSubmodelRenderWarnings, estimateImpactCount } from "./command-builders.js";
+import {
+  buildDesignerPlanCommands,
+  buildDisplayElementOrderCommand,
+  buildSequenceSettingsCommand,
+  collectGroupRenderPolicyWarnings,
+  collectSubmodelRenderWarnings,
+  estimateImpactCount
+} from "./command-builders.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
@@ -61,6 +68,42 @@ function deriveExecutionStrategy(intentHandoff = {}) {
     sectionCount: Number(strategy.sectionCount || 0),
     targetCount: Number(strategy.targetCount || 0),
     primarySections: normArray(strategy.primarySections).map((s) => normText(s)).filter(Boolean),
+    effectPlacements: normArray(strategy.effectPlacements)
+      .map((row, index) => {
+        const targetId = normText(row?.targetId);
+        const effectName = normText(row?.effectName);
+        const startMs = Number(row?.startMs);
+        const endMs = Number(row?.endMs);
+        const layerIndex = Number(row?.layerIndex);
+        if (!targetId || !effectName) return null;
+        if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+        if (!Number.isFinite(layerIndex) || layerIndex < 0) return null;
+        return {
+          placementId: normText(row?.placementId) || `placement-${index + 1}`,
+          targetId,
+          layerIndex,
+          effectName,
+          startMs,
+          endMs,
+          timingContext: row?.timingContext && typeof row.timingContext === "object" && !Array.isArray(row.timingContext)
+            ? {
+                trackName: normText(row?.timingContext?.trackName),
+                anchorLabel: normText(row?.timingContext?.anchorLabel),
+                anchorStartMs: Number(row?.timingContext?.anchorStartMs),
+                anchorEndMs: Number(row?.timingContext?.anchorEndMs),
+                alignmentMode: normText(row?.timingContext?.alignmentMode)
+              }
+            : null,
+          settings: row?.settings && typeof row.settings === "object" ? row.settings : (typeof row?.settings === "string" ? row.settings : {}),
+          palette: row?.palette && typeof row.palette === "object" ? row.palette : (typeof row?.palette === "string" ? row.palette : {}),
+          settingsIntent: row?.settingsIntent && typeof row.settingsIntent === "object" ? row.settingsIntent : null,
+          paletteIntent: row?.paletteIntent && typeof row.paletteIntent === "object" ? row.paletteIntent : null,
+          layerIntent: row?.layerIntent && typeof row.layerIntent === "object" ? row.layerIntent : null,
+          renderIntent: row?.renderIntent && typeof row.renderIntent === "object" ? row.renderIntent : null,
+          constraints: row?.constraints && typeof row.constraints === "object" ? row.constraints : null
+        };
+      })
+      .filter(Boolean),
     sectionPlans: normArray(strategy.sectionPlans)
       .map((row) => ({
         section: normText(row?.section),
@@ -201,6 +244,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } =
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
+  const effectPlacements = normArray(scope?.executionStrategy?.effectPlacements);
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
         const effectName = inferEffectNameFromSectionPlan({
@@ -229,10 +273,144 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } =
       })()];
   return {
     toneHint,
+    effectPlacements,
     executionSeedLines,
     preferSynthesized: strategySectionPlans.length > 0,
     strategy: timing.strategy,
     detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy}`
+  };
+}
+
+function buildPlacementMarks({ effectPlacements = [], sectionWindowsByName = null, trackName = "" } = {}) {
+  const normalizedTrackName = normText(trackName);
+  const marks = [];
+  const seen = new Set();
+  if (sectionWindowsByName instanceof Map && normalizedTrackName === "XD: Song Structure") {
+    for (const [label, window] of sectionWindowsByName.entries()) {
+      const markLabel = normText(label);
+      const startMs = Number(window?.startMs);
+      const endMs = Number(window?.endMs);
+      if (!markLabel || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+      marks.push({ label: markLabel, startMs, endMs });
+      seen.add(`${markLabel}::${startMs}::${endMs}`);
+    }
+  }
+  for (const placement of normArray(effectPlacements)) {
+    const label = normText(placement?.timingContext?.anchorLabel);
+    const startMs = Number(placement?.timingContext?.anchorStartMs);
+    const endMs = Number(placement?.timingContext?.anchorEndMs);
+    if (!label || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+    const key = `${label}::${startMs}::${endMs}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    marks.push({ label, startMs, endMs });
+  }
+  return marks
+    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
+    .slice(0, 64);
+}
+
+function buildCommandsFromEffectPlacements({
+  effectPlacements = [],
+  targetIds = [],
+  trackName = "XD: Sequencer Plan",
+  sectionWindowsByName = null,
+  sequenceSettings = {},
+  groupIds = [],
+  displayElements = [],
+  groupsById = {}
+} = {}) {
+  const placements = normArray(effectPlacements);
+  if (!placements.length) {
+    return {
+      commands: [],
+      estimatedImpact: 0,
+      validationReady: false
+    };
+  }
+  const marks = buildPlacementMarks({ effectPlacements: placements, sectionWindowsByName, trackName });
+  const commands = [];
+  if (marks.length) {
+    commands.push({
+      id: "timing.track.create",
+      cmd: "timing.createTrack",
+      params: {
+        trackName,
+        replaceIfExists: true
+      }
+    });
+    commands.push({
+      id: "timing.marks.insert",
+      dependsOn: ["timing.track.create"],
+      cmd: "timing.insertMarks",
+      params: {
+        trackName,
+        marks
+      }
+    });
+  }
+  const displayTargetIds = Array.from(new Set([
+    ...normArray(targetIds).map((row) => normText(row)).filter(Boolean),
+    ...placements.map((row) => normText(row.targetId)).filter(Boolean)
+  ]));
+  const displayOrderCommand = buildDisplayElementOrderCommand({
+    targetIds: displayTargetIds,
+    displayElements,
+    groupIds,
+    groupsById,
+    trackName
+  });
+  const effectCommands = placements.map((placement, index) => ({
+    id: placement.placementId || `effect.${index + 1}`,
+    dependsOn: [
+      ...(marks.length ? ["timing.marks.insert"] : []),
+      ...(displayOrderCommand ? [displayOrderCommand.id] : [])
+    ],
+    anchor: {
+      kind: "timing_track",
+      trackName: normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan",
+      markLabel: normText(placement?.timingContext?.anchorLabel),
+      startMs: Number(placement.startMs),
+      endMs: Number(placement.endMs),
+      basis: normText(placement?.timingContext?.alignmentMode || "explicit_window") || "explicit_window"
+    },
+    cmd: "effects.create",
+    params: {
+      modelName: normText(placement.targetId),
+      layerIndex: Number(placement.layerIndex),
+      effectName: normText(placement.effectName),
+      startMs: Number(placement.startMs),
+      endMs: Number(placement.endMs),
+      settings: placement.settings && typeof placement.settings === "object" ? placement.settings : {},
+      palette: placement.palette && typeof placement.palette === "object" ? placement.palette : {}
+    },
+    intent: {
+      settingsIntent: placement.settingsIntent,
+      paletteIntent: placement.paletteIntent,
+      layerIntent: placement.layerIntent,
+      renderIntent: placement.renderIntent,
+      constraints: placement.constraints
+    }
+  }));
+  const sequenceSettingsCommand = buildSequenceSettingsCommand({
+    effectCommands,
+    groupIds,
+    sequenceSettings
+  });
+  const normalizedEffectCommands = effectCommands.map((row) => {
+    if (!sequenceSettingsCommand) return row;
+    const dependsOn = Array.isArray(row.dependsOn) ? row.dependsOn.slice() : [];
+    if (!dependsOn.includes(sequenceSettingsCommand.id)) dependsOn.push(sequenceSettingsCommand.id);
+    return { ...row, dependsOn };
+  });
+  const commandsOut = commands
+    .concat(sequenceSettingsCommand ? [sequenceSettingsCommand] : [])
+    .concat(displayOrderCommand ? [displayOrderCommand] : [])
+    .concat(normalizedEffectCommands);
+  return {
+    commands: commandsOut,
+    estimatedImpact: normalizedEffectCommands.length,
+    validationReady: commandsOut.length > 0
   };
 }
 
@@ -264,6 +442,44 @@ function stageCommandGraphSynthesis({
     : (proposed.length ? proposed : synthesized);
   const advertisedCapabilities = Array.isArray(capabilityCommands) ? capabilityCommands.map((row) => normText(row)).filter(Boolean) : [];
   const enableEffectTimingAlignment = !advertisedCapabilities.length || advertisedCapabilities.includes("effects.alignToTiming");
+  if (Array.isArray(effect?.effectPlacements) && effect.effectPlacements.length) {
+    const placementGraph = buildCommandsFromEffectPlacements({
+      effectPlacements: effect.effectPlacements,
+      targetIds,
+      trackName,
+      sectionWindowsByName,
+      sequenceSettings,
+      groupIds,
+      displayElements,
+      groupsById
+    });
+    const capabilityGate = evaluateSequencePlanCapabilities({ commands: placementGraph.commands, capabilityCommands });
+    if (!capabilityGate.ok) {
+      const err = new Error(capabilityGate.errors.join("; ") || "capability gate failed");
+      err.failureCategory = "capability";
+      throw err;
+    }
+    if (Array.isArray(capabilityGate.warnings) && capabilityGate.warnings.length) {
+      warnings.push(...capabilityGate.warnings);
+    }
+    const effectCompat = evaluateEffectCommandCompatibility({ commands: placementGraph.commands, effectCatalog });
+    if (!effectCompat.ok) {
+      const err = new Error(effectCompat.errors.join("; ") || "effect compatibility gate failed");
+      err.failureCategory = "validate";
+      throw err;
+    }
+    if (Array.isArray(effectCompat.warnings) && effectCompat.warnings.length) {
+      warnings.push(...effectCompat.warnings);
+    }
+    return {
+      commands: placementGraph.commands,
+      executionLines: [],
+      estimatedImpact: Number(placementGraph.estimatedImpact || 0),
+      warnings,
+      validationReady: Boolean(placementGraph.validationReady),
+      detail: `placementCommands=${Array.isArray(placementGraph.commands) ? placementGraph.commands.length : 0} capabilities=${capabilityGate.requiredCapabilities.length}`
+    };
+  }
   const groupRenderWarnings = collectGroupRenderPolicyWarnings(executionLines, { groupIds, groupsById });
   if (groupRenderWarnings.length) warnings.push(...groupRenderWarnings);
   const submodelRenderWarnings = collectSubmodelRenderWarnings(executionLines, { submodelsById, targetIds });
@@ -471,6 +687,10 @@ export function buildSequenceAgentPlan({
       tagNames: scope.tagNames,
       stageOrder: STAGE_ORDER.slice(),
       executionStrategy: scope.executionStrategy
+      ,
+      effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
+        ? scope.executionStrategy.effectPlacements.length
+        : 0
     }
   };
   plan.createdAt = new Date().toISOString();

@@ -1503,6 +1503,126 @@ test("sequence_agent turns designer whole-sequence section plans into effect com
   assert.equal(effectCommands.some((row) => row.params.modelName === "Star" && row.params.effectName === "Bars"), true);
 });
 
+test("sequence_agent honors explicit effect placements over section-level inference", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 30000, endMs: 50000 },
+          { label: "Bridge", startMs: 50000, endMs: 70000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Apply exact designer-authored placements.",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        tagNames: [],
+        sections: ["Chorus 1", "Bridge"]
+      },
+      executionStrategy: {
+        passScope: "multi_section",
+        implementationMode: "section_pass",
+        routePreference: "designer_to_sequence_agent",
+        shouldUseFullSongStructureTrack: true,
+        primarySections: ["Chorus 1", "Bridge"],
+        effectPlacements: [
+          {
+            placementId: "p1",
+            targetId: "MegaTree",
+            layerIndex: 1,
+            effectName: "Shimmer",
+            startMs: 32000,
+            endMs: 36500,
+            timingContext: {
+              trackName: "XD: Song Structure",
+              anchorLabel: "Chorus 1",
+              anchorStartMs: 30000,
+              anchorEndMs: 50000,
+              alignmentMode: "within_section"
+            },
+            settings: {
+              C_SLIDER_Brightness: 125
+            },
+            settingsIntent: {
+              intensity: "high"
+            },
+            layerIntent: {
+              priority: "foreground"
+            }
+          },
+          {
+            placementId: "p2",
+            targetId: "Roofline",
+            layerIndex: 0,
+            effectName: "Bars",
+            startMs: 54000,
+            endMs: 61000,
+            timingContext: {
+              trackName: "XD: Song Structure",
+              anchorLabel: "Bridge",
+              anchorStartMs: 50000,
+              anchorEndMs: 70000,
+              alignmentMode: "within_section"
+            },
+            palette: {
+              C_BUTTON_Palette1: "#ffd39b"
+            },
+            renderIntent: {
+              groupPolicy: "preserve_group_rendering"
+            }
+          }
+        ]
+      }
+    },
+    sourceLines: [],
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Bars", params: [] }
+    ])
+  });
+
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+  assert.equal(effectCommands.length, 2);
+  assert.deepEqual(
+    effectCommands.map((row) => ({
+      modelName: row.params.modelName,
+      layerIndex: row.params.layerIndex,
+      effectName: row.params.effectName,
+      startMs: row.params.startMs,
+      endMs: row.params.endMs
+    })),
+    [
+      {
+        modelName: "MegaTree",
+        layerIndex: 1,
+        effectName: "Shimmer",
+        startMs: 32000,
+        endMs: 36500
+      },
+      {
+        modelName: "Roofline",
+        layerIndex: 0,
+        effectName: "Bars",
+        startMs: 54000,
+        endMs: 61000
+      }
+    ]
+  );
+  assert.equal(effectCommands[0].intent.settingsIntent.intensity, "high");
+  assert.equal(effectCommands[0].intent.layerIntent.priority, "foreground");
+  assert.equal(effectCommands[1].intent.renderIntent.groupPolicy, "preserve_group_rendering");
+  assert.equal(out.metadata.effectPlacementCount, 2);
+  const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
+  assert.deepEqual(markInsert.params.marks, [
+    { label: "Chorus 1", startMs: 30000, endMs: 50000 },
+    { label: "Bridge", startMs: 50000, endMs: 70000 }
+  ]);
+});
+
 test("sequence_agent prefers synthesized effect lines over non-executable designer prose lines", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

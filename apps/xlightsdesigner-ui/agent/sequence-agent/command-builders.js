@@ -1037,5 +1037,7 @@ export function buildDesignerPlanCommands(
 }
 
 export {
+  buildDisplayElementOrderCommand,
+  buildSequenceSettingsCommand,
   parseProposalLine
 };

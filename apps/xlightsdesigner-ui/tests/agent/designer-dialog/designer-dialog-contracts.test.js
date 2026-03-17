@@ -148,6 +148,49 @@ test("proposal bundle contract accepts optional execution plan", () => {
   assert.deepEqual(errors, []);
 });
 
+test("proposal bundle contract accepts placement-first execution plan metadata", () => {
+  const errors = validateProposalBundle(sampleProposal({
+    executionPlan: {
+      passScope: "whole_sequence",
+      implementationMode: "whole_sequence_pass",
+      routePreference: "designer_to_sequence_agent",
+      sectionCount: 2,
+      primarySections: ["Chorus 1", "Bridge"],
+      effectPlacements: [
+        {
+          placementId: "p1",
+          targetId: "MegaTree",
+          layerIndex: 1,
+          effectName: "Shimmer",
+          startMs: 30000,
+          endMs: 36000,
+          timingContext: {
+            trackName: "XD: Song Structure",
+            anchorLabel: "Chorus 1",
+            anchorStartMs: 30000,
+            anchorEndMs: 50000,
+            alignmentMode: "within_section"
+          },
+          settingsIntent: {
+            intensity: "medium_high",
+            speed: "medium"
+          },
+          paletteIntent: {
+            colors: ["warm gold"]
+          },
+          layerIntent: {
+            priority: "foreground"
+          },
+          renderIntent: {
+            groupPolicy: "preserve_group_rendering"
+          }
+        }
+      ]
+    }
+  }));
+  assert.deepEqual(errors, []);
+});
+
 test("designer dialog result contract accepts canonical payload", () => {
   const errors = validateDesignerDialogResult(sampleResult());
   assert.deepEqual(errors, []);
