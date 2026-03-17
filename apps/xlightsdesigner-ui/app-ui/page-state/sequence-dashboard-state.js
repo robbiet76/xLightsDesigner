@@ -360,11 +360,18 @@ export function buildSequenceDashboardState({
     timingTracks: Array.isArray(state.timingTracks) ? state.timingTracks : [],
     planCommands
   });
-  const rows = buildDashboardRows({
+  const allRows = buildDashboardRows({
     state,
     proposalLines,
     planCommands
   });
+  const activeDesignFilterId = str(state.ui?.sequenceDesignFilterId || "");
+  const rows = activeDesignFilterId
+    ? allRows.filter((row) => str(row.designId) === activeDesignFilterId)
+    : allRows;
+  const activeDesignFilter = activeDesignFilterId
+    ? (allRows.find((row) => str(row.designId) === activeDesignFilterId) || null)
+    : null;
 
   let status = "idle";
   let readinessLevel = "idle";
@@ -416,6 +423,13 @@ export function buildSequenceDashboardState({
     },
     data: {
       translationSource,
+      activeDesignFilter: activeDesignFilter
+        ? {
+            designId: activeDesignFilter.designId,
+            designLabel: activeDesignFilter.designLabel,
+            designRevision: activeDesignFilter.designRevision
+          }
+        : null,
       changeLineCount: proposalLines.length,
       commandCount,
       warningCount: warningList.length,

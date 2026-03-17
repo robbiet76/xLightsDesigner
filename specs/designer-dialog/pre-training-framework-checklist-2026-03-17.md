@@ -56,9 +56,9 @@ Exit gate:
 - [x] Make Design conceptual rather than a sequence mirror
 - [x] Make Review grouped by concept instead of raw proposal lines
 - [x] Keep Sequence as the technical execution view
-- [ ] Add a compact concept-to-sequence drill-down path that does not duplicate Sequence detail on Design
+- [x] Add a compact concept-to-sequence drill-down path that does not duplicate Sequence detail on Design
 - [ ] Add concept-level empty states / stale states where the current UI is still ambiguous
-- [ ] Confirm the Review page action model is final enough for training-driven iteration
+- [x] Confirm the Review page action model is final enough for training-driven iteration
 
 Exit gate:
 - the three major pages have stable responsibilities and a stable mental model
@@ -70,17 +70,17 @@ Exit gate:
 - [x] Preserve direct-user concepts through the same grouped review model
 - [x] Add `designRevision` to handoff contracts
 - [x] Define revise/supersede handoff semantics explicitly in spec
-- [ ] Freeze the pre-training handoff contract version for the training phase
+- [x] Freeze the pre-training handoff contract version for the training phase
 
 Exit gate:
 - training can target one stable handoff contract rather than a moving one
 
 ### F. Evaluation Surfaces
 
-- [ ] Define the concept-quality rubric used to judge designer output
-- [ ] Define the whole-sequence-quality rubric used to judge a broad pass
-- [ ] Add stable diagnostics snapshots for design concepts, linked sequence rows, and apply results
-- [ ] Make it possible to inspect one concept cleanly without reading raw effect rows unless needed
+- [x] Define the concept-quality rubric used to judge designer output
+- [x] Define the whole-sequence-quality rubric used to judge a broad pass
+- [x] Add stable diagnostics snapshots for design concepts, linked sequence rows, and apply results
+- [x] Make it possible to inspect one concept cleanly without reading raw effect rows unless needed
 
 Exit gate:
 - humans can evaluate designer quality consistently during training without needing new framework work

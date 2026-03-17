@@ -367,6 +367,7 @@ const defaultState = {
     proposedSelection: [],
     sequenceMode: "existing",
     sectionTrackName: "",
+    sequenceDesignFilterId: "",
     proposedRowsVisible: DEFAULT_PROPOSED_ROWS,
     designRevisionTarget: null,
     chatDraft: "",
@@ -7012,6 +7013,10 @@ function clearDesignRevisionTarget() {
   state.ui.designRevisionTarget = null;
 }
 
+function clearSequenceDesignFilter() {
+  state.ui.sequenceDesignFilterId = "";
+}
+
 function buildDesignRevisionTargetById(designId = "") {
   const normalizedDesignId = String(designId || "").trim();
   if (!normalizedDesignId) return null;
@@ -7919,6 +7924,19 @@ function onReviseDesignConcept(designId) {
     "info",
     `Revising ${buildDesignDisplay(revisionTarget.designId, revisionTarget.priorDesignRevision)} in place. The next generated draft will replace it as ${buildDesignDisplay(revisionTarget.designId, revisionTarget.designRevision)}.`
   );
+  persist();
+  render();
+}
+
+function onInspectDesignConcept(designId) {
+  const normalizedDesignId = String(designId || "").trim();
+  if (!normalizedDesignId) {
+    setStatus("warning", "No design concept selected for inspection.");
+    return render();
+  }
+  state.ui.sequenceDesignFilterId = normalizedDesignId;
+  state.route = "sequence";
+  setStatus("info", `Inspecting sequence rows for ${buildDesignDisplay(normalizedDesignId, 0).replace(/\.0$/, "") || normalizedDesignId}.`);
   persist();
   render();
 }
@@ -9269,6 +9287,7 @@ function onResetProjectWorkspace() {
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
   state.ui.designRevisionTarget = null;
+  state.ui.sequenceDesignFilterId = "";
   state.ui.sequenceMode = "existing";
   state.ui.sectionTrackName = "";
   state.ui.metadataTargetId = "";
@@ -9383,6 +9402,7 @@ async function onResetAppInstallState() {
 function resetSessionDraftState() {
   clearDesignerDraft(state);
   clearDesignRevisionTarget();
+  clearSequenceDesignFilter();
   state.ui.detailsOpen = false;
   state.ui.sectionSelections = ["all"];
   state.ui.designTab = "chat";
@@ -11907,6 +11927,7 @@ function bindEvents() {
     onRebaseDraft,
     setSectionFilter,
     setDesignTab,
+    onInspectDesignConcept,
     onReviseDesignConcept,
     onRemoveDesignConcept,
     onRemoveSelectedProposed,

@@ -16,3 +16,6 @@ Related domains:
 
 - `pre-training-framework-checklist-2026-03-17.md`: framework stabilization checklist to finish before the large designer-training push.
 - `deep-training-next-phase-checklist-2026-03-17.md`: post-stabilization checklist for the large designer-training phase.
+- `pre-training-handoff-freeze-2026-03-17.md`: frozen pre-training handoff/version boundary for deep designer training.
+- `designer-training-rubric-2026-03-17.md`: concept-quality and whole-sequence-quality rubric for the deep training phase.
+- `designer-diagnostics-snapshots-2026-03-17.md`: stable inspection snapshot definitions for concepts, linked sequence rows, and apply results.

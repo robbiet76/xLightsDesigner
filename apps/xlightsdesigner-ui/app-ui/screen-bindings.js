@@ -54,6 +54,7 @@ export function bindScreenEvents({
   onRebaseDraft,
   setSectionFilter,
   setDesignTab,
+  onInspectDesignConcept,
   onReviseDesignConcept,
   onRemoveDesignConcept,
   onRemoveSelectedProposed,
@@ -444,6 +445,17 @@ export function bindScreenEvents({
 
   app.querySelectorAll("[data-design-revise]").forEach((btn) => {
     btn.addEventListener("click", () => onReviseDesignConcept(btn.dataset.designRevise));
+  });
+
+  app.querySelectorAll("[data-design-inspect]").forEach((btn) => {
+    btn.addEventListener("click", () => onInspectDesignConcept(btn.dataset.designInspect));
+  });
+
+  const clearSequenceDesignFilterBtn = app.querySelector("#clear-sequence-design-filter");
+  if (clearSequenceDesignFilterBtn) clearSequenceDesignFilterBtn.addEventListener("click", () => {
+    state.ui.sequenceDesignFilterId = "";
+    persist();
+    render();
   });
 
   const removeSelectedProposedBtn = app.querySelector("#remove-selected-proposed");

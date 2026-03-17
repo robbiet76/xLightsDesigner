@@ -752,6 +752,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const data = dashboard?.data || {};
     const rows = Array.isArray(data.rows) ? data.rows : [];
     const timingDependency = data.timingDependency || {};
+    const activeDesignFilter = data.activeDesignFilter || null;
     return `
       <section class="card full-span sequence-translation-card">
         <div class="artifact-kicker">Sequence Translation</div>
@@ -768,6 +769,11 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         ${
           timingDependency.summary
             ? `<div class="banner ${timingDependency.ready ? "" : "banner-warning"}">${escapeHtml(String(timingDependency.summary))}</div>`
+            : ""
+        }
+        ${
+          activeDesignFilter
+            ? `<div class="banner">Inspecting ${escapeHtml(String(activeDesignFilter.designLabel || activeDesignFilter.designId || "design concept"))}. <button id="clear-sequence-design-filter">Show all sequence rows</button></div>`
             : ""
         }
         <div class="metadata-grid-wrap proposed-grid-wrap sequence-grid-wrap">
@@ -801,7 +807,11 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     </tr>
                   `;
                     }).join("")
-                  : `<tr><td colspan="8" class="banner">No translated sequence changes yet.</td></tr>`
+                  : `<tr><td colspan="8" class="banner">${
+                    activeDesignFilter
+                      ? `No translated sequence changes found for ${escapeHtml(String(activeDesignFilter.designLabel || activeDesignFilter.designId || "this design concept"))}.`
+                      : "No translated sequence changes yet."
+                  }</td></tr>`
               }
                 </tbody>
               </table>
@@ -1059,7 +1069,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th style="width:168px;">Focus</th>
                   <th style="width:168px;">Palette</th>
                   <th style="width:80px;">Linked</th>
-                  <th style="width:148px;">Action</th>
+                  <th style="width:216px;">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1075,6 +1085,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <td>${escapeHtml(String(row.placementCount || 0))}</td>
                         <td>
                           <div class="row">
+                            <button data-design-inspect="${escapeHtml(String(row.designId || ""))}">Inspect</button>
                             <button data-design-revise="${escapeHtml(String(row.designId || ""))}">Revise</button>
                             <button data-design-remove="${escapeHtml(String(row.designId || ""))}">Delete</button>
                           </div>
@@ -1259,7 +1270,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <th style="width:140px;">Anchor</th>
                     <th style="width:148px;">Focus</th>
                     <th style="width:72px;">Effects</th>
-                    <th style="width:148px;">Action</th>
+                    <th style="width:216px;">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1288,7 +1299,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <td>${escapeHtml(String(effectCount || 0))}</td>
                         <td>${
                           designId
-                            ? `<div class="row"><button data-design-revise="${escapeHtml(String(designId))}">Revise</button><button data-design-remove="${escapeHtml(String(designId))}">Delete</button></div>`
+                            ? `<div class="row"><button data-design-inspect="${escapeHtml(String(designId))}">Inspect</button><button data-design-revise="${escapeHtml(String(designId))}">Revise</button><button data-design-remove="${escapeHtml(String(designId))}">Delete</button></div>`
                             : `<button data-proposed-delete="${escapeHtml(indexCsv.split(",")[0] || "")}">Delete</button>`
                         }</td>
                       </tr>

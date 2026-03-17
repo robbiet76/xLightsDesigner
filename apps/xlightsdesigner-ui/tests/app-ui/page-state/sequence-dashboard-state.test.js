@@ -364,6 +364,48 @@ test("sequence dashboard sorts by numeric design id and exposes superseded revis
   assert.equal(dashboard.data.rows[0].revisionState, "current");
 });
 
+test("sequence dashboard filters rows to one inspected design concept", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: [],
+      ui: { sequenceDesignFilterId: "DES-002" },
+      agentPlan: {
+        summary: "Filtered design inspection.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [{ name: "XD: Song Structure" }]
+    },
+    planHandoff: {
+      artifactId: "plan-filter",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
+        {
+          designId: "DES-001",
+          designRevision: 0,
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 500 },
+          params: { modelName: "Tree", effectName: "Bars", startMs: 0, endMs: 500, layerIndex: 0 }
+        },
+        {
+          designId: "DES-002",
+          designRevision: 1,
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 500, endMs: 1000 },
+          params: { modelName: "Snowman", effectName: "Color Wash", startMs: 500, endMs: 1000, layerIndex: 0 }
+        }
+      ]
+    }
+  });
+
+  assert.equal(dashboard.data.activeDesignFilter.designId, "DES-002");
+  assert.equal(dashboard.data.activeDesignFilter.designLabel, "D2.1");
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].designId, "DES-002");
+});
+
 test("sequence dashboard state surfaces missing timing dependency", () => {
   const dashboard = buildSequenceDashboardState({
     state: {
