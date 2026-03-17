@@ -49,26 +49,65 @@ function isCompoundScopedDirectRequest({ goal = "", sectionNames = [], sourceLin
   return isDirectRequest && hasJoiner && (normArray(sectionNames).length > 1 || hasSecondActionVerb);
 }
 
-function deriveSectionNames({ analysisHandoff = {}, intentHandoff = {} } = {}) {
-  const fromAnalysis = normArray(analysisHandoff?.structure?.sections).map((s) => normText(s));
+function deriveExecutionStrategy(intentHandoff = {}) {
+  const strategy = intentHandoff && typeof intentHandoff?.executionStrategy === "object" && !Array.isArray(intentHandoff.executionStrategy)
+    ? intentHandoff.executionStrategy
+    : {};
+  return {
+    passScope: normText(strategy.passScope),
+    implementationMode: normText(strategy.implementationMode),
+    routePreference: normText(strategy.routePreference),
+    shouldUseFullSongStructureTrack: Boolean(strategy.shouldUseFullSongStructureTrack),
+    sectionCount: Number(strategy.sectionCount || 0),
+    targetCount: Number(strategy.targetCount || 0),
+    primarySections: normArray(strategy.primarySections).map((s) => normText(s)).filter(Boolean),
+    sectionPlans: normArray(strategy.sectionPlans)
+      .map((row) => ({
+        section: normText(row?.section),
+        energy: normText(row?.energy),
+        density: normText(row?.density),
+        intentSummary: normText(row?.intentSummary),
+        targetIds: normArray(row?.targetIds).map((s) => normText(s)).filter(Boolean),
+        effectHints: normArray(row?.effectHints).map((s) => normText(s)).filter(Boolean)
+      }))
+      .filter((row) => row.section)
+  };
+}
+
+function deriveSectionNames({ analysisHandoff = {}, intentHandoff = {}, executionStrategy = {} } = {}) {
+  const fromAnalysis = normArray(analysisHandoff?.structure?.sections).map((s) => normText(typeof s === "string" ? s : s?.label || s?.name));
   const fromScope = normArray(intentHandoff?.scope?.sections).map((s) => normText(s));
-  return fromScope.length ? fromScope : fromAnalysis;
+  const fromStrategy = normArray(executionStrategy?.primarySections).map((s) => normText(s));
+  return fromStrategy.length ? fromStrategy : (fromScope.length ? fromScope : fromAnalysis);
 }
 
 function deriveSectionWindowsByName({ analysisHandoff = {}, sectionNames = [], includeAll = false } = {}) {
   const requested = includeAll ? new Set() : new Set(normArray(sectionNames).map((row) => normText(row)).filter(Boolean));
-  const windows = new Map();
+  const windowsByName = new Map();
   const rows = Array.isArray(analysisHandoff?.structure?.sections) ? analysisHandoff.structure.sections : [];
   for (const row of rows) {
     const label = typeof row === "string"
       ? normText(row)
       : normText(row?.label || row?.name || "");
     if (!label) continue;
-    if (requested.size && !requested.has(label)) continue;
     const startMs = Number(row?.startMs);
     const endMs = Number(row?.endMs);
     if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
-    windows.set(label, { startMs, endMs });
+    windowsByName.set(label, { startMs, endMs });
+  }
+  const windows = new Map();
+  const orderedRequested = includeAll
+    ? Array.from(windowsByName.keys())
+    : normArray(sectionNames).map((row) => normText(row)).filter(Boolean);
+  for (const label of orderedRequested) {
+    if (requested.size && !requested.has(label)) continue;
+    const match = windowsByName.get(label);
+    if (match) windows.set(label, match);
+  }
+  if (includeAll) {
+    for (const [label, match] of windowsByName.entries()) {
+      if (!windows.has(label)) windows.set(label, match);
+    }
   }
   return windows;
 }
@@ -76,7 +115,8 @@ function deriveSectionWindowsByName({ analysisHandoff = {}, sectionNames = [], i
 function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sourceLines = [] } = {}) {
   const mode = normText(intentHandoff?.mode) || "create";
   const goal = normText(intentHandoff?.goal);
-  const sectionNames = deriveSectionNames({ analysisHandoff, intentHandoff });
+  const executionStrategy = deriveExecutionStrategy(intentHandoff);
+  const sectionNames = deriveSectionNames({ analysisHandoff, intentHandoff, executionStrategy });
   const targetIds = normArray(intentHandoff?.scope?.targetIds);
   const tagNames = normArray(intentHandoff?.scope?.tagNames);
   if (isCompoundScopedDirectRequest({ goal, sectionNames, sourceLines })) {
@@ -90,37 +130,58 @@ function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, source
     sectionNames,
     targetIds,
     tagNames,
-    detail: `sections=${sectionNames.length || 0} targets=${targetIds.length || 0} tags=${tagNames.length || 0}`
+    executionStrategy,
+    detail: `sections=${sectionNames.length || 0} targets=${targetIds.length || 0} tags=${tagNames.length || 0} passScope=${executionStrategy.passScope || "default"}`
   };
 }
 
 function stageTimingAssetDecision({ hasAnalysis = false, scope = {} } = {}) {
   const hasScopedSections = Array.isArray(scope.sectionNames) && scope.sectionNames.length > 0;
+  const passScope = normText(scope?.executionStrategy?.passScope);
+  const useFullSongStructureTrack = Boolean(scope?.executionStrategy?.shouldUseFullSongStructureTrack) || passScope === "whole_sequence" || passScope === "multi_section";
   const strategy = hasAnalysis ? "analysis_tracks" : (hasScopedSections ? "scope_only" : "minimal_fallback");
   return {
     strategy,
     degradedMode: !hasAnalysis,
     useSections: hasScopedSections,
-    trackName: hasScopedSections ? "XD: Song Structure" : "XD: Sequencer Plan",
-    detail: `strategy=${strategy}${!hasAnalysis ? " reduced-confidence" : ""}`
+    trackName: (hasScopedSections || useFullSongStructureTrack) ? "XD: Song Structure" : "XD: Sequencer Plan",
+    detail: `strategy=${strategy}${!hasAnalysis ? " reduced-confidence" : ""} passScope=${passScope || "default"}`
   };
+}
+
+function isGenericExecutionLine(line = "") {
+  const text = normText(line);
+  if (!text) return false;
+  return /^general\s*\//i.test(text);
 }
 
 function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
-  const sectionText = Array.isArray(scope.sectionNames) && scope.sectionNames.length
-    ? scope.sectionNames.slice(0, 8).join(", ")
-    : "Global";
-  const targetText = Array.isArray(scope.targetIds) && scope.targetIds.length
-    ? scope.targetIds.slice(0, 8).join(", ")
-    : "Whole Show";
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
-  const line = `${sectionText} / ${targetText} / ${scope.mode || "create"} from intent: ${scope.goal || "unspecified"}${toneText}`;
+  const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
+  const executionSeedLines = strategySectionPlans.length
+    ? strategySectionPlans.map((row) => {
+        const sectionText = normText(row?.section) || "General";
+        const targetText = normArray(row?.targetIds).length
+          ? normArray(row?.targetIds).slice(0, 8).join(" + ")
+          : (Array.isArray(scope.targetIds) && scope.targetIds.length ? scope.targetIds.slice(0, 8).join(" + ") : "General");
+        const summary = normText(row?.intentSummary || scope.goal || `${scope.mode || "create"} from intent`);
+        return `${sectionText} / ${targetText} / ${summary}${toneText}`;
+      })
+    : [(() => {
+        const sectionText = Array.isArray(scope.sectionNames) && scope.sectionNames.length
+          ? scope.sectionNames.slice(0, 8).join(", ")
+          : "Global";
+        const targetText = Array.isArray(scope.targetIds) && scope.targetIds.length
+          ? scope.targetIds.slice(0, 8).join(", ")
+          : "Whole Show";
+        return `${sectionText} / ${targetText} / ${scope.mode || "create"} from intent: ${scope.goal || "unspecified"}${toneText}`;
+      })()];
   return {
     toneHint,
-    executionSeedLines: [line],
+    executionSeedLines,
     strategy: timing.strategy,
-    detail: `seedLines=1 strategy=${timing.strategy}`
+    detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy}`
   };
 }
 
@@ -141,7 +202,11 @@ function stageCommandGraphSynthesis({
   allowTimingWrites = true
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
-  const executionLines = proposed.length ? proposed : normArray(effect.executionSeedLines).filter(Boolean);
+  const synthesized = normArray(effect.executionSeedLines).filter(Boolean);
+  const shouldPreferSynthesized = synthesized.length && proposed.length && proposed.every((line) => isGenericExecutionLine(line));
+  const executionLines = shouldPreferSynthesized
+    ? synthesized
+    : (proposed.length ? proposed : synthesized);
   const advertisedCapabilities = Array.isArray(capabilityCommands) ? capabilityCommands.map((row) => normText(row)).filter(Boolean) : [];
   const enableEffectTimingAlignment = !advertisedCapabilities.length || advertisedCapabilities.includes("effects.alignToTiming");
   const groupRenderWarnings = collectGroupRenderPolicyWarnings(executionLines, { groupIds, groupsById });
@@ -349,7 +414,8 @@ export function buildSequenceAgentPlan({
       sectionNames: scope.sectionNames,
       targetIds: scope.targetIds,
       tagNames: scope.tagNames,
-      stageOrder: STAGE_ORDER.slice()
+      stageOrder: STAGE_ORDER.slice(),
+      executionStrategy: scope.executionStrategy
     }
   };
   plan.createdAt = new Date().toISOString();

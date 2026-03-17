@@ -1332,3 +1332,104 @@ test("sequence_agent rotates fanout member order across repeated lines", () => {
     ]
   );
 });
+
+test("sequence_agent honors designer whole-sequence execution strategy over narrow scope sections", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Verse 1", startMs: 10000, endMs: 30000 },
+          { label: "Chorus 1", startMs: 30000, endMs: 50000 },
+          { label: "Bridge", startMs: 50000, endMs: 70000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Rework the whole show into a warmer, more cinematic pass.",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: ["focal"],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        routePreference: "designer_to_sequence_agent",
+        shouldUseFullSongStructureTrack: true,
+        sectionCount: 4,
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+        sectionPlans: [
+          { section: "Intro", intentSummary: "keep the pass restrained", targetIds: ["MegaTree"] },
+          { section: "Verse 1", intentSummary: "develop warmth and motion", targetIds: ["MegaTree"] },
+          { section: "Chorus 1", intentSummary: "build stronger visual payoff", targetIds: ["MegaTree"] },
+          { section: "Bridge", intentSummary: "open the picture wider", targetIds: ["MegaTree"] }
+        ]
+      }
+    },
+    sourceLines: ["General / MegaTree / build stronger visual payoff with a warmer cinematic arc"],
+    effectCatalog: sampleCatalog()
+  });
+
+  const trackCreate = out.commands.find((row) => row.cmd === "timing.createTrack");
+  const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
+
+  assert.equal(trackCreate.params.trackName, "XD: Song Structure");
+  assert.deepEqual(out.metadata.scope.sections, ["Intro", "Verse 1", "Chorus 1", "Bridge"]);
+  assert.equal(out.metadata.executionStrategy.passScope, "whole_sequence");
+  assert.equal(out.metadata.executionStrategy.implementationMode, "whole_sequence_pass");
+  assert.deepEqual(markInsert.params.marks, [
+    { startMs: 0, endMs: 10000, label: "Intro" },
+    { startMs: 10000, endMs: 30000, label: "Verse 1" },
+    { startMs: 30000, endMs: 50000, label: "Chorus 1" },
+    { startMs: 50000, endMs: 70000, label: "Bridge" }
+  ]);
+});
+
+test("sequence_agent synthesizes execution lines from designer section plans when explicit lines are absent", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Chorus 1", startMs: 30000, endMs: 50000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Build a broader cinematic pass.",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: [],
+        sections: []
+      },
+      executionStrategy: {
+        passScope: "multi_section",
+        implementationMode: "section_pass",
+        routePreference: "designer_to_sequence_agent",
+        shouldUseFullSongStructureTrack: true,
+        sectionCount: 2,
+        primarySections: ["Intro", "Chorus 1"],
+        sectionPlans: [
+          { section: "Intro", intentSummary: "keep the pass restrained", targetIds: ["MegaTree"] },
+          { section: "Chorus 1", intentSummary: "build stronger visual payoff", targetIds: ["MegaTree"] }
+        ]
+      }
+    },
+    sourceLines: [],
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"]
+  });
+
+  assert.deepEqual(out.executionLines, [
+    "Intro / MegaTree / keep the pass restrained",
+    "Chorus 1 / MegaTree / build stronger visual payoff"
+  ]);
+  assert.deepEqual(out.metadata.scope.sections, ["Intro", "Chorus 1"]);
+  assert.equal(out.metadata.executionStrategy.passScope, "multi_section");
+  assert.equal(out.commands.some((row) => row.cmd === "effects.create"), true);
+});
