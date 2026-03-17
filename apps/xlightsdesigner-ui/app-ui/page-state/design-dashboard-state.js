@@ -63,6 +63,9 @@ export function buildDesignDashboardState({
   const bundle = state.creative?.proposalBundle && typeof state.creative.proposalBundle === "object"
     ? state.creative.proposalBundle
     : null;
+  const intentHandoff = state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object"
+    ? state.creative.intentHandoff
+    : null;
   const references = arr(state.creative?.references);
   const swatches = arr(state.inspiration?.paletteSwatches).filter(Boolean);
   const assumptions = arr(bundle?.assumptions).filter(Boolean).slice(0, 3);
@@ -72,7 +75,9 @@ export function buildDesignDashboardState({
   const musicSignals = bundle?.traceability?.musicDesignSignals || {};
   const executionPlan = bundle?.executionPlan && typeof bundle.executionPlan === "object"
     ? bundle.executionPlan
-    : null;
+    : (intentHandoff?.executionStrategy && typeof intentHandoff.executionStrategy === "object"
+        ? intentHandoff.executionStrategy
+        : null);
   const conceptRows = buildConceptRows(executionPlan);
   const planPlacements = arr(executionPlan?.effectPlacements);
   const planEffectFamilies = uniqueStrings(planPlacements.map((row) => row?.effectName));

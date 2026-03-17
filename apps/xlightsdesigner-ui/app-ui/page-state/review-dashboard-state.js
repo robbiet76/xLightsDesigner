@@ -13,7 +13,9 @@ function uniqueStrings(values = []) {
 function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes = [] } = {}) {
   const executionPlan = state.creative?.proposalBundle?.executionPlan && typeof state.creative.proposalBundle.executionPlan === "object"
     ? state.creative.proposalBundle.executionPlan
-    : null;
+    : (state.creative?.intentHandoff?.executionStrategy && typeof state.creative.intentHandoff.executionStrategy === "object"
+        ? state.creative.intentHandoff.executionStrategy
+        : null);
   const sectionPlans = arr(executionPlan?.sectionPlans);
   const planCommands = arr(state.agentPlan?.handoff?.commands);
   const effectCommands = planCommands.filter((command) => str(command?.cmd) === "effects.create");
@@ -34,6 +36,27 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
     if (str(row?.section)) bucket.sections.push(str(row.section));
     if (str(row?.intentSummary)) bucket.summaries.push(str(row.intentSummary));
     bucket.targetIds.push(...arr(row?.targetIds));
+  }
+
+  if (conceptMeta.size) {
+    return [...conceptMeta.values()].map((meta, index) => {
+      const designId = str(meta.designId);
+      const matchingIndexes = filteredRows
+        .filter((entry) => meta.sections.includes(str(entry.section)))
+        .map((entry) => entry.idx);
+      const linkedEffectCount = effectCommands.filter((command) => str(command?.designId || command?.intent?.designId) === designId).length;
+      return {
+        idx: index,
+        designId,
+        designAuthor: str(meta.designAuthor || "designer"),
+        anchor: uniqueStrings(meta.sections).join(", ") || "General",
+        summary: uniqueStrings(meta.summaries)[0] || "Pending design change",
+        targetSummary: uniqueStrings(meta.targetIds).slice(0, 3).join(", ") || "Current scope",
+        effectCount: linkedEffectCount,
+        indexes: matchingIndexes,
+        selected: matchingIndexes.length ? matchingIndexes.every((idx) => selectedIndexes.includes(idx)) : false
+      };
+    });
   }
 
   const grouped = new Map();

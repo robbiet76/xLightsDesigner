@@ -151,3 +151,46 @@ test("design dashboard state carries last applied snapshot when available", () =
   assert.equal(dashboard.data.lastAppliedSnapshot.proposalLines[0], "Applied proposal line");
   assert.equal(dashboard.data.lastAppliedSnapshot.audioTitle, "Song");
 });
+
+test("design dashboard state falls back to intent handoff execution strategy when proposal bundle lacks one", () => {
+  const dashboard = buildDesignDashboardState({
+    state: {
+      creative: {
+        intentHandoff: {
+          executionStrategy: {
+            passScope: "whole_sequence",
+            sectionCount: 1,
+            targetCount: 1,
+            sectionPlans: [
+              {
+                designId: "DES-001",
+                designAuthor: "designer",
+                section: "Chorus 1",
+                intentSummary: "Warm focal chorus concept.",
+                targetIds: ["Snowman"]
+              }
+            ],
+            effectPlacements: [
+              {
+                designId: "DES-001",
+                effectName: "Color Wash",
+                layerIndex: 0,
+                paletteIntent: { colors: ["#ffcc88"] }
+              }
+            ]
+          }
+        },
+        proposalBundle: {
+          artifactId: "proposal-456",
+          proposalLines: ["Chorus 1 / Snowman / warm focal lift"]
+        }
+      },
+      inspiration: {},
+      applyHistory: [],
+      ui: {}
+    }
+  });
+
+  assert.equal(dashboard.data.executionPlan.designConceptCount, 1);
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].designId, "DES-001");
+});

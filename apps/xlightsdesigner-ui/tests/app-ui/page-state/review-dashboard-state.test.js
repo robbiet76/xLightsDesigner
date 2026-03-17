@@ -156,3 +156,43 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.brief.summary, "Applied design");
   assert.equal(dashboard.data.lastAppliedSnapshot.proposalLines[0], "Applied line");
 });
+
+test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {
+  const dashboard = buildReviewDashboardState({
+    state: {
+      proposed: [
+        "Chorus 1 / Snowman / warm focal lift"
+      ],
+      creative: {
+        intentHandoff: {
+          executionStrategy: {
+            sectionPlans: [
+              {
+                designId: "DES-001",
+                designAuthor: "user",
+                section: "Chorus 1",
+                intentSummary: "User-directed chorus change.",
+                targetIds: ["Snowman"]
+              }
+            ]
+          }
+        }
+      },
+      agentPlan: {
+        handoff: {
+          commands: [
+            { cmd: "effects.create", designId: "DES-001", params: { effectName: "Color Wash" }, intent: { designId: "DES-001", designAuthor: "user" } }
+          ]
+        }
+      },
+      ui: { proposedSelection: [0], applyApprovalChecked: false },
+      flags: { applyInProgress: false, proposalStale: false }
+    },
+    helpers: buildHelpers()
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].designId, "DES-001");
+  assert.equal(dashboard.data.rows[0].designAuthor, "user");
+  assert.equal(dashboard.data.rows[0].effectCount, 1);
+});
