@@ -960,6 +960,80 @@ function runPairedPreferenceCase(testCase, metadataFixture) {
   };
 }
 
+function runRepeatedPreferenceCase(testCase, metadataFixture) {
+  const fixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const promptText = str(testCase.promptText);
+  const profileName = str(testCase.directorProfileVariant || "warm_cinematic");
+  const baseArgs = {
+    sequenceRevision: "eval-rev-1",
+    promptText,
+    goals: promptText,
+    selectedSections: arr(testCase.selectedSections),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext,
+    directorProfile: buildDirectorProfile(profileName)
+  };
+  const firstResult = executeDesignerProposalOrchestration({
+    requestId: `eval-${testCase.id}-1`,
+    ...baseArgs
+  });
+  const secondResult = executeDesignerProposalOrchestration({
+    requestId: `eval-${testCase.id}-2`,
+    ...baseArgs
+  });
+  const firstMetrics = extractMetrics(firstResult);
+  const secondMetrics = extractMetrics(secondResult);
+  const failures = [];
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+  check(
+    "preference_family_drift",
+    JSON.stringify(uniq(firstMetrics.distinctEffectFamilies).sort()) === JSON.stringify(uniq(secondMetrics.distinctEffectFamilies).sort())
+  );
+  check(
+    "preference_target_drift",
+    JSON.stringify(uniq(firstMetrics.targetIds).sort()) === JSON.stringify(uniq(secondMetrics.targetIds).sort())
+  );
+  check(
+    "preference_speed_drift",
+    JSON.stringify(firstMetrics.perSectionAverageSpeeds) === JSON.stringify(secondMetrics.perSectionAverageSpeeds)
+  );
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    runnerMode: "repeated_preference",
+    lenses: arr(testCase.lenses),
+    status: failures.length ? "failed" : "passed",
+    summary: promptText,
+    structuralScore: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    artisticScores: null,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      firstFamilies: uniq(firstMetrics.distinctEffectFamilies).sort(),
+      secondFamilies: uniq(secondMetrics.distinctEffectFamilies).sort(),
+      firstTargets: uniq(firstMetrics.targetIds).sort(),
+      secondTargets: uniq(secondMetrics.targetIds).sort(),
+      firstSpeeds: firstMetrics.perSectionAverageSpeeds,
+      secondSpeeds: secondMetrics.perSectionAverageSpeeds
+    }
+  };
+}
+
 function summarizeResults(results = []) {
   const supported = arr(results).filter((row) => row.status !== "deferred");
   const passed = supported.filter((row) => row.status === "passed");
@@ -1001,6 +1075,8 @@ function main() {
   const results = arr(corpus.cases).map((testCase) => (
     str(testCase.runnerMode) === "paired_preference"
       ? runPairedPreferenceCase(testCase, metadataFixture)
+      : str(testCase.runnerMode) === "repeated_preference"
+        ? runRepeatedPreferenceCase(testCase, metadataFixture)
       : runCase(testCase, metadataFixture)
   ));
   const report = {

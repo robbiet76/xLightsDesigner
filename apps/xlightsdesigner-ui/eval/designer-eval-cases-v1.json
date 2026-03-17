@@ -383,6 +383,16 @@
       "fixtureVariant": "default",
       "promptText": "Build a broad chorus payoff that feels warm, cinematic, and emotionally open.",
       "selectedSections": ["Chorus 1", "Final Chorus"]
+    },
+    {
+      "id": "pref-repeat-warm-consistency",
+      "kind": "preference",
+      "runnerMode": "repeated_preference",
+      "lenses": ["Preference Adaptation"],
+      "fixtureVariant": "default",
+      "directorProfileVariant": "warm_cinematic",
+      "promptText": "Build a broad chorus payoff that feels warm, cinematic, and emotionally open.",
+      "selectedSections": ["Chorus 1", "Final Chorus"]
     }
   ]
 }
