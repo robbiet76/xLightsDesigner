@@ -238,4 +238,57 @@ test("review dashboard sorts grouped rows numerically and exposes superseded rev
   assert.deepEqual(dashboard.data.rows.map((row) => row.designLabel), ["D2.1", "D10.0"]);
   assert.equal(dashboard.data.rows[0].supersededRevisionCount, 1);
   assert.equal(dashboard.data.rows[0].revisionState, "current");
+  assert.equal(dashboard.data.rows[0].previousRevision.designLabel, "D2.0");
+  assert.equal(dashboard.data.rows[0].previousRevision.summary, "Previous revision");
+});
+
+test("review dashboard compares current concept to prior superseded revision details", () => {
+  const dashboard = buildReviewDashboardState({
+    state: {
+      proposed: ["Chorus 1 / Snowman / revised chorus concept"],
+      creative: {
+        supersededConcepts: [
+          {
+            designId: "DES-001",
+            designRevision: 0,
+            summary: "Original chorus concept.",
+            sections: ["Chorus 1"],
+            targetIds: ["Snowman", "Star"],
+            placementCount: 3
+          }
+        ],
+        proposalBundle: {
+          executionPlan: {
+            sectionPlans: [
+              {
+                designId: "DES-001",
+                designRevision: 1,
+                designAuthor: "designer",
+                section: "Chorus 1",
+                intentSummary: "Revised chorus concept.",
+                targetIds: ["Snowman"]
+              }
+            ]
+          }
+        }
+      },
+      agentPlan: {
+        handoff: {
+          commands: [
+            { cmd: "effects.create", designId: "DES-001", params: { effectName: "Color Wash" }, intent: { designId: "DES-001", designAuthor: "designer" } }
+          ]
+        }
+      },
+      ui: { proposedSelection: [0], applyApprovalChecked: false },
+      flags: { applyInProgress: false, proposalStale: false }
+    },
+    helpers: buildHelpers()
+  });
+
+  assert.equal(dashboard.data.rows[0].designLabel, "D1.1");
+  assert.equal(dashboard.data.rows[0].previousRevision.designLabel, "D1.0");
+  assert.equal(dashboard.data.rows[0].previousRevision.summary, "Original chorus concept.");
+  assert.equal(dashboard.data.rows[0].previousRevision.anchor, "Chorus 1");
+  assert.equal(dashboard.data.rows[0].previousRevision.targetSummary, "Snowman, Star");
+  assert.equal(dashboard.data.rows[0].previousRevision.effectCount, 3);
 });

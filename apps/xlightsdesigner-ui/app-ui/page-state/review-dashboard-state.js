@@ -63,6 +63,21 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
     if (!supersededByDesignId.has(designId)) supersededByDesignId.set(designId, []);
     supersededByDesignId.get(designId).push(row);
   }
+  function buildPreviousRevisionSummary(designId = "") {
+    const revisions = supersededByDesignId.get(str(designId)) || [];
+    if (!revisions.length) return null;
+    const latest = [...revisions].sort((a, b) => Number(b?.designRevision || 0) - Number(a?.designRevision || 0))[0];
+    const display = buildDesignDisplay(designId, latest?.designRevision || 0);
+    return {
+      designId: str(latest?.designId || designId),
+      designRevision: Number(latest?.designRevision || 0),
+      designLabel: display.designLabel,
+      summary: str(latest?.summary || "Previous revision"),
+      anchor: uniqueStrings(latest?.sections || []).join(", ") || "General",
+      targetSummary: uniqueStrings(latest?.targetIds || []).slice(0, 3).join(", ") || "Current scope",
+      effectCount: Number(latest?.placementCount || 0)
+    };
+  }
   const conceptMeta = new Map();
   for (const row of sectionPlans) {
     const designId = str(row?.designId);
@@ -97,6 +112,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
         designAuthor: str(meta.designAuthor || "designer"),
         revisionState: "current",
         supersededRevisionCount: (supersededByDesignId.get(designId) || []).length,
+        previousRevision: buildPreviousRevisionSummary(designId),
         anchor: uniqueStrings(meta.sections).join(", ") || "General",
         summary: uniqueStrings(meta.summaries)[0] || "Pending design change",
         targetSummary: uniqueStrings(meta.targetIds).slice(0, 3).join(", ") || "Current scope",
@@ -147,6 +163,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       designAuthor: str(row.designAuthor || ""),
       revisionState: "current",
       supersededRevisionCount: (supersededByDesignId.get(str(row.designId || "")) || []).length,
+      previousRevision: buildPreviousRevisionSummary(row.designId),
       anchor: row.sections.length ? row.sections.join(", ") : "General",
       summary: row.summaries[0] || "Pending design change",
       targetSummary: row.targetIds.length ? row.targetIds.slice(0, 3).join(", ") : "Current scope",

@@ -46,7 +46,7 @@ Exit gate:
 - [x] Support revise-in-place for an existing concept
 - [x] Support supersede semantics for revised concepts in the active draft
 - [x] Ensure Sequence rows can distinguish current vs superseded concept revisions
-- [ ] Ensure Review can compare a current concept revision against the previous one
+- [x] Ensure Review can compare a current concept revision against the previous one
 
 Exit gate:
 - the app can create, revise, and remove design concepts without inventing new workflow primitives mid-training

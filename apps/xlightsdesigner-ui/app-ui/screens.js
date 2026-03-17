@@ -1266,7 +1266,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   ${
                     rows.length
                       ? rows
-                          .map(({ designId, designLabel, designAuthor, summary, anchor, targetSummary, effectCount, indexes, selected }) => {
+                          .map(({ designId, designLabel, designAuthor, summary, anchor, targetSummary, effectCount, previousRevision, indexes, selected }) => {
                             const indexCsv = Array.isArray(indexes) ? indexes.join(",") : "";
                             return `
                       <tr class="${selected ? "proposed-row-selected" : ""}">
@@ -1275,7 +1275,14 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         </td>
                         <td>${escapeHtml(String(designLabel || designId || "—"))}</td>
                         <td>${escapeHtml(String(designAuthor || "designer"))}</td>
-                        <td>${escapeHtml(String(summary || "Pending design change"))}</td>
+                        <td>
+                          <div>${escapeHtml(String(summary || "Pending design change"))}</div>
+                          ${
+                            previousRevision
+                              ? `<div class="banner">Prev ${escapeHtml(String(previousRevision.designLabel || "revision"))}: ${escapeHtml(String(previousRevision.summary || "Previous revision"))}</div>`
+                              : ""
+                          }
+                        </td>
                         <td>${escapeHtml(String(anchor || "General"))}</td>
                         <td>${escapeHtml(String(targetSummary || "Current scope"))}</td>
                         <td>${escapeHtml(String(effectCount || 0))}</td>
