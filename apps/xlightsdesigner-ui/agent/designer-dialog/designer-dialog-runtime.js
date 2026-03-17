@@ -238,6 +238,29 @@ function rotateStrings(values = [], seed = "") {
   return rows.slice(offset).concat(rows.slice(0, offset));
 }
 
+const FAMILY_POOLS = {
+  intro: ["Color Wash", "Candle", "On", "Snowflakes"],
+  verse: ["Color Wash", "Butterfly", "Circles", "Wave", "Twinkle"],
+  chorus: ["Shimmer", "Pinwheel", "Meteors", "Fireworks", "Color Wash"],
+  bridge: ["Bars", "Morph", "Shockwave", "Spirals", "Ripple"],
+  outro: ["Spirals", "Wave", "Snowstorm", "Color Wash", "On"],
+  wide: ["Bars", "Morph", "Shockwave", "Warp", "Ripple"],
+  dense: ["Shimmer", "Pinwheel", "Meteors", "Galaxy", "Fireworks"],
+  gentle: ["Color Wash", "Candle", "Snowflakes", "On", "Wave"],
+  default: ["Color Wash", "Butterfly", "Shimmer", "Bars", "Twinkle"]
+};
+
+function pickDistinctEffects(primary = [], secondary = [], count = 2) {
+  const out = [];
+  for (const name of [...arr(primary), ...arr(secondary)]) {
+    const effectName = str(name);
+    if (!effectName || out.includes(effectName)) continue;
+    out.push(effectName);
+    if (out.length >= count) break;
+  }
+  return out;
+}
+
 function chooseExecutionTargets({
   explicitTargetIds = [],
   fallbackTargetIds = [],
@@ -301,27 +324,27 @@ function buildSectionEffectHints({ section = "", energy = "", density = "", goal
   const nearPeak = count > 0 ? idx >= Math.floor(count * 0.35) && idx <= Math.floor(count * 0.7) : false;
   const nearEnd = count > 0 ? idx >= Math.max(0, count - 2) : false;
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lower)) {
-    return ["Shimmer", "Color Wash"];
+    return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
   }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lower)) {
-    return ["Bars", "Shimmer"];
+    return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
   }
   if (normalizedEnergy === "low" || /intro|outro/.test(lower)) {
-    return ["Color Wash", "On"];
+    return pickDistinctEffects(/outro/.test(lower) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
   }
   if (nearPeak) {
-    return ["Shimmer", "Bars"];
+    return pickDistinctEffects(FAMILY_POOLS.dense, FAMILY_POOLS.chorus);
   }
   if (nearEnd) {
-    return ["Bars", "Color Wash"];
+    return pickDistinctEffects(FAMILY_POOLS.outro, FAMILY_POOLS.bridge);
   }
   if (nearStart) {
-    return ["Color Wash", "On"];
+    return pickDistinctEffects(FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
   }
   if (/pulse|rhythm|drive|movement/.test(lower)) {
-    return ["Bars", "Color Wash"];
+    return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.default);
   }
-  return ["Color Wash"];
+  return pickDistinctEffects(FAMILY_POOLS.verse, FAMILY_POOLS.default);
 }
 
 function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {
@@ -381,18 +404,18 @@ function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex 
   const effect = str(effectName).toLowerCase();
   const nearEnd = sectionCount > 0 ? sectionIndex >= Math.max(0, sectionCount - 2) : false;
   const colors = warm
-    ? (effect === "bars" ? ["amber", "gold", "deep red"] : ["warm gold", "amber"])
+    ? (["bars", "fireworks", "strobe", "meteors", "pinwheel"].includes(effect) ? ["amber", "gold", "deep red"] : ["warm gold", "amber"])
     : cool
-      ? ["ice blue", "cool white"]
+      ? (["snowflakes", "snowstorm", "ripple", "wave"].includes(effect) ? ["ice blue", "cool white", "blue"] : ["ice blue", "cool white"])
       : nearEnd
         ? ["gold", "white"]
-        : ["warm white", "amber"];
+        : (["spirals", "butterfly", "circles", "galaxy"].includes(effect) ? ["warm gold", "purple"] : ["warm white", "amber"]);
   return {
     colors,
     temperature: warm ? "warm" : (cool ? "cool" : "neutral"),
-    contrast: effect === "bars" ? "high" : "medium",
-    brightness: effect === "shimmer" ? "high" : "medium_high",
-    accentUsage: effect === "bars" ? "accent" : "primary"
+    contrast: ["bars", "shockwave", "strobe", "meteors", "pinwheel"].includes(effect) ? "high" : "medium",
+    brightness: ["shimmer", "fireworks", "strobe", "meteors"].includes(effect) ? "high" : "medium_high",
+    accentUsage: ["bars", "shockwave", "strobe", "pinwheel"].includes(effect) ? "accent" : "primary"
   };
 }
 
@@ -400,7 +423,7 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
   const effect = str(effectName).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
-  if (effect === "shimmer") {
+  if (["shimmer", "twinkle", "galaxy", "fireworks"].includes(effect)) {
     return {
       intensity: normalizedEnergy === "high" ? "high" : "medium_high",
       speed: normalizedEnergy === "high" ? "fast" : "medium",
@@ -410,7 +433,7 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
       variation: normalizedEnergy === "high" ? "medium" : "low"
     };
   }
-  if (effect === "bars") {
+  if (["bars", "shockwave", "warp", "marquee", "singlestrand", "wave"].includes(effect)) {
     return {
       intensity: normalizedEnergy === "high" ? "high" : "medium",
       speed: normalizedEnergy === "high" ? "medium_fast" : "medium",
@@ -419,6 +442,30 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
       motion: "rhythmic",
       direction: "forward",
       thickness: normalizedDensity === "wide" ? "medium" : "thin"
+    };
+  }
+  if (["pinwheel", "spirals", "butterfly", "circles", "fan", "morph", "ripple", "spirograph"].includes(effect)) {
+    return {
+      intensity: normalizedEnergy === "low" ? "medium" : "medium_high",
+      speed: normalizedEnergy === "high" ? "fast" : "medium_fast",
+      density: normalizedDensity === "dense" ? "medium" : "light",
+      coverage: effectIndex === 0 ? "full" : "partial",
+      motion: "wash",
+      direction: normalizedDensity === "wide" ? "outward" : "forward",
+      thickness: normalizedDensity === "dense" ? "medium" : "thin",
+      variation: "medium"
+    };
+  }
+  if (["meteors", "fire", "lightning", "snowflakes", "snowstorm", "candle", "tendril"].includes(effect)) {
+    return {
+      intensity: normalizedEnergy === "high" ? "high" : "medium",
+      speed: normalizedEnergy === "high" ? "fast" : "medium",
+      density: normalizedDensity === "dense" ? "dense" : "medium",
+      coverage: effectIndex === 0 ? "full" : "focused",
+      motion: "rhythmic",
+      direction: "reverse",
+      thickness: "medium",
+      variation: "medium"
     };
   }
   return {
@@ -432,6 +479,7 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
 }
 
 function inferPlacementLayerIntent({ effectIndex = 0, effectName = "" } = {}) {
+  const lower = str(effectName).toLowerCase();
   if (effectIndex === 0) {
     return {
       priority: "base",
@@ -442,7 +490,7 @@ function inferPlacementLayerIntent({ effectIndex = 0, effectName = "" } = {}) {
   }
   return {
     priority: "foreground",
-    blendRole: str(effectName).toLowerCase() === "bars" ? "rhythmic_overlay" : "accent_overlay",
+    blendRole: ["bars", "shockwave", "meteors", "strobe", "wave"].includes(lower) ? "rhythmic_overlay" : "accent_overlay",
     overlayPolicy: "allow_overlay",
     mixAmount: "default"
   };

@@ -282,9 +282,9 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.ok(sectionPlans[0].targetIds.length >= 2);
   assert.ok(sectionPlans[2].targetIds.includes("Snowman"));
   assert.ok(sectionPlans[2].targetIds.includes("PorchTree"));
-  assert.deepEqual(sectionPlans[0].effectHints, ["Color Wash", "On"]);
-  assert.deepEqual(sectionPlans[2].effectHints, ["Shimmer", "Color Wash"]);
-  assert.deepEqual(sectionPlans[3].effectHints, ["Bars", "Shimmer"]);
+  assert.deepEqual(sectionPlans[0].effectHints, ["Color Wash", "Candle"]);
+  assert.deepEqual(sectionPlans[2].effectHints, ["Shimmer", "Pinwheel"]);
+  assert.deepEqual(sectionPlans[3].effectHints, ["Bars", "Morph"]);
   assert.ok(sectionPlans[3].targetIds.some((row) => /Border-01\/Segments|Snowman\/Face2-Head/i.test(row)));
 });
 
@@ -345,4 +345,55 @@ test("designer runtime emits exact effect placements when analyzed section timin
   assert.ok(chorusOverlay.settingsIntent);
   assert.ok(chorusOverlay.paletteIntent);
   assert.deepEqual(result.handoff.executionStrategy.effectPlacements, placements);
+});
+
+test("designer runtime broad whole-sequence passes now use multiple supported effect families", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-8",
+    sequenceRevision: "rev-8",
+    promptText: "Rework the whole show into a warmer, more cinematic pass.",
+    goals: "Create a full-song cinematic holiday treatment.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000, energy: "low", density: "sparse" },
+          { label: "Verse 1", startMs: 10000, endMs: 25000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 25000, endMs: 45000, energy: "high", density: "dense" },
+          { label: "Bridge", startMs: 45000, endMs: 65000, energy: "medium", density: "wide" },
+          { label: "Outro", startMs: 65000, endMs: 80000, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Snowman", "PorchTree"],
+      coverageDomains: {
+        broad: ["AllModels", "AllModels_NoFloods"],
+        detail: ["Border-01/Segments", "Snowman/Face2-Head"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "wide" },
+        { label: "Outro", energy: "low", density: "sparse" }
+      ],
+      designCues: {
+        revealMoments: ["Chorus 1"],
+        holdMoments: ["Intro"],
+        lyricFocusMoments: []
+      }
+    }
+  });
+
+  const effectNames = Array.from(new Set(result.proposalBundle.executionPlan.effectPlacements.map((row) => row.effectName)));
+  assert.ok(effectNames.includes("Candle"));
+  assert.ok(effectNames.includes("Pinwheel"));
+  assert.ok(effectNames.includes("Morph"));
+  assert.ok(effectNames.length >= 5);
 });
