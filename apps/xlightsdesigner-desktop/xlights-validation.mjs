@@ -272,3 +272,105 @@ export function validateDirectSequencePromptState({
     }
   };
 }
+
+export function validateDesignConceptState({
+  expected = {},
+  pageStates = {},
+  xlightsSequenceState = null,
+  xlightsEffectOccupancyState = null
+} = {}) {
+  const design = pageStates?.design || {};
+  const review = pageStates?.review || {};
+  const sequence = pageStates?.sequence || {};
+  const project = pageStates?.project || {};
+  const issues = [];
+  const requireAppliedState = expected?.applied === true;
+
+  const expectedSequenceName = str(expected.sequenceName);
+  if (
+    expectedSequenceName &&
+    normalizeSequenceName(project?.data?.sequenceContext?.activeSequence) !== normalizeSequenceName(expectedSequenceName)
+  ) {
+    issues.push({ code: "wrong_active_sequence", message: `Active sequence mismatch: expected ${expectedSequenceName}.` });
+  }
+
+  const designLabel = str(expected.designLabel);
+  const anchor = str(expected.anchor || expected.section);
+  const expectedTargets = arr(expected.targets).map((row) => str(row)).filter(Boolean).sort();
+  const expectedFamilies = arr(expected.effectFamilies).map((row) => str(row)).filter(Boolean).sort();
+
+  const conceptRows = arr(design?.data?.executionPlan?.conceptRows);
+  const matchingDesignRows = conceptRows.filter((row) => !designLabel || str(row?.designLabel) === designLabel);
+  if (!matchingDesignRows.length) {
+    issues.push({ code: "missing_design_concept", message: "Design dashboard has no matching concept row." });
+  }
+  const designRow = matchingDesignRows[0] || null;
+  if (designRow && anchor && str(designRow?.anchor) !== anchor) {
+    issues.push({ code: "wrong_design_anchor", message: `Design concept anchor mismatch: expected ${anchor}.` });
+  }
+  if (designRow && expectedTargets.length) {
+    const actualFocus = arr(designRow?.focus).map((row) => str(row)).filter(Boolean).sort();
+    if (JSON.stringify(actualFocus) !== JSON.stringify(expectedTargets)) {
+      issues.push({ code: "wrong_design_targets", message: `Design concept targets mismatch: expected ${expectedTargets.join(", ")}.` });
+    }
+  }
+  if (designRow && expectedFamilies.length) {
+    const actualFamilies = arr(designRow?.effectFamilies).map((row) => str(row)).filter(Boolean).sort();
+    if (JSON.stringify(actualFamilies) !== JSON.stringify(expectedFamilies)) {
+      issues.push({ code: "wrong_design_effect_families", message: `Design concept effect families mismatch: expected ${expectedFamilies.join(", ")}.` });
+    }
+  }
+
+  const reviewRows = arr(review?.data?.rows);
+  const matchingReviewRows = reviewRows.filter((row) => !designLabel || str(row?.designLabel) === designLabel);
+  if (!matchingReviewRows.length) {
+    issues.push({ code: "missing_review_group", message: "Review dashboard has no matching design concept row." });
+  }
+
+  const sequenceRows = arr(sequence?.data?.rows);
+  const matchingSequenceRows = sequenceRows.filter((row) => !designLabel || str(row?.designLabel) === designLabel);
+  if (!matchingSequenceRows.length) {
+    issues.push({ code: "missing_sequence_rows", message: "Sequence dashboard has no matching concept rows." });
+  }
+  if (matchingSequenceRows.length && expectedTargets.length) {
+    const actualTargets = [...new Set(matchingSequenceRows.map((row) => str(row?.target)).filter(Boolean))].sort();
+    if (JSON.stringify(actualTargets) !== JSON.stringify(expectedTargets)) {
+      issues.push({ code: "wrong_sequence_targets", message: `Sequence concept targets mismatch: expected ${expectedTargets.join(", ")}.` });
+    }
+  }
+  if (matchingSequenceRows.length && expectedFamilies.length) {
+    const seenFamilies = [...new Set(
+      matchingSequenceRows.flatMap((row) => str(row?.summary).split(",").map((part) => str(part))).filter(Boolean)
+    )].sort();
+    if (!expectedFamilies.every((family) => seenFamilies.some((value) => value.toLowerCase().includes(family.toLowerCase())))) {
+      issues.push({ code: "wrong_sequence_effect_families", message: `Sequence concept rows do not reflect expected families ${expectedFamilies.join(", ")}.` });
+    }
+  }
+
+  if (requireAppliedState && xlightsSequenceState && !xlightsSequenceState.sequence?.isOpen) {
+    issues.push({ code: "no_open_sequence", message: "xLights reports no open sequence." });
+  }
+  if (requireAppliedState && xlightsEffectOccupancyState) {
+    const matchedCount = Number(xlightsEffectOccupancyState?.matchedCount || 0);
+    if (matchedCount <= 0) {
+      issues.push({ code: "concept_effects_not_present_in_xlights", message: "xLights effect occupancy did not confirm any expected concept effects." });
+    }
+  }
+
+  return {
+    contract: "design_concept_validation_state_v1",
+    version: "1.0",
+    ok: issues.length === 0,
+    summary: issues.length === 0
+      ? "Design concept validation checks passed."
+      : `${issues.length} design concept validation issue${issues.length === 1 ? "" : "s"} detected.`,
+    issues,
+    refs: {
+      designDashboard: design?.contract || null,
+      reviewDashboard: review?.contract || null,
+      sequenceDashboard: sequence?.contract || null,
+      xlightsSequenceState: xlightsSequenceState?.contract || null,
+      xlightsEffectOccupancyState: xlightsEffectOccupancyState?.contract || null
+    }
+  };
+}

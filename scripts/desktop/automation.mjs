@@ -11,7 +11,7 @@ fs.mkdirSync(requestsDir, { recursive: true });
 fs.mkdirSync(responsesDir, { recursive: true });
 
 function usage() {
-  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload>");
+  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload> | run-design-concept-validation <json-payload>");
   process.exit(2);
 }
 
@@ -43,6 +43,10 @@ if (command === "dispatch-prompt") {
   payload = {};
 } else if (command === "run-direct-sequence-validation") {
   action = "runDirectSequenceValidation";
+  const raw = rest.join(" ").trim();
+  payload = raw ? JSON.parse(raw) : {};
+} else if (command === "run-design-concept-validation") {
+  action = "runDesignConceptValidation";
   const raw = rest.join(" ").trim();
   payload = raw ? JSON.parse(raw) : {};
 } else {

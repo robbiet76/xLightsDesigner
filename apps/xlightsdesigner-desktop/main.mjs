@@ -19,6 +19,7 @@ import {
 import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs";
 import {
   validateDirectSequencePromptState,
+  validateDesignConceptState,
   buildXLightsSequenceState,
   buildXLightsTimingState,
   buildXLightsEffectOccupancyState
@@ -252,6 +253,44 @@ async function runDirectSequenceValidationFromDesktop(expected = {}) {
   };
 }
 
+async function runDesignConceptValidationFromDesktop(expected = {}) {
+  const snapshot = await getRendererValidationSnapshot();
+  const endpoint = str(snapshot?.endpoint);
+  const pageStates = snapshot?.pageStates || {};
+  const xlightsSequenceState = await readXLightsSequenceStateViaCurl(endpoint);
+  const expectedTargets = arr(expected?.targets).map((row) => str(row)).filter(Boolean);
+  const expectedFamilies = arr(expected?.effectFamilies).map((row) => str(row)).filter(Boolean);
+  const queries = [];
+  for (const target of expectedTargets) {
+    for (const effectName of expectedFamilies) {
+      queries.push({
+        modelName: target,
+        layerIndex: null,
+        startMs: null,
+        endMs: null,
+        effectName
+      });
+    }
+  }
+  const xlightsEffectOccupancyState = queries.length
+    ? await readXLightsEffectOccupancyStateViaCurl(endpoint, queries)
+    : null;
+  const validation = validateDesignConceptState({
+    expected,
+    pageStates,
+    xlightsSequenceState,
+    xlightsEffectOccupancyState
+  });
+  return {
+    contract: "design_concept_validation_run_v1",
+    version: "1.0",
+    pageStates,
+    xlightsSequenceState,
+    xlightsEffectOccupancyState,
+    validation
+  };
+}
+
 async function invokeRendererAutomation(action = "", payload = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
@@ -295,6 +334,9 @@ async function processAutomationRequests() {
       }
       if (action === "runDirectSequenceValidation") {
         return runDirectSequenceValidationFromDesktop(request?.payload || {});
+      }
+      if (action === "runDesignConceptValidation") {
+        return runDesignConceptValidationFromDesktop(request?.payload || {});
       }
       throw new Error(`Unknown automation action: ${action || "missing"}`);
     }

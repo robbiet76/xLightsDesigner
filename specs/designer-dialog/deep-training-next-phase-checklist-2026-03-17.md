@@ -91,7 +91,7 @@ By the end of the deep-training phase:
 
 ### H. Live Validation Cadence
 
-- [ ] Run concept-only review validations without apply
+- [x] Run concept-only review validations without apply
 - [ ] Run concept apply validations on selected concepts
 - [ ] Run whole-sequence apply validations on fresh sequences
 - [x] Score outputs against the rubric after each training slice
