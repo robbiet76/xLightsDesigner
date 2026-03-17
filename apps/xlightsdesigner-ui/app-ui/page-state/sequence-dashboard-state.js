@@ -32,6 +32,16 @@ function buildDesignDisplay(designId = "", designRevision = 0) {
   };
 }
 
+function compareDesignEntries(a = {}, b = {}) {
+  const aNumber = Number.isFinite(Number(a.designNumber)) ? Number(a.designNumber) : Number.MAX_SAFE_INTEGER;
+  const bNumber = Number.isFinite(Number(b.designNumber)) ? Number(b.designNumber) : Number.MAX_SAFE_INTEGER;
+  if (aNumber !== bNumber) return aNumber - bNumber;
+  const aRevision = Number.isFinite(Number(a.designRevision)) ? Number(a.designRevision) : 0;
+  const bRevision = Number.isFinite(Number(b.designRevision)) ? Number(b.designRevision) : 0;
+  if (aRevision !== bRevision) return bRevision - aRevision;
+  return str(a.designId).localeCompare(str(b.designId));
+}
+
 function parseTranslatedTarget(line = "") {
   const parts = String(line || "").split("/").map((part) => part.trim()).filter(Boolean);
   if (!parts.length) return "";
@@ -227,12 +237,24 @@ function buildDashboardRows({
   proposalLines = [],
   planCommands = []
 } = {}) {
+  const supersededConcepts = Array.isArray(state.creative?.supersededConcepts) ? state.creative.supersededConcepts : [];
+  const supersededByDesignId = new Map();
+  for (const row of supersededConcepts) {
+    const designId = str(row?.designId);
+    if (!designId) continue;
+    if (!supersededByDesignId.has(designId)) supersededByDesignId.set(designId, []);
+    supersededByDesignId.get(designId).push(row);
+  }
   const effectCommands = (Array.isArray(planCommands) ? planCommands : []).filter((command) => str(command?.cmd) === "effects.create");
   if (effectCommands.length) {
     const timingMarks = buildTimingMarkLookup(planCommands);
-    return buildAggregatedEffectRows(effectCommands, timingMarks, state?.sceneGraph || null).map((row, idx) => {
+    return buildAggregatedEffectRows(effectCommands, timingMarks, state?.sceneGraph || null)
+      .sort(compareDesignEntries)
+      .map((row, idx) => {
       return {
         index: idx + 1,
+        revisionState: "current",
+        supersededRevisionCount: (supersededByDesignId.get(str(row.designId || "")) || []).length,
         ...row
       };
     });
@@ -240,8 +262,10 @@ function buildDashboardRows({
 
   const timingRows = buildTimingOnlyRows(planCommands);
   if (timingRows.length) {
-    return timingRows.map((row, idx) => ({
+    return timingRows.sort(compareDesignEntries).map((row, idx) => ({
       index: idx + 1,
+      revisionState: "current",
+      supersededRevisionCount: (supersededByDesignId.get(str(row.designId || "")) || []).length,
       ...row
     }));
   }
@@ -253,6 +277,8 @@ function buildDashboardRows({
       designId: str(row.designId || ""),
       ...buildDesignDisplay(row.designId || "", row.designRevision || 0),
       designAuthor: str(row.designAuthor || ""),
+      revisionState: "current",
+      supersededRevisionCount: (supersededByDesignId.get(str(row.designId || "")) || []).length,
       timing: str(row.timing || "XD: Sequencer Plan"),
       section: str(row.section || getSectionNameFromLine(line) || "General"),
       target: str(row.target || parseTranslatedTarget(line) || "Unresolved"),
@@ -261,7 +287,7 @@ function buildDashboardRows({
       effects: Number.isFinite(Number(row.effects)) ? Number(row.effects) : 0,
       sourceLine: str(line)
     };
-  });
+  }).sort(compareDesignEntries);
 }
 
 function getTimingTrackNames(tracks = []) {

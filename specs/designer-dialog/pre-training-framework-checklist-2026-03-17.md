@@ -35,7 +35,7 @@ Exit gate:
 - [x] Use compact display labels in the UI
 - [x] Add first-class `designRevision`
 - [x] Add derived `designLabel` based on true revision state, not default `0`
-- [ ] Define numeric sort rules for concept id + revision everywhere the UI sorts concepts
+- [x] Define numeric sort rules for concept id + revision everywhere the UI sorts concepts
 
 Exit gate:
 - concepts have stable identity and revision semantics before training starts
@@ -45,7 +45,7 @@ Exit gate:
 - [x] Support concept-level delete by `designId`
 - [x] Support revise-in-place for an existing concept
 - [x] Support supersede semantics for revised concepts in the active draft
-- [ ] Ensure Sequence rows can distinguish current vs superseded concept revisions
+- [x] Ensure Sequence rows can distinguish current vs superseded concept revisions
 - [ ] Ensure Review can compare a current concept revision against the previous one
 
 Exit gate:

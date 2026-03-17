@@ -320,6 +320,50 @@ test("sequence dashboard counts ten same-row placements correctly", () => {
   assert.equal(dashboard.data.rows[0].effects, 10);
 });
 
+test("sequence dashboard sorts by numeric design id and exposes superseded revision counts", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: [],
+      agentPlan: {
+        summary: "Revision-aware sequencing draft.",
+        warnings: []
+      },
+      creative: {
+        supersededConcepts: [
+          { designId: "DES-002", designRevision: 0 }
+        ]
+      },
+      timingTracks: [{ name: "XD: Song Structure" }]
+    },
+    planHandoff: {
+      artifactId: "plan-sort-superseded",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
+        {
+          designId: "DES-010",
+          designRevision: 0,
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 500 },
+          params: { modelName: "Tree", effectName: "Bars", startMs: 0, endMs: 500, layerIndex: 0 }
+        },
+        {
+          designId: "DES-002",
+          designRevision: 1,
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 500, endMs: 1000 },
+          params: { modelName: "Snowman", effectName: "Color Wash", startMs: 500, endMs: 1000, layerIndex: 0 }
+        }
+      ]
+    }
+  });
+
+  assert.deepEqual(dashboard.data.rows.map((row) => row.designLabel), ["D2.1", "D10.0"]);
+  assert.equal(dashboard.data.rows[0].supersededRevisionCount, 1);
+  assert.equal(dashboard.data.rows[0].revisionState, "current");
+});
+
 test("sequence dashboard state surfaces missing timing dependency", () => {
   const dashboard = buildSequenceDashboardState({
     state: {

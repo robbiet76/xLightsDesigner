@@ -36,6 +36,16 @@ function buildDesignDisplay(designId = "", designRevision = 0) {
   };
 }
 
+function compareDesignEntries(a = {}, b = {}) {
+  const aNumber = Number.isFinite(Number(a.designNumber)) ? Number(a.designNumber) : Number.MAX_SAFE_INTEGER;
+  const bNumber = Number.isFinite(Number(b.designNumber)) ? Number(b.designNumber) : Number.MAX_SAFE_INTEGER;
+  if (aNumber !== bNumber) return aNumber - bNumber;
+  const aRevision = Number.isFinite(Number(a.designRevision)) ? Number(a.designRevision) : 0;
+  const bRevision = Number.isFinite(Number(b.designRevision)) ? Number(b.designRevision) : 0;
+  if (aRevision !== bRevision) return bRevision - aRevision;
+  return str(a.designId).localeCompare(str(b.designId));
+}
+
 function summarizePalette(colors = []) {
   const list = uniqueStrings(colors);
   return {
@@ -44,7 +54,7 @@ function summarizePalette(colors = []) {
   };
 }
 
-function buildConceptRows(executionPlan = null) {
+function buildConceptRows(executionPlan = null, supersededConcepts = []) {
   const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : {};
   const sectionPlans = arr(plan.sectionPlans);
   const effectPlacements = arr(plan.effectPlacements);
@@ -55,10 +65,18 @@ function buildConceptRows(executionPlan = null) {
     if (!placementsByDesignId.has(designId)) placementsByDesignId.set(designId, []);
     placementsByDesignId.get(designId).push(placement);
   }
+  const supersededByDesignId = new Map();
+  for (const row of arr(supersededConcepts)) {
+    const designId = str(row?.designId);
+    if (!designId) continue;
+    if (!supersededByDesignId.has(designId)) supersededByDesignId.set(designId, []);
+    supersededByDesignId.get(designId).push(row);
+  }
   return sectionPlans
     .map((sectionPlan, index) => {
       const designId = str(sectionPlan?.designId || `DES-${String(index + 1).padStart(3, "0")}`);
       const placements = placementsByDesignId.get(designId) || [];
+      const superseded = supersededByDesignId.get(designId) || [];
       const focusTargets = uniqueStrings(sectionPlan?.targetIds).slice(0, 3);
       const palette = summarizePalette(placements.flatMap((placement) => arr(placement?.paletteIntent?.colors)));
       const effectFamilies = uniqueStrings(placements.map((placement) => placement?.effectName));
@@ -67,6 +85,8 @@ function buildConceptRows(executionPlan = null) {
         designId,
         ...buildDesignDisplay(designId, sectionPlan?.designRevision),
         designAuthor: str(sectionPlan?.designAuthor || "designer"),
+        revisionState: "current",
+        supersededRevisionCount: superseded.length,
         anchor: str(sectionPlan?.section || "General"),
         intent: str(sectionPlan?.intentSummary || "No design intent summary yet."),
         focus: focusTargets,
@@ -75,7 +95,8 @@ function buildConceptRows(executionPlan = null) {
         placementCount: placements.length
       };
     })
-    .filter((row) => row.designId);
+    .filter((row) => row.designId)
+    .sort(compareDesignEntries);
 }
 
 export function buildDesignDashboardState({
@@ -105,7 +126,8 @@ export function buildDesignDashboardState({
     : (intentHandoff?.executionStrategy && typeof intentHandoff.executionStrategy === "object"
         ? intentHandoff.executionStrategy
         : null);
-  const conceptRows = buildConceptRows(executionPlan);
+  const supersededConcepts = arr(state.creative?.supersededConcepts);
+  const conceptRows = buildConceptRows(executionPlan, supersededConcepts);
   const planPlacements = arr(executionPlan?.effectPlacements);
   const planEffectFamilies = uniqueStrings(planPlacements.map((row) => row?.effectName));
   const planLayers = uniqueStrings(planPlacements.map((row) => Number.isFinite(Number(row?.layerIndex)) ? `L${Number(row.layerIndex)}` : ""));
@@ -182,7 +204,8 @@ export function buildDesignDashboardState({
         briefSections: arr(brief?.sections).length,
         hypotheses: arr(brief?.hypotheses).length,
         designConcepts: conceptRows.length,
-        effectPlacements: planPlacements.length
+        effectPlacements: planPlacements.length,
+        supersededConcepts: supersededConcepts.length
       },
       brief: {
         summary: str(brief?.summary || "No creative brief captured yet."),
@@ -213,6 +236,7 @@ export function buildDesignDashboardState({
         sectionCount: Number(executionPlan?.sectionCount || 0),
         targetCount: Number(executionPlan?.targetCount || 0),
         designConceptCount: conceptRows.length,
+        supersededConceptCount: supersededConcepts.length,
         effectPlacementCount: planPlacements.length,
         effectFamilyCount: planEffectFamilies.length,
         layerCount: planLayers.length,

@@ -198,3 +198,44 @@ test("review dashboard state falls back to intent handoff execution strategy for
   assert.equal(dashboard.data.rows[0].designAuthor, "user");
   assert.equal(dashboard.data.rows[0].effectCount, 1);
 });
+
+test("review dashboard sorts grouped rows numerically and exposes superseded revision counts", () => {
+  const dashboard = buildReviewDashboardState({
+    state: {
+      proposed: [
+        "Bridge / Tree / bars accent",
+        "Chorus 1 / Snowman / warm focal lift"
+      ],
+      creative: {
+        supersededConcepts: [
+          { designId: "DES-002", designRevision: 0 }
+        ],
+        proposalBundle: {
+          executionPlan: {
+            sectionPlans: [
+              { designId: "DES-010", designRevision: 0, designAuthor: "designer", section: "Bridge", intentSummary: "Bridge concept.", targetIds: ["Tree"] },
+              { designId: "DES-002", designRevision: 1, designAuthor: "designer", section: "Chorus 1", intentSummary: "Chorus concept.", targetIds: ["Snowman"] }
+            ]
+          }
+        }
+      },
+      agentPlan: {
+        handoff: {
+          commands: [
+            { cmd: "effects.create", designId: "DES-010", params: { effectName: "Bars" }, intent: { designId: "DES-010", designAuthor: "designer" } },
+            { cmd: "effects.create", designId: "DES-002", params: { effectName: "Color Wash" }, intent: { designId: "DES-002", designAuthor: "designer" } }
+          ]
+        }
+      },
+      ui: { proposedSelection: [0, 1], applyApprovalChecked: false },
+      flags: { applyInProgress: false, proposalStale: false }
+    },
+    helpers: buildHelpers({
+      hasAllSectionsSelected: () => true
+    })
+  });
+
+  assert.deepEqual(dashboard.data.rows.map((row) => row.designLabel), ["D2.1", "D10.0"]);
+  assert.equal(dashboard.data.rows[0].supersededRevisionCount, 1);
+  assert.equal(dashboard.data.rows[0].revisionState, "current");
+});

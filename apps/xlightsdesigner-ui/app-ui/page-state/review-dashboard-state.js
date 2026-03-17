@@ -36,6 +36,16 @@ function buildDesignDisplay(designId = "", designRevision = 0) {
   };
 }
 
+function compareDesignEntries(a = {}, b = {}) {
+  const aNumber = Number.isFinite(Number(a.designNumber)) ? Number(a.designNumber) : Number.MAX_SAFE_INTEGER;
+  const bNumber = Number.isFinite(Number(b.designNumber)) ? Number(b.designNumber) : Number.MAX_SAFE_INTEGER;
+  if (aNumber !== bNumber) return aNumber - bNumber;
+  const aRevision = Number.isFinite(Number(a.designRevision)) ? Number(a.designRevision) : 0;
+  const bRevision = Number.isFinite(Number(b.designRevision)) ? Number(b.designRevision) : 0;
+  if (aRevision !== bRevision) return bRevision - aRevision;
+  return str(a.designId).localeCompare(str(b.designId));
+}
+
 function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes = [] } = {}) {
   const executionPlan = state.creative?.proposalBundle?.executionPlan && typeof state.creative.proposalBundle.executionPlan === "object"
     ? state.creative.proposalBundle.executionPlan
@@ -45,6 +55,14 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
   const sectionPlans = arr(executionPlan?.sectionPlans);
   const planCommands = arr(state.agentPlan?.handoff?.commands);
   const effectCommands = planCommands.filter((command) => str(command?.cmd) === "effects.create");
+  const supersededConcepts = arr(state.creative?.supersededConcepts);
+  const supersededByDesignId = new Map();
+  for (const row of supersededConcepts) {
+    const designId = str(row?.designId);
+    if (!designId) continue;
+    if (!supersededByDesignId.has(designId)) supersededByDesignId.set(designId, []);
+    supersededByDesignId.get(designId).push(row);
+  }
   const conceptMeta = new Map();
   for (const row of sectionPlans) {
     const designId = str(row?.designId);
@@ -77,6 +95,8 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
         designId,
         ...buildDesignDisplay(designId, meta.designRevision),
         designAuthor: str(meta.designAuthor || "designer"),
+        revisionState: "current",
+        supersededRevisionCount: (supersededByDesignId.get(designId) || []).length,
         anchor: uniqueStrings(meta.sections).join(", ") || "General",
         summary: uniqueStrings(meta.summaries)[0] || "Pending design change",
         targetSummary: uniqueStrings(meta.targetIds).slice(0, 3).join(", ") || "Current scope",
@@ -84,7 +104,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
         indexes: matchingIndexes,
         selected: matchingIndexes.length ? matchingIndexes.every((idx) => selectedIndexes.includes(idx)) : false
       };
-    });
+    }).sort(compareDesignEntries);
   }
 
   const grouped = new Map();
@@ -125,6 +145,8 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       designId: str(row.designId || ""),
       ...buildDesignDisplay(row.designId || "", row.designRevision || 0),
       designAuthor: str(row.designAuthor || ""),
+      revisionState: "current",
+      supersededRevisionCount: (supersededByDesignId.get(str(row.designId || "")) || []).length,
       anchor: row.sections.length ? row.sections.join(", ") : "General",
       summary: row.summaries[0] || "Pending design change",
       targetSummary: row.targetIds.length ? row.targetIds.slice(0, 3).join(", ") : "Current scope",
@@ -132,7 +154,7 @@ function buildReviewGroupRows({ state = {}, filteredRows = [], selectedIndexes =
       indexes,
       selected: indexes.length ? indexes.every((idx) => selectedIndexes.includes(idx)) : false
     };
-  });
+  }).sort(compareDesignEntries);
 }
 
 export function buildReviewDashboardState({

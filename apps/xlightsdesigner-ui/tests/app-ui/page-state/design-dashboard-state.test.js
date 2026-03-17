@@ -196,3 +196,35 @@ test("design dashboard state falls back to intent handoff execution strategy whe
   assert.equal(dashboard.data.executionPlan.conceptRows[0].designId, "DES-001");
   assert.equal(dashboard.data.executionPlan.conceptRows[0].designLabel, "D1.0");
 });
+
+test("design dashboard sorts concepts numerically and reports superseded revision counts", () => {
+  const dashboard = buildDesignDashboardState({
+    state: {
+      creative: {
+        supersededConcepts: [
+          { designId: "DES-002", designRevision: 0 }
+        ],
+        proposalBundle: {
+          executionPlan: {
+            sectionPlans: [
+              { designId: "DES-010", designRevision: 0, designAuthor: "designer", section: "Bridge", intentSummary: "Bridge concept.", targetIds: ["Tree"] },
+              { designId: "DES-002", designRevision: 1, designAuthor: "designer", section: "Chorus 1", intentSummary: "Chorus concept.", targetIds: ["Snowman"] }
+            ],
+            effectPlacements: [
+              { designId: "DES-010", effectName: "Bars", layerIndex: 0, paletteIntent: { colors: ["#ffffff"] } },
+              { designId: "DES-002", effectName: "Color Wash", layerIndex: 0, paletteIntent: { colors: ["#ffcc88"] } }
+            ]
+          }
+        }
+      },
+      inspiration: {},
+      applyHistory: [],
+      ui: {}
+    }
+  });
+
+  assert.deepEqual(dashboard.data.executionPlan.conceptRows.map((row) => row.designLabel), ["D2.1", "D10.0"]);
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].supersededRevisionCount, 1);
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].revisionState, "current");
+  assert.equal(dashboard.data.executionPlan.supersededConceptCount, 1);
+});

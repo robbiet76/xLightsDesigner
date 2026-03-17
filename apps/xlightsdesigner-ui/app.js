@@ -456,6 +456,7 @@ const defaultState = {
     references: [],
     brief: null,
     proposalBundle: null,
+    supersededConcepts: [],
     briefUpdatedAt: "",
     runtime: null
   },
@@ -521,6 +522,12 @@ function normalizeDraftState(target) {
   if (!target || typeof target !== "object") return;
   if (!Array.isArray(target.proposed)) {
     target.proposed = [];
+  }
+  target.creative = target.creative && typeof target.creative === "object"
+    ? target.creative
+    : structuredClone(defaultState.creative);
+  if (!Array.isArray(target.creative.supersededConcepts)) {
+    target.creative.supersededConcepts = [];
   }
   const hasBundle = Boolean(target.creative?.proposalBundle);
   if (!hasBundle && looksLikeDemoProposedLines(target.proposed)) {
@@ -3330,6 +3337,9 @@ async function onGenerate(intentOverride = "", options = {}) {
     render();
     return;
   }
+  const supersededConceptRecord = revisionTarget
+    ? buildSupersededConceptRecordById(revisionTarget.designId, revisionTarget.designRevision)
+    : null;
   const resolvedProposalOrchestration = revisionTarget
     ? applyRevisionTargetToOrchestration(proposalOrchestration, revisionTarget)
     : proposalOrchestration;
@@ -3549,6 +3559,9 @@ async function onGenerate(intentOverride = "", options = {}) {
     executionLines
   };
   const planSet = setAgentHandoff("plan_handoff_v1", planHandoff, "sequence_agent");
+  if (revisionTarget && planSet.ok && supersededConceptRecord) {
+    upsertSupersededConceptRecord(supersededConceptRecord);
+  }
   if (!planSet.ok) {
     markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
     addChatMessage("system", `Plan handoff is incomplete: ${planSet.errors.join("; ")}`);
@@ -6936,6 +6949,65 @@ function getExecutionPlanFromArtifacts({
   return null;
 }
 
+function upsertSupersededConceptRecord(record = null) {
+  if (!record || typeof record !== "object") return;
+  state.creative = state.creative || {};
+  const current = Array.isArray(state.creative.supersededConcepts) ? state.creative.supersededConcepts : [];
+  const next = current.filter((entry) => !(
+    String(entry?.designId || "").trim() === String(record.designId || "").trim() &&
+    Number(entry?.designRevision || 0) === Number(record.designRevision || 0)
+  ));
+  next.push(record);
+  state.creative.supersededConcepts = next;
+}
+
+function buildSupersededConceptRecordById(designId = "", supersededByRevision = 0) {
+  const normalizedDesignId = String(designId || "").trim();
+  if (!normalizedDesignId) return null;
+  const proposalBundle = state.creative?.proposalBundle && typeof state.creative.proposalBundle === "object"
+    ? state.creative.proposalBundle
+    : null;
+  const intentHandoff = state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object"
+    ? state.creative.intentHandoff
+    : null;
+  const executionPlan = getExecutionPlanFromArtifacts({ proposalBundle, intentHandoff });
+  if (!executionPlan) return null;
+  const sectionPlans = (Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans : [])
+    .filter((row) => String(row?.designId || "").trim() === normalizedDesignId);
+  const effectPlacements = (Array.isArray(executionPlan.effectPlacements) ? executionPlan.effectPlacements : [])
+    .filter((row) => String(row?.designId || "").trim() === normalizedDesignId);
+  if (!sectionPlans.length && !effectPlacements.length) return null;
+  const currentRevision = Math.max(
+    0,
+    ...sectionPlans.map((row) => Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0),
+    ...effectPlacements.map((row) => Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0)
+  );
+  const sections = Array.from(new Set(sectionPlans.map((row) => String(row?.section || "").trim()).filter(Boolean)));
+  const targetIds = Array.from(new Set([
+    ...sectionPlans.flatMap((row) => Array.isArray(row?.targetIds) ? row.targetIds : []),
+    ...effectPlacements.map((row) => String(row?.targetId || "").trim()).filter(Boolean)
+  ]));
+  const effectNames = Array.from(new Set(effectPlacements.map((row) => String(row?.effectName || "").trim()).filter(Boolean)));
+  return {
+    designId: normalizedDesignId,
+    designRevision: currentRevision,
+    designAuthor: String(sectionPlans[0]?.designAuthor || effectPlacements[0]?.designAuthor || "designer").trim() || "designer",
+    designLabel: buildDesignDisplay(normalizedDesignId, currentRevision),
+    revisionState: "superseded",
+    supersededByRevision: Number.isInteger(Number(supersededByRevision)) ? Number(supersededByRevision) : currentRevision + 1,
+    sections,
+    targetIds,
+    effectNames,
+    summary: String(
+      sectionPlans.map((row) => String(row?.intentSummary || "").trim()).find(Boolean)
+      || effectPlacements.map((row) => String(row?.creativeRole || "").trim()).find(Boolean)
+      || "Superseded design concept"
+    ).trim(),
+    placementCount: effectPlacements.length,
+    supersededAt: new Date().toISOString()
+  };
+}
+
 function clearDesignRevisionTarget() {
   state.ui.designRevisionTarget = null;
 }
@@ -7725,6 +7797,7 @@ function onRemoveAllProposed() {
   }
   state.creative.proposalBundle = null;
   state.creative.intentHandoff = null;
+  state.creative.supersededConcepts = [];
   state.agentPlan = null;
   clearDesignRevisionTarget();
   state.proposed = [];
