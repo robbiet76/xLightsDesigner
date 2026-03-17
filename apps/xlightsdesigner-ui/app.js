@@ -982,6 +982,15 @@ function resetDerivedAudioAnalysisState() {
   resetAudioAnalysisView(state.audioAnalysis);
 }
 
+function syncSectionSuggestionsFromAnalysisArtifact(artifact = null) {
+  const sections = Array.isArray(artifact?.structure?.sections) ? artifact.structure.sections : [];
+  const built = buildSectionSuggestions(sections);
+  state.ui.sectionTrackName = built.labels.length ? "Analysis: Song Structure" : state.ui.sectionTrackName;
+  state.sectionSuggestions = built.labels;
+  state.sectionStartByLabel = built.startByLabel;
+  reconcileSectionSelectionsToAvailable();
+}
+
 function applyPersistedAnalysisArtifact(artifact = null) {
   const out = applyPersistedAnalysisArtifactToState({
     artifact,
@@ -989,6 +998,7 @@ function applyPersistedAnalysisArtifact(artifact = null) {
     audioAnalysisState: state.audioAnalysis,
     setHandoff: (handoff) => setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst")
   });
+  if (out.ok === true) syncSectionSuggestionsFromAnalysisArtifact(artifact);
   return out.ok === true;
 }
 
@@ -10837,6 +10847,7 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
     if (!applied.ok) {
       throw new Error("Audio analysis flow did not produce a valid UI projection.");
     }
+    syncSectionSuggestionsFromAnalysisArtifact(persistedArtifact);
     setAudioAnalysisProgress(state.audioAnalysis, {
       stage: "handoff_ready",
       message: "Analysis finished and handoff is ready."
