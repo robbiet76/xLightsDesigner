@@ -8,8 +8,21 @@ import { buildEffectDefinitionCatalog } from "../../../agent/sequence-agent/effe
 function sampleCatalog() {
   return buildEffectDefinitionCatalog([
     { effectName: "On", params: [] },
-    { effectName: "Color Wash", params: [] }
+    { effectName: "Color Wash", params: [] },
+    { effectName: "Shimmer", params: [] }
   ]);
+}
+
+function sampleAnalysis() {
+  return {
+    structure: {
+      sections: [
+        { label: "Intro", startMs: 0, endMs: 10000 },
+        { label: "Chorus 1", startMs: 44000, endMs: 62000 },
+        { label: "Chorus 2", startMs: 78000, endMs: 96000 }
+      ]
+    }
+  };
 }
 
 test("direct sequence orchestrator bypasses designer scaffolding and emits canonical handoff", () => {
@@ -78,4 +91,76 @@ test("direct sequence orchestrator asks for clarification when effect name is no
   assert.deepEqual(result.proposalLines, []);
   assert.ok(result.guidedQuestions.some((row) => /loaded xlights effect name/i.test(row)));
   assert.ok(result.warnings.some((row) => /does not match a loaded xlights effect name/i.test(row)));
+});
+
+test("direct sequence orchestrator infers analyzed section scope from the prompt", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-4",
+    sequenceRevision: "rev-1",
+    promptText: "Add a Color Wash effect on Snowman during Chorus 1.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Snowman", name: "Snowman", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Snowman", name: "Snowman", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: sampleAnalysis()
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.intentHandoff.scope.sections, ["Chorus 1"]);
+  assert.ok(result.proposalBundle.scope.sections.includes("Chorus 1"));
+  assert.match(result.proposalLines[0], /for the requested duration/i);
+});
+
+test("direct sequence orchestrator fails closed when prompt names a section without analysis", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-5",
+    sequenceRevision: "rev-1",
+    promptText: "Add a Color Wash effect on Snowman during Chorus 1.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Snowman", name: "Snowman", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Snowman", name: "Snowman", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: null
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.intentHandoff, null);
+  assert.ok(result.warnings.some((row) => /analyze the track first/i.test(row)));
+});
+
+test("direct sequence orchestrator blocks mixed effect and section clauses", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-6",
+    sequenceRevision: "rev-1",
+    promptText: "Add a Color Wash effect on Snowman during Chorus 1 and a Shimmer effect on PorchTree during Chorus 2.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "PorchTree", name: "PorchTree", type: "Model" }
+    ],
+    submodels: [],
+    displayElements: [
+      { id: "Snowman", name: "Snowman", type: "model" },
+      { id: "PorchTree", name: "PorchTree", type: "model" }
+    ],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: sampleAnalysis()
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.intentHandoff, null);
+  assert.deepEqual(result.proposalLines, []);
+  assert.ok(result.warnings.some((row) => /multiple sequencing clauses/i.test(row)));
+  assert.ok(result.guidedQuestions.some((row) => /split this into separate requests/i.test(row)));
 });
