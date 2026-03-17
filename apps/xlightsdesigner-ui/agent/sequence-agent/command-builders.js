@@ -933,7 +933,7 @@ function buildEffectTemplates(
     }
   }
 
-  return out.slice(0, 24);
+  return out;
 }
 
 export function buildDesignerPlanCommands(

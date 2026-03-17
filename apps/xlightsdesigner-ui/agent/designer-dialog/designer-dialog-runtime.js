@@ -226,30 +226,102 @@ function uniqueStrings(values = []) {
   return out;
 }
 
+function rotateStrings(values = [], seed = "") {
+  const rows = uniqueStrings(values);
+  if (rows.length <= 1) return rows;
+  const text = str(seed);
+  let hash = 0;
+  for (let idx = 0; idx < text.length; idx += 1) {
+    hash = ((hash * 31) + text.charCodeAt(idx)) >>> 0;
+  }
+  const offset = hash % rows.length;
+  return rows.slice(offset).concat(rows.slice(0, offset));
+}
+
 function chooseExecutionTargets({
   explicitTargetIds = [],
   fallbackTargetIds = [],
   broadCoverageDomains = [],
   focalCandidates = [],
+  detailCoverageDomains = [],
   energy = "",
+  density = "",
   section = ""
 } = {}) {
   const explicit = uniqueStrings(explicitTargetIds);
   if (explicit.length) return explicit.slice(0, 8);
-  const broad = uniqueStrings(broadCoverageDomains);
-  const focal = uniqueStrings(focalCandidates);
-  const fallback = uniqueStrings(fallbackTargetIds);
+  const broad = rotateStrings(broadCoverageDomains, section);
+  const focal = rotateStrings(focalCandidates, `${section}:focal`);
+  const detail = rotateStrings(detailCoverageDomains, `${section}:detail`);
+  const fallback = rotateStrings(fallbackTargetIds, `${section}:fallback`);
   const key = str(section).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
+  const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
   if (isPeak) {
-    return uniqueStrings([...broad.slice(0, 2), ...focal.slice(0, 2), ...fallback.slice(0, 2)]).slice(0, 8);
+    return uniqueStrings([
+      ...focal.slice(0, 2),
+      ...detail.slice(0, 2),
+      ...broad.slice(0, 2),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (isWide) {
+    return uniqueStrings([
+      ...broad.slice(0, 1),
+      ...detail.slice(0, 2),
+      ...focal.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
   }
   if (isGentle) {
-    return uniqueStrings([...broad.slice(0, 2), ...fallback.slice(0, 2)]).slice(0, 8);
+    return uniqueStrings([
+      ...broad.slice(0, 2),
+      ...detail.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
   }
-  return uniqueStrings([...broad.slice(0, 2), ...focal.slice(0, 1), ...fallback.slice(0, 2)]).slice(0, 8);
+  return uniqueStrings([
+    ...broad.slice(0, 2),
+    ...focal.slice(0, 1),
+    ...detail.slice(0, 1),
+    ...fallback.slice(0, 2)
+  ]).slice(0, 8);
+}
+
+function buildSectionEffectHints({ section = "", energy = "", density = "", goal = "", sectionIndex = 0, sectionCount = 0 } = {}) {
+  const lower = `${str(section)} ${str(goal)}`.toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
+  const count = Number.isFinite(Number(sectionCount)) ? Math.max(0, Number(sectionCount)) : 0;
+  const idx = Number.isFinite(Number(sectionIndex)) ? Math.max(0, Number(sectionIndex)) : 0;
+  const nearStart = count > 0 ? idx <= Math.max(0, Math.floor(count * 0.2)) : idx === 0;
+  const nearPeak = count > 0 ? idx >= Math.floor(count * 0.35) && idx <= Math.floor(count * 0.7) : false;
+  const nearEnd = count > 0 ? idx >= Math.max(0, count - 2) : false;
+  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lower)) {
+    return ["Shimmer", "Color Wash"];
+  }
+  if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lower)) {
+    return ["Bars", "Shimmer"];
+  }
+  if (normalizedEnergy === "low" || /intro|outro/.test(lower)) {
+    return ["Color Wash", "On"];
+  }
+  if (nearPeak) {
+    return ["Shimmer", "Bars"];
+  }
+  if (nearEnd) {
+    return ["Bars", "Color Wash"];
+  }
+  if (nearStart) {
+    return ["Color Wash", "On"];
+  }
+  if (/pulse|rhythm|drive|movement/.test(lower)) {
+    return ["Bars", "Color Wash"];
+  }
+  return ["Color Wash"];
 }
 
 function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {
@@ -302,6 +374,7 @@ function buildDesignerExecutionPlan({
   const availableSections = sectionArc.length ? sectionArc : analyzedSections;
   const scene = isPlainObject(designSceneContext) ? designSceneContext : {};
   const broadCoverageDomains = arr(scene?.coverageDomains?.broad).map((row) => str(row)).filter(Boolean);
+  const detailCoverageDomains = arr(scene?.coverageDomains?.detail).map((row) => str(row)).filter(Boolean);
   const focalCandidates = arr(scene?.focalCandidates).map((row) => str(row)).filter(Boolean);
   const resolvedTargetIds = arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
@@ -313,9 +386,10 @@ function buildDesignerExecutionPlan({
         ? "single_section"
         : "whole_sequence";
   const primarySections = (explicitSections.length ? explicitSections : availableSections.map((row) => row.label)).slice(0, 24);
-  const sectionPlans = (primarySections.length ? primarySections : availableSections.map((row) => row.label))
-    .slice(0, 24)
-    .map((label) => {
+  const normalizedSections = (primarySections.length ? primarySections : availableSections.map((row) => row.label))
+    .slice(0, 24);
+  const sectionPlans = normalizedSections
+    .map((label, idx) => {
       const match = availableSections.find((row) => str(row.label) === str(label));
       const energy = str(match?.energy);
       const density = str(match?.density);
@@ -333,11 +407,22 @@ function buildDesignerExecutionPlan({
           explicitTargetIds: targetIds,
           fallbackTargetIds: resolvedTargetIds,
           broadCoverageDomains,
+          detailCoverageDomains,
           focalCandidates,
           energy,
+          density,
           section: label
         }).slice(0, 40),
-        effectHints: arr(intent.effectOverrides).map((row) => str(row)).filter(Boolean)
+        effectHints: arr(intent.effectOverrides).length
+          ? arr(intent.effectOverrides).map((row) => str(row)).filter(Boolean)
+          : buildSectionEffectHints({
+              section: label,
+              energy,
+              density,
+              goal: intent.goal || "",
+              sectionIndex: idx,
+              sectionCount: normalizedSections.length
+            })
       };
     });
 

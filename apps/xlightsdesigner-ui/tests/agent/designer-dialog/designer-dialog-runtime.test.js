@@ -280,8 +280,10 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.notEqual(sectionPlans[0].intentSummary, result.handoff.goal);
   assert.deepEqual(sectionPlans[0].targetIds.slice(0, 2), ["AllModels", "AllModels_NoFloods"]);
   assert.ok(sectionPlans[0].targetIds.length >= 2);
-  assert.ok(sectionPlans[2].targetIds.includes("AllModels"));
-  assert.ok(sectionPlans[2].targetIds.includes("AllModels_NoFloods"));
   assert.ok(sectionPlans[2].targetIds.includes("Snowman"));
   assert.ok(sectionPlans[2].targetIds.includes("PorchTree"));
+  assert.deepEqual(sectionPlans[0].effectHints, ["Color Wash", "On"]);
+  assert.deepEqual(sectionPlans[2].effectHints, ["Shimmer", "Color Wash"]);
+  assert.deepEqual(sectionPlans[3].effectHints, ["Bars", "Shimmer"]);
+  assert.ok(sectionPlans[3].targetIds.some((row) => /Border-01\/Segments|Snowman\/Face2-Head/i.test(row)));
 });
