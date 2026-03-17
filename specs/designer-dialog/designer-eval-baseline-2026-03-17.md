@@ -18,75 +18,50 @@ Command:
 node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-report.json
 ```
 
-## Baseline Summary
+## Current Baseline Summary
 
 - total cases: `25`
-- supported by current offline runner: `19`
-- passed: `14`
-- failed: `5`
-- deferred: `6`
-- average structural score: `2.21`
+- supported by current offline runner: `25`
+- passed: `25`
+- failed: `0`
+- deferred: `0`
+- average structural score: `3`
 
 Interpretation:
-- the current designer baseline is already structurally acceptable on most supported concept, whole-pass, and preference cases
-- the largest remaining offline gap is revise-case automation, not corpus coverage
-- the current whole-pass weakness is family diversity in some broad-pass prompts
-- the current concept weakness is still target/layout interpretation in a few concept prompts
+- the canonical offline corpus is now fully supported
+- concept, whole-sequence, preference, and revise cases all pass the current structural gate
+- the current bottleneck is no longer structural correctness
+- the next bottleneck is richer artistic scoring and deeper quality tuning
 
-## Failed Supported Cases
+## What Changed Since The First Baseline
 
-### 1. `concept-layout-foreground-background`
+The runner and designer logic now cover:
+- layout/depth-sensitive concepts
+- stage-lighting-language concepts
+- richer broad-pass family diversity for rhythm/layout/lighting prompts
+- offline revise-case scoring through the same merge semantics used by the app revision path
 
-Observed failure:
-- missing required foreground/background target behavior in the current plan
+## Current Meaning Of A Pass
 
-Implication:
-- layout/depth reasoning is not yet dependable enough for this concept shape
+The current offline pass means:
+- concept identity holds
+- revise cases preserve the concept set and increment the intended revision
+- unrelated concepts remain unchanged during revise merges
+- concept summaries stay on the design side of the boundary
+- whole-pass prompts produce enough placements and family diversity for the current structural gate
 
-### 2. `concept-lighting-key-fill`
+It does **not** yet mean:
+- motion language is artistically strong
+- lighting/composition reasoning is artistically strong in every case
+- settings/render choices are fully tuned
+- live applied whole-sequence output is artistically complete
 
-Observed failure:
-- target choice and language did not clearly support the requested key/fill framing
+## Next Training Priorities
 
-Implication:
-- stage-lighting reasoning is still weak or too implicit in concept language
-
-### 3. `whole-rhythm-led-build`
-
-Observed failure:
-- insufficient family diversity
-
-Implication:
-- broad rhythm-driven passes still collapse into too narrow a family set
-
-### 4. `whole-perimeter-vs-center`
-
-Observed failure:
-- insufficient family diversity
-
-Implication:
-- layout-aware broad passes still need richer family selection
-
-### 5. `whole-lighting-language-pass`
-
-Observed failure:
-- insufficient family diversity
-
-Implication:
-- stage-lighting-inspired broad passes are still flattening to too few families
-
-## Deferred Cases
-
-The `6` revise cases are defined in the corpus but currently marked `framework_assisted`.
-
-Reason:
-- full scoring of revise behavior still needs app-level revision orchestration so concept identity, supersede behavior, and unrelated-concept preservation can be measured through the actual revision path
-
-Next step:
-- automate revise-case scoring through the app revision flow without moving back into UI-driven testing
-
-## Immediate Training Priorities
-
-1. improve layout/depth reasoning for foreground/background and key/fill style prompts
-2. improve broad-pass family diversity when prompts emphasize rhythm, layout framing, or lighting logic
-3. automate offline revise-case scoring so the full corpus becomes promotable without manual exceptions
+1. add richer non-structural scoring for:
+   - motion language quality
+   - stage-lighting quality
+   - composition quality
+   - settings/render plausibility
+2. keep the current `25/25` corpus as the structural regression gate
+3. start tuning designer quality against the richer scoring layer instead of changing framework behavior

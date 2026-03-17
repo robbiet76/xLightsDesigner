@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { executeDesignerProposalOrchestration } from "../agent/designer-dialog/designer-dialog-orchestrator.js";
 import { buildDesignSceneContext } from "../agent/designer-dialog/design-scene-context.js";
+import {
+  mergeRevisedDesignConceptExecutionPlan,
+  normalizeDesignRevisionTarget
+} from "../agent/designer-dialog/design-concept-revision.js";
 
 const cwd = process.cwd();
 const evalDir = path.join(cwd, "apps/xlightsdesigner-ui/eval");
@@ -195,6 +199,135 @@ function extractMetrics(result = {}) {
   };
 }
 
+function getExecutionPlanFromResult(result = {}) {
+  const executionPlan = result?.proposalBundle?.executionPlan;
+  return executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+}
+
+function collectConceptRows(executionPlan = null, designId = "") {
+  const normalizedDesignId = str(designId);
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+  if (!plan || !normalizedDesignId) return { sectionPlans: [], effectPlacements: [] };
+  return {
+    sectionPlans: arr(plan.sectionPlans).filter((row) => str(row?.designId) === normalizedDesignId),
+    effectPlacements: arr(plan.effectPlacements).filter((row) => str(row?.designId) === normalizedDesignId)
+  };
+}
+
+function buildRevisionTargetFromExecutionPlan(executionPlan = null, testCase = {}) {
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+  if (!plan) return null;
+  const desiredSections = uniq(testCase.selectedSections);
+  const sectionPlans = arr(plan.sectionPlans);
+  const targetPlan = sectionPlans.find((row) => desiredSections.includes(str(row?.section))) || sectionPlans[0];
+  const designId = str(targetPlan?.designId);
+  if (!designId) return null;
+  const rows = collectConceptRows(plan, designId);
+  const currentRevision = Math.max(
+    0,
+    ...rows.sectionPlans.map((row) => Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0),
+    ...rows.effectPlacements.map((row) => Number.isInteger(Number(row?.designRevision)) ? Number(row.designRevision) : 0)
+  );
+  const sectionNames = desiredSections.length
+    ? desiredSections
+    : uniq(rows.sectionPlans.map((row) => row?.section));
+  const targetIds = uniq([
+    ...rows.sectionPlans.flatMap((row) => arr(row?.targetIds)),
+    ...rows.effectPlacements.map((row) => row?.targetId)
+  ]);
+  const summary = str(
+    rows.sectionPlans.map((row) => row?.intentSummary).find(Boolean)
+    || rows.effectPlacements.map((row) => row?.creative?.purpose).find(Boolean)
+    || "Revise existing design concept"
+  );
+  return normalizeDesignRevisionTarget({
+    designId,
+    designRevision: currentRevision + 1,
+    priorDesignRevision: currentRevision,
+    designAuthor: str(targetPlan?.designAuthor || "designer") || "designer",
+    sections: sectionNames,
+    targetIds,
+    summary,
+    designLabel: `D${Number.parseInt(designId.replace(/\D+/g, ""), 10) || 1}.${currentRevision + 1}`
+  });
+}
+
+function buildRevisionPromptText(promptText = "", revisionTarget = null) {
+  const normalizedTarget = normalizeDesignRevisionTarget(revisionTarget);
+  const rawPrompt = str(promptText);
+  if (!normalizedTarget) return rawPrompt;
+  const sectionText = normalizedTarget.sections.length ? normalizedTarget.sections.join(", ") : "current concept scope";
+  const targetText = normalizedTarget.targetIds.length ? normalizedTarget.targetIds.slice(0, 6).join(", ") : "current concept targets";
+  const prefix = `Revise existing design concept ${normalizedTarget.designLabel || normalizedTarget.designId} in place. Keep the same concept identity and limit changes to sections ${sectionText} and targets ${targetText}.`;
+  return rawPrompt ? `${prefix} ${rawPrompt}` : prefix;
+}
+
+function comparableNonTargetRows(executionPlan = null, designId = "") {
+  const normalizedDesignId = str(designId);
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+  if (!plan) return { sectionPlans: [], effectPlacements: [] };
+  const clean = (row = {}) => {
+    const next = { ...row };
+    delete next.designId;
+    delete next.designRevision;
+    delete next.designAuthor;
+    return next;
+  };
+  return {
+    sectionPlans: arr(plan.sectionPlans).filter((row) => str(row?.designId) !== normalizedDesignId).map(clean),
+    effectPlacements: arr(plan.effectPlacements).filter((row) => str(row?.designId) !== normalizedDesignId).map(clean)
+  };
+}
+
+function evaluateRevisionCase(baseResult, revisedResult, mergedExecutionPlan, revisionTarget) {
+  const failures = [];
+  const baseExecutionPlan = getExecutionPlanFromResult(baseResult);
+  const revisedExecution = mergedExecutionPlan && typeof mergedExecutionPlan === "object" ? mergedExecutionPlan : null;
+  const target = normalizeDesignRevisionTarget(revisionTarget);
+  if (!baseResult?.ok || !revisedResult?.ok || !baseExecutionPlan || !revisedExecution || !target) {
+    failures.push("revision_runtime_failure");
+    return { score: 0, failures, checksPassed: 0, checksTotal: 1, metrics: {} };
+  }
+
+  const baseIds = uniq(arr(baseExecutionPlan.sectionPlans).map((row) => row?.designId));
+  const mergedIds = uniq(arr(revisedExecution.sectionPlans).map((row) => row?.designId));
+  const revisedRows = collectConceptRows(revisedExecution, target.designId);
+  const baseNonTarget = comparableNonTargetRows(baseExecutionPlan, target.designId);
+  const mergedNonTarget = comparableNonTargetRows(revisedExecution, target.designId);
+  const revisedSections = uniq([
+    ...revisedRows.sectionPlans.map((row) => row?.section),
+    ...revisedRows.effectPlacements.map((row) => row?.timingContext?.anchorLabel)
+  ]);
+
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+
+  check("revision_identity_drift", revisedRows.sectionPlans.every((row) => str(row?.designId) === target.designId) && revisedRows.effectPlacements.every((row) => str(row?.designId) === target.designId));
+  check("revision_number_not_incremented", revisedRows.sectionPlans.every((row) => Number(row?.designRevision) === Number(target.designRevision)) && revisedRows.effectPlacements.every((row) => Number(row?.designRevision) === Number(target.designRevision)));
+  check("unrelated_concepts_changed", JSON.stringify(baseNonTarget) === JSON.stringify(mergedNonTarget));
+  check("concept_set_drift", JSON.stringify(baseIds) === JSON.stringify(mergedIds));
+  check("revision_scope_drift", revisedSections.every((section) => !target.sections.length || target.sections.includes(section)));
+
+  return {
+    score: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      baseDesignIds: baseIds,
+      mergedDesignIds: mergedIds,
+      revisedSectionCount: revisedRows.sectionPlans.length,
+      revisedPlacementCount: revisedRows.effectPlacements.length,
+      revisedSections
+    }
+  };
+}
+
 function structuralScore({ ok, failures = [], checksPassed = 0, checksTotal = 0 }) {
   if (!ok || failures.length) return 0;
   if (!checksTotal) return 1;
@@ -268,20 +401,64 @@ function evaluateCase(result, testCase) {
 }
 
 function runCase(testCase, metadataFixture) {
-  if (str(testCase.runnerMode) === "framework_assisted") {
-    return {
-      id: testCase.id,
-      kind: testCase.kind,
-      runnerMode: "framework_assisted",
-      status: "deferred",
-      summary: "Case is defined in the corpus but requires app-level revision orchestration for full scoring."
-    };
-  }
-
   const fixture = buildFixture({
     variant: str(testCase.fixtureVariant || "default"),
     metadataFixture
   });
+  if (str(testCase.runnerMode) === "framework_assisted") {
+    const seedPrompt = str(testCase.seedPromptText || "Rework the whole show into a warmer, more cinematic pass with clear section contrast, stronger focal moments, and more varied effects across the song.");
+    const baseResult = executeDesignerProposalOrchestration({
+      requestId: `eval-seed-${testCase.id}`,
+      sequenceRevision: "eval-rev-1",
+      promptText: seedPrompt,
+      goals: seedPrompt,
+      analysisArtifact: fixture.analysisArtifact,
+      analysisHandoff: fixture.analysisHandoff,
+      models: fixture.models,
+      submodels: fixture.submodels,
+      metadataAssignments: fixture.metadataAssignments,
+      designSceneContext: fixture.designSceneContext,
+      musicDesignContext: fixture.musicDesignContext
+    });
+    const baseExecutionPlan = getExecutionPlanFromResult(baseResult);
+    const revisionTarget = buildRevisionTargetFromExecutionPlan(baseExecutionPlan, testCase);
+    const revisedPromptText = buildRevisionPromptText(testCase.promptText, revisionTarget);
+    const revisedResult = executeDesignerProposalOrchestration({
+      requestId: `eval-revise-${testCase.id}`,
+      sequenceRevision: "eval-rev-1",
+      promptText: revisedPromptText,
+      goals: revisedPromptText,
+      selectedSections: arr(revisionTarget?.sections),
+      selectedTargetIds: arr(revisionTarget?.targetIds),
+      analysisArtifact: fixture.analysisArtifact,
+      analysisHandoff: fixture.analysisHandoff,
+      models: fixture.models,
+      submodels: fixture.submodels,
+      metadataAssignments: fixture.metadataAssignments,
+      designSceneContext: fixture.designSceneContext,
+      musicDesignContext: fixture.musicDesignContext
+    });
+    const mergedExecutionPlan = mergeRevisedDesignConceptExecutionPlan({
+      currentExecutionPlan: baseExecutionPlan,
+      revisedExecutionPlan: getExecutionPlanFromResult(revisedResult),
+      revisionTarget
+    });
+    const evaluation = evaluateRevisionCase(baseResult, revisedResult, mergedExecutionPlan, revisionTarget);
+    return {
+      id: testCase.id,
+      kind: testCase.kind,
+      runnerMode: "framework_assisted",
+      lenses: arr(testCase.lenses),
+      status: evaluation.failures.length ? "failed" : "passed",
+      summary: str(revisedResult?.summary || testCase.promptText),
+      structuralScore: evaluation.score,
+      failures: evaluation.failures,
+      checksPassed: evaluation.checksPassed,
+      checksTotal: evaluation.checksTotal,
+      metrics: evaluation.metrics
+    };
+  }
+
   const result = executeDesignerProposalOrchestration({
     requestId: `eval-${testCase.id}`,
     sequenceRevision: "eval-rev-1",

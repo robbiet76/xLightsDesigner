@@ -61,7 +61,7 @@ By the end of the deep-training phase:
 ### D. Revision Quality
 
 - [ ] Train revise behavior to preserve concept identity
-- [ ] Automate offline scoring for revise-existing-concept eval cases through the app revision path
+- [x] Automate offline scoring for revise-existing-concept eval cases through the app revision path
 - [ ] Train revise behavior to modify only the requested concepts when possible
 - [ ] Train delete/regenerate workflows at the concept level
 - [ ] Train partial-pass refinement without whole-sequence drift
