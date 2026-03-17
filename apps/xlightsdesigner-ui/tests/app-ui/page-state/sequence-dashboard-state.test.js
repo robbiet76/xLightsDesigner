@@ -86,3 +86,36 @@ test("sequence dashboard state surfaces missing timing dependency", () => {
   assert.equal(dashboard.data.timingDependency.ready, false);
   assert.match(dashboard.validationIssues[0].code, /missing_required_timing_track/);
 });
+
+test("sequence dashboard state treats planned structure timing track as ready for draft validation", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      proposed: [
+        "Chorus 1 / Snowman / apply Color Wash effect for the requested duration using the current target timing"
+      ],
+      agentPlan: {
+        summary: "Draft exists and plans a structure track.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [{ name: "New Timing" }]
+    },
+    intentHandoff: {
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 1, endMs: 2, label: "Chorus 1" }] } }
+      ]
+    }
+  });
+
+  assert.equal(dashboard.status, "ready");
+  assert.equal(dashboard.readiness.ok, true);
+  assert.equal(dashboard.data.timingDependency.ready, true);
+  assert.equal(dashboard.data.timingDependency.planned, true);
+});

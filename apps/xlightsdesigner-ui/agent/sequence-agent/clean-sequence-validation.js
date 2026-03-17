@@ -6,6 +6,10 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function normalizeSequenceName(value = "") {
+  return str(value).replace(/\\/g, "/").split("/").pop().replace(/\.xsq$/i, "").toLowerCase();
+}
+
 function includesInsensitive(value = "", fragment = "") {
   return str(value).toLowerCase().includes(str(fragment).toLowerCase());
 }
@@ -24,9 +28,13 @@ export function validateDirectSequencePromptState({
   const review = pageStates?.review || {};
   const project = pageStates?.project || {};
   const issues = [];
+  const requireAppliedState = expected?.applied === true;
 
   const expectedSequenceName = str(expected.sequenceName);
-  if (expectedSequenceName && str(project?.data?.sequenceContext?.activeSequence) !== expectedSequenceName) {
+  if (
+    expectedSequenceName &&
+    normalizeSequenceName(project?.data?.sequenceContext?.activeSequence) !== normalizeSequenceName(expectedSequenceName)
+  ) {
     issues.push({ code: "wrong_active_sequence", message: `Active sequence mismatch: expected ${expectedSequenceName}.` });
   }
 
@@ -65,7 +73,7 @@ export function validateDirectSequencePromptState({
     issues.push({ code: "missing_required_timing_track", message: "Sequence dashboard reports missing timing dependency." });
   }
 
-  if (xlightsSequenceState && section) {
+  if (requireAppliedState && xlightsSequenceState && section) {
     if (!xlightsSequenceState.sequence?.isOpen) {
       issues.push({ code: "no_open_sequence", message: "xLights reports no open sequence." });
     }
@@ -74,7 +82,7 @@ export function validateDirectSequencePromptState({
     }
   }
 
-  if (xlightsEffectOccupancyState && effectName) {
+  if (requireAppliedState && xlightsEffectOccupancyState && effectName) {
     const matchedCount = Number(xlightsEffectOccupancyState?.matchedCount || 0);
     if (matchedCount <= 0) {
       issues.push({ code: "effect_not_present_in_xlights", message: "xLights effect occupancy did not confirm the expected effect." });

@@ -19,7 +19,11 @@ export function buildSequencingStrategy(normalizedIntent, targets = []) {
   if (isDirectEffectRequest) {
     const effectName = String(intent.effectOverrides[0] || "").trim();
     const colorText = String(intent.explicitColor || "").trim();
-    const durationMs = Number.isFinite(Number(intent.durationMs)) ? Math.max(1, Number(intent.durationMs)) : null;
+    const rawDurationMs = intent.durationMs;
+    const durationMs =
+      rawDurationMs == null || rawDurationMs === ""
+        ? null
+        : (Number.isFinite(Number(rawDurationMs)) ? Math.max(1, Number(rawDurationMs)) : null);
     const startText = String(intent.startHint || "").trim() === "track_start" ? "starting at 0 ms" : "using the current target timing";
     const durationText = durationMs ? `for ${durationMs} ms` : "for the requested duration";
     const colorClause = colorText ? ` in ${colorText}` : "";

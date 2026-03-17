@@ -56,20 +56,35 @@ function isXdTimingTrack(name) {
   return /^xd:/i.test(str(name));
 }
 
-function inferTimingDependency({ sections = [], timingTracks = [] } = {}) {
+function hasPlannedStructureTrack(commands = []) {
+  return (Array.isArray(commands) ? commands : []).some((command) => {
+    const cmd = str(command?.cmd);
+    const trackName = str(command?.params?.trackName);
+    if (cmd !== "timing.createTrack" && cmd !== "timing.insertMarks" && cmd !== "timing.replaceMarks") return false;
+    return /^xd:/i.test(trackName) && /song structure|section|structure/i.test(trackName);
+  });
+}
+
+function inferTimingDependency({ sections = [], timingTracks = [], planCommands = [] } = {}) {
   const names = getTimingTrackNames(timingTracks);
   const xdNames = names.filter((name) => isXdTimingTrack(name));
   const sectionScoped = (Array.isArray(sections) ? sections : []).filter(Boolean);
   const needsTiming = sectionScoped.length > 0;
   const hasXdStructureTrack = xdNames.some((name) => /song sections|section|structure/i.test(name));
-  const ready = !needsTiming || hasXdStructureTrack;
+  const plannedStructureTrack = hasPlannedStructureTrack(planCommands);
+  const ready = !needsTiming || hasXdStructureTrack || plannedStructureTrack;
   return {
     needsTiming,
     ready,
+    planned: plannedStructureTrack,
     availableTrackNames: names,
     xdTrackNames: xdNames,
     summary: ready
-      ? (needsTiming ? "Required timing context is available for the current section scope." : "No timing dependency is required for the current draft.")
+      ? (needsTiming
+          ? (hasXdStructureTrack
+              ? "Required timing context is available for the current section scope."
+              : "Required timing context is planned for the current section scope.")
+          : "No timing dependency is required for the current draft.")
       : "Required timing context is missing for the current section scope.",
     missingReason: !ready ? "missing_required_timing_track" : ""
   };
@@ -96,7 +111,8 @@ export function buildSequenceDashboardState({
   const warningList = Array.isArray(plan?.warnings) ? plan.warnings.filter(Boolean) : [];
   const timingDependency = inferTimingDependency({
     sections: sectionScope,
-    timingTracks: Array.isArray(state.timingTracks) ? state.timingTracks : []
+    timingTracks: Array.isArray(state.timingTracks) ? state.timingTracks : [],
+    planCommands: Array.isArray(planHandoff?.commands) ? planHandoff.commands : []
   });
   const rows = proposalLines.map((line, idx) => {
     const row = summarizeSequenceGridRow(line);
