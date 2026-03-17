@@ -347,6 +347,221 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   return `develop warmth and continuity${warmClause} with smooth motion and balanced supporting texture`;
 }
 
+function buildTimedSectionMap(analysisHandoff = null) {
+  const map = new Map();
+  for (const row of arr(analysisHandoff?.structure?.sections)) {
+    const label = str(row?.label || row?.name);
+    const startMs = Number(row?.startMs);
+    const endMs = Number(row?.endMs);
+    if (!label || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+    map.set(label, {
+      label,
+      startMs,
+      endMs,
+      energy: str(row?.energy),
+      density: str(row?.density)
+    });
+  }
+  return map;
+}
+
+function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
+  const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
+  if (normalizedEnergy === "high") return 6;
+  if (normalizedDensity === "wide") return 5;
+  if (normalizedEnergy === "low") return 3;
+  return 4;
+}
+
+function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex = 0, sectionCount = 0 } = {}) {
+  const lowerGoal = str(goal).toLowerCase();
+  const warm = /warm|amber|gold|cinematic|theatrical|holiday/.test(lowerGoal);
+  const cool = /cool|icy|blue|winter/.test(lowerGoal);
+  const effect = str(effectName).toLowerCase();
+  const nearEnd = sectionCount > 0 ? sectionIndex >= Math.max(0, sectionCount - 2) : false;
+  const colors = warm
+    ? (effect === "bars" ? ["amber", "gold", "deep red"] : ["warm gold", "amber"])
+    : cool
+      ? ["ice blue", "cool white"]
+      : nearEnd
+        ? ["gold", "white"]
+        : ["warm white", "amber"];
+  return {
+    colors,
+    temperature: warm ? "warm" : (cool ? "cool" : "neutral"),
+    contrast: effect === "bars" ? "high" : "medium",
+    brightness: effect === "shimmer" ? "high" : "medium_high",
+    accentUsage: effect === "bars" ? "accent" : "primary"
+  };
+}
+
+function inferPlacementSettingsIntent({ effectName = "", energy = "", density = "", effectIndex = 0 } = {}) {
+  const effect = str(effectName).toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
+  if (effect === "shimmer") {
+    return {
+      intensity: normalizedEnergy === "high" ? "high" : "medium_high",
+      speed: normalizedEnergy === "high" ? "fast" : "medium",
+      density: normalizedDensity === "dense" ? "medium" : "light",
+      coverage: effectIndex === 0 ? "full" : "partial",
+      motion: "sparkle",
+      variation: normalizedEnergy === "high" ? "medium" : "low"
+    };
+  }
+  if (effect === "bars") {
+    return {
+      intensity: normalizedEnergy === "high" ? "high" : "medium",
+      speed: normalizedEnergy === "high" ? "medium_fast" : "medium",
+      density: normalizedDensity === "wide" ? "medium" : "light",
+      coverage: effectIndex === 0 ? "partial" : "focused",
+      motion: "rhythmic",
+      direction: "forward",
+      thickness: normalizedDensity === "wide" ? "medium" : "thin"
+    };
+  }
+  return {
+    intensity: normalizedEnergy === "low" ? "medium" : "medium_high",
+    speed: normalizedEnergy === "low" ? "slow" : "medium",
+    density: normalizedDensity === "dense" ? "medium" : "light",
+    coverage: effectIndex === 0 ? "full" : "partial",
+    motion: "wash",
+    variation: "low"
+  };
+}
+
+function inferPlacementLayerIntent({ effectIndex = 0, effectName = "" } = {}) {
+  if (effectIndex === 0) {
+    return {
+      priority: "base",
+      blendRole: "foundation",
+      overlayPolicy: "allow_overlay",
+      mixAmount: "default"
+    };
+  }
+  return {
+    priority: "foreground",
+    blendRole: str(effectName).toLowerCase() === "bars" ? "rhythmic_overlay" : "accent_overlay",
+    overlayPolicy: "allow_overlay",
+    mixAmount: "default"
+  };
+}
+
+function inferPlacementRenderIntent({ targetId = "" } = {}) {
+  const lower = str(targetId).toLowerCase();
+  const isAggregate = /allmodels|group|train_|upperprops|wreathes|nofloods|nomatrix/.test(lower);
+  return {
+    groupPolicy: isAggregate ? "preserve_group_rendering" : "no_expand",
+    bufferStyle: "inherit",
+    expansionPolicy: isAggregate ? "preserve" : "no_expand",
+    riskTolerance: isAggregate ? "low" : "medium"
+  };
+}
+
+function buildPlacementWindow({ startMs = 0, endMs = 0, effectIndex = 0, effectCount = 1, energy = "" } = {}) {
+  const start = Number(startMs);
+  const end = Number(endMs);
+  const duration = Math.max(1, end - start);
+  const normalizedEnergy = str(energy).toLowerCase();
+  if (effectCount <= 1 || effectIndex <= 0) {
+    return { startMs: start, endMs: end };
+  }
+  if (effectIndex === 1) {
+    const offsetStart = normalizedEnergy === "high" ? 0.18 : 0.24;
+    const offsetEnd = normalizedEnergy === "high" ? 0.82 : 0.76;
+    return {
+      startMs: Math.round(start + (duration * offsetStart)),
+      endMs: Math.round(start + (duration * offsetEnd))
+    };
+  }
+  return {
+    startMs: Math.round(start + (duration * 0.52)),
+    endMs: Math.round(start + (duration * 0.92))
+  };
+}
+
+function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), goal = "" } = {}) {
+  const placements = [];
+  const plans = arr(sectionPlans);
+  const sectionCount = plans.length;
+  for (let sectionIndex = 0; sectionIndex < plans.length; sectionIndex += 1) {
+    const plan = plans[sectionIndex];
+    const section = str(plan?.section);
+    const timed = timedSections.get(section);
+    if (!timed) continue;
+    const targets = arr(plan?.targetIds).map((row) => str(row)).filter(Boolean).slice(0, inferTargetLimitForSection({
+      energy: plan?.energy,
+      density: plan?.density
+    }));
+    const effectHints = arr(plan?.effectHints).map((row) => str(row)).filter(Boolean);
+    if (!targets.length || !effectHints.length) continue;
+    for (let targetIndex = 0; targetIndex < targets.length; targetIndex += 1) {
+      const targetId = targets[targetIndex];
+      const perTargetEffectHints = targetIndex < 2
+        ? effectHints.slice(0, Math.min(2, effectHints.length))
+        : effectHints.slice(0, 1);
+      for (let effectIndex = 0; effectIndex < perTargetEffectHints.length; effectIndex += 1) {
+        const effectName = perTargetEffectHints[effectIndex];
+        const window = buildPlacementWindow({
+          startMs: timed.startMs,
+          endMs: timed.endMs,
+          effectIndex,
+          effectCount: perTargetEffectHints.length,
+          energy: plan?.energy
+        });
+        placements.push({
+          placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}`,
+          targetId,
+          layerIndex: effectIndex,
+          effectName,
+          startMs: window.startMs,
+          endMs: window.endMs,
+          timingContext: {
+            trackName: "XD: Song Structure",
+            anchorLabel: section,
+            anchorStartMs: timed.startMs,
+            anchorEndMs: timed.endMs,
+            alignmentMode: effectIndex === 0 ? "section_span" : "within_section"
+          },
+          creative: {
+            role: effectIndex === 0 ? "section_foundation" : "section_accent",
+            purpose: str(plan?.intentSummary),
+            notes: effectIndex === 0
+              ? `Primary ${effectName} layer for ${section}.`
+              : `Overlay ${effectName} accent for ${section}.`
+          },
+          settingsIntent: inferPlacementSettingsIntent({
+            effectName,
+            energy: plan?.energy,
+            density: plan?.density,
+            effectIndex
+          }),
+          paletteIntent: inferPlacementPaletteIntent({
+            goal,
+            effectName,
+            sectionIndex,
+            sectionCount
+          }),
+          layerIntent: inferPlacementLayerIntent({
+            effectIndex,
+            effectName
+          }),
+          renderIntent: inferPlacementRenderIntent({
+            targetId
+          }),
+          constraints: {
+            mustAlignToTiming: true,
+            preserveExistingEffects: false,
+            mustNotOverlap: false
+          }
+        });
+      }
+    }
+  }
+  return placements;
+}
+
 function buildDesignerExecutionPlan({
   normalizedIntent = null,
   analysisHandoff = null,
@@ -377,6 +592,7 @@ function buildDesignerExecutionPlan({
   const detailCoverageDomains = arr(scene?.coverageDomains?.detail).map((row) => str(row)).filter(Boolean);
   const focalCandidates = arr(scene?.focalCandidates).map((row) => str(row)).filter(Boolean);
   const resolvedTargetIds = arr(targets).map((row) => str(row?.id || row?.name)).filter(Boolean);
+  const timedSections = buildTimedSectionMap(analysisHandoff);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
   const passScope = allowGlobalRewrite
     ? "whole_sequence"
@@ -425,6 +641,11 @@ function buildDesignerExecutionPlan({
             })
       };
     });
+  const effectPlacements = buildEffectPlacements({
+    sectionPlans,
+    timedSections,
+    goal: intent.goal || ""
+  });
 
   return {
     passScope,
@@ -435,7 +656,8 @@ function buildDesignerExecutionPlan({
     sectionCount: primarySections.length,
     targetCount: (targetIds.length ? targetIds : arr(targets)).length,
     primarySections,
-    sectionPlans
+    sectionPlans,
+    effectPlacements
   };
 }
 

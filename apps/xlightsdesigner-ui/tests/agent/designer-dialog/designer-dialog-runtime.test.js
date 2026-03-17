@@ -287,3 +287,62 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.deepEqual(sectionPlans[3].effectHints, ["Bars", "Shimmer"]);
   assert.ok(sectionPlans[3].targetIds.some((row) => /Border-01\/Segments|Snowman\/Face2-Head/i.test(row)));
 });
+
+test("designer runtime emits exact effect placements when analyzed section timings are available", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-7",
+    sequenceRevision: "rev-7",
+    promptText: "Rework the whole show into a warmer, more cinematic pass.",
+    goals: "Create a full-song cinematic holiday treatment.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000, energy: "low", density: "sparse" },
+          { label: "Chorus 1", startMs: 30000, endMs: 50000, energy: "high", density: "dense" },
+          { label: "Bridge", startMs: 50000, endMs: 70000, energy: "medium", density: "wide" }
+        ]
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Snowman", "PorchTree"],
+      coverageDomains: {
+        broad: ["AllModels", "AllModels_NoFloods"],
+        detail: ["Border-01/Segments", "Snowman/Face2-Head"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "wide" }
+      ],
+      designCues: {
+        revealMoments: ["Chorus 1"],
+        holdMoments: ["Intro"],
+        lyricFocusMoments: []
+      }
+    }
+  });
+
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  assert.ok(Array.isArray(placements));
+  assert.ok(placements.length >= 6);
+  const introPrimary = placements.find((row) => row.timingContext?.anchorLabel === "Intro" && row.layerIndex === 0);
+  const chorusOverlay = placements.find((row) => row.timingContext?.anchorLabel === "Chorus 1" && row.layerIndex === 1);
+  assert.equal(introPrimary.startMs, 0);
+  assert.equal(introPrimary.endMs, 10000);
+  assert.equal(introPrimary.timingContext.alignmentMode, "section_span");
+  assert.equal(chorusOverlay.timingContext.anchorStartMs, 30000);
+  assert.equal(chorusOverlay.timingContext.anchorEndMs, 50000);
+  assert.ok(chorusOverlay.startMs > 30000);
+  assert.ok(chorusOverlay.endMs < 50000);
+  assert.ok(chorusOverlay.layerIntent);
+  assert.ok(chorusOverlay.renderIntent);
+  assert.ok(chorusOverlay.settingsIntent);
+  assert.ok(chorusOverlay.paletteIntent);
+  assert.deepEqual(result.handoff.executionStrategy.effectPlacements, placements);
+});
