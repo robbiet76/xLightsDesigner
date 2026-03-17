@@ -47,6 +47,44 @@ function deriveFallbackMediaId(audioPath = "") {
   return `media-${(hash >>> 0).toString(16)}`;
 }
 
+function buildFallbackSectionTemplates(count = 0) {
+  const n = Math.max(0, Math.round(Number(count) || 0));
+  if (n <= 0) return [];
+  const known = {
+    5: ["Intro", "Verse 1", "Chorus 1", "Bridge", "Outro"],
+    6: ["Intro", "Verse 1", "Chorus 1", "Bridge", "Final Chorus", "Outro"],
+    7: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Bridge", "Final Chorus", "Outro"],
+    8: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"]
+  };
+  if (known[n]) return known[n];
+  const labels = [];
+  for (let i = 0; i < n; i += 1) {
+    if (i === 0) labels.push("Intro");
+    else if (i === n - 1) labels.push("Outro");
+    else if (i === n - 2) labels.push("Final Chorus");
+    else if (i % 2 === 1) labels.push(`Verse ${Math.ceil(i / 2)}`);
+    else labels.push(`Chorus ${Math.ceil(i / 2)}`);
+  }
+  return labels;
+}
+
+function looksGenericSectionLabel(value = "") {
+  return /^section\s+\d+$/i.test(str(value));
+}
+
+function normalizeStructureSections(sections = []) {
+  const src = rows(sections);
+  if (!src.length) return [];
+  const genericOnly = src.every((row) => looksGenericSectionLabel(row?.label || row?.name));
+  if (!genericOnly) return src;
+  const fallback = buildFallbackSectionTemplates(src.length);
+  if (fallback.length !== src.length) return src;
+  return src.map((row, index) => ({
+    ...row,
+    label: fallback[index]
+  }));
+}
+
 export const AUDIO_ANALYST_ARTIFACT_TYPE = "analysis_artifact_v1";
 export const AUDIO_ANALYST_ARTIFACT_VERSION = AUDIO_ANALYST_CONTRACT_VERSION;
 
@@ -72,7 +110,7 @@ export function buildAnalysisArtifactFromPipelineResult({
   const bars = rows(raw?.bars);
   const chords = rows(raw?.chords);
   const lyricsLines = rows(raw?.lyrics);
-  const sections = rows(raw?.sections);
+  const sections = normalizeStructureSections(raw?.sections);
   const webTempoEvidence = isPlainObject(rawMeta?.webTempoEvidence) ? rawMeta.webTempoEvidence : {};
 
   return finalizeArtifact({
