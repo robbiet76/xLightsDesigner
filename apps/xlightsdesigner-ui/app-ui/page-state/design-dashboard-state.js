@@ -6,6 +6,50 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set(arr(values).map((value) => str(value)).filter(Boolean))];
+}
+
+function summarizePalette(colors = []) {
+  const list = uniqueStrings(colors);
+  return {
+    colors: list.slice(0, 5),
+    count: list.length
+  };
+}
+
+function buildConceptRows(executionPlan = null) {
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : {};
+  const sectionPlans = arr(plan.sectionPlans);
+  const effectPlacements = arr(plan.effectPlacements);
+  const placementsByDesignId = new Map();
+  for (const placement of effectPlacements) {
+    const designId = str(placement?.designId);
+    if (!designId) continue;
+    if (!placementsByDesignId.has(designId)) placementsByDesignId.set(designId, []);
+    placementsByDesignId.get(designId).push(placement);
+  }
+  return sectionPlans
+    .map((sectionPlan, index) => {
+      const designId = str(sectionPlan?.designId || `DES-${String(index + 1).padStart(3, "0")}`);
+      const placements = placementsByDesignId.get(designId) || [];
+      const focusTargets = uniqueStrings(sectionPlan?.targetIds).slice(0, 3);
+      const palette = summarizePalette(placements.flatMap((placement) => arr(placement?.paletteIntent?.colors)));
+      const effectFamilies = uniqueStrings(placements.map((placement) => placement?.effectName));
+      return {
+        index: index + 1,
+        designId,
+        anchor: str(sectionPlan?.section || "General"),
+        intent: str(sectionPlan?.intentSummary || "No design intent summary yet."),
+        focus: focusTargets,
+        palette,
+        effectFamilies,
+        placementCount: placements.length
+      };
+    })
+    .filter((row) => row.designId);
+}
+
 export function buildDesignDashboardState({
   state = {}
 } = {}) {
@@ -25,6 +69,13 @@ export function buildDesignDashboardState({
   const warnings = arr(runtime?.warnings).filter(Boolean).slice(0, 3);
   const designSignals = bundle?.traceability?.designSceneSignals || {};
   const musicSignals = bundle?.traceability?.musicDesignSignals || {};
+  const executionPlan = bundle?.executionPlan && typeof bundle.executionPlan === "object"
+    ? bundle.executionPlan
+    : null;
+  const conceptRows = buildConceptRows(executionPlan);
+  const planPlacements = arr(executionPlan?.effectPlacements);
+  const planEffectFamilies = uniqueStrings(planPlacements.map((row) => row?.effectName));
+  const planLayers = uniqueStrings(planPlacements.map((row) => Number.isFinite(Number(row?.layerIndex)) ? `L${Number(row.layerIndex)}` : ""));
   const focal = arr(designSignals?.focalCandidates).filter(Boolean).slice(0, 3);
   const broad = arr(designSignals?.broadCoverageDomains).filter(Boolean).slice(0, 3);
   const reveals = arr(musicSignals?.revealMoments).filter(Boolean).slice(0, 3);
@@ -96,7 +147,9 @@ export function buildDesignDashboardState({
         proposalLines: arr(bundle?.proposalLines).length,
         openQuestions: guidedQuestions.length,
         briefSections: arr(brief?.sections).length,
-        hypotheses: arr(brief?.hypotheses).length
+        hypotheses: arr(brief?.hypotheses).length,
+        designConcepts: conceptRows.length,
+        effectPlacements: planPlacements.length
       },
       brief: {
         summary: str(brief?.summary || "No creative brief captured yet."),
@@ -121,6 +174,16 @@ export function buildDesignDashboardState({
       palette: {
         count: swatches.length,
         swatches: swatches.slice(0, 5)
+      },
+      executionPlan: {
+        passScope: str(executionPlan?.passScope || "unknown"),
+        sectionCount: Number(executionPlan?.sectionCount || 0),
+        targetCount: Number(executionPlan?.targetCount || 0),
+        designConceptCount: conceptRows.length,
+        effectPlacementCount: planPlacements.length,
+        effectFamilyCount: planEffectFamilies.length,
+        layerCount: planLayers.length,
+        conceptRows
       },
       lastAppliedSnapshot: lastAppliedSnapshot
         ? {

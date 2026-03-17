@@ -39,6 +39,33 @@ test("design dashboard state summarizes active designer state", () => {
         proposalBundle: {
           artifactId: "proposal-123",
           proposalLines: ["Chorus 1 / Snowman / warm focal lift"],
+          executionPlan: {
+            passScope: "whole_sequence",
+            sectionCount: 1,
+            targetCount: 1,
+            sectionPlans: [
+              {
+                designId: "DES-001",
+                section: "Chorus 1",
+                intentSummary: "Warm focal lift on Snowman with a supporting glow.",
+                targetIds: ["Snowman"]
+              }
+            ],
+            effectPlacements: [
+              {
+                designId: "DES-001",
+                effectName: "Color Wash",
+                layerIndex: 0,
+                paletteIntent: { colors: ["#ffcc88", "#fff3d1"] }
+              },
+              {
+                designId: "DES-001",
+                effectName: "Shimmer",
+                layerIndex: 1,
+                paletteIntent: { colors: ["#ffcc88"] }
+              }
+            ]
+          },
           assumptions: ["Use the current track structure as the working timing guide."],
           guidedQuestions: [],
           traceability: {
@@ -69,6 +96,12 @@ test("design dashboard state summarizes active designer state", () => {
   assert.equal(dashboard.data.musicCues.reveals[0], "Chorus 1");
   assert.equal(dashboard.data.references.count, 1);
   assert.equal(dashboard.data.palette.count, 2);
+  assert.equal(dashboard.data.executionPlan.designConceptCount, 1);
+  assert.equal(dashboard.data.executionPlan.effectPlacementCount, 2);
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].designId, "DES-001");
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].anchor, "Chorus 1");
+  assert.equal(dashboard.data.executionPlan.conceptRows[0].placementCount, 2);
+  assert.deepEqual(dashboard.data.executionPlan.conceptRows[0].palette.colors, ["#ffcc88", "#fff3d1"]);
 });
 
 test("design dashboard state reports needs input when designer has open questions", () => {

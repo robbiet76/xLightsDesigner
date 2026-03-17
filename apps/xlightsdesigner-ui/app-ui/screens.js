@@ -775,6 +775,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <thead>
                   <tr>
                 <th style="width:52px;">#</th>
+                <th style="width:92px;">Design ID</th>
                 <th style="width:124px;">Timing</th>
                 <th style="width:124px;">Section</th>
                 <th style="width:148px;">Target</th>
@@ -790,6 +791,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       return `
                     <tr>
                       <td>${idx + 1}</td>
+                      <td>${escapeHtml(String(row.designId || "—"))}</td>
                       <td>${escapeHtml(String(row.timing || "XD: Sequencer Plan"))}</td>
                       <td>${escapeHtml(String(row.section || "General"))}</td>
                       <td>${escapeHtml(String(row.target || "Unresolved"))}</td>
@@ -799,7 +801,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     </tr>
                   `;
                     }).join("")
-                  : `<tr><td colspan="7" class="banner">No translated sequence changes yet.</td></tr>`
+                  : `<tr><td colspan="8" class="banner">No translated sequence changes yet.</td></tr>`
               }
                 </tbody>
               </table>
@@ -968,6 +970,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const musicCues = data.musicCues || {};
     const references = data.references || {};
     const palette = data.palette || {};
+    const executionPlan = data.executionPlan || {};
+    const conceptRows = Array.isArray(executionPlan.conceptRows) ? executionPlan.conceptRows : [];
+    const renderPaletteSwatches = (swatches = []) => {
+      const rows = Array.isArray(swatches) ? swatches.filter(Boolean) : [];
+      if (!rows.length) return "<span class=\"banner\">No palette captured yet.</span>";
+      return `<div class="artifact-chip-row">${rows.map((color) => `<span class="artifact-chip" title="${escapeHtml(String(color))}"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${escapeHtml(String(color))};margin-right:6px;vertical-align:middle;border:1px solid rgba(255,255,255,0.18);"></span>${escapeHtml(String(color))}</span>`).join("")}</div>`;
+    };
     return `
       <section class="card full-span designer-dashboard-card">
         <div class="artifact-kicker">Designer Live Dashboard</div>
@@ -975,7 +984,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         <div class="artifact-chip-row">
           <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.sourceLabel || "Idle"))}</span>
           <span class="artifact-chip">${escapeHtml(String(data.runtime?.status || "idle"))}</span>
-          <span class="artifact-chip">${escapeHtml(String(data.counts?.proposalLines || 0))} proposal lines</span>
+          <span class="artifact-chip">${escapeHtml(String(data.counts?.designConcepts || 0))} design concepts</span>
+          <span class="artifact-chip">${escapeHtml(String(data.counts?.effectPlacements || 0))} placements</span>
           <span class="artifact-chip">${escapeHtml(String(data.counts?.openQuestions || 0))} open questions</span>
         </div>
         <p class="artifact-body">${escapeHtml(String(data.runtime?.assistantMessage || "The designer’s current reasoning, assumptions, and active focus will be summarized here."))}</p>
@@ -1025,11 +1035,50 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div class="dashboard-panel">
             <div class="artifact-kicker">Color Palette</div>
             <p>${escapeHtml(String(palette.count))} swatch(es) captured.</p>
-            <p>${escapeHtml(String((palette.swatches || []).join(", ")))}</p>
+            ${renderPaletteSwatches(palette.swatches || [])}
           </div>
           `
               : ""
           }
+        </div>
+        <div class="dashboard-brief-block">
+          <div class="artifact-kicker">Design Concepts</div>
+          <div class="artifact-chip-row">
+            <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(executionPlan.passScope || "unknown"))}</span>
+            <span class="artifact-chip">${escapeHtml(String(executionPlan.designConceptCount || 0))} concepts</span>
+            <span class="artifact-chip">${escapeHtml(String(executionPlan.effectFamilyCount || 0))} effect families</span>
+            <span class="artifact-chip">${escapeHtml(String(executionPlan.layerCount || 0))} layers</span>
+          </div>
+          <div class="metadata-grid-wrap proposed-grid-wrap sequence-grid-wrap">
+            <table class="metadata-grid proposed-grid">
+              <thead>
+                <tr>
+                  <th style="width:92px;">Design ID</th>
+                  <th style="width:148px;">Anchor</th>
+                  <th>Intent</th>
+                  <th style="width:168px;">Focus</th>
+                  <th style="width:168px;">Palette</th>
+                  <th style="width:80px;">Linked</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  conceptRows.length
+                    ? conceptRows.map((row) => `
+                      <tr>
+                        <td>${escapeHtml(String(row.designId || "—"))}</td>
+                        <td>${escapeHtml(String(row.anchor || "General"))}</td>
+                        <td title="${escapeHtml(String(row.intent || ""))}">${escapeHtml(String(row.intent || "No design intent summary yet."))}</td>
+                        <td>${escapeHtml(String((row.focus || []).join(", ") || "No focus targets"))}</td>
+                        <td>${renderPaletteSwatches(row.palette?.colors || [])}</td>
+                        <td>${escapeHtml(String(row.placementCount || 0))}</td>
+                      </tr>
+                    `).join("")
+                    : `<tr><td colspan="6" class="banner">No design concepts available yet.</td></tr>`
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
         ${dashboard.warnings?.length ? `<div class="banner banner-warning">${escapeHtml(dashboard.warnings.join(" | "))}</div>` : ""}
       </section>

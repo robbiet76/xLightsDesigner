@@ -48,6 +48,7 @@ test("sequence dashboard state exposes direct technical draft rows", () => {
         { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
         { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
         {
+          designId: "DES-001",
           cmd: "effects.create",
           anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
           params: {
@@ -67,6 +68,7 @@ test("sequence dashboard state exposes direct technical draft rows", () => {
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.rows[0].section, "Chorus 1");
   assert.equal(dashboard.data.rows[0].target, "Snowman");
+  assert.equal(dashboard.data.rows[0].designId, "DES-001");
   assert.equal(dashboard.data.rows[0].timing, "XD: Song Structure");
   assert.equal(dashboard.data.rows[0].summary, "Color Wash");
   assert.equal(dashboard.data.commandCount, 3);
@@ -99,6 +101,7 @@ test("sequence dashboard aggregates multiple effects on the same target into one
         { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
         { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
         {
+          designId: "DES-001",
           cmd: "effects.create",
           anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
           params: {
@@ -110,6 +113,7 @@ test("sequence dashboard aggregates multiple effects on the same target into one
           }
         },
         {
+          designId: "DES-001",
           cmd: "effects.create",
           anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
           params: {
@@ -127,8 +131,65 @@ test("sequence dashboard aggregates multiple effects on the same target into one
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.rows[0].section, "Chorus 1");
   assert.equal(dashboard.data.rows[0].target, "Snowman");
+  assert.equal(dashboard.data.rows[0].designId, "DES-001");
   assert.equal(dashboard.data.rows[0].summary, "Color Wash, Shimmer");
   assert.equal(dashboard.data.rows[0].effects, 2);
+});
+
+test("sequence dashboard keeps separate rows for different design ids on the same target and section", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: [],
+      agentPlan: {
+        summary: "Concept-linked sequencing draft.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [{ name: "XD: Song Structure" }]
+    },
+    intentHandoff: {
+      artifactId: "intent-design-split",
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      artifactId: "plan-design-split",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
+        {
+          designId: "DES-001",
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 500 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Color Wash",
+            startMs: 0,
+            endMs: 500,
+            layerIndex: 0
+          }
+        },
+        {
+          designId: "DES-002",
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 500, endMs: 1000 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Shimmer",
+            startMs: 500,
+            endMs: 1000,
+            layerIndex: 1
+          }
+        }
+      ]
+    }
+  });
+
+  assert.equal(dashboard.data.rows.length, 2);
+  assert.deepEqual(dashboard.data.rows.map((row) => row.designId), ["DES-001", "DES-002"]);
 });
 
 test("sequence dashboard counts duplicate same-type placements as separate effects", () => {
