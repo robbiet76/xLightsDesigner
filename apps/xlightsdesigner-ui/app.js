@@ -3223,14 +3223,22 @@ async function onGenerate(intentOverride = "", options = {}) {
   state.flags.proposalStale = false;
   state.draftBaseRevision = state.revision;
   invalidateApplyApproval();
+  const rawIntentText = String(intentOverride || "").trim() || latestUserIntentText();
+  const intentText = buildRevisionPromptText(rawIntentText, revisionTarget);
+  const analysisHandoff = directSequenceMode
+    ? await ensureCurrentAnalysisHandoff({ silent: true })
+    : getValidHandoff("analysis_handoff_v1");
+  const designSceneContext = buildCurrentDesignSceneContext();
+  const musicDesignContext = buildCurrentMusicDesignContext();
+  const inferredPromptSections = inferPromptSectionSelection(intentText, musicDesignContext);
   const usingAll = hasAllSectionsSelected();
   const selected = revisionTarget?.sections?.length
     ? revisionTarget.sections
-    : (usingAll
-        ? getSectionChoiceList()
-        : getSelectedSections().filter((s) => s !== "all"));
-  const rawIntentText = String(intentOverride || "").trim() || latestUserIntentText();
-  const intentText = buildRevisionPromptText(rawIntentText, revisionTarget);
+    : (inferredPromptSections.length
+        ? inferredPromptSections
+        : (usingAll
+            ? getSectionChoiceList()
+            : getSelectedSections().filter((s) => s !== "all")));
   const includeDesignerSelection = shouldCarryDesignerSelectionContext(intentText);
   const designerSelectedTags = includeDesignerSelection ? (state.ui.metadataSelectedTags || []) : [];
   const designerSelectedTargetIds = revisionTarget?.targetIds?.length
@@ -3239,11 +3247,6 @@ async function onGenerate(intentOverride = "", options = {}) {
   const directSelectedTargetIds = revisionTarget?.targetIds?.length
     ? revisionTarget.targetIds
     : (state.ui.metadataSelectionIds || []);
-  const analysisHandoff = directSequenceMode
-    ? await ensureCurrentAnalysisHandoff({ silent: true })
-    : getValidHandoff("analysis_handoff_v1");
-  const designSceneContext = buildCurrentDesignSceneContext();
-  const musicDesignContext = buildCurrentMusicDesignContext();
   let designerCloudResponse = null;
   if (!directSequenceMode && bridge && typeof bridge.runDesignerConversation === "function") {
     const cloud = await bridge.runDesignerConversation({
@@ -5284,6 +5287,26 @@ function shouldCarryDesignerSelectionContext(promptText = "") {
   if (selectedTargets.some((id) => text.includes(String(id || "").toLowerCase()))) return true;
   if (selectedTags.some((tag) => text.includes(String(tag || "").toLowerCase()))) return true;
   return false;
+}
+
+function inferPromptSectionSelection(promptText = "", musicDesignContext = null) {
+  const text = String(promptText || "").trim().toLowerCase();
+  if (!text) return [];
+  const candidateSections = [
+    ...getSectionChoiceList(),
+    ...(Array.isArray(musicDesignContext?.sectionArc)
+      ? musicDesignContext.sectionArc.map((row) => String(row?.label || "").trim())
+      : []),
+    ...Object.keys(musicDesignContext?.designCues?.cueWindowsBySection || {})
+  ]
+    .map((label) => String(label || "").trim())
+    .filter(Boolean);
+  const matched = [];
+  for (const label of normalizeStringArray(candidateSections)) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`\\b${escaped}\\b`, "i").test(text)) matched.push(label);
+  }
+  return matched;
 }
 
 function buildAgentConversationContext(userMessage = "") {
