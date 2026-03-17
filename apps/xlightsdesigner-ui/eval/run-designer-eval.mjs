@@ -393,6 +393,8 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
   }));
   return {
     text,
+    summary: str(summary),
+    proposalLines: arr(proposalLines).map((row) => str(row)).filter(Boolean),
     placements,
     sectionPlans,
     motionValues,
@@ -509,9 +511,61 @@ function scoreSettingsRenderPlausibility(context) {
   };
 }
 
+function scoreConceptSummaryQuality(context) {
+  const summaryWords = context.summary.split(/\s+/).filter(Boolean).length;
+  const genericProposalLines = context.proposalLines.filter((line) => (
+    /^general\s*\/\s*general\s*\//i.test(line)
+    && !/lighting stack|focal-versus-support|key-vs-fill/i.test(line)
+  ));
+  const targetedProposalLines = context.proposalLines.filter((line) => !/^general\s*\/\s*general\s*\//i.test(line));
+  const uniqueIntentSummaries = uniq(context.sectionPlans.map((row) => row?.intentSummary));
+  let signal = 0;
+  if (summaryWords >= 6 && summaryWords <= 28) signal += 1;
+  if (targetedProposalLines.length >= Math.max(1, Math.ceil(context.proposalLines.length / 2))) signal += 1;
+  if (genericProposalLines.length <= Math.max(1, Math.floor(context.proposalLines.length / 3))) signal += 1;
+  if (uniqueIntentSummaries.length >= Math.min(2, Math.max(1, context.sectionPlans.length))) signal += 1;
+  return {
+    applicable: true,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    signals: {
+      summaryWordCount: summaryWords,
+      proposalLineCount: context.proposalLines.length,
+      genericProposalLineCount: genericProposalLines.length,
+      targetedProposalLineCount: targetedProposalLines.length,
+      uniqueIntentSummaryCount: uniqueIntentSummaries.length
+    }
+  };
+}
+
+function scoreTargetSelectionQuality(context) {
+  const aggregatePlacements = context.placements.filter((row) => /allmodels|group|nofloods|nomatrix/i.test(str(row?.targetId)));
+  const selectivePlacements = context.placements.filter((row) => !/allmodels|group|nofloods|nomatrix/i.test(str(row?.targetId)));
+  const selectiveRatio = context.placements.length ? selectivePlacements.length / context.placements.length : 0;
+  const targetedDemand = ["Prop Understanding", "Setting and Layout Awareness", "Composition Reasoning", "Stage Lighting Reasoning"]
+    .some((lens) => context.lenses.has(lens));
+  let signal = 0;
+  if (selectivePlacements.length >= 1) signal += 1;
+  if (selectiveRatio >= 0.35) signal += 1;
+  if (!targetedDemand || selectivePlacements.length >= Math.max(2, Math.ceil(context.placements.length * 0.25))) signal += 1;
+  if (uniq(selectivePlacements.map((row) => row?.targetId)).length >= Math.min(3, Math.max(1, context.sectionPlans.length))) signal += 1;
+  return {
+    applicable: true,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    signals: {
+      placementCount: context.placements.length,
+      aggregatePlacementCount: aggregatePlacements.length,
+      selectivePlacementCount: selectivePlacements.length,
+      selectiveRatio: Number(selectiveRatio.toFixed(2)),
+      selectiveTargetCount: uniq(selectivePlacements.map((row) => row?.targetId)).length
+    }
+  };
+}
+
 function evaluateArtisticScores({ summary = "", proposalLines = [], executionPlan = null, lenses = [], promptText = "" }) {
   const context = buildArtisticContext({ summary, proposalLines, executionPlan, lenses, promptText });
   const categories = {
+    conceptSummaryQuality: scoreConceptSummaryQuality(context),
+    targetSelectionQuality: scoreTargetSelectionQuality(context),
     motionLanguage: scoreMotionLanguage(context),
     stageLighting: scoreStageLighting(context),
     composition: scoreComposition(context),
@@ -722,6 +776,8 @@ function summarizeResults(results = []) {
     deferred: deferred.length,
     averageStructuralScore: Number(avgScore.toFixed(2)),
     artisticAverages: {
+      conceptSummaryQuality: collectArtisticAverages("conceptSummaryQuality"),
+      targetSelectionQuality: collectArtisticAverages("targetSelectionQuality"),
       motionLanguage: collectArtisticAverages("motionLanguage"),
       stageLighting: collectArtisticAverages("stageLighting"),
       composition: collectArtisticAverages("composition"),

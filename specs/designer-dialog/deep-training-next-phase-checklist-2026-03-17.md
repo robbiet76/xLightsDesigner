@@ -38,9 +38,9 @@ By the end of the deep-training phase:
 
 ### B. Concept Authoring Quality
 
-- [ ] Improve concept summaries so they are concise and actionable
+- [x] Improve concept summaries so they are concise and actionable
 - [ ] Improve anchors so concepts can target sections, beats, chords, or global ranges appropriately
-- [ ] Improve target-group selection quality
+- [x] Improve target-group selection quality
 - [ ] Improve use of xLights source structure and metadata tags in concept selection
 - [ ] Improve user-guided metadata capture so tag refinement can affect later concepts
 - [ ] Improve setting/layout-aware concept selection based on prop position and visibility

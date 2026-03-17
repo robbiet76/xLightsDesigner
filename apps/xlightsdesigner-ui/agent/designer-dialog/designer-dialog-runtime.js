@@ -268,6 +268,8 @@ function chooseExecutionTargets({
   focalCandidates = [],
   detailCoverageDomains = [],
   spatialZones = {},
+  singleScope = false,
+  tagDriven = false,
   energy = "",
   density = "",
   section = "",
@@ -326,6 +328,22 @@ function chooseExecutionTargets({
       ...focal.slice(0, 2),
       ...detail.slice(0, 1),
       ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (singleScope || tagDriven) {
+    if (isGentle) {
+      return uniqueStrings([
+        ...focal.slice(0, 2),
+        ...detail.slice(0, 2),
+        ...fallback.slice(0, 3),
+        ...broad.slice(0, 1)
+      ]).slice(0, 8);
+    }
+    return uniqueStrings([
+      ...focal.slice(0, 2),
+      ...detail.slice(0, 2),
+      ...fallback.slice(0, 3),
+      ...broad.slice(0, 1)
     ]).slice(0, 8);
   }
   if (isPeak) {
@@ -476,9 +494,21 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     return `shape the section like a lighting cue${warmClause} with readable support and controlled depth`;
   }
   if (/negative space|frame|framing|centerpiece|perimeter/.test(lowerGoal)) {
+    if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
+      return `frame the reveal${warmClause} with cleaner negative space and tighter focal contrast`;
+    }
+    if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
+      return `hold more negative space${warmClause} so the frame stays calm and uncluttered`;
+    }
     return `use cleaner framing${warmClause} with more negative space and clearer focal boundaries`;
   }
   if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lowerSection)) {
+    if (/final chorus|finale/.test(lowerSection)) {
+      return `push the final payoff${warmClause} with broader contrast, clearer hierarchy, and a stronger closing lift`;
+    }
+    if (/chorus/.test(lowerSection)) {
+      return `open the main reveal${warmClause} with clearer focal emphasis and controlled contrast`;
+    }
     return `build stronger visual payoff${warmClause} using layered shimmer, glow, and clearer focal emphasis`;
   }
   if (/bridge/.test(lowerSection)) {
@@ -491,6 +521,16 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     return `develop the section${warmClause} with richer layering while keeping the read controlled`;
   }
   return `develop warmth and continuity${warmClause} with smooth motion and balanced supporting texture`;
+}
+
+function sanitizeDesignerSummaryText(promptText = "") {
+  const raw = str(promptText);
+  if (!raw) return "";
+  const stripped = raw.replace(
+    /^Revise existing design concept\s+D[\d.]+\s+in place\.\s+Keep the same concept identity and limit changes to sections .*? and targets .*?\.\s*/i,
+    ""
+  );
+  return str(stripped || raw);
 }
 
 function buildTimedSectionMap(analysisHandoff = null) {
@@ -747,6 +787,7 @@ function buildDesignerExecutionPlan({
 } = {}) {
   const intent = isPlainObject(normalizedIntent) ? normalizedIntent : {};
   const targetIds = arr(intent.targetIds).filter(Boolean);
+  const tagNames = arr(intent.tags).filter(Boolean);
   const explicitSections = arr(intent.sections).filter(Boolean);
   const sectionArc = arr(musicDesignContext?.sectionArc)
     .map((row) => ({
@@ -806,6 +847,8 @@ function buildDesignerExecutionPlan({
           detailCoverageDomains,
           focalCandidates,
           spatialZones,
+          singleScope: passScope === "single_section",
+          tagDriven: tagNames.length > 0,
           energy,
           density,
           section: label,
@@ -930,7 +973,7 @@ export function buildProposalBundleArtifact({
   });
   const proposalBundle = buildProposalBundle({
     proposalId: makeId("proposal"),
-    summary: str(promptText || plan.normalizedIntent?.goal || "Designer proposal generated from current conversation."),
+    summary: sanitizeDesignerSummaryText(promptText || plan.normalizedIntent?.goal || "Designer proposal generated from current conversation."),
     baseRevision: str(sequenceRevision || "unknown"),
     scope: {
       sections: arr(plan.normalizedIntent?.sections),

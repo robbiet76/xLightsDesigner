@@ -40,11 +40,16 @@ Current artistic averages from the same corpus:
 - stage-lighting quality: `3.00`
 - composition quality: `3.00`
 - settings/render plausibility: `3.00`
+- concept-summary quality: `3.00`
+- target-selection quality: `3.00`
 
 Interpretation:
-- motion language is now strong enough on the current offline corpus to stop being the main training bottleneck
-- stage-lighting, composition, and settings/render plausibility are now stable on the current heuristic layer
-- the next training bottlenecks are concept-summary quality, target-group selection quality, and finer settings/render nuance rather than broad artistic direction
+- the current offline heuristic layer is fully green on the canonical corpus
+- broad artistic direction, reviewability, and target discipline are now stable enough to stop being the immediate training bottleneck
+- the next bottlenecks move deeper into:
+  - per-effect settings/render nuance
+  - exact timing-window quality beyond section anchors
+  - live validation cadence against real sequence output
 
 ## What Changed Since The First Baseline
 
@@ -73,7 +78,7 @@ It does **not** yet mean:
 
 1. keep the current `25/25` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
-   - concept-summary quality
-   - target-group selection quality
    - per-effect settings/render nuance
+   - exact timing-window quality and music-driven sub-section placement
+   - live validation slices against real sequence output
 3. promote only changes that improve the artistic layer without regressing structural results

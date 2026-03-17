@@ -42,6 +42,7 @@ function pruneRedundantLines(lines = [], normalizedIntent = null) {
     str(intent.tempoIntent) !== "increase";
   const seenConcepts = new Set();
   const out = [];
+  let genericGeneralCount = 0;
 
   for (const line of arr(lines).map((row) => str(row)).filter(Boolean)) {
     const concept = classifyGuidanceConcept(line);
@@ -52,6 +53,14 @@ function pruneRedundantLines(lines = [], normalizedIntent = null) {
       continue;
     }
     if (concept) seenConcepts.add(concept);
+    const isGenericGeneral = /^general\s*\/\s*general\s*\//i.test(line);
+    const isLightingStructureLine = /lighting stack|focal-versus-support|key-vs-fill/i.test(line);
+    if (isGenericGeneral && !isLightingStructureLine) {
+      genericGeneralCount += 1;
+      if (genericGeneralCount > 2) {
+        continue;
+      }
+    }
     out.push(line);
   }
 
