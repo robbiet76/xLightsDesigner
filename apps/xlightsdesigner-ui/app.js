@@ -4297,10 +4297,10 @@ async function pollJobs() {
 
   let changed = false;
   for (const job of active) {
+    const isOwnedJob =
+      String(job?.source || "").trim() === "owned_batch_plan" ||
+      String(job?.id || "").trim().startsWith("xld-job-");
     try {
-      const isOwnedJob =
-        String(job?.source || "").trim() === "owned_batch_plan" ||
-        String(job?.id || "").trim().startsWith("xld-job-");
       const body = isOwnedJob
         ? await getOwnedJob(state.endpoint, job.id)
         : await getJob(state.endpoint, job.id);
@@ -4331,6 +4331,19 @@ async function pollJobs() {
         setStatus("info", `Job ${job.id} completed.`);
       }
     } catch (err) {
+      const message = String(err?.message || err || "");
+      if (isOwnedJob && message.includes("(NOT_FOUND)")) {
+        upsertJob({
+          id: job.id,
+          source: job.source || "owned_batch_plan",
+          status: "completed",
+          progress: 100,
+          message: "Owned job record expired after completion.",
+          updatedAt: new Date().toISOString()
+        });
+        changed = true;
+        continue;
+      }
       setStatusWithDiagnostics("warning", `jobs.get failed for ${job.id}: ${err.message}`);
     }
   }
