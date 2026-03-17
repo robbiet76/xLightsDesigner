@@ -72,6 +72,65 @@ test("sequence dashboard state exposes direct technical draft rows", () => {
   assert.equal(dashboard.data.commandCount, 3);
 });
 
+test("sequence dashboard aggregates multiple effects on the same target into one row", () => {
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: [
+        "Wrong prose line / Wrong target / wrong summary"
+      ],
+      agentPlan: {
+        summary: "Stacked technical sequencing draft.",
+        warnings: []
+      },
+      creative: {},
+      timingTracks: [{ name: "XD: Song Structure" }]
+    },
+    intentHandoff: {
+      artifactId: "intent-aggregate",
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      artifactId: "plan-aggregate",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Color Wash",
+            startMs: 0,
+            endMs: 1000,
+            layerIndex: 0
+          }
+        },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", markLabel: "Chorus 1", startMs: 0, endMs: 1000 },
+          params: {
+            modelName: "Snowman",
+            effectName: "Shimmer",
+            startMs: 0,
+            endMs: 1000,
+            layerIndex: 1
+          }
+        }
+      ]
+    }
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].section, "Chorus 1");
+  assert.equal(dashboard.data.rows[0].target, "Snowman");
+  assert.equal(dashboard.data.rows[0].summary, "Color Wash, Shimmer");
+  assert.equal(dashboard.data.rows[0].effects, 2);
+});
+
 test("sequence dashboard state surfaces missing timing dependency", () => {
   const dashboard = buildSequenceDashboardState({
     state: {

@@ -113,6 +113,45 @@ function summarizeEffectRow(command = null, timingMarks = new Map(), sceneGraph 
   };
 }
 
+function summarizeAggregatedEffectSummaries(summaries = []) {
+  const unique = [...new Set((Array.isArray(summaries) ? summaries : []).map((value) => str(value)).filter(Boolean))];
+  if (!unique.length) return "Pending effect detail";
+  if (unique.length === 1) return unique[0];
+  if (unique.length === 2) return `${unique[0]}, ${unique[1]}`;
+  return `${unique[0]}, ${unique[1]} +${unique.length - 2} more`;
+}
+
+function buildAggregatedEffectRows(commands = [], timingMarks = new Map(), sceneGraph = null) {
+  const buckets = new Map();
+  for (const command of Array.isArray(commands) ? commands : []) {
+    const row = summarizeEffectRow(command, timingMarks, sceneGraph);
+    const key = [row.timing, row.section, row.target, row.level].join("|");
+    if (!buckets.has(key)) {
+      buckets.set(key, {
+        timing: row.timing,
+        section: row.section,
+        target: row.target,
+        level: row.level,
+        summaryParts: [],
+        effects: 0,
+        sourceLine: ""
+      });
+    }
+    const bucket = buckets.get(key);
+    bucket.summaryParts.push(row.summary);
+    bucket.effects += 1;
+  }
+  return [...buckets.values()].map((bucket) => ({
+    timing: bucket.timing,
+    section: bucket.section,
+    target: bucket.target,
+    level: bucket.level,
+    summary: summarizeAggregatedEffectSummaries(bucket.summaryParts),
+    effects: bucket.effects,
+    sourceLine: bucket.sourceLine
+  }));
+}
+
 function buildTimingOnlyRows(commands = []) {
   const rows = [];
   for (const command of Array.isArray(commands) ? commands : []) {
@@ -144,8 +183,7 @@ function buildDashboardRows({
   const effectCommands = (Array.isArray(planCommands) ? planCommands : []).filter((command) => str(command?.cmd) === "effects.create");
   if (effectCommands.length) {
     const timingMarks = buildTimingMarkLookup(planCommands);
-    return effectCommands.map((command, idx) => {
-      const row = summarizeEffectRow(command, timingMarks, state?.sceneGraph || null);
+    return buildAggregatedEffectRows(effectCommands, timingMarks, state?.sceneGraph || null).map((row, idx) => {
       return {
         index: idx + 1,
         ...row
