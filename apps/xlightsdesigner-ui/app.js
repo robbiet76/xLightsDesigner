@@ -5983,12 +5983,6 @@ async function onSendChat() {
     state.health.agentModel = String(res.model || state.health.agentModel || "");
     state.health.agentConfigured = true;
 
-    if (shouldAutoGenerate) {
-      await onGenerate(String(res.proposalIntent || raw), {
-        requestedRole: String(res.routeDecision || "")
-      });
-      return;
-    }
     if (shouldAnswerExistingAudio) {
       const analysis = getValidHandoff("analysis_handoff_v1");
       addStructuredChatMessage("agent", buildAudioAnalystChatReply(raw, analysis), {
@@ -6014,24 +6008,33 @@ async function onSendChat() {
       return;
     }
     if (shouldAutoRunAudio) {
+      const continuationRole = inferAudioContinuationProposalRole(res);
       pushDiagnostic(
         "info",
-        `audio-first route: continueToProposal=${continueToProposal ? "true" : "false"} route=${String(res.routeDecision || "")} addressedTo=${String(res.addressedTo || "")}`
+        `audio-first route: continueToProposal=${continueToProposal ? "true" : "false"} route=${String(res.routeDecision || "")} addressedTo=${String(res.addressedTo || "")} continueRole=${continuationRole}`
       );
       await onAnalyzeAudio({ userPrompt: raw });
       if (continueToProposal) {
-        pushDiagnostic("info", "audio-first route: seeding technical intent handoff before generate");
-        const seeded = seedTechnicalIntentHandoffFromChatPrompt(String(res.proposalIntent || raw), "app_assistant");
-        if (seeded?.ok) {
-          pushDiagnostic("info", "audio-first route: intent_handoff_v1 seeded");
-        } else {
-          pushDiagnostic("warning", "audio-first route: direct intent orchestration did not produce a valid intent handoff");
+        if (continuationRole === "sequence_agent") {
+          pushDiagnostic("info", "audio-first route: seeding technical intent handoff before generate");
+          const seeded = seedTechnicalIntentHandoffFromChatPrompt(String(res.proposalIntent || raw), "app_assistant");
+          if (seeded?.ok) {
+            pushDiagnostic("info", "audio-first route: intent_handoff_v1 seeded");
+          } else {
+            pushDiagnostic("warning", "audio-first route: direct intent orchestration did not produce a valid intent handoff");
+          }
         }
-        pushDiagnostic("info", "audio-first route: entering onGenerate(sequence_agent)");
+        pushDiagnostic("info", `audio-first route: entering onGenerate(${continuationRole})`);
         await onGenerate(String(res.proposalIntent || raw), {
-          requestedRole: "sequence_agent"
+          requestedRole: continuationRole
         });
       }
+      return;
+    }
+    if (shouldAutoGenerate) {
+      await onGenerate(String(res.proposalIntent || raw), {
+        requestedRole: String(res.routeDecision || "")
+      });
       return;
     }
     if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
@@ -6559,11 +6562,19 @@ function shouldAutoGenerateProposalFromChatResult(res = {}, raw = "") {
 
 function shouldAutoRunAudioAnalysisFromChatResult(res = {}, raw = "") {
   const routeDecision = String(res?.routeDecision || "").trim();
-  if (routeDecision !== "audio_analyst") return false;
   const hasAudioPath = Boolean(String(state.audioPathInput || "").trim());
   if (!hasAudioPath) return false;
   const text = String(raw || "").trim().toLowerCase();
   if (!text) return false;
+  if (routeDecision === "designer_dialog") {
+    const hasSequenceContext =
+      Boolean(String(state.sequencePathInput || "").trim()) ||
+      Boolean(state.flags.activeSequenceLoaded) ||
+      Boolean(state.flags.planOnlyMode);
+    if (!hasSequenceContext || hasUsableCurrentAudioAnalysis()) return false;
+    return shouldAutoGenerateProposalFromChatResult(res, raw);
+  }
+  if (routeDecision !== "audio_analyst") return false;
   const explicitRerun = /(re-?analy|analyze again|run analysis|refresh the beat map|refresh analysis|rerun)/.test(text);
   if (explicitRerun) return true;
   return !hasUsableCurrentAudioAnalysis() &&
@@ -6722,6 +6733,14 @@ function shouldContinueToProposalAfterAudio(res = {}, raw = "") {
   if (proposalRole === "sequence_agent") return explicitGenerateIntent;
   if (proposalRole === "designer_dialog") return explicitGenerateIntent;
   return explicitGenerateIntent && Boolean(res?.shouldGenerateProposal);
+}
+
+function inferAudioContinuationProposalRole(res = {}) {
+  const addressedTo = String(res?.addressedTo || "").trim();
+  if (["designer_dialog", "sequence_agent"].includes(addressedTo)) return addressedTo;
+  const routeDecision = String(res?.routeDecision || "").trim();
+  if (["designer_dialog", "sequence_agent"].includes(routeDecision)) return routeDecision;
+  return "sequence_agent";
 }
 
 function inferProposalLinesFromIntent(intentText, sections = []) {
