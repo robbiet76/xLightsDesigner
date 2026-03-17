@@ -914,6 +914,7 @@ function buildDesignerExecutionPlan({
   const scopedTargetIds = targetIds.length ? targetIds : (explicitTagScope && tagNames.length && !hasSpatialDirective ? resolvedTargetIds : []);
   const timedSections = buildTimedSectionMap(analysisHandoff);
   const allowGlobalRewrite = Boolean(intent?.preservationConstraints?.allowGlobalRewrite);
+  const reviseInPlace = str(intent?.mode).toLowerCase() === "revise";
   const passScope = allowGlobalRewrite
     ? "whole_sequence"
     : explicitSections.length > 1
@@ -921,6 +922,7 @@ function buildDesignerExecutionPlan({
       : explicitSections.length === 1
         ? "single_section"
         : "whole_sequence";
+  const sharedRevisionDesignId = reviseInPlace && !allowGlobalRewrite && explicitSections.length ? "DES-001" : "";
   const primarySections = (explicitSections.length ? explicitSections : availableSections.map((row) => row.label)).slice(0, 24);
   const normalizedSections = (primarySections.length ? primarySections : availableSections.map((row) => row.label))
     .slice(0, 24);
@@ -930,7 +932,7 @@ function buildDesignerExecutionPlan({
       const energy = str(match?.energy);
       const density = str(match?.density);
       return {
-        designId: `DES-${String(idx + 1).padStart(3, "0")}`,
+        designId: sharedRevisionDesignId || `DES-${String(idx + 1).padStart(3, "0")}`,
         designRevision: 0,
         designAuthor: "designer",
         section: str(label),

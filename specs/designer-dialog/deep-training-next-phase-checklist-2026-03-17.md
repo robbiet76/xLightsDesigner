@@ -60,17 +60,17 @@ By the end of the deep-training phase:
 
 ### D. Revision Quality
 
-- [ ] Train revise behavior to preserve concept identity
+- [x] Train revise behavior to preserve concept identity
 - [x] Automate offline scoring for revise-existing-concept eval cases through the app revision path
-- [ ] Train revise behavior to modify only the requested concepts when possible
+- [x] Train revise behavior to modify only the requested concepts when possible
 - [ ] Train delete/regenerate workflows at the concept level
-- [ ] Train partial-pass refinement without whole-sequence drift
+- [x] Train partial-pass refinement without whole-sequence drift
 
 ### E. Whole-Sequence Pass Quality
 
 - [x] Train richer broad-pass authorship using the supported effect families intentionally
 - [x] Improve section-to-section contrast across an entire song
-- [ ] Improve thematic continuity across the full pass
+- [x] Improve thematic continuity across the full pass
 - [x] Improve restraint so the designer does not overfill dense sections
 - [x] Improve escalation into late-song peaks and finales
 - [x] Improve translation from musical structure into whole-song pacing and contrast

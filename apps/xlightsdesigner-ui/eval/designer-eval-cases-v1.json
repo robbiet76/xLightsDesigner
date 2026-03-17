@@ -239,6 +239,8 @@
         "minDistinctEffectFamilies": 4,
         "minDesignConceptCount": 4,
         "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2,
+        "maxPaletteTemperatureCount": 2,
         "placementCountComparisons": [
           { "higherSection": "Chorus 1", "lowerSection": "Intro" },
           { "higherSection": "Final Chorus", "lowerSection": "Outro" }
@@ -259,6 +261,7 @@
         "minDistinctEffectFamilies": 3,
         "minDesignConceptCount": 4,
         "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2,
         "placementCountComparisons": [
           { "higherSection": "Final Chorus", "lowerSection": "Intro" }
         ],
@@ -278,6 +281,7 @@
         "minDistinctEffectFamilies": 3,
         "minDesignConceptCount": 4,
         "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2,
         "placementCountComparisons": [
           { "higherSection": "Chorus 1", "lowerSection": "Intro" }
         ]
@@ -293,7 +297,8 @@
         "minEffectPlacementCount": 12,
         "minDistinctEffectFamilies": 3,
         "minDesignConceptCount": 4,
-        "minDistinctSectionFamilySignatures": 3
+        "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2
       }
     },
     {
@@ -307,6 +312,7 @@
         "minDistinctEffectFamilies": 3,
         "minDesignConceptCount": 4,
         "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2,
         "placementCountComparisons": [
           { "higherSection": "Chorus 1", "lowerSection": "Verse 1" }
         ]
@@ -327,6 +333,8 @@
         "mustIncludeBlendRoles": ["support_fill", "foundation", "accent_overlay"],
         "mustIncludeBufferStyles": ["overlay_scaled", "inherit"],
         "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2,
+        "maxPaletteTemperatureCount": 2,
         "placementCountComparisons": [
           { "higherSection": "Final Chorus", "lowerSection": "Intro" }
         ]

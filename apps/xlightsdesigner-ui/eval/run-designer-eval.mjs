@@ -225,6 +225,7 @@ function extractMetrics(result = {}) {
   const perSectionPlacementCounts = {};
   const perSectionEffectFamilies = {};
   const perSectionSpeedValues = {};
+  const perSectionPaletteTemperatures = {};
   for (const placement of placements) {
     const section = str(placement?.sourceSectionLabel || placement?.timingContext?.anchorLabel);
     if (!section) continue;
@@ -233,9 +234,14 @@ function extractMetrics(result = {}) {
     perSectionEffectFamilies[section].push(str(placement?.effectName));
     if (!perSectionSpeedValues[section]) perSectionSpeedValues[section] = [];
     perSectionSpeedValues[section].push(normalizeSpeedValue(placement?.settingsIntent?.speed));
+    if (!perSectionPaletteTemperatures[section]) perSectionPaletteTemperatures[section] = [];
+    perSectionPaletteTemperatures[section].push(str(placement?.paletteIntent?.temperature));
   }
   const perSectionEffectFamilyCounts = Object.fromEntries(
     Object.entries(perSectionEffectFamilies).map(([section, values]) => [section, uniq(values).length])
+  );
+  const perSectionPaletteTemperatureCounts = Object.fromEntries(
+    Object.entries(perSectionPaletteTemperatures).map(([section, values]) => [section, uniq(values).filter(Boolean).length])
   );
   const perSectionAverageSpeeds = Object.fromEntries(
     Object.entries(perSectionSpeedValues).map(([section, values]) => [section, Number(average(values).toFixed(2))])
@@ -247,6 +253,16 @@ function extractMetrics(result = {}) {
       )
     )
   ).length;
+  const familyUsageCounts = {};
+  for (const values of Object.values(perSectionEffectFamilies)) {
+    for (const family of uniq(values)) {
+      familyUsageCounts[family] = (familyUsageCounts[family] || 0) + 1;
+    }
+  }
+  const recurringEffectFamilies = Object.entries(familyUsageCounts)
+    .filter(([, count]) => Number(count) >= 2)
+    .map(([family]) => family)
+    .sort();
   return {
     proposalLineCount: arr(proposalBundle.proposalLines).length,
     designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
@@ -263,8 +279,10 @@ function extractMetrics(result = {}) {
     focusedOverlayPlacementCount: focusedOverlayPlacements.length,
     perSectionPlacementCounts,
     perSectionEffectFamilyCounts,
+    perSectionPaletteTemperatureCounts,
     perSectionAverageSpeeds,
     distinctSectionFamilySignatures,
+    recurringEffectFamilies,
     tagNames: uniq(result?.intentHandoff?.scope?.tagNames),
     sections: uniq(result?.intentHandoff?.scope?.sections)
   };
@@ -353,18 +371,28 @@ function comparableNonTargetRows(executionPlan = null, designId = "") {
 function evaluateRevisionCase(baseResult, revisedResult, mergedExecutionPlan, revisionTarget) {
   const failures = [];
   const baseExecutionPlan = getExecutionPlanFromResult(baseResult);
+  const rawRevisedExecution = getExecutionPlanFromResult(revisedResult);
   const revisedExecution = mergedExecutionPlan && typeof mergedExecutionPlan === "object" ? mergedExecutionPlan : null;
   const target = normalizeDesignRevisionTarget(revisionTarget);
-  if (!baseResult?.ok || !revisedResult?.ok || !baseExecutionPlan || !revisedExecution || !target) {
+  if (!baseResult?.ok || !revisedResult?.ok || !baseExecutionPlan || !rawRevisedExecution || !revisedExecution || !target) {
     failures.push("revision_runtime_failure");
     return { score: 0, failures, checksPassed: 0, checksTotal: 1, metrics: {} };
   }
 
   const baseIds = uniq(arr(baseExecutionPlan.sectionPlans).map((row) => row?.designId));
   const mergedIds = uniq(arr(revisedExecution.sectionPlans).map((row) => row?.designId));
+  const rawRevisedIds = uniq(arr(rawRevisedExecution.sectionPlans).map((row) => row?.designId));
   const revisedRows = collectConceptRows(revisedExecution, target.designId);
   const baseNonTarget = comparableNonTargetRows(baseExecutionPlan, target.designId);
   const mergedNonTarget = comparableNonTargetRows(revisedExecution, target.designId);
+  const rawRevisedSections = uniq([
+    ...arr(rawRevisedExecution.sectionPlans).map((row) => row?.section),
+    ...arr(rawRevisedExecution.effectPlacements).map((row) => row?.sourceSectionLabel || row?.timingContext?.anchorLabel)
+  ]);
+  const rawRevisedTargets = uniq([
+    ...arr(rawRevisedExecution.sectionPlans).flatMap((row) => arr(row?.targetIds)),
+    ...arr(rawRevisedExecution.effectPlacements).map((row) => row?.targetId)
+  ]);
   const revisedSections = uniq([
     ...revisedRows.sectionPlans.map((row) => row?.section),
     ...revisedRows.effectPlacements.map((row) => row?.sourceSectionLabel || row?.timingContext?.anchorLabel)
@@ -383,6 +411,10 @@ function evaluateRevisionCase(baseResult, revisedResult, mergedExecutionPlan, re
   check("unrelated_concepts_changed", JSON.stringify(baseNonTarget) === JSON.stringify(mergedNonTarget));
   check("concept_set_drift", JSON.stringify(baseIds) === JSON.stringify(mergedIds));
   check("revision_scope_drift", revisedSections.every((section) => !target.sections.length || target.sections.includes(section)));
+  check("raw_revision_multi_concept_drift", rawRevisedIds.length <= 1);
+  check("raw_revision_section_drift", rawRevisedSections.every((section) => !target.sections.length || target.sections.includes(section)));
+  check("raw_revision_target_drift", rawRevisedTargets.every((targetId) => !target.targetIds.length || target.targetIds.includes(targetId)));
+  check("raw_revision_whole_pass_expansion", arr(rawRevisedExecution.sectionPlans).length <= Math.max(1, target.sections.length));
 
   return {
     score: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
@@ -392,9 +424,12 @@ function evaluateRevisionCase(baseResult, revisedResult, mergedExecutionPlan, re
     metrics: {
       baseDesignIds: baseIds,
       mergedDesignIds: mergedIds,
+      rawRevisedDesignIds: rawRevisedIds,
       revisedSectionCount: revisedRows.sectionPlans.length,
       revisedPlacementCount: revisedRows.effectPlacements.length,
-      revisedSections
+      revisedSections,
+      rawRevisedSections,
+      rawRevisedTargets
     }
   };
 }
@@ -452,12 +487,19 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
   const layerBlendRoles = uniq(placements.map((row) => row?.layerIntent?.blendRole));
   const mixAmounts = uniq(placements.map((row) => row?.layerIntent?.mixAmount));
   const coverageValues = uniq(placements.map((row) => row?.settingsIntent?.coverage));
+  const paletteTemperatures = uniq(placements.map((row) => row?.paletteIntent?.temperature));
   const speedBySection = {};
+  const familiesBySection = {};
+  const paletteBySection = {};
   for (const placement of placements) {
     const label = str(placement?.timingContext?.anchorLabel);
     if (!label) continue;
     if (!speedBySection[label]) speedBySection[label] = [];
     speedBySection[label].push(normalizeSpeedValue(placement?.settingsIntent?.speed));
+    if (!familiesBySection[label]) familiesBySection[label] = [];
+    familiesBySection[label].push(str(placement?.effectName));
+    if (!paletteBySection[label]) paletteBySection[label] = [];
+    paletteBySection[label].push(str(placement?.paletteIntent?.temperature));
   }
   const sortedSections = Object.keys(speedBySection)
     .sort((a, b) => sectionOrderIndex(a) - sectionOrderIndex(b));
@@ -481,6 +523,9 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
     layerBlendRoles,
     mixAmounts,
     coverageValues,
+    paletteTemperatures,
+    familiesBySection,
+    paletteBySection,
     sectionSpeedAverages,
     lenses: new Set(arr(lenses).map((value) => str(value)))
   };
@@ -597,6 +642,41 @@ function scoreSettingsRenderPlausibility(context) {
   };
 }
 
+function scoreThematicContinuity(context) {
+  const applicable = context.sectionLabels.length >= 3;
+  if (!applicable) return null;
+  let signal = 0;
+  const recurringFamilies = new Set();
+  for (const families of Object.values(context.familiesBySection)) {
+    for (const family of uniq(families)) {
+      recurringFamilies.add(family);
+    }
+  }
+  const familyUsageCounts = {};
+  for (const families of Object.values(context.familiesBySection)) {
+    for (const family of uniq(families)) {
+      familyUsageCounts[family] = (familyUsageCounts[family] || 0) + 1;
+    }
+  }
+  const repeatedFamilies = Object.entries(familyUsageCounts).filter(([, count]) => count >= 2).map(([family]) => family);
+  const sectionTemperatureCounts = Object.values(context.paletteBySection).map((values) => uniq(values).filter(Boolean).length);
+  if (repeatedFamilies.length >= 2) signal += 1;
+  if (context.paletteTemperatures.length <= 2) signal += 1;
+  if (sectionTemperatureCounts.every((count) => count <= 2)) signal += 1;
+  if (context.effectFamilies.length >= 4 && repeatedFamilies.length < context.effectFamilies.length) signal += 1;
+  return {
+    applicable: true,
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    signals: {
+      repeatedFamilies,
+      paletteTemperatures: context.paletteTemperatures,
+      perSectionPaletteTemperatureCounts: Object.fromEntries(
+        Object.entries(context.paletteBySection).map(([section, values]) => [section, uniq(values).filter(Boolean).length])
+      )
+    }
+  };
+}
+
 function scoreConceptSummaryQuality(context) {
   const summaryWords = context.summary.split(/\s+/).filter(Boolean).length;
   const genericProposalLines = context.proposalLines.filter((line) => (
@@ -655,7 +735,8 @@ function evaluateArtisticScores({ summary = "", proposalLines = [], executionPla
     motionLanguage: scoreMotionLanguage(context),
     stageLighting: scoreStageLighting(context),
     composition: scoreComposition(context),
-    settingsRenderPlausibility: scoreSettingsRenderPlausibility(context)
+    settingsRenderPlausibility: scoreSettingsRenderPlausibility(context),
+    thematicContinuity: scoreThematicContinuity(context)
   };
   const applicableScores = Object.values(categories)
     .filter((entry) => entry?.applicable)
@@ -754,6 +835,14 @@ function evaluateCase(result, testCase) {
   }
   if (expect.minDistinctSectionFamilySignatures != null) {
     check("insufficient_section_family_contrast", Number(metrics.distinctSectionFamilySignatures || 0) >= Number(expect.minDistinctSectionFamilySignatures));
+  }
+  if (expect.minRecurringEffectFamilies != null) {
+    check("insufficient_thematic_family_recurrence", arr(metrics.recurringEffectFamilies).length >= Number(expect.minRecurringEffectFamilies));
+  }
+  if (expect.maxPaletteTemperatureCount != null) {
+    const sectionCounts = Object.values(metrics.perSectionPaletteTemperatureCounts || {}).map((value) => Number(value || 0));
+    const maxCount = sectionCounts.length ? Math.max(...sectionCounts) : 0;
+    check("excessive_palette_temperature_scatter", maxCount <= Number(expect.maxPaletteTemperatureCount));
   }
   for (const comparison of arr(expect.placementCountComparisons)) {
     const higher = str(comparison?.higherSection);
@@ -1064,7 +1153,8 @@ function summarizeResults(results = []) {
       motionLanguage: collectArtisticAverages("motionLanguage"),
       stageLighting: collectArtisticAverages("stageLighting"),
       composition: collectArtisticAverages("composition"),
-      settingsRenderPlausibility: collectArtisticAverages("settingsRenderPlausibility")
+      settingsRenderPlausibility: collectArtisticAverages("settingsRenderPlausibility"),
+      thematicContinuity: collectArtisticAverages("thematicContinuity")
     }
   };
 }

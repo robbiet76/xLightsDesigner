@@ -732,3 +732,43 @@ test("designer runtime keeps support targets lighter for single-section focal co
   assert.equal(placements.filter((row) => row.targetId === "Snowman").length, 2);
   assert.equal(placements.filter((row) => row.targetId === "Star").length, 1);
 });
+
+test("designer runtime keeps multi-section revise requests inside one conceptual group", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-14",
+    sequenceRevision: "rev-14",
+    promptText: "Revise the perimeter support concept so it contributes less visual weight and more framing.",
+    goals: "Revise the perimeter support concept so it contributes less visual weight and more framing.",
+    selectedSections: ["Verse 1", "Chorus 1"],
+    models: [
+      { id: "Snowman", name: "Snowman", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" },
+      { id: "Border-02", name: "Border-02", type: "Model" },
+      { id: "Border-03", name: "Border-03", type: "Model" }
+    ],
+    submodels,
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  const sectionPlans = result.proposalBundle.executionPlan.sectionPlans;
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  const conceptIds = Array.from(new Set(sectionPlans.map((row) => row.designId)));
+  const placementConceptIds = Array.from(new Set(placements.map((row) => row.designId)));
+  assert.deepEqual(conceptIds, ["DES-001"]);
+  assert.deepEqual(placementConceptIds, ["DES-001"]);
+  assert.deepEqual(Array.from(new Set(sectionPlans.map((row) => row.section))).sort(), ["Chorus 1", "Verse 1"]);
+});
