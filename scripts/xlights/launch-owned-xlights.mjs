@@ -23,7 +23,12 @@ if (!candidates.length) {
 const target = candidates[0].app;
 const binary = path.join(target, 'Contents/MacOS/xLights');
 const args = process.argv.slice(2);
-const env = { ...process.env, XLIGHTS_DESIGNER_ENABLED: '1' };
+const env = {
+  ...process.env,
+  XLIGHTS_DESIGNER_ENABLED: '1',
+  XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: process.env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS || '30000'
+};
+const logPath = '/tmp/xld-owned-xlights.log';
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -74,7 +79,17 @@ async function waitForSingleOwnedProcess(timeoutMs = 15000) {
   }
 }
 
-console.log(JSON.stringify({ target, binary, args, env: { XLIGHTS_DESIGNER_ENABLED: env.XLIGHTS_DESIGNER_ENABLED } }, null, 2));
+fs.writeFileSync(logPath, '', 'utf8');
+console.log(JSON.stringify({
+  target,
+  binary,
+  args,
+  logPath,
+  env: {
+    XLIGHTS_DESIGNER_ENABLED: env.XLIGHTS_DESIGNER_ENABLED,
+    XLIGHTS_DESIGNER_STARTUP_SETTLE_MS: env.XLIGHTS_DESIGNER_STARTUP_SETTLE_MS
+  }
+}, null, 2));
 
 try {
   execFileSync('pkill', ['-f', 'xLights.app/Contents/MacOS/xLights'], { stdio: 'ignore' });
@@ -82,9 +97,12 @@ try {
 
 await waitForNoXLightsProcesses();
 
+const stdoutFd = fs.openSync(logPath, 'a');
+const stderrFd = fs.openSync(logPath, 'a');
+
 const child = spawn(binary, args, {
   detached: true,
-  stdio: 'ignore',
+  stdio: ['ignore', stdoutFd, stderrFd],
   env
 });
 child.unref();

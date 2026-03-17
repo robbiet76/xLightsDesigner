@@ -38,6 +38,15 @@ function buildPlanSummary({ goal = "", mode = "", sectionNames = [] } = {}) {
   return `${mode || "create"} plan for ${base}${sectionText}`.trim();
 }
 
+function isCompoundScopedDirectRequest({ goal = "", sectionNames = [] } = {}) {
+  const lowerGoal = normText(goal).toLowerCase();
+  if (!lowerGoal) return false;
+  const isDirectRequest = /\b(add|apply|put|make|set)\b/.test(lowerGoal);
+  const hasJoiner = /\b(and|then|also)\b|,/.test(lowerGoal);
+  const hasSecondActionVerb = /\b(and|then|also)\b[^.]*\b(add|apply|put|make|set)\b/.test(lowerGoal);
+  return isDirectRequest && hasJoiner && (normArray(sectionNames).length > 1 || hasSecondActionVerb);
+}
+
 function deriveSectionNames({ analysisHandoff = {}, intentHandoff = {} } = {}) {
   const fromAnalysis = normArray(analysisHandoff?.structure?.sections).map((s) => normText(s));
   const fromScope = normArray(intentHandoff?.scope?.sections).map((s) => normText(s));
@@ -68,6 +77,11 @@ function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {} } = {})
   const sectionNames = deriveSectionNames({ analysisHandoff, intentHandoff });
   const targetIds = normArray(intentHandoff?.scope?.targetIds);
   const tagNames = normArray(intentHandoff?.scope?.tagNames);
+  if (isCompoundScopedDirectRequest({ goal, sectionNames })) {
+    const err = new Error("Compound direct sequencing requests must be split into one effect/section instruction per request.");
+    err.failureCategory = "scope";
+    throw err;
+  }
   return {
     mode,
     goal,

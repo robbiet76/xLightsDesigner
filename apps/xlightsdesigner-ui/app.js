@@ -3269,6 +3269,10 @@ async function onGenerate(intentOverride = "", options = {}) {
       status: "failed",
       summary: directSequenceMode ? "direct sequence flow failed" : "designer flow failed"
     });
+    clearDesignerDraft(state);
+    state.agentPlan = null;
+    state.creative = state.creative || {};
+    state.creative.intentHandoff = null;
     state.ui.agentThinking = false;
     setStatusWithDiagnostics(
       "warning",

@@ -375,6 +375,35 @@ test("sequence_agent stage failure is classified and surfaced", () => {
   );
 });
 
+test("sequence_agent fails closed on mixed direct sequencing clauses", () => {
+  assert.throws(
+    () =>
+      buildSequenceAgentPlan({
+        analysisHandoff: {
+          trackIdentity: { title: "Track A", artist: "Artist A" },
+          structure: { sections: ["Chorus 1", "Chorus 2"] },
+          briefSeed: { tone: "upbeat" }
+        },
+        intentHandoff: {
+          goal: "Add a Color Wash effect on Snowman during Chorus 1 and a Shimmer effect on PorchTree during Chorus 2.",
+          mode: "revise",
+          scope: {
+            targetIds: ["PorchTree", "Snowman"],
+            tagNames: [],
+            sections: ["Chorus 1", "Chorus 2"]
+          }
+        },
+        sourceLines: []
+      }),
+    (err) => {
+      assert.equal(err.stage, "scope_resolution");
+      assert.equal(err.failureCategory, "scope");
+      assert.match(String(err.message || ""), /split into one effect\/section instruction per request/i);
+      return true;
+    }
+  );
+});
+
 test("sequence_agent blocks plan synthesis when required capabilities are missing", () => {
   assert.throws(
     () =>
