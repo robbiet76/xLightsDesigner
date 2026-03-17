@@ -1059,6 +1059,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th style="width:168px;">Focus</th>
                   <th style="width:168px;">Palette</th>
                   <th style="width:80px;">Linked</th>
+                  <th style="width:88px;">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1072,9 +1073,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <td>${escapeHtml(String((row.focus || []).join(", ") || "No focus targets"))}</td>
                         <td>${renderPaletteSwatches(row.palette?.colors || [])}</td>
                         <td>${escapeHtml(String(row.placementCount || 0))}</td>
+                        <td><button data-design-remove="${escapeHtml(String(row.designId || ""))}">Delete</button></td>
                       </tr>
                     `).join("")
-                    : `<tr><td colspan="6" class="banner">No design concepts available yet.</td></tr>`
+                    : `<tr><td colspan="7" class="banner">No design concepts available yet.</td></tr>`
                 }
               </tbody>
             </table>

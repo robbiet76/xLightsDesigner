@@ -6858,6 +6858,95 @@ function buildDesignerExecutionSeedLines(proposalOrchestration = null) {
     .filter(Boolean);
 }
 
+function filterDesignerExecutionPlanByDesignId(executionPlan = null, designId = "") {
+  const normalizedDesignId = String(designId || "").trim();
+  if (!normalizedDesignId || !executionPlan || typeof executionPlan !== "object") return null;
+  const sectionPlans = Array.isArray(executionPlan.sectionPlans)
+    ? executionPlan.sectionPlans.filter((row) => String(row?.designId || "").trim() !== normalizedDesignId)
+    : [];
+  const effectPlacements = Array.isArray(executionPlan.effectPlacements)
+    ? executionPlan.effectPlacements.filter((row) => String(row?.designId || "").trim() !== normalizedDesignId)
+    : [];
+  const primarySections = sectionPlans
+    .map((row) => String(row?.section || "").trim())
+    .filter(Boolean);
+  const targetIds = Array.from(new Set(
+    sectionPlans.flatMap((row) => Array.isArray(row?.targetIds) ? row.targetIds : [])
+      .map((row) => String(row || "").trim())
+      .filter(Boolean)
+  ));
+  return {
+    ...executionPlan,
+    sectionPlans,
+    effectPlacements,
+    primarySections,
+    sectionCount: primarySections.length,
+    targetCount: targetIds.length
+  };
+}
+
+function rebuildProposalBundleFromExecutionPlan(proposalBundle = null, executionPlan = null) {
+  const bundle = proposalBundle && typeof proposalBundle === "object" ? proposalBundle : null;
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+  if (!bundle || !plan) return null;
+  const proposalLines = mergeCreativeBriefIntoProposal(
+    buildDesignerExecutionSeedLines({
+      proposalBundle: {
+        ...bundle,
+        executionPlan: plan
+      }
+    })
+  );
+  return {
+    ...bundle,
+    executionPlan: plan,
+    proposalLines,
+    impact: {
+      ...(bundle.impact && typeof bundle.impact === "object" ? bundle.impact : {}),
+      estimatedImpact: Math.max(proposalLines.length * 8, Array.isArray(plan.effectPlacements) ? plan.effectPlacements.length : 0)
+    }
+  };
+}
+
+function rebuildSequenceAgentStateFromCurrentIntent() {
+  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  let intentHandoff = state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object"
+    ? state.creative.intentHandoff
+    : getValidHandoff("intent_handoff_v1");
+  intentHandoff = hydrateIntentHandoffExecutionStrategy(intentHandoff, state.creative?.proposalBundle || null);
+  if (!intentHandoff) return { ok: false, reason: "missing_intent_handoff" };
+
+  const sequencerPlan = buildSequenceAgentPlan({
+    analysisHandoff,
+    intentHandoff,
+    sourceLines: Array.isArray(state.proposed) ? state.proposed : [],
+    baseRevision: state.draftBaseRevision,
+    capabilityCommands: state.health.capabilityCommands || [],
+    effectCatalog: state.effectCatalog,
+    sequenceSettings: state.sequenceSettings,
+    layoutMode: currentLayoutMode(),
+    displayElements: state.displayElements,
+    groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+    groupsById: state.sceneGraph?.groupsById || {},
+    submodelsById: state.sceneGraph?.submodelsById || {},
+    timingOwnership: getSequenceTimingOwnershipRows(),
+    allowTimingWrites: true
+  });
+  const planGate = validateSequenceAgentContractGate("plan", sequencerPlan, "design-id-rebuild");
+  if (!planGate.ok) return { ok: false, reason: planGate.report.errors.join("; ") };
+
+  state.creative.intentHandoff = intentHandoff;
+  state.agentPlan = {
+    createdAt: new Date().toISOString(),
+    source: "sequence_agent",
+    handoff: sequencerPlan,
+    executionLines: Array.isArray(sequencerPlan?.executionLines) ? sequencerPlan.executionLines : []
+  };
+  setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
+  setAgentHandoff("plan_handoff_v1", sequencerPlan, "sequence_agent");
+  return { ok: true };
+}
+
 function mergeCreativeBriefIntoProposal(lines) {
   const base = Array.isArray(lines) ? [...lines] : [];
   if (base.some((row) => /\/\s+apply\s+.+\s+effect\b/i.test(String(row || "")))) {
@@ -7440,6 +7529,54 @@ function onRemoveSelectedProposed() {
   state.flags.hasDraftProposal = state.proposed.length > 0;
   invalidateApplyApproval();
   setStatus("info", `Removed ${uniqueDesc.length} proposed line${uniqueDesc.length === 1 ? "" : "s"}.`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+function onRemoveDesignConcept(designId) {
+  const normalizedDesignId = String(designId || "").trim();
+  if (!normalizedDesignId) {
+    setStatus("warning", "No design concept selected.");
+    return render();
+  }
+  const proposalBundle = state.creative?.proposalBundle && typeof state.creative.proposalBundle === "object"
+    ? state.creative.proposalBundle
+    : null;
+  const executionPlan = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === "object"
+    ? proposalBundle.executionPlan
+    : null;
+  if (!executionPlan) {
+    setStatus("warning", "No design execution plan is available to edit.");
+    return render();
+  }
+  const filteredExecutionPlan = filterDesignerExecutionPlanByDesignId(executionPlan, normalizedDesignId);
+  if (!filteredExecutionPlan) {
+    setStatus("warning", "Unable to filter the selected design concept.");
+    return render();
+  }
+  if (Array.isArray(filteredExecutionPlan.sectionPlans) && filteredExecutionPlan.sectionPlans.length === Array.isArray(executionPlan.sectionPlans).length) {
+    setStatus("warning", `Design concept ${normalizedDesignId} was not found in the current draft.`);
+    return render();
+  }
+  const rebuiltBundle = rebuildProposalBundleFromExecutionPlan(proposalBundle, filteredExecutionPlan);
+  if (!rebuiltBundle) {
+    setStatus("warning", "Unable to rebuild the draft after removing that concept.");
+    return render();
+  }
+
+  state.creative.proposalBundle = rebuiltBundle;
+  state.proposed = Array.isArray(rebuiltBundle.proposalLines) ? [...rebuiltBundle.proposalLines] : [];
+  state.flags.hasDraftProposal = state.proposed.length > 0;
+  state.ui.proposedSelection = [];
+
+  const rebuild = rebuildSequenceAgentStateFromCurrentIntent();
+  if (!rebuild.ok) {
+    setStatus("warning", `Removed ${normalizedDesignId}, but could not rebuild the sequence draft: ${rebuild.reason}`);
+  } else {
+    setStatus("info", `Removed design concept ${normalizedDesignId}.`);
+  }
+  invalidateApplyApproval();
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -10649,6 +10786,245 @@ async function analyzeAutomationAudio(payload = {}) {
   };
 }
 
+async function showAutomationTenEffectGridDemo() {
+  const start = 78230;
+  const end = 97120;
+  const span = end - start;
+  const slot = Math.floor(span / 10);
+  const effectNames = ["Color Wash", "Shimmer", "Bars", "Butterfly", "Meteors", "Pinwheel", "Spirals", "Wave", "Candle", "Morph"];
+
+  clearDesignerDraft(state);
+  state.agentPlan = null;
+  clearSequencingHandoffsForSequenceChange("automation demo reset");
+
+  state.draftBaseRevision = String(state.revision || "unknown");
+  state.draftSequencePath = String(state.sequencePathInput || "").trim();
+  state.proposed = ["Chorus 1 / Snowman / Color Wash, Shimmer +8 more"];
+  state.flags.hasDraftProposal = true;
+  state.flags.proposalStale = false;
+
+  const intentHandoff = {
+    artifactId: `intent_handoff_v1-demo-${Date.now()}`,
+    artifactType: "intent_handoff_v1",
+    createdAt: new Date().toISOString(),
+    goal: "Sequence grid demo with ten effects on one target in one section.",
+    mode: "revise",
+    scope: {
+      targetIds: ["Snowman"],
+      tagNames: [],
+      sections: ["Chorus 1"],
+      timeRangeMs: { startMs: start, endMs: end }
+    },
+    constraints: {
+      changeTolerance: "medium",
+      preserveTimingTracks: true,
+      allowGlobalRewrite: false
+    },
+    directorPreferences: {
+      styleDirection: "demo",
+      energyArc: "hold",
+      focusElements: ["Snowman"],
+      colorDirection: "mixed"
+    },
+    approvalPolicy: {
+      requiresExplicitApprove: true,
+      elevatedRiskConfirmed: false
+    }
+  };
+
+  const commands = [
+    { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+    {
+      id: "timing.marks.insert",
+      dependsOn: ["timing.track.create"],
+      cmd: "timing.insertMarks",
+      params: {
+        trackName: "XD: Song Structure",
+        marks: [{ label: "Chorus 1", startMs: start, endMs: end }]
+      }
+    },
+    ...effectNames.map((effectName, i) => ({
+      id: `demo-placement-${i + 1}`,
+      dependsOn: ["timing.marks.insert"],
+      anchor: {
+        kind: "timing_track",
+        trackName: "XD: Song Structure",
+        markLabel: "Chorus 1",
+        startMs: start + (i * slot),
+        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
+        basis: "within_section"
+      },
+      cmd: "effects.create",
+      params: {
+        modelName: "Snowman",
+        layerIndex: 0,
+        effectName,
+        startMs: start + (i * slot),
+        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
+        settings: {},
+        palette: {}
+      }
+    }))
+  ];
+
+  const planHandoff = {
+    artifactId: `plan_handoff_v1-demo-${Date.now()}`,
+    artifactType: "plan_handoff_v1",
+    createdAt: new Date().toISOString(),
+    goal: "Show ten-effect Sequence grid aggregation demo.",
+    summary: "Ten effects on Snowman in Chorus 1 for Sequence grid validation.",
+    estimatedImpact: 10,
+    warnings: [],
+    commands,
+    baseRevision: state.draftBaseRevision,
+    validationReady: true
+  };
+
+  state.creative = state.creative || {};
+  state.creative.intentHandoff = structuredClone(intentHandoff);
+  state.agentPlan = {
+    source: "automation_demo",
+    summary: planHandoff.summary,
+    warnings: [],
+    estimatedImpact: 10,
+    handoff: structuredClone(planHandoff)
+  };
+
+  setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
+  setAgentHandoff("plan_handoff_v1", planHandoff, "sequence_agent");
+  setStatus("info", "Loaded ten-effect grid demo (proposal only).");
+  persist();
+  render();
+
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
+  };
+}
+
+async function showAutomationSplitEffectGridDemo() {
+  const start = 78230;
+  const end = 97120;
+  const span = end - start;
+  const slot = Math.floor(span / 10);
+  const effectNames = [
+    "Color Wash", "Color Wash", "Color Wash", "Color Wash", "Color Wash",
+    "Shimmer", "Shimmer", "Shimmer", "Shimmer", "Shimmer"
+  ];
+
+  clearDesignerDraft(state);
+  state.agentPlan = null;
+  clearSequencingHandoffsForSequenceChange("automation demo reset");
+
+  state.draftBaseRevision = String(state.revision || "unknown");
+  state.draftSequencePath = String(state.sequencePathInput || "").trim();
+  state.proposed = ["Chorus 1 / Snowman / Color Wash, Shimmer"];
+  state.flags.hasDraftProposal = true;
+  state.flags.proposalStale = false;
+
+  const intentHandoff = {
+    artifactId: `intent_handoff_v1-demo-${Date.now()}`,
+    artifactType: "intent_handoff_v1",
+    createdAt: new Date().toISOString(),
+    goal: "Sequence grid demo with five Color Wash and five Shimmer effects on one target in one section.",
+    mode: "revise",
+    scope: {
+      targetIds: ["Snowman"],
+      tagNames: [],
+      sections: ["Chorus 1"],
+      timeRangeMs: { startMs: start, endMs: end }
+    },
+    constraints: {
+      changeTolerance: "medium",
+      preserveTimingTracks: true,
+      allowGlobalRewrite: false
+    },
+    directorPreferences: {
+      styleDirection: "demo",
+      energyArc: "hold",
+      focusElements: ["Snowman"],
+      colorDirection: "mixed"
+    },
+    approvalPolicy: {
+      requiresExplicitApprove: true,
+      elevatedRiskConfirmed: false
+    }
+  };
+
+  const commands = [
+    { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+    {
+      id: "timing.marks.insert",
+      dependsOn: ["timing.track.create"],
+      cmd: "timing.insertMarks",
+      params: {
+        trackName: "XD: Song Structure",
+        marks: [{ label: "Chorus 1", startMs: start, endMs: end }]
+      }
+    },
+    ...effectNames.map((effectName, i) => ({
+      id: `demo-split-placement-${i + 1}`,
+      dependsOn: ["timing.marks.insert"],
+      anchor: {
+        kind: "timing_track",
+        trackName: "XD: Song Structure",
+        markLabel: "Chorus 1",
+        startMs: start + (i * slot),
+        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
+        basis: "within_section"
+      },
+      cmd: "effects.create",
+      params: {
+        modelName: "Snowman",
+        layerIndex: 0,
+        effectName,
+        startMs: start + (i * slot),
+        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
+        settings: {},
+        palette: {}
+      }
+    }))
+  ];
+
+  const planHandoff = {
+    artifactId: `plan_handoff_v1-demo-${Date.now()}`,
+    artifactType: "plan_handoff_v1",
+    createdAt: new Date().toISOString(),
+    goal: "Show split-effect Sequence grid aggregation demo.",
+    summary: "Five Color Wash and five Shimmer effects on Snowman in Chorus 1.",
+    estimatedImpact: 10,
+    warnings: [],
+    commands,
+    baseRevision: state.draftBaseRevision,
+    validationReady: true
+  };
+
+  state.creative = state.creative || {};
+  state.creative.intentHandoff = structuredClone(intentHandoff);
+  state.agentPlan = {
+    source: "automation_demo",
+    summary: planHandoff.summary,
+    warnings: [],
+    estimatedImpact: 10,
+    handoff: structuredClone(planHandoff)
+  };
+
+  setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
+  setAgentHandoff("plan_handoff_v1", planHandoff, "sequence_agent");
+  setStatus("info", "Loaded split-effect grid demo (proposal only).");
+  persist();
+  render();
+
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
+  };
+}
+
 function getAutomationAgentRuntimeSnapshot() {
   const summarizeExecutionStrategy = (payload = null) => {
     const strategy = isPlainObject(payload?.executionStrategy) ? payload.executionStrategy : null;
@@ -10716,6 +11092,8 @@ function exposeRuntimeValidationHooks() {
     analyzeAudio: analyzeAutomationAudio,
     applyCurrentProposal: applyAutomationCurrentProposal,
     diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
+    showTenEffectGridDemo: showAutomationTenEffectGridDemo,
+    showSplitEffectGridDemo: showAutomationSplitEffectGridDemo,
     getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,
     runDirectSequenceValidation: runCurrentDirectSequenceValidation,
     getDirectSequenceValidationSnapshot: getCurrentDirectSequenceValidationSnapshot
@@ -11173,6 +11551,7 @@ function bindEvents() {
     onRebaseDraft,
     setSectionFilter,
     setDesignTab,
+    onRemoveDesignConcept,
     onRemoveSelectedProposed,
     onRemoveAllProposed,
     toggleProposedSelection,
