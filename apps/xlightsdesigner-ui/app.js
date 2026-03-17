@@ -1307,6 +1307,11 @@ function clearAgentHandoffs() {
   refreshAgentRuntimeHealth();
 }
 
+function clearSequencingHandoffsForSequenceChange(reason = "sequence changed") {
+  clearAgentHandoff("intent_handoff_v1", reason, { pushLog: false });
+  clearAgentHandoff("plan_handoff_v1", reason, { pushLog: false });
+}
+
 async function loadAgentRuntimeBundle({ force = false } = {}) {
   const CACHE_TTL_MS = 60_000;
   if (!force && trainingPackageAgentBundleCache && (Date.now() - trainingPackageAgentBundleCacheAt) < CACHE_TTL_MS) {
@@ -4119,6 +4124,7 @@ async function onRefresh() {
             state.agentPlan = null;
             state.creative = state.creative || {};
             state.creative.intentHandoff = null;
+            clearSequencingHandoffsForSequenceChange("sequence changed");
             invalidateApplyApproval();
           }
         },
@@ -4127,6 +4133,7 @@ async function onRefresh() {
           state.agentPlan = null;
           state.creative = state.creative || {};
           state.creative.intentHandoff = null;
+          clearSequencingHandoffsForSequenceChange("sequence cleared");
           invalidateApplyApproval();
         },
         syncAudioPathFromMediaStatus,
@@ -4144,6 +4151,7 @@ async function onRefresh() {
       state.agentPlan = null;
       state.creative = state.creative || {};
       state.creative.intentHandoff = null;
+      clearSequencingHandoffsForSequenceChange("sequence changed");
       invalidateApplyApproval();
     }
   } catch (err) {
