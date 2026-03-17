@@ -419,6 +419,9 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
   const designIds = uniq(sectionPlans.map((row) => row?.designId));
   const sectionLabels = uniq(sectionPlans.map((row) => row?.section));
   const renderPolicies = uniq(placements.map((row) => row?.renderIntent?.expansionPolicy || row?.renderIntent?.groupPolicy));
+  const bufferStyles = uniq(placements.map((row) => row?.renderIntent?.bufferStyle));
+  const layerBlendRoles = uniq(placements.map((row) => row?.layerIntent?.blendRole));
+  const mixAmounts = uniq(placements.map((row) => row?.layerIntent?.mixAmount));
   const coverageValues = uniq(placements.map((row) => row?.settingsIntent?.coverage));
   const speedBySection = {};
   for (const placement of placements) {
@@ -445,6 +448,9 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
     designIds,
     sectionLabels,
     renderPolicies,
+    bufferStyles,
+    layerBlendRoles,
+    mixAmounts,
     coverageValues,
     sectionSpeedAverages,
     lenses: new Set(arr(lenses).map((value) => str(value)))
@@ -519,13 +525,17 @@ function scoreComposition(context) {
   if (/negative space|frame|framing|perimeter|centerpiece|balance|contrast|left side|right side|foreground|background|depth/.test(context.text)) signal += 1;
   if (context.coverageValues.some((value) => /focused|partial/.test(value))) signal += 1;
   if (context.renderPolicies.some((value) => /no_expand|preserve/.test(value))) signal += 1;
+  if (context.layerBlendRoles.some((value) => /support_fill|foundation|rhythmic_overlay|accent_overlay/.test(value))) signal += 1;
+  if (context.mixAmounts.some((value) => /low|medium|medium_high|high/.test(value))) signal += 1;
   const selectiveTargets = context.placements.filter((row) => !/AllModels/.test(str(row?.targetId))).length;
   if (selectiveTargets >= Math.max(2, context.placements.length * 0.25)) signal += 1;
   return {
     applicable: true,
-    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 3, strong: 5 }),
     signals: {
       renderPolicies: context.renderPolicies,
+      layerBlendRoles: context.layerBlendRoles,
+      mixAmounts: context.mixAmounts,
       coverageValues: context.coverageValues,
       selectiveTargetPlacements: selectiveTargets
     }
@@ -539,15 +549,20 @@ function scoreSettingsRenderPlausibility(context) {
   let signal = 0;
   if (placements.length && completePlacements.length === placements.length) signal += 1;
   if (context.renderPolicies.length >= 1) signal += 1;
+  if (context.bufferStyles.length >= 1) signal += 1;
   if (context.coverageValues.length >= 1) signal += 1;
   if (placements.some((row) => str(row?.paletteIntent?.accentUsage))) signal += 1;
+  if (context.mixAmounts.length >= 2 || context.layerBlendRoles.length >= 2) signal += 1;
   return {
     applicable,
-    score: scoreThresholds({ value: signal, weak: 1, acceptable: 2, strong: 4 }),
+    score: scoreThresholds({ value: signal, weak: 1, acceptable: 3, strong: 5 }),
     signals: {
       placementCount: placements.length,
       completePlacementCount: completePlacements.length,
       renderPolicies: context.renderPolicies,
+      bufferStyles: context.bufferStyles,
+      layerBlendRoles: context.layerBlendRoles,
+      mixAmounts: context.mixAmounts,
       coverageValues: context.coverageValues
     }
   };
@@ -699,6 +714,14 @@ function evaluateCase(result, testCase) {
   }
   if (expect.minFocusedOverlayPlacementCount != null) {
     check("insufficient_focused_overlay_placements", metrics.focusedOverlayPlacementCount >= Number(expect.minFocusedOverlayPlacementCount));
+  }
+  if (expect.mustIncludeBlendRoles) {
+    const actual = new Set(arr(result?.proposalBundle?.executionPlan?.effectPlacements).map((row) => str(row?.layerIntent?.blendRole)));
+    check("missing_required_blend_roles", arr(expect.mustIncludeBlendRoles).every((row) => actual.has(str(row))));
+  }
+  if (expect.mustIncludeBufferStyles) {
+    const actual = new Set(arr(result?.proposalBundle?.executionPlan?.effectPlacements).map((row) => str(row?.renderIntent?.bufferStyle)));
+    check("missing_required_buffer_styles", arr(expect.mustIncludeBufferStyles).every((row) => actual.has(str(row))));
   }
 
   const score = structuralScore({

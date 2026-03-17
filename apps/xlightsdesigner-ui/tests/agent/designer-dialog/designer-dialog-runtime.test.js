@@ -694,6 +694,10 @@ test("designer runtime layers the lead target before support targets for lightin
   assert.deepEqual(borderLayers, [0]);
   assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => /focused|partial/i.test(String(row?.settingsIntent?.coverage || ""))));
   assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => row.layerIntent?.blendRole === "support_fill"));
+  assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => row.layerIntent?.mixAmount === "low"));
+  assert.ok(placements.some((row) => row.targetId === "Snowman" && row.layerIntent?.mixAmount === "high"));
+  assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => row.renderIntent?.groupPolicy === "preserve_group_rendering"));
+  assert.ok(placements.filter((row) => row.targetId === "Border-01").every((row) => row.renderIntent?.bufferStyle === "inherit"));
 });
 
 test("designer runtime keeps support targets lighter for single-section focal concepts", () => {

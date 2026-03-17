@@ -56,7 +56,7 @@ By the end of the deep-training phase:
 - [x] Improve timing-window quality from beat, chord, phrase, and transition cues when section labels are insufficient
 - [x] Improve multi-effect same-target layering quality
 - [x] Improve per-effect settings intent quality
-- [ ] Improve layer/render intent quality
+- [x] Improve layer/render intent quality
 
 ### D. Revision Quality
 

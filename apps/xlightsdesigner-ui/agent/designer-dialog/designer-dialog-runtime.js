@@ -697,32 +697,48 @@ function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScop
   return normalizedEnergy === "high" && targetIndex === 1;
 }
 
-function inferPlacementLayerIntent({ effectIndex = 0, effectName = "", targetRole = "primary" } = {}) {
+function inferPlacementLayerIntent({ effectIndex = 0, effectName = "", targetRole = "primary", energy = "", goal = "" } = {}) {
   const lower = str(effectName).toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const lowerGoal = str(goal).toLowerCase();
   if (effectIndex === 0) {
+    const isSupport = targetRole === "support";
     return {
-      priority: targetRole === "support" ? "support" : "base",
-      blendRole: targetRole === "support" ? "support_fill" : "foundation",
+      priority: isSupport ? "support" : "base",
+      blendRole: isSupport ? "support_fill" : "foundation",
       overlayPolicy: "allow_overlay",
-      mixAmount: "default"
+      mixAmount: isSupport
+        ? "low"
+        : normalizedEnergy === "high"
+          ? "high"
+          : "medium"
     };
   }
+  const rhythmicOverlay = ["bars", "shockwave", "meteors", "strobe", "wave"].includes(lower);
   return {
     priority: "foreground",
-    blendRole: ["bars", "shockwave", "meteors", "strobe", "wave"].includes(lower) ? "rhythmic_overlay" : "accent_overlay",
+    blendRole: rhythmicOverlay ? "rhythmic_overlay" : "accent_overlay",
     overlayPolicy: "allow_overlay",
-    mixAmount: "default"
+    mixAmount: /key light|focus|focal|punch/.test(lowerGoal)
+      ? "high"
+      : rhythmicOverlay
+        ? "medium_high"
+        : "medium"
   };
 }
 
-function inferPlacementRenderIntent({ targetId = "" } = {}) {
+function inferPlacementRenderIntent({ targetId = "", targetRole = "primary", goal = "", effectName = "" } = {}) {
   const lower = str(targetId).toLowerCase();
   const isAggregate = /allmodels|group|train_|upperprops|wreathes|nofloods|nomatrix/.test(lower);
+  const lowerGoal = str(goal).toLowerCase();
+  const effect = str(effectName).toLowerCase();
+  const supportWeighted = targetRole === "support" || /fill|support|perimeter|frame\b|framing\b|background|negative space/.test(lowerGoal);
+  const rhythmicWeighted = /rhythm|pulse|drive|beat/.test(lowerGoal) || ["bars", "shockwave", "meteors", "wave"].includes(effect);
   return {
-    groupPolicy: isAggregate ? "preserve_group_rendering" : "no_expand",
-    bufferStyle: "inherit",
-    expansionPolicy: isAggregate ? "preserve" : "no_expand",
-    riskTolerance: isAggregate ? "low" : "medium"
+    groupPolicy: isAggregate || supportWeighted ? "preserve_group_rendering" : "no_expand",
+    bufferStyle: rhythmicWeighted ? "overlay_scaled" : (supportWeighted ? "inherit" : "inherit"),
+    expansionPolicy: isAggregate || supportWeighted ? "preserve" : "no_expand",
+    riskTolerance: isAggregate || supportWeighted ? "low" : "medium"
   };
 }
 
@@ -835,10 +851,15 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
           layerIntent: inferPlacementLayerIntent({
             effectIndex,
             effectName,
-            targetRole
+            targetRole,
+            energy: plan?.energy,
+            goal
           }),
           renderIntent: inferPlacementRenderIntent({
-            targetId
+            targetId,
+            targetRole,
+            goal,
+            effectName
           }),
           constraints: {
             mustAlignToTiming: true,
