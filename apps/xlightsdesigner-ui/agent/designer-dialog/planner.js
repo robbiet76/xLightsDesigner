@@ -141,6 +141,7 @@ function buildIntentGuidanceLines({ normalizedIntent = null } = {}) {
 
   if (styleDirection === "cinematic") {
     lines.push(`${scope} / General / let the phrasing breathe with broader cinematic transitions instead of busy accents`);
+    lines.push(`${scope} / General / shape the pass like a lighting stack with restrained base washes and clearer focal-versus-support separation`);
   } else if (styleDirection === "punchy" || motionIntent === "punchy" || tempoIntent === "increase") {
     lines.push(`${scope} / General / let the lift feel bigger through sharper contrast without turning chaotic`);
   } else if (styleDirection === "smooth" || motionIntent === "smooth") {

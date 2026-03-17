@@ -44,10 +44,10 @@ By the end of the deep-training phase:
 - [ ] Improve use of xLights source structure and metadata tags in concept selection
 - [ ] Improve user-guided metadata capture so tag refinement can affect later concepts
 - [ ] Improve setting/layout-aware concept selection based on prop position and visibility
-- [ ] Improve palette and motion-language consistency across a whole song
+- [x] Improve palette and motion-language consistency across a whole song
 - [ ] Improve focal vs support balance within and across concepts
-- [ ] Improve the designer's use of stage-lighting concepts where they materially improve sequencing choices
-- [ ] Improve the designer's use of composition principles where they materially improve sequencing choices
+- [x] Improve the designer's use of stage-lighting concepts where they materially improve sequencing choices
+- [x] Improve the designer's use of composition principles where they materially improve sequencing choices
 
 ### C. Placement Quality
 
