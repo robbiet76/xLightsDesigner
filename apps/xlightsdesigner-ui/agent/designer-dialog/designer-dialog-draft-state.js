@@ -14,10 +14,11 @@ function syncFlags(state) {
   state.flags.proposalStale = derived.proposalStale;
 }
 
-export function applyDesignerDraftSuccessState(state, { proposalBundle = null, proposalLines = [] } = {}) {
+export function applyDesignerDraftSuccessState(state, { proposalBundle = null, proposalLines = [], sequencePath = "" } = {}) {
   state.creative = state.creative || {};
   state.creative.proposalBundle = proposalBundle;
   state.proposed = arr(proposalLines);
+  state.draftSequencePath = String(sequencePath || "").trim();
   syncFlags(state);
 }
 
@@ -48,6 +49,7 @@ export function clearDesignerDraft(state) {
   state.creative.proposalBundle = null;
   state.creative.runtime = null;
   state.proposed = [];
+  state.draftSequencePath = "";
   syncFlags(state);
 }
 

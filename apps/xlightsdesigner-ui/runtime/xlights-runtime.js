@@ -85,6 +85,8 @@ export async function executeXLightsRefreshCycle({
     currentSequencePath = () => "",
     clearIgnoredExternalSequenceNote = () => {},
     applyOpenSequenceState = () => {},
+    onSequenceChanged = () => {},
+    onSequenceCleared = () => {},
     syncAudioPathFromMediaStatus = async () => {},
     hydrateSidecarForCurrentSequence = async () => {},
     updateSequenceFileMtime = async () => {},
@@ -113,12 +115,19 @@ export async function executeXLightsRefreshCycle({
     }
     const nextPath = currentSequencePath();
     if (nextPath && nextPath !== prevPath) {
+      onSequenceChanged({
+        previousPath: prevPath,
+        nextPath,
+        sequence: seq
+      });
       await hydrateSidecarForCurrentSequence();
     }
     await updateSequenceFileMtime(currentSequencePath());
     await maybeFlushSidecarAfterExternalSave(currentSequencePath());
   } else if (open?.data?.isOpen && seq) {
     noteIgnoredExternalSequence(seq);
+  } else if (prevPath) {
+    onSequenceCleared({ previousPath: prevPath });
   }
 
   const revisionState = await syncRevision();

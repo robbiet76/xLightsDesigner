@@ -24,7 +24,8 @@ export function applyDesignerProposalSuccessToState(state, orchestration = {}) {
   };
   applyDesignerDraftSuccessState(state, {
     proposalBundle: orchestration.proposalBundle || null,
-    proposalLines: arr(orchestration.proposalLines)
+    proposalLines: arr(orchestration.proposalLines),
+    sequencePath: String(state.sequencePathInput || "")
   });
   const derived = deriveDesignerDraftState({
     proposalBundle: state.creative?.proposalBundle,

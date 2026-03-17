@@ -286,6 +286,7 @@ const defaultState = {
   projectCreatedAt: "",
   projectUpdatedAt: "",
   revision: "unknown",
+  draftSequencePath: "",
   health: {
     lastCheckedAt: "",
     capabilitiesCount: 0,
@@ -1816,6 +1817,7 @@ function buildSequenceSidecarDocument() {
       proposed: Array.isArray(state.proposed) ? state.proposed : [],
       agentPlan: state.agentPlan && typeof state.agentPlan === "object" ? state.agentPlan : null,
       draftBaseRevision: state.draftBaseRevision || "unknown",
+      draftSequencePath: String(state.draftSequencePath || ""),
       flags: {
         hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
         proposalStale: Boolean(state.flags?.proposalStale)
@@ -1850,6 +1852,9 @@ function applySequenceSidecarDocument(doc) {
     : null;
   if (typeof doc?.draft?.draftBaseRevision === "string") {
     state.draftBaseRevision = doc.draft.draftBaseRevision;
+  }
+  if (typeof doc?.draft?.draftSequencePath === "string") {
+    state.draftSequencePath = doc.draft.draftSequencePath;
   }
   if (doc?.draft?.flags && typeof doc.draft.flags === "object") {
     if (typeof doc.draft.flags.hasDraftProposal === "boolean") {
@@ -2197,9 +2202,10 @@ function extractProjectSnapshot() {
       handoffs
     },
     draft: {
-      draftBaseRevision: String(state.draftBaseRevision || "unknown"),
-      hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
-      proposalStale: Boolean(state.flags?.proposalStale)
+    draftBaseRevision: String(state.draftBaseRevision || "unknown"),
+    draftSequencePath: String(state.draftSequencePath || ""),
+    hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
+    proposalStale: Boolean(state.flags?.proposalStale)
     },
     flags: {
       planOnlyMode: state.flags.planOnlyMode
@@ -2282,6 +2288,7 @@ function applyProjectSnapshot(snapshot) {
   });
   if (snapshot?.draft && typeof snapshot.draft === "object") {
     state.draftBaseRevision = String(snapshot.draft.draftBaseRevision || state.draftBaseRevision || "unknown");
+    state.draftSequencePath = String(snapshot.draft.draftSequencePath || state.draftSequencePath || "");
     state.flags.hasDraftProposal = Boolean(snapshot.draft.hasDraftProposal);
     state.flags.proposalStale = Boolean(snapshot.draft.proposalStale);
   }
@@ -3291,7 +3298,8 @@ async function onGenerate(intentOverride = "", options = {}) {
   if (directSequenceMode) {
     applyDesignerDraftSuccessState(state, {
       proposalBundle: proposalOrchestration.proposalBundle || null,
-      proposalLines: Array.isArray(proposalOrchestration.proposalLines) ? proposalOrchestration.proposalLines : []
+      proposalLines: Array.isArray(proposalOrchestration.proposalLines) ? proposalOrchestration.proposalLines : [],
+      sequencePath: currentSequencePathForSidecar()
     });
   } else {
     applyDesignerProposalSuccessToState(state, proposalOrchestration);
@@ -4057,6 +4065,7 @@ async function syncLatestSequenceRevision({
 
 async function onRefresh() {
   state.ui.firstRunMode = false;
+  const prevDraftSequencePath = String(state.draftSequencePath || "").trim();
   try {
     await hydrateAgentHealth();
     await executeXLightsRefreshCycle({
@@ -4081,6 +4090,22 @@ async function onRefresh() {
         currentSequencePath: currentSequencePathForSidecar,
         clearIgnoredExternalSequenceNote,
         applyOpenSequenceState,
+        onSequenceChanged: ({ previousPath = "", nextPath = "" } = {}) => {
+          if (nextPath && nextPath !== previousPath) {
+            clearDesignerDraft(state);
+            state.agentPlan = null;
+            state.creative = state.creative || {};
+            state.creative.intentHandoff = null;
+            invalidateApplyApproval();
+          }
+        },
+        onSequenceCleared: () => {
+          clearDesignerDraft(state);
+          state.agentPlan = null;
+          state.creative = state.creative || {};
+          state.creative.intentHandoff = null;
+          invalidateApplyApproval();
+        },
         syncAudioPathFromMediaStatus,
         hydrateSidecarForCurrentSequence,
         updateSequenceFileMtime,
@@ -4090,6 +4115,14 @@ async function onRefresh() {
         onInfo: (text) => setStatus("info", text)
       }
     });
+    const nextSequencePath = currentSequencePathForSidecar();
+    if (prevDraftSequencePath && nextSequencePath && nextSequencePath !== prevDraftSequencePath) {
+      clearDesignerDraft(state);
+      state.agentPlan = null;
+      state.creative = state.creative || {};
+      state.creative.intentHandoff = null;
+      invalidateApplyApproval();
+    }
   } catch (err) {
     state.flags.xlightsConnected = false;
     enforceConnectivityPlanOnly();

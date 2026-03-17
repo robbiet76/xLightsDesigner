@@ -67,8 +67,10 @@ test("applyDesignerDraftSuccessState syncs proposal bundle and lines", () => {
   const state = buildState();
   applyDesignerDraftSuccessState(state, {
     proposalBundle: state.creative.proposalBundle,
-    proposalLines: ["Chorus / MegaTree / add brighter focal contrast."]
+    proposalLines: ["Chorus / MegaTree / add brighter focal contrast."],
+    sequencePath: "/show/Test.xsq"
   });
   assert.deepEqual(state.proposed, ["Chorus / MegaTree / add brighter focal contrast."]);
+  assert.equal(state.draftSequencePath, "/show/Test.xsq");
   assert.equal(state.flags.hasDraftProposal, true);
 });

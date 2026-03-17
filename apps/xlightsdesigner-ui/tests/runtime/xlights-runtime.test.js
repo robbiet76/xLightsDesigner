@@ -85,3 +85,72 @@ test("executeXLightsRefreshCycle delegates open-sequence refresh flow", async ()
   assert.equal(applied, "/show/Test.xsq");
   assert.equal(result.openSequenceAllowed, true);
 });
+
+test("executeXLightsRefreshCycle notifies when sequence path changes", async () => {
+  const state = { flags: {}, health: {} };
+  let changed = null;
+  let currentPath = "/show/Prev.xsq";
+  await executeXLightsRefreshCycle({
+    state,
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    deps: {
+      getOpen: async () => ({ data: { isOpen: true, sequence: { file: "/show/Next.xsq" } } }),
+      syncRevision: async () => ({ staleDetected: false }),
+      refreshMetadata: async () => {},
+      refreshEffects: async () => {},
+      refreshSections: async () => {},
+      refreshHistory: async () => {}
+    },
+    callbacks: {
+      applyRolloutPolicy: () => {},
+      releaseConnectivityPlanOnly: () => false,
+      isSequenceAllowed: () => true,
+      currentSequencePath: () => currentPath,
+      clearIgnoredExternalSequenceNote: () => {},
+      applyOpenSequenceState: (seq) => { currentPath = seq.file; },
+      onSequenceChanged: (payload) => { changed = payload; },
+      syncAudioPathFromMediaStatus: async () => {},
+      hydrateSidecarForCurrentSequence: async () => {},
+      updateSequenceFileMtime: async () => {},
+      maybeFlushSidecarAfterExternalSave: async () => {},
+      noteIgnoredExternalSequence: () => {},
+      onWarning: () => {},
+      onInfo: () => {}
+    }
+  });
+
+  assert.deepEqual(changed, {
+    previousPath: "/show/Prev.xsq",
+    nextPath: "/show/Next.xsq",
+    sequence: { file: "/show/Next.xsq" }
+  });
+});
+
+test("executeXLightsRefreshCycle notifies when open sequence is cleared", async () => {
+  const state = { flags: {}, health: {} };
+  let cleared = null;
+  await executeXLightsRefreshCycle({
+    state,
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    deps: {
+      getOpen: async () => ({ data: { isOpen: false, sequence: null } }),
+      syncRevision: async () => ({ staleDetected: false }),
+      refreshMetadata: async () => {},
+      refreshEffects: async () => {},
+      refreshSections: async () => {},
+      refreshHistory: async () => {}
+    },
+    callbacks: {
+      applyRolloutPolicy: () => {},
+      releaseConnectivityPlanOnly: () => false,
+      currentSequencePath: () => "/show/Prev.xsq",
+      clearIgnoredExternalSequenceNote: () => {},
+      onSequenceCleared: (payload) => { cleared = payload; },
+      noteIgnoredExternalSequence: () => {},
+      onWarning: () => {},
+      onInfo: () => {}
+    }
+  });
+
+  assert.deepEqual(cleared, { previousPath: "/show/Prev.xsq" });
+});
