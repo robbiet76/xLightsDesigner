@@ -84,10 +84,10 @@ By the end of the deep-training phase:
 
 ### G. Knowledge and Context Inputs
 
-- [ ] Verify metadata tags needed for design reasoning are available from xLights source data or user dialog capture
-- [ ] Identify gaps where the app needs better musical-analysis outputs for training and eval
-- [ ] Identify which stage-lighting terms are allowed vocabulary versus unsupported stylistic noise
-- [ ] Identify which composition principles should be actively evaluated versus treated as optional language
+- [x] Verify metadata tags needed for design reasoning are available from xLights source data or user dialog capture
+- [x] Identify gaps where the app needs better musical-analysis outputs for training and eval
+- [x] Identify which stage-lighting terms are allowed vocabulary versus unsupported stylistic noise
+- [x] Identify which composition principles should be actively evaluated versus treated as optional language
 
 ### H. Live Validation Cadence
 
