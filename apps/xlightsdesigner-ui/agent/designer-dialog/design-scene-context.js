@@ -37,7 +37,21 @@ function summarizeModelPosition(model = {}) {
   const x = average(points.map((row) => row.x));
   const y = average(points.map((row) => row.y));
   const z = average(points.map((row) => row.z));
-  return { x, y, z, nodeCount: points.length };
+  const xs = points.map((row) => row.x).filter(Number.isFinite);
+  const ys = points.map((row) => row.y).filter(Number.isFinite);
+  const zs = points.map((row) => row.z).filter(Number.isFinite);
+  return {
+    x,
+    y,
+    z,
+    nodeCount: points.length,
+    minX: xs.length ? Math.min(...xs) : null,
+    maxX: xs.length ? Math.max(...xs) : null,
+    minY: ys.length ? Math.min(...ys) : null,
+    maxY: ys.length ? Math.max(...ys) : null,
+    minZ: zs.length ? Math.min(...zs) : null,
+    maxZ: zs.length ? Math.max(...zs) : null
+  };
 }
 
 function classifyAxisZone(value, min, max) {
@@ -67,6 +81,17 @@ function classifyDepthZone(value, min, max) {
   return "midground";
 }
 
+function safeSpan(min, max, fallback = 1) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return fallback;
+  const span = Math.abs(max - min);
+  return span > 0 ? span : fallback;
+}
+
+function normalizeFraction(value, total) {
+  if (!Number.isFinite(value) || !Number.isFinite(total) || total <= 0) return 0;
+  return Math.max(0, Math.min(1, value / total));
+}
+
 export function buildDesignSceneContext({
   sceneGraph = {},
   revision = ""
@@ -94,6 +119,10 @@ export function buildDesignSceneContext({
   const maxY = ys.length ? Math.max(...ys) : 0;
   const minZ = zs.length ? Math.min(...zs) : 0;
   const maxZ = zs.length ? Math.max(...zs) : 0;
+  const layoutWidth = safeSpan(minX, maxX);
+  const layoutHeight = safeSpan(minY, maxY);
+  const layoutArea = layoutWidth * layoutHeight;
+  const totalNodeCount = positioned.reduce((sum, row) => sum + Number(row.nodeCount || 0), 0);
 
   const spatialZones = {
     left: [],
@@ -132,6 +161,35 @@ export function buildDesignSceneContext({
     .map((row) => str(row?.id || row?.name))
     .filter(Boolean);
 
+  const impactByTarget = {};
+  let totalImpactWeight = 0;
+  for (const row of positioned) {
+    const width = safeSpan(row.minX, row.maxX);
+    const height = safeSpan(row.minY, row.maxY);
+    const footprintArea = Math.max(1, width * height);
+    const nodeShare = normalizeFraction(Number(row.nodeCount || 0), totalNodeCount);
+    const footprintShare = normalizeFraction(footprintArea, layoutArea);
+    const weightedImpact = (nodeShare * 0.7) + (footprintShare * 0.3);
+    totalImpactWeight += weightedImpact;
+    impactByTarget[row.id] = {
+      nodeCount: Number(row.nodeCount || 0),
+      nodeShare: Number(nodeShare.toFixed(4)),
+      footprintArea: Number(footprintArea.toFixed(4)),
+      footprintShare: Number(footprintShare.toFixed(4)),
+      weightedImpact: Number(weightedImpact.toFixed(4)),
+      position: {
+        x: Number.isFinite(row.x) ? Number(row.x.toFixed(2)) : null,
+        y: Number.isFinite(row.y) ? Number(row.y.toFixed(2)) : null,
+        z: Number.isFinite(row.z) ? Number(row.z.toFixed(2)) : null
+      }
+    };
+  }
+
+  const rankedImpactTargets = Object.entries(impactByTarget)
+    .map(([id, metrics]) => ({ id, ...metrics }))
+    .sort((a, b) => Number(b.weightedImpact || 0) - Number(a.weightedImpact || 0))
+    .slice(0, 12);
+
   return finalizeArtifact({
     artifactType: "design_scene_context_v1",
     artifactVersion: "1.0",
@@ -141,6 +199,15 @@ export function buildDesignSceneContext({
     coverageDomains: {
       broad: broadGroups,
       detail: detailTargets
+    },
+    impactMetrics: {
+      totalNodeCount,
+      layoutWidth: Number(layoutWidth.toFixed(2)),
+      layoutHeight: Number(layoutHeight.toFixed(2)),
+      layoutArea: Number(layoutArea.toFixed(2)),
+      totalImpactWeight: Number(totalImpactWeight.toFixed(4)),
+      impactByTarget,
+      rankedTargets: rankedImpactTargets
     },
     metadata: {
       layoutMode: str(stats.layoutMode || "unknown"),

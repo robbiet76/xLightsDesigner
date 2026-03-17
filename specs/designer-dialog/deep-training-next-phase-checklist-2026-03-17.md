@@ -44,6 +44,7 @@ By the end of the deep-training phase:
 - [x] Improve use of xLights source structure and metadata tags in concept selection
 - [x] Improve user-guided metadata capture so tag refinement can affect later concepts
 - [x] Improve setting/layout-aware concept selection based on prop position and visibility
+- [x] Add layout-weighted impact awareness using node count and spatial footprint
 - [x] Improve palette and motion-language consistency across a whole song
 - [x] Improve focal vs support balance within and across concepts
 - [x] Improve the designer's use of stage-lighting concepts where they materially improve sequencing choices
@@ -72,6 +73,7 @@ By the end of the deep-training phase:
 - [x] Improve section-to-section contrast across an entire song
 - [x] Improve thematic continuity across the full pass
 - [x] Improve restraint so the designer does not overfill dense sections
+- [x] Add target-impact balance awareness so focal moments use enough visual weight without saturating the layout
 - [x] Improve escalation into late-song peaks and finales
 - [x] Improve translation from musical structure into whole-song pacing and contrast
 

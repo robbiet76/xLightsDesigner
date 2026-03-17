@@ -56,6 +56,7 @@ Interpretation:
 
 The runner and designer logic now cover:
 - layout/depth-sensitive concepts
+- layout-weighted impact awareness using node share plus spatial footprint
 - stage-lighting-language concepts
 - richer broad-pass family diversity for rhythm/layout/lighting prompts
 - offline revise-case scoring through the same merge semantics used by the app revision path
@@ -106,4 +107,5 @@ Interpretation:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
    - live validation slices against real sequence output
+   - richer impact-budget tuning using the new node/share metrics
 3. promote only changes that improve the artistic layer without regressing structural results

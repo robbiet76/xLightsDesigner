@@ -97,7 +97,9 @@
         "mustOnlyIncludeTargetIds": ["Snowman", "Star"],
         "mustIncludeTrackNames": ["XD: Beat Grid"],
         "mustIncludeAlignmentModes": ["beat_window"],
-        "maxTargetCount": 2
+        "maxTargetCount": 2,
+        "minConceptWeightedImpactShare": 0.11,
+        "maxConceptWeightedImpactShare": 0.45
       }
     },
     {
@@ -283,6 +285,7 @@
         "minDesignConceptCount": 4,
         "minDistinctSectionFamilySignatures": 3,
         "minRecurringEffectFamilies": 2,
+        "maxPeakSectionImpactShare": 0.75,
         "placementCountComparisons": [
           { "higherSection": "Chorus 1", "lowerSection": "Intro" }
         ]
@@ -337,6 +340,7 @@
         "minDistinctSectionFamilySignatures": 3,
         "minRecurringEffectFamilies": 2,
         "maxPaletteTemperatureCount": 2,
+        "minPeakSectionImpactShare": 0.18,
         "placementCountComparisons": [
           { "higherSection": "Final Chorus", "lowerSection": "Intro" }
         ]

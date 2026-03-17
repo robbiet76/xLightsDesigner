@@ -29,6 +29,12 @@ function uniq(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function parentTargetId(value = "") {
+  const text = str(value);
+  if (!text) return "";
+  return text.includes("/") ? text.split("/")[0] : text;
+}
+
 function buildFixture({ variant = "default", metadataFixture = null } = {}) {
   const baseAssignments = arr(metadataFixture?.assignments);
   const overrideAssignments = variant === "metadata_change_sensitivity"
@@ -202,11 +208,27 @@ function includesAll(source = [], required = []) {
   return arr(required).every((row) => haystack.has(str(row)));
 }
 
-function extractMetrics(result = {}) {
+function sumRounded(values = []) {
+  return Number(arr(values).reduce((sum, value) => sum + Number(value || 0), 0).toFixed(4));
+}
+
+function resolveImpactEntry(impactByTarget = {}, targetId = "") {
+  const normalized = str(targetId);
+  if (!normalized) return null;
+  return impactByTarget[normalized] || impactByTarget[parentTargetId(normalized)] || null;
+}
+
+function extractMetrics(result = {}, options = {}) {
   const proposalBundle = result?.proposalBundle || {};
   const executionPlan = proposalBundle?.executionPlan || {};
   const placements = arr(executionPlan.effectPlacements);
   const sectionPlans = arr(executionPlan.sectionPlans);
+  const designSceneContext = options?.designSceneContext && typeof options.designSceneContext === "object"
+    ? options.designSceneContext
+    : {};
+  const impactByTarget = designSceneContext?.impactMetrics?.impactByTarget && typeof designSceneContext.impactMetrics.impactByTarget === "object"
+    ? designSceneContext.impactMetrics.impactByTarget
+    : {};
   const conceptIds = uniq(sectionPlans.map((row) => row?.designId));
   const placementConceptIds = uniq(placements.map((row) => row?.designId));
   const effectFamilies = uniq(placements.map((row) => row?.effectName));
@@ -300,6 +322,30 @@ function extractMetrics(result = {}) {
       wellShapedOverlayCount += 1;
     }
   }
+  const targetIds = uniq([
+    ...arr(result?.intentHandoff?.scope?.targetIds),
+    ...placements.map((row) => row?.targetId)
+  ]);
+  const uniqueTargetImpacts = targetIds
+    .map((targetId) => ({ targetId, impact: resolveImpactEntry(impactByTarget, targetId) }))
+    .filter((row) => row.impact);
+  const conceptWeightedImpactShare = sumRounded(uniqueTargetImpacts.map((row) => row.impact.weightedImpact));
+  const conceptNodeShare = sumRounded(uniqueTargetImpacts.map((row) => row.impact.nodeShare));
+  const perSectionImpactShares = {};
+  for (const section of Object.keys(perSectionPlacementCounts)) {
+    const sectionTargets = uniq(
+      placements
+        .filter((row) => str(row?.sourceSectionLabel || row?.timingContext?.anchorLabel) === section)
+        .map((row) => row?.targetId)
+    );
+    perSectionImpactShares[section] = sumRounded(
+      sectionTargets.map((targetId) => resolveImpactEntry(impactByTarget, targetId)?.weightedImpact || 0)
+    );
+  }
+  const peakSectionImpactShare = Object.values(perSectionImpactShares).length
+    ? Number(Math.max(...Object.values(perSectionImpactShares).map((value) => Number(value || 0))).toFixed(4))
+    : 0;
+
   return {
     proposalLineCount: arr(proposalBundle.proposalLines).length,
     designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
@@ -310,10 +356,7 @@ function extractMetrics(result = {}) {
     distinctEffectFamilies: effectFamilies,
     trackNames: uniq(placements.map((row) => row?.timingContext?.trackName)),
     alignmentModes: uniq(placements.map((row) => row?.timingContext?.alignmentMode)),
-    targetIds: uniq([
-      ...arr(result?.intentHandoff?.scope?.targetIds),
-      ...placements.map((row) => row?.targetId)
-    ]),
+    targetIds,
     layeredTargetIds,
     overlayPlacementCount: overlayPlacements.length,
     focusedOverlayPlacementCount: focusedOverlayPlacements.length,
@@ -324,6 +367,10 @@ function extractMetrics(result = {}) {
     distinctSectionFamilySignatures,
     recurringEffectFamilies,
     wellShapedOverlayCount,
+    conceptWeightedImpactShare,
+    conceptNodeShare,
+    perSectionImpactShares,
+    peakSectionImpactShare,
     tagNames: uniq(result?.intentHandoff?.scope?.tagNames),
     sections: uniq(result?.intentHandoff?.scope?.sections)
   };
@@ -790,11 +837,11 @@ function evaluateArtisticScores({ summary = "", proposalLines = [], executionPla
   };
 }
 
-function evaluateCase(result, testCase) {
+function evaluateCase(result, testCase, fixture = null) {
   const failures = [];
   const proposalLines = arr(result?.proposalLines);
   const summary = str(result?.summary);
-  const metrics = extractMetrics(result);
+  const metrics = extractMetrics(result, { designSceneContext: fixture?.designSceneContext || null });
   const expect = testCase.expect || {};
   let checksTotal = 0;
   let checksPassed = 0;
@@ -885,6 +932,18 @@ function evaluateCase(result, testCase) {
   }
   if (expect.minDistinctSectionFamilySignatures != null) {
     check("insufficient_section_family_contrast", Number(metrics.distinctSectionFamilySignatures || 0) >= Number(expect.minDistinctSectionFamilySignatures));
+  }
+  if (expect.maxConceptWeightedImpactShare != null) {
+    check("excessive_concept_impact_share", Number(metrics.conceptWeightedImpactShare || 0) <= Number(expect.maxConceptWeightedImpactShare));
+  }
+  if (expect.minConceptWeightedImpactShare != null) {
+    check("insufficient_concept_impact_share", Number(metrics.conceptWeightedImpactShare || 0) >= Number(expect.minConceptWeightedImpactShare));
+  }
+  if (expect.maxPeakSectionImpactShare != null) {
+    check("excessive_peak_section_impact_share", Number(metrics.peakSectionImpactShare || 0) <= Number(expect.maxPeakSectionImpactShare));
+  }
+  if (expect.minPeakSectionImpactShare != null) {
+    check("insufficient_peak_section_impact_share", Number(metrics.peakSectionImpactShare || 0) >= Number(expect.minPeakSectionImpactShare));
   }
   if (expect.minRecurringEffectFamilies != null) {
     check("insufficient_thematic_family_recurrence", arr(metrics.recurringEffectFamilies).length >= Number(expect.minRecurringEffectFamilies));
@@ -1009,7 +1068,7 @@ function runCase(testCase, metadataFixture) {
     directorProfile: buildDirectorProfile(testCase.directorProfileVariant)
   });
 
-  const evaluation = evaluateCase(result, testCase);
+  const evaluation = evaluateCase(result, testCase, fixture);
   return {
     id: testCase.id,
     kind: testCase.kind,
@@ -1060,8 +1119,8 @@ function runPairedPreferenceCase(testCase, metadataFixture) {
     ...baseArgs,
     directorProfile: buildDirectorProfile("crisp_focal")
   });
-  const warmMetrics = extractMetrics(warmResult);
-  const crispMetrics = extractMetrics(crispResult);
+  const warmMetrics = extractMetrics(warmResult, { designSceneContext: fixture.designSceneContext });
+  const crispMetrics = extractMetrics(crispResult, { designSceneContext: fixture.designSceneContext });
   const warmFamilies = uniq(warmMetrics.distinctEffectFamilies).sort();
   const crispFamilies = uniq(crispMetrics.distinctEffectFamilies).sort();
   const warmChorusSpeed = Number(warmMetrics.perSectionAverageSpeeds?.["Chorus 1"] || 0);
@@ -1128,8 +1187,8 @@ function runRepeatedPreferenceCase(testCase, metadataFixture) {
     requestId: `eval-${testCase.id}-2`,
     ...baseArgs
   });
-  const firstMetrics = extractMetrics(firstResult);
-  const secondMetrics = extractMetrics(secondResult);
+  const firstMetrics = extractMetrics(firstResult, { designSceneContext: fixture.designSceneContext });
+  const secondMetrics = extractMetrics(secondResult, { designSceneContext: fixture.designSceneContext });
   const failures = [];
   let checksTotal = 0;
   let checksPassed = 0;
@@ -1200,8 +1259,8 @@ function runPairedMetadataCase(testCase, metadataFixture) {
   });
   const defaultResult = executeDesignerProposalOrchestration(buildArgs(defaultFixture, `eval-${testCase.id}-default`));
   const overrideResult = executeDesignerProposalOrchestration(buildArgs(overrideFixture, `eval-${testCase.id}-override`));
-  const defaultMetrics = extractMetrics(defaultResult);
-  const overrideMetrics = extractMetrics(overrideResult);
+  const defaultMetrics = extractMetrics(defaultResult, { designSceneContext: defaultFixture.designSceneContext });
+  const overrideMetrics = extractMetrics(overrideResult, { designSceneContext: overrideFixture.designSceneContext });
   const defaultTargets = uniq(defaultMetrics.targetIds).sort();
   const overrideTargets = uniq(overrideMetrics.targetIds).sort();
   const failures = [];

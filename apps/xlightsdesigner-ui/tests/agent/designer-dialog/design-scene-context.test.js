@@ -53,4 +53,7 @@ test("buildDesignSceneContext derives spatial zones and focal candidates", () =>
   assert.ok(context.focalCandidates.includes("CenterTree"));
   assert.ok(context.coverageDomains.broad.includes("AllModels"));
   assert.ok(context.coverageDomains.detail.includes("CenterTree/Star"));
+  assert.equal(context.impactMetrics.totalNodeCount, 4);
+  assert.ok(context.impactMetrics.impactByTarget.CenterTree.nodeShare > context.impactMetrics.impactByTarget.LeftTree.nodeShare);
+  assert.ok(context.impactMetrics.rankedTargets[0].id === "CenterTree");
 });
