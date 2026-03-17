@@ -237,7 +237,15 @@
       "expect": {
         "minEffectPlacementCount": 16,
         "minDistinctEffectFamilies": 4,
-        "minDesignConceptCount": 4
+        "minDesignConceptCount": 4,
+        "minDistinctSectionFamilySignatures": 3,
+        "placementCountComparisons": [
+          { "higherSection": "Chorus 1", "lowerSection": "Intro" },
+          { "higherSection": "Final Chorus", "lowerSection": "Outro" }
+        ],
+        "averageSpeedComparisons": [
+          { "fasterSection": "Final Chorus", "slowerSection": "Intro" }
+        ]
       }
     },
     {
@@ -249,7 +257,14 @@
       "expect": {
         "minEffectPlacementCount": 12,
         "minDistinctEffectFamilies": 3,
-        "minDesignConceptCount": 4
+        "minDesignConceptCount": 4,
+        "minDistinctSectionFamilySignatures": 3,
+        "placementCountComparisons": [
+          { "higherSection": "Final Chorus", "lowerSection": "Intro" }
+        ],
+        "averageSpeedComparisons": [
+          { "fasterSection": "Final Chorus", "slowerSection": "Intro" }
+        ]
       }
     },
     {
@@ -261,7 +276,11 @@
       "expect": {
         "minEffectPlacementCount": 10,
         "minDistinctEffectFamilies": 3,
-        "minDesignConceptCount": 4
+        "minDesignConceptCount": 4,
+        "minDistinctSectionFamilySignatures": 3,
+        "placementCountComparisons": [
+          { "higherSection": "Chorus 1", "lowerSection": "Intro" }
+        ]
       }
     },
     {
@@ -273,7 +292,8 @@
       "expect": {
         "minEffectPlacementCount": 12,
         "minDistinctEffectFamilies": 3,
-        "minDesignConceptCount": 4
+        "minDesignConceptCount": 4,
+        "minDistinctSectionFamilySignatures": 3
       }
     },
     {
@@ -285,7 +305,11 @@
       "expect": {
         "minEffectPlacementCount": 12,
         "minDistinctEffectFamilies": 3,
-        "minDesignConceptCount": 4
+        "minDesignConceptCount": 4,
+        "minDistinctSectionFamilySignatures": 3,
+        "placementCountComparisons": [
+          { "higherSection": "Chorus 1", "lowerSection": "Verse 1" }
+        ]
       }
     },
     {
@@ -301,7 +325,11 @@
         "minLayeredTargetCount": 2,
         "minFocusedOverlayPlacementCount": 2,
         "mustIncludeBlendRoles": ["support_fill", "foundation", "accent_overlay"],
-        "mustIncludeBufferStyles": ["overlay_scaled", "inherit"]
+        "mustIncludeBufferStyles": ["overlay_scaled", "inherit"],
+        "minDistinctSectionFamilySignatures": 3,
+        "placementCountComparisons": [
+          { "higherSection": "Final Chorus", "lowerSection": "Intro" }
+        ]
       }
     },
 

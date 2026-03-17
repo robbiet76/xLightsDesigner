@@ -68,12 +68,12 @@ By the end of the deep-training phase:
 
 ### E. Whole-Sequence Pass Quality
 
-- [ ] Train richer broad-pass authorship using the supported effect families intentionally
-- [ ] Improve section-to-section contrast across an entire song
+- [x] Train richer broad-pass authorship using the supported effect families intentionally
+- [x] Improve section-to-section contrast across an entire song
 - [ ] Improve thematic continuity across the full pass
-- [ ] Improve restraint so the designer does not overfill dense sections
-- [ ] Improve escalation into late-song peaks and finales
-- [ ] Improve translation from musical structure into whole-song pacing and contrast
+- [x] Improve restraint so the designer does not overfill dense sections
+- [x] Improve escalation into late-song peaks and finales
+- [x] Improve translation from musical structure into whole-song pacing and contrast
 
 ### F. Preference and Director Adaptation
 

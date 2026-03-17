@@ -222,6 +222,31 @@ function extractMetrics(result = {}) {
   }
   const overlayPlacements = placements.filter((row) => Number(row?.layerIndex) >= 1);
   const focusedOverlayPlacements = overlayPlacements.filter((row) => /focused|partial/i.test(str(row?.settingsIntent?.coverage)));
+  const perSectionPlacementCounts = {};
+  const perSectionEffectFamilies = {};
+  const perSectionSpeedValues = {};
+  for (const placement of placements) {
+    const section = str(placement?.sourceSectionLabel || placement?.timingContext?.anchorLabel);
+    if (!section) continue;
+    perSectionPlacementCounts[section] = (perSectionPlacementCounts[section] || 0) + 1;
+    if (!perSectionEffectFamilies[section]) perSectionEffectFamilies[section] = [];
+    perSectionEffectFamilies[section].push(str(placement?.effectName));
+    if (!perSectionSpeedValues[section]) perSectionSpeedValues[section] = [];
+    perSectionSpeedValues[section].push(normalizeSpeedValue(placement?.settingsIntent?.speed));
+  }
+  const perSectionEffectFamilyCounts = Object.fromEntries(
+    Object.entries(perSectionEffectFamilies).map(([section, values]) => [section, uniq(values).length])
+  );
+  const perSectionAverageSpeeds = Object.fromEntries(
+    Object.entries(perSectionSpeedValues).map(([section, values]) => [section, Number(average(values).toFixed(2))])
+  );
+  const distinctSectionFamilySignatures = uniq(
+    Object.values(
+      Object.fromEntries(
+        Object.entries(perSectionEffectFamilies).map(([section, values]) => [section, uniq(values).sort().join("|")])
+      )
+    )
+  ).length;
   return {
     proposalLineCount: arr(proposalBundle.proposalLines).length,
     designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
@@ -236,6 +261,10 @@ function extractMetrics(result = {}) {
     layeredTargetIds,
     overlayPlacementCount: overlayPlacements.length,
     focusedOverlayPlacementCount: focusedOverlayPlacements.length,
+    perSectionPlacementCounts,
+    perSectionEffectFamilyCounts,
+    perSectionAverageSpeeds,
+    distinctSectionFamilySignatures,
     tagNames: uniq(result?.intentHandoff?.scope?.tagNames),
     sections: uniq(result?.intentHandoff?.scope?.sections)
   };
@@ -722,6 +751,23 @@ function evaluateCase(result, testCase) {
   if (expect.mustIncludeBufferStyles) {
     const actual = new Set(arr(result?.proposalBundle?.executionPlan?.effectPlacements).map((row) => str(row?.renderIntent?.bufferStyle)));
     check("missing_required_buffer_styles", arr(expect.mustIncludeBufferStyles).every((row) => actual.has(str(row))));
+  }
+  if (expect.minDistinctSectionFamilySignatures != null) {
+    check("insufficient_section_family_contrast", Number(metrics.distinctSectionFamilySignatures || 0) >= Number(expect.minDistinctSectionFamilySignatures));
+  }
+  for (const comparison of arr(expect.placementCountComparisons)) {
+    const higher = str(comparison?.higherSection);
+    const lower = str(comparison?.lowerSection);
+    const higherCount = Number(metrics.perSectionPlacementCounts?.[higher] || 0);
+    const lowerCount = Number(metrics.perSectionPlacementCounts?.[lower] || 0);
+    check(`placement_count_comparison_${higher}_vs_${lower}`, higherCount > lowerCount);
+  }
+  for (const comparison of arr(expect.averageSpeedComparisons)) {
+    const faster = str(comparison?.fasterSection);
+    const slower = str(comparison?.slowerSection);
+    const fasterSpeed = Number(metrics.perSectionAverageSpeeds?.[faster] || 0);
+    const slowerSpeed = Number(metrics.perSectionAverageSpeeds?.[slower] || 0);
+    check(`average_speed_comparison_${faster}_vs_${slower}`, fasterSpeed > slowerSpeed);
   }
 
   const score = structuralScore({
