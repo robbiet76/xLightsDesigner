@@ -17,6 +17,12 @@ import {
   writeProjectArtifacts
 } from "./project-artifact-store.mjs";
 import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs";
+import {
+  validateDirectSequencePromptState,
+  buildXLightsSequenceState,
+  buildXLightsTimingState,
+  buildXLightsEffectOccupancyState
+} from "./xlights-validation.mjs";
 
 const require = createRequire(import.meta.url);
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
@@ -45,6 +51,10 @@ const PACKAGED_RENDERER_ENTRY = path.join(__dirname, "renderer", "index.html");
 const DEV_RENDERER_ENTRY = path.resolve(__dirname, "..", "xlightsdesigner-ui", "index.html");
 let mainWindow = null;
 const STARTUP_LOG = "/tmp/xld-desktop-main.log";
+const AUTOMATION_ROOT = "/tmp/xld-automation";
+const AUTOMATION_REQUESTS_DIR = path.join(AUTOMATION_ROOT, "requests");
+const AUTOMATION_RESPONSES_DIR = path.join(AUTOMATION_ROOT, "responses");
+let automationPollTimer = null;
 const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
@@ -60,6 +70,240 @@ function logStartup(message) {
 
 function ensureDirSync(dir) {
   fs.mkdirSync(dir, { recursive: true });
+}
+
+function ensureAutomationDirs() {
+  ensureDirSync(AUTOMATION_REQUESTS_DIR);
+  ensureDirSync(AUTOMATION_RESPONSES_DIR);
+}
+
+function automationResponsePath(id = "") {
+  return path.join(AUTOMATION_RESPONSES_DIR, `${String(id || "").trim()}.json`);
+}
+
+function normalizeXLightsBody(raw = "") {
+  const text = String(raw || "");
+  const idx = text.indexOf("{");
+  return idx >= 0 ? text.slice(idx) : text;
+}
+
+function runCurl(args = []) {
+  return new Promise((resolve, reject) => {
+    const child = spawn("curl", args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += String(chunk || ""); });
+    child.stderr.on("data", (chunk) => { stderr += String(chunk || ""); });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(stderr.trim() || `curl exited with code ${code}`));
+        return;
+      }
+      resolve(stdout);
+    });
+  });
+}
+
+async function postXLightsCommand(endpoint = "", cmd = "", params = {}, options = {}) {
+  const payload = JSON.stringify({
+    apiVersion: 2,
+    cmd,
+    params,
+    options
+  });
+  const raw = await runCurl([
+    "-sS",
+    "-H", "Content-Type: application/json",
+    "--data-binary", payload,
+    String(endpoint || "").trim()
+  ]);
+  const normalized = normalizeXLightsBody(raw);
+  let json = null;
+  try {
+    json = JSON.parse(normalized);
+  } catch (err) {
+    throw new Error(`Invalid JSON from xLights endpoint (${err.message})`);
+  }
+  if (json?.res !== 200) {
+    const code = json?.error?.code || "UNKNOWN";
+    const message = json?.error?.message || json?.msg || "Command failed";
+    throw new Error(`${cmd} failed (${code}): ${message}`);
+  }
+  return json;
+}
+
+async function getRendererValidationSnapshot() {
+  return invokeRendererAutomation("getDirectSequenceValidationSnapshot", {});
+}
+
+function str(value = "") {
+  return String(value || "").trim();
+}
+
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function buildEffectQueriesFromSequenceRows(rows = [], expected = {}) {
+  const target = str(expected?.target || expected?.targetModelName);
+  const section = str(expected?.section || expected?.expectedSectionLabel);
+  const effectName = str(expected?.effectName || expected?.expectedEffectName);
+  return arr(rows)
+    .filter((row) => {
+      if (target && str(row?.target) !== target) return false;
+      if (section && str(row?.section) !== section) return false;
+      if (effectName && !str(row?.summary).toLowerCase().includes(effectName.toLowerCase())) return false;
+      return true;
+    })
+    .map((row) => ({
+      modelName: str(row?.target),
+      layerIndex: 0,
+      effectName,
+      startMs: null,
+      endMs: null
+    }))
+    .filter((row) => row.modelName && row.effectName);
+}
+
+async function readXLightsSequenceStateViaCurl(endpoint = "") {
+  const [openResp, revisionResp, settingsResp, modelsResp, submodelsResp, displayResp, tracksResp] = await Promise.all([
+    postXLightsCommand(endpoint, "sequence.getOpen", {}),
+    postXLightsCommand(endpoint, "sequence.getRevision", {}),
+    postXLightsCommand(endpoint, "sequence.getSettings", {}),
+    postXLightsCommand(endpoint, "layout.getModels", {}),
+    postXLightsCommand(endpoint, "layout.getSubmodels", {}),
+    postXLightsCommand(endpoint, "layout.getDisplayElements", {}),
+    postXLightsCommand(endpoint, "timing.getTracks", {})
+  ]);
+
+  return buildXLightsSequenceState({
+    endpoint,
+    openSequence: openResp?.data?.isOpen ? openResp?.data?.sequence || null : null,
+    revision: str(revisionResp?.data?.revision || revisionResp?.data?.revisionToken || "unknown"),
+    sequenceSettings: settingsResp?.data || null,
+    models: arr(modelsResp?.data?.models),
+    submodels: arr(submodelsResp?.data?.submodels),
+    displayElements: arr(displayResp?.data?.elements),
+    timingState: buildXLightsTimingState({
+      tracks: arr(tracksResp?.data?.tracks)
+    })
+  });
+}
+
+async function readXLightsEffectOccupancyStateViaCurl(endpoint = "", queries = []) {
+  const effectsByQuery = {};
+  for (const query of arr(queries)) {
+    const key = [
+      str(query?.modelName),
+      query?.layerIndex == null ? "*" : String(query.layerIndex),
+      query?.startMs == null ? "*" : String(query.startMs),
+      query?.endMs == null ? "*" : String(query.endMs),
+      str(query?.effectName || "*")
+    ].join("|");
+    const resp = await postXLightsCommand(endpoint, "effects.list", {
+      modelName: query.modelName,
+      layerIndex: query.layerIndex == null ? undefined : query.layerIndex,
+      startMs: query.startMs == null ? undefined : query.startMs,
+      endMs: query.endMs == null ? undefined : query.endMs
+    });
+    effectsByQuery[key] = arr(resp?.data?.effects);
+  }
+  return buildXLightsEffectOccupancyState({ queries, effectsByQuery });
+}
+
+async function runDirectSequenceValidationFromDesktop(expected = {}) {
+  const snapshot = await getRendererValidationSnapshot();
+  const endpoint = str(snapshot?.endpoint);
+  const pageStates = snapshot?.pageStates || {};
+  const xlightsSequenceState = await readXLightsSequenceStateViaCurl(endpoint);
+  const queries = buildEffectQueriesFromSequenceRows(pageStates?.sequence?.data?.rows || [], {
+    target: expected?.target || expected?.targetModelName,
+    section: expected?.section || expected?.expectedSectionLabel,
+    effectName: expected?.effectName || expected?.expectedEffectName
+  });
+  const xlightsEffectOccupancyState = queries.length
+    ? await readXLightsEffectOccupancyStateViaCurl(endpoint, queries)
+    : null;
+  const validation = validateDirectSequencePromptState({
+    expected: {
+      sequenceName: expected?.sequenceName,
+      target: expected?.target || expected?.targetModelName,
+      section: expected?.section || expected?.expectedSectionLabel,
+      effectName: expected?.effectName || expected?.expectedEffectName,
+      applied: expected?.applied === true
+    },
+    pageStates,
+    xlightsSequenceState,
+    xlightsEffectOccupancyState
+  });
+  return {
+    contract: "direct_sequence_validation_run_v1",
+    version: "1.0",
+    pageStates,
+    xlightsSequenceState,
+    xlightsEffectOccupancyState,
+    validation
+  };
+}
+
+async function invokeRendererAutomation(action = "", payload = {}) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    throw new Error("xLightsDesigner window is not available");
+  }
+  const script = `(() => {
+    const runtime = window.xLightsDesignerRuntime;
+    if (!runtime || typeof runtime[${JSON.stringify(action)}] !== "function") {
+      throw new Error("Renderer automation action unavailable: ${action}");
+    }
+    return runtime[${JSON.stringify(action)}](${JSON.stringify(payload)});
+  })()`;
+  return mainWindow.webContents.executeJavaScript(script, true);
+}
+
+async function processAutomationRequests() {
+  ensureAutomationDirs();
+  const files = fs.readdirSync(AUTOMATION_REQUESTS_DIR)
+    .filter((name) => name.endsWith('.json'))
+    .sort();
+  for (const name of files) {
+    const fullPath = path.join(AUTOMATION_REQUESTS_DIR, name);
+    let request = null;
+    try {
+      request = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+      const id = String(request?.id || path.basename(name, '.json')).trim() || path.basename(name, '.json');
+      const action = String(request?.action || '').trim();
+      let result = null;
+      if (action === 'dispatchPrompt') {
+        result = await invokeRendererAutomation('dispatchPrompt', String(request?.payload?.prompt || ''));
+      } else if (action === 'ping') {
+        result = { ok: true, appReady: true };
+      } else if (action === 'applyCurrentProposal') {
+        result = await invokeRendererAutomation('applyCurrentProposal', request?.payload || {});
+      } else if (action == 'runDirectSequenceValidation') {
+        result = await runDirectSequenceValidationFromDesktop(request?.payload || {});
+      } else {
+        throw new Error(`Unknown automation action: ${action || 'missing'}`);
+      }
+      fs.writeFileSync(automationResponsePath(id), JSON.stringify({ ok: true, id, action, result }, null, 2), 'utf8');
+    } catch (err) {
+      const id = String(request?.id || path.basename(name, '.json')).trim() || path.basename(name, '.json');
+      const action = String(request?.action || '').trim();
+      fs.writeFileSync(automationResponsePath(id), JSON.stringify({ ok: false, id, action, error: String(err?.message || err) }, null, 2), 'utf8');
+    } finally {
+      try { fs.unlinkSync(fullPath); } catch {}
+    }
+  }
+}
+
+function startAutomationPolling() {
+  ensureAutomationDirs();
+  if (automationPollTimer) return;
+  automationPollTimer = setInterval(() => {
+    processAutomationRequests().catch((err) => {
+      logStartup(`automation:poll error=${String(err?.message || err)}`);
+    });
+  }, 500);
 }
 
 function tryCopyIfMissing(src, dest) {
@@ -308,6 +552,14 @@ function createWindow() {
 
   win.webContents.on("did-fail-load", (_event, code, desc, url, isMainFrame) => {
     logStartup(`webContents:did-fail-load code=${code} desc=${desc} url=${url} main=${isMainFrame}`);
+  });
+
+  win.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    logStartup(`webContents:console level=${level} line=${line} source=${sourceId || "unknown"} message=${String(message || "")}`);
+  });
+
+  win.webContents.on("preload-error", (_event, preloadPath, error) => {
+    logStartup(`webContents:preload-error path=${preloadPath || "unknown"} error=${String(error?.message || error || "unknown")}`);
   });
 
   win.webContents.on("render-process-gone", (_event, details) => {
@@ -1847,6 +2099,7 @@ app.on("child-process-gone", (_event, details) => {
 app.whenReady().then(() => {
   logStartup("app:whenReady:resolved");
   createWindow();
+  startAutomationPolling();
 });
 
 app.on("window-all-closed", () => {

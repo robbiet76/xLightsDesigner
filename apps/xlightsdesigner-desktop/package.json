@@ -10,8 +10,9 @@
     "test:agent-ui": "node --test ../xlightsdesigner-ui/tests/agent/*.test.js ../xlightsdesigner-ui/tests/agent/audio-analyst/*.test.js ../xlightsdesigner-ui/tests/agent/designer-dialog/*.test.js ../xlightsdesigner-ui/tests/agent/sequence-agent/*.test.js",
     "prepare:renderer": "node scripts/prepare-renderer.mjs",
     "dist:dir": "npm run prepare:renderer && electron-builder --dir",
-    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip && node scripts/install-mac-app.mjs",
+    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip && node scripts/install-mac-app.mjs && node scripts/install-launch-agent.mjs",
     "install:mac-app": "node scripts/install-mac-app.mjs",
+    "install:launch-agent": "node scripts/install-launch-agent.mjs",
     "verify:bundle": "node scripts/verify-bundle.mjs"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "files": [
       "main.mjs",
       "preload.mjs",
+      "xlights-validation.mjs",
       "designer-chat-sanitizer.mjs",
       "analysis-artifact-store.mjs",
       "project-artifact-store.mjs",
