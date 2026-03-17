@@ -20,7 +20,7 @@ By the end of the deep-training phase:
 
 - [x] Finalize concept-quality rubric
 - [x] Finalize whole-sequence pass rubric
-- [ ] Build eval sets for:
+- [x] Build eval sets for:
   - concept clarity
   - prop understanding from xLights source data and metadata tags
   - setting/layout awareness
@@ -61,6 +61,7 @@ By the end of the deep-training phase:
 ### D. Revision Quality
 
 - [ ] Train revise behavior to preserve concept identity
+- [ ] Automate offline scoring for revise-existing-concept eval cases through the app revision path
 - [ ] Train revise behavior to modify only the requested concepts when possible
 - [ ] Train delete/regenerate workflows at the concept level
 - [ ] Train partial-pass refinement without whole-sequence drift

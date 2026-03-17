@@ -1,0 +1,289 @@
+{
+  "corpusType": "designer_eval_cases_v1",
+  "version": "1.0",
+  "description": "Canonical offline eval corpus for designer deep-training baseline.",
+  "cases": [
+    {
+      "id": "concept-metadata-character-support",
+      "kind": "concept",
+      "lenses": ["Prop Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Keep the character props leading the chorus while support props stay subtle.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "mustIncludeTagNames": ["character", "support"],
+        "mustIncludeTargetIds": ["Snowman", "Border-01"],
+        "proposalLinePatternsAny": ["character props", "support props"]
+      }
+    },
+    {
+      "id": "concept-metadata-lyric-rhythm",
+      "kind": "concept",
+      "lenses": ["Prop Understanding", "Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Use the lyric props for verse emphasis and let the rhythm props carry the lift in Chorus 1.",
+      "selectedSections": ["Verse 1", "Chorus 1"],
+      "expect": {
+        "mustIncludeTagNames": ["lyric", "rhythm"],
+        "mustIncludeTargetIds": ["NorthPoleSign", "SpiralTrees"],
+        "proposalLinePatternsAny": ["lyric", "rhythm"]
+      }
+    },
+    {
+      "id": "concept-layout-foreground-background",
+      "kind": "concept",
+      "lenses": ["Setting and Layout Awareness", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Keep the foreground calmer while the background opens up in Chorus 1.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "mustIncludeTargetIds": ["Border-01"],
+        "proposalLinePatternsAny": ["foreground calmer", "background opens up", "add depth"]
+      }
+    },
+    {
+      "id": "concept-layout-left-right",
+      "kind": "concept",
+      "lenses": ["Setting and Layout Awareness", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Use the left side more gently than the right side during the intro.",
+      "selectedSections": ["Intro"],
+      "expect": {
+        "proposalLinePatternsAny": ["left side", "right side"]
+      }
+    },
+    {
+      "id": "concept-music-intro-chorus-reveal",
+      "kind": "concept",
+      "lenses": ["Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Keep the intro calm, then let Chorus 1 open up with a stronger reveal.",
+      "selectedSections": ["Intro", "Chorus 1"],
+      "expect": {
+        "proposalLinePatternsAny": ["Intro", "Chorus 1", "restrained", "stronger visual payoff"]
+      }
+    },
+    {
+      "id": "concept-music-verse-chorus-lift",
+      "kind": "concept",
+      "lenses": ["Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Use Verse 1 for lyric emphasis, then let Chorus 1 carry the bigger lift.",
+      "selectedSections": ["Verse 1", "Chorus 1"],
+      "expect": {
+        "proposalLinePatternsAny": ["Verse 1", "Chorus 1", "lyric", "lift"]
+      }
+    },
+    {
+      "id": "concept-lighting-key-fill",
+      "kind": "concept",
+      "lenses": ["Stage Lighting Reasoning", "Focal Hierarchy"],
+      "fixtureVariant": "default",
+      "promptText": "Treat Snowman like the key light focus and let the border props act more like gentle fill in Chorus 1.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "mustIncludeTargetIds": ["Snowman", "Border-01"],
+        "proposalLinePatternsAny": ["focus", "gentle fill", "support"]
+      }
+    },
+    {
+      "id": "concept-composition-negative-space",
+      "kind": "concept",
+      "lenses": ["Composition Reasoning", "Coverage Discipline"],
+      "fixtureVariant": "default",
+      "promptText": "Use more negative space in the verse so the focal props feel framed rather than crowded.",
+      "selectedSections": ["Verse 1"],
+      "expect": {
+        "proposalLinePatternsAny": ["negative space", "framed", "restrained", "focal"]
+      }
+    },
+    {
+      "id": "concept-metadata-change-sensitivity",
+      "kind": "concept",
+      "lenses": ["Prop Understanding"],
+      "fixtureVariant": "metadata_change_sensitivity",
+      "promptText": "Use the lyric props for verse emphasis.",
+      "selectedSections": ["Verse 1"],
+      "expect": {
+        "mustIncludeTagNames": ["lyric"],
+        "mustIncludeTargetIds": ["Snowman"]
+      }
+    },
+    {
+      "id": "concept-layout-centerpiece-perimeter",
+      "kind": "concept",
+      "lenses": ["Setting and Layout Awareness", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Let the centerpiece props carry the eye while perimeter props frame the chorus more softly.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "proposalLinePatternsAny": ["frame", "centerpiece", "perimeter", "focal"]
+      }
+    },
+
+    {
+      "id": "revise-focal-chorus-lift",
+      "kind": "revise",
+      "runnerMode": "framework_assisted",
+      "lenses": ["Revision Quality"],
+      "promptText": "Revise the main chorus focal concept so it feels warmer and less busy without changing the supporting concepts.",
+      "selectedSections": ["Chorus 1"]
+    },
+    {
+      "id": "revise-verse-lyric-emphasis",
+      "kind": "revise",
+      "runnerMode": "framework_assisted",
+      "lenses": ["Revision Quality", "Musical Understanding"],
+      "promptText": "Revise the verse lyric concept so the emphasis lands later in the phrase and stays cleaner.",
+      "selectedSections": ["Verse 1"]
+    },
+    {
+      "id": "revise-bridge-width",
+      "kind": "revise",
+      "runnerMode": "framework_assisted",
+      "lenses": ["Revision Quality", "Composition Reasoning"],
+      "promptText": "Revise the bridge concept so it feels wider and more transitional without changing the chorus concepts.",
+      "selectedSections": ["Bridge"]
+    },
+    {
+      "id": "revise-perimeter-support",
+      "kind": "revise",
+      "runnerMode": "framework_assisted",
+      "lenses": ["Revision Quality", "Setting and Layout Awareness"],
+      "promptText": "Revise the perimeter support concept so it contributes less visual weight and more framing.",
+      "selectedSections": ["Verse 1", "Chorus 1"]
+    },
+    {
+      "id": "revise-rhythm-accent-concept",
+      "kind": "revise",
+      "runnerMode": "framework_assisted",
+      "lenses": ["Revision Quality", "Musical Understanding"],
+      "promptText": "Revise the rhythm-driven concept so the accents are clearer and less constant.",
+      "selectedSections": ["Chorus 1", "Bridge"]
+    },
+    {
+      "id": "revise-outro-restraint",
+      "kind": "revise",
+      "runnerMode": "framework_assisted",
+      "lenses": ["Revision Quality", "Coverage Discipline"],
+      "promptText": "Revise the outro concept so it breathes more and avoids filling every target.",
+      "selectedSections": ["Outro"]
+    },
+
+    {
+      "id": "whole-cinematic-warm-pass",
+      "kind": "whole_sequence",
+      "lenses": ["Palette Coherence", "Stage Lighting Reasoning", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Rework the whole show into a warmer, more cinematic pass with clear section contrast, stronger focal moments, and more varied effects across the song.",
+      "expect": {
+        "minEffectPlacementCount": 16,
+        "minDistinctEffectFamilies": 4,
+        "minDesignConceptCount": 4
+      }
+    },
+    {
+      "id": "whole-rhythm-led-build",
+      "kind": "whole_sequence",
+      "lenses": ["Musical Understanding", "Focal Hierarchy"],
+      "fixtureVariant": "default",
+      "promptText": "Build the whole sequence around a stronger rhythmic rise, holding back the early sections and escalating clearly into the final chorus.",
+      "expect": {
+        "minEffectPlacementCount": 12,
+        "minDistinctEffectFamilies": 3,
+        "minDesignConceptCount": 4
+      }
+    },
+    {
+      "id": "whole-negative-space-balance",
+      "kind": "whole_sequence",
+      "lenses": ["Composition Reasoning", "Coverage Discipline"],
+      "fixtureVariant": "default",
+      "promptText": "Rebuild the whole song with more negative space, cleaner framing, and fewer but more intentional focal moments.",
+      "expect": {
+        "minEffectPlacementCount": 10,
+        "minDistinctEffectFamilies": 3,
+        "minDesignConceptCount": 4
+      }
+    },
+    {
+      "id": "whole-perimeter-vs-center",
+      "kind": "whole_sequence",
+      "lenses": ["Setting and Layout Awareness", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
+      "expect": {
+        "minEffectPlacementCount": 12,
+        "minDistinctEffectFamilies": 3,
+        "minDesignConceptCount": 4
+      }
+    },
+    {
+      "id": "whole-lyric-vs-rhythm-pass",
+      "kind": "whole_sequence",
+      "lenses": ["Musical Understanding", "Prop Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Let lyric-sensitive props carry the verses and let rhythm-sensitive props drive the bigger lifts and transitions across the song.",
+      "expect": {
+        "minEffectPlacementCount": 12,
+        "minDistinctEffectFamilies": 3,
+        "minDesignConceptCount": 4
+      }
+    },
+    {
+      "id": "whole-lighting-language-pass",
+      "kind": "whole_sequence",
+      "lenses": ["Stage Lighting Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Design the full song more like a stage-lighting cue stack with restrained washes, clearer key-vs-fill hierarchy, and stronger finale punch.",
+      "expect": {
+        "minEffectPlacementCount": 12,
+        "minDistinctEffectFamilies": 3,
+        "minDesignConceptCount": 4
+      }
+    },
+
+    {
+      "id": "pref-warm-director-chorus",
+      "kind": "preference",
+      "lenses": ["Preference Adaptation", "Palette Coherence"],
+      "fixtureVariant": "default",
+      "directorProfileVariant": "warm_cinematic",
+      "promptText": "Build a broad chorus payoff that feels warm, cinematic, and emotionally open.",
+      "selectedSections": ["Chorus 1", "Final Chorus"],
+      "expect": {
+        "minEffectPlacementCount": 6,
+        "minDistinctEffectFamilies": 2,
+        "proposalLinePatternsAny": ["warm", "cinematic", "glow", "payoff"]
+      }
+    },
+    {
+      "id": "pref-crisp-director-chorus",
+      "kind": "preference",
+      "lenses": ["Preference Adaptation", "Focal Hierarchy"],
+      "fixtureVariant": "default",
+      "directorProfileVariant": "crisp_focal",
+      "promptText": "Build a broad chorus payoff that feels warm, cinematic, and emotionally open.",
+      "selectedSections": ["Chorus 1", "Final Chorus"],
+      "expect": {
+        "minEffectPlacementCount": 6,
+        "minDistinctEffectFamilies": 2,
+        "proposalLinePatternsAny": ["focus", "clarity", "payoff", "impact"]
+      }
+    },
+    {
+      "id": "pref-warm-director-verse",
+      "kind": "preference",
+      "lenses": ["Preference Adaptation", "Palette Coherence"],
+      "fixtureVariant": "default",
+      "directorProfileVariant": "warm_cinematic",
+      "promptText": "Keep the verse intimate and controlled but still emotionally warm.",
+      "selectedSections": ["Verse 1"],
+      "expect": {
+        "minEffectPlacementCount": 2,
+        "minDistinctEffectFamilies": 1,
+        "proposalLinePatternsAny": ["warm", "controlled", "restrained", "intimate"]
+      }
+    }
+  ]
+}

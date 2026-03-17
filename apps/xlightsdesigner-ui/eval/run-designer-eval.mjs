@@ -1,0 +1,350 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import { executeDesignerProposalOrchestration } from "../agent/designer-dialog/designer-dialog-orchestrator.js";
+import { buildDesignSceneContext } from "../agent/designer-dialog/design-scene-context.js";
+
+const cwd = process.cwd();
+const evalDir = path.join(cwd, "apps/xlightsdesigner-ui/eval");
+const casesPath = path.join(evalDir, "designer-eval-cases-v1.json");
+const metadataFixturePath = path.join(evalDir, "synthetic-metadata-fixture-v1.json");
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function str(value = "") {
+  return String(value || "").trim();
+}
+
+function arr(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function uniq(values = []) {
+  return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
+}
+
+function buildFixture({ variant = "default", metadataFixture = null } = {}) {
+  const baseAssignments = arr(metadataFixture?.assignments);
+  const overrideAssignments = variant === "metadata_change_sensitivity"
+    ? arr(metadataFixture?.evalOverrides?.metadata_change_sensitivity)
+    : [];
+  const metadataAssignments = overrideAssignments.length
+    ? [
+        ...baseAssignments.filter((row) => !overrideAssignments.some((override) => str(override.targetId) === str(row?.targetId))),
+        ...overrideAssignments
+      ]
+    : baseAssignments;
+
+  const swapDepth = variant === "layout_swap_depth";
+  const foregroundZ = swapDepth ? 9 : 0;
+  const backgroundZ = swapDepth ? 0 : 9;
+  const sectionDefinitions = [
+    { label: "Intro", startMs: 0, endMs: 18000, energy: "low", density: "sparse" },
+    { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" },
+    { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" },
+    { label: "Bridge", startMs: 90000, endMs: 120000, energy: "medium", density: "moderate" },
+    { label: "Final Chorus", startMs: 120000, endMs: 156000, energy: "high", density: "dense" },
+    { label: "Outro", startMs: 156000, endMs: 176000, energy: "low", density: "sparse" }
+  ];
+  const sceneGraph = {
+    modelsById: {
+      "Border-01": { id: "Border-01", name: "Border-01", type: "Line", nodes: [{ coords: { world: { x: 1, y: 1, z: foregroundZ } } }] },
+      "Border-02": { id: "Border-02", name: "Border-02", type: "Line", nodes: [{ coords: { world: { x: 2, y: 1, z: foregroundZ } } }] },
+      "Border-03": { id: "Border-03", name: "Border-03", type: "Line", nodes: [{ coords: { world: { x: 10, y: 1, z: foregroundZ } } }] },
+      Snowman: { id: "Snowman", name: "Snowman", type: "Prop", nodes: [{ coords: { world: { x: 6, y: 3, z: 2 } } }] },
+      Star: { id: "Star", name: "Star", type: "Prop", nodes: [{ coords: { world: { x: 6, y: 8, z: 8 } } }] },
+      NorthPoleSign: { id: "NorthPoleSign", name: "NorthPoleSign", type: "Matrix", nodes: [{ coords: { world: { x: 11, y: 4, z: backgroundZ } } }] },
+      PorchTree: { id: "PorchTree", name: "PorchTree", type: "Tree", nodes: [{ coords: { world: { x: 2, y: 6, z: backgroundZ } } }] },
+      SpiralTrees: { id: "SpiralTrees", name: "SpiralTrees", type: "Tree", nodes: [{ coords: { world: { x: 9, y: 5, z: 5 } } }] },
+      Wreathes: { id: "Wreathes", name: "Wreathes", type: "Prop", nodes: [{ coords: { world: { x: 5, y: 7, z: backgroundZ } } }] },
+      Train_Outlines: { id: "Train_Outlines", name: "Train_Outlines", type: "Line", nodes: [{ coords: { world: { x: 3, y: 2, z: 3 } } }] },
+      Train_Rings: { id: "Train_Rings", name: "Train_Rings", type: "Prop", nodes: [{ coords: { world: { x: 4, y: 2, z: 3 } } }] },
+      Train_Wheels: { id: "Train_Wheels", name: "Train_Wheels", type: "Prop", nodes: [{ coords: { world: { x: 5, y: 2, z: 3 } } }] },
+      AllModels_NoFloods: { id: "AllModels_NoFloods", name: "AllModels_NoFloods", type: "Group", nodes: [{ coords: { world: { x: 6, y: 5, z: 4 } } }] }
+    },
+    groupsById: {
+      AllModels: {
+        id: "AllModels",
+        members: {
+          flattened: [
+            "Border-01", "Border-02", "Border-03", "Snowman", "Star", "NorthPoleSign",
+            "PorchTree", "SpiralTrees", "Wreathes", "Train_Outlines", "Train_Rings", "Train_Wheels"
+          ]
+        }
+      },
+      AllModels_NoFloods: {
+        id: "AllModels_NoFloods",
+        members: {
+          flattened: [
+            "Border-01", "Border-02", "Border-03", "Snowman", "Star", "NorthPoleSign",
+            "PorchTree", "SpiralTrees", "Wreathes", "Train_Outlines", "Train_Rings", "Train_Wheels"
+          ]
+        }
+      }
+    },
+    submodelsById: {
+      "Snowman/Face1-Eyes": { id: "Snowman/Face1-Eyes", parentId: "Snowman" },
+      "Snowman/Snowman Hat Beads": { id: "Snowman/Snowman Hat Beads", parentId: "Snowman" },
+      "Border-01/Left": { id: "Border-01/Left", parentId: "Border-01" },
+      "Border-01/Right": { id: "Border-01/Right", parentId: "Border-01" }
+    },
+    stats: { layoutMode: "2d", modelCount: 13, groupCount: 2, submodelCount: 4 }
+  };
+
+  return {
+    models: Object.values(sceneGraph.modelsById).map((row) => ({ id: row.id, name: row.name, type: row.type })),
+    submodels: Object.values(sceneGraph.submodelsById).map((row) => ({ id: row.id, name: row.id.split("/").pop(), parentId: row.parentId })),
+    metadataAssignments,
+    designSceneContext: buildDesignSceneContext({ sceneGraph, revision: `eval-${variant}` }),
+    analysisArtifact: {
+      artifactType: "audio_analysis_artifact_v1",
+      mediaId: `media-${variant}`,
+      capabilities: {
+        structure: {
+          sections: sectionDefinitions
+        }
+      }
+    },
+    analysisHandoff: {
+      artifactType: "analysis_handoff_v1",
+      mediaId: `media-${variant}`,
+      trackIdentity: {
+        title: "Synthetic Eval Song",
+        artist: "xLightsDesigner"
+      },
+      structure: {
+        sections: sectionDefinitions
+      },
+      lyrics: {
+        sections: [
+          { label: "Verse 1" },
+          { label: "Chorus 1" },
+          { label: "Final Chorus" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      artifactType: "music_design_context_v1",
+      sectionArc: sectionDefinitions.map((row) => ({
+        label: row.label,
+        energy: row.energy,
+        density: row.density
+      })),
+      designCues: {
+        revealMoments: ["Verse 1->Chorus 1", "Bridge->Final Chorus"],
+        holdMoments: ["Intro", "Outro"],
+        lyricFocusMoments: ["Verse 1"]
+      }
+    }
+  };
+}
+
+function buildDirectorProfile(variant = "") {
+  if (variant === "warm_cinematic") {
+    return {
+      summary: "Prefers warm cinematic color, emotional payoff, and smoother motion.",
+      preferences: {
+        palettePreference: "warm_cinematic",
+        motionPreference: "smooth",
+        focusPreference: "hero-prop-first"
+      }
+    };
+  }
+  if (variant === "crisp_focal") {
+    return {
+      summary: "Prefers crisp focal contrast, clean reads, and controlled clutter.",
+      preferences: {
+        palettePreference: "clean_contrast",
+        motionPreference: "controlled",
+        focusPreference: "crisp-focal"
+      }
+    };
+  }
+  return null;
+}
+
+function regexAny(lines = [], patterns = []) {
+  const text = arr(lines).join("\n");
+  return arr(patterns).some((pattern) => new RegExp(pattern, "i").test(text));
+}
+
+function includesAll(source = [], required = []) {
+  const haystack = new Set(arr(source).map((row) => str(row)));
+  return arr(required).every((row) => haystack.has(str(row)));
+}
+
+function extractMetrics(result = {}) {
+  const proposalBundle = result?.proposalBundle || {};
+  const executionPlan = proposalBundle?.executionPlan || {};
+  const placements = arr(executionPlan.effectPlacements);
+  const sectionPlans = arr(executionPlan.sectionPlans);
+  const effectFamilies = uniq(placements.map((row) => row?.effectName));
+  return {
+    proposalLineCount: arr(proposalBundle.proposalLines).length,
+    designConceptCount: sectionPlans.length ? uniq(sectionPlans.map((row) => row?.designId)).length : 0,
+    effectPlacementCount: placements.length,
+    distinctEffectFamilies: effectFamilies,
+    targetIds: uniq([
+      ...arr(result?.intentHandoff?.scope?.targetIds),
+      ...placements.map((row) => row?.targetId)
+    ]),
+    tagNames: uniq(result?.intentHandoff?.scope?.tagNames),
+    sections: uniq(result?.intentHandoff?.scope?.sections)
+  };
+}
+
+function structuralScore({ ok, failures = [], checksPassed = 0, checksTotal = 0 }) {
+  if (!ok || failures.length) return 0;
+  if (!checksTotal) return 1;
+  const ratio = checksPassed / checksTotal;
+  if (ratio >= 0.95) return 3;
+  if (ratio >= 0.75) return 2;
+  return 1;
+}
+
+function evaluateCase(result, testCase) {
+  const failures = [];
+  const proposalLines = arr(result?.proposalLines);
+  const summary = str(result?.summary);
+  const metrics = extractMetrics(result);
+  const expect = testCase.expect || {};
+  let checksTotal = 0;
+  let checksPassed = 0;
+
+  if (!result?.ok) {
+    failures.push("designer_failure");
+  }
+  if (/effects\.create|layerindex|startms|endms/i.test(`${summary}\n${proposalLines.join("\n")}`)) {
+    failures.push("sequencing_leakage");
+  }
+
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) {
+      checksPassed += 1;
+    } else {
+      failures.push(name);
+    }
+  };
+
+  if (expect.mustIncludeTagNames) {
+    check("missing_required_tags", includesAll(metrics.tagNames, expect.mustIncludeTagNames));
+  }
+  if (expect.mustIncludeTargetIds) {
+    check("missing_required_targets", includesAll(metrics.targetIds, expect.mustIncludeTargetIds));
+  }
+  if (expect.mustIncludeSections) {
+    check("missing_required_sections", includesAll(metrics.sections, expect.mustIncludeSections));
+  }
+  if (expect.proposalLinePatternsAny) {
+    check("missing_expected_language", regexAny(proposalLines, expect.proposalLinePatternsAny));
+  }
+  if (expect.minEffectPlacementCount != null) {
+    check("insufficient_effect_placements", metrics.effectPlacementCount >= Number(expect.minEffectPlacementCount));
+  }
+  if (expect.minDistinctEffectFamilies != null) {
+    check("insufficient_family_diversity", metrics.distinctEffectFamilies.length >= Number(expect.minDistinctEffectFamilies));
+  }
+  if (expect.minDesignConceptCount != null) {
+    check("insufficient_design_concepts", metrics.designConceptCount >= Number(expect.minDesignConceptCount));
+  }
+
+  const score = structuralScore({
+    ok: result?.ok,
+    failures,
+    checksPassed,
+    checksTotal
+  });
+
+  return {
+    score,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics
+  };
+}
+
+function runCase(testCase, metadataFixture) {
+  if (str(testCase.runnerMode) === "framework_assisted") {
+    return {
+      id: testCase.id,
+      kind: testCase.kind,
+      runnerMode: "framework_assisted",
+      status: "deferred",
+      summary: "Case is defined in the corpus but requires app-level revision orchestration for full scoring."
+    };
+  }
+
+  const fixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const result = executeDesignerProposalOrchestration({
+    requestId: `eval-${testCase.id}`,
+    sequenceRevision: "eval-rev-1",
+    promptText: testCase.promptText,
+    goals: testCase.promptText,
+    selectedSections: arr(testCase.selectedSections),
+    selectedTargetIds: arr(testCase.selectedTargetIds),
+    selectedTagNames: arr(testCase.selectedTagNames),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext,
+    directorProfile: buildDirectorProfile(testCase.directorProfileVariant)
+  });
+
+  const evaluation = evaluateCase(result, testCase);
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    lenses: arr(testCase.lenses),
+    status: evaluation.failures.length ? "failed" : "passed",
+    summary: str(result?.summary),
+    structuralScore: evaluation.score,
+    failures: evaluation.failures,
+    checksPassed: evaluation.checksPassed,
+    checksTotal: evaluation.checksTotal,
+    metrics: evaluation.metrics
+  };
+}
+
+function summarizeResults(results = []) {
+  const supported = arr(results).filter((row) => row.status !== "deferred");
+  const passed = supported.filter((row) => row.status === "passed");
+  const failed = supported.filter((row) => row.status === "failed");
+  const deferred = arr(results).filter((row) => row.status === "deferred");
+  const avgScore = supported.length
+    ? supported.reduce((sum, row) => sum + Number(row.structuralScore || 0), 0) / supported.length
+    : 0;
+  return {
+    total: arr(results).length,
+    supported: supported.length,
+    passed: passed.length,
+    failed: failed.length,
+    deferred: deferred.length,
+    averageStructuralScore: Number(avgScore.toFixed(2))
+  };
+}
+
+function main() {
+  const corpus = readJson(casesPath);
+  const metadataFixture = readJson(metadataFixturePath);
+  const results = arr(corpus.cases).map((testCase) => runCase(testCase, metadataFixture));
+  const report = {
+    corpusType: corpus.corpusType,
+    version: corpus.version,
+    generatedAt: new Date().toISOString(),
+    summary: summarizeResults(results),
+    results
+  };
+  console.log(JSON.stringify(report, null, 2));
+}
+
+main();
