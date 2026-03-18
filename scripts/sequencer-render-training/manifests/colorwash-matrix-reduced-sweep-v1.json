@@ -3,7 +3,7 @@
   "packId": "colorwash-matrix-reduced-sweep-v1",
   "description": "Reduced baseline Color Wash sweep on a concrete matrix model using the 4-second animated-effect standard.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "NorthPoleMatrix",
     "modelType": "matrix",
     "startMs": 1000,
@@ -35,7 +35,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["steady_wash", "matrix_fill"]
+      "labelHints": [
+        "steady_wash",
+        "matrix_fill"
+      ]
     },
     {
       "sampleId": "colorwash-matrix-vertical-fade-v1",
@@ -60,7 +63,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["vertical_fade", "matrix_gradient"]
+      "labelHints": [
+        "vertical_fade",
+        "matrix_gradient"
+      ]
     },
     {
       "sampleId": "colorwash-matrix-shimmer-circular-v1",
@@ -87,7 +93,11 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["shimmer_wash", "two_axis_fade", "circular_palette"]
+      "labelHints": [
+        "shimmer_wash",
+        "two_axis_fade",
+        "circular_palette"
+      ]
     }
   ]
 }

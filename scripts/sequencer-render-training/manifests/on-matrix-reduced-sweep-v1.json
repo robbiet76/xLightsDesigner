@@ -3,7 +3,7 @@
   "packId": "on-matrix-reduced-sweep-v1",
   "description": "Reduced baseline On sweep on a concrete matrix model using a short standard duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "NorthPoleMatrix",
     "modelType": "matrix",
     "startMs": 1000,
@@ -33,7 +33,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["static_hold", "matrix_fill"]
+      "labelHints": [
+        "static_hold",
+        "matrix_fill"
+      ]
     },
     {
       "sampleId": "on-matrix-ramp-down-v1",
@@ -56,7 +59,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["soft_falloff", "matrix_glow"]
+      "labelHints": [
+        "soft_falloff",
+        "matrix_glow"
+      ]
     },
     {
       "sampleId": "on-matrix-shimmer-v1",
@@ -80,7 +86,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["shimmer_hold", "matrix_twinkle"]
+      "labelHints": [
+        "shimmer_hold",
+        "matrix_twinkle"
+      ]
     }
   ]
 }

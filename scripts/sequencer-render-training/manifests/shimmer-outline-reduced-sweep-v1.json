@@ -3,7 +3,7 @@
   "packId": "shimmer-outline-reduced-sweep-v1",
   "description": "Reduced baseline Shimmer sweep on a concrete outline model using the 4-second animated-effect standard.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "Border-01",
     "modelType": "outline",
     "startMs": 1000,
@@ -32,7 +32,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["restrained_shimmer", "outline_read"]
+      "labelHints": [
+        "restrained_shimmer",
+        "outline_read"
+      ]
     },
     {
       "sampleId": "shimmer-outline-balanced-v1",
@@ -54,7 +57,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["balanced_shimmer", "outline_sparkle"]
+      "labelHints": [
+        "balanced_shimmer",
+        "outline_sparkle"
+      ]
     },
     {
       "sampleId": "shimmer-outline-busy-v1",
@@ -78,7 +84,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["heavy_shimmer", "busy_texture"]
+      "labelHints": [
+        "heavy_shimmer",
+        "busy_texture"
+      ]
     }
   ]
 }

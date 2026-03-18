@@ -3,7 +3,7 @@
   "packId": "singlestrand-linear-reduced-sweep-v1",
   "description": "Reduced baseline SingleStrand sweep on a concrete linear model using a 4-second standard animated duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "UpperGutter-01",
     "modelType": "single_line",
     "startMs": 1000,
@@ -38,7 +38,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["single_direction_chase", "clean_linear_pattern"]
+      "labelHints": [
+        "single_direction_chase",
+        "clean_linear_pattern"
+      ]
     },
     {
       "sampleId": "single-strand-linear-chase-bounce-v1",
@@ -66,7 +69,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["bounce_pattern", "linear_dual_motion"]
+      "labelHints": [
+        "bounce_pattern",
+        "linear_dual_motion"
+      ]
     },
     {
       "sampleId": "single-strand-linear-skips-left-v1",
@@ -91,7 +97,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["skip_pattern", "left_motion"]
+      "labelHints": [
+        "skip_pattern",
+        "left_motion"
+      ]
     },
     {
       "sampleId": "single-strand-linear-fx-fireworks-v1",
@@ -116,7 +125,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["fx_texture", "burst_pattern"]
+      "labelHints": [
+        "fx_texture",
+        "burst_pattern"
+      ]
     }
   ]
 }

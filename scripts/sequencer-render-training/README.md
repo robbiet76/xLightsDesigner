@@ -24,6 +24,7 @@ The current harness is intentionally small:
 - `run-manifest.sh`: execute all samples from a sweep manifest
 - `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
 - `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, exporting once, then slicing per-sample GIFs
+- `build-animation-fixture.py`: derive a short animation-only fixture sequence from an existing `.xsq`
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
 - `build-comparison.sh`: produce pairwise preference records from observation score outputs
@@ -54,6 +55,13 @@ bash scripts/sequencer-render-training/run-manifest.sh \
 bash scripts/sequencer-render-training/run-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-model-batch
+```
+
+```bash
+python3 scripts/sequencer-render-training/build-animation-fixture.py \
+  --source /Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq \
+  --output /Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq \
+  --duration-seconds 30
 ```
 
 ```bash
@@ -127,3 +135,9 @@ Environment:
   - single-line / roofline via `UpperGutter-01`
   - matrix via `NorthPoleMatrix`
 - The current show fixture does not contain a true arch model, so arch-class coverage remains a known gap until a dedicated arch fixture is added.
+- Preferred training fixture shape:
+  - animation-only
+  - short duration
+  - no media file
+  - no timing display rows
+  - no pre-existing effects

@@ -3,7 +3,7 @@
   "packId": "on-reduced-sweep-v1",
   "description": "Reduced baseline On sweep on a concrete outline model using a short standard duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "Border-01",
     "modelType": "outline",
     "startMs": 1000,
@@ -33,7 +33,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["static_hold", "outline_read"]
+      "labelHints": [
+        "static_hold",
+        "outline_read"
+      ]
     },
     {
       "sampleId": "on-outline-ramp-down-v1",
@@ -56,7 +59,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["soft_falloff", "restrained_glow"]
+      "labelHints": [
+        "soft_falloff",
+        "restrained_glow"
+      ]
     },
     {
       "sampleId": "on-outline-shimmer-v1",
@@ -80,7 +86,10 @@
         "mode": "model_with_render",
         "format": "gif"
       },
-      "labelHints": ["shimmer_hold", "alternating_read"]
+      "labelHints": [
+        "shimmer_hold",
+        "alternating_read"
+      ]
     }
   ]
 }

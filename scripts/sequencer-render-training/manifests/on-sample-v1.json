@@ -3,7 +3,7 @@
   "packId": "sequencer-render-training-on-sample-v1",
   "description": "Minimal first-pass On effect render sample for the internal sequencer training harness.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
     "modelName": "Border-01",
     "modelType": "outline",
     "startMs": 1000,
