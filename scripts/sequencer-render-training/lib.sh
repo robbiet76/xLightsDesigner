@@ -4,6 +4,8 @@ set -euo pipefail
 XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
 CURL_MAX_TIME="${CURL_MAX_TIME:-60}"
+XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-abdssfsqgzefmgebylgtlxhcrlae/Build/Products/Debug/xLights.app}"
+XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-1}"
 
 post_cmd() {
   local payload="$1"
@@ -33,6 +35,40 @@ require_cmd() {
     echo "Missing required command: ${cmd}" >&2
     exit 1
   }
+}
+
+xlights_ping() {
+  curl --max-time 5 -sS -X POST "${AUTOMATION_URL}" \
+    -H "Content-Type: application/json" \
+    -d '{"cmd":"getModels"}' >/dev/null
+}
+
+restart_xlights_app() {
+  [[ -d "${XLIGHTS_APP_PATH}" ]] || {
+    echo "xLights app path not found: ${XLIGHTS_APP_PATH}" >&2
+    return 1
+  }
+
+  pkill -9 -f "${XLIGHTS_APP_PATH}/Contents/MacOS/xLights" || true
+  local i
+  for i in $(seq 1 10); do
+    if ! pgrep -f "${XLIGHTS_APP_PATH}/Contents/MacOS/xLights" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
+  sleep 2
+  open -g "${XLIGHTS_APP_PATH}"
+
+  for i in $(seq 1 45); do
+    if xlights_ping; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "xLights did not become healthy after restart" >&2
+  return 1
 }
 
 json_string() {

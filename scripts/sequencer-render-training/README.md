@@ -51,13 +51,18 @@ Environment:
   - default: `http://127.0.0.1:49914`
 - `CURL_MAX_TIME`
   - default: `60`
+- `XLIGHTS_RECYCLE_BEFORE_SAMPLE`
+  - default: `1`
+  - restart the debug xLights app before each sample for a cleaner automation session
 
 ## Notes
 
 - This is an internal harness, not product runtime.
 - xLights export currently needs a concrete model, not a `ModelGroup`.
 - The harness stages artifacts under the sequence directory so the xLights app can write them, then copies them to the requested output directory.
+- Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - The runner fails if xLights reports export success but the staged artifact does not exist.
+- The runner currently recycles the debug xLights app before each sample by default. That is intentional: a fresh session is slower, but much more stable than reusing a wedged automation listener.
 - Each successful sample also records basic artifact features:
   - file size
   - MIME type

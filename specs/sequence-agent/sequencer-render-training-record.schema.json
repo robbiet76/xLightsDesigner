@@ -40,6 +40,10 @@
           "type": "string",
           "minLength": 1
         },
+        "workingSequencePath": {
+          "type": "string",
+          "minLength": 1
+        },
         "modelName": {
           "type": "string",
           "minLength": 1

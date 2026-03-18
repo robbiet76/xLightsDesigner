@@ -53,6 +53,8 @@ fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
 fixture_end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
 fixture_duration_class="$(jq -r '.durationClass // "short"' <<<"${fixture_json}")"
 sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
+source_sequence_path="${sequence_path}"
+working_sequence_path="${sequence_dir}/.$(basename "${sequence_path}" .xsq).render-training-${SAMPLE_ID}-$$.xsq"
 
 effect_name="$(jq -r '.effectName' <<<"${sample_json}")"
 shared_settings_json="$(jq -c '.sharedSettings // {}' <<<"${sample_json}")"
@@ -87,9 +89,20 @@ features_path="${OUT_DIR}/${SAMPLE_ID}.features.json"
 observations_path="${OUT_DIR}/${SAMPLE_ID}.observations.json"
 
 mkdir -p "${staging_dir}"
+cp "${source_sequence_path}" "${working_sequence_path}"
+cleanup_working_sequence() {
+  rm -f "${working_sequence_path}"
+}
+trap cleanup_working_sequence EXIT
 
 opened_sequence=0
-if run_allowing_already_open "$(jq -cn --arg seq "${sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')" >/dev/null; then
+if [[ "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" == "1" ]]; then
+  restart_xlights_app >/dev/null
+elif ! xlights_ping; then
+  restart_xlights_app >/dev/null
+fi
+
+if run_allowing_already_open "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')" >/dev/null; then
   opened_sequence=1
 fi
 
@@ -136,7 +149,8 @@ jq -cn \
   --arg version "1.0" \
   --arg sampleId "${SAMPLE_ID}" \
   --arg effectName "${effect_name}" \
-  --arg sequencePath "${sequence_path}" \
+  --arg sequencePath "${source_sequence_path}" \
+  --arg workingSequencePath "${working_sequence_path}" \
   --arg modelName "${model_name}" \
   --arg modelType "${model_type}" \
   --arg mode "${export_mode}" \
@@ -156,6 +170,7 @@ jq -cn \
     effectName: $effectName,
     fixture: {
       sequencePath: $sequencePath,
+      workingSequencePath: $workingSequencePath,
       modelName: $modelName,
       modelType: $modelType,
       startMs: $startMs,
