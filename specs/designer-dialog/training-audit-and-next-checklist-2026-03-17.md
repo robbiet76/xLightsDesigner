@@ -22,7 +22,7 @@ Validated baseline today:
 - promoted live baseline suite: `8/8` passed
 - canary live suite: `3` scenarios
 - smoke live comparative suite: `3` scenarios
-- current extended live suite file: `11` scenarios
+- current extended live suite file: `12` scenarios
 
 Interpretation:
 - framework churn is no longer the bottleneck
@@ -86,7 +86,7 @@ Important boundary:
 ### A. Baseline Hygiene
 
 - [ ] Update the baseline docs whenever the promoted counts change
-- [x] Rerun the current extended live pack and promote the full `11/11` result if it stays green
+- [x] Rerun the current extended live pack and promote the full `12/12` result if it stays green
 - [ ] Keep GitHub aligned after each promoted checkpoint
 
 ### B. Overnight Automation

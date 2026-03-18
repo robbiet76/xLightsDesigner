@@ -155,16 +155,17 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-Diversity-Live-20260317-H.xsq`
   - slice: `diversity-h-composition-pass`
   - status: validated individually and included in the extended live pack
-- extended live suite file: current definition is `11` scenarios
+- extended live suite file: current definition is `12` scenarios
   - baseline pack plus:
     - `wholepass-b-composition-pass`
     - `wholepass-b-phrase-subtlety-pass`
     - `wholepass-e-composition-pass`
     - `diversity-h-composition-pass`
+    - `clean-phase-beat-grid-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - current status: `11/11` promoted
-  - latest full rerun completed in about `432s`
+  - current status: `12/12` promoted
+  - latest full rerun completed in about `448s`
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
