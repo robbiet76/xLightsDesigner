@@ -1690,6 +1690,23 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(related without becoming monotonous|recognizable visual motif|evolve it)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(uniform and repetitive|same visual idea|as little change as possible)\b/.test(lowerSummary)) score -= 2.0;
   }
+  if (/\b(verse 1 and chorus 1|abrupt unrelated jump|abrupt, disconnected|connected rather than|separate clearly)\b/.test(lowerPrompt)) {
+    const verseSpeed = Number(metrics.perSectionAverageSpeeds?.["Verse 1"] || 0);
+    const chorusSpeed = Number(metrics.perSectionAverageSpeeds?.["Chorus 1"] || 0);
+    const speedDelta = (Number.isFinite(chorusSpeed) ? chorusSpeed : 0) - (Number.isFinite(verseSpeed) ? verseSpeed : 0);
+    const versePalette = arr(metrics.paletteBySection?.["Verse 1"]).map((value) => str(value));
+    const chorusPalette = arr(metrics.paletteBySection?.["Chorus 1"]).map((value) => str(value));
+    const sharedTemperatures = versePalette.filter((value) => chorusPalette.includes(value));
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    if (speedDelta >= 0.5 && speedDelta <= 1.6) score += 1.2;
+    else if (speedDelta > 1.6) score -= Math.min(1.4, (speedDelta - 1.6) * 1.4);
+    else if (speedDelta < 0.3) score -= 0.9;
+    if (sharedTemperatures.length) score += 0.8;
+    else score -= 0.8;
+    if (sectionContrast >= 2) score += 0.8;
+    if (/\b(connected rather than|lift feels connected|separate clearly)\b/.test(lowerSummary)) score += 1.8;
+    if (/\b(abrupt|disconnected|incoherent|unrelated jump)\b/.test(lowerSummary)) score -= 1.8;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));

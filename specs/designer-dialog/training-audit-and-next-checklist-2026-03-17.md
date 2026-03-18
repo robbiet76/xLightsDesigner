@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `50/50` passed
+- offline eval corpus: `51/51` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
@@ -30,6 +30,7 @@ Interpretation:
 - section taxonomy coverage now explicitly extends beyond the core pop template when semantic analysis labels are available
 - hierarchy-vs-variety comparative scoring now exists for support participation around a hero read
 - motif-reuse comparative scoring now exists for continuity without monotony
+- adjacent-section contrast pacing scoring now exists for connected, non-jarring lifts
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates

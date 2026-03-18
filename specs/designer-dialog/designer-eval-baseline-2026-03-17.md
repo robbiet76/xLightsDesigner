@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `50`
-- supported by current offline runner: `50`
-- passed: `50`
+- total cases: `51`
+- supported by current offline runner: `51`
+- passed: `51`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -79,6 +79,7 @@ The runner and designer logic now cover:
 - semantic section-scoped lift prompts that keep explicit `Pre-Chorus` scope and anchor to `XD: Phrase Cues`
 - comparative hierarchy-vs-variety quality scoring where broader support participation must still preserve a clear hero read
 - motif-reuse comparative scoring where section-to-section thematic continuity must evolve without collapsing into monotony
+- adjacent-section contrast pacing scoring where Verse-to-Chorus separation must stay connected instead of becoming abrupt and incoherent
 
 ## Current Meaning Of A Pass
 
@@ -156,7 +157,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `50/50` corpus as the structural regression gate
+1. keep the current `51/51` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

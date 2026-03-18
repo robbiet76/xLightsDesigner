@@ -670,6 +670,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-adjacent-contrast-pacing",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "default",
+      "promptText": "Let Verse 1 and Chorus 1 separate clearly, but pace the contrast so the lift feels connected rather than like an abrupt unrelated jump.",
+      "altPromptText": "Make Verse 1 and Chorus 1 feel maximally different even if the jump is abrupt, disconnected, and stylistically incoherent.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
