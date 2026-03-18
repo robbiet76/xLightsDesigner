@@ -69,7 +69,8 @@ Environment:
   - average frame delay
   - first-frame unique color count
   - first-frame brightness and active-pixel ratios
-  - note: current xLights exports can include pre-roll, so first-frame pixel metrics are structurally useful but not yet representative for motion scoring
+  - sampled representative-frame metrics chosen from multiple points across the export
+  - note: current xLights exports can include pre-roll, so representative-frame sampling is more useful than first-frame metrics, but it is still a sampled approximation rather than full motion scoring
 - Each successful sample also records first-pass heuristic observations:
   - derived labels
   - readability/restraint/pattern clarity/prop suitability

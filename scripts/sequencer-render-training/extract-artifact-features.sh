@@ -38,6 +38,8 @@ if [[ "${mime_type}" == "image/gif" ]]; then
   first_frame_png="${tmpdir}/first-frame.png"
   if sips -s format png "${ARTIFACT_PATH}" --out "${first_frame_png}" >/dev/null 2>&1 && [[ -f "${first_frame_png}" ]]; then
     derived_features="$(python3 "${SCRIPT_DIR}/extract-gif-features.py" --gif "${ARTIFACT_PATH}" --first-frame-png "${first_frame_png}")"
+    sampled_frame_features="$(osascript -l JavaScript "${SCRIPT_DIR}/extract-gif-sampled-frame-features.js" "${ARTIFACT_PATH}")"
+    derived_features="$(jq -cn --argjson base "${derived_features}" --argjson sampled "${sampled_frame_features}" '$base + $sampled')"
   fi
 fi
 
