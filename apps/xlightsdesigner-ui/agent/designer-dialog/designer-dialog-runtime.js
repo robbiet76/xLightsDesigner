@@ -292,6 +292,9 @@ function chooseExecutionTargets({
   const focal = rotateStrings(focalCandidates, `${section}:focal`);
   const detail = rotateStrings(detailCoverageDomains, `${section}:detail`);
   const fallback = rotateStrings(fallbackTargetIds, `${section}:fallback`);
+  const stableFocal = uniqueStrings(focalCandidates);
+  const stableDetail = uniqueStrings(detailCoverageDomains);
+  const stableFallback = uniqueStrings(fallbackTargetIds);
   const zones = spatialZones && typeof spatialZones === "object" ? spatialZones : {};
   const foreground = uniqueStrings(arr(zones.foreground));
   const background = uniqueStrings(arr(zones.background));
@@ -306,7 +309,9 @@ function chooseExecutionTargets({
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
-  const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support/.test(lowerGoal);
+  const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support|visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
+  const impactBudgetGoal = /visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
+  const floodedImpactBudgetGoal = /same weight|equal emphasis|flooding the whole layout|spend the visual impact budget immediately|whole layout whenever possible/.test(lowerGoal);
   const controlledFinale = isControlledFinaleGoal(lowerGoal);
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   const variedHierarchy = !uniformHierarchy && isVariedHierarchyGoal(lowerGoal);
@@ -327,6 +332,30 @@ function chooseExecutionTargets({
       ...center.slice(0, 1),
       ...fallback.slice(0, 2)
     ]).slice(0, 8);
+  }
+  if (floodedImpactBudgetGoal && !singleScope && !tagDriven) {
+    return prioritizeConcreteTargets([
+      ...focal.slice(0, 2),
+      ...broad.slice(0, 2),
+      ...detail.slice(0, 2),
+      ...left.slice(0, 1),
+      ...right.slice(0, 1),
+      ...fallback.slice(0, 3)
+    ]).slice(0, 8);
+  }
+  if (impactBudgetGoal && !singleScope && !tagDriven) {
+    const stableSupport = prioritizeConcreteTargets([
+      ...center.slice(0, 1),
+      ...stableFocal.slice(0, 2),
+      ...stableDetail.slice(0, 1),
+      ...left.slice(0, 1),
+      ...right.slice(0, 1),
+      ...stableFallback.slice(0, 2)
+    ]);
+    if (isPeak || controlledFinale) {
+      return stableSupport.slice(0, 5);
+    }
+    return stableSupport.slice(0, 4);
   }
   if (!uniformHierarchy && (/perimeter/.test(lowerGoal) || /frame\b|framing\b/.test(lowerGoal))) {
     if (restrainedSupport && !isPeak) {
@@ -479,7 +508,7 @@ function buildSectionEffectHints({
   const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
-  if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
+  if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return smoothBias
         ? pickDistinctEffects(["Color Wash", "Wave"], nearEnd ? ["Spirals", "Shimmer"] : ["Candle", "Shimmer"])
@@ -946,7 +975,7 @@ function inferTargetRole({ goal = "", targetIndex = 0, singleScope = false } = {
 }
 
 function isRestrainedRenderGoal(goal = "") {
-  return /\b(restrained|luminous base|smoother texture transitions|selective sparkle|readable atmosphere|cleaner spacing|hold the lighting stack back)\b/.test(str(goal).toLowerCase());
+  return /\b(restrained|luminous base|smoother texture transitions|selective sparkle|readable atmosphere|cleaner spacing|hold the lighting stack back|impact budget|visual weight|carry the weight|support lighter)\b/.test(str(goal).toLowerCase());
 }
 
 function isBusyTextureGoal(goal = "") {

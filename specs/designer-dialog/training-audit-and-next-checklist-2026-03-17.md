@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `57/57` passed
+- offline eval corpus: `58/58` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
@@ -36,6 +36,7 @@ Interpretation:
 - tag-ending scoring now exists so a semantic `Tag` is judged as a resolving echo rather than a redundant new climax
 - middle-8 contrast scoring now exists so a semantic `Middle 8` is judged as a real detour instead of another chorus clone
 - post-chorus hook-extension scoring now exists so a semantic `Post-Chorus` is judged as a hook echo instead of a fresh verse-sized section
+- impact-budget comparative scoring now exists so broad whole-song prompts can prefer controlled visual weight over equal-emphasis full-layout flooding
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates

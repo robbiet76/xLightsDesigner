@@ -1662,6 +1662,28 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     else score -= Math.min(1.0, (overlayCount - 1) * 0.3);
     if (peakImpact <= 0.4) score += 0.5;
   }
+  if (/\b(impact budget|visual weight|carry the weight|support lighter|large-footprint|large footprint)\b/.test(lowerPrompt)) {
+    const targetCount = Number(arr(metrics.targetIds).length || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    const peakImpact = Number(metrics.peakSectionImpactShare || 0);
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    const layeredTargetCount = Number(arr(metrics.layeredTargetIds).length || 0);
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    if (targetCount >= 3 && targetCount <= 6) score += 0.9;
+    else if (targetCount > 6) score -= Math.min(1.8, (targetCount - 6) * 0.24);
+    if (conceptImpact >= 0.22 && conceptImpact <= 0.55) score += 1.4;
+    else if (conceptImpact < 0.16) score -= 0.7;
+    else if (conceptImpact > 0.62) score -= Math.min(1.8, (conceptImpact - 0.62) * 6);
+    if (peakImpact >= 0.14 && peakImpact <= 0.34) score += 1.0;
+    else if (peakImpact > 0.4) score -= Math.min(1.2, (peakImpact - 0.4) * 5);
+    if (overlayCount <= 5) score += 0.6;
+    else score -= Math.min(1.1, (overlayCount - 5) * 0.25);
+    if (layeredTargetCount <= 3) score += 0.6;
+    else score -= Math.min(1.0, (layeredTargetCount - 3) * 0.2);
+    if (sectionContrast >= 2) score += 0.5;
+    if (/\b(controlled visual weight|lets the larger props carry the picture|support stays lighter|readable and controlled)\b/.test(lowerSummary)) score += 1.8;
+    if (/\b(floods too much|same weight everywhere|every large prop carries equal weight|spends the full budget immediately)\b/.test(lowerSummary)) score -= 1.8;
+  }
   if (/\b(target variety|more props participate|hero hierarchy|every prop read equally important|using everything at once|controlled support)\b/.test(lowerPrompt)) {
     const targetCount = Number(arr(metrics.targetIds).length || 0);
     const layeredTargetCount = Number(arr(metrics.layeredTargetIds).length || 0);

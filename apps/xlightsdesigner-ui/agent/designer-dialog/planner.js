@@ -22,6 +22,10 @@ function prependUnique(lines = [], additions = []) {
   return [...merged, ...arr(lines).map((row) => str(row)).filter(Boolean)];
 }
 
+function isImpactBudgetGoal(goal = "") {
+  return /\b(impact budget|visual weight|carry the weight|support lighter|large footprint|large-footprint)\b/.test(str(goal).toLowerCase());
+}
+
 function classifyGuidanceConcept(line = "") {
   const lower = str(line).toLowerCase();
   if (!lower) return "";
@@ -138,6 +142,10 @@ function buildIntentGuidanceLines({ normalizedIntent = null } = {}) {
 
   if (/(department store holiday window|elegant|glowing|theatrical)/.test(goal)) {
     lines.push(`${scope} / General / keep the picture elegant and glowing with a composed theatrical frame instead of busy motion`);
+  }
+
+  if (isImpactBudgetGoal(goal)) {
+    lines.push(`${scope} / General / keep the visual weight controlled so larger props carry the picture without broad support flooding the whole layout`);
   }
 
   if (/(breath|pauses for a breath|pause for a breath|opens up)/.test(goal)) {
@@ -358,7 +366,9 @@ export function buildProposalFromIntent(input = {}) {
       : goalMatchSelection.targets
   ).map((row) => str(row?.id)).filter(Boolean);
   const allowGlobalRewrite = Boolean(baseNormalizedIntent?.preservationConstraints?.allowGlobalRewrite);
+  const impactBudgetGoal = isImpactBudgetGoal(baseNormalizedIntent?.goal);
   const shouldPromoteGoalMatchedTargets = !arr(baseNormalizedIntent?.targetIds).length
+    && !impactBudgetGoal
     && (selection.resolutionSource === "goal_match" || goalMatchSelection.resolutionSource === "goal_match")
     && (
       promotedGoalMatchTargets.length > 1

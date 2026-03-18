@@ -761,6 +761,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-impact-budget-discipline",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Composition Reasoning", "Coverage Discipline", "Stage Lighting Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Across the full song, keep the visual impact budget readable and controlled: let the larger props carry the picture when needed, keep support lighter, and avoid spending the full visual weight on every large-footprint target at once.",
+      "altPromptText": "Across the full song, spend the visual impact budget immediately by giving every large-footprint prop the same weight, broadening support until everything carries equal emphasis, and flooding the whole layout whenever possible.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

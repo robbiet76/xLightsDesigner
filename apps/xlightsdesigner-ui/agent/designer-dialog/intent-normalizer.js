@@ -173,10 +173,14 @@ function collectPromptInferredTags(text = "", metadataAssignments = []) {
     const key = normalizeName(tag);
     if (!key) continue;
     const variants = buildTagPatterns(tag);
-    const patterns = variants.flatMap((variant) => ([
-      new RegExp(`\\b${escapeRegex(variant)}\\b`, "i"),
-      new RegExp(`\\b${escapeRegex(variant)}\\s+(?:prop|props|model|models|element|elements|items?)\\b`, "i")
-    ]));
+    const patterns = key === "support"
+      ? variants.map((variant) => (
+          new RegExp(`\\b${escapeRegex(variant)}\\s+(?:prop|props|model|models|element|elements|items?)\\b`, "i")
+        ))
+      : variants.flatMap((variant) => ([
+          new RegExp(`\\b${escapeRegex(variant)}\\b`, "i"),
+          new RegExp(`\\b${escapeRegex(variant)}\\s+(?:prop|props|model|models|element|elements|items?)\\b`, "i")
+        ]));
     let index = Number.POSITIVE_INFINITY;
     for (const pattern of patterns) {
       const match = lower.match(pattern);
