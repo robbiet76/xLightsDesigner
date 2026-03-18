@@ -20,6 +20,14 @@
       "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
     },
     {
+      "name": "wholepass-b-phrase-subtlety-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-WholePass-20260317-B.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "sections": ["Bridge"],
+      "strongPrompt": "In the Bridge, hold the breath before the phrase release and shape the lift with subtler within-phrase timing instead of filling the whole section evenly.",
+      "weakPrompt": "In the Bridge, ignore the phrase release and fill the whole section with the same broad look from start to end."
+    },
+    {
       "name": "wholepass-e-composition-pass",
       "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-WholePass-20260317-E.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",

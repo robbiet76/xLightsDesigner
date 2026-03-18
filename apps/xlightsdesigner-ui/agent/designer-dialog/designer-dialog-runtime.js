@@ -695,6 +695,33 @@ function buildCueWindowIndex(musicDesignContext = null) {
       }
     }
   }
+  for (const [section, beatRows] of modes.beat.entries()) {
+    if (modes.phrase.has(section) || !Array.isArray(beatRows) || beatRows.length < 4) continue;
+    const splitIndex = Math.max(1, beatRows.length - 2);
+    const head = beatRows.slice(0, splitIndex);
+    const tail = beatRows.slice(splitIndex);
+    const phraseRows = [];
+    if (head.length) {
+      phraseRows.push({
+        label: "Phrase Hold",
+        trackName: "XD: Phrase Cues",
+        startMs: head[0].startMs,
+        endMs: head[head.length - 1].endMs
+      });
+    }
+    if (tail.length) {
+      phraseRows.push({
+        label: "Phrase Release",
+        trackName: "XD: Phrase Cues",
+        startMs: tail[0].startMs,
+        endMs: tail[tail.length - 1].endMs
+      });
+    }
+    const validRows = phraseRows.filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs);
+    if (validRows.length) {
+      modes.phrase.set(section, validRows);
+    }
+  }
   return modes;
 }
 

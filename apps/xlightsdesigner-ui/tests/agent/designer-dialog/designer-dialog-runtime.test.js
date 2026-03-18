@@ -494,6 +494,51 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
   assert.deepEqual(preChorusSections, ["Pre-Chorus"]);
 });
 
+test("designer runtime derives phrase windows from beat cues when phrase cues are missing", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-8e",
+    sequenceRevision: "rev-8e",
+    promptText: "In the Bridge, hold the breath before the phrase release and shape the lift with subtler within-phrase timing instead of filling the whole section evenly.",
+    goals: "In the Bridge, hold the breath before the phrase release and shape the lift with subtler within-phrase timing instead of filling the whole section evenly.",
+    selectedSections: ["Bridge"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 201410, endMs: 219250, energy: "medium", density: "moderate" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Bridge", energy: "medium", density: "moderate" }
+      ],
+      designCues: {
+        cueWindowsBySection: {
+          Bridge: {
+            beat: [
+              { label: "1", trackName: "XD: Beat Grid", startMs: 201851, endMs: 202385 },
+              { label: "2", trackName: "XD: Beat Grid", startMs: 202385, endMs: 202919 },
+              { label: "1", trackName: "XD: Beat Grid", startMs: 202919, endMs: 203453 },
+              { label: "2", trackName: "XD: Beat Grid", startMs: 203453, endMs: 203987 },
+              { label: "1", trackName: "XD: Beat Grid", startMs: 203987, endMs: 204521 },
+              { label: "2", trackName: "XD: Beat Grid", startMs: 204521, endMs: 205055 }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  const trackNames = Array.from(new Set(placements.map((row) => row.timingContext.trackName)));
+  const alignmentModes = Array.from(new Set(placements.map((row) => row.timingContext.alignmentMode)));
+  assert.deepEqual(trackNames, ["XD: Phrase Cues"]);
+  assert.deepEqual(alignmentModes, ["phrase_window"]);
+});
+
 test("designer runtime broad whole-sequence passes now use multiple supported effect families", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-8",
