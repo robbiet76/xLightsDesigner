@@ -579,6 +579,20 @@
       }
     },
     {
+      "id": "quality-compare-beat-grid-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "In Chorus 1, let the pulse land on the beat grid with cleaner beat-driven accents instead of washing the full section evenly.",
+      "altPromptText": "In Chorus 1, ignore the beat grid and wash the full section evenly instead of shaping cleaner beat-driven accents.",
+      "selectedSections": ["Chorus 1"],
+      "altSelectedSections": ["Chorus 1"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-render-restraint",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

@@ -772,7 +772,7 @@ function buildTimedSectionMap(analysisHandoff = null) {
 
 function inferPlacementAnchorMode(goal = "") {
   const lowerGoal = str(goal).toLowerCase();
-  if (/\b(ignore the phrase release|ignore phrase release|ignore the chord changes|ignore chord changes)\b/.test(lowerGoal)) {
+  if (/\b(ignore the phrase release|ignore phrase release|ignore the chord changes|ignore chord changes|ignore the beat grid|ignore beat grid|ignore the beats|ignore beats|ignore the pulse)\b/.test(lowerGoal)) {
     return "section";
   }
   if (/\b(beat|downbeat|upbeat|pulse|beat grid)\b/.test(lowerGoal)) return "beat";

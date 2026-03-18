@@ -1642,6 +1642,17 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(harmonic pivots|follow the chord changes|cleaner chord-led movement|track the harmony)\b/.test(lowerSummary)) score += 1.8;
     if (/\b(flat span|one flat verse|ignores the chords|treats the verse evenly)\b/.test(lowerSummary)) score -= 1.8;
   }
+  if (/\b(beat grid|on the beat grid|pulse lands on the beat|washed across the full section|washing the full section)\b/.test(lowerPrompt)) {
+    const alignmentModes = arr(metrics.alignmentModes).map((value) => str(value));
+    const trackNames = arr(metrics.trackNames).map((value) => str(value));
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    if (alignmentModes.includes("beat_window")) score += 1.6;
+    if (trackNames.includes("XD: Beat Grid")) score += 1.0;
+    if (alignmentModes.includes("section_span") && alignmentModes.length === 1) score -= 1.4;
+    if (overlayCount <= 2) score += 0.3;
+    if (/\b(beat-driven accents|pulse lands on the beat grid|clean beat hits|grid-locked)\b/.test(lowerSummary)) score += 1.8;
+    if (/\b(washes the section|full section wash|ignores the beat grid|flat section span)\b/.test(lowerSummary)) score -= 1.8;
+  }
   if (/\b(wide and suspended|second full-chorus payoff|suspended transition|immediate big payoff|hold the breath)\b/.test(lowerPrompt)) {
     const averageSpeeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
     const meanSpeed = averageSpeeds.length

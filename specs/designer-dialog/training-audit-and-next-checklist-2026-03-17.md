@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `59/59` passed
+- offline eval corpus: `60/60` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
@@ -38,6 +38,7 @@ Interpretation:
 - post-chorus hook-extension scoring now exists so a semantic `Post-Chorus` is judged as a hook echo instead of a fresh verse-sized section
 - impact-budget comparative scoring now exists so broad whole-song prompts can prefer controlled visual weight over equal-emphasis full-layout flooding
 - chord-pivot comparative scoring now exists so verse timing can prefer harmonic movement over flat section-span treatment
+- beat-grid comparative scoring now exists so pulse-driven chorus timing can prefer beat windows over flat section washes
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates
