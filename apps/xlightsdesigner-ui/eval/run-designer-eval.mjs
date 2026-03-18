@@ -60,11 +60,12 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         { label: "Chorus 1", startMs: 54000, endMs: 76000, energy: "high", density: "dense" },
         { label: "Post-Chorus", startMs: 76000, endMs: 90000, energy: "medium", density: "moderate" },
         { label: "Drop", startMs: 90000, endMs: 106000, energy: "high", density: "dense" },
-        { label: "Breakdown", startMs: 106000, endMs: 120000, energy: "low", density: "sparse" },
-        { label: "Middle 8", startMs: 120000, endMs: 138000, energy: "medium", density: "wide" },
-        { label: "Final Chorus", startMs: 138000, endMs: 170000, energy: "high", density: "dense" },
-        { label: "Tag", startMs: 170000, endMs: 186000, energy: "medium", density: "moderate" },
-        { label: "Outro", startMs: 186000, endMs: 202000, energy: "low", density: "sparse" }
+        { label: "Breakdown", startMs: 106000, endMs: 118000, energy: "low", density: "sparse" },
+        { label: "Interlude", startMs: 118000, endMs: 130000, energy: "low", density: "sparse" },
+        { label: "Middle 8", startMs: 130000, endMs: 148000, energy: "medium", density: "wide" },
+        { label: "Final Chorus", startMs: 148000, endMs: 180000, energy: "high", density: "dense" },
+        { label: "Tag", startMs: 180000, endMs: 196000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 196000, endMs: 212000, energy: "low", density: "sparse" }
       ]
     : variant === "bridge_peak_arc"
     ? [
@@ -1899,6 +1900,22 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (effectFamilies.includes("Shimmer")) score -= 0.4;
     if (/\b(cleaner reset|strips the picture back|room for the next build|pulls back)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(full chorus payoff energy|does not really reset|keeps spending the payoff)\b/.test(lowerSummary)) score -= 2.0;
+  }
+  if (/\b(in the interlude|interlude\b).*?\b(breathe|breathing space|lighter connective space|another payoff section|active climax)\b/.test(lowerPrompt)) {
+    const interludeSpeed = Number(metrics.perSectionAverageSpeeds?.["Interlude"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(interludeSpeed) ? interludeSpeed : 0);
+    const interludeImpact = Number(metrics.perSectionImpactShares?.["Interlude"] || 0);
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (speedDelta >= 0.6 && speedDelta <= 2.0) score += 1.0;
+    else if (speedDelta < 0.3) score -= 0.9;
+    if (interludeImpact <= 0.14) score += 0.9;
+    else score -= Math.min(1.1, (interludeImpact - 0.14) * 6);
+    if (effectFamilies.includes("Color Wash")) score += 0.4;
+    if (effectFamilies.includes("Wave")) score += 0.3;
+    if (effectFamilies.includes("Bars")) score -= 0.4;
+    if (/\b(breathes|lighter connective space|lets the song breathe|connective space)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(another payoff section|active climax|keeps the payoff running)\b/.test(lowerSummary)) score -= 2.0;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));

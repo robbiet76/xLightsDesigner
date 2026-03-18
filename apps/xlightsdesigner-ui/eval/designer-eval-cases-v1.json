@@ -833,6 +833,20 @@
       }
     },
     {
+      "id": "quality-compare-interlude-breathing-space-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Interlude, let the song breathe with lighter connective space instead of pushing it like another payoff section.",
+      "altPromptText": "In the Interlude, push the same payoff energy forward so it feels like another active climax instead of breathing space.",
+      "selectedSections": ["Interlude"],
+      "altSelectedSections": ["Interlude"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

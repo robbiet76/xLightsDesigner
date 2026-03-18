@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `63/63` passed
+- offline eval corpus: `64/64` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
@@ -42,6 +42,7 @@ Interpretation:
 - pre-chorus lift comparative scoring now exists so a semantic `Pre-Chorus` can be judged as held tension into `Chorus 1` instead of an early-spent chorus payoff
 - outro resolution comparative scoring now exists so an `Outro` can be judged as a resolving afterglow instead of a reopened fresh climax
 - breakdown reset comparative scoring now exists so a semantic `Breakdown` can be judged as a real pullback/reset instead of chorus-energy carryover
+- interlude breathing-space comparative scoring now exists so a semantic `Interlude` can be judged as connective breathing room instead of another payoff section
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates

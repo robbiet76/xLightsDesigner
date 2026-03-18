@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `63`
-- supported by current offline runner: `63`
-- passed: `63`
+- total cases: `64`
+- supported by current offline runner: `64`
+- passed: `64`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -88,6 +88,7 @@ The runner and designer logic now cover:
 - pre-chorus lift discipline scoring where a semantic `Pre-Chorus` must hold tension and hand off into `Chorus 1` instead of spending full chorus payoff too early
 - outro resolution discipline scoring where an `Outro` must resolve as an afterglow instead of reopening a fresh full climax
 - breakdown reset discipline scoring where a semantic `Breakdown` must strip the picture back and reset instead of carrying full chorus payoff energy forward
+- interlude breathing-space discipline scoring where an `Interlude` must create connective space instead of acting like another payoff section
 - impact-budget discipline scoring where broad whole-song prompts must keep visual weight controlled instead of flattening large-footprint targets into equal-emphasis coverage
 - chord-pivot discipline scoring where Verse material must follow harmonic changes instead of collapsing into one flat span
 - beat-grid discipline scoring where pulse-driven chorus material must land on beat windows instead of washing the whole section
@@ -190,7 +191,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `63/63` corpus as the structural regression gate
+1. keep the current `64/64` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
