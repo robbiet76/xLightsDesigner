@@ -1727,6 +1727,19 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(controlled release|lands strongly|clean payoff|handoff)\b/.test(lowerSummary)) score += 1.8;
     if (/\b(premature|weaker|disconnected handoff)\b/.test(lowerSummary)) score -= 1.8;
   }
+  if (/\b(in the drop|drop\b).*?\b(concentrated impact|cleaner landing|release hit|never really lands|release feels diffused|transition section)\b/.test(lowerPrompt)) {
+    const dropSpeed = Number(metrics.perSectionAverageSpeeds?.["Drop"] || 0);
+    const dropImpact = Number(metrics.perSectionImpactShares?.["Drop"] || 0);
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (dropSpeed >= 2.3 && dropSpeed <= 4.8) score += 1.2;
+    else if (dropSpeed < 1.8) score -= 1.2;
+    if (dropImpact >= 0.16 && dropImpact <= 0.42) score += 1.0;
+    else if (dropImpact < 0.12) score -= 0.8;
+    if (effectFamilies.includes("Shockwave")) score += 0.9;
+    if (effectFamilies.includes("Bars")) score += 0.4;
+    if (/\b(concentrated release|cleaner post-buildup hit|landing hard|sharper release)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(broader|transitional|diffused|never really lands)\b/.test(lowerSummary)) score -= 2.0;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));

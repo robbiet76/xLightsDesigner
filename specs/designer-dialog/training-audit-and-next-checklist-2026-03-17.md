@@ -9,12 +9,12 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `52/52` passed
+- offline eval corpus: `53/53` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
   - target-selection quality: `3.00`
-  - motion language: `3.00`
+  - motion language: `2.93`
   - stage-lighting quality: `3.00`
   - composition quality: `3.00`
   - settings/render plausibility: `3.00`
@@ -32,6 +32,7 @@ Interpretation:
 - motif-reuse comparative scoring now exists for continuity without monotony
 - adjacent-section contrast pacing scoring now exists for connected, non-jarring lifts
 - bridge-to-final-chorus handoff scoring now exists for controlled release into payoff
+- drop-release scoring now exists so a semantic `Drop` is judged as a landing/release moment rather than just another high-energy section
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates
@@ -94,7 +95,7 @@ Important boundary:
 
 - [x] Add at least one more materially different saved-sequence/layout family to the extended live pack
 - [x] Add at least one more alternate-song scenario where phrase timing matters more than section labels
-- [ ] Add at least one more live scenario where render restraint must beat a busier alternative
+- [x] Add at least one more live scenario where render restraint must beat a busier alternative
 
 ### D. Training Quality Expansion
 

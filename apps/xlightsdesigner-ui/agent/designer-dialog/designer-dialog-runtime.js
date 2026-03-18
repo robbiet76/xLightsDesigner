@@ -469,6 +469,8 @@ function buildSectionEffectHints({
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
   const controlledFinale = isControlledFinaleGoal(lowerGoal);
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
+  const focusedDrop = isFocusedDropGoal(lowerGoal);
+  const diffusedDrop = isDiffusedDropGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
@@ -518,6 +520,12 @@ function buildSectionEffectHints({
     return pickDistinctEffects(["Wave", "Butterfly"], ["Bars", "Circles"]);
   }
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
+    if (/drop/.test(lowerSection) && focusedDrop) {
+      return pickDistinctEffects(["Shockwave", "Bars"], ["Meteors", "Pinwheel"]);
+    }
+    if (/drop/.test(lowerSection) && diffusedDrop) {
+      return pickDistinctEffects(["Wave", "Color Wash"], ["Spirals", "Morph"]);
+    }
     if (/final chorus|finale/.test(lowerSection) && controlledFinale) {
       return pickDistinctEffects(["Bars", "Wave"], ["Shimmer", "Color Wash"]);
     }
@@ -577,6 +585,8 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
   const controlledFinale = isControlledFinaleGoal(lowerGoal);
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
+  const focusedDrop = isFocusedDropGoal(lowerGoal);
+  const diffusedDrop = isDiffusedDropGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
@@ -596,6 +606,15 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     return `use cleaner framing${warmClause} with more negative space and clearer focal boundaries`;
   }
   if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lowerSection)) {
+    if (/drop/.test(lowerSection)) {
+      if (focusedDrop) {
+        return `let the drop land${warmClause} with concentrated release, tighter impact, and a cleaner post-buildup hit`;
+      }
+      if (diffusedDrop) {
+        return `keep the drop broader${warmClause} and more transitional so the release stays diffused rather than landing hard`;
+      }
+      return `let the drop open up${warmClause} with sharper release and a more concentrated impact window`;
+    }
     if (/final chorus|finale/.test(lowerSection)) {
       if (controlledFinale) {
         return `push the final payoff${warmClause} with clear hero emphasis, controlled width, and restraint around the main reveal`;
@@ -908,6 +927,18 @@ function isEscalationPacingGoal(goal = "") {
 
 function isFlattenedEscalationGoal(goal = "") {
   return /peak too early|nearly the same payoff intensity|little escalation difference/.test(str(goal).toLowerCase());
+}
+
+function isFocusedDropGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /drop/.test(lower)
+    && /release hit|lands? immediately|concentrated impact|cleaner landing|after the buildup|opens up hard/.test(lower);
+}
+
+function isDiffusedDropGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /drop/.test(lower)
+    && /broad and transitional|never really lands|release feels diffused|stretch(?:ing)? it like another transition/.test(lower);
 }
 
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {

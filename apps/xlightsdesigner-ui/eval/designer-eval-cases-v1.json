@@ -694,6 +694,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-drop-release-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Stage Lighting Reasoning", "Composition Reasoning"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Drop, let the release hit immediately with concentrated impact and a cleaner landing after the buildup instead of stretching it like another transition section.",
+      "altPromptText": "In the Drop, keep it broad and transitional so the energy never really lands and the release feels diffused.",
+      "selectedSections": ["Drop"],
+      "altSelectedSections": ["Drop"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `52`
-- supported by current offline runner: `52`
-- passed: `52`
+- total cases: `53`
+- supported by current offline runner: `53`
+- passed: `53`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -42,7 +42,7 @@ Interpretation:
 ## Current Artistic Baseline
 
 Current artistic averages from the same corpus:
-- motion language: `3.00`
+- motion language: `2.93`
 - stage-lighting quality: `3.00`
 - composition quality: `3.00`
 - settings/render plausibility: `3.00`
@@ -81,6 +81,7 @@ The runner and designer logic now cover:
 - motif-reuse comparative scoring where section-to-section thematic continuity must evolve without collapsing into monotony
 - adjacent-section contrast pacing scoring where Verse-to-Chorus separation must stay connected instead of becoming abrupt and incoherent
 - bridge-to-final-chorus handoff scoring where suspended release must land in a strong but not premature payoff
+- drop-release discipline scoring where a semantic `Drop` must land as a concentrated release instead of staying broad and transitional
 
 ## Current Meaning Of A Pass
 
@@ -133,6 +134,13 @@ Live validation status on the current promoted baseline:
     - strong alignment: `phrase_window`
     - weak timing: `XD: Song Structure`
   - status: validated individually and included in the extended live pack
+- alternate-song render-restraint probe: passed
+  - sequence: `API-Designer-WholePass-20260317-B.xsq`
+  - slice: `wholepass-b-render-discipline-pass`
+  - result:
+    - strong score: `22.3`
+    - weak score: `17.2`
+  - status: validated individually
 - alternate saved-sequence probe: passed
   - sequence: `API-Designer-WholePass-20260317-E.xsq`
   - slice: `wholepass-e-composition-pass`
@@ -172,7 +180,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `52/52` corpus as the structural regression gate
+1. keep the current `53/53` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
