@@ -116,7 +116,12 @@ Live validation status on the current promoted baseline:
 - alternate saved-sequence probe: passed
   - sequence: `API-Designer-WholePass-20260317-E.xsq`
   - slice: `wholepass-e-composition-pass`
-  - status: validated individually, not promoted into the baseline pack yet because the larger combined live pack exceeded the current automation timeout/cadence budget
+  - status: validated individually and included in the extended live pack
+- extended live suite: passed
+  - scenarios: `7/7`
+  - baseline pack plus:
+    - `wholepass-e-composition-pass`
+  - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -132,6 +137,7 @@ Interpretation:
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - live comparative validation is no longer tied to one saved sequence
 - alternate saved-sequence coverage exists, but is currently held in the extended live pack rather than the promoted baseline pack
+- alternate saved-sequence coverage is now operationally stable in the extended live pack
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 

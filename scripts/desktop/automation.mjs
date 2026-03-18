@@ -69,7 +69,20 @@ const requestPath = path.join(requestsDir, `${id}.json`);
 const responsePath = path.join(responsesDir, `${id}.json`);
 fs.writeFileSync(requestPath, JSON.stringify({ id, action, payload }, null, 2), "utf8");
 
-const timeoutMs = 300000;
+function computeTimeoutMs(action = "", payload = {}) {
+  if (action === "runLiveDesignValidationSuite") {
+    const scenarioCount = Array.isArray(payload?.scenarios) ? payload.scenarios.length : 0;
+    const baseMs = 300000;
+    const perScenarioMs = 90000;
+    return Math.max(baseMs, baseMs + (scenarioCount * perScenarioMs));
+  }
+  if (action === "runComparativeLiveDesignValidation") {
+    return 300000;
+  }
+  return 120000;
+}
+
+const timeoutMs = computeTimeoutMs(action, payload);
 const started = Date.now();
 for (;;) {
   if (fs.existsSync(responsePath)) {

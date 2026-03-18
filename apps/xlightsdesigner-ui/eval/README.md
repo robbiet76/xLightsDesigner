@@ -16,7 +16,9 @@ Current policy:
 - use comparative quality cases to ensure the scorer prefers stronger outputs over flatter but still valid alternatives
 - use fixture-shift cases so the same prompt must adapt across alternate layouts and song arcs, not just one synthetic scene
 - use the live scenario pack after offline changes are green to validate real-sequence comparative behavior without apply-by-default
-- keep the promoted live baseline pack small enough to complete reliably; use the extended pack for slower alternate-sequence probes before promotion
+- keep the promoted live baseline pack small enough to complete reliably
+- use the extended live pack for slower alternate-sequence probes and broader cadence checks
+- the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
 
 Runner modes:
 - `default`: normal single-output pass/fail eval
