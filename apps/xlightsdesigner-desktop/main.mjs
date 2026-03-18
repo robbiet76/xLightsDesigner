@@ -398,6 +398,76 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   };
 }
 
+async function openSequenceFromDesktop(sequencePath = "") {
+  const snapshot = await getRendererValidationSnapshot();
+  const endpoint = str(snapshot?.endpoint);
+  const file = str(sequencePath);
+  if (!endpoint) {
+    throw new Error("xLights endpoint unavailable for sequence.open.");
+  }
+  if (!file) {
+    throw new Error("sequencePath is required.");
+  }
+  await postXLightsCommand(endpoint, "sequence.open", {
+    file,
+    force: true,
+    promptIssues: false
+  });
+  await invokeRendererAutomation("refreshFromXLights", {});
+  return {
+    ok: true,
+    endpoint,
+    sequencePath: file
+  };
+}
+
+async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
+  const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
+  if (!scenarios.length) {
+    throw new Error("Live design validation suite requires at least one scenario.");
+  }
+  const results = [];
+  for (const scenario of scenarios) {
+    const name = str(scenario?.name || `scenario-${results.length + 1}`);
+    const sequencePath = str(scenario?.sequencePath);
+    if (sequencePath) {
+      await openSequenceFromDesktop(sequencePath);
+    } else if (scenario?.refreshFirst !== false) {
+      await invokeRendererAutomation("refreshFromXLights", {});
+    }
+    if (str(scenario?.analyzePrompt)) {
+      await invokeRendererAutomation("analyzeAudio", { prompt: str(scenario.analyzePrompt) });
+    }
+    const comparison = await runComparativeLiveDesignValidationFromDesktop({
+      ...scenario,
+      refreshFirst: false,
+      analyzePrompt: ""
+    });
+    results.push({
+      name,
+      sequencePath,
+      validation: comparison?.validation || null,
+      metrics: comparison?.validation?.metrics || null,
+      strong: comparison?.strong || null,
+      weak: comparison?.weak || null
+    });
+  }
+
+  const failed = results.filter((row) => row?.validation?.ok !== true);
+  return {
+    contract: "live_design_validation_suite_run_v1",
+    version: "1.0",
+    ok: failed.length === 0,
+    summary: failed.length === 0
+      ? `Live validation suite passed ${results.length}/${results.length} scenarios.`
+      : `Live validation suite passed ${results.length - failed.length}/${results.length} scenarios.`,
+    scenarioCount: results.length,
+    failedScenarioCount: failed.length,
+    failedScenarioNames: failed.map((row) => row.name),
+    results
+  };
+}
+
 async function invokeRendererAutomation(action = "", payload = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
@@ -450,6 +520,9 @@ async function processAutomationRequests() {
       }
       if (action === "runComparativeLiveDesignValidation") {
         return runComparativeLiveDesignValidationFromDesktop(request?.payload || {});
+      }
+      if (action === "runLiveDesignValidationSuite") {
+        return runLiveDesignValidationSuiteFromDesktop(request?.payload || {});
       }
       throw new Error(`Unknown automation action: ${action || "missing"}`);
     }

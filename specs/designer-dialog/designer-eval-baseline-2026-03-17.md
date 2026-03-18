@@ -100,6 +100,13 @@ Live validation status on the current promoted baseline:
     - section scope: `Chorus 1`
     - targets: `Snowman`, `Star`
   - weak prompt drifted broader in live execution and scored lower
+- live comparative suite on real saved sequences: passed
+  - scenarios: `2/2`
+  - `API-Whole-Sequence-Validation-20260317-193350.xsq`
+  - `Validation-Clean-Phase1.xsq`
+  - both scenarios preferred the stronger scoped prompt:
+    - `strongScore: 5.95`
+    - `weakScore: 2.15`
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -113,6 +120,7 @@ Live validation status on the current promoted baseline:
 Interpretation:
 - the current promoted baseline is now green on both the offline corpus and the live apply cadence
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
+- live comparative validation is no longer tied to one saved sequence
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 
