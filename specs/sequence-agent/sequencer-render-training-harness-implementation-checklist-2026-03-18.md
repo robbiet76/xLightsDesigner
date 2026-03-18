@@ -89,6 +89,17 @@ or
   - matrix
 - [ ] Record model geometry metadata needed for later interpretation
 
+Current working fixture coverage:
+- [x] outline
+- [x] cane / single-strand-like prop
+- [ ] arch
+- [ ] matrix
+
+Model-class principle:
+- effects must be trained against representative model classes, not just one arbitrary model
+- full training matrix should be organized as:
+  - `effect x shared settings x effect settings x model class`
+
 ### C. Initial Effect Set
 
 - [x] Start with:

@@ -73,6 +73,7 @@ artifact_path="${OUT_DIR}/${SAMPLE_ID}.${export_format}"
 staging_dir="${sequence_dir}/RenderTraining"
 staged_artifact_path="${staging_dir}/${SAMPLE_ID}.${export_format}"
 record_path="${OUT_DIR}/${SAMPLE_ID}.record.json"
+features_path="${OUT_DIR}/${SAMPLE_ID}.features.json"
 
 mkdir -p "${staging_dir}"
 
@@ -88,7 +89,7 @@ run_and_require_ok "$(jq -cn \
   --arg palette "${palette_string}" \
   --arg start "${start_ms}" \
   --arg end "${end_ms}" \
-  '{cmd:"addEffect",target:$target,effect:$effect,settings:$settings,palette:$palette,layer:"0",startTime:$start,endTime:$end}')"
+  '{cmd:"addEffect",target:$target,effect:$effect,settings:$settings,palette:$palette,layer:"0",startTime:$start,endTime:$end}')" >/dev/null
 
 run_and_require_ok '{"cmd":"renderAll","highdef":"false"}' >/dev/null
 
@@ -110,6 +111,8 @@ cp "${staged_artifact_path}" "${artifact_path}"
   exit 1
 }
 
+bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${artifact_path}" > "${features_path}"
+
 if [[ "${opened_sequence}" == "1" ]]; then
   run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
 fi
@@ -128,6 +131,7 @@ jq -cn \
   --argjson endMs "${end_ms}" \
   --argjson sharedSettings "${shared_settings_json}" \
   --argjson effectSettings "${effect_settings_json}" \
+  --argjson features "$(cat "${features_path}")" \
   '{
     recordVersion: $version,
     sampleId: $sampleId,
@@ -151,7 +155,7 @@ jq -cn \
       scores: {},
       notes: "Initial harness capture. Interpretation pending."
     },
-    features: {},
+    features: $features,
     comparisons: []
   }' > "${record_path}"
 

@@ -21,6 +21,8 @@ The current harness is intentionally small:
 ## Files
 
 - `run-sample.sh`: execute one sample from a sweep manifest
+- `run-manifest.sh`: execute all samples from a sweep manifest
+- `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -32,6 +34,12 @@ The current harness is intentionally small:
 bash scripts/sequencer-render-training/run-sample.sh \
   --manifest scripts/sequencer-render-training/manifests/on-sample-v1.json \
   --out-dir /tmp/sequencer-render-training
+```
+
+```bash
+bash scripts/sequencer-render-training/run-manifest.sh \
+  --manifest scripts/sequencer-render-training/manifests/singlestrand-reduced-sweep-v1.json \
+  --out-dir /tmp/sequencer-render-training-batch
 ```
 
 Environment:
@@ -46,3 +54,12 @@ Environment:
 - xLights export currently needs a concrete model, not a `ModelGroup`.
 - The harness stages artifacts under the sequence directory so the xLights app can write them, then copies them to the requested output directory.
 - The runner fails if xLights reports export success but the staged artifact does not exist.
+- Each successful sample also records basic artifact features:
+  - file size
+  - MIME type
+  - SHA-256
+  - pixel width / height when available
+- Batch runs write:
+  - one subdirectory per sample
+  - `run.log`
+  - `run-summary.json`

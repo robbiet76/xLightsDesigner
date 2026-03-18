@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ARTIFACT_PATH=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --artifact)
+      ARTIFACT_PATH="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+[[ -n "${ARTIFACT_PATH}" ]] || { echo "--artifact is required" >&2; exit 1; }
+[[ -f "${ARTIFACT_PATH}" ]] || { echo "Artifact not found: ${ARTIFACT_PATH}" >&2; exit 1; }
+
+bytes="$(stat -f%z "${ARTIFACT_PATH}")"
+sha256="$(shasum -a 256 "${ARTIFACT_PATH}" | awk '{print $1}')"
+mime_type="$(file -b --mime-type "${ARTIFACT_PATH}")"
+
+width=""
+height=""
+if sips_output="$(sips -g pixelWidth -g pixelHeight "${ARTIFACT_PATH}" 2>/dev/null)"; then
+  width="$(printf '%s\n' "${sips_output}" | awk '/pixelWidth:/ {print $2}' | tail -n 1)"
+  height="$(printf '%s\n' "${sips_output}" | awk '/pixelHeight:/ {print $2}' | tail -n 1)"
+fi
+
+jq -cn \
+  --arg path "${ARTIFACT_PATH}" \
+  --arg mimeType "${mime_type}" \
+  --arg sha256 "${sha256}" \
+  --argjson bytes "${bytes}" \
+  --arg width "${width}" \
+  --arg height "${height}" \
+  '{
+    artifactPath: $path,
+    fileSizeBytes: $bytes,
+    mimeType: $mimeType,
+    sha256: $sha256
+  }
+  + (if ($width | length) > 0 then {pixelWidth: ($width | tonumber)} else {} end)
+  + (if ($height | length) > 0 then {pixelHeight: ($height | tonumber)} else {} end)'
