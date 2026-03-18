@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  flushAutomationRequests,
   processAutomationRequestsOnce,
   createSingleFlightAutomationProcessor
 } from "../automation-request-processor.mjs";
@@ -103,6 +104,48 @@ test("single-flight automation processor reruns once after overlap to pick up ne
   assert.deepEqual(seen, ["first", "second"]);
   assert.deepEqual(fs.readdirSync(requestsDir), []);
   assert.deepEqual(fs.readdirSync(responsesDir).sort(), ["req-1.json", "req-2.json"]);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("flushAutomationRequests clears queued requests and writes failure responses", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-automation-"));
+  const requestsDir = path.join(root, "requests");
+  const responsesDir = path.join(root, "responses");
+  fs.mkdirSync(requestsDir, { recursive: true });
+  fs.mkdirSync(responsesDir, { recursive: true });
+
+  fs.writeFileSync(
+    path.join(requestsDir, "req-1.json"),
+    JSON.stringify({ id: "req-1", action: "ping", payload: {} }),
+    "utf8"
+  );
+  fs.writeFileSync(
+    path.join(requestsDir, "req-2.json"),
+    "{not-valid-json",
+    "utf8"
+  );
+
+  flushAutomationRequests({
+    requestsDir,
+    responsePathForId: (id) => path.join(responsesDir, `${id}.json`),
+    reason: "Cleared stale automation request during app startup."
+  });
+
+  assert.deepEqual(fs.readdirSync(requestsDir), []);
+  assert.deepEqual(fs.readdirSync(responsesDir).sort(), ["req-1.json", "req-2.json"]);
+  assert.deepEqual(readJson(path.join(responsesDir, "req-1.json")), {
+    ok: false,
+    id: "req-1",
+    action: "ping",
+    error: "Cleared stale automation request during app startup."
+  });
+  assert.deepEqual(readJson(path.join(responsesDir, "req-2.json")), {
+    ok: false,
+    id: "req-2",
+    action: "",
+    error: "Cleared stale automation request during app startup."
+  });
 
   fs.rmSync(root, { recursive: true, force: true });
 });

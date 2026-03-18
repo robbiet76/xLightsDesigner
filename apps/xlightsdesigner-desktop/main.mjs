@@ -27,6 +27,7 @@ import {
   buildXLightsEffectOccupancyState
 } from "./xlights-validation.mjs";
 import {
+  flushAutomationRequests,
   processAutomationRequestsOnce,
   createSingleFlightAutomationProcessor
 } from "./automation-request-processor.mjs";
@@ -531,6 +532,11 @@ async function processAutomationRequests() {
 
 function startAutomationPolling() {
   ensureAutomationDirs();
+  flushAutomationRequests({
+    requestsDir: AUTOMATION_REQUESTS_DIR,
+    responsePathForId: automationResponsePath,
+    reason: "Cleared stale automation request during app startup."
+  });
   if (automationPollTimer) return;
   if (!automationRequestProcessor) {
     automationRequestProcessor = createSingleFlightAutomationProcessor({

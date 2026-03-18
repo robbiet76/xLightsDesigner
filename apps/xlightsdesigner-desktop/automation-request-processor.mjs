@@ -5,6 +5,43 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+export function flushAutomationRequests({
+  requestsDir,
+  responsePathForId,
+  reason = "Cleared stale automation request.",
+  fsImpl = fs
+} = {}) {
+  const files = fsImpl.readdirSync(requestsDir)
+    .filter((name) => name.endsWith(".json"))
+    .sort();
+  for (const name of files) {
+    const fullPath = path.join(requestsDir, name);
+    let request = null;
+    const idFallback = path.basename(name, ".json");
+    try {
+      request = JSON.parse(fsImpl.readFileSync(fullPath, "utf8"));
+    } catch {
+      request = null;
+    }
+    const id = str(request?.id || idFallback) || idFallback;
+    const action = str(request?.action);
+    try {
+      fsImpl.writeFileSync(
+        responsePathForId(id),
+        JSON.stringify({ ok: false, id, action, error: reason }, null, 2),
+        "utf8"
+      );
+    } catch {
+      // ignore response write failures during startup cleanup
+    }
+    try {
+      fsImpl.unlinkSync(fullPath);
+    } catch {
+      // ignore cleanup failures
+    }
+  }
+}
+
 export async function processAutomationRequestsOnce({
   requestsDir,
   responsePathForId,
