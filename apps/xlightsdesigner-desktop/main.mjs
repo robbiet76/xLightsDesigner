@@ -397,6 +397,13 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   return {
     contract: "comparative_live_design_validation_run_v1",
     version: "1.0",
+    comparison: validation?.metrics
+      ? {
+          strongScore: validation.metrics.strongScore,
+          weakScore: validation.metrics.weakScore,
+          preferred: validation.metrics.strongScore > validation.metrics.weakScore ? "strong" : "weak"
+        }
+      : null,
     strong: {
       diagnose: strongDiagnose,
       pageStates: strongSnapshot?.pageStates || {}
