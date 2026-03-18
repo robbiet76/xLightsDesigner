@@ -4,6 +4,7 @@ This folder contains the offline eval corpus and runner for the deep designer-tr
 
 Current contents:
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
+- `live-design-validation-suite-v1.json`: canonical live comparative validation scenarios for real saved sequences
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
 
@@ -13,6 +14,7 @@ Current policy:
 - treat structural scorer output as the automated gate
 - use comparative quality cases to ensure the scorer prefers stronger outputs over flatter but still valid alternatives
 - use fixture-shift cases so the same prompt must adapt across alternate layouts and song arcs, not just one synthetic scene
+- use the live scenario pack after offline changes are green to validate real-sequence comparative behavior without apply-by-default
 
 Runner modes:
 - `default`: normal single-output pass/fail eval

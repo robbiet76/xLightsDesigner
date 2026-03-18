@@ -357,11 +357,12 @@ export function buildProposalFromIntent(input = {}) {
       ? selection.targets
       : goalMatchSelection.targets
   ).map((row) => str(row?.id)).filter(Boolean);
+  const allowGlobalRewrite = Boolean(baseNormalizedIntent?.preservationConstraints?.allowGlobalRewrite);
   const shouldPromoteGoalMatchedTargets = !arr(baseNormalizedIntent?.targetIds).length
     && (selection.resolutionSource === "goal_match" || goalMatchSelection.resolutionSource === "goal_match")
     && (
       promotedGoalMatchTargets.length > 1
-      || !arr(baseNormalizedIntent?.tags).length
+      || (!arr(baseNormalizedIntent?.tags).length && (!allowGlobalRewrite || promotedGoalMatchTargets.length > 1))
     );
   const inferredTargetIds = !arr(baseNormalizedIntent?.targetIds).length
     && shouldPromoteGoalMatchedTargets

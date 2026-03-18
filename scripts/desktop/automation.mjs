@@ -69,7 +69,7 @@ const requestPath = path.join(requestsDir, `${id}.json`);
 const responsePath = path.join(responsesDir, `${id}.json`);
 fs.writeFileSync(requestPath, JSON.stringify({ id, action, payload }, null, 2), "utf8");
 
-const timeoutMs = 120000;
+const timeoutMs = 300000;
 const started = Date.now();
 for (;;) {
   if (fs.existsSync(responsePath)) {

@@ -470,10 +470,16 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
   const proposalScope = diagnose?.proposalScope || {};
   const executionPlanSummary = diagnose?.executionPlanSummary || {};
   const distinctFamilies = new Set();
+  const timingTrackNames = new Set();
+  const anchorBases = new Set();
   for (const row of arr(diagnose?.rawPlan)) {
     if (str(row?.cmd) !== "effects.create") continue;
     const effectName = str(row?.params?.effectName);
     if (effectName) distinctFamilies.add(effectName);
+    const trackName = str(row?.anchor?.trackName);
+    const basis = str(row?.anchor?.basis);
+    if (trackName) timingTrackNames.add(trackName);
+    if (basis) anchorBases.add(basis);
   }
   if (!distinctFamilies.size) {
     for (const row of sequenceRows) {
@@ -496,7 +502,9 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
     sequenceRowCount: sequenceRows.length,
     distinctFamilyCount: distinctFamilies.size,
     distinctFamilies: [...distinctFamilies].sort(),
-    focusTargets: flattenedFocusTargets
+    focusTargets: flattenedFocusTargets,
+    timingTrackNames: [...timingTrackNames].sort(),
+    anchorBases: [...anchorBases].sort()
   };
 }
 
@@ -557,6 +565,51 @@ function comparativeLiveScopeAdjustment(metrics = {}, expected = {}) {
   return Number(adjustment.toFixed(2));
 }
 
+function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
+  const lowerGoal = str(goalText).toLowerCase();
+  let adjustment = 0;
+  const familyCount = Number(metrics.distinctFamilyCount || 0);
+  const placementCount = Number(metrics.effectPlacementCount || 0);
+  const timingTrackNames = sortedNormalizedList(metrics.timingTrackNames);
+  const anchorBases = sortedNormalizedList(metrics.anchorBases);
+
+  if (/stage-lighting|stage lighting|cue stack|key-vs-fill|key light|fill|restrained washes|restrained wash/.test(lowerGoal)) {
+    if (familyCount >= 4 && familyCount <= 6) adjustment += 1.8;
+    if (familyCount >= 7) adjustment -= 1.4;
+    if (placementCount > 44) adjustment -= 1.0;
+  }
+
+  if (/uniform effect language|uniform|even look|visually even|same emphasis|share the same emphasis|minimal hierarchy|simple and uniform/.test(lowerGoal)) {
+    if (familyCount <= 3) adjustment += 1.0;
+    if (familyCount >= 5) adjustment -= 3.0;
+    if (placementCount > 36) adjustment -= 1.0;
+  }
+
+  if (/perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)
+    && !/visually even|same emphasis|share the same emphasis|even look|minimal hierarchy/.test(lowerGoal)) {
+    const focusTargetCount = sortedNormalizedList(metrics.focusTargets).length;
+    if (focusTargetCount > 0 && focusTargetCount <= 6) adjustment += 1.6;
+    if (focusTargetCount >= 12) adjustment -= 1.2;
+    if (placementCount >= 16 && placementCount <= 32) adjustment += 0.8;
+  }
+
+  if (/beat grid|beat-driven|pulse lands on the beat|anchored to the beat/.test(lowerGoal)) {
+    if (timingTrackNames.includes("XD: Beat Grid") || anchorBases.includes("beat_window")) {
+      adjustment += 1.1;
+    } else {
+      adjustment -= 1.1;
+    }
+  }
+
+  if (/phrase cue|phrase release|hold the breath|before the phrase release/.test(lowerGoal)) {
+    if (anchorBases.includes("phrase_window")) {
+      adjustment += 0.9;
+    }
+  }
+
+  return Number(adjustment.toFixed(2));
+}
+
 export function validateComparativeLiveDesignState({
   expected = {},
   strong = {},
@@ -567,8 +620,16 @@ export function validateComparativeLiveDesignState({
   const issues = [];
   const expectedSections = arr(expected?.sections).map((row) => str(row)).filter(Boolean).sort();
   const expectedTargets = arr(expected?.targets).map((row) => str(row)).filter(Boolean).sort();
-  const strongScore = Number((comparativeLiveScore(strongMetrics) + comparativeLiveScopeAdjustment(strongMetrics, expected)).toFixed(2));
-  const weakScore = Number((comparativeLiveScore(weakMetrics) + comparativeLiveScopeAdjustment(weakMetrics, expected)).toFixed(2));
+  const strongScore = Number((
+    comparativeLiveScore(strongMetrics)
+    + comparativeLiveScopeAdjustment(strongMetrics, expected)
+    + comparativeLivePromptAdjustment(strongMetrics, strong?.diagnose?.intentHandoffSummary?.goal)
+  ).toFixed(2));
+  const weakScore = Number((
+    comparativeLiveScore(weakMetrics)
+    + comparativeLiveScopeAdjustment(weakMetrics, expected)
+    + comparativeLivePromptAdjustment(weakMetrics, weak?.diagnose?.intentHandoffSummary?.goal)
+  ).toFixed(2));
 
   if (!strongMetrics.effectPlacementCount) {
     issues.push({ code: "strong_prompt_no_proposal", message: "Strong prompt did not produce effect placements." });

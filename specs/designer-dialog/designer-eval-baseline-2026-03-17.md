@@ -101,12 +101,15 @@ Live validation status on the current promoted baseline:
     - targets: `Snowman`, `Star`
   - weak prompt drifted broader in live execution and scored lower
 - live comparative suite on real saved sequences: passed
-  - scenarios: `2/2`
+  - scenarios: `4/4`
   - `API-Whole-Sequence-Validation-20260317-193350.xsq`
   - `Validation-Clean-Phase1.xsq`
-  - both scenarios preferred the stronger scoped prompt:
-    - `strongScore: 5.95`
-    - `weakScore: 2.15`
+  - covered live comparative slices:
+    - `whole-sequence-chorus-focus`
+    - `clean-phase-chorus-focus`
+    - `clean-phase-stage-lighting-pass`
+    - `clean-phase-composition-pass`
+  - all scenarios preferred the stronger prompt over the flatter alternative
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`

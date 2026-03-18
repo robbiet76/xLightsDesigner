@@ -261,6 +261,17 @@ function pickDistinctEffects(primary = [], secondary = [], count = 2) {
   return out;
 }
 
+function prioritizeConcreteTargets(targetIds = []) {
+  const aggregatePattern = /(^|\/)(allmodels|allmodels_|.*_all$|.*_nofloods$|.*_nomatrix$)/i;
+  const concrete = [];
+  const aggregate = [];
+  for (const targetId of uniqueStrings(targetIds)) {
+    if (aggregatePattern.test(str(targetId))) aggregate.push(targetId);
+    else concrete.push(targetId);
+  }
+  return concrete.length ? [...concrete, ...aggregate] : aggregate;
+}
+
 function chooseExecutionTargets({
   explicitTargetIds = [],
   fallbackTargetIds = [],
@@ -289,6 +300,7 @@ function chooseExecutionTargets({
   const center = uniqueStrings(arr(zones.center));
   const key = str(section).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
+  const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
@@ -312,22 +324,24 @@ function chooseExecutionTargets({
       ...fallback.slice(0, 2)
     ]).slice(0, 8);
   }
-  if (/perimeter/.test(lowerGoal) || /frame\b|framing\b/.test(lowerGoal)) {
-    return uniqueStrings([
+  if (!uniformHierarchy && (/perimeter/.test(lowerGoal) || /frame\b|framing\b/.test(lowerGoal))) {
+    return prioritizeConcreteTargets([
       ...left.slice(0, 1),
       ...right.slice(0, 1),
       ...foreground.slice(0, 2),
+      ...broad.slice(0, 2),
       ...center.slice(0, 1),
       ...focal.slice(0, 1),
-      ...fallback.slice(0, 2)
+      ...fallback.slice(0, 3)
     ]).slice(0, 8);
   }
-  if (/centerpiece|center props|key light|focal/.test(lowerGoal)) {
-    return uniqueStrings([
+  if (!uniformHierarchy && /centerpiece|center props|key light|focal/.test(lowerGoal)) {
+    return prioritizeConcreteTargets([
       ...center.slice(0, 2),
       ...focal.slice(0, 2),
       ...detail.slice(0, 1),
-      ...fallback.slice(0, 2)
+      ...broad.slice(0, 2),
+      ...fallback.slice(0, 3)
     ]).slice(0, 8);
   }
   if (singleScope || tagDriven) {
@@ -406,7 +420,8 @@ function buildSectionEffectHints({
   const nearEnd = count > 1 ? idx === count - 1 : idx === 0;
   const crispBias = motionPreference === "controlled" || focusPreference === "crisp-focal" || /clarity|clean read|focused/.test(lowerGoal);
   const smoothBias = !crispBias && (motionPreference === "smooth" || /cinematic|emotionally open|glow/.test(lowerGoal));
-  if (/key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
+  const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
+  if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return smoothBias
         ? pickDistinctEffects(["Color Wash", "Wave"], nearEnd ? ["Spirals", "Shimmer"] : ["Candle", "Shimmer"])
@@ -434,7 +449,7 @@ function buildSectionEffectHints({
     }
     return pickDistinctEffects(["Wave", "Circles"], ["Butterfly", "Twinkle"]);
   }
-  if (/perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
+  if (!uniformHierarchy && /perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return pickDistinctEffects(["Color Wash", "Pinwheel"], ["Shimmer", "Spirals"]);
     }
@@ -488,9 +503,10 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
+  const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const warm = /warm|amber|gold|red|cinematic|glow|theatrical/.test(lowerGoal);
   const warmClause = warm ? ' with warm cinematic color and glow control' : '';
-  if (/key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
+  if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
     }
@@ -499,7 +515,7 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     }
     return `shape the section like a lighting cue${warmClause} with readable support and controlled depth`;
   }
-  if (/negative space|frame|framing|centerpiece|perimeter/.test(lowerGoal)) {
+  if (!uniformHierarchy && /negative space|frame|framing|centerpiece|perimeter/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `frame the reveal${warmClause} with cleaner negative space and tighter focal contrast`;
     }
@@ -686,8 +702,9 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
 
 function inferTargetRole({ goal = "", targetIndex = 0, singleScope = false } = {}) {
   const lowerGoal = str(goal).toLowerCase();
-  const leadWeighted = /key light|focal|focus|centerpiece|hero|lead/.test(lowerGoal);
-  const supportWeighted = /fill|support|perimeter|frame\b|framing\b|background|negative space/.test(lowerGoal);
+  const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
+  const leadWeighted = !uniformHierarchy && /key light|focal|focus|centerpiece|hero|lead/.test(lowerGoal);
+  const supportWeighted = !uniformHierarchy && /fill|support|perimeter|frame\b|framing\b|background|negative space/.test(lowerGoal);
   if (targetIndex === 0) return leadWeighted || singleScope ? "lead" : "primary";
   if (supportWeighted) return "support";
   return "secondary";
@@ -696,7 +713,8 @@ function inferTargetRole({ goal = "", targetIndex = 0, singleScope = false } = {
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {
   const lowerGoal = str(goal).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
-  const lightingOrCompositionScoped = /key light|fill|support|focal|centerpiece|perimeter|frame\b|framing\b|negative space|foreground|background/.test(lowerGoal);
+  const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
+  const lightingOrCompositionScoped = !uniformHierarchy && /key light|fill|support|focal|centerpiece|perimeter|frame\b|framing\b|negative space|foreground|background/.test(lowerGoal);
   if (targetIndex === 0) return true;
   if (lightingOrCompositionScoped) return !singleScope && normalizedEnergy === "high" && targetIndex === 1;
   if (singleScope && targetIndex >= 1) return false;
