@@ -618,6 +618,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-escalation-pacing",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Focal Hierarchy", "Thematic Continuity"],
+      "fixtureVariant": "default",
+      "promptText": "Stage the song so Verse 1 stays measured, Chorus 1 lifts clearly, and the Final Chorus feels like the largest payoff instead of peaking too early.",
+      "altPromptText": "Make the song peak too early by treating Verse 1, Chorus 1, and Final Chorus with nearly the same payoff intensity and little escalation difference.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

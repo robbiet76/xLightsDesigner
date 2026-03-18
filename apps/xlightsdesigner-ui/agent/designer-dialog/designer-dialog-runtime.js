@@ -461,6 +461,8 @@ function buildSectionEffectHints({
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
   const controlledFinale = isControlledFinaleGoal(lowerGoal);
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
+  const escalationGoal = isEscalationPacingGoal(lowerGoal);
+  const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return smoothBias
@@ -530,6 +532,11 @@ function buildSectionEffectHints({
   }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
+  }
+  if (escalationGoal && /verse 1/.test(lowerSection)) {
+    return flattenedEscalation
+      ? pickDistinctEffects(["Shimmer", "Bars"], ["Wave", "Color Wash"])
+      : pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Butterfly"]);
   }
   if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
     return pickDistinctEffects(/outro/.test(lowerSection) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
@@ -851,6 +858,14 @@ function isPaletteResetGoal(goal = "") {
     return false;
   }
   return /unrelated palette|separate unrelated palette|more disconnected|unrelated color reset/.test(lowerGoal);
+}
+
+function isEscalationPacingGoal(goal = "") {
+  return /verse 1 stays measured|final chorus feels like the largest payoff|peaking too early|little escalation difference/.test(str(goal).toLowerCase());
+}
+
+function isFlattenedEscalationGoal(goal = "") {
+  return /peak too early|nearly the same payoff intensity|little escalation difference/.test(str(goal).toLowerCase());
 }
 
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {
