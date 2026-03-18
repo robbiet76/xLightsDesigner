@@ -643,27 +643,36 @@ function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex 
   };
 }
 
-function inferPlacementSettingsIntent({ effectName = "", energy = "", density = "", effectIndex = 0, targetRole = "primary" } = {}) {
+function inferPlacementSettingsIntent({ effectName = "", energy = "", density = "", effectIndex = 0, targetRole = "primary", goal = "" } = {}) {
   const effect = str(effectName).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const supportTarget = targetRole === "support";
+  const lowerGoal = str(goal).toLowerCase();
+  const restrained = isRestrainedRenderGoal(lowerGoal);
+  const busyTexture = isBusyTextureGoal(lowerGoal);
   if (["shimmer", "twinkle", "galaxy", "fireworks"].includes(effect)) {
     return {
-      intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium_high"),
-      speed: normalizedEnergy === "high" ? "fast" : "medium",
-      density: normalizedDensity === "dense" ? "medium" : "light",
-      coverage: supportTarget ? "focused" : (effectIndex === 0 ? "full" : "partial"),
+      intensity: restrained
+        ? "medium"
+        : (supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium_high")),
+      speed: restrained ? "medium" : (normalizedEnergy === "high" ? "fast" : "medium"),
+      density: restrained ? "light" : (busyTexture ? "dense" : (normalizedDensity === "dense" ? "medium" : "light")),
+      coverage: restrained
+        ? "focused"
+        : (supportTarget ? "focused" : (effectIndex === 0 ? "full" : "partial")),
       motion: "sparkle",
-      variation: normalizedEnergy === "high" ? "medium" : "low"
+      variation: restrained ? "low" : (busyTexture ? "high" : (normalizedEnergy === "high" ? "medium" : "low"))
     };
   }
   if (["bars", "shockwave", "warp", "marquee", "singlestrand", "wave"].includes(effect)) {
     return {
       intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium"),
-      speed: normalizedEnergy === "high" ? "medium_fast" : "medium",
+      speed: restrained ? "medium" : (normalizedEnergy === "high" ? "medium_fast" : "medium"),
       density: normalizedDensity === "wide" ? "medium" : "light",
-      coverage: supportTarget ? "focused" : (effectIndex === 0 ? "partial" : "focused"),
+      coverage: restrained
+        ? "partial"
+        : (supportTarget ? "focused" : (effectIndex === 0 ? "partial" : "focused")),
       motion: "rhythmic",
       direction: "forward",
       thickness: normalizedDensity === "wide" ? "medium" : "thin"
@@ -671,35 +680,39 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
   }
   if (["pinwheel", "spirals", "butterfly", "circles", "fan", "morph", "ripple", "spirograph"].includes(effect)) {
     return {
-      intensity: supportTarget ? "medium" : (normalizedEnergy === "low" ? "medium" : "medium_high"),
-      speed: normalizedEnergy === "high" ? "fast" : "medium_fast",
-      density: normalizedDensity === "dense" ? "medium" : "light",
-      coverage: supportTarget ? "partial" : (effectIndex === 0 ? "full" : "partial"),
+      intensity: restrained ? "medium" : (supportTarget ? "medium" : (normalizedEnergy === "low" ? "medium" : "medium_high")),
+      speed: restrained ? "medium" : (normalizedEnergy === "high" ? "fast" : "medium_fast"),
+      density: busyTexture ? "medium" : (normalizedDensity === "dense" ? "medium" : "light"),
+      coverage: restrained
+        ? "partial"
+        : (supportTarget ? "partial" : (effectIndex === 0 ? "full" : "partial")),
       motion: "wash",
       direction: normalizedDensity === "wide" ? "outward" : "forward",
       thickness: normalizedDensity === "dense" ? "medium" : "thin",
-      variation: "medium"
+      variation: restrained ? "low" : "medium"
     };
   }
   if (["meteors", "fire", "lightning", "snowflakes", "snowstorm", "candle", "tendril"].includes(effect)) {
     return {
-      intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium"),
-      speed: normalizedEnergy === "high" ? "fast" : "medium",
-      density: normalizedDensity === "dense" ? "dense" : "medium",
-      coverage: supportTarget ? "focused" : (effectIndex === 0 ? "full" : "focused"),
+      intensity: restrained ? "medium" : (supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium")),
+      speed: restrained ? "medium" : (normalizedEnergy === "high" ? "fast" : "medium"),
+      density: restrained ? "light" : (busyTexture ? "dense" : (normalizedDensity === "dense" ? "dense" : "medium")),
+      coverage: restrained
+        ? "partial"
+        : (supportTarget ? "focused" : (effectIndex === 0 ? "full" : "focused")),
       motion: "rhythmic",
       direction: "reverse",
       thickness: "medium",
-      variation: "medium"
+      variation: restrained ? "low" : "medium"
     };
   }
   return {
     intensity: supportTarget ? "medium" : (normalizedEnergy === "low" ? "medium" : "medium_high"),
-    speed: normalizedEnergy === "low" ? "slow" : "medium",
+    speed: restrained ? "slow" : (normalizedEnergy === "low" ? "slow" : "medium"),
     density: normalizedDensity === "dense" ? "medium" : "light",
-    coverage: supportTarget ? "focused" : (effectIndex === 0 ? "full" : "partial"),
+    coverage: restrained ? "partial" : (supportTarget ? "focused" : (effectIndex === 0 ? "full" : "partial")),
     motion: "wash",
-    variation: "low"
+    variation: restrained ? "low" : (busyTexture ? "medium" : "low")
   };
 }
 
@@ -713,14 +726,24 @@ function inferTargetRole({ goal = "", targetIndex = 0, singleScope = false } = {
   return "secondary";
 }
 
+function isRestrainedRenderGoal(goal = "") {
+  return /\b(restrained|luminous base|smoother texture transitions|selective sparkle|readable atmosphere|cleaner spacing|hold the lighting stack back)\b/.test(str(goal).toLowerCase());
+}
+
+function isBusyTextureGoal(goal = "") {
+  return /\b(texture-heavy|texture heavy|frequent sparkle|constant overlay energy|busier|more constant overlay)\b/.test(str(goal).toLowerCase());
+}
+
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {
   const lowerGoal = str(goal).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const lightingOrCompositionScoped = !uniformHierarchy && /key light|fill|support|focal|centerpiece|perimeter|frame\b|framing\b|negative space|foreground|background/.test(lowerGoal);
   if (targetIndex === 0) return true;
+  if (isRestrainedRenderGoal(lowerGoal)) return false;
   if (lightingOrCompositionScoped) return !singleScope && normalizedEnergy === "high" && targetIndex === 1;
   if (singleScope && targetIndex >= 1) return false;
+  if (isBusyTextureGoal(lowerGoal)) return normalizedEnergy === "high" ? targetIndex <= 2 : targetIndex === 1;
   return normalizedEnergy === "high" && targetIndex === 1;
 }
 
@@ -728,6 +751,8 @@ function inferPlacementLayerIntent({ effectIndex = 0, effectName = "", targetRol
   const lower = str(effectName).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
+  const restrained = isRestrainedRenderGoal(lowerGoal);
+  const busyTexture = isBusyTextureGoal(lowerGoal);
   if (effectIndex === 0) {
     const isSupport = targetRole === "support";
     return {
@@ -736,6 +761,8 @@ function inferPlacementLayerIntent({ effectIndex = 0, effectName = "", targetRol
       overlayPolicy: "allow_overlay",
       mixAmount: isSupport
         ? "low"
+        : restrained
+          ? "medium"
         : normalizedEnergy === "high"
           ? "high"
           : "medium"
@@ -746,8 +773,12 @@ function inferPlacementLayerIntent({ effectIndex = 0, effectName = "", targetRol
     priority: "foreground",
     blendRole: rhythmicOverlay ? "rhythmic_overlay" : "accent_overlay",
     overlayPolicy: "allow_overlay",
-    mixAmount: /key light|focus|focal|punch/.test(lowerGoal)
+    mixAmount: restrained
+      ? "medium"
+      : /key light|focus|focal|punch/.test(lowerGoal)
       ? "high"
+      : busyTexture
+        ? "high"
       : rhythmicOverlay
         ? "medium_high"
         : "medium"
@@ -761,11 +792,17 @@ function inferPlacementRenderIntent({ targetId = "", targetRole = "primary", goa
   const effect = str(effectName).toLowerCase();
   const supportWeighted = targetRole === "support" || /fill|support|perimeter|frame\b|framing\b|background|negative space/.test(lowerGoal);
   const rhythmicWeighted = /rhythm|pulse|drive|beat/.test(lowerGoal) || ["bars", "shockwave", "meteors", "wave"].includes(effect);
+  const restrained = isRestrainedRenderGoal(lowerGoal);
+  const busyTexture = isBusyTextureGoal(lowerGoal);
   return {
     groupPolicy: isAggregate || supportWeighted ? "preserve_group_rendering" : "no_expand",
-    bufferStyle: rhythmicWeighted ? "overlay_scaled" : (supportWeighted ? "inherit" : "inherit"),
+    bufferStyle: restrained
+      ? (rhythmicWeighted ? "overlay_scaled" : "inherit")
+      : (rhythmicWeighted || busyTexture)
+        ? "overlay_scaled"
+        : (supportWeighted ? "inherit" : "inherit"),
     expansionPolicy: isAggregate || supportWeighted ? "preserve" : "no_expand",
-    riskTolerance: isAggregate || supportWeighted ? "low" : "medium"
+    riskTolerance: restrained ? "low" : (isAggregate || supportWeighted ? "low" : "medium")
   };
 }
 
@@ -867,7 +904,8 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             energy: plan?.energy,
             density: plan?.density,
             effectIndex,
-            targetRole
+            targetRole,
+            goal
           }),
           paletteIntent: inferPlacementPaletteIntent({
             goal,

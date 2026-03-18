@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `39/39` passed
+- offline eval corpus: `40/40` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
@@ -19,7 +19,7 @@ Validated baseline today:
   - composition quality: `3.00`
   - settings/render plausibility: `3.00`
   - thematic continuity: `3.00`
-- promoted live baseline suite: `7/7` passed
+- promoted live baseline suite: `8/8` passed
 - canary live suite: `3` scenarios
 - smoke live comparative suite: `3` scenarios
 - current extended live suite file: `9` scenarios

@@ -1553,6 +1553,38 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
     if (trackNames.includes("XD: Phrase Cues")) score += 0.9;
     if (alignmentModes.includes("section_span") && alignmentModes.length === 1) score -= 1.4;
   }
+  if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
+    const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
+    const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));
+    const coverageValues = arr(metrics.coverageValues).map((value) => str(value));
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    const focusedOverlayCount = Number(metrics.focusedOverlayPlacementCount || 0);
+    const wellShapedOverlayCount = Number(metrics.wellShapedOverlayCount || 0);
+    const effectPlacementCount = Number(metrics.effectPlacementCount || 0);
+    const layeredTargetCount = Number(arr(metrics.layeredTargetIds).length || 0);
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    const peakImpact = Number(metrics.peakSectionImpactShare || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    if (bufferStyles.some((value) => /inherit/i.test(value))) score += 0.8;
+    if (blendRoles.some((value) => /foundation|support_fill/i.test(value))) score += 0.8;
+    if (coverageValues.some((value) => /focused|partial/i.test(value))) score += 0.9;
+    if (overlayCount <= 6) score += 1.4;
+    else if (overlayCount <= 10) score += 0.5;
+    else score -= Math.min(2.4, (overlayCount - 6) * 0.35);
+    if (focusedOverlayCount <= 6) score += 0.7;
+    else score -= Math.min(1.8, (focusedOverlayCount - 6) * 0.22);
+    if (wellShapedOverlayCount <= 6) score += 0.5;
+    else score -= Math.min(1.6, (wellShapedOverlayCount - 6) * 0.18);
+    if (effectPlacementCount <= 34) score += 0.5;
+    else score -= Math.min(1.2, (effectPlacementCount - 34) * 0.12);
+    if (layeredTargetCount <= 4) score += 0.8;
+    else score -= Math.min(1.8, (layeredTargetCount - 4) * 0.25);
+    if (peakImpact <= 0.32) score += 0.9;
+    else if (peakImpact >= 0.45) score -= 0.7;
+    if (conceptImpact <= 0.85) score += 0.7;
+    else if (conceptImpact >= 1.0) score -= 0.5;
+    if (sectionContrast >= 3) score += 0.4;
+  }
 
   return Number(score.toFixed(2));
 }

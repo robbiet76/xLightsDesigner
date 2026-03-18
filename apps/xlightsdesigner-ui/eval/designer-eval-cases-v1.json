@@ -526,6 +526,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-render-restraint",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Stage Lighting Reasoning", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Keep the full song visually restrained with a luminous base, smoother texture transitions, and only selective sparkle on the bigger lifts.",
+      "altPromptText": "Make the full song busier and more texture-heavy with frequent sparkle, more constant overlay energy, and less restraint between major lifts.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
