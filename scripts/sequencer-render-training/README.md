@@ -24,6 +24,7 @@ The current harness is intentionally small:
 - `run-manifest.sh`: execute all samples from a sweep manifest
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
+- `build-comparison.sh`: produce pairwise preference records from observation score outputs
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -73,6 +74,9 @@ Environment:
   - derived labels
   - readability/restraint/pattern clarity/prop suitability
   - usefulness baseline score
+- Pairwise comparison helper:
+  - turns two observation payloads into a preference record for one scoring criterion
+  - intended for early ranking before we have a stronger learned comparison layer
 - Batch runs write:
   - one subdirectory per sample
   - `run.log`
