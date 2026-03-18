@@ -307,6 +307,8 @@ function chooseExecutionTargets({
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
   const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support/.test(lowerGoal);
+  const controlledFinale = isControlledFinaleGoal(lowerGoal);
+  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   if (/foreground/.test(lowerGoal) || /background/.test(lowerGoal)) {
     return uniqueStrings([
       ...foreground.slice(0, 1),
@@ -380,6 +382,21 @@ function chooseExecutionTargets({
     ]).slice(0, 5);
   }
   if (isPeak) {
+    if (/final chorus|finale/.test(key) && controlledFinale) {
+      return uniqueStrings([
+        ...focal.slice(0, 2),
+        ...detail.slice(0, 2),
+        ...fallback.slice(0, 2)
+      ]).slice(0, 5);
+    }
+    if (/final chorus|finale/.test(key) && floodedFinale) {
+      return uniqueStrings([
+        ...focal.slice(0, 2),
+        ...detail.slice(0, 2),
+        ...broad.slice(0, 2),
+        ...fallback.slice(0, 2)
+      ]).slice(0, 8);
+    }
     return uniqueStrings([
       ...focal.slice(0, 2),
       ...detail.slice(0, 2),
@@ -442,6 +459,8 @@ function buildSectionEffectHints({
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const suspendedBridge = isSuspendedBridgeGoal(lowerGoal);
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
+  const controlledFinale = isControlledFinaleGoal(lowerGoal);
+  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return smoothBias
@@ -489,6 +508,12 @@ function buildSectionEffectHints({
     return pickDistinctEffects(["Wave", "Butterfly"], ["Bars", "Circles"]);
   }
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
+    if (/final chorus|finale/.test(lowerSection) && controlledFinale) {
+      return pickDistinctEffects(["Bars", "Wave"], ["Shimmer", "Color Wash"]);
+    }
+    if (/final chorus|finale/.test(lowerSection) && floodedFinale) {
+      return pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"]);
+    }
     if (smoothBias) {
       return nearEnd
         ? pickDistinctEffects(["Spirals", "Wave"], ["Color Wash", "Shimmer"])
@@ -535,6 +560,8 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const warmClause = warm ? ' with warm cinematic color and glow control' : '';
   const suspendedBridge = isSuspendedBridgeGoal(lowerGoal);
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
+  const controlledFinale = isControlledFinaleGoal(lowerGoal);
+  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
@@ -555,6 +582,12 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   }
   if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lowerSection)) {
     if (/final chorus|finale/.test(lowerSection)) {
+      if (controlledFinale) {
+        return `push the final payoff${warmClause} with clear hero emphasis, controlled width, and restraint around the main reveal`;
+      }
+      if (floodedFinale) {
+        return `push the final payoff${warmClause} as a full-yard flood with constant output and minimal restraint`;
+      }
       return `push the final payoff${warmClause} with broader contrast, clearer hierarchy, and a stronger closing lift`;
     }
     if (/chorus/.test(lowerSection)) {
@@ -688,12 +721,14 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
   const busyTexture = isBusyTextureGoal(lowerGoal);
   const suspendedBridge = isSuspendedBridgeGoal(lowerGoal) || /delayed release/.test(lowerGoal);
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
+  const controlledFinale = isControlledFinaleGoal(lowerGoal);
+  const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   if (["shimmer", "twinkle", "galaxy", "fireworks"].includes(effect)) {
     return {
       intensity: restrained
         ? "medium"
         : (supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium_high")),
-      speed: suspendedBridge ? "slow" : (chorusLikeBridge ? "fast" : (restrained ? "medium" : (normalizedEnergy === "high" ? "fast" : "medium"))),
+      speed: suspendedBridge ? "slow" : (controlledFinale ? "medium" : (chorusLikeBridge || floodedFinale ? "fast" : (restrained ? "medium" : (normalizedEnergy === "high" ? "fast" : "medium")))),
       density: restrained ? "light" : (busyTexture ? "dense" : (normalizedDensity === "dense" ? "medium" : "light")),
       coverage: restrained
         ? "focused"
@@ -705,10 +740,14 @@ function inferPlacementSettingsIntent({ effectName = "", energy = "", density = 
   if (["bars", "shockwave", "warp", "marquee", "singlestrand", "wave"].includes(effect)) {
     return {
       intensity: supportTarget ? "medium" : (normalizedEnergy === "high" ? "high" : "medium"),
-      speed: suspendedBridge ? "slow" : (chorusLikeBridge ? "fast" : (restrained ? "medium" : (normalizedEnergy === "high" ? "medium_fast" : "medium"))),
+      speed: suspendedBridge ? "slow" : (controlledFinale ? "medium_fast" : (chorusLikeBridge || floodedFinale ? "fast" : (restrained ? "medium" : (normalizedEnergy === "high" ? "medium_fast" : "medium")))),
       density: normalizedDensity === "wide" ? "medium" : "light",
       coverage: suspendedBridge
         ? "partial"
+        : controlledFinale
+        ? (supportTarget ? "focused" : (effectIndex === 0 ? "partial" : "focused"))
+        : floodedFinale
+        ? "full"
         : restrained
         ? "partial"
         : (supportTarget ? "focused" : (effectIndex === 0 ? "partial" : "focused")),
@@ -781,6 +820,14 @@ function isSuspendedBridgeGoal(goal = "") {
 
 function isChorusLikeBridgeGoal(goal = "") {
   return /second full-chorus payoff|full chorus|immediate big payoff|denser overlays|no suspended transition feeling/.test(str(goal).toLowerCase());
+}
+
+function isControlledFinaleGoal(goal = "") {
+  return /final chorus feel big but still controlled|clear hero payoff|does not flatten|constant full-output wall/.test(str(goal).toLowerCase());
+}
+
+function isFloodedFinaleGoal(goal = "") {
+  return /as huge as possible|flooding the whole yard evenly|constant full-output energy everywhere|removing most restraint/.test(str(goal).toLowerCase());
 }
 
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {

@@ -1607,6 +1607,22 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
     if (effectFamilies.includes("Shimmer")) score -= 0.7;
     if (effectFamilies.includes("Bars")) score -= 0.4;
   }
+  if (/\b(final chorus feel big but still controlled|clear hero payoff|constant full-output wall|flooding the whole yard evenly|constant full-output energy everywhere)\b/.test(lowerPrompt)) {
+    const averageSpeeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
+    const meanSpeed = averageSpeeds.length
+      ? averageSpeeds.reduce((sum, value) => sum + value, 0) / averageSpeeds.length
+      : 0;
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    const peakImpact = Number(metrics.peakSectionImpactShare || 0);
+    if (meanSpeed && meanSpeed <= 3.2) score += 1.0;
+    else if (meanSpeed >= 3.8) score -= Math.min(1.2, (meanSpeed - 3.8) * 0.8 + 0.6);
+    if (effectFamilies.includes("Wave")) score += 0.7;
+    if (effectFamilies.includes("Meteors")) score -= 0.7;
+    if (overlayCount <= 1) score += 0.5;
+    else score -= Math.min(1.0, (overlayCount - 1) * 0.3);
+    if (peakImpact <= 0.4) score += 0.5;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));

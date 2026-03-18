@@ -580,6 +580,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-finale-restraint",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Focal Hierarchy", "Composition Reasoning", "Coverage Discipline"],
+      "fixtureVariant": "default",
+      "promptText": "Let the final chorus feel big but still controlled, with a clear hero payoff and enough restraint that the whole yard does not flatten into one constant full-output wall.",
+      "altPromptText": "Make the final chorus as huge as possible by flooding the whole yard evenly, pushing constant full-output energy everywhere, and removing most restraint.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
