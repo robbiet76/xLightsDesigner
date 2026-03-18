@@ -62,6 +62,13 @@ Environment:
   - MIME type
   - SHA-256
   - pixel width / height when available
+- GIF artifacts also record richer derived features when extraction succeeds:
+  - frame count
+  - total duration
+  - average frame delay
+  - first-frame unique color count
+  - first-frame brightness and active-pixel ratios
+  - note: current xLights exports can include pre-roll, so first-frame pixel metrics are structurally useful but not yet representative for motion scoring
 - Each successful sample also records first-pass heuristic observations:
   - derived labels
   - readability/restraint/pattern clarity/prop suitability

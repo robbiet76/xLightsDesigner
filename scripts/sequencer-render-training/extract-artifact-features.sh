@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ARTIFACT_PATH=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -30,6 +31,16 @@ if sips_output="$(sips -g pixelWidth -g pixelHeight "${ARTIFACT_PATH}" 2>/dev/nu
   height="$(printf '%s\n' "${sips_output}" | awk '/pixelHeight:/ {print $2}' | tail -n 1)"
 fi
 
+derived_features='{}'
+if [[ "${mime_type}" == "image/gif" ]]; then
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "${tmpdir}"' EXIT
+  first_frame_png="${tmpdir}/first-frame.png"
+  if sips -s format png "${ARTIFACT_PATH}" --out "${first_frame_png}" >/dev/null 2>&1 && [[ -f "${first_frame_png}" ]]; then
+    derived_features="$(python3 "${SCRIPT_DIR}/extract-gif-features.py" --gif "${ARTIFACT_PATH}" --first-frame-png "${first_frame_png}")"
+  fi
+fi
+
 jq -cn \
   --arg path "${ARTIFACT_PATH}" \
   --arg mimeType "${mime_type}" \
@@ -37,6 +48,7 @@ jq -cn \
   --argjson bytes "${bytes}" \
   --arg width "${width}" \
   --arg height "${height}" \
+  --argjson derived "${derived_features}" \
   '{
     artifactPath: $path,
     fileSizeBytes: $bytes,
@@ -44,4 +56,5 @@ jq -cn \
     sha256: $sha256
   }
   + (if ($width | length) > 0 then {pixelWidth: ($width | tonumber)} else {} end)
-  + (if ($height | length) > 0 then {pixelHeight: ($height | tonumber)} else {} end)'
+  + (if ($height | length) > 0 then {pixelHeight: ($height | tonumber)} else {} end)
+  + $derived'
