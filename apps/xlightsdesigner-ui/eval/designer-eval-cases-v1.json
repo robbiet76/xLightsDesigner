@@ -847,6 +847,20 @@
       }
     },
     {
+      "id": "quality-compare-solo-feature-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Focal Hierarchy", "Composition Reasoning"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Solo, feature a clearer spotlighted detour with narrower focus instead of treating it like another broad chorus pass.",
+      "altPromptText": "In the Solo, spread the same broad chorus language everywhere instead of creating a featured spotlighted detour.",
+      "selectedSections": ["Solo"],
+      "altSelectedSections": ["Solo"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

@@ -243,6 +243,7 @@ const FAMILY_POOLS = {
   verse: ["Color Wash", "Butterfly", "Circles", "Wave", "Twinkle"],
   chorus: ["Shimmer", "Pinwheel", "Meteors", "Fireworks", "Color Wash"],
   bridge: ["Bars", "Morph", "Shockwave", "Spirals", "Ripple"],
+  solo: ["Pinwheel", "Meteors", "Color Wash", "Wave", "Shimmer"],
   outro: ["Spirals", "Wave", "Snowstorm", "Color Wash", "On"],
   wide: ["Bars", "Morph", "Shockwave", "Warp", "Ripple"],
   dense: ["Shimmer", "Pinwheel", "Meteors", "Galaxy", "Fireworks"],
@@ -309,6 +310,9 @@ function chooseExecutionTargets({
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
+  const isSolo = /(^|\b)(solo|instrumental solo)\b/.test(key);
+  const focusedSolo = isSolo && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
+  const chorusLikeSolo = isSolo && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support|visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
   const impactBudgetGoal = /visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
   const floodedImpactBudgetGoal = /same weight|equal emphasis|flooding the whole layout|spend the visual impact budget immediately|whole layout whenever possible/.test(lowerGoal);
@@ -387,6 +391,22 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (singleScope || tagDriven) {
+    if (focusedSolo) {
+      return prioritizeConcreteTargets([
+        ...focal.slice(0, 2),
+        ...center.slice(0, 1),
+        ...detail.slice(0, 1),
+        ...fallback.slice(0, 1)
+      ]).slice(0, 4);
+    }
+    if (chorusLikeSolo) {
+      return prioritizeConcreteTargets([
+        ...focal.slice(0, 2),
+        ...detail.slice(0, 2),
+        ...broad.slice(0, 2),
+        ...fallback.slice(0, 2)
+      ]).slice(0, 8);
+    }
     if (isGentle) {
       return uniqueStrings([
         ...focal.slice(0, 2),
@@ -435,6 +455,22 @@ function chooseExecutionTargets({
       ]).slice(0, 8);
     }
     return uniqueStrings([
+      ...focal.slice(0, 2),
+      ...detail.slice(0, 2),
+      ...broad.slice(0, 2),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (focusedSolo) {
+    return prioritizeConcreteTargets([
+      ...focal.slice(0, 2),
+      ...center.slice(0, 1),
+      ...detail.slice(0, 1),
+      ...fallback.slice(0, 1)
+    ]).slice(0, 4);
+  }
+  if (chorusLikeSolo) {
+    return prioritizeConcreteTargets([
       ...focal.slice(0, 2),
       ...detail.slice(0, 2),
       ...broad.slice(0, 2),
@@ -508,6 +544,10 @@ function buildSectionEffectHints({
   const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
+  const focusedSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
+    && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
+  const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
+    && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return smoothBias
@@ -608,6 +648,12 @@ function buildSectionEffectHints({
     }
     return pickDistinctEffects(["Shimmer", "Color Wash"], ["Wave", "Bars"]);
   }
+  if (focusedSolo) {
+    return pickDistinctEffects(FAMILY_POOLS.solo, ["Pinwheel", "Color Wash"]);
+  }
+  if (chorusLikeSolo) {
+    return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
+  }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
   }
@@ -655,6 +701,10 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
   const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
   const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
+  const focusedSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
+    && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
+  const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
+    && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
@@ -732,6 +782,12 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
       return `treat the post-chorus${warmClause} like a fresh verse-sized section with a new arc instead of reinforcing the hook`;
     }
     return `let the post-chorus${warmClause} reinforce the hook with a cleaner extension and lighter follow-through`;
+  }
+  if (focusedSolo) {
+    return `feature the solo${warmClause} like a spotlighted detour with narrower focus and clearer individual emphasis`;
+  }
+  if (chorusLikeSolo) {
+    return `treat the solo${warmClause} like another broad chorus pass with the same payoff language spread across the picture`;
   }
   if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
     return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;

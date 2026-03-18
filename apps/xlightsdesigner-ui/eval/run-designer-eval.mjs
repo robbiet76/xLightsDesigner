@@ -61,11 +61,12 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         { label: "Post-Chorus", startMs: 76000, endMs: 90000, energy: "medium", density: "moderate" },
         { label: "Drop", startMs: 90000, endMs: 106000, energy: "high", density: "dense" },
         { label: "Breakdown", startMs: 106000, endMs: 118000, energy: "low", density: "sparse" },
-        { label: "Interlude", startMs: 118000, endMs: 130000, energy: "low", density: "sparse" },
-        { label: "Middle 8", startMs: 130000, endMs: 148000, energy: "medium", density: "wide" },
-        { label: "Final Chorus", startMs: 148000, endMs: 180000, energy: "high", density: "dense" },
-        { label: "Tag", startMs: 180000, endMs: 196000, energy: "medium", density: "moderate" },
-        { label: "Outro", startMs: 196000, endMs: 212000, energy: "low", density: "sparse" }
+        { label: "Interlude", startMs: 118000, endMs: 128000, energy: "low", density: "sparse" },
+        { label: "Solo", startMs: 128000, endMs: 142000, energy: "medium", density: "focused" },
+        { label: "Middle 8", startMs: 142000, endMs: 160000, energy: "medium", density: "wide" },
+        { label: "Final Chorus", startMs: 160000, endMs: 192000, energy: "high", density: "dense" },
+        { label: "Tag", startMs: 192000, endMs: 208000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 208000, endMs: 224000, energy: "low", density: "sparse" }
       ]
     : variant === "bridge_peak_arc"
     ? [
@@ -1916,6 +1917,24 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (effectFamilies.includes("Bars")) score -= 0.4;
     if (/\b(breathes|lighter connective space|lets the song breathe|connective space)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(another payoff section|active climax|keeps the payoff running)\b/.test(lowerSummary)) score -= 2.0;
+  }
+  if (/\b(in the solo|solo\b).*?\b(featured spotlighted detour|narrower focus|broad chorus pass|featured spotlight)\b/.test(lowerPrompt)) {
+    const leadSummary = lowerSummary.split(/\binstead of\b/)[0] || lowerSummary;
+    const targetCount = Number(arr(metrics.targetIds).length || 0);
+    const layeredTargetCount = Number(arr(metrics.layeredTargetIds).length || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (targetCount >= 1 && targetCount <= 4) score += 1.0;
+    else if (targetCount > 4) score -= Math.min(1.5, (targetCount - 4) * 0.25);
+    if (layeredTargetCount >= 1 && layeredTargetCount <= 2) score += 0.8;
+    else if (layeredTargetCount > 2) score -= Math.min(1.0, (layeredTargetCount - 2) * 0.25);
+    if (conceptImpact >= 0.12 && conceptImpact <= 0.32) score += 0.8;
+    else if (conceptImpact > 0.38) score -= Math.min(1.1, (conceptImpact - 0.38) * 5);
+    if (effectFamilies.includes("Pinwheel")) score += 0.4;
+    if (effectFamilies.includes("Meteors")) score += 0.3;
+    if (effectFamilies.includes("Color Wash")) score += 0.3;
+    if (/\b(featured spotlight|spotlighted detour|narrower focus|solo feature)\b/.test(leadSummary)) score += 2.0;
+    if (/\b(broad chorus pass|same broad chorus language|spread everywhere)\b/.test(leadSummary)) score -= 2.0;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
