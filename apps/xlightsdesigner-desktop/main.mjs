@@ -152,6 +152,10 @@ async function getRendererValidationSnapshot() {
   return invokeRendererAutomation("getDirectSequenceValidationSnapshot", {});
 }
 
+async function getRendererAgentRuntimeSnapshot() {
+  return invokeRendererAutomation("getAgentRuntimeSnapshot", {});
+}
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -503,6 +507,20 @@ async function openSequenceFromDesktop(sequencePath = "") {
   const file = str(sequencePath);
   if (!file) {
     throw new Error("sequencePath is required.");
+  }
+  try {
+    const runtime = await getRendererAgentRuntimeSnapshot();
+    const currentPath = str(runtime?.sequencePathInput);
+    if (currentPath && currentPath === file) {
+      return {
+        ok: true,
+        skipped: true,
+        activeSequence: str(runtime?.activeSequence),
+        sequencePath: file
+      };
+    }
+  } catch {
+    // best-effort precheck only
   }
   const opened = await invokeRendererAutomation("openSequence", {
     sequencePath: file
