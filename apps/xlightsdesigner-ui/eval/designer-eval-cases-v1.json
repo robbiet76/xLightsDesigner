@@ -658,6 +658,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-motif-reuse-without-monotony",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Thematic Continuity", "Composition Reasoning", "Musical Understanding"],
+      "fixtureVariant": "default",
+      "promptText": "Carry a recognizable visual motif across Verse 1, Chorus 1, and the Final Chorus, but evolve it so each section feels related without becoming monotonous.",
+      "altPromptText": "Repeat the same visual idea in Verse 1, Chorus 1, and the Final Chorus with as little change as possible so the song feels uniform and repetitive.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

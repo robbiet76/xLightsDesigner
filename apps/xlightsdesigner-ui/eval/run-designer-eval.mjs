@@ -1680,6 +1680,16 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (versePalette.includes("warm") && chorusPalette.includes("warm")) score += 0.8;
     if (versePalette.includes("warm") && chorusPalette.includes("cool")) score -= 0.8;
   }
+  if (/\b(recognizable visual motif|related without becoming monotonous|uniform and repetitive|same visual idea|as little change as possible)\b/.test(lowerPrompt)) {
+    const recurringCount = Number(arr(metrics.recurringEffectFamilies).length || 0);
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    if (recurringCount >= 1) score += 1.0;
+    if (recurringCount >= 2) score += 0.4;
+    if (sectionContrast >= 2) score += 1.1;
+    if (sectionContrast === 1) score -= 1.3;
+    if (/\b(related without becoming monotonous|recognizable visual motif|evolve it)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(uniform and repetitive|same visual idea|as little change as possible)\b/.test(lowerSummary)) score -= 2.0;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));
