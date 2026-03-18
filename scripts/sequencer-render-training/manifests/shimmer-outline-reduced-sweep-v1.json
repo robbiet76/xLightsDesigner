@@ -1,0 +1,84 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shimmer-outline-reduced-sweep-v1",
+  "description": "Reduced baseline Shimmer sweep on a concrete outline model using the 4-second animated-effect standard.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "modelName": "Border-01",
+    "modelType": "outline",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Reduced Shimmer sweep on a concrete outline model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "shimmer-outline-restrained-v1",
+      "effectName": "Shimmer",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_restrained",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFE2A8",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "dutyFactor": 25,
+        "cycles": 1.0,
+        "useAllColors": false
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["restrained_shimmer", "outline_read"]
+    },
+    {
+      "sampleId": "shimmer-outline-balanced-v1",
+      "effectName": "Shimmer",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cool_balanced",
+        "palette": {
+          "C_BUTTON_Palette1": "#DDF4FF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 2.0,
+        "useAllColors": false
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["balanced_shimmer", "outline_sparkle"]
+    },
+    {
+      "sampleId": "shimmer-outline-busy-v1",
+      "effectName": "Shimmer",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "multi_busy",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00C2FF",
+          "C_BUTTON_Palette4": "#FFD000"
+        }
+      },
+      "effectSettings": {
+        "dutyFactor": 75,
+        "cycles": 4.0,
+        "useAllColors": true
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["heavy_shimmer", "busy_texture"]
+    }
+  ]
+}

@@ -10,7 +10,7 @@ It drives xLights as the authoritative renderer, captures the exported result, a
 The current harness is intentionally small:
 - one manifest file
 - one sample at a time
-- first-class support for `On` and reduced `SingleStrand`
+- first-class support for `On`, `SingleStrand`, `Shimmer`, and `Color Wash`
 - xLights export path:
   - `openSequence`
   - `addEffect`
@@ -33,6 +33,8 @@ The current harness is intentionally small:
 - `manifests/on-matrix-reduced-sweep-v1.json`: reduced `On` sweep on a concrete matrix model
 - `manifests/singlestrand-reduced-sweep-v1.json`: reduced `SingleStrand` sweep
 - `manifests/singlestrand-linear-reduced-sweep-v1.json`: reduced `SingleStrand` sweep on a concrete linear model
+- `manifests/shimmer-outline-reduced-sweep-v1.json`: reduced `Shimmer` sweep on a concrete outline model
+- `manifests/colorwash-matrix-reduced-sweep-v1.json`: reduced `Color Wash` sweep on a concrete matrix model
 
 ## Usage
 
@@ -117,7 +119,8 @@ Environment:
   - per-sample GIF slicing by assigned time window
 - Current duration guidance:
   - static effects like `On`: short windows are fine
-  - animated effects like `SingleStrand`: use the 4-second standard by default
+- animated effects like `SingleStrand`: use the 4-second standard by default
+- animated effects like `SingleStrand`, `Shimmer`, and `Color Wash`: use the 4-second standard by default
 - Current explicit fixture classes:
   - outline via `Border-01`
   - cane via `CandyCane-01`

@@ -123,6 +123,58 @@ jq -cn \
               end
             )
         )
+      elif $effect == "Shimmer" then
+        unique_labels(
+          $labelHints
+          + ["effect:shimmer", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["sparkle_texture"]
+          + (if ($settings.useAllColors // false) then ["all_colors"] else ["palette_limited"] end)
+          + (
+              if (($settings.dutyFactor // 50) <= 35) then ["restrained_shimmer"]
+              elif (($settings.dutyFactor // 50) >= 70) then ["heavy_shimmer"]
+              else ["balanced_shimmer"]
+              end
+            )
+          + (
+              if $modelType == "matrix" then ["matrix_sparkle_fit"]
+              elif ($modelType == "outline" or $modelType == "single_line" or $modelType == "cane") then ["linear_sparkle_fit"]
+              else []
+              end
+            )
+          + (
+              if $activeRatio >= 0.5 then ["dense_sampled_motion"]
+              elif $activeRatio > 0 then ["sparse_sampled_motion"]
+              else ["blank_sampled_frame"]
+              end
+            )
+        )
+      elif $effect == "Color Wash" then
+        unique_labels(
+          $labelHints
+          + ["effect:color_wash", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["wash_fill"]
+          + (if ($settings.shimmer // false) then ["shimmer_wash"] else ["steady_wash"] end)
+          + (if ($settings.circularPalette // false) then ["circular_palette"] else ["linear_palette"] end)
+          + (
+              if ($settings.hFade // false) and ($settings.vFade // false) then ["two_axis_fade"]
+              elif ($settings.hFade // false) then ["horizontal_fade"]
+              elif ($settings.vFade // false) then ["vertical_fade"]
+              else ["flat_fill"]
+              end
+            )
+          + (
+              if $modelType == "matrix" then ["matrix_fill"]
+              elif ($modelType == "outline" or $modelType == "single_line") then ["linear_fill"]
+              else []
+              end
+            )
+          + (
+              if $activeRatio >= 0.95 then ["full_coverage"]
+              elif $activeRatio > 0 then ["partial_coverage"]
+              else ["blank_sampled_frame"]
+              end
+            )
+        )
       else
         unique_labels(
           $labelHints
@@ -178,6 +230,57 @@ jq -cn \
             (if ($modelType == "cane" or $modelType == "single_line") then 0.9
              elif $modelType == "matrix" then 0.6
              else 0.72 end)
+        }
+      elif $effect == "Shimmer" then
+        {
+          readability:
+            (
+              (if (($settings.useAllColors // false)) then 0.62
+               elif (($settings.dutyFactor // 50) >= 70) then 0.68
+               else 0.82 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          restraint:
+            (if (($settings.useAllColors // false)) then 0.38
+             elif (($settings.dutyFactor // 50) <= 35 and ($settings.cycles // 1.0) <= 1.5) then 0.84
+             elif (($settings.dutyFactor // 50) >= 70 or ($settings.cycles // 1.0) >= 4.0) then 0.48
+             else 0.66 end),
+          patternClarity:
+            (
+              (if (($settings.cycles // 1.0) >= 4.0 and ($settings.useAllColors // false)) then 0.52
+               elif (($settings.cycles // 1.0) >= 4.0) then 0.66
+               else 0.78 end)
+              * (if $activeRatio > 0 then 1 else 0.35 end)
+            ),
+          propSuitability:
+            (if ($modelType == "outline" or $modelType == "single_line" or $modelType == "cane") then 0.84
+             elif $modelType == "matrix" then 0.8
+             else 0.72 end)
+        }
+      elif $effect == "Color Wash" then
+        {
+          readability:
+            (
+              (if (($settings.hFade // false) and ($settings.vFade // false)) then 0.76
+               elif ($settings.shimmer // false) then 0.72
+               else 0.86 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if (($settings.shimmer // false)) then 0.52
+             elif (($settings.hFade // false) or ($settings.vFade // false)) then 0.74
+             else 0.8 end),
+          patternClarity:
+            (
+              (if (($settings.hFade // false) and ($settings.vFade // false)) then 0.7
+               elif (($settings.circularPalette // false)) then 0.74
+               else 0.82 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "matrix") then 0.9
+             elif ($modelType == "outline" or $modelType == "single_line") then 0.82
+             else 0.74 end)
         }
       else
         {

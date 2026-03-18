@@ -195,6 +195,44 @@ single_strand_effect_settings_json() {
     '
 }
 
+shimmer_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_TEXTCTRL_Shimmer_Duty_Factor: (($eff.dutyFactor // 50) | tostring),
+        E_TEXTCTRL_Shimmer_Cycles: (($eff.cycles // 1.0) | tostring),
+        E_CHECKBOX_Shimmer_Use_All_Colors: (if ($eff.useAllColors // false) then "1" else "0" end)
+      }
+      + (if ($eff.pre2017 // false) then {E_CHECKBOX_PRE_2017_7: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
+color_wash_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_TEXTCTRL_ColorWash_Cycles: (($eff.cycles // 1.0) | tostring)
+      }
+      + (if ($eff.vFade // false) then {E_CHECKBOX_ColorWash_VFade: "1"} else {} end)
+      + (if ($eff.hFade // false) then {E_CHECKBOX_ColorWash_HFade: "1"} else {} end)
+      + (if ($eff.reverseFades // false) then {E_CHECKBOX_ColorWash_ReverseFades: "1"} else {} end)
+      + (if ($eff.shimmer // false) then {E_CHECKBOX_ColorWash_Shimmer: "1"} else {} end)
+      + (if ($eff.circularPalette // false) then {E_CHECKBOX_ColorWash_CircularPalette: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -206,6 +244,12 @@ settings_json_for_effect() {
       ;;
     "SingleStrand")
       single_strand_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Shimmer")
+      shimmer_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Color Wash")
+      color_wash_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
       echo "Unsupported effect in initial harness: ${effect_name}" >&2

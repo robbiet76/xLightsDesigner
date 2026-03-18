@@ -80,7 +80,7 @@ ensure_xlights_ready >>"${log_path}" 2>&1
 
 warmup_payload="$(jq -cn --arg seq "${sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
 log_batch "warmup-open-sequence sequence=${sequence_path}"
-if run_allowing_already_open "${warmup_payload}" >/dev/null; then
+if CURL_MAX_TIME=10 run_allowing_already_open "${warmup_payload}" >/dev/null; then
   log_batch "warmup-close-sequence"
   post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
   sleep 1
@@ -89,7 +89,7 @@ else
   log_batch "warmup-open-sequence-retry sequence=${sequence_path}"
   post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
   sleep 2
-  if ensure_xlights_ready >>"${log_path}" 2>&1 && run_allowing_already_open "${warmup_payload}" >/dev/null; then
+  if ensure_xlights_ready >>"${log_path}" 2>&1 && CURL_MAX_TIME=10 run_allowing_already_open "${warmup_payload}" >/dev/null; then
     log_batch "warmup-close-sequence"
     post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
     sleep 1
