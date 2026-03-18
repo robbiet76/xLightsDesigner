@@ -337,8 +337,12 @@ async function runWholeSequenceApplyValidationFromDesktop(expected = {}) {
 async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   const strongPrompt = str(expected?.strongPrompt);
   const weakPrompt = str(expected?.weakPrompt);
+  const sequencePath = str(expected?.sequencePath);
   if (!strongPrompt || !weakPrompt) {
     throw new Error("Comparative live validation requires both strongPrompt and weakPrompt.");
+  }
+  if (sequencePath) {
+    await openSequenceFromDesktop(sequencePath);
   }
   if (expected?.refreshFirst !== false) {
     await invokeRendererAutomation("refreshFromXLights", {});
@@ -400,24 +404,16 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
 }
 
 async function openSequenceFromDesktop(sequencePath = "") {
-  const snapshot = await getRendererValidationSnapshot();
-  const endpoint = str(snapshot?.endpoint);
   const file = str(sequencePath);
-  if (!endpoint) {
-    throw new Error("xLights endpoint unavailable for sequence.open.");
-  }
   if (!file) {
     throw new Error("sequencePath is required.");
   }
-  await postXLightsCommand(endpoint, "sequence.open", {
-    file,
-    force: true,
-    promptIssues: false
+  const opened = await invokeRendererAutomation("openSequence", {
+    sequencePath: file
   });
-  await invokeRendererAutomation("refreshFromXLights", {});
   return {
     ok: true,
-    endpoint,
+    activeSequence: str(opened?.activeSequence),
     sequencePath: file
   };
 }
@@ -491,6 +487,9 @@ async function processAutomationRequests() {
     invokeAction: async ({ action, request }) => {
       if (action === "dispatchPrompt") {
         return invokeRendererAutomation("dispatchPrompt", String(request?.payload?.prompt || ""));
+      }
+      if (action === "openSequence") {
+        return invokeRendererAutomation("openSequence", request?.payload || {});
       }
       if (action === "ping") {
         return { ok: true, appReady: true };

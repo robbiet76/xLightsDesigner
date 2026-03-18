@@ -11238,6 +11238,20 @@ async function analyzeAutomationAudio(payload = {}) {
   };
 }
 
+async function openAutomationSequence(payload = {}) {
+  const targetPath = String(payload?.sequencePath || "").trim();
+  if (!targetPath) {
+    return { ok: false, error: "sequencePath is required." };
+  }
+  await onOpenExistingSequence(targetPath);
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    sequencePathInput: state.sequencePathInput || ""
+  };
+}
+
 async function showAutomationTenEffectGridDemo() {
   const start = 78230;
   const end = 97120;
@@ -11553,6 +11567,7 @@ function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
     generateProposal: generateAutomationProposal,
+    openSequence: openAutomationSequence,
     refreshFromXLights: refreshAutomationFromXLights,
     analyzeAudio: analyzeAutomationAudio,
     applyCurrentProposal: applyAutomationCurrentProposal,

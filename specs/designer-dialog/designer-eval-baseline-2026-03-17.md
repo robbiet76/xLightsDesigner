@@ -113,6 +113,10 @@ Live validation status on the current promoted baseline:
     - `clean-phase-motion-language-pass`
     - `clean-phase-render-discipline-pass`
   - all scenarios preferred the stronger prompt over the flatter alternative
+- alternate saved-sequence probe: passed
+  - sequence: `API-Designer-WholePass-20260317-E.xsq`
+  - slice: `wholepass-e-composition-pass`
+  - status: validated individually, not promoted into the baseline pack yet because the larger combined live pack exceeded the current automation timeout/cadence budget
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -127,6 +131,7 @@ Interpretation:
 - the current promoted baseline is now green on both the offline corpus and the live apply cadence
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - live comparative validation is no longer tied to one saved sequence
+- alternate saved-sequence coverage exists, but is currently held in the extended live pack rather than the promoted baseline pack
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 
