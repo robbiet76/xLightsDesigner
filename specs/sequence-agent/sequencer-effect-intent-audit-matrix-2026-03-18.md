@@ -16,7 +16,7 @@ Legend:
 | Effect | Canonical xLights Name | Current Capability Entry | Current Realization State | Main Current Mapping Path | Primary Gap | Next Action |
 | --- | --- | --- | --- | --- | --- | --- |
 | On | `On` | Yes | Schema + partial heuristic | inferred directly from steady/hold language; palette/brightness translation only | no render-grounded understanding of hold intensity by prop type | audit actual `On` params and build hold/wash exemplars |
-| Single Strand | `SingleStrand` | No | Schema only | structurally supported in xLights catalog, but not first-class in capability table | no explicit capability metadata; no semantic mapping | add capability entry and first dedicated audit |
+| Single Strand | `SingleStrand` | Yes | Schema + partial heuristic | structurally supported in xLights catalog and now first-class in the capability table | still no render-grounded semantic mapping; still not a first-class inferred family in sequencing heuristics | audit live params and build first dedicated strand exemplars |
 | Color Wash | `Color Wash` | Yes | Schema + heuristic | capability table plus shared palette/intensity/render translation | settings choices are still coarse and not render-grounded | create wash exemplars across matrices/outlines/figures |
 | Shimmer | `Shimmer` | Yes | Schema + heuristic | inferred from sparkle/shimmer language; shared speed/density translation | sparkle density and restraint are not tied to real render outcomes | capture restrained vs busy shimmer sweeps |
 | Bars | `Bars` | Yes | Schema + heuristic | inferred from pulse/rhythm language; dedicated thickness/direction patterns | bar count/width/speed semantics still rely on naming heuristics | capture rhythmic sweeps across outlines and canes |

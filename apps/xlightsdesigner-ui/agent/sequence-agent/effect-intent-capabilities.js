@@ -143,6 +143,19 @@ const EFFECT_INTENT_CAPABILITIES = {
       direction: [/style/, /3d/]
     }
   },
+  SingleStrand: {
+    family: "strand_pattern",
+    supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
+    supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
+    supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
+    supportedRenderIntent: ["groupPolicy", "bufferStyle", "expansionPolicy", "riskTolerance"],
+    effectParamPatterns: {
+      speed: [/speed/, /velocity/, /rate/, /chase/],
+      density: [/count/, /repeat/, /skip/, /segments?/, /group/],
+      thickness: [/width/, /size/, /thick/, /band/],
+      direction: [/direction/, /dir/, /style/, /mirror/, /chase/]
+    }
+  },
   Snowflakes: {
     family: "particle_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],

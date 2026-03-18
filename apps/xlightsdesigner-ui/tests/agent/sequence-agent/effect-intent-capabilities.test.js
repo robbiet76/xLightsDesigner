@@ -30,6 +30,11 @@ test("effect intent capabilities expose the supported high-value effect families
   assert.equal(vuMeter.family, "audio_reactive");
   assert.ok(vuMeter.supportedSettingsIntent.includes("density"));
 
+  const singleStrand = getEffectIntentCapability("SingleStrand");
+  assert.equal(singleStrand.family, "strand_pattern");
+  assert.ok(singleStrand.supportedSettingsIntent.includes("direction"));
+  assert.ok(singleStrand.supportedSettingsIntent.includes("thickness"));
+
   const listed = listEffectIntentCapabilities().map((row) => row.effectName);
   assert.ok(listed.includes("Color Wash"));
   assert.ok(listed.includes("Shimmer"));
@@ -43,6 +48,7 @@ test("effect intent capabilities expose the supported high-value effect families
   assert.ok(listed.includes("Morph"));
   assert.ok(listed.includes("Meteors"));
   assert.ok(listed.includes("Pinwheel"));
+  assert.ok(listed.includes("SingleStrand"));
   assert.ok(listed.includes("Snowflakes"));
   assert.ok(listed.includes("Spirals"));
   assert.ok(listed.includes("VU Meter"));

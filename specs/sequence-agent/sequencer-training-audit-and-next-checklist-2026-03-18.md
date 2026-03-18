@@ -117,13 +117,50 @@ Reason:
 `SingleStrand`
 - canonical xLights effect name is `SingleStrand`
 - present in the effect-support audit as structurally supported
-- not currently present in the sequencer capability table
-- not currently first-class in the heuristic intent translator
-- is therefore under-modeled despite being a common practical effect family
+- now present in the sequencer capability table
+- still not first-class in the heuristic intent translator
+- is therefore still under-modeled despite being a common practical effect family
 
 Interpretation:
 - `On` is partially modeled but not deeply understood
-- `SingleStrand` is not modeled deeply enough even at the capability layer
+- `SingleStrand` is now modeled at the capability layer, but still not deeply understood
+
+## Gaps We Must Fill
+
+These gaps cannot be closed from schema inspection alone.
+They require either:
+- user/operator knowledge
+- render-grounded xLights sweeps
+- or both
+
+`On`
+- when should `On` be treated as:
+  - hard hold
+  - soft glow
+  - architectural outline read
+  - hero prop emphasis
+- what brightness ranges read as:
+  - restrained
+  - normal
+  - blown out
+  on common prop classes
+- when `On` should beat `Color Wash` for a stable look
+
+`SingleStrand`
+- which visual sub-modes are the practically important ones
+- which parameters actually define:
+  - chase character
+  - bounce/comet feel
+  - grouping
+  - directionality
+  - readable thickness on strings/canes/outlines
+- which prop classes benefit from `SingleStrand` versus `Bars` or `Wave`
+
+Cross-effect gaps for the initial training set:
+- what are the preferred “good defaults” per effect
+- what settings combinations are visually dangerous
+- which props make an effect look bad even when settings are valid
+- which effects are commonly overused for looks that should be simpler
 
 ## Render-Grounded Training Direction
 
@@ -161,7 +198,7 @@ This gives the sequencer a real effect-behavior memory instead of relying only o
 
 ### B. Capability Coverage
 
-- [ ] Add `SingleStrand` to the sequencer capability table
+- [x] Add `SingleStrand` to the sequencer capability table
 - [ ] Re-audit `On` for foundational hold/wash behavior
 - [ ] Confirm the first set of common effects all have explicit supported intent dimensions
 
