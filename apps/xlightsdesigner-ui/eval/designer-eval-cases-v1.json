@@ -141,6 +141,18 @@
       }
     },
     {
+      "id": "concept-prechorus-lift-taxonomy",
+      "kind": "concept",
+      "lenses": ["Musical Understanding"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "Shape the Pre-Chorus like a lift that holds tension before Chorus 1 opens up.",
+      "selectedSections": ["Pre-Chorus"],
+      "expect": {
+        "mustIncludeTrackNames": ["XD: Phrase Cues"],
+        "mustIncludeAlignmentModes": ["phrase_window"]
+      }
+    },
+    {
       "id": "concept-lighting-key-fill",
       "kind": "concept",
       "lenses": ["Stage Lighting Reasoning", "Focal Hierarchy"],

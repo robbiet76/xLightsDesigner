@@ -85,6 +85,16 @@ test('normalizeIntent keeps whole-song rewrite permission when named sections ar
   assert.deepEqual(normalized.sections, ['Bridge', 'Final Chorus']);
 });
 
+test('normalizeIntent keeps explicit selected sections even when the prompt references another section narratively', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Shape the Pre-Chorus like a lift that holds tension before Chorus 1 opens up.',
+    selectedSections: ['Pre-Chorus'],
+    availableSectionNames: ['Verse 1', 'Pre-Chorus', 'Chorus 1']
+  });
+
+  assert.deepEqual(normalized.sections, ['Pre-Chorus']);
+});
+
 test('resolveTargets honors explicit target ids and metadata tags', () => {
   const normalizedIntent = normalizeIntent({
     promptText: 'Bring up energy on focal rhythm-driver elements',

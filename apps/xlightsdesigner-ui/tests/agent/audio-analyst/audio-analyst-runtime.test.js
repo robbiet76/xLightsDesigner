@@ -117,6 +117,67 @@ test("audio analyst runtime derives analysis handoff from canonical artifact", (
   assert.equal(handoff.evidence.sources.length, 1);
 });
 
+test("audio analyst runtime classifies extended section taxonomy labels", () => {
+  const pipeline = samplePipelineResult();
+  pipeline.raw.sections = [
+    { startMs: 0, endMs: 10000, label: "Intro" },
+    { startMs: 10000, endMs: 18000, label: "Lift" },
+    { startMs: 18000, endMs: 26000, label: "Post-Chorus" },
+    { startMs: 26000, endMs: 34000, label: "Interlude" },
+    { startMs: 34000, endMs: 42000, label: "Drop" },
+    { startMs: 42000, endMs: 50000, label: "Rap Section" },
+    { startMs: 50000, endMs: 58000, label: "Middle 8" },
+    { startMs: 58000, endMs: 66000, label: "Tag" },
+    { startMs: 66000, endMs: 74000, label: "Ad Lib" }
+  ];
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Song.mp3",
+    mediaId: "media-extended-sections",
+    result: pipeline
+  });
+  const handoff = buildAnalysisHandoffFromArtifact(artifact);
+
+  assert.deepEqual(
+    artifact.structure.sections.map((row) => row.sectionType),
+    ["intro", "pre_chorus", "post_chorus", "interlude", "drop", "rap", "middle_8", "tag", "ad_lib"]
+  );
+  assert.deepEqual(
+    handoff.structure.sections.map((row) => row.sectionType),
+    ["intro", "pre_chorus", "post_chorus", "interlude", "drop", "rap", "middle_8", "tag", "ad_lib"]
+  );
+  assert.equal(artifact.structure.sections[1].label, "Lift");
+  assert.equal(artifact.structure.sections[6].label, "Middle 8");
+  assert.equal(artifact.structure.sections[8].label, "Ad Lib");
+});
+
+test("audio analyst runtime assigns section types to fallback semantic templates", () => {
+  const pipeline = samplePipelineResult();
+  pipeline.raw.sections = [
+    { startMs: 0, endMs: 10000, label: "Section 1" },
+    { startMs: 10000, endMs: 20000, label: "Section 2" },
+    { startMs: 20000, endMs: 30000, label: "Section 3" },
+    { startMs: 30000, endMs: 40000, label: "Section 4" },
+    { startMs: 40000, endMs: 50000, label: "Section 5" },
+    { startMs: 50000, endMs: 60000, label: "Section 6" }
+  ];
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Song.mp3",
+    mediaId: "media-fallback-sections",
+    result: pipeline
+  });
+
+  assert.deepEqual(
+    artifact.structure.sections.map((row) => row.label),
+    ["Intro", "Verse 1", "Chorus 1", "Bridge", "Final Chorus", "Outro"]
+  );
+  assert.deepEqual(
+    artifact.structure.sections.map((row) => row.sectionType),
+    ["intro", "verse", "chorus", "bridge", "chorus", "outro"]
+  );
+});
+
 test("audio analyst input gate blocks sequence-aware payloads", () => {
   const input = buildAudioAnalystInput({
     requestId: "audio-1",
@@ -151,7 +212,7 @@ test("audio analyst input builder emits canonical agent role and service shape",
   assert.equal(input.agentRole, AUDIO_ANALYST_ROLE);
   assert.equal(input.context.media.path, "/tmp/Song.mp3");
   assert.equal(input.context.project.mediaRootPath, "/tmp/media");
-  assert.equal(input.context.service.provider, "beatnet");
+  assert.equal(input.context.service.provider, "librosa");
   assert.equal(input.context.service.apiKeyPresent, true);
 });
 

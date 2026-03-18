@@ -448,6 +448,50 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
   const phrasePlacement = phraseResult.proposalBundle.executionPlan.effectPlacements[0];
   assert.equal(phrasePlacement.timingContext.trackName, "XD: Phrase Cues");
   assert.equal(phrasePlacement.timingContext.alignmentMode, "phrase_window");
+
+  const preChorusLiftResult = executeDesignerDialogFlow({
+    requestId: "req-8d",
+    sequenceRevision: "rev-8d",
+    promptText: "Shape the Pre-Chorus like a lift that holds tension before Chorus 1 opens up.",
+    goals: "Use phrase cues in the Pre-Chorus lift.",
+    selectedSections: ["Pre-Chorus"],
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Pre-Chorus", startMs: 43000, endMs: 53500, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 53500, endMs: 70000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Pre-Chorus", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ],
+      designCues: {
+        revealMoments: ["Chorus 1"],
+        holdMoments: ["Pre-Chorus"],
+        lyricFocusMoments: [],
+        cueWindowsBySection: {
+          "Pre-Chorus": {
+            phrase: [
+              { label: "Lift Build", trackName: "XD: Phrase Cues", startMs: 43000, endMs: 50000 },
+              { label: "Lift Release", trackName: "XD: Phrase Cues", startMs: 50000, endMs: 53500 }
+            ]
+          }
+        }
+      }
+    }
+  });
+  const preChorusTracks = Array.from(new Set(preChorusLiftResult.proposalBundle.executionPlan.effectPlacements.map((row) => row.timingContext.trackName)));
+  const preChorusAlignmentModes = Array.from(new Set(preChorusLiftResult.proposalBundle.executionPlan.effectPlacements.map((row) => row.timingContext.alignmentMode)));
+  const preChorusSections = Array.from(new Set(preChorusLiftResult.proposalBundle.executionPlan.effectPlacements.map((row) => row.sourceSectionLabel)));
+  assert.deepEqual(preChorusTracks, ["XD: Phrase Cues"]);
+  assert.deepEqual(preChorusAlignmentModes, ["phrase_window"]);
+  assert.deepEqual(preChorusSections, ["Pre-Chorus"]);
 });
 
 test("designer runtime broad whole-sequence passes now use multiple supported effect families", () => {

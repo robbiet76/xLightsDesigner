@@ -16,6 +16,7 @@ Purpose: capture the first offline baseline against the canonical designer eval 
   - `metadata_change_sensitivity`
   - `layout_swap_depth`
   - `bridge_peak_arc`
+  - `extended_taxonomy_sections`
 
 Command:
 
@@ -25,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `39`
-- supported by current offline runner: `39`
-- passed: `39`
+- total cases: `48`
+- supported by current offline runner: `48`
+- passed: `48`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -74,6 +75,8 @@ The runner and designer logic now cover:
 - metadata-refinement sensitivity where changed tags produce changed target choices
 - explicit `effectPlacements[]` as the primary authored output
 - overlay-window shaping and same-target multi-effect layering checks
+- extended section taxonomy normalization so non-core structure labels like `Pre-Chorus`, `Drop`, `Middle 8`, `Tag`, and `Rap Section` are preserved and classified when analysis provides them
+- semantic section-scoped lift prompts that keep explicit `Pre-Chorus` scope and anchor to `XD: Phrase Cues`
 
 ## Current Meaning Of A Pass
 
@@ -151,7 +154,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `47/47` corpus as the structural regression gate
+1. keep the current `48/48` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

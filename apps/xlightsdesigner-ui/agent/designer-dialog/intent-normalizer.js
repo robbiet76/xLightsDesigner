@@ -311,7 +311,10 @@ export function normalizeIntent({
         return Boolean(text) && text.toLowerCase() !== "all";
       })
     : [];
-  const inferredSections = globalScopeRequested ? [] : inferSectionsFromPrompt(goal, availableSectionNames);
+  const hasSemanticExplicitSections = explicitSections.some((row) => !looksGenericSectionLabel(row));
+  const inferredSections = globalScopeRequested || hasSemanticExplicitSections
+    ? []
+    : inferSectionsFromPrompt(goal, availableSectionNames);
   const mergedSections = uniqueStrings([...explicitSections, ...inferredSections]);
   const sections = mergedSections.some((row) => !looksGenericSectionLabel(row))
     ? mergedSections.filter((row) => !looksGenericSectionLabel(row))

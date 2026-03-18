@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `47/47` passed
+- offline eval corpus: `48/48` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`
@@ -27,6 +27,7 @@ Validated baseline today:
 Interpretation:
 - framework churn is no longer the bottleneck
 - structural and first-tier artistic gates are green
+- section taxonomy coverage now explicitly extends beyond the core pop template when semantic analysis labels are available
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates

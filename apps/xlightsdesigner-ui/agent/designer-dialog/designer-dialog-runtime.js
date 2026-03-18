@@ -655,6 +655,9 @@ function inferPlacementAnchorMode(goal = "") {
   }
   if (/\b(beat|downbeat|upbeat|pulse|beat grid)\b/.test(lowerGoal)) return "beat";
   if (/\b(chord|harmon(?:y|ic)|changes?)\b/.test(lowerGoal)) return "chord";
+  if (/\b(pre-?chorus|lift)\b/.test(lowerGoal) && /\b(tension|hold|release|open(?:s|ing)? up|before chorus)\b/.test(lowerGoal)) {
+    return "phrase";
+  }
   if (/\b(phrase|transition|release|breath)\b/.test(lowerGoal)) return "phrase";
   return "section";
 }

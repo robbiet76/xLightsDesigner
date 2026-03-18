@@ -52,7 +52,19 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
   const swapDepth = variant === "layout_swap_depth";
   const foregroundZ = swapDepth ? 9 : 0;
   const backgroundZ = swapDepth ? 0 : 9;
-  const sectionDefinitions = variant === "bridge_peak_arc"
+  const sectionDefinitions = variant === "extended_taxonomy_sections"
+    ? [
+        { label: "Intro", startMs: 0, endMs: 16000, energy: "low", density: "sparse" },
+        { label: "Verse 1", startMs: 16000, endMs: 42000, energy: "medium", density: "moderate" },
+        { label: "Pre-Chorus", startMs: 42000, endMs: 54000, energy: "medium", density: "moderate" },
+        { label: "Chorus 1", startMs: 54000, endMs: 82000, energy: "high", density: "dense" },
+        { label: "Drop", startMs: 82000, endMs: 98000, energy: "high", density: "dense" },
+        { label: "Middle 8", startMs: 98000, endMs: 116000, energy: "medium", density: "wide" },
+        { label: "Final Chorus", startMs: 116000, endMs: 150000, energy: "high", density: "dense" },
+        { label: "Tag", startMs: 150000, endMs: 166000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 166000, endMs: 182000, energy: "low", density: "sparse" }
+      ]
+    : variant === "bridge_peak_arc"
     ? [
         { label: "Intro", startMs: 0, endMs: 18000, energy: "low", density: "sparse" },
         { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" },
@@ -88,6 +100,12 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
       phrase: [
         { label: "Phrase Hold", trackName: "XD: Phrase Cues", startMs: 96000, endMs: 104000 },
         { label: "Phrase Release", trackName: "XD: Phrase Cues", startMs: 104000, endMs: 112000 }
+      ]
+    },
+    "Pre-Chorus": {
+      phrase: [
+        { label: "Lift Build", trackName: "XD: Phrase Cues", startMs: 43000, endMs: 50000 },
+        { label: "Lift Release", trackName: "XD: Phrase Cues", startMs: 50000, endMs: 53500 }
       ]
     }
   };

@@ -68,6 +68,68 @@ function buildFallbackSectionTemplates(count = 0) {
   return labels;
 }
 
+function titleCaseWords(value = "") {
+  return str(value)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function classifySectionType(label = "") {
+  const lower = str(label).toLowerCase();
+  if (!lower) return "section";
+  if (/^intro\b/.test(lower)) return "intro";
+  if (/^(verse|rap verse)\b/.test(lower)) return "verse";
+  if (/^(chorus|final chorus|hook)\b/.test(lower)) return "chorus";
+  if (/^(pre[- ]?chorus|lift)\b/.test(lower)) return "pre_chorus";
+  if (/^(post[- ]?chorus)\b/.test(lower)) return "post_chorus";
+  if (/^(bridge)\b/.test(lower)) return "bridge";
+  if (/^(middle 8|middle8)\b/.test(lower)) return "middle_8";
+  if (/^(outro|ending)\b/.test(lower)) return "outro";
+  if (/^(tag)\b/.test(lower)) return "tag";
+  if (/^(coda)\b/.test(lower)) return "coda";
+  if (/^(interlude|break|turn)\b/.test(lower)) return "interlude";
+  if (/^(refrain)\b/.test(lower)) return "refrain";
+  if (/^(instrumental solo|solo)\b/.test(lower)) return "solo";
+  if (/^(breakdown)\b/.test(lower)) return "breakdown";
+  if (/^(drop)\b/.test(lower)) return "drop";
+  if (/^(rap|rap section)\b/.test(lower)) return "rap";
+  if (/^(ad[- ]?lib)\b/.test(lower)) return "ad_lib";
+  return "section";
+}
+
+function canonicalizeSectionLabel(label = "", sectionType = "section") {
+  const value = str(label);
+  if (!value) return "";
+  switch (sectionType) {
+    case "pre_chorus":
+      return /^lift$/i.test(value) ? "Lift" : value.replace(/^pre[- ]?chorus/i, "Pre-Chorus");
+    case "post_chorus":
+      return value.replace(/^post[- ]?chorus/i, "Post-Chorus");
+    case "middle_8":
+      return /^middle ?8$/i.test(value) ? "Middle 8" : value.replace(/^middle ?8/i, "Middle 8");
+    case "ad_lib":
+      return value.replace(/^ad[- ]?lib/i, "Ad Lib");
+    case "coda":
+      return value.replace(/^coda/i, "Coda");
+    case "tag":
+      return value.replace(/^tag/i, "Tag");
+    case "interlude":
+      return /^(break|turn)$/i.test(value) ? titleCaseWords(value) : value.replace(/^interlude/i, "Interlude");
+    case "solo":
+      return /^instrumental solo$/i.test(value) ? "Instrumental Solo" : value.replace(/^solo/i, "Solo");
+    case "bridge":
+    case "drop":
+    case "refrain":
+    case "breakdown":
+    case "rap":
+      return titleCaseWords(value);
+    default:
+      return value;
+  }
+}
+
 function looksGenericSectionLabel(value = "") {
   return /^section\s+\d+$/i.test(str(value));
 }
@@ -76,12 +138,25 @@ function normalizeStructureSections(sections = []) {
   const src = rows(sections);
   if (!src.length) return [];
   const genericOnly = src.every((row) => looksGenericSectionLabel(row?.label || row?.name));
-  if (!genericOnly) return src;
+  if (!genericOnly) {
+    return src.map((row) => {
+      const label = str(row?.label || row?.name);
+      const sectionType = classifySectionType(label);
+      return {
+        ...row,
+        label: canonicalizeSectionLabel(label, sectionType),
+        sectionType,
+        canonicalLabel: canonicalizeSectionLabel(label, sectionType)
+      };
+    });
+  }
   const fallback = buildFallbackSectionTemplates(src.length);
   if (fallback.length !== src.length) return src;
   return src.map((row, index) => ({
     ...row,
-    label: fallback[index]
+    label: fallback[index],
+    sectionType: classifySectionType(fallback[index]),
+    canonicalLabel: canonicalizeSectionLabel(fallback[index], classifySectionType(fallback[index]))
   }));
 }
 
