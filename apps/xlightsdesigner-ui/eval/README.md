@@ -19,6 +19,7 @@ Current policy:
 - keep the promoted live baseline pack small enough to complete reliably
 - use the extended live pack for slower alternate-sequence probes and broader cadence checks
 - the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
+- the desktop live-suite runner now reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
 
 Runner modes:
 - `default`: normal single-output pass/fail eval

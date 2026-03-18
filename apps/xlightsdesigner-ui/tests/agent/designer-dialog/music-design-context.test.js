@@ -61,3 +61,50 @@ test("buildMusicDesignContext derives section arc and design cues", () => {
   assert.equal(context.designCues.cueWindowsBySection.Chorus.chord[0].trackName, "XD: Chord Changes");
   assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
 });
+
+test("buildMusicDesignContext derives fallback phrase cues from bars when lyric lines are absent", () => {
+  const context = buildMusicDesignContext({
+    analysisArtifact: {
+      mediaId: "media-2",
+      timing: {
+        beats: [
+          { startMs: 2000, endMs: 2500, label: "1" },
+          { startMs: 2500, endMs: 3000, label: "2" },
+          { startMs: 3000, endMs: 3500, label: "3" },
+          { startMs: 3500, endMs: 4000, label: "4" }
+        ],
+        bars: [
+          { startMs: 2000, endMs: 3000, label: "Bar 1" },
+          { startMs: 3000, endMs: 4000, label: "Bar 2" }
+        ]
+      },
+      harmonic: {
+        chords: []
+      },
+      lyrics: {
+        lines: []
+      },
+      capabilities: {
+        structure: {
+          sections: [
+            { label: "Bridge", startMs: 2000, endMs: 4000 }
+          ]
+        }
+      }
+    },
+    analysisHandoff: {
+      lyrics: {
+        sections: []
+      }
+    }
+  });
+
+  assert.equal(context.designCues.cueWindowsBySection.Bridge.phrase[0].trackName, "XD: Phrase Cues");
+  assert.deepEqual(
+    context.designCues.cueWindowsBySection.Bridge.phrase.map((row) => [row.label, row.startMs, row.endMs]),
+    [
+      ["Phrase Hold", 2000, 3000],
+      ["Phrase Release", 3000, 4000]
+    ]
+  );
+});

@@ -102,7 +102,7 @@ Live validation status on the current promoted baseline:
     - targets: `Snowman`, `Star`
   - weak prompt drifted broader in live execution and scored lower
 - live comparative suite on real saved sequences: passed
-  - scenarios: `6/6`
+  - scenarios: `7/7`
   - `API-Whole-Sequence-Validation-20260317-193350.xsq`
   - `Validation-Clean-Phase1.xsq`
   - covered live comparative slices:
@@ -111,6 +111,7 @@ Live validation status on the current promoted baseline:
     - `clean-phase-stage-lighting-pass`
     - `clean-phase-composition-pass`
     - `clean-phase-motion-language-pass`
+    - `clean-phase-phrase-subtlety-pass`
     - `clean-phase-render-discipline-pass`
   - all scenarios preferred the stronger prompt over the flatter alternative
 - alternate saved-sequence probe: passed
@@ -122,6 +123,8 @@ Live validation status on the current promoted baseline:
   - baseline pack plus:
     - `wholepass-e-composition-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
+  - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
+  - note: the extended pack file now also includes the phrase-subtlety slice, but that `8/8` rerun has not been promoted yet
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`

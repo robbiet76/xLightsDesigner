@@ -424,17 +424,30 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     throw new Error("Live design validation suite requires at least one scenario.");
   }
   const results = [];
+  let activeSequencePath = "";
+  const refreshedSequences = new Set();
+  const analyzedContexts = new Set();
   for (const scenario of scenarios) {
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
     const sequencePath = str(scenario?.sequencePath);
-    if (sequencePath) {
+    if (sequencePath && sequencePath !== activeSequencePath) {
       await openSequenceFromDesktop(sequencePath);
-    } else if (scenario?.refreshFirst !== false) {
+      activeSequencePath = sequencePath;
+    }
+
+    const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
+    if (!refreshedSequences.has(sequenceContextKey) && scenario?.refreshFirst !== false) {
       await invokeRendererAutomation("refreshFromXLights", {});
+      refreshedSequences.add(sequenceContextKey);
     }
-    if (str(scenario?.analyzePrompt)) {
-      await invokeRendererAutomation("analyzeAudio", { prompt: str(scenario.analyzePrompt) });
+
+    const analyzePrompt = str(scenario?.analyzePrompt);
+    const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
+    if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+      analyzedContexts.add(analysisContextKey);
     }
+
     const comparison = await runComparativeLiveDesignValidationFromDesktop({
       ...scenario,
       refreshFirst: false,

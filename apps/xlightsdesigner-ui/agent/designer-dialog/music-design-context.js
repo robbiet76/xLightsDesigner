@@ -73,10 +73,67 @@ function clipWindow(row = {}, startMs = 0, endMs = 0, fallbackLabel = "") {
   };
 }
 
+function deriveFallbackPhraseWindows({ startMs = 0, endMs = 0, bars = [], beats = [] } = {}) {
+  const barWindows = rows(bars)
+    .filter((row) => overlapsWindow(row, startMs, endMs))
+    .map((row, index) => clipWindow(row, startMs, endMs, `Phrase ${index + 1}`))
+    .filter(Boolean);
+  if (barWindows.length >= 2) {
+    const head = barWindows.slice(0, Math.max(1, Math.ceil(barWindows.length / 2)));
+    const tail = barWindows.slice(Math.max(1, Math.ceil(barWindows.length / 2)));
+    const windows = [];
+    const merge = (rowsToMerge = [], label = "") => {
+      if (!rowsToMerge.length) return null;
+      return {
+        label,
+        trackName: "XD: Phrase Cues",
+        startMs: rowsToMerge[0].startMs,
+        endMs: rowsToMerge[rowsToMerge.length - 1].endMs
+      };
+    };
+    const first = merge(head, "Phrase Hold");
+    const second = merge(tail, "Phrase Release");
+    if (first) windows.push(first);
+    if (second && second.startMs > first?.startMs) windows.push(second);
+    if (windows.length) return windows.slice(0, 2);
+  }
+
+  const beatWindows = rows(beats)
+    .filter((row) => overlapsWindow(row, startMs, endMs))
+    .map((row, index) => clipWindow(row, startMs, endMs, `Beat ${index + 1}`))
+    .filter(Boolean);
+  if (beatWindows.length >= 4) {
+    const splitIndex = Math.max(1, beatWindows.length - 2);
+    const head = beatWindows.slice(0, splitIndex);
+    const tail = beatWindows.slice(splitIndex);
+    const merged = [];
+    if (head.length) {
+      merged.push({
+        label: "Phrase Hold",
+        trackName: "XD: Phrase Cues",
+        startMs: head[0].startMs,
+        endMs: head[head.length - 1].endMs
+      });
+    }
+    if (tail.length) {
+      merged.push({
+        label: "Phrase Release",
+        trackName: "XD: Phrase Cues",
+        startMs: tail[0].startMs,
+        endMs: tail[tail.length - 1].endMs
+      });
+    }
+    return merged.filter((row) => row.endMs > row.startMs).slice(0, 2);
+  }
+
+  return [];
+}
+
 function buildCueWindowsBySection({
   sections = [],
   beats = [],
   chords = [],
+  bars = [],
   lyricLines = []
 } = {}) {
   const out = {};
@@ -104,7 +161,7 @@ function buildCueWindowsBySection({
       .filter(Boolean)
       .slice(0, 8);
 
-    const phraseWindows = rows(lyricLines)
+    let phraseWindows = rows(lyricLines)
       .filter((row) => overlapsWindow(row, startMs, endMs))
       .map((row, index) => {
         const clipped = clipWindow(row, startMs, endMs, `Phrase ${index + 1}`);
@@ -112,6 +169,14 @@ function buildCueWindowsBySection({
       })
       .filter(Boolean)
       .slice(0, 8);
+    if (!phraseWindows.length) {
+      phraseWindows = deriveFallbackPhraseWindows({
+        startMs,
+        endMs,
+        bars,
+        beats
+      });
+    }
 
     if (beatWindows.length || chordWindows.length || phraseWindows.length) {
       out[label] = {};
@@ -163,11 +228,13 @@ export function buildMusicDesignContext({
     .slice(0, 8);
 
   const beats = rows(analysisArtifact?.timing?.beats);
+  const bars = rows(analysisArtifact?.timing?.bars);
   const chords = rows(analysisArtifact?.harmonic?.chords);
   const lyricLines = rows(analysisArtifact?.lyrics?.lines);
   const cueWindowsBySection = buildCueWindowsBySection({
     sections,
     beats,
+    bars,
     chords,
     lyricLines
   });
