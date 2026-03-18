@@ -589,6 +589,8 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
   const mixAmounts = uniq(placements.map((row) => row?.layerIntent?.mixAmount));
   const coverageValues = uniq(placements.map((row) => row?.settingsIntent?.coverage));
   const paletteTemperatures = uniq(placements.map((row) => row?.paletteIntent?.temperature));
+  const alignmentModes = uniq(placements.map((row) => row?.timingContext?.alignmentMode));
+  const trackNames = uniq(placements.map((row) => row?.timingContext?.trackName));
   const speedBySection = {};
   const familiesBySection = {};
   const paletteBySection = {};
@@ -625,6 +627,8 @@ function buildArtisticContext({ summary = "", proposalLines = [], executionPlan 
     mixAmounts,
     coverageValues,
     paletteTemperatures,
+    alignmentModes,
+    trackNames,
     familiesBySection,
     paletteBySection,
     sectionSpeedAverages,
@@ -1540,6 +1544,14 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
   if (/\b(crisp|punchy|rhythmic|pulse|staccato|choppy)\b/.test(lowerPrompt)) {
     score += Number(metrics.focusedOverlayPlacementCount || 0) * 0.2;
     score += Number(metrics.wellShapedOverlayCount || 0) * 0.15;
+  }
+  if (/\b(phrase release|within-phrase|within phrase|hold the breath|subtler within-phrase timing|ignore the phrase release)\b/.test(lowerPrompt)) {
+    const alignmentModes = arr(metrics.alignmentModes).map((value) => str(value));
+    const trackNames = arr(metrics.trackNames).map((value) => str(value));
+    if (alignmentModes.includes("phrase_window")) score += 1.6;
+    if (alignmentModes.includes("within_section")) score += 0.5;
+    if (trackNames.includes("XD: Phrase Cues")) score += 0.9;
+    if (alignmentModes.includes("section_span") && alignmentModes.length === 1) score -= 1.4;
   }
 
   return Number(score.toFixed(2));

@@ -512,6 +512,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-phrase-subtlety",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "In the Bridge, hold the breath before the phrase release and shape the lift with subtler within-phrase timing instead of filling the whole section evenly.",
+      "altPromptText": "In the Bridge, ignore the phrase release and fill the whole section with the same broad look from start to end.",
+      "selectedSections": ["Bridge"],
+      "altSelectedSections": ["Bridge"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
