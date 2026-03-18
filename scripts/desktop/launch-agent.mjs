@@ -44,7 +44,7 @@ function launchOrActivateApp() {
       isRunning: true
     };
   }
-  const launchArgs = ["-g", "-j", "-n", APP_PATH];
+  const launchArgs = ["-g", "-n", APP_PATH];
   const launch = spawnSync("/usr/bin/env", ["-u", "ELECTRON_RUN_AS_NODE", "/usr/bin/open", ...launchArgs], {
     encoding: "utf8"
   });

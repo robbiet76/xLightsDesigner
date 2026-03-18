@@ -80,6 +80,14 @@
       "weakPrompt": "In the Bridge, ignore the phrase release and fill the whole section with the same broad look from start to end."
     },
     {
+      "name": "clean-phase-beat-grid-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "sections": ["Chorus 1"],
+      "strongPrompt": "In Chorus 1, let the pulse land on the beat grid with cleaner beat-driven accents instead of washing the full section evenly.",
+      "weakPrompt": "In Chorus 1, ignore the beat grid and wash the full section evenly instead of shaping cleaner beat-driven accents."
+    },
+    {
       "name": "clean-phase-render-discipline-pass",
       "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
