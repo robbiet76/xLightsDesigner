@@ -309,6 +309,7 @@ function chooseExecutionTargets({
   const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support/.test(lowerGoal);
   const controlledFinale = isControlledFinaleGoal(lowerGoal);
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
+  const variedHierarchy = !uniformHierarchy && isVariedHierarchyGoal(lowerGoal);
   if (/foreground/.test(lowerGoal) || /background/.test(lowerGoal)) {
     return uniqueStrings([
       ...foreground.slice(0, 1),
@@ -371,6 +372,13 @@ function chooseExecutionTargets({
       ...fallback.slice(0, 3),
       ...broad.slice(0, 1)
     ]).slice(0, 8);
+  }
+  if (variedHierarchy) {
+    return prioritizeConcreteTargets([
+      ...uniqueStrings(focalCandidates).slice(0, 2),
+      ...uniqueStrings(detailCoverageDomains).slice(0, 1),
+      ...uniqueStrings(fallbackTargetIds).slice(0, 1)
+    ]).slice(0, 4);
   }
   if (restrainedSupport && !isPeak) {
     return prioritizeConcreteTargets([
@@ -863,6 +871,10 @@ function isPaletteResetGoal(goal = "") {
   return /unrelated palette|separate unrelated palette|more disconnected|unrelated color reset/.test(lowerGoal);
 }
 
+function isVariedHierarchyGoal(goal = "") {
+  return /target variety|more props participate|broader participation|hero hierarchy|controlled support/.test(str(goal).toLowerCase());
+}
+
 function isEscalationPacingGoal(goal = "") {
   return /verse 1 stays measured|final chorus feels like the largest payoff|peaking too early|little escalation difference/.test(str(goal).toLowerCase());
 }
@@ -876,8 +888,10 @@ function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScop
   const normalizedEnergy = str(energy).toLowerCase();
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const lightingOrCompositionScoped = !uniformHierarchy && /key light|fill|support|focal|centerpiece|perimeter|frame\b|framing\b|negative space|foreground|background/.test(lowerGoal);
+  const variedHierarchy = !uniformHierarchy && isVariedHierarchyGoal(lowerGoal);
   if (targetIndex === 0) return true;
   if (isRestrainedRenderGoal(lowerGoal)) return false;
+  if (variedHierarchy) return normalizedEnergy === "high" ? targetIndex === 1 : false;
   if (lightingOrCompositionScoped) return !singleScope && normalizedEnergy === "high" && targetIndex === 1;
   if (singleScope && targetIndex >= 1) return false;
   if (isBusyTextureGoal(lowerGoal)) return normalizedEnergy === "high" ? targetIndex <= 2 : targetIndex === 1;

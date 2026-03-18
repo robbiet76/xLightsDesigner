@@ -1532,8 +1532,9 @@ function artisticCompositeScore(artisticScores = null) {
   return Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2));
 }
 
-function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } = {}) {
+function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", summaryText = "" } = {}) {
   const lowerPrompt = str(promptText).toLowerCase();
+  const lowerSummary = str(summaryText).toLowerCase();
   const lensSet = new Set(arr(lenses).map((value) => str(value)));
   let score = 0;
 
@@ -1648,6 +1649,28 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
     else score -= Math.min(1.0, (overlayCount - 1) * 0.3);
     if (peakImpact <= 0.4) score += 0.5;
   }
+  if (/\b(target variety|more props participate|hero hierarchy|every prop read equally important|using everything at once|controlled support)\b/.test(lowerPrompt)) {
+    const targetCount = Number(arr(metrics.targetIds).length || 0);
+    const layeredTargetCount = Number(arr(metrics.layeredTargetIds).length || 0);
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    const peakImpact = Number(metrics.peakSectionImpactShare || 0);
+    if (targetCount >= 4 && targetCount <= 6) score += 1.4;
+    else if (targetCount < 4) score -= 0.5;
+    else score -= Math.min(2.0, (targetCount - 6) * 0.4);
+    if (layeredTargetCount >= 1 && layeredTargetCount <= 2) score += 1.0;
+    else if (layeredTargetCount > 2) score -= Math.min(1.8, (layeredTargetCount - 2) * 0.45);
+    if (overlayCount <= 3) score += 0.8;
+    else score -= Math.min(1.6, (overlayCount - 3) * 0.35);
+    if (conceptImpact >= 0.22 && conceptImpact <= 0.4) score += 1.0;
+    else if (conceptImpact > 0.4) score -= Math.min(1.8, (conceptImpact - 0.4) * 6);
+    if (sectionContrast >= 2) score += 0.5;
+    if (peakImpact <= 0.34) score += 0.6;
+    else score -= Math.min(1.2, (peakImpact - 0.34) * 5);
+    if (/\b(hero read|hero hierarchy|controlled support|support framing|hierarchy stays clear)\b/.test(lowerSummary)) score += 3.2;
+    if (/\b(equally important|evenly as possible|same treatment|no clear hero hierarchy)\b/.test(lowerSummary)) score -= 3.2;
+  }
   if (/\b(carry a coherent palette|unrelated color reset|separate unrelated palette|continuity forward)\b/.test(lowerPrompt)) {
     const versePalette = arr(metrics.paletteBySection?.["Verse 1"]).map((value) => str(value));
     const chorusPalette = arr(metrics.paletteBySection?.["Chorus 1"]).map((value) => str(value));
@@ -1747,8 +1770,18 @@ function runPairedQualityCase(testCase, metadataFixture) {
   const weakMetrics = extractMetrics(weakResult, { designSceneContext: fixture.designSceneContext });
   const strongComposite = artisticCompositeScore(strongArtistic);
   const weakComposite = artisticCompositeScore(weakArtistic);
-  const strongPreference = comparativeQualityScore({ metrics: strongMetrics, lenses: testCase.lenses, promptText: strongPrompt });
-  const weakPreference = comparativeQualityScore({ metrics: weakMetrics, lenses: testCase.lenses, promptText: strongPrompt });
+  const strongPreference = comparativeQualityScore({
+    metrics: strongMetrics,
+    lenses: testCase.lenses,
+    promptText: strongPrompt,
+    summaryText: str(strongResult?.summary)
+  });
+  const weakPreference = comparativeQualityScore({
+    metrics: weakMetrics,
+    lenses: testCase.lenses,
+    promptText: strongPrompt,
+    summaryText: str(weakResult?.summary)
+  });
   const failures = [];
   let checksTotal = 0;
   let checksPassed = 0;
@@ -1780,6 +1813,14 @@ function runPairedQualityCase(testCase, metadataFixture) {
       weakComposite,
       strongPreference,
       weakPreference,
+      strongTargetCount: Number(arr(strongMetrics.targetIds).length || 0),
+      weakTargetCount: Number(arr(weakMetrics.targetIds).length || 0),
+      strongLayeredTargetCount: Number(arr(strongMetrics.layeredTargetIds).length || 0),
+      weakLayeredTargetCount: Number(arr(weakMetrics.layeredTargetIds).length || 0),
+      strongOverlayCount: Number(strongMetrics.overlayPlacementCount || 0),
+      weakOverlayCount: Number(weakMetrics.overlayPlacementCount || 0),
+      strongConceptImpact: Number(strongMetrics.conceptWeightedImpactShare || 0),
+      weakConceptImpact: Number(weakMetrics.conceptWeightedImpactShare || 0),
       strongSummary: str(strongResult?.summary),
       weakSummary: str(weakResult?.summary)
     }

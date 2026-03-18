@@ -642,6 +642,22 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-target-variety-hierarchy",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Focal Hierarchy", "Composition Reasoning", "Coverage Discipline"],
+      "fixtureVariant": "default",
+      "promptText": "In Chorus 1, keep Snowman and Star as the hero read, and use NorthPoleSign plus the border props only as controlled support framing so the hierarchy stays clear.",
+      "altPromptText": "In Chorus 1, spread the same treatment as evenly as possible across Snowman, Star, NorthPoleSign, and the border props so everything reads equally important.",
+      "selectedSections": ["Chorus 1"],
+      "altSelectedSections": ["Chorus 1"],
+      "selectedTargetIds": ["Snowman", "Star", "NorthPoleSign", "Border-03", "Border-01"],
+      "altSelectedTargetIds": ["Snowman", "Star", "NorthPoleSign", "Border-01", "Border-02", "Border-03"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

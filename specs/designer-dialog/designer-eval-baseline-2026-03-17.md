@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `48`
-- supported by current offline runner: `48`
-- passed: `48`
+- total cases: `49`
+- supported by current offline runner: `49`
+- passed: `49`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -77,6 +77,7 @@ The runner and designer logic now cover:
 - overlay-window shaping and same-target multi-effect layering checks
 - extended section taxonomy normalization so non-core structure labels like `Pre-Chorus`, `Drop`, `Middle 8`, `Tag`, and `Rap Section` are preserved and classified when analysis provides them
 - semantic section-scoped lift prompts that keep explicit `Pre-Chorus` scope and anchor to `XD: Phrase Cues`
+- comparative hierarchy-vs-variety quality scoring where broader support participation must still preserve a clear hero read
 
 ## Current Meaning Of A Pass
 
@@ -154,7 +155,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `48/48` corpus as the structural regression gate
+1. keep the current `49/49` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
