@@ -11647,6 +11647,16 @@ async function showAutomationSplitEffectGridDemo() {
 }
 
 function getAutomationAgentRuntimeSnapshot() {
+  const musicDesignContext = buildCurrentMusicDesignContext();
+  const cueWindowSections = isPlainObject(musicDesignContext?.designCues?.cueWindowsBySection)
+    ? musicDesignContext.designCues.cueWindowsBySection
+    : {};
+  const availableCueTypes = Array.from(new Set(
+    Object.values(cueWindowSections)
+      .flatMap((row) => Object.keys(isPlainObject(row) ? row : {}))
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter(Boolean)
+  ));
   const summarizeExecutionStrategy = (payload = null) => {
     const strategy = isPlainObject(payload?.executionStrategy) ? payload.executionStrategy : null;
     if (!strategy) return null;
@@ -11694,6 +11704,11 @@ function getAutomationAgentRuntimeSnapshot() {
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
     agentThinking: Boolean(state.ui?.agentThinking),
     activeRole: String(agentRuntime.activeRole || ""),
+    musicDesignContextSummary: {
+      sectionArc: Array.isArray(musicDesignContext?.sectionArc) ? musicDesignContext.sectionArc : [],
+      cueWindowSections: Object.keys(cueWindowSections),
+      availableCueTypes
+    },
     creativeIntentHandoff: isPlainObject(state.creative?.intentHandoff)
       ? {
           artifactId: String(state.creative.intentHandoff.artifactId || ""),

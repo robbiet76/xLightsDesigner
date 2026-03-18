@@ -156,7 +156,38 @@ async function getRendererAgentRuntimeSnapshot() {
   return invokeRendererAutomation("getAgentRuntimeSnapshot", {});
 }
 
-async function canReuseCurrentAnalysis({ sequencePath = "", analyzePrompt = "" } = {}) {
+function inferRequiredCueTypesFromText(text = "") {
+  const lower = str(text).toLowerCase();
+  const out = new Set();
+  if (!lower) return out;
+  if (/\b(beat grid|beat-driven|beats|pulse)\b/.test(lower) && !/\bignore (the )?(beat grid|beats|pulse)\b/.test(lower)) {
+    out.add("beat");
+  }
+  if (/\b(chord|harmonic|cadence|pivot)\b/.test(lower) && !/\bignore (the )?(chord|chords|harmonic|cadence)\b/.test(lower)) {
+    out.add("chord");
+  }
+  if (/\b(phrase|release|lift|breath)\b/.test(lower) && !/\bignore (the )?(phrase|release|lift|breath)\b/.test(lower)) {
+    out.add("phrase");
+  }
+  return out;
+}
+
+function inferRequiredCueTypesFromScenario(scenario = {}) {
+  const required = new Set();
+  for (const text of [
+    scenario?.analyzePrompt,
+    scenario?.strongPrompt,
+    scenario?.weakPrompt,
+    scenario?.prompt
+  ]) {
+    for (const cueType of inferRequiredCueTypesFromText(text)) {
+      required.add(cueType);
+    }
+  }
+  return required;
+}
+
+async function canReuseCurrentAnalysis({ sequencePath = "", analyzePrompt = "", requiredCueTypes = new Set() } = {}) {
   const prompt = str(analyzePrompt);
   if (!prompt) return false;
   try {
@@ -169,7 +200,14 @@ async function canReuseCurrentAnalysis({ sequencePath = "", analyzePrompt = "" }
     const analysisValid = Boolean(analysisHandoff?.valid);
     const sameSequence = !str(sequencePath) || currentPath === str(sequencePath);
     const sameAudio = Boolean(currentAudioPath) && currentAudioPath === handoffAudioPath;
-    return Boolean(sameSequence && analysisValid && sameAudio && lastAnalysisPrompt === prompt);
+    if (!(sameSequence && analysisValid && sameAudio && lastAnalysisPrompt === prompt)) {
+      return false;
+    }
+    const availableCueTypes = new Set(arr(runtime?.musicDesignContextSummary?.availableCueTypes).map((value) => str(value).toLowerCase()).filter(Boolean));
+    for (const cueType of requiredCueTypes) {
+      if (!availableCueTypes.has(str(cueType).toLowerCase())) return false;
+    }
+    return true;
   } catch {
     return false;
   }
@@ -585,9 +623,11 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
     if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      const requiredCueTypes = inferRequiredCueTypesFromScenario(scenario);
       const reuse = await canReuseCurrentAnalysis({
         sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
-        analyzePrompt
+        analyzePrompt,
+        requiredCueTypes
       });
       if (reuse) {
         timings.analyzeMs = 0;
@@ -677,9 +717,11 @@ async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
     if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      const requiredCueTypes = inferRequiredCueTypesFromScenario(scenario);
       const reuse = await canReuseCurrentAnalysis({
         sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
-        analyzePrompt
+        analyzePrompt,
+        requiredCueTypes
       });
       if (reuse) {
         timings.analyzeMs = 0;

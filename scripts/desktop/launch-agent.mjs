@@ -30,8 +30,12 @@ function responsePath(id = "") {
 }
 
 function isAppRunning() {
-  const out = spawnSync("/usr/bin/pgrep", ["-f", APP_BINARY_MATCH], { encoding: "utf8" });
-  return out.status === 0 && String(out.stdout || "").trim().length > 0;
+  const out = spawnSync("/bin/ps", ["-axo", "command="], { encoding: "utf8" });
+  if (out.status !== 0) return false;
+  return String(out.stdout || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .some((line) => line === APP_BINARY_MATCH);
 }
 
 function launchOrActivateApp() {
