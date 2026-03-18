@@ -78,6 +78,15 @@ post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1
 sleep 1
 ensure_xlights_ready >>"${log_path}" 2>&1
 
+warmup_payload="$(jq -cn --arg seq "${sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
+log_batch "warmup-open-sequence sequence=${sequence_path}"
+if run_allowing_already_open "${warmup_payload}" >/dev/null; then
+  log_batch "warmup-close-sequence"
+  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+  sleep 1
+  ensure_xlights_ready >>"${log_path}" 2>&1
+fi
+
 open_sequence_payload="$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
 log_batch "open-batch-sequence sequence=${working_sequence_path}"
 if ! run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
