@@ -63,10 +63,11 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         { label: "Breakdown", startMs: 106000, endMs: 118000, energy: "low", density: "sparse" },
         { label: "Interlude", startMs: 118000, endMs: 128000, energy: "low", density: "sparse" },
         { label: "Solo", startMs: 128000, endMs: 142000, energy: "medium", density: "focused" },
-        { label: "Middle 8", startMs: 142000, endMs: 160000, energy: "medium", density: "wide" },
-        { label: "Final Chorus", startMs: 160000, endMs: 192000, energy: "high", density: "dense" },
-        { label: "Tag", startMs: 192000, endMs: 208000, energy: "medium", density: "moderate" },
-        { label: "Outro", startMs: 208000, endMs: 224000, energy: "low", density: "sparse" }
+        { label: "Rap Section", startMs: 142000, endMs: 156000, energy: "medium", density: "focused" },
+        { label: "Middle 8", startMs: 156000, endMs: 174000, energy: "medium", density: "wide" },
+        { label: "Final Chorus", startMs: 174000, endMs: 206000, energy: "high", density: "dense" },
+        { label: "Tag", startMs: 206000, endMs: 222000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 222000, endMs: 238000, energy: "low", density: "sparse" }
       ]
     : variant === "bridge_peak_arc"
     ? [
@@ -1935,6 +1936,30 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (effectFamilies.includes("Color Wash")) score += 0.3;
     if (/\b(featured spotlight|spotlighted detour|narrower focus|solo feature)\b/.test(leadSummary)) score += 2.0;
     if (/\b(broad chorus pass|same broad chorus language|spread everywhere)\b/.test(leadSummary)) score -= 2.0;
+  }
+  if (/\b(in the rap section|rap section|rap\b).*?\b(clipped rhythmic delivery|narrower focus|singing chorus pass|broad singing-chorus language|tighten the motion)\b/.test(lowerPrompt)) {
+    const leadSummary = lowerSummary.split(/\binstead of\b/)[0] || lowerSummary;
+    const targetCount = Number(arr(metrics.targetIds).length || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    const averageSpeeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
+    const meanSpeed = averageSpeeds.length
+      ? averageSpeeds.reduce((sum, value) => sum + value, 0) / averageSpeeds.length
+      : 0;
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    const coverageValues = arr(metrics.coverageValues).map((value) => str(value));
+    if (targetCount >= 2 && targetCount <= 5) score += 1.0;
+    else if (targetCount > 5) score -= Math.min(1.6, (targetCount - 5) * 0.28);
+    if (conceptImpact >= 0.12 && conceptImpact <= 0.32) score += 0.9;
+    else if (conceptImpact > 0.36) score -= Math.min(1.2, (conceptImpact - 0.36) * 5);
+    if (meanSpeed >= 1.6 && meanSpeed <= 3.2) score += 0.8;
+    else if (meanSpeed < 1.2) score -= 0.6;
+    else if (meanSpeed > 3.8) score -= 0.8;
+    if (coverageValues.some((value) => /focused|partial/i.test(value))) score += 0.6;
+    if (effectFamilies.includes("Bars")) score += 0.5;
+    if (effectFamilies.includes("Shockwave")) score += 0.4;
+    if (effectFamilies.includes("Shimmer")) score -= 0.4;
+    if (/\b(clipped rhythmic delivery|narrower focus|tighten the rap section|stronger pulse control)\b/.test(leadSummary)) score += 2.0;
+    if (/\b(singing chorus pass|broad singing-chorus language|broad chorus pass)\b/.test(leadSummary)) score -= 2.0;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));

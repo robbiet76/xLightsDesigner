@@ -27,7 +27,7 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 ## Current Baseline Summary
 
 - total cases: `65`
-- supported by current offline runner: `65`
+- supported by current offline runner: `66`
 - passed: `65`
 - failed: `0`
 - deferred: `0`
@@ -192,7 +192,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `65/65` corpus as the structural regression gate
+1. keep the current `66/66` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

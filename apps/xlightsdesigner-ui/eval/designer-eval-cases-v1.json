@@ -861,6 +861,20 @@
       }
     },
     {
+      "id": "quality-compare-rap-section-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Motion Language", "Composition Reasoning"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Rap Section, tighten the motion into a more clipped rhythmic delivery with narrower focus instead of treating it like another singing chorus pass.",
+      "altPromptText": "In the Rap Section, keep the same broad singing-chorus language instead of tightening the motion around the rhythmic delivery.",
+      "selectedSections": ["Rap Section"],
+      "altSelectedSections": ["Rap Section"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

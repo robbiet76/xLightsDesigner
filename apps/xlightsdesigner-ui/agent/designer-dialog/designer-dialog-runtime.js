@@ -243,6 +243,7 @@ const FAMILY_POOLS = {
   verse: ["Color Wash", "Butterfly", "Circles", "Wave", "Twinkle"],
   chorus: ["Shimmer", "Pinwheel", "Meteors", "Fireworks", "Color Wash"],
   bridge: ["Bars", "Morph", "Shockwave", "Spirals", "Ripple"],
+  rap: ["Bars", "Shockwave", "Wave", "Color Wash", "Meteors"],
   solo: ["Pinwheel", "Meteors", "Color Wash", "Wave", "Shimmer"],
   outro: ["Spirals", "Wave", "Snowstorm", "Color Wash", "On"],
   wide: ["Bars", "Morph", "Shockwave", "Warp", "Ripple"],
@@ -310,7 +311,10 @@ function chooseExecutionTargets({
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
+  const isRap = /(^|\b)(rap|rap section)\b/.test(key);
   const isSolo = /(^|\b)(solo|instrumental solo)\b/.test(key);
+  const focusedRap = isRap && /\b(clipped|rhythmic delivery|narrower focus|tighten the motion)\b/.test(lowerGoal);
+  const chorusLikeRap = isRap && /\b(singing-chorus language|broad.*chorus|same broad)\b/.test(lowerGoal);
   const focusedSolo = isSolo && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
   const chorusLikeSolo = isSolo && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support|visual weight|impact budget|carry the weight|support lighter|large footprint|large-footprint/.test(lowerGoal);
@@ -391,6 +395,22 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (singleScope || tagDriven) {
+    if (focusedRap) {
+      return prioritizeConcreteTargets([
+        ...focal.slice(0, 2),
+        ...detail.slice(0, 1),
+        ...center.slice(0, 1),
+        ...fallback.slice(0, 1)
+      ]).slice(0, 4);
+    }
+    if (chorusLikeRap) {
+      return prioritizeConcreteTargets([
+        ...focal.slice(0, 2),
+        ...detail.slice(0, 2),
+        ...broad.slice(0, 2),
+        ...fallback.slice(0, 2)
+      ]).slice(0, 8);
+    }
     if (focusedSolo) {
       return prioritizeConcreteTargets([
         ...focal.slice(0, 2),
@@ -455,6 +475,22 @@ function chooseExecutionTargets({
       ]).slice(0, 8);
     }
     return uniqueStrings([
+      ...focal.slice(0, 2),
+      ...detail.slice(0, 2),
+      ...broad.slice(0, 2),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 8);
+  }
+  if (focusedRap) {
+    return prioritizeConcreteTargets([
+      ...focal.slice(0, 2),
+      ...detail.slice(0, 1),
+      ...center.slice(0, 1),
+      ...fallback.slice(0, 1)
+    ]).slice(0, 4);
+  }
+  if (chorusLikeRap) {
+    return prioritizeConcreteTargets([
       ...focal.slice(0, 2),
       ...detail.slice(0, 2),
       ...broad.slice(0, 2),
@@ -544,6 +580,10 @@ function buildSectionEffectHints({
   const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
+  const focusedRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
+    && /\b(clipped|rhythmic delivery|narrower focus|tighten the motion)\b/.test(lowerGoal);
+  const chorusLikeRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
+    && /\b(singing-chorus language|broad.*chorus|same broad)\b/.test(lowerGoal);
   const focusedSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
     && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
   const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
@@ -648,6 +688,12 @@ function buildSectionEffectHints({
     }
     return pickDistinctEffects(["Shimmer", "Color Wash"], ["Wave", "Bars"]);
   }
+  if (focusedRap) {
+    return pickDistinctEffects(FAMILY_POOLS.rap, ["Bars", "Shockwave"]);
+  }
+  if (chorusLikeRap) {
+    return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
+  }
   if (focusedSolo) {
     return pickDistinctEffects(FAMILY_POOLS.solo, ["Pinwheel", "Color Wash"]);
   }
@@ -701,6 +747,10 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
   const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
   const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
+  const focusedRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
+    && /\b(clipped|rhythmic delivery|narrower focus|tighten the motion)\b/.test(lowerGoal);
+  const chorusLikeRap = /(^|\b)(rap|rap section)\b/.test(lowerSection)
+    && /\b(singing-chorus language|broad.*chorus|same broad)\b/.test(lowerGoal);
   const focusedSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
     && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
   const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
@@ -782,6 +832,12 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
       return `treat the post-chorus${warmClause} like a fresh verse-sized section with a new arc instead of reinforcing the hook`;
     }
     return `let the post-chorus${warmClause} reinforce the hook with a cleaner extension and lighter follow-through`;
+  }
+  if (focusedRap) {
+    return `tighten the rap section${warmClause} around a clipped rhythmic delivery with narrower focus and stronger pulse control`;
+  }
+  if (chorusLikeRap) {
+    return `treat the rap section${warmClause} like another broad singing chorus pass instead of tightening around the rhythmic delivery`;
   }
   if (focusedSolo) {
     return `feature the solo${warmClause} like a spotlighted detour with narrower focus and clearer individual emphasis`;
