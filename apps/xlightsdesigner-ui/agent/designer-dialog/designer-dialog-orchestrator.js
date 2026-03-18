@@ -13,7 +13,8 @@ function str(value = "") {
 
 export function executeDesignerProposalOrchestration(input = {}) {
   const localResult = executeDesignerDialogFlow(input);
-  const cloudResult = input?.cloudResponse
+  const hasAuthoritativeTargetSelection = arr(input?.selectedTargetIds).map((row) => str(row)).filter(Boolean).length > 0;
+  const cloudResult = input?.cloudResponse && !hasAuthoritativeTargetSelection
     ? normalizeDesignerCloudResponse({
         cloudResponse: input.cloudResponse,
         fallback: {
@@ -27,7 +28,9 @@ export function executeDesignerProposalOrchestration(input = {}) {
       })
     : null;
   const result = cloudResult || localResult;
-  const source = cloudResult ? "cloud_normalized" : "local_runtime";
+  const source = cloudResult
+    ? "cloud_normalized"
+    : (hasAuthoritativeTargetSelection && input?.cloudResponse ? "local_runtime_explicit_target_scope" : "local_runtime");
   const proposalBundle = result?.proposalBundle || null;
   const handoff = result?.handoff || null;
   const degradedMode = !input?.analysisHandoff;

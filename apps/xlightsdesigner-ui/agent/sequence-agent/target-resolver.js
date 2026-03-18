@@ -52,6 +52,15 @@ function escapeRegex(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function exactGoalTokenMatch(goal = "", token = "", { allowSlashBoundary = false } = {}) {
+  const normalizedGoal = normalizeName(goal);
+  const normalizedToken = normalizeName(token);
+  if (!normalizedGoal || !normalizedToken) return false;
+  const boundaryClass = allowSlashBoundary ? "a-z0-9" : "a-z0-9/";
+  const pattern = new RegExp(`(^|[^${boundaryClass}])${escapeRegex(normalizedToken)}([^${boundaryClass}]|$)`, "i");
+  return pattern.test(normalizedGoal);
+}
+
 function buildNameCounts(targets = []) {
   const counts = new Map();
   for (const target of targets || []) {
@@ -69,12 +78,11 @@ function goalMentionsTarget(goal = "", target = null, nameCounts = new Map()) {
   const id = normalizeName(target?.id);
   const parentId = normalizeName(target?.parentId);
 
-  if (id && normalizedGoal.includes(id)) return true;
-  if (parentId && name && normalizedGoal.includes(`${parentId}/${name}`)) return true;
-  if (parentId && name && normalizedGoal.includes(`${parentId} ${name}`)) return true;
+  if (id && exactGoalTokenMatch(normalizedGoal, id)) return true;
+  if (parentId && name && exactGoalTokenMatch(normalizedGoal, `${parentId}/${name}`)) return true;
+  if (parentId && name && exactGoalTokenMatch(normalizedGoal, `${parentId} ${name}`, { allowSlashBoundary: true })) return true;
 
-  const exactNamePattern = new RegExp(`(^|[^a-z0-9])${escapeRegex(name)}([^a-z0-9]|$)`, "i");
-  if (!exactNamePattern.test(normalizedGoal)) return false;
+  if (!exactGoalTokenMatch(normalizedGoal, name)) return false;
 
   if (target?.type === "submodel") {
     const nameCount = Number(nameCounts.get(name) || 0);

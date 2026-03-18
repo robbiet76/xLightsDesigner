@@ -67,3 +67,53 @@ test("designer orchestrator can normalize cloud response while preserving local 
   assert.equal(result.intentHandoff.goal, "Make the chorus feel nostalgic and cleaner.");
   assert.deepEqual(result.guidedQuestions, ["Should the chorus spread beyond the focal props?"]);
 });
+
+test("designer orchestrator keeps local target scope authoritative when explicit targets are selected", () => {
+  const result = executeDesignerProposalOrchestration({
+    requestId: "req-cloud-explicit-targets",
+    sequenceRevision: "rev-4",
+    promptText: "Design a single Chorus 1 concept for CandyCane-01/Fill and Border_Segments.",
+    selectedSections: ["Chorus 1"],
+    selectedTargetIds: ["CandyCane-01/Fill", "Border_Segments"],
+    models: [
+      { id: "Border_Segments", name: "Border_Segments", type: "Model" },
+      { id: "CandyCane-01", name: "CandyCane-01", type: "Model" }
+    ],
+    submodels: [
+      { id: "CandyCane-01/Fill", name: "Fill", parentId: "CandyCane-01" }
+    ],
+    displayElements: [
+      { id: "Border_Segments", name: "Border_Segments", type: "model" },
+      { id: "CandyCane-01", name: "CandyCane-01", type: "model" },
+      { id: "CandyCane-01/Fill", name: "CandyCane-01/Fill", type: "submodel" }
+    ],
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ]
+    },
+    cloudResponse: {
+      responseType: "designer_cloud_response_v1",
+      responseVersion: "1.0",
+      assistantMessage: "Cloud widened the scope.",
+      summary: "Cloud widened the scope.",
+      proposal: {
+        proposalId: "proposal-cloud-wide",
+        summary: "Cloud widened the scope.",
+        baseRevision: "rev-4",
+        scope: {
+          sections: ["Chorus 1"],
+          targetIds: ["Border_Segments", "CandyCane-01", "CandyCane-01/Fill"]
+        },
+        proposalLines: [
+          "Chorus 1 / Border_Segments + CandyCane-01 + CandyCane-01/Fill / broaden the scope"
+        ]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.source, "local_runtime_explicit_target_scope");
+  assert.deepEqual(result.proposalBundle.scope.targetIds.sort(), ["Border_Segments", "CandyCane-01/Fill"]);
+  assert.deepEqual(result.intentHandoff.scope.targetIds.sort(), ["Border_Segments", "CandyCane-01/Fill"]);
+});

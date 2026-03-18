@@ -446,7 +446,10 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   const strongGenerateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt: strongPrompt,
-    requestedRole: "designer_dialog"
+    requestedRole: "designer_dialog",
+    selectedSections: arr(expected?.sections),
+    selectedTargetIds: arr(expected?.targets),
+    selectedTagNames: arr(expected?.tagNames)
   });
   const strongSnapshot = await safeComparativeSnapshot();
   const strongGenerateMs = nowMs() - strongGenerateStartedAtMs;
@@ -454,7 +457,10 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   const weakGenerateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt: weakPrompt,
-    requestedRole: "designer_dialog"
+    requestedRole: "designer_dialog",
+    selectedSections: arr(expected?.sections),
+    selectedTargetIds: arr(expected?.altTargets),
+    selectedTagNames: arr(expected?.altTagNames)
   });
   const weakSnapshot = await safeComparativeSnapshot();
   const weakGenerateMs = nowMs() - weakGenerateStartedAtMs;
@@ -528,7 +534,10 @@ async function runLiveDesignCanaryValidationFromDesktop(expected = {}) {
   const generateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt,
-    requestedRole: "designer_dialog"
+    requestedRole: "designer_dialog",
+    selectedSections: arr(expected?.sections),
+    selectedTargetIds: arr(expected?.targets),
+    selectedTagNames: arr(expected?.tagNames)
   });
   const snapshot = await invokeRendererAutomation("getComparativeValidationSnapshot", {});
   const validation = validateDesignConceptState({

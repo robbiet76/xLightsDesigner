@@ -228,6 +228,40 @@ test('planner promotes prompt-matched targets into explicit intent scope for nar
   assert.deepEqual(result.targets.map((row) => row.id).sort(), ['Snowman', 'Star']);
 });
 
+test('planner goal matching does not widen a submodel prompt to its parent model', () => {
+  const scopedModels = [
+    { id: 'Border_Segments', name: 'Border_Segments', type: 'Model' },
+    { id: 'CandyCane-01', name: 'CandyCane-01', type: 'Model' }
+  ];
+  const scopedSubmodels = [
+    { id: 'CandyCane-01/Fill', name: 'Fill', parentId: 'CandyCane-01' }
+  ];
+  const scopedDisplayElements = [
+    { id: 'Border_Segments', name: 'Border_Segments', type: 'model' },
+    { id: 'CandyCane-01', name: 'CandyCane-01', type: 'model' },
+    { id: 'CandyCane-01/Fill', name: 'CandyCane-01/Fill', type: 'submodel' }
+  ];
+
+  const result = buildProposalFromIntent({
+    promptText: 'Design a single Chorus 1 concept anchored to the beat grid for CandyCane-01/Fill and Border_Segments. Keep CandyCane-01/Fill as the focal read and use Border_Segments as support. Do not rewrite the whole show.',
+    selectedSections: ['Chorus 1'],
+    models: scopedModels,
+    submodels: scopedSubmodels,
+    metadataAssignments: [],
+    displayElements: scopedDisplayElements,
+    musicDesignContext: {
+      sectionArc: [
+        { label: 'Verse 1', energy: 'medium', density: 'moderate' },
+        { label: 'Chorus 1', energy: 'high', density: 'dense' }
+      ]
+    }
+  });
+
+  assert.deepEqual(result.normalizedIntent.targetIds.sort(), ['Border_Segments', 'CandyCane-01/Fill']);
+  assert.deepEqual(result.targets.map((row) => row.id).sort(), ['Border_Segments', 'CandyCane-01/Fill']);
+  assert.ok(!result.targets.map((row) => row.id).includes('CandyCane-01'));
+});
+
 test('planner keeps prompt-matched explicit targets even when regenerate wording implies focal tags', () => {
   const scopedModels = [
     { id: 'Snowman', name: 'Snowman', type: 'Model' },

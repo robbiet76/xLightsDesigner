@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `65`
+- total cases: `67`
 - supported by current offline runner: `67`
-- passed: `65`
+- passed: `67`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -160,18 +160,26 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-Diversity-Live-20260317-H.xsq`
   - slice: `diversity-h-composition-pass`
   - status: validated individually and included in the extended live pack
-- extended live suite file: current definition is `13` scenarios
+- alternate live family focal-hierarchy probe: passed
+  - sequence: `API-Designer-Diversity-Live-20260317-H.xsq`
+  - slice: `diversity-h-chorus-focus`
+  - result:
+    - strong score: `10.85`
+    - weak score: `4.45`
+  - status: validated individually and included in the extended live pack
+- extended live suite file: current definition is `14` scenarios
   - baseline pack plus:
     - `wholepass-b-composition-pass`
     - `wholepass-b-phrase-subtlety-pass`
     - `wholepass-b-render-discipline-pass`
     - `wholepass-e-composition-pass`
     - `diversity-h-composition-pass`
+    - `diversity-h-chorus-focus`
     - `clean-phase-beat-grid-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - current status: `13/13` promoted
-  - latest full rerun completed in about `475s`
+  - current status: `14/14` promoted
+  - latest full rerun completed in about `527s` after the `diversity-h-chorus-focus` addition
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -186,8 +194,8 @@ Interpretation:
 - the current promoted baseline is now green on both the offline corpus and the live apply cadence
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - live comparative validation is no longer tied to one saved sequence
-- alternate saved-sequence coverage remains outside the lean promoted `7/7` baseline pack to preserve faster cadence
-- alternate saved-sequence coverage is operationally stable in the promoted `11/11` extended live pack
+- alternate saved-sequence coverage remains outside the lean promoted `8/8` baseline pack to preserve faster cadence
+- alternate saved-sequence coverage is operationally stable in the promoted `14/14` extended live pack
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 

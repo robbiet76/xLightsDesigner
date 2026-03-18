@@ -122,3 +122,144 @@ test("comparative live validation accepts expectedStrong alias fields", () => {
   assert.equal(out.ok, true);
   assert.ok(Number(out.metrics.strongScore) > Number(out.metrics.weakScore));
 });
+
+test("comparative live validation prefers restrained render discipline over a busier whole-song alternative", () => {
+  const strong = {
+    diagnose: {
+      activeSequence: "API-Designer-WholePass-20260317-B",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"],
+        effectPlacementCount: 41
+      },
+      intentHandoffSummary: {
+        goal: "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"],
+          effectPlacementCount: 41
+        }
+      },
+      rawPlan: []
+    },
+    pageStates: {
+      design: {
+        data: {
+          executionPlan: {
+            conceptRows: [
+              {
+                anchor: "Intro",
+                focus: [
+                  "AllModels",
+                  "AllModels_NoFloods",
+                  "AllModels_NoMatrix",
+                  "AllModels_NoMatrix_Floods",
+                  "Border-01/Left",
+                  "Border-01/Segments",
+                  "Border-02/Left",
+                  "Border_Segments",
+                  "Borders",
+                  "CandyCane-01/Diagonals",
+                  "CandyCane-01/Fill",
+                  "CandyCane-01/Outline",
+                  "CandyCane-02/Diagonals",
+                  "CandyCane-02/Rows",
+                  "CandyCane-03/Little Canes",
+                  "FrontHouse"
+                ],
+                effectFamilies: ["Bars", "Candle", "Color Wash", "Morph", "Pinwheel", "Shimmer", "Spirals", "Wave"]
+              }
+            ]
+          }
+        }
+      },
+      sequence: {
+        data: {
+          rows: Array.from({ length: 33 }, (_, idx) => ({
+            target: `Target-${idx + 1}`,
+            section: idx < 8 ? "Intro" : "Chorus 1",
+            summary: "Color Wash"
+          }))
+        }
+      }
+    }
+  };
+
+  const weak = {
+    diagnose: {
+      activeSequence: "API-Designer-WholePass-20260317-B",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"],
+        effectPlacementCount: 55
+      },
+      intentHandoffSummary: {
+        goal: "Keep changing textures aggressively across the whole song with busier sparkle, harder texture swaps, and less restraint in the base look.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"],
+          effectPlacementCount: 55
+        }
+      },
+      rawPlan: []
+    },
+    pageStates: {
+      design: {
+        data: {
+          executionPlan: {
+            conceptRows: [
+              {
+                anchor: "Intro",
+                focus: [
+                  "Border-01/Left",
+                  "Border-01/Segments",
+                  "Border-02/Left",
+                  "Border_Segments",
+                  "Borders",
+                  "CandyCane-01/Diagonals",
+                  "CandyCane-01/Fill",
+                  "CandyCane-01/Outline",
+                  "CandyCane-02/Diagonals",
+                  "CandyCane-02/Rows",
+                  "CandyCane-03/Little Canes",
+                  "Floods Front",
+                  "FrontHouse",
+                  "SpiralTreeStars",
+                  "SpiralTrees",
+                  "Train",
+                  "Train_Hubs",
+                  "Train_NoMatrix",
+                  "Wreathes",
+                  "Wreathes_All"
+                ],
+                effectFamilies: ["Bars", "Candle", "Color Wash", "Morph", "Pinwheel", "Shimmer", "Spirals", "Wave"]
+              }
+            ]
+          }
+        }
+      },
+      sequence: {
+        data: {
+          rows: Array.from({ length: 36 }, (_, idx) => ({
+            target: `Target-${idx + 1}`,
+            section: idx < 8 ? "Intro" : "Chorus 1",
+            summary: "Color Wash"
+          }))
+        }
+      }
+    }
+  };
+
+  const out = validateComparativeLiveDesignState({ strong, weak });
+
+  assert.equal(out.ok, true);
+  assert.ok(Number(out.metrics.strongScore) > Number(out.metrics.weakScore));
+});

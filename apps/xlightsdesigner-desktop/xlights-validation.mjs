@@ -634,9 +634,13 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
 
   if (/restrained glowing base|smoother texture transitions|selective sparkle|render feels polished|less restraint in the base look/.test(lowerGoal)) {
     if (familyCount <= 6) adjustment += 1.2;
-    if (familyCount >= 7) adjustment -= 1.0;
-    if (placementCount <= 36) adjustment += 0.6;
-    if (placementCount >= 40) adjustment -= 0.8;
+    if (familyCount >= 7) adjustment -= 1.2;
+    if (placementCount <= 42) adjustment += 1.0;
+    if (placementCount >= 50) adjustment -= 1.6;
+    if (focusTargetCount <= 16) adjustment += 1.2;
+    if (focusTargetCount >= 18) adjustment -= 1.4;
+    if (sequenceRowCount <= 34) adjustment += 0.8;
+    if (sequenceRowCount >= 36) adjustment -= 1.0;
     if (targetScopeCount > 0 && targetScopeCount <= 2) adjustment -= 1.4;
   }
 

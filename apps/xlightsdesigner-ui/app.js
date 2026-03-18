@@ -3188,6 +3188,15 @@ async function onGenerate(intentOverride = "", options = {}) {
   const proposalRole = ["sequence_agent", "designer_dialog"].includes(requestedRole)
     ? requestedRole
     : "designer_dialog";
+  const explicitSelectedSections = Array.isArray(options?.selectedSections)
+    ? options.selectedSections.map((row) => String(row || "").trim()).filter(Boolean)
+    : [];
+  const explicitSelectedTargetIds = Array.isArray(options?.selectedTargetIds)
+    ? options.selectedTargetIds.map((row) => String(row || "").trim()).filter(Boolean)
+    : [];
+  const explicitSelectedTagNames = Array.isArray(options?.selectedTagNames)
+    ? options.selectedTagNames.map((row) => String(row || "").trim()).filter(Boolean)
+    : [];
   const directSequenceMode = proposalRole === "sequence_agent";
   const revisionTarget = normalizeDesignRevisionTarget(state.ui.designRevisionTarget);
   const postGenerateFailureMessage = (text = "") => {
@@ -3245,7 +3254,9 @@ async function onGenerate(intentOverride = "", options = {}) {
   const musicDesignContext = buildCurrentMusicDesignContext();
   const inferredPromptSections = inferPromptSectionSelection(intentText, musicDesignContext);
   const usingAll = hasAllSectionsSelected();
-  const selected = revisionTarget?.sections?.length
+  const selected = explicitSelectedSections.length
+    ? explicitSelectedSections
+    : revisionTarget?.sections?.length
     ? revisionTarget.sections
     : (inferredPromptSections.length
         ? inferredPromptSections
@@ -3253,11 +3264,17 @@ async function onGenerate(intentOverride = "", options = {}) {
             ? getSectionChoiceList()
             : getSelectedSections().filter((s) => s !== "all")));
   const includeDesignerSelection = shouldCarryDesignerSelectionContext(intentText);
-  const designerSelectedTags = includeDesignerSelection ? (state.ui.metadataSelectedTags || []) : [];
-  const designerSelectedTargetIds = revisionTarget?.targetIds?.length
+  const designerSelectedTags = explicitSelectedTagNames.length
+    ? explicitSelectedTagNames
+    : (includeDesignerSelection ? (state.ui.metadataSelectedTags || []) : []);
+  const designerSelectedTargetIds = explicitSelectedTargetIds.length
+    ? explicitSelectedTargetIds
+    : revisionTarget?.targetIds?.length
     ? revisionTarget.targetIds
     : (includeDesignerSelection ? (state.ui.metadataSelectionIds || []) : []);
-  const directSelectedTargetIds = revisionTarget?.targetIds?.length
+  const directSelectedTargetIds = explicitSelectedTargetIds.length
+    ? explicitSelectedTargetIds
+    : revisionTarget?.targetIds?.length
     ? revisionTarget.targetIds
     : (state.ui.metadataSelectionIds || []);
   let designerCloudResponse = null;
@@ -11074,7 +11091,12 @@ async function generateAutomationProposal(payload = {}) {
   if (!prompt) {
     return { ok: false, error: "Prompt is required." };
   }
-  await onGenerate(prompt, { requestedRole });
+  await onGenerate(prompt, {
+    requestedRole,
+    selectedSections: Array.isArray(payload?.selectedSections) ? payload.selectedSections : [],
+    selectedTargetIds: Array.isArray(payload?.selectedTargetIds) ? payload.selectedTargetIds : [],
+    selectedTagNames: Array.isArray(payload?.selectedTagNames) ? payload.selectedTagNames : []
+  });
   return {
     ok: true,
     status: state.status || null,
