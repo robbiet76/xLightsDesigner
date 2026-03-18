@@ -42,11 +42,11 @@ Interpretation:
 ## Current Artistic Baseline
 
 Current artistic averages from the same corpus:
-- motion language: `2.94`
+- motion language: `3.00`
 - stage-lighting quality: `3.00`
 - composition quality: `3.00`
 - settings/render plausibility: `3.00`
-- concept-summary quality: `2.97`
+- concept-summary quality: `3.00`
 - target-selection quality: `3.00`
 - thematic continuity: `3.00`
 

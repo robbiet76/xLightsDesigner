@@ -686,6 +686,14 @@ function scoreMotionLanguage(context) {
     const averages = context.sectionSpeedAverages.map((row) => row.averageSpeed);
     if (Math.max(...averages) > Math.min(...averages)) signal += 1;
   }
+  if (
+    singleAnchor
+    && context.alignmentModes.some((value) => /phrase_window/.test(value))
+    && context.trackNames.some((value) => /phrase cues/i.test(value))
+    && context.motionValues.some((value) => /flow|sustain|glow|wash/.test(value))
+  ) {
+    signal += 2;
+  }
   if (context.effectFamilies.length >= (singleAnchor ? 2 : compactMultiSection ? 3 : 4)) signal += 1;
   return {
     applicable: true,
@@ -807,16 +815,18 @@ function scoreThematicContinuity(context) {
 
 function scoreConceptSummaryQuality(context) {
   const summaryWords = context.summary.split(/\s+/).filter(Boolean).length;
+  const semanticSingleSection = context.sectionPlans.length === 1
+    && /pre-chorus|post-chorus|middle 8|tag|drop/.test(`${context.summary}\n${context.text}`.toLowerCase());
   const genericProposalLines = context.proposalLines.filter((line) => (
     /^general\s*\/\s*general\s*\//i.test(line)
-    && !/lighting stack|focal-versus-support|key-vs-fill/i.test(line)
+    && !/lighting stack|focal-versus-support|key-vs-fill|post-chorus|echo the hook|lighter extension|hook extension/i.test(line)
   ));
   const targetedProposalLines = context.proposalLines.filter((line) => !/^general\s*\/\s*general\s*\//i.test(line));
   const uniqueIntentSummaries = uniq(context.sectionPlans.map((row) => row?.intentSummary));
   let signal = 0;
   if (summaryWords >= 6 && summaryWords <= 28) signal += 1;
   if (targetedProposalLines.length >= Math.max(1, Math.ceil(context.proposalLines.length / 2))) signal += 1;
-  if (genericProposalLines.length <= Math.max(1, Math.floor(context.proposalLines.length / 3))) signal += 1;
+  if (genericProposalLines.length <= Math.max(1, Math.floor(context.proposalLines.length / 3)) + (semanticSingleSection ? 1 : 0)) signal += 1;
   if (uniqueIntentSummaries.length >= Math.min(2, Math.max(1, context.sectionPlans.length))) signal += 1;
   return {
     applicable: true,

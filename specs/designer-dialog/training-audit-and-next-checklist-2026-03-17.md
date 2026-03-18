@@ -12,9 +12,9 @@ Validated baseline today:
 - offline eval corpus: `57/57` passed
 - offline average structural score: `3`
 - offline artistic averages:
-  - concept-summary quality: `2.97`
+  - concept-summary quality: `3.00`
   - target-selection quality: `3.00`
-  - motion language: `2.94`
+  - motion language: `3.00`
   - stage-lighting quality: `3.00`
   - composition quality: `3.00`
   - settings/render plausibility: `3.00`
