@@ -1532,6 +1532,15 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
   if (/\b(key light|fill|framing|perimeter|focal hierarchy)\b/.test(lowerPrompt)) {
     score += Number(metrics.wellShapedOverlayCount || 0) * 0.25;
   }
+  if (/\b(smooth|connected transitions|cinematic|glide|flowing)\b/.test(lowerPrompt)) {
+    score += Number(arr(metrics.recurringEffectFamilies).length || 0) * 0.18;
+    score += Number(metrics.distinctSectionFamilySignatures || 0) * 0.12;
+    score -= Number(arr(metrics.layeredTargetIds).length || 0) * 0.05;
+  }
+  if (/\b(crisp|punchy|rhythmic|pulse|staccato|choppy)\b/.test(lowerPrompt)) {
+    score += Number(metrics.focusedOverlayPlacementCount || 0) * 0.2;
+    score += Number(metrics.wellShapedOverlayCount || 0) * 0.15;
+  }
 
   return Number(score.toFixed(2));
 }

@@ -500,6 +500,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-motion-language",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.",
+      "altPromptText": "Make the full song choppier and more staccato with punchy pulse changes, sharper accents, and less connected motion between sections.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

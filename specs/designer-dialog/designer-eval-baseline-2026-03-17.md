@@ -25,9 +25,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `37`
-- supported by current offline runner: `37`
-- passed: `37`
+- total cases: `38`
+- supported by current offline runner: `38`
+- passed: `38`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -66,6 +66,7 @@ The runner and designer logic now cover:
 - alternate song-arc validation where the bridge can intentionally outrank the final chorus
 - layout-weighted impact awareness using node share plus spatial footprint
 - stage-lighting-language concepts
+- motion-language comparative quality
 - richer broad-pass family diversity for rhythm/layout/lighting prompts
 - offline revise-case scoring through the same merge semantics used by the app revision path
 - concept-level delete/regenerate scoring where one concept is removed and a scoped replacement is appended without disturbing the rest of the draft
