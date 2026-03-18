@@ -5,6 +5,19 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function withTimeout(promise, timeoutMs = 0, label = "automation action") {
+  if (!(timeoutMs > 0)) return promise;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      const timer = setTimeout(() => {
+        clearTimeout(timer);
+        reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+    })
+  ]);
+}
+
 export function flushAutomationRequests({
   requestsDir,
   responsePathForId,
@@ -46,6 +59,9 @@ export async function processAutomationRequestsOnce({
   requestsDir,
   responsePathForId,
   invokeAction,
+  requestTimeoutMsForAction = () => 0,
+  onRequestStart = () => {},
+  onRequestFinish = () => {},
   fsImpl = fs
 } = {}) {
   const files = fsImpl.readdirSync(requestsDir)
@@ -58,12 +74,19 @@ export async function processAutomationRequestsOnce({
       request = JSON.parse(fsImpl.readFileSync(fullPath, "utf8"));
       const id = str(request?.id || path.basename(name, ".json")) || path.basename(name, ".json");
       const action = str(request?.action);
-      const result = await invokeAction({ action, request, name, fullPath, id });
+      onRequestStart({ id, action, request, name, fullPath });
+      const timeoutMs = Number(requestTimeoutMsForAction({ action, request, name, fullPath, id }) || 0);
+      const result = await withTimeout(
+        invokeAction({ action, request, name, fullPath, id }),
+        timeoutMs,
+        `Automation action ${action || "missing"}`
+      );
       fsImpl.writeFileSync(
         responsePathForId(id),
         JSON.stringify({ ok: true, id, action, result }, null, 2),
         "utf8"
       );
+      onRequestFinish({ id, action, ok: true });
     } catch (err) {
       const id = str(request?.id || path.basename(name, ".json")) || path.basename(name, ".json");
       const action = str(request?.action);
@@ -72,6 +95,7 @@ export async function processAutomationRequestsOnce({
         JSON.stringify({ ok: false, id, action, error: String(err?.message || err) }, null, 2),
         "utf8"
       );
+      onRequestFinish({ id, action, ok: false, error: String(err?.message || err) });
     } finally {
       try {
         fsImpl.unlinkSync(fullPath);

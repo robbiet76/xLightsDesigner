@@ -497,6 +497,21 @@ async function processAutomationRequests() {
   return processAutomationRequestsOnce({
     requestsDir: AUTOMATION_REQUESTS_DIR,
     responsePathForId: automationResponsePath,
+    requestTimeoutMsForAction: ({ action }) => {
+      if (action === "runLiveDesignValidationSuite") return 1800000;
+      if (action === "runComparativeLiveDesignValidation") return 900000;
+      if (action === "runWholeSequenceApplyValidation") return 900000;
+      if (action === "runDesignConceptValidation") return 300000;
+      if (action === "runDirectSequenceValidation") return 300000;
+      if (action === "analyzeAudio") return 300000;
+      return 120000;
+    },
+    onRequestStart: ({ id, action }) => {
+      logStartup(`automation:request:start id=${id} action=${action || "missing"}`);
+    },
+    onRequestFinish: ({ id, action, ok, error }) => {
+      logStartup(`automation:request:finish id=${id} action=${action || "missing"} ok=${ok ? "true" : "false"} error=${String(error || "")}`);
+    },
     invokeAction: async ({ action, request }) => {
       if (action === "dispatchPrompt") {
         return invokeRendererAutomation("dispatchPrompt", String(request?.payload?.prompt || ""));

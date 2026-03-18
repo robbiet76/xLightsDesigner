@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 
@@ -11,8 +10,24 @@ fs.mkdirSync(requestsDir, { recursive: true });
 fs.mkdirSync(responsesDir, { recursive: true });
 
 function usage() {
-  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload> | run-design-concept-validation <json-payload> | run-whole-sequence-apply-validation <json-payload> | run-comparative-live-design-validation <json-payload> | run-live-design-validation-suite <json-payload>");
+  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path>");
   process.exit(2);
+}
+
+function readJsonPayload(args = []) {
+  const first = String(args[0] || "").trim();
+  if (!first) return {};
+  if (first === "--payload-file") {
+    const file = String(args[1] || "").trim();
+    if (!file) {
+      throw new Error("--payload-file requires a path");
+    }
+    return JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
+  }
+  if (first.startsWith("@")) {
+    return JSON.parse(fs.readFileSync(path.resolve(first.slice(1)), "utf8"));
+  }
+  return JSON.parse(args.join(" ").trim());
 }
 
 const [, , command, ...rest] = process.argv;
@@ -28,39 +43,30 @@ if (command === "dispatch-prompt") {
   payload = { prompt };
 } else if (command === "ping") {
   action = "ping";
-  payload = {};
 } else if (command === "refresh-from-xlights") {
   action = "refreshFromXLights";
-  payload = {};
 } else if (command === "analyze-audio") {
   action = "analyzeAudio";
   payload = { prompt: rest.join(" ").trim() };
 } else if (command === "apply-current-proposal") {
   action = "applyCurrentProposal";
-  payload = {};
 } else if (command === "diagnose-current-proposal") {
   action = "diagnoseCurrentProposal";
-  payload = {};
 } else if (command === "run-direct-sequence-validation") {
   action = "runDirectSequenceValidation";
-  const raw = rest.join(" ").trim();
-  payload = raw ? JSON.parse(raw) : {};
+  payload = readJsonPayload(rest);
 } else if (command === "run-design-concept-validation") {
   action = "runDesignConceptValidation";
-  const raw = rest.join(" ").trim();
-  payload = raw ? JSON.parse(raw) : {};
+  payload = readJsonPayload(rest);
 } else if (command === "run-whole-sequence-apply-validation") {
   action = "runWholeSequenceApplyValidation";
-  const raw = rest.join(" ").trim();
-  payload = raw ? JSON.parse(raw) : {};
+  payload = readJsonPayload(rest);
 } else if (command === "run-comparative-live-design-validation") {
   action = "runComparativeLiveDesignValidation";
-  const raw = rest.join(" ").trim();
-  payload = raw ? JSON.parse(raw) : {};
+  payload = readJsonPayload(rest);
 } else if (command === "run-live-design-validation-suite") {
   action = "runLiveDesignValidationSuite";
-  const raw = rest.join(" ").trim();
-  payload = raw ? JSON.parse(raw) : {};
+  payload = readJsonPayload(rest);
 } else {
   usage();
 }
@@ -69,14 +75,14 @@ const requestPath = path.join(requestsDir, `${id}.json`);
 const responsePath = path.join(responsesDir, `${id}.json`);
 fs.writeFileSync(requestPath, JSON.stringify({ id, action, payload }, null, 2), "utf8");
 
-function computeTimeoutMs(action = "", payload = {}) {
-  if (action === "runLiveDesignValidationSuite") {
-    const scenarioCount = Array.isArray(payload?.scenarios) ? payload.scenarios.length : 0;
+function computeTimeoutMs(currentAction = "", currentPayload = {}) {
+  if (currentAction === "runLiveDesignValidationSuite") {
+    const scenarioCount = Array.isArray(currentPayload?.scenarios) ? currentPayload.scenarios.length : 0;
     const baseMs = 300000;
     const perScenarioMs = 90000;
     return Math.max(baseMs, baseMs + (scenarioCount * perScenarioMs));
   }
-  if (action === "runComparativeLiveDesignValidation") {
+  if (currentAction === "runComparativeLiveDesignValidation") {
     return 300000;
   }
   return 120000;
@@ -88,7 +94,9 @@ for (;;) {
   if (fs.existsSync(responsePath)) {
     const raw = fs.readFileSync(responsePath, "utf8");
     process.stdout.write(raw + "\n");
-    try { fs.unlinkSync(responsePath); } catch {}
+    try {
+      fs.unlinkSync(responsePath);
+    } catch {}
     process.exit(0);
   }
   if (Date.now() - started > timeoutMs) {

@@ -36,7 +36,15 @@ function isAppRunning() {
 
 function launchOrActivateApp() {
   const before = isAppRunning();
-  const launchArgs = before ? ["-g", "-b", BUNDLE_ID] : ["-g", "-na", APP_PATH];
+  if (before) {
+    return {
+      ok: true,
+      method: "already-running",
+      wasRunning: true,
+      isRunning: true
+    };
+  }
+  const launchArgs = ["-g", "-j", "-n", APP_PATH];
   const launch = spawnSync("/usr/bin/env", ["-u", "ELECTRON_RUN_AS_NODE", "/usr/bin/open", ...launchArgs], {
     encoding: "utf8"
   });
