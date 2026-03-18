@@ -9,12 +9,12 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `55/55` passed
+- offline eval corpus: `57/57` passed
 - offline average structural score: `3`
 - offline artistic averages:
-  - concept-summary quality: `3.00`
+  - concept-summary quality: `2.97`
   - target-selection quality: `3.00`
-  - motion language: `2.93`
+  - motion language: `2.94`
   - stage-lighting quality: `3.00`
   - composition quality: `3.00`
   - settings/render plausibility: `3.00`
@@ -35,6 +35,7 @@ Interpretation:
 - drop-release scoring now exists so a semantic `Drop` is judged as a landing/release moment rather than just another high-energy section
 - tag-ending scoring now exists so a semantic `Tag` is judged as a resolving echo rather than a redundant new climax
 - middle-8 contrast scoring now exists so a semantic `Middle 8` is judged as a real detour instead of another chorus clone
+- post-chorus hook-extension scoring now exists so a semantic `Post-Chorus` is judged as a hook echo instead of a fresh verse-sized section
 - the remaining work is operational and qualitative:
   - broader live coverage
   - richer comparative taste gates

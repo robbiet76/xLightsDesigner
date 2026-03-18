@@ -475,6 +475,8 @@ function buildSectionEffectHints({
   const overblownTag = isOverblownTagGoal(lowerGoal);
   const contrastingMiddle8 = isContrastingMiddle8Goal(lowerGoal);
   const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
+  const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
+  const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
@@ -568,6 +570,15 @@ function buildSectionEffectHints({
     }
     return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
   }
+  if (/post-?chorus/.test(lowerSection)) {
+    if (hookEchoPostChorus) {
+      return pickDistinctEffects(["Shimmer", "Wave"], ["Color Wash", "Candle"]);
+    }
+    if (verseLikePostChorus) {
+      return pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Butterfly"]);
+    }
+    return pickDistinctEffects(["Shimmer", "Color Wash"], ["Wave", "Bars"]);
+  }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
   }
@@ -613,6 +624,8 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const overblownTag = isOverblownTagGoal(lowerGoal);
   const contrastingMiddle8 = isContrastingMiddle8Goal(lowerGoal);
   const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
+  const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
+  const verseLikePostChorus = isVerseLikePostChorusGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
@@ -681,6 +694,15 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
       return `treat the middle 8${warmClause} like another chorus with the same payoff language and little contrast`;
     }
     return `give the middle 8${warmClause} a wider contrasting breath before the closing payoff`;
+  }
+  if (/post-?chorus/.test(lowerSection)) {
+    if (hookEchoPostChorus) {
+      return `let the post-chorus echo the hook${warmClause} with a lighter extension instead of opening a whole new section arc`;
+    }
+    if (verseLikePostChorus) {
+      return `treat the post-chorus${warmClause} like a fresh verse-sized section with a new arc instead of reinforcing the hook`;
+    }
+    return `let the post-chorus${warmClause} reinforce the hook with a cleaner extension and lighter follow-through`;
   }
   if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
     return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;
@@ -1007,6 +1029,18 @@ function isChorusLikeMiddle8Goal(goal = "") {
   const lower = str(goal).toLowerCase();
   return /middle 8/.test(lower)
     && /same payoff language|another chorus|little contrast|reuse chorus payoff/.test(lower);
+}
+
+function isHookEchoPostChorusGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /post-?chorus/.test(lower)
+    && /reinforce the hook|lighter echo|echo the hook|after the chorus|hook extension/.test(lower);
+}
+
+function isVerseLikePostChorusGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /post-?chorus/.test(lower)
+    && /whole new section arc|new verse|verse-like|fresh narrative section/.test(lower);
 }
 
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {

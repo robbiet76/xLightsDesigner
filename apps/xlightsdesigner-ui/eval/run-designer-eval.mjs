@@ -57,12 +57,13 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         { label: "Intro", startMs: 0, endMs: 16000, energy: "low", density: "sparse" },
         { label: "Verse 1", startMs: 16000, endMs: 42000, energy: "medium", density: "moderate" },
         { label: "Pre-Chorus", startMs: 42000, endMs: 54000, energy: "medium", density: "moderate" },
-        { label: "Chorus 1", startMs: 54000, endMs: 82000, energy: "high", density: "dense" },
-        { label: "Drop", startMs: 82000, endMs: 98000, energy: "high", density: "dense" },
-        { label: "Middle 8", startMs: 98000, endMs: 116000, energy: "medium", density: "wide" },
-        { label: "Final Chorus", startMs: 116000, endMs: 150000, energy: "high", density: "dense" },
-        { label: "Tag", startMs: 150000, endMs: 166000, energy: "medium", density: "moderate" },
-        { label: "Outro", startMs: 166000, endMs: 182000, energy: "low", density: "sparse" }
+        { label: "Chorus 1", startMs: 54000, endMs: 76000, energy: "high", density: "dense" },
+        { label: "Post-Chorus", startMs: 76000, endMs: 90000, energy: "medium", density: "moderate" },
+        { label: "Drop", startMs: 90000, endMs: 106000, energy: "high", density: "dense" },
+        { label: "Middle 8", startMs: 106000, endMs: 124000, energy: "medium", density: "wide" },
+        { label: "Final Chorus", startMs: 124000, endMs: 158000, energy: "high", density: "dense" },
+        { label: "Tag", startMs: 158000, endMs: 174000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 174000, endMs: 190000, energy: "low", density: "sparse" }
       ]
     : variant === "bridge_peak_arc"
     ? [
@@ -1772,6 +1773,20 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (sectionContrast >= 2) score += 0.8;
     if (/\b(contrasting detour|wider contrasting breath|before the final lift)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(another chorus|same payoff language|little contrast)\b/.test(lowerSummary)) score -= 2.0;
+  }
+  if (/\b(in the post-?chorus|post-?chorus\b).*?\b(reinforce the hook|lighter echo|whole new section arc|fresh verse-sized section|new arc)\b/.test(lowerPrompt)) {
+    const postSpeed = Number(metrics.perSectionAverageSpeeds?.["Post-Chorus"] || 0);
+    const chorusSpeed = Number(metrics.perSectionAverageSpeeds?.["Chorus 1"] || 0);
+    const speedDelta = (Number.isFinite(chorusSpeed) ? chorusSpeed : 0) - (Number.isFinite(postSpeed) ? postSpeed : 0);
+    const chorusPalette = arr(metrics.paletteBySection?.["Chorus 1"]).map((value) => str(value));
+    const postPalette = arr(metrics.paletteBySection?.["Post-Chorus"]).map((value) => str(value));
+    const sharedTemperatures = postPalette.filter((value) => chorusPalette.includes(value));
+    if (speedDelta >= 0 && speedDelta <= 1.2) score += 1.0;
+    else if (speedDelta < -0.2) score -= 0.9;
+    if (sharedTemperatures.length) score += 0.8;
+    else score -= 0.6;
+    if (/\b(echo the hook|lighter extension|reinforce the hook|lighter follow-through)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(whole new section arc|fresh verse-sized section|new arc)\b/.test(lowerSummary)) score -= 2.0;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));

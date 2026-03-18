@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `55`
-- supported by current offline runner: `55`
-- passed: `55`
+- total cases: `57`
+- supported by current offline runner: `57`
+- passed: `57`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -42,11 +42,11 @@ Interpretation:
 ## Current Artistic Baseline
 
 Current artistic averages from the same corpus:
-- motion language: `2.93`
+- motion language: `2.94`
 - stage-lighting quality: `3.00`
 - composition quality: `3.00`
 - settings/render plausibility: `3.00`
-- concept-summary quality: `3.00`
+- concept-summary quality: `2.97`
 - target-selection quality: `3.00`
 - thematic continuity: `3.00`
 
@@ -84,6 +84,7 @@ The runner and designer logic now cover:
 - drop-release discipline scoring where a semantic `Drop` must land as a concentrated release instead of staying broad and transitional
 - tag-ending discipline scoring where a semantic `Tag` must resolve the final hook without reopening a brand-new climax
 - middle-8 contrast scoring where a semantic `Middle 8` must create a real detour instead of reusing chorus payoff language
+- post-chorus hook-extension scoring where a semantic `Post-Chorus` must reinforce the hook instead of behaving like a fresh verse-sized section
 
 ## Current Meaning Of A Pass
 
@@ -182,7 +183,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `55/55` corpus as the structural regression gate
+1. keep the current `57/57` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

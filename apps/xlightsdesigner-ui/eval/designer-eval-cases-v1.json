@@ -153,6 +153,17 @@
       }
     },
     {
+      "id": "concept-postchorus-hook-taxonomy",
+      "kind": "concept",
+      "lenses": ["Musical Understanding", "Thematic Continuity"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Post-Chorus, reinforce the hook with a lighter echo instead of opening a whole new section arc.",
+      "selectedSections": ["Post-Chorus"],
+      "expect": {
+        "proposalLinePatternsAny": ["post-chorus", "echo the hook", "lighter extension", "reinforce the hook"]
+      }
+    },
+    {
       "id": "concept-lighting-key-fill",
       "kind": "concept",
       "lenses": ["Stage Lighting Reasoning", "Focal Hierarchy"],
@@ -733,6 +744,20 @@
       "altPromptText": "In the Middle 8, treat it like another chorus with the same payoff language and little contrast.",
       "selectedSections": ["Middle 8"],
       "altSelectedSections": ["Middle 8"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
+      "id": "quality-compare-postchorus-hook-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Thematic Continuity", "Composition Reasoning"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Post-Chorus, reinforce the hook with a lighter echo after the chorus instead of opening a whole new section arc.",
+      "altPromptText": "In the Post-Chorus, treat it like a fresh verse-sized section with a new arc instead of reinforcing the hook.",
+      "selectedSections": ["Post-Chorus"],
+      "altSelectedSections": ["Post-Chorus"],
       "expect": {
         "minComparativeMargin": 0.15
       }
