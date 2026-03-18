@@ -19,10 +19,16 @@ Start a run:
 ```bash
 nohup bash scripts/designer-training/run-overnight-training.sh \
   --iterations 6 \
-  --baseline-live-every 1 \
+  --smoke-live-every 1 \
+  --baseline-live-every 0 \
   --extended-live-every 2 \
   > /tmp/xld-overnight-launch.log 2>&1 &
 ```
+
+Recommended cadence:
+- smoke suite: every iteration
+- promoted baseline suite: checkpoint only
+- extended suite: every second iteration or slower
 
 Add a queued follow-up:
 

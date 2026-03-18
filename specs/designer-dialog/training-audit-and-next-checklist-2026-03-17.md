@@ -20,7 +20,8 @@ Validated baseline today:
   - settings/render plausibility: `3.00`
   - thematic continuity: `3.00`
 - promoted live baseline suite: `7/7` passed
-- current extended live suite file: `8` scenarios
+- smoke live suite candidate: `3` scenarios
+- current extended live suite file: `9` scenarios
 
 Interpretation:
 - framework churn is no longer the bottleneck
@@ -33,10 +34,10 @@ Interpretation:
 
 ## Current Gaps
 
-1. Extended live pack promotion is behind the file contents
-- the checked-in extended live pack now has `8` scenarios
-- the last promoted note only reflects the earlier `7/7` run before the phrase-subtlety slice was added
-- this should be rerun and promoted explicitly
+1. Live hierarchy needs to prioritize fast iteration
+- the checked-in smoke suite should be the default per-iteration live gate
+- the promoted baseline suite should move to checkpoint cadence
+- the extended live pack should stay slower and broader
 
 2. Live coverage is still narrow in layout/song diversity
 - the live pack is materially better than before
@@ -104,10 +105,11 @@ Important boundary:
 
 Recommended default cadence:
 1. run offline eval every iteration
-2. run promoted baseline live suite every iteration
-3. run extended live suite every second iteration
-4. stop at the first hard failure unless explicitly running in continue-on-failure mode
-5. review the run summary and follow-up queue in the morning before changing prompts or heuristics again
+2. run smoke live suite every iteration
+3. run promoted baseline live suite only at checkpoints or explicit promotion runs
+4. run extended live suite every second iteration or slower
+5. stop at the first hard failure unless explicitly running in continue-on-failure mode
+6. review the run summary and follow-up queue in the morning before changing prompts or heuristics again
 
 ## Recommended Commands
 
@@ -116,7 +118,8 @@ Start detached overnight run:
 ```bash
 nohup bash scripts/designer-training/run-overnight-training.sh \
   --iterations 6 \
-  --baseline-live-every 1 \
+  --smoke-live-every 1 \
+  --baseline-live-every 0 \
   --extended-live-every 2 \
   > /tmp/xld-overnight-launch.log 2>&1 &
 ```

@@ -4,6 +4,7 @@ This folder contains the offline eval corpus and runner for the deep designer-tr
 
 Current contents:
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
+- `live-design-validation-suite-smoke-v1.json`: fast canary live comparative scenarios for frequent iteration loops
 - `live-design-validation-suite-v1.json`: canonical live comparative validation scenarios for real saved sequences, including scoped focus, stage-lighting, composition, motion-language, and render-discipline slices
 - `live-design-validation-suite-extended-v1.json`: slower extended live pack that adds alternate saved-sequence coverage beyond the promoted baseline pack, including additional whole-pass composition checks on alternate saved-sequence families
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
@@ -16,6 +17,7 @@ Current policy:
 - use comparative quality cases to ensure the scorer prefers stronger outputs over flatter but still valid alternatives
 - use fixture-shift cases so the same prompt must adapt across alternate layouts and song arcs, not just one synthetic scene
 - use the live scenario pack after offline changes are green to validate real-sequence comparative behavior without apply-by-default
+- use the smoke live pack on most iterations
 - keep the promoted live baseline pack small enough to complete reliably
 - use the extended live pack for slower alternate-sequence probes and broader cadence checks
 - the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
