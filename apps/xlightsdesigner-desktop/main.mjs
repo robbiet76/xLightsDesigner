@@ -160,6 +160,10 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function nowMs() {
+  return Date.now();
+}
+
 function buildEffectQueriesFromSequenceRows(rows = [], expected = {}) {
   const target = str(expected?.target || expected?.targetModelName);
   const section = str(expected?.section || expected?.expectedSectionLabel);
@@ -341,6 +345,7 @@ async function runWholeSequenceApplyValidationFromDesktop(expected = {}) {
 }
 
 async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
+  const runStartedAtMs = nowMs();
   const strongPrompt = str(expected?.strongPrompt);
   const weakPrompt = str(expected?.weakPrompt);
   const sequencePath = str(expected?.sequencePath);
@@ -348,18 +353,27 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
     throw new Error("Comparative live validation requires both strongPrompt and weakPrompt.");
   }
   if (sequencePath) {
+    const openStartedAtMs = nowMs();
     await openSequenceFromDesktop(sequencePath);
+    expected.__timings = expected.__timings || {};
+    expected.__timings.openSequenceMs = nowMs() - openStartedAtMs;
   }
   if (expected?.refreshFirst !== false) {
+    const refreshStartedAtMs = nowMs();
     await invokeRendererAutomation("refreshFromXLights", {});
+    expected.__timings = expected.__timings || {};
+    expected.__timings.refreshMs = nowMs() - refreshStartedAtMs;
   }
   if (str(expected?.analyzePrompt)) {
+    const analyzeStartedAtMs = nowMs();
     await invokeRendererAutomation("analyzeAudio", { prompt: str(expected.analyzePrompt) });
+    expected.__timings = expected.__timings || {};
+    expected.__timings.analyzeMs = nowMs() - analyzeStartedAtMs;
   }
 
-  const safeDiagnose = async () => {
+  const safeComparativeSnapshot = async () => {
     try {
-      return await invokeRendererAutomation("diagnoseCurrentProposal", {});
+      return await invokeRendererAutomation("getComparativeValidationSnapshot", {});
     } catch (err) {
       return {
         ok: false,
@@ -368,28 +382,30 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
     }
   };
 
+  const strongGenerateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt: strongPrompt,
     requestedRole: "designer_dialog"
   });
-  const strongDiagnose = await safeDiagnose();
-  const strongSnapshot = await getRendererValidationSnapshot();
+  const strongSnapshot = await safeComparativeSnapshot();
+  const strongGenerateMs = nowMs() - strongGenerateStartedAtMs;
 
+  const weakGenerateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt: weakPrompt,
     requestedRole: "designer_dialog"
   });
-  const weakDiagnose = await safeDiagnose();
-  const weakSnapshot = await getRendererValidationSnapshot();
+  const weakSnapshot = await safeComparativeSnapshot();
+  const weakGenerateMs = nowMs() - weakGenerateStartedAtMs;
 
   const validation = validateComparativeLiveDesignState({
     expected,
     strong: {
-      diagnose: strongDiagnose,
+      diagnose: strongSnapshot,
       pageStates: strongSnapshot?.pageStates || {}
     },
     weak: {
-      diagnose: weakDiagnose,
+      diagnose: weakSnapshot,
       pageStates: weakSnapshot?.pageStates || {}
     }
   });
@@ -397,6 +413,14 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   return {
     contract: "comparative_live_design_validation_run_v1",
     version: "1.0",
+    timings: {
+      totalMs: nowMs() - runStartedAtMs,
+      openSequenceMs: Number(expected?.__timings?.openSequenceMs || 0),
+      refreshMs: Number(expected?.__timings?.refreshMs || 0),
+      analyzeMs: Number(expected?.__timings?.analyzeMs || 0),
+      strongGenerateMs,
+      weakGenerateMs
+    },
     comparison: validation?.metrics
       ? {
           strongScore: validation.metrics.strongScore,
@@ -405,11 +429,11 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
         }
       : null,
     strong: {
-      diagnose: strongDiagnose,
+      diagnose: strongSnapshot,
       pageStates: strongSnapshot?.pageStates || {}
     },
     weak: {
-      diagnose: weakDiagnose,
+      diagnose: weakSnapshot,
       pageStates: weakSnapshot?.pageStates || {}
     },
     validation
@@ -432,6 +456,7 @@ async function openSequenceFromDesktop(sequencePath = "") {
 }
 
 async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
+  const suiteStartedAtMs = nowMs();
   const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
   if (!scenarios.length) {
     throw new Error("Live design validation suite requires at least one scenario.");
@@ -441,34 +466,51 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
   const refreshedSequences = new Set();
   const analyzedContexts = new Set();
   for (const scenario of scenarios) {
+    const scenarioStartedAtMs = nowMs();
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
     const sequencePath = str(scenario?.sequencePath);
+    const timings = {};
     if (sequencePath && sequencePath !== activeSequencePath) {
+      const openStartedAtMs = nowMs();
       await openSequenceFromDesktop(sequencePath);
+      timings.openSequenceMs = nowMs() - openStartedAtMs;
       activeSequencePath = sequencePath;
     }
 
     const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
     if (!refreshedSequences.has(sequenceContextKey) && scenario?.refreshFirst !== false) {
+      const refreshStartedAtMs = nowMs();
       await invokeRendererAutomation("refreshFromXLights", {});
+      timings.refreshMs = nowMs() - refreshStartedAtMs;
       refreshedSequences.add(sequenceContextKey);
     }
 
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
     if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      const analyzeStartedAtMs = nowMs();
       await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+      timings.analyzeMs = nowMs() - analyzeStartedAtMs;
       analyzedContexts.add(analysisContextKey);
     }
 
     const comparison = await runComparativeLiveDesignValidationFromDesktop({
       ...scenario,
+      __timings: timings,
       refreshFirst: false,
       analyzePrompt: ""
     });
     results.push({
       name,
       sequencePath,
+      timings: {
+        totalMs: nowMs() - scenarioStartedAtMs,
+        openSequenceMs: Number(comparison?.timings?.openSequenceMs || timings.openSequenceMs || 0),
+        refreshMs: Number(comparison?.timings?.refreshMs || timings.refreshMs || 0),
+        analyzeMs: Number(comparison?.timings?.analyzeMs || timings.analyzeMs || 0),
+        strongGenerateMs: Number(comparison?.timings?.strongGenerateMs || 0),
+        weakGenerateMs: Number(comparison?.timings?.weakGenerateMs || 0)
+      },
       validation: comparison?.validation || null,
       metrics: comparison?.validation?.metrics || null,
       strong: comparison?.strong || null,
@@ -484,6 +526,9 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     summary: failed.length === 0
       ? `Live validation suite passed ${results.length}/${results.length} scenarios.`
       : `Live validation suite passed ${results.length - failed.length}/${results.length} scenarios.`,
+    timings: {
+      totalMs: nowMs() - suiteStartedAtMs
+    },
     scenarioCount: results.length,
     failedScenarioCount: failed.length,
     failedScenarioNames: failed.map((row) => row.name),

@@ -11216,6 +11216,141 @@ async function diagnoseAutomationCurrentProposal() {
   };
 }
 
+function summarizeComparativeValidationPageStates(pageStates = getPageStates()) {
+  const designConceptRows = Array.isArray(pageStates?.design?.data?.executionPlan?.conceptRows)
+    ? pageStates.design.data.executionPlan.conceptRows
+    : [];
+  const sequenceRows = Array.isArray(pageStates?.sequence?.data?.rows)
+    ? pageStates.sequence.data.rows
+    : [];
+  return {
+    project: {
+      data: {
+        sequenceContext: {
+          activeSequence: state.activeSequence || ""
+        }
+      }
+    },
+    design: {
+      data: {
+        executionPlan: {
+          conceptRows: designConceptRows.map((row) => ({
+            anchor: String(row?.anchor || ""),
+            focus: Array.isArray(row?.focus) ? row.focus.map((value) => String(value || "").trim()).filter(Boolean) : []
+          }))
+        }
+      }
+    },
+    sequence: {
+      data: {
+        rows: sequenceRows.map((row) => ({
+          summary: String(row?.summary || ""),
+          effects: Number(row?.effects || 0) || 0
+        }))
+      }
+    }
+  };
+}
+
+function summarizeComparativeValidationRawPlan(rawPlan = []) {
+  return Array.isArray(rawPlan)
+    ? rawPlan
+        .filter((row) => String(row?.cmd || "").trim() === "effects.create")
+        .map((row) => ({
+          cmd: "effects.create",
+          params: {
+            effectName: String(row?.params?.effectName || "")
+          },
+          anchor: {
+            trackName: String(row?.anchor?.trackName || ""),
+            basis: String(row?.anchor?.basis || "")
+          }
+        }))
+    : [];
+}
+
+async function getAutomationComparativeValidationSnapshot() {
+  const sourceLines = filteredProposed();
+  const intentHandoff = getValidHandoff("intent_handoff_v1");
+  const planHandoff = getValidHandoff("plan_handoff_v1");
+  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const proposalBundle = state.creative?.proposalBundle || null;
+  const executionPlan = proposalBundle?.executionPlan || null;
+  const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
+  const currentFiltered = filteredProposed();
+  const fullScopeApply = arraysEqualOrdered(sourceLines, currentFiltered);
+  let planSource = "generated";
+  let fallbackReason = "";
+  let rawPlan = [];
+
+  if (handoffCommands.length > 0 && fullScopeApply) {
+    const graph = validateCommandGraph(handoffCommands);
+    if (graph.ok) {
+      planSource = "handoff_graph";
+      rawPlan = handoffCommands;
+    } else {
+      fallbackReason = `handoff graph invalid (${graph.errors.join(" | ")})`;
+    }
+  } else if (handoffCommands.length > 0 && !fullScopeApply) {
+    fallbackReason = "non-default partial-scope apply requested";
+  } else {
+    fallbackReason = "plan_handoff_v1 commands unavailable";
+  }
+
+  if (!rawPlan.length) {
+    const generated = buildSequenceAgentPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines,
+      baseRevision: state.draftBaseRevision,
+      capabilityCommands: state.health.capabilityCommands || [],
+      effectCatalog: state.effectCatalog,
+      sequenceSettings: state.sequenceSettings,
+      layoutMode: currentLayoutMode(),
+      displayElements: state.displayElements,
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      timingOwnership: getSequenceTimingOwnershipRows(),
+      allowTimingWrites: true
+    });
+    rawPlan = Array.isArray(generated?.commands) ? generated.commands : [];
+  }
+
+  return {
+    ok: true,
+    activeSequence: state.activeSequence || "",
+    planSource,
+    fallbackReason,
+    proposalScope: proposalBundle?.scope || null,
+    executionPlanSummary: executionPlan
+      ? {
+          passScope: executionPlan.passScope || "",
+          implementationMode: executionPlan.implementationMode || "",
+          primarySections: Array.isArray(executionPlan.primarySections) ? executionPlan.primarySections : [],
+          sectionPlanCount: Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans.length : 0,
+          effectPlacementCount: Array.isArray(executionPlan.effectPlacements) ? executionPlan.effectPlacements.length : 0
+        }
+      : null,
+    intentHandoffSummary: intentHandoff
+      ? {
+          goal: intentHandoff.goal || "",
+          scope: intentHandoff.scope || null,
+          executionStrategy: intentHandoff.executionStrategy
+            ? {
+                passScope: intentHandoff.executionStrategy.passScope || "",
+                implementationMode: intentHandoff.executionStrategy.implementationMode || "",
+                primarySections: Array.isArray(intentHandoff.executionStrategy.primarySections) ? intentHandoff.executionStrategy.primarySections : [],
+                effectPlacementCount: Array.isArray(intentHandoff.executionStrategy.effectPlacements) ? intentHandoff.executionStrategy.effectPlacements.length : 0
+              }
+            : null
+        }
+      : null,
+    rawPlan: summarizeComparativeValidationRawPlan(rawPlan),
+    pageStates: summarizeComparativeValidationPageStates()
+  };
+}
+
 async function refreshAutomationFromXLights() {
   await onRefresh();
   return {
@@ -11572,6 +11707,7 @@ function exposeRuntimeValidationHooks() {
     analyzeAudio: analyzeAutomationAudio,
     applyCurrentProposal: applyAutomationCurrentProposal,
     diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
+    getComparativeValidationSnapshot: getAutomationComparativeValidationSnapshot,
     showTenEffectGridDemo: showAutomationTenEffectGridDemo,
     showSplitEffectGridDemo: showAutomationSplitEffectGridDemo,
     getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,
