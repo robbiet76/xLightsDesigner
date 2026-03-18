@@ -30,7 +30,8 @@
         "modelName",
         "modelType",
         "startMs",
-        "endMs"
+        "endMs",
+        "durationClass"
       ],
       "properties": {
         "sequencePath": {
@@ -52,6 +53,14 @@
         "endMs": {
           "type": "integer",
           "minimum": 1
+        },
+        "durationClass": {
+          "type": "string",
+          "enum": [
+            "short",
+            "medium",
+            "long"
+          ]
         },
         "notes": {
           "type": "string"
@@ -160,6 +169,14 @@
             "endMs": {
               "type": "integer",
               "minimum": 1
+            },
+            "durationClass": {
+              "type": "string",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ]
             }
           }
         },

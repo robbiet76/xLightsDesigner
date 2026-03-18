@@ -27,6 +27,7 @@ Scope:
    - palette
    - layer/blend behavior
    - buffer style
+6. Effect duration is part of the training context and must be standardized for baseline sweeps.
 
 ## Primary Goal
 
@@ -37,6 +38,15 @@ For each rendered sample, the harness must produce a training record that captur
 - how useful or high-quality the result appears
 
 That is the minimum needed for the sequencer to learn what the levers do and which ones are worth pulling.
+
+Duration policy:
+- baseline sweeps should use a standard duration per effect family
+- duration should be explicit in the fixture or sample timing window
+- early default bands:
+  - `short`: around `1000 ms`
+  - `medium`: around `2000 ms`
+  - `long`: around `4000 ms`
+- duration variation can become its own sweep dimension later, after the baseline harness is stable
 
 ## Phase 1: Harness Foundation
 

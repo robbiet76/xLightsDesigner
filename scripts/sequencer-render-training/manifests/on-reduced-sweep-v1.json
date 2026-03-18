@@ -1,10 +1,14 @@
 {
+  "manifestVersion": "1.0",
+  "packId": "on-reduced-sweep-v1",
+  "description": "Reduced baseline On sweep on a concrete outline model using a short standard duration.",
   "fixture": {
     "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
     "modelName": "Border-01",
     "modelType": "outline",
     "startMs": 1000,
     "endMs": 2000,
+    "durationClass": "short",
     "notes": "Reduced On sweep on a concrete outline model."
   },
   "samples": [

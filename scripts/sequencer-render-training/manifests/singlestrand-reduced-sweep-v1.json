@@ -1,11 +1,15 @@
 {
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-reduced-sweep-v1",
+  "description": "Reduced baseline SingleStrand sweep on a concrete cane model using a medium standard duration.",
   "fixture": {
     "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
     "modelName": "CandyCane-01",
     "modelType": "cane",
     "startMs": 1000,
-    "endMs": 2000,
-    "notes": "Reduced SingleStrand sweep on a concrete cane model."
+    "endMs": 3000,
+    "durationClass": "medium",
+    "notes": "Reduced SingleStrand sweep on a concrete cane model with a standard medium duration for timing-sensitive settings."
   },
   "samples": [
     {

@@ -49,8 +49,9 @@ sample_json="$(jq -c --arg sid "${SAMPLE_ID}" '.samples[] | select(.sampleId == 
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 model_type="$(jq -r '.modelType' <<<"${fixture_json}")"
-start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
-end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
+fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
+fixture_end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
+fixture_duration_class="$(jq -r '.durationClass // "short"' <<<"${fixture_json}")"
 sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
 
 effect_name="$(jq -r '.effectName' <<<"${sample_json}")"
@@ -59,6 +60,15 @@ effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
 palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
 export_mode="$(jq -r '.export.mode' <<<"${sample_json}")"
 export_format="$(jq -r '.export.format // "gif"' <<<"${sample_json}")"
+start_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.startMs // $fixture.startMs)' <<<"${sample_json}")"
+end_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.endMs // $fixture.endMs)' <<<"${sample_json}")"
+duration_class="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.durationClass // $fixture.durationClass // "short")' <<<"${sample_json}")"
+duration_ms="$((end_ms - start_ms))"
+
+[[ "${duration_ms}" -gt 0 ]] || {
+  echo "Resolved timing window is invalid for sample ${SAMPLE_ID}: start=${start_ms} end=${end_ms}" >&2
+  exit 1
+}
 
 if [[ "${export_mode}" != "model_with_render" ]]; then
   echo "Initial harness only supports export.mode=model_with_render" >&2
@@ -129,6 +139,8 @@ jq -cn \
   --arg path "${artifact_path}" \
   --argjson startMs "${start_ms}" \
   --argjson endMs "${end_ms}" \
+  --argjson durationMs "${duration_ms}" \
+  --arg durationClass "${duration_class}" \
   --argjson sharedSettings "${shared_settings_json}" \
   --argjson effectSettings "${effect_settings_json}" \
   --argjson features "$(cat "${features_path}")" \
@@ -141,7 +153,9 @@ jq -cn \
       modelName: $modelName,
       modelType: $modelType,
       startMs: $startMs,
-      endMs: $endMs
+      endMs: $endMs,
+      durationMs: $durationMs,
+      durationClass: $durationClass
     },
     sharedSettings: $sharedSettings,
     effectSettings: $effectSettings,
