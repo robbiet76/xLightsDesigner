@@ -123,7 +123,8 @@ Live validation status on the current promoted baseline:
     - `wholepass-e-composition-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - current follow-up: rerun and explicitly promote the full `8/8` result
+  - current status: passed `8/8`
+  - extended pack is now validated end to end and ready to use as the broader attended/unattended live regression sweep
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -138,8 +139,8 @@ Interpretation:
 - the current promoted baseline is now green on both the offline corpus and the live apply cadence
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - live comparative validation is no longer tied to one saved sequence
-- alternate saved-sequence coverage exists, but is currently held in the extended live pack rather than the promoted baseline pack
-- alternate saved-sequence coverage is now operationally stable in the extended live pack
+- alternate saved-sequence coverage remains outside the lean promoted `7/7` baseline pack to preserve faster cadence
+- alternate saved-sequence coverage is operationally stable in the validated `8/8` extended live pack
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 

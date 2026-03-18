@@ -94,3 +94,52 @@ test("effect intent translation preserves explicit raw settings and palette over
   assert.equal(out.settings.E_DENSITY, 8);
   assert.equal(out.palette.C_BUTTON_Palette1, "#123456");
 });
+
+test("effect intent translation does not map Bars thickness onto bar count controls", () => {
+  const catalog = buildEffectDefinitionCatalog([
+    {
+      effectName: "Bars",
+      params: [
+        { name: "E_SLIDER_Bars_BarCount", type: "int", min: 0, max: 5 },
+        { name: "E_CHOICE_Bars_Direction", type: "enum", enumValues: ["Forward", "Reverse"] }
+      ]
+    }
+  ]);
+
+  const out = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Bars",
+      settingsIntent: {
+        thickness: "thin",
+        direction: "forward"
+      }
+    },
+    effectCatalog: catalog
+  });
+
+  assert.equal(out.settings.E_CHOICE_Bars_Direction, "Forward");
+  assert.equal(Object.prototype.hasOwnProperty.call(out.settings, "E_SLIDER_Bars_BarCount"), false);
+});
+
+test("effect intent translation skips enum settings when the requested direction is not in the effect schema", () => {
+  const catalog = buildEffectDefinitionCatalog([
+    {
+      effectName: "Pinwheel",
+      params: [
+        { name: "E_CHOICE_Pinwheel_Style", type: "enum", enumValues: ["New Render Method", "Old Render Method"] }
+      ]
+    }
+  ]);
+
+  const out = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Pinwheel",
+      settingsIntent: {
+        direction: "forward"
+      }
+    },
+    effectCatalog: catalog
+  });
+
+  assert.equal(Object.prototype.hasOwnProperty.call(out.settings, "E_CHOICE_Pinwheel_Style"), false);
+});

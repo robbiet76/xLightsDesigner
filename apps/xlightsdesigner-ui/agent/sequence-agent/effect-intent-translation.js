@@ -29,6 +29,23 @@ function mapScale(value = "", mapping = {}) {
   return Object.prototype.hasOwnProperty.call(mapping, key) ? mapping[key] : null;
 }
 
+function normalizeEnumKey(value = "") {
+  return normText(value).toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function resolveEnumValue(param = null, desiredValue = "") {
+  const desired = normText(desiredValue);
+  const enumValues = Array.isArray(param?.enumValues) ? param.enumValues.map((row) => normText(row)).filter(Boolean) : [];
+  if (!desired || !enumValues.length) return null;
+
+  const exact = enumValues.find((row) => row.toLowerCase() === desired.toLowerCase());
+  if (exact) return exact;
+
+  const normalizedDesired = normalizeEnumKey(desired);
+  const normalized = enumValues.find((row) => normalizeEnumKey(row) === normalizedDesired);
+  return normalized || null;
+}
+
 const COLOR_MAP = {
   "warm gold": "#ffd166",
   amber: "#ffbf69",
@@ -150,12 +167,17 @@ function writeEffectSpecificSetting(settings, effectDefinition, value, patterns 
   if (!param) return;
   if (param.type === "enum" && enumMap) {
     const mapped = enumMap[normText(value).toLowerCase()];
-    if (mapped) settings[param.name] = mapped;
+    const resolved = resolveEnumValue(param, mapped || value);
+    if (resolved) settings[param.name] = resolved;
     return;
   }
   if (param.type === "int" && intMap) {
     const mapped = intMap[normText(value).toLowerCase()];
-    if (mapped != null) settings[param.name] = mapped;
+    if (mapped != null) {
+      const min = Number.isFinite(Number(param.min)) ? Number(param.min) : Number.MIN_SAFE_INTEGER;
+      const max = Number.isFinite(Number(param.max)) ? Number(param.max) : Number.MAX_SAFE_INTEGER;
+      settings[param.name] = clampInt(mapped, min, max, mapped);
+    }
   }
 }
 

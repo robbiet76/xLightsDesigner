@@ -34,7 +34,7 @@ const EFFECT_INTENT_CAPABILITIES = {
     effectParamPatterns: {
       speed: [/speed/, /velocity/, /rate/],
       density: [/dens/, /count/, /repeat/],
-      thickness: [/thick/, /width/, /bars/],
+      thickness: [/thick/, /width/, /size/],
       direction: [/dir/, /mode/]
     }
   },
@@ -178,6 +178,19 @@ const EFFECT_INTENT_CAPABILITIES = {
       speed: [/gain/, /sensitivity/],
       density: [/bars?/, /note/],
       direction: [/type/, /shape/]
+    }
+  },
+  Wave: {
+    family: "motion_texture",
+    supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
+    supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
+    supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
+    supportedRenderIntent: ["groupPolicy", "bufferStyle", "expansionPolicy", "riskTolerance"],
+    effectParamPatterns: {
+      speed: [/speed/, /movement/, /rate/],
+      density: [/dens/, /count/, /repeat/],
+      thickness: [/thick/, /width/, /size/, /height/],
+      direction: [/direction/, /dir/, /mode/]
     }
   }
 };
