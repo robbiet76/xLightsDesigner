@@ -875,6 +875,20 @@
       }
     },
     {
+      "id": "quality-compare-coda-resolution-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Coda, let the song breathe into a resolving coda with a final release, less information, and lower payoff weight than the Final Chorus.",
+      "altPromptText": "In the Coda, reopen the energy and treat it like another full climax instead of a resolving coda.",
+      "selectedSections": ["Coda"],
+      "altSelectedSections": ["Coda"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

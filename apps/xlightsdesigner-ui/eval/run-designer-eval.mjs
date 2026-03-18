@@ -67,7 +67,8 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         { label: "Middle 8", startMs: 156000, endMs: 174000, energy: "medium", density: "wide" },
         { label: "Final Chorus", startMs: 174000, endMs: 206000, energy: "high", density: "dense" },
         { label: "Tag", startMs: 206000, endMs: 222000, energy: "medium", density: "moderate" },
-        { label: "Outro", startMs: 222000, endMs: 238000, energy: "low", density: "sparse" }
+        { label: "Coda", startMs: 222000, endMs: 232000, energy: "low", density: "sparse" },
+        { label: "Outro", startMs: 232000, endMs: 248000, energy: "low", density: "sparse" }
       ]
     : variant === "bridge_peak_arc"
     ? [
@@ -596,7 +597,8 @@ function sectionOrderIndex(label = "") {
   if (normalized.includes("chorus 1")) return 2;
   if (normalized.includes("bridge")) return 3;
   if (normalized.includes("final chorus")) return 4;
-  if (normalized.includes("outro")) return 5;
+  if (normalized.includes("coda")) return 5;
+  if (normalized.includes("outro")) return 6;
   return 999;
 }
 
@@ -1885,6 +1887,24 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (effectFamilies.includes("Color Wash")) score += 0.4;
     if (effectFamilies.includes("Meteors")) score -= 0.4;
     if (/\b(resolving afterglow|lower payoff weight|less information|breathes out)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(another full climax|reopens the energy|same payoff weight|full climax again)\b/.test(lowerSummary)) score -= 2.0;
+  }
+  if (/\b(in the coda|coda\b).*?\b(resolving coda|final release|less information|another full climax|reopen the energy)\b/.test(lowerPrompt)) {
+    const codaSpeed = Number(metrics.perSectionAverageSpeeds?.["Coda"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(codaSpeed) ? codaSpeed : 0);
+    const codaPalette = arr(metrics.paletteBySection?.["Coda"]).map((value) => str(value));
+    const finalPalette = arr(metrics.paletteBySection?.["Final Chorus"]).map((value) => str(value));
+    const sharedTemperatures = codaPalette.filter((value) => finalPalette.includes(value));
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (speedDelta >= 0.4 && speedDelta <= 2.0) score += 1.1;
+    else if (speedDelta < 0.2) score -= 1.0;
+    if (sharedTemperatures.length) score += 0.7;
+    else score -= 0.5;
+    if (effectFamilies.includes("Wave")) score += 0.4;
+    if (effectFamilies.includes("Color Wash")) score += 0.4;
+    if (effectFamilies.includes("Meteors")) score -= 0.4;
+    if (/\b(resolving coda|final release|less information|breathes out|closing release)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(another full climax|reopens the energy|same payoff weight|full climax again)\b/.test(lowerSummary)) score -= 2.0;
   }
   if (/\b(in the breakdown|breakdown\b).*?\b(strip the picture back|cleaner reset|next build|full chorus payoff energy)\b/.test(lowerPrompt)) {

@@ -574,6 +574,8 @@ function buildSectionEffectHints({
   const diffusedDrop = isDiffusedDropGoal(lowerGoal);
   const resolvingTag = isResolvingTagGoal(lowerGoal);
   const overblownTag = isOverblownTagGoal(lowerGoal);
+  const resolvingCoda = isResolvingCodaGoal(lowerGoal);
+  const overblownCoda = isOverblownCodaGoal(lowerGoal);
   const contrastingMiddle8 = isContrastingMiddle8Goal(lowerGoal);
   const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
   const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
@@ -597,7 +599,7 @@ function buildSectionEffectHints({
     if (/bridge/.test(lowerSection)) {
       return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
     }
-    if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
+    if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
       return pickDistinctEffects(["Color Wash", "Candle"], ["On", "Wave"]);
     }
     return pickDistinctEffects(["Color Wash", "Wave"], ["Butterfly", "Circles"]);
@@ -629,7 +631,7 @@ function buildSectionEffectHints({
     if (/bridge/.test(lowerSection)) {
       return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
     }
-    if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
+    if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
       return pickDistinctEffects(["Color Wash", "Candle"], ["Snowflakes", "On"]);
     }
     return pickDistinctEffects(["Wave", "Butterfly"], ["Bars", "Circles"]);
@@ -670,6 +672,15 @@ function buildSectionEffectHints({
     }
     return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "Shimmer"]);
   }
+  if (/coda/.test(lowerSection)) {
+    if (resolvingCoda) {
+      return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "On"]);
+    }
+    if (overblownCoda) {
+      return pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"]);
+    }
+    return pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "On"]);
+  }
   if (/middle 8/.test(lowerSection)) {
     if (contrastingMiddle8) {
       return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "Spirals"]);
@@ -708,8 +719,8 @@ function buildSectionEffectHints({
       ? pickDistinctEffects(["Shimmer", "Bars"], ["Wave", "Color Wash"])
       : pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Butterfly"]);
   }
-  if (normalizedEnergy === "low" || /intro|outro/.test(lowerSection)) {
-    return pickDistinctEffects(/outro/.test(lowerSection) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
+  if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
+    return pickDistinctEffects(/outro|coda/.test(lowerSection) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
   }
   if (nearPeak) {
     return pickDistinctEffects(FAMILY_POOLS.dense, FAMILY_POOLS.chorus);
@@ -743,6 +754,8 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const diffusedDrop = isDiffusedDropGoal(lowerGoal);
   const resolvingTag = isResolvingTagGoal(lowerGoal);
   const overblownTag = isOverblownTagGoal(lowerGoal);
+  const resolvingCoda = isResolvingCodaGoal(lowerGoal);
+  const overblownCoda = isOverblownCodaGoal(lowerGoal);
   const contrastingMiddle8 = isContrastingMiddle8Goal(lowerGoal);
   const chorusLikeMiddle8 = isChorusLikeMiddle8Goal(lowerGoal);
   const hookEchoPostChorus = isHookEchoPostChorusGoal(lowerGoal);
@@ -759,7 +772,7 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
     }
-    if (/intro|outro/.test(lowerSection) || normalizedEnergy === 'low') {
+    if (/intro|outro|coda/.test(lowerSection) || normalizedEnergy === 'low') {
       return `hold the lighting stack back${warmClause} with restrained washes and cleaner negative space`;
     }
     return `shape the section like a lighting cue${warmClause} with readable support and controlled depth`;
@@ -768,7 +781,7 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `frame the reveal${warmClause} with cleaner negative space and tighter focal contrast`;
     }
-    if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
+    if (normalizedEnergy === 'low' || /intro|outro|coda/.test(lowerSection)) {
       return `hold more negative space${warmClause} so the frame stays calm and uncluttered`;
     }
     return `use cleaner framing${warmClause} with more negative space and clearer focal boundaries`;
@@ -815,6 +828,15 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     }
     return `let the tag settle${warmClause} with a cleaner echo and narrower closing energy`;
   }
+  if (/coda/.test(lowerSection)) {
+    if (resolvingCoda) {
+      return `let the coda resolve${warmClause} as a final release with less information and lower payoff weight than the final chorus`;
+    }
+    if (overblownCoda) {
+      return `treat the coda${warmClause} like another full climax instead of a final release`;
+    }
+    return `let the coda settle${warmClause} as a cleaner closing release with restrained afterglow`;
+  }
   if (/middle 8/.test(lowerSection)) {
     if (contrastingMiddle8) {
       return `let the middle 8 open wider${warmClause} as a contrasting detour before the final lift instead of repeating chorus payoff language`;
@@ -845,7 +867,7 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   if (chorusLikeSolo) {
     return `treat the solo${warmClause} like another broad chorus pass with the same payoff language spread across the picture`;
   }
-  if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
+  if (normalizedEnergy === 'low' || /intro|outro|coda/.test(lowerSection)) {
     return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;
   }
   if (normalizedDensity === 'dense') {
@@ -1158,6 +1180,18 @@ function isOverblownTagGoal(goal = "") {
   const lower = str(goal).toLowerCase();
   return /tag/.test(lower)
     && /brand-?new climax|same full-payoff density|full payoff density|another climax|same as the final chorus/.test(lower);
+}
+
+function isResolvingCodaGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /coda/.test(lower)
+    && /resolving coda|final release|less information|closing release|lower payoff weight/.test(lower);
+}
+
+function isOverblownCodaGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /coda/.test(lower)
+    && /another full climax|reopen the energy|same payoff weight|full climax again/.test(lower);
 }
 
 function isContrastingMiddle8Goal(goal = "") {
