@@ -23,6 +23,7 @@ The current harness is intentionally small:
 - `run-sample.sh`: execute one sample from a sweep manifest
 - `run-manifest.sh`: execute all samples from a sweep manifest
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
+- `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -61,6 +62,10 @@ Environment:
   - MIME type
   - SHA-256
   - pixel width / height when available
+- Each successful sample also records first-pass heuristic observations:
+  - derived labels
+  - readability/restraint/pattern clarity/prop suitability
+  - usefulness baseline score
 - Batch runs write:
   - one subdirectory per sample
   - `run.log`

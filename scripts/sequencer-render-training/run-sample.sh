@@ -84,6 +84,7 @@ staging_dir="${sequence_dir}/RenderTraining"
 staged_artifact_path="${staging_dir}/${SAMPLE_ID}.${export_format}"
 record_path="${OUT_DIR}/${SAMPLE_ID}.record.json"
 features_path="${OUT_DIR}/${SAMPLE_ID}.features.json"
+observations_path="${OUT_DIR}/${SAMPLE_ID}.observations.json"
 
 mkdir -p "${staging_dir}"
 
@@ -122,6 +123,10 @@ cp "${staged_artifact_path}" "${artifact_path}"
 }
 
 bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${artifact_path}" > "${features_path}"
+bash "${SCRIPT_DIR}/extract-observations.sh" \
+  --sample-json "${sample_json}" \
+  --model-type "${model_type}" \
+  --features-json "$(cat "${features_path}")" > "${observations_path}"
 
 if [[ "${opened_sequence}" == "1" ]]; then
   run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
@@ -143,6 +148,7 @@ jq -cn \
   --arg durationClass "${duration_class}" \
   --argjson sharedSettings "${shared_settings_json}" \
   --argjson effectSettings "${effect_settings_json}" \
+  --argjson observations "$(cat "${observations_path}")" \
   --argjson features "$(cat "${features_path}")" \
   '{
     recordVersion: $version,
@@ -164,11 +170,7 @@ jq -cn \
       format: $format,
       path: $path
     },
-    observations: {
-      labels: [],
-      scores: {},
-      notes: "Initial harness capture. Interpretation pending."
-    },
+    observations: $observations,
     features: $features,
     comparisons: []
   }' > "${record_path}"
