@@ -42,6 +42,20 @@
       }
     },
     {
+      "id": "fixture-layout-foreground-background-shift",
+      "kind": "concept",
+      "runnerMode": "paired_fixture",
+      "lenses": ["Setting and Layout Awareness", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "overrideFixtureVariant": "layout_swap_depth",
+      "promptText": "Keep the foreground calmer while the background opens up in Chorus 1.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "defaultMustIncludeTargetIds": ["Border-01"],
+        "overrideMustExcludeTargetIds": ["NorthPoleSign", "Star"]
+      }
+    },
+    {
       "id": "concept-layout-left-right",
       "kind": "concept",
       "lenses": ["Setting and Layout Awareness", "Composition Reasoning"],
@@ -343,6 +357,27 @@
         "minPeakSectionImpactShare": 0.18,
         "placementCountComparisons": [
           { "higherSection": "Final Chorus", "lowerSection": "Intro" }
+        ]
+      }
+    },
+    {
+      "id": "whole-bridge-peak-arc",
+      "kind": "whole_sequence",
+      "lenses": ["Musical Understanding", "Composition Reasoning"],
+      "fixtureVariant": "bridge_peak_arc",
+      "promptText": "Shape the full song so the Bridge becomes the biggest atmospheric peak, and let the final chorus resolve rather than simply getting bigger again.",
+      "expect": {
+        "minEffectPlacementCount": 12,
+        "minDistinctEffectFamilies": 3,
+        "minDesignConceptCount": 4,
+        "minDistinctSectionFamilySignatures": 3,
+        "minRecurringEffectFamilies": 2,
+        "placementCountComparisons": [
+          { "higherSection": "Bridge", "lowerSection": "Intro" },
+          { "higherSection": "Bridge", "lowerSection": "Final Chorus" }
+        ],
+        "averageSpeedComparisons": [
+          { "fasterSection": "Bridge", "slowerSection": "Intro" }
         ]
       }
     },

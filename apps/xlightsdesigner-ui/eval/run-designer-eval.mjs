@@ -50,14 +50,23 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
   const swapDepth = variant === "layout_swap_depth";
   const foregroundZ = swapDepth ? 9 : 0;
   const backgroundZ = swapDepth ? 0 : 9;
-  const sectionDefinitions = [
-    { label: "Intro", startMs: 0, endMs: 18000, energy: "low", density: "sparse" },
-    { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" },
-    { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" },
-    { label: "Bridge", startMs: 90000, endMs: 120000, energy: "medium", density: "moderate" },
-    { label: "Final Chorus", startMs: 120000, endMs: 156000, energy: "high", density: "dense" },
-    { label: "Outro", startMs: 156000, endMs: 176000, energy: "low", density: "sparse" }
-  ];
+  const sectionDefinitions = variant === "bridge_peak_arc"
+    ? [
+        { label: "Intro", startMs: 0, endMs: 18000, energy: "low", density: "sparse" },
+        { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" },
+        { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "medium", density: "moderate" },
+        { label: "Bridge", startMs: 90000, endMs: 120000, energy: "high", density: "dense" },
+        { label: "Final Chorus", startMs: 120000, endMs: 156000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 156000, endMs: 176000, energy: "low", density: "sparse" }
+      ]
+    : [
+        { label: "Intro", startMs: 0, endMs: 18000, energy: "low", density: "sparse" },
+        { label: "Verse 1", startMs: 18000, endMs: 54000, energy: "medium", density: "moderate" },
+        { label: "Chorus 1", startMs: 54000, endMs: 90000, energy: "high", density: "dense" },
+        { label: "Bridge", startMs: 90000, endMs: 120000, energy: "medium", density: "moderate" },
+        { label: "Final Chorus", startMs: 120000, endMs: 156000, energy: "high", density: "dense" },
+        { label: "Outro", startMs: 156000, endMs: 176000, energy: "low", density: "sparse" }
+      ];
   const cueWindowsBySection = {
     "Verse 1": {
       chord: [
@@ -165,7 +174,9 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         density: row.density
       })),
       designCues: {
-        revealMoments: ["Verse 1->Chorus 1", "Bridge->Final Chorus"],
+        revealMoments: variant === "bridge_peak_arc"
+          ? ["Chorus 1->Bridge"]
+          : ["Verse 1->Chorus 1", "Bridge->Final Chorus"],
         holdMoments: ["Intro", "Outro"],
         lyricFocusMoments: ["Verse 1"],
         cueWindowsBySection
@@ -1298,6 +1309,84 @@ function runPairedMetadataCase(testCase, metadataFixture) {
   };
 }
 
+function runPairedFixtureCase(testCase, metadataFixture) {
+  const promptText = str(testCase.promptText);
+  const defaultFixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const overrideFixture = buildFixture({
+    variant: str(testCase.overrideFixtureVariant || "layout_swap_depth"),
+    metadataFixture
+  });
+  const buildArgs = (fixture, requestId) => ({
+    requestId,
+    sequenceRevision: "eval-rev-1",
+    promptText,
+    goals: promptText,
+    selectedSections: arr(testCase.selectedSections),
+    selectedTargetIds: arr(testCase.selectedTargetIds),
+    selectedTagNames: arr(testCase.selectedTagNames),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext
+  });
+  const defaultResult = executeDesignerProposalOrchestration(buildArgs(defaultFixture, `eval-${testCase.id}-default`));
+  const overrideResult = executeDesignerProposalOrchestration(buildArgs(overrideFixture, `eval-${testCase.id}-override`));
+  const defaultEval = evaluateCase(defaultResult, testCase, defaultFixture);
+  const overrideEval = evaluateCase(overrideResult, {
+    ...testCase,
+    fixtureVariant: str(testCase.overrideFixtureVariant || "layout_swap_depth"),
+    expect: {}
+  }, overrideFixture);
+  const defaultMetrics = extractMetrics(defaultResult, { designSceneContext: defaultFixture.designSceneContext });
+  const overrideMetrics = extractMetrics(overrideResult, { designSceneContext: overrideFixture.designSceneContext });
+  const defaultTargets = uniq(defaultMetrics.targetIds).sort();
+  const overrideTargets = uniq(overrideMetrics.targetIds).sort();
+  const failures = [];
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+  check("default_fixture_failed_structure", !defaultEval.failures.length);
+  check("override_fixture_failed_structure", !overrideEval.failures.length);
+  check("fixture_shift_no_effect", JSON.stringify(defaultTargets) !== JSON.stringify(overrideTargets));
+  if (testCase.expect?.defaultMustIncludeTargetIds) {
+    check("default_fixture_targets_missing", includesAll(defaultTargets, testCase.expect.defaultMustIncludeTargetIds));
+  }
+  if (testCase.expect?.overrideMustIncludeTargetIds) {
+    check("override_fixture_targets_missing", includesAll(overrideTargets, testCase.expect.overrideMustIncludeTargetIds));
+  }
+  if (testCase.expect?.overrideMustExcludeTargetIds) {
+    const excluded = new Set(uniq(testCase.expect.overrideMustExcludeTargetIds));
+    check("override_fixture_targets_not_shifted", !overrideTargets.some((targetId) => excluded.has(targetId)));
+  }
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    runnerMode: "paired_fixture",
+    lenses: arr(testCase.lenses),
+    status: failures.length ? "failed" : "passed",
+    summary: promptText,
+    structuralScore: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    artisticScores: null,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      defaultTargets,
+      overrideTargets
+    }
+  };
+}
+
 function artisticCompositeScore(artisticScores = null) {
   const categories = artisticScores?.categories || {};
   const values = Object.values(categories)
@@ -1480,6 +1569,8 @@ function main() {
         ? runRepeatedPreferenceCase(testCase, metadataFixture)
       : str(testCase.runnerMode) === "paired_metadata"
         ? runPairedMetadataCase(testCase, metadataFixture)
+        : str(testCase.runnerMode) === "paired_fixture"
+          ? runPairedFixtureCase(testCase, metadataFixture)
         : str(testCase.runnerMode) === "paired_quality"
           ? runPairedQualityCase(testCase, metadataFixture)
         : runCase(testCase, metadataFixture)

@@ -36,6 +36,7 @@ By the end of the deep-training phase:
   - revise behavior on existing concepts
 - [x] Define failure classes for unacceptable designer outputs
 - [x] Add comparative quality evals that distinguish stronger outputs from flatter but still valid alternatives
+- [x] Broaden the eval corpus across alternate layout and song-arc fixtures so the baseline is not tied to one synthetic scene
 
 ### B. Concept Authoring Quality
 

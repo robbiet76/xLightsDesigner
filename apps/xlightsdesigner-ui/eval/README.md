@@ -12,6 +12,7 @@ Current policy:
 - prefer offline validation over live apply during iterative designer training
 - treat structural scorer output as the automated gate
 - use comparative quality cases to ensure the scorer prefers stronger outputs over flatter but still valid alternatives
+- use fixture-shift cases so the same prompt must adapt across alternate layouts and song arcs, not just one synthetic scene
 
 Runner modes:
 - `default`: normal single-output pass/fail eval
@@ -19,4 +20,5 @@ Runner modes:
 - `paired_preference`: compare two director profiles on the same prompt
 - `repeated_preference`: confirm stability across repeated preference-aware runs
 - `paired_metadata`: confirm metadata changes actually change target selection
+- `paired_fixture`: confirm layout or song-arc changes actually change target selection or section behavior
 - `paired_quality`: compare a stronger prompt against a flatter alternative and require the scorer to prefer the stronger result

@@ -342,7 +342,10 @@ export function normalizeIntent({
     preserveDisplayOrder: true,
     allowGlobalRewrite:
       !hasNegatedGlobalRewrite(goal) &&
-      (mode === "create" || hasAnyText(goal, [/(whole show|entire sequence|full rewrite|global rewrite)/])),
+      (
+        mode === "create" ||
+        hasAnyText(goal, [/(whole show|whole sequence|entire sequence|full show|full song|across the song|throughout the song|full rewrite|global rewrite)/])
+      ),
     keepSuccessfulMoments: !hasAnyText(goal, [/(replace everything|completely different|start over)/])
   };
   const fieldSources = buildFieldSources({

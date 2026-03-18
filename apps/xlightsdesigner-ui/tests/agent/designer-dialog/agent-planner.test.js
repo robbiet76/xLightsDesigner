@@ -75,6 +75,16 @@ test('normalizeIntent drops generic section labels when semantic labels are pres
   assert.deepEqual(normalized.sections, ['Chorus 1']);
 });
 
+test('normalizeIntent keeps whole-song rewrite permission when named sections are part of a global prompt', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Shape the full song so the Bridge becomes the biggest atmospheric peak, and let the final chorus resolve rather than simply getting bigger again.',
+    availableSectionNames: ['Intro', 'Verse 1', 'Chorus 1', 'Bridge', 'Final Chorus', 'Outro']
+  });
+
+  assert.equal(normalized.preservationConstraints.allowGlobalRewrite, true);
+  assert.deepEqual(normalized.sections, ['Bridge', 'Final Chorus']);
+});
+
 test('resolveTargets honors explicit target ids and metadata tags', () => {
   const normalizedIntent = normalizeIntent({
     promptText: 'Bring up energy on focal rhythm-driver elements',

@@ -929,7 +929,13 @@ function buildDesignerExecutionPlan({
         ? "single_section"
         : "whole_sequence";
   const sharedRevisionDesignId = reviseInPlace && !allowGlobalRewrite && explicitSections.length ? "DES-001" : "";
-  const primarySections = (explicitSections.length ? explicitSections : availableSections.map((row) => row.label)).slice(0, 24);
+  const primarySections = (
+    allowGlobalRewrite
+      ? availableSections.map((row) => row.label)
+      : explicitSections.length
+        ? explicitSections
+        : availableSections.map((row) => row.label)
+  ).slice(0, 24);
   const normalizedSections = (primarySections.length ? primarySections : availableSections.map((row) => row.label))
     .slice(0, 24);
   const sectionPlans = normalizedSections

@@ -11,6 +11,11 @@ Purpose: capture the first offline baseline against the canonical designer eval 
 - corpus: [designer-eval-cases-v1.json](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/eval/designer-eval-cases-v1.json)
 - runner: [run-designer-eval.mjs](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/eval/run-designer-eval.mjs)
 - metadata fixture: [synthetic-metadata-fixture-v1.json](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/eval/synthetic-metadata-fixture-v1.json)
+- fixture variants covered by the current baseline:
+  - `default`
+  - `metadata_change_sensitivity`
+  - `layout_swap_depth`
+  - `bridge_peak_arc`
 
 Command:
 
@@ -20,9 +25,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `32`
-- supported by current offline runner: `32`
-- passed: `32`
+- total cases: `36`
+- supported by current offline runner: `36`
+- passed: `36`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -57,6 +62,8 @@ Interpretation:
 
 The runner and designer logic now cover:
 - layout/depth-sensitive concepts
+- fixture-shift validation where the same prompt must adapt across alternate layouts
+- alternate song-arc validation where the bridge can intentionally outrank the final chorus
 - layout-weighted impact awareness using node share plus spatial footprint
 - stage-lighting-language concepts
 - richer broad-pass family diversity for rhythm/layout/lighting prompts
@@ -103,7 +110,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `32/32` corpus as the structural regression gate
+1. keep the current `36/36` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
