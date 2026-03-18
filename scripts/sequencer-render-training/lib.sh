@@ -40,7 +40,7 @@ require_cmd() {
 
 xlights_ping() {
   local body
-  body="$(curl --max-time 10 -sS -X POST "${AUTOMATION_URL}" \
+  body="$(curl --max-time 3 -sS -X POST "${AUTOMATION_URL}" \
     -H "Content-Type: application/json" \
     -d '{"cmd":"getModels"}' || true)"
   body="$(normalize_json_body "${body}")"
@@ -100,7 +100,7 @@ restart_xlights_app() {
 }
 
 ensure_xlights_ready() {
-  if xlights_wait_until_ready 5; then
+  if xlights_wait_until_ready 30; then
     return 0
   fi
 

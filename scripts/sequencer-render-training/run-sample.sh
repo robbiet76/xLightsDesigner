@@ -58,7 +58,7 @@ fixture_end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
 fixture_duration_class="$(jq -r '.durationClass // "short"' <<<"${fixture_json}")"
 sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
 source_sequence_path="${sequence_path}"
-working_sequence_path="${sequence_dir}/.$(basename "${sequence_path}" .xsq).render-training-${SAMPLE_ID}-$$.xsq"
+sequence_base_name="$(basename "${sequence_path}" .xsq)"
 
 effect_name="$(jq -r '.effectName' <<<"${sample_json}")"
 shared_settings_json="$(jq -c '.sharedSettings // {}' <<<"${sample_json}")"
@@ -88,6 +88,7 @@ palette_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"
 artifact_path="${OUT_DIR}/${SAMPLE_ID}.${export_format}"
 staging_dir="${sequence_dir}/RenderTraining"
 staged_artifact_path="${staging_dir}/${SAMPLE_ID}.${export_format}"
+working_sequence_path="${staging_dir}/${sequence_base_name}.render-training-${SAMPLE_ID}-$$.xsq"
 record_path="${OUT_DIR}/${SAMPLE_ID}.record.json"
 features_path="${OUT_DIR}/${SAMPLE_ID}.features.json"
 observations_path="${OUT_DIR}/${SAMPLE_ID}.observations.json"
@@ -107,6 +108,9 @@ else
   log_step "ensure-ready sampleId=${SAMPLE_ID}"
   ensure_xlights_ready >/dev/null
 fi
+
+log_step "close-any-open-sequence sampleId=${SAMPLE_ID}"
+post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
 
 log_step "open-sequence sampleId=${SAMPLE_ID} sequence=${working_sequence_path}"
 if run_allowing_already_open "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')" >/dev/null; then
