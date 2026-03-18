@@ -118,9 +118,15 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-WholePass-20260317-E.xsq`
   - slice: `wholepass-e-composition-pass`
   - status: validated individually and included in the extended live pack
-- extended live suite file: current definition is `8` scenarios
+- alternate live family probe: passed
+  - sequence: `API-Designer-Diversity-Live-20260317-H.xsq`
+  - slice: `diversity-h-composition-pass`
+  - status: validated individually and added to the extended live pack candidate set
+- extended live suite file: current definition is `9` scenarios
   - baseline pack plus:
     - `wholepass-e-composition-pass`
+  - next candidate addition after rerun:
+    - `diversity-h-composition-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
   - current status: passed `8/8`

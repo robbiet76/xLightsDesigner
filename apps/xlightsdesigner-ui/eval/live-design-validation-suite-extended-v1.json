@@ -20,6 +20,13 @@
       "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
     },
     {
+      "name": "diversity-h-composition-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-Diversity-Live-20260317-H.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "strongPrompt": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
+      "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
+    },
+    {
       "name": "clean-phase-chorus-focus",
       "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
