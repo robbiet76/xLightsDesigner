@@ -20,7 +20,8 @@ Validated baseline today:
   - settings/render plausibility: `3.00`
   - thematic continuity: `3.00`
 - promoted live baseline suite: `7/7` passed
-- smoke live suite candidate: `3` scenarios
+- canary live suite: `3` scenarios
+- smoke live comparative suite: `3` scenarios
 - current extended live suite file: `9` scenarios
 
 Interpretation:
@@ -35,7 +36,8 @@ Interpretation:
 ## Current Gaps
 
 1. Live hierarchy needs to prioritize fast iteration
-- the checked-in smoke suite should be the default per-iteration live gate
+- the checked-in canary suite should be the default per-iteration live gate
+- the smoke comparative suite should stay available as a checkpoint tool
 - the promoted baseline suite should move to checkpoint cadence
 - the extended live pack should stay slower and broader
 
@@ -105,11 +107,12 @@ Important boundary:
 
 Recommended default cadence:
 1. run offline eval every iteration
-2. run smoke live suite every iteration
-3. run promoted baseline live suite only at checkpoints or explicit promotion runs
-4. run extended live suite every second iteration or slower
-5. stop at the first hard failure unless explicitly running in continue-on-failure mode
-6. review the run summary and follow-up queue in the morning before changing prompts or heuristics again
+2. run one-prompt canary live suite every iteration
+3. run smoke comparative suite only at checkpoints or explicit preference-shaping runs
+4. run promoted baseline live suite only at checkpoints or explicit promotion runs
+5. run extended live suite every second iteration or slower
+6. stop at the first hard failure unless explicitly running in continue-on-failure mode
+7. review the run summary and follow-up queue in the morning before changing prompts or heuristics again
 
 ## Recommended Commands
 
@@ -118,7 +121,7 @@ Start detached overnight run:
 ```bash
 nohup bash scripts/designer-training/run-overnight-training.sh \
   --iterations 6 \
-  --smoke-live-every 1 \
+  --canary-live-every 1 \
   --baseline-live-every 0 \
   --extended-live-every 2 \
   > /tmp/xld-overnight-launch.log 2>&1 &

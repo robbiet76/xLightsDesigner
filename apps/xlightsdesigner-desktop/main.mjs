@@ -440,6 +440,65 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   };
 }
 
+async function runLiveDesignCanaryValidationFromDesktop(expected = {}) {
+  const runStartedAtMs = nowMs();
+  const prompt = str(expected?.prompt || expected?.strongPrompt);
+  const sequencePath = str(expected?.sequencePath);
+  if (!prompt) {
+    throw new Error("Live canary validation requires a prompt.");
+  }
+  const timings = {};
+  if (sequencePath) {
+    const openStartedAtMs = nowMs();
+    await openSequenceFromDesktop(sequencePath);
+    timings.openSequenceMs = nowMs() - openStartedAtMs;
+  }
+  if (expected?.refreshFirst !== false) {
+    const refreshStartedAtMs = nowMs();
+    await invokeRendererAutomation("refreshFromXLights", {});
+    timings.refreshMs = nowMs() - refreshStartedAtMs;
+  }
+  if (str(expected?.analyzePrompt)) {
+    const analyzeStartedAtMs = nowMs();
+    await invokeRendererAutomation("analyzeAudio", { prompt: str(expected.analyzePrompt) });
+    timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+  }
+
+  const generateStartedAtMs = nowMs();
+  await invokeRendererAutomation("generateProposal", {
+    prompt,
+    requestedRole: "designer_dialog"
+  });
+  const snapshot = await invokeRendererAutomation("getComparativeValidationSnapshot", {});
+  const validation = validateDesignConceptState({
+    expected: {
+      sequenceName: expected?.sequenceName,
+      designLabel: expected?.designLabel,
+      anchor: expected?.anchor || arr(expected?.sections)[0] || expected?.section,
+      section: expected?.section || arr(expected?.sections)[0] || expected?.anchor,
+      targets: arr(expected?.targets),
+      effectFamilies: arr(expected?.effectFamilies),
+      applied: false
+    },
+    pageStates: snapshot?.pageStates || {}
+  });
+
+  return {
+    contract: "live_design_canary_validation_run_v1",
+    version: "1.0",
+    ok: validation?.ok === true,
+    timings: {
+      totalMs: nowMs() - runStartedAtMs,
+      openSequenceMs: Number(timings.openSequenceMs || 0),
+      refreshMs: Number(timings.refreshMs || 0),
+      analyzeMs: Number(timings.analyzeMs || 0),
+      generateMs: nowMs() - generateStartedAtMs
+    },
+    snapshot,
+    validation
+  };
+}
+
 async function openSequenceFromDesktop(sequencePath = "") {
   const file = str(sequencePath);
   if (!file) {
@@ -536,6 +595,86 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
   };
 }
 
+async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
+  const suiteStartedAtMs = nowMs();
+  const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
+  if (!scenarios.length) {
+    throw new Error("Live design canary suite requires at least one scenario.");
+  }
+  const results = [];
+  let activeSequencePath = "";
+  const refreshedSequences = new Set();
+  const analyzedContexts = new Set();
+  for (const scenario of scenarios) {
+    const name = str(scenario?.name || `scenario-${results.length + 1}`);
+    const sequencePath = str(scenario?.sequencePath);
+    const scenarioStartedAtMs = nowMs();
+    const timings = {};
+
+    if (sequencePath && sequencePath !== activeSequencePath) {
+      const openStartedAtMs = nowMs();
+      await openSequenceFromDesktop(sequencePath);
+      timings.openSequenceMs = nowMs() - openStartedAtMs;
+      activeSequencePath = sequencePath;
+    }
+
+    const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
+    if (!refreshedSequences.has(sequenceContextKey) && scenario?.refreshFirst !== false) {
+      const refreshStartedAtMs = nowMs();
+      await invokeRendererAutomation("refreshFromXLights", {});
+      timings.refreshMs = nowMs() - refreshStartedAtMs;
+      refreshedSequences.add(sequenceContextKey);
+    }
+
+    const analyzePrompt = str(scenario?.analyzePrompt);
+    const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
+    if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      const analyzeStartedAtMs = nowMs();
+      await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+      timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      analyzedContexts.add(analysisContextKey);
+    }
+
+    const run = await runLiveDesignCanaryValidationFromDesktop({
+      ...scenario,
+      refreshFirst: false,
+      analyzePrompt: "",
+      sequencePath: "",
+      __timings: timings
+    });
+
+    results.push({
+      name,
+      sequencePath,
+      timings: {
+        totalMs: nowMs() - scenarioStartedAtMs,
+        openSequenceMs: Number(timings.openSequenceMs || run?.timings?.openSequenceMs || 0),
+        refreshMs: Number(timings.refreshMs || run?.timings?.refreshMs || 0),
+        analyzeMs: Number(timings.analyzeMs || run?.timings?.analyzeMs || 0),
+        generateMs: Number(run?.timings?.generateMs || 0)
+      },
+      validation: run?.validation || null
+    });
+  }
+
+  const failed = results.filter((row) => row?.validation?.ok !== true);
+  return {
+    contract: "live_design_canary_suite_run_v1",
+    version: "1.0",
+    ok: failed.length === 0,
+    summary: failed.length === 0
+      ? `Live canary suite passed ${results.length}/${results.length} scenarios.`
+      : `Live canary suite passed ${results.length - failed.length}/${results.length} scenarios.`,
+    timings: {
+      totalMs: nowMs() - suiteStartedAtMs
+    },
+    scenarioCount: results.length,
+    failedScenarioCount: failed.length,
+    failedScenarioNames: failed.map((row) => row.name),
+    results
+  };
+}
+
 async function invokeRendererAutomation(action = "", payload = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
@@ -557,6 +696,8 @@ async function processAutomationRequests() {
     responsePathForId: automationResponsePath,
     requestTimeoutMsForAction: ({ action }) => {
       if (action === "runLiveDesignValidationSuite") return 1800000;
+      if (action === "runLiveDesignCanarySuite") return 900000;
+      if (action === "runLiveDesignCanaryValidation") return 300000;
       if (action === "runComparativeLiveDesignValidation") return 900000;
       if (action === "runWholeSequenceApplyValidation") return 900000;
       if (action === "runDesignConceptValidation") return 300000;
@@ -607,8 +748,14 @@ async function processAutomationRequests() {
       if (action === "runComparativeLiveDesignValidation") {
         return runComparativeLiveDesignValidationFromDesktop(request?.payload || {});
       }
+      if (action === "runLiveDesignCanaryValidation") {
+        return runLiveDesignCanaryValidationFromDesktop(request?.payload || {});
+      }
       if (action === "runLiveDesignValidationSuite") {
         return runLiveDesignValidationSuiteFromDesktop(request?.payload || {});
+      }
+      if (action === "runLiveDesignCanarySuite") {
+        return runLiveDesignCanarySuiteFromDesktop(request?.payload || {});
       }
       throw new Error(`Unknown automation action: ${action || "missing"}`);
     }

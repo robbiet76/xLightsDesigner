@@ -11220,6 +11220,9 @@ function summarizeComparativeValidationPageStates(pageStates = getPageStates()) 
   const designConceptRows = Array.isArray(pageStates?.design?.data?.executionPlan?.conceptRows)
     ? pageStates.design.data.executionPlan.conceptRows
     : [];
+  const reviewRows = Array.isArray(pageStates?.review?.data?.rows)
+    ? pageStates.review.data.rows
+    : [];
   const sequenceRows = Array.isArray(pageStates?.sequence?.data?.rows)
     ? pageStates.sequence.data.rows
     : [];
@@ -11235,15 +11238,28 @@ function summarizeComparativeValidationPageStates(pageStates = getPageStates()) 
       data: {
         executionPlan: {
           conceptRows: designConceptRows.map((row) => ({
+            designLabel: String(row?.designLabel || ""),
             anchor: String(row?.anchor || ""),
-            focus: Array.isArray(row?.focus) ? row.focus.map((value) => String(value || "").trim()).filter(Boolean) : []
+            focus: Array.isArray(row?.focus) ? row.focus.map((value) => String(value || "").trim()).filter(Boolean) : [],
+            effectFamilies: Array.isArray(row?.effectFamilies)
+              ? row.effectFamilies.map((value) => String(value || "").trim()).filter(Boolean)
+              : []
           }))
         }
+      }
+    },
+    review: {
+      data: {
+        rows: reviewRows.map((row) => ({
+          designLabel: String(row?.designLabel || "")
+        }))
       }
     },
     sequence: {
       data: {
         rows: sequenceRows.map((row) => ({
+          designLabel: String(row?.designLabel || ""),
+          target: String(row?.target || ""),
           summary: String(row?.summary || ""),
           effects: Number(row?.effects || 0) || 0
         }))

@@ -12,7 +12,7 @@ const launchRoot = "/tmp/xld-desktop-launch";
 const launchRequestsDir = path.join(launchRoot, "requests");
 
 function usage() {
-  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path>");
+  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
   process.exit(2);
 }
 
@@ -78,8 +78,14 @@ if (command === "dispatch-prompt") {
 } else if (command === "run-comparative-live-design-validation") {
   action = "runComparativeLiveDesignValidation";
   payload = readJsonPayload(rest);
+} else if (command === "run-live-design-canary-validation") {
+  action = "runLiveDesignCanaryValidation";
+  payload = readJsonPayload(rest);
 } else if (command === "run-live-design-validation-suite") {
   action = "runLiveDesignValidationSuite";
+  payload = readJsonPayload(rest);
+} else if (command === "run-live-design-canary-suite") {
+  action = "runLiveDesignCanarySuite";
   payload = readJsonPayload(rest);
 } else {
   usage();
@@ -99,6 +105,15 @@ function computeTimeoutMs(currentAction = "", currentPayload = {}) {
   }
   if (currentAction === "runComparativeLiveDesignValidation") {
     return 300000;
+  }
+  if (currentAction === "runLiveDesignCanaryValidation") {
+    return 180000;
+  }
+  if (currentAction === "runLiveDesignCanarySuite") {
+    const scenarioCount = Array.isArray(currentPayload?.scenarios) ? currentPayload.scenarios.length : 0;
+    const baseMs = 180000;
+    const perScenarioMs = 45000;
+    return Math.max(baseMs, baseMs + (scenarioCount * perScenarioMs));
   }
   return 120000;
 }
