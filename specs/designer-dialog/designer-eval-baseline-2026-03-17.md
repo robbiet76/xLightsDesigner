@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `58`
-- supported by current offline runner: `58`
-- passed: `58`
+- total cases: `59`
+- supported by current offline runner: `59`
+- passed: `59`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -86,6 +86,7 @@ The runner and designer logic now cover:
 - middle-8 contrast scoring where a semantic `Middle 8` must create a real detour instead of reusing chorus payoff language
 - post-chorus hook-extension scoring where a semantic `Post-Chorus` must reinforce the hook instead of behaving like a fresh verse-sized section
 - impact-budget discipline scoring where broad whole-song prompts must keep visual weight controlled instead of flattening large-footprint targets into equal-emphasis coverage
+- chord-pivot discipline scoring where Verse material must follow harmonic changes instead of collapsing into one flat span
 
 ## Current Meaning Of A Pass
 
@@ -184,7 +185,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `58/58` corpus as the structural regression gate
+1. keep the current `59/59` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

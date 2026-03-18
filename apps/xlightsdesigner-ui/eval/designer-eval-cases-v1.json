@@ -565,6 +565,20 @@
       }
     },
     {
+      "id": "quality-compare-chord-pivot-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "In Verse 1, follow the chord changes with cleaner harmonic pivots instead of treating the verse as one flat span.",
+      "altPromptText": "In Verse 1, ignore the chord changes and treat the whole verse like one flat span with even treatment throughout.",
+      "selectedSections": ["Verse 1"],
+      "altSelectedSections": ["Verse 1"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-render-restraint",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

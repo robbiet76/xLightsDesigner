@@ -1631,6 +1631,17 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (trackNames.includes("XD: Phrase Cues")) score += 0.9;
     if (alignmentModes.includes("section_span") && alignmentModes.length === 1) score -= 1.4;
   }
+  if (/\b(chord changes|harmonic pivots|harmonic|follow the chords|flat span|treating the verse as one flat span)\b/.test(lowerPrompt)) {
+    const alignmentModes = arr(metrics.alignmentModes).map((value) => str(value));
+    const trackNames = arr(metrics.trackNames).map((value) => str(value));
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    if (alignmentModes.includes("chord_window")) score += 1.6;
+    if (trackNames.includes("XD: Chord Changes")) score += 1.0;
+    if (alignmentModes.includes("section_span") && alignmentModes.length === 1) score -= 1.4;
+    if (sectionContrast >= 2) score += 0.3;
+    if (/\b(harmonic pivots|follow the chord changes|cleaner chord-led movement|track the harmony)\b/.test(lowerSummary)) score += 1.8;
+    if (/\b(flat span|one flat verse|ignores the chords|treats the verse evenly)\b/.test(lowerSummary)) score -= 1.8;
+  }
   if (/\b(wide and suspended|second full-chorus payoff|suspended transition|immediate big payoff|hold the breath)\b/.test(lowerPrompt)) {
     const averageSpeeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
     const meanSpeed = averageSpeeds.length
