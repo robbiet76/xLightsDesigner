@@ -1,0 +1,41 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "sequencer-render-training-on-sample-v1",
+  "description": "Minimal first-pass On effect render sample for the internal sequencer training harness.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "modelName": "Border-01",
+    "modelType": "outline",
+    "startMs": 1000,
+    "endMs": 2000,
+    "notes": "Uses one short controlled window for the first harness proof."
+  },
+  "samples": [
+    {
+      "sampleId": "on-outline-default-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "white_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": [
+        "static_hold",
+        "outline_read"
+      ]
+    }
+  ]
+}

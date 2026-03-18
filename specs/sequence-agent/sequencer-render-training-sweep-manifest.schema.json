@@ -90,6 +90,14 @@
         "paletteProfile": {
           "type": "string"
         },
+        "palette": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "settingsOverrides": {
+          "type": "object",
+          "additionalProperties": true
+        },
         "notes": {
           "type": "string"
         }
