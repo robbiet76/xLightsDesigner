@@ -722,6 +722,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-middle8-contrast-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Middle 8, open a wider contrasting detour before the final lift instead of repeating chorus payoff language.",
+      "altPromptText": "In the Middle 8, treat it like another chorus with the same payoff language and little contrast.",
+      "selectedSections": ["Middle 8"],
+      "altSelectedSections": ["Middle 8"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

@@ -1758,6 +1758,21 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(shorter afterglow|resolving echo|narrower closing energy|echoing the final hook)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(brand-?new climax|same density|same payoff weight|another full climax)\b/.test(lowerSummary)) score -= 2.0;
   }
+  if (/\b(in the middle 8|middle 8\b).*?\b(contrasting detour|repeating chorus payoff language|another chorus|little contrast|final lift)\b/.test(lowerPrompt)) {
+    const middleSpeed = Number(metrics.perSectionAverageSpeeds?.["Middle 8"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(middleSpeed) ? middleSpeed : 0);
+    const sectionContrast = Number(metrics.distinctSectionFamilySignatures || 0);
+    const middlePalette = arr(metrics.paletteBySection?.["Middle 8"]).map((value) => str(value));
+    const finalPalette = arr(metrics.paletteBySection?.["Final Chorus"]).map((value) => str(value));
+    const sharedTemperatures = middlePalette.filter((value) => finalPalette.includes(value));
+    if (speedDelta >= 0.3 && speedDelta <= 1.6) score += 1.0;
+    else if (speedDelta < 0.1) score -= 0.9;
+    if (sharedTemperatures.length) score += 0.6;
+    if (sectionContrast >= 2) score += 0.8;
+    if (/\b(contrasting detour|wider contrasting breath|before the final lift)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(another chorus|same payoff language|little contrast)\b/.test(lowerSummary)) score -= 2.0;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));
