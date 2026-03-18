@@ -1605,6 +1605,8 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     score += Number(arr(metrics.recurringEffectFamilies).length || 0) * 0.18;
     score += Number(metrics.distinctSectionFamilySignatures || 0) * 0.12;
     score -= Number(arr(metrics.layeredTargetIds).length || 0) * 0.05;
+    if (/\b(smooth|connected|cinematic|flowing)\b/.test(lowerSummary)) score += 1.4;
+    if (/\b(choppier|staccato|sharper accents|less connected)\b/.test(lowerSummary)) score -= 1.4;
   }
   if (/\b(crisp|punchy|rhythmic|pulse|staccato|choppy)\b/.test(lowerPrompt)) {
     score += Number(metrics.focusedOverlayPlacementCount || 0) * 0.2;
@@ -1706,6 +1708,24 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (sectionContrast >= 2) score += 0.8;
     if (/\b(connected rather than|lift feels connected|separate clearly)\b/.test(lowerSummary)) score += 1.8;
     if (/\b(abrupt|disconnected|incoherent|unrelated jump)\b/.test(lowerSummary)) score -= 1.8;
+  }
+  if (/\b(bridge hand off|bridge handoff|final chorus|controlled release|premature|weaker or more disconnected handoff)\b/.test(lowerPrompt)) {
+    const bridgeSpeed = Number(metrics.perSectionAverageSpeeds?.["Bridge"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(bridgeSpeed) ? bridgeSpeed : 0);
+    const bridgePalette = arr(metrics.paletteBySection?.["Bridge"]).map((value) => str(value));
+    const finalPalette = arr(metrics.paletteBySection?.["Final Chorus"]).map((value) => str(value));
+    const sharedTemperatures = bridgePalette.filter((value) => finalPalette.includes(value));
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (speedDelta >= 0.6 && speedDelta <= 1.8) score += 1.2;
+    else if (speedDelta > 1.8) score -= Math.min(1.3, (speedDelta - 1.8) * 1.2);
+    else if (speedDelta < 0.4) score -= 1.0;
+    if (sharedTemperatures.length) score += 0.8;
+    else score -= 0.8;
+    if (effectFamilies.includes("Wave")) score += 0.4;
+    if (effectFamilies.includes("Shimmer")) score += 0.3;
+    if (/\b(controlled release|lands strongly|clean payoff|handoff)\b/.test(lowerSummary)) score += 1.8;
+    if (/\b(premature|weaker|disconnected handoff)\b/.test(lowerSummary)) score -= 1.8;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));

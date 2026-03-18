@@ -682,6 +682,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-bridge-final-handoff",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Stage Lighting Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "default",
+      "promptText": "Let the Bridge hand off into the Final Chorus with a controlled release, so the payoff lands strongly without feeling premature or disconnected.",
+      "altPromptText": "Make the Bridge spend the payoff early so the Final Chorus arrives with a weaker or more disconnected handoff.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
