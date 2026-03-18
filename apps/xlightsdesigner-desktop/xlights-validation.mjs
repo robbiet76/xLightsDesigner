@@ -545,20 +545,30 @@ function comparativeLiveScopeAdjustment(metrics = {}, expected = {}) {
     const scopeCoverage = scopeMatchCount / expectedTargets.length;
     const focusCoverage = focusMatchCount / expectedTargets.length;
 
-    adjustment += scopeCoverage * 1.2;
-    adjustment += focusCoverage * 0.8;
+    adjustment += scopeCoverage * 2.0;
+    adjustment += focusCoverage * 1.2;
+
+    if (JSON.stringify(scopeTargets) === JSON.stringify(expectedTargets)) {
+      adjustment += 1.6;
+    }
+    if (JSON.stringify(focusTargets) === JSON.stringify(expectedTargets)) {
+      adjustment += 1.0;
+    }
 
     if (scopeTargets.length && scopeMatchCount === 0) {
-      adjustment -= 1.8;
+      adjustment -= 2.4;
     }
     if (focusTargets.length && focusMatchCount === 0) {
-      adjustment -= 1.2;
+      adjustment -= 1.8;
     }
     if (scopeTargets.length > expectedTargets.length) {
-      adjustment -= Math.min(1.2, (scopeTargets.length - expectedTargets.length) * 0.3);
+      adjustment -= Math.min(2.4, (scopeTargets.length - expectedTargets.length) * 0.5);
+    }
+    if (focusTargets.length > expectedTargets.length) {
+      adjustment -= Math.min(2.0, (focusTargets.length - expectedTargets.length) * 0.2);
     }
     if (!scopeTargets.length) {
-      adjustment -= 0.8;
+      adjustment -= 2.0;
     }
   }
 
@@ -618,16 +628,21 @@ export function validateComparativeLiveDesignState({
   const strongMetrics = liveProposalMetrics(strong);
   const weakMetrics = liveProposalMetrics(weak);
   const issues = [];
-  const expectedSections = arr(expected?.sections).map((row) => str(row)).filter(Boolean).sort();
-  const expectedTargets = arr(expected?.targets).map((row) => str(row)).filter(Boolean).sort();
+  const normalizedExpected = {
+    ...expected,
+    sections: arr(expected?.sections).length ? expected.sections : [str(expected?.section || expected?.expectedStrong?.section)].filter(Boolean),
+    targets: arr(expected?.targets).length ? expected.targets : arr(expected?.expectedStrong?.targets)
+  };
+  const expectedSections = arr(normalizedExpected?.sections).map((row) => str(row)).filter(Boolean).sort();
+  const expectedTargets = arr(normalizedExpected?.targets).map((row) => str(row)).filter(Boolean).sort();
   const strongScore = Number((
     comparativeLiveScore(strongMetrics)
-    + comparativeLiveScopeAdjustment(strongMetrics, expected)
+    + comparativeLiveScopeAdjustment(strongMetrics, normalizedExpected)
     + comparativeLivePromptAdjustment(strongMetrics, strong?.diagnose?.intentHandoffSummary?.goal)
   ).toFixed(2));
   const weakScore = Number((
     comparativeLiveScore(weakMetrics)
-    + comparativeLiveScopeAdjustment(weakMetrics, expected)
+    + comparativeLiveScopeAdjustment(weakMetrics, normalizedExpected)
     + comparativeLivePromptAdjustment(weakMetrics, weak?.diagnose?.intentHandoffSummary?.goal)
   ).toFixed(2));
 
@@ -649,19 +664,19 @@ export function validateComparativeLiveDesignState({
   if (expectedTargets.length && JSON.stringify(strongMetrics.targetScope) !== JSON.stringify(expectedTargets)) {
     issues.push({ code: "strong_scope_targets_mismatch", message: `Strong prompt targets mismatch: expected ${expectedTargets.join(", ")}.` });
   }
-  if (expected?.minStrongDistinctFamilyLead != null) {
+  if (normalizedExpected?.minStrongDistinctFamilyLead != null) {
     const margin = strongMetrics.distinctFamilyCount - weakMetrics.distinctFamilyCount;
-    if (margin < Number(expected.minStrongDistinctFamilyLead)) {
-      issues.push({ code: "strong_family_lead_too_small", message: `Strong prompt family lead ${margin} is below expected minimum ${expected.minStrongDistinctFamilyLead}.` });
+    if (margin < Number(normalizedExpected.minStrongDistinctFamilyLead)) {
+      issues.push({ code: "strong_family_lead_too_small", message: `Strong prompt family lead ${margin} is below expected minimum ${normalizedExpected.minStrongDistinctFamilyLead}.` });
     }
   }
-  if (expected?.minStrongPlacementLead != null) {
+  if (normalizedExpected?.minStrongPlacementLead != null) {
     const margin = strongMetrics.effectPlacementCount - weakMetrics.effectPlacementCount;
-    if (margin < Number(expected.minStrongPlacementLead)) {
-      issues.push({ code: "strong_placement_lead_too_small", message: `Strong prompt placement lead ${margin} is below expected minimum ${expected.minStrongPlacementLead}.` });
+    if (margin < Number(normalizedExpected.minStrongPlacementLead)) {
+      issues.push({ code: "strong_placement_lead_too_small", message: `Strong prompt placement lead ${margin} is below expected minimum ${normalizedExpected.minStrongPlacementLead}.` });
     }
   }
-  if (expected?.requireStrongPreferred !== false && strongScore <= weakScore) {
+  if (normalizedExpected?.requireStrongPreferred !== false && strongScore <= weakScore) {
     issues.push({ code: "strong_prompt_not_preferred", message: `Strong live score ${strongScore} did not exceed weak score ${weakScore}.` });
   }
 
