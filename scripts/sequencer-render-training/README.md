@@ -26,7 +26,9 @@ The current harness is intentionally small:
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
+- `manifests/on-matrix-reduced-sweep-v1.json`: reduced `On` sweep on a concrete matrix model
 - `manifests/singlestrand-reduced-sweep-v1.json`: reduced `SingleStrand` sweep
+- `manifests/singlestrand-linear-reduced-sweep-v1.json`: reduced `SingleStrand` sweep on a concrete linear model
 
 ## Usage
 
@@ -63,3 +65,9 @@ Environment:
   - one subdirectory per sample
   - `run.log`
   - `run-summary.json`
+- Current explicit fixture classes:
+  - outline via `Border-01`
+  - cane via `CandyCane-01`
+  - single-line / roofline via `UpperGutter-01`
+  - matrix via `NorthPoleMatrix`
+- The current show fixture does not contain a true arch model, so arch-class coverage remains a known gap until a dedicated arch fixture is added.

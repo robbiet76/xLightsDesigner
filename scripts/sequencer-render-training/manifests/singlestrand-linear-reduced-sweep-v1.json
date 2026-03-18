@@ -1,0 +1,122 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-reduced-sweep-v1",
+  "description": "Reduced baseline SingleStrand sweep on a concrete linear model using a medium standard duration.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 3000,
+    "durationClass": "medium",
+    "notes": "Reduced SingleStrand sweep on a concrete roofline-style single-line model."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-chase-basic-v1",
+      "effectName": "SingleStrand",
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "two_color_linear",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["single_direction_chase", "clean_linear_pattern"]
+    },
+    {
+      "sampleId": "single-strand-linear-chase-bounce-v1",
+      "effectName": "SingleStrand",
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "two_color_linear",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#00C2FF"
+        }
+      },
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 2,
+        "chaseSize": 28,
+        "cycles": 2.0,
+        "offset": 0,
+        "chaseType": "Bounce from Middle",
+        "fadeType": "From Head",
+        "groupAllStrands": false
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["bounce_pattern", "linear_dual_motion"]
+    },
+    {
+      "sampleId": "single-strand-linear-skips-left-v1",
+      "effectName": "SingleStrand",
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "skip_pattern",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 1,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["skip_pattern", "left_motion"]
+    },
+    {
+      "sampleId": "single-strand-linear-fx-fireworks-v1",
+      "effectName": "SingleStrand",
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_accent",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD000",
+          "C_BUTTON_Palette3": "#FF5A00"
+        }
+      },
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 160,
+        "speed": 110
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["fx_texture", "burst_pattern"]
+    }
+  ]
+}

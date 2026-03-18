@@ -103,7 +103,20 @@ Current working fixture coverage:
 - [x] outline
 - [x] cane / single-strand-like prop
 - [ ] arch
-- [ ] matrix
+- [x] matrix
+
+Current concrete fixture models:
+- outline:
+  - `Border-01` (`DisplayAs="Poly Line"`)
+- cane:
+  - `CandyCane-01` (`DisplayAs="Custom"`)
+- single-line / roofline:
+  - `UpperGutter-01` (`DisplayAs="Single Line"`)
+- matrix:
+  - `NorthPoleMatrix` (`DisplayAs="Horiz Matrix"`)
+
+Known current fixture gap:
+- the current show fixture does not expose a true arch model, so arch-class render training is still pending a dedicated fixture
 
 Model-class principle:
 - effects must be trained against representative model classes, not just one arbitrary model

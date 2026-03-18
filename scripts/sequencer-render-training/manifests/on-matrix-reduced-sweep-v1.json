@@ -1,0 +1,86 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "on-matrix-reduced-sweep-v1",
+  "description": "Reduced baseline On sweep on a concrete matrix model using a short standard duration.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+    "modelName": "NorthPoleMatrix",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 2000,
+    "durationClass": "short",
+    "notes": "Reduced On sweep on a concrete 64x128 horizontal matrix model."
+  },
+  "samples": [
+    {
+      "sampleId": "on-matrix-hold-default-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "white_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["static_hold", "matrix_fill"]
+    },
+    {
+      "sampleId": "on-matrix-ramp-down-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 45,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["soft_falloff", "matrix_glow"]
+    },
+    {
+      "sampleId": "on-matrix-shimmer-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cool_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#DDF4FF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": true,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "labelHints": ["shimmer_hold", "matrix_twinkle"]
+    }
+  ]
+}
