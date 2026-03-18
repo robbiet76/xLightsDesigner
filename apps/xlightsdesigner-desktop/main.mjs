@@ -156,6 +156,25 @@ async function getRendererAgentRuntimeSnapshot() {
   return invokeRendererAutomation("getAgentRuntimeSnapshot", {});
 }
 
+async function canReuseCurrentAnalysis({ sequencePath = "", analyzePrompt = "" } = {}) {
+  const prompt = str(analyzePrompt);
+  if (!prompt) return false;
+  try {
+    const runtime = await getRendererAgentRuntimeSnapshot();
+    const currentPath = str(runtime?.sequencePathInput);
+    const currentAudioPath = str(runtime?.audioPathInput);
+    const lastAnalysisPrompt = str(runtime?.lastAnalysisPrompt);
+    const analysisHandoff = runtime?.handoffs?.analysis_handoff_v1 || null;
+    const handoffAudioPath = str(analysisHandoff?.context?.audioPath);
+    const analysisValid = Boolean(analysisHandoff?.valid);
+    const sameSequence = !str(sequencePath) || currentPath === str(sequencePath);
+    const sameAudio = Boolean(currentAudioPath) && currentAudioPath === handoffAudioPath;
+    return Boolean(sameSequence && analysisValid && sameAudio && lastAnalysisPrompt === prompt);
+  } catch {
+    return false;
+  }
+}
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -565,9 +584,17 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
     if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
-      const analyzeStartedAtMs = nowMs();
-      await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
-      timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      const reuse = await canReuseCurrentAnalysis({
+        sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
+        analyzePrompt
+      });
+      if (reuse) {
+        timings.analyzeMs = 0;
+      } else {
+        const analyzeStartedAtMs = nowMs();
+        await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+        timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      }
       analyzedContexts.add(analysisContextKey);
     }
 
@@ -647,9 +674,17 @@ async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
     if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
-      const analyzeStartedAtMs = nowMs();
-      await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
-      timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      const reuse = await canReuseCurrentAnalysis({
+        sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
+        analyzePrompt
+      });
+      if (reuse) {
+        timings.analyzeMs = 0;
+      } else {
+        const analyzeStartedAtMs = nowMs();
+        await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+        timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      }
       analyzedContexts.add(analysisContextKey);
     }
 

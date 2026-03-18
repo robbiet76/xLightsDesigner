@@ -660,6 +660,9 @@ if (typeof state.ui?.analysisServiceLastError !== "string") {
 if (typeof state.ui?.analysisServiceLastCheckedAt !== "string") {
   state.ui.analysisServiceLastCheckedAt = "";
 }
+if (typeof state.ui?.lastAnalysisPrompt !== "string") {
+  state.ui.lastAnalysisPrompt = "";
+}
 if (typeof state.ui?.agentLastOrchestrationMatrixStatus !== "string") {
   state.ui.agentLastOrchestrationMatrixStatus = "";
 }
@@ -10768,6 +10771,7 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
 
 async function onAnalyzeAudio({ userPrompt = "" } = {}) {
   const audioPath = String(state.audioPathInput || "").trim();
+  state.ui.lastAnalysisPrompt = String(userPrompt || "").trim();
   if (!audioPath) {
     setStatus("warning", "No audio track available for analysis on this sequence.");
     return render();
@@ -11685,6 +11689,8 @@ function getAutomationAgentRuntimeSnapshot() {
     status: state.status || null,
     activeSequence: state.activeSequence || "",
     sequencePathInput: state.sequencePathInput || "",
+    audioPathInput: state.audioPathInput || "",
+    lastAnalysisPrompt: String(state.ui?.lastAnalysisPrompt || ""),
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
     agentThinking: Boolean(state.ui?.agentThinking),
     activeRole: String(agentRuntime.activeRole || ""),
