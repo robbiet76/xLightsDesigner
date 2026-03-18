@@ -218,6 +218,40 @@ test('planner promotes prompt-matched targets into explicit intent scope for nar
   assert.deepEqual(result.targets.map((row) => row.id).sort(), ['Snowman', 'Star']);
 });
 
+test('planner keeps prompt-matched explicit targets even when regenerate wording implies focal tags', () => {
+  const scopedModels = [
+    { id: 'Snowman', name: 'Snowman', type: 'Model' },
+    { id: 'Star', name: 'Star', type: 'Model' },
+    { id: 'Border-03', name: 'Border-03', type: 'Model' },
+    { id: 'AllModels_NoFloods', name: 'AllModels_NoFloods', type: 'Group' }
+  ];
+  const scopedDisplayElements = scopedModels.map((row) => ({ id: row.id, name: row.name, type: 'model' }));
+  const scopedMetadata = [
+    { targetId: 'Snowman', tags: ['focal'] },
+    { targetId: 'Star', tags: ['focal'] },
+    { targetId: 'Border-03', tags: ['focal'] }
+  ];
+
+  const result = buildProposalFromIntent({
+    promptText: 'Regenerate a single Chorus 1 concept anchored to the beat grid for Snowman and Star, keeping it more focused than the removed concept.',
+    selectedSections: ['Chorus 1'],
+    models: scopedModels,
+    submodels: [],
+    metadataAssignments: scopedMetadata,
+    displayElements: scopedDisplayElements,
+    musicDesignContext: {
+      sectionArc: [
+        { label: 'Verse 1', energy: 'medium', density: 'moderate' },
+        { label: 'Chorus 1', energy: 'high', density: 'dense' }
+      ]
+    }
+  });
+
+  assert.deepEqual(result.normalizedIntent.targetIds.sort(), ['Snowman', 'Star']);
+  assert.equal(result.normalizedIntent.focusHierarchy, 'explicit_targets');
+  assert.deepEqual(result.targets.map((row) => row.id).sort(), ['Snowman', 'Star']);
+});
+
 test('planner uses scene and music context to shape first-pass proposal lines', () => {
   const result = buildProposalFromIntent({
     promptText: 'Make the chorus feel bigger and more cinematic',

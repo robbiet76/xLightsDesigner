@@ -244,6 +244,23 @@
       "promptText": "Revise the outro concept so it breathes more and avoids filling every target.",
       "selectedSections": ["Outro"]
     },
+    {
+      "id": "delete-regenerate-chorus-concept",
+      "kind": "revise",
+      "runnerMode": "delete_regenerate",
+      "lenses": ["Revision Quality", "Musical Understanding", "Focal Hierarchy"],
+      "fixtureVariant": "default",
+      "seedPromptText": "Rework the whole show into a warmer, more cinematic pass with clear section contrast, stronger focal moments, and more varied effects across the song.",
+      "removeSection": "Chorus 1",
+      "promptText": "Regenerate a single Chorus 1 concept anchored to the beat grid for Snowman and Star, keeping it more focused than the removed concept.",
+      "selectedSections": ["Chorus 1"],
+      "expect": {
+        "mustOnlyIncludeTargetIds": ["Snowman", "Star"],
+        "mustIncludeTrackNames": ["XD: Beat Grid"],
+        "mustIncludeAlignmentModes": ["beat_window"],
+        "maxTargetCount": 2
+      }
+    },
 
     {
       "id": "whole-cinematic-warm-pass",

@@ -5,7 +5,9 @@ import { executeDesignerProposalOrchestration } from "../agent/designer-dialog/d
 import { buildDesignSceneContext } from "../agent/designer-dialog/design-scene-context.js";
 import {
   mergeRevisedDesignConceptExecutionPlan,
-  normalizeDesignRevisionTarget
+  normalizeDesignRevisionTarget,
+  removeDesignConceptExecutionPlan,
+  appendGeneratedDesignConceptExecutionPlan
 } from "../agent/designer-dialog/design-concept-revision.js";
 
 const cwd = process.cwd();
@@ -1387,6 +1389,110 @@ function runPairedFixtureCase(testCase, metadataFixture) {
   };
 }
 
+function runDeleteRegenerateCase(testCase, metadataFixture) {
+  const fixture = buildFixture({
+    variant: str(testCase.fixtureVariant || "default"),
+    metadataFixture
+  });
+  const seedPrompt = str(testCase.seedPromptText || "Rework the whole show into a warmer, more cinematic pass with clear section contrast, stronger focal moments, and more varied effects across the song.");
+  const regeneratePrompt = str(testCase.promptText);
+  const buildArgs = ({
+    promptText,
+    requestId,
+    selectedSections = testCase.selectedSections,
+    selectedTargetIds = testCase.selectedTargetIds,
+    selectedTagNames = testCase.selectedTagNames
+  }) => ({
+    requestId,
+    sequenceRevision: "eval-rev-1",
+    promptText,
+    goals: promptText,
+    selectedSections: arr(selectedSections),
+    selectedTargetIds: arr(selectedTargetIds),
+    selectedTagNames: arr(selectedTagNames),
+    analysisArtifact: fixture.analysisArtifact,
+    analysisHandoff: fixture.analysisHandoff,
+    models: fixture.models,
+    submodels: fixture.submodels,
+    metadataAssignments: fixture.metadataAssignments,
+    designSceneContext: fixture.designSceneContext,
+    musicDesignContext: fixture.musicDesignContext,
+    directorProfile: buildDirectorProfile(testCase.directorProfileVariant)
+  });
+
+  const seedResult = executeDesignerProposalOrchestration(buildArgs({
+    promptText: seedPrompt,
+    requestId: `eval-${testCase.id}-seed`,
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: []
+  }));
+  const seedPlan = getExecutionPlanFromResult(seedResult);
+  const sectionToRemove = str(testCase.removeSection);
+  const designIdToRemove = arr(seedPlan?.sectionPlans).find((row) => str(row?.section) === sectionToRemove)?.designId
+    || str(testCase.removeDesignId);
+  const removedPlan = removeDesignConceptExecutionPlan({
+    currentExecutionPlan: seedPlan,
+    designId: designIdToRemove
+  });
+  const regenerateResult = executeDesignerProposalOrchestration(buildArgs({
+    promptText: regeneratePrompt,
+    requestId: `eval-${testCase.id}-regenerate`
+  }));
+  const regeneratedEval = evaluateCase(regenerateResult, testCase, fixture);
+  const appendedPlan = appendGeneratedDesignConceptExecutionPlan({
+    currentExecutionPlan: removedPlan,
+    generatedExecutionPlan: getExecutionPlanFromResult(regenerateResult)
+  });
+
+  const seedConceptIds = uniq(arr(seedPlan?.sectionPlans).map((row) => row?.designId));
+  const removedConceptIds = uniq(arr(removedPlan?.sectionPlans).map((row) => row?.designId));
+  const appendedConceptIds = uniq(arr(appendedPlan?.sectionPlans).map((row) => row?.designId));
+  const preservedIds = seedConceptIds.filter((row) => row && row !== designIdToRemove);
+  const replacementIds = appendedConceptIds.filter((row) => !seedConceptIds.includes(row));
+  const failures = [];
+  let checksTotal = 0;
+  let checksPassed = 0;
+  const check = (name, ok) => {
+    checksTotal += 1;
+    if (ok) checksPassed += 1;
+    else failures.push(name);
+  };
+
+  check("seed_plan_missing", Boolean(seedPlan && arr(seedPlan.sectionPlans).length));
+  check("remove_concept_not_found", Boolean(designIdToRemove));
+  check("delete_failed_to_remove_concept", Boolean(removedPlan) && !removedConceptIds.includes(designIdToRemove));
+  check("delete_regenerate_preservation_failed", preservedIds.every((row) => appendedConceptIds.includes(row)));
+  check("delete_regenerate_no_replacement", replacementIds.length >= 1);
+  check("delete_regenerate_scope_failed", !regeneratedEval.failures.length);
+  check(
+    "delete_regenerate_concept_count_drift",
+    arr(appendedPlan?.sectionPlans).length >= arr(seedPlan?.sectionPlans).length
+  );
+
+  return {
+    id: testCase.id,
+    kind: testCase.kind,
+    runnerMode: "delete_regenerate",
+    lenses: arr(testCase.lenses),
+    status: failures.length ? "failed" : "passed",
+    summary: regeneratePrompt,
+    structuralScore: structuralScore({ ok: !failures.length, failures, checksPassed, checksTotal }),
+    artisticScores: null,
+    failures: uniq(failures),
+    checksPassed,
+    checksTotal,
+    metrics: {
+      removedDesignId: designIdToRemove,
+      seedConceptIds,
+      removedConceptIds,
+      appendedConceptIds,
+      replacementIds,
+      regenerateSections: uniq(arr(getExecutionPlanFromResult(regenerateResult)?.sectionPlans).map((row) => row?.section))
+    }
+  };
+}
+
 function artisticCompositeScore(artisticScores = null) {
   const categories = artisticScores?.categories || {};
   const values = Object.values(categories)
@@ -1569,8 +1675,10 @@ function main() {
         ? runRepeatedPreferenceCase(testCase, metadataFixture)
       : str(testCase.runnerMode) === "paired_metadata"
         ? runPairedMetadataCase(testCase, metadataFixture)
-        : str(testCase.runnerMode) === "paired_fixture"
+      : str(testCase.runnerMode) === "paired_fixture"
           ? runPairedFixtureCase(testCase, metadataFixture)
+        : str(testCase.runnerMode) === "delete_regenerate"
+          ? runDeleteRegenerateCase(testCase, metadataFixture)
         : str(testCase.runnerMode) === "paired_quality"
           ? runPairedQualityCase(testCase, metadataFixture)
         : runCase(testCase, metadataFixture)

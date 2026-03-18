@@ -21,4 +21,5 @@ Runner modes:
 - `repeated_preference`: confirm stability across repeated preference-aware runs
 - `paired_metadata`: confirm metadata changes actually change target selection
 - `paired_fixture`: confirm layout or song-arc changes actually change target selection or section behavior
+- `delete_regenerate`: remove one concept from a seeded draft, regenerate a scoped replacement, and confirm the rest of the draft survives unchanged
 - `paired_quality`: compare a stronger prompt against a flatter alternative and require the scorer to prefer the stronger result

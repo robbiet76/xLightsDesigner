@@ -337,9 +337,35 @@ export function buildProposalFromIntent(input = {}) {
     metadataAssignments: input.metadataAssignments,
     displayElements: input.displayElements
   });
+  const goalMatchSelection = !arr(baseNormalizedIntent?.targetIds).length
+    ? resolveTargetSelection({
+        normalizedIntent: {
+          ...baseNormalizedIntent,
+          tags: [],
+          focusHierarchy: baseNormalizedIntent?.focusHierarchy === "explicit_targets"
+            ? "balanced_full_yard"
+            : baseNormalizedIntent?.focusHierarchy
+        },
+        models: input.models,
+        submodels: input.submodels,
+        metadataAssignments: input.metadataAssignments,
+        displayElements: input.displayElements
+      })
+    : { targets: [], resolutionSource: "none" };
+  const promotedGoalMatchTargets = arr(
+    selection.resolutionSource === "goal_match"
+      ? selection.targets
+      : goalMatchSelection.targets
+  ).map((row) => str(row?.id)).filter(Boolean);
+  const shouldPromoteGoalMatchedTargets = !arr(baseNormalizedIntent?.targetIds).length
+    && (selection.resolutionSource === "goal_match" || goalMatchSelection.resolutionSource === "goal_match")
+    && (
+      promotedGoalMatchTargets.length > 1
+      || !arr(baseNormalizedIntent?.tags).length
+    );
   const inferredTargetIds = !arr(baseNormalizedIntent?.targetIds).length
-    && selection.resolutionSource === "goal_match"
-    ? arr(selection.targets).map((row) => str(row?.id)).filter(Boolean)
+    && shouldPromoteGoalMatchedTargets
+    ? promotedGoalMatchTargets
     : [];
   const normalizedIntent = inferredTargetIds.length
     ? {
@@ -353,7 +379,13 @@ export function buildProposalFromIntent(input = {}) {
         assumptions: arr(baseNormalizedIntent?.assumptions).filter((line) => !/balanced full-yard/i.test(str(line)))
       }
     : baseNormalizedIntent;
-  const targets = selection.targets;
+  const targets = inferredTargetIds.length
+    ? (
+      selection.resolutionSource === "goal_match"
+        ? selection.targets
+        : goalMatchSelection.targets
+    )
+    : selection.targets;
   const proposalLines = applyDesignerContextToProposalLines({
     proposalLines: buildSequencingStrategy(normalizedIntent, targets),
     normalizedIntent,

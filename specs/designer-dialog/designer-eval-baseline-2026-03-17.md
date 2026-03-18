@@ -25,9 +25,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `36`
-- supported by current offline runner: `36`
-- passed: `36`
+- total cases: `37`
+- supported by current offline runner: `37`
+- passed: `37`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -68,6 +68,7 @@ The runner and designer logic now cover:
 - stage-lighting-language concepts
 - richer broad-pass family diversity for rhythm/layout/lighting prompts
 - offline revise-case scoring through the same merge semantics used by the app revision path
+- concept-level delete/regenerate scoring where one concept is removed and a scoped replacement is appended without disturbing the rest of the draft
 - beat-, chord-, and phrase-anchored concept cases with cue-window placements
 - metadata-refinement sensitivity where changed tags produce changed target choices
 - explicit `effectPlacements[]` as the primary authored output
@@ -110,7 +111,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `36/36` corpus as the structural regression gate
+1. keep the current `37/37` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

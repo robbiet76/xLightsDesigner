@@ -15,6 +15,11 @@ function normalizeRevisionNumber(value, fallback = 0) {
   return Number.isInteger(num) && num >= 0 ? num : fallback;
 }
 
+function parseDesignIdNumber(designId = "") {
+  const match = str(designId).match(/^DES-(\d{3,})$/i);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
 export function normalizeDesignRevisionTarget(target = null) {
   if (!target || typeof target !== "object") return null;
   const designId = str(target.designId);
@@ -45,6 +50,19 @@ function rebuildExecutionPlanStats(executionPlan = {}) {
     sectionCount: primarySections.length,
     targetCount: targetIds.length
   };
+}
+
+function nextDesignIdFromExecutionPlan(executionPlan = null) {
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+  const ids = uniqueStrings([
+    ...arr(plan?.sectionPlans).map((row) => row?.designId),
+    ...arr(plan?.effectPlacements).map((row) => row?.designId)
+  ]);
+  const maxId = ids
+    .map((value) => parseDesignIdNumber(value))
+    .filter((value) => Number.isInteger(value))
+    .reduce((max, value) => Math.max(max, value), 0);
+  return `DES-${String(maxId + 1).padStart(3, "0")}`;
 }
 
 function retagRows(rows = [], target = null) {
@@ -102,4 +120,56 @@ export function mergeRevisedDesignConceptExecutionPlan({
   };
 
   return rebuildExecutionPlanStats(merged);
+}
+
+export function removeDesignConceptExecutionPlan({
+  currentExecutionPlan = null,
+  designId = ""
+} = {}) {
+  const currentPlan = currentExecutionPlan && typeof currentExecutionPlan === "object" ? currentExecutionPlan : null;
+  const normalizedDesignId = str(designId);
+  if (!currentPlan || !normalizedDesignId) return null;
+  const sectionPlans = arr(currentPlan.sectionPlans)
+    .filter((row) => str(row?.designId) !== normalizedDesignId);
+  const effectPlacements = arr(currentPlan.effectPlacements)
+    .filter((row) => str(row?.designId) !== normalizedDesignId);
+  return rebuildExecutionPlanStats({
+    ...currentPlan,
+    sectionPlans,
+    effectPlacements
+  });
+}
+
+export function appendGeneratedDesignConceptExecutionPlan({
+  currentExecutionPlan = null,
+  generatedExecutionPlan = null,
+  designId = "",
+  designRevision = 0,
+  designAuthor = "designer"
+} = {}) {
+  const currentPlan = currentExecutionPlan && typeof currentExecutionPlan === "object" ? currentExecutionPlan : null;
+  const generatedPlan = generatedExecutionPlan && typeof generatedExecutionPlan === "object" ? generatedExecutionPlan : null;
+  if (!currentPlan || !generatedPlan) return null;
+  const normalizedDesignId = str(designId) || nextDesignIdFromExecutionPlan(currentPlan);
+  const normalizedRevision = normalizeRevisionNumber(designRevision, 0);
+  const normalizedAuthor = str(designAuthor || "designer") || "designer";
+  const target = normalizeDesignRevisionTarget({
+    designId: normalizedDesignId,
+    designRevision: normalizedRevision,
+    designAuthor: normalizedAuthor
+  });
+  const appendedSectionPlans = [
+    ...arr(currentPlan.sectionPlans),
+    ...retagRows(generatedPlan.sectionPlans, target)
+  ];
+  const appendedEffectPlacements = [
+    ...arr(currentPlan.effectPlacements),
+    ...retagRows(generatedPlan.effectPlacements, target)
+  ];
+  return rebuildExecutionPlanStats({
+    ...currentPlan,
+    ...generatedPlan,
+    sectionPlans: appendedSectionPlans,
+    effectPlacements: appendedEffectPlacements
+  });
 }

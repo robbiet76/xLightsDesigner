@@ -66,7 +66,7 @@ By the end of the deep-training phase:
 - [x] Train revise behavior to preserve concept identity
 - [x] Automate offline scoring for revise-existing-concept eval cases through the app revision path
 - [x] Train revise behavior to modify only the requested concepts when possible
-- [ ] Train delete/regenerate workflows at the concept level
+- [x] Train delete/regenerate workflows at the concept level
 - [x] Train partial-pass refinement without whole-sequence drift
 
 ### E. Whole-Sequence Pass Quality
