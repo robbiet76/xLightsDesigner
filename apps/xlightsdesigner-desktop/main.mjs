@@ -21,6 +21,7 @@ import {
   validateDirectSequencePromptState,
   validateDesignConceptState,
   validateWholeSequenceApplyState,
+  validateComparativeLiveDesignState,
   buildXLightsSequenceState,
   buildXLightsTimingState,
   buildXLightsEffectOccupancyState
@@ -332,6 +333,71 @@ async function runWholeSequenceApplyValidationFromDesktop(expected = {}) {
   };
 }
 
+async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
+  const strongPrompt = str(expected?.strongPrompt);
+  const weakPrompt = str(expected?.weakPrompt);
+  if (!strongPrompt || !weakPrompt) {
+    throw new Error("Comparative live validation requires both strongPrompt and weakPrompt.");
+  }
+  if (expected?.refreshFirst !== false) {
+    await invokeRendererAutomation("refreshFromXLights", {});
+  }
+  if (str(expected?.analyzePrompt)) {
+    await invokeRendererAutomation("analyzeAudio", { prompt: str(expected.analyzePrompt) });
+  }
+
+  const safeDiagnose = async () => {
+    try {
+      return await invokeRendererAutomation("diagnoseCurrentProposal", {});
+    } catch (err) {
+      return {
+        ok: false,
+        error: String(err?.message || err || "")
+      };
+    }
+  };
+
+  await invokeRendererAutomation("generateProposal", {
+    prompt: strongPrompt,
+    requestedRole: "designer_dialog"
+  });
+  const strongDiagnose = await safeDiagnose();
+  const strongSnapshot = await getRendererValidationSnapshot();
+
+  await invokeRendererAutomation("generateProposal", {
+    prompt: weakPrompt,
+    requestedRole: "designer_dialog"
+  });
+  const weakDiagnose = await safeDiagnose();
+  const weakSnapshot = await getRendererValidationSnapshot();
+
+  const validation = validateComparativeLiveDesignState({
+    expected,
+    strong: {
+      diagnose: strongDiagnose,
+      pageStates: strongSnapshot?.pageStates || {}
+    },
+    weak: {
+      diagnose: weakDiagnose,
+      pageStates: weakSnapshot?.pageStates || {}
+    }
+  });
+
+  return {
+    contract: "comparative_live_design_validation_run_v1",
+    version: "1.0",
+    strong: {
+      diagnose: strongDiagnose,
+      pageStates: strongSnapshot?.pageStates || {}
+    },
+    weak: {
+      diagnose: weakDiagnose,
+      pageStates: weakSnapshot?.pageStates || {}
+    },
+    validation
+  };
+}
+
 async function invokeRendererAutomation(action = "", payload = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
@@ -381,6 +447,9 @@ async function processAutomationRequests() {
       }
       if (action === "runWholeSequenceApplyValidation") {
         return runWholeSequenceApplyValidationFromDesktop(request?.payload || {});
+      }
+      if (action === "runComparativeLiveDesignValidation") {
+        return runComparativeLiveDesignValidationFromDesktop(request?.payload || {});
       }
       throw new Error(`Unknown automation action: ${action || "missing"}`);
     }

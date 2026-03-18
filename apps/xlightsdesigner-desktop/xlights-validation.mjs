@@ -461,3 +461,162 @@ export function validateWholeSequenceApplyState({
     }
   };
 }
+
+function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
+  const design = pageStates?.design || {};
+  const sequence = pageStates?.sequence || {};
+  const conceptRows = arr(design?.data?.executionPlan?.conceptRows);
+  const sequenceRows = arr(sequence?.data?.rows);
+  const proposalScope = diagnose?.proposalScope || {};
+  const executionPlanSummary = diagnose?.executionPlanSummary || {};
+  const distinctFamilies = new Set();
+  for (const row of arr(diagnose?.rawPlan)) {
+    if (str(row?.cmd) !== "effects.create") continue;
+    const effectName = str(row?.params?.effectName);
+    if (effectName) distinctFamilies.add(effectName);
+  }
+  if (!distinctFamilies.size) {
+    for (const row of sequenceRows) {
+      for (const part of str(row?.summary).split(",")) {
+        const family = str(part.replace(/\+\d+\s+more$/i, ""));
+        if (family) distinctFamilies.add(family);
+      }
+    }
+  }
+  const flattenedFocusTargets = [...new Set(
+    conceptRows.flatMap((row) => arr(row?.focus)).map((row) => str(row)).filter(Boolean)
+  )].sort();
+  return {
+    activeSequence: str(diagnose?.activeSequence || pageStates?.project?.data?.sequenceContext?.activeSequence),
+    sectionScope: arr(proposalScope?.sections || conceptRows.map((row) => row?.anchor)).map((row) => str(row)).filter(Boolean),
+    targetScope: arr(proposalScope?.targetIds || flattenedFocusTargets).map((row) => str(row)).filter(Boolean).sort(),
+    effectPlacementCount: Number(executionPlanSummary?.effectPlacementCount || sequenceRows.reduce((sum, row) => sum + Number(row?.effects || 0), 0) || 0),
+    sectionCount: arr(executionPlanSummary?.primarySections || conceptRows.map((row) => row?.anchor)).filter(Boolean).length,
+    designConceptCount: conceptRows.length,
+    sequenceRowCount: sequenceRows.length,
+    distinctFamilyCount: distinctFamilies.size,
+    distinctFamilies: [...distinctFamilies].sort(),
+    focusTargets: flattenedFocusTargets
+  };
+}
+
+function comparativeLiveScore(metrics = {}) {
+  let score = 0;
+  score += Number(metrics.effectPlacementCount || 0) * 0.2;
+  score += Number(metrics.distinctFamilyCount || 0) * 0.8;
+  score += Number(metrics.designConceptCount || 0) * 0.5;
+  score += Number(metrics.sectionCount || 0) * 0.35;
+  score += Number(metrics.sequenceRowCount || 0) * 0.1;
+  return Number(score.toFixed(2));
+}
+
+function sortedNormalizedList(values = []) {
+  return arr(values).map((row) => str(row)).filter(Boolean).sort();
+}
+
+function countIntersection(left = [], right = []) {
+  const rightSet = new Set(sortedNormalizedList(right));
+  return sortedNormalizedList(left).filter((row) => rightSet.has(row)).length;
+}
+
+function comparativeLiveScopeAdjustment(metrics = {}, expected = {}) {
+  const expectedSections = sortedNormalizedList(expected?.sections);
+  const expectedTargets = sortedNormalizedList(expected?.targets);
+  const scopeSections = sortedNormalizedList(metrics.sectionScope);
+  const scopeTargets = sortedNormalizedList(metrics.targetScope);
+  const focusTargets = sortedNormalizedList(metrics.focusTargets);
+  let adjustment = 0;
+
+  if (expectedSections.length) {
+    adjustment += JSON.stringify(scopeSections) === JSON.stringify(expectedSections) ? 0.6 : -0.8;
+  }
+
+  if (expectedTargets.length) {
+    const scopeMatchCount = countIntersection(scopeTargets, expectedTargets);
+    const focusMatchCount = countIntersection(focusTargets, expectedTargets);
+    const scopeCoverage = scopeMatchCount / expectedTargets.length;
+    const focusCoverage = focusMatchCount / expectedTargets.length;
+
+    adjustment += scopeCoverage * 1.2;
+    adjustment += focusCoverage * 0.8;
+
+    if (scopeTargets.length && scopeMatchCount === 0) {
+      adjustment -= 1.8;
+    }
+    if (focusTargets.length && focusMatchCount === 0) {
+      adjustment -= 1.2;
+    }
+    if (scopeTargets.length > expectedTargets.length) {
+      adjustment -= Math.min(1.2, (scopeTargets.length - expectedTargets.length) * 0.3);
+    }
+    if (!scopeTargets.length) {
+      adjustment -= 0.8;
+    }
+  }
+
+  return Number(adjustment.toFixed(2));
+}
+
+export function validateComparativeLiveDesignState({
+  expected = {},
+  strong = {},
+  weak = {}
+} = {}) {
+  const strongMetrics = liveProposalMetrics(strong);
+  const weakMetrics = liveProposalMetrics(weak);
+  const issues = [];
+  const expectedSections = arr(expected?.sections).map((row) => str(row)).filter(Boolean).sort();
+  const expectedTargets = arr(expected?.targets).map((row) => str(row)).filter(Boolean).sort();
+  const strongScore = Number((comparativeLiveScore(strongMetrics) + comparativeLiveScopeAdjustment(strongMetrics, expected)).toFixed(2));
+  const weakScore = Number((comparativeLiveScore(weakMetrics) + comparativeLiveScopeAdjustment(weakMetrics, expected)).toFixed(2));
+
+  if (!strongMetrics.effectPlacementCount) {
+    issues.push({ code: "strong_prompt_no_proposal", message: "Strong prompt did not produce effect placements." });
+  }
+  if (!weakMetrics.effectPlacementCount) {
+    issues.push({ code: "weak_prompt_no_proposal", message: "Weak prompt did not produce effect placements." });
+  }
+  if (str(strong?.diagnose?.error)) {
+    issues.push({ code: "strong_prompt_diagnose_failed", message: `Strong prompt diagnostics failed: ${str(strong.diagnose.error)}` });
+  }
+  if (str(weak?.diagnose?.error)) {
+    issues.push({ code: "weak_prompt_diagnose_failed", message: `Weak prompt diagnostics failed: ${str(weak.diagnose.error)}` });
+  }
+  if (expectedSections.length && JSON.stringify(strongMetrics.sectionScope.sort()) !== JSON.stringify(expectedSections)) {
+    issues.push({ code: "strong_scope_sections_mismatch", message: `Strong prompt sections mismatch: expected ${expectedSections.join(", ")}.` });
+  }
+  if (expectedTargets.length && JSON.stringify(strongMetrics.targetScope) !== JSON.stringify(expectedTargets)) {
+    issues.push({ code: "strong_scope_targets_mismatch", message: `Strong prompt targets mismatch: expected ${expectedTargets.join(", ")}.` });
+  }
+  if (expected?.minStrongDistinctFamilyLead != null) {
+    const margin = strongMetrics.distinctFamilyCount - weakMetrics.distinctFamilyCount;
+    if (margin < Number(expected.minStrongDistinctFamilyLead)) {
+      issues.push({ code: "strong_family_lead_too_small", message: `Strong prompt family lead ${margin} is below expected minimum ${expected.minStrongDistinctFamilyLead}.` });
+    }
+  }
+  if (expected?.minStrongPlacementLead != null) {
+    const margin = strongMetrics.effectPlacementCount - weakMetrics.effectPlacementCount;
+    if (margin < Number(expected.minStrongPlacementLead)) {
+      issues.push({ code: "strong_placement_lead_too_small", message: `Strong prompt placement lead ${margin} is below expected minimum ${expected.minStrongPlacementLead}.` });
+    }
+  }
+  if (expected?.requireStrongPreferred !== false && strongScore <= weakScore) {
+    issues.push({ code: "strong_prompt_not_preferred", message: `Strong live score ${strongScore} did not exceed weak score ${weakScore}.` });
+  }
+
+  return {
+    contract: "comparative_live_design_validation_state_v1",
+    version: "1.0",
+    ok: issues.length === 0,
+    summary: issues.length === 0
+      ? "Comparative live design validation checks passed."
+      : `${issues.length} comparative live validation issue${issues.length === 1 ? "" : "s"} detected.`,
+    issues,
+    metrics: {
+      strong: strongMetrics,
+      weak: weakMetrics,
+      strongScore,
+      weakScore
+    }
+  };
+}

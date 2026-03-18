@@ -11064,6 +11064,28 @@ async function dispatchAutomationPrompt(prompt = "") {
   };
 }
 
+async function generateAutomationProposal(payload = {}) {
+  const prompt = String(payload?.prompt || "").trim();
+  const requestedRole = String(payload?.requestedRole || "designer_dialog").trim();
+  if (!prompt) {
+    return { ok: false, error: "Prompt is required." };
+  }
+  await onGenerate(prompt, { requestedRole });
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    requestedRole,
+    creativeIntentHandoff: isPlainObject(state.creative?.intentHandoff)
+      ? {
+          artifactId: String(state.creative.intentHandoff.artifactId || ""),
+          goal: String(state.creative.intentHandoff.goal || "")
+        }
+      : null
+  };
+}
+
 async function applyAutomationCurrentProposal() {
   state.ui.applyApprovalChecked = true;
   const previousConfirmMode = state.safety?.applyConfirmMode;
@@ -11530,6 +11552,7 @@ function getAutomationPageStatesSnapshot() {
 function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
+    generateProposal: generateAutomationProposal,
     refreshFromXLights: refreshAutomationFromXLights,
     analyzeAudio: analyzeAutomationAudio,
     applyCurrentProposal: applyAutomationCurrentProposal,

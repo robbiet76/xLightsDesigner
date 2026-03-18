@@ -11,7 +11,7 @@ fs.mkdirSync(requestsDir, { recursive: true });
 fs.mkdirSync(responsesDir, { recursive: true });
 
 function usage() {
-  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload> | run-design-concept-validation <json-payload> | run-whole-sequence-apply-validation <json-payload>");
+  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload> | run-design-concept-validation <json-payload> | run-whole-sequence-apply-validation <json-payload> | run-comparative-live-design-validation <json-payload>");
   process.exit(2);
 }
 
@@ -53,6 +53,10 @@ if (command === "dispatch-prompt") {
   action = "runWholeSequenceApplyValidation";
   const raw = rest.join(" ").trim();
   payload = raw ? JSON.parse(raw) : {};
+} else if (command === "run-comparative-live-design-validation") {
+  action = "runComparativeLiveDesignValidation";
+  const raw = rest.join(" ").trim();
+  payload = raw ? JSON.parse(raw) : {};
 } else {
   usage();
 }
@@ -61,7 +65,7 @@ const requestPath = path.join(requestsDir, `${id}.json`);
 const responsePath = path.join(responsesDir, `${id}.json`);
 fs.writeFileSync(requestPath, JSON.stringify({ id, action, payload }, null, 2), "utf8");
 
-const timeoutMs = 30000;
+const timeoutMs = 120000;
 const started = Date.now();
 for (;;) {
   if (fs.existsSync(responsePath)) {

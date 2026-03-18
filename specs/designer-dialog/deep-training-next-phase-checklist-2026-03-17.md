@@ -98,6 +98,7 @@ By the end of the deep-training phase:
 - [x] Run concept-only review validations without apply
 - [x] Run concept apply validations on selected concepts
 - [x] Run whole-sequence apply validations on fresh sequences
+- [x] Run live comparative concept validations where a stronger scoped prompt must outrank a flatter or drifted alternative
 - [x] Score outputs against the rubric after each training slice
 - [x] Promote only stable improvements into the training baseline
 

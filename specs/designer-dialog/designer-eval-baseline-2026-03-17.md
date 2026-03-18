@@ -94,6 +94,12 @@ It does **not** yet mean:
 
 Live validation status on the current promoted baseline:
 - concept-only review validation: passed
+- live comparative concept validation: passed
+  - sequence: `API-Whole-Sequence-Validation-20260317-193350`
+  - strong prompt preserved:
+    - section scope: `Chorus 1`
+    - targets: `Snowman`, `Star`
+  - weak prompt drifted broader in live execution and scored lower
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -106,6 +112,7 @@ Live validation status on the current promoted baseline:
 
 Interpretation:
 - the current promoted baseline is now green on both the offline corpus and the live apply cadence
+- live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 
