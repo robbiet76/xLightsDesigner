@@ -149,9 +149,9 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-WholePass-20260317-B.xsq`
   - slice: `wholepass-b-render-discipline-pass`
   - result:
-    - strong score: `22.3`
-    - weak score: `17.2`
-  - status: validated individually
+    - strong score: `22.8`
+    - weak score: `13.6`
+  - status: validated individually and included in the extended live pack
 - alternate saved-sequence probe: passed
   - sequence: `API-Designer-WholePass-20260317-E.xsq`
   - slice: `wholepass-e-composition-pass`
@@ -160,17 +160,18 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-Diversity-Live-20260317-H.xsq`
   - slice: `diversity-h-composition-pass`
   - status: validated individually and included in the extended live pack
-- extended live suite file: current definition is `12` scenarios
+- extended live suite file: current definition is `13` scenarios
   - baseline pack plus:
     - `wholepass-b-composition-pass`
     - `wholepass-b-phrase-subtlety-pass`
+    - `wholepass-b-render-discipline-pass`
     - `wholepass-e-composition-pass`
     - `diversity-h-composition-pass`
     - `clean-phase-beat-grid-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - current status: `12/12` promoted
-  - latest full rerun completed in about `448s`
+  - current status: `13/13` promoted
+  - latest full rerun completed in about `475s`
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`

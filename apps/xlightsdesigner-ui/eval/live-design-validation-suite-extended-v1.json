@@ -28,6 +28,13 @@
       "weakPrompt": "In the Bridge, ignore the phrase release and fill the whole section with the same broad look from start to end."
     },
     {
+      "name": "wholepass-b-render-discipline-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-WholePass-20260317-B.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "strongPrompt": "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+      "weakPrompt": "Keep changing textures aggressively across the whole song with busier sparkle, harder texture swaps, and less restraint in the base look."
+    },
+    {
       "name": "wholepass-e-composition-pass",
       "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-WholePass-20260317-E.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
