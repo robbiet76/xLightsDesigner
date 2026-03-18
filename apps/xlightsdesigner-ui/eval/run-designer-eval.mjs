@@ -1536,6 +1536,20 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
   if (/\b(key light|fill|framing|perimeter|focal hierarchy)\b/.test(lowerPrompt)) {
     score += Number(metrics.wellShapedOverlayCount || 0) * 0.25;
   }
+  if (/\b(hero focus|hero treatment|avoid flooding|controlled support framing|clear hero focus|equally big and saturated|whole yard)\b/.test(lowerPrompt)) {
+    const targetCount = Number(arr(metrics.targetIds).length || 0);
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    const layeredTargetCount = Number(arr(metrics.layeredTargetIds).length || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    if (targetCount <= 4) score += 1.1;
+    else score -= Math.min(2.2, (targetCount - 4) * 0.3);
+    if (overlayCount <= 4) score += 0.8;
+    else score -= Math.min(1.5, (overlayCount - 4) * 0.22);
+    if (layeredTargetCount <= 2) score += 0.8;
+    else score -= Math.min(1.5, (layeredTargetCount - 2) * 0.25);
+    if (conceptImpact <= 0.38) score += 0.9;
+    else score -= Math.min(1.4, (conceptImpact - 0.38) * 5);
+  }
   if (/\b(smooth|connected transitions|cinematic|glide|flowing)\b/.test(lowerPrompt)) {
     score += Number(arr(metrics.recurringEffectFamilies).length || 0) * 0.18;
     score += Number(metrics.distinctSectionFamilySignatures || 0) * 0.12;

@@ -9,7 +9,7 @@ Purpose: capture the current training state after the deep-training checklist co
 ## Current Training State
 
 Validated baseline today:
-- offline eval corpus: `40/40` passed
+- offline eval corpus: `41/41` passed
 - offline average structural score: `3`
 - offline artistic averages:
   - concept-summary quality: `3.00`

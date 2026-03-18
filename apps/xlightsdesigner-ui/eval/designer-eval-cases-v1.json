@@ -538,6 +538,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-focal-restraint",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Stage Lighting Reasoning", "Focal Hierarchy", "Composition Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "In Chorus 1, keep Snowman and Star as the clear hero focus with controlled support framing and avoid flooding the rest of the yard.",
+      "altPromptText": "In Chorus 1, spread the same bright hero treatment across the whole yard so everything feels equally big and saturated.",
+      "selectedSections": ["Chorus 1"],
+      "altSelectedSections": ["Chorus 1"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
