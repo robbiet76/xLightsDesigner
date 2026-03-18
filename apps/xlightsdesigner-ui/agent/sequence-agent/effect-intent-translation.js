@@ -135,7 +135,8 @@ function buildRenderSettingsFromIntent(renderIntent = {}) {
   const normalized = bufferStyle.toLowerCase();
   if (!bufferStyle || normalized === "inherit" || normalized === "default") return out;
   const mapped =
-    normalized === "overlay" ? "Overlay - Scaled" :
+    normalized === "overlay" || normalized === "overlay_scaled" ? "Overlay - Scaled" :
+    normalized === "overlay_centered" ? "Overlay - Centered" :
     normalized === "stack" ? "Horizontal Stack" :
     normalized === "single_line" ? "Single Line" :
     normalized === "per_model" ? "Per Model Default" :

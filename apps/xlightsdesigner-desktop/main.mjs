@@ -33,7 +33,7 @@ import {
 } from "./automation-request-processor.mjs";
 
 const require = createRequire(import.meta.url);
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, powerSaveBlocker } = require("electron");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +44,9 @@ app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("no-sandbox");
 app.commandLine.appendSwitch("disable-gpu");
 app.commandLine.appendSwitch("disable-features", "NetworkService,NetworkServiceSandbox");
+app.commandLine.appendSwitch("disable-background-timer-throttling");
+app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
 // Use a fresh profile dir to avoid startup crash loops from corrupted Chromium caches.
 const XLD_USER_DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop-v2");
 app.setPath("userData", XLD_USER_DATA_DIR);
@@ -64,6 +67,9 @@ const AUTOMATION_REQUESTS_DIR = path.join(AUTOMATION_ROOT, "requests");
 const AUTOMATION_RESPONSES_DIR = path.join(AUTOMATION_ROOT, "responses");
 let automationPollTimer = null;
 let automationRequestProcessor = null;
+let automationHeartbeatTimer = null;
+let automationRequestWatcher = null;
+let automationPowerSaveBlockerId = null;
 const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
@@ -559,6 +565,10 @@ async function processAutomationRequests() {
 
 function startAutomationPolling() {
   ensureAutomationDirs();
+  if (automationPowerSaveBlockerId == null || !powerSaveBlocker.isStarted(automationPowerSaveBlockerId)) {
+    automationPowerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
+    logStartup(`automation:powerSaveBlocker started id=${automationPowerSaveBlockerId}`);
+  }
   flushAutomationRequests({
     requestsDir: AUTOMATION_REQUESTS_DIR,
     responsePathForId: automationResponsePath,
@@ -573,9 +583,35 @@ function startAutomationPolling() {
       }
     });
   }
+  automationRequestProcessor.processPending();
   automationPollTimer = setInterval(() => {
     automationRequestProcessor.processPending();
   }, 500);
+  if (!automationHeartbeatTimer) {
+    automationHeartbeatTimer = setInterval(() => {
+      try {
+        const pending = fs.readdirSync(AUTOMATION_REQUESTS_DIR).filter((name) => name.endsWith(".json")).length;
+        if (pending > 0) {
+          logStartup(`automation:heartbeat pending=${pending}`);
+          automationRequestProcessor.processPending();
+        }
+      } catch (err) {
+        logStartup(`automation:heartbeat error=${String(err?.message || err)}`);
+      }
+    }, 5000);
+  }
+  if (!automationRequestWatcher) {
+    try {
+      automationRequestWatcher = fs.watch(AUTOMATION_REQUESTS_DIR, (_eventType, filename) => {
+        const name = String(filename || "").trim();
+        if (!name.endsWith(".json")) return;
+        logStartup(`automation:watch event file=${name}`);
+        automationRequestProcessor.processPending();
+      });
+    } catch (err) {
+      logStartup(`automation:watch error=${String(err?.message || err)}`);
+    }
+  }
 }
 
 function tryCopyIfMissing(src, dest) {

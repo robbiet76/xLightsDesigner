@@ -8,6 +8,8 @@ const requestsDir = path.join(root, "requests");
 const responsesDir = path.join(root, "responses");
 fs.mkdirSync(requestsDir, { recursive: true });
 fs.mkdirSync(responsesDir, { recursive: true });
+const launchRoot = "/tmp/xld-desktop-launch";
+const launchRequestsDir = path.join(launchRoot, "requests");
 
 function usage() {
   console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path>");
@@ -28,6 +30,18 @@ function readJsonPayload(args = []) {
     return JSON.parse(fs.readFileSync(path.resolve(first.slice(1)), "utf8"));
   }
   return JSON.parse(args.join(" ").trim());
+}
+
+function nudgeApp() {
+  if (process.platform !== "darwin") return;
+  try {
+    fs.mkdirSync(launchRequestsDir, { recursive: true });
+    const id = `launch-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+    const requestPath = path.join(launchRequestsDir, `${id}.json`);
+    fs.writeFileSync(requestPath, JSON.stringify({ id, action: "launch" }, null, 2), "utf8");
+  } catch {
+    // best effort only
+  }
 }
 
 const [, , command, ...rest] = process.argv;
@@ -74,6 +88,7 @@ if (command === "dispatch-prompt") {
 const requestPath = path.join(requestsDir, `${id}.json`);
 const responsePath = path.join(responsesDir, `${id}.json`);
 fs.writeFileSync(requestPath, JSON.stringify({ id, action, payload }, null, 2), "utf8");
+nudgeApp();
 
 function computeTimeoutMs(currentAction = "", currentPayload = {}) {
   if (currentAction === "runLiveDesignValidationSuite") {
@@ -90,6 +105,7 @@ function computeTimeoutMs(currentAction = "", currentPayload = {}) {
 
 const timeoutMs = computeTimeoutMs(action, payload);
 const started = Date.now();
+let lastNudgeAt = started;
 for (;;) {
   if (fs.existsSync(responsePath)) {
     const raw = fs.readFileSync(responsePath, "utf8");
@@ -98,6 +114,10 @@ for (;;) {
       fs.unlinkSync(responsePath);
     } catch {}
     process.exit(0);
+  }
+  if (Date.now() - started > 2000 && Date.now() - lastNudgeAt > 3000) {
+    nudgeApp();
+    lastNudgeAt = Date.now();
   }
   if (Date.now() - started > timeoutMs) {
     console.error(JSON.stringify({ ok: false, id, action, error: "Timed out waiting for automation response" }));

@@ -66,6 +66,20 @@ test("effect intent translation maps palette, layer, render, and shared settings
   assert.equal(out.palette.C_SLIDER_Contrast, 35);
 });
 
+test("effect intent translation normalizes overlay_scaled render intent to xLights buffer style", () => {
+  const out = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Bars",
+      renderIntent: {
+        bufferStyle: "overlay_scaled"
+      }
+    },
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(out.settings.B_CHOICE_BufferStyle, "Overlay - Scaled");
+});
+
 test("effect intent translation preserves explicit raw settings and palette overrides", () => {
   const out = translatePlacementIntentToXlights({
     placement: {
