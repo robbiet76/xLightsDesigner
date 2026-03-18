@@ -60,10 +60,11 @@ function buildFixture({ variant = "default", metadataFixture = null } = {}) {
         { label: "Chorus 1", startMs: 54000, endMs: 76000, energy: "high", density: "dense" },
         { label: "Post-Chorus", startMs: 76000, endMs: 90000, energy: "medium", density: "moderate" },
         { label: "Drop", startMs: 90000, endMs: 106000, energy: "high", density: "dense" },
-        { label: "Middle 8", startMs: 106000, endMs: 124000, energy: "medium", density: "wide" },
-        { label: "Final Chorus", startMs: 124000, endMs: 158000, energy: "high", density: "dense" },
-        { label: "Tag", startMs: 158000, endMs: 174000, energy: "medium", density: "moderate" },
-        { label: "Outro", startMs: 174000, endMs: 190000, energy: "low", density: "sparse" }
+        { label: "Breakdown", startMs: 106000, endMs: 120000, energy: "low", density: "sparse" },
+        { label: "Middle 8", startMs: 120000, endMs: 138000, energy: "medium", density: "wide" },
+        { label: "Final Chorus", startMs: 138000, endMs: 170000, energy: "high", density: "dense" },
+        { label: "Tag", startMs: 170000, endMs: 186000, energy: "medium", density: "moderate" },
+        { label: "Outro", startMs: 186000, endMs: 202000, energy: "low", density: "sparse" }
       ]
     : variant === "bridge_peak_arc"
     ? [
@@ -1882,6 +1883,22 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (effectFamilies.includes("Meteors")) score -= 0.4;
     if (/\b(resolving afterglow|lower payoff weight|less information|breathes out)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(another full climax|reopens the energy|same payoff weight|full climax again)\b/.test(lowerSummary)) score -= 2.0;
+  }
+  if (/\b(in the breakdown|breakdown\b).*?\b(strip the picture back|cleaner reset|next build|full chorus payoff energy)\b/.test(lowerPrompt)) {
+    const breakdownSpeed = Number(metrics.perSectionAverageSpeeds?.["Breakdown"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(breakdownSpeed) ? breakdownSpeed : 0);
+    const breakdownImpact = Number(metrics.perSectionImpactShares?.["Breakdown"] || 0);
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (speedDelta >= 0.6 && speedDelta <= 2.0) score += 1.1;
+    else if (speedDelta < 0.3) score -= 1.0;
+    if (breakdownImpact <= 0.16) score += 0.9;
+    else score -= Math.min(1.1, (breakdownImpact - 0.16) * 6);
+    if (effectFamilies.includes("Color Wash")) score += 0.4;
+    if (effectFamilies.includes("Wave")) score += 0.4;
+    if (effectFamilies.includes("Shimmer")) score -= 0.4;
+    if (/\b(cleaner reset|strips the picture back|room for the next build|pulls back)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(full chorus payoff energy|does not really reset|keeps spending the payoff)\b/.test(lowerSummary)) score -= 2.0;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));

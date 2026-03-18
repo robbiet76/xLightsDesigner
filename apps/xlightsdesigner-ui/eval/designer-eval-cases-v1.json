@@ -819,6 +819,20 @@
       }
     },
     {
+      "id": "quality-compare-breakdown-reset-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Breakdown, strip the picture back and create a cleaner reset before the next build instead of keeping full chorus payoff energy alive.",
+      "altPromptText": "In the Breakdown, keep the full chorus payoff energy running so it does not really reset before the next build.",
+      "selectedSections": ["Breakdown"],
+      "altSelectedSections": ["Breakdown"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",
