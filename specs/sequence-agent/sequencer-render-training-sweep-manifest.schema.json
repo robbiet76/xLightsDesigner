@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/specs/sequence-agent/sequencer-render-training-sweep-manifest.schema.json",
+  "title": "Sequencer Render Training Sweep Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestVersion",
+    "packId",
+    "fixture",
+    "samples"
+  ],
+  "properties": {
+    "manifestVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequencePath",
+        "modelName",
+        "modelType",
+        "startMs",
+        "endMs"
+      ],
+      "properties": {
+        "sequencePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "sharedProfiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sharedProfile"
+      },
+      "default": []
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/sampleSpec"
+      }
+    }
+  },
+  "$defs": {
+    "sharedSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "renderStyle": {
+          "type": "string"
+        },
+        "bufferStyle": {
+          "type": "string"
+        },
+        "layerMethod": {
+          "type": "string"
+        },
+        "paletteProfile": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "sharedProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileId",
+        "sharedSettings"
+      ],
+      "properties": {
+        "profileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sharedSettings": {
+          "$ref": "#/$defs/sharedSettings"
+        }
+      }
+    },
+    "sampleSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sampleId",
+        "effectName",
+        "sharedSettings",
+        "effectSettings",
+        "export"
+      ],
+      "properties": {
+        "sampleId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effectName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sharedProfileId": {
+          "type": "string"
+        },
+        "sharedSettings": {
+          "$ref": "#/$defs/sharedSettings"
+        },
+        "effectSettings": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "timingWindow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "startMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "endMs": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "export": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "model_with_render",
+                "model_only",
+                "video_preview"
+              ]
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "labelHints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

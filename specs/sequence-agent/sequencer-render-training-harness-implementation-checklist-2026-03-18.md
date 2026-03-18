@@ -100,7 +100,7 @@ or
 
 ### A. Manifest Schema
 
-- [ ] Define a sweep manifest schema
+- [x] Define a sweep manifest schema
 - [ ] Include:
   - `effectName`
   - `modelName`
@@ -182,7 +182,7 @@ or
 
 ### A. Training Record Schema
 
-- [ ] Define a render-sample record schema
+- [x] Define a render-sample record schema
 - [ ] Record:
   - sample ID
   - effect name
@@ -253,8 +253,8 @@ or
 ### First Milestone
 
 - [ ] Harness skeleton created
-- [ ] Sweep manifest schema defined
-- [ ] Training record schema defined
+- [x] Sweep manifest schema defined
+- [x] Training record schema defined
 - [ ] First fixture sequence/model pack defined
 - [ ] First working capture path confirmed with xLights
 

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xlightsdesigner.local/specs/sequence-agent/sequencer-render-training-record.schema.json",
+  "title": "Sequencer Render Training Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordVersion",
+    "sampleId",
+    "effectName",
+    "fixture",
+    "sharedSettings",
+    "effectSettings",
+    "artifact",
+    "observations"
+  ],
+  "properties": {
+    "recordVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sampleId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effectName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequencePath",
+        "modelName",
+        "modelType"
+      ],
+      "properties": {
+        "sequencePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "sharedSettings": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "effectSettings": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "path"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "model_with_render",
+            "model_only",
+            "video_preview"
+          ]
+        },
+        "format": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labels",
+        "scores"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "scores": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "readability": {
+              "type": "number"
+            },
+            "restraint": {
+              "type": "number"
+            },
+            "patternClarity": {
+              "type": "number"
+            },
+            "propSuitability": {
+              "type": "number"
+            },
+            "usefulness": {
+              "type": "number"
+            }
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "otherSampleId",
+          "preferredFor"
+        ],
+        "properties": {
+          "otherSampleId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preferredFor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "default": []
+    }
+  }
+}
