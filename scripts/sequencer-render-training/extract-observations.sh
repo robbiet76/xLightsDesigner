@@ -55,6 +55,15 @@ jq -cn \
   | ($features.pixelWidth // 0) as $w
   | ($features.pixelHeight // 0) as $h
   | ($w * $h) as $pixelCount
+  | ($features.representativeSampledFrameActivePixelRatio
+      // $features.firstFrameActivePixelRatio
+      // 0) as $activeRatio
+  | ($features.representativeSampledFrameAverageBrightness
+      // $features.firstFrameAverageBrightness
+      // 0) as $repBrightness
+  | ($features.representativeSampledFrameUniqueColorCount
+      // $features.firstFrameUniqueColorCount
+      // 0) as $repUniqueColors
   | ($shared.renderStyle // "Default") as $renderStyle
   | (
       if $effect == "On" then
@@ -73,6 +82,12 @@ jq -cn \
               if $modelType == "matrix" then ["matrix_fill"]
               elif ($modelType == "outline" or $modelType == "single_line") then ["linear_hold"]
               else []
+              end
+            )
+          + (
+              if $activeRatio >= 0.95 then ["full_coverage"]
+              elif $activeRatio > 0 then ["partial_coverage"]
+              else ["blank_sampled_frame"]
               end
             )
         )
@@ -101,6 +116,12 @@ jq -cn \
               else []
               end
             )
+          + (
+              if $activeRatio >= 0.5 then ["dense_sampled_motion"]
+              elif $activeRatio > 0 then ["sparse_sampled_motion"]
+              else ["blank_sampled_frame"]
+              end
+            )
         )
       else
         unique_labels(
@@ -113,34 +134,46 @@ jq -cn \
       if $effect == "On" then
         {
           readability:
-            (if $modelType == "matrix" then 0.92
-             elif ($modelType == "outline" or $modelType == "single_line") then 0.9
-             else 0.82 end),
+            (
+              (if $modelType == "matrix" then 0.92
+               elif ($modelType == "outline" or $modelType == "single_line") then 0.9
+               else 0.82 end)
+              * (if $activeRatio > 0 then 1 else 0.55 end)
+            ),
           restraint:
             (if ($settings.shimmer // false) then 0.62
              elif (($settings.startLevel // 100) <= 60 or ($settings.endLevel // 100) <= 60) then 0.88
              else 0.82 end),
           patternClarity:
-            (if ($settings.shimmer // false) then 0.7 else 0.95 end),
+            (
+              (if ($settings.shimmer // false) then 0.7 else 0.95 end)
+              * (if $activeRatio > 0 then 1 else 0.35 end)
+            ),
           propSuitability:
             (if ($modelType == "matrix" or $modelType == "outline" or $modelType == "single_line") then 0.92 else 0.78 end)
         }
       elif $effect == "SingleStrand" then
         {
           readability:
-            (if (($settings.mode // "") == "FX") then 0.58
-             elif (($settings.mode // "") == "Skips") then 0.8
-             elif (($settings.chaseType // "") | ascii_downcase | test("bounce")) then 0.74
-             else 0.84 end),
+            (
+              (if (($settings.mode // "") == "FX") then 0.58
+               elif (($settings.mode // "") == "Skips") then 0.8
+               elif (($settings.chaseType // "") | ascii_downcase | test("bounce")) then 0.74
+               else 0.84 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
           restraint:
             (if (($settings.mode // "") == "FX") then 0.42
              elif (($settings.numberChases // 1) > 1) then 0.6
              else 0.72 end),
           patternClarity:
-            (if (($settings.mode // "") == "FX") then 0.5
-             elif (($settings.mode // "") == "Skips") then 0.82
-             elif (($settings.chaseType // "") | ascii_downcase | test("bounce")) then 0.78
-             else 0.86 end),
+            (
+              (if (($settings.mode // "") == "FX") then 0.5
+               elif (($settings.mode // "") == "Skips") then 0.82
+               elif (($settings.chaseType // "") | ascii_downcase | test("bounce")) then 0.78
+               else 0.86 end)
+              * (if $activeRatio > 0 then 1 else 0.3 end)
+            ),
           propSuitability:
             (if ($modelType == "cane" or $modelType == "single_line") then 0.9
              elif $modelType == "matrix" then 0.6
@@ -167,6 +200,6 @@ jq -cn \
       labels: $labels,
       scores: $scores,
       notes:
-        ("Initial heuristic interpretation from manifest intent, model class, and artifact geometry. pixelCount="
+        ("Initial heuristic interpretation from manifest intent, model class, and render-derived geometry. pixelCount="
           + ($pixelCount | tostring))
     }'
