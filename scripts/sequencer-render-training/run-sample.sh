@@ -115,8 +115,20 @@ sleep 1
 ensure_xlights_ready >/dev/null
 
 log_step "open-sequence sampleId=${SAMPLE_ID} sequence=${working_sequence_path}"
-if run_allowing_already_open "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')" >/dev/null; then
+open_sequence_payload="$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
+if run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
   opened_sequence=1
+else
+  log_step "open-sequence-retry sampleId=${SAMPLE_ID}"
+  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+  sleep 2
+  ensure_xlights_ready >/dev/null
+  if run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
+    opened_sequence=1
+  else
+    echo "Failed to open working sequence after retry: ${working_sequence_path}" >&2
+    exit 1
+  fi
 fi
 
 log_step "add-effect sampleId=${SAMPLE_ID} effect=${effect_name} model=${model_name} start=${start_ms} end=${end_ms}"

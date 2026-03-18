@@ -240,5 +240,5 @@ run_allowing_already_open() {
     return 10
   fi
   echo "${body}" >&2
-  exit 1
+  return 1
 }
