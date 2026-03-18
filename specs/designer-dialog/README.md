@@ -21,4 +21,5 @@ Related domains:
 - `designer-diagnostics-snapshots-2026-03-17.md`: stable inspection snapshot definitions for concepts, linked sequence rows, and apply results.
 - `synthetic-metadata-fixtures-2026-03-17.md`: synthetic metadata vocabulary and fixture policy for metadata-aware training evals before real project metadata is available.
 - `designer-eval-baseline-2026-03-17.md`: first offline baseline results against the canonical deep-training eval corpus.
+- `training-audit-and-next-checklist-2026-03-17.md`: current training audit plus the operational checklist for the next unattended training runs.
 - `designer-knowledge-input-audit-2026-03-17.md`: current metadata/music input readiness plus allowed lighting/composition vocabulary boundaries for training.

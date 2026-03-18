@@ -25,9 +25,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `38`
-- supported by current offline runner: `38`
-- passed: `38`
+- total cases: `39`
+- supported by current offline runner: `39`
+- passed: `39`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -118,13 +118,12 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-WholePass-20260317-E.xsq`
   - slice: `wholepass-e-composition-pass`
   - status: validated individually and included in the extended live pack
-- extended live suite: passed
-  - scenarios: `7/7`
+- extended live suite file: current definition is `8` scenarios
   - baseline pack plus:
     - `wholepass-e-composition-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - note: the extended pack file now also includes the phrase-subtlety slice, but that `8/8` rerun has not been promoted yet
+  - current follow-up: rerun and explicitly promote the full `8/8` result
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -146,7 +145,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `38/38` corpus as the structural regression gate
+1. keep the current `39/39` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
