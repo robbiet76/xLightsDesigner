@@ -691,10 +691,16 @@ function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
 
 function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex = 0, sectionCount = 0 } = {}) {
   const lowerGoal = str(goal).toLowerCase();
+  const continuityPalette = isPaletteContinuityGoal(lowerGoal);
+  const resetPalette = isPaletteResetGoal(lowerGoal);
   const warm = /warm|amber|gold|cinematic|theatrical|holiday/.test(lowerGoal);
   const cool = /cool|icy|blue|winter/.test(lowerGoal);
   const effect = str(effectName).toLowerCase();
   const nearEnd = sectionCount > 0 ? sectionIndex >= Math.max(0, sectionCount - 2) : false;
+  const laterLift = Number(sectionIndex) >= 1;
+  let temperature = warm ? "warm" : (cool ? "cool" : "neutral");
+  if (continuityPalette) temperature = laterLift ? "warm" : "warm";
+  if (resetPalette) temperature = laterLift ? "cool" : "warm";
   const colors = warm
     ? (["bars", "fireworks", "strobe", "meteors", "pinwheel"].includes(effect) ? ["amber", "gold", "deep red"] : ["warm gold", "amber"])
     : cool
@@ -702,9 +708,14 @@ function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex 
       : nearEnd
         ? ["gold", "white"]
         : (["spirals", "butterfly", "circles", "galaxy"].includes(effect) ? ["warm gold", "purple"] : ["warm white", "amber"]);
+  const resolvedColors = continuityPalette
+    ? (laterLift ? ["amber", "warm gold", "white"] : ["warm white", "amber"])
+    : resetPalette
+      ? (laterLift ? ["ice blue", "cool white", "blue"] : ["warm white", "amber"])
+      : colors;
   return {
-    colors,
-    temperature: warm ? "warm" : (cool ? "cool" : "neutral"),
+    colors: resolvedColors,
+    temperature,
     contrast: ["bars", "shockwave", "strobe", "meteors", "pinwheel"].includes(effect) ? "high" : "medium",
     brightness: ["shimmer", "fireworks", "strobe", "meteors"].includes(effect) ? "high" : "medium_high",
     accentUsage: ["bars", "shockwave", "strobe", "pinwheel"].includes(effect) ? "accent" : "primary"
@@ -828,6 +839,18 @@ function isControlledFinaleGoal(goal = "") {
 
 function isFloodedFinaleGoal(goal = "") {
   return /as huge as possible|flooding the whole yard evenly|constant full-output energy everywhere|removing most restraint/.test(str(goal).toLowerCase());
+}
+
+function isPaletteContinuityGoal(goal = "") {
+  return /carry a coherent palette|feels connected|continuity forward|not like an unrelated color reset|rather than like an unrelated color reset/.test(str(goal).toLowerCase());
+}
+
+function isPaletteResetGoal(goal = "") {
+  const lowerGoal = str(goal).toLowerCase();
+  if (/not like an unrelated color reset|avoid an unrelated color reset|rather than like an unrelated color reset/.test(lowerGoal)) {
+    return false;
+  }
+  return /unrelated palette|separate unrelated palette|more disconnected|unrelated color reset/.test(lowerGoal);
 }
 
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {

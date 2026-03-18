@@ -592,6 +592,18 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-palette-continuity",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_quality",
+      "lenses": ["Palette Coherence", "Composition Reasoning", "Thematic Continuity"],
+      "fixtureVariant": "default",
+      "promptText": "Carry a coherent palette from Verse 1 into Chorus 1 so the lift feels connected rather than like an unrelated color reset.",
+      "altPromptText": "Make Verse 1 and Chorus 1 feel more disconnected by shifting to a separate unrelated palette at the chorus instead of carrying continuity forward.",
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

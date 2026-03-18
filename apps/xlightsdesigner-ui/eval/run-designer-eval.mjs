@@ -280,6 +280,9 @@ function extractMetrics(result = {}, options = {}) {
   const perSectionPaletteTemperatureCounts = Object.fromEntries(
     Object.entries(perSectionPaletteTemperatures).map(([section, values]) => [section, uniq(values).filter(Boolean).length])
   );
+  const paletteBySection = Object.fromEntries(
+    Object.entries(perSectionPaletteTemperatures).map(([section, values]) => [section, uniq(values).filter(Boolean)])
+  );
   const perSectionAverageSpeeds = Object.fromEntries(
     Object.entries(perSectionSpeedValues).map(([section, values]) => [section, Number(average(values).toFixed(2))])
   );
@@ -376,6 +379,7 @@ function extractMetrics(result = {}, options = {}) {
     perSectionPlacementCounts,
     perSectionEffectFamilyCounts,
     perSectionPaletteTemperatureCounts,
+    paletteBySection,
     perSectionAverageSpeeds,
     distinctSectionFamilySignatures,
     recurringEffectFamilies,
@@ -1622,6 +1626,15 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
     if (overlayCount <= 1) score += 0.5;
     else score -= Math.min(1.0, (overlayCount - 1) * 0.3);
     if (peakImpact <= 0.4) score += 0.5;
+  }
+  if (/\b(carry a coherent palette|unrelated color reset|separate unrelated palette|continuity forward)\b/.test(lowerPrompt)) {
+    const versePalette = arr(metrics.paletteBySection?.["Verse 1"]).map((value) => str(value));
+    const chorusPalette = arr(metrics.paletteBySection?.["Chorus 1"]).map((value) => str(value));
+    const sharedTemperatures = versePalette.filter((value) => chorusPalette.includes(value));
+    if (sharedTemperatures.length) score += 1.2;
+    else score -= 1.0;
+    if (versePalette.includes("warm") && chorusPalette.includes("warm")) score += 0.8;
+    if (versePalette.includes("warm") && chorusPalette.includes("cool")) score -= 0.8;
   }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
