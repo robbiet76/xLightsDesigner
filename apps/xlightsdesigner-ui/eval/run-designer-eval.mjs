@@ -1592,6 +1592,21 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
     if (trackNames.includes("XD: Phrase Cues")) score += 0.9;
     if (alignmentModes.includes("section_span") && alignmentModes.length === 1) score -= 1.4;
   }
+  if (/\b(wide and suspended|second full-chorus payoff|suspended transition|immediate big payoff|hold the breath)\b/.test(lowerPrompt)) {
+    const averageSpeeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
+    const meanSpeed = averageSpeeds.length
+      ? averageSpeeds.reduce((sum, value) => sum + value, 0) / averageSpeeds.length
+      : 0;
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    const alignmentModes = arr(metrics.alignmentModes).map((value) => str(value));
+    if (alignmentModes.includes("phrase_window")) score += 0.8;
+    if (meanSpeed && meanSpeed <= 1.5) score += 1.2;
+    else if (meanSpeed >= 3) score -= Math.min(1.6, (meanSpeed - 3) * 0.5 + 0.8);
+    if (effectFamilies.includes("Color Wash")) score += 0.7;
+    if (effectFamilies.includes("Wave")) score += 0.6;
+    if (effectFamilies.includes("Shimmer")) score -= 0.7;
+    if (effectFamilies.includes("Bars")) score -= 0.4;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));

@@ -151,7 +151,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `42/42` corpus as the structural regression gate
+1. keep the current `43/43` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

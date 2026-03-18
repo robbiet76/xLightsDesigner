@@ -566,6 +566,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-bridge-transition-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Composition Reasoning", "Stage Lighting Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "In the Bridge, keep the transition wide and suspended, hold the breath before the release, and avoid turning it into a second full-chorus payoff.",
+      "altPromptText": "In the Bridge, make it hit like another full chorus with immediate big payoff, denser overlays, and no suspended transition feeling.",
+      "selectedSections": ["Bridge"],
+      "altSelectedSections": ["Bridge"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
