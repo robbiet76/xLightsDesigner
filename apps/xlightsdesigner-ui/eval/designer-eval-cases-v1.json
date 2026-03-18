@@ -475,6 +475,20 @@
       }
     },
     {
+      "id": "metadata-refinement-whole-song-role-shift",
+      "kind": "whole_sequence",
+      "runnerMode": "paired_metadata",
+      "lenses": ["Prop Understanding", "Musical Understanding"],
+      "fixtureVariant": "default",
+      "overrideFixtureVariant": "metadata_change_sensitivity",
+      "promptText": "Build the whole song so lyric props carry the verse language and rhythm props carry the chorus lift.",
+      "selectedSections": ["Verse 1", "Chorus 1", "Final Chorus"],
+      "expect": {
+        "defaultMustIncludeTargetIds": ["NorthPoleSign"],
+        "overrideMustIncludeTargetIds": ["Snowman"]
+      }
+    },
+    {
       "id": "quality-compare-whole-contrast",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

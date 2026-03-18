@@ -1300,6 +1300,9 @@ function runPairedMetadataCase(testCase, metadataFixture) {
     const expected = uniq(testCase.expect.overrideMustOnlyIncludeTargetIds).sort();
     check("override_metadata_targets_wrong", JSON.stringify(overrideTargets) === JSON.stringify(expected));
   }
+  if (testCase.expect?.overrideMustIncludeTargetIds) {
+    check("override_metadata_targets_missing", includesAll(overrideTargets, testCase.expect.overrideMustIncludeTargetIds));
+  }
   return {
     id: testCase.id,
     kind: testCase.kind,
