@@ -10,7 +10,7 @@ It drives xLights as the authoritative renderer, captures the exported result, a
 The current harness is intentionally small:
 - one manifest file
 - one sample at a time
-- first-class support for `On`
+- first-class support for `On` and reduced `SingleStrand`
 - xLights export path:
   - `openSequence`
   - `addEffect`
@@ -23,6 +23,8 @@ The current harness is intentionally small:
 - `run-sample.sh`: execute one sample from a sweep manifest
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
+- `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
+- `manifests/singlestrand-reduced-sweep-v1.json`: reduced `SingleStrand` sweep
 
 ## Usage
 
@@ -41,7 +43,6 @@ Environment:
 ## Notes
 
 - This is an internal harness, not product runtime.
-- The first version is intentionally narrow so we can prove the capture loop before broadening to:
-  - `SingleStrand`
-  - richer shared settings
-  - wider sweep matrices
+- xLights export currently needs a concrete model, not a `ModelGroup`.
+- The harness stages artifacts under the sequence directory so the xLights app can write them, then copies them to the requested output directory.
+- The runner fails if xLights reports export success but the staged artifact does not exist.

@@ -98,7 +98,17 @@ run_and_require_ok "$(jq -cn \
   --arg format "${export_format}" \
   '{cmd:"exportModelWithRender",model:$model,filename:$file,highdef:"false",format:$format}')" >/dev/null
 
+[[ -s "${staged_artifact_path}" ]] || {
+  echo "xLights reported export success but no staged artifact was created: ${staged_artifact_path}" >&2
+  exit 1
+}
+
 cp "${staged_artifact_path}" "${artifact_path}"
+
+[[ -s "${artifact_path}" ]] || {
+  echo "Artifact copy failed: ${artifact_path}" >&2
+  exit 1
+}
 
 if [[ "${opened_sequence}" == "1" ]]; then
   run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null

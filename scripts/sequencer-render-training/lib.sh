@@ -69,6 +69,58 @@ on_effect_settings_json() {
     '
 }
 
+single_strand_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      def shared_render:
+        (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+        + ($shared.settingsOverrides // {});
+
+      def chase_defaults:
+        {
+          E_NOTEBOOK_SSEFFECT_TYPE: "Chase",
+          E_CHOICE_SingleStrand_Colors: ($eff.colors // "Palette"),
+          E_SLIDER_Number_Chases: (($eff.numberChases // 1) | tostring),
+          E_SLIDER_Color_Mix1: (($eff.chaseSize // 10) | tostring),
+          E_TEXTCTRL_Chase_Rotations: (($eff.cycles // 1.0) | tostring),
+          E_TEXTCTRL_Chase_Offset: (($eff.offset // 0.0) | tostring),
+          E_CHOICE_Chase_Type1: ($eff.chaseType // "Left-Right"),
+          E_CHOICE_Fade_Type: ($eff.fadeType // "None"),
+          E_CHECKBOX_Chase_Group_All: (if ($eff.groupAllStrands // false) then "1" else "0" end)
+        };
+
+      def skips_defaults:
+        {
+          E_NOTEBOOK_SSEFFECT_TYPE: "Skips",
+          E_SLIDER_Skips_BandSize: (($eff.bandSize // 1) | tostring),
+          E_SLIDER_Skips_SkipSize: (($eff.skipSize // 1) | tostring),
+          E_SLIDER_Skips_StartPos: (($eff.startPos // 1) | tostring),
+          E_SLIDER_Skips_Advance: (($eff.advances // 0) | tostring),
+          E_CHOICE_Skips_Direction: ($eff.direction // "Left")
+        };
+
+      def fx_defaults:
+        {
+          E_NOTEBOOK_SSEFFECT_TYPE: "FX",
+          E_CHOICE_SingleStrand_FX: ($eff.fxName // "Fireworks 1D"),
+          E_CHOICE_SingleStrand_FX_Palette: ($eff.fxPalette // "* Colors Only"),
+          E_SLIDER_FX_Intensity: (($eff.intensity // 128) | tostring),
+          E_SLIDER_FX_Speed: (($eff.speed // 128) | tostring)
+        };
+
+      (
+        if (($eff.mode // "Chase") == "Skips") then skips_defaults
+        elif (($eff.mode // "Chase") == "FX") then fx_defaults
+        else chase_defaults
+        end
+      ) + shared_render
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -77,6 +129,9 @@ settings_json_for_effect() {
   case "${effect_name}" in
     "On")
       on_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "SingleStrand")
+      single_strand_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
       echo "Unsupported effect in initial harness: ${effect_name}" >&2

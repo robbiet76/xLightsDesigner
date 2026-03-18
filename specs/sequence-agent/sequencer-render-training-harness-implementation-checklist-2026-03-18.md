@@ -42,10 +42,10 @@ That is the minimum needed for the sequencer to learn what the levers do and whi
 
 ### A. Command Path Audit
 
-- [ ] Confirm the smallest viable xLights-backed capture path
-- [ ] Verify whether `exportModelWithRender` is sufficient for the first harness
+- [x] Confirm the smallest viable xLights-backed capture path
+- [x] Verify whether `exportModelWithRender` is sufficient for the first harness
 - [ ] Verify whether `exportVideoPreview` is needed for temporal/pattern cases or can be deferred
-- [ ] Record exact command parameters and output behavior for:
+- [x] Record exact command parameters and output behavior for:
   - `openSequence`
   - `addEffect`
   - `renderAll`
@@ -56,9 +56,9 @@ That is the minimum needed for the sequencer to learn what the levers do and whi
 
 ### B. Internal Tool Boundary
 
-- [ ] Choose a dedicated internal location for the harness code
-- [ ] Keep the harness outside normal user-facing runtime paths
-- [ ] Define artifact output directories for:
+- [x] Choose a dedicated internal location for the harness code
+- [x] Keep the harness outside normal user-facing runtime paths
+- [x] Define artifact output directories for:
   - manifests
   - raw render artifacts
   - extracted features
@@ -74,9 +74,9 @@ or
 
 ### A. Controlled Training Sequences
 
-- [ ] Create a minimal dedicated training fixture sequence pack
-- [ ] Keep sequence duration short enough for fast iteration
-- [ ] Use one or a small number of controlled windows per sample
+- [x] Create a minimal dedicated training fixture sequence pack
+- [x] Keep sequence duration short enough for fast iteration
+- [x] Use one or a small number of controlled windows per sample
 - [ ] Ensure fixture sequences are stable and reproducible
 
 ### B. Prop Coverage
@@ -91,7 +91,7 @@ or
 
 ### C. Initial Effect Set
 
-- [ ] Start with:
+- [x] Start with:
   - `On`
   - `SingleStrand`
 - [ ] Keep `Bars` and `Wave` as the immediate next expansion set
@@ -114,8 +114,8 @@ or
 
 ### B. Shared Settings
 
-- [ ] Make shared realization settings first-class
-- [ ] Include at minimum:
+- [x] Make shared realization settings first-class
+- [x] Include at minimum:
   - `renderStyle`
   - `paletteProfile`
   - `layerMethod`
@@ -124,13 +124,13 @@ or
 ### C. Effect-Specific Settings
 
 - [ ] Build reduced sweep dimensions per effect instead of full cartesian products
-- [ ] For `On`, start with:
+- [x] For `On`, start with:
   - start level
   - end level
   - shimmer
   - cycles
   - transparency
-- [ ] For `SingleStrand`, start with:
+- [x] For `SingleStrand`, start with:
   - mode
   - direction
   - number/grouping
@@ -151,7 +151,7 @@ or
 
 ### A. Render Orchestration
 
-- [ ] Implement a harness runner that:
+- [x] Implement a harness runner that:
   - opens fixture sequence
   - inserts or updates sample effect
   - triggers render
@@ -162,8 +162,8 @@ or
 
 ### B. Artifact Capture
 
-- [ ] Persist each sample artifact with a stable ID
-- [ ] Record:
+- [x] Persist each sample artifact with a stable ID
+- [x] Record:
   - exact command inputs
   - resolved effect settings
   - shared settings
@@ -252,11 +252,11 @@ or
 
 ### First Milestone
 
-- [ ] Harness skeleton created
+- [x] Harness skeleton created
 - [x] Sweep manifest schema defined
 - [x] Training record schema defined
-- [ ] First fixture sequence/model pack defined
-- [ ] First working capture path confirmed with xLights
+- [x] First fixture sequence/model pack defined
+- [x] First working capture path confirmed with xLights
 
 ### Second Milestone
 
