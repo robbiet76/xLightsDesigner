@@ -156,11 +156,12 @@ def parse_png_metrics(path: Path):
 
     if width is None or height is None:
         raise ValueError("PNG missing IHDR")
-    if bit_depth != 8 or color_type != 2:
-        raise ValueError("Only 8-bit RGB PNGs are supported")
+    if bit_depth != 8 or color_type not in (2, 6):
+        raise ValueError("Only 8-bit RGB/RGBA PNGs are supported")
 
     raw = zlib.decompress(bytes(idat))
-    stride = width * 3
+    channels = 3 if color_type == 2 else 4
+    stride = width * channels
     rows = []
     pos = 0
     prev = [0] * stride
@@ -171,9 +172,9 @@ def parse_png_metrics(path: Path):
         pos += stride
         decoded = [0] * stride
         for i, value in enumerate(row):
-            left = decoded[i - 3] if i >= 3 else 0
+            left = decoded[i - channels] if i >= channels else 0
             up = prev[i]
-            up_left = prev[i - 3] if i >= 3 else 0
+            up_left = prev[i - channels] if i >= channels else 0
             if filter_type == 0:
                 decoded[i] = value
             elif filter_type == 1:
@@ -191,7 +192,7 @@ def parse_png_metrics(path: Path):
 
     pixels = []
     for row in rows:
-        for i in range(0, len(row), 3):
+        for i in range(0, len(row), channels):
             pixels.append((row[i], row[i + 1], row[i + 2]))
 
     unique_colors = len(set(pixels))

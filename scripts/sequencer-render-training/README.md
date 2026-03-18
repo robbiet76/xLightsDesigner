@@ -23,6 +23,7 @@ The current harness is intentionally small:
 - `run-sample.sh`: execute one sample from a sweep manifest
 - `run-manifest.sh`: execute all samples from a sweep manifest
 - `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
+- `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, exporting once, then slicing per-sample GIFs
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
 - `build-comparison.sh`: produce pairwise preference records from observation score outputs
@@ -51,6 +52,12 @@ bash scripts/sequencer-render-training/run-manifest.sh \
 bash scripts/sequencer-render-training/run-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-model-batch
+```
+
+```bash
+bash scripts/sequencer-render-training/run-packed-model-batch.sh \
+  --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
+  --out-dir /tmp/sequencer-render-training-packed-batch
 ```
 
 Environment:
@@ -103,6 +110,14 @@ Environment:
   - one already-open healthy xLights session
   - one temporary sequence copy per sample
   - no automatic restart on sample failure
+- `run-packed-model-batch.sh` is the preferred scaling path:
+  - one working sequence per batch
+  - many sample windows added into that one open sequence
+  - one full-model batch export
+  - per-sample GIF slicing by assigned time window
+- Current duration guidance:
+  - static effects like `On`: short windows are fine
+  - animated effects like `SingleStrand`: use the 4-second standard by default
 - Current explicit fixture classes:
   - outline via `Border-01`
   - cane via `CandyCane-01`

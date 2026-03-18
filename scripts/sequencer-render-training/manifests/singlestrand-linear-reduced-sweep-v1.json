@@ -1,15 +1,15 @@
 {
   "manifestVersion": "1.0",
   "packId": "singlestrand-linear-reduced-sweep-v1",
-  "description": "Reduced baseline SingleStrand sweep on a concrete linear model using a medium standard duration.",
+  "description": "Reduced baseline SingleStrand sweep on a concrete linear model using a 4-second standard animated duration.",
   "fixture": {
     "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
     "modelName": "UpperGutter-01",
     "modelType": "single_line",
     "startMs": 1000,
-    "endMs": 3000,
-    "durationClass": "medium",
-    "notes": "Reduced SingleStrand sweep on a concrete roofline-style single-line model."
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Reduced SingleStrand sweep on a concrete roofline-style single-line model using the 4-second animated-effect standard."
   },
   "samples": [
     {
