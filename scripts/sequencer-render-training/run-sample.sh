@@ -111,6 +111,8 @@ fi
 
 log_step "close-any-open-sequence sampleId=${SAMPLE_ID}"
 post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+sleep 1
+ensure_xlights_ready >/dev/null
 
 log_step "open-sequence sampleId=${SAMPLE_ID} sequence=${working_sequence_path}"
 if run_allowing_already_open "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')" >/dev/null; then

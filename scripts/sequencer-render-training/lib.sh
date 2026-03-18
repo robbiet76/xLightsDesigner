@@ -24,6 +24,7 @@ json_has_res_200() {
   local body="$1"
   [[ "${body}" == *'"res":200'* || \
      "${body}" == *'"worked":"true"'* || \
+     "${body}" == *'"fullseq"'* || \
      "${body}" == *'"msg":"Rendered."'* || \
      "${body}" == *'"msg":"Sequence closed."'* || \
      "${body}" == *'"msg":"Model exported."'* || \
