@@ -34,6 +34,13 @@
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
       "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
+    },
+    {
+      "name": "clean-phase-motion-language-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "strongPrompt": "Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.",
+      "weakPrompt": "Make the full song choppier and more staccato with punchy pulse changes, sharper accents, and less connected motion between sections."
     }
   ]
 }
