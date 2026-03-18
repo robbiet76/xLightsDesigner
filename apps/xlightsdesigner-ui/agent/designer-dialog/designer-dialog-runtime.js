@@ -1480,6 +1480,10 @@ export function executeDesignerDialogFlow({
       elevatedRiskConfirmed,
       executionStrategy: proposal.proposalBundle?.executionPlan || null,
       resolvedTargetIds: proposal.plan.resolutionSource === "fallback"
+        || (
+          proposal.plan.resolutionSource === "goal_match"
+          && !arr(proposal.plan.normalizedIntent?.targetIds).length
+        )
         ? []
         : arr(proposal.plan.targets).map((row) => str(row?.id || row?.name)).filter(Boolean)
     });

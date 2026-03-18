@@ -646,6 +646,60 @@ test("designer runtime does not treat inferred focal language as explicit metada
   assert.ok(placementTargets.length >= 2);
 });
 
+test("designer runtime keeps broad whole-song goal-match targets out of handoff scope", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-8e",
+    sequenceRevision: "rev-8e",
+    promptText: "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+    goals: "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+    models: [
+      { id: "Train", name: "Train", type: "Model" },
+      { id: "Border-01", name: "Border-01", type: "Model" },
+      { id: "CandyCane-01", name: "CandyCane-01", type: "Model" },
+      { id: "FrontHouse", name: "FrontHouse", type: "Model" }
+    ],
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000, energy: "low", density: "sparse" },
+          { label: "Verse 1", startMs: 10000, endMs: 30000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 30000, endMs: 50000, energy: "high", density: "dense" },
+          { label: "Bridge", startMs: 50000, endMs: 70000, energy: "medium", density: "moderate" },
+          { label: "Outro", startMs: 70000, endMs: 80000, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Train"],
+      coverageDomains: {
+        broad: ["AllModels", "AllModels_NoFloods"],
+        detail: ["Border-01/Segments", "Train/Body"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "moderate" },
+        { label: "Outro", energy: "low", density: "sparse" }
+      ],
+      designCues: {
+        revealMoments: ["Verse 1->Chorus 1"],
+        holdMoments: ["Intro", "Outro"],
+        lyricFocusMoments: []
+      }
+    }
+  });
+
+  assert.deepEqual(result.proposalBundle.scope.targetIds, []);
+  assert.deepEqual(result.handoff.scope.targetIds, []);
+  assert.equal(result.proposalBundle.executionPlan.passScope, "whole_sequence");
+});
+
 test("designer runtime constrains tag-driven execution plans to resolved metadata targets when prompt has no explicit target ids", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-9",
