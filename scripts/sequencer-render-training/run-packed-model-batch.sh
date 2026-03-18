@@ -85,6 +85,18 @@ if run_allowing_already_open "${warmup_payload}" >/dev/null; then
   post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
   sleep 1
   ensure_xlights_ready >>"${log_path}" 2>&1
+else
+  log_batch "warmup-open-sequence-retry sequence=${sequence_path}"
+  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+  sleep 2
+  if ensure_xlights_ready >>"${log_path}" 2>&1 && run_allowing_already_open "${warmup_payload}" >/dev/null; then
+    log_batch "warmup-close-sequence"
+    post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+    sleep 1
+    ensure_xlights_ready >>"${log_path}" 2>&1
+  else
+    log_batch "warmup-skip sequence=${sequence_path}"
+  fi
 fi
 
 open_sequence_payload="$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
