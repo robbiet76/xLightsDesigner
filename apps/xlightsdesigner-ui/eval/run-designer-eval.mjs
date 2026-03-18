@@ -1865,6 +1865,24 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(held lift|hold tension|opens up after|narrower lift|before chorus 1 opens up)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(already feels like the chorus|full chorus payoff early|spends the payoff early)\b/.test(lowerSummary)) score -= 2.0;
   }
+  if (/\b(in the outro|outro\b).*?\b(resolving afterglow|less information|lower payoff weight|another full climax|reopen the energy)\b/.test(lowerPrompt)) {
+    const outroSpeed = Number(metrics.perSectionAverageSpeeds?.["Outro"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(outroSpeed) ? outroSpeed : 0);
+    const outroPalette = arr(metrics.paletteBySection?.["Outro"]).map((value) => str(value));
+    const finalPalette = arr(metrics.paletteBySection?.["Final Chorus"]).map((value) => str(value));
+    const sharedTemperatures = outroPalette.filter((value) => finalPalette.includes(value));
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (speedDelta >= 0.4 && speedDelta <= 1.8) score += 1.1;
+    else if (speedDelta < 0.2) score -= 1.0;
+    if (sharedTemperatures.length) score += 0.7;
+    else score -= 0.5;
+    if (effectFamilies.includes("Wave")) score += 0.4;
+    if (effectFamilies.includes("Color Wash")) score += 0.4;
+    if (effectFamilies.includes("Meteors")) score -= 0.4;
+    if (/\b(resolving afterglow|lower payoff weight|less information|breathes out)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(another full climax|reopens the energy|same payoff weight|full climax again)\b/.test(lowerSummary)) score -= 2.0;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));

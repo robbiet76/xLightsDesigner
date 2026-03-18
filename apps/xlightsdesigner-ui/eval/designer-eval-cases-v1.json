@@ -805,6 +805,20 @@
       }
     },
     {
+      "id": "quality-compare-outro-resolution-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Thematic Continuity", "Composition Reasoning", "Stage Lighting Reasoning"],
+      "fixtureVariant": "default",
+      "promptText": "In the Outro, let the ending breathe as a resolving afterglow with less information and lower payoff weight than the Final Chorus.",
+      "altPromptText": "In the Outro, reopen the energy and treat it like another full climax instead of a resolving afterglow.",
+      "selectedSections": ["Outro"],
+      "altSelectedSections": ["Outro"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",
