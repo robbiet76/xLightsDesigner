@@ -791,6 +791,20 @@
       }
     },
     {
+      "id": "quality-compare-prechorus-lift-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Thematic Continuity", "Stage Lighting Reasoning"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Pre-Chorus, hold tension and narrow the lift before Chorus 1 opens up instead of spending the full chorus payoff too early.",
+      "altPromptText": "In the Pre-Chorus, spend the full chorus payoff early so it already feels like the chorus instead of a held lift into Chorus 1.",
+      "selectedSections": ["Pre-Chorus"],
+      "altSelectedSections": ["Pre-Chorus"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
+    },
+    {
       "id": "quality-compare-impact-budget-discipline",
       "kind": "whole_sequence",
       "runnerMode": "paired_quality",

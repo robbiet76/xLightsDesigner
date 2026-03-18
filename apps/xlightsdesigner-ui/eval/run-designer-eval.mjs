@@ -1842,6 +1842,29 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(echo the hook|lighter extension|reinforce the hook|lighter follow-through)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(whole new section arc|fresh verse-sized section|new arc)\b/.test(lowerSummary)) score -= 2.0;
   }
+  if (/\b(in the pre-?chorus|pre-?chorus\b).*?\b(hold tension|held lift|opens up|full chorus payoff too early|spend the full chorus payoff early)\b/.test(lowerPrompt)) {
+    const preSpeed = Number(metrics.perSectionAverageSpeeds?.["Pre-Chorus"] || 0);
+    const chorusSpeed = Number(metrics.perSectionAverageSpeeds?.["Chorus 1"] || 0);
+    const speedDelta = (Number.isFinite(chorusSpeed) ? chorusSpeed : 0) - (Number.isFinite(preSpeed) ? preSpeed : 0);
+    const alignmentModes = arr(metrics.alignmentModes).map((value) => str(value));
+    const trackNames = arr(metrics.trackNames).map((value) => str(value));
+    const prePalette = arr(metrics.paletteBySection?.["Pre-Chorus"]).map((value) => str(value));
+    const chorusPalette = arr(metrics.paletteBySection?.["Chorus 1"]).map((value) => str(value));
+    const sharedTemperatures = prePalette.filter((value) => chorusPalette.includes(value));
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (alignmentModes.includes("phrase_window")) score += 1.1;
+    if (trackNames.includes("XD: Phrase Cues")) score += 0.8;
+    if (speedDelta >= 0.4 && speedDelta <= 1.6) score += 1.1;
+    else if (speedDelta < 0.2) score -= 1.0;
+    else if (speedDelta > 1.8) score -= 0.8;
+    if (sharedTemperatures.length) score += 0.7;
+    else score -= 0.6;
+    if (effectFamilies.includes("Wave")) score += 0.4;
+    if (effectFamilies.includes("Color Wash")) score += 0.3;
+    if (effectFamilies.includes("Shimmer")) score -= 0.4;
+    if (/\b(held lift|hold tension|opens up after|narrower lift|before chorus 1 opens up)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(already feels like the chorus|full chorus payoff early|spends the payoff early)\b/.test(lowerSummary)) score -= 2.0;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));
