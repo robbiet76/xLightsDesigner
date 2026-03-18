@@ -552,6 +552,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-verse-support-restraint",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Stage Lighting Reasoning", "Composition Reasoning", "Coverage Discipline"],
+      "fixtureVariant": "default",
+      "promptText": "In Verse 1, keep the support language restrained with more negative space, lighter framing, and avoid turning the whole yard into an equal-brightness wash.",
+      "altPromptText": "In Verse 1, spread the support treatment broadly across the whole yard with fuller coverage and less negative space so everything reads equally present.",
+      "selectedSections": ["Verse 1"],
+      "altSelectedSections": ["Verse 1"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }

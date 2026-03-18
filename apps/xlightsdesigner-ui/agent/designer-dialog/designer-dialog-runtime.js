@@ -306,6 +306,7 @@ function chooseExecutionTargets({
   const isPeak = normalizedEnergy === 'high' || /chorus|finale|outro payoff/.test(key);
   const isGentle = normalizedEnergy === 'low' || /intro|outro/.test(key);
   const isWide = normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(key);
+  const restrainedSupport = !uniformHierarchy && /negative space|lighter framing|restrained|support/.test(lowerGoal);
   if (/foreground/.test(lowerGoal) || /background/.test(lowerGoal)) {
     return uniqueStrings([
       ...foreground.slice(0, 1),
@@ -325,6 +326,15 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (!uniformHierarchy && (/perimeter/.test(lowerGoal) || /frame\b|framing\b/.test(lowerGoal))) {
+    if (restrainedSupport && !isPeak) {
+      return prioritizeConcreteTargets([
+        ...left.slice(0, 1),
+        ...right.slice(0, 1),
+        ...detail.slice(0, 1),
+        ...focal.slice(0, 1),
+        ...fallback.slice(0, 2)
+      ]).slice(0, 5);
+    }
     return prioritizeConcreteTargets([
       ...left.slice(0, 1),
       ...right.slice(0, 1),
@@ -359,6 +369,15 @@ function chooseExecutionTargets({
       ...fallback.slice(0, 3),
       ...broad.slice(0, 1)
     ]).slice(0, 8);
+  }
+  if (restrainedSupport && !isPeak) {
+    return prioritizeConcreteTargets([
+      ...detail.slice(0, 1),
+      ...left.slice(0, 1),
+      ...right.slice(0, 1),
+      ...focal.slice(0, 1),
+      ...fallback.slice(0, 2)
+    ]).slice(0, 5);
   }
   if (isPeak) {
     return uniqueStrings([

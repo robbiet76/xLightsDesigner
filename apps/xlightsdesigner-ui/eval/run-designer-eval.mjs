@@ -1550,6 +1550,31 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "" } 
     if (conceptImpact <= 0.38) score += 0.9;
     else score -= Math.min(1.4, (conceptImpact - 0.38) * 5);
   }
+  if (/\b(verse 1|negative space|lighter framing|equal-brightness wash|equally present|support language restrained)\b/.test(lowerPrompt)) {
+    const targetCount = Number(arr(metrics.targetIds).length || 0);
+    const overlayCount = Number(metrics.overlayPlacementCount || 0);
+    const effectPlacementCount = Number(metrics.effectPlacementCount || 0);
+    const conceptImpact = Number(metrics.conceptWeightedImpactShare || 0);
+    const coverageValues = arr(metrics.coverageValues).map((value) => str(value));
+    const averageSpeeds = Object.values(metrics.perSectionAverageSpeeds || {}).map((value) => Number(value || 0)).filter((value) => Number.isFinite(value));
+    const meanSpeed = averageSpeeds.length
+      ? averageSpeeds.reduce((sum, value) => sum + value, 0) / averageSpeeds.length
+      : 0;
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (targetCount <= 4) score += 0.9;
+    else score -= Math.min(2.0, (targetCount - 4) * 0.28);
+    if (overlayCount <= 3) score += 0.8;
+    else score -= Math.min(1.5, (overlayCount - 3) * 0.25);
+    if (effectPlacementCount <= 5) score += 0.7;
+    else score -= Math.min(1.4, (effectPlacementCount - 5) * 0.18);
+    if (conceptImpact <= 0.22) score += 1.0;
+    else score -= Math.min(1.6, (conceptImpact - 0.22) * 8);
+    if (coverageValues.some((value) => /focused|partial/i.test(value))) score += 0.7;
+    if (meanSpeed && meanSpeed <= 1.5) score += 1.0;
+    else if (meanSpeed >= 2) score -= Math.min(1.2, (meanSpeed - 2) * 0.8 + 0.4);
+    if (effectFamilies.includes("Color Wash")) score += 0.7;
+    if (effectFamilies.includes("Butterfly")) score -= 0.8;
+  }
   if (/\b(smooth|connected transitions|cinematic|glide|flowing)\b/.test(lowerPrompt)) {
     score += Number(arr(metrics.recurringEffectFamilies).length || 0) * 0.18;
     score += Number(metrics.distinctSectionFamilySignatures || 0) * 0.12;
