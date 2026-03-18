@@ -122,6 +122,10 @@ Live validation status on the current promoted baseline:
     - `clean-phase-render-discipline-pass`
   - all scenarios preferred the stronger prompt over the flatter alternative
 - alternate saved-sequence probe: passed
+  - sequence: `API-Designer-WholePass-20260317-B.xsq`
+  - slice: `wholepass-b-composition-pass`
+  - status: validated individually and included in the extended live pack
+- alternate saved-sequence probe: passed
   - sequence: `API-Designer-WholePass-20260317-E.xsq`
   - slice: `wholepass-e-composition-pass`
   - status: validated individually and included in the extended live pack
@@ -129,14 +133,15 @@ Live validation status on the current promoted baseline:
   - sequence: `API-Designer-Diversity-Live-20260317-H.xsq`
   - slice: `diversity-h-composition-pass`
   - status: validated individually and included in the extended live pack
-- extended live suite file: current definition is `9` scenarios
+- extended live suite file: current definition is `10` scenarios
   - baseline pack plus:
+    - `wholepass-b-composition-pass`
     - `wholepass-e-composition-pass`
     - `diversity-h-composition-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - current status: passed `9/9`
-  - extended pack is now validated end to end and ready to use as the broader attended/unattended live regression sweep
+  - current status: `9/9` promoted, `wholepass-b-composition-pass` also validated individually
+  - next promotion checkpoint is a full `10/10` rerun
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -152,7 +157,7 @@ Interpretation:
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - live comparative validation is no longer tied to one saved sequence
 - alternate saved-sequence coverage remains outside the lean promoted `7/7` baseline pack to preserve faster cadence
-- alternate saved-sequence coverage is operationally stable in the validated `9/9` extended live pack
+- alternate saved-sequence coverage is operationally stable in the promoted `9/9` extended live pack, with one additional `WholePass-B` slice validated individually and queued for the next `10/10` promotion run
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 

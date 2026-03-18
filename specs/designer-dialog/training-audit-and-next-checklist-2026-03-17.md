@@ -22,7 +22,7 @@ Validated baseline today:
 - promoted live baseline suite: `8/8` passed
 - canary live suite: `3` scenarios
 - smoke live comparative suite: `3` scenarios
-- current extended live suite file: `9` scenarios
+- current extended live suite file: `10` scenarios
 
 Interpretation:
 - framework churn is no longer the bottleneck
@@ -92,7 +92,7 @@ Important boundary:
 
 ### C. Live Coverage Expansion
 
-- [ ] Add at least one more materially different saved-sequence/layout family to the extended live pack
+- [x] Add at least one more materially different saved-sequence/layout family to the extended live pack
 - [ ] Add at least one more alternate-song scenario where phrase timing matters more than section labels
 - [ ] Add at least one more live scenario where render restraint must beat a busier alternative
 

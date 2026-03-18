@@ -13,6 +13,13 @@
       "weakPrompt": "Treat Chorus 1 as one broad even look across the yard with no real focal hierarchy. Keep the effect language simple and uniform."
     },
     {
+      "name": "wholepass-b-composition-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-WholePass-20260317-B.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "strongPrompt": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
+      "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
+    },
+    {
       "name": "wholepass-e-composition-pass",
       "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Designer-WholePass-20260317-E.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
