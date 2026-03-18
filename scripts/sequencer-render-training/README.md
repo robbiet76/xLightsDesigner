@@ -22,6 +22,7 @@ The current harness is intentionally small:
 
 - `run-sample.sh`: execute one sample from a sweep manifest
 - `run-manifest.sh`: execute all samples from a sweep manifest
+- `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
 - `build-comparison.sh`: produce pairwise preference records from observation score outputs
@@ -46,14 +47,23 @@ bash scripts/sequencer-render-training/run-manifest.sh \
   --out-dir /tmp/sequencer-render-training-batch
 ```
 
+```bash
+bash scripts/sequencer-render-training/run-model-batch.sh \
+  --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
+  --out-dir /tmp/sequencer-render-training-model-batch
+```
+
 Environment:
 - `XLIGHTS_BASE_URL`
   - default: `http://127.0.0.1:49914`
 - `CURL_MAX_TIME`
   - default: `60`
 - `XLIGHTS_RECYCLE_BEFORE_SAMPLE`
-  - default: `1`
-  - restart the debug xLights app before each sample for a cleaner automation session
+  - default: `0`
+  - optional manual recovery mode; not used by default
+- `XLIGHTS_FORCE_RECYCLE_BEFORE_BATCH`
+  - default: `0`
+  - optional manual recovery mode for batch runs
 
 ## Notes
 
@@ -62,7 +72,9 @@ Environment:
 - The harness stages artifacts under the sequence directory so the xLights app can write them, then copies them to the requested output directory.
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - The runner fails if xLights reports export success but the staged artifact does not exist.
-- The runner currently recycles the debug xLights app before each sample by default. That is intentional: a fresh session is slower, but much more stable than reusing a wedged automation listener.
+- The default operating mode is now a persistent xLights session.
+- Automatic restarts are not part of the normal harness flow anymore.
+- Restart flags remain available only as manual recovery tools.
 - Each successful sample also records basic artifact features:
   - file size
   - MIME type
@@ -87,6 +99,10 @@ Environment:
   - one subdirectory per sample
   - `run.log`
   - `run-summary.json`
+- `run-model-batch.sh` is the preferred execution mode for a single-model manifest:
+  - one already-open healthy xLights session
+  - one temporary sequence copy per sample
+  - no automatic restart on sample failure
 - Current explicit fixture classes:
   - outline via `Border-01`
   - cane via `CandyCane-01`

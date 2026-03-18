@@ -31,6 +31,10 @@ done
 
 require_cmd jq
 
+log_step() {
+  printf '[run-sample] %s\n' "$*" >&2
+}
+
 [[ -n "${MANIFEST_FILE}" ]] || { echo "--manifest is required" >&2; exit 1; }
 [[ -f "${MANIFEST_FILE}" ]] || { echo "Manifest not found: ${MANIFEST_FILE}" >&2; exit 1; }
 [[ -n "${OUT_DIR}" ]] || { echo "--out-dir is required" >&2; exit 1; }
@@ -97,15 +101,19 @@ trap cleanup_working_sequence EXIT
 
 opened_sequence=0
 if [[ "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" == "1" ]]; then
+  log_step "recycle-before-sample sampleId=${SAMPLE_ID}"
   restart_xlights_app >/dev/null
-elif ! xlights_ping; then
-  restart_xlights_app >/dev/null
+else
+  log_step "ensure-ready sampleId=${SAMPLE_ID}"
+  ensure_xlights_ready >/dev/null
 fi
 
+log_step "open-sequence sampleId=${SAMPLE_ID} sequence=${working_sequence_path}"
 if run_allowing_already_open "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')" >/dev/null; then
   opened_sequence=1
 fi
 
+log_step "add-effect sampleId=${SAMPLE_ID} effect=${effect_name} model=${model_name} start=${start_ms} end=${end_ms}"
 run_and_require_ok "$(jq -cn \
   --arg target "${model_name}" \
   --arg effect "${effect_name}" \
@@ -115,8 +123,10 @@ run_and_require_ok "$(jq -cn \
   --arg end "${end_ms}" \
   '{cmd:"addEffect",target:$target,effect:$effect,settings:$settings,palette:$palette,layer:"0",startTime:$start,endTime:$end}')" >/dev/null
 
+log_step "render-all sampleId=${SAMPLE_ID}"
 run_and_require_ok '{"cmd":"renderAll","highdef":"false"}' >/dev/null
 
+log_step "export-model sampleId=${SAMPLE_ID} artifact=${staged_artifact_path}"
 run_and_require_ok "$(jq -cn \
   --arg model "${model_name}" \
   --arg file "${staged_artifact_path}" \
@@ -142,8 +152,11 @@ bash "${SCRIPT_DIR}/extract-observations.sh" \
   --features-json "$(cat "${features_path}")" > "${observations_path}"
 
 if [[ "${opened_sequence}" == "1" ]]; then
+  log_step "close-sequence sampleId=${SAMPLE_ID}"
   run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
 fi
+
+log_step "record-written sampleId=${SAMPLE_ID} record=${record_path}"
 
 jq -cn \
   --arg version "1.0" \

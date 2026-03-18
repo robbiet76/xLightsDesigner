@@ -5,7 +5,8 @@ XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
 CURL_MAX_TIME="${CURL_MAX_TIME:-60}"
 XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-abdssfsqgzefmgebylgtlxhcrlae/Build/Products/Debug/xLights.app}"
-XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-1}"
+XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-0}"
+XLIGHTS_STARTUP_WAIT_SECONDS="${XLIGHTS_STARTUP_WAIT_SECONDS:-180}"
 
 post_cmd() {
   local payload="$1"
@@ -38,9 +39,32 @@ require_cmd() {
 }
 
 xlights_ping() {
-  curl --max-time 5 -sS -X POST "${AUTOMATION_URL}" \
+  local body
+  body="$(curl --max-time 10 -sS -X POST "${AUTOMATION_URL}" \
     -H "Content-Type: application/json" \
-    -d '{"cmd":"getModels"}' >/dev/null
+    -d '{"cmd":"getModels"}' || true)"
+  body="$(normalize_json_body "${body}")"
+  [[ "${body}" == *'"models"'* || "${body}" == *'"msg":"OK"'* || "${body}" == *'"res":200'* ]]
+}
+
+xlights_listener_ready() {
+  curl --max-time 2 -sS -X POST "${AUTOMATION_URL}" \
+    -H "Content-Type: application/json" \
+    -d '{"cmd":"getModels"}' >/dev/null 2>&1
+}
+
+xlights_wait_until_ready() {
+  local max_wait="${1:-${XLIGHTS_STARTUP_WAIT_SECONDS}}"
+  local i
+
+  for i in $(seq 1 "${max_wait}"); do
+    if xlights_ping; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
 }
 
 restart_xlights_app() {
@@ -58,16 +82,29 @@ restart_xlights_app() {
     sleep 1
   done
   sleep 2
-  open -g "${XLIGHTS_APP_PATH}"
+  open "${XLIGHTS_APP_PATH}"
 
   for i in $(seq 1 45); do
-    if xlights_ping; then
-      return 0
+    if xlights_listener_ready; then
+      break
     fi
     sleep 1
   done
 
+  if xlights_wait_until_ready "${XLIGHTS_STARTUP_WAIT_SECONDS}"; then
+    return 0
+  fi
+
   echo "xLights did not become healthy after restart" >&2
+  return 1
+}
+
+ensure_xlights_ready() {
+  if xlights_wait_until_ready 5; then
+    return 0
+  fi
+
+  echo "xLights automation is not healthy." >&2
   return 1
 }
 
