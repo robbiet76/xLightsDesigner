@@ -4,7 +4,7 @@ This folder contains the offline eval corpus and runner for the deep designer-tr
 
 Current contents:
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
-- `live-design-validation-suite-v1.json`: canonical live comparative validation scenarios for real saved sequences, including scoped focus, stage-lighting, composition, and motion-language slices
+- `live-design-validation-suite-v1.json`: canonical live comparative validation scenarios for real saved sequences, including scoped focus, stage-lighting, composition, motion-language, and render-discipline slices
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
 

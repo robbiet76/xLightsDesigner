@@ -41,6 +41,13 @@
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.",
       "weakPrompt": "Make the full song choppier and more staccato with punchy pulse changes, sharper accents, and less connected motion between sections."
+    },
+    {
+      "name": "clean-phase-render-discipline-pass",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "strongPrompt": "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+      "weakPrompt": "Keep changing textures aggressively across the whole song with busier sparkle, harder texture swaps, and less restraint in the base look."
     }
   ]
 }

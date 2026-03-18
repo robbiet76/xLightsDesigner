@@ -102,7 +102,7 @@ Live validation status on the current promoted baseline:
     - targets: `Snowman`, `Star`
   - weak prompt drifted broader in live execution and scored lower
 - live comparative suite on real saved sequences: passed
-  - scenarios: `5/5`
+  - scenarios: `6/6`
   - `API-Whole-Sequence-Validation-20260317-193350.xsq`
   - `Validation-Clean-Phase1.xsq`
   - covered live comparative slices:
@@ -111,6 +111,7 @@ Live validation status on the current promoted baseline:
     - `clean-phase-stage-lighting-pass`
     - `clean-phase-composition-pass`
     - `clean-phase-motion-language-pass`
+    - `clean-phase-render-discipline-pass`
   - all scenarios preferred the stronger prompt over the flatter alternative
 - concept apply validation on selected concept: passed
   - `D1.0`
@@ -131,7 +132,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `37/37` corpus as the structural regression gate
+1. keep the current `38/38` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement
