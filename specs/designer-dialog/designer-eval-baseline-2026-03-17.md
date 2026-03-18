@@ -26,9 +26,9 @@ node apps/xlightsdesigner-ui/eval/run-designer-eval.mjs > /tmp/designer-eval-rep
 
 ## Current Baseline Summary
 
-- total cases: `53`
-- supported by current offline runner: `53`
-- passed: `53`
+- total cases: `54`
+- supported by current offline runner: `54`
+- passed: `54`
 - failed: `0`
 - deferred: `0`
 - average structural score: `3`
@@ -82,6 +82,7 @@ The runner and designer logic now cover:
 - adjacent-section contrast pacing scoring where Verse-to-Chorus separation must stay connected instead of becoming abrupt and incoherent
 - bridge-to-final-chorus handoff scoring where suspended release must land in a strong but not premature payoff
 - drop-release discipline scoring where a semantic `Drop` must land as a concentrated release instead of staying broad and transitional
+- tag-ending discipline scoring where a semantic `Tag` must resolve the final hook without reopening a brand-new climax
 
 ## Current Meaning Of A Pass
 
@@ -180,7 +181,7 @@ Interpretation:
 
 ## Next Training Priorities
 
-1. keep the current `53/53` corpus as the structural regression gate
+1. keep the current `54/54` corpus as the structural regression gate
 2. keep the current artistic baseline fixed while training against:
    - per-effect settings/render nuance
    - exact timing-window quality and music-driven sub-section placement

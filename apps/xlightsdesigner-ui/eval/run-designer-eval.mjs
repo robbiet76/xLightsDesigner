@@ -1740,6 +1740,24 @@ function comparativeQualityScore({ metrics = {}, lenses = [], promptText = "", s
     if (/\b(concentrated release|cleaner post-buildup hit|landing hard|sharper release)\b/.test(lowerSummary)) score += 2.0;
     if (/\b(broader|transitional|diffused|never really lands)\b/.test(lowerSummary)) score -= 2.0;
   }
+  if (/\b(in the tag|tag\b).*?\b(resolving echo|afterglow|less new information|brand-?new climax|full-payoff density)\b/.test(lowerPrompt)) {
+    const tagSpeed = Number(metrics.perSectionAverageSpeeds?.["Tag"] || 0);
+    const finalSpeed = Number(metrics.perSectionAverageSpeeds?.["Final Chorus"] || 0);
+    const speedDelta = (Number.isFinite(finalSpeed) ? finalSpeed : 0) - (Number.isFinite(tagSpeed) ? tagSpeed : 0);
+    const tagPalette = arr(metrics.paletteBySection?.["Tag"]).map((value) => str(value));
+    const finalPalette = arr(metrics.paletteBySection?.["Final Chorus"]).map((value) => str(value));
+    const sharedTemperatures = tagPalette.filter((value) => finalPalette.includes(value));
+    const effectFamilies = arr(metrics.distinctEffectFamilies).map((value) => str(value));
+    if (speedDelta >= 0.4 && speedDelta <= 1.8) score += 1.1;
+    else if (speedDelta < 0.2) score -= 1.0;
+    if (sharedTemperatures.length) score += 0.8;
+    else score -= 0.6;
+    if (effectFamilies.includes("Candle")) score += 0.5;
+    if (effectFamilies.includes("Color Wash")) score += 0.4;
+    if (effectFamilies.includes("Meteors")) score -= 0.4;
+    if (/\b(shorter afterglow|resolving echo|narrower closing energy|echoing the final hook)\b/.test(lowerSummary)) score += 2.0;
+    if (/\b(brand-?new climax|same density|same payoff weight|another full climax)\b/.test(lowerSummary)) score -= 2.0;
+  }
   if (/\b(restrained|luminous base|smoother texture transitions|selective sparkle|bigger lifts)\b/.test(lowerPrompt)) {
     const bufferStyles = arr(metrics.bufferStyles).map((value) => str(value));
     const blendRoles = arr(metrics.layerBlendRoles).map((value) => str(value));

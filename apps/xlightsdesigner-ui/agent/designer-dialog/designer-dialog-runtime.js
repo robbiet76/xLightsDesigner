@@ -471,6 +471,8 @@ function buildSectionEffectHints({
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   const focusedDrop = isFocusedDropGoal(lowerGoal);
   const diffusedDrop = isDiffusedDropGoal(lowerGoal);
+  const resolvingTag = isResolvingTagGoal(lowerGoal);
+  const overblownTag = isOverblownTagGoal(lowerGoal);
   const escalationGoal = isEscalationPacingGoal(lowerGoal);
   const flattenedEscalation = isFlattenedEscalationGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
@@ -546,6 +548,15 @@ function buildSectionEffectHints({
       ? pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Fireworks", "Pinwheel"])
       : pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
   }
+  if (/tag/.test(lowerSection)) {
+    if (resolvingTag) {
+      return pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Shimmer"]);
+    }
+    if (overblownTag) {
+      return pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"]);
+    }
+    return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "Shimmer"]);
+  }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
   }
@@ -587,6 +598,8 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   const focusedDrop = isFocusedDropGoal(lowerGoal);
   const diffusedDrop = isDiffusedDropGoal(lowerGoal);
+  const resolvingTag = isResolvingTagGoal(lowerGoal);
+  const overblownTag = isOverblownTagGoal(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
       return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
@@ -637,6 +650,15 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
       return `push the bridge harder${warmClause} like a payoff hit with denser overlay energy and less suspension`;
     }
     return `widen the picture${warmClause} with smoother transitions and controlled contrast lift`;
+  }
+  if (/tag/.test(lowerSection)) {
+    if (resolvingTag) {
+      return `let the tag resolve${warmClause} like a shorter afterglow, echoing the final hook without opening a new climax`;
+    }
+    if (overblownTag) {
+      return `treat the tag${warmClause} like another full climax with the same density and payoff weight as the final chorus`;
+    }
+    return `let the tag settle${warmClause} with a cleaner echo and narrower closing energy`;
   }
   if (normalizedEnergy === 'low' || /intro|outro/.test(lowerSection)) {
     return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;
@@ -939,6 +961,18 @@ function isDiffusedDropGoal(goal = "") {
   const lower = str(goal).toLowerCase();
   return /drop/.test(lower)
     && /broad and transitional|never really lands|release feels diffused|stretch(?:ing)? it like another transition/.test(lower);
+}
+
+function isResolvingTagGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /tag/.test(lower)
+    && /resolving echo|afterglow|less new information|final hook|short resolving|echo of the final/.test(lower);
+}
+
+function isOverblownTagGoal(goal = "") {
+  const lower = str(goal).toLowerCase();
+  return /tag/.test(lower)
+    && /brand-?new climax|same full-payoff density|full payoff density|another climax|same as the final chorus/.test(lower);
 }
 
 function shouldLayerTarget({ goal = "", energy = "", targetIndex = 0, singleScope = false } = {}) {

@@ -708,6 +708,20 @@
       "expect": {
         "minComparativeMargin": 0.15
       }
+    },
+    {
+      "id": "quality-compare-tag-ending-discipline",
+      "kind": "concept",
+      "runnerMode": "paired_quality",
+      "lenses": ["Musical Understanding", "Thematic Continuity", "Composition Reasoning"],
+      "fixtureVariant": "extended_taxonomy_sections",
+      "promptText": "In the Tag, use a short resolving echo of the final hook with a narrower afterglow and less new information than the Final Chorus.",
+      "altPromptText": "In the Tag, treat it like a brand-new climax with the same full-payoff density as the Final Chorus.",
+      "selectedSections": ["Tag"],
+      "altSelectedSections": ["Tag"],
+      "expect": {
+        "minComparativeMargin": 0.15
+      }
     }
   ]
 }
