@@ -580,6 +580,11 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
   let adjustment = 0;
   const familyCount = Number(metrics.distinctFamilyCount || 0);
   const placementCount = Number(metrics.effectPlacementCount || 0);
+  const sequenceRowCount = Number(metrics.sequenceRowCount || 0);
+  const sectionCount = Number(metrics.sectionCount || 0);
+  const designConceptCount = Number(metrics.designConceptCount || 0);
+  const targetScopeCount = sortedNormalizedList(metrics.targetScope).length;
+  const focusTargetCount = sortedNormalizedList(metrics.focusTargets).length;
   const timingTrackNames = sortedNormalizedList(metrics.timingTrackNames);
   const anchorBases = sortedNormalizedList(metrics.anchorBases);
 
@@ -587,12 +592,17 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
     if (familyCount >= 4 && familyCount <= 6) adjustment += 1.8;
     if (familyCount >= 7) adjustment -= 1.4;
     if (placementCount > 44) adjustment -= 1.0;
+    if (focusTargetCount >= 10) adjustment -= 1.2;
+    if (sequenceRowCount > 30) adjustment -= 0.8;
+    if (designConceptCount === sectionCount && designConceptCount >= 8) adjustment += 0.5;
   }
 
   if (/uniform effect language|uniform|even look|visually even|same emphasis|share the same emphasis|minimal hierarchy|simple and uniform/.test(lowerGoal)) {
     if (familyCount <= 3) adjustment += 1.0;
     if (familyCount >= 5) adjustment -= 3.0;
     if (placementCount > 36) adjustment -= 1.0;
+    if (focusTargetCount >= 12) adjustment -= 1.4;
+    if (sequenceRowCount > 28) adjustment -= 0.8;
   }
 
   if (/perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)
@@ -615,6 +625,19 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
     if (anchorBases.includes("phrase_window")) {
       adjustment += 0.9;
     }
+  }
+
+  if (/full song|whole song|full show/.test(lowerGoal) && !/chorus 1|bridge|verse 1|verse 2|pre-chorus|post-chorus|middle 8|tag|drop/.test(lowerGoal)) {
+    if (targetScopeCount === 0) adjustment += 0.9;
+    if (targetScopeCount > 0 && targetScopeCount <= 2) adjustment -= 1.8;
+  }
+
+  if (/restrained glowing base|smoother texture transitions|selective sparkle|render feels polished|less restraint in the base look/.test(lowerGoal)) {
+    if (familyCount <= 6) adjustment += 1.2;
+    if (familyCount >= 7) adjustment -= 1.0;
+    if (placementCount <= 36) adjustment += 0.6;
+    if (placementCount >= 40) adjustment -= 0.8;
+    if (targetScopeCount > 0 && targetScopeCount <= 2) adjustment -= 1.4;
   }
 
   return Number(adjustment.toFixed(2));

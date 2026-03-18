@@ -12,7 +12,7 @@ const launchRoot = "/tmp/xld-desktop-launch";
 const launchRequestsDir = path.join(launchRoot, "requests");
 
 function usage() {
-  console.error("usage: automation.mjs ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
+  console.error("usage: automation.mjs [--result-file path] ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
   process.exit(2);
 }
 
@@ -44,7 +44,14 @@ function nudgeApp() {
   }
 }
 
-const [, , command, ...rest] = process.argv;
+const argv = process.argv.slice(2);
+let resultFile = "";
+if (argv[0] === "--result-file") {
+  resultFile = String(argv[1] || "").trim();
+  if (!resultFile) usage();
+  argv.splice(0, 2);
+}
+const [command, ...rest] = argv;
 if (!command) usage();
 
 const id = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
@@ -124,6 +131,9 @@ let lastNudgeAt = started;
 for (;;) {
   if (fs.existsSync(responsePath)) {
     const raw = fs.readFileSync(responsePath, "utf8");
+    if (resultFile) {
+      fs.writeFileSync(path.resolve(resultFile), raw + "\n", "utf8");
+    }
     process.stdout.write(raw + "\n");
     try {
       fs.unlinkSync(responsePath);

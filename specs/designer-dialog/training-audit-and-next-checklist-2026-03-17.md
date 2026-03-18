@@ -83,7 +83,7 @@ Important boundary:
 ### A. Baseline Hygiene
 
 - [ ] Update the baseline docs whenever the promoted counts change
-- [x] Rerun the current extended live pack and promote the full `9/9` result if it stays green
+- [x] Rerun the current extended live pack and promote the full `11/11` result if it stays green
 - [ ] Keep GitHub aligned after each promoted checkpoint
 
 ### B. Overnight Automation

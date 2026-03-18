@@ -566,6 +566,7 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
     const sequencePath = str(scenario?.sequencePath);
     const timings = {};
+    logStartup(`automation:live-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
     if (sequencePath && sequencePath !== activeSequencePath) {
       const openStartedAtMs = nowMs();
       await openSequenceFromDesktop(sequencePath);
@@ -620,6 +621,7 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
       strong: comparison?.strong || null,
       weak: comparison?.weak || null
     });
+    logStartup(`automation:live-suite:scenario:finish name=${name} ok=${comparison?.validation?.ok === true ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
   }
 
   const failed = results.filter((row) => row?.validation?.ok !== true);
@@ -655,6 +657,7 @@ async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
     const sequencePath = str(scenario?.sequencePath);
     const scenarioStartedAtMs = nowMs();
     const timings = {};
+    logStartup(`automation:canary-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
 
     if (sequencePath && sequencePath !== activeSequencePath) {
       const openStartedAtMs = nowMs();
@@ -708,6 +711,7 @@ async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
       },
       validation: run?.validation || null
     });
+    logStartup(`automation:canary-suite:scenario:finish name=${name} ok=${run?.validation?.ok === true ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
   }
 
   const failed = results.filter((row) => row?.validation?.ok !== true);

@@ -160,8 +160,8 @@ Live validation status on the current promoted baseline:
     - `diversity-h-composition-pass`
   - desktop automation timeout now scales with suite size so the extended pack can complete through the normal CLI path
   - desktop suite orchestration now reuses refresh/analyze setup per sequence context; the promoted `7/7` baseline pack completed in about `271s` on the optimized runner
-  - current status: `9/9` promoted, `wholepass-b-composition-pass` and `wholepass-b-phrase-subtlety-pass` also validated individually
-  - next promotion checkpoint is a full `11/11` rerun
+  - current status: `11/11` promoted
+  - latest full rerun completed in about `432s`
 - concept apply validation on selected concept: passed
   - `D1.0`
   - anchor: `Chorus 1`
@@ -177,7 +177,7 @@ Interpretation:
 - live comparative validation now exercises the direct designer path rather than the app-assistant routing layer
 - live comparative validation is no longer tied to one saved sequence
 - alternate saved-sequence coverage remains outside the lean promoted `7/7` baseline pack to preserve faster cadence
-- alternate saved-sequence coverage is operationally stable in the promoted `9/9` extended live pack, with two additional `WholePass-B` slices validated individually and queued for the next `11/11` promotion run
+- alternate saved-sequence coverage is operationally stable in the promoted `11/11` extended live pack
 - stable improvements from the recent training slices are promoted into the baseline
 - the next work should focus on deeper artistic tuning, not more framework churn
 
