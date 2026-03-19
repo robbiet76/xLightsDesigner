@@ -191,3 +191,15 @@ The next contract milestone should be:
 - test-backed validation
 
 That will give the sequencer a clean training boundary and reduce style drift, guesswork, and inconsistent execution.
+
+## UX Boundary Reminder
+This stronger handoff is an internal contract.
+
+It should not be surfaced as a required user-facing chat format.
+
+The intended relationship remains:
+- director/user -> conversational, high-level, intent-focused
+- designer -> internal normalization into explicit sequencing directives
+- sequencer -> execution of those directives
+
+That separation should be preserved in both product UX and training design.
