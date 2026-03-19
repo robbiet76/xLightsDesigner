@@ -1,0 +1,42 @@
+{
+  "version": "3.0",
+  "description": "Cross-effect selector evaluation including Twinkle and Shockwave against the mature Stage 1 set.",
+  "cases": [
+    {
+      "caseId": "select_twinkle_restrained_line",
+      "description": "Restrained steady animated texture on a line should prefer Twinkle over motion-centric effects.",
+      "requiredIntents": ["animated", "patterned", "restrained", "steady"],
+      "requiredPatternFamilies": ["linear_restrained_twinkle"],
+      "geometryProfiles": ["single_line_horizontal"],
+      "effects": ["Bars", "Marquee", "Twinkle"],
+      "expectedSelection": "Twinkle"
+    },
+    {
+      "caseId": "select_twinkle_strobe_spinner",
+      "description": "Bold busy animated radial texture on the spinner should prefer Twinkle over Shockwave.",
+      "requiredIntents": ["animated", "bold", "busy", "patterned"],
+      "requiredPatternFamilies": ["radial_strobe_twinkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Twinkle", "Shockwave"],
+      "expectedSelection": "Twinkle"
+    },
+    {
+      "caseId": "select_shockwave_fill_spinner",
+      "description": "Centered fill-oriented radial motion on the spinner should still prefer Shockwave.",
+      "requiredIntents": ["animated", "fill", "patterned"],
+      "requiredPatternFamilies": ["radial_diffuse_shockwave"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Twinkle", "Shockwave"],
+      "expectedSelection": "Shockwave"
+    },
+    {
+      "caseId": "select_twinkle_varied_spinner",
+      "description": "Varied restrained radial texture should prefer Twinkle.",
+      "requiredIntents": ["animated", "patterned", "restrained", "varied"],
+      "requiredPatternFamilies": ["radial_classic_random_twinkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Twinkle", "Shockwave", "Pinwheel"],
+      "expectedSelection": "Twinkle"
+    }
+  ]
+}

@@ -151,8 +151,8 @@ Current Stage 1 state:
 - current result:
   - structurally observable
   - structurally retrievable for constrained Twinkle requests
-  - not ready for selector promotion
-- next work should deepen interaction semantics before it is added to the selector or controlled-vocabulary layers
+  - selector-ready for the current merged selector set
+- next work should broaden calibration before it is added to wider selector coverage or the controlled-vocabulary layer
 
 ## Decision Rules
 

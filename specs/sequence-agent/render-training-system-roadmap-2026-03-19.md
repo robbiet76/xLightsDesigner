@@ -63,7 +63,7 @@ These should not follow the same early-conclusion policy as simpler effects.
 `Spirals` should be treated as a benchmark tree effect for Stage 1 quality.
 With full Stage 1 standard-geometry coverage now in place, `Bars` should also be treated as a complex effect for planning and promotion purposes.
 `Shockwave` has now completed its first broad-geometry screening pass and should remain in the structurally-observable stage until its geometry-aware semantics are improved.
-`Twinkle` has now completed its first broad-geometry screening pass and is structurally retrievable for constrained requests, but should remain out of the selector stack until its interaction semantics are strengthened.
+`Twinkle` has now completed its first broad-geometry screening pass, is structurally retrievable for constrained requests, and is selector-ready within the current merged selector set. It should still stay out of broader selector claims until it is calibrated against more effects.
 
 ### Stage 2: Layered-Effect Understanding
 

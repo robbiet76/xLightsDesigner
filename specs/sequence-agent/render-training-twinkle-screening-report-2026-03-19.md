@@ -11,6 +11,8 @@ Machine-readable artifacts:
 - [/tmp/twinkle-intent-eval.v1.json](/tmp/twinkle-intent-eval.v1.json)
 - [/tmp/render-training-twinkle-interaction-intent-map.v1.json](/tmp/render-training-twinkle-interaction-intent-map.v1.json)
 - [/tmp/twinkle-intent-eval.v2.json](/tmp/twinkle-intent-eval.v2.json)
+- [/tmp/render-training-selector-intent-map.v1.json](/tmp/render-training-selector-intent-map.v1.json)
+- [/tmp/priority-effect-selection-eval.v6.json](/tmp/priority-effect-selection-eval.v6.json)
 
 Result:
 - `20/20` packs passed on the refined rerun
@@ -21,6 +23,8 @@ Result:
   - `3/3` passed
   - `18/18` samples passed
 - dedicated interaction retrieval eval:
+  - `4/4` passed
+- cross-effect selector eval:
   - `4/4` passed
 
 Scope:
@@ -117,25 +121,27 @@ What this means:
   - rerandomized classic radial twinkle
 
 What is not mature enough yet:
-- `Twinkle` is not ready for the selector stack yet
-- effect-local retrieval works
-- cross-effect routing does not yet have enough evidence that Twinkle semantics are calibrated against:
-  - `Shimmer`
-  - `Shockwave`
-  - the mature Stage 1 selector set
 - broader designer language is still too open-ended for promotion
+- selector support is now justified only for the currently merged selector set:
+  - `Bars`
+  - `Marquee`
+  - `Pinwheel`
+  - `Spirals`
+  - `Shockwave`
+  - `Twinkle`
+- this does not yet imply global effect routing across all effects
 
 Recommended next work on `Twinkle`:
 1. deepen interaction semantics:
    - `count` + `steps`
    - `strobe` + geometry
    - `style` + geometry
-2. validate whether `Twinkle` can be contrasted cleanly against existing selector effects
-3. only then consider selector or vocabulary promotion
+2. calibrate against additional texture/motion effects before calling the selector coverage broad
+3. only then consider controlled vocabulary promotion
 
 Current maturity recommendation:
 - `execution_ready`: yes
 - `structurally_observable`: yes
 - `structurally_retrievable`: yes
-- `selector_ready`: no
+- `selector_ready`: yes, for the current supported selector set
 - `designer_language_candidate`: no
