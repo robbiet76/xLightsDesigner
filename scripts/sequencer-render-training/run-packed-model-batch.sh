@@ -26,6 +26,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_cmd jq
+require_cmd python3
 
 [[ -n "${MANIFEST_FILE}" ]] || { echo "--manifest is required" >&2; exit 1; }
 [[ -f "${MANIFEST_FILE}" ]] || { echo "Manifest not found: ${MANIFEST_FILE}" >&2; exit 1; }
@@ -47,6 +48,13 @@ sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 model_type="$(jq -r '.modelType' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
+show_dir="$(cd "$(dirname "${sequence_path}")/../.." && pwd)"
+model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
+model_start_channel_zero="$(jq -r '.startChannelZero' <<<"${model_metadata_json}")"
+model_channel_count="$(jq -r '.channelCount' <<<"${model_metadata_json}")"
+model_node_count="$(jq -r '.nodeCount' <<<"${model_metadata_json}")"
+model_channels_per_node="$(jq -r '.channelsPerNode' <<<"${model_metadata_json}")"
+decoder_bin="$("${SCRIPT_DIR}/build-fseq-window-decoder.sh")"
 pack_id="$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}")"
 training_working_dir="${RENDER_TRAINING_ROOT}/working"
 training_fseq_dir="${RENDER_TRAINING_ROOT}/fseq"
@@ -187,6 +195,26 @@ while IFS= read -r planned_row; do
   error_message=""
 
   cp "${batch_features_path}" "${features_path}"
+  decoded_features_path="${sample_dir}/${sample_id}.decoded-features.json"
+  "${decoder_bin}" \
+    --fseq "${batch_artifact_path}" \
+    --start-channel "${model_start_channel_zero}" \
+    --channel-count "${model_channel_count}" \
+    --window-start-ms "${start_ms}" \
+    --window-end-ms "${end_ms}" \
+    --node-count "${model_node_count}" \
+    --channels-per-node "${model_channels_per_node}" \
+    > "${decoded_features_path}"
+  jq -cn \
+    --argjson base "$(cat "${features_path}")" \
+    --argjson decoded "$(cat "${decoded_features_path}")" \
+    '$base + $decoded' > "${features_path}"
+  observations_json="$(
+    bash "${SCRIPT_DIR}/extract-observations.sh" \
+      --sample-json "${sample_json}" \
+      --model-type "${model_type}" \
+      --features-json "$(cat "${features_path}")"
+  )"
   jq -cn \
     --arg version "1.0" \
     --arg sampleId "${sample_id}" \
@@ -207,7 +235,8 @@ while IFS= read -r planned_row; do
     --argjson sharedSettings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
     --argjson effectSettings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
     --argjson features "$(cat "${features_path}")" \
-    --argjson labelHints "$(jq -c '.labelHints // []' <<<"${sample_json}")" \
+    --argjson observations "${observations_json}" \
+    --argjson modelMetadata "${model_metadata_json}" \
     '{
       recordVersion: $version,
       sampleId: $sampleId,
@@ -233,11 +262,8 @@ while IFS= read -r planned_row; do
         windowStartMs: $startMs,
         windowEndMs: $endMs
       },
-      observations: {
-        labels: (($labelHints + [("effect:" + ($effectName | ascii_downcase | gsub("[^a-z0-9]+"; "_"))), ("model:" + $modelType), "artifact:fseq", "pending_fseq_decode"]) | unique),
-        scores: {},
-        notes: "Primary artifact captured as packed FSEQ. Window-specific interpretation is pending FSEQ decoding."
-      },
+      modelMetadata: $modelMetadata,
+      observations: $observations,
       features: $features,
       comparisons: []
     }' > "${record_path}"

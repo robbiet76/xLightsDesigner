@@ -52,18 +52,28 @@ jq -cn \
   | ($sample.effectSettings // {}) as $settings
   | ($sample.sharedSettings // {}) as $shared
   | ($sample.labelHints // []) as $labelHints
+  | ($features.averageActiveNodeRatio // null) as $fseqActiveNodeRatio
+  | ($features.averageActiveChannelRatio // null) as $fseqActiveChannelRatio
+  | ($features.temporalChangeMean // null) as $fseqTemporalChangeMean
+  | ($features.averageLongestRunRatio // null) as $fseqLongestRunRatio
   | ($features.pixelWidth // 0) as $w
   | ($features.pixelHeight // 0) as $h
   | ($w * $h) as $pixelCount
   | ($features.representativeSampledFrameActivePixelRatio
       // $features.firstFrameActivePixelRatio
+      // $fseqActiveNodeRatio
+      // $fseqActiveChannelRatio
       // 0) as $activeRatio
   | ($features.representativeSampledFrameAverageBrightness
       // $features.firstFrameAverageBrightness
+      // $features.averageNodeBrightness
+      // $features.averageChannelLevel
       // 0) as $repBrightness
   | ($features.representativeSampledFrameUniqueColorCount
       // $features.firstFrameUniqueColorCount
       // 0) as $repUniqueColors
+  | ($fseqTemporalChangeMean // 0) as $temporalChange
+  | ($fseqLongestRunRatio // 0) as $longestRunRatio
   | ($shared.renderStyle // "Default") as $renderStyle
   | (
       if $effect == "On" then
@@ -88,6 +98,13 @@ jq -cn \
               if $activeRatio >= 0.95 then ["full_coverage"]
               elif $activeRatio > 0 then ["partial_coverage"]
               else ["blank_sampled_frame"]
+              end
+            )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (
+              if $temporalChange >= 0.12 then ["high_motion_window"]
+              elif $temporalChange > 0.02 then ["subtle_motion_window"]
+              else ["stable_window"]
               end
             )
         )
@@ -122,6 +139,13 @@ jq -cn \
               else ["blank_sampled_frame"]
               end
             )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (
+              if $longestRunRatio >= 0.7 then ["long_contiguous_pattern"]
+              elif $longestRunRatio >= 0.25 then ["segmented_pattern"]
+              else ["fragmented_pattern"]
+              end
+            )
         )
       elif $effect == "Shimmer" then
         unique_labels(
@@ -147,6 +171,7 @@ jq -cn \
               else ["blank_sampled_frame"]
               end
             )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
         )
       elif $effect == "Color Wash" then
         unique_labels(
@@ -174,6 +199,7 @@ jq -cn \
               else ["blank_sampled_frame"]
               end
             )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
         )
       else
         unique_labels(
@@ -303,6 +329,7 @@ jq -cn \
       labels: $labels,
       scores: $scores,
       notes:
-        ("Initial heuristic interpretation from manifest intent, model class, and render-derived geometry. pixelCount="
-          + ($pixelCount | tostring))
+        ("Heuristic interpretation from manifest intent plus render-derived features."
+          + " pixelCount=" + ($pixelCount | tostring)
+          + " decoded=" + (($features.decoded // false) | tostring))
     }'
