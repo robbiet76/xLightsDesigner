@@ -46,6 +46,8 @@ The current harness is intentionally small:
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
+- `generate-model-geometry-audit.py`: audit the canonical training layout by xLights model settings and compare related variants against a structural baseline
+- `generic-layout-geometry-audit.json`: generated audit of the canonical training layout grouped by xLights `DisplayAs`
 - `analysis/analyze_decoded_window.py`: dispatch decoded `.fseq` windows through the geometry-family analyzer framework
 - `analysis/framework.py`: generic analyzer registry and family-specific sequence-analysis scaffolding
 - `lib.sh`: shared xLights automation helpers
@@ -97,6 +99,12 @@ python3 scripts/sequencer-render-training/normalize-manifest.py \
   --manifest scripts/sequencer-render-training/manifests/singlestrand-linear-expanded-sweep-v2.json \
   --standards scripts/sequencer-render-training/training-standards.json \
   --out-file /tmp/normalized-manifest.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-model-geometry-audit.py \
+  --show-dir /Users/robterry/Desktop/Show/RenderTraining \
+  --out-file scripts/sequencer-render-training/generic-layout-geometry-audit.json
 ```
 
 ```bash
@@ -192,6 +200,10 @@ Environment:
   - structural-test brightness defaults to `100%`
   - packed decode frame emission defaults to `auto`
   - effect-semantic brightness exceptions remain explicit in the manifest/effect settings layer
+- Model-family reasoning should come from xLights model metadata and audited structural settings:
+  - use raw xLights `DisplayAs` as the base family source
+  - use the generated geometry audit to capture structure-changing settings such as spirals, layers, grouping, orientation, and density
+  - do not rely on user model names as semantic input
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - Packed batch mode now performs:
   - `openSequence`

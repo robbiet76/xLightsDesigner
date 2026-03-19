@@ -1,0 +1,743 @@
+{
+  "layoutName": "RenderTraining",
+  "showDir": "/Users/robterry/Desktop/Show/RenderTraining",
+  "generatedBy": "generate-model-geometry-audit.py",
+  "families": [
+    {
+      "displayAs": "Arches",
+      "resolvedModelType": "arch",
+      "analyzerFamily": "linear",
+      "baselineModelName": "ArchSingle",
+      "baselineStructuralSettings": {
+        "Angle": "0",
+        "Dir": "L",
+        "DisplayAs": "Arches",
+        "Height": "1.000000",
+        "StartSide": "B",
+        "StringType": "RGB Nodes",
+        "X2": "195.021469",
+        "Y2": "0.000000",
+        "Z2": "0.000000",
+        "parm1": "1",
+        "parm2": "50",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "ArchGroup",
+          "displayAs": "Arches",
+          "resolvedModelType": "arch",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "grouped",
+            "type:arch"
+          ],
+          "structuralSettings": {
+            "Angle": "0",
+            "Dir": "L",
+            "DisplayAs": "Arches",
+            "Height": "1.000000",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "195.021469",
+            "Y2": "0.000000",
+            "Z2": "0.000000",
+            "parm1": "3",
+            "parm2": "50",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "parm1": {
+              "baseline": "1",
+              "variant": "3"
+            }
+          }
+        },
+        {
+          "modelName": "ArchSingle",
+          "displayAs": "Arches",
+          "resolvedModelType": "arch",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "type:arch"
+          ],
+          "structuralSettings": {
+            "Angle": "0",
+            "Dir": "L",
+            "DisplayAs": "Arches",
+            "Height": "1.000000",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "195.021469",
+            "Y2": "0.000000",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "50",
+            "parm3": "1"
+          }
+        },
+        {
+          "modelName": "ArchTripleLayer",
+          "displayAs": "Arches",
+          "resolvedModelType": "arch",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "layered",
+            "type:arch"
+          ],
+          "structuralSettings": {
+            "Angle": "0",
+            "Dir": "L",
+            "DisplayAs": "Arches",
+            "Height": "1.000000",
+            "LayerSizes": "50,50,50",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "195.021469",
+            "Y2": "0.000000",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "150",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "LayerSizes": {
+              "baseline": null,
+              "variant": "50,50,50"
+            },
+            "parm2": {
+              "baseline": "50",
+              "variant": "150"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Candy Canes",
+      "resolvedModelType": "cane",
+      "analyzerFamily": "linear",
+      "baselineModelName": "CaneSingle",
+      "baselineStructuralSettings": {
+        "Angle": "0",
+        "Dir": "L",
+        "DisplayAs": "Candy Canes",
+        "Height": "0.326090",
+        "StartSide": "B",
+        "StringType": "RGB Nodes",
+        "X2": "170.651443",
+        "Y2": "0.000000",
+        "Z2": "0.000000",
+        "parm1": "1",
+        "parm2": "50",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "CaneGroup",
+          "displayAs": "Candy Canes",
+          "resolvedModelType": "cane",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "grouped",
+            "low_node_density",
+            "type:cane"
+          ],
+          "structuralSettings": {
+            "Angle": "0",
+            "Dir": "L",
+            "DisplayAs": "Candy Canes",
+            "Height": "1.000000",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "165.042267",
+            "Y2": "1.259827",
+            "Z2": "0.000000",
+            "parm1": "3",
+            "parm2": "18",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "Height": {
+              "baseline": "0.326090",
+              "variant": "1.000000"
+            },
+            "X2": {
+              "baseline": "170.651443",
+              "variant": "165.042267"
+            },
+            "Y2": {
+              "baseline": "0.000000",
+              "variant": "1.259827"
+            },
+            "parm1": {
+              "baseline": "1",
+              "variant": "3"
+            },
+            "parm2": {
+              "baseline": "50",
+              "variant": "18"
+            }
+          }
+        },
+        {
+          "modelName": "CaneSingle",
+          "displayAs": "Candy Canes",
+          "resolvedModelType": "cane",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "type:cane"
+          ],
+          "structuralSettings": {
+            "Angle": "0",
+            "Dir": "L",
+            "DisplayAs": "Candy Canes",
+            "Height": "0.326090",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "170.651443",
+            "Y2": "0.000000",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "50",
+            "parm3": "1"
+          }
+        },
+        {
+          "modelName": "CaneStickGroup",
+          "displayAs": "Candy Canes",
+          "resolvedModelType": "cane",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "grouped",
+            "low_node_density",
+            "stick_segments",
+            "type:cane"
+          ],
+          "structuralSettings": {
+            "Angle": "0",
+            "CandyCaneSticks": "true",
+            "Dir": "L",
+            "DisplayAs": "Candy Canes",
+            "Height": "1.000000",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "165.042267",
+            "Y2": "1.259827",
+            "Z2": "0.000000",
+            "parm1": "3",
+            "parm2": "18",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "CandyCaneSticks": {
+              "baseline": null,
+              "variant": "true"
+            },
+            "Height": {
+              "baseline": "0.326090",
+              "variant": "1.000000"
+            },
+            "X2": {
+              "baseline": "170.651443",
+              "variant": "165.042267"
+            },
+            "Y2": {
+              "baseline": "0.000000",
+              "variant": "1.259827"
+            },
+            "parm1": {
+              "baseline": "1",
+              "variant": "3"
+            },
+            "parm2": {
+              "baseline": "50",
+              "variant": "18"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Horiz Matrix",
+      "resolvedModelType": "matrix",
+      "analyzerFamily": "matrix",
+      "baselineModelName": "MatrixLowDensity",
+      "baselineStructuralSettings": {
+        "Dir": "L",
+        "DisplayAs": "Horiz Matrix",
+        "StartSide": "T",
+        "StringType": "RGB Nodes",
+        "parm1": "8",
+        "parm2": "16",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "MatrixHighDensity",
+          "displayAs": "Horiz Matrix",
+          "resolvedModelType": "matrix",
+          "analyzerFamily": "matrix",
+          "geometryTraits": [
+            "density_high",
+            "matrix:64x128",
+            "type:matrix"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Horiz Matrix",
+            "StartSide": "T",
+            "StringType": "RGB Nodes",
+            "parm1": "64",
+            "parm2": "128",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "parm1": {
+              "baseline": "8",
+              "variant": "64"
+            },
+            "parm2": {
+              "baseline": "16",
+              "variant": "128"
+            }
+          }
+        },
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Horiz Matrix",
+          "resolvedModelType": "matrix",
+          "analyzerFamily": "matrix",
+          "geometryTraits": [
+            "density_low",
+            "matrix:8x16",
+            "type:matrix"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Horiz Matrix",
+            "StartSide": "T",
+            "StringType": "RGB Nodes",
+            "parm1": "8",
+            "parm2": "16",
+            "parm3": "1"
+          }
+        },
+        {
+          "modelName": "MatrixMedDensity",
+          "displayAs": "Horiz Matrix",
+          "resolvedModelType": "matrix",
+          "analyzerFamily": "matrix",
+          "geometryTraits": [
+            "density_medium",
+            "matrix:16x50",
+            "type:matrix"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Horiz Matrix",
+            "StartSide": "T",
+            "StringType": "RGB Nodes",
+            "parm1": "16",
+            "parm2": "50",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "parm1": {
+              "baseline": "8",
+              "variant": "16"
+            },
+            "parm2": {
+              "baseline": "16",
+              "variant": "50"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Icicles",
+      "resolvedModelType": "icicles",
+      "analyzerFamily": "linear",
+      "baselineModelName": "Icicles",
+      "baselineStructuralSettings": {
+        "Dir": "L",
+        "DisplayAs": "Icicles",
+        "DropPattern": "3,4,5,4",
+        "Height": "-0.500000",
+        "Shear": "0.000000",
+        "StartSide": "B",
+        "StringType": "RGB Nodes",
+        "X2": "857.488281",
+        "Y2": "-8.302979",
+        "Z2": "0.000000",
+        "parm1": "1",
+        "parm2": "80",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "Icicles",
+          "displayAs": "Icicles",
+          "resolvedModelType": "icicles",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "drop_pattern",
+            "type:icicles"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Icicles",
+            "DropPattern": "3,4,5,4",
+            "Height": "-0.500000",
+            "Shear": "0.000000",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "857.488281",
+            "Y2": "-8.302979",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "80",
+            "parm3": "1"
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Single Line",
+      "resolvedModelType": "single_line",
+      "analyzerFamily": "linear",
+      "baselineModelName": "SingleLineHorizontal",
+      "baselineStructuralSettings": {
+        "Dir": "L",
+        "DisplayAs": "Single Line",
+        "StartSide": "B",
+        "StringType": "RGB Nodes",
+        "X2": "238.114456",
+        "Y2": "0.000000",
+        "Z2": "0.000000",
+        "parm1": "1",
+        "parm2": "50",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "SingleLineHorizontal",
+          "displayAs": "Single Line",
+          "resolvedModelType": "single_line",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "horizontal_orientation",
+            "type:single_line"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Single Line",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "238.114456",
+            "Y2": "0.000000",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "50",
+            "parm3": "1"
+          }
+        },
+        {
+          "modelName": "SingleLineSingleNode",
+          "displayAs": "Single Line",
+          "resolvedModelType": "single_line",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "horizontal_orientation",
+            "single_node",
+            "type:single_line"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Single Line",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "127.981384",
+            "Y2": "0.000000",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "1",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "X2": {
+              "baseline": "238.114456",
+              "variant": "127.981384"
+            },
+            "parm2": {
+              "baseline": "50",
+              "variant": "1"
+            }
+          }
+        },
+        {
+          "modelName": "SingleLineVertical",
+          "displayAs": "Single Line",
+          "resolvedModelType": "single_line",
+          "analyzerFamily": "linear",
+          "geometryTraits": [
+            "type:single_line",
+            "vertical_orientation"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Single Line",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "X2": "0.000000",
+            "Y2": "-169.600769",
+            "Z2": "0.000000",
+            "parm1": "1",
+            "parm2": "50",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "X2": {
+              "baseline": "238.114456",
+              "variant": "0.000000"
+            },
+            "Y2": {
+              "baseline": "0.000000",
+              "variant": "-169.600769"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Spinner",
+      "resolvedModelType": "spinner",
+      "analyzerFamily": "radial",
+      "baselineModelName": "Spinner",
+      "baselineStructuralSettings": {
+        "Alternate": "false",
+        "Arc": "360",
+        "Dir": "L",
+        "DisplayAs": "Spinner",
+        "Hollow": "0",
+        "StartSide": "T",
+        "StringType": "RGB Nodes",
+        "ZigZag": "false",
+        "parm1": "1",
+        "parm2": "10",
+        "parm3": "8"
+      },
+      "models": [
+        {
+          "modelName": "Spinner",
+          "displayAs": "Spinner",
+          "resolvedModelType": "spinner",
+          "analyzerFamily": "radial",
+          "geometryTraits": [
+            "arms:8",
+            "type:spinner"
+          ],
+          "structuralSettings": {
+            "Alternate": "false",
+            "Arc": "360",
+            "Dir": "L",
+            "DisplayAs": "Spinner",
+            "Hollow": "0",
+            "StartSide": "T",
+            "StringType": "RGB Nodes",
+            "ZigZag": "false",
+            "parm1": "1",
+            "parm2": "10",
+            "parm3": "8"
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Star",
+      "resolvedModelType": "star",
+      "analyzerFamily": "star",
+      "baselineModelName": "StarSingle",
+      "baselineStructuralSettings": {
+        "DisplayAs": "Star",
+        "StarStartLocation": "Bottom Ctr-CW",
+        "StringType": "RGB Nodes",
+        "parm1": "1",
+        "parm2": "50",
+        "parm3": "5"
+      },
+      "models": [
+        {
+          "modelName": "StarSingle",
+          "displayAs": "Star",
+          "resolvedModelType": "star",
+          "analyzerFamily": "star",
+          "geometryTraits": [
+            "points:5",
+            "type:star"
+          ],
+          "structuralSettings": {
+            "DisplayAs": "Star",
+            "StarStartLocation": "Bottom Ctr-CW",
+            "StringType": "RGB Nodes",
+            "parm1": "1",
+            "parm2": "50",
+            "parm3": "5"
+          }
+        },
+        {
+          "modelName": "StarTripleLayer",
+          "displayAs": "Star",
+          "resolvedModelType": "star",
+          "analyzerFamily": "star",
+          "geometryTraits": [
+            "layered",
+            "points:5",
+            "type:star"
+          ],
+          "structuralSettings": {
+            "DisplayAs": "Star",
+            "LayerSizes": "30,40,50",
+            "StarStartLocation": "Bottom Ctr-CW",
+            "StringType": "RGB Nodes",
+            "parm1": "1",
+            "parm2": "120",
+            "parm3": "5"
+          },
+          "diffFromBaseline": {
+            "LayerSizes": {
+              "baseline": null,
+              "variant": "30,40,50"
+            },
+            "parm2": {
+              "baseline": "50",
+              "variant": "120"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Tree 360",
+      "resolvedModelType": "tree_360",
+      "analyzerFamily": "tree",
+      "baselineModelName": "TreeRound",
+      "baselineStructuralSettings": {
+        "Dir": "L",
+        "DisplayAs": "Tree 360",
+        "StartSide": "B",
+        "StringType": "RGB Nodes",
+        "parm1": "16",
+        "parm2": "50",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "TreeRound",
+          "displayAs": "Tree 360",
+          "resolvedModelType": "tree_360",
+          "analyzerFamily": "tree",
+          "geometryTraits": [
+            "nodes_per_string:50",
+            "strings:16",
+            "type:tree_360"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Tree 360",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "parm1": "16",
+            "parm2": "50",
+            "parm3": "1"
+          }
+        },
+        {
+          "modelName": "TreeSpiral",
+          "displayAs": "Tree 360",
+          "resolvedModelType": "tree_360",
+          "analyzerFamily": "tree",
+          "geometryTraits": [
+            "nodes_per_string:300",
+            "spiral_enabled",
+            "strand_dir:vertical",
+            "strings:1",
+            "type:tree_360"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Tree 360",
+            "StartSide": "B",
+            "StrandDir": "Vertical",
+            "StringType": "RGB Nodes",
+            "TreeRotation": "0.000000",
+            "TreeSpiralRotations": "12.000000",
+            "parm1": "1",
+            "parm2": "300",
+            "parm3": "1"
+          },
+          "diffFromBaseline": {
+            "StrandDir": {
+              "baseline": null,
+              "variant": "Vertical"
+            },
+            "TreeRotation": {
+              "baseline": null,
+              "variant": "0.000000"
+            },
+            "TreeSpiralRotations": {
+              "baseline": null,
+              "variant": "12.000000"
+            },
+            "parm1": {
+              "baseline": "16",
+              "variant": "1"
+            },
+            "parm2": {
+              "baseline": "50",
+              "variant": "300"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "displayAs": "Tree Flat",
+      "resolvedModelType": "tree_flat",
+      "analyzerFamily": "tree",
+      "baselineModelName": "TreeFlat",
+      "baselineStructuralSettings": {
+        "Dir": "L",
+        "DisplayAs": "Tree Flat",
+        "StartSide": "B",
+        "StringType": "RGB Nodes",
+        "parm1": "16",
+        "parm2": "50",
+        "parm3": "1"
+      },
+      "models": [
+        {
+          "modelName": "TreeFlat",
+          "displayAs": "Tree Flat",
+          "resolvedModelType": "tree_flat",
+          "analyzerFamily": "tree",
+          "geometryTraits": [
+            "nodes_per_string:50",
+            "strings:16",
+            "type:tree_flat"
+          ],
+          "structuralSettings": {
+            "Dir": "L",
+            "DisplayAs": "Tree Flat",
+            "StartSide": "B",
+            "StringType": "RGB Nodes",
+            "parm1": "16",
+            "parm2": "50",
+            "parm3": "1"
+          }
+        }
+      ]
+    }
+  ]
+}
