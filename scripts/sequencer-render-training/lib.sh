@@ -7,6 +7,7 @@ CURL_MAX_TIME="${CURL_MAX_TIME:-60}"
 XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-}"
 XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-0}"
 XLIGHTS_STARTUP_WAIT_SECONDS="${XLIGHTS_STARTUP_WAIT_SECONDS:-180}"
+RENDER_TRAINING_ROOT="${RENDER_TRAINING_ROOT:-/Users/robterry/Desktop/Show/RenderTraining}"
 
 post_cmd() {
   local payload="$1"
@@ -58,6 +59,8 @@ json_has_res_200() {
      "${body}" == *'"worked":"true"'* || \
      "${body}" == *'"fullseq"'* || \
      "${body}" == *'"msg":"Rendered."'* || \
+     "${body}" == *'"msg":"Sequence Saved."'* || \
+     "${body}" == *'"msg":"Sequence batch rendered."'* || \
      "${body}" == *'"msg":"Sequence closed."'* || \
      "${body}" == *'"msg":"Model exported."'* || \
      "${body}" == *'"msg":"Exported"'* ]]
@@ -84,6 +87,12 @@ xlights_listener_ready() {
   curl --max-time 2 -sS -X POST "${AUTOMATION_URL}" \
     -H "Content-Type: application/json" \
     -d '{"cmd":"getModels"}' >/dev/null 2>&1
+}
+
+json_get_string_field() {
+  local payload="$1"
+  local key="$2"
+  printf '%s' "${payload}" | jq -r --arg key "${key}" '.[$key] // empty'
 }
 
 xlights_wait_until_ready() {
@@ -137,6 +146,36 @@ ensure_xlights_ready() {
 
   echo "xLights automation is not healthy." >&2
   return 1
+}
+
+get_show_folder() {
+  local body
+  body="$(post_cmd '{"cmd":"getShowFolder"}')"
+  body="$(normalize_json_body "${body}")"
+  json_get_string_field "${body}" "folder"
+}
+
+get_fseq_directory() {
+  local body
+  body="$(post_cmd '{"cmd":"getFseqDirectory"}')"
+  body="$(normalize_json_body "${body}")"
+  json_get_string_field "${body}" "folder"
+}
+
+resolve_fseq_path_for_sequence() {
+  local xsq_path="$1"
+  local show_folder fseq_dir xsq_dir xsq_base
+
+  show_folder="$(get_show_folder)"
+  fseq_dir="$(get_fseq_directory)"
+  xsq_dir="$(cd "$(dirname "${xsq_path}")" && pwd)"
+  xsq_base="$(basename "${xsq_path}" .xsq)"
+
+  if [[ -n "${fseq_dir}" && -n "${show_folder}" && "${fseq_dir}" != "${show_folder}" ]]; then
+    printf '%s/%s.fseq\n' "${fseq_dir}" "${xsq_base}"
+  else
+    printf '%s/%s.fseq\n' "${xsq_dir}" "${xsq_base}"
+  fi
 }
 
 json_string() {

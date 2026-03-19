@@ -26,7 +26,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_cmd jq
-require_cmd swift
 
 [[ -n "${MANIFEST_FILE}" ]] || { echo "--manifest is required" >&2; exit 1; }
 [[ -f "${MANIFEST_FILE}" ]] || { echo "Manifest not found: ${MANIFEST_FILE}" >&2; exit 1; }
@@ -48,19 +47,21 @@ sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 model_type="$(jq -r '.modelType' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
-sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
-sequence_base_name="$(basename "${sequence_path}" .xsq)"
-staging_dir="${sequence_dir}/RenderTraining"
-mkdir -p "${staging_dir}"
-working_sequence_path="${staging_dir}/${sequence_base_name}.packed-batch-$$.xsq"
-batch_artifact_staged="${staging_dir}/$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}").batch.gif"
-batch_artifact_path="${OUT_DIR}/batch-export.gif"
+pack_id="$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}")"
+training_working_dir="${RENDER_TRAINING_ROOT}/working"
+training_fseq_dir="${RENDER_TRAINING_ROOT}/fseq"
+training_records_dir="${RENDER_TRAINING_ROOT}/records"
+training_manifests_dir="${RENDER_TRAINING_ROOT}/manifests"
+mkdir -p "${training_working_dir}" "${training_fseq_dir}" "${training_records_dir}" "${training_manifests_dir}"
+run_stamp="$(date -u +"%Y%m%dT%H%M%SZ")"
+working_sequence_path="${training_working_dir}/${pack_id}.${run_stamp}.xsq"
+batch_artifact_staged="$(resolve_fseq_path_for_sequence "${working_sequence_path}")"
+batch_artifact_path="${training_fseq_dir}/${pack_id}.${run_stamp}.fseq"
+batch_features_path="${OUT_DIR}/batch-export.features.json"
+batch_manifest_copy="${training_manifests_dir}/${pack_id}.manifest.json"
 
 cp "${sequence_path}" "${working_sequence_path}"
-cleanup_batch_sequence() {
-  rm -f "${working_sequence_path}"
-}
-trap cleanup_batch_sequence EXIT
+jq '.' "${MANIFEST_FILE}" > "${batch_manifest_copy}"
 
 sample_ids=()
 while IFS= read -r sample_id; do
@@ -151,18 +152,19 @@ for sample_id in "${sample_ids[@]}"; do
   sample_plan_json="$(jq -cn --argjson rows "${sample_plan_json}" --argjson row "${plan_row}" '$rows + [$row]')"
 done
 
-log_batch "render-all"
-run_and_require_ok '{"cmd":"renderAll","highdef":"false"}' >/dev/null
+log_batch "save-sequence sequence=${working_sequence_path}"
+run_and_require_ok "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"saveSequence",seq:$seq}')" >/dev/null
 
-log_batch "export-batch artifact=${batch_artifact_staged}"
-run_and_require_ok "$(jq -cn \
-  --arg model "${model_name}" \
-  --arg file "${batch_artifact_staged}" \
-  '{cmd:"exportModelWithRender",model:$model,filename:$file,highdef:"false",format:"gif"}')" >/dev/null
+log_batch "close-batch-sequence-before-render"
+run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
+
+log_batch "batch-render sequence=${working_sequence_path}"
+run_and_require_ok "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"batchRender",seqs_0:$seq,promptIssues:"false",highdef:"false"}')" >/dev/null
 
 [[ -s "${batch_artifact_staged}" ]] || { echo "Batch artifact missing: ${batch_artifact_staged}" >&2; exit 1; }
-cp "${batch_artifact_staged}" "${batch_artifact_path}"
+[[ -s "${batch_artifact_path}" ]] || cp "${batch_artifact_staged}" "${batch_artifact_path}"
 [[ -s "${batch_artifact_path}" ]] || { echo "Batch artifact copy failed: ${batch_artifact_path}" >&2; exit 1; }
+bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${batch_artifact_path}" > "${batch_features_path}"
 
 results_json='[]'
 passed=0
@@ -177,78 +179,69 @@ while IFS= read -r planned_row; do
   duration_class="$(jq -r '.assignedWindow.durationClass' <<<"${planned_row}")"
   sample_dir="${OUT_DIR}/${sample_id}"
   mkdir -p "${sample_dir}"
-  sample_artifact="${sample_dir}/${sample_id}.gif"
   record_path="${sample_dir}/${sample_id}.record.json"
   features_path="${sample_dir}/${sample_id}.features.json"
-  observations_path="${sample_dir}/${sample_id}.observations.json"
   sample_started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
   status="passed"
   error_message=""
 
-  if swift "${SCRIPT_DIR}/slice-gif-by-time.swift" \
-      --input "${batch_artifact_path}" \
-      --output "${sample_artifact}" \
-      --start-ms "${start_ms}" \
-      --end-ms "${end_ms}" >>"${log_path}" 2>&1; then
-    bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${sample_artifact}" > "${features_path}"
-    bash "${SCRIPT_DIR}/extract-observations.sh" \
-      --sample-json "${sample_json}" \
-      --model-type "${model_type}" \
-      --features-json "$(cat "${features_path}")" > "${observations_path}"
-
-    jq -cn \
-      --arg version "1.0" \
-      --arg sampleId "${sample_id}" \
-      --arg effectName "$(jq -r '.effectName' <<<"${sample_json}")" \
-      --arg sequencePath "${sequence_path}" \
-      --arg workingSequencePath "${working_sequence_path}" \
-      --arg modelName "${model_name}" \
-      --arg modelType "${model_type}" \
-      --arg mode "model_with_render_batch_slice" \
-      --arg format "gif" \
-      --arg path "${sample_artifact}" \
-      --arg batchPath "${batch_artifact_path}" \
-      --argjson startMs "${start_ms}" \
-      --argjson endMs "${end_ms}" \
-      --argjson durationMs "$((end_ms-start_ms))" \
-      --arg durationClass "${duration_class}" \
-      --argjson sharedSettings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
-      --argjson effectSettings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
-      --argjson observations "$(cat "${observations_path}")" \
-      --argjson features "$(cat "${features_path}")" \
-      '{
-        recordVersion: $version,
-        sampleId: $sampleId,
-        effectName: $effectName,
-        fixture: {
-          sequencePath: $sequencePath,
-          workingSequencePath: $workingSequencePath,
-          modelName: $modelName,
-          modelType: $modelType,
-          startMs: $startMs,
-          endMs: $endMs,
-          durationMs: $durationMs,
-          durationClass: $durationClass
-        },
-        sharedSettings: $sharedSettings,
-        effectSettings: $effectSettings,
-        artifact: {
-          mode: $mode,
-          format: $format,
-          path: $path,
-          batchArtifactPath: $batchPath
-        },
-        observations: $observations,
-        features: $features,
-        comparisons: []
-      }' > "${record_path}"
-    passed=$((passed + 1))
-  else
-    status="failed"
-    failed=$((failed + 1))
-    error_message="slice_failed"
-  fi
+  cp "${batch_features_path}" "${features_path}"
+  jq -cn \
+    --arg version "1.0" \
+    --arg sampleId "${sample_id}" \
+    --arg effectName "$(jq -r '.effectName' <<<"${sample_json}")" \
+    --arg sequencePath "${sequence_path}" \
+    --arg workingSequencePath "${working_sequence_path}" \
+    --arg modelName "${model_name}" \
+    --arg modelType "${model_type}" \
+    --arg mode "packed_fseq_window" \
+    --arg format "fseq" \
+    --arg path "${batch_artifact_path}" \
+    --arg batchPath "${batch_artifact_path}" \
+    --arg batchManifestPath "${batch_manifest_copy}" \
+    --argjson startMs "${start_ms}" \
+    --argjson endMs "${end_ms}" \
+    --argjson durationMs "$((end_ms-start_ms))" \
+    --arg durationClass "${duration_class}" \
+    --argjson sharedSettings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
+    --argjson effectSettings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
+    --argjson features "$(cat "${features_path}")" \
+    --argjson labelHints "$(jq -c '.labelHints // []' <<<"${sample_json}")" \
+    '{
+      recordVersion: $version,
+      sampleId: $sampleId,
+      effectName: $effectName,
+      fixture: {
+        sequencePath: $sequencePath,
+        workingSequencePath: $workingSequencePath,
+        modelName: $modelName,
+        modelType: $modelType,
+        startMs: $startMs,
+        endMs: $endMs,
+        durationMs: $durationMs,
+        durationClass: $durationClass
+      },
+      sharedSettings: $sharedSettings,
+      effectSettings: $effectSettings,
+      artifact: {
+        mode: $mode,
+        format: $format,
+        path: $path,
+        batchArtifactPath: $batchPath,
+        batchManifestPath: $batchManifestPath,
+        windowStartMs: $startMs,
+        windowEndMs: $endMs
+      },
+      observations: {
+        labels: (($labelHints + [("effect:" + ($effectName | ascii_downcase | gsub("[^a-z0-9]+"; "_"))), ("model:" + $modelType), "artifact:fseq", "pending_fseq_decode"]) | unique),
+        scores: {},
+        notes: "Primary artifact captured as packed FSEQ. Window-specific interpretation is pending FSEQ decoding."
+      },
+      features: $features,
+      comparisons: []
+    }' > "${record_path}"
+  passed=$((passed + 1))
 
   sample_finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
   result_row="$(jq -cn \
@@ -271,8 +264,8 @@ while IFS= read -r planned_row; do
   results_json="$(jq -cn --argjson rows "${results_json}" --argjson row "${result_row}" '$rows + [$row]')"
 done < <(jq -c '.[]' <<<"${sample_plan_json}")
 
-log_batch "close-batch-sequence"
-run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
+log_batch "close-batch-sequence-final"
+run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null || true
 
 run_finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 jq -cn \
@@ -281,6 +274,8 @@ jq -cn \
   --arg startedAt "${run_started_at}" \
   --arg finishedAt "${run_finished_at}" \
   --arg batchArtifactPath "${batch_artifact_path}" \
+  --arg batchFeaturesPath "${batch_features_path}" \
+  --arg batchManifestPath "${batch_manifest_copy}" \
   --arg workingSequencePath "${working_sequence_path}" \
   --argjson total "${#sample_ids[@]}" \
   --argjson passed "${passed}" \
@@ -293,6 +288,8 @@ jq -cn \
     startedAt: $startedAt,
     finishedAt: $finishedAt,
     batchArtifactPath: $batchArtifactPath,
+    batchFeaturesPath: $batchFeaturesPath,
+    batchManifestPath: $batchManifestPath,
     workingSequencePath: $workingSequencePath,
     totalSamples: $total,
     passedSamples: $passed,

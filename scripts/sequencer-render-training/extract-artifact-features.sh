@@ -30,6 +30,8 @@ if sips_output="$(sips -g pixelWidth -g pixelHeight "${ARTIFACT_PATH}" 2>/dev/nu
   width="$(printf '%s\n' "${sips_output}" | awk '/pixelWidth:/ {print $2}' | tail -n 1)"
   height="$(printf '%s\n' "${sips_output}" | awk '/pixelHeight:/ {print $2}' | tail -n 1)"
 fi
+[[ "${width}" == "<nil>" ]] && width=""
+[[ "${height}" == "<nil>" ]] && height=""
 
 derived_features='{}'
 if [[ "${mime_type}" == "image/gif" ]]; then

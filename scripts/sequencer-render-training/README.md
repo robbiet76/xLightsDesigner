@@ -3,7 +3,7 @@
 Internal-only tooling for xLights-backed render sweeps used to train sequencer realization behavior.
 
 This tooling does **not** replace xLights rendering.
-It drives xLights as the authoritative renderer, captures the exported result, and writes a structured training record.
+It drives xLights as the authoritative renderer, captures the render artifact, and writes a structured training record.
 
 ## First Slice
 
@@ -11,19 +11,26 @@ The current harness is intentionally small:
 - one manifest file
 - one sample at a time
 - first-class support for `On`, `SingleStrand`, `Shimmer`, and `Color Wash`
-- xLights export path:
+- direct model export path:
   - `openSequence`
   - `addEffect`
   - `renderAll`
   - `exportModelWithRender`
   - `closeSequence`
+- packed training path:
+  - `openSequence`
+  - `addEffect`
+  - `saveSequence`
+  - `closeSequence`
+  - `batchRender`
+  - `.fseq` capture
 
 ## Files
 
 - `run-sample.sh`: execute one sample from a sweep manifest
 - `run-manifest.sh`: execute all samples from a sweep manifest
 - `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
-- `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, exporting once, then slicing per-sample GIFs
+- `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, saving and rendering once, then recording per-sample windows against one packed `.fseq`
 - `build-animation-fixture.py`: derive a short animation-only fixture sequence from an existing `.xsq`
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
@@ -81,14 +88,27 @@ Environment:
 - `XLIGHTS_FORCE_RECYCLE_BEFORE_BATCH`
   - default: `0`
   - optional manual recovery mode for batch runs
+- `RENDER_TRAINING_ROOT`
+  - default: `/Users/robterry/Desktop/Show/RenderTraining`
+  - internal workspace for packed `.fseq`, working `.xsq`, copied manifests, and derived artifacts
 
 ## Notes
 
 - This is an internal harness, not product runtime.
 - xLights export currently needs a concrete model, not a `ModelGroup`.
-- The harness stages artifacts under the sequence directory so the xLights app can write them, then copies them to the requested output directory.
+- Packed batch runs now use the internal show-side workspace under `RenderTraining/`:
+  - `working/` for temporary `.xsq`
+  - `fseq/` for primary packed `.fseq`
+  - `manifests/` for copied manifests
+  - `derived/` reserved for future decode outputs
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
-- The runner fails if xLights reports export success but the staged artifact does not exist.
+- Packed batch mode now performs:
+  - `openSequence`
+  - `addEffect`
+  - `saveSequence`
+  - `closeSequence`
+  - `batchRender`
+  - `.fseq` capture
 - The default operating mode is now a persistent xLights session.
 - Automatic restarts are not part of the normal harness flow anymore.
 - Restart flags remain available only as manual recovery tools.
@@ -97,7 +117,7 @@ Environment:
   - MIME type
   - SHA-256
   - pixel width / height when available
-- GIF artifacts also record richer derived features when extraction succeeds:
+- GIF artifacts still record richer derived features when extraction succeeds:
   - frame count
   - total duration
   - average frame delay
@@ -120,11 +140,12 @@ Environment:
   - one already-open healthy xLights session
   - one temporary sequence copy per sample
   - no automatic restart on sample failure
-- `run-packed-model-batch.sh` is the preferred scaling path:
+- `run-packed-model-batch.sh` is now the preferred scaling path:
   - one working sequence per batch
   - many sample windows added into that one open sequence
-  - one full-model batch export
-  - per-sample GIF slicing by assigned time window
+  - one packed `.fseq` artifact per batch
+  - per-sample records keyed to assigned time windows inside that `.fseq`
+  - window decoding is the next step, not GIF slicing
 - Current duration guidance:
   - static effects like `On`: short windows are fine
 - animated effects like `SingleStrand`: use the 4-second standard by default

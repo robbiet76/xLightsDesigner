@@ -95,7 +95,8 @@
           "enum": [
             "model_with_render",
             "model_only",
-            "video_preview"
+            "video_preview",
+            "packed_fseq_window"
           ]
         },
         "format": {

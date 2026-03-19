@@ -14,6 +14,17 @@ function sanitizeOwnedBase(endpoint) {
   return String(endpoint || "").trim().replace(/\/+$/, "");
 }
 
+function deriveLegacyEndpointBase(endpoint) {
+  const raw = sanitizeEndpoint(endpoint);
+  if (!raw) return "http://127.0.0.1:49914";
+  try {
+    const url = new URL(raw);
+    return `${url.protocol}//${url.hostname}:${url.port || "49914"}`;
+  } catch {
+    return "http://127.0.0.1:49914";
+  }
+}
+
 function readTextWithXHR(targetEndpoint, bodyText) {
   return new Promise((resolve, reject) => {
     if (typeof XMLHttpRequest !== "function") {
@@ -65,6 +76,21 @@ async function readOwnedJson(targetEndpoint, { method = "GET", body = null } = {
     throw new Error(`${method} ${targetEndpoint} failed (${code}): ${message}`);
   }
   return json;
+}
+
+async function legacyGet(endpoint, command, params = {}) {
+  const base = deriveLegacyEndpointBase(endpoint);
+  const url = new URL(`${base}/${command}`);
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value == null || value === "") continue;
+    url.searchParams.set(key, String(value));
+  }
+  const response = await fetch(url.toString(), { method: "GET" });
+  const text = String(await response.text());
+  if (!response.ok) {
+    throw new Error(`${command} failed (${response.status}): ${text || "Command failed"}`);
+  }
+  return text;
 }
 
 export function getDefaultEndpoint() {
@@ -167,7 +193,28 @@ export async function setSequenceSettings(endpoint, params = {}) {
 export async function saveSequence(endpoint, file = null) {
   const params = {};
   if (file) params.file = file;
-  return postCommand(endpoint, "sequence.save", params);
+  try {
+    return await postCommand(endpoint, "sequence.save", params);
+  } catch (err) {
+    const message = String(err?.message || "");
+    const shouldFallback =
+      message.includes("sequence.save failed") ||
+      message.includes("Invalid JSON from xLights endpoint") ||
+      message.includes("Could not process xLights Automation");
+    if (!shouldFallback) {
+      throw err;
+    }
+    const legacyText = await legacyGet(endpoint, "saveSequence", file ? { seq: file } : {});
+    return {
+      res: 200,
+      msg: legacyText,
+      data: {
+        saved: true,
+        file: file || null,
+        fallback: "legacySaveSequence"
+      }
+    };
+  }
 }
 
 export async function closeSequence(endpoint, force = true, quiet = false) {
