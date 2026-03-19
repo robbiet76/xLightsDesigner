@@ -35,6 +35,8 @@ The current harness is intentionally small:
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
 - `build-comparison.sh`: produce pairwise preference records from observation score outputs
+- `build-record-comparison.sh`: produce pairwise preference records directly from sample record JSON
+- `generate-sample-comparisons.sh`: generate a comparison set from all records in a run directory
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -75,6 +77,13 @@ python3 scripts/sequencer-render-training/build-animation-fixture.py \
 bash scripts/sequencer-render-training/run-packed-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-packed-batch
+```
+
+```bash
+bash scripts/sequencer-render-training/generate-sample-comparisons.sh \
+  --run-dir /tmp/shimmer-outline-packed-fseq-decoded-debug \
+  --criterion usefulness \
+  --out-file /tmp/shimmer-outline-packed-fseq-decoded-debug/comparisons.usefulness.json
 ```
 
 Environment:
