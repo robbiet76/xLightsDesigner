@@ -52,6 +52,10 @@
           "type": "string",
           "minLength": 1
         },
+        "geometryProfile": {
+          "type": "string",
+          "minLength": 1
+        },
         "expectedModelType": {
           "type": [
             "string",

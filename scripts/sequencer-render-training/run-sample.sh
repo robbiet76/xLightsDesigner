@@ -60,6 +60,7 @@ sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
 model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
 resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
+resolved_geometry_profile="$(jq -r '.resolvedGeometryProfile' <<<"${model_metadata_json}")"
 source_sequence_path="${sequence_path}"
 sequence_base_name="$(basename "${sequence_path}" .xsq)"
 
@@ -187,6 +188,7 @@ jq -cn \
   --arg workingSequencePath "${working_sequence_path}" \
   --arg modelName "${model_name}" \
   --arg modelType "${resolved_model_type}" \
+  --arg geometryProfile "${resolved_geometry_profile}" \
   --arg expectedModelType "${expected_model_type}" \
   --argjson modelMetadata "${model_metadata_json}" \
   --arg mode "${export_mode}" \
@@ -209,6 +211,7 @@ jq -cn \
       workingSequencePath: $workingSequencePath,
       modelName: $modelName,
       modelType: $modelType,
+      geometryProfile: $geometryProfile,
       expectedModelType: (if $expectedModelType == "" then null else $expectedModelType end),
       startMs: $startMs,
       endMs: $endMs,

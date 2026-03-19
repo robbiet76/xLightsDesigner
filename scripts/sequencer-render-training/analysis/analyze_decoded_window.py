@@ -25,18 +25,20 @@ def main() -> None:
     shared_settings = json.loads(args.shared_settings)
 
     resolved_model_type = model_metadata.get("resolvedModelType") or args.model_type or "unknown"
+    resolved_geometry_profile = model_metadata.get("resolvedGeometryProfile") or resolved_model_type
 
     inp = SequenceAnalysisInput(
-        model_type=resolved_model_type,
+        model_type=resolved_geometry_profile,
         decoded_window=decoded_window,
         model_metadata=model_metadata,
         effect_name=args.effect_name,
         effect_settings=effect_settings,
         shared_settings=shared_settings,
     )
-    result = get_analyzer(resolved_model_type).analyze(inp)
+    result = get_analyzer(resolved_geometry_profile).analyze(inp)
     result["analysisVersion"] = "1.0"
     result["modelType"] = resolved_model_type
+    result["geometryProfile"] = resolved_geometry_profile
     if args.model_type:
         result["expectedModelType"] = args.model_type
     result["effectName"] = args.effect_name

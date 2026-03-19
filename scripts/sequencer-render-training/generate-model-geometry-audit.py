@@ -174,6 +174,51 @@ def trait_list(display_as: str, attrs: dict[str, str]) -> list[str]:
     return sorted(set(traits))
 
 
+def geometry_profile(display_as: str, attrs: dict[str, str]) -> str:
+    model_type = canonical_model_type(display_as)
+    traits = set(trait_list(display_as, attrs))
+
+    if model_type == "single_line":
+        if "single_node" in traits:
+            return "single_line_single_node"
+        if "vertical_orientation" in traits:
+            return "single_line_vertical"
+        return "single_line_horizontal"
+    if model_type == "arch":
+        if "layered" in traits:
+            return "arch_multi_layer"
+        if "grouped" in traits:
+            return "arch_grouped"
+        return "arch_single"
+    if model_type == "cane":
+        if "stick_segments" in traits and "grouped" in traits:
+            return "cane_stick_grouped"
+        if "grouped" in traits:
+            return "cane_grouped"
+        return "cane_single"
+    if model_type == "matrix":
+        if "density_high" in traits:
+            return "matrix_high_density"
+        if "density_medium" in traits:
+            return "matrix_medium_density"
+        return "matrix_low_density"
+    if model_type == "tree_360":
+        if "spiral_enabled" in traits:
+            return "tree_360_spiral"
+        return "tree_360_round"
+    if model_type == "tree_flat":
+        return "tree_flat_single_layer"
+    if model_type == "star":
+        if "layered" in traits:
+            return "star_multi_layer"
+        return "star_single_layer"
+    if model_type == "icicles":
+        return "icicles_drop_pattern" if "drop_pattern" in traits else "icicles_standard"
+    if model_type == "spinner":
+        return "spinner_standard"
+    return model_type
+
+
 def main() -> int:
     args = parse_args()
     root = ET.parse(Path(args.show_dir) / "xlights_rgbeffects.xml").getroot()
@@ -196,6 +241,7 @@ def main() -> int:
                 "modelName": name,
                 "displayAs": display_as,
                 "resolvedModelType": canonical_model_type(display_as),
+                "resolvedGeometryProfile": geometry_profile(display_as, attrs),
                 "analyzerFamily": analyzer_family(canonical_model_type(display_as)),
                 "geometryTraits": trait_list(display_as, attrs),
                 "structuralSettings": attrs,
@@ -209,6 +255,7 @@ def main() -> int:
             "resolvedModelType": canonical_model_type(display_as),
             "analyzerFamily": analyzer_family(canonical_model_type(display_as)),
             "baselineModelName": baseline.attrib.get("name"),
+            "baselineGeometryProfile": geometry_profile(display_as, baseline_attrs),
             "baselineStructuralSettings": baseline_attrs,
             "models": entries,
         })

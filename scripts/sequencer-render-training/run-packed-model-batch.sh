@@ -61,6 +61,7 @@ fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
 model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
 resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
+resolved_geometry_profile="$(jq -r '.resolvedGeometryProfile' <<<"${model_metadata_json}")"
 expected_model_type_args=()
 if [[ -n "${expected_model_type}" ]]; then
   expected_model_type_args=(--model-type "${expected_model_type}")
@@ -250,6 +251,7 @@ while IFS= read -r planned_row; do
     --arg workingSequencePath "${working_sequence_path}" \
     --arg modelName "${model_name}" \
     --arg modelType "${resolved_model_type}" \
+    --arg geometryProfile "${resolved_geometry_profile}" \
     --arg expectedModelType "${expected_model_type}" \
     --arg mode "packed_fseq_window" \
     --arg format "fseq" \
@@ -275,6 +277,7 @@ while IFS= read -r planned_row; do
         workingSequencePath: $workingSequencePath,
         modelName: $modelName,
         modelType: $modelType,
+        geometryProfile: $geometryProfile,
         expectedModelType: (if $expectedModelType == "" then null else $expectedModelType end),
         startMs: $startMs,
         endMs: $endMs,

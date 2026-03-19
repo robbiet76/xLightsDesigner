@@ -8,6 +8,7 @@
       "resolvedModelType": "arch",
       "analyzerFamily": "linear",
       "baselineModelName": "ArchSingle",
+      "baselineGeometryProfile": "arch_single",
       "baselineStructuralSettings": {
         "Angle": "0",
         "Dir": "L",
@@ -27,6 +28,7 @@
           "modelName": "ArchGroup",
           "displayAs": "Arches",
           "resolvedModelType": "arch",
+          "resolvedGeometryProfile": "arch_grouped",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "grouped",
@@ -57,6 +59,7 @@
           "modelName": "ArchSingle",
           "displayAs": "Arches",
           "resolvedModelType": "arch",
+          "resolvedGeometryProfile": "arch_single",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "type:arch"
@@ -80,6 +83,7 @@
           "modelName": "ArchTripleLayer",
           "displayAs": "Arches",
           "resolvedModelType": "arch",
+          "resolvedGeometryProfile": "arch_multi_layer",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "layered",
@@ -118,6 +122,7 @@
       "resolvedModelType": "cane",
       "analyzerFamily": "linear",
       "baselineModelName": "CaneSingle",
+      "baselineGeometryProfile": "cane_single",
       "baselineStructuralSettings": {
         "Angle": "0",
         "Dir": "L",
@@ -137,6 +142,7 @@
           "modelName": "CaneGroup",
           "displayAs": "Candy Canes",
           "resolvedModelType": "cane",
+          "resolvedGeometryProfile": "cane_grouped",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "grouped",
@@ -184,6 +190,7 @@
           "modelName": "CaneSingle",
           "displayAs": "Candy Canes",
           "resolvedModelType": "cane",
+          "resolvedGeometryProfile": "cane_single",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "type:cane"
@@ -207,6 +214,7 @@
           "modelName": "CaneStickGroup",
           "displayAs": "Candy Canes",
           "resolvedModelType": "cane",
+          "resolvedGeometryProfile": "cane_stick_grouped",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "grouped",
@@ -263,6 +271,7 @@
       "resolvedModelType": "matrix",
       "analyzerFamily": "matrix",
       "baselineModelName": "MatrixLowDensity",
+      "baselineGeometryProfile": "matrix_low_density",
       "baselineStructuralSettings": {
         "Dir": "L",
         "DisplayAs": "Horiz Matrix",
@@ -277,6 +286,7 @@
           "modelName": "MatrixHighDensity",
           "displayAs": "Horiz Matrix",
           "resolvedModelType": "matrix",
+          "resolvedGeometryProfile": "matrix_high_density",
           "analyzerFamily": "matrix",
           "geometryTraits": [
             "density_high",
@@ -307,6 +317,7 @@
           "modelName": "MatrixLowDensity",
           "displayAs": "Horiz Matrix",
           "resolvedModelType": "matrix",
+          "resolvedGeometryProfile": "matrix_low_density",
           "analyzerFamily": "matrix",
           "geometryTraits": [
             "density_low",
@@ -327,6 +338,7 @@
           "modelName": "MatrixMedDensity",
           "displayAs": "Horiz Matrix",
           "resolvedModelType": "matrix",
+          "resolvedGeometryProfile": "matrix_medium_density",
           "analyzerFamily": "matrix",
           "geometryTraits": [
             "density_medium",
@@ -360,6 +372,7 @@
       "resolvedModelType": "icicles",
       "analyzerFamily": "linear",
       "baselineModelName": "Icicles",
+      "baselineGeometryProfile": "icicles_drop_pattern",
       "baselineStructuralSettings": {
         "Dir": "L",
         "DisplayAs": "Icicles",
@@ -380,6 +393,7 @@
           "modelName": "Icicles",
           "displayAs": "Icicles",
           "resolvedModelType": "icicles",
+          "resolvedGeometryProfile": "icicles_drop_pattern",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "drop_pattern",
@@ -408,6 +422,7 @@
       "resolvedModelType": "single_line",
       "analyzerFamily": "linear",
       "baselineModelName": "SingleLineHorizontal",
+      "baselineGeometryProfile": "single_line_horizontal",
       "baselineStructuralSettings": {
         "Dir": "L",
         "DisplayAs": "Single Line",
@@ -425,6 +440,7 @@
           "modelName": "SingleLineHorizontal",
           "displayAs": "Single Line",
           "resolvedModelType": "single_line",
+          "resolvedGeometryProfile": "single_line_horizontal",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "horizontal_orientation",
@@ -447,6 +463,7 @@
           "modelName": "SingleLineSingleNode",
           "displayAs": "Single Line",
           "resolvedModelType": "single_line",
+          "resolvedGeometryProfile": "single_line_single_node",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "horizontal_orientation",
@@ -480,6 +497,7 @@
           "modelName": "SingleLineVertical",
           "displayAs": "Single Line",
           "resolvedModelType": "single_line",
+          "resolvedGeometryProfile": "single_line_vertical",
           "analyzerFamily": "linear",
           "geometryTraits": [
             "type:single_line",
@@ -515,6 +533,7 @@
       "resolvedModelType": "spinner",
       "analyzerFamily": "radial",
       "baselineModelName": "Spinner",
+      "baselineGeometryProfile": "spinner_standard",
       "baselineStructuralSettings": {
         "Alternate": "false",
         "Arc": "360",
@@ -533,6 +552,7 @@
           "modelName": "Spinner",
           "displayAs": "Spinner",
           "resolvedModelType": "spinner",
+          "resolvedGeometryProfile": "spinner_standard",
           "analyzerFamily": "radial",
           "geometryTraits": [
             "arms:8",
@@ -559,6 +579,7 @@
       "resolvedModelType": "star",
       "analyzerFamily": "star",
       "baselineModelName": "StarSingle",
+      "baselineGeometryProfile": "star_single_layer",
       "baselineStructuralSettings": {
         "DisplayAs": "Star",
         "StarStartLocation": "Bottom Ctr-CW",
@@ -572,6 +593,7 @@
           "modelName": "StarSingle",
           "displayAs": "Star",
           "resolvedModelType": "star",
+          "resolvedGeometryProfile": "star_single_layer",
           "analyzerFamily": "star",
           "geometryTraits": [
             "points:5",
@@ -590,6 +612,7 @@
           "modelName": "StarTripleLayer",
           "displayAs": "Star",
           "resolvedModelType": "star",
+          "resolvedGeometryProfile": "star_multi_layer",
           "analyzerFamily": "star",
           "geometryTraits": [
             "layered",
@@ -623,6 +646,7 @@
       "resolvedModelType": "tree_360",
       "analyzerFamily": "tree",
       "baselineModelName": "TreeRound",
+      "baselineGeometryProfile": "tree_360_round",
       "baselineStructuralSettings": {
         "Dir": "L",
         "DisplayAs": "Tree 360",
@@ -637,6 +661,7 @@
           "modelName": "TreeRound",
           "displayAs": "Tree 360",
           "resolvedModelType": "tree_360",
+          "resolvedGeometryProfile": "tree_360_round",
           "analyzerFamily": "tree",
           "geometryTraits": [
             "nodes_per_string:50",
@@ -657,6 +682,7 @@
           "modelName": "TreeSpiral",
           "displayAs": "Tree 360",
           "resolvedModelType": "tree_360",
+          "resolvedGeometryProfile": "tree_360_spiral",
           "analyzerFamily": "tree",
           "geometryTraits": [
             "nodes_per_string:300",
@@ -707,6 +733,7 @@
       "resolvedModelType": "tree_flat",
       "analyzerFamily": "tree",
       "baselineModelName": "TreeFlat",
+      "baselineGeometryProfile": "tree_flat_single_layer",
       "baselineStructuralSettings": {
         "Dir": "L",
         "DisplayAs": "Tree Flat",
@@ -721,6 +748,7 @@
           "modelName": "TreeFlat",
           "displayAs": "Tree Flat",
           "resolvedModelType": "tree_flat",
+          "resolvedGeometryProfile": "tree_flat_single_layer",
           "analyzerFamily": "tree",
           "geometryTraits": [
             "nodes_per_string:50",

@@ -452,12 +452,28 @@ class StarAnalyzer(BaseAnalyzer):
 
 ANALYZERS = {
     "single_line": LinearAnalyzer(),
+    "single_line_horizontal": LinearAnalyzer(),
+    "single_line_vertical": LinearAnalyzer(),
+    "single_line_single_node": LinearAnalyzer(),
     "cane": LinearAnalyzer(),
+    "cane_single": LinearAnalyzer(),
+    "cane_grouped": LinearAnalyzer(),
+    "cane_stick_grouped": LinearAnalyzer(),
     "arch": LinearAnalyzer(),
+    "arch_single": LinearAnalyzer(),
+    "arch_grouped": LinearAnalyzer(),
+    "arch_multi_layer": LinearAnalyzer(),
     "icicles": LinearAnalyzer(),
+    "icicles_standard": LinearAnalyzer(),
+    "icicles_drop_pattern": LinearAnalyzer(),
     "tree_flat": TreeAnalyzer(),
+    "tree_flat_single_layer": TreeAnalyzer(),
     "tree_360": TreeAnalyzer(),
+    "tree_360_round": TreeAnalyzer(),
+    "tree_360_spiral": TreeAnalyzer(),
     "star": StarAnalyzer(),
+    "star_single_layer": StarAnalyzer(),
+    "star_multi_layer": StarAnalyzer(),
 }
 
 

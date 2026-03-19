@@ -119,6 +119,143 @@ def resolve_analyzer_family(model_family):
     return "base"
 
 
+def structural_attributes(model):
+    ignored = {
+        "name",
+        "WorldPosX",
+        "WorldPosY",
+        "WorldPosZ",
+        "ScaleX",
+        "ScaleY",
+        "ScaleZ",
+        "RotateX",
+        "RotateY",
+        "RotateZ",
+        "StartChannel",
+        "Controller",
+        "LayoutGroup",
+        "Transparency",
+        "PixelSize",
+        "Antialias",
+        "versionNumber",
+    }
+    attrs = {}
+    for key, value in sorted(model.attrib.items()):
+        if key in ignored:
+            continue
+        attrs[key] = value.strip()
+    return attrs
+
+
+def geometry_traits(display_as, attrs):
+    traits = []
+    model_type = resolve_model_family(display_as)
+    traits.append(f"type:{model_type}")
+
+    if attrs.get("LayerSizes"):
+        traits.append("layered")
+    if attrs.get("CandyCaneSticks", "").lower() == "true":
+        traits.append("stick_segments")
+    if attrs.get("TreeSpiralRotations") not in {None, "", "0", "0.000000"}:
+        traits.append("spiral_enabled")
+    if attrs.get("StrandDir"):
+        traits.append(f"strand_dir:{attrs['StrandDir'].lower()}")
+    if attrs.get("DropPattern"):
+        traits.append("drop_pattern")
+    if attrs.get("Alternate", "").lower() == "true":
+        traits.append("alternate")
+    if attrs.get("ZigZag", "").lower() == "true":
+        traits.append("zigzag")
+
+    parm1 = attrs.get("parm1")
+    parm2 = attrs.get("parm2")
+    parm3 = attrs.get("parm3")
+    if model_type == "single_line":
+        if parm2 == "1":
+            traits.append("single_node")
+        x2 = float(attrs.get("X2", "0") or "0")
+        y2 = float(attrs.get("Y2", "0") or "0")
+        if abs(x2) > abs(y2):
+            traits.append("horizontal_orientation")
+        elif abs(y2) > abs(x2):
+            traits.append("vertical_orientation")
+    if model_type == "arch":
+        if parm1 and int(parm1) > 1:
+            traits.append("grouped")
+    if model_type == "cane":
+        if parm1 and int(parm1) > 1:
+            traits.append("grouped")
+        if parm2 and int(parm2) <= 20:
+            traits.append("low_node_density")
+    if model_type == "matrix":
+        if parm1 and parm2:
+            rows = int(parm1)
+            cols = int(parm2)
+            traits.append(f"matrix:{rows}x{cols}")
+            cells = rows * cols
+            if cells <= 256:
+                traits.append("density_low")
+            elif cells <= 1024:
+                traits.append("density_medium")
+            else:
+                traits.append("density_high")
+    if model_type in {"tree_flat", "tree_360"}:
+        if parm1 and parm2:
+            traits.append(f"strings:{parm1}")
+            traits.append(f"nodes_per_string:{parm2}")
+    if model_type == "star" and parm3:
+        traits.append(f"points:{parm3}")
+    if model_type == "spinner" and parm3:
+        traits.append(f"arms:{parm3}")
+
+    return sorted(set(traits))
+
+
+def resolve_geometry_profile(display_as, attrs):
+    model_type = resolve_model_family(display_as)
+    traits = set(geometry_traits(display_as, attrs))
+
+    if model_type == "single_line":
+        if "single_node" in traits:
+            return "single_line_single_node"
+        if "vertical_orientation" in traits:
+            return "single_line_vertical"
+        return "single_line_horizontal"
+    if model_type == "arch":
+        if "layered" in traits:
+            return "arch_multi_layer"
+        if "grouped" in traits:
+            return "arch_grouped"
+        return "arch_single"
+    if model_type == "cane":
+        if "stick_segments" in traits and "grouped" in traits:
+            return "cane_stick_grouped"
+        if "grouped" in traits:
+            return "cane_grouped"
+        return "cane_single"
+    if model_type == "matrix":
+        if "density_high" in traits:
+            return "matrix_high_density"
+        if "density_medium" in traits:
+            return "matrix_medium_density"
+        return "matrix_low_density"
+    if model_type == "tree_360":
+        if "spiral_enabled" in traits:
+            return "tree_360_spiral"
+        return "tree_360_round"
+    if model_type == "tree_flat":
+        return "tree_flat_single_layer"
+    if model_type == "star":
+        if "layered" in traits:
+            return "star_multi_layer"
+        return "star_single_layer"
+    if model_type == "icicles":
+        return "icicles_drop_pattern" if "drop_pattern" in traits else "icicles_standard"
+    if model_type == "spinner":
+        return "spinner_standard"
+    return model_type
+
+
 def main():
     args = parse_args()
     rgbeffects_path = f"{args.show_dir.rstrip('/')}/xlights_rgbeffects.xml"
@@ -144,12 +281,18 @@ def main():
 
     display_as = target.attrib.get("DisplayAs")
     resolved_model_family = resolve_model_family(display_as)
+    attrs = structural_attributes(target)
+    traits = geometry_traits(display_as, attrs)
+    geometry_profile = resolve_geometry_profile(display_as, attrs)
     print(json.dumps({
         "modelName": args.model_name,
         "displayAs": display_as,
         "displayAsNormalized": re.sub(r"[^a-z0-9]+", "_", (display_as or "").strip().lower()).strip("_"),
         "resolvedModelType": resolved_model_family,
+        "resolvedGeometryProfile": geometry_profile,
+        "geometryTraits": traits,
         "analyzerFamily": resolve_analyzer_family(resolved_model_family),
+        "structuralSettings": attrs,
         "stringType": target.attrib.get("StringType"),
         "startChannel": start_channel_zero + 1,
         "startChannelZero": start_channel_zero,
