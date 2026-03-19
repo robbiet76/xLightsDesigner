@@ -1,0 +1,121 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "pinwheel-treespiral-expanded-sweep-v1",
+  "description": "Expanded Pinwheel sweep on the canonical spiral tree model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeSpiral",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Pinwheel sweep on the canonical spiral tree model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "pinwheel-treespiral-expanded-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 3,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": false,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "pinwheel_motion",
+        "tree_pinwheel"
+      ]
+    },
+    {
+      "sampleId": "pinwheel-treespiral-expanded-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 4,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 60,
+        "speed": 12,
+        "rotation": true,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "pinwheel_motion",
+        "rotating_pinwheel"
+      ]
+    },
+    {
+      "sampleId": "pinwheel-treespiral-expanded-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 6,
+        "armSize": 50,
+        "thickness": 60,
+        "twist": 0,
+        "speed": 10,
+        "rotation": true,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "pinwheel_motion",
+        "dense_pinwheel"
+      ]
+    },
+    {
+      "sampleId": "pinwheel-treespiral-expanded-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "Old Render Method",
+        "arms": 4,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 0,
+        "speed": 10,
+        "rotation": true,
+        "3DMode": "None"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "pinwheel_motion",
+        "old_render_pinwheel"
+      ]
+    },
+    {
+      "sampleId": "pinwheel-treespiral-expanded-v1",
+      "effectName": "Pinwheel",
+      "effectSettings": {
+        "style": "New Render Method",
+        "arms": 4,
+        "armSize": 50,
+        "thickness": 40,
+        "twist": 60,
+        "speed": 12,
+        "rotation": true,
+        "3DMode": "3D"
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "pinwheel_motion",
+        "depth_mode"
+      ]
+    }
+  ]
+}

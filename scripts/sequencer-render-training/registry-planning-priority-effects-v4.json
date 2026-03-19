@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "description": "Complex-effect gap fill v4 for Marquee and Pinwheel across additional standard geometries.",
+  "plans": [
+    {
+      "planId": "marquee-arch-group",
+      "effect": "Marquee",
+      "geometryProfile": "arch_grouped",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-archgroup-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "reverse"]
+    },
+    {
+      "planId": "marquee-arch-multi-layer",
+      "effect": "Marquee",
+      "geometryProfile": "arch_multi_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-archtriplelayer-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "reverse"]
+    },
+    {
+      "planId": "marquee-tree-round",
+      "effect": "Marquee",
+      "geometryProfile": "tree_360_round",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-treeround-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "reverse"]
+    },
+    {
+      "planId": "marquee-tree-spiral",
+      "effect": "Marquee",
+      "geometryProfile": "tree_360_spiral",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-treespiral-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "reverse"]
+    },
+    {
+      "planId": "pinwheel-tree-flat",
+      "effect": "Pinwheel",
+      "geometryProfile": "tree_flat_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-treeflat-expanded-sweep-v1.json",
+      "parameters": ["arms", "thickness", "rotation", "3DMode"]
+    },
+    {
+      "planId": "pinwheel-tree-spiral",
+      "effect": "Pinwheel",
+      "geometryProfile": "tree_360_spiral",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-treespiral-expanded-sweep-v1.json",
+      "parameters": ["arms", "thickness", "rotation", "3DMode"]
+    }
+  ]
+}
