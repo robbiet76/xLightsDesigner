@@ -1,0 +1,21 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "twinkle-singlelinehorizontal-expanded-sweep-v1",
+  "description": "Expanded Twinkle sweep on the canonical horizontal single-line model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "SingleLineHorizontal",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Twinkle sweep on the canonical horizontal single-line model using the 4-second animated standard."
+  },
+  "samples": [
+    {"sampleId": "twinkle-singlelinehorizontal-soft-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 3, "steps": 70, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["soft_twinkle", "line_read"]},
+    {"sampleId": "twinkle-singlelinehorizontal-dense-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 9, "steps": 40, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["dense_twinkle", "busy_texture"]},
+    {"sampleId": "twinkle-singlelinehorizontal-strobe-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 7, "steps": 20, "strobe": true, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["strobe_twinkle", "punchy_texture"]},
+    {"sampleId": "twinkle-singlelinehorizontal-classic-v1", "effectName": "Twinkle", "effectSettings": {"style": "Old Render Method", "count": 5, "steps": 50, "strobe": false, "reRandomize": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["classic_twinkle", "rerandomized_texture"]},
+    {"sampleId": "twinkle-singlelinehorizontal-sparse-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 1, "steps": 90, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["sparse_twinkle", "restrained_texture"]}
+  ]
+}

@@ -638,6 +638,21 @@ class TreeAnalyzer(BaseAnalyzer):
                 pattern_family = "expanding_shockwave"
             else:
                 pattern_family = "shockwave_ring"
+        elif inp.effect_name == "Twinkle":
+            count = float(settings.get("count", 5) or 5)
+            steps = float(settings.get("steps", 50) or 50)
+            strobe = bool(settings.get("strobe", False))
+            style = str(settings.get("style", "New Render Method") or "New Render Method").lower()
+            if strobe and count >= 7:
+                pattern_family = "strobe_twinkle"
+            elif strobe:
+                pattern_family = "punchy_twinkle"
+            elif count >= 7 or steps <= 20:
+                pattern_family = "dense_twinkle"
+            elif "old" in style:
+                pattern_family = "classic_twinkle"
+            else:
+                pattern_family = "soft_twinkle"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -661,6 +676,8 @@ class TreeAnalyzer(BaseAnalyzer):
             "configuredShockwaveStartWidth": shock["startWidth"] if inp.effect_name == "Shockwave" else None,
             "configuredShockwaveEndWidth": shock["endWidth"] if inp.effect_name == "Shockwave" else None,
             "configuredShockwaveAccel": shock["accel"] if inp.effect_name == "Shockwave" else None,
+            "configuredTwinkleCount": int(settings.get("count", 5) or 5) if inp.effect_name == "Twinkle" else None,
+            "configuredTwinkleSteps": int(settings.get("steps", 50) or 50) if inp.effect_name == "Twinkle" else None,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -695,6 +712,20 @@ class TreeAnalyzer(BaseAnalyzer):
                 "shockwaveEdgeClass": shock["edgeClass"] if inp.effect_name == "Shockwave" else None,
                 "shockwaveAccelClass": shock["accelClass"] if inp.effect_name == "Shockwave" else None,
                 "shockwaveCycleClass": shock["cycleClass"] if inp.effect_name == "Shockwave" else None,
+                "twinkleDensityClass": (
+                    "dense" if int(settings.get("count", 5) or 5) >= 7 else
+                    "sparse" if int(settings.get("count", 5) or 5) <= 2 else
+                    "medium"
+                ) if inp.effect_name == "Twinkle" else None,
+                "twinkleCadenceClass": (
+                    "fast" if int(settings.get("steps", 50) or 50) <= 20 else
+                    "slow" if int(settings.get("steps", 50) or 50) >= 70 else
+                    "medium"
+                ) if inp.effect_name == "Twinkle" else None,
+                "twinkleStyleClass": (
+                    "classic" if "old" in str(settings.get("style", "New Render Method") or "New Render Method").lower() else
+                    "modern"
+                ) if inp.effect_name == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -729,6 +760,18 @@ class TreeAnalyzer(BaseAnalyzer):
             intents = set(self._shockwave_intents(settings))
             if geometry_profile == "tree_360_spiral":
                 intents.add("geometry_coupled")
+        if inp.effect_name == "Twinkle":
+            intents = {"animated", "patterned"}
+            if int(settings.get("count", 5) or 5) >= 7:
+                intents.add("busy")
+            else:
+                intents.add("restrained")
+            if bool(settings.get("strobe", False)):
+                intents.add("bold")
+            if int(settings.get("steps", 50) or 50) >= 70:
+                intents.add("steady")
+            if coverage >= 0.85:
+                intents.add("fill")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -766,6 +809,17 @@ class StarAnalyzer(BaseAnalyzer):
                 pattern_family = "radial_surging_shockwave"
             else:
                 pattern_family = "radial_shockwave"
+        elif inp.effect_name == "Twinkle":
+            count = int(inp.effect_settings.get("count", 5) or 5)
+            strobe = bool(inp.effect_settings.get("strobe", False))
+            if strobe and count >= 7:
+                pattern_family = "radial_strobe_twinkle"
+            elif strobe:
+                pattern_family = "radial_punchy_twinkle"
+            elif count >= 7:
+                pattern_family = "radial_dense_twinkle"
+            else:
+                pattern_family = "radial_soft_twinkle"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -802,6 +856,11 @@ class StarAnalyzer(BaseAnalyzer):
                 "shockwaveEdgeClass": shock["edgeClass"] if inp.effect_name == "Shockwave" else None,
                 "shockwaveAccelClass": shock["accelClass"] if inp.effect_name == "Shockwave" else None,
                 "shockwaveCycleClass": shock["cycleClass"] if inp.effect_name == "Shockwave" else None,
+                "twinkleDensityClass": (
+                    "dense" if int(inp.effect_settings.get("count", 5) or 5) >= 7 else
+                    "sparse" if int(inp.effect_settings.get("count", 5) or 5) <= 2 else
+                    "medium"
+                ) if inp.effect_name == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -815,6 +874,14 @@ class StarAnalyzer(BaseAnalyzer):
             intents.add("directional")
         if inp.effect_name == "Shockwave":
             intents = set(self._shockwave_intents(inp.effect_settings))
+        if inp.effect_name == "Twinkle":
+            intents = {"animated", "patterned"}
+            if bool(inp.effect_settings.get("strobe", False)):
+                intents.add("bold")
+            if int(inp.effect_settings.get("count", 5) or 5) >= 7:
+                intents.add("busy")
+            else:
+                intents.add("restrained")
         elif coverage >= 0.85:
             intents.add("fill")
         base["intentCandidates"] = sorted(intents)
@@ -854,6 +921,17 @@ class RadialAnalyzer(BaseAnalyzer):
                 pattern_family = "radial_surging_shockwave"
             else:
                 pattern_family = "radial_shockwave"
+        elif inp.effect_name == "Twinkle":
+            count = int(inp.effect_settings.get("count", 5) or 5)
+            strobe = bool(inp.effect_settings.get("strobe", False))
+            if strobe and count >= 7:
+                pattern_family = "radial_strobe_twinkle"
+            elif strobe:
+                pattern_family = "radial_punchy_twinkle"
+            elif count >= 7:
+                pattern_family = "radial_dense_twinkle"
+            else:
+                pattern_family = "radial_soft_twinkle"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -890,6 +968,11 @@ class RadialAnalyzer(BaseAnalyzer):
                 "shockwaveEdgeClass": shock["edgeClass"] if inp.effect_name == "Shockwave" else None,
                 "shockwaveAccelClass": shock["accelClass"] if inp.effect_name == "Shockwave" else None,
                 "shockwaveCycleClass": shock["cycleClass"] if inp.effect_name == "Shockwave" else None,
+                "twinkleDensityClass": (
+                    "dense" if int(inp.effect_settings.get("count", 5) or 5) >= 7 else
+                    "sparse" if int(inp.effect_settings.get("count", 5) or 5) <= 2 else
+                    "medium"
+                ) if inp.effect_name == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -900,6 +983,14 @@ class RadialAnalyzer(BaseAnalyzer):
             intents.add("directional")
         if inp.effect_name == "Shockwave":
             intents = set(self._shockwave_intents(inp.effect_settings))
+        if inp.effect_name == "Twinkle":
+            intents = {"animated", "patterned"}
+            if bool(inp.effect_settings.get("strobe", False)):
+                intents.add("bold")
+            if int(inp.effect_settings.get("count", 5) or 5) >= 7:
+                intents.add("busy")
+            else:
+                intents.add("restrained")
         elif coverage >= 0.85:
             intents.add("fill")
         base["intentCandidates"] = sorted(intents)

@@ -415,6 +415,41 @@ jq -cn \
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
           + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
+      elif $effect == "Twinkle" then
+        unique_labels(
+          $labelHints
+          + ["effect:twinkle", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["twinkle_pattern"]
+          + (
+              if $modelType == "star" or $modelType == "spinner" then ["radial_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              elif ($modelType == "single_line") then ["linear_pattern_fit"]
+              else []
+              end
+            )
+          + (
+              if (($analysis.patternSignals.twinkleDensityClass // "") == "dense") then ["dense_twinkle"]
+              elif (($analysis.patternSignals.twinkleDensityClass // "") == "sparse") then ["sparse_twinkle"]
+              else ["medium_twinkle"]
+              end
+            )
+          + (
+              if (($analysis.patternSignals.twinkleCadenceClass // "") == "fast") then ["fast_twinkle"]
+              elif (($analysis.patternSignals.twinkleCadenceClass // "") == "slow") then ["slow_twinkle"]
+              else ["medium_cadence_twinkle"]
+              end
+            )
+          + (
+              if (($settings.strobe // false)) then ["strobe_twinkle"]
+              else ["soft_twinkle"]
+              end
+            )
+          + (
+              if (($settings.reRandomize // false)) then ["rerandomized_twinkle"] else [] end
+            )
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
+        )
       else
         unique_labels(
           $labelHints
@@ -659,6 +694,32 @@ jq -cn \
              elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.88
              elif ($modelType == "matrix") then 0.92
              else 0.66 end)
+        }
+      elif $effect == "Twinkle" then
+        {
+          readability:
+            (
+              (if (($settings.strobe // false) and ($settings.count // 5) >= 7) then 0.68
+               elif (($settings.count // 5) >= 7) then 0.74
+               else 0.82 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if (($settings.strobe // false)) then 0.46
+             elif (($settings.count // 5) >= 7) then 0.54
+             else 0.74 end),
+          patternClarity:
+            (
+              (if (($settings.steps // 50) >= 70) then 0.8
+               elif (($settings.strobe // false)) then 0.72
+               else 0.76 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "tree_flat" or $modelType == "tree_360") then 0.9
+             elif $modelType == "star" or $modelType == "spinner" then 0.86
+             elif $modelType == "single_line" then 0.8
+             else 0.72 end)
         }
       else
         {

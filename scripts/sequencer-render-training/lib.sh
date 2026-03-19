@@ -430,6 +430,25 @@ shockwave_effect_settings_json() {
     '
 }
 
+twinkle_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_CHOICE_Twinkle_Style: ($eff.style // "New Render Method"),
+        E_SLIDER_Twinkle_Count: (($eff.count // 5) | tostring),
+        E_SLIDER_Twinkle_Steps: (($eff.steps // 50) | tostring)
+      }
+      + (if ($eff.strobe // false) then {E_CHECKBOX_Twinkle_Strobe: "1"} else {} end)
+      + (if ($eff.reRandomize // false) then {E_CHECKBOX_Twinkle_ReRandomize: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -462,6 +481,9 @@ settings_json_for_effect() {
       ;;
     "Shockwave")
       shockwave_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Twinkle")
+      twinkle_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
       echo "Unsupported effect in initial harness: ${effect_name}" >&2

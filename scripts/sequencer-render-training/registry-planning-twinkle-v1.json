@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "description": "First broad-geometry Stage 1 Twinkle screening across line, tree, star, and spinner profiles.",
+  "plans": [
+    {"planId": "twinkle-single-line-horizontal", "effect": "Twinkle", "geometryProfile": "single_line_horizontal", "baseManifest": "scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json", "parameters": ["style", "count", "steps", "strobe"]},
+    {"planId": "twinkle-tree-round", "effect": "Twinkle", "geometryProfile": "tree_360_round", "baseManifest": "scripts/sequencer-render-training/manifests/twinkle-treeround-expanded-sweep-v1.json", "parameters": ["style", "count", "steps", "strobe"]},
+    {"planId": "twinkle-tree-spiral", "effect": "Twinkle", "geometryProfile": "tree_360_spiral", "baseManifest": "scripts/sequencer-render-training/manifests/twinkle-treespiral-expanded-sweep-v1.json", "parameters": ["style", "count", "steps", "strobe"]},
+    {"planId": "twinkle-star-single", "effect": "Twinkle", "geometryProfile": "star_single_layer", "baseManifest": "scripts/sequencer-render-training/manifests/twinkle-starsingle-expanded-sweep-v1.json", "parameters": ["style", "count", "steps", "strobe"]},
+    {"planId": "twinkle-spinner", "effect": "Twinkle", "geometryProfile": "spinner_standard", "baseManifest": "scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json", "parameters": ["style", "count", "steps", "strobe"]}
+  ]
+}
