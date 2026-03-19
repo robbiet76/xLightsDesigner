@@ -48,10 +48,17 @@ jq -cn \
     | map(select(type == "string" and length > 0))
     | unique;
 
+  def normalized_label_hints(xs):
+    if (xs | index("registry_generated")) != null then
+      xs | map(select(. == "registry_generated" or . == "range_sample" or . == "derived_from_registry"))
+    else
+      xs
+    end;
+
   ($sample.effectName // "") as $effect
   | ($sample.effectSettings // {}) as $settings
   | ($sample.sharedSettings // {}) as $shared
-  | ($sample.labelHints // []) as $labelHints
+  | (normalized_label_hints($sample.labelHints // [])) as $labelHints
   | ($features.averageActiveNodeRatio // null) as $fseqActiveNodeRatio
   | ($features.averageActiveChannelRatio // null) as $fseqActiveChannelRatio
   | ($features.temporalChangeMean // null) as $fseqTemporalChangeMean

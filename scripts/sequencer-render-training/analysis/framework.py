@@ -322,8 +322,9 @@ class LinearAnalyzer(BaseAnalyzer):
             reverse = bool(settings.get("reverse", False))
             skip_size = int(settings.get("skipSize", 0) or 0)
             band_size = int(settings.get("bandSize", 1) or 1)
+            direction = "reverse" if reverse else "forward"
             if reverse:
-                direction = "reverse"
+                pass
             if skip_size >= 4:
                 pattern_family = "segmented_marquee"
             elif band_size >= 6:
@@ -503,6 +504,14 @@ class TreeAnalyzer(BaseAnalyzer):
                     "dynamic" if abs(direction_summary["netTravel"]) >= 0.02 or temporal >= 0.03 else
                     "stable"
                 ),
+                "pinwheelArmDensityClass": (
+                    "dense" if int(settings.get("arms", 3) or 3) >= 6 else
+                    "multi" if int(settings.get("arms", 3) or 3) >= 4 else
+                    "few"
+                ) if inp.effect_name == "Pinwheel" else None,
+                "pinwheelRotationClass": (
+                    "rotating" if bool(settings.get("rotation", False)) else "static"
+                ) if inp.effect_name == "Pinwheel" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -554,6 +563,7 @@ class StarAnalyzer(BaseAnalyzer):
             "radialMotion": temporal,
             "radialDirectionReversals": direction_summary["reversals"],
             "radialNetTravel": direction_summary["netTravel"],
+            "configuredPinwheelArms": int(inp.effect_settings.get("arms", 3) or 3) if inp.effect_name == "Pinwheel" else None,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -562,7 +572,15 @@ class StarAnalyzer(BaseAnalyzer):
                     "full_fill" if coverage >= 0.85 else
                     "sparse_points" if coverage <= 0.2 else
                     "partial_fill"
-                )
+                ),
+                "pinwheelArmDensityClass": (
+                    "dense" if int(inp.effect_settings.get("arms", 3) or 3) >= 6 else
+                    "multi" if int(inp.effect_settings.get("arms", 3) or 3) >= 4 else
+                    "few"
+                ) if inp.effect_name == "Pinwheel" else None,
+                "pinwheelRotationClass": (
+                    "rotating" if bool(inp.effect_settings.get("rotation", False)) else "static"
+                ) if inp.effect_name == "Pinwheel" else None,
             }
         )
         intents = set(base["intentCandidates"])
