@@ -48,6 +48,8 @@ The current harness is intentionally small:
 - `generate-parameter-sweep-manifest.py`: generate registry-driven sweep manifests from a base effect manifest and a registered parameter
 - `registry-planning-phase1.json`: first planning set mapping geometry profiles and effects to registry-driven sweeps
 - `generate-registry-plan-manifests.py`: emit a batch of registry-driven manifests from a planning file
+- `generate-priority-effect-summary.py`: consolidate priority-effect region summaries from completed runs into one machine-readable summary
+- `generate-priority-intent-map.py`: build a first-pass intent map from the consolidated priority-effect summary
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -126,6 +128,19 @@ python3 scripts/sequencer-render-training/generate-registry-plan-manifests.py \
   --plan scripts/sequencer-render-training/registry-planning-phase1.json \
   --out-dir /tmp/registry-plan-manifests \
   --summary-out /tmp/registry-plan-manifests/summary.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-priority-effect-summary.py \
+  --run-root /tmp/render-training-priority-effects-v1 \
+  --run-root /tmp/render-training-priority-effects-v2-clean \
+  --out-file /tmp/render-training-priority-effects-summary.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-priority-intent-map.py \
+  --summary /tmp/render-training-priority-effects-summary.json \
+  --out-file /tmp/render-training-priority-intent-map.json
 ```
 
 ```bash
@@ -235,6 +250,9 @@ Environment:
 - Parameter sampling should come from the effect parameter registry where possible:
   - registry anchors define first-pass sweeps
   - registry metadata defines expected importance, interaction hypotheses, and stop rules
+- Intent mapping should only be built on structurally mature effects and geometry profiles:
+  - use the consolidated priority-effect summary as the input
+  - do not over-promote weak or style-level semantics before the analyzer layer supports them
 - Registry planning should be geometry-profile-aware:
   - choose a stable base manifest per geometry profile
   - generate first-order sweeps from registered parameters
