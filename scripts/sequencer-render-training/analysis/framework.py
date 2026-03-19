@@ -451,9 +451,10 @@ class StarAnalyzer(BaseAnalyzer):
 
 
 ANALYZERS = {
-    "outline": LinearAnalyzer(),
     "single_line": LinearAnalyzer(),
     "cane": LinearAnalyzer(),
+    "arch": LinearAnalyzer(),
+    "icicles": LinearAnalyzer(),
     "tree_flat": TreeAnalyzer(),
     "tree_360": TreeAnalyzer(),
     "star": StarAnalyzer(),

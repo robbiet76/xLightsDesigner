@@ -28,7 +28,6 @@
       "required": [
         "sequencePath",
         "modelName",
-        "modelType",
         "startMs",
         "endMs",
         "durationClass"

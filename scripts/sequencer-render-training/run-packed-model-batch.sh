@@ -56,10 +56,15 @@ decoder_max_frame_cells="$(jq -r '.interpretationFramework.decodePolicy.maxFrame
 fixture_json="$(jq -c '.fixture' "${MANIFEST_FILE}")"
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
-model_type="$(jq -r '.modelType' <<<"${fixture_json}")"
+expected_model_type="$(jq -r '.modelType // empty' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
 model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
+resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
+expected_model_type_args=()
+if [[ -n "${expected_model_type}" ]]; then
+  expected_model_type_args=(--model-type "${expected_model_type}")
+fi
 model_start_channel_zero="$(jq -r '.startChannelZero' <<<"${model_metadata_json}")"
 model_channel_count="$(jq -r '.channelCount' <<<"${model_metadata_json}")"
 model_node_count="$(jq -r '.nodeCount' <<<"${model_metadata_json}")"
@@ -221,7 +226,7 @@ while IFS= read -r planned_row; do
   python3 "${SCRIPT_DIR}/analysis/analyze_decoded_window.py" \
     --decoded-window "${decoded_features_path}" \
     --model-metadata <(printf '%s' "${model_metadata_json}") \
-    --model-type "${model_type}" \
+    "${expected_model_type_args[@]}" \
     --effect-name "$(jq -r '.effectName' <<<"${sample_json}")" \
     --effect-settings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
     --shared-settings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
@@ -234,7 +239,7 @@ while IFS= read -r planned_row; do
   observations_json="$(
     bash "${SCRIPT_DIR}/extract-observations.sh" \
       --sample-json "${sample_json}" \
-      --model-type "${model_type}" \
+      --model-type "${resolved_model_type}" \
       --features-json "$(cat "${features_path}")"
   )"
   jq -cn \
@@ -244,7 +249,8 @@ while IFS= read -r planned_row; do
     --arg sequencePath "${sequence_path}" \
     --arg workingSequencePath "${working_sequence_path}" \
     --arg modelName "${model_name}" \
-    --arg modelType "${model_type}" \
+    --arg modelType "${resolved_model_type}" \
+    --arg expectedModelType "${expected_model_type}" \
     --arg mode "packed_fseq_window" \
     --arg format "fseq" \
     --arg path "${batch_artifact_path}" \
@@ -269,6 +275,7 @@ while IFS= read -r planned_row; do
         workingSequencePath: $workingSequencePath,
         modelName: $modelName,
         modelType: $modelType,
+        expectedModelType: (if $expectedModelType == "" then null else $expectedModelType end),
         startMs: $startMs,
         endMs: $endMs,
         durationMs: $durationMs,

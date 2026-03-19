@@ -12,7 +12,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--decoded-window", required=True)
     parser.add_argument("--model-metadata", required=True)
-    parser.add_argument("--model-type", required=True)
+    parser.add_argument("--model-type")
     parser.add_argument("--effect-name", required=True)
     parser.add_argument("--effect-settings", required=True)
     parser.add_argument("--shared-settings", required=True)
@@ -24,17 +24,21 @@ def main() -> None:
     effect_settings = json.loads(args.effect_settings)
     shared_settings = json.loads(args.shared_settings)
 
+    resolved_model_type = model_metadata.get("resolvedModelType") or args.model_type or "unknown"
+
     inp = SequenceAnalysisInput(
-        model_type=args.model_type,
+        model_type=resolved_model_type,
         decoded_window=decoded_window,
         model_metadata=model_metadata,
         effect_name=args.effect_name,
         effect_settings=effect_settings,
         shared_settings=shared_settings,
     )
-    result = get_analyzer(args.model_type).analyze(inp)
+    result = get_analyzer(resolved_model_type).analyze(inp)
     result["analysisVersion"] = "1.0"
-    result["modelType"] = args.model_type
+    result["modelType"] = resolved_model_type
+    if args.model_type:
+        result["expectedModelType"] = args.model_type
     result["effectName"] = args.effect_name
     Path(args.out_file).write_text(json.dumps(result, indent=2) + "\n")
 

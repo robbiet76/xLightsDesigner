@@ -52,11 +52,14 @@ sample_json="$(jq -c --arg sid "${SAMPLE_ID}" '.samples[] | select(.sampleId == 
 
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
-model_type="$(jq -r '.modelType' <<<"${fixture_json}")"
+expected_model_type="$(jq -r '.modelType // empty' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
 fixture_end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
 fixture_duration_class="$(jq -r '.durationClass // "short"' <<<"${fixture_json}")"
 sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
+show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
+model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
+resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
 source_sequence_path="${sequence_path}"
 sequence_base_name="$(basename "${sequence_path}" .xsq)"
 
@@ -166,7 +169,7 @@ cp "${staged_artifact_path}" "${artifact_path}"
 bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${artifact_path}" > "${features_path}"
 bash "${SCRIPT_DIR}/extract-observations.sh" \
   --sample-json "${sample_json}" \
-  --model-type "${model_type}" \
+  --model-type "${resolved_model_type}" \
   --features-json "$(cat "${features_path}")" > "${observations_path}"
 
 if [[ "${opened_sequence}" == "1" ]]; then
@@ -183,7 +186,9 @@ jq -cn \
   --arg sequencePath "${source_sequence_path}" \
   --arg workingSequencePath "${working_sequence_path}" \
   --arg modelName "${model_name}" \
-  --arg modelType "${model_type}" \
+  --arg modelType "${resolved_model_type}" \
+  --arg expectedModelType "${expected_model_type}" \
+  --argjson modelMetadata "${model_metadata_json}" \
   --arg mode "${export_mode}" \
   --arg format "${export_format}" \
   --arg path "${artifact_path}" \
@@ -204,6 +209,7 @@ jq -cn \
       workingSequencePath: $workingSequencePath,
       modelName: $modelName,
       modelType: $modelType,
+      expectedModelType: (if $expectedModelType == "" then null else $expectedModelType end),
       startMs: $startMs,
       endMs: $endMs,
       durationMs: $durationMs,
@@ -216,6 +222,7 @@ jq -cn \
       format: $format,
       path: $path
     },
+    modelMetadata: $modelMetadata,
     observations: $observations,
     features: $features,
     comparisons: []

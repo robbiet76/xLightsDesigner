@@ -78,6 +78,47 @@ def infer_node_count(model):
     raise ValueError(f"unable to infer node count for model {model.attrib.get('name')}")
 
 
+def resolve_model_family(display_as):
+    raw = (display_as or "").strip().lower()
+    normalized = re.sub(r"[^a-z0-9]+", "_", raw).strip("_")
+
+    if raw in {"single line", "poly line"}:
+        return "single_line"
+    if raw == "arches":
+        return "arch"
+    if raw == "candy canes":
+        return "cane"
+    if raw in {"horiz matrix", "vert matrix", "matrix"}:
+        return "matrix"
+    if raw == "tree flat":
+        return "tree_flat"
+    if raw == "tree 360":
+        return "tree_360"
+    if raw == "star":
+        return "star"
+    if raw == "icicles":
+        return "icicles"
+    if raw == "spinner":
+        return "spinner"
+    if raw == "wreath":
+        return "wreath"
+    return normalized or "unknown"
+
+
+def resolve_analyzer_family(model_family):
+    if model_family in {"single_line", "arch", "cane", "icicles"}:
+        return "linear"
+    if model_family in {"tree_flat", "tree_360"}:
+        return "tree"
+    if model_family == "star":
+        return "star"
+    if model_family in {"spinner", "wreath"}:
+        return "radial"
+    if model_family == "matrix":
+        return "matrix"
+    return "base"
+
+
 def main():
     args = parse_args()
     rgbeffects_path = f"{args.show_dir.rstrip('/')}/xlights_rgbeffects.xml"
@@ -101,9 +142,14 @@ def main():
     channels_per_node = infer_channels_per_node(target.attrib.get("StringType", ""))
     channel_count = node_count * channels_per_node
 
+    display_as = target.attrib.get("DisplayAs")
+    resolved_model_family = resolve_model_family(display_as)
     print(json.dumps({
         "modelName": args.model_name,
-        "displayAs": target.attrib.get("DisplayAs"),
+        "displayAs": display_as,
+        "displayAsNormalized": re.sub(r"[^a-z0-9]+", "_", (display_as or "").strip().lower()).strip("_"),
+        "resolvedModelType": resolved_model_family,
+        "analyzerFamily": resolve_analyzer_family(resolved_model_family),
         "stringType": target.attrib.get("StringType"),
         "startChannel": start_channel_zero + 1,
         "startChannelZero": start_channel_zero,
