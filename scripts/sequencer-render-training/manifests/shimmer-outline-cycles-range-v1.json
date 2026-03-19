@@ -1,0 +1,124 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shimmer-outline-cycles-range-v1",
+  "description": "Range sampling sweep for Shimmer cycles on an outline model. Uses fixed dutyFactor and palette-limited shimmer to isolate cadence changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "Border-01",
+    "modelType": "outline",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for Shimmer cycles on outline geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "shimmer-outline-cycles-0_5-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 0.5,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": ["range_sample", "shimmer_cycles", "cycles_0_5"]
+    },
+    {
+      "sampleId": "shimmer-outline-cycles-1_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 1.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": ["range_sample", "shimmer_cycles", "cycles_1_0"]
+    },
+    {
+      "sampleId": "shimmer-outline-cycles-2_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 2.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": ["range_sample", "shimmer_cycles", "cycles_2_0"]
+    },
+    {
+      "sampleId": "shimmer-outline-cycles-3_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 3.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": ["range_sample", "shimmer_cycles", "cycles_3_0"]
+    },
+    {
+      "sampleId": "shimmer-outline-cycles-4_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 4.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": ["range_sample", "shimmer_cycles", "cycles_4_0"]
+    },
+    {
+      "sampleId": "shimmer-outline-cycles-5_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 5.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": ["range_sample", "shimmer_cycles", "cycles_5_0"]
+    }
+  ]
+}

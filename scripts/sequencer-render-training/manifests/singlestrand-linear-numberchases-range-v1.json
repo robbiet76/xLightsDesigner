@@ -1,0 +1,136 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-numberchases-range-v1",
+  "description": "Range sampling sweep for SingleStrand numberChases on a single-line model. Uses fixed chaseSize and cycles to isolate density and directionality changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for SingleStrand numberChases on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-numberchases-1-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "numberchases_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": ["range_sample", "number_chases", "numberchases_1"]
+    },
+    {
+      "sampleId": "single-strand-linear-numberchases-2-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 2,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "numberchases_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": ["range_sample", "number_chases", "numberchases_2"]
+    },
+    {
+      "sampleId": "single-strand-linear-numberchases-3-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 3,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "numberchases_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": ["range_sample", "number_chases", "numberchases_3"]
+    },
+    {
+      "sampleId": "single-strand-linear-numberchases-4-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 4,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "numberchases_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": ["range_sample", "number_chases", "numberchases_4"]
+    },
+    {
+      "sampleId": "single-strand-linear-numberchases-5-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 5,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "numberchases_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": ["range_sample", "number_chases", "numberchases_5"]
+    }
+  ]
+}

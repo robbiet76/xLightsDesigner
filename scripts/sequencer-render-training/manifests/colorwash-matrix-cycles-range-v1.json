@@ -1,0 +1,142 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-cycles-range-v1",
+  "description": "Range sampling sweep for Color Wash cycles on a matrix model. Uses a fixed vertical fade profile to isolate speed/cadence changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "NorthPoleMatrix",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for Color Wash cycles on matrix geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "colorwash-matrix-cycles-0_5-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 0.5,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["range_sample", "wash_cycles", "cycles_0_5"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-1_0-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["range_sample", "wash_cycles", "cycles_1_0"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-1_5-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["range_sample", "wash_cycles", "cycles_1_5"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-2_0-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["range_sample", "wash_cycles", "cycles_2_0"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-3_0-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 3.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["range_sample", "wash_cycles", "cycles_3_0"]
+    },
+    {
+      "sampleId": "colorwash-matrix-cycles-4_0-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 4.0,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cycles_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["range_sample", "wash_cycles", "cycles_4_0"]
+    }
+  ]
+}
