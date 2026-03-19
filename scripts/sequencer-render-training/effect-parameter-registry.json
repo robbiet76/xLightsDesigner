@@ -415,8 +415,8 @@
       }
     },
     "Marquee": {
-      "complexityClass": "moderate",
-      "earlySamplingPolicy": "standard_screening",
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
       "notes": "Readable border and perimeter motion effect. Band/skip/thickness/speed should be screened before less common positioning controls.",
       "parameters": {
         "bandSize": {

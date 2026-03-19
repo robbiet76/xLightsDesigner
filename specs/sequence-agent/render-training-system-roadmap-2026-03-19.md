@@ -53,6 +53,7 @@ This is the current major stage.
 
 Within Stage 1, complex effects require deeper early testing before strong conclusions.
 Examples:
+- `Marquee`
 - `Spirals`
 - `Pinwheel`
 

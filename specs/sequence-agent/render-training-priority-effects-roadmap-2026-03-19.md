@@ -32,7 +32,7 @@ Reason:
 - good coverage across canonical geometry profiles
 
 Additional policy:
-- `Spirals` and `Pinwheel` are complex effects
+- `Marquee`, `Spirals`, and `Pinwheel` are complex effects
 - complex effects require broader early testing before strong conclusions
 - `Spirals` should be treated as a benchmark tree effect during Stage 1
 

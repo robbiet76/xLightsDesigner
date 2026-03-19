@@ -85,6 +85,7 @@ Meaning:
 4. delay strong pruning claims until multi-geometry evidence exists
 
 Current complex-effect examples:
+- `Marquee`
 - `Spirals`
 - `Pinwheel`
 - later:
