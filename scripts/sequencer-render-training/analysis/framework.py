@@ -135,6 +135,10 @@ class BaseAnalyzer:
     def _mean(self, values: List[float]) -> float:
         return sum(values) / len(values) if values else 0.0
 
+    def _lower_setting(self, settings: Dict[str, Any], key: str) -> str:
+        value = settings.get(key, "")
+        return str(value).strip().lower()
+
     def _common_intents(self, quality: Dict[str, float]) -> List[str]:
         tags: List[str] = []
         if quality["coverage"] >= 0.85:
@@ -265,8 +269,8 @@ class LinearAnalyzer(BaseAnalyzer):
             direction = "right_to_left"
         else:
             if effect == "SingleStrand":
-                chase_type = str(settings.get("chaseType", "")).lower()
-                direction_setting = str(settings.get("direction", "")).lower()
+                chase_type = self._lower_setting(settings, "chaseType")
+                direction_setting = self._lower_setting(settings, "direction")
                 if "bounce" in chase_type:
                     direction = "bounce"
                 elif direction_setting == "left":
@@ -277,6 +281,12 @@ class LinearAnalyzer(BaseAnalyzer):
                     direction = "left_to_right"
                 elif "right-left" in chase_type:
                     direction = "right_to_left"
+            elif effect == "Bars":
+                direction_setting = self._lower_setting(settings, "direction")
+                if direction_setting in {"left", "right", "up", "down"}:
+                    direction = direction_setting
+                elif direction_setting in {"expand", "compress"}:
+                    direction = direction_setting
 
         pattern_family = "unclassified"
         if effect == "On":
@@ -295,6 +305,19 @@ class LinearAnalyzer(BaseAnalyzer):
                 pattern_family = "segmented_chase"
             else:
                 pattern_family = "directional_chase"
+        elif effect == "Bars":
+            bar_count = int(settings.get("barCount", 1) or 1)
+            direction_setting = self._lower_setting(settings, "direction")
+            if direction_setting == "expand":
+                pattern_family = "expanding_bars"
+            elif direction_setting == "compress":
+                pattern_family = "compressing_bars"
+            elif bar_count >= 4:
+                pattern_family = "dense_bars"
+            elif bar_count >= 2:
+                pattern_family = "multi_bars"
+            else:
+                pattern_family = "single_bar_motion"
 
         base["geometrySignals"] = {
             "centroidMotionMean": centroid_motion,
@@ -344,10 +367,17 @@ class LinearAnalyzer(BaseAnalyzer):
                     "medium"
                 ),
                 "dominantColorRole": dominant_color_role,
+                "barCountClass": (
+                    "dense" if int(settings.get("barCount", 1) or 1) >= 4 else
+                    "multi" if int(settings.get("barCount", 1) or 1) >= 2 else
+                    "single"
+                ) if effect == "Bars" else None,
             }
         )
         intents = set(base["intentCandidates"])
         if direction in {"left", "right", "left_to_right", "right_to_left"}:
+            intents.add("directional")
+        if direction in {"up", "down"}:
             intents.add("directional")
         if direction == "bounce":
             intents.add("bouncy")
@@ -357,6 +387,12 @@ class LinearAnalyzer(BaseAnalyzer):
             intents.add("segmented")
         if pattern_family == "burst_texture":
             intents.add("texture_heavy")
+        if effect == "Bars":
+            intents.add("patterned")
+            if int(settings.get("barCount", 1) or 1) >= 2:
+                intents.add("segmented")
+            if direction in {"expand", "compress"}:
+                intents.add("animated")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -369,15 +405,44 @@ class TreeAnalyzer(BaseAnalyzer):
         centroid_motion = self._f(inp, "centroidMotionMean")
         coverage = self._f(inp, "averageActiveNodeRatio")
         temporal = self._f(inp, "temporalChangeMean")
+        settings = inp.effect_settings
         centroids = self._frame_centroids(inp)
         deltas = self._signed_deltas(centroids)
         direction_summary = self._signed_direction_summary(deltas)
+        geometry_profile = inp.model_type
 
         pattern_family = "tree_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = "tree_shimmer"
         elif inp.effect_name == "SingleStrand":
             pattern_family = "spiral_travel" if centroid_motion > 0.01 else "tree_band_motion"
+        elif inp.effect_name == "Bars":
+            direction_setting = self._lower_setting(settings, "direction")
+            bar_count = int(settings.get("barCount", 1) or 1)
+            if direction_setting == "expand":
+                pattern_family = "tree_expanding_bars"
+            elif direction_setting == "compress":
+                pattern_family = "tree_compressing_bars"
+            elif bar_count >= 4:
+                pattern_family = "tree_dense_bars"
+            else:
+                pattern_family = "tree_bar_bands"
+        elif inp.effect_name == "Spirals":
+            movement = float(settings.get("movement", 0) or 0)
+            rotation = float(settings.get("rotation", 0) or 0)
+            count = int(settings.get("count", 1) or 1)
+            thickness = float(settings.get("thickness", 50) or 50)
+            if geometry_profile == "tree_360_spiral":
+                if abs(movement) > 0 or abs(rotation) > 0:
+                    pattern_family = "helical_spiral_motion"
+                else:
+                    pattern_family = "helical_spiral_bands"
+            elif abs(movement) > 0 or abs(rotation) > 0:
+                pattern_family = "spiral_motion"
+            elif count >= 3 or thickness >= 65:
+                pattern_family = "dense_spiral_fill"
+            else:
+                pattern_family = "spiral_bands"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -387,6 +452,9 @@ class TreeAnalyzer(BaseAnalyzer):
             "treeCentroidMotion": centroid_motion,
             "treeDirectionReversals": direction_summary["reversals"],
             "treeNetTravel": direction_summary["netTravel"],
+            "spiralGeometryProfile": geometry_profile == "tree_360_spiral",
+            "configuredSpiralCount": int(settings.get("count", 1) or 1) if inp.effect_name == "Spirals" else None,
+            "configuredBarCount": int(settings.get("barCount", 1) or 1) if inp.effect_name == "Bars" else None,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -397,6 +465,10 @@ class TreeAnalyzer(BaseAnalyzer):
                     "banded"
                 ),
                 "treeMotionClass": "sparkle" if inp.effect_name == "Shimmer" else base["patternSignals"]["motionClass"],
+                "treeTraversalClass": (
+                    "dynamic" if abs(direction_summary["netTravel"]) >= 0.02 or temporal >= 0.03 else
+                    "stable"
+                ),
             }
         )
         intents = set(base["intentCandidates"])
@@ -404,6 +476,15 @@ class TreeAnalyzer(BaseAnalyzer):
             intents.add("fill")
         if inp.effect_name == "Shimmer":
             intents.add("texture_heavy")
+        if inp.effect_name == "Bars":
+            intents.add("patterned")
+            if int(settings.get("barCount", 1) or 1) >= 2:
+                intents.add("segmented")
+        if inp.effect_name == "Spirals":
+            intents.add("patterned")
+            intents.add("directional")
+            if geometry_profile == "tree_360_spiral":
+                intents.add("geometry_coupled")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -422,6 +503,8 @@ class StarAnalyzer(BaseAnalyzer):
         pattern_family = "star_fill"
         if inp.effect_name == "Shimmer":
             pattern_family = "radial_sparkle"
+        elif inp.effect_name == "Spirals":
+            pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -444,6 +527,9 @@ class StarAnalyzer(BaseAnalyzer):
         intents = set(base["intentCandidates"])
         if inp.effect_name == "Shimmer":
             intents.add("texture_heavy")
+        if inp.effect_name == "Spirals":
+            intents.add("patterned")
+            intents.add("directional")
         if coverage >= 0.85:
             intents.add("fill")
         base["intentCandidates"] = sorted(intents)
