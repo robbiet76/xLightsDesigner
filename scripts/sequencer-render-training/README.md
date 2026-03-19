@@ -65,6 +65,7 @@ The current harness is intentionally small:
 - `controlled-designer-vocab-cases.v1.json`: first evaluator case set for the controlled designer vocabulary layer
 - `generate-effect-maturity-report.py`: compute the current maturity stage for each effect from summaries and evaluator outputs
 - `generate-effect-geometry-gap-report.py`: compare current mature-effect geometry coverage against the canonical standard-model catalog
+- `generate-effect-static-complexity-report.py`: compute a registry-only static complexity score and inferred complexity class per effect
 - `evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
 - `priority-effect-selection-cases.v1.json`: first selector-evaluation case set
 - `priority-effect-selection-cases.v2.json`: expanded selector-evaluation case set with tighter geometry-specific structural cases
@@ -215,6 +216,12 @@ python3 scripts/sequencer-render-training/generate-effect-geometry-gap-report.py
   --summary /tmp/render-training-priority-effects-summary.v3.json \
   --catalog scripts/sequencer-render-training/generic-layout-model-catalog.json \
   --out-file /tmp/render-training-effect-geometry-gaps.v1.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-effect-static-complexity-report.py \
+  --registry scripts/sequencer-render-training/effect-parameter-registry.json \
+  --out-file /tmp/render-training-effect-static-complexity.v1.json
 ```
 
 ```bash
