@@ -95,6 +95,64 @@ def collect_style_traits(labels):
     return ordered
 
 
+def derive_intent_tags(sample):
+    tags = []
+    scores = sample["scores"]
+    traits = set(sample["styleTraits"])
+
+    if sample["qualityBand"] == "high":
+        tags.append("high_value")
+    elif sample["qualityBand"] == "low":
+        tags.append("low_value")
+
+    if sample["restraintBand"] == "high":
+        tags.append("restrained")
+    elif sample["restraintBand"] == "low":
+        tags.append("bold")
+
+    if sample["clarityBand"] == "high":
+        tags.append("clean")
+    elif sample["clarityBand"] == "low":
+        tags.append("busy")
+
+    if sample["motionFamily"] in {"single_direction_chase", "left_motion", "right_motion"}:
+        tags.append("directional")
+    if sample["motionFamily"] == "bounce_motion":
+        tags.append("bouncy")
+    if sample["motionFamily"] in {"steady_wash", "stable_window"}:
+        tags.append("steady")
+    if sample["motionFamily"] in {"shimmer_wash", "high_motion_window", "subtle_motion_window"}:
+        tags.append("animated")
+
+    if sample["lookFamily"] == "fx_texture" or "sparkle_texture" in traits:
+        tags.append("texture_heavy")
+    if sample["lookFamily"] == "wash_fill":
+        tags.append("fill")
+    if sample["lookFamily"] in {"chase_pattern", "skip_pattern"}:
+        tags.append("patterned")
+
+    if sample["coverageFamily"] == "full_coverage":
+        tags.append("full")
+    elif sample["coverageFamily"] in {"sparse_sampled_motion", "partial_coverage"}:
+        tags.append("sparse")
+    elif sample["coverageFamily"] == "dense_sampled_motion":
+        tags.append("dense")
+
+    if scores["readability"] >= 0.8:
+        tags.append("readable")
+    elif scores["readability"] < 0.65:
+        tags.append("low_read")
+
+    ordered = []
+    seen = set()
+    for tag in tags:
+        if tag in seen:
+            continue
+        seen.add(tag)
+        ordered.append(tag)
+    return ordered
+
+
 def sample_entry(record_path: Path) -> dict:
     record = load_record(record_path)
     labels = record["observations"]["labels"]
@@ -142,6 +200,7 @@ def sample_entry(record_path: Path) -> dict:
         "restraintBand": restraint_band,
         "clarityBand": clarity_band,
         "diversityKey": diversity_key,
+        "intentTags": [],
         "window": {
             "startMs": record["artifact"].get("windowStartMs"),
             "endMs": record["artifact"].get("windowEndMs"),
@@ -157,6 +216,7 @@ def sample_entry(record_path: Path) -> dict:
 def build_clusters(samples):
     clusters = {}
     for sample in samples:
+        sample["intentTags"] = derive_intent_tags(sample)
         clusters.setdefault(sample["diversityKey"], []).append(sample)
 
     out = []
@@ -177,6 +237,7 @@ def build_clusters(samples):
                 "restraintBand": rep["restraintBand"],
                 "clarityBand": rep["clarityBand"],
                 "styleTraits": rep["styleTraits"],
+                "intentTags": rep["intentTags"],
                 "representativeSampleId": rep["sampleId"],
                 "representativeUsefulness": rep["scores"]["usefulness"],
                 "memberCount": len(members),

@@ -38,6 +38,7 @@ The current harness is intentionally small:
 - `build-record-comparison.sh`: produce pairwise preference records directly from sample record JSON
 - `generate-sample-comparisons.sh`: generate a comparison set from all records in a run directory
 - `generate-look-catalog.py`: group decoded sample records into distinct look clusters instead of a single winner list
+  - also derives intent-facing tags such as `restrained`, `clean`, `directional`, `busy`, `fill`, and `texture_heavy`
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
