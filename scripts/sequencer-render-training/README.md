@@ -41,9 +41,12 @@ The current harness is intentionally small:
   - also derives intent-facing tags such as `restrained`, `clean`, `directional`, `busy`, `fill`, and `texture_heavy`
 - `generate-intent-vocab-summary.py`: roll a look catalog up into an effect/model intent vocabulary with representative samples
 - `generate-intent-gap-report.py`: compare an intent summary against seed coverage targets while preserving extra discovered looks and tags
+- `generate-range-transition-report.py`: detect where a sampled slider range actually changes semantic behavior across ordered anchor values
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
+- `manifests/shimmer-outline-dutyfactor-range-v1.json`: sampled duty-factor range sweep for `Shimmer`
+- `manifests/singlestrand-linear-chasesize-range-v1.json`: sampled chase-size range sweep for `SingleStrand`
 - `manifests/on-matrix-reduced-sweep-v1.json`: reduced `On` sweep on a concrete matrix model
 - `manifests/singlestrand-reduced-sweep-v1.json`: reduced `SingleStrand` sweep
 - `manifests/singlestrand-linear-reduced-sweep-v1.json`: reduced `SingleStrand` sweep on a concrete linear model
@@ -106,6 +109,13 @@ python3 scripts/sequencer-render-training/generate-intent-vocab-summary.py \
 python3 scripts/sequencer-render-training/generate-intent-gap-report.py \
   --summary /tmp/singlestrand-cane-packed-fseq-decoded-debug/intent-summary.json \
   --out-file /tmp/singlestrand-cane-packed-fseq-decoded-debug/intent-gap-report.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-range-transition-report.py \
+  --run-dir /tmp/shimmer-outline-dutyfactor-range-v1 \
+  --param dutyFactor \
+  --out-file /tmp/shimmer-outline-dutyfactor-range-v1/range-transition.json
 ```
 
 Notes:

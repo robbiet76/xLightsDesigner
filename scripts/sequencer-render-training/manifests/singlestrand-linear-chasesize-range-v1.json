@@ -1,0 +1,184 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-chasesize-range-v1",
+  "description": "Range sampling sweep for SingleStrand chaseSize on a single-line model. Uses one chase and fixed cycles to isolate visible chase-size transitions.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for SingleStrand chaseSize on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-chasesize-08-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 8,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "chasesize_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "chase_size",
+        "chasesize_08"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasesize-14-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 14,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "chasesize_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "chase_size",
+        "chasesize_14"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasesize-20-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 20,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "chasesize_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "chase_size",
+        "chasesize_20"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasesize-26-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 26,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "chasesize_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "chase_size",
+        "chasesize_26"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasesize-32-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 32,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "chasesize_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "chase_size",
+        "chasesize_32"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasesize-38-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 38,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "chasesize_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "chase_size",
+        "chasesize_38"
+      ]
+    }
+  ]
+}
