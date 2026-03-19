@@ -5,6 +5,9 @@ Goal:
 - make the training system recognize what a human would call the rendered pattern
 - standardize structural tests on RGB at full brightness
 
+Primary design reference:
+- [render-training-experiment-design-spec-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-experiment-design-spec-2026-03-19.md)
+
 ## Training Standard
 
 - [x] Define a structural training palette standard
@@ -40,6 +43,8 @@ Goal:
 ## Geometry Layer
 
 - [ ] Build a generic geometry adapter layer
+- [ ] Promote `resolvedGeometryProfile` to the primary analyzer-dispatch input
+- [ ] Emit `geometryTraits` from audited xLights model settings
 - [ ] Support at minimum:
   - linear models
   - tree models
