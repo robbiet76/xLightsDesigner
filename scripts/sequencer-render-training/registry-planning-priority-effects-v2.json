@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "description": "Priority effect expansion v2 focused on Marquee and Pinwheel after Bars/Spirals validation.",
+  "plans": [
+    {
+      "planId": "marquee-single-line-horizontal",
+      "effect": "Marquee",
+      "geometryProfile": "single_line_horizontal",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-singlelinehorizontal-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "thickness", "speed", "reverse"]
+    },
+    {
+      "planId": "marquee-arch-single",
+      "effect": "Marquee",
+      "geometryProfile": "arch_single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-archsingle-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "thickness", "speed", "reverse"]
+    },
+    {
+      "planId": "pinwheel-star-single",
+      "effect": "Pinwheel",
+      "geometryProfile": "star_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-starsingle-expanded-sweep-v1.json",
+      "parameters": ["style", "arms", "thickness", "twist", "rotation", "3DMode"]
+    },
+    {
+      "planId": "pinwheel-tree-round",
+      "effect": "Pinwheel",
+      "geometryProfile": "tree_360_round",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-treeround-expanded-sweep-v1.json",
+      "parameters": ["style", "arms", "thickness", "twist", "rotation", "3DMode"]
+    }
+  ]
+}

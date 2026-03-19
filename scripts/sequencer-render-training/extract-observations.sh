@@ -285,6 +285,53 @@ jq -cn \
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
           + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
+      elif $effect == "Marquee" then
+        unique_labels(
+          $labelHints
+          + ["effect:marquee", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["marquee_pattern"]
+          + (if ($settings.reverse // false) then ["reverse_motion"] else ["forward_motion"] end)
+          + (
+              if $modelType == "arch" then ["arch_pattern_fit"]
+              elif ($modelType == "single_line" or $modelType == "icicles") then ["linear_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              else []
+              end
+            )
+          + (
+              if (($settings.skipSize // 0) >= 4) then ["segmented_marquee"]
+              elif (($settings.bandSize // 1) >= 6) then ["wide_marquee"]
+              else ["tight_marquee"]
+              end
+            )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
+        )
+      elif $effect == "Pinwheel" then
+        unique_labels(
+          $labelHints
+          + ["effect:pinwheel", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["pinwheel_pattern"]
+          + (if ($settings.rotation // false) then ["rotating_pinwheel"] else ["static_pinwheel"] end)
+          + (
+              if $modelType == "star" then ["star_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              elif $modelType == "spinner" then ["radial_pattern_fit"]
+              else []
+              end
+            )
+          + (
+              if (($settings.arms // 2) >= 6) then ["dense_pinwheel"]
+              elif (($settings.arms // 2) >= 4) then ["multi_arm_pinwheel"]
+              else ["few_arm_pinwheel"]
+              end
+            )
+          + (if (($settings["3DMode"] // "None") | ascii_downcase) != "none" then ["depth_mode"] else [] end)
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
+        )
       else
         unique_labels(
           $labelHints
@@ -445,6 +492,47 @@ jq -cn \
             (if ($modelType == "tree_flat" or $modelType == "tree_360") then 0.92
              elif $modelType == "star" then 0.86
              elif $modelType == "spinner" then 0.88
+             else 0.68 end)
+        }
+      elif $effect == "Marquee" then
+        {
+          readability:
+            (
+              (if (($settings.skipSize // 0) >= 4) then 0.78 else 0.86 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if (($settings.bandSize // 1) >= 6 or ($settings.stagger // 0) >= 4) then 0.56
+             else 0.72 end),
+          patternClarity:
+            (
+              (if (($settings.skipSize // 0) >= 4 and ($settings.thickness // 1) >= 4) then 0.74 else 0.86 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "single_line" or $modelType == "arch" or $modelType == "icicles") then 0.92
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.82
+             else 0.68 end)
+        }
+      elif $effect == "Pinwheel" then
+        {
+          readability:
+            (
+              (if (($settings.arms // 2) >= 6) then 0.74 else 0.84 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if (($settings["3DMode"] // "None") | ascii_downcase) != "none" then 0.5
+             elif (($settings.thickness // 40) >= 60) then 0.56
+             else 0.72 end),
+          patternClarity:
+            (
+              (if (($settings.rotation // false) and (($settings.twist // 0) | tonumber) != 0) then 0.8 else 0.86 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "star" or $modelType == "spinner") then 0.92
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.86
              else 0.68 end)
         }
       else

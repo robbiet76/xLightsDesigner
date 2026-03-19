@@ -318,6 +318,18 @@ class LinearAnalyzer(BaseAnalyzer):
                 pattern_family = "multi_bars"
             else:
                 pattern_family = "single_bar_motion"
+        elif effect == "Marquee":
+            reverse = bool(settings.get("reverse", False))
+            skip_size = int(settings.get("skipSize", 0) or 0)
+            band_size = int(settings.get("bandSize", 1) or 1)
+            if reverse:
+                direction = "reverse"
+            if skip_size >= 4:
+                pattern_family = "segmented_marquee"
+            elif band_size >= 6:
+                pattern_family = "wide_marquee"
+            else:
+                pattern_family = "marquee_motion"
 
         base["geometrySignals"] = {
             "centroidMotionMean": centroid_motion,
@@ -372,6 +384,11 @@ class LinearAnalyzer(BaseAnalyzer):
                     "multi" if int(settings.get("barCount", 1) or 1) >= 2 else
                     "single"
                 ) if effect == "Bars" else None,
+                "marqueeGapClass": (
+                    "wide_gap" if int(settings.get("skipSize", 0) or 0) >= 4 else
+                    "tight_gap" if int(settings.get("skipSize", 0) or 0) <= 1 else
+                    "medium_gap"
+                ) if effect == "Marquee" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -393,6 +410,11 @@ class LinearAnalyzer(BaseAnalyzer):
                 intents.add("segmented")
             if direction in {"expand", "compress"}:
                 intents.add("animated")
+        if effect == "Marquee":
+            intents.add("patterned")
+            intents.add("directional")
+            if int(settings.get("skipSize", 0) or 0) >= 4:
+                intents.add("segmented")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -443,6 +465,17 @@ class TreeAnalyzer(BaseAnalyzer):
                 pattern_family = "dense_spiral_fill"
             else:
                 pattern_family = "spiral_bands"
+        elif inp.effect_name == "Pinwheel":
+            arms = int(settings.get("arms", 3) or 3)
+            rotation = bool(settings.get("rotation", False))
+            if geometry_profile == "tree_360_spiral":
+                pattern_family = "helical_pinwheel"
+            elif rotation:
+                pattern_family = "tree_pinwheel_rotation"
+            elif arms >= 6:
+                pattern_family = "dense_pinwheel"
+            else:
+                pattern_family = "tree_pinwheel"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -455,6 +488,7 @@ class TreeAnalyzer(BaseAnalyzer):
             "spiralGeometryProfile": geometry_profile == "tree_360_spiral",
             "configuredSpiralCount": int(settings.get("count", 1) or 1) if inp.effect_name == "Spirals" else None,
             "configuredBarCount": int(settings.get("barCount", 1) or 1) if inp.effect_name == "Bars" else None,
+            "configuredPinwheelArms": int(settings.get("arms", 3) or 3) if inp.effect_name == "Pinwheel" else None,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -485,6 +519,11 @@ class TreeAnalyzer(BaseAnalyzer):
             intents.add("directional")
             if geometry_profile == "tree_360_spiral":
                 intents.add("geometry_coupled")
+        if inp.effect_name == "Pinwheel":
+            intents.add("patterned")
+            intents.add("directional")
+            if geometry_profile == "tree_360_spiral":
+                intents.add("geometry_coupled")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -505,6 +544,8 @@ class StarAnalyzer(BaseAnalyzer):
             pattern_family = "radial_sparkle"
         elif inp.effect_name == "Spirals":
             pattern_family = "radial_spiral_motion"
+        elif inp.effect_name == "Pinwheel":
+            pattern_family = "radial_pinwheel"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -528,6 +569,9 @@ class StarAnalyzer(BaseAnalyzer):
         if inp.effect_name == "Shimmer":
             intents.add("texture_heavy")
         if inp.effect_name == "Spirals":
+            intents.add("patterned")
+            intents.add("directional")
+        if inp.effect_name == "Pinwheel":
             intents.add("patterned")
             intents.add("directional")
         if coverage >= 0.85:

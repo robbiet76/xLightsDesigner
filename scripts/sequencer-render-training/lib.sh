@@ -363,6 +363,49 @@ spirals_effect_settings_json() {
     '
 }
 
+marquee_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_SLIDER_Marquee_Band_Size: (($eff.bandSize // 3) | tostring),
+        E_SLIDER_Marquee_Skip_Size: (($eff.skipSize // 0) | tostring),
+        E_SLIDER_Marquee_Thickness: (($eff.thickness // 2) | tostring),
+        E_SLIDER_Marquee_Stagger: (($eff.stagger // 0) | tostring),
+        E_SLIDER_Marquee_Speed: (($eff.speed // 5) | tostring),
+        E_SLIDER_Marquee_Start: (($eff.start // 0) | tostring)
+      }
+      + (if ($eff.reverse // false) then {E_CHECKBOX_Marquee_Reverse: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
+pinwheel_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_SLIDER_Pinwheel_Arms: (($eff.arms // 3) | tostring),
+        E_SLIDER_Pinwheel_ArmSize: (($eff.armSize // 50) | tostring),
+        E_SLIDER_Pinwheel_Twist: (($eff.twist // 0) | tostring),
+        E_SLIDER_Pinwheel_Thickness: (($eff.thickness // 40) | tostring),
+        E_SLIDER_Pinwheel_Speed: (($eff.speed // 10) | tostring),
+        E_CHOICE_Pinwheel_Style: ($eff.style // "New Render Method"),
+        E_CHOICE_Pinwheel_3D: ($eff["3DMode"] // "None")
+      }
+      + (if ($eff.rotation // false) then {E_CHECKBOX_Pinwheel_Rotation: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -386,6 +429,12 @@ settings_json_for_effect() {
       ;;
     "Spirals")
       spirals_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Marquee")
+      marquee_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Pinwheel")
+      pinwheel_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
       echo "Unsupported effect in initial harness: ${effect_name}" >&2
