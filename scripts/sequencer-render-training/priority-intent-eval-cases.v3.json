@@ -1,0 +1,162 @@
+{
+  "version": "3.0",
+  "description": "Expanded structural retrieval evaluation set for Bars, Marquee, Pinwheel, and Spirals.",
+  "cases": [
+    {
+      "caseId": "bars_clean_fill_steady",
+      "description": "Clean steady fill on Bars should retrieve a stable bar-motion region.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "effects": ["Bars"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Bars",
+        "patternFamiliesAny": ["single_bar_motion", "multi_bars", "tree_bar_bands"],
+        "intentTagsAll": ["clean", "fill", "steady"]
+      }
+    },
+    {
+      "caseId": "bars_directional_segmented",
+      "description": "Directional segmented Bars should prefer multi-bar regions rather than noisy effects.",
+      "requiredIntents": ["directional", "segmented"],
+      "excludedIntents": ["busy"],
+      "effects": ["Bars"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Bars",
+        "patternFamiliesAny": ["multi_bars", "dense_bars"],
+        "intentTagsAll": ["directional", "segmented"]
+      }
+    },
+    {
+      "caseId": "bars_expand_motion",
+      "description": "Animated clean Bars should retrieve expand motion when specifically requested.",
+      "requiredIntents": ["animated", "clean"],
+      "requiredPatternFamilies": ["expanding_bars"],
+      "effects": ["Bars"],
+      "geometryProfiles": ["single_line_horizontal", "arch_single"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Bars",
+        "patternFamiliesAny": ["expanding_bars"],
+        "intentTagsAll": ["animated", "clean"]
+      }
+    },
+    {
+      "caseId": "marquee_segmented_directional",
+      "description": "Segmented directional Marquee should retrieve segmented marquee regions.",
+      "requiredIntents": ["directional", "segmented"],
+      "effects": ["Marquee"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Marquee",
+        "parameterName": "skipSize",
+        "patternFamiliesAny": ["segmented_marquee", "marquee_motion"],
+        "intentTagsAll": ["directional", "segmented"]
+      }
+    },
+    {
+      "caseId": "marquee_clean_fill_steady",
+      "description": "Clean fill steady Marquee should retrieve baseline marquee motion regions.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "excludedIntents": ["busy"],
+      "effects": ["Marquee"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Marquee",
+        "patternFamiliesAny": ["marquee_motion", "wide_marquee"],
+        "intentTagsAll": ["clean", "fill", "steady"]
+      }
+    },
+    {
+      "caseId": "marquee_wide_clean",
+      "description": "Wide clean Marquee should prefer wide band-size regions.",
+      "requiredIntents": ["clean", "directional"],
+      "requiredPatternFamilies": ["wide_marquee"],
+      "effects": ["Marquee"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Marquee",
+        "parameterName": "bandSize",
+        "patternFamiliesAny": ["wide_marquee"],
+        "intentTagsAll": ["clean", "directional"]
+      }
+    },
+    {
+      "caseId": "pinwheel_sparse_star",
+      "description": "Sparse restrained Pinwheel on a star should retrieve thin-arm star pinwheel regions.",
+      "requiredIntents": ["animated", "directional", "restrained"],
+      "requiredStructuralLabels": ["few_arm_pinwheel"],
+      "effects": ["Pinwheel"],
+      "geometryProfiles": ["star_single_layer"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Pinwheel",
+        "geometryProfile": "star_single_layer",
+        "patternFamiliesAny": ["radial_pinwheel"],
+        "intentTagsAll": ["animated", "directional", "restrained"]
+      }
+    },
+    {
+      "caseId": "pinwheel_rotating_star",
+      "description": "Rotating Pinwheel on a star should retrieve the rotating pinwheel region rather than the static one.",
+      "requiredIntents": ["animated", "directional"],
+      "requiredStructuralLabels": ["rotating_pinwheel"],
+      "effects": ["Pinwheel"],
+      "geometryProfiles": ["star_single_layer"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Pinwheel",
+        "geometryProfile": "star_single_layer",
+        "parameterName": "rotation",
+        "patternFamiliesAny": ["radial_pinwheel"],
+        "intentTagsAll": ["animated", "directional"]
+      }
+    },
+    {
+      "caseId": "spirals_round_reverse_flow",
+      "description": "Round-tree Spirals with reverse motion should retrieve reverse-motion spiral flow regions.",
+      "requiredIntents": ["animated", "directional"],
+      "requiredStructuralLabels": ["reverse_motion"],
+      "requiredPatternFamilies": ["spiral_flow"],
+      "effects": ["Spirals"],
+      "geometryProfiles": ["tree_360_round"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Spirals",
+        "geometryProfile": "tree_360_round",
+        "patternFamiliesAny": ["spiral_flow"],
+        "intentTagsAll": ["animated", "directional"]
+      }
+    },
+    {
+      "caseId": "spirals_round_rotation_only",
+      "description": "Round-tree Spirals with steady drift should retrieve spiral rotation without drift.",
+      "requiredIntents": ["directional", "steady"],
+      "requiredPatternFamilies": ["spiral_rotation"],
+      "effects": ["Spirals"],
+      "geometryProfiles": ["tree_360_round"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Spirals",
+        "geometryProfile": "tree_360_round",
+        "patternFamiliesAny": ["spiral_rotation"],
+        "intentTagsAll": ["directional", "steady"]
+      }
+    },
+    {
+      "caseId": "spirals_helical_geometry_coupled",
+      "description": "Spiral-tree Spirals should retrieve geometry-coupled helical flow regions.",
+      "requiredIntents": ["geometry_coupled", "clean", "fill"],
+      "requiredPatternFamilies": ["helical_spiral_flow"],
+      "effects": ["Spirals"],
+      "geometryProfiles": ["tree_360_spiral"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Spirals",
+        "geometryProfile": "tree_360_spiral",
+        "patternFamiliesAny": ["helical_spiral_flow"],
+        "intentTagsAll": ["geometry_coupled", "clean", "fill"]
+      }
+    }
+  ]
+}

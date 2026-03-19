@@ -4,7 +4,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-SUPPORTED_EFFECTS = {"Bars", "Marquee", "Pinwheel"}
+SUPPORTED_EFFECTS = {"Bars", "Marquee", "Pinwheel", "Spirals"}
 
 PRIMARY_INTENTS = [
     "directional",

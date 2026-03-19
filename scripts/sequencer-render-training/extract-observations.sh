@@ -85,6 +85,7 @@ jq -cn \
   | ($analysis.patternFamily // null) as $patternFamily
   | ($analysis.intentCandidates // []) as $analysisIntents
   | ($analysis.patternSignals.directionality // null) as $analysisDirection
+  | ($analysis.geometryProfile // null) as $geometryProfile
   | ($shared.renderStyle // "Default") as $renderStyle
   | (
       if $effect == "On" then
@@ -288,6 +289,20 @@ jq -cn \
               else ["single_spiral"]
               end
             )
+          + (
+              if (($settings.thickness // 50) >= 70) then ["thick_spiral"]
+              elif (($settings.thickness // 50) <= 20) then ["thin_spiral"]
+              else ["medium_spiral"]
+              end
+            )
+          + (
+              if (($settings.movement // 0) != 0 and ($settings.rotation // 0) != 0) then ["spiral_flow"]
+              elif (($settings.movement // 0) != 0) then ["spiral_drift"]
+              elif (($settings.rotation // 0) != 0) then ["spiral_rotation"]
+              else ["spiral_bands"]
+              end
+            )
+          + (if $geometryProfile == "tree_360_spiral" then ["geometry_coupled_spiral"] else [] end)
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
           + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))

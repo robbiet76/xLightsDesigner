@@ -455,13 +455,41 @@ class TreeAnalyzer(BaseAnalyzer):
             rotation = float(settings.get("rotation", 0) or 0)
             count = int(settings.get("count", 1) or 1)
             thickness = float(settings.get("thickness", 50) or 50)
+            movement_class = (
+                "reverse_drift" if movement < 0 else
+                "forward_drift" if movement > 0 else
+                "static_drift"
+            )
+            rotation_class = (
+                "reverse_rotation" if rotation < 0 else
+                "forward_rotation" if rotation > 0 else
+                "neutral_rotation"
+            )
+            count_class = (
+                "single_spiral" if count <= 1 else
+                "multi_spiral" if count <= 2 else
+                "dense_spiral"
+            )
+            thickness_class = (
+                "thin_spiral" if thickness <= 20 else
+                "medium_spiral" if thickness <= 60 else
+                "thick_spiral"
+            )
             if geometry_profile == "tree_360_spiral":
-                if abs(movement) > 0 or abs(rotation) > 0:
-                    pattern_family = "helical_spiral_motion"
+                if abs(movement) > 0 and abs(rotation) > 0:
+                    pattern_family = "helical_spiral_flow"
+                elif abs(movement) > 0:
+                    pattern_family = "helical_spiral_drift"
+                elif abs(rotation) > 0:
+                    pattern_family = "helical_spiral_rotation"
                 else:
                     pattern_family = "helical_spiral_bands"
-            elif abs(movement) > 0 or abs(rotation) > 0:
-                pattern_family = "spiral_motion"
+            elif abs(movement) > 0 and abs(rotation) > 0:
+                pattern_family = "spiral_flow"
+            elif abs(movement) > 0:
+                pattern_family = "spiral_drift"
+            elif abs(rotation) > 0:
+                pattern_family = "spiral_rotation"
             elif count >= 3 or thickness >= 65:
                 pattern_family = "dense_spiral_fill"
             else:
@@ -488,6 +516,9 @@ class TreeAnalyzer(BaseAnalyzer):
             "treeNetTravel": direction_summary["netTravel"],
             "spiralGeometryProfile": geometry_profile == "tree_360_spiral",
             "configuredSpiralCount": int(settings.get("count", 1) or 1) if inp.effect_name == "Spirals" else None,
+            "configuredSpiralMovement": float(settings.get("movement", 0) or 0) if inp.effect_name == "Spirals" else None,
+            "configuredSpiralRotation": float(settings.get("rotation", 0) or 0) if inp.effect_name == "Spirals" else None,
+            "configuredSpiralThickness": float(settings.get("thickness", 50) or 50) if inp.effect_name == "Spirals" else None,
             "configuredBarCount": int(settings.get("barCount", 1) or 1) if inp.effect_name == "Bars" else None,
             "configuredPinwheelArms": int(settings.get("arms", 3) or 3) if inp.effect_name == "Pinwheel" else None,
         }
@@ -504,6 +535,10 @@ class TreeAnalyzer(BaseAnalyzer):
                     "dynamic" if abs(direction_summary["netTravel"]) >= 0.02 or temporal >= 0.03 else
                     "stable"
                 ),
+                "spiralMovementClass": movement_class if inp.effect_name == "Spirals" else None,
+                "spiralRotationClass": rotation_class if inp.effect_name == "Spirals" else None,
+                "spiralCountClass": count_class if inp.effect_name == "Spirals" else None,
+                "spiralThicknessClass": thickness_class if inp.effect_name == "Spirals" else None,
                 "pinwheelArmDensityClass": (
                     "dense" if int(settings.get("arms", 3) or 3) >= 6 else
                     "multi" if int(settings.get("arms", 3) or 3) >= 4 else
@@ -526,6 +561,15 @@ class TreeAnalyzer(BaseAnalyzer):
         if inp.effect_name == "Spirals":
             intents.add("patterned")
             intents.add("directional")
+            if thickness >= 70:
+                intents.add("bold")
+            if thickness <= 20:
+                intents.add("sparse")
+            if count >= 3:
+                intents.add("busy")
+                intents.add("segmented")
+            if movement == 0 and rotation == 0:
+                intents.add("steady")
             if geometry_profile == "tree_360_spiral":
                 intents.add("geometry_coupled")
         if inp.effect_name == "Pinwheel":

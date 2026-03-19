@@ -112,12 +112,42 @@ def scan_run(run_root: Path):
 
 
 def build_summary(run_roots):
-    all_entries = []
+    ordered_entries = []
     source_runs = []
-    for run_root in run_roots:
+    for source_index, run_root in enumerate(run_roots):
         run_root = Path(run_root)
         source_runs.append(str(run_root))
-        all_entries.extend(scan_run(run_root))
+        for entry in scan_run(run_root):
+            entry["_sourceIndex"] = source_index
+            ordered_entries.append(entry)
+
+    # Later runs should replace earlier runs for the same semantic slice.
+    deduped = {}
+    for entry in ordered_entries:
+        for region in entry["regions"]:
+            key = (
+                entry["effect"],
+                entry["geometryProfile"],
+                entry["parameterName"],
+                json.dumps(region.get("startValue"), sort_keys=True),
+                json.dumps(region.get("endValue"), sort_keys=True),
+            )
+            deduped[key] = entry
+
+    all_entries = []
+    seen_entry_ids = set()
+    for entry in deduped.values():
+        entry_id = (
+            entry["effect"],
+            entry["geometryProfile"],
+            entry["parameterName"],
+            entry["runName"],
+            entry["path"],
+        )
+        if entry_id in seen_entry_ids:
+            continue
+        seen_entry_ids.add(entry_id)
+        all_entries.append(entry)
 
     effects = defaultdict(lambda: {"geometries": defaultdict(lambda: {"parameters": []})})
     impact_counts = defaultdict(int)

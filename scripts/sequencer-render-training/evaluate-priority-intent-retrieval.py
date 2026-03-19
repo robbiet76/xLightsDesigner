@@ -73,6 +73,8 @@ def collect_candidates(
                         descriptor.get("parameterName"),
                         descriptor.get("valueRange", {}).get("start"),
                         descriptor.get("valueRange", {}).get("end"),
+                        tuple(descriptor.get("patternFamilies", [])),
+                        tuple(descriptor.get("structuralLabels", [])),
                     )
                     if key in seen:
                         continue
