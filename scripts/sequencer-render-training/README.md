@@ -53,6 +53,8 @@ The current harness is intentionally small:
 - `query-priority-intent-map.py`: query the first-pass intent map for structurally matched regions
 - `evaluate-priority-intent-retrieval.py`: run a small structural retrieval evaluation set against the intent map
 - `priority-intent-eval-cases.v1.json`: first evaluator case set for Bars and Marquee structural requests
+- `priority-intent-eval-cases.v2.json`: expanded evaluator case set including Pinwheel structural requests
+- `select-priority-effect.py`: choose the best-supported effect for a constrained structural request
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -158,8 +160,16 @@ python3 scripts/sequencer-render-training/query-priority-intent-map.py \
 ```bash
 python3 scripts/sequencer-render-training/evaluate-priority-intent-retrieval.py \
   --intent-map /tmp/render-training-priority-intent-map.json \
-  --cases scripts/sequencer-render-training/priority-intent-eval-cases.v1.json \
+  --cases scripts/sequencer-render-training/priority-intent-eval-cases.v2.json \
   --out-file /tmp/priority-intent-eval.v1.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/select-priority-effect.py \
+  --intent-map /tmp/render-training-priority-intent-map.json \
+  --intent directional \
+  --intent segmented \
+  --exclude-intent busy
 ```
 
 ```bash
@@ -273,6 +283,7 @@ Environment:
   - use the consolidated priority-effect summary as the input
   - do not over-promote weak or style-level semantics before the analyzer layer supports them
   - query helpers over the intent map should be treated as constrained structural retrieval, not freeform designer-language understanding
+  - effect selection over the intent map should route only among supported mature effects, not imply global effect coverage
 - Registry planning should be geometry-profile-aware:
   - choose a stable base manifest per geometry profile
   - generate first-order sweeps from registered parameters
