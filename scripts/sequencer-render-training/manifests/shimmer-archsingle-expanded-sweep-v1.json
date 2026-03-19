@@ -1,0 +1,96 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shimmer-archsingle-expanded-sweep-v1",
+  "description": "Expanded Shimmer sweep on the canonical single arch model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchSingle",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shimmer sweep on the canonical single arch model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "shimmer-archsingle-restrained-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 25,
+        "cycles": 1.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "restrained_shimmer",
+        "arch_read"
+      ]
+    },
+    {
+      "sampleId": "shimmer-archsingle-restrained-all-colors-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 22,
+        "cycles": 1.0,
+        "useAllColors": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "restrained_shimmer",
+        "soft_multi_sparkle"
+      ]
+    },
+    {
+      "sampleId": "shimmer-archsingle-balanced-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 2.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "balanced_shimmer",
+        "arch_sparkle"
+      ]
+    },
+    {
+      "sampleId": "shimmer-archsingle-punchy-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 82,
+        "cycles": 5.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "punchy_shimmer",
+        "high_energy_sparkle"
+      ]
+    },
+    {
+      "sampleId": "shimmer-archsingle-busy-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 75,
+        "cycles": 4.0,
+        "useAllColors": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "heavy_shimmer",
+        "busy_texture"
+      ]
+    }
+  ]
+}

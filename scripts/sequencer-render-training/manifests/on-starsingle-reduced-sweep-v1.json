@@ -1,0 +1,70 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "on-starsingle-reduced-sweep-v1",
+  "description": "Reduced baseline On sweep on the canonical single-layer star model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "StarSingle",
+    "modelType": "star",
+    "startMs": 1000,
+    "endMs": 2000,
+    "durationClass": "short",
+    "notes": "Reduced On sweep on the canonical single-layer star model."
+  },
+  "samples": [
+    {
+      "sampleId": "on-starsingle-hold-default-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "static_hold",
+        "star_fill"
+      ]
+    },
+    {
+      "sampleId": "on-starsingle-ramp-down-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 45,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "soft_falloff",
+        "star_glow"
+      ]
+    },
+    {
+      "sampleId": "on-starsingle-shimmer-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": true,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "shimmer_hold",
+        "star_sparkle"
+      ]
+    }
+  ]
+}
