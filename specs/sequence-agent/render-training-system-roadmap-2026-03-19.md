@@ -230,6 +230,7 @@ Each effect should move through these maturity levels:
 This maturity model should be tracked explicitly over time.
 
 The training system should emit a machine-readable maturity report so promotion decisions are based on explicit evidence, not ad hoc judgment.
+Selector-ready promotion should depend on explicit selector-evaluation evidence, not only on retrieval evidence.
 
 ## 9. Near-Term Roadmap
 

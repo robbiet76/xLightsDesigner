@@ -18,11 +18,20 @@ def build_eval_index(eval_payload: dict):
     return index
 
 
+def build_selection_eval_index(eval_payload: dict):
+    index = {}
+    for result in eval_payload.get('results', []):
+        effect = result.get('expectedSelection') or result.get('selectedEffect')
+        if effect:
+            index.setdefault(effect, []).append(result)
+    return index
+
+
 def all_cases_passed(results):
     return bool(results) and all(item.get('passed') for item in results)
 
 
-def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_index: dict):
+def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_index: dict, selection_eval_index: dict):
     effect_summary = summary.get('effects', {}).get(effect_name)
     if not effect_summary:
         return None
@@ -50,12 +59,14 @@ def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_inde
     in_selector = bool(effect_intent.get('geometries'))
     eval_results = eval_index.get(effect_name, [])
     retrieval_ready = all_cases_passed(eval_results)
+    selection_results = selection_eval_index.get(effect_name, [])
+    selection_ready = all_cases_passed(selection_results)
 
     stages = {
         'execution_ready': True,
         'structurally_observable': bool(high_impact),
         'structurally_retrievable': retrieval_ready,
-        'selector_ready': in_selector and retrieval_ready,
+        'selector_ready': in_selector and retrieval_ready and selection_ready,
         'designer_language_candidate': False,
         'layered_effect_ready': False,
     }
@@ -79,10 +90,18 @@ def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_inde
         'interactionSuspected': interaction_suspected,
         'contextFlatObserved': context_flat,
         'evaluation': {
-            'caseCount': len(eval_results),
-            'passedCount': sum(1 for item in eval_results if item.get('passed')),
-            'failedCount': sum(1 for item in eval_results if not item.get('passed')),
-            'caseIds': [item.get('caseId') for item in eval_results],
+            'retrieval': {
+                'caseCount': len(eval_results),
+                'passedCount': sum(1 for item in eval_results if item.get('passed')),
+                'failedCount': sum(1 for item in eval_results if not item.get('passed')),
+                'caseIds': [item.get('caseId') for item in eval_results],
+            },
+            'selection': {
+                'caseCount': len(selection_results),
+                'passedCount': sum(1 for item in selection_results if item.get('passed')),
+                'failedCount': sum(1 for item in selection_results if not item.get('passed')),
+                'caseIds': [item.get('caseId') for item in selection_results],
+            },
         },
         'notes': [
             'designer_language_candidate remains false until broad style-language evaluation exists',
@@ -96,6 +115,7 @@ def main():
     parser.add_argument('--summary', required=True)
     parser.add_argument('--intent-map', required=True)
     parser.add_argument('--eval-results', required=True)
+    parser.add_argument('--selection-eval-results')
     parser.add_argument('--out-file', required=True)
     args = parser.parse_args()
 
@@ -103,10 +123,14 @@ def main():
     intent_map = load_json(Path(args.intent_map))
     eval_results = load_json(Path(args.eval_results))
     eval_index = build_eval_index(eval_results)
+    selection_eval_index = {}
+    if args.selection_eval_results:
+        selection_eval_payload = load_json(Path(args.selection_eval_results))
+        selection_eval_index = build_selection_eval_index(selection_eval_payload)
 
     effects = []
     for effect_name in sorted(summary.get('effects', {}).keys()):
-        item = effect_maturity(effect_name, summary, intent_map, eval_index)
+        item = effect_maturity(effect_name, summary, intent_map, eval_index, selection_eval_index)
         if item:
             effects.append(item)
 
@@ -116,6 +140,7 @@ def main():
         'summaryPath': args.summary,
         'intentMapPath': args.intent_map,
         'evaluationPath': args.eval_results,
+        'selectionEvaluationPath': args.selection_eval_results,
         'effectCount': len(effects),
         'effects': effects,
     }
