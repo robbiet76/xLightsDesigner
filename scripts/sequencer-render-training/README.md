@@ -37,6 +37,7 @@ The current harness is intentionally small:
 - `build-comparison.sh`: produce pairwise preference records from observation score outputs
 - `build-record-comparison.sh`: produce pairwise preference records directly from sample record JSON
 - `generate-sample-comparisons.sh`: generate a comparison set from all records in a run directory
+- `generate-look-catalog.py`: group decoded sample records into distinct look clusters instead of a single winner list
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -84,6 +85,12 @@ bash scripts/sequencer-render-training/generate-sample-comparisons.sh \
   --run-dir /tmp/shimmer-outline-packed-fseq-decoded-debug \
   --criterion usefulness \
   --out-file /tmp/shimmer-outline-packed-fseq-decoded-debug/comparisons.usefulness.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-look-catalog.py \
+  --run-dir /tmp/singlestrand-cane-packed-fseq-decoded-debug \
+  --out-file /tmp/singlestrand-cane-packed-fseq-decoded-debug/look-catalog.json
 ```
 
 Environment:
