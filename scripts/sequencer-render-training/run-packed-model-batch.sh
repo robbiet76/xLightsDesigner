@@ -188,6 +188,9 @@ run_and_require_ok "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"batchRe
 [[ -s "${batch_artifact_staged}" ]] || { echo "Batch artifact missing: ${batch_artifact_staged}" >&2; exit 1; }
 [[ -s "${batch_artifact_path}" ]] || cp "${batch_artifact_staged}" "${batch_artifact_path}"
 [[ -s "${batch_artifact_path}" ]] || { echo "Batch artifact copy failed: ${batch_artifact_path}" >&2; exit 1; }
+if [[ "${batch_artifact_staged}" != "${batch_artifact_path}" && -f "${batch_artifact_staged}" ]]; then
+  rm -f "${batch_artifact_staged}"
+fi
 bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${batch_artifact_path}" > "${batch_features_path}"
 
 results_json='[]'
