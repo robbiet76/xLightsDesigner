@@ -8,6 +8,7 @@ CYCLE_LIMIT=40
 POLL_SECONDS=300
 MINUTES=60
 RUN_ROOT=""
+SEED_LEDGER=""
 STAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 
 while [[ $# -gt 0 ]]; do
@@ -32,6 +33,10 @@ while [[ $# -gt 0 ]]; do
       RUN_ROOT="$2"
       shift 2
       ;;
+    --seed-ledger)
+      SEED_LEDGER="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -54,7 +59,12 @@ STATE_PATH="$RUN_ROOT/controller-state.json"
 : > "$HEALTH_LOG"
 : > "$HEALTH_JSONL"
 : > "$MAIN_LOG"
-printf '{"version":"1.0","items":[]}' > "$LEDGER_PATH"
+if [[ -n "$SEED_LEDGER" ]]; then
+  [[ -f "$SEED_LEDGER" ]] || { echo "Seed ledger not found: $SEED_LEDGER" >&2; exit 1; }
+  cp "$SEED_LEDGER" "$LEDGER_PATH"
+else
+  printf '{"version":"1.0","items":[]}' > "$LEDGER_PATH"
+fi
 printf '{"version":"1.0","cycles":[]}' > "$STATE_PATH"
 
 START_EPOCH="$(date +%s)"
