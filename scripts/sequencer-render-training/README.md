@@ -59,6 +59,7 @@ The current harness is intentionally small:
 - `priority-intent-eval-cases.v2.json`: expanded evaluator case set including Pinwheel structural requests
 - `priority-intent-eval-cases.v3.json`: expanded evaluator case set including Spirals structural requests
 - `select-priority-effect.py`: choose the best-supported effect for a constrained structural request
+- `generate-effect-maturity-report.py`: compute the current maturity stage for each effect from summaries and evaluator outputs
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -174,6 +175,14 @@ python3 scripts/sequencer-render-training/select-priority-effect.py \
   --intent directional \
   --intent segmented \
   --exclude-intent busy
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-effect-maturity-report.py \
+  --summary /tmp/render-training-priority-effects-summary.v2.json \
+  --intent-map /tmp/render-training-priority-intent-map.v2.json \
+  --eval-results /tmp/priority-intent-eval.v3.json \
+  --out-file /tmp/render-training-effect-maturity.v1.json
 ```
 
 ```bash
