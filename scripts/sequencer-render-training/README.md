@@ -93,6 +93,12 @@ bash scripts/sequencer-render-training/run-overnight-approved-matrix.sh \
 ```
 
 ```bash
+bash scripts/sequencer-render-training/run-overnight-approved-matrix.sh \
+  --phase-set phase1 \
+  --out-dir /tmp/render-training-phase1
+```
+
+```bash
 bash scripts/sequencer-render-training/generate-sample-comparisons.sh \
   --run-dir /tmp/shimmer-outline-packed-fseq-decoded-debug \
   --criterion usefulness \
@@ -142,6 +148,12 @@ Environment:
 - `RENDER_TRAINING_ROOT`
   - default: `/Users/robterry/Desktop/Show/RenderTraining`
   - internal workspace for packed `.fseq`, working `.xsq`, copied manifests, and derived artifacts
+- `PHASE_SET`
+  - used by `run-overnight-approved-matrix.sh`
+  - values:
+    - `phase1`
+    - `phase1_phase2`
+  - default: `phase1_phase2`
 
 ## Notes
 

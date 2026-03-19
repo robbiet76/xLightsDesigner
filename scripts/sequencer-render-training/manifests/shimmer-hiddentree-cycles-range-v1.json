@@ -1,0 +1,148 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shimmer-hiddentree-cycles-range-v1",
+  "description": "Range sampling sweep for Shimmer cycles on the HiddenTree model. Uses fixed dutyFactor to isolate cadence changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "HiddenTree",
+    "modelType": "tree_flat",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for Shimmer cycles on flat tree geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "shimmer-hiddentree-cycles-0_5-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 0.5,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_0_5"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentree-cycles-1_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 1.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_1_0"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentree-cycles-2_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 2.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_2_0"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentree-cycles-3_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 3.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_3_0"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentree-cycles-4_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 4.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_4_0"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentree-cycles-5_0-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 5.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_5_0"
+      ]
+    }
+  ]
+}

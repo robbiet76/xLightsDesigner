@@ -1,0 +1,151 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-fadetype-combos-v1",
+  "description": "Structured comparison sweep for SingleStrand fadeType on a single-line model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Structured fade-type comparison on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-fadetype-none-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "fade_type",
+        "hard_edge"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-fadetype-from-head-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "From Head",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "fade_type",
+        "head_bright"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-fadetype-from-tail-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "From Tail",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "fade_type",
+        "tail_bright"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-fadetype-head-and-tail-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "Head and Tail",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "fade_type",
+        "double_ended"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-fadetype-middle-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "Middle",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "fade_type",
+        "middle_weighted"
+      ]
+    }
+  ]
+}

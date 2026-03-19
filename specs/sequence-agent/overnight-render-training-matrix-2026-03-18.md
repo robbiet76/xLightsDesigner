@@ -1,10 +1,11 @@
 # Overnight Render Training Matrix
 
 Goal for this run:
-- capture the first broad unattended corpus using the stable debug-only `.xsq` + `.fseq` flow
+- capture a broad unattended corpus using the stable debug-only `.xsq` + `.fseq` flow
 - stay on concrete models only
 - defer model groups, submodels, and matrix-heavy coverage to later rounds
 - expand beyond linear props into tree and star geometry
+- use enough of the overnight window to move beyond first-pass discovery into broader representative setting coverage
 
 Operating assumptions:
 - xLights target is debug build only
@@ -23,7 +24,7 @@ Scope guardrails for this overnight:
 - defer matrix-focused packs for now
 - treat custom-model generalization as a later workstream after we have better coverage on representative built and custom concrete models
 
-## Matrix
+## Phase 1 Matrix
 
 | Priority | Pack ID | Effect | Model Type | Model | Samples | Sweep Type | Purpose | Expected Yield |
 |---|---|---|---|---|---:|---|---|---|
@@ -45,7 +46,7 @@ Scope guardrails for this overnight:
 | Core | `on-hiddentreestar-reduced-sweep-v1` | `On` | `star` | `HiddenTreeStar` | 3 | discrete looks | baseline hold / fade behavior on star geometry | medium |
 | Core | `shimmer-hiddentreestar-expanded-sweep-v1` | `Shimmer` | `star` | `HiddenTreeStar` | 5 | discrete looks | restrained / balanced / busy sparkle family on star geometry | high |
 
-## First-Round Totals
+## Phase 1 Totals
 
 | Category | Samples |
 |---|---:|
@@ -54,6 +55,137 @@ Scope guardrails for this overnight:
 | `SingleStrand` parameter ranges | 21 |
 | `Shimmer` discrete + ranges | 27 |
 | **Total** | **74** |
+
+## Why Phase 1 Is Not Enough For The Full Night
+
+The validated first round is the right starting block, but it will not use the full overnight window.
+
+Expected duration:
+- about `30-45 minutes`
+
+That is enough to establish:
+- baseline geometry coverage
+- first look-family coverage
+- first high-impact parameter regions
+
+It is not enough to claim representative understanding of every meaningful lever.
+
+To use roughly `6` overnight hours, the run should expand in structured phases rather than by brute-force combinations.
+
+## Expanded Overnight Target
+
+Target shape:
+- `300-450` samples total
+- roughly `5-7` hours depending on xLights throughput and session stability
+
+Design rules:
+- keep concrete models only
+- stay on `On`, `SingleStrand`, and `Shimmer`
+- add representative parameter and shared-axis coverage
+- do not try full Cartesian products
+- prioritize axes that help us understand the range of behaviors, not a single best preset
+
+## Phase 2 Expansion
+
+Purpose:
+- finish the most important effect-local parameter coverage
+- deepen tree/star coverage
+- keep geometry diversity high
+
+Proposed new packs to add after Phase 1:
+
+| Priority | Proposed Pack ID | Effect | Model Type | Model | Est. Samples | Sweep Type | Purpose |
+|---|---|---|---|---|---:|---|---|
+| Core | `singlestrand-linear-cycles-range-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 6 | parameter range | find chase cadence regions on linear geometry |
+| Core | `singlestrand-linear-skipsize-range-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 5 | parameter range | find skip spacing regions |
+| Core | `singlestrand-linear-bandsize-range-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 5 | parameter range | find skip band-width regions |
+| Core | `singlestrand-linear-chasetype-combos-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 5 | structured combos | compare major chase motion structures |
+| Core | `singlestrand-linear-fadetype-combos-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 4 | structured combos | compare chase fade structures |
+| Core | `shimmer-hiddentree-cycles-range-v1` | `Shimmer` | `tree_flat` | `HiddenTree` | 6 | parameter range | find cadence regions on dense tree geometry |
+| Core | `shimmer-hiddentreestar-dutyfactor-range-v1` | `Shimmer` | `star` | `HiddenTreeStar` | 6 | parameter range | find low/mid/high shimmer regions on star geometry |
+| Core | `shimmer-hiddentreestar-cycles-range-v1` | `Shimmer` | `star` | `HiddenTreeStar` | 6 | parameter range | find cadence regions on star geometry |
+| Core | `singlestrand-spiraltree-chasesize-range-v1` | `SingleStrand` | `tree_360` | `SpiralTree-01` | 6 | parameter range | find chase-size breakpoints on spiral geometry |
+| Core | `singlestrand-spiraltree-cycles-range-v1` | `SingleStrand` | `tree_360` | `SpiralTree-01` | 6 | parameter range | find chase cadence regions on spiral geometry |
+
+Phase 2 estimate:
+- additional `56` samples
+- cumulative total after Phase 2: `130`
+
+## Phase 3 Shared-Axis Expansion
+
+Purpose:
+- learn how shared rendering choices shift the same effect behavior
+- avoid overfitting the training set to one palette and one render-style assumption
+
+Shared axes to sample:
+- `renderStyle`
+- palette class
+
+Palette classes to cover:
+- `two_color_high_contrast`
+- `two_color_low_contrast`
+- `warm_multi`
+- `cool_multi`
+
+Render-style strategy:
+- only where the effect meaning actually changes by render style
+- not every style on every pack
+
+Proposed Phase 3 packs:
+
+| Priority | Proposed Pack ID | Effect | Model Type | Model | Est. Samples | Sweep Type | Purpose |
+|---|---|---|---|---|---:|---|---|
+| Core | `singlestrand-linear-palette-classes-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 8 | shared-axis sweep | compare major palette classes on a stable chase |
+| Core | `shimmer-outline-palette-classes-v1` | `Shimmer` | `outline` | `Border-01` | 8 | shared-axis sweep | compare palette-driven texture/readability shifts |
+| Core | `shimmer-hiddentree-palette-classes-v1` | `Shimmer` | `tree_flat` | `HiddenTree` | 8 | shared-axis sweep | compare palette effect on dense tree sparkle |
+| Core | `singlestrand-spiraltree-palette-classes-v1` | `SingleStrand` | `tree_360` | `SpiralTree-01` | 8 | shared-axis sweep | compare palette effect on spiral motion readability |
+| Core | `singlestrand-linear-renderstyle-v1` | `SingleStrand` | `single_line` | `UpperGutter-01` | 6 | shared-axis sweep | test major render-style shifts on one stable chase setup |
+| Core | `shimmer-outline-renderstyle-v1` | `Shimmer` | `outline` | `Border-01` | 6 | shared-axis sweep | test major render-style shifts on sparkle texture |
+| Core | `shimmer-hiddentree-renderstyle-v1` | `Shimmer` | `tree_flat` | `HiddenTree` | 6 | shared-axis sweep | test render-style shifts on dense tree sparkle |
+
+Phase 3 estimate:
+- additional `45-55` samples
+- cumulative total after Phase 3: about `180-195`
+
+## Phase 4 Deeper Representative Coverage
+
+Purpose:
+- use the rest of the overnight window on the highest-yield effect/model pairs
+- sample interactions without opening a full combinatorial explosion
+
+Strategy:
+- choose only the strongest effect/model pairs from Phases 1-3
+- add second-order interaction sweeps:
+  - one numeric parameter x one structural option
+  - one numeric parameter x one palette class
+
+Candidate high-yield pairs:
+- `SingleStrand` on `UpperGutter-01`
+- `Shimmer` on `Border-01`
+- `Shimmer` on `HiddenTree`
+- `SingleStrand` on `SpiralTree-01`
+
+Representative Phase 4 pack types:
+- `numberChases x chaseType`
+- `dutyFactor x useAllColors`
+- `cycles x paletteClass`
+- `chaseSize x fadeType`
+
+Phase 4 estimate:
+- additional `120-220` samples depending on how many interactions we approve
+
+## Full-Night Target Range
+
+| Scope | Est. Samples | Est. Duration |
+|---|---:|---:|
+| Phase 1 only | 74 | `~0.5 h` |
+| Phase 1 + 2 | 130-140 | `~2-3 h` |
+| Phase 1 + 2 + 3 | 180-195 | `~3-4 h` |
+| Phase 1 + 2 + 3 + selected Phase 4 | 300-450 | `~5-7 h` |
+
+Recommended full-night target:
+- `~320-380` samples
+- enough to use the overnight window without drifting into low-value brute-force coverage
 
 ## Why This Matrix
 
@@ -127,10 +259,11 @@ Explicitly deferred from this overnight:
   - remove from first unattended run
   - cover later under a dedicated custom-model pass
 
-## Recommended Overnight Order
+## Recommended Execution Order
 
 Run order should reduce context churn and keep similar model/effect groups together:
 
+Phase 1:
 1. `on-reduced-sweep-v1`
 2. `singlestrand-linear-expanded-sweep-v2`
 3. `singlestrand-linear-chasesize-range-v1`
@@ -156,6 +289,12 @@ Rationale:
 - add tree-flat before spiral tree
 - finish with the star model
 
+Phase 2-4 ordering rule:
+- keep packs grouped by effect and model
+- run shared-axis sweeps after base parameter sweeps
+- run second-order interaction packs last
+- stop expansion before adding matrix, model groups, or submodels
+
 ## Expected Overnight Outputs
 
 For each pack:
@@ -178,9 +317,9 @@ For look packs:
 This matrix is intentionally:
 - concrete-model only
 - biased toward geometry diversity over matrix breadth
-- still wide enough to tell us which parameters matter and which stay flat
+- aimed at representative understanding, not exhaustive combinations
 
-Before wiring the unattended run, the main review points are:
-1. whether the tree/star packs are the right first-round additions
-2. whether the two low-yield `SingleStrand` control ranges should stay in the overnight job
-3. whether `On` baselines should stay on all model classes or be trimmed back after the first full unattended pass
+Before wiring the longer unattended run, the main review points are:
+1. whether Phase 2 parameter additions are the right next levers
+2. whether palette class and render style should both be included in Phase 3
+3. how much Phase 4 interaction coverage to allow for the actual overnight window

@@ -1,0 +1,184 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-cycles-range-v1",
+  "description": "Range sampling sweep for SingleStrand cycles on a single-line model. Uses one chase and fixed chaseSize to isolate cadence changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for SingleStrand cycles on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-cycles-0_5-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 0.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_0_5"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-cycles-1_0-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.0,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_1_0"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-cycles-2_0-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 2.0,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_2_0"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-cycles-3_0-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 3.0,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_3_0"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-cycles-4_0-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 4.0,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_4_0"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-cycles-5_0-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 5.0,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "cycles",
+        "cycles_5_0"
+      ]
+    }
+  ]
+}

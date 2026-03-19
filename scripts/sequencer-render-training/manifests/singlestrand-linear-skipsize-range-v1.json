@@ -1,0 +1,141 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-skipsize-range-v1",
+  "description": "Range sampling sweep for SingleStrand skipSize on a single-line model. Uses fixed band size to isolate spacing changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for SingleStrand skipSize on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-skipsize-01-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 1,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "skip_size",
+        "skipsize_01"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-skipsize-02-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 2,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "skip_size",
+        "skipsize_02"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-skipsize-03-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 3,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "skip_size",
+        "skipsize_03"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-skipsize-04-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 4,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "skip_size",
+        "skipsize_04"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-skipsize-05-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 5,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "range_sample",
+        "skip_size",
+        "skipsize_05"
+      ]
+    }
+  ]
+}

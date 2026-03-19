@@ -1,0 +1,151 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-chasetype-combos-v1",
+  "description": "Structured comparison sweep for SingleStrand chaseType on a single-line model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Structured chase-type comparison on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-chasetype-left-right-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "chase_type",
+        "single_direction_chase"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasetype-right-left-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Right-Left",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "chase_type",
+        "reverse_direction_chase"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasetype-bounce-left-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Bounce from Left",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "chase_type",
+        "bounce_pattern"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasetype-bounce-middle-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Bounce from Middle",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "chase_type",
+        "bounce_pattern"
+      ]
+    },
+    {
+      "sampleId": "single-strand-linear-chasetype-static-left-right-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.75,
+        "offset": 0,
+        "chaseType": "Static Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "phase2_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "chase_type",
+        "static_segmented_pattern"
+      ]
+    }
+  ]
+}
