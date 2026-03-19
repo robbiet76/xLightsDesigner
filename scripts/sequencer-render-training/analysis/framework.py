@@ -83,6 +83,58 @@ class BaseAnalyzer:
             "netTravel": net,
         }
 
+    def _frame_segments(self, frame: Dict[str, Any]) -> List[Dict[str, int]]:
+        active = frame.get("nodeActive", [])
+        if not isinstance(active, list):
+            return []
+        segments: List[Dict[str, int]] = []
+        start = None
+        for idx, raw in enumerate(active):
+            is_on = bool(raw)
+            if is_on and start is None:
+                start = idx
+            elif not is_on and start is not None:
+                end = idx - 1
+                segments.append({"start": start, "end": end, "length": end - start + 1})
+                start = None
+        if start is not None:
+            end = len(active) - 1
+            segments.append({"start": start, "end": end, "length": end - start + 1})
+        return segments
+
+    def _symmetry_score(self, frame: Dict[str, Any]) -> float:
+        active = frame.get("nodeActive", [])
+        if not isinstance(active, list) or not active:
+            return 0.0
+        matches = 0
+        total = len(active)
+        for i in range(total):
+            if int(bool(active[i])) == int(bool(active[total - 1 - i])):
+                matches += 1
+        return matches / total
+
+    def _rgb_roles(self, frame: Dict[str, Any]) -> Dict[str, int]:
+        rgb = frame.get("nodeRgb", [])
+        if not isinstance(rgb, list):
+            return {"redDominant": 0, "greenDominant": 0, "blueDominant": 0}
+        red = green = blue = 0
+        for raw in rgb:
+            if not isinstance(raw, list) or len(raw) < 3:
+                continue
+            r, g, b = int(raw[0]), int(raw[1]), int(raw[2])
+            if r == g == b == 0:
+                continue
+            if r >= g and r >= b:
+                red += 1
+            elif g >= r and g >= b:
+                green += 1
+            elif b >= r and b >= g:
+                blue += 1
+        return {"redDominant": red, "greenDominant": green, "blueDominant": blue}
+
+    def _mean(self, values: List[float]) -> float:
+        return sum(values) / len(values) if values else 0.0
+
     def _common_intents(self, quality: Dict[str, float]) -> List[str]:
         tags: List[str] = []
         if quality["coverage"] >= 0.85:
@@ -147,12 +199,62 @@ class LinearAnalyzer(BaseAnalyzer):
         centroids = self._frame_centroids(inp)
         deltas = self._signed_deltas(centroids)
         direction_summary = self._signed_direction_summary(deltas)
+        frames = self._frames(inp)
+        segment_counts: List[float] = []
+        segment_lengths: List[float] = []
+        center_biases: List[float] = []
+        symmetry_scores: List[float] = []
+        red_roles = green_roles = blue_roles = 0
+        edge_origin_frames = 0
+        center_origin_frames = 0
+
+        for frame in frames:
+            segments = self._frame_segments(frame)
+            segment_counts.append(float(len(segments)))
+            if segments:
+                segment_lengths.append(max(seg["length"] for seg in segments))
+                first = min(segments, key=lambda seg: seg["start"])
+                last = max(segments, key=lambda seg: seg["end"])
+                node_count = max(len(frame.get("nodeActive", [])), 1)
+                center_pos = (node_count - 1) / 2.0
+                first_mid = (first["start"] + first["end"]) / 2.0
+                last_mid = (last["start"] + last["end"]) / 2.0
+                midpoint_bias = min(abs(first_mid - center_pos), abs(last_mid - center_pos)) / max(center_pos, 1.0)
+                center_biases.append(1.0 - midpoint_bias)
+                near_edge = first["start"] <= 1 or last["end"] >= node_count - 2
+                near_center = abs(first_mid - center_pos) <= 2 or abs(last_mid - center_pos) <= 2
+                if near_edge:
+                    edge_origin_frames += 1
+                if near_center:
+                    center_origin_frames += 1
+            else:
+                segment_lengths.append(0.0)
+                center_biases.append(0.0)
+            symmetry_scores.append(self._symmetry_score(frame))
+            roles = self._rgb_roles(frame)
+            red_roles += roles["redDominant"]
+            green_roles += roles["greenDominant"]
+            blue_roles += roles["blueDominant"]
+
+        mean_segment_count = self._mean(segment_counts)
+        max_segment_length_ratio = (max(segment_lengths) / max(inp.model_metadata.get("nodeCount", 0), 1)) if segment_lengths else 0.0
+        mean_center_bias = self._mean(center_biases)
+        mean_symmetry = self._mean(symmetry_scores)
+        dominant_color_role = "none"
+        if max(red_roles, green_roles, blue_roles) > 0:
+            if red_roles >= green_roles and red_roles >= blue_roles:
+                dominant_color_role = "red"
+            elif green_roles >= red_roles and green_roles >= blue_roles:
+                dominant_color_role = "green"
+            else:
+                dominant_color_role = "blue"
 
         direction = "ambiguous"
         if (
             direction_summary["reversals"] > 0
             and direction_summary["positiveSteps"] >= 3
             and direction_summary["negativeSteps"] >= 3
+            and mean_segment_count >= 2.0
         ):
             direction = "bounce"
         elif abs(direction_summary["netTravel"]) >= 0.02:
@@ -189,6 +291,8 @@ class LinearAnalyzer(BaseAnalyzer):
                 pattern_family = "bounce"
             elif mode == "Skips":
                 pattern_family = "skips"
+            elif mean_segment_count >= 2.0 and max_segment_length_ratio < 0.35:
+                pattern_family = "segmented_chase"
             else:
                 pattern_family = "directional_chase"
 
@@ -202,6 +306,13 @@ class LinearAnalyzer(BaseAnalyzer):
             "centroidNegativeSteps": direction_summary["negativeSteps"],
             "centroidDirectionReversals": direction_summary["reversals"],
             "centroidNetTravel": direction_summary["netTravel"],
+            "meanSegmentCount": mean_segment_count,
+            "maxSegmentLengthRatio": max_segment_length_ratio,
+            "meanCenterBias": mean_center_bias,
+            "meanSymmetryScore": mean_symmetry,
+            "edgeOriginFrames": edge_origin_frames,
+            "centerOriginFrames": center_origin_frames,
+            "dominantColorRole": dominant_color_role,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -217,6 +328,22 @@ class LinearAnalyzer(BaseAnalyzer):
                     "low" if centroid_motion <= 0.005 else
                     "medium"
                 ),
+                "segmentDensity": (
+                    "multi_segment" if mean_segment_count >= 2.0 else
+                    "single_segment" if mean_segment_count >= 0.9 else
+                    "minimal"
+                ),
+                "originBias": (
+                    "center" if center_origin_frames > edge_origin_frames else
+                    "edge" if edge_origin_frames > center_origin_frames else
+                    "mixed"
+                ),
+                "symmetryClass": (
+                    "high" if mean_symmetry >= 0.85 else
+                    "low" if mean_symmetry <= 0.45 else
+                    "medium"
+                ),
+                "dominantColorRole": dominant_color_role,
             }
         )
         intents = set(base["intentCandidates"])
@@ -224,8 +351,10 @@ class LinearAnalyzer(BaseAnalyzer):
             intents.add("directional")
         if direction == "bounce":
             intents.add("bouncy")
-        if longest_run >= 0.65:
+        if longest_run >= 0.65 or pattern_family in {"directional_chase", "segmented_chase"}:
             intents.add("patterned")
+        if mean_segment_count >= 2.0:
+            intents.add("segmented")
         if pattern_family == "burst_texture":
             intents.add("texture_heavy")
         base["intentCandidates"] = sorted(intents)
