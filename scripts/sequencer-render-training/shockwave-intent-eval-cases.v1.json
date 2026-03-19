@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "caseId": "shockwave_diffuse_round_tree",
+      "description": "Retrieve a diffuse centered Shockwave on the round tree.",
+      "requiredIntents": ["animated", "fill", "bold"],
+      "requiredStructuralLabels": ["diffuse_shockwave", "centered_shockwave"],
+      "requiredPatternFamilies": ["diffuse_shockwave"],
+      "effects": ["Shockwave"],
+      "geometryProfiles": ["tree_360_round"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Shockwave",
+        "geometryProfile": "tree_360_round",
+        "patternFamiliesAny": ["diffuse_shockwave"]
+      }
+    },
+    {
+      "caseId": "shockwave_crisp_spinner",
+      "description": "Retrieve a crisp radial Shockwave on the spinner.",
+      "requiredIntents": ["animated", "fill"],
+      "requiredStructuralLabels": ["crisp_shockwave", "thin_shockwave"],
+      "requiredPatternFamilies": ["radial_crisp_shockwave"],
+      "effects": ["Shockwave"],
+      "geometryProfiles": ["spinner_standard"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Shockwave",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_crisp_shockwave"]
+      }
+    },
+    {
+      "caseId": "shockwave_compact_spiral_tree",
+      "description": "Retrieve a compact restrained Shockwave on the spiral tree.",
+      "requiredIntents": ["animated", "fill", "restrained"],
+      "requiredStructuralLabels": ["compact_shockwave", "decelerating_shockwave"],
+      "requiredPatternFamilies": ["helical_compact_shockwave"],
+      "effects": ["Shockwave"],
+      "geometryProfiles": ["tree_360_spiral"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Shockwave",
+        "geometryProfile": "tree_360_spiral",
+        "patternFamiliesAny": ["helical_compact_shockwave"]
+      }
+    },
+    {
+      "caseId": "shockwave_offset_directional_star",
+      "description": "Retrieve an offset directional Shockwave on the star.",
+      "requiredIntents": ["animated", "directional"],
+      "requiredStructuralLabels": ["offset_y_shockwave"],
+      "requiredPatternFamilies": ["offcenter_radial_shockwave"],
+      "effects": ["Shockwave"],
+      "geometryProfiles": ["star_single_layer"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Shockwave",
+        "geometryProfile": "star_single_layer",
+        "patternFamiliesAny": ["offcenter_radial_shockwave"]
+      }
+    }
+  ]
+}

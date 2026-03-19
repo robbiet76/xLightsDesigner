@@ -4,6 +4,7 @@ Runs:
 - `/tmp/render-training-shockwave-v1-rerun`
 - `/tmp/render-training-shockwave-v2`
 - `/tmp/shockwave-interactions-v1`
+- `/tmp/shockwave-interactions-v2`
 
 Machine-readable summary:
 - [/tmp/render-training-shockwave-summary.v3.json](/tmp/render-training-shockwave-summary.v3.json)
@@ -14,6 +15,9 @@ Result:
 - representative interaction packs:
   - `3/3` passed
   - `18/18` samples passed
+- dedicated retrieval eval:
+  - `/tmp/shockwave-intent-eval.v3.json`
+  - `4/4` passed
 
 Scope:
 - geometries:
@@ -66,6 +70,12 @@ What this means:
 - geometry coupling is real and should remain part of the early policy for `Shockwave`
 - center placement, radius controls, width controls, and acceleration are all real early levers
 - `blendEdges` should stay in the effect model as an interaction-sensitive control, not a low-value control
+- the effect is now structurally retrievable for constrained `Shockwave` requests built around:
+  - diffuse
+  - crisp
+  - compact
+  - centered fill
+  - offset directional
 
 Interaction-set result:
 - the representative interaction set cleanly preserved:
@@ -98,7 +108,7 @@ What is not mature enough yet:
   - `busy`
   - `restrained`
   are still too broad for useful effect routing
-- interaction cases are now semantically separated at the pattern-family layer, but not yet validated through a retrieval/evaluator layer
+- interaction cases are now semantically separated at the pattern-family layer and validated through a dedicated retrieval evaluator
 - `Shockwave` should stay out of:
   - the controlled designer vocabulary layer
   - the structural effect selector
@@ -120,6 +130,6 @@ Recommended next work on `Shockwave`:
 Current maturity recommendation:
 - `execution_ready`: yes
 - `structurally_observable`: yes
-- `structurally_retrievable`: candidate after dedicated retrieval evaluation
+- `structurally_retrievable`: yes
 - `selector_ready`: no
 - `designer_language_candidate`: no
