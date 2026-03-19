@@ -51,6 +51,8 @@ The current harness is intentionally small:
 - `generate-priority-effect-summary.py`: consolidate priority-effect region summaries from completed runs into one machine-readable summary
 - `generate-priority-intent-map.py`: build a first-pass intent map from the consolidated priority-effect summary
 - `query-priority-intent-map.py`: query the first-pass intent map for structurally matched regions
+- `evaluate-priority-intent-retrieval.py`: run a small structural retrieval evaluation set against the intent map
+- `priority-intent-eval-cases.v1.json`: first evaluator case set for Bars and Marquee structural requests
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -151,6 +153,13 @@ python3 scripts/sequencer-render-training/query-priority-intent-map.py \
   --intent segmented \
   --exclude-intent busy \
   --limit 5
+```
+
+```bash
+python3 scripts/sequencer-render-training/evaluate-priority-intent-retrieval.py \
+  --intent-map /tmp/render-training-priority-intent-map.json \
+  --cases scripts/sequencer-render-training/priority-intent-eval-cases.v1.json \
+  --out-file /tmp/priority-intent-eval.v1.json
 ```
 
 ```bash

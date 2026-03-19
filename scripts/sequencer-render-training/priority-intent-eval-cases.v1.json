@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "description": "First structural retrieval evaluation set for Bars and Marquee.",
+  "cases": [
+    {
+      "caseId": "bars_clean_fill_steady",
+      "description": "Clean steady fill on Bars should retrieve a stable bar-motion region.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "effects": ["Bars"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Bars",
+        "patternFamiliesAny": ["single_bar_motion", "multi_bars", "tree_bar_bands"],
+        "intentTagsAll": ["clean", "fill", "steady"]
+      }
+    },
+    {
+      "caseId": "bars_directional_segmented",
+      "description": "Directional segmented Bars should prefer multi-bar regions rather than noisy effects.",
+      "requiredIntents": ["directional", "segmented"],
+      "excludedIntents": ["busy"],
+      "effects": ["Bars"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Bars",
+        "patternFamiliesAny": ["multi_bars", "dense_bars"],
+        "intentTagsAll": ["directional", "segmented"]
+      }
+    },
+    {
+      "caseId": "marquee_segmented_directional",
+      "description": "Segmented directional Marquee should retrieve segmented marquee regions.",
+      "requiredIntents": ["directional", "segmented"],
+      "effects": ["Marquee"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Marquee",
+        "parameterName": "skipSize",
+        "patternFamiliesAny": ["segmented_marquee", "marquee_motion"],
+        "intentTagsAll": ["directional", "segmented"]
+      }
+    },
+    {
+      "caseId": "marquee_clean_fill_steady",
+      "description": "Clean fill steady Marquee should retrieve baseline marquee motion regions.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "excludedIntents": ["busy"],
+      "effects": ["Marquee"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Marquee",
+        "patternFamiliesAny": ["marquee_motion", "wide_marquee"],
+        "intentTagsAll": ["clean", "fill", "steady"]
+      }
+    }
+  ]
+}
