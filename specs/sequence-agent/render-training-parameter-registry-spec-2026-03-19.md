@@ -85,6 +85,7 @@ Meaning:
 4. delay strong pruning claims until multi-geometry evidence exists
 
 Current complex-effect examples:
+- `Bars`
 - `Marquee`
 - `Spirals`
 - `Pinwheel`
@@ -93,6 +94,7 @@ Current complex-effect examples:
   - `Twinkle`
 
 `Spirals` should be treated as a benchmark tree effect in Stage 1.
+`Bars` should now also be treated as a complex Stage 1 effect because its multi-geometry evidence shows broader coupling and interaction risk than a moderate classification suggests.
 
 ## Current Covered Effects
 

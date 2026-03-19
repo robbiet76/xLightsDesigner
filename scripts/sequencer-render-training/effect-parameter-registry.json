@@ -246,9 +246,9 @@
       }
     },
     "Bars": {
-      "complexityClass": "moderate",
-      "earlySamplingPolicy": "standard_screening",
-      "notes": "High-value structural motion effect. Direction, bar count, cadence, and structural toggles are likely first-order levers across linear and tree geometries.",
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "notes": "High-value structural motion effect. Direction, bar count, cadence, and structural toggles are first-order levers across linear, arch, and tree geometries. Full Stage 1 geometry coverage and observed behavior now support treating Bars as complex rather than moderate.",
       "parameters": {
         "direction": {
           "type": "enum",

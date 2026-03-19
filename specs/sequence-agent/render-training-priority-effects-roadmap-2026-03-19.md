@@ -32,9 +32,10 @@ Reason:
 - good coverage across canonical geometry profiles
 
 Additional policy:
-- `Marquee`, `Spirals`, and `Pinwheel` are complex effects
+- `Bars`, `Marquee`, `Spirals`, and `Pinwheel` are complex effects
 - complex effects require broader early testing before strong conclusions
 - `Spirals` should be treated as a benchmark tree effect during Stage 1
+- `Shockwave` is the next Stage 1 expansion target after the current Tier 1 set is fully covered
 
 ### Tier 2
 - `Shockwave`

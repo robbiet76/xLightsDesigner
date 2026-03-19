@@ -53,12 +53,14 @@ This is the current major stage.
 
 Within Stage 1, complex effects require deeper early testing before strong conclusions.
 Examples:
+- `Bars`
 - `Marquee`
 - `Spirals`
 - `Pinwheel`
 
 These should not follow the same early-conclusion policy as simpler effects.
 `Spirals` should be treated as a benchmark tree effect for Stage 1 quality.
+With full Stage 1 standard-geometry coverage now in place, `Bars` should also be treated as a complex effect for planning and promotion purposes.
 
 ### Stage 2: Layered-Effect Understanding
 
