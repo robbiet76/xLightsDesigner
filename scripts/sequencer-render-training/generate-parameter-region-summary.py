@@ -17,6 +17,45 @@ def slice_rows(samples, start_index, end_index):
     return samples[start_index:end_index + 1]
 
 
+def derive_observed_impact(report, regions):
+    samples = report["samples"]
+    transitions = report.get("transitions", [])
+    changed_count = sum(1 for item in transitions if item.get("changed"))
+    sample_count = len(samples)
+    region_count = len(regions)
+    target = report.get("target", "effectSettings")
+
+    if sample_count <= 1:
+        status = "under_sampled"
+        rationale = "Only one sampled value was available, so no impact conclusion is defensible."
+    elif changed_count == 0 or region_count <= 1:
+        status = "context_flat_observed"
+        rationale = (
+            "The sampled values collapsed into one semantic region in this tested context."
+            " This does not imply the parameter is globally low-impact."
+        )
+    else:
+        max_region_size = max(len(region["sampleIds"]) for region in regions)
+        if changed_count >= 2 or region_count >= 3 or max_region_size >= 2:
+            status = "high_impact_observed"
+            rationale = "The sampled values split into multiple stable semantic regions in this tested context."
+        else:
+            status = "interaction_suspected"
+            rationale = (
+                "Some semantic change was observed, but the evidence is narrow."
+                " This parameter may depend on geometry, render style, or other settings."
+            )
+
+    return {
+        "status": status,
+        "sampleCount": sample_count,
+        "changedTransitionCount": changed_count,
+        "regionCount": region_count,
+        "target": target,
+        "rationale": rationale,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--transition-report", required=True)
@@ -64,7 +103,9 @@ def main():
     payload = {
         "runDir": report["runDir"],
         "param": report["param"],
+        "parameterName": report["param"],
         "target": report.get("target", "effectSettings"),
+        "observedImpact": derive_observed_impact(report, regions),
         "regionCount": len(regions),
         "regions": regions
     }

@@ -108,6 +108,7 @@ def main():
     payload = {
         "runDir": args.run_dir,
         "param": args.param,
+        "parameterName": args.param,
         "target": target,
         "samples": rows,
         "transitions": transitions
