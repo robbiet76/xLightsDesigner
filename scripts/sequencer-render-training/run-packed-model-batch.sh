@@ -235,16 +235,16 @@ while IFS= read -r planned_row; do
     --effect-settings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
     --shared-settings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
     --out-file "${analysis_path}"
-  jq -cn \
-    --argjson base "$(cat "${features_path}")" \
-    --argjson decoded "$(cat "${decoded_features_path}")" \
-    --argjson analysis "$(cat "${analysis_path}")" \
-    '$base + $decoded + {analysis: $analysis}' > "${features_path}"
+  jq -s '.[0] + .[1] + {analysis: .[2]}' \
+    "${features_path}" \
+    "${decoded_features_path}" \
+    "${analysis_path}" > "${features_path}.tmp"
+  mv "${features_path}.tmp" "${features_path}"
   observations_json="$(
     bash "${SCRIPT_DIR}/extract-observations.sh" \
       --sample-json "${sample_json}" \
       --model-type "${resolved_model_type}" \
-      --features-json "$(cat "${features_path}")"
+      --features-file "${features_path}"
   )"
   jq -cn \
     --arg version "1.0" \
@@ -267,10 +267,10 @@ while IFS= read -r planned_row; do
     --arg durationClass "${duration_class}" \
     --argjson sharedSettings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
     --argjson effectSettings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
-    --argjson features "$(cat "${features_path}")" \
     --argjson observations "${observations_json}" \
     --argjson modelMetadata "${model_metadata_json}" \
-    --argjson analysis "$(cat "${analysis_path}")" \
+    --slurpfile featuresFile "${features_path}" \
+    --slurpfile analysisFile "${analysis_path}" \
     '{
       recordVersion: $version,
       sampleId: $sampleId,
@@ -299,9 +299,9 @@ while IFS= read -r planned_row; do
         windowEndMs: $endMs
       },
       modelMetadata: $modelMetadata,
-      analysis: $analysis,
+      analysis: $analysisFile[0],
       observations: $observations,
-      features: $features,
+      features: $featuresFile[0],
       comparisons: []
     }' > "${record_path}"
   passed=$((passed + 1))

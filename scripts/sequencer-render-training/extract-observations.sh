@@ -4,6 +4,7 @@ set -euo pipefail
 SAMPLE_JSON=""
 MODEL_TYPE=""
 FEATURES_JSON=""
+FEATURES_FILE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -19,6 +20,10 @@ while [[ $# -gt 0 ]]; do
       FEATURES_JSON="$2"
       shift 2
       ;;
+    --features-file)
+      FEATURES_FILE="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -28,12 +33,27 @@ done
 
 [[ -n "${SAMPLE_JSON}" ]] || { echo "--sample-json is required" >&2; exit 1; }
 [[ -n "${MODEL_TYPE}" ]] || { echo "--model-type is required" >&2; exit 1; }
-[[ -n "${FEATURES_JSON}" ]] || { echo "--features-json is required" >&2; exit 1; }
+if [[ -z "${FEATURES_JSON}" && -z "${FEATURES_FILE}" ]]; then
+  echo "--features-json or --features-file is required" >&2
+  exit 1
+fi
 
-jq -cn \
-  --argjson sample "${SAMPLE_JSON}" \
-  --arg modelType "${MODEL_TYPE}" \
-  --argjson features "${FEATURES_JSON}" '
+if [[ -n "${FEATURES_JSON}" && -n "${FEATURES_FILE}" ]]; then
+  echo "Only one of --features-json or --features-file may be used" >&2
+  exit 1
+fi
+
+JQ_ARGS=(-cn --argjson sample "${SAMPLE_JSON}" --arg modelType "${MODEL_TYPE}")
+JQ_PREFIX=""
+if [[ -n "${FEATURES_FILE}" ]]; then
+  JQ_ARGS+=(--slurpfile featuresFile "${FEATURES_FILE}")
+  JQ_PREFIX='($featuresFile[0]) as $features |'
+else
+  JQ_ARGS+=(--argjson features "${FEATURES_JSON}")
+fi
+
+jq "${JQ_ARGS[@]}" '
+  '"${JQ_PREFIX}"'
   def clamp01:
     if . < 0 then 0
     elif . > 1 then 1
