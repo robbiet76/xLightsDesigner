@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "description": "Second registry-driven planning set focused on high-impact shared render style and next canonical geometry profiles.",
+  "plans": [
+    {
+      "planId": "singlestrand-single-line-horizontal",
+      "baseManifest": "scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json",
+      "geometryProfile": "single_line_horizontal",
+      "parameters": [
+        "renderStyle",
+        "numberChases",
+        "chaseSize",
+        "chaseType"
+      ]
+    },
+    {
+      "planId": "shimmer-star-single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shimmer-starsingle-expanded-sweep-v1.json",
+      "geometryProfile": "star_single_layer",
+      "parameters": [
+        "renderStyle",
+        "dutyFactor",
+        "cycles",
+        "useAllColors"
+      ]
+    },
+    {
+      "planId": "singlestrand-tree-round",
+      "baseManifest": "scripts/sequencer-render-training/manifests/singlestrand-treeround-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_round",
+      "parameters": [
+        "renderStyle",
+        "numberChases",
+        "chaseSize",
+        "chaseType",
+        "cycles"
+      ]
+    },
+    {
+      "planId": "shimmer-tree-round",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shimmer-treeround-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_round",
+      "parameters": [
+        "renderStyle",
+        "dutyFactor",
+        "cycles",
+        "useAllColors"
+      ]
+    },
+    {
+      "planId": "singlestrand-tree-spiral",
+      "baseManifest": "scripts/sequencer-render-training/manifests/singlestrand-treespiral-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_spiral",
+      "parameters": [
+        "renderStyle",
+        "numberChases",
+        "chaseSize",
+        "chaseType",
+        "cycles"
+      ]
+    },
+    {
+      "planId": "shimmer-tree-spiral",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shimmer-treespiral-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_spiral",
+      "parameters": [
+        "renderStyle",
+        "dutyFactor",
+        "cycles",
+        "useAllColors"
+      ]
+    },
+    {
+      "planId": "singlestrand-arch-single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/singlestrand-archsingle-expanded-sweep-v1.json",
+      "geometryProfile": "arch_single",
+      "parameters": [
+        "renderStyle",
+        "numberChases",
+        "chaseSize",
+        "chaseType"
+      ]
+    },
+    {
+      "planId": "shimmer-arch-single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shimmer-archsingle-expanded-sweep-v1.json",
+      "geometryProfile": "arch_single",
+      "parameters": [
+        "renderStyle",
+        "dutyFactor",
+        "cycles",
+        "useAllColors"
+      ]
+    }
+  ]
+}

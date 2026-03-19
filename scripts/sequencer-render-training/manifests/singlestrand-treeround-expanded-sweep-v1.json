@@ -1,0 +1,97 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-treeround-expanded-sweep-v1",
+  "description": "Expanded SingleStrand sweep on the canonical round tree model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded SingleStrand sweep on the canonical round tree model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-treeround-chase-basic-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "single_direction_chase",
+        "round_tree_pattern"
+      ]
+    },
+    {
+      "sampleId": "single-strand-treeround-chase-bounce-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 2,
+        "chaseSize": 28,
+        "cycles": 2.0,
+        "offset": 0,
+        "chaseType": "Bounce from Middle",
+        "fadeType": "From Head",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bounce_pattern",
+        "round_tree_dual_motion"
+      ]
+    },
+    {
+      "sampleId": "single-strand-treeround-skips-left-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 1,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "skip_pattern",
+        "left_motion"
+      ]
+    },
+    {
+      "sampleId": "single-strand-treeround-fx-fireworks-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 160,
+        "speed": 110
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "fx_texture",
+        "burst_pattern"
+      ]
+    }
+  ]
+}

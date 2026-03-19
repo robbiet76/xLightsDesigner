@@ -13,6 +13,10 @@ def same_signature(a, b):
     return a["signature"] == b["signature"]
 
 
+def slice_rows(samples, start_index, end_index):
+    return samples[start_index:end_index + 1]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--transition-report", required=True)
@@ -25,39 +29,42 @@ def main():
       raise SystemExit("No samples in transition report")
 
     regions = []
-    start = samples[0]
-    current = samples[0]
-    for sample in samples[1:]:
-        if same_signature(current, sample):
-            current = sample
+    start_index = 0
+    current_index = 0
+    for idx, sample in enumerate(samples[1:], start=1):
+        if same_signature(samples[current_index], sample):
+            current_index = idx
             continue
+        region_rows = slice_rows(samples, start_index, current_index)
         regions.append({
-            "startValue": start["value"],
-            "endValue": current["value"],
-            "sampleIds": [row["sampleId"] for row in samples if row["value"] >= start["value"] and row["value"] <= current["value"]],
-            "signature": start["signature"],
+            "startValue": samples[start_index]["value"],
+            "endValue": samples[current_index]["value"],
+            "sampleIds": [row["sampleId"] for row in region_rows],
+            "signature": samples[start_index]["signature"],
             "usefulnessRange": {
-                "min": min(row["scores"]["usefulness"] for row in samples if row["value"] >= start["value"] and row["value"] <= current["value"]),
-                "max": max(row["scores"]["usefulness"] for row in samples if row["value"] >= start["value"] and row["value"] <= current["value"])
+                "min": min(row["scores"]["usefulness"] for row in region_rows),
+                "max": max(row["scores"]["usefulness"] for row in region_rows)
             }
         })
-        start = sample
-        current = sample
+        start_index = idx
+        current_index = idx
 
+    region_rows = slice_rows(samples, start_index, current_index)
     regions.append({
-        "startValue": start["value"],
-        "endValue": current["value"],
-        "sampleIds": [row["sampleId"] for row in samples if row["value"] >= start["value"] and row["value"] <= current["value"]],
-        "signature": start["signature"],
+        "startValue": samples[start_index]["value"],
+        "endValue": samples[current_index]["value"],
+        "sampleIds": [row["sampleId"] for row in region_rows],
+        "signature": samples[start_index]["signature"],
         "usefulnessRange": {
-            "min": min(row["scores"]["usefulness"] for row in samples if row["value"] >= start["value"] and row["value"] <= current["value"]),
-            "max": max(row["scores"]["usefulness"] for row in samples if row["value"] >= start["value"] and row["value"] <= current["value"])
+            "min": min(row["scores"]["usefulness"] for row in region_rows),
+            "max": max(row["scores"]["usefulness"] for row in region_rows)
         }
     })
 
     payload = {
         "runDir": report["runDir"],
         "param": report["param"],
+        "target": report.get("target", "effectSettings"),
         "regionCount": len(regions),
         "regions": regions
     }

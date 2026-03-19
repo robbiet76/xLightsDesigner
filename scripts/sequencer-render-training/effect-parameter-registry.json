@@ -1,5 +1,16 @@
 {
   "version": "1.0",
+  "sharedParameters": {
+    "renderStyle": {
+      "type": "enum",
+      "target": "sharedSettings",
+      "anchors": ["Default", "Single Line"],
+      "importance": "high",
+      "phase": "screen",
+      "interactionHypotheses": ["effect", "geometryProfile"],
+      "stopRule": "all_meaningful_options"
+    }
+  },
   "effects": {
     "On": {
       "notes": "Static baseline effect. Brightness transitions are semantic and are not normalized away.",

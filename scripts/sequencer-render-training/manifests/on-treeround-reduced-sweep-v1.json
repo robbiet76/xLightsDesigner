@@ -1,0 +1,70 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "on-treeround-reduced-sweep-v1",
+  "description": "Reduced baseline On sweep on the canonical round tree model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 2000,
+    "durationClass": "short",
+    "notes": "Reduced On sweep on the canonical round tree model."
+  },
+  "samples": [
+    {
+      "sampleId": "on-treeround-hold-default-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "static_hold",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "on-treeround-ramp-down-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 45,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "soft_falloff",
+        "tree_glow"
+      ]
+    },
+    {
+      "sampleId": "on-treeround-shimmer-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": true,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "shimmer_hold",
+        "tree_sparkle"
+      ]
+    }
+  ]
+}

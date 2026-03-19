@@ -30,6 +30,20 @@ def load_single_effect(base_manifest: dict) -> str:
     return next(iter(names))
 
 
+def lookup_parameter_registry(registry: dict, effect: str, parameter: str) -> tuple[dict, str]:
+    effect_registry = registry["effects"].get(effect)
+    if effect_registry is not None:
+        param_registry = effect_registry["parameters"].get(parameter)
+        if param_registry is not None:
+            return param_registry, param_registry.get("target", "effectSettings")
+
+    shared_registry = registry.get("sharedParameters", {}).get(parameter)
+    if shared_registry is not None:
+        return shared_registry, shared_registry.get("target", "sharedSettings")
+
+    raise ValueError(f"parameter not found for effect {effect}: {parameter}")
+
+
 def applies_when_ok(sample_settings: dict, applies_when: dict | None) -> bool:
     if not applies_when:
         return True
@@ -41,10 +55,11 @@ def applies_when_ok(sample_settings: dict, applies_when: dict | None) -> bool:
 
 def generate_manifest(registry: dict, base_manifest: dict, parameter: str, out_file: Path) -> dict:
     effect = load_single_effect(base_manifest)
-    param_registry = registry["effects"][effect]["parameters"][parameter]
+    param_registry, target = lookup_parameter_registry(registry, effect, parameter)
     anchors = param_registry.get("anchors", [])
     template = deepcopy(base_manifest["samples"][0])
     base_settings = deepcopy(template.get("effectSettings", {}))
+    base_shared = deepcopy(template.get("sharedSettings", {}))
     if not applies_when_ok(base_settings, param_registry.get("appliesWhen")):
         raise ValueError(
             f"base manifest sample does not satisfy appliesWhen for {effect}.{parameter}"
@@ -65,12 +80,17 @@ def generate_manifest(registry: dict, base_manifest: dict, parameter: str, out_f
         "anchors": anchors,
         "stopRule": param_registry.get("stopRule"),
         "interactionHypotheses": param_registry.get("interactionHypotheses", []),
+        "target": target,
     }
 
     for value in anchors:
         sample = deepcopy(template)
         sample["effectSettings"] = deepcopy(base_settings)
-        sample["effectSettings"][parameter] = value
+        sample["sharedSettings"] = deepcopy(base_shared)
+        if target == "sharedSettings":
+            sample["sharedSettings"][parameter] = value
+        else:
+            sample["effectSettings"][parameter] = value
         token = build_value_token(value)
         sample["sampleId"] = f"{effect.lower()}-{parameter.lower()}-{token}-registry-v1"
         hints = list(sample.get("labelHints", []))

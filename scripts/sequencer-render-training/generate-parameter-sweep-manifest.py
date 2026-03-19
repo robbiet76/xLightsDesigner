@@ -32,18 +32,27 @@ def build_value_token(value) -> str:
     return token.replace(".", "_").replace(" ", "_").replace("/", "_")
 
 
+def lookup_parameter_registry(registry: dict, effect: str, parameter: str) -> tuple[dict, str]:
+    effect_registry = registry["effects"].get(effect)
+    if effect_registry is not None:
+        param_registry = effect_registry["parameters"].get(parameter)
+        if param_registry is not None:
+            return param_registry, param_registry.get("target", "effectSettings")
+
+    shared_registry = registry.get("sharedParameters", {}).get(parameter)
+    if shared_registry is not None:
+        return shared_registry, shared_registry.get("target", "sharedSettings")
+
+    raise ValueError(f"parameter not found for effect {effect}: {parameter}")
+
+
 def main() -> int:
     args = parse_args()
     registry = json.loads(Path(args.registry).read_text())
     manifest = json.loads(Path(args.base_manifest).read_text())
     effect = load_single_effect(manifest)
 
-    effect_registry = registry["effects"].get(effect)
-    if effect_registry is None:
-        raise ValueError(f"effect not found in registry: {effect}")
-    param_registry = effect_registry["parameters"].get(args.parameter)
-    if param_registry is None:
-        raise ValueError(f"parameter not found for effect {effect}: {args.parameter}")
+    param_registry, target = lookup_parameter_registry(registry, effect, args.parameter)
 
     anchors = param_registry.get("anchors", [])
     if not anchors:
@@ -51,6 +60,7 @@ def main() -> int:
 
     template = deepcopy(manifest["samples"][0])
     base_settings = deepcopy(template.get("effectSettings", {}))
+    base_shared = deepcopy(template.get("sharedSettings", {}))
     out = deepcopy(manifest)
     out["samples"] = []
     out["packId"] = args.pack_id or f"{manifest['packId']}-{args.parameter}-generated"
@@ -65,12 +75,17 @@ def main() -> int:
         "importance": param_registry.get("importance"),
         "phase": param_registry.get("phase"),
         "anchors": anchors,
+        "target": target,
     }
 
     for value in anchors:
         sample = deepcopy(template)
         sample["effectSettings"] = deepcopy(base_settings)
-        sample["effectSettings"][args.parameter] = value
+        sample["sharedSettings"] = deepcopy(base_shared)
+        if target == "sharedSettings":
+            sample["sharedSettings"][args.parameter] = value
+        else:
+            sample["effectSettings"][args.parameter] = value
         token = build_value_token(value)
         sample["sampleId"] = f"{effect.lower()}-{args.parameter.lower()}-{token}-generated-v1"
         hints = list(sample.get("labelHints", []))

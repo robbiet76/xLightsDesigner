@@ -56,6 +56,18 @@ def signature(record: dict, param: str) -> dict:
     }
 
 
+def get_param_target(run_dir: Path, param: str) -> str:
+    manifest_path = run_dir / "manifest.normalized.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+        target = manifest.get("registryMetadata", {}).get("target")
+        if target in {"effectSettings", "sharedSettings"}:
+            return target
+    if param == "renderStyle":
+        return "sharedSettings"
+    return "effectSettings"
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", required=True)
@@ -63,14 +75,17 @@ def main():
     parser.add_argument("--out-file", required=True)
     args = parser.parse_args()
 
-    summary = json.loads((Path(args.run_dir) / "run-summary.json").read_text())
+    run_dir = Path(args.run_dir)
+    summary = json.loads((run_dir / "run-summary.json").read_text())
+    target = get_param_target(run_dir, args.param)
     rows = []
     for result in summary["results"]:
         record = load_record(Path(result["recordPath"]))
-        value = record.get("effectSettings", {}).get(args.param)
+        value = record.get(target, {}).get(args.param)
         rows.append({
             "sampleId": record["sampleId"],
             "param": args.param,
+            "target": target,
             "value": value,
             "scores": record["observations"]["scores"],
             "signature": signature(record, args.param)
@@ -93,6 +108,7 @@ def main():
     payload = {
         "runDir": args.run_dir,
         "param": args.param,
+        "target": target,
         "samples": rows,
         "transitions": transitions
     }
