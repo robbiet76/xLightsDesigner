@@ -57,10 +57,12 @@ Examples:
 - `Marquee`
 - `Spirals`
 - `Pinwheel`
+- `Shockwave`
 
 These should not follow the same early-conclusion policy as simpler effects.
 `Spirals` should be treated as a benchmark tree effect for Stage 1 quality.
 With full Stage 1 standard-geometry coverage now in place, `Bars` should also be treated as a complex effect for planning and promotion purposes.
+`Shockwave` has now completed its first broad-geometry screening pass and should remain in the structurally-observable stage until its geometry-aware semantics are improved.
 
 ### Stage 2: Layered-Effect Understanding
 

@@ -122,6 +122,19 @@ Reason:
 - `endRadius`
 - `blendEdges`
 
+Current Stage 1 state:
+- first broad-geometry screening completed on:
+  - `tree_flat_single_layer`
+  - `tree_360_round`
+  - `tree_360_spiral`
+  - `star_single_layer`
+  - `spinner_standard`
+- early result:
+  - structurally observable
+  - not yet structurally retrievable
+  - not ready for selector promotion
+- next work should deepen `Shockwave` semantics before it is added to the controlled vocabulary or selector layers
+
 ### Twinkle
 - `style`
 - `count`
