@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "description": "Controlled designer vocabulary evaluation cases over the structural selector.",
+  "cases": [
+    {
+      "caseId": "term_clean_fill",
+      "term": "clean_fill",
+      "expectedSelection": "Marquee"
+    },
+    {
+      "caseId": "term_segmented_motion",
+      "term": "segmented_motion",
+      "expectedSelection": "Bars"
+    },
+    {
+      "caseId": "term_wide_clean_motion",
+      "term": "wide_clean_motion",
+      "expectedSelection": "Marquee"
+    },
+    {
+      "caseId": "term_restrained_star_motion",
+      "term": "restrained_star_motion",
+      "expectedSelection": "Pinwheel"
+    },
+    {
+      "caseId": "term_helical_tree_fill",
+      "term": "helical_tree_fill",
+      "expectedSelection": "Spirals"
+    },
+    {
+      "caseId": "term_round_tree_spiral_rotation",
+      "term": "round_tree_spiral_rotation",
+      "expectedSelection": "Spirals"
+    }
+  ]
+}

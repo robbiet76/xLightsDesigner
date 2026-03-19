@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "description": "Controlled designer vocabulary mapped onto structural selector queries.",
+  "terms": {
+    "clean_fill": {
+      "description": "Clean, stable fill behavior.",
+      "query": {
+        "requiredIntents": ["clean", "fill", "steady"]
+      }
+    },
+    "segmented_motion": {
+      "description": "Directional segmented motion without noisy texture.",
+      "query": {
+        "requiredIntents": ["directional", "segmented"],
+        "excludedIntents": ["busy"]
+      }
+    },
+    "wide_clean_motion": {
+      "description": "Wide, clean perimeter or marquee-like motion.",
+      "query": {
+        "requiredIntents": ["clean", "directional"],
+        "requiredPatternFamilies": ["wide_marquee"]
+      }
+    },
+    "restrained_star_motion": {
+      "description": "Restrained animated directional motion on star geometry.",
+      "query": {
+        "requiredIntents": ["animated", "directional", "restrained"],
+        "geometryProfiles": ["star_single_layer"]
+      }
+    },
+    "helical_tree_fill": {
+      "description": "Geometry-coupled clean spiral fill on spiral trees.",
+      "query": {
+        "requiredIntents": ["geometry_coupled", "clean", "fill"],
+        "geometryProfiles": ["tree_360_spiral"]
+      }
+    },
+    "round_tree_spiral_rotation": {
+      "description": "Directional steady spiral rotation on round trees.",
+      "query": {
+        "requiredIntents": ["directional", "steady"],
+        "requiredPatternFamilies": ["spiral_rotation"],
+        "geometryProfiles": ["tree_360_round"]
+      }
+    }
+  }
+}

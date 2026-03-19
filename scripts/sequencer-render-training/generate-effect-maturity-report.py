@@ -27,11 +27,20 @@ def build_selection_eval_index(eval_payload: dict):
     return index
 
 
+def build_controlled_vocab_eval_index(eval_payload: dict):
+    index = {}
+    for result in eval_payload.get('results', []):
+        effect = result.get('expectedSelection') or result.get('selectedEffect')
+        if effect:
+            index.setdefault(effect, []).append(result)
+    return index
+
+
 def all_cases_passed(results):
     return bool(results) and all(item.get('passed') for item in results)
 
 
-def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_index: dict, selection_eval_index: dict):
+def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_index: dict, selection_eval_index: dict, controlled_vocab_eval_index: dict):
     effect_summary = summary.get('effects', {}).get(effect_name)
     if not effect_summary:
         return None
@@ -61,6 +70,8 @@ def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_inde
     retrieval_ready = all_cases_passed(eval_results)
     selection_results = selection_eval_index.get(effect_name, [])
     selection_ready = all_cases_passed(selection_results)
+    controlled_vocab_results = controlled_vocab_eval_index.get(effect_name, [])
+    controlled_vocab_ready = all_cases_passed(controlled_vocab_results)
 
     stages = {
         'execution_ready': True,
@@ -102,8 +113,16 @@ def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_inde
                 'failedCount': sum(1 for item in selection_results if not item.get('passed')),
                 'caseIds': [item.get('caseId') for item in selection_results],
             },
+            'controlledVocabulary': {
+                'caseCount': len(controlled_vocab_results),
+                'passedCount': sum(1 for item in controlled_vocab_results if item.get('passed')),
+                'failedCount': sum(1 for item in controlled_vocab_results if not item.get('passed')),
+                'caseIds': [item.get('caseId') for item in controlled_vocab_results],
+                'ready': controlled_vocab_ready,
+            },
         },
         'notes': [
+            'controlled vocabulary evidence is tracked separately and does not by itself imply broad designer-language readiness',
             'designer_language_candidate remains false until broad style-language evaluation exists',
             'layered_effect_ready remains false until Stage 2 layered-effect training begins',
         ],
@@ -116,6 +135,7 @@ def main():
     parser.add_argument('--intent-map', required=True)
     parser.add_argument('--eval-results', required=True)
     parser.add_argument('--selection-eval-results')
+    parser.add_argument('--controlled-vocab-eval-results')
     parser.add_argument('--out-file', required=True)
     args = parser.parse_args()
 
@@ -127,10 +147,14 @@ def main():
     if args.selection_eval_results:
         selection_eval_payload = load_json(Path(args.selection_eval_results))
         selection_eval_index = build_selection_eval_index(selection_eval_payload)
+    controlled_vocab_eval_index = {}
+    if args.controlled_vocab_eval_results:
+        controlled_vocab_eval_payload = load_json(Path(args.controlled_vocab_eval_results))
+        controlled_vocab_eval_index = build_controlled_vocab_eval_index(controlled_vocab_eval_payload)
 
     effects = []
     for effect_name in sorted(summary.get('effects', {}).keys()):
-        item = effect_maturity(effect_name, summary, intent_map, eval_index, selection_eval_index)
+        item = effect_maturity(effect_name, summary, intent_map, eval_index, selection_eval_index, controlled_vocab_eval_index)
         if item:
             effects.append(item)
 
@@ -141,6 +165,7 @@ def main():
         'intentMapPath': args.intent_map,
         'evaluationPath': args.eval_results,
         'selectionEvaluationPath': args.selection_eval_results,
+        'controlledVocabularyEvaluationPath': args.controlled_vocab_eval_results,
         'effectCount': len(effects),
         'effects': effects,
     }

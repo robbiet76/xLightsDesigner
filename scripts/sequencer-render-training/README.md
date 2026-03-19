@@ -59,6 +59,10 @@ The current harness is intentionally small:
 - `priority-intent-eval-cases.v2.json`: expanded evaluator case set including Pinwheel structural requests
 - `priority-intent-eval-cases.v3.json`: expanded evaluator case set including Spirals structural requests
 - `select-priority-effect.py`: choose the best-supported effect for a constrained structural request
+- `controlled-designer-vocab.v1.json`: narrow approved designer vocabulary mapped onto structural selector queries
+- `resolve-controlled-designer-term.py`: resolve one approved designer term into the current supported effect selection
+- `evaluate-controlled-designer-vocabulary.py`: evaluate the controlled designer vocabulary layer against expected effect selections
+- `controlled-designer-vocab-cases.v1.json`: first evaluator case set for the controlled designer vocabulary layer
 - `generate-effect-maturity-report.py`: compute the current maturity stage for each effect from summaries and evaluator outputs
 - `evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
 - `priority-effect-selection-cases.v1.json`: first selector-evaluation case set
@@ -180,11 +184,27 @@ python3 scripts/sequencer-render-training/select-priority-effect.py \
 ```
 
 ```bash
+python3 scripts/sequencer-render-training/resolve-controlled-designer-term.py \
+  --intent-map /tmp/render-training-priority-intent-map.v2.json \
+  --vocab scripts/sequencer-render-training/controlled-designer-vocab.v1.json \
+  --term clean_fill
+```
+
+```bash
+python3 scripts/sequencer-render-training/evaluate-controlled-designer-vocabulary.py \
+  --intent-map /tmp/render-training-priority-intent-map.v2.json \
+  --vocab scripts/sequencer-render-training/controlled-designer-vocab.v1.json \
+  --cases scripts/sequencer-render-training/controlled-designer-vocab-cases.v1.json \
+  --out-file /tmp/controlled-designer-vocab-eval.v1.json
+```
+
+```bash
 python3 scripts/sequencer-render-training/generate-effect-maturity-report.py \
   --summary /tmp/render-training-priority-effects-summary.v2.json \
   --intent-map /tmp/render-training-priority-intent-map.v2.json \
   --eval-results /tmp/priority-intent-eval.v3.json \
   --selection-eval-results /tmp/priority-effect-selection-eval.v1.json \
+  --controlled-vocab-eval-results /tmp/controlled-designer-vocab-eval.v1.json \
   --out-file /tmp/render-training-effect-maturity.v1.json
 ```
 
@@ -258,6 +278,7 @@ python3 scripts/sequencer-render-training/generate-range-transition-report.py \
 
 Notes:
 - seed coverage targets are not a closed taxonomy
+- controlled designer vocabulary is intentionally narrow and evaluated; it is not broad freeform designer-language support
 - extra discovered tags and families are preserved so the catalog can expand beyond the initial predefined look list
 
 Environment:

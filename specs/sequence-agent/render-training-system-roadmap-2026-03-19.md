@@ -223,6 +223,7 @@ Each effect should move through these maturity levels:
 
 5. designer_language_candidate
 - effect semantics are rich enough to start mapping controlled designer vocabulary
+- this stage begins with a narrow approved vocabulary layer, not freeform designer language
 
 6. layered_effect_ready
 - effect is mature enough to participate in layered-effect training

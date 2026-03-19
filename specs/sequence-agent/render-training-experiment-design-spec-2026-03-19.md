@@ -248,6 +248,7 @@ Method:
 Outputs:
 - intent vocabulary map per effect and geometry profile
 - representative look regions per intent
+- a controlled designer vocabulary layer evaluated against expected effect-selection outcomes before any broader language claims
 
 ## 8. Parameter Taxonomy
 
