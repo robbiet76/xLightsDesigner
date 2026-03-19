@@ -1,0 +1,284 @@
+{
+  "version": "1.0",
+  "effects": {
+    "On": {
+      "notes": "Static baseline effect. Brightness transitions are semantic and are not normalized away.",
+      "parameters": {
+        "startLevel": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [0, 100],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "semantic_levels_only"
+        },
+        "endLevel": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [0, 100],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "semantic_levels_only"
+        },
+        "shimmer": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "all_meaningful_options"
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 5.0
+          },
+          "anchors": [1.0],
+          "importance": "low",
+          "phase": "defer",
+          "stopRule": "do_not_expand_without_signal"
+        }
+      }
+    },
+    "SingleStrand": {
+      "notes": "Primary motion-pattern effect. Mode and geometry profile materially change which parameters matter.",
+      "parameters": {
+        "mode": {
+          "type": "enum",
+          "anchors": ["Chase", "Skips", "FX"],
+          "importance": "high",
+          "phase": "baseline",
+          "stopRule": "all_meaningful_options"
+        },
+        "numberChases": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [1, 2, 3, 4, 5],
+          "importance": "high",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": ["Chase"]
+          },
+          "interactionHypotheses": ["chaseType", "chaseSize", "geometryProfile"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "chaseSize": {
+          "type": "numeric",
+          "range": {
+            "min": 4,
+            "max": 40
+          },
+          "anchors": [8, 14, 20, 26, 32, 38],
+          "importance": "high",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": ["Chase"]
+          },
+          "interactionHypotheses": ["numberChases", "fadeType", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 5.0
+          },
+          "anchors": [0.5, 1.0, 2.0, 3.0, 4.0, 5.0],
+          "importance": "medium",
+          "phase": "screen",
+          "interactionHypotheses": ["mode", "geometryProfile"],
+          "stopRule": "stop_if_flat_across_profile"
+        },
+        "skipSize": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 9
+          },
+          "anchors": [1, 3, 5, 7, 9],
+          "importance": "medium",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": ["Skips"]
+          },
+          "interactionHypotheses": ["advances", "bandSize", "geometryProfile"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "bandSize": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 9
+          },
+          "anchors": [1, 3, 5, 7, 9],
+          "importance": "medium",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": ["Skips"]
+          },
+          "interactionHypotheses": ["skipSize", "geometryProfile"],
+          "stopRule": "stop_if_flat_across_profile"
+        },
+        "advances": {
+          "type": "numeric",
+          "range": {
+            "min": 8,
+            "max": 40
+          },
+          "anchors": [8, 16, 24, 32, 40],
+          "importance": "low",
+          "phase": "control",
+          "appliesWhen": {
+            "mode": ["Skips"]
+          },
+          "stopRule": "stop_if_flat_across_profile"
+        },
+        "intensity": {
+          "type": "numeric",
+          "range": {
+            "min": 40,
+            "max": 200
+          },
+          "anchors": [40, 80, 120, 160, 200],
+          "importance": "low",
+          "phase": "control",
+          "appliesWhen": {
+            "mode": ["FX"]
+          },
+          "stopRule": "stop_if_flat_across_profile"
+        },
+        "chaseType": {
+          "type": "enum",
+          "anchors": [
+            "Left-Right",
+            "Right-Left",
+            "Bounce from Middle",
+            "Dual Bounce"
+          ],
+          "importance": "high",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": ["Chase"]
+          },
+          "interactionHypotheses": ["numberChases", "fadeType", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        },
+        "fadeType": {
+          "type": "enum",
+          "anchors": [
+            "None",
+            "From Head",
+            "From Tail",
+            "Head and Tail",
+            "Middle"
+          ],
+          "importance": "medium",
+          "phase": "screen",
+          "appliesWhen": {
+            "mode": ["Chase"]
+          },
+          "interactionHypotheses": ["chaseType", "chaseSize", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
+    "Shimmer": {
+      "notes": "Texture-heavy effect where duty and cadence strongly shape density and restraint.",
+      "parameters": {
+        "dutyFactor": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [10, 25, 40, 55, 70, 85],
+          "importance": "high",
+          "phase": "screen",
+          "interactionHypotheses": ["cycles", "useAllColors", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 5.0
+          },
+          "anchors": [0.5, 1.0, 2.0, 3.0, 4.0, 5.0],
+          "importance": "high",
+          "phase": "screen",
+          "interactionHypotheses": ["dutyFactor", "useAllColors", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "useAllColors": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "interactionHypotheses": ["cycles", "dutyFactor"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
+    "Color Wash": {
+      "notes": "Structure often changes more from boolean fade combinations than from numeric cycle changes.",
+      "parameters": {
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 0.5,
+            "max": 4.0
+          },
+          "anchors": [0.5, 1.0, 2.0, 3.0, 4.0],
+          "importance": "medium",
+          "phase": "screen",
+          "interactionHypotheses": ["vFade", "hFade", "shimmer", "circularPalette"],
+          "stopRule": "stop_if_flat_across_profile"
+        },
+        "vFade": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "high",
+          "phase": "screen",
+          "stopRule": "all_meaningful_options"
+        },
+        "hFade": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "high",
+          "phase": "screen",
+          "stopRule": "all_meaningful_options"
+        },
+        "reverseFades": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "interaction",
+          "stopRule": "interaction_only"
+        },
+        "shimmer": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "stopRule": "all_meaningful_options"
+        },
+        "circularPalette": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    }
+  }
+}

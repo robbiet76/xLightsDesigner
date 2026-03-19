@@ -43,6 +43,8 @@ The current harness is intentionally small:
 - `generate-intent-vocab-summary.py`: roll a look catalog up into an effect/model intent vocabulary with representative samples
 - `generate-intent-gap-report.py`: compare an intent summary against seed coverage targets while preserving extra discovered looks and tags
 - `generate-range-transition-report.py`: detect where a sampled slider range actually changes semantic behavior across ordered anchor values
+- `effect-parameter-registry.json`: formal effect-parameter registry for anchor values, importance, hypotheses, and stop rules
+- `generate-parameter-sweep-manifest.py`: generate registry-driven sweep manifests from a base effect manifest and a registered parameter
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -105,6 +107,14 @@ python3 scripts/sequencer-render-training/normalize-manifest.py \
 python3 scripts/sequencer-render-training/generate-model-geometry-audit.py \
   --show-dir /Users/robterry/Desktop/Show/RenderTraining \
   --out-file scripts/sequencer-render-training/generic-layout-geometry-audit.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-parameter-sweep-manifest.py \
+  --registry scripts/sequencer-render-training/effect-parameter-registry.json \
+  --base-manifest scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json \
+  --parameter numberChases \
+  --out-file /tmp/singlestrand-numberchases.generated.json
 ```
 
 ```bash
@@ -204,6 +214,9 @@ Environment:
   - use raw xLights `DisplayAs` as the base family source
   - use the generated geometry audit to capture structure-changing settings such as spirals, layers, grouping, orientation, and density
   - do not rely on user model names as semantic input
+- Parameter sampling should come from the effect parameter registry where possible:
+  - registry anchors define first-pass sweeps
+  - registry metadata defines expected importance, interaction hypotheses, and stop rules
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - Packed batch mode now performs:
   - `openSequence`
