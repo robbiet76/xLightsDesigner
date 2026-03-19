@@ -32,6 +32,7 @@ The current harness is intentionally small:
 - `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
 - `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, saving and rendering once, then recording per-sample windows against one packed `.fseq`
 - `run-overnight-approved-matrix.sh`: execute the approved first-round overnight matrix sequentially against the debug xLights build and write a master summary
+- `run-registry-plan.sh`: generate registry-driven manifests from a plan file and execute them sequentially against the debug xLights build
 - `build-animation-fixture.py`: derive a short animation-only fixture sequence from an existing `.xsq`
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
@@ -141,6 +142,13 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
 ```bash
 bash scripts/sequencer-render-training/run-overnight-approved-matrix.sh \
   --out-dir /tmp/render-training-overnight
+```
+
+```bash
+bash scripts/sequencer-render-training/run-registry-plan.sh \
+  --plan scripts/sequencer-render-training/registry-planning-phase1.json \
+  --registry scripts/sequencer-render-training/effect-parameter-registry.json \
+  --out-dir /tmp/render-training-registry-run
 ```
 
 ```bash
