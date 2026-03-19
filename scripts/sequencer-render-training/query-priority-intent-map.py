@@ -35,7 +35,32 @@ def score_descriptor(descriptor, required, excluded):
     return score, missing
 
 
-def collect_candidates(intent_map, effect_filter, geometry_filter, required, excluded):
+def score_terms(descriptor_values, required, excluded, weight):
+    values = set(descriptor_values or [])
+    score = 0
+    missing = []
+    for item in required:
+        if item in values:
+            score += weight
+        else:
+            missing.append(item)
+    for item in excluded:
+        if item in values:
+            score -= weight + 1
+    return score, missing
+
+
+def collect_candidates(
+    intent_map,
+    effect_filter,
+    geometry_filter,
+    required,
+    excluded,
+    required_structural,
+    excluded_structural,
+    required_families,
+    excluded_families,
+):
     candidates = []
     for effect_name, effect_payload in intent_map.get("effects", {}).items():
         if effect_filter and effect_name not in effect_filter:
@@ -57,9 +82,28 @@ def collect_candidates(intent_map, effect_filter, geometry_filter, required, exc
                         continue
                     seen.add(key)
                     score, missing = score_descriptor(descriptor, required, excluded)
+                    structural_score, structural_missing = score_terms(
+                        descriptor.get("structuralLabels", []),
+                        required_structural,
+                        excluded_structural,
+                        2,
+                    )
+                    family_score, family_missing = score_terms(
+                        descriptor.get("patternFamilies", []),
+                        required_families,
+                        excluded_families,
+                        3,
+                    )
+                    score += structural_score + family_score
                     if missing:
                         continue
+                    if structural_missing or family_missing:
+                        continue
                     if any(item in descriptor.get("intentTags", []) for item in excluded):
+                        continue
+                    if any(item in descriptor.get("structuralLabels", []) for item in excluded_structural):
+                        continue
+                    if any(item in descriptor.get("patternFamilies", []) for item in excluded_families):
                         continue
                     candidates.append({
                         "score": round(score, 3),
@@ -87,6 +131,10 @@ def main():
     parser.add_argument("--exclude-intent", action="append", default=[])
     parser.add_argument("--effect", action="append", default=[])
     parser.add_argument("--geometry-profile", action="append", default=[])
+    parser.add_argument("--structural-label", action="append", default=[])
+    parser.add_argument("--exclude-structural-label", action="append", default=[])
+    parser.add_argument("--pattern-family", action="append", default=[])
+    parser.add_argument("--exclude-pattern-family", action="append", default=[])
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--out-file")
     args = parser.parse_args()
@@ -96,12 +144,30 @@ def main():
     excluded = normalize_list(args.exclude_intent)
     effect_filter = set(normalize_list(args.effect))
     geometry_filter = set(normalize_list(args.geometry_profile))
+    required_structural = normalize_list(args.structural_label)
+    excluded_structural = normalize_list(args.exclude_structural_label)
+    required_families = normalize_list(args.pattern_family)
+    excluded_families = normalize_list(args.exclude_pattern_family)
 
-    candidates = collect_candidates(payload, effect_filter, geometry_filter, required, excluded)
+    candidates = collect_candidates(
+        payload,
+        effect_filter,
+        geometry_filter,
+        required,
+        excluded,
+        required_structural,
+        excluded_structural,
+        required_families,
+        excluded_families,
+    )
     result = {
         "intentQuery": {
             "required": required,
             "excluded": excluded,
+            "requiredStructuralLabels": required_structural,
+            "excludedStructuralLabels": excluded_structural,
+            "requiredPatternFamilies": required_families,
+            "excludedPatternFamilies": excluded_families,
             "effects": sorted(effect_filter),
             "geometryProfiles": sorted(geometry_filter),
         },

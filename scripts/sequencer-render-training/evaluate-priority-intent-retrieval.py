@@ -31,7 +31,32 @@ def score_descriptor(descriptor, required, excluded):
     return score, missing
 
 
-def collect_candidates(intent_map, effect_filter, geometry_filter, required, excluded):
+def score_terms(descriptor_values, required, excluded, weight):
+    values = set(descriptor_values or [])
+    score = 0
+    missing = []
+    for item in required:
+        if item in values:
+            score += weight
+        else:
+            missing.append(item)
+    for item in excluded:
+        if item in values:
+            score -= weight + 1
+    return score, missing
+
+
+def collect_candidates(
+    intent_map,
+    effect_filter,
+    geometry_filter,
+    required,
+    excluded,
+    required_structural,
+    excluded_structural,
+    required_families,
+    excluded_families,
+):
     candidates = []
     for effect_name, effect_payload in intent_map.get("effects", {}).items():
         if effect_filter and effect_name not in effect_filter:
@@ -53,9 +78,28 @@ def collect_candidates(intent_map, effect_filter, geometry_filter, required, exc
                         continue
                     seen.add(key)
                     score, missing = score_descriptor(descriptor, required, excluded)
+                    structural_score, structural_missing = score_terms(
+                        descriptor.get("structuralLabels", []),
+                        required_structural,
+                        excluded_structural,
+                        2,
+                    )
+                    family_score, family_missing = score_terms(
+                        descriptor.get("patternFamilies", []),
+                        required_families,
+                        excluded_families,
+                        3,
+                    )
+                    score += structural_score + family_score
                     if missing:
                         continue
+                    if structural_missing or family_missing:
+                        continue
                     if any(item in descriptor.get("intentTags", []) for item in excluded):
+                        continue
+                    if any(item in descriptor.get("structuralLabels", []) for item in excluded_structural):
+                        continue
+                    if any(item in descriptor.get("patternFamilies", []) for item in excluded_families):
                         continue
                     candidates.append({
                         "score": round(score, 3),
@@ -107,10 +151,24 @@ def matches_expectation(candidate: dict, expected: dict) -> bool:
 def evaluate_case(intent_map: dict, case: dict) -> dict:
     required = case.get('requiredIntents', [])
     excluded = case.get('excludedIntents', [])
+    required_structural = case.get('requiredStructuralLabels', [])
+    excluded_structural = case.get('excludedStructuralLabels', [])
+    required_families = case.get('requiredPatternFamilies', [])
+    excluded_families = case.get('excludedPatternFamilies', [])
     effect_filter = set(case.get('effects', []))
     geometry_filter = set(case.get('geometryProfiles', []))
     limit = case.get('limit', 5)
-    candidates = collect_candidates(intent_map, effect_filter, geometry_filter, required, excluded)
+    candidates = collect_candidates(
+        intent_map,
+        effect_filter,
+        geometry_filter,
+        required,
+        excluded,
+        required_structural,
+        excluded_structural,
+        required_families,
+        excluded_families,
+    )
     top = candidates[:limit]
     expected_top = case.get('expectedTop', {})
     top_match = top[0] if top else None
@@ -121,6 +179,10 @@ def evaluate_case(intent_map: dict, case: dict) -> dict:
         'query': {
             'requiredIntents': required,
             'excludedIntents': excluded,
+            'requiredStructuralLabels': required_structural,
+            'excludedStructuralLabels': excluded_structural,
+            'requiredPatternFamilies': required_families,
+            'excludedPatternFamilies': excluded_families,
             'effects': sorted(effect_filter),
             'geometryProfiles': sorted(geometry_filter),
         },
