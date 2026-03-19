@@ -402,6 +402,14 @@ jq -cn \
               else ["single_shockwave"]
               end
             )
+          + (
+              if (($analysis.patternSignals.shockwaveWidthClass // "") == "wide" and ($analysis.patternSignals.shockwaveEdgeClass // "") == "soft") then ["diffuse_shockwave"]
+              elif (($analysis.patternSignals.shockwaveWidthClass // "") == "thin" and ($analysis.patternSignals.shockwaveEdgeClass // "") == "hard") then ["crisp_shockwave"]
+              elif (($analysis.patternSignals.shockwaveSpanClass // "") == "compact" and ($analysis.patternSignals.shockwaveAccelClass // "") == "decelerating") then ["compact_decelerating_shockwave"]
+              elif (($analysis.patternSignals.shockwaveSpanClass // "") == "large" and ($analysis.patternSignals.shockwaveAccelClass // "") == "accelerating") then ["surging_shockwave"]
+              else []
+              end
+            )
           + (if ($settings.scale // true) then ["scaled_shockwave"] else [] end)
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)

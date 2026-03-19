@@ -231,6 +231,19 @@ class BaseAnalyzer:
             intents.add("busy")
         return sorted(intents)
 
+    def _shockwave_variant(self, shock: Dict[str, Any]) -> str | None:
+        if shock["centerClass"] != "centered":
+            return None
+        if shock["spanClass"] == "compact" and shock["accelClass"] == "decelerating":
+            return "compact"
+        if shock["widthClass"] == "wide" and shock["edgeClass"] == "soft":
+            return "diffuse"
+        if shock["widthClass"] == "thin" and shock["edgeClass"] == "hard":
+            return "crisp"
+        if shock["spanClass"] == "large" and shock["accelClass"] == "accelerating":
+            return "surging"
+        return None
+
     def _common_intents(self, quality: Dict[str, float]) -> List[str]:
         tags: List[str] = []
         if quality["coverage"] >= 0.85:
@@ -599,10 +612,28 @@ class TreeAnalyzer(BaseAnalyzer):
                 pattern_family = "tree_pinwheel"
         elif inp.effect_name == "Shockwave":
             shock = self._shockwave_signals(settings)
+            variant = self._shockwave_variant(shock)
             if geometry_profile == "tree_360_spiral":
-                pattern_family = "helical_shockwave"
+                if variant == "compact":
+                    pattern_family = "helical_compact_shockwave"
+                elif variant == "diffuse":
+                    pattern_family = "helical_diffuse_shockwave"
+                elif variant == "crisp":
+                    pattern_family = "helical_crisp_shockwave"
+                elif variant == "surging":
+                    pattern_family = "helical_surging_shockwave"
+                else:
+                    pattern_family = "helical_shockwave"
             elif shock["centerClass"] != "centered":
                 pattern_family = "offcenter_shockwave"
+            elif variant == "compact":
+                pattern_family = "compact_shockwave_ring"
+            elif variant == "diffuse":
+                pattern_family = "diffuse_shockwave"
+            elif variant == "crisp":
+                pattern_family = "crisp_shockwave"
+            elif variant == "surging":
+                pattern_family = "surging_shockwave"
             elif shock["spanClass"] == "large":
                 pattern_family = "expanding_shockwave"
             else:
@@ -722,7 +753,19 @@ class StarAnalyzer(BaseAnalyzer):
             pattern_family = "radial_pinwheel"
         elif inp.effect_name == "Shockwave":
             shock = self._shockwave_signals(inp.effect_settings)
-            pattern_family = "radial_shockwave" if shock["centerClass"] == "centered" else "offcenter_radial_shockwave"
+            variant = self._shockwave_variant(shock)
+            if shock["centerClass"] != "centered":
+                pattern_family = "offcenter_radial_shockwave"
+            elif variant == "compact":
+                pattern_family = "radial_compact_shockwave"
+            elif variant == "diffuse":
+                pattern_family = "radial_diffuse_shockwave"
+            elif variant == "crisp":
+                pattern_family = "radial_crisp_shockwave"
+            elif variant == "surging":
+                pattern_family = "radial_surging_shockwave"
+            else:
+                pattern_family = "radial_shockwave"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -798,7 +841,19 @@ class RadialAnalyzer(BaseAnalyzer):
             pattern_family = "radial_pinwheel"
         elif inp.effect_name == "Shockwave":
             shock = self._shockwave_signals(inp.effect_settings)
-            pattern_family = "radial_shockwave" if shock["centerClass"] == "centered" else "offcenter_radial_shockwave"
+            variant = self._shockwave_variant(shock)
+            if shock["centerClass"] != "centered":
+                pattern_family = "offcenter_radial_shockwave"
+            elif variant == "compact":
+                pattern_family = "radial_compact_shockwave"
+            elif variant == "diffuse":
+                pattern_family = "radial_diffuse_shockwave"
+            elif variant == "crisp":
+                pattern_family = "radial_crisp_shockwave"
+            elif variant == "surging":
+                pattern_family = "radial_surging_shockwave"
+            else:
+                pattern_family = "radial_shockwave"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 

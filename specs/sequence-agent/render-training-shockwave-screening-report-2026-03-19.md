@@ -78,12 +78,19 @@ Interaction-set result:
   - `patternSignals`
   - observation labels
 - but several paired cases still share the same:
-  - `patternFamily`
   - high-level intent bucket
+- after the semantic refinement pass, the interaction set now exposes distinct semantic families such as:
+  - `diffuse_shockwave`
+  - `crisp_shockwave`
+  - `compact_shockwave_ring`
+  - `helical_diffuse_shockwave`
+  - `helical_crisp_shockwave`
+  - `radial_diffuse_shockwave`
+  - `radial_crisp_shockwave`
 - example:
-  - wide soft centered ring
-  - thin hard centered ring
-  are distinguished structurally, but not yet by a richer semantic layer
+  - wide soft centered round-tree ring now maps to `diffuse_shockwave`
+  - thin hard centered round-tree ring now maps to `crisp_shockwave`
+  - compact decelerating ring now maps to `compact_shockwave_ring`
 
 What is not mature enough yet:
 - intent semantics are still too coarse for promotion into the selector stack
@@ -91,7 +98,7 @@ What is not mature enough yet:
   - `busy`
   - `restrained`
   are still too broad for useful effect routing
-- interaction cases are distinguishable in structural signals, but not yet richly separated in semantic intent space
+- interaction cases are now semantically separated at the pattern-family layer, but not yet validated through a retrieval/evaluator layer
 - `Shockwave` should stay out of:
   - the controlled designer vocabulary layer
   - the structural effect selector
@@ -113,6 +120,6 @@ Recommended next work on `Shockwave`:
 Current maturity recommendation:
 - `execution_ready`: yes
 - `structurally_observable`: yes
-- `structurally_retrievable`: not yet
+- `structurally_retrievable`: candidate after dedicated retrieval evaluation
 - `selector_ready`: no
 - `designer_language_candidate`: no
