@@ -1,0 +1,116 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "bars-singlelinehorizontal-expanded-sweep-v1",
+  "description": "Expanded Bars sweep on the canonical horizontal single-line model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "SingleLineHorizontal",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Bars sweep on the canonical horizontal single-line model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "bars-singlelinehorizontal-up-basic-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 6,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "single_bar"
+      ]
+    },
+    {
+      "sampleId": "bars-singlelinehorizontal-left-striped-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "Left",
+        "barCount": 3,
+        "cycles": 8,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "striped_motion"
+      ]
+    },
+    {
+      "sampleId": "bars-singlelinehorizontal-expand-gradient-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "expand",
+        "barCount": 2,
+        "cycles": 5,
+        "center": 0,
+        "highlight": false,
+        "gradient": true,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "expanding_bars",
+        "soft_gradient"
+      ]
+    },
+    {
+      "sampleId": "bars-singlelinehorizontal-right-highlight-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "Right",
+        "barCount": 4,
+        "cycles": 10,
+        "center": 0,
+        "highlight": true,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "highlighted_edges"
+      ]
+    },
+    {
+      "sampleId": "bars-singlelinehorizontal-compress-3d-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "compress",
+        "barCount": 2,
+        "cycles": 7,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "compressing_bars",
+        "depth_shading"
+      ]
+    }
+  ]
+}

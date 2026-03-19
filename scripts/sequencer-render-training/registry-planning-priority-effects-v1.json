@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "description": "First registry-driven validation set for higher-value priority effects Bars and Spirals on canonical geometry profiles.",
+  "plans": [
+    {
+      "planId": "bars-single-line-horizontal",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-singlelinehorizontal-expanded-sweep-v1.json",
+      "geometryProfile": "single_line_horizontal",
+      "parameters": [
+        "direction",
+        "barCount",
+        "cycles"
+      ]
+    },
+    {
+      "planId": "bars-arch-single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-archsingle-expanded-sweep-v1.json",
+      "geometryProfile": "arch_single",
+      "parameters": [
+        "direction",
+        "barCount",
+        "cycles"
+      ]
+    },
+    {
+      "planId": "bars-tree-round",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-treeround-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_round",
+      "parameters": [
+        "direction",
+        "barCount",
+        "cycles"
+      ]
+    },
+    {
+      "planId": "spirals-tree-round",
+      "baseManifest": "scripts/sequencer-render-training/manifests/spirals-treeround-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_round",
+      "parameters": [
+        "count",
+        "movement",
+        "rotation",
+        "thickness"
+      ]
+    },
+    {
+      "planId": "spirals-tree-spiral",
+      "baseManifest": "scripts/sequencer-render-training/manifests/spirals-treespiral-expanded-sweep-v1.json",
+      "geometryProfile": "tree_360_spiral",
+      "parameters": [
+        "count",
+        "movement",
+        "rotation",
+        "thickness"
+      ]
+    }
+  ]
+}

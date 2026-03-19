@@ -319,6 +319,50 @@ color_wash_effect_settings_json() {
     '
 }
 
+bars_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_SLIDER_Bars_BarCount: (($eff.barCount // 1) | tostring),
+        E_TEXTCTRL_Bars_Cycles: (($eff.cycles // 10) | tostring),
+        E_TEXTCTRL_Bars_Center: (($eff.center // 0) | tostring),
+        E_CHOICE_Bars_Direction: ($eff.direction // "up")
+      }
+      + (if ($eff.highlight // false) then {E_CHECKBOX_Bars_Highlight: "1"} else {} end)
+      + (if ($eff.useFirstColorForHighlight // false) then {E_CHECKBOX_Bars_UseFirstColorForHighlight: "1"} else {} end)
+      + (if ($eff["3D"] // false) then {E_CHECKBOX_Bars_3D: "1"} else {} end)
+      + (if ($eff.gradient // false) then {E_CHECKBOX_Bars_Gradient: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
+spirals_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_SLIDER_Spirals_Count: (($eff.count // 1) | tostring),
+        E_TEXTCTRL_Spirals_Movement: (($eff.movement // 10) | tostring),
+        E_SLIDER_Spirals_Rotation: (($eff.rotation // 20) | tostring),
+        E_SLIDER_Spirals_Thickness: (($eff.thickness // 50) | tostring)
+      }
+      + (if ($eff.blend // false) then {E_CHECKBOX_Spirals_Blend: "1"} else {} end)
+      + (if ($eff["3D"] // false) then {E_CHECKBOX_Spirals_3D: "1"} else {} end)
+      + (if ($eff.grow // false) then {E_CHECKBOX_Spirals_Grow: "1"} else {} end)
+      + (if ($eff.shrink // false) then {E_CHECKBOX_Spirals_Shrink: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -336,6 +380,12 @@ settings_json_for_effect() {
       ;;
     "Color Wash")
       color_wash_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Bars")
+      bars_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Spirals")
+      spirals_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
       echo "Unsupported effect in initial harness: ${effect_name}" >&2

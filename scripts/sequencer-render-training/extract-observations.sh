@@ -222,6 +222,69 @@ jq -cn \
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
           + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
+      elif $effect == "Bars" then
+        unique_labels(
+          $labelHints
+          + ["effect:bars", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["bar_pattern"]
+          + (
+              if (($settings.direction // "") | ascii_downcase) == "left" then ["left_motion"]
+              elif (($settings.direction // "") | ascii_downcase) == "right" then ["right_motion"]
+              elif (($settings.direction // "") | ascii_downcase) == "expand" then ["expand_motion"]
+              elif (($settings.direction // "") | ascii_downcase) == "compress" then ["compress_motion"]
+              else []
+              end
+            )
+          + (
+              if $modelType == "arch" then ["arch_pattern_fit"]
+              elif $modelType == "single_line" then ["linear_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              else []
+              end
+            )
+          + (
+              if (($settings.barCount // 1) >= 4) then ["dense_bars"]
+              elif (($settings.barCount // 1) >= 2) then ["multi_bar"]
+              else ["single_bar"]
+              end
+            )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
+        )
+      elif $effect == "Spirals" then
+        unique_labels(
+          $labelHints
+          + ["effect:spirals", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["spiral_pattern"]
+          + (
+              if (($settings.movement // 0) < 0) then ["reverse_motion"]
+              elif (($settings.movement // 0) > 0) then ["forward_motion"]
+              else ["static_spiral"]
+              end
+            )
+          + (
+              if (($settings.rotation // 0) < 0) then ["reverse_rotation"]
+              elif (($settings.rotation // 0) > 0) then ["forward_rotation"]
+              else ["neutral_rotation"]
+              end
+            )
+          + (
+              if $modelType == "star" then ["star_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              else []
+              end
+            )
+          + (
+              if (($settings.count // 1) >= 3) then ["dense_spirals"]
+              elif (($settings.count // 1) >= 2) then ["multi_spiral"]
+              else ["single_spiral"]
+              end
+            )
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
+        )
       else
         unique_labels(
           $labelHints
@@ -339,6 +402,50 @@ jq -cn \
             (if ($modelType == "matrix") then 0.9
              elif ($modelType == "outline" or $modelType == "single_line") then 0.82
              else 0.74 end)
+        }
+      elif $effect == "Bars" then
+        {
+          readability:
+            (
+              (if (($settings.barCount // 1) >= 4) then 0.72 else 0.84 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if (($settings.gradient // false) or ($settings["3D"] // false)) then 0.64
+             elif (($settings.barCount // 1) >= 4) then 0.52
+             else 0.74 end),
+          patternClarity:
+            (
+              (if (($settings.direction // "") | ascii_downcase | test("expand|compress")) then 0.82 else 0.86 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "single_line" or $modelType == "arch") then 0.9
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.84
+             elif $modelType == "matrix" then 0.78
+             else 0.72 end)
+        }
+      elif $effect == "Spirals" then
+        {
+          readability:
+            (
+              (if (($settings.count // 1) >= 3) then 0.72 else 0.82 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if (($settings.blend // false) or ($settings["3D"] // false)) then 0.56
+             elif (($settings.thickness // 50) >= 70) then 0.5
+             else 0.72 end),
+          patternClarity:
+            (
+              (if (($settings.count // 1) >= 3 and ($settings.thickness // 50) >= 60) then 0.72 else 0.84 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "tree_flat" or $modelType == "tree_360") then 0.92
+             elif $modelType == "star" then 0.86
+             elif $modelType == "spinner" then 0.88
+             else 0.68 end)
         }
       else
         {
