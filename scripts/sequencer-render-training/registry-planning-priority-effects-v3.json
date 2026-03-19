@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "description": "Priority effect expansion v3 focused on broader standard-model coverage for structurally mature effects.",
+  "plans": [
+    {
+      "planId": "bars-single-line-vertical",
+      "effect": "Bars",
+      "geometryProfile": "single_line_vertical",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-singlelinevertical-expanded-sweep-v1.json",
+      "parameters": ["direction", "barCount", "cycles"]
+    },
+    {
+      "planId": "bars-tree-flat",
+      "effect": "Bars",
+      "geometryProfile": "tree_flat_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-treeflat-expanded-sweep-v1.json",
+      "parameters": ["direction", "barCount", "cycles"]
+    },
+    {
+      "planId": "marquee-single-line-vertical",
+      "effect": "Marquee",
+      "geometryProfile": "single_line_vertical",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-singlelinevertical-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "reverse"]
+    },
+    {
+      "planId": "marquee-tree-flat",
+      "effect": "Marquee",
+      "geometryProfile": "tree_flat_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/marquee-treeflat-expanded-sweep-v1.json",
+      "parameters": ["bandSize", "skipSize", "reverse"]
+    },
+    {
+      "planId": "pinwheel-star-multi-layer",
+      "effect": "Pinwheel",
+      "geometryProfile": "star_multi_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-startriplelayer-expanded-sweep-v1.json",
+      "parameters": ["arms", "thickness", "rotation", "3DMode"]
+    },
+    {
+      "planId": "spirals-tree-flat",
+      "effect": "Spirals",
+      "geometryProfile": "tree_flat_single_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/spirals-treeflat-expanded-sweep-v1.json",
+      "parameters": ["count", "movement", "rotation", "thickness"]
+    }
+  ]
+}

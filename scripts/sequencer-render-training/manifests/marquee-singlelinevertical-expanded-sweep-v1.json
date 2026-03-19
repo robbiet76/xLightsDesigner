@@ -1,0 +1,116 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "marquee-singlelinevertical-expanded-sweep-v1",
+  "description": "Expanded Marquee sweep on the canonical vertical single-line model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "SingleLineVertical",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Marquee sweep on the canonical vertical single-line model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "marquee-singlelinevertical-expanded-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 0,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "marquee_motion",
+        "tight_marquee"
+      ]
+    },
+    {
+      "sampleId": "marquee-singlelinevertical-expanded-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 4,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "marquee_motion",
+        "segmented_marquee"
+      ]
+    },
+    {
+      "sampleId": "marquee-singlelinevertical-expanded-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 7,
+        "skipSize": 1,
+        "thickness": 4,
+        "stagger": 0,
+        "speed": 5,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "marquee_motion",
+        "wide_marquee"
+      ]
+    },
+    {
+      "sampleId": "marquee-singlelinevertical-expanded-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 2,
+        "thickness": 2,
+        "stagger": 0,
+        "speed": 7,
+        "start": 0,
+        "reverse": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "marquee_motion",
+        "reverse_motion"
+      ]
+    },
+    {
+      "sampleId": "marquee-singlelinevertical-expanded-v1",
+      "effectName": "Marquee",
+      "effectSettings": {
+        "bandSize": 3,
+        "skipSize": 2,
+        "thickness": 2,
+        "stagger": 4,
+        "speed": 7,
+        "start": 0,
+        "reverse": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "marquee_motion",
+        "staggered_motion"
+      ]
+    }
+  ]
+}

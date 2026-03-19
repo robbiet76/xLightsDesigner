@@ -1,0 +1,121 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "spirals-treeflat-expanded-sweep-v1",
+  "description": "Expanded Spirals sweep on the canonical flat tree model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeFlat",
+    "modelType": "tree_flat",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Spirals sweep on the canonical flat tree model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "spirals-treeflat-expanded-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 1,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 50,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "spiral_motion",
+        "round_tree_pattern"
+      ]
+    },
+    {
+      "sampleId": "spirals-treeflat-expanded-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 3,
+        "movement": 14,
+        "rotation": 30,
+        "thickness": 35,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "spiral_motion",
+        "dense_spirals"
+      ]
+    },
+    {
+      "sampleId": "spirals-treeflat-expanded-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 2,
+        "movement": -10,
+        "rotation": -20,
+        "thickness": 50,
+        "blend": false,
+        "3D": false,
+        "grow": false,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "spiral_motion",
+        "reverse_rotation"
+      ]
+    },
+    {
+      "sampleId": "spirals-treeflat-expanded-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 2,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 60,
+        "blend": true,
+        "3D": false,
+        "grow": false,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "spiral_motion",
+        "blended_texture"
+      ]
+    },
+    {
+      "sampleId": "spirals-treeflat-expanded-grow-v1",
+      "effectName": "Spirals",
+      "effectSettings": {
+        "count": 2,
+        "movement": 10,
+        "rotation": 20,
+        "thickness": 70,
+        "blend": false,
+        "3D": true,
+        "grow": true,
+        "shrink": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "spiral_motion",
+        "depth_shading"
+      ]
+    }
+  ]
+}
