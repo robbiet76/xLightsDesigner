@@ -16,6 +16,16 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def effect_policy(registry: dict, effect: str) -> dict:
+    effect_registry = registry["effects"].get(effect, {})
+    return {
+        "complexityClass": effect_registry.get("complexityClass", "moderate"),
+        "earlySamplingPolicy": effect_registry.get("earlySamplingPolicy", "standard_screening"),
+        "benchmarkGeometryFamilies": effect_registry.get("benchmarkGeometryFamilies", []),
+        "benchmarkRole": effect_registry.get("benchmarkRole"),
+    }
+
+
 def build_value_token(value) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
@@ -116,17 +126,64 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     results = []
+    plan_effects = {}
     for item in plan.get("plans", []):
         base_manifest_path = Path(item["baseManifest"])
         base_manifest = json.loads(base_manifest_path.read_text())
         plan_id = item["planId"]
         geometry_profile = item.get("geometryProfile")
+        effect = item["effect"]
+        policy = effect_policy(registry, effect)
+        effect_bucket = plan_effects.setdefault(
+            effect,
+            {
+                "effect": effect,
+                "complexityClass": policy["complexityClass"],
+                "earlySamplingPolicy": policy["earlySamplingPolicy"],
+                "benchmarkGeometryFamilies": policy["benchmarkGeometryFamilies"],
+                "benchmarkRole": policy["benchmarkRole"],
+                "geometryProfiles": set(),
+                "parameters": set(),
+            },
+        )
+        if geometry_profile:
+            effect_bucket["geometryProfiles"].add(geometry_profile)
         for parameter in item.get("parameters", []):
             out_file = out_dir / f"{plan_id}.{parameter}.json"
             result = generate_manifest(registry, base_manifest, parameter, out_file)
             result["planId"] = plan_id
             result["geometryProfile"] = geometry_profile
+            result["complexityClass"] = policy["complexityClass"]
+            result["earlySamplingPolicy"] = policy["earlySamplingPolicy"]
             results.append(result)
+            effect_bucket["parameters"].add(parameter)
+
+    effect_summaries = []
+    warnings = []
+    for effect_name, payload in sorted(plan_effects.items()):
+        geometry_profiles = sorted(payload["geometryProfiles"])
+        parameters = sorted(payload["parameters"])
+        effect_summary = {
+            "effect": effect_name,
+            "complexityClass": payload["complexityClass"],
+            "earlySamplingPolicy": payload["earlySamplingPolicy"],
+            "benchmarkGeometryFamilies": payload["benchmarkGeometryFamilies"],
+            "benchmarkRole": payload["benchmarkRole"],
+            "geometryProfiles": geometry_profiles,
+            "geometryCount": len(geometry_profiles),
+            "parameterCount": len(parameters),
+            "parameters": parameters,
+        }
+        if payload["complexityClass"] == "complex" and len(geometry_profiles) < 2:
+            warnings.append(
+                {
+                    "effect": effect_name,
+                    "severity": "warning",
+                    "kind": "complex_effect_undercovered",
+                    "message": f"Complex effect {effect_name} has only {len(geometry_profiles)} geometry profile in this plan.",
+                }
+            )
+        effect_summaries.append(effect_summary)
 
     if args.summary_out:
         Path(args.summary_out).write_text(
@@ -135,6 +192,8 @@ def main() -> int:
                     "planVersion": plan.get("version", "1.0"),
                     "description": plan.get("description", ""),
                     "manifestCount": len(results),
+                    "effectSummaries": effect_summaries,
+                    "warnings": warnings,
                     "results": results,
                 },
                 indent=2,

@@ -59,6 +59,11 @@ python3 "${SCRIPT_DIR}/generate-registry-plan-manifests.py" \
   --out-dir "${GENERATED_DIR}" \
   --summary-out "${GENERATED_SUMMARY}"
 
+while IFS= read -r warning; do
+  [[ -n "${warning}" ]] || continue
+  log "plan-warning ${warning}"
+done < <(jq -r '.warnings[]?.message' "${GENERATED_SUMMARY}")
+
 results='[]'
 
 while IFS= read -r row; do
