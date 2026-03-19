@@ -5,6 +5,7 @@ Runs:
 - `/tmp/render-training-shockwave-v2`
 - `/tmp/shockwave-interactions-v1`
 - `/tmp/shockwave-interactions-v2`
+- `/tmp/priority-effect-selection-eval.v7.json`
 
 Machine-readable summary:
 - [/tmp/render-training-shockwave-summary.v3.json](/tmp/render-training-shockwave-summary.v3.json)
@@ -18,6 +19,9 @@ Result:
 - dedicated retrieval eval:
   - `/tmp/shockwave-intent-eval.v3.json`
   - `4/4` passed
+- selector eval in the current merged selector set:
+  - `/tmp/priority-effect-selection-eval.v7.json`
+  - `3` Shockwave-selected cases passed
 
 Scope:
 - geometries:
@@ -103,16 +107,9 @@ Interaction-set result:
   - compact decelerating ring now maps to `compact_shockwave_ring`
 
 What is not mature enough yet:
-- intent semantics are still too coarse for promotion into the selector stack
-- labels such as:
-  - `busy`
-  - `restrained`
-  are still too broad for useful effect routing
-- interaction cases are now semantically separated at the pattern-family layer and validated through a dedicated retrieval evaluator
-- `Shockwave` should stay out of:
-  - the controlled designer vocabulary layer
-  - the structural effect selector
-  until the semantic layer is sharper
+- broader designer language remains too coarse for promotion
+- selector support is now justified only for the current merged selector set
+- this does not yet imply global effect routing across all effects
 
 Recommended next work on `Shockwave`:
 1. strengthen geometry-aware semantics:
@@ -125,11 +122,11 @@ Recommended next work on `Shockwave`:
    - width + blendEdges
    - radius span + acceleration
    - center placement + geometry
-3. only then consider selector or vocabulary promotion
+3. broaden calibration before claiming wider selector coverage or controlled-vocabulary readiness
 
 Current maturity recommendation:
 - `execution_ready`: yes
 - `structurally_observable`: yes
 - `structurally_retrievable`: yes
-- `selector_ready`: no
+- `selector_ready`: yes, for the current merged selector set
 - `designer_language_candidate`: no

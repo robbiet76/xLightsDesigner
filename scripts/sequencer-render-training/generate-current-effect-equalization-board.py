@@ -126,12 +126,12 @@ def main():
     rows.append(
         make_effect_row(
             effect="Shockwave",
-            stage="structurally_retrievable",
+            stage="selector_ready" if selection_counts.get("Shockwave", {}).get("selectedCaseCount", 0) >= 2 else "structurally_retrievable",
             stages={
                 "execution_ready": True,
                 "structurally_observable": True,
                 "structurally_retrievable": shockwave_retrieval_eval["passedCount"] == shockwave_retrieval_eval["caseCount"],
-                "selector_ready": False,
+                "selector_ready": selection_counts.get("Shockwave", {}).get("selectedCaseCount", 0) >= 2,
                 "designer_language_candidate": False,
                 "layered_effect_ready": False,
             },

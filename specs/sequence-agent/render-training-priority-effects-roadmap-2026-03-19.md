@@ -131,9 +131,9 @@ Current Stage 1 state:
   - `spinner_standard`
 - early result:
   - structurally observable
-  - not yet structurally retrievable
-  - not ready for selector promotion
-- next work should deepen `Shockwave` semantics before it is added to the controlled vocabulary or selector layers
+  - structurally retrievable for constrained Shockwave requests
+  - selector-ready for the current merged selector set
+- next work should broaden calibration before it is added to wider selector coverage or the controlled-vocabulary layer
 
 ### Twinkle
 - `style`
