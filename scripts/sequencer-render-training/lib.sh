@@ -162,6 +162,23 @@ get_fseq_directory() {
   json_get_string_field "${body}" "folder"
 }
 
+resolve_show_dir_for_sequence() {
+  local xsq_path="$1"
+  local probe
+  probe="$(cd "$(dirname "${xsq_path}")" && pwd)"
+
+  while [[ "${probe}" != "/" ]]; do
+    if [[ -f "${probe}/xlights_networks.xml" && -f "${probe}/xlights_rgbeffects.xml" ]]; then
+      printf '%s\n' "${probe}"
+      return 0
+    fi
+    probe="$(dirname "${probe}")"
+  done
+
+  echo "Unable to resolve show directory for sequence: ${xsq_path}" >&2
+  return 1
+}
+
 resolve_fseq_path_for_sequence() {
   local xsq_path="$1"
   local show_folder fseq_dir xsq_dir xsq_base

@@ -1,0 +1,121 @@
+{
+  "layoutName": "RenderTraining",
+  "showDir": "/Users/robterry/Desktop/Show/RenderTraining",
+  "fixtureSequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+  "canonicalModels": {
+    "single_line_horizontal": {
+      "modelName": "SingleLineHorizontal",
+      "modelType": "single_line",
+      "analyzerFamily": "linear",
+      "notes": "Primary linear baseline for directional and segmented motion."
+    },
+    "single_line_vertical": {
+      "modelName": "SingleLineVertical",
+      "modelType": "single_line",
+      "analyzerFamily": "linear",
+      "notes": "Vertical linear baseline for orientation-sensitive effects."
+    },
+    "single_line_single_node": {
+      "modelName": "SingleLineSingleNode",
+      "modelType": "single_line",
+      "analyzerFamily": "linear",
+      "notes": "Degenerate single-node control prop."
+    },
+    "arch_single": {
+      "modelName": "ArchSingle",
+      "modelType": "arch",
+      "analyzerFamily": "linear",
+      "notes": "Single arch baseline. Analyzer support to be added."
+    },
+    "arch_triple_layer": {
+      "modelName": "ArchTripleLayer",
+      "modelType": "arch",
+      "analyzerFamily": "linear",
+      "notes": "Layered arch variant."
+    },
+    "arch_group": {
+      "modelName": "ArchGroup",
+      "modelType": "arch",
+      "analyzerFamily": "linear",
+      "notes": "Grouped arch variant."
+    },
+    "tree_flat": {
+      "modelName": "TreeFlat",
+      "modelType": "tree_flat",
+      "analyzerFamily": "tree",
+      "notes": "Flat tree baseline."
+    },
+    "tree_round": {
+      "modelName": "TreeRound",
+      "modelType": "tree_360",
+      "analyzerFamily": "tree",
+      "notes": "Compact round tree baseline."
+    },
+    "tree_spiral": {
+      "modelName": "TreeSpiral",
+      "modelType": "tree_360",
+      "analyzerFamily": "tree",
+      "notes": "Higher-density spiral tree."
+    },
+    "star_single": {
+      "modelName": "StarSingle",
+      "modelType": "star",
+      "analyzerFamily": "star",
+      "notes": "Single-layer star baseline."
+    },
+    "star_triple_layer": {
+      "modelName": "StarTripleLayer",
+      "modelType": "star",
+      "analyzerFamily": "star",
+      "notes": "Layered star variant."
+    },
+    "icicles": {
+      "modelName": "Icicles",
+      "modelType": "icicles",
+      "analyzerFamily": "linear",
+      "notes": "Icicle curtain model. Analyzer support to be added."
+    },
+    "spinner": {
+      "modelName": "Spinner",
+      "modelType": "spinner",
+      "analyzerFamily": "radial",
+      "notes": "Spinner/radial prop. Analyzer support to be added."
+    },
+    "cane_single": {
+      "modelName": "CaneSingle",
+      "modelType": "cane",
+      "analyzerFamily": "linear",
+      "notes": "Single cane baseline."
+    },
+    "cane_group": {
+      "modelName": "CaneGroup",
+      "modelType": "cane",
+      "analyzerFamily": "linear",
+      "notes": "Grouped cane variant."
+    },
+    "cane_stick_group": {
+      "modelName": "CaneStickGroup",
+      "modelType": "cane",
+      "analyzerFamily": "linear",
+      "notes": "Stick-segment cane variant."
+    },
+    "matrix_low_density": {
+      "modelName": "MatrixLowDensity",
+      "modelType": "matrix",
+      "analyzerFamily": "matrix",
+      "notes": "Lightweight matrix baseline."
+    },
+    "matrix_med_density": {
+      "modelName": "MatrixMedDensity",
+      "modelType": "matrix",
+      "analyzerFamily": "matrix",
+      "notes": "Mid-density matrix variant."
+    },
+    "matrix_high_density": {
+      "modelName": "MatrixHighDensity",
+      "modelType": "matrix",
+      "analyzerFamily": "matrix",
+      "notes": "High-density matrix stress case."
+    }
+  }
+}
