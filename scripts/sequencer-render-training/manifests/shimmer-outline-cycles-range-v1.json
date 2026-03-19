@@ -22,13 +22,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cycles_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "shimmer_cycles", "cycles_0_5"]
+      "labelHints": [
+        "range_sample",
+        "shimmer_cycles",
+        "cycles_0_5"
+      ]
     },
     {
       "sampleId": "shimmer-outline-cycles-1_0-v1",
@@ -40,13 +45,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cycles_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "shimmer_cycles", "cycles_1_0"]
+      "labelHints": [
+        "range_sample",
+        "shimmer_cycles",
+        "cycles_1_0"
+      ]
     },
     {
       "sampleId": "shimmer-outline-cycles-2_0-v1",
@@ -58,13 +68,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cycles_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "shimmer_cycles", "cycles_2_0"]
+      "labelHints": [
+        "range_sample",
+        "shimmer_cycles",
+        "cycles_2_0"
+      ]
     },
     {
       "sampleId": "shimmer-outline-cycles-3_0-v1",
@@ -76,13 +91,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cycles_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "shimmer_cycles", "cycles_3_0"]
+      "labelHints": [
+        "range_sample",
+        "shimmer_cycles",
+        "cycles_3_0"
+      ]
     },
     {
       "sampleId": "shimmer-outline-cycles-4_0-v1",
@@ -94,13 +114,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cycles_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "shimmer_cycles", "cycles_4_0"]
+      "labelHints": [
+        "range_sample",
+        "shimmer_cycles",
+        "cycles_4_0"
+      ]
     },
     {
       "sampleId": "shimmer-outline-cycles-5_0-v1",
@@ -112,13 +137,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cycles_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "shimmer_cycles", "cycles_5_0"]
+      "labelHints": [
+        "range_sample",
+        "shimmer_cycles",
+        "cycles_5_0"
+      ]
     }
   ]
 }

@@ -17,9 +17,11 @@
       "effectName": "On",
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "white_hold",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "effectSettings": {
@@ -43,9 +45,11 @@
       "effectName": "On",
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_hold",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "effectSettings": {
@@ -69,10 +73,11 @@
       "effectName": "On",
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "cool_hold",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#DDF4FF",
-          "C_BUTTON_Palette2": "#FFFFFF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "effectSettings": {

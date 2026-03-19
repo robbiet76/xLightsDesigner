@@ -24,14 +24,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_intensity_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD27A",
-          "C_BUTTON_Palette3": "#FF8A42"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "fx_intensity", "intensity_40"]
+      "labelHints": [
+        "range_sample",
+        "fx_intensity",
+        "intensity_40"
+      ]
     },
     {
       "sampleId": "single-strand-linear-fx-intensity-80-v1",
@@ -45,14 +49,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_intensity_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD27A",
-          "C_BUTTON_Palette3": "#FF8A42"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "fx_intensity", "intensity_80"]
+      "labelHints": [
+        "range_sample",
+        "fx_intensity",
+        "intensity_80"
+      ]
     },
     {
       "sampleId": "single-strand-linear-fx-intensity-120-v1",
@@ -66,14 +74,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_intensity_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD27A",
-          "C_BUTTON_Palette3": "#FF8A42"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "fx_intensity", "intensity_120"]
+      "labelHints": [
+        "range_sample",
+        "fx_intensity",
+        "intensity_120"
+      ]
     },
     {
       "sampleId": "single-strand-linear-fx-intensity-160-v1",
@@ -87,14 +99,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_intensity_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD27A",
-          "C_BUTTON_Palette3": "#FF8A42"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "fx_intensity", "intensity_160"]
+      "labelHints": [
+        "range_sample",
+        "fx_intensity",
+        "intensity_160"
+      ]
     },
     {
       "sampleId": "single-strand-linear-fx-intensity-200-v1",
@@ -108,14 +124,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_intensity_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD27A",
-          "C_BUTTON_Palette3": "#FF8A42"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "fx_intensity", "intensity_200"]
+      "labelHints": [
+        "range_sample",
+        "fx_intensity",
+        "intensity_200"
+      ]
     }
   ]
 }

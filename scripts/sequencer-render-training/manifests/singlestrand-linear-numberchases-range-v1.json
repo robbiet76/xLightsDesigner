@@ -28,13 +28,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "numberchases_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "number_chases", "numberchases_1"]
+      "labelHints": [
+        "range_sample",
+        "number_chases",
+        "numberchases_1"
+      ]
     },
     {
       "sampleId": "single-strand-linear-numberchases-2-v1",
@@ -52,13 +57,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "numberchases_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "number_chases", "numberchases_2"]
+      "labelHints": [
+        "range_sample",
+        "number_chases",
+        "numberchases_2"
+      ]
     },
     {
       "sampleId": "single-strand-linear-numberchases-3-v1",
@@ -76,13 +86,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "numberchases_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "number_chases", "numberchases_3"]
+      "labelHints": [
+        "range_sample",
+        "number_chases",
+        "numberchases_3"
+      ]
     },
     {
       "sampleId": "single-strand-linear-numberchases-4-v1",
@@ -100,13 +115,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "numberchases_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "number_chases", "numberchases_4"]
+      "labelHints": [
+        "range_sample",
+        "number_chases",
+        "numberchases_4"
+      ]
     },
     {
       "sampleId": "single-strand-linear-numberchases-5-v1",
@@ -124,13 +144,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "numberchases_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "number_chases", "numberchases_5"]
+      "labelHints": [
+        "range_sample",
+        "number_chases",
+        "numberchases_5"
+      ]
     }
   ]
 }

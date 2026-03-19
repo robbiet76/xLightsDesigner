@@ -43,6 +43,10 @@ The current harness is intentionally small:
 - `generate-intent-vocab-summary.py`: roll a look catalog up into an effect/model intent vocabulary with representative samples
 - `generate-intent-gap-report.py`: compare an intent summary against seed coverage targets while preserving extra discovered looks and tags
 - `generate-range-transition-report.py`: detect where a sampled slider range actually changes semantic behavior across ordered anchor values
+- `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
+- `normalize-manifest.py`: apply the shared training standard to a manifest before execution
+- `analysis/analyze_decoded_window.py`: dispatch decoded `.fseq` windows through the geometry-family analyzer framework
+- `analysis/framework.py`: generic analyzer registry and family-specific sequence-analysis scaffolding
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -85,6 +89,24 @@ python3 scripts/sequencer-render-training/build-animation-fixture.py \
 bash scripts/sequencer-render-training/run-packed-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-packed-batch
+```
+
+```bash
+python3 scripts/sequencer-render-training/normalize-manifest.py \
+  --manifest scripts/sequencer-render-training/manifests/singlestrand-linear-expanded-sweep-v2.json \
+  --standards scripts/sequencer-render-training/training-standards.json \
+  --out-file /tmp/normalized-manifest.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
+  --decoded-window /tmp/sample.decoded-features.json \
+  --model-metadata /tmp/sample.model-metadata.json \
+  --model-type single_line \
+  --effect-name SingleStrand \
+  --effect-settings '{"mode":"Chase","chaseType":"Left-Right"}' \
+  --shared-settings '{"renderStyle":"Single Line"}' \
+  --out-file /tmp/sample.analysis.json
 ```
 
 ```bash
@@ -164,6 +186,10 @@ Environment:
   - `fseq/` for primary packed `.fseq`
   - `manifests/` for copied manifests
   - `derived/` reserved for future decode outputs
+- Packed batch runs now normalize manifests through `training-standards.json` before execution:
+  - structural palette defaults to `RGB`
+  - structural-test brightness defaults to `100%`
+  - effect-semantic brightness exceptions remain explicit in the manifest/effect settings layer
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - Packed batch mode now performs:
   - `openSequence`
@@ -208,7 +234,10 @@ Environment:
   - many sample windows added into that one open sequence
   - one packed `.fseq` artifact per batch
   - per-sample records keyed to assigned time windows inside that `.fseq`
-  - window decoding is the next step, not GIF slicing
+  - each record now includes:
+    - decoded `.fseq` summary features
+    - geometry-family analysis output
+  - per-frame decode remains the next interpretation upgrade
 - Current duration guidance:
   - static effects like `On`: short windows are fine
 - animated effects like `SingleStrand`: use the 4-second standard by default

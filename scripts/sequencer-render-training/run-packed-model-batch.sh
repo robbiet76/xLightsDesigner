@@ -43,6 +43,14 @@ log_batch() {
   printf '[run-packed-model-batch] %s\n' "$*" >>"${log_path}"
 }
 
+standards_path="${SCRIPT_DIR}/training-standards.json"
+normalized_manifest_path="${OUT_DIR}/manifest.normalized.json"
+python3 "${SCRIPT_DIR}/normalize-manifest.py" \
+  --manifest "${MANIFEST_FILE}" \
+  --standards "${standards_path}" \
+  --out-file "${normalized_manifest_path}"
+MANIFEST_FILE="${normalized_manifest_path}"
+
 fixture_json="$(jq -c '.fixture' "${MANIFEST_FILE}")"
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
 model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
@@ -196,6 +204,7 @@ while IFS= read -r planned_row; do
 
   cp "${batch_features_path}" "${features_path}"
   decoded_features_path="${sample_dir}/${sample_id}.decoded-features.json"
+  analysis_path="${sample_dir}/${sample_id}.analysis.json"
   "${decoder_bin}" \
     --fseq "${batch_artifact_path}" \
     --start-channel "${model_start_channel_zero}" \
@@ -205,10 +214,19 @@ while IFS= read -r planned_row; do
     --node-count "${model_node_count}" \
     --channels-per-node "${model_channels_per_node}" \
     > "${decoded_features_path}"
+  python3 "${SCRIPT_DIR}/analysis/analyze_decoded_window.py" \
+    --decoded-window "${decoded_features_path}" \
+    --model-metadata <(printf '%s' "${model_metadata_json}") \
+    --model-type "${model_type}" \
+    --effect-name "$(jq -r '.effectName' <<<"${sample_json}")" \
+    --effect-settings "$(jq -c '.effectSettings // {}' <<<"${sample_json}")" \
+    --shared-settings "$(jq -c '.sharedSettings // {}' <<<"${sample_json}")" \
+    --out-file "${analysis_path}"
   jq -cn \
     --argjson base "$(cat "${features_path}")" \
     --argjson decoded "$(cat "${decoded_features_path}")" \
-    '$base + $decoded' > "${features_path}"
+    --argjson analysis "$(cat "${analysis_path}")" \
+    '$base + $decoded + {analysis: $analysis}' > "${features_path}"
   observations_json="$(
     bash "${SCRIPT_DIR}/extract-observations.sh" \
       --sample-json "${sample_json}" \
@@ -237,6 +255,7 @@ while IFS= read -r planned_row; do
     --argjson features "$(cat "${features_path}")" \
     --argjson observations "${observations_json}" \
     --argjson modelMetadata "${model_metadata_json}" \
+    --argjson analysis "$(cat "${analysis_path}")" \
     '{
       recordVersion: $version,
       sampleId: $sampleId,
@@ -263,6 +282,7 @@ while IFS= read -r planned_row; do
         windowEndMs: $endMs
       },
       modelMetadata: $modelMetadata,
+      analysis: $analysis,
       observations: $observations,
       features: $features,
       comparisons: []

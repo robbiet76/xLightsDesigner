@@ -22,10 +22,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "phase2_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -44,10 +45,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "phase2_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -66,10 +68,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "phase2_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -88,10 +91,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "phase2_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -110,10 +114,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "phase2_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -132,10 +137,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "phase2_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#DDF4FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [

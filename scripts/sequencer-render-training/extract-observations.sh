@@ -74,6 +74,10 @@ jq -cn \
       // 0) as $repUniqueColors
   | ($fseqTemporalChangeMean // 0) as $temporalChange
   | ($fseqLongestRunRatio // 0) as $longestRunRatio
+  | ($features.analysis // {}) as $analysis
+  | ($analysis.patternFamily // null) as $patternFamily
+  | ($analysis.intentCandidates // []) as $analysisIntents
+  | ($analysis.patternSignals.directionality // null) as $analysisDirection
   | ($shared.renderStyle // "Default") as $renderStyle
   | (
       if $effect == "On" then
@@ -103,6 +107,8 @@ jq -cn \
               end
             )
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
           + (
               if $temporalChange >= 0.12 then ["high_motion_window"]
               elif $temporalChange > 0.02 then ["subtle_motion_window"]
@@ -144,6 +150,9 @@ jq -cn \
               end
             )
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + (if $analysisDirection != null then [("directionality:" + ($analysisDirection | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
           + (
               if $longestRunRatio >= 0.7 then ["long_contiguous_pattern"]
               elif $longestRunRatio >= 0.25 then ["segmented_pattern"]
@@ -178,6 +187,8 @@ jq -cn \
               end
             )
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
       elif $effect == "Color Wash" then
         unique_labels(
@@ -206,11 +217,15 @@ jq -cn \
               end
             )
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
       else
         unique_labels(
           $labelHints
           + [("effect:" + ($effect | ascii_downcase)), ("model:" + $modelType)]
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
       end
     ) as $labels

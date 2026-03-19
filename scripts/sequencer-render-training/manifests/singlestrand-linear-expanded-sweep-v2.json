@@ -28,10 +28,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "two_color_linear",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -55,10 +56,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "two_color_linear",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#00C2FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -82,10 +84,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "dense_dual_linear",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#4AC8FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -106,10 +109,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "skip_pattern",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -130,10 +134,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "wide_skip_pattern",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#00C2FF"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -153,11 +158,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_accent",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD000",
-          "C_BUTTON_Palette3": "#FF5A00"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -177,11 +182,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "fx_soft",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FFD27A",
-          "C_BUTTON_Palette3": "#FF8A42"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [

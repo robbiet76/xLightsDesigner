@@ -25,13 +25,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "advances_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "advances", "advances_08"]
+      "labelHints": [
+        "range_sample",
+        "advances",
+        "advances_08"
+      ]
     },
     {
       "sampleId": "single-strand-linear-advances-16-v1",
@@ -46,13 +51,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "advances_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "advances", "advances_16"]
+      "labelHints": [
+        "range_sample",
+        "advances",
+        "advances_16"
+      ]
     },
     {
       "sampleId": "single-strand-linear-advances-24-v1",
@@ -67,13 +77,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "advances_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "advances", "advances_24"]
+      "labelHints": [
+        "range_sample",
+        "advances",
+        "advances_24"
+      ]
     },
     {
       "sampleId": "single-strand-linear-advances-32-v1",
@@ -88,13 +103,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "advances_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "advances", "advances_32"]
+      "labelHints": [
+        "range_sample",
+        "advances",
+        "advances_32"
+      ]
     },
     {
       "sampleId": "single-strand-linear-advances-40-v1",
@@ -109,13 +129,18 @@
       },
       "sharedSettings": {
         "renderStyle": "Single Line",
-        "paletteProfile": "advances_range",
+        "paletteProfile": "rgb_standard",
         "palette": {
-          "C_BUTTON_Palette1": "#FFFFFF",
-          "C_BUTTON_Palette2": "#FF0000"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
-      "labelHints": ["range_sample", "advances", "advances_40"]
+      "labelHints": [
+        "range_sample",
+        "advances",
+        "advances_40"
+      ]
     }
   ]
 }

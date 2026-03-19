@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "structuralTrainingStandard": {
+    "paletteProfile": "rgb_standard",
+    "palette": {
+      "C_BUTTON_Palette1": "#FF0000",
+      "C_BUTTON_Palette2": "#00FF00",
+      "C_BUTTON_Palette3": "#0000FF"
+    },
+    "brightnessPolicy": {
+      "defaultBrightnessPercent": 100,
+      "useFullBrightnessForStructuralTests": true,
+      "exceptions": [
+        {
+          "effect": "On",
+          "reason": "level transitions are part of the effect semantics and must still be sampled explicitly"
+        }
+      ]
+    },
+    "durationPolicy": {
+      "staticDefaultMs": 1000,
+      "animatedDefaultMs": 4000
+    }
+  },
+  "interpretationFramework": {
+    "primaryArtifact": "fseq",
+    "decodePolicy": {
+      "emitPerFrameState": true,
+      "emitPerNodeBrightness": true,
+      "emitPerNodeRgb": true,
+      "emitWindowSummary": true
+    },
+    "analyzerRegistry": {
+      "linear": ["outline", "single_line", "cane"],
+      "tree": ["tree_flat", "tree_360"],
+      "star": ["star"]
+    }
+  }
+}
