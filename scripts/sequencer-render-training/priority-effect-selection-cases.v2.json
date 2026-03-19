@@ -1,0 +1,77 @@
+{
+  "version": "2.0",
+  "description": "Expanded cross-geometry selector evaluation for structurally mature effects.",
+  "cases": [
+    {
+      "caseId": "select_directional_segmented_clean",
+      "description": "Directional segmented without busy should prefer Bars.",
+      "requiredIntents": ["directional", "segmented"],
+      "excludedIntents": ["busy"],
+      "expectedSelection": "Bars"
+    },
+    {
+      "caseId": "select_clean_fill_steady_competition",
+      "description": "Clean fill steady across Bars and Marquee should prefer Marquee.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "effects": ["Bars", "Marquee"],
+      "expectedSelection": "Marquee"
+    },
+    {
+      "caseId": "select_star_directional_restrained",
+      "description": "Animated directional restrained on star geometry should prefer Pinwheel.",
+      "requiredIntents": ["animated", "directional", "restrained"],
+      "geometryProfiles": ["star_single_layer"],
+      "expectedSelection": "Pinwheel"
+    },
+    {
+      "caseId": "select_helical_clean_fill",
+      "description": "Geometry-coupled clean fill on spiral-tree geometry should prefer Spirals.",
+      "requiredIntents": ["geometry_coupled", "clean", "fill"],
+      "geometryProfiles": ["tree_360_spiral"],
+      "expectedSelection": "Spirals"
+    },
+    {
+      "caseId": "select_round_spiral_rotation",
+      "description": "Directional steady spiral rotation on round trees should prefer Spirals.",
+      "requiredIntents": ["directional", "steady"],
+      "requiredPatternFamilies": ["spiral_rotation"],
+      "geometryProfiles": ["tree_360_round"],
+      "expectedSelection": "Spirals"
+    },
+    {
+      "caseId": "select_wide_clean_motion",
+      "description": "Wide clean directional motion should prefer Marquee.",
+      "requiredIntents": ["clean", "directional"],
+      "requiredPatternFamilies": ["wide_marquee"],
+      "expectedSelection": "Marquee"
+    },
+    {
+      "caseId": "select_arch_compress_motion",
+      "description": "Arch compressing bar motion should prefer Bars.",
+      "requiredPatternFamilies": ["compressing_bars"],
+      "geometryProfiles": ["arch_single"],
+      "expectedSelection": "Bars"
+    },
+    {
+      "caseId": "select_star_dense_pinwheel",
+      "description": "Dense pinwheel structure on star geometry should prefer Pinwheel.",
+      "requiredStructuralLabels": ["dense_pinwheel"],
+      "geometryProfiles": ["star_single_layer"],
+      "expectedSelection": "Pinwheel"
+    },
+    {
+      "caseId": "select_spiral_helical_rotation",
+      "description": "Helical spiral rotation on spiral trees should prefer Spirals.",
+      "requiredPatternFamilies": ["helical_spiral_rotation"],
+      "geometryProfiles": ["tree_360_spiral"],
+      "expectedSelection": "Spirals"
+    },
+    {
+      "caseId": "select_arch_segmented_marquee",
+      "description": "Segmented marquee motion on arches should prefer Marquee.",
+      "requiredPatternFamilies": ["segmented_marquee"],
+      "geometryProfiles": ["arch_single"],
+      "expectedSelection": "Marquee"
+    }
+  ]
+}

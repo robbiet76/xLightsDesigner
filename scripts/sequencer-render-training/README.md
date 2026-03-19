@@ -66,6 +66,7 @@ The current harness is intentionally small:
 - `generate-effect-maturity-report.py`: compute the current maturity stage for each effect from summaries and evaluator outputs
 - `evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
 - `priority-effect-selection-cases.v1.json`: first selector-evaluation case set
+- `priority-effect-selection-cases.v2.json`: expanded selector-evaluation case set with tighter geometry-specific structural cases
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
