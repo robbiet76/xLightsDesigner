@@ -1,0 +1,44 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "bars-archgroup-expanded-sweep-v1",
+  "description": "Expanded Bars sweep on the canonical grouped arch model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Bars sweep on the grouped arch variant using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "bars-archgroup-up-basic-v1",
+      "effectName": "Bars",
+      "effectSettings": {"direction": "up", "barCount": 1, "cycles": 6, "center": 0, "highlight": false, "gradient": false, "3D": false},
+      "sharedSettings": {"renderStyle": "Single Line"},
+      "labelHints": ["bar_motion", "grouped_arch_read"]
+    },
+    {
+      "sampleId": "bars-archgroup-left-striped-v1",
+      "effectName": "Bars",
+      "effectSettings": {"direction": "Left", "barCount": 3, "cycles": 8, "center": 0, "highlight": false, "gradient": false, "3D": false},
+      "sharedSettings": {"renderStyle": "Single Line"},
+      "labelHints": ["bar_motion", "striped_motion"]
+    },
+    {
+      "sampleId": "bars-archgroup-expand-gradient-v1",
+      "effectName": "Bars",
+      "effectSettings": {"direction": "expand", "barCount": 2, "cycles": 5, "center": 0, "highlight": false, "gradient": true, "3D": false},
+      "sharedSettings": {"renderStyle": "Single Line"},
+      "labelHints": ["expanding_bars", "soft_gradient"]
+    },
+    {
+      "sampleId": "bars-archgroup-compress-3d-v1",
+      "effectName": "Bars",
+      "effectSettings": {"direction": "compress", "barCount": 2, "cycles": 7, "center": 0, "highlight": false, "gradient": false, "3D": true},
+      "sharedSettings": {"renderStyle": "Single Line"},
+      "labelHints": ["compressing_bars", "depth_shading"]
+    }
+  ]
+}

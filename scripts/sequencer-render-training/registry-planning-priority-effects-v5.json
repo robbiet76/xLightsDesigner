@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "description": "Priority-effect gap fill v5 for Bars and Pinwheel across remaining Stage 1 standard geometries.",
+  "plans": [
+    {
+      "planId": "bars-arch-group",
+      "effect": "Bars",
+      "geometryProfile": "arch_grouped",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-archgroup-expanded-sweep-v1.json",
+      "parameters": ["barCount", "direction", "cycles"]
+    },
+    {
+      "planId": "bars-arch-multi-layer",
+      "effect": "Bars",
+      "geometryProfile": "arch_multi_layer",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-archtriplelayer-expanded-sweep-v1.json",
+      "parameters": ["barCount", "direction", "cycles"]
+    },
+    {
+      "planId": "bars-tree-spiral",
+      "effect": "Bars",
+      "geometryProfile": "tree_360_spiral",
+      "baseManifest": "scripts/sequencer-render-training/manifests/bars-treespiral-expanded-sweep-v1.json",
+      "parameters": ["barCount", "direction", "cycles"]
+    },
+    {
+      "planId": "pinwheel-spinner",
+      "effect": "Pinwheel",
+      "geometryProfile": "spinner_standard",
+      "baseManifest": "scripts/sequencer-render-training/manifests/pinwheel-spinner-expanded-sweep-v1.json",
+      "parameters": ["style", "arms", "thickness", "rotation", "3DMode"]
+    }
+  ]
+}
