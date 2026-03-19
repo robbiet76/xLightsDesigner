@@ -75,18 +75,36 @@ while IFS= read -r row; do
   log "pack-begin ${pack_id}"
   status="passed"
   error_message=""
+  attempt_count=0
 
-  if bash "${SCRIPT_DIR}/run-packed-model-batch.sh" --manifest "${manifest}" --out-dir "${run_dir}" >>"${LOG_PATH}" 2>&1; then
+  run_pack() {
+    bash "${SCRIPT_DIR}/run-packed-model-batch.sh" --manifest "${manifest}" --out-dir "${run_dir}" >>"${LOG_PATH}" 2>&1
+  }
+
+  post_process_pack() {
     python3 "${SCRIPT_DIR}/generate-range-transition-report.py" \
       --run-dir "${run_dir}" \
       --param "${parameter}" \
-      --out-file "${run_dir}/range-transition.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+      --out-file "${run_dir}/range-transition.json" >>"${LOG_PATH}" 2>&1 &&
     python3 "${SCRIPT_DIR}/generate-parameter-region-summary.py" \
       --transition-report "${run_dir}/range-transition.json" \
-      --out-file "${run_dir}/region-summary.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+      --out-file "${run_dir}/region-summary.json" >>"${LOG_PATH}" 2>&1
+  }
+
+  attempt_count=$((attempt_count + 1))
+  if run_pack && post_process_pack; then
+    :
   else
-    status="failed"
-    error_message="run-packed-model-batch failed"
+    log "pack-retry ${pack_id} attempt=2"
+    ensure_xlights_ready >>"${LOG_PATH}" 2>&1 || true
+    attempt_count=$((attempt_count + 1))
+    if run_pack && post_process_pack; then
+      status="passed"
+      error_message="recovered_after_retry"
+    else
+      status="failed"
+      error_message="run-packed-model-batch failed after retry"
+    fi
   fi
 
   finished_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -101,9 +119,10 @@ while IFS= read -r row; do
     --arg runDir "${run_dir}" \
     --arg status "${status}" \
     --arg errorMessage "${error_message}" \
+    --argjson attemptCount "${attempt_count}" \
     --arg startedAt "${started_at}" \
     --arg finishedAt "${finished_at}" \
-    '$rows + [{planId:$planId,effect:$effect,parameter:$parameter,geometryProfile:$geometryProfile,packId:$packId,manifest:$manifest,runDir:$runDir,status:$status,errorMessage:$errorMessage,startedAt:$startedAt,finishedAt:$finishedAt}]')"
+    '$rows + [{planId:$planId,effect:$effect,parameter:$parameter,geometryProfile:$geometryProfile,packId:$packId,manifest:$manifest,runDir:$runDir,status:$status,errorMessage:$errorMessage,attemptCount:$attemptCount,startedAt:$startedAt,finishedAt:$finishedAt}]')"
 
   jq -cn \
     --arg runStamp "${STAMP}" \
@@ -119,4 +138,3 @@ while IFS= read -r row; do
 done < <(jq -c '.results[]' "${GENERATED_SUMMARY}")
 
 log "registry-run-complete summary=${SUMMARY_PATH}"
-
