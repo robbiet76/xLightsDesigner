@@ -1,13 +1,14 @@
 ## Shockwave Screening
 
-Run:
-- `/tmp/render-training-shockwave-v1`
+Runs:
+- `/tmp/render-training-shockwave-v1-rerun`
+- `/tmp/render-training-shockwave-v2`
 
 Machine-readable summary:
-- [/tmp/render-training-shockwave-summary.v1.json](/tmp/render-training-shockwave-summary.v1.json)
+- [/tmp/render-training-shockwave-summary.v3.json](/tmp/render-training-shockwave-summary.v3.json)
 
 Result:
-- `25/25` packs passed
+- `45/45` packs passed
 - `0` failed
 
 Scope:
@@ -20,26 +21,30 @@ Scope:
 - parameters:
   - `cycles`
   - `centerX`
+  - `centerY`
   - `startRadius`
   - `endRadius`
+  - `startWidth`
+  - `endWidth`
+  - `accel`
   - `blendEdges`
 
 Impact counts:
-- `high_impact_observed`: `18`
-- `context_flat_observed`: `7`
+- `high_impact_observed`: `40`
+- `interaction_suspected`: `5`
 
 What is clearly learned:
 - `centerX` is high-impact on every tested geometry.
+- `centerY` is high-impact on every tested geometry.
 - `startRadius` is high-impact on every tested geometry.
 - `endRadius` is high-impact on every tested geometry.
-- `cycles` is high-impact on:
-  - `tree_flat_single_layer`
-  - `tree_360_round`
-  - `tree_360_spiral`
-- `cycles` was context-flat on:
-  - `star_single_layer`
-  - `spinner_standard`
-- `blendEdges` was context-flat on every tested geometry in this first pass.
+- `startWidth` is high-impact on every tested geometry.
+- `endWidth` is high-impact on every tested geometry.
+- `accel` is high-impact on every tested geometry.
+- `cycles` is high-impact on every tested geometry after the refined semantic pass.
+- `blendEdges` is now consistently `interaction_suspected` on every tested geometry.
+  - it is not globally flat
+  - it appears to matter in combination with width and ring-shape choices
 
 Current structural families observed:
 - flat / round tree:
@@ -55,16 +60,15 @@ Current structural families observed:
 What this means:
 - the effect is already structurally observable across the intended first-pass geometry set
 - geometry coupling is real and should remain part of the early policy for `Shockwave`
-- center placement and radius controls are the primary early levers
+- center placement, radius controls, width controls, and acceleration are all real early levers
+- `blendEdges` should stay in the effect model as an interaction-sensitive control, not a low-value control
 
 What is not mature enough yet:
 - intent semantics are still too coarse for promotion into the selector stack
 - labels such as:
   - `busy`
   - `restrained`
-  - `sparse`
-  - `steady`
-  are showing up too broadly to support useful effect routing
+  are still too broad for useful effect routing
 - `Shockwave` should stay out of:
   - the controlled designer vocabulary layer
   - the structural effect selector
@@ -77,10 +81,10 @@ Recommended next work on `Shockwave`:
    - expansion span
    - edge hardness / softness
    - radial symmetry quality
-2. add the next likely high-value controls:
-   - `centerY`
-   - width controls
-   - acceleration
+2. strengthen interaction semantics:
+   - width + blendEdges
+   - radius span + acceleration
+   - center placement + geometry
 3. only then consider selector or vocabulary promotion
 
 Current maturity recommendation:
@@ -89,4 +93,3 @@ Current maturity recommendation:
 - `structurally_retrievable`: not yet
 - `selector_ready`: no
 - `designer_language_candidate`: no
-
