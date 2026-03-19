@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "description": "First registry-driven planning set for canonical geometry profiles. Uses stable base manifests and registered parameter anchors.",
+  "plans": [
+    {
+      "planId": "singlestrand-single-line-horizontal",
+      "baseManifest": "scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json",
+      "geometryProfile": "single_line_horizontal",
+      "parameters": [
+        "numberChases",
+        "chaseSize",
+        "cycles",
+        "chaseType",
+        "fadeType"
+      ]
+    },
+    {
+      "planId": "shimmer-star-single",
+      "baseManifest": "scripts/sequencer-render-training/manifests/shimmer-starsingle-expanded-sweep-v1.json",
+      "geometryProfile": "star_single_layer",
+      "parameters": [
+        "dutyFactor",
+        "cycles",
+        "useAllColors"
+      ]
+    },
+    {
+      "planId": "on-single-line-horizontal",
+      "baseManifest": "scripts/sequencer-render-training/manifests/on-singlelinehorizontal-reduced-sweep-v1.json",
+      "geometryProfile": "single_line_horizontal",
+      "parameters": [
+        "startLevel",
+        "endLevel",
+        "shimmer"
+      ]
+    }
+  ]
+}

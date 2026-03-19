@@ -45,6 +45,8 @@ The current harness is intentionally small:
 - `generate-range-transition-report.py`: detect where a sampled slider range actually changes semantic behavior across ordered anchor values
 - `effect-parameter-registry.json`: formal effect-parameter registry for anchor values, importance, hypotheses, and stop rules
 - `generate-parameter-sweep-manifest.py`: generate registry-driven sweep manifests from a base effect manifest and a registered parameter
+- `registry-planning-phase1.json`: first planning set mapping geometry profiles and effects to registry-driven sweeps
+- `generate-registry-plan-manifests.py`: emit a batch of registry-driven manifests from a planning file
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -115,6 +117,14 @@ python3 scripts/sequencer-render-training/generate-parameter-sweep-manifest.py \
   --base-manifest scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json \
   --parameter numberChases \
   --out-file /tmp/singlestrand-numberchases.generated.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/generate-registry-plan-manifests.py \
+  --registry scripts/sequencer-render-training/effect-parameter-registry.json \
+  --plan scripts/sequencer-render-training/registry-planning-phase1.json \
+  --out-dir /tmp/registry-plan-manifests \
+  --summary-out /tmp/registry-plan-manifests/summary.json
 ```
 
 ```bash
@@ -217,6 +227,10 @@ Environment:
 - Parameter sampling should come from the effect parameter registry where possible:
   - registry anchors define first-pass sweeps
   - registry metadata defines expected importance, interaction hypotheses, and stop rules
+- Registry planning should be geometry-profile-aware:
+  - choose a stable base manifest per geometry profile
+  - generate first-order sweeps from registered parameters
+  - replace duplicated hand-authored range manifests over time
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - Packed batch mode now performs:
   - `openSequence`
