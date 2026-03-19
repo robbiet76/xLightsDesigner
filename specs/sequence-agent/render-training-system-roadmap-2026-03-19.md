@@ -51,6 +51,14 @@ Success criteria:
 
 This is the current major stage.
 
+Within Stage 1, complex effects require deeper early testing before strong conclusions.
+Examples:
+- `Spirals`
+- `Pinwheel`
+
+These should not follow the same early-conclusion policy as simpler effects.
+`Spirals` should be treated as a benchmark tree effect for Stage 1 quality.
+
 ### Stage 2: Layered-Effect Understanding
 
 Primary goal:

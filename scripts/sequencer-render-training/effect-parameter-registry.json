@@ -13,6 +13,8 @@
   },
   "effects": {
     "On": {
+      "complexityClass": "simple",
+      "earlySamplingPolicy": "baseline_only",
       "notes": "Static baseline effect. Brightness transitions are semantic and are not normalized away.",
       "parameters": {
         "startLevel": {
@@ -58,6 +60,8 @@
       }
     },
     "SingleStrand": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "standard_screening",
       "notes": "Primary motion-pattern effect. Mode and geometry profile materially change which parameters matter.",
       "parameters": {
         "mode": {
@@ -203,6 +207,8 @@
       }
     },
     "Shimmer": {
+      "complexityClass": "simple",
+      "earlySamplingPolicy": "standard_screening",
       "notes": "Texture-heavy effect where duty and cadence strongly shape density and restraint.",
       "parameters": {
         "dutyFactor": {
@@ -240,6 +246,8 @@
       }
     },
     "Bars": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "standard_screening",
       "notes": "High-value structural motion effect. Direction, bar count, cadence, and structural toggles are likely first-order levers across linear and tree geometries.",
       "parameters": {
         "direction": {
@@ -307,6 +315,13 @@
       }
     },
     "Spirals": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "benchmarkGeometryFamilies": [
+        "tree_flat",
+        "tree_360"
+      ],
+      "benchmarkRole": "flagship_tree_effect",
       "notes": "Geometry-sensitive motion effect. Especially high value on tree profiles where count, movement, rotation, and thickness interact with spiral-capable model forms.",
       "parameters": {
         "count": {
@@ -400,6 +415,8 @@
       }
     },
     "Marquee": {
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "standard_screening",
       "notes": "Readable border and perimeter motion effect. Band/skip/thickness/speed should be screened before less common positioning controls.",
       "parameters": {
         "bandSize": {
@@ -479,6 +496,12 @@
       }
     },
     "Pinwheel": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
+      "benchmarkGeometryFamilies": [
+        "star",
+        "tree_360"
+      ],
       "notes": "High-value radial effect. Strong candidate for star, spinner, and tree profiles where style, arms, rotation, and speed should dominate early screening.",
       "parameters": {
         "style": {
@@ -576,6 +599,8 @@
       }
     },
     "Shockwave": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
       "notes": "Spatial expansion effect. Best on matrix/radial/tree classes, but worth early inclusion because center/radius/width semantics are highly interpretable.",
       "parameters": {
         "cycles": {
@@ -703,6 +728,8 @@
       }
     },
     "Twinkle": {
+      "complexityClass": "complex",
+      "earlySamplingPolicy": "broad_geometry_first",
       "notes": "Higher-value texture effect than Shimmer for long-term training. Density, dwell, strobe behavior, rerandomization, and render method should be screened first.",
       "parameters": {
         "style": {

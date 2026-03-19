@@ -31,6 +31,11 @@ Reason:
 - high expected information gain from parameter sweeps
 - good coverage across canonical geometry profiles
 
+Additional policy:
+- `Spirals` and `Pinwheel` are complex effects
+- complex effects require broader early testing before strong conclusions
+- `Spirals` should be treated as a benchmark tree effect during Stage 1
+
 ### Tier 2
 - `Shockwave`
 - `Twinkle`
@@ -132,3 +137,7 @@ Reason:
   - `under_sampled`
 - Preserve diverse useful look regions rather than selecting a single best preset.
 - Prefer shared/high-practical-value axes before obscure controls.
+- For complex effects:
+  - prefer broader geometry coverage earlier
+  - treat early flat results as local/contextual by default
+  - require more evidence before maturity promotion and before deprioritizing a control

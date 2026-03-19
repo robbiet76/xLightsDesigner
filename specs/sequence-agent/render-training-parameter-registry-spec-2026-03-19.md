@@ -18,6 +18,8 @@ The parameter registry exists to move render-training sampling away from ad hoc 
 It is part of the long-lived test-design framework for the render-training system, not just a one-time sweep generator.
 
 It records, per effect:
+- effect complexity
+- early sampling policy
 - which parameters exist
 - which ones matter most
 - which anchors should be sampled first
@@ -27,6 +29,10 @@ It records, per effect:
 
 ## Required Registry Fields
 
+For each effect:
+- `complexityClass`
+- `earlySamplingPolicy`
+
 For each parameter:
 - `type`
 - `anchors`
@@ -35,9 +41,57 @@ For each parameter:
 - `stopRule`
 
 Optional:
+- `benchmarkGeometryFamilies`
+- `benchmarkRole`
 - `range`
 - `appliesWhen`
 - `interactionHypotheses`
+
+## Complexity Policy
+
+Effects should not all follow the same early-testing rules.
+
+Allowed `complexityClass` values:
+- `simple`
+- `moderate`
+- `complex`
+
+Allowed `earlySamplingPolicy` values:
+- `baseline_only`
+- `standard_screening`
+- `broad_geometry_first`
+
+Meaning:
+- `simple`
+  - smaller parameter surface
+  - lower geometry coupling
+  - early first-pass impact judgments are lower risk
+- `moderate`
+  - normal screening is acceptable
+  - geometry expansion still matters, but first-pass summaries are generally useful
+- `complex`
+  - do not draw broad conclusions from one narrow sweep
+  - prioritize broader geometry coverage earlier
+  - treat early flat results as local/contextual by default
+  - require stronger evidence before maturity promotion or deprioritizing a control
+
+`broad_geometry_first` means:
+1. cover the main intended geometry families early
+2. test more first-order parameters before calling a setting flat
+3. default more early results into:
+   - `under_sampled`
+   - `interaction_suspected`
+   - `context_flat_observed`
+4. delay strong pruning claims until multi-geometry evidence exists
+
+Current complex-effect examples:
+- `Spirals`
+- `Pinwheel`
+- later:
+  - `Shockwave`
+  - `Twinkle`
+
+`Spirals` should be treated as a benchmark tree effect in Stage 1.
 
 ## Current Covered Effects
 
@@ -75,3 +129,4 @@ python3 scripts/sequencer-render-training/generate-parameter-sweep-manifest.py \
 The next code slice after this registry is:
 - consume registry metadata in overnight planning
 - generate sweep families from registry anchors instead of maintaining large duplicated hand-authored range manifests
+- use `complexityClass` and `earlySamplingPolicy` in planning heuristics and promotion rules
