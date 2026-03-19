@@ -367,16 +367,41 @@ jq -cn \
               end
             )
           + (
-              if (($settings.centerX // 50) == 50 and ($settings.centerY // 50) == 50) then ["centered_shockwave"]
+              if (($analysis.patternSignals.shockwaveCenterClass // "") == "centered") then ["centered_shockwave"]
+              elif (($analysis.patternSignals.shockwaveCenterClass // "") == "offset_x") then ["offset_x_shockwave"]
+              elif (($analysis.patternSignals.shockwaveCenterClass // "") == "offset_y") then ["offset_y_shockwave"]
               else ["offset_shockwave"]
               end
             )
           + (
-              if (($settings.endRadius // 10) - ($settings.startRadius // 1)) >= 40 then ["large_shockwave"]
+              if (($analysis.patternSignals.shockwaveSpanClass // "") == "large") then ["large_shockwave"]
+              elif (($analysis.patternSignals.shockwaveSpanClass // "") == "medium") then ["medium_shockwave"]
               else ["compact_shockwave"]
               end
             )
-          + (if ($settings.blendEdges // true) then ["blended_shockwave"] else ["hard_edge_shockwave"] end)
+          + (
+              if (($analysis.patternSignals.shockwaveWidthClass // "") == "wide") then ["wide_shockwave"]
+              elif (($analysis.patternSignals.shockwaveWidthClass // "") == "thin") then ["thin_shockwave"]
+              else ["medium_width_shockwave"]
+              end
+            )
+          + (
+              if (($analysis.patternSignals.shockwaveEdgeClass // "") == "soft") then ["blended_shockwave"]
+              else ["hard_edge_shockwave"]
+              end
+            )
+          + (
+              if (($analysis.patternSignals.shockwaveAccelClass // "") == "accelerating") then ["accelerating_shockwave"]
+              elif (($analysis.patternSignals.shockwaveAccelClass // "") == "decelerating") then ["decelerating_shockwave"]
+              else ["neutral_shockwave"]
+              end
+            )
+          + (
+              if (($analysis.patternSignals.shockwaveCycleClass // "") == "repeating_dense") then ["dense_repeating_shockwave"]
+              elif (($analysis.patternSignals.shockwaveCycleClass // "") == "repeating") then ["repeating_shockwave"]
+              else ["single_shockwave"]
+              end
+            )
           + (if ($settings.scale // true) then ["scaled_shockwave"] else [] end)
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
@@ -589,16 +614,36 @@ jq -cn \
         {
           readability:
             (
-              (if (($settings.blendEdges // true)) then 0.84 else 0.78 end)
+              (
+                if (($analysis.patternSignals.shockwaveCenterClass // "") == "centered") then 0.86
+                elif (($analysis.patternSignals.shockwaveCenterClass // "") == "offset_xy") then 0.76
+                else 0.8
+                end
+              )
               * (if $activeRatio > 0 then 1 else 0.45 end)
             ),
           restraint:
-            (if ((($settings.endRadius // 10) - ($settings.startRadius // 1)) >= 40) then 0.58
-             elif (($settings.blendEdges // true)) then 0.72
-             else 0.64 end),
+            (
+              if (($analysis.patternSignals.shockwaveSpanClass // "") == "large") then 0.56
+              elif (($analysis.patternSignals.shockwaveWidthClass // "") == "wide") then 0.58
+              elif (($analysis.patternSignals.shockwaveCycleClass // "") == "repeating_dense") then 0.5
+              elif (($analysis.patternSignals.shockwaveEdgeClass // "") == "soft") then 0.76
+              else 0.68
+              end
+            ),
           patternClarity:
             (
-              (if (($settings.centerX // 50) == 50 and ($settings.centerY // 50) == 50) then 0.86 else 0.78 end)
+              (
+                if (($analysis.patternSignals.shockwaveCenterClass // "") == "centered") then 0.86
+                elif (($analysis.patternSignals.shockwaveCenterClass // "") == "offset_xy") then 0.74
+                else 0.79
+                end
+              )
+              * (
+                if (($analysis.patternSignals.shockwaveEdgeClass // "") == "hard") then 0.96
+                else 1.0
+                end
+              )
               * (if $activeRatio > 0 then 1 else 0.4 end)
             ),
           propSuitability:

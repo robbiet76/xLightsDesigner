@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "description": "Second broad-geometry Stage 1 Shockwave screening focused on vertical center placement, width shaping, and acceleration semantics.",
+  "plans": [
+    {"planId": "shockwave-tree-flat-v2", "effect": "Shockwave", "geometryProfile": "tree_flat_single_layer", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json", "parameters": ["centerY", "startWidth", "endWidth", "accel"]},
+    {"planId": "shockwave-tree-round-v2", "effect": "Shockwave", "geometryProfile": "tree_360_round", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json", "parameters": ["centerY", "startWidth", "endWidth", "accel"]},
+    {"planId": "shockwave-tree-spiral-v2", "effect": "Shockwave", "geometryProfile": "tree_360_spiral", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json", "parameters": ["centerY", "startWidth", "endWidth", "accel"]},
+    {"planId": "shockwave-star-single-v2", "effect": "Shockwave", "geometryProfile": "star_single_layer", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json", "parameters": ["centerY", "startWidth", "endWidth", "accel"]},
+    {"planId": "shockwave-spinner-v2", "effect": "Shockwave", "geometryProfile": "spinner_standard", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json", "parameters": ["centerY", "startWidth", "endWidth", "accel"]}
+  ]
+}
