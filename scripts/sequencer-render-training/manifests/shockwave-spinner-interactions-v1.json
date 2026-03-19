@@ -1,0 +1,22 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shockwave-spinner-interactions-v1",
+  "description": "Representative Shockwave interaction sweep on the canonical spinner model.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "Spinner",
+    "modelType": "spinner",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Selected interaction sweep combining center placement, width, edge softness, span, and acceleration on the spinner."
+  },
+  "samples": [
+    {"sampleId": "shockwave-spinner-wide-soft-center-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 50, "centerY": 50, "startRadius": 5, "endRadius": 60, "startWidth": 8, "endWidth": 20, "accel": 0, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "wide_soft_shockwave", "centered_shockwave"]},
+    {"sampleId": "shockwave-spinner-thin-hard-center-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 50, "centerY": 50, "startRadius": 5, "endRadius": 60, "startWidth": 2, "endWidth": 4, "accel": 0, "blendEdges": false, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "thin_hard_shockwave", "centered_shockwave"]},
+    {"sampleId": "shockwave-spinner-compact-soft-decel-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 1, "centerX": 50, "centerY": 50, "startRadius": 20, "endRadius": 30, "startWidth": 4, "endWidth": 6, "accel": -5, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "compact_shockwave", "decelerating_shockwave"]},
+    {"sampleId": "shockwave-spinner-offset-wide-soft-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 30, "centerY": 70, "startRadius": 8, "endRadius": 45, "startWidth": 8, "endWidth": 18, "accel": 0, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "offset_shockwave", "wide_soft_shockwave"]},
+    {"sampleId": "shockwave-spinner-offset-thin-hard-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 30, "centerY": 70, "startRadius": 8, "endRadius": 45, "startWidth": 2, "endWidth": 5, "accel": 0, "blendEdges": false, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "offset_shockwave", "thin_hard_shockwave"]},
+    {"sampleId": "shockwave-spinner-wide-soft-accel-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 3, "centerX": 50, "centerY": 50, "startRadius": 3, "endRadius": 65, "startWidth": 8, "endWidth": 18, "accel": 5, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "accelerating_shockwave", "wide_soft_shockwave"]}
+  ]
+}

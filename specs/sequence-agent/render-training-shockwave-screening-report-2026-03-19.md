@@ -3,6 +3,7 @@
 Runs:
 - `/tmp/render-training-shockwave-v1-rerun`
 - `/tmp/render-training-shockwave-v2`
+- `/tmp/shockwave-interactions-v1`
 
 Machine-readable summary:
 - [/tmp/render-training-shockwave-summary.v3.json](/tmp/render-training-shockwave-summary.v3.json)
@@ -10,6 +11,9 @@ Machine-readable summary:
 Result:
 - `45/45` packs passed
 - `0` failed
+- representative interaction packs:
+  - `3/3` passed
+  - `18/18` samples passed
 
 Scope:
 - geometries:
@@ -63,12 +67,31 @@ What this means:
 - center placement, radius controls, width controls, and acceleration are all real early levers
 - `blendEdges` should stay in the effect model as an interaction-sensitive control, not a low-value control
 
+Interaction-set result:
+- the representative interaction set cleanly preserved:
+  - center placement
+  - span size
+  - width class
+  - edge hardness
+  - acceleration class
+- these are now visible in:
+  - `patternSignals`
+  - observation labels
+- but several paired cases still share the same:
+  - `patternFamily`
+  - high-level intent bucket
+- example:
+  - wide soft centered ring
+  - thin hard centered ring
+  are distinguished structurally, but not yet by a richer semantic layer
+
 What is not mature enough yet:
 - intent semantics are still too coarse for promotion into the selector stack
 - labels such as:
   - `busy`
   - `restrained`
   are still too broad for useful effect routing
+- interaction cases are distinguishable in structural signals, but not yet richly separated in semantic intent space
 - `Shockwave` should stay out of:
   - the controlled designer vocabulary layer
   - the structural effect selector
