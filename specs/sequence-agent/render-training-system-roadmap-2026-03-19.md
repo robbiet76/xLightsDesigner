@@ -49,6 +49,12 @@ Success criteria:
   - stable regions
   - transition points
 
+Coverage contract:
+- selector equalization is a maturity milestone inside Stage 1
+- it is not the Stage 1 finish line
+- full Stage 1 completion now follows:
+  - [render-training-stage1-full-coverage-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-stage1-full-coverage-roadmap-2026-03-19.md)
+
 This is the current major stage.
 
 Within Stage 1, complex effects require deeper early testing before strong conclusions.

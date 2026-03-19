@@ -1,0 +1,278 @@
+{
+  "version": "1.0",
+  "description": "Stage 1 single-effect model coverage contract for the canonical render-training layout.",
+  "completionRule": "Stage 1 single-effect coverage is complete only when every in-scope effect has full primary geometry coverage and all required probe geometries are either covered or explicitly waived with documented rationale.",
+  "notes": [
+    "Primary profiles are the canonical geometries where the effect is expected to have strong sequencing value.",
+    "Probe profiles are reduced-coverage validation targets used to document transferability, degenerate behavior, or low-value applicability without over-investing in full sweeps.",
+    "This contract is stricter than the current equalization board. Equalization means selector maturity inside the current cohort; it does not imply full model coverage."
+  ],
+  "effects": {
+    "On": {
+      "coveragePolicy": "all_primary",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [],
+      "notes": "Baseline control effect. Should exist on every canonical model because hold, fade, and shimmer semantics anchor comparison for other effects."
+    },
+    "SingleStrand": {
+      "coveragePolicy": "primary_plus_probe",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [
+        "single_line_single_node"
+      ],
+      "notes": "Primary motion-pattern effect. Broad applicability should be validated across almost the full canonical set before Stage 1 closes. Single-node is a degenerate control probe."
+    },
+    "Shimmer": {
+      "coveragePolicy": "all_primary",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [],
+      "notes": "Calibration/control texture effect. Broad coverage is required so restraint, density, and cadence comparisons are grounded across the full model catalog."
+    },
+    "Color Wash": {
+      "coveragePolicy": "all_primary",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [],
+      "notes": "Broad fill/wash effect. Needs wide canonical coverage because fade-direction booleans and cadence semantics can change meaning substantially by geometry."
+    },
+    "Bars": {
+      "coveragePolicy": "primary_plus_probe",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [
+        "single_line_single_node"
+      ],
+      "notes": "Complex structured motion effect. Current selector maturity exists, but Stage 1 closure now requires expansion beyond the earlier intended geometry set."
+    },
+    "Marquee": {
+      "coveragePolicy": "primary_plus_probe",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [
+        "single_line_single_node"
+      ],
+      "notes": "Complex segmented motion effect. Like Bars, it now needs expansion beyond the earlier intended geometry set."
+    },
+    "Pinwheel": {
+      "coveragePolicy": "primary_plus_probe",
+      "primaryProfiles": [
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "spinner_standard",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "icicles_drop_pattern",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped"
+      ],
+      "notes": "Complex radial/tree effect. Primary emphasis stays on radial, star, tree, and matrix-like surfaces; lower-value linear forms still require reduced probes to document behavior."
+    },
+    "Spirals": {
+      "coveragePolicy": "primary_plus_probe",
+      "primaryProfiles": [
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "spinner_standard",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "icicles_drop_pattern",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped"
+      ],
+      "notes": "Benchmark tree effect. Existing maturity is strong, but Stage 1 closure now requires broader transferability documentation."
+    },
+    "Shockwave": {
+      "coveragePolicy": "primary_plus_probe",
+      "primaryProfiles": [
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "spinner_standard",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "icicles_drop_pattern",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped"
+      ],
+      "notes": "Primary radial expansion effect. Current selector maturity is cohort-local; broader primary/probe coverage is required before Stage 1 closes."
+    },
+    "Twinkle": {
+      "coveragePolicy": "all_primary",
+      "primaryProfiles": [
+        "single_line_horizontal",
+        "single_line_vertical",
+        "single_line_single_node",
+        "arch_single",
+        "arch_multi_layer",
+        "arch_grouped",
+        "tree_flat_single_layer",
+        "tree_360_round",
+        "tree_360_spiral",
+        "star_single_layer",
+        "star_multi_layer",
+        "icicles_drop_pattern",
+        "spinner_standard",
+        "cane_single",
+        "cane_grouped",
+        "cane_stick_grouped",
+        "matrix_low_density",
+        "matrix_medium_density",
+        "matrix_high_density"
+      ],
+      "probeProfiles": [],
+      "notes": "Broad texture effect. Current maturity is strong on a subset, but Stage 1 closure requires full canonical coverage."
+    }
+  }
+}

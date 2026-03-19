@@ -788,7 +788,9 @@
       }
     },
     "Color Wash": {
-      "notes": "Structure often changes more from boolean fade combinations than from numeric cycle changes.",
+      "complexityClass": "moderate",
+      "earlySamplingPolicy": "standard_screening",
+      "notes": "Structure often changes more from boolean fade combinations than from numeric cycle changes. Broad canonical coverage is still required because fade-direction semantics shift by geometry.",
       "parameters": {
         "cycles": {
           "type": "numeric",

@@ -17,6 +17,9 @@ This roadmap applies inside Stage 1 of the broader render-training system:
 - full single-effect understanding across the standard model set
 - before layered-effect training begins
 
+Full Stage 1 model-coverage closure is tracked separately in:
+- [render-training-stage1-full-coverage-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-stage1-full-coverage-roadmap-2026-03-19.md)
+
 ## Priority Order
 
 ### Tier 1
