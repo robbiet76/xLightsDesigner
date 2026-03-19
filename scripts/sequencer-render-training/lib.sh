@@ -4,7 +4,7 @@ set -euo pipefail
 XLIGHTS_BASE_URL="${XLIGHTS_BASE_URL:-http://127.0.0.1:49914}"
 AUTOMATION_URL="${XLIGHTS_BASE_URL}/xlDoAutomation"
 CURL_MAX_TIME="${CURL_MAX_TIME:-60}"
-XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-abdssfsqgzefmgebylgtlxhcrlae/Build/Products/Debug/xLights.app}"
+XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-}"
 XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-0}"
 XLIGHTS_STARTUP_WAIT_SECONDS="${XLIGHTS_STARTUP_WAIT_SECONDS:-180}"
 
@@ -13,6 +13,38 @@ post_cmd() {
   curl --max-time "${CURL_MAX_TIME}" -sS -X POST "${AUTOMATION_URL}" \
     -H "Content-Type: application/json" \
     -d "${payload}"
+}
+
+resolve_xlights_app_path() {
+  if [[ -n "${XLIGHTS_APP_PATH}" && -d "${XLIGHTS_APP_PATH}" ]]; then
+    printf '%s\n' "${XLIGHTS_APP_PATH}"
+    return 0
+  fi
+
+  local running_binary running_app
+  running_binary="$(ps -ax -o command= | awk '/xLights\.app\/Contents\/MacOS\/xLights$/ && $0 !~ /awk/ {print; exit}')"
+  if [[ -n "${running_binary}" ]]; then
+    running_app="${running_binary%/Contents/MacOS/xLights}"
+    if [[ -d "${running_app}" ]]; then
+      printf '%s\n' "${running_app}"
+      return 0
+    fi
+  fi
+
+  if [[ -d "/Applications/xLights.app" ]]; then
+    printf '%s\n' "/Applications/xLights.app"
+    return 0
+  fi
+
+  local derived_app
+  derived_app="$(find /Users/robterry/Library/Developer/Xcode/DerivedData -path '*/Build/Products/Debug/xLights.app' -type d 2>/dev/null | head -n 1 || true)"
+  if [[ -n "${derived_app}" && -d "${derived_app}" ]]; then
+    printf '%s\n' "${derived_app}"
+    return 0
+  fi
+
+  echo "Unable to resolve xLights app path." >&2
+  return 1
 }
 
 normalize_json_body() {
@@ -69,21 +101,19 @@ xlights_wait_until_ready() {
 }
 
 restart_xlights_app() {
-  [[ -d "${XLIGHTS_APP_PATH}" ]] || {
-    echo "xLights app path not found: ${XLIGHTS_APP_PATH}" >&2
-    return 1
-  }
+  local app_path
+  app_path="$(resolve_xlights_app_path)" || return 1
 
-  pkill -9 -f "${XLIGHTS_APP_PATH}/Contents/MacOS/xLights" || true
+  pkill -9 -f "${app_path}/Contents/MacOS/xLights" || true
   local i
   for i in $(seq 1 10); do
-    if ! pgrep -f "${XLIGHTS_APP_PATH}/Contents/MacOS/xLights" >/dev/null 2>&1; then
+    if ! pgrep -f "${app_path}/Contents/MacOS/xLights" >/dev/null 2>&1; then
       break
     fi
     sleep 1
   done
   sleep 2
-  open "${XLIGHTS_APP_PATH}"
+  open "${app_path}"
 
   for i in $(seq 1 45); do
     if xlights_listener_ready; then
