@@ -1,0 +1,121 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-linear-fx-intensity-range-v1",
+  "description": "Range sampling sweep for SingleStrand FX intensity on a single-line model. Uses Fireworks 1D with fixed speed to isolate texture strength changes.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "UpperGutter-01",
+    "modelType": "single_line",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Range sampling sweep for SingleStrand FX intensity on single-line geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-linear-fx-intensity-40-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 40,
+        "speed": 90
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_intensity_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD27A",
+          "C_BUTTON_Palette3": "#FF8A42"
+        }
+      },
+      "labelHints": ["range_sample", "fx_intensity", "intensity_40"]
+    },
+    {
+      "sampleId": "single-strand-linear-fx-intensity-80-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 80,
+        "speed": 90
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_intensity_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD27A",
+          "C_BUTTON_Palette3": "#FF8A42"
+        }
+      },
+      "labelHints": ["range_sample", "fx_intensity", "intensity_80"]
+    },
+    {
+      "sampleId": "single-strand-linear-fx-intensity-120-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 120,
+        "speed": 90
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_intensity_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD27A",
+          "C_BUTTON_Palette3": "#FF8A42"
+        }
+      },
+      "labelHints": ["range_sample", "fx_intensity", "intensity_120"]
+    },
+    {
+      "sampleId": "single-strand-linear-fx-intensity-160-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 160,
+        "speed": 90
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_intensity_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD27A",
+          "C_BUTTON_Palette3": "#FF8A42"
+        }
+      },
+      "labelHints": ["range_sample", "fx_intensity", "intensity_160"]
+    },
+    {
+      "sampleId": "single-strand-linear-fx-intensity-200-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 200,
+        "speed": 90
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_intensity_range",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD27A",
+          "C_BUTTON_Palette3": "#FF8A42"
+        }
+      },
+      "labelHints": ["range_sample", "fx_intensity", "intensity_200"]
+    }
+  ]
+}

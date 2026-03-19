@@ -1,0 +1,144 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-fade-combos-v1",
+  "description": "Structured sweep for Color Wash fade combinations on a matrix model. Holds cycles fixed while enumerating the major fade-combination states.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "NorthPoleMatrix",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Structured sweep for Color Wash fade combinations on matrix geometry."
+  },
+  "samples": [
+    {
+      "sampleId": "colorwash-matrix-flat-combo-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "fade_combo",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["combo_sample", "fade_combo", "flat_fill"]
+    },
+    {
+      "sampleId": "colorwash-matrix-vfade-combo-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "fade_combo",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["combo_sample", "fade_combo", "vertical_fade"]
+    },
+    {
+      "sampleId": "colorwash-matrix-hfade-combo-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": false,
+        "hFade": true,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "fade_combo",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["combo_sample", "fade_combo", "horizontal_fade"]
+    },
+    {
+      "sampleId": "colorwash-matrix-two-axis-combo-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": true,
+        "hFade": true,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "fade_combo",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["combo_sample", "fade_combo", "two_axis_fade"]
+    },
+    {
+      "sampleId": "colorwash-matrix-two-axis-reverse-combo-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": true,
+        "hFade": true,
+        "reverseFades": true,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "fade_combo",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": ["combo_sample", "fade_combo", "reverse_two_axis"]
+    },
+    {
+      "sampleId": "colorwash-matrix-two-axis-shimmer-combo-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": true,
+        "hFade": true,
+        "reverseFades": true,
+        "shimmer": true,
+        "circularPalette": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "fade_combo",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF5A00",
+          "C_BUTTON_Palette3": "#FFD000",
+          "C_BUTTON_Palette4": "#00C2FF"
+        }
+      },
+      "labelHints": ["combo_sample", "fade_combo", "shimmer_circular"]
+    }
+  ]
+}
