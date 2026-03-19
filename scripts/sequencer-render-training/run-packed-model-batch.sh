@@ -50,6 +50,8 @@ python3 "${SCRIPT_DIR}/normalize-manifest.py" \
   --standards "${standards_path}" \
   --out-file "${normalized_manifest_path}"
 MANIFEST_FILE="${normalized_manifest_path}"
+decoder_frame_mode="$(jq -r '.interpretationFramework.decodePolicy.frameMode // "auto"' "${standards_path}")"
+decoder_max_frame_cells="$(jq -r '.interpretationFramework.decodePolicy.maxFrameCells // 250000' "${standards_path}")"
 
 fixture_json="$(jq -c '.fixture' "${MANIFEST_FILE}")"
 sequence_path="$(jq -r '.sequencePath' <<<"${fixture_json}")"
@@ -213,6 +215,8 @@ while IFS= read -r planned_row; do
     --window-end-ms "${end_ms}" \
     --node-count "${model_node_count}" \
     --channels-per-node "${model_channels_per_node}" \
+    --frame-mode "${decoder_frame_mode}" \
+    --max-frame-cells "${decoder_max_frame_cells}" \
     > "${decoded_features_path}"
   python3 "${SCRIPT_DIR}/analysis/analyze_decoded_window.py" \
     --decoded-window "${decoded_features_path}" \

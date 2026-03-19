@@ -153,6 +153,14 @@
       "type": "object",
       "additionalProperties": true
     },
+    "modelMetadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "comparisons": {
       "type": "array",
       "items": {

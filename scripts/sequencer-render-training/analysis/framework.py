@@ -42,6 +42,47 @@ class BaseAnalyzer:
             "brightness": brightness,
         }
 
+    def _frames(self, inp: SequenceAnalysisInput) -> List[Dict[str, Any]]:
+        frames = inp.decoded_window.get("frames", [])
+        return frames if isinstance(frames, list) else []
+
+    def _frame_centroids(self, inp: SequenceAnalysisInput) -> List[float]:
+        values: List[float] = []
+        for frame in self._frames(inp):
+            try:
+                values.append(float(frame.get("centroidPosition", 0.0)))
+            except (TypeError, ValueError):
+                values.append(0.0)
+        return values
+
+    def _signed_deltas(self, values: List[float], epsilon: float = 0.0025) -> List[float]:
+        deltas: List[float] = []
+        for i in range(1, len(values)):
+            delta = values[i] - values[i - 1]
+            if abs(delta) >= epsilon:
+                deltas.append(delta)
+        return deltas
+
+    def _signed_direction_summary(self, deltas: List[float], epsilon: float = 0.0025) -> Dict[str, Any]:
+        positive = sum(1 for value in deltas if value > epsilon)
+        negative = sum(1 for value in deltas if value < -epsilon)
+        reversals = 0
+        previous_sign = 0
+        for value in deltas:
+            sign = 1 if value > epsilon else -1 if value < -epsilon else 0
+            if sign == 0:
+                continue
+            if previous_sign != 0 and sign != previous_sign:
+                reversals += 1
+            previous_sign = sign
+        net = sum(deltas)
+        return {
+            "positiveSteps": positive,
+            "negativeSteps": negative,
+            "reversals": reversals,
+            "netTravel": net,
+        }
+
     def _common_intents(self, quality: Dict[str, float]) -> List[str]:
         tags: List[str] = []
         if quality["coverage"] >= 0.85:
@@ -102,22 +143,38 @@ class LinearAnalyzer(BaseAnalyzer):
         longest_run = self._f(inp, "averageLongestRunRatio")
         run_count = self._f(inp, "averageRunCount")
         effect = inp.effect_name
+        settings = inp.effect_settings
+        centroids = self._frame_centroids(inp)
+        deltas = self._signed_deltas(centroids)
+        direction_summary = self._signed_direction_summary(deltas)
 
         direction = "ambiguous"
-        settings = inp.effect_settings
-        if effect == "SingleStrand":
-            chase_type = str(settings.get("chaseType", "")).lower()
-            direction_setting = str(settings.get("direction", "")).lower()
-            if "bounce" in chase_type:
-                direction = "bounce"
-            elif direction_setting == "left":
-                direction = "left"
-            elif direction_setting == "right":
-                direction = "right"
-            elif "left-right" in chase_type:
-                direction = "left_to_right"
-            elif "right-left" in chase_type:
-                direction = "right_to_left"
+        if (
+            direction_summary["reversals"] > 0
+            and direction_summary["positiveSteps"] >= 3
+            and direction_summary["negativeSteps"] >= 3
+        ):
+            direction = "bounce"
+        elif abs(direction_summary["netTravel"]) >= 0.02:
+            direction = "left_to_right" if direction_summary["netTravel"] > 0 else "right_to_left"
+        elif direction_summary["positiveSteps"] > 0 and direction_summary["negativeSteps"] == 0:
+            direction = "left_to_right"
+        elif direction_summary["negativeSteps"] > 0 and direction_summary["positiveSteps"] == 0:
+            direction = "right_to_left"
+        else:
+            if effect == "SingleStrand":
+                chase_type = str(settings.get("chaseType", "")).lower()
+                direction_setting = str(settings.get("direction", "")).lower()
+                if "bounce" in chase_type:
+                    direction = "bounce"
+                elif direction_setting == "left":
+                    direction = "left"
+                elif direction_setting == "right":
+                    direction = "right"
+                elif "left-right" in chase_type:
+                    direction = "left_to_right"
+                elif "right-left" in chase_type:
+                    direction = "right_to_left"
 
         pattern_family = "unclassified"
         if effect == "On":
@@ -140,6 +197,11 @@ class LinearAnalyzer(BaseAnalyzer):
             "runCountMean": run_count,
             "longestRunRatio": longest_run,
             "directionality": direction,
+            "centroidTraceFrameCount": len(centroids),
+            "centroidPositiveSteps": direction_summary["positiveSteps"],
+            "centroidNegativeSteps": direction_summary["negativeSteps"],
+            "centroidDirectionReversals": direction_summary["reversals"],
+            "centroidNetTravel": direction_summary["netTravel"],
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -178,6 +240,9 @@ class TreeAnalyzer(BaseAnalyzer):
         centroid_motion = self._f(inp, "centroidMotionMean")
         coverage = self._f(inp, "averageActiveNodeRatio")
         temporal = self._f(inp, "temporalChangeMean")
+        centroids = self._frame_centroids(inp)
+        deltas = self._signed_deltas(centroids)
+        direction_summary = self._signed_direction_summary(deltas)
 
         pattern_family = "tree_fill"
         if inp.effect_name == "Shimmer":
@@ -191,6 +256,8 @@ class TreeAnalyzer(BaseAnalyzer):
             "treeCoverage": coverage,
             "treeMotion": temporal,
             "treeCentroidMotion": centroid_motion,
+            "treeDirectionReversals": direction_summary["reversals"],
+            "treeNetTravel": direction_summary["netTravel"],
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -219,6 +286,9 @@ class StarAnalyzer(BaseAnalyzer):
         base = super().analyze(inp)
         coverage = self._f(inp, "averageActiveNodeRatio")
         temporal = self._f(inp, "temporalChangeMean")
+        centroids = self._frame_centroids(inp)
+        deltas = self._signed_deltas(centroids)
+        direction_summary = self._signed_direction_summary(deltas)
 
         pattern_family = "star_fill"
         if inp.effect_name == "Shimmer":
@@ -229,6 +299,8 @@ class StarAnalyzer(BaseAnalyzer):
         base["geometrySignals"] = {
             "radialCoverage": coverage,
             "radialMotion": temporal,
+            "radialDirectionReversals": direction_summary["reversals"],
+            "radialNetTravel": direction_summary["netTravel"],
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(

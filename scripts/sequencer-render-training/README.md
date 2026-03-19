@@ -44,6 +44,7 @@ The current harness is intentionally small:
 - `generate-intent-gap-report.py`: compare an intent summary against seed coverage targets while preserving extra discovered looks and tags
 - `generate-range-transition-report.py`: detect where a sampled slider range actually changes semantic behavior across ordered anchor values
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
+  - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
 - `analysis/analyze_decoded_window.py`: dispatch decoded `.fseq` windows through the geometry-family analyzer framework
 - `analysis/framework.py`: generic analyzer registry and family-specific sequence-analysis scaffolding
@@ -189,6 +190,7 @@ Environment:
 - Packed batch runs now normalize manifests through `training-standards.json` before execution:
   - structural palette defaults to `RGB`
   - structural-test brightness defaults to `100%`
+  - packed decode frame emission defaults to `auto`
   - effect-semantic brightness exceptions remain explicit in the manifest/effect settings layer
 - Each sample now runs against a temporary working copy of the source sequence so repeated harness runs do not accumulate effects into the same `.xsq`.
 - Packed batch mode now performs:
@@ -236,6 +238,7 @@ Environment:
   - per-sample records keyed to assigned time windows inside that `.fseq`
   - each record now includes:
     - decoded `.fseq` summary features
+    - compact per-frame node state when the frame-cell budget allows it
     - geometry-family analysis output
   - per-frame decode remains the next interpretation upgrade
 - Current duration guidance:

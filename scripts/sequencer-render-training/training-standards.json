@@ -28,7 +28,9 @@
       "emitPerFrameState": true,
       "emitPerNodeBrightness": true,
       "emitPerNodeRgb": true,
-      "emitWindowSummary": true
+      "emitWindowSummary": true,
+      "frameMode": "auto",
+      "maxFrameCells": 250000
     },
     "analyzerRegistry": {
       "linear": ["outline", "single_line", "cane"],
