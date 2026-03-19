@@ -1,0 +1,139 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "colorwash-matrix-expanded-sweep-v2",
+  "description": "Expanded Color Wash sweep on a concrete matrix model. Adds horizontal and two-axis steady fades to broaden the fill look space beyond the reduced set.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "NorthPoleMatrix",
+    "modelType": "matrix",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Color Wash sweep on a concrete matrix model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "colorwash-matrix-flat-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.0,
+        "vFade": false,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_fill",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFF0D0"
+        }
+      },
+      "labelHints": [
+        "steady_wash",
+        "matrix_fill"
+      ]
+    },
+    {
+      "sampleId": "colorwash-matrix-vertical-fade-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": true,
+        "hFade": false,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cool_gradient",
+        "palette": {
+          "C_BUTTON_Palette1": "#BEEBFF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": [
+        "vertical_fade",
+        "matrix_gradient"
+      ]
+    },
+    {
+      "sampleId": "colorwash-matrix-horizontal-fade-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.5,
+        "vFade": false,
+        "hFade": true,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "hfade_gradient",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": [
+        "horizontal_fade",
+        "matrix_gradient"
+      ]
+    },
+    {
+      "sampleId": "colorwash-matrix-two-axis-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 1.75,
+        "vFade": true,
+        "hFade": true,
+        "reverseFades": false,
+        "shimmer": false,
+        "circularPalette": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "two_axis_calm",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFE6B8",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": [
+        "two_axis_fade",
+        "soft_fill_gradient"
+      ]
+    },
+    {
+      "sampleId": "colorwash-matrix-shimmer-circular-v1",
+      "effectName": "Color Wash",
+      "effectSettings": {
+        "cycles": 2.0,
+        "vFade": true,
+        "hFade": true,
+        "reverseFades": true,
+        "shimmer": true,
+        "circularPalette": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "circular_multi",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF5A00",
+          "C_BUTTON_Palette3": "#FFD000",
+          "C_BUTTON_Palette4": "#00C2FF"
+        }
+      },
+      "labelHints": [
+        "shimmer_wash",
+        "two_axis_fade",
+        "circular_palette"
+      ]
+    }
+  ]
+}

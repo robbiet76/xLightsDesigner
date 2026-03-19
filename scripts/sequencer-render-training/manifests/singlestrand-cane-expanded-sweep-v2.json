@@ -1,0 +1,193 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "singlestrand-cane-expanded-sweep-v2",
+  "description": "Expanded SingleStrand sweep on a concrete cane model. Adds denser chase, alternate skip spacing, and softer FX coverage beyond the reduced set.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "CandyCane-01",
+    "modelType": "cane",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded SingleStrand sweep on a concrete cane model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "single-strand-chase-basic-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 1,
+        "chaseSize": 18,
+        "cycles": 1.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "None",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "two_color_cane",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "single_direction_chase",
+        "clean_cane_pattern"
+      ]
+    },
+    {
+      "sampleId": "single-strand-chase-bounce-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 2,
+        "chaseSize": 28,
+        "cycles": 2.0,
+        "offset": 0,
+        "chaseType": "Bounce from Middle",
+        "fadeType": "From Head",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "two_color_cane",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#00C2FF"
+        }
+      },
+      "labelHints": [
+        "bounce_pattern",
+        "dual_motion"
+      ]
+    },
+    {
+      "sampleId": "single-strand-chase-dense-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Chase",
+        "colors": "Palette",
+        "numberChases": 3,
+        "chaseSize": 10,
+        "cycles": 2.5,
+        "offset": 0,
+        "chaseType": "Left-Right",
+        "fadeType": "From Head",
+        "groupAllStrands": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "dense_dual_cane",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#00C2FF"
+        }
+      },
+      "labelHints": [
+        "dense_chase",
+        "cane_train_pattern"
+      ]
+    },
+    {
+      "sampleId": "single-strand-skips-left-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 2,
+        "skipSize": 1,
+        "startPos": 1,
+        "advances": 24,
+        "direction": "Left"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "skip_pattern",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000"
+        }
+      },
+      "labelHints": [
+        "skip_pattern",
+        "left_motion"
+      ]
+    },
+    {
+      "sampleId": "single-strand-skips-wide-right-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "Skips",
+        "bandSize": 4,
+        "skipSize": 2,
+        "startPos": 1,
+        "advances": 16,
+        "direction": "Right"
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "wide_skip_pattern",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#00C2FF"
+        }
+      },
+      "labelHints": [
+        "wide_skip_pattern",
+        "right_motion"
+      ]
+    },
+    {
+      "sampleId": "single-strand-fx-fireworks-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 160,
+        "speed": 110
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_accent",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD000",
+          "C_BUTTON_Palette3": "#FF5A00"
+        }
+      },
+      "labelHints": [
+        "fx_texture",
+        "burst_pattern"
+      ]
+    },
+    {
+      "sampleId": "single-strand-fx-fireworks-soft-v1",
+      "effectName": "SingleStrand",
+      "effectSettings": {
+        "mode": "FX",
+        "fxName": "Fireworks 1D",
+        "fxPalette": "* Colors Only",
+        "intensity": 85,
+        "speed": 55
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line",
+        "paletteProfile": "fx_soft",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FFD27A",
+          "C_BUTTON_Palette3": "#FF8A42"
+        }
+      },
+      "labelHints": [
+        "fx_texture",
+        "soft_burst"
+      ]
+    }
+  ]
+}

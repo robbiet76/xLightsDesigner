@@ -40,6 +40,7 @@ The current harness is intentionally small:
 - `generate-look-catalog.py`: group decoded sample records into distinct look clusters instead of a single winner list
   - also derives intent-facing tags such as `restrained`, `clean`, `directional`, `busy`, `fill`, and `texture_heavy`
 - `generate-intent-vocab-summary.py`: roll a look catalog up into an effect/model intent vocabulary with representative samples
+- `generate-intent-gap-report.py`: compare an intent summary against seed coverage targets while preserving extra discovered looks and tags
 - `lib.sh`: shared xLights automation helpers
 - `manifests/on-sample-v1.json`: example manifest
 - `manifests/on-reduced-sweep-v1.json`: reduced `On` sweep
@@ -100,6 +101,16 @@ python3 scripts/sequencer-render-training/generate-intent-vocab-summary.py \
   --catalog /tmp/singlestrand-cane-packed-fseq-decoded-debug/look-catalog.json \
   --out-file /tmp/singlestrand-cane-packed-fseq-decoded-debug/intent-summary.json
 ```
+
+```bash
+python3 scripts/sequencer-render-training/generate-intent-gap-report.py \
+  --summary /tmp/singlestrand-cane-packed-fseq-decoded-debug/intent-summary.json \
+  --out-file /tmp/singlestrand-cane-packed-fseq-decoded-debug/intent-gap-report.json
+```
+
+Notes:
+- seed coverage targets are not a closed taxonomy
+- extra discovered tags and families are preserved so the catalog can expand beyond the initial predefined look list
 
 Environment:
 - `XLIGHTS_BASE_URL`
