@@ -1,0 +1,21 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shockwave-treespiral-expanded-sweep-v1",
+  "description": "Expanded Shockwave sweep on the canonical spiral tree model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeSpiral",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shockwave sweep on the spiral tree using the 4-second animated standard."
+  },
+  "samples": [
+    {"sampleId": "shockwave-treespiral-centered-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 1, "centerX": 50, "centerY": 50, "startRadius": 1, "endRadius": 45, "startWidth": 5, "endWidth": 12, "accel": 0, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["shockwave_ring", "tree_fill"]},
+    {"sampleId": "shockwave-treespiral-offset-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 1, "centerX": 35, "centerY": 60, "startRadius": 1, "endRadius": 35, "startWidth": 4, "endWidth": 10, "accel": 0, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["offset_shockwave", "directional"]},
+    {"sampleId": "shockwave-treespiral-multi-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 3, "centerX": 50, "centerY": 50, "startRadius": 5, "endRadius": 55, "startWidth": 3, "endWidth": 8, "accel": 2, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["repeating_shockwave", "animated"]},
+    {"sampleId": "shockwave-treespiral-hardedge-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 50, "centerY": 50, "startRadius": 10, "endRadius": 60, "startWidth": 2, "endWidth": 5, "accel": 0, "blendEdges": false, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["hard_edge_shockwave", "ring"]},
+    {"sampleId": "shockwave-treespiral-compact-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 50, "centerY": 50, "startRadius": 15, "endRadius": 28, "startWidth": 4, "endWidth": 6, "accel": -2, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["compact_shockwave", "restrained"]}
+  ]
+}

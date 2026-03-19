@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "description": "First broad-geometry Stage 1 Shockwave screening across tree, star, and spinner profiles.",
+  "plans": [
+    {"planId": "shockwave-tree-flat", "effect": "Shockwave", "geometryProfile": "tree_flat_single_layer", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json", "parameters": ["cycles", "centerX", "startRadius", "endRadius", "blendEdges"]},
+    {"planId": "shockwave-tree-round", "effect": "Shockwave", "geometryProfile": "tree_360_round", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json", "parameters": ["cycles", "centerX", "startRadius", "endRadius", "blendEdges"]},
+    {"planId": "shockwave-tree-spiral", "effect": "Shockwave", "geometryProfile": "tree_360_spiral", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json", "parameters": ["cycles", "centerX", "startRadius", "endRadius", "blendEdges"]},
+    {"planId": "shockwave-star-single", "effect": "Shockwave", "geometryProfile": "star_single_layer", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json", "parameters": ["cycles", "centerX", "startRadius", "endRadius", "blendEdges"]},
+    {"planId": "shockwave-spinner", "effect": "Shockwave", "geometryProfile": "spinner_standard", "baseManifest": "scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json", "parameters": ["cycles", "centerX", "startRadius", "endRadius", "blendEdges"]}
+  ]
+}

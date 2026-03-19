@@ -354,6 +354,34 @@ jq -cn \
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
           + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
         )
+      elif $effect == "Shockwave" then
+        unique_labels(
+          $labelHints
+          + ["effect:shockwave", ("model:" + $modelType), ("render_style:" + ($renderStyle | ascii_downcase | gsub("[^a-z0-9]+"; "_")))]
+          + ["shockwave_pattern"]
+          + (
+              if $modelType == "star" or $modelType == "spinner" then ["radial_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              elif ($modelType == "matrix") then ["matrix_pattern_fit"]
+              else []
+              end
+            )
+          + (
+              if (($settings.centerX // 50) == 50 and ($settings.centerY // 50) == 50) then ["centered_shockwave"]
+              else ["offset_shockwave"]
+              end
+            )
+          + (
+              if (($settings.endRadius // 10) - ($settings.startRadius // 1)) >= 40 then ["large_shockwave"]
+              else ["compact_shockwave"]
+              end
+            )
+          + (if ($settings.blendEdges // true) then ["blended_shockwave"] else ["hard_edge_shockwave"] end)
+          + (if ($settings.scale // true) then ["scaled_shockwave"] else [] end)
+          + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)
+          + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
+          + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))
+        )
       else
         unique_labels(
           $labelHints
@@ -556,6 +584,28 @@ jq -cn \
             (if ($modelType == "star" or $modelType == "spinner") then 0.92
              elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.86
              else 0.68 end)
+        }
+      elif $effect == "Shockwave" then
+        {
+          readability:
+            (
+              (if (($settings.blendEdges // true)) then 0.84 else 0.78 end)
+              * (if $activeRatio > 0 then 1 else 0.45 end)
+            ),
+          restraint:
+            (if ((($settings.endRadius // 10) - ($settings.startRadius // 1)) >= 40) then 0.58
+             elif (($settings.blendEdges // true)) then 0.72
+             else 0.64 end),
+          patternClarity:
+            (
+              (if (($settings.centerX // 50) == 50 and ($settings.centerY // 50) == 50) then 0.86 else 0.78 end)
+              * (if $activeRatio > 0 then 1 else 0.4 end)
+            ),
+          propSuitability:
+            (if ($modelType == "spinner" or $modelType == "star") then 0.9
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.88
+             elif ($modelType == "matrix") then 0.92
+             else 0.66 end)
         }
       else
         {

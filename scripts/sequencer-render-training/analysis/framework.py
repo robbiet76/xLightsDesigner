@@ -505,6 +505,19 @@ class TreeAnalyzer(BaseAnalyzer):
                 pattern_family = "dense_pinwheel"
             else:
                 pattern_family = "tree_pinwheel"
+        elif inp.effect_name == "Shockwave":
+            end_radius = float(settings.get("endRadius", 10) or 10)
+            start_radius = float(settings.get("startRadius", 1) or 1)
+            center_x = float(settings.get("centerX", 50) or 50)
+            center_y = float(settings.get("centerY", 50) or 50)
+            if geometry_profile == "tree_360_spiral":
+                pattern_family = "helical_shockwave"
+            elif center_x != 50 or center_y != 50:
+                pattern_family = "offcenter_shockwave"
+            elif end_radius - start_radius >= 40:
+                pattern_family = "expanding_shockwave"
+            else:
+                pattern_family = "shockwave_ring"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -521,6 +534,10 @@ class TreeAnalyzer(BaseAnalyzer):
             "configuredSpiralThickness": float(settings.get("thickness", 50) or 50) if inp.effect_name == "Spirals" else None,
             "configuredBarCount": int(settings.get("barCount", 1) or 1) if inp.effect_name == "Bars" else None,
             "configuredPinwheelArms": int(settings.get("arms", 3) or 3) if inp.effect_name == "Pinwheel" else None,
+            "configuredShockwaveCenterX": float(settings.get("centerX", 50) or 50) if inp.effect_name == "Shockwave" else None,
+            "configuredShockwaveCenterY": float(settings.get("centerY", 50) or 50) if inp.effect_name == "Shockwave" else None,
+            "configuredShockwaveStartRadius": float(settings.get("startRadius", 1) or 1) if inp.effect_name == "Shockwave" else None,
+            "configuredShockwaveEndRadius": float(settings.get("endRadius", 10) or 10) if inp.effect_name == "Shockwave" else None,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -547,6 +564,10 @@ class TreeAnalyzer(BaseAnalyzer):
                 "pinwheelRotationClass": (
                     "rotating" if bool(settings.get("rotation", False)) else "static"
                 ) if inp.effect_name == "Pinwheel" else None,
+                "shockwaveCenterClass": (
+                    "centered" if float(settings.get("centerX", 50) or 50) == 50 and float(settings.get("centerY", 50) or 50) == 50
+                    else "offset"
+                ) if inp.effect_name == "Shockwave" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -577,6 +598,13 @@ class TreeAnalyzer(BaseAnalyzer):
             intents.add("directional")
             if geometry_profile == "tree_360_spiral":
                 intents.add("geometry_coupled")
+        if inp.effect_name == "Shockwave":
+            intents.add("patterned")
+            intents.add("animated")
+            if float(settings.get("centerX", 50) or 50) != 50 or float(settings.get("centerY", 50) or 50) != 50:
+                intents.add("directional")
+            else:
+                intents.add("fill")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -599,6 +627,10 @@ class StarAnalyzer(BaseAnalyzer):
             pattern_family = "radial_spiral_motion"
         elif inp.effect_name == "Pinwheel":
             pattern_family = "radial_pinwheel"
+        elif inp.effect_name == "Shockwave":
+            center_x = float(inp.effect_settings.get("centerX", 50) or 50)
+            center_y = float(inp.effect_settings.get("centerY", 50) or 50)
+            pattern_family = "radial_shockwave" if center_x == 50 and center_y == 50 else "offcenter_radial_shockwave"
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -608,6 +640,8 @@ class StarAnalyzer(BaseAnalyzer):
             "radialDirectionReversals": direction_summary["reversals"],
             "radialNetTravel": direction_summary["netTravel"],
             "configuredPinwheelArms": int(inp.effect_settings.get("arms", 3) or 3) if inp.effect_name == "Pinwheel" else None,
+            "configuredShockwaveCenterX": float(inp.effect_settings.get("centerX", 50) or 50) if inp.effect_name == "Shockwave" else None,
+            "configuredShockwaveCenterY": float(inp.effect_settings.get("centerY", 50) or 50) if inp.effect_name == "Shockwave" else None,
         }
         base["patternFamily"] = pattern_family
         base["patternSignals"].update(
@@ -625,6 +659,10 @@ class StarAnalyzer(BaseAnalyzer):
                 "pinwheelRotationClass": (
                     "rotating" if bool(inp.effect_settings.get("rotation", False)) else "static"
                 ) if inp.effect_name == "Pinwheel" else None,
+                "shockwaveCenterClass": (
+                    "centered" if float(inp.effect_settings.get("centerX", 50) or 50) == 50 and float(inp.effect_settings.get("centerY", 50) or 50) == 50
+                    else "offset"
+                ) if inp.effect_name == "Shockwave" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -636,6 +674,86 @@ class StarAnalyzer(BaseAnalyzer):
         if inp.effect_name == "Pinwheel":
             intents.add("patterned")
             intents.add("directional")
+        if inp.effect_name == "Shockwave":
+            intents.add("patterned")
+            intents.add("animated")
+            if float(inp.effect_settings.get("centerX", 50) or 50) == 50 and float(inp.effect_settings.get("centerY", 50) or 50) == 50:
+                intents.add("fill")
+            else:
+                intents.add("directional")
+        if coverage >= 0.85:
+            intents.add("fill")
+        base["intentCandidates"] = sorted(intents)
+        return base
+
+
+class RadialAnalyzer(BaseAnalyzer):
+    family = "radial"
+
+    def analyze(self, inp: SequenceAnalysisInput) -> Dict[str, Any]:
+        base = super().analyze(inp)
+        coverage = self._f(inp, "averageActiveNodeRatio")
+        temporal = self._f(inp, "temporalChangeMean")
+        centroids = self._frame_centroids(inp)
+        deltas = self._signed_deltas(centroids)
+        direction_summary = self._signed_direction_summary(deltas)
+
+        pattern_family = "radial_fill"
+        if inp.effect_name == "Shimmer":
+            pattern_family = "radial_sparkle"
+        elif inp.effect_name == "Spirals":
+            pattern_family = "radial_spiral_motion"
+        elif inp.effect_name == "Pinwheel":
+            pattern_family = "radial_pinwheel"
+        elif inp.effect_name == "Shockwave":
+            center_x = float(inp.effect_settings.get("centerX", 50) or 50)
+            center_y = float(inp.effect_settings.get("centerY", 50) or 50)
+            pattern_family = "radial_shockwave" if center_x == 50 and center_y == 50 else "offcenter_radial_shockwave"
+        elif inp.effect_name == "On":
+            pattern_family = "static_fill"
+
+        base["geometrySignals"] = {
+            "radialCoverage": coverage,
+            "radialMotion": temporal,
+            "radialDirectionReversals": direction_summary["reversals"],
+            "radialNetTravel": direction_summary["netTravel"],
+            "configuredPinwheelArms": int(inp.effect_settings.get("arms", 3) or 3) if inp.effect_name == "Pinwheel" else None,
+            "configuredShockwaveCenterX": float(inp.effect_settings.get("centerX", 50) or 50) if inp.effect_name == "Shockwave" else None,
+            "configuredShockwaveCenterY": float(inp.effect_settings.get("centerY", 50) or 50) if inp.effect_name == "Shockwave" else None,
+        }
+        base["patternFamily"] = pattern_family
+        base["patternSignals"].update(
+            {
+                "radialStructure": (
+                    "full_fill" if coverage >= 0.85 else
+                    "sparse_points" if coverage <= 0.2 else
+                    "partial_fill"
+                ),
+                "pinwheelArmDensityClass": (
+                    "dense" if int(inp.effect_settings.get("arms", 3) or 3) >= 6 else
+                    "multi" if int(inp.effect_settings.get("arms", 3) or 3) >= 4 else
+                    "few"
+                ) if inp.effect_name == "Pinwheel" else None,
+                "pinwheelRotationClass": (
+                    "rotating" if bool(inp.effect_settings.get("rotation", False)) else "static"
+                ) if inp.effect_name == "Pinwheel" else None,
+                "shockwaveCenterClass": (
+                    "centered" if float(inp.effect_settings.get("centerX", 50) or 50) == 50 and float(inp.effect_settings.get("centerY", 50) or 50) == 50
+                    else "offset"
+                ) if inp.effect_name == "Shockwave" else None,
+            }
+        )
+        intents = set(base["intentCandidates"])
+        if inp.effect_name in ("Spirals", "Pinwheel", "Shockwave"):
+            intents.add("patterned")
+            intents.add("animated")
+        if inp.effect_name == "Pinwheel":
+            intents.add("directional")
+        if inp.effect_name == "Shockwave":
+            if float(inp.effect_settings.get("centerX", 50) or 50) == 50 and float(inp.effect_settings.get("centerY", 50) or 50) == 50:
+                intents.add("fill")
+            else:
+                intents.add("directional")
         if coverage >= 0.85:
             intents.add("fill")
         base["intentCandidates"] = sorted(intents)
@@ -666,6 +784,8 @@ ANALYZERS = {
     "star": StarAnalyzer(),
     "star_single_layer": StarAnalyzer(),
     "star_multi_layer": StarAnalyzer(),
+    "spinner": RadialAnalyzer(),
+    "spinner_standard": RadialAnalyzer(),
 }
 
 

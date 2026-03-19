@@ -406,6 +406,30 @@ pinwheel_effect_settings_json() {
     '
 }
 
+shockwave_effect_settings_json() {
+  local effect_settings_json="$1"
+  local shared_settings_json="$2"
+
+  jq -cn \
+    --argjson eff "${effect_settings_json}" \
+    --argjson shared "${shared_settings_json}" '
+      {
+        E_SLIDER_Shockwave_CenterX: (($eff.centerX // 50) | tostring),
+        E_SLIDER_Shockwave_CenterY: (($eff.centerY // 50) | tostring),
+        E_SLIDER_Shockwave_Start_Radius: (($eff.startRadius // 1) | tostring),
+        E_SLIDER_Shockwave_End_Radius: (($eff.endRadius // 10) | tostring),
+        E_SLIDER_Shockwave_Start_Width: (($eff.startWidth // 5) | tostring),
+        E_SLIDER_Shockwave_End_Width: (($eff.endWidth // 10) | tostring),
+        E_SLIDER_Shockwave_Accel: (($eff.accel // 0) | tostring),
+        E_SLIDER_Shockwave_Cycles: (($eff.cycles // 1) | tostring)
+      }
+      + (if ($eff.blendEdges // true) then {E_CHECKBOX_Shockwave_Blend_Edges: "1"} else {} end)
+      + (if ($eff.scale // true) then {E_CHECKBOX_Shockwave_Scale: "1"} else {} end)
+      + (if (($shared.renderStyle // "") | length) > 0 then {B_CHOICE_BufferStyle: ($shared.renderStyle)} else {} end)
+      + ($shared.settingsOverrides // {})
+    '
+}
+
 settings_json_for_effect() {
   local effect_name="$1"
   local effect_settings_json="$2"
@@ -435,6 +459,9 @@ settings_json_for_effect() {
       ;;
     "Pinwheel")
       pinwheel_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
+      ;;
+    "Shockwave")
+      shockwave_effect_settings_json "${effect_settings_json}" "${shared_settings_json}"
       ;;
     *)
       echo "Unsupported effect in initial harness: ${effect_name}" >&2

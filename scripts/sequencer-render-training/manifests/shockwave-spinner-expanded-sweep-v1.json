@@ -1,0 +1,21 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shockwave-spinner-expanded-sweep-v1",
+  "description": "Expanded Shockwave sweep on the canonical spinner model in the generic render-training layout.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "Spinner",
+    "modelType": "spinner",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shockwave sweep on the radial spinner using the 4-second animated standard."
+  },
+  "samples": [
+    {"sampleId": "shockwave-spinner-centered-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 1, "centerX": 50, "centerY": 50, "startRadius": 1, "endRadius": 45, "startWidth": 5, "endWidth": 12, "accel": 0, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["radial_shockwave", "spinner_fill"]},
+    {"sampleId": "shockwave-spinner-offset-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 1, "centerX": 25, "centerY": 65, "startRadius": 1, "endRadius": 35, "startWidth": 4, "endWidth": 10, "accel": 0, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["offset_shockwave", "directional"]},
+    {"sampleId": "shockwave-spinner-multi-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 3, "centerX": 50, "centerY": 50, "startRadius": 5, "endRadius": 55, "startWidth": 3, "endWidth": 8, "accel": 2, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["repeating_shockwave", "animated"]},
+    {"sampleId": "shockwave-spinner-hardedge-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 50, "centerY": 50, "startRadius": 10, "endRadius": 60, "startWidth": 2, "endWidth": 5, "accel": 0, "blendEdges": false, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["hard_edge_shockwave", "ring"]},
+    {"sampleId": "shockwave-spinner-compact-v1", "effectName": "Shockwave", "effectSettings": {"cycles": 2, "centerX": 50, "centerY": 50, "startRadius": 15, "endRadius": 28, "startWidth": 4, "endWidth": 6, "accel": -2, "blendEdges": true, "scale": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["compact_shockwave", "restrained"]}
+  ]
+}
