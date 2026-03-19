@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "caseId": "twinkle_soft_round_tree",
+      "description": "Retrieve a soft restrained Twinkle on the round tree.",
+      "requiredIntents": ["animated", "patterned", "restrained", "steady"],
+      "requiredStructuralLabels": ["soft_twinkle", "tree_pattern_fit"],
+      "requiredPatternFamilies": ["soft_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["tree_360_round"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "tree_360_round",
+        "patternFamiliesAny": ["soft_twinkle"]
+      }
+    },
+    {
+      "caseId": "twinkle_dense_line",
+      "description": "Retrieve a dense linear Twinkle on the horizontal line.",
+      "requiredIntents": ["animated", "busy", "patterned", "steady"],
+      "requiredStructuralLabels": ["dense_twinkle", "linear_pattern_fit"],
+      "requiredPatternFamilies": ["linear_dense_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["single_line_horizontal"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "single_line_horizontal",
+        "patternFamiliesAny": ["linear_dense_twinkle"]
+      }
+    },
+    {
+      "caseId": "twinkle_punchy_spinner",
+      "description": "Retrieve a punchy radial Twinkle on the spinner.",
+      "requiredIntents": ["animated", "bold", "patterned", "restrained"],
+      "requiredStructuralLabels": ["strobe_twinkle", "radial_pattern_fit"],
+      "requiredPatternFamilies": ["radial_punchy_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_punchy_twinkle"]
+      }
+    },
+    {
+      "caseId": "twinkle_classic_line",
+      "description": "Retrieve a classic linear Twinkle on the horizontal line.",
+      "requiredIntents": ["animated", "patterned", "restrained", "steady"],
+      "requiredStructuralLabels": ["soft_twinkle", "linear_pattern_fit"],
+      "requiredPatternFamilies": ["linear_classic_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["single_line_horizontal"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "single_line_horizontal",
+        "patternFamiliesAny": ["linear_classic_twinkle"]
+      }
+    }
+  ]
+}

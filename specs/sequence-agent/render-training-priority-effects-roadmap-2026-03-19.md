@@ -141,6 +141,19 @@ Current Stage 1 state:
 - `steps`
 - `strobe`
 
+Current Stage 1 state:
+- first broad-geometry screening completed on:
+  - `single_line_horizontal`
+  - `tree_360_round`
+  - `tree_360_spiral`
+  - `star_single_layer`
+  - `spinner_standard`
+- current result:
+  - structurally observable
+  - structurally retrievable for constrained Twinkle requests
+  - not ready for selector promotion
+- next work should deepen interaction semantics before it is added to the selector or controlled-vocabulary layers
+
 ## Decision Rules
 
 - Do not drop a parameter after one flat result.
