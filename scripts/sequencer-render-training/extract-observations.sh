@@ -445,7 +445,16 @@ jq -cn \
               end
             )
           + (
-              if (($settings.reRandomize // false)) then ["rerandomized_twinkle"] else [] end
+              if (($analysis.patternSignals.twinkleStyleClass // "") == "classic") then ["classic_twinkle"] else [] end
+            )
+          + (
+              if (($analysis.patternSignals.twinkleRandomizeClass // "") == "rerandomized") then ["rerandomized_twinkle"] else [] end
+            )
+          + (
+              if (($analysis.patternFamily // "") | contains("surging_twinkle")) then ["surging_twinkle"]
+              elif (($analysis.patternFamily // "") | contains("restrained_twinkle")) then ["restrained_twinkle"]
+              else []
+              end
             )
           + (if $patternFamily != null then [("pattern_family:" + ($patternFamily | ascii_downcase | gsub("[^a-z0-9]+"; "_")))] else [] end)
           + ($analysisIntents | map("intent:" + (. | ascii_downcase | gsub("[^a-z0-9]+"; "_"))))

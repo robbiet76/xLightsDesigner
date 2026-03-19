@@ -1,0 +1,22 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "twinkle-spinner-interactions-v1",
+  "description": "Representative Twinkle interaction sweep on the canonical spinner.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "Spinner",
+    "modelType": "spinner",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Selected interaction sweep combining density, cadence, strobe, style, and rerandomization on the spinner."
+  },
+  "samples": [
+    {"sampleId": "twinkle-spinner-restrained-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 1, "steps": 90, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "restrained_twinkle"]},
+    {"sampleId": "twinkle-spinner-soft-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 3, "steps": 70, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "soft_twinkle"]},
+    {"sampleId": "twinkle-spinner-surging-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 9, "steps": 10, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "surging_twinkle"]},
+    {"sampleId": "twinkle-spinner-strobe-v1", "effectName": "Twinkle", "effectSettings": {"style": "New Render Method", "count": 9, "steps": 10, "strobe": true, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "strobe_twinkle"]},
+    {"sampleId": "twinkle-spinner-classic-random-v1", "effectName": "Twinkle", "effectSettings": {"style": "Old Render Method", "count": 5, "steps": 50, "strobe": false, "reRandomize": true}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "classic_twinkle", "rerandomized_twinkle"]},
+    {"sampleId": "twinkle-spinner-classic-stable-v1", "effectName": "Twinkle", "effectSettings": {"style": "Old Render Method", "count": 5, "steps": 50, "strobe": false, "reRandomize": false}, "sharedSettings": {"renderStyle": "Default"}, "labelHints": ["interaction_sweep", "classic_twinkle"]}
+  ]
+}

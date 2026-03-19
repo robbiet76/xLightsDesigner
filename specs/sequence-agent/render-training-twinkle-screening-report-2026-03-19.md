@@ -3,16 +3,24 @@
 Runs:
 - `/tmp/render-training-twinkle-v1`
 - `/tmp/render-training-twinkle-v1-rerun`
+- `/tmp/twinkle-interactions-v1`
 
 Machine-readable artifacts:
 - [/tmp/render-training-twinkle-summary.v2.json](/tmp/render-training-twinkle-summary.v2.json)
 - [/tmp/render-training-twinkle-intent-map.v1.json](/tmp/render-training-twinkle-intent-map.v1.json)
 - [/tmp/twinkle-intent-eval.v1.json](/tmp/twinkle-intent-eval.v1.json)
+- [/tmp/render-training-twinkle-interaction-intent-map.v1.json](/tmp/render-training-twinkle-interaction-intent-map.v1.json)
+- [/tmp/twinkle-intent-eval.v2.json](/tmp/twinkle-intent-eval.v2.json)
 
 Result:
 - `20/20` packs passed on the refined rerun
 - `0` failed
 - dedicated retrieval eval:
+  - `4/4` passed
+- representative interaction packs:
+  - `3/3` passed
+  - `18/18` samples passed
+- dedicated interaction retrieval eval:
   - `4/4` passed
 
 Scope:
@@ -63,6 +71,29 @@ Current structural families observed:
   - `radial_dense_twinkle`
   - `radial_punchy_twinkle`
 
+Interaction families now observed:
+- horizontal line:
+  - `linear_restrained_twinkle`
+  - `linear_soft_twinkle`
+  - `linear_surging_twinkle`
+  - `linear_strobe_twinkle`
+  - `linear_classic_twinkle`
+  - `linear_classic_random_twinkle`
+- round tree:
+  - `restrained_twinkle`
+  - `soft_twinkle`
+  - `surging_twinkle`
+  - `strobe_twinkle`
+  - `classic_twinkle`
+  - `classic_random_twinkle`
+- spinner:
+  - `radial_restrained_twinkle`
+  - `radial_soft_twinkle`
+  - `radial_surging_twinkle`
+  - `radial_strobe_twinkle`
+  - `radial_classic_twinkle`
+  - `radial_classic_random_twinkle`
+
 Important refinement:
 - the initial linear pass was too generic and inherited chase-like semantics
 - the refined rerun corrected that
@@ -81,6 +112,9 @@ What this means:
   - dense twinkle
   - punchy radial twinkle
   - classic linear twinkle
+  - restrained linear twinkle
+  - surging tree twinkle
+  - rerandomized classic radial twinkle
 
 What is not mature enough yet:
 - `Twinkle` is not ready for the selector stack yet

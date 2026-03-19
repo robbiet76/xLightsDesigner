@@ -231,6 +231,31 @@ class BaseAnalyzer:
             intents.add("busy")
         return sorted(intents)
 
+    def _twinkle_family(self, settings: Dict[str, Any], prefix: str = "") -> str:
+        count = int(settings.get("count", 5) or 5)
+        steps = int(settings.get("steps", 50) or 50)
+        strobe = bool(settings.get("strobe", False))
+        rerandomize = bool(settings.get("reRandomize", False))
+        style = str(settings.get("style", "New Render Method") or "New Render Method").lower()
+
+        if strobe and count >= 7:
+            name = "strobe_twinkle"
+        elif strobe:
+            name = "punchy_twinkle"
+        elif count >= 7 and steps <= 20:
+            name = "surging_twinkle"
+        elif count >= 7:
+            name = "dense_twinkle"
+        elif "old" in style and rerandomize:
+            name = "classic_random_twinkle"
+        elif "old" in style:
+            name = "classic_twinkle"
+        elif count <= 2 and steps >= 70:
+            name = "restrained_twinkle"
+        else:
+            name = "soft_twinkle"
+        return f"{prefix}{name}" if prefix else name
+
     def _shockwave_variant(self, shock: Dict[str, Any]) -> str | None:
         if shock["centerClass"] != "centered":
             return None
@@ -437,20 +462,7 @@ class LinearAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "marquee_motion"
         elif effect == "Twinkle":
-            count = int(settings.get("count", 5) or 5)
-            steps = int(settings.get("steps", 50) or 50)
-            strobe = bool(settings.get("strobe", False))
-            style = str(settings.get("style", "New Render Method") or "New Render Method").lower()
-            if strobe and count >= 7:
-                pattern_family = "linear_strobe_twinkle"
-            elif strobe:
-                pattern_family = "linear_punchy_twinkle"
-            elif count >= 7 or steps <= 20:
-                pattern_family = "linear_dense_twinkle"
-            elif "old" in style:
-                pattern_family = "linear_classic_twinkle"
-            else:
-                pattern_family = "linear_soft_twinkle"
+            pattern_family = self._twinkle_family(settings, "linear_")
 
         base["geometrySignals"] = {
             "centroidMotionMean": centroid_motion,
@@ -524,6 +536,9 @@ class LinearAnalyzer(BaseAnalyzer):
                     "classic" if "old" in str(settings.get("style", "New Render Method") or "New Render Method").lower() else
                     "modern"
                 ) if effect == "Twinkle" else None,
+                "twinkleRandomizeClass": (
+                    "rerandomized" if bool(settings.get("reRandomize", False)) else "stable"
+                ) if effect == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -560,6 +575,8 @@ class LinearAnalyzer(BaseAnalyzer):
                 intents.add("restrained")
             if int(settings.get("steps", 50) or 50) >= 70:
                 intents.add("steady")
+            if bool(settings.get("reRandomize", False)):
+                intents.add("varied")
         base["intentCandidates"] = sorted(intents)
         return base
 
@@ -678,20 +695,7 @@ class TreeAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "shockwave_ring"
         elif inp.effect_name == "Twinkle":
-            count = float(settings.get("count", 5) or 5)
-            steps = float(settings.get("steps", 50) or 50)
-            strobe = bool(settings.get("strobe", False))
-            style = str(settings.get("style", "New Render Method") or "New Render Method").lower()
-            if strobe and count >= 7:
-                pattern_family = "strobe_twinkle"
-            elif strobe:
-                pattern_family = "punchy_twinkle"
-            elif count >= 7 or steps <= 20:
-                pattern_family = "dense_twinkle"
-            elif "old" in style:
-                pattern_family = "classic_twinkle"
-            else:
-                pattern_family = "soft_twinkle"
+            pattern_family = self._twinkle_family(settings)
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -765,6 +769,9 @@ class TreeAnalyzer(BaseAnalyzer):
                     "classic" if "old" in str(settings.get("style", "New Render Method") or "New Render Method").lower() else
                     "modern"
                 ) if inp.effect_name == "Twinkle" else None,
+                "twinkleRandomizeClass": (
+                    "rerandomized" if bool(settings.get("reRandomize", False)) else "stable"
+                ) if inp.effect_name == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -809,6 +816,8 @@ class TreeAnalyzer(BaseAnalyzer):
                 intents.add("bold")
             if int(settings.get("steps", 50) or 50) >= 70:
                 intents.add("steady")
+            if bool(settings.get("reRandomize", False)):
+                intents.add("varied")
             if coverage >= 0.85:
                 intents.add("fill")
         base["intentCandidates"] = sorted(intents)
@@ -849,16 +858,7 @@ class StarAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "radial_shockwave"
         elif inp.effect_name == "Twinkle":
-            count = int(inp.effect_settings.get("count", 5) or 5)
-            strobe = bool(inp.effect_settings.get("strobe", False))
-            if strobe and count >= 7:
-                pattern_family = "radial_strobe_twinkle"
-            elif strobe:
-                pattern_family = "radial_punchy_twinkle"
-            elif count >= 7:
-                pattern_family = "radial_dense_twinkle"
-            else:
-                pattern_family = "radial_soft_twinkle"
+            pattern_family = self._twinkle_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -900,6 +900,18 @@ class StarAnalyzer(BaseAnalyzer):
                     "sparse" if int(inp.effect_settings.get("count", 5) or 5) <= 2 else
                     "medium"
                 ) if inp.effect_name == "Twinkle" else None,
+                "twinkleCadenceClass": (
+                    "fast" if int(inp.effect_settings.get("steps", 50) or 50) <= 20 else
+                    "slow" if int(inp.effect_settings.get("steps", 50) or 50) >= 70 else
+                    "medium"
+                ) if inp.effect_name == "Twinkle" else None,
+                "twinkleStyleClass": (
+                    "classic" if "old" in str(inp.effect_settings.get("style", "New Render Method") or "New Render Method").lower() else
+                    "modern"
+                ) if inp.effect_name == "Twinkle" else None,
+                "twinkleRandomizeClass": (
+                    "rerandomized" if bool(inp.effect_settings.get("reRandomize", False)) else "stable"
+                ) if inp.effect_name == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -921,6 +933,8 @@ class StarAnalyzer(BaseAnalyzer):
                 intents.add("busy")
             else:
                 intents.add("restrained")
+            if bool(inp.effect_settings.get("reRandomize", False)):
+                intents.add("varied")
         elif coverage >= 0.85:
             intents.add("fill")
         base["intentCandidates"] = sorted(intents)
@@ -961,16 +975,7 @@ class RadialAnalyzer(BaseAnalyzer):
             else:
                 pattern_family = "radial_shockwave"
         elif inp.effect_name == "Twinkle":
-            count = int(inp.effect_settings.get("count", 5) or 5)
-            strobe = bool(inp.effect_settings.get("strobe", False))
-            if strobe and count >= 7:
-                pattern_family = "radial_strobe_twinkle"
-            elif strobe:
-                pattern_family = "radial_punchy_twinkle"
-            elif count >= 7:
-                pattern_family = "radial_dense_twinkle"
-            else:
-                pattern_family = "radial_soft_twinkle"
+            pattern_family = self._twinkle_family(inp.effect_settings, "radial_")
         elif inp.effect_name == "On":
             pattern_family = "static_fill"
 
@@ -1012,6 +1017,18 @@ class RadialAnalyzer(BaseAnalyzer):
                     "sparse" if int(inp.effect_settings.get("count", 5) or 5) <= 2 else
                     "medium"
                 ) if inp.effect_name == "Twinkle" else None,
+                "twinkleCadenceClass": (
+                    "fast" if int(inp.effect_settings.get("steps", 50) or 50) <= 20 else
+                    "slow" if int(inp.effect_settings.get("steps", 50) or 50) >= 70 else
+                    "medium"
+                ) if inp.effect_name == "Twinkle" else None,
+                "twinkleStyleClass": (
+                    "classic" if "old" in str(inp.effect_settings.get("style", "New Render Method") or "New Render Method").lower() else
+                    "modern"
+                ) if inp.effect_name == "Twinkle" else None,
+                "twinkleRandomizeClass": (
+                    "rerandomized" if bool(inp.effect_settings.get("reRandomize", False)) else "stable"
+                ) if inp.effect_name == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -1030,6 +1047,8 @@ class RadialAnalyzer(BaseAnalyzer):
                 intents.add("busy")
             else:
                 intents.add("restrained")
+            if bool(inp.effect_settings.get("reRandomize", False)):
+                intents.add("varied")
         elif coverage >= 0.85:
             intents.add("fill")
         base["intentCandidates"] = sorted(intents)

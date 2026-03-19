@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "caseId": "twinkle_restrained_line",
+      "description": "Retrieve a restrained linear Twinkle on the horizontal line.",
+      "requiredIntents": ["animated", "patterned", "restrained", "steady"],
+      "requiredStructuralLabels": ["restrained_twinkle"],
+      "requiredPatternFamilies": ["linear_restrained_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["single_line_horizontal"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "single_line_horizontal",
+        "patternFamiliesAny": ["linear_restrained_twinkle"]
+      }
+    },
+    {
+      "caseId": "twinkle_surging_tree",
+      "description": "Retrieve a surging Twinkle on the round tree.",
+      "requiredIntents": ["animated", "busy", "patterned"],
+      "requiredStructuralLabels": ["surging_twinkle"],
+      "requiredPatternFamilies": ["surging_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["tree_360_round"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "tree_360_round",
+        "patternFamiliesAny": ["surging_twinkle"]
+      }
+    },
+    {
+      "caseId": "twinkle_strobe_spinner",
+      "description": "Retrieve a strobe radial Twinkle on the spinner.",
+      "requiredIntents": ["animated", "bold", "busy", "patterned"],
+      "requiredStructuralLabels": ["strobe_twinkle"],
+      "requiredPatternFamilies": ["radial_strobe_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_strobe_twinkle"]
+      }
+    },
+    {
+      "caseId": "twinkle_classic_random_spinner",
+      "description": "Retrieve a rerandomized classic Twinkle on the spinner.",
+      "requiredIntents": ["animated", "patterned", "restrained", "varied"],
+      "requiredStructuralLabels": ["classic_twinkle", "rerandomized_twinkle"],
+      "requiredPatternFamilies": ["radial_classic_random_twinkle"],
+      "effects": ["Twinkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "limit": 5,
+      "expectedTop": {
+        "effect": "Twinkle",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_classic_random_twinkle"]
+      }
+    }
+  ]
+}
