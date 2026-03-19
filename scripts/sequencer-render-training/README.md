@@ -50,6 +50,7 @@ The current harness is intentionally small:
 - `generate-registry-plan-manifests.py`: emit a batch of registry-driven manifests from a planning file
 - `generate-priority-effect-summary.py`: consolidate priority-effect region summaries from completed runs into one machine-readable summary
 - `generate-priority-intent-map.py`: build a first-pass intent map from the consolidated priority-effect summary
+- `query-priority-intent-map.py`: query the first-pass intent map for structurally matched regions
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -141,6 +142,15 @@ python3 scripts/sequencer-render-training/generate-priority-effect-summary.py \
 python3 scripts/sequencer-render-training/generate-priority-intent-map.py \
   --summary /tmp/render-training-priority-effects-summary.json \
   --out-file /tmp/render-training-priority-intent-map.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/query-priority-intent-map.py \
+  --intent-map /tmp/render-training-priority-intent-map.json \
+  --intent directional \
+  --intent segmented \
+  --exclude-intent busy \
+  --limit 5
 ```
 
 ```bash
@@ -253,6 +263,7 @@ Environment:
 - Intent mapping should only be built on structurally mature effects and geometry profiles:
   - use the consolidated priority-effect summary as the input
   - do not over-promote weak or style-level semantics before the analyzer layer supports them
+  - query helpers over the intent map should be treated as constrained structural retrieval, not freeform designer-language understanding
 - Registry planning should be geometry-profile-aware:
   - choose a stable base manifest per geometry profile
   - generate first-order sweeps from registered parameters
