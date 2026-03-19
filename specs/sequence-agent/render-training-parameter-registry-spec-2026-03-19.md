@@ -4,6 +4,9 @@ Status: Draft
 Date: 2026-03-19  
 Owner: xLightsDesigner Team
 
+System roadmap reference:
+- [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
+
 Primary implementation artifacts:
 - [effect-parameter-registry.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/effect-parameter-registry.json)
 - [generate-parameter-sweep-manifest.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generate-parameter-sweep-manifest.py)
@@ -11,6 +14,8 @@ Primary implementation artifacts:
 ## Purpose
 
 The parameter registry exists to move render-training sampling away from ad hoc manifest authoring.
+
+It is part of the long-lived test-design framework for the render-training system, not just a one-time sweep generator.
 
 It records, per effect:
 - which parameters exist

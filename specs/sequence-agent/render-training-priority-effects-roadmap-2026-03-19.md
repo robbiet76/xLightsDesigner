@@ -1,5 +1,8 @@
 # Render Training Priority Effects Roadmap
 
+System roadmap reference:
+- [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
+
 ## Goal
 Prioritize effect expansion by:
 
@@ -9,6 +12,10 @@ Prioritize effect expansion by:
 4. interpretation value
 
 Do not prioritize by implementation ease alone.
+
+This roadmap applies inside Stage 1 of the broader render-training system:
+- full single-effect understanding across the standard model set
+- before layered-effect training begins
 
 ## Priority Order
 

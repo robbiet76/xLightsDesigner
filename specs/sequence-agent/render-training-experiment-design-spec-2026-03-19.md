@@ -4,9 +4,14 @@ Status: Draft
 Date: 2026-03-19  
 Owner: xLightsDesigner Team
 
+Roadmap reference:
+- [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
+
 ## 1. Purpose
 
 This spec formalizes the training strategy for sequencer render understanding.
+
+This spec defines the experiment model inside the broader long-lived render-training system roadmap.
 
 The problem space is effectively massive:
 - model settings
@@ -443,4 +448,3 @@ Not part of the immediate phase:
 - aesthetic palette optimization
 
 These are later workstreams.
-

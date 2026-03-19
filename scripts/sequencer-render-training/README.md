@@ -5,6 +5,9 @@ Internal-only tooling for xLights-backed render sweeps used to train sequencer r
 This tooling does **not** replace xLights rendering.
 It drives xLights as the authoritative renderer, captures the render artifact, and writes a structured training record.
 
+Primary system roadmap:
+- [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
+
 ## First Slice
 
 The current harness is intentionally small:
