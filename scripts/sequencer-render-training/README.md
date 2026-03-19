@@ -67,6 +67,7 @@ The current harness is intentionally small:
 - `generate-effect-geometry-gap-report.py`: compare current mature-effect geometry coverage against the canonical standard-model catalog
 - `generate-effect-static-complexity-report.py`: compute a registry-only static complexity score and inferred complexity class per effect
 - `generate-effect-complexity-review.py`: combine static complexity with current training evidence into a review artifact
+- `cleanup-render-training-artifacts.py`: dry-run or apply cleanup for stale raw artifacts in the canonical render-training workspace
 - `evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
 - `priority-effect-selection-cases.v1.json`: first selector-evaluation case set
 - `priority-effect-selection-cases.v2.json`: expanded selector-evaluation case set with tighter geometry-specific structural cases
@@ -230,6 +231,14 @@ python3 scripts/sequencer-render-training/generate-effect-complexity-review.py \
   --static-complexity /tmp/render-training-effect-static-complexity.v1.json \
   --maturity /tmp/render-training-effect-maturity.v5.json \
   --out-file /tmp/render-training-effect-complexity-review.v1.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/cleanup-render-training-artifacts.py \
+  --root /Users/robterry/Desktop/Show/RenderTraining \
+  --keep-working-xsq 40 \
+  --keep-manifests 40 \
+  --out-file /tmp/render-training-cleanup-plan.v1.json
 ```
 
 ```bash

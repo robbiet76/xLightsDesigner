@@ -162,9 +162,13 @@ The long-lived system should be organized around these persistent layers:
 9. intent map and retrieval evaluation
 10. effect-selection layer
 11. future layered-effect planning and evaluation
+12. retention and cleanup policy
 
 The existing framework already covers most of this.
 The roadmap is to harden and extend it, not replace it.
+
+Retention policy reference:
+- [render-training-retention-policy-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-retention-policy-2026-03-19.md)
 
 ## 6. Canonical Training Assets
 
