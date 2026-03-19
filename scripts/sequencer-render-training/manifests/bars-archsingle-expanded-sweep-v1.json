@@ -3,7 +3,7 @@
   "packId": "bars-archsingle-expanded-sweep-v1",
   "description": "Expanded Bars sweep on the canonical single arch model in the generic render-training layout.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "ArchSingle",
     "modelType": "arch",
     "startMs": 1000,

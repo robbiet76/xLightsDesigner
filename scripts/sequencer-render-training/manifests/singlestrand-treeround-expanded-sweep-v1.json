@@ -3,7 +3,7 @@
   "packId": "singlestrand-treeround-expanded-sweep-v1",
   "description": "Expanded SingleStrand sweep on the canonical round tree model in the generic render-training layout.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "TreeRound",
     "modelType": "tree_360",
     "startMs": 1000,

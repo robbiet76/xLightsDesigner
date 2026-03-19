@@ -131,7 +131,7 @@ python3 scripts/sequencer-render-training/normalize-manifest.py \
 
 ```bash
 python3 scripts/sequencer-render-training/generate-model-geometry-audit.py \
-  --show-dir /Users/robterry/Desktop/Show/RenderTraining \
+  --show-dir /Users/robterry/Projects/xLightsDesigner/render-training \
   --out-file scripts/sequencer-render-training/generic-layout-geometry-audit.json
 ```
 
@@ -235,7 +235,7 @@ python3 scripts/sequencer-render-training/generate-effect-complexity-review.py \
 
 ```bash
 python3 scripts/sequencer-render-training/cleanup-render-training-artifacts.py \
-  --root /Users/robterry/Desktop/Show/RenderTraining \
+  --root /Users/robterry/Projects/xLightsDesigner/render-training \
   --keep-working-xsq 40 \
   --keep-manifests 40 \
   --out-file /tmp/render-training-cleanup-plan.v1.json
@@ -326,7 +326,7 @@ Environment:
   - default: `0`
   - optional manual recovery mode for batch runs
 - `RENDER_TRAINING_ROOT`
-  - default: `/Users/robterry/Desktop/Show/RenderTraining`
+  - default: `/Users/robterry/Projects/xLightsDesigner/render-training`
   - internal workspace for packed `.fseq`, working `.xsq`, copied manifests, and derived artifacts
 - `PHASE_SET`
   - used by `run-overnight-approved-matrix.sh`

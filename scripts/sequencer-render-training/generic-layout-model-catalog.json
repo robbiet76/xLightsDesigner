@@ -1,7 +1,7 @@
 {
   "layoutName": "RenderTraining",
-  "showDir": "/Users/robterry/Desktop/Show/RenderTraining",
-  "fixtureSequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+  "showDir": "/Users/robterry/Projects/xLightsDesigner/render-training",
+  "fixtureSequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
   "canonicalModels": {
     "single_line_horizontal": {
       "modelName": "SingleLineHorizontal",

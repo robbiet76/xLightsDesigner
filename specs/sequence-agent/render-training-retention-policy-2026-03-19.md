@@ -53,7 +53,7 @@ Keep only where justified:
 ## 3. Current Workspace Policy
 
 Canonical training workspace:
-- `/Users/robterry/Desktop/Show/RenderTraining`
+- `/Users/robterry/Projects/xLightsDesigner/render-training`
 
 Current folder roles:
 - `working/`

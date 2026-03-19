@@ -3,7 +3,7 @@
   "packId": "pinwheel-treespiral-expanded-sweep-v1",
   "description": "Expanded Pinwheel sweep on the canonical spiral tree model in the generic render-training layout.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "TreeSpiral",
     "modelType": "tree_360",
     "startMs": 1000,

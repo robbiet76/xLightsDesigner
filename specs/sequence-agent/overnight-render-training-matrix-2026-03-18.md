@@ -10,7 +10,7 @@ Goal for this run:
 Operating assumptions:
 - xLights target is debug build only
 - runs are sequential, not parallel
-- all outputs persist under `/Users/robterry/Desktop/Show/RenderTraining`
+- all outputs persist under `/Users/robterry/Projects/xLightsDesigner/render-training`
 - each run writes:
   - packed `.xsq`
   - packed `.fseq`
@@ -298,9 +298,9 @@ Phase 2-4 ordering rule:
 ## Expected Overnight Outputs
 
 For each pack:
-- packed `.xsq` under `/Users/robterry/Desktop/Show/RenderTraining/working`
-- packed `.fseq` under `/Users/robterry/Desktop/Show/RenderTraining/fseq`
-- manifest snapshot under `/Users/robterry/Desktop/Show/RenderTraining/manifests`
+- packed `.xsq` under `/Users/robterry/Projects/xLightsDesigner/render-training/working`
+- packed `.fseq` under `/Users/robterry/Projects/xLightsDesigner/render-training/fseq`
+- manifest snapshot under `/Users/robterry/Projects/xLightsDesigner/render-training/manifests`
 - per-sample decoded records under the selected run output directory
 
 For range packs:

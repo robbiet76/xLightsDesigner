@@ -3,7 +3,7 @@
   "packId": "shimmer-treeflat-expanded-sweep-v1",
   "description": "Expanded Shimmer sweep on the canonical flat tree model in the generic render-training layout.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/RenderTraining/RenderTraining-AnimationFixture.xsq",
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "TreeFlat",
     "modelType": "tree_flat",
     "startMs": 1000,

@@ -8,7 +8,7 @@ Purpose:
 - establish the next input layer for `resolvedGeometryProfile` and `geometryTraits`
 
 Authoritative source:
-- `/Users/robterry/Desktop/Show/RenderTraining/xlights_rgbeffects.xml`
+- `/Users/robterry/Projects/xLightsDesigner/render-training/xlights_rgbeffects.xml`
 
 Generated artifact:
 - [generic-layout-geometry-audit.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generic-layout-geometry-audit.json)

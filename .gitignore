@@ -29,3 +29,6 @@ apps/xlightsdesigner-analysis-service/eval/*.local.json
 
 # Editor
 .vscode/settings.json
+
+# Render training workspace
+render-training/

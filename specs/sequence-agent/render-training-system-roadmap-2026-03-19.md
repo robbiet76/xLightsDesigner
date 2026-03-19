@@ -173,7 +173,7 @@ Retention policy reference:
 ## 6. Canonical Training Assets
 
 The canonical training workspace should continue to live under:
-- `/Users/robterry/Desktop/Show/RenderTraining`
+- `/Users/robterry/Projects/xLightsDesigner/render-training`
 
 It should remain the home for:
 - canonical xLights layout XML
