@@ -239,6 +239,527 @@
         }
       }
     },
+    "Bars": {
+      "notes": "High-value structural motion effect. Direction, bar count, cadence, and structural toggles are likely first-order levers across linear and tree geometries.",
+      "parameters": {
+        "direction": {
+          "type": "enum",
+          "anchors": ["up", "down", "expand", "compress", "Left", "Right"],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["barCount", "cycles", "renderStyle", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        },
+        "barCount": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [1, 2, 3, 4, 5],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["direction", "cycles", "geometryProfile"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 20
+          },
+          "anchors": [2, 5, 10, 15, 20],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["direction", "barCount", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "highlight": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["gradient", "3D"],
+          "stopRule": "all_meaningful_options"
+        },
+        "3D": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["highlight", "gradient"],
+          "stopRule": "all_meaningful_options"
+        },
+        "gradient": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["highlight", "barCount"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
+    "Spirals": {
+      "notes": "Geometry-sensitive motion effect. Especially high value on tree profiles where count, movement, rotation, and thickness interact with spiral-capable model forms.",
+      "parameters": {
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [1, 2, 3, 4, 5],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["movement", "rotation", "thickness", "geometryProfile"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "movement": {
+          "type": "numeric",
+          "range": {
+            "min": -20,
+            "max": 20
+          },
+          "anchors": [-15, -5, 0, 5, 15],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["rotation", "count", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "rotation": {
+          "type": "numeric",
+          "range": {
+            "min": -50,
+            "max": 50
+          },
+          "anchors": [-30, -10, 0, 10, 30],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["movement", "thickness", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "thickness": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [10, 30, 50, 70, 90],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["count", "blend", "3D"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "blend": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["3D", "rotation"],
+          "stopRule": "all_meaningful_options"
+        },
+        "3D": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["blend", "thickness"],
+          "stopRule": "all_meaningful_options"
+        },
+        "grow": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "low",
+          "interactionHypotheses": ["shrink", "movement"],
+          "stopRule": "all_meaningful_options"
+        },
+        "shrink": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "low",
+          "interactionHypotheses": ["grow", "movement"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
+    "Marquee": {
+      "notes": "Readable border and perimeter motion effect. Band/skip/thickness/speed should be screened before less common positioning controls.",
+      "parameters": {
+        "bandSize": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [1, 3, 5, 7, 9],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["skipSize", "thickness", "speed"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "skipSize": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 10
+          },
+          "anchors": [0, 2, 4, 6, 8],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["bandSize", "speed", "reverse"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "thickness": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [1, 2, 4, 6, 8],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["bandSize", "skipSize", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [1, 3, 5, 7, 9],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["bandSize", "reverse", "stagger"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "reverse": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["speed", "start"],
+          "stopRule": "all_meaningful_options"
+        },
+        "stagger": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 10
+          },
+          "anchors": [0, 2, 4, 6, 8],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["thickness", "reverse"],
+          "stopRule": "stop_if_flat_across_profile"
+        }
+      }
+    },
+    "Pinwheel": {
+      "notes": "High-value radial effect. Strong candidate for star, spinner, and tree profiles where style, arms, rotation, and speed should dominate early screening.",
+      "parameters": {
+        "style": {
+          "type": "enum",
+          "anchors": ["Old Render Method", "New Render Method"],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["arms", "3D", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        },
+        "arms": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 8
+          },
+          "anchors": [2, 3, 4, 6, 8],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["speed", "armSize", "geometryProfile"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "armSize": {
+          "type": "numeric",
+          "range": {
+            "min": 10,
+            "max": 100
+          },
+          "anchors": [25, 50, 75, 100],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["arms", "thickness", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "thickness": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [0, 20, 40, 60, 80],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["arms", "twist", "3D"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "twist": {
+          "type": "numeric",
+          "range": {
+            "min": -360,
+            "max": 360
+          },
+          "anchors": [-180, -60, 0, 60, 180],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["rotation", "speed", "geometryProfile"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "speed": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 20
+          },
+          "anchors": [3, 7, 10, 14, 18],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["arms", "rotation", "twist"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "rotation": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["twist", "speed"],
+          "stopRule": "all_meaningful_options"
+        },
+        "3DMode": {
+          "type": "enum",
+          "anchors": ["none", "3D", "3D Inverted", "Sweep"],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["style", "thickness", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
+    "Shockwave": {
+      "notes": "Spatial expansion effect. Best on matrix/radial/tree classes, but worth early inclusion because center/radius/width semantics are highly interpretable.",
+      "parameters": {
+        "cycles": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 5
+          },
+          "anchors": [1, 2, 3, 4, 5],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["startRadius", "endRadius", "accel"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "centerX": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [25, 50, 75],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["centerY", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        },
+        "centerY": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [25, 50, 75],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["centerX", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        },
+        "startRadius": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [0, 10, 25, 50],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["endRadius", "scale"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "endRadius": {
+          "type": "numeric",
+          "range": {
+            "min": 0,
+            "max": 100
+          },
+          "anchors": [10, 25, 50, 75],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["startRadius", "scale"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "startWidth": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 50
+          },
+          "anchors": [2, 5, 10, 20],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["endWidth", "blendEdges"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "endWidth": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 50
+          },
+          "anchors": [2, 5, 10, 20],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["startWidth", "blendEdges"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "accel": {
+          "type": "numeric",
+          "range": {
+            "min": -10,
+            "max": 10
+          },
+          "anchors": [-5, 0, 5],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["cycles", "endRadius"],
+          "stopRule": "all_meaningful_options"
+        },
+        "blendEdges": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["startWidth", "endWidth"],
+          "stopRule": "all_meaningful_options"
+        },
+        "scale": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["startRadius", "endRadius", "geometryProfile"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
+    "Twinkle": {
+      "notes": "Higher-value texture effect than Shimmer for long-term training. Density, dwell, strobe behavior, rerandomization, and render method should be screened first.",
+      "parameters": {
+        "style": {
+          "type": "enum",
+          "anchors": ["Old Render Method", "New Render Method"],
+          "importance": "high",
+          "phase": "baseline",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["count", "steps", "strobe"],
+          "stopRule": "all_meaningful_options"
+        },
+        "count": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 10
+          },
+          "anchors": [1, 3, 5, 7, 9],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["steps", "strobe", "geometryProfile"],
+          "stopRule": "stop_when_regions_stabilize"
+        },
+        "steps": {
+          "type": "numeric",
+          "range": {
+            "min": 1,
+            "max": 100
+          },
+          "anchors": [10, 30, 50, 70, 90],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["count", "strobe", "style"],
+          "stopRule": "refine_only_near_breakpoints"
+        },
+        "strobe": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "high",
+          "phase": "screen",
+          "practicalPriority": "high",
+          "interactionHypotheses": ["steps", "style"],
+          "stopRule": "all_meaningful_options"
+        },
+        "reRandomize": {
+          "type": "boolean",
+          "anchors": [false, true],
+          "importance": "medium",
+          "phase": "screen",
+          "practicalPriority": "medium",
+          "interactionHypotheses": ["style", "count"],
+          "stopRule": "all_meaningful_options"
+        }
+      }
+    },
     "Color Wash": {
       "notes": "Structure often changes more from boolean fade combinations than from numeric cycle changes.",
       "parameters": {
