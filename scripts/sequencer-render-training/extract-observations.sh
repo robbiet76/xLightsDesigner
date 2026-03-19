@@ -91,6 +91,8 @@ jq -cn \
           + (
               if $modelType == "matrix" then ["matrix_fill"]
               elif ($modelType == "outline" or $modelType == "single_line") then ["linear_hold"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_fill"]
+              elif $modelType == "star" then ["star_fill"]
               else []
               end
             )
@@ -130,6 +132,8 @@ jq -cn \
               if $modelType == "cane" then ["cane_pattern_fit"]
               elif $modelType == "single_line" then ["linear_pattern_fit"]
               elif $modelType == "matrix" then ["matrix_pattern_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_pattern_fit"]
+              elif $modelType == "star" then ["star_pattern_fit"]
               else []
               end
             )
@@ -162,6 +166,8 @@ jq -cn \
           + (
               if $modelType == "matrix" then ["matrix_sparkle_fit"]
               elif ($modelType == "outline" or $modelType == "single_line" or $modelType == "cane") then ["linear_sparkle_fit"]
+              elif ($modelType == "tree_flat" or $modelType == "tree_360") then ["tree_sparkle_fit"]
+              elif $modelType == "star" then ["star_sparkle_fit"]
               else []
               end
             )
@@ -215,6 +221,8 @@ jq -cn \
             (
               (if $modelType == "matrix" then 0.92
                elif ($modelType == "outline" or $modelType == "single_line") then 0.9
+               elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.86
+               elif $modelType == "star" then 0.88
                else 0.82 end)
               * (if $activeRatio > 0 then 1 else 0.55 end)
             ),
@@ -228,7 +236,10 @@ jq -cn \
               * (if $activeRatio > 0 then 1 else 0.35 end)
             ),
           propSuitability:
-            (if ($modelType == "matrix" or $modelType == "outline" or $modelType == "single_line") then 0.92 else 0.78 end)
+            (if ($modelType == "matrix" or $modelType == "outline" or $modelType == "single_line") then 0.92
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.88
+             elif $modelType == "star" then 0.9
+             else 0.78 end)
         }
       elif $effect == "SingleStrand" then
         {
@@ -254,6 +265,8 @@ jq -cn \
             ),
           propSuitability:
             (if ($modelType == "cane" or $modelType == "single_line") then 0.9
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.84
+             elif $modelType == "star" then 0.72
              elif $modelType == "matrix" then 0.6
              else 0.72 end)
         }
@@ -280,6 +293,8 @@ jq -cn \
             ),
           propSuitability:
             (if ($modelType == "outline" or $modelType == "single_line" or $modelType == "cane") then 0.84
+             elif ($modelType == "tree_flat" or $modelType == "tree_360") then 0.86
+             elif $modelType == "star" then 0.82
              elif $modelType == "matrix" then 0.8
              else 0.72 end)
         }

@@ -31,6 +31,7 @@ The current harness is intentionally small:
 - `run-manifest.sh`: execute all samples from a sweep manifest
 - `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
 - `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, saving and rendering once, then recording per-sample windows against one packed `.fseq`
+- `run-overnight-approved-matrix.sh`: execute the approved first-round overnight matrix sequentially against the debug xLights build and write a master summary
 - `build-animation-fixture.py`: derive a short animation-only fixture sequence from an existing `.xsq`
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
@@ -84,6 +85,11 @@ python3 scripts/sequencer-render-training/build-animation-fixture.py \
 bash scripts/sequencer-render-training/run-packed-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-packed-batch
+```
+
+```bash
+bash scripts/sequencer-render-training/run-overnight-approved-matrix.sh \
+  --out-dir /tmp/render-training-overnight
 ```
 
 ```bash
@@ -197,8 +203,11 @@ Environment:
 - animated effects like `SingleStrand`, `Shimmer`, and `Color Wash`: use the 4-second standard by default
 - Current explicit fixture classes:
   - outline via `Border-01`
-  - cane via `CandyCane-01`
   - single-line / roofline via `UpperGutter-01`
+  - tree flat via `HiddenTree`
+  - tree 360 via `SpiralTree-01`
+  - star via `HiddenTreeStar`
+  - cane via `CandyCane-01`
   - matrix via `NorthPoleMatrix`
 - The current show fixture does not contain a true arch model, so arch-class coverage remains a known gap until a dedicated arch fixture is added.
 - Preferred training fixture shape:

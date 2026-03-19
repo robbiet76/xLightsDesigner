@@ -17,7 +17,25 @@ TARGETS = {
         "motionFamilies": ["single_direction_chase", "bounce_motion", "left_motion", "right_motion"],
         "coverageFamilies": ["dense_sampled_motion", "sparse_sampled_motion"],
     },
+    ("SingleStrand", "tree_360"): {
+        "intentTags": ["clean", "directional", "bouncy", "texture_heavy", "patterned", "dense", "sparse", "readable"],
+        "lookFamilies": ["chase_pattern", "skip_pattern", "fx_texture"],
+        "motionFamilies": ["single_direction_chase", "bounce_motion", "left_motion", "right_motion"],
+        "coverageFamilies": ["dense_sampled_motion", "sparse_sampled_motion"],
+    },
     ("Shimmer", "outline"): {
+        "intentTags": ["restrained", "texture_heavy", "dense", "sparse", "readable", "busy", "bold"],
+        "lookFamilies": ["sparkle_texture"],
+        "motionFamilies": ["unclassified_motion"],
+        "coverageFamilies": ["dense_sampled_motion", "sparse_sampled_motion"],
+    },
+    ("Shimmer", "tree_flat"): {
+        "intentTags": ["restrained", "texture_heavy", "dense", "sparse", "readable", "busy", "bold"],
+        "lookFamilies": ["sparkle_texture"],
+        "motionFamilies": ["unclassified_motion"],
+        "coverageFamilies": ["dense_sampled_motion", "sparse_sampled_motion"],
+    },
+    ("Shimmer", "star"): {
         "intentTags": ["restrained", "texture_heavy", "dense", "sparse", "readable", "busy", "bold"],
         "lookFamilies": ["sparkle_texture"],
         "motionFamilies": ["unclassified_motion"],

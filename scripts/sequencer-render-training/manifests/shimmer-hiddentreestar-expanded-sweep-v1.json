@@ -1,0 +1,124 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shimmer-hiddentreestar-expanded-sweep-v1",
+  "description": "Expanded Shimmer sweep on the HiddenTreeStar model. Adds sparse all-color sparkle and punchier palette-limited shimmer to widen the star look space.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "HiddenTreeStar",
+    "modelType": "star",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shimmer sweep on the HiddenTreeStar model using the 4-second animated-effect standard."
+  },
+  "samples": [
+    {
+      "sampleId": "shimmer-hiddentreestar-restrained-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 25,
+        "cycles": 1.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_restrained",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFE2A8",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": [
+        "restrained_shimmer",
+        "star_read"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentreestar-restrained-all-colors-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 22,
+        "cycles": 1.0,
+        "useAllColors": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "soft_multi",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFF6D8",
+          "C_BUTTON_Palette2": "#FFE2A8",
+          "C_BUTTON_Palette3": "#DDF4FF"
+        }
+      },
+      "labelHints": [
+        "restrained_shimmer",
+        "soft_multi_sparkle"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentreestar-balanced-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 50,
+        "cycles": 2.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cool_balanced",
+        "palette": {
+          "C_BUTTON_Palette1": "#DDF4FF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "labelHints": [
+        "balanced_shimmer",
+        "star_sparkle"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentreestar-punchy-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 82,
+        "cycles": 5.0,
+        "useAllColors": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "punchy_contrast",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#00C2FF"
+        }
+      },
+      "labelHints": [
+        "punchy_shimmer",
+        "high_energy_sparkle"
+      ]
+    },
+    {
+      "sampleId": "shimmer-hiddentreestar-busy-v1",
+      "effectName": "Shimmer",
+      "effectSettings": {
+        "dutyFactor": 75,
+        "cycles": 4.0,
+        "useAllColors": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "multi_busy",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00C2FF",
+          "C_BUTTON_Palette4": "#FFD000"
+        }
+      },
+      "labelHints": [
+        "heavy_shimmer",
+        "busy_texture"
+      ]
+    }
+  ]
+}

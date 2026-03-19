@@ -1,0 +1,83 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "on-hiddentreestar-reduced-sweep-v1",
+  "description": "Reduced baseline On sweep on the HiddenTreeStar model using a short standard duration.",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
+    "modelName": "HiddenTreeStar",
+    "modelType": "star",
+    "startMs": 1000,
+    "endMs": 2000,
+    "durationClass": "short",
+    "notes": "Reduced On sweep on the HiddenTreeStar model."
+  },
+  "samples": [
+    {
+      "sampleId": "on-hiddentreestar-hold-default-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "white_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "static_hold",
+        "star_fill"
+      ]
+    },
+    {
+      "sampleId": "on-hiddentreestar-ramp-down-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "warm_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#FFD27A"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 45,
+        "shimmer": false,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "soft_falloff",
+        "star_glow"
+      ]
+    },
+    {
+      "sampleId": "on-hiddentreestar-shimmer-v1",
+      "effectName": "On",
+      "sharedSettings": {
+        "renderStyle": "Default",
+        "paletteProfile": "cool_hold",
+        "palette": {
+          "C_BUTTON_Palette1": "#DDF4FF",
+          "C_BUTTON_Palette2": "#FFFFFF"
+        }
+      },
+      "effectSettings": {
+        "startLevel": 100,
+        "endLevel": 100,
+        "shimmer": true,
+        "cycles": 1,
+        "transparency": 0
+      },
+      "labelHints": [
+        "shimmer_hold",
+        "star_sparkle"
+      ]
+    }
+  ]
+}
