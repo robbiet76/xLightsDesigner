@@ -436,6 +436,21 @@ class LinearAnalyzer(BaseAnalyzer):
                 pattern_family = "wide_marquee"
             else:
                 pattern_family = "marquee_motion"
+        elif effect == "Twinkle":
+            count = int(settings.get("count", 5) or 5)
+            steps = int(settings.get("steps", 50) or 50)
+            strobe = bool(settings.get("strobe", False))
+            style = str(settings.get("style", "New Render Method") or "New Render Method").lower()
+            if strobe and count >= 7:
+                pattern_family = "linear_strobe_twinkle"
+            elif strobe:
+                pattern_family = "linear_punchy_twinkle"
+            elif count >= 7 or steps <= 20:
+                pattern_family = "linear_dense_twinkle"
+            elif "old" in style:
+                pattern_family = "linear_classic_twinkle"
+            else:
+                pattern_family = "linear_soft_twinkle"
 
         base["geometrySignals"] = {
             "centroidMotionMean": centroid_motion,
@@ -495,6 +510,20 @@ class LinearAnalyzer(BaseAnalyzer):
                     "tight_gap" if int(settings.get("skipSize", 0) or 0) <= 1 else
                     "medium_gap"
                 ) if effect == "Marquee" else None,
+                "twinkleDensityClass": (
+                    "dense" if int(settings.get("count", 5) or 5) >= 7 else
+                    "sparse" if int(settings.get("count", 5) or 5) <= 2 else
+                    "medium"
+                ) if effect == "Twinkle" else None,
+                "twinkleCadenceClass": (
+                    "fast" if int(settings.get("steps", 50) or 50) <= 20 else
+                    "slow" if int(settings.get("steps", 50) or 50) >= 70 else
+                    "medium"
+                ) if effect == "Twinkle" else None,
+                "twinkleStyleClass": (
+                    "classic" if "old" in str(settings.get("style", "New Render Method") or "New Render Method").lower() else
+                    "modern"
+                ) if effect == "Twinkle" else None,
             }
         )
         intents = set(base["intentCandidates"])
@@ -521,6 +550,16 @@ class LinearAnalyzer(BaseAnalyzer):
             intents.add("directional")
             if int(settings.get("skipSize", 0) or 0) >= 4:
                 intents.add("segmented")
+        if effect == "Twinkle":
+            intents = {"animated", "patterned"}
+            if bool(settings.get("strobe", False)):
+                intents.add("bold")
+            if int(settings.get("count", 5) or 5) >= 7:
+                intents.add("busy")
+            else:
+                intents.add("restrained")
+            if int(settings.get("steps", 50) or 50) >= 70:
+                intents.add("steady")
         base["intentCandidates"] = sorted(intents)
         return base
 
