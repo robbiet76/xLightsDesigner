@@ -57,12 +57,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--out-manifest-dir', required=True)
     parser.add_argument('--summary-out')
     parser.add_argument('--limit', type=int, default=40)
+    parser.add_argument('--completed-ledger')
     return parser.parse_args()
 
 
 def load_json(path: str | Path) -> dict:
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
+
+
+def load_completed_keys(path: str | None) -> set[tuple[str, str, str]]:
+    if not path:
+        return set()
+    ledger = load_json(path)
+    out = set()
+    for item in ledger.get('items', []):
+        if item.get('status') != 'completed':
+            continue
+        out.add((item['effect'], item['geometryProfile'], item['coverageType']))
+    return out
 
 
 def canonical_model_maps(catalog: dict):
@@ -139,11 +152,17 @@ def main() -> int:
     backlog = load_json(args.backlog)
     catalog = load_json(args.catalog)
     registry = load_json(args.registry)
+    completed_keys = load_completed_keys(args.completed_ledger)
     manifest_dir = Path(args.manifest_dir)
     out_manifest_dir = Path(args.out_manifest_dir)
     out_manifest_dir.mkdir(parents=True, exist_ok=True)
 
-    target_items = backlog.get('recommendedHour1', [])[: args.limit]
+    ordered_items = backlog.get('items') or backlog.get('recommendedHour1', [])
+    filtered_items = [
+        item for item in ordered_items
+        if (item['effect'], item['geometryProfile'], item['coverageType']) not in completed_keys
+    ]
+    target_items = filtered_items[: args.limit]
     target_by_profile = canonical_model_maps(catalog)
     profile_by_model = {v['modelName']: k for k, v in target_by_profile.items()}
     existing = index_existing_manifests(manifest_dir, profile_by_model)
@@ -181,6 +200,7 @@ def main() -> int:
             'parameters': parameters,
         })
         summary_rows.append({
+            'planId': plan_id,
             'effect': effect,
             'geometryProfile': geometry_profile,
             'coverageType': coverage_type,
@@ -204,6 +224,7 @@ def main() -> int:
             'version': '1.0',
             'description': 'Summary of generated Stage 1 coverage plans.',
             'backlogSource': args.backlog,
+            'completedLedger': args.completed_ledger,
             'requestedItemLimit': args.limit,
             'selectedPlanCount': len(plans),
             'plans': summary_rows,
