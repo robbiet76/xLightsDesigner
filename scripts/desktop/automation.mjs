@@ -3,7 +3,18 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 
-const root = "/tmp/xld-automation";
+const argv = process.argv.slice(2);
+let automationChannel = "packaged";
+if (argv[0] === "--channel") {
+  automationChannel = String(argv[1] || "").trim() || "packaged";
+  if (!["packaged", "dev"].includes(automationChannel)) {
+    console.error(`unsupported automation channel: ${automationChannel}`);
+    process.exit(2);
+  }
+  argv.splice(0, 2);
+}
+
+const root = `/tmp/xld-automation-${automationChannel}`;
 const requestsDir = path.join(root, "requests");
 const responsesDir = path.join(root, "responses");
 fs.mkdirSync(requestsDir, { recursive: true });
@@ -12,7 +23,7 @@ const launchRoot = "/tmp/xld-desktop-launch";
 const launchRequestsDir = path.join(launchRoot, "requests");
 
 function usage() {
-  console.error("usage: automation.mjs [--result-file path] ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-section-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
+  console.error("usage: automation.mjs [--channel packaged|dev] [--result-file path] ping | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-section-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
   process.exit(2);
 }
 
@@ -34,6 +45,7 @@ function readJsonPayload(args = []) {
 
 function nudgeApp() {
   if (process.platform !== "darwin") return;
+  if (automationChannel !== "packaged") return;
   try {
     fs.mkdirSync(launchRequestsDir, { recursive: true });
     const id = `launch-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
@@ -44,7 +56,6 @@ function nudgeApp() {
   }
 }
 
-const argv = process.argv.slice(2);
 let resultFile = "";
 if (argv[0] === "--result-file") {
   resultFile = String(argv[1] || "").trim();
