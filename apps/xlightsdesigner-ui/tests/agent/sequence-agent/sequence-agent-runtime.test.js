@@ -53,6 +53,21 @@ test("sequence agent apply gate blocks invalid apply result payload", () => {
   assert.equal(gate.report.stage, "apply_contract");
 });
 
+test("sequence agent apply result preserves practical validation payload", () => {
+  const result = buildSequenceAgentApplyResult({
+    planId: "plan-2",
+    status: "applied",
+    failureReason: null,
+    verification: { revisionAdvanced: true, expectedMutationsPresent: true },
+    practicalValidation: {
+      artifactType: "practical_sequence_validation_v1",
+      overallOk: true
+    }
+  });
+  assert.equal(result.practicalValidation.artifactType, "practical_sequence_validation_v1");
+  assert.equal(result.practicalValidation.overallOk, true);
+});
+
 test("classifyOrchestrationFailureReason maps known stages", () => {
   assert.equal(classifyOrchestrationFailureReason("revision"), "revision");
   assert.equal(classifyOrchestrationFailureReason("validate_apply"), "validate");

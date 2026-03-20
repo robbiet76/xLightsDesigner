@@ -78,6 +78,16 @@ export function buildHistorySnapshotSummary({
           checked: compactList(applyResult.verification.checked, 8),
           failures: compactList(applyResult.verification.failures, 8)
         }
+      : null,
+    practicalValidationSummary: applyResult?.practicalValidation
+      ? {
+          overallOk: applyResult.practicalValidation.overallOk === true,
+          designSummary: ensureString(applyResult.practicalValidation.designSummary, null),
+          artifactType: ensureString(applyResult.practicalValidation.artifactType, null),
+          trainingArtifactVersion: ensureString(applyResult.practicalValidation?.trainingKnowledge?.artifactVersion, null),
+          readbackFailed: Number(applyResult.practicalValidation?.summary?.readbackChecks?.failed || 0),
+          designFailed: Number(applyResult.practicalValidation?.summary?.designChecks?.failed || 0)
+        }
       : null
   };
 }

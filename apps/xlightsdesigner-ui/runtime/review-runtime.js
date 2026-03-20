@@ -1,4 +1,6 @@
 
+import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practical-sequence-validation.js";
+
 export async function executeApplyCore({
   state = {},
   sourceLines = [],
@@ -282,13 +284,18 @@ export async function executeApplyCore({
     });
     lastVerification = verification;
     verification.revisionAdvanced = String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || "");
+    const practicalValidation = buildPracticalSequenceValidation({
+      planHandoff,
+      verification
+    });
     applyResult = buildSequenceAgentApplyResult({
       planId: String(planHandoff?.planId || ""),
       status: "applied",
       failureReason: null,
       currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
       nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown"),
-      verification
+      verification,
+      practicalValidation
     });
     const applyGate = validateSequenceAgentContractGate("apply", applyResult, orchestrationRun.id);
     pushSequenceAgentContractDiagnostic(applyGate.report);

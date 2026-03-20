@@ -117,7 +117,8 @@ export function buildSequenceAgentApplyResult({
   failureReason = null,
   currentRevision = "",
   nextRevision = "",
-  verification = null
+  verification = null,
+  practicalValidation = null
 } = {}) {
   const result = {
     agentRole: "sequence_agent",
@@ -128,6 +129,7 @@ export function buildSequenceAgentApplyResult({
     currentRevision: String(currentRevision || "").trim() || undefined,
     nextRevision: String(nextRevision || "").trim() || undefined,
     verification: verification && typeof verification === "object" ? verification : undefined,
+    practicalValidation: practicalValidation && typeof practicalValidation === "object" ? practicalValidation : undefined,
     createdAt: new Date().toISOString()
   };
   result.artifactId = buildArtifactId(SEQUENCE_AGENT_APPLY_RESULT_CONTRACT, result);
