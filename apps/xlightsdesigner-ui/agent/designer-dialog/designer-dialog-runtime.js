@@ -1782,9 +1782,12 @@ export function executeDesignerDialogFlow({
       metadataAssignments
     });
     const handoff = buildIntentHandoffFromDesignerState({
+      requestId: resolvedRequestId,
       normalizedIntent: proposal.plan.normalizedIntent,
       intentText: promptText,
       creativeBrief: brief,
+      proposalBundle: proposal.proposalBundle,
+      baseRevision: sequenceRevision,
       elevatedRiskConfirmed,
       executionStrategy: proposal.proposalBundle?.executionPlan || null,
       resolvedTargetIds: proposal.plan.resolutionSource === "fallback"
@@ -1811,6 +1814,7 @@ export function executeDesignerDialogFlow({
       creativeBrief: brief,
       proposalBundle: proposal.proposalBundle,
       handoff,
+      sequencingDesignHandoff: handoff?.sequencingDesignHandoff || null,
       warnings,
       summary: proposal.proposalBundle.summary
     });

@@ -1,4 +1,4 @@
-export const AGENT_HANDOFF_CONTRACTS = ["analysis_handoff_v1", "intent_handoff_v1", "plan_handoff_v1"];
+export const AGENT_HANDOFF_CONTRACTS = ["analysis_handoff_v1", "intent_handoff_v1", "sequencing_design_handoff_v2", "plan_handoff_v1"];
 
 export const HANDOFF_SCHEMAS = {
   analysis_handoff_v1: {
@@ -9,6 +9,17 @@ export const HANDOFF_SCHEMAS = {
     requiredStringFields: ["artifactId", "createdAt", "goal"],
     enumFields: [["mode", ["create", "revise", "polish", "analyze"]]],
     requiredObjectFields: ["scope", "constraints", "directorPreferences", "approvalPolicy"]
+  },
+  sequencing_design_handoff_v2: {
+    requiredStringFields: ["artifactId", "createdAt", "agentRole", "requestId", "baseRevision", "goal", "designSummary", "executionLatitude"],
+    requiredObjectFields: ["scope", "focusPlan", "visualFamilyPreferences", "constraints", "traceability"],
+    requiredArrayFields: ["sectionDirectives", "propRoleAssignments", ["scope", "sections"]],
+    enumFields: [
+      ["executionLatitude", ["tight", "moderate", "broad"]],
+      [["constraints", "changeTolerance"], ["low", "medium", "high"]],
+      [["constraints", "readabilityPriority"], ["low", "medium", "high"]],
+      [["constraints", "flashTolerance"], ["low", "medium", "high"]]
+    ]
   },
   plan_handoff_v1: {
     requiredStringFields: ["planId", "summary", "baseRevision"],

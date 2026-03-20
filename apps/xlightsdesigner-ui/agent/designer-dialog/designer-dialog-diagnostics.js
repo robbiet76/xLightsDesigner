@@ -14,7 +14,8 @@ export function buildDesignerDiagnosticsArtifact({
   warnings = [],
   proposalBundle = null,
   creativeBrief = null,
-  handoff = null
+  handoff = null,
+  sequencingDesignHandoff = null
 } = {}) {
   return {
     artifactType: "designer_dialog_diagnostics_v1",
@@ -29,6 +30,10 @@ export function buildDesignerDiagnosticsArtifact({
     briefSummary: str(creativeBrief?.summary),
     handoffGoal: str(handoff?.goal),
     handoffExecutionStrategy: handoff?.executionStrategy || null,
+    sequencingDesignHandoffSummary: str(sequencingDesignHandoff?.designSummary),
+    sequencingSectionDirectiveCount: Array.isArray(sequencingDesignHandoff?.sectionDirectives)
+      ? sequencingDesignHandoff.sectionDirectives.length
+      : 0,
     generatedAt: new Date().toISOString()
   };
 }

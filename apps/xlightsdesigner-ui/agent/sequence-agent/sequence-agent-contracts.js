@@ -95,6 +95,14 @@ export function validateSequenceAgentInput(payload = {}) {
   if (obj.analysisHandoff != null && !isPlainObject(obj.analysisHandoff)) {
     errors.push("analysisHandoff must be an object when provided");
   }
+  if (obj.sequencingDesignHandoff != null) {
+    if (!isPlainObject(obj.sequencingDesignHandoff)) {
+      errors.push("sequencingDesignHandoff must be an object when provided");
+    } else {
+      const handoffErrors = validateAgentHandoff("sequencing_design_handoff_v2", obj.sequencingDesignHandoff);
+      for (const error of handoffErrors) errors.push(`sequencingDesignHandoff.${error}`);
+    }
+  }
   if (obj.planningScope != null && !isPlainObject(obj.planningScope)) {
     errors.push("planningScope must be an object when provided");
   }
@@ -180,3 +188,4 @@ export function validateSequenceAgentApplyResult(payload = {}) {
 
   return errors;
 }
+import { validateAgentHandoff } from "../handoff-contracts.js";

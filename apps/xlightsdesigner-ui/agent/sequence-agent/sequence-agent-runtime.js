@@ -20,6 +20,7 @@ export function buildSequenceAgentInput({
   groupsById = {},
   submodelsById = {},
   intentHandoff = null,
+  sequencingDesignHandoff = null,
   analysisHandoff = null,
   planningScope = null,
   timingOwnership = [],
@@ -43,6 +44,7 @@ export function buildSequenceAgentInput({
       submodelsById: submodelsById && typeof submodelsById === "object" && !Array.isArray(submodelsById) ? submodelsById : {}
     },
     intentHandoff: intentHandoff && typeof intentHandoff === "object" ? intentHandoff : null,
+    sequencingDesignHandoff: sequencingDesignHandoff && typeof sequencingDesignHandoff === "object" ? sequencingDesignHandoff : null,
     analysisHandoff: analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : null,
     planningScope: planningScope && typeof planningScope === "object" ? planningScope : null,
     safety: {

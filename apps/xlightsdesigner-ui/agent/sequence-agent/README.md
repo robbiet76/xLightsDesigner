@@ -17,4 +17,5 @@ Boundary:
 Training integration:
 - `generated/stage1-trained-effect-bundle.js`: generated Stage 1 effect knowledge bundle consumed by the runtime
 - `trained-effect-knowledge.js`: stable loader and recommendation API in front of the generated bundle
+- `sequence-design-handoff.js`: builder/normalizer for the richer internal `sequencing_design_handoff_v2` brief
 - future training refreshes should regenerate the bundle, not change runtime call sites

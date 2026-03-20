@@ -33,6 +33,7 @@ export function executeDesignerProposalOrchestration(input = {}) {
     : (hasAuthoritativeTargetSelection && input?.cloudResponse ? "local_runtime_explicit_target_scope" : "local_runtime");
   const proposalBundle = result?.proposalBundle || null;
   const handoff = result?.handoff || null;
+  const sequencingDesignHandoff = result?.sequencingDesignHandoff || result?.handoff?.sequencingDesignHandoff || null;
   const degradedMode = !input?.analysisHandoff;
   const failureReason = classifyDesignerOrchestrationFailure(result);
 
@@ -48,7 +49,8 @@ export function executeDesignerProposalOrchestration(input = {}) {
         warnings: result?.warnings || [],
         proposalBundle,
         creativeBrief: result?.creativeBrief,
-        handoff
+        handoff,
+        sequencingDesignHandoff
       }),
       summary: str(result?.summary || "Designer flow failed."),
       warnings: arr(result?.warnings)
@@ -67,11 +69,13 @@ export function executeDesignerProposalOrchestration(input = {}) {
       warnings: result?.warnings || [],
       proposalBundle,
       creativeBrief: result?.creativeBrief,
-      handoff
+      handoff,
+      sequencingDesignHandoff
     }),
     creativeBrief: result.creativeBrief || null,
     proposalBundle,
     intentHandoff: handoff,
+    sequencingDesignHandoff,
     proposalLines: arr(proposalBundle.proposalLines),
     guidedQuestions: arr(proposalBundle.guidedQuestions),
     assistantMessage: str(result?.assistantMessage || ""),

@@ -131,6 +131,27 @@ function deriveExecutionStrategy(intentHandoff = {}) {
   };
 }
 
+function deriveSequencingDesignHandoff(intentHandoff = {}, sequencingDesignHandoff = null) {
+  if (sequencingDesignHandoff && typeof sequencingDesignHandoff === "object" && !Array.isArray(sequencingDesignHandoff)) {
+    return sequencingDesignHandoff;
+  }
+  if (intentHandoff?.sequencingDesignHandoff && typeof intentHandoff.sequencingDesignHandoff === "object" && !Array.isArray(intentHandoff.sequencingDesignHandoff)) {
+    return intentHandoff.sequencingDesignHandoff;
+  }
+  return null;
+}
+
+function buildSectionDirectiveIndex(designHandoff = null) {
+  const index = new Map();
+  const rows = Array.isArray(designHandoff?.sectionDirectives) ? designHandoff.sectionDirectives : [];
+  for (const row of rows) {
+    const key = normText(row?.sectionName);
+    if (!key) continue;
+    index.set(key, row);
+  }
+  return index;
+}
+
 function decorateCommandsWithDesignMetadata(commands = [], executionStrategy = {}) {
   const normalized = normArray(commands);
   const defaultDesignIds = Array.from(new Set([
@@ -207,11 +228,18 @@ function deriveSectionWindowsByName({ analysisHandoff = {}, sectionNames = [], i
 
 function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sourceLines = [] } = {}) {
   const mode = normText(intentHandoff?.mode) || "create";
-  const goal = normText(intentHandoff?.goal);
+  const sequencingDesignHandoff = deriveSequencingDesignHandoff(intentHandoff);
+  const goal = normText(sequencingDesignHandoff?.goal || intentHandoff?.goal);
   const executionStrategy = deriveExecutionStrategy(intentHandoff);
-  const sectionNames = deriveSectionNames({ analysisHandoff, intentHandoff, executionStrategy });
-  const targetIds = normArray(intentHandoff?.scope?.targetIds);
-  const tagNames = normArray(intentHandoff?.scope?.tagNames);
+  const sectionNames = normArray(sequencingDesignHandoff?.scope?.sections).length
+    ? normArray(sequencingDesignHandoff.scope.sections).map((row) => normText(row)).filter(Boolean)
+    : deriveSectionNames({ analysisHandoff, intentHandoff, executionStrategy });
+  const targetIds = normArray(sequencingDesignHandoff?.scope?.targetIds).length
+    ? normArray(sequencingDesignHandoff.scope.targetIds).map((row) => normText(row)).filter(Boolean)
+    : normArray(intentHandoff?.scope?.targetIds);
+  const tagNames = normArray(sequencingDesignHandoff?.scope?.tagNames).length
+    ? normArray(sequencingDesignHandoff.scope.tagNames).map((row) => normText(row)).filter(Boolean)
+    : normArray(intentHandoff?.scope?.tagNames);
   if (isCompoundScopedDirectRequest({ goal, sectionNames, sourceLines })) {
     const err = new Error("Compound direct sequencing requests must be split into one effect/section instruction per request.");
     err.failureCategory = "scope";
@@ -223,8 +251,9 @@ function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, source
     sectionNames,
     targetIds,
     tagNames,
+    sequencingDesignHandoff,
     executionStrategy,
-    detail: `sections=${sectionNames.length || 0} targets=${targetIds.length || 0} tags=${tagNames.length || 0} passScope=${executionStrategy.passScope || "default"}`
+    detail: `sections=${sectionNames.length || 0} targets=${targetIds.length || 0} tags=${tagNames.length || 0} passScope=${executionStrategy.passScope || "default"} designHandoff=${sequencingDesignHandoff ? "v2" : "none"}`
   };
 }
 
@@ -265,11 +294,19 @@ function inferEffectNameFromSectionPlan({
   intentSummary = "",
   effectHints = [],
   targetIds = [],
-  displayElements = []
+  displayElements = [],
+  sectionDirective = null
 } = {}) {
   const hinted = normArray(effectHints).map((row) => normText(row)).find(Boolean);
   if (hinted) return hinted;
-  const summary = `${normText(intentSummary)} ${normText(section)}`.toLowerCase();
+  const directiveText = [
+    normText(sectionDirective?.sectionPurpose),
+    normText(sectionDirective?.motionTarget),
+    normText(sectionDirective?.densityTarget),
+    normText(sectionDirective?.transitionIntent),
+    ...normArray(sectionDirective?.preferredVisualFamilies)
+  ].join(" ");
+  const summary = `${normText(intentSummary)} ${normText(section)} ${directiveText}`.toLowerCase();
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
   const trained = recommendTrainedEffectsForTargets({
@@ -312,16 +349,19 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
   const effectPlacements = normArray(scope?.executionStrategy?.effectPlacements);
+  const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
+        const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
         const effectName = inferEffectNameFromSectionPlan({
           section: row?.section,
-          energy: row?.energy,
-          density: row?.density,
+          energy: sectionDirective?.energyTarget || row?.energy,
+          density: sectionDirective?.densityTarget || row?.density,
           intentSummary: row?.intentSummary || scope.goal,
           effectHints: row?.effectHints,
           targetIds: row?.targetIds || scope.targetIds,
-          displayElements
+          displayElements,
+          sectionDirective
         });
         return buildStructuredExecutionLine({
           section: row?.section,
@@ -772,6 +812,7 @@ export function buildSequenceAgentPlan({
       tagNames: scope.tagNames,
       stageOrder: STAGE_ORDER.slice(),
       executionStrategy: scope.executionStrategy,
+      sequencingDesignHandoff: scope.sequencingDesignHandoff,
       designIds: Array.from(new Set(normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designId)).filter(Boolean))),
       designAuthors: Array.from(new Set([
         normText(scope?.executionStrategy?.designAuthor),
@@ -780,6 +821,10 @@ export function buildSequenceAgentPlan({
       ].filter(Boolean))),
       effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
         ? scope.executionStrategy.effectPlacements.length
+        : 0,
+      sequencingDesignHandoffSummary: normText(scope?.sequencingDesignHandoff?.designSummary),
+      sequencingSectionDirectiveCount: Array.isArray(scope?.sequencingDesignHandoff?.sectionDirectives)
+        ? scope.sequencingDesignHandoff.sectionDirectives.length
         : 0,
       trainingKnowledge: buildStage1TrainingKnowledgeMetadata()
     }

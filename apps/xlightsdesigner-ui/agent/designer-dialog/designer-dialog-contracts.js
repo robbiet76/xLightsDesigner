@@ -1,5 +1,6 @@
 import { validateAgentHandoff } from "../handoff-contracts.js";
 import { buildCanonicalSequenceIntentHandoff } from "../sequence-agent/sequence-intent-handoff.js";
+import { buildSequencingDesignHandoffV2 } from "../sequence-agent/sequence-design-handoff.js";
 import { finalizeArtifact } from "../shared/artifact-ids.js";
 
 export const DESIGNER_DIALOG_ROLE = "designer_dialog";
@@ -201,6 +202,14 @@ export function validateDesignerDialogResult(payload = {}) {
   if (obj.handoff != null) {
     const handoffErrors = validateAgentHandoff("intent_handoff_v1", obj.handoff);
     for (const error of handoffErrors) errors.push(`handoff.${error}`);
+    if (obj.handoff?.sequencingDesignHandoff != null) {
+      const sequencingErrors = validateAgentHandoff("sequencing_design_handoff_v2", obj.handoff.sequencingDesignHandoff);
+      for (const error of sequencingErrors) errors.push(`handoff.sequencingDesignHandoff.${error}`);
+    }
+  }
+  if (obj.sequencingDesignHandoff != null) {
+    const sequencingErrors = validateAgentHandoff("sequencing_design_handoff_v2", obj.sequencingDesignHandoff);
+    for (const error of sequencingErrors) errors.push(`sequencingDesignHandoff.${error}`);
   }
   if (obj.warnings != null && !Array.isArray(obj.warnings)) {
     errors.push("warnings must be an array when provided");
@@ -300,14 +309,27 @@ export function buildProposalBundle({
 }
 
 export function buildIntentHandoffFromDesignerState({
+  requestId = "",
   normalizedIntent = {},
   intentText = "",
   creativeBrief = null,
+  proposalBundle = null,
+  baseRevision = "unknown",
   elevatedRiskConfirmed = false,
   resolvedTargetIds = [],
   executionStrategy = null
 } = {}) {
-  return buildCanonicalSequenceIntentHandoff({
+  const sequencingDesignHandoff = buildSequencingDesignHandoffV2({
+    requestId: str(requestId),
+    baseRevision,
+    normalizedIntent,
+    creativeBrief,
+    proposalBundle,
+    resolvedTargetIds,
+    executionStrategy
+  });
+  return {
+    ...buildCanonicalSequenceIntentHandoff({
     normalizedIntent: {
       ...normalizedIntent,
       changeTolerance: strOrDefault(normalizedIntent?.changeTolerance, inferIntentModeFromGoal(str(normalizedIntent?.goal || intentText)) === "polish" ? "low" : "medium")
@@ -317,7 +339,9 @@ export function buildIntentHandoffFromDesignerState({
     elevatedRiskConfirmed,
     resolvedTargetIds,
     executionStrategy
-  });
+    }),
+    sequencingDesignHandoff
+  };
 }
 
 export function buildDesignerDialogResult({
@@ -327,6 +351,7 @@ export function buildDesignerDialogResult({
   creativeBrief = null,
   proposalBundle = null,
   handoff = null,
+  sequencingDesignHandoff = null,
   warnings = [],
   summary = ""
 } = {}) {
@@ -339,6 +364,7 @@ export function buildDesignerDialogResult({
     creativeBrief: isPlainObject(creativeBrief) ? creativeBrief : undefined,
     proposalBundle: isPlainObject(proposalBundle) ? proposalBundle : undefined,
     handoff: isPlainObject(handoff) ? handoff : undefined,
+    sequencingDesignHandoff: isPlainObject(sequencingDesignHandoff) ? sequencingDesignHandoff : undefined,
     warnings: arr(warnings).map((row) => str(row)).filter(Boolean),
     summary: str(summary)
   };
