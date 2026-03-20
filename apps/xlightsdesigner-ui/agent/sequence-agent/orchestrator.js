@@ -91,6 +91,18 @@ async function waitForOwnedJob(endpoint, jobId, getOwnedJob, attempts = 40, dela
   throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
 }
 
+function isOwnedApiUnavailable(message = "") {
+  const text = norm(message);
+  return (
+    text.includes("failed to fetch") ||
+    text.includes("networkerror") ||
+    text.includes("load failed") ||
+    text.includes("couldn't connect") ||
+    text.includes("not found") ||
+    text.includes("econnrefused")
+  );
+}
+
 export async function validateAndApplyPlan({
   endpoint,
   commands,
@@ -137,6 +149,7 @@ export async function validateAndApplyPlan({
 
   const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
   let currentRevision = 'unknown';
+  let ownedApiReady = false;
 
   if (ownedBatchPlan && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
     if (typeof getOwnedHealth !== "function") {
@@ -147,20 +160,23 @@ export async function validateAndApplyPlan({
       };
     }
     try {
+      const health = await getOwnedHealth(endpoint);
+      const state = str(health?.data?.state || health?.data?.status || "");
+      ownedApiReady = health?.ok === true && (!state || state.toLowerCase() === "ready");
       if (typeof getOwnedRevision === 'function') {
         const rev = await getOwnedRevision(endpoint).catch(() => ({ data: { revision: 'unknown' } }));
         currentRevision = str(rev?.data?.revision || rev?.data?.revisionToken || 'unknown') || 'unknown';
       }
     } catch (err) {
-      return {
-        ok: false,
-        stage: "runtime",
-        error: `owned xLights API unavailable: ${str(err?.message || err)}`
-      };
+      ownedApiReady = false;
     }
-  } else {
+  }
+
+  if (!ownedApiReady) {
     const rev = await getRevision(endpoint);
     currentRevision = rev?.data?.revision ?? 'unknown';
+  } else {
+    // already populated from owned revision path above
   }
 
   if (
@@ -177,7 +193,7 @@ export async function validateAndApplyPlan({
     };
   }
 
-  if (ownedBatchPlan && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
+  if (ownedBatchPlan && ownedApiReady && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
     if (typeof getOwnedHealth !== "function") {
       return {
         ok: false,
@@ -230,11 +246,15 @@ export async function validateAndApplyPlan({
       };
     } catch (err) {
       const message = str(err?.message || err);
+      if (isOwnedApiUnavailable(message)) {
+        // Fall through to legacy transaction apply when the owned sidecar is down.
+      } else {
       return {
         ok: false,
         stage: "runtime",
         error: `owned sequencing.applyBatchPlan failed: ${message}`
       };
+      }
     }
   }
 
