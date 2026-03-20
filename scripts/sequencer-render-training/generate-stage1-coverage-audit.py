@@ -31,6 +31,21 @@ def build_manifest_coverage(manifest_dir, model_to_profile):
     return coverage
 
 
+def build_ledger_coverage(ledger_path):
+    coverage = defaultdict(set)
+    if not ledger_path or not os.path.exists(ledger_path):
+        return coverage
+    data = load_json(ledger_path)
+    for item in data.get('items', []):
+        if item.get('status') != 'completed':
+            continue
+        effect = item.get('effect')
+        profile = item.get('geometryProfile')
+        if effect and profile:
+            coverage[effect].add(profile)
+    return coverage
+
+
 def load_equalized(equalization_path):
     if not equalization_path or not os.path.exists(equalization_path):
         return {}
@@ -78,6 +93,7 @@ def main():
     parser.add_argument('--registry', default='scripts/sequencer-render-training/effect-parameter-registry.json')
     parser.add_argument('--manifest-dir', default='scripts/sequencer-render-training/manifests')
     parser.add_argument('--equalization', default='/tmp/render-training-current-effect-equalization.v5.json')
+    parser.add_argument('--completed-ledger')
     parser.add_argument('--out', required=True)
     args = parser.parse_args()
 
@@ -90,10 +106,15 @@ def main():
     model_to_profile = {v['modelName']: v['geometryProfile'] for v in canonical_models.values()}
     profile_to_model = {v['geometryProfile']: v['modelName'] for v in canonical_models.values()}
     manifest_coverage = build_manifest_coverage(args.manifest_dir, model_to_profile)
+    ledger_coverage = build_ledger_coverage(args.completed_ledger)
+    effective_coverage = defaultdict(set)
+    all_effects = set(manifest_coverage.keys()) | set(ledger_coverage.keys())
+    for effect in all_effects:
+        effective_coverage[effect] = set(manifest_coverage.get(effect, set())) | set(ledger_coverage.get(effect, set()))
 
     results = []
     for effect_name, effect_scope in scope['effects'].items():
-        covered = manifest_coverage.get(effect_name, set())
+        covered = effective_coverage.get(effect_name, set())
         primary = effect_scope['primaryProfiles']
         probe = effect_scope['probeProfiles']
         covered_primary = sorted([p for p in primary if p in covered])
@@ -147,6 +168,7 @@ def main():
         'scopePath': os.path.abspath(args.scope),
         'catalogPath': os.path.abspath(args.catalog),
         'manifestDir': os.path.abspath(args.manifest_dir),
+        'completedLedgerPath': os.path.abspath(args.completed_ledger) if args.completed_ledger else None,
         'equalizationPath': os.path.abspath(args.equalization) if args.equalization else None,
         'effectCount': len(results),
         'effectsNeedingWork': len([r for r in results if r['priority'] != 'low']),
