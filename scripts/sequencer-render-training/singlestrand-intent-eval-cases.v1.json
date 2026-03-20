@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "description": "Effect-local retrieval evaluation for SingleStrand structural intent coverage.",
+  "cases": [
+    {
+      "caseId": "singlestrand_bounce_vertical",
+      "description": "Vertical line bounce motion should retrieve SingleStrand bounce cases.",
+      "requiredIntents": ["animated", "restrained"],
+      "requiredPatternFamilies": ["bounce"],
+      "geometryProfiles": ["single_line_vertical"],
+      "effects": ["SingleStrand"],
+      "expectedTop": {
+        "effect": "SingleStrand",
+        "geometryProfile": "single_line_vertical",
+        "patternFamiliesAny": ["bounce"]
+      }
+    },
+    {
+      "caseId": "singlestrand_directional_arch",
+      "description": "Directional restrained chase on grouped arches should retrieve SingleStrand directional chase regions.",
+      "requiredIntents": ["animated", "directional", "restrained"],
+      "requiredPatternFamilies": ["directional_chase"],
+      "geometryProfiles": ["arch_grouped"],
+      "effects": ["SingleStrand"],
+      "expectedTop": {
+        "effect": "SingleStrand",
+        "geometryProfile": "arch_grouped",
+        "patternFamiliesAny": ["directional_chase"]
+      }
+    },
+    {
+      "caseId": "singlestrand_spiral_treeflat",
+      "description": "Restrained animated travel on flat trees should retrieve SingleStrand spiral-travel regions.",
+      "requiredIntents": ["animated", "restrained"],
+      "requiredPatternFamilies": ["spiral_travel"],
+      "geometryProfiles": ["tree_flat_single_layer"],
+      "effects": ["SingleStrand"],
+      "expectedTop": {
+        "effect": "SingleStrand",
+        "geometryProfile": "tree_flat_single_layer",
+        "patternFamiliesAny": ["spiral_travel"]
+      }
+    },
+    {
+      "caseId": "singlestrand_radial_spinner",
+      "description": "Restrained animated radial fill on the spinner should retrieve SingleStrand spinner regions.",
+      "requiredIntents": ["animated", "restrained"],
+      "requiredPatternFamilies": ["radial_fill"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["SingleStrand"],
+      "expectedTop": {
+        "effect": "SingleStrand",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_fill"]
+      }
+    }
+  ]
+}

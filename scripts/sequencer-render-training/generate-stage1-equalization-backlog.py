@@ -52,15 +52,26 @@ def load_json(path: Path):
 def main():
     parser = argparse.ArgumentParser(description="Generate a Stage 1 equalization backlog from the Stage 1 coverage audit.")
     parser.add_argument("--audit", required=True)
+    parser.add_argument("--equalization-board")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
     audit = load_json(Path(args.audit))
+    equalized_effects = set()
+    if args.equalization_board:
+        board = load_json(Path(args.equalization_board))
+        equalized_effects = {
+            row["effect"]
+            for row in board.get("effects", [])
+            if row.get("equalized")
+        }
     items = []
     for effect in audit.get("effects", []):
         if effect.get("status") != "coverage_complete_not_equalized":
             continue
         effect_name = effect["effect"]
+        if effect_name in equalized_effects:
+            continue
         items.append({
             "effect": effect_name,
             "priority": effect.get("priority", "high"),
@@ -83,6 +94,7 @@ def main():
         "version": "1.0",
         "description": "Remaining Stage 1 equalization backlog after full effect x model coverage is complete.",
         "sourceAudit": str(Path(args.audit).resolve()),
+        "sourceEqualizationBoard": str(Path(args.equalization_board).resolve()) if args.equalization_board else None,
         "remainingEffectCount": len(items),
         "effects": items,
     }
