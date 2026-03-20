@@ -288,6 +288,21 @@ function isExecutableSequencingLine(line = "") {
   return false;
 }
 
+function buildAvailableEffectSet(effectCatalog = null) {
+  if (!effectCatalog || typeof effectCatalog !== "object") return null;
+  const byName = effectCatalog.byName && typeof effectCatalog.byName === "object" ? effectCatalog.byName : {};
+  const names = Object.keys(byName).map((row) => normText(row)).filter(Boolean);
+  return names.length ? new Set(names) : null;
+}
+
+function firstAvailableEffect(candidates = [], availableEffects = null) {
+  const normalized = normArray(candidates).map((row) => normText(row)).filter(Boolean);
+  if (!availableEffects || !(availableEffects instanceof Set) || !availableEffects.size) {
+    return normalized.find(Boolean) || "";
+  }
+  return normalized.find((row) => availableEffects.has(row)) || "";
+}
+
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -296,9 +311,10 @@ function inferEffectNameFromSectionPlan({
   effectHints = [],
   targetIds = [],
   displayElements = [],
-  sectionDirective = null
+  sectionDirective = null,
+  availableEffects = null
 } = {}) {
-  const hinted = normArray(effectHints).map((row) => normText(row)).find(Boolean);
+  const hinted = firstAvailableEffect(effectHints, availableEffects);
   if (hinted) return hinted;
   const familyDriven = recommendTrainedEffectsForVisualFamilies({
     preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
@@ -306,7 +322,8 @@ function inferEffectNameFromSectionPlan({
     displayElements,
     limit: 1
   });
-  if (familyDriven.length) return normText(familyDriven[0]?.effectName);
+  const familyChosen = firstAvailableEffect(familyDriven.map((row) => row?.effectName), availableEffects);
+  if (familyChosen) return familyChosen;
   const directiveText = [
     normText(sectionDirective?.sectionPurpose),
     normText(sectionDirective?.motionTarget),
@@ -317,6 +334,8 @@ function inferEffectNameFromSectionPlan({
   const summary = `${normText(intentSummary)} ${normText(section)} ${directiveText}`.toLowerCase();
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
+  const explicitStaticCue = /\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary);
+  const cinematicWarmCue = /warm|amber|gold|cinematic|glow|smooth/.test(summary);
   const trained = recommendTrainedEffectsForTargets({
     summary,
     energy: normalizedEnergy,
@@ -325,13 +344,40 @@ function inferEffectNameFromSectionPlan({
     displayElements,
     limit: 1
   });
-  if (trained.length) return normText(trained[0]?.effectName);
-  if (/shimmer|sparkle|twinkle|glitter/.test(summary)) return "Shimmer";
-  if (/bars|pulse|strobe|rhythm|chop/.test(summary)) return "Bars";
-  if (/\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary)) return "On";
-  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) return "Shimmer";
-  if (normalizedDensity === "dense" || /bridge/.test(summary)) return "Bars";
-  return "Color Wash";
+  const trainedChosen = firstAvailableEffect(trained.map((row) => row?.effectName), availableEffects);
+  if (trainedChosen) {
+    if (trainedChosen === "On" && cinematicWarmCue && !explicitStaticCue) {
+      const alternate = firstAvailableEffect(
+        trained.map((row) => row?.effectName).filter((row) => normText(row) !== "On"),
+        availableEffects
+      ) || firstAvailableEffect(["Color Wash", "Shimmer"], availableEffects);
+      if (alternate) return alternate;
+    }
+    return trainedChosen;
+  }
+
+  if (/shimmer|sparkle|twinkle|glitter/.test(summary)) {
+    return firstAvailableEffect(["Shimmer", "Twinkle"], availableEffects) || "Shimmer";
+  }
+  if (/bars|pulse|strobe|rhythm|chop/.test(summary)) {
+    return firstAvailableEffect(["Bars", "Marquee", "SingleStrand"], availableEffects) || "Bars";
+  }
+  if (explicitStaticCue) {
+    return firstAvailableEffect(["On", "Color Wash"], availableEffects) || "On";
+  }
+  if (cinematicWarmCue) {
+    if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) {
+      return firstAvailableEffect(["Shimmer", "Color Wash", "On"], availableEffects) || "Shimmer";
+    }
+    return firstAvailableEffect(["Color Wash", "Shimmer", "On"], availableEffects) || "Color Wash";
+  }
+  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) {
+    return firstAvailableEffect(["Shimmer", "Bars", "Pinwheel"], availableEffects) || "Shimmer";
+  }
+  if (normalizedDensity === "dense" || /bridge/.test(summary)) {
+    return firstAvailableEffect(["Bars", "Shimmer", "Color Wash"], availableEffects) || "Bars";
+  }
+  return firstAvailableEffect(["Color Wash", "On", "Shimmer"], availableEffects) || "Color Wash";
 }
 
 function buildStructuredExecutionLine({
@@ -352,12 +398,13 @@ function buildStructuredExecutionLine({
   return `${sectionText} / ${targetText} / apply ${effectText} effect${paletteClause} for the requested duration using the current target timing`;
 }
 
-function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [] } = {}) {
+function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
   const effectPlacements = normArray(scope?.executionStrategy?.effectPlacements);
   const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
+  const availableEffects = buildAvailableEffectSet(effectCatalog);
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
@@ -369,7 +416,8 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           effectHints: row?.effectHints,
           targetIds: row?.targetIds || scope.targetIds,
           displayElements,
-          sectionDirective
+          sectionDirective,
+          availableEffects
         });
         return buildStructuredExecutionLine({
           section: row?.section,
@@ -758,7 +806,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.effect_strategy === "function"
       ? stageOverrides.effect_strategy({ scope, analysisHandoff: safeAnalysis, timing })
-      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements }))
+      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog }))
   });
 
   const graph = runStage({

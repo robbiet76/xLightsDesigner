@@ -3134,10 +3134,10 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         commitTransaction,
         rollbackTransaction,
         stageTransactionCommand,
-        applySequencingBatchPlan,
-        getOwnedHealth,
-        getOwnedJob,
-        getOwnedSequenceRevision
+        applySequencingBatchPlan: null,
+        getOwnedHealth: null,
+        getOwnedJob: null,
+        getOwnedSequenceRevision: null
       },
       callbacks: {
         pushSequenceAgentContractDiagnostic,
@@ -11138,13 +11138,18 @@ async function generateAutomationProposal(payload = {}) {
     status: state.status || null,
     activeSequence: state.activeSequence || "",
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
+    hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
+    reviewReady: applyReadyForApprovalGate(),
     requestedRole,
+    lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null,
     creativeIntentHandoff: isPlainObject(state.creative?.intentHandoff)
       ? {
           artifactId: String(state.creative.intentHandoff.artifactId || ""),
           goal: String(state.creative.intentHandoff.goal || "")
         }
-      : null
+      : null,
+    intentHandoff: getValidHandoff("intent_handoff_v1") || null,
+    planHandoff: getValidHandoff("plan_handoff_v1") || null
   };
 }
 
@@ -11772,11 +11777,19 @@ function getAutomationAgentRuntimeSnapshot() {
     status: state.status || null,
     activeSequence: state.activeSequence || "",
     sequencePathInput: state.sequencePathInput || "",
+    showFolder: state.showFolder || "",
     audioPathInput: state.audioPathInput || "",
     lastAnalysisPrompt: String(state.ui?.lastAnalysisPrompt || ""),
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
     agentThinking: Boolean(state.ui?.agentThinking),
     activeRole: String(agentRuntime.activeRole || ""),
+    flags: {
+      xlightsConnected: Boolean(state.flags?.xlightsConnected),
+      activeSequenceLoaded: Boolean(state.flags?.activeSequenceLoaded),
+      planOnlyMode: Boolean(state.flags?.planOnlyMode),
+      hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
+      proposalStale: Boolean(state.flags?.proposalStale)
+    },
     musicDesignContextSummary: {
       sectionArc: Array.isArray(musicDesignContext?.sectionArc) ? musicDesignContext.sectionArc : [],
       cueWindowSections: Object.keys(cueWindowSections),

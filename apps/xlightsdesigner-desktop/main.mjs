@@ -238,6 +238,10 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
+}
+
 function nowMs() {
   return Date.now();
 }
@@ -731,7 +735,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       activeSequencePath = sequencePath;
     }
     const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
-    if (!refreshedSequences.has(sequenceContextKey) && scenario?.refreshFirst !== false) {
+    if (scenario?.refreshFirst !== false) {
       const refreshStartedAtMs = nowMs();
       await invokeRendererAutomation("refreshFromXLights", {});
       timings.refreshMs = nowMs() - refreshStartedAtMs;
@@ -757,7 +761,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     }
 
     const generateStartedAtMs = nowMs();
-    await invokeRendererAutomation("generateProposal", {
+    const generateResponse = await invokeRendererAutomation("generateProposal", {
       prompt: str(scenario?.prompt || scenario?.strongPrompt),
       requestedRole: "designer_dialog",
       selectedSections: arr(scenario?.sections),
@@ -766,13 +770,25 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     });
     timings.generateMs = nowMs() - generateStartedAtMs;
 
-    const applyStartedAtMs = nowMs();
-    const applyResponse = await invokeRendererAutomation("applyCurrentProposal", {});
-    timings.applyMs = nowMs() - applyStartedAtMs;
+    let applyResponse = null;
+    if (generateResponse?.planHandoff || generateResponse?.hasDraftProposal) {
+      const applyStartedAtMs = nowMs();
+      applyResponse = await invokeRendererAutomation("applyCurrentProposal", {});
+      timings.applyMs = nowMs() - applyStartedAtMs;
+    } else {
+      timings.applyMs = 0;
+    }
 
     const snapshot = await getRendererSequencerValidationSnapshot();
-    const practicalValidation = snapshot?.latestPracticalValidation || null;
-    const observedEffectNames = arr(practicalValidation?.designAlignment?.observedEffectNames).map((row) => str(row)).filter(Boolean);
+    const practicalValidation = snapshot?.latestPracticalValidation
+      || applyResponse?.latestPracticalValidation
+      || applyResponse?.applyOutcome?.applyResult?.practicalValidation
+      || null;
+    const observedEffectNames = uniqueStrings([
+      ...arr(practicalValidation?.designAlignment?.observedEffectNames),
+      ...arr(applyResponse?.applyOutcome?.applyResult?.practicalValidation?.designAlignment?.observedEffectNames),
+      ...arr(applyResponse?.latestApply?.verification?.designAlignment?.observedEffectNames)
+    ]).map((row) => str(row)).filter(Boolean);
     const expectedEffects = arr(scenario?.expectedEffects).map((row) => str(row)).filter(Boolean);
     const matchedExpectedEffects = expectedEffects.filter((row) => observedEffectNames.includes(row));
     const ok = practicalValidation?.overallOk === true && matchedExpectedEffects.length > 0;
@@ -793,6 +809,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       observedEffectNames,
       matchedExpectedEffects,
       practicalValidation,
+      generateResponse,
       applyResponse
     });
     logStartup(`automation:live-sequencer-suite:scenario:finish name=${name} ok=${ok ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
@@ -948,6 +965,9 @@ async function processAutomationRequests() {
     invokeAction: async ({ action, request }) => {
       if (action === "dispatchPrompt") {
         return invokeRendererAutomation("dispatchPrompt", String(request?.payload?.prompt || ""));
+      }
+      if (action === "generateProposal") {
+        return invokeRendererAutomation("generateProposal", request?.payload || {});
       }
       if (action === "openSequence") {
         return invokeRendererAutomation("openSequence", request?.payload || {});

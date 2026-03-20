@@ -62,6 +62,19 @@ function inferTransitionIntent({ section = '', goal = '', energy = '' } = {}) {
   return 'hold';
 }
 
+function inferSectionPreferredVisualFamilies({ section = '', goal = '', effectHints = [] } = {}) {
+  const text = `${str(section)} ${str(goal)} ${arr(effectHints).map((row) => str(row)).join(' ')}`.toLowerCase();
+  const preferred = [];
+  if (/spiral|helical|helix/.test(text)) preferred.push('spiral_flow');
+  if (/radial|spin|pinwheel|rotation/.test(text)) preferred.push('radial_rotation');
+  if (/segment|chase|directional|travel/.test(text)) preferred.push('segmented_motion');
+  if (/texture|sparkle|twinkle|shimmer|glitter|soft/.test(text)) preferred.push('soft_texture');
+  if (/crisp|strobe/.test(text)) preferred.push('crisp_texture');
+  if (/shockwave|burst|ring|expand/.test(text)) preferred.push('diffuse_expand');
+  if (/fill|wash|broad coverage|base coverage/.test(text)) preferred.push('fill');
+  return uniqueStrings(preferred);
+}
+
 function inferVisualPreferences({ goal = '', creativeBrief = null, proposalBundle = null } = {}) {
   const text = `${str(goal)} ${str(creativeBrief?.visualCues)} ${str(creativeBrief?.summary)} ${arr(proposalBundle?.proposalLines).join(' ')}`.toLowerCase();
   const preferred = [];
@@ -167,7 +180,10 @@ export function buildSequencingDesignHandoffV2({
     motionTarget: inferMotionTarget({ section: row?.section, goal: row?.intentSummary || goal, effectHints: row?.effectHints }),
     densityTarget: mapDensityTarget(row?.density),
     transitionIntent: inferTransitionIntent({ section: row?.section, goal: row?.intentSummary || goal, energy: row?.energy }),
-    preferredVisualFamilies: uniqueStrings(arr(row?.effectHints).map((hint) => str(hint).toLowerCase().replace(/\s+/g, '_'))),
+    preferredVisualFamilies: uniqueStrings([
+      ...arr(row?.effectHints).map((hint) => str(hint).toLowerCase().replace(/\s+/g, '_')),
+      ...inferSectionPreferredVisualFamilies({ section: row?.section, goal: row?.intentSummary || goal, effectHints: row?.effectHints })
+    ]),
     avoidVisualFamilies: uniqueStrings(visualFamilyPreferences.avoid),
     notes: str(row?.intentSummary)
   })).filter((row) => row.sectionName);

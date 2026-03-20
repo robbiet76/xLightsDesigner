@@ -263,6 +263,27 @@ function pickDistinctEffects(primary = [], secondary = [], count = 2) {
   return out;
 }
 
+function canonicalizeDesignerEffectHint(value = "") {
+  const text = str(value);
+  if (!text) return "";
+  const lower = text.toLowerCase();
+  const map = {
+    "color wash": "Color Wash",
+    colorwash: "Color Wash",
+    shimmer: "Shimmer",
+    twinkle: "Twinkle",
+    spirals: "Spirals",
+    spiral: "Spirals",
+    bars: "Bars",
+    pinwheel: "Pinwheel",
+    butterfly: "Butterfly",
+    meteors: "Meteors",
+    on: "On",
+    off: "Off"
+  };
+  return map[lower] || text;
+}
+
 function prioritizeConcreteTargets(targetIds = []) {
   const aggregatePattern = /(^|\/)(allmodels|allmodels_|.*_all$|.*_nofloods$|.*_nomatrix$)/i;
   const concrete = [];
@@ -590,6 +611,13 @@ function buildSectionEffectHints({
     && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
   const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
     && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
+  if (/\b(spiral|spirals|helical|helix)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Spirals"], smoothBias ? ["Shimmer"] : ["Color Wash"]);
+  }
+  if ((/\b(twinkle|shimmer)\b/.test(lowerGoal) || /\btexture-?led|soft(er)? texture|soft texture\b/.test(lowerGoal))
+    && !/\b(directional|segmented|bars?)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Shimmer", "Twinkle"], smoothBias ? ["Color Wash"] : ["Bars"]);
+  }
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
       return smoothBias
@@ -1516,7 +1544,7 @@ function buildDesignerExecutionPlan({
           goal: intent.goal || ""
         }).slice(0, 40),
         effectHints: arr(intent.effectOverrides).length
-          ? arr(intent.effectOverrides).map((row) => str(row)).filter(Boolean)
+          ? arr(intent.effectOverrides).map((row) => canonicalizeDesignerEffectHint(row)).filter(Boolean)
           : buildSectionEffectHints({
               section: label,
               energy,

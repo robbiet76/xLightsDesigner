@@ -1,6 +1,29 @@
 
 import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practical-sequence-validation.js";
 
+function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
+  const commands = Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
+  const hasAnalysisSections = Array.isArray(analysisHandoff?.structure?.sections) && analysisHandoff.structure.sections.length > 0;
+  if (!hasAnalysisSections) return commands;
+
+  const timingCreate = commands.find((row) => String(row?.cmd || "").trim() === "timing.createTrack");
+  const timingInsert = commands.find((row) => String(row?.cmd || "").trim() === "timing.insertMarks");
+  const trackName = String(timingInsert?.params?.trackName || timingCreate?.params?.trackName || "").trim();
+  if (trackName !== "XD: Song Structure") return commands;
+
+  const removedIds = new Set(
+    [timingCreate?.id, timingInsert?.id].map((row) => String(row || "").trim()).filter(Boolean)
+  );
+  if (!removedIds.size) return commands;
+
+  return commands
+    .filter((row) => !removedIds.has(String(row?.id || "").trim()))
+    .map((row) => {
+      const dependsOn = Array.isArray(row?.dependsOn) ? row.dependsOn.filter((dep) => !removedIds.has(String(dep || "").trim())) : row?.dependsOn;
+      return dependsOn === row?.dependsOn ? row : { ...row, dependsOn };
+    });
+}
+
 export async function executeApplyCore({
   state = {},
   sourceLines = [],
@@ -170,7 +193,10 @@ export async function executeApplyCore({
     }
 
     markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", planSource === "handoff_graph" ? "using plan_handoff_v1 command graph" : "apply plan built");
-    const rawPlan = Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [];
+    const rawPlan = normalizePlanForLiveApply(
+      Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [],
+      { analysisHandoff }
+    );
     if (!rawPlan.length) {
       throw new Error("sequence_agent generated no commands for apply.");
     }

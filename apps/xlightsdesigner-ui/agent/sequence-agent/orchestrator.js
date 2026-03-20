@@ -148,10 +148,15 @@ export async function validateAndApplyPlan({
   }
 
   const ownedBatchPlan = buildOwnedSequencingBatchPlan(commands);
+  const ownedPathAvailable = Boolean(
+    ownedBatchPlan &&
+    typeof applySequencingBatchPlan === "function" &&
+    typeof getOwnedJob === "function"
+  );
   let currentRevision = 'unknown';
   let ownedApiReady = false;
 
-  if (ownedBatchPlan && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
+  if (ownedPathAvailable) {
     if (typeof getOwnedHealth !== "function") {
       return {
         ok: false,
@@ -193,7 +198,9 @@ export async function validateAndApplyPlan({
     };
   }
 
-  if (ownedBatchPlan && ownedApiReady && typeof applySequencingBatchPlan === "function" && typeof getOwnedJob === "function") {
+  const shouldUseOwnedPath = ownedPathAvailable && ownedApiReady;
+
+  if (shouldUseOwnedPath) {
     if (typeof getOwnedHealth !== "function") {
       return {
         ok: false,
