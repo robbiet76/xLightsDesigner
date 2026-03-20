@@ -3008,7 +3008,14 @@ async function preflightSequenceFileForApply() {
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
   if (!applyEnabled()) {
     setStatusWithDiagnostics("warning", applyDisabledReason());
-    return render();
+    render();
+    return {
+      ok: false,
+      status: "blocked",
+      blocked: true,
+      reason: "apply_disabled",
+      message: applyDisabledReason()
+    };
   }
   const revisionState = await syncLatestSequenceRevision({
     onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
@@ -3020,38 +3027,49 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     pushDiagnostic("warning", "Proceeding with apply despite unknown xLights revision.");
   }
   if (state.flags.proposalStale) {
-    setStatusWithDiagnostics("warning", "Apply blocked: draft is stale against the latest xLights revision.");
-    return render();
+    const message = "Apply blocked: draft is stale against the latest xLights revision.";
+    setStatusWithDiagnostics("warning", message);
+    render();
+    return { ok: false, status: "blocked", blocked: true, reason: "stale_draft", message };
   }
   const handoffGate = evaluateApplyHandoffGate();
   if (!handoffGate.ok) {
-    setStatusWithDiagnostics("warning", `Apply blocked: ${handoffGate.message}`);
-    return render();
+    const message = `Apply blocked: ${handoffGate.message}`;
+    setStatusWithDiagnostics("warning", message);
+    render();
+    return { ok: false, status: "blocked", blocked: true, reason: "handoff_gate", message };
   }
   const intentHandoffRecord = getValidHandoffRecord("intent_handoff_v1");
   const intentHandoff = intentHandoffRecord?.payload || null;
   const planHandoff = getValidHandoff("plan_handoff_v1");
   const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
   if (!scopedSource.length) {
-    setStatusWithDiagnostics("warning", "No proposed changes available for this apply action.");
-    return render();
+    const message = "No proposed changes available for this apply action.";
+    setStatusWithDiagnostics("warning", message);
+    render();
+    return { ok: false, status: "blocked", blocked: true, reason: "no_proposed_changes", message };
   }
   if (!state.ui.applyApprovalChecked) {
-    setStatusWithDiagnostics("warning", "Review the plan and check approval before apply.");
-    return render();
+    const message = "Review the plan and check approval before apply.";
+    setStatusWithDiagnostics("warning", message);
+    render();
+    return { ok: false, status: "blocked", blocked: true, reason: "approval_required", message };
   }
   const sequencePreflight = await preflightSequenceFileForApply();
   if (!sequencePreflight.ok) {
     setStatusWithDiagnostics("warning", sequencePreflight.message);
-    return render();
+    render();
+    return { ok: false, status: "blocked", blocked: true, reason: "sequence_preflight", message: sequencePreflight.message };
   }
   const scopedImpactCount = scopedSource.length * 11;
 
   if (requiresApplyConfirmation()) {
     const message = `Apply ${scopedImpactCount} estimated impacted effects?`;
     if (!window.confirm(message)) {
-      setStatus("info", "Apply canceled by user.");
-      return render();
+      const cancelMessage = "Apply canceled by user.";
+      setStatus("info", cancelMessage);
+      render();
+      return { ok: false, status: "canceled", blocked: true, reason: "user_canceled", message: cancelMessage };
     }
   }
 
@@ -3138,7 +3156,16 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     clearApprovalAfterApply = Boolean(result.clearApprovalAfterApply);
     if (result.blocked) {
       setStatusWithDiagnostics("action-required", result.message || "Apply blocked.", result.details || "");
-      return;
+      return {
+        ok: false,
+        status: "blocked",
+        blocked: true,
+        reason: result.applyResult?.failureReason || result.status || "blocked",
+        message: result.message || "Apply blocked.",
+        details: result.details || "",
+        applyAuditEntry,
+        applyResult
+      };
     }
   } finally {
     if (clearApprovalAfterApply) {
@@ -3156,6 +3183,15 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
     persist();
     render();
   }
+  return {
+    ok: Boolean(applyAuditEntry),
+    status: applyResult?.status || (applyAuditEntry ? String(applyAuditEntry.status || "unknown") : "unknown"),
+    blocked: false,
+    reason: applyResult?.failureReason || null,
+    message: applyAuditEntry?.summary || null,
+    applyAuditEntry,
+    applyResult
+  };
 }
 
 
@@ -3180,7 +3216,7 @@ async function onApplySelected() {
 }
 
 async function onApplyAll() {
-  await onApply(filteredProposed(), "all proposed changes");
+  return await onApply(filteredProposed(), "all proposed changes");
 }
 
 async function onGenerate(intentOverride = "", options = {}) {
@@ -11115,23 +11151,38 @@ async function generateAutomationProposal(payload = {}) {
 async function applyAutomationCurrentProposal() {
   state.ui.applyApprovalChecked = true;
   const previousConfirmMode = state.safety?.applyConfirmMode;
+  const beforeHistoryId = String(state.applyHistory?.[0]?.historyEntryId || "").trim();
+  let applyOutcome = null;
   if (state.safety && typeof state.safety === "object") {
     state.safety.applyConfirmMode = "never";
   }
   try {
-    await onApplyAll();
+    applyOutcome = await onApplyAll();
   } finally {
     if (state.safety && typeof state.safety === "object") {
       state.safety.applyConfirmMode = previousConfirmMode || "large-only";
     }
   }
+  const afterLatestApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
+  const afterHistoryId = String(afterLatestApply?.historyEntryId || "").trim();
+  const historyAdvanced = Boolean(afterHistoryId && afterHistoryId !== beforeHistoryId);
+  const historySnapshot = state.ui?.reviewHistorySnapshot && typeof state.ui.reviewHistorySnapshot === "object"
+    ? state.ui.reviewHistorySnapshot
+    : (state.ui?.selectedHistorySnapshot && typeof state.ui.selectedHistorySnapshot === "object"
+        ? state.ui.selectedHistorySnapshot
+        : null);
   return {
-    ok: true,
+    ok: applyOutcome?.ok !== false,
     status: state.status || null,
     activeSequence: state.activeSequence || "",
     proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
     reviewReady: applyReadyForApprovalGate(),
-    lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null
+    lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null,
+    applyOutcome,
+    historyAdvanced,
+    latestApply: afterLatestApply,
+    latestApplyResult: historySnapshot?.applyResult || null,
+    latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null
   };
 }
 

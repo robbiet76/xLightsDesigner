@@ -767,7 +767,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     timings.generateMs = nowMs() - generateStartedAtMs;
 
     const applyStartedAtMs = nowMs();
-    await invokeRendererAutomation("applyCurrentProposal", {});
+    const applyResponse = await invokeRendererAutomation("applyCurrentProposal", {});
     timings.applyMs = nowMs() - applyStartedAtMs;
 
     const snapshot = await getRendererSequencerValidationSnapshot();
@@ -792,7 +792,8 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       expectedEffects,
       observedEffectNames,
       matchedExpectedEffects,
-      practicalValidation
+      practicalValidation,
+      applyResponse
     });
     logStartup(`automation:live-sequencer-suite:scenario:finish name=${name} ok=${ok ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
   }
