@@ -50,6 +50,11 @@ app.commandLine.appendSwitch("disable-renderer-backgrounding");
 // Use a fresh profile dir to avoid startup crash loops from corrupted Chromium caches.
 const XLD_USER_DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop-v2");
 app.setPath("userData", XLD_USER_DATA_DIR);
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+  process.exit(0);
+}
 
 const UI_URL = String(process.env.XLD_UI_URL || "").trim();
 const STATE_FILENAME = "xlightsdesigner-state.json";
@@ -75,6 +80,13 @@ const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
 let analysisServiceStarting = null;
+
+app.on("second-instance", () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized?.()) mainWindow.restore();
+  mainWindow.show?.();
+  mainWindow.focus?.();
+});
 
 function logStartup(message) {
   try {
