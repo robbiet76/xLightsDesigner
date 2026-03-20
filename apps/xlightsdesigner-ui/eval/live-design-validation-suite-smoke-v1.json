@@ -5,7 +5,7 @@
   "scenarios": [
     {
       "name": "smoke-chorus-focus",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Chorus 1"],
       "targets": ["Snowman", "Star"],
@@ -14,14 +14,14 @@
     },
     {
       "name": "smoke-composition-pass",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
       "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
     },
     {
       "name": "smoke-phrase-subtlety",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Bridge"],
       "strongPrompt": "In the Bridge, hold the breath before the phrase release and shape the lift with subtler within-phrase timing instead of filling the whole section evenly.",
