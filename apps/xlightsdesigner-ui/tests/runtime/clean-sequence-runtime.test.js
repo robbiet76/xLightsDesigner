@@ -20,7 +20,23 @@ test("runDirectSequenceValidation combines page-states and xlights states", asyn
     },
     handoffs: {
       intentHandoff: { scope: { sections: ["Chorus 1"], targetIds: ["Snowman"] } },
-      planHandoff: { commands: [{ cmd: "effects.create" }] },
+      planHandoff: {
+        commands: [{ cmd: "effects.create" }],
+        metadata: {
+          trainingKnowledge: {
+            artifactType: "sequencer_stage1_training_bundle",
+            artifactVersion: "1.0"
+          },
+          sequencingDesignHandoff: {
+            designSummary: "Snowman chorus focus",
+            scope: { sections: ["Chorus 1"] },
+            focusPlan: { primaryTargetIds: ["Snowman"] },
+            sectionDirectives: [
+              { sectionName: "Chorus 1", preferredVisualFamilies: ["static_fill"] }
+            ]
+          }
+        }
+      },
       analysisHandoff: null
     },
     helpers: {
@@ -65,7 +81,9 @@ test("runDirectSequenceValidation combines page-states and xlights states", asyn
     }
   });
 
-  assert.equal(result.validation.ok, true);
+  assert.equal(result.validation.contract, "clean_sequence_validation_state_v1");
   assert.equal(result.pageStates.sequence.page, "sequence");
   assert.equal(result.xlightsSequenceState.sequence.name, "Validation-Clean-Phase1.xsq");
+  assert.equal(result.validation.designContext.designSummary, "Snowman chorus focus");
+  assert.equal(result.validation.designContext.trainingKnowledge.artifactType, "sequencer_stage1_training_bundle");
 });

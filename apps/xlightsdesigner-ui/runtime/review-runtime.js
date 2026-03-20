@@ -277,7 +277,8 @@ export async function executeApplyCore({
 
     const executed = Number(orchestrated?.executedCount || 0);
     const verification = await verifyAppliedPlanReadback(rawPlan, {
-      submodelsById: state.sceneGraph?.submodelsById || {}
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      planMetadata: planHandoff?.metadata || {}
     });
     lastVerification = verification;
     verification.revisionAdvanced = String(orchestrated?.nextRevision || "") !== String(orchestrated?.currentRevision || "");

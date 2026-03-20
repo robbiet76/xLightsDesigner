@@ -107,6 +107,66 @@ test("apply readback verifies timing, display order, and distributed effects", a
   assert.equal(verification.checks.every((row) => row.ok), true);
 });
 
+test("apply readback carries design and training context with alignment checks", async () => {
+  const plan = [
+    {
+      cmd: "effects.create",
+      params: {
+        modelName: "TreeRound",
+        layerIndex: 0,
+        effectName: "Spirals",
+        startMs: 0,
+        endMs: 1000
+      }
+    }
+  ];
+
+  const verification = await verifyAppliedPlanReadback(plan, {
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    planMetadata: {
+      sequencingDesignHandoffSummary: "Big tree chorus",
+      sequencingSectionDirectiveCount: 1,
+      trainingKnowledge: {
+        artifactType: "sequencer_stage1_training_bundle",
+        artifactVersion: "1.0"
+      },
+      sequencingDesignHandoff: {
+        designSummary: "Big tree chorus",
+        focusPlan: {
+          primaryTargetIds: ["TreeRound"]
+        },
+        propRoleAssignments: [
+          { role: "lead", targetIds: ["TreeRound"] }
+        ],
+        sectionDirectives: [
+          {
+            sectionName: "Chorus",
+            preferredVisualFamilies: ["spiral_flow"]
+          }
+        ]
+      }
+    },
+    listEffects: async (_endpoint, { modelName, layerIndex, startMs, endMs }) => ({
+      data: {
+        effects: [{ modelName, layerIndex, startMs, endMs, effectName: "Spirals" }]
+      }
+    })
+  });
+
+  assert.equal(verification.expectedMutationsPresent, true);
+  assert.equal(verification.designContext.designSummary, "Big tree chorus");
+  assert.equal(verification.designContext.trainingKnowledge.artifactType, "sequencer_stage1_training_bundle");
+  assert.deepEqual(verification.designAlignment.coveredPrimaryFocusTargetIds, ["TreeRound"]);
+  assert.deepEqual(
+    verification.designChecks.map((row) => [row.kind, row.ok]),
+    [
+      ["design-focus", true],
+      ["design-role", true],
+      ["design-visual-family", true]
+    ]
+  );
+});
+
 test("apply readback flags mismatched distributed effect windows", async () => {
   const plan = [
     {

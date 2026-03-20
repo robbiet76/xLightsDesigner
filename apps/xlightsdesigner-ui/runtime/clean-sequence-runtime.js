@@ -49,7 +49,8 @@ export async function runDirectSequenceValidation({
     expected,
     pageStates,
     xlightsSequenceState,
-    xlightsEffectOccupancyState
+    xlightsEffectOccupancyState,
+    handoffs
   });
   return {
     contract: "direct_sequence_validation_run_v1",

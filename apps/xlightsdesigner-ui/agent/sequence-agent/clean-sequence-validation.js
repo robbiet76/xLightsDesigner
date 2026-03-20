@@ -18,11 +18,43 @@ function hasSongStructureTrack(timing = {}) {
   return arr(timing?.trackNames || timing?.xdTrackNames || []).some((name) => /song structure|section/i.test(str(name)));
 }
 
+function pickSequencingDesignHandoff(handoffs = {}, sequencingDesignHandoff = null) {
+  if (sequencingDesignHandoff && typeof sequencingDesignHandoff === "object" && !Array.isArray(sequencingDesignHandoff)) {
+    return sequencingDesignHandoff;
+  }
+  if (handoffs?.planHandoff?.metadata?.sequencingDesignHandoff && typeof handoffs.planHandoff.metadata.sequencingDesignHandoff === "object") {
+    return handoffs.planHandoff.metadata.sequencingDesignHandoff;
+  }
+  if (handoffs?.intentHandoff?.sequencingDesignHandoff && typeof handoffs.intentHandoff.sequencingDesignHandoff === "object") {
+    return handoffs.intentHandoff.sequencingDesignHandoff;
+  }
+  return null;
+}
+
+function buildValidationDesignContext(handoffs = {}, sequencingDesignHandoff = null) {
+  const designHandoff = pickSequencingDesignHandoff(handoffs, sequencingDesignHandoff);
+  const trainingKnowledge = handoffs?.planHandoff?.metadata?.trainingKnowledge && typeof handoffs.planHandoff.metadata.trainingKnowledge === "object"
+    ? handoffs.planHandoff.metadata.trainingKnowledge
+    : {};
+  const focusPlan = designHandoff?.focusPlan && typeof designHandoff.focusPlan === "object" ? designHandoff.focusPlan : {};
+  const sectionName = str(designHandoff?.scope?.sections?.[0]);
+  const matchingDirective = arr(designHandoff?.sectionDirectives).find((row) => str(row?.sectionName) === sectionName) || null;
+  return {
+    designSummary: str(designHandoff?.designSummary),
+    sectionDirectiveCount: arr(designHandoff?.sectionDirectives).length,
+    primaryFocusTargetIds: arr(focusPlan?.primaryTargetIds).map((row) => str(row)).filter(Boolean),
+    preferredVisualFamilies: arr(matchingDirective?.preferredVisualFamilies).map((row) => str(row)).filter(Boolean),
+    trainingKnowledge
+  };
+}
+
 export function validateDirectSequencePromptState({
   expected = {},
   pageStates = {},
   xlightsSequenceState = null,
-  xlightsEffectOccupancyState = null
+  xlightsEffectOccupancyState = null,
+  handoffs = {},
+  sequencingDesignHandoff = null
 } = {}) {
   const sequence = pageStates?.sequence || {};
   const review = pageStates?.review || {};
@@ -69,6 +101,14 @@ export function validateDirectSequencePromptState({
     issues.push({ code: "no_review_rows", message: "Review dashboard has no pending rows." });
   }
 
+  const designContext = buildValidationDesignContext(handoffs, sequencingDesignHandoff);
+  if (target && designContext.primaryFocusTargetIds.length && !designContext.primaryFocusTargetIds.includes(target)) {
+    issues.push({
+      code: "target_not_in_primary_focus",
+      message: `Expected target ${target} is outside the primary focus set (${designContext.primaryFocusTargetIds.join(", ")}).`
+    });
+  }
+
   if (section && str(sequence?.data?.timingDependency?.needsTiming) === "true" && !sequence?.data?.timingDependency?.ready) {
     issues.push({ code: "missing_required_timing_track", message: "Sequence dashboard reports missing timing dependency." });
   }
@@ -102,6 +142,7 @@ export function validateDirectSequencePromptState({
       reviewDashboard: review?.contract || null,
       xlightsSequenceState: xlightsSequenceState?.contract || null,
       xlightsEffectOccupancyState: xlightsEffectOccupancyState?.contract || null
-    }
+    },
+    designContext
   };
 }
