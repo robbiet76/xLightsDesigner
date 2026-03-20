@@ -5,7 +5,7 @@
   "scenarios": [
     {
       "name": "whole-sequence-chorus-focus",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/API-Whole-Sequence-Validation-20260317-193350.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/API-Whole-Sequence-Validation-20260317-193350.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Chorus 1"],
       "targets": ["Snowman", "Star"],
@@ -14,7 +14,7 @@
     },
     {
       "name": "clean-phase-chorus-focus",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Chorus 1"],
       "targets": ["Snowman", "Star"],
@@ -23,28 +23,28 @@
     },
     {
       "name": "clean-phase-stage-lighting-pass",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Design the full song more like a stage-lighting cue stack with restrained washes, clearer key-vs-fill hierarchy, and stronger finale punch.",
       "weakPrompt": "Keep the full song as one broad even look across the yard with minimal hierarchy and mostly uniform effect language."
     },
     {
       "name": "clean-phase-composition-pass",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Use the perimeter props to frame the song while the centerpiece props take over the key reveals and choruses.",
       "weakPrompt": "Keep the full song visually even so the perimeter and centerpiece props all share the same emphasis most of the time."
     },
     {
       "name": "clean-phase-motion-language-pass",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.",
       "weakPrompt": "Make the full song choppier and more staccato with punchy pulse changes, sharper accents, and less connected motion between sections."
     },
     {
       "name": "clean-phase-phrase-subtlety-pass",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Bridge"],
       "strongPrompt": "In the Bridge, hold the breath before the phrase release and shape the lift with subtler within-phrase timing instead of filling the whole section evenly.",
@@ -52,7 +52,7 @@
     },
     {
       "name": "clean-phase-render-discipline-pass",
-      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation/Validation-Clean-Phase1.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "strongPrompt": "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
       "weakPrompt": "Keep changing textures aggressively across the whole song with busier sparkle, harder texture swaps, and less restraint in the base look."

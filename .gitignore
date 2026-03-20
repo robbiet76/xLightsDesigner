@@ -32,3 +32,6 @@ apps/xlightsdesigner-analysis-service/eval/*.local.json
 
 # Render training workspace
 render-training/
+
+# Sequence validation workspace
+sequence-validation/
