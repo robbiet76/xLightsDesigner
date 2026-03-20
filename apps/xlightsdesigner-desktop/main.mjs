@@ -994,7 +994,8 @@ function startAutomationPolling() {
   flushAutomationRequests({
     requestsDir: AUTOMATION_REQUESTS_DIR,
     responsePathForId: automationResponsePath,
-    reason: "Cleared stale automation request during app startup."
+    reason: "Cleared stale automation request during app startup.",
+    olderThanMs: 120000
   });
   if (automationPollTimer) return;
   if (!automationRequestProcessor) {

@@ -22,6 +22,8 @@ export function flushAutomationRequests({
   requestsDir,
   responsePathForId,
   reason = "Cleared stale automation request.",
+  olderThanMs = 0,
+  nowMs = () => Date.now(),
   fsImpl = fs
 } = {}) {
   const files = fsImpl.readdirSync(requestsDir)
@@ -29,6 +31,17 @@ export function flushAutomationRequests({
     .sort();
   for (const name of files) {
     const fullPath = path.join(requestsDir, name);
+    if (olderThanMs > 0) {
+      try {
+        const stats = fsImpl.statSync(fullPath);
+        const ageMs = Math.max(0, Number(nowMs()) - Number(stats.mtimeMs || 0));
+        if (ageMs < olderThanMs) {
+          continue;
+        }
+      } catch {
+        // If stat fails, treat the request as flushable during startup cleanup.
+      }
+    }
     let request = null;
     const idFallback = path.basename(name, ".json");
     try {
