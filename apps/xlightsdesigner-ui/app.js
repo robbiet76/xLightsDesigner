@@ -11757,6 +11757,27 @@ function getAutomationPageStatesSnapshot() {
   };
 }
 
+function getAutomationSequencerValidationSnapshot() {
+  const latestApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
+  const historySnapshot = state.ui?.reviewHistorySnapshot && typeof state.ui.reviewHistorySnapshot === "object"
+    ? state.ui.reviewHistorySnapshot
+    : (state.ui?.selectedHistorySnapshot && typeof state.ui.selectedHistorySnapshot === "object"
+        ? state.ui.selectedHistorySnapshot
+        : null);
+  return {
+    ok: true,
+    status: state.status || null,
+    activeSequence: state.activeSequence || "",
+    sequencePathInput: state.sequencePathInput || "",
+    latestApply,
+    latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null,
+    latestApplyResult: historySnapshot?.applyResult || null,
+    latestPlanHandoff: historySnapshot?.planHandoff || getValidHandoff("plan_handoff_v1"),
+    latestIntentHandoff: historySnapshot?.intentHandoff || getValidHandoff("intent_handoff_v1"),
+    pageStates: getPageStates()
+  };
+}
+
 function exposeRuntimeValidationHooks() {
   window.xLightsDesignerRuntime = {
     dispatchPrompt: dispatchAutomationPrompt,
@@ -11767,6 +11788,7 @@ function exposeRuntimeValidationHooks() {
     applyCurrentProposal: applyAutomationCurrentProposal,
     diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
     getComparativeValidationSnapshot: getAutomationComparativeValidationSnapshot,
+    getSequencerValidationSnapshot: getAutomationSequencerValidationSnapshot,
     showTenEffectGridDemo: showAutomationTenEffectGridDemo,
     showSplitEffectGridDemo: showAutomationSplitEffectGridDemo,
     getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,

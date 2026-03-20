@@ -152,6 +152,10 @@ async function getRendererValidationSnapshot() {
   return invokeRendererAutomation("getDirectSequenceValidationSnapshot", {});
 }
 
+async function getRendererSequencerValidationSnapshot() {
+  return invokeRendererAutomation("getSequencerValidationSnapshot", {});
+}
+
 async function getRendererAgentRuntimeSnapshot() {
   return invokeRendererAutomation("getAgentRuntimeSnapshot", {});
 }
@@ -691,6 +695,113 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
   };
 }
 
+async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expected = {}) {
+  const suiteStartedAtMs = nowMs();
+  const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
+  if (!scenarios.length) {
+    throw new Error("Live section practical sequence validation suite requires at least one scenario.");
+  }
+  const results = [];
+  let activeSequencePath = "";
+  const refreshedSequences = new Set();
+  const analyzedContexts = new Set();
+  for (const scenario of scenarios) {
+    const scenarioStartedAtMs = nowMs();
+    const name = str(scenario?.name || `scenario-${results.length + 1}`);
+    const sequencePath = str(scenario?.sequencePath);
+    const timings = {};
+    logStartup(`automation:live-sequencer-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
+    if (sequencePath && sequencePath !== activeSequencePath) {
+      const openStartedAtMs = nowMs();
+      await openSequenceFromDesktop(sequencePath);
+      timings.openSequenceMs = nowMs() - openStartedAtMs;
+      activeSequencePath = sequencePath;
+    }
+    const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
+    if (!refreshedSequences.has(sequenceContextKey) && scenario?.refreshFirst !== false) {
+      const refreshStartedAtMs = nowMs();
+      await invokeRendererAutomation("refreshFromXLights", {});
+      timings.refreshMs = nowMs() - refreshStartedAtMs;
+      refreshedSequences.add(sequenceContextKey);
+    }
+    const analyzePrompt = str(scenario?.analyzePrompt);
+    const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
+    if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      const requiredCueTypes = inferRequiredCueTypesFromScenario(scenario);
+      const reuse = await canReuseCurrentAnalysis({
+        sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
+        analyzePrompt,
+        requiredCueTypes
+      });
+      if (reuse) {
+        timings.analyzeMs = 0;
+      } else {
+        const analyzeStartedAtMs = nowMs();
+        await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+        timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      }
+      analyzedContexts.add(analysisContextKey);
+    }
+
+    const generateStartedAtMs = nowMs();
+    await invokeRendererAutomation("generateProposal", {
+      prompt: str(scenario?.prompt || scenario?.strongPrompt),
+      requestedRole: "designer_dialog",
+      selectedSections: arr(scenario?.sections),
+      selectedTargetIds: arr(scenario?.targets),
+      selectedTagNames: arr(scenario?.tagNames)
+    });
+    timings.generateMs = nowMs() - generateStartedAtMs;
+
+    const applyStartedAtMs = nowMs();
+    await invokeRendererAutomation("applyCurrentProposal", {});
+    timings.applyMs = nowMs() - applyStartedAtMs;
+
+    const snapshot = await getRendererSequencerValidationSnapshot();
+    const practicalValidation = snapshot?.latestPracticalValidation || null;
+    const observedEffectNames = arr(practicalValidation?.designAlignment?.observedEffectNames).map((row) => str(row)).filter(Boolean);
+    const expectedEffects = arr(scenario?.expectedEffects).map((row) => str(row)).filter(Boolean);
+    const matchedExpectedEffects = expectedEffects.filter((row) => observedEffectNames.includes(row));
+    const ok = practicalValidation?.overallOk === true && matchedExpectedEffects.length > 0;
+
+    results.push({
+      name,
+      sequencePath,
+      timings: {
+        totalMs: nowMs() - scenarioStartedAtMs,
+        openSequenceMs: Number(timings.openSequenceMs || 0),
+        refreshMs: Number(timings.refreshMs || 0),
+        analyzeMs: Number(timings.analyzeMs || 0),
+        generateMs: Number(timings.generateMs || 0),
+        applyMs: Number(timings.applyMs || 0)
+      },
+      ok,
+      expectedEffects,
+      observedEffectNames,
+      matchedExpectedEffects,
+      practicalValidation
+    });
+    logStartup(`automation:live-sequencer-suite:scenario:finish name=${name} ok=${ok ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
+  }
+
+  const failed = results.filter((row) => row?.ok !== true);
+  return {
+    contract: "live_section_practical_sequence_validation_suite_run_v1",
+    version: "1.0",
+    ok: failed.length === 0,
+    summary: failed.length === 0
+      ? `Live section practical sequence suite passed ${results.length}/${results.length} scenarios.`
+      : `Live section practical sequence suite passed ${results.length - failed.length}/${results.length} scenarios.`,
+    timings: {
+      totalMs: nowMs() - suiteStartedAtMs
+    },
+    scenarioCount: results.length,
+    failedScenarioCount: failed.length,
+    failedScenarioNames: failed.map((row) => row.name),
+    results
+  };
+}
+
 async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
   const suiteStartedAtMs = nowMs();
   const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
@@ -804,6 +915,7 @@ async function processAutomationRequests() {
     responsePathForId: automationResponsePath,
     requestTimeoutMsForAction: ({ action }) => {
       if (action === "runLiveDesignValidationSuite") return 1800000;
+      if (action === "runLiveSectionPracticalSequenceValidationSuite") return 1800000;
       if (action === "runLiveDesignCanarySuite") return 900000;
       if (action === "runLiveDesignCanaryValidation") return 300000;
       if (action === "runComparativeLiveDesignValidation") return 900000;
@@ -861,6 +973,9 @@ async function processAutomationRequests() {
       }
       if (action === "runLiveDesignValidationSuite") {
         return runLiveDesignValidationSuiteFromDesktop(request?.payload || {});
+      }
+      if (action === "runLiveSectionPracticalSequenceValidationSuite") {
+        return runLiveSectionPracticalSequenceValidationSuiteFromDesktop(request?.payload || {});
       }
       if (action === "runLiveDesignCanarySuite") {
         return runLiveDesignCanarySuiteFromDesktop(request?.payload || {});

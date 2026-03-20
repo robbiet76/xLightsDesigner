@@ -5,6 +5,7 @@ This folder contains the offline eval corpus and runner for the deep designer-tr
 Current contents:
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
 - `section-practical-sequence-validation-suite-v1.json`: deterministic section-scoped sequencer validation scenarios tied to the Stage 1 trained baseline
+- `live-section-practical-sequence-validation-suite-v1.json`: live apply section-scoped sequencer validation scenarios that reuse the practical validation artifact
 - `live-design-canary-suite-v1.json`: fastest one-prompt live canary scenarios for frequent iteration loops
 - `live-design-validation-suite-smoke-v1.json`: fast canary live comparative scenarios for frequent iteration loops
 - `live-design-validation-suite-v1.json`: canonical live comparative validation scenarios for real saved sequences, including scoped focus, stage-lighting, composition, motion-language, and render-discipline slices

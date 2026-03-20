@@ -1,0 +1,25 @@
+{
+  "contract": "live_section_practical_sequence_validation_suite_v1",
+  "version": "1.0",
+  "summary": "Live section-scoped sequencer validation scenarios built on the Stage 1 trained baseline and practical validation artifact.",
+  "scenarios": [
+    {
+      "name": "live-clean-phase-tree-chorus-spiral-focus",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "sections": ["Chorus 1"],
+      "targets": ["SpiralTrees"],
+      "prompt": "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill. Do not rewrite the whole show.",
+      "expectedEffects": ["Spirals"]
+    },
+    {
+      "name": "live-clean-phase-spinner-restrained-texture",
+      "sequencePath": "/Users/robterry/Desktop/Show/Test/Validation-Clean-Phase1.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "sections": ["Bridge"],
+      "targets": ["Star"],
+      "prompt": "In the Bridge, keep Star restrained and texture-led rather than broad fill motion. Use a softer twinkle or shimmer family instead of a large directional pass.",
+      "expectedEffects": ["Twinkle", "Shimmer"]
+    }
+  ]
+}
