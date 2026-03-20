@@ -68,6 +68,7 @@ The current harness is intentionally small:
 - `generate-effect-static-complexity-report.py`: compute a registry-only static complexity score and inferred complexity class per effect
 - `generate-effect-complexity-review.py`: combine static complexity with current training evidence into a review artifact
 - `cleanup-render-training-artifacts.py`: dry-run or apply cleanup for stale raw artifacts in the canonical render-training workspace
+- `export-sequencer-stage1-bundle.py`: export the current equalized Stage 1 training outputs into a repo-managed sequencer bundle
 - `evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
 - `priority-effect-selection-cases.v1.json`: first selector-evaluation case set
 - `priority-effect-selection-cases.v2.json`: expanded selector-evaluation case set with tighter geometry-specific structural cases
@@ -133,6 +134,20 @@ python3 scripts/sequencer-render-training/normalize-manifest.py \
 python3 scripts/sequencer-render-training/generate-model-geometry-audit.py \
   --show-dir /Users/robterry/Projects/xLightsDesigner/render-training \
   --out-file scripts/sequencer-render-training/generic-layout-geometry-audit.json
+```
+
+```bash
+python3 scripts/sequencer-render-training/export-sequencer-stage1-bundle.py \
+  --equalization-board /tmp/render-training-stage1-equalization.v10.json \
+  --coverage-audit /private/tmp/render-training-stage1-coverage-audit.v3.json \
+  --intent-map /tmp/render-training-priority-intent-map.v5.json \
+  --intent-map /tmp/render-training-shockwave-interaction-intent-map.v2.json \
+  --intent-map /tmp/render-training-twinkle-interaction-intent-map.v1.json \
+  --intent-map /tmp/render-training-singlestrand-intent-map.v1.json \
+  --intent-map /tmp/render-training-colorwash-intent-map.v1.json \
+  --intent-map /tmp/render-training-on-intent-map.v1.json \
+  --intent-map /tmp/render-training-shimmer-intent-map.v1.json \
+  --output apps/xlightsdesigner-ui/agent/sequence-agent/generated/stage1-trained-effect-bundle.js
 ```
 
 ```bash

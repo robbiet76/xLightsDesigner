@@ -1,3 +1,5 @@
+import { recommendTrainedEffectsForTargets } from "./trained-effect-knowledge.js";
+
 export function estimateImpactCount(sourceLines = []) {
   const count = Array.isArray(sourceLines) ? sourceLines.filter(Boolean).length : 0;
   return Math.max(0, count * 11);
@@ -670,7 +672,7 @@ function buildSequenceSettingsCommand({ effectCommands = [], groupIds = [], sequ
   };
 }
 
-function inferEffectNameFromDescription(description = "", effectCatalog = null) {
+function inferEffectNameFromDescription(description = "", effectCatalog = null, options = {}) {
   const byName = normalizeEffectCatalog(effectCatalog);
   const text = normText(description).toLowerCase();
   const hasCatalog = Object.keys(byName).length > 0;
@@ -685,6 +687,18 @@ function inferEffectNameFromDescription(description = "", effectCatalog = null) 
   for (const row of aliases) {
     if (hasCatalog && !Object.prototype.hasOwnProperty.call(byName, row.effectName)) continue;
     if (row.patterns.some((pattern) => text.includes(pattern))) return row.effectName;
+  }
+  const trained = recommendTrainedEffectsForTargets({
+    summary: description,
+    targetIds: options?.targetIds || [],
+    displayElements: options?.displayElements || [],
+    limit: 1
+  });
+  if (trained.length) {
+    const trainedEffect = normText(trained[0]?.effectName);
+    if (!hasCatalog || Object.prototype.hasOwnProperty.call(byName, trainedEffect)) {
+      return trainedEffect;
+    }
   }
   return chooseTemplateEffectName(effectCatalog);
 }
@@ -836,6 +850,7 @@ function buildEffectTemplates(
   parsed = [],
   targetIds = [],
   effectCatalog = null,
+  displayElements = [],
   groupIds = [],
   groupsById = {},
   submodelsById = {},
@@ -883,7 +898,10 @@ function buildEffectTemplates(
       const layerIndex = Number(layerCounts.get(layerKey) || 0);
       layerCounts.set(layerKey, layerIndex + 1);
 
-      const effectName = inferEffectNameFromDescription(row.description, effectCatalog);
+      const effectName = inferEffectNameFromDescription(row.description, effectCatalog, {
+        targetIds: [modelName],
+        displayElements
+      });
       if (!effectName) continue;
       const scopedWindow = target?.sourceGroupId
         ? derivePerMemberWindow(window, modelIdx, models.length, row.description)
@@ -995,6 +1013,7 @@ export function buildDesignerPlanCommands(
     parsed,
     targetIds,
     effectCatalog,
+    displayElements,
     groupIds,
     groupsById,
     submodelsById,

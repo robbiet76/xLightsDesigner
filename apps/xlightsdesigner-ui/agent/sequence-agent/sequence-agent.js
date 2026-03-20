@@ -10,6 +10,10 @@ import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, S
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
+import {
+  buildStage1TrainingKnowledgeMetadata,
+  recommendTrainedEffectsForTargets
+} from "./trained-effect-knowledge.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
@@ -254,12 +258,29 @@ function isExecutableSequencingLine(line = "") {
   return false;
 }
 
-function inferEffectNameFromSectionPlan({ section = "", energy = "", density = "", intentSummary = "", effectHints = [] } = {}) {
+function inferEffectNameFromSectionPlan({
+  section = "",
+  energy = "",
+  density = "",
+  intentSummary = "",
+  effectHints = [],
+  targetIds = [],
+  displayElements = []
+} = {}) {
   const hinted = normArray(effectHints).map((row) => normText(row)).find(Boolean);
   if (hinted) return hinted;
   const summary = `${normText(intentSummary)} ${normText(section)}`.toLowerCase();
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
+  const trained = recommendTrainedEffectsForTargets({
+    summary,
+    energy: normalizedEnergy,
+    density: normalizedDensity,
+    targetIds,
+    displayElements,
+    limit: 1
+  });
+  if (trained.length) return normText(trained[0]?.effectName);
   if (/shimmer|sparkle|twinkle|glitter/.test(summary)) return "Shimmer";
   if (/bars|pulse|strobe|rhythm|chop/.test(summary)) return "Bars";
   if (/\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary)) return "On";
@@ -286,7 +307,7 @@ function buildStructuredExecutionLine({
   return `${sectionText} / ${targetText} / apply ${effectText} effect${paletteClause} for the requested duration using the current target timing`;
 }
 
-function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } = {}) {
+function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [] } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
@@ -298,7 +319,9 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {} } =
           energy: row?.energy,
           density: row?.density,
           intentSummary: row?.intentSummary || scope.goal,
-          effectHints: row?.effectHints
+          effectHints: row?.effectHints,
+          targetIds: row?.targetIds || scope.targetIds,
+          displayElements
         });
         return buildStructuredExecutionLine({
           section: row?.section,
@@ -687,7 +710,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.effect_strategy === "function"
       ? stageOverrides.effect_strategy({ scope, analysisHandoff: safeAnalysis, timing })
-      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing }))
+      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements }))
   });
 
   const graph = runStage({
@@ -757,7 +780,8 @@ export function buildSequenceAgentPlan({
       ].filter(Boolean))),
       effectPlacementCount: Array.isArray(scope?.executionStrategy?.effectPlacements)
         ? scope.executionStrategy.effectPlacements.length
-        : 0
+        : 0,
+      trainingKnowledge: buildStage1TrainingKnowledgeMetadata()
     }
   };
   plan.createdAt = new Date().toISOString();

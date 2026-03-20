@@ -1,3 +1,8 @@
+import {
+  getStage1TrainedEffectBundle,
+  getStage1TrainedEffectProfile
+} from "./trained-effect-knowledge.js";
+
 function normText(value = "") {
   return String(value || "").trim();
 }
@@ -208,13 +213,42 @@ const EFFECT_INTENT_CAPABILITIES = {
   }
 };
 
+function mergeTrainingProfileIntoCapability(effectName = "", baseCapability = null) {
+  const trainingProfile = getStage1TrainedEffectProfile(effectName);
+  if (!baseCapability && !trainingProfile) return null;
+  const capability = baseCapability ? { ...baseCapability } : {
+    family: "trained_effect",
+    supportedSettingsIntent: [],
+    supportedPaletteIntent: [],
+    supportedLayerIntent: [],
+    supportedRenderIntent: [],
+    effectParamPatterns: {}
+  };
+  if (!trainingProfile) return capability;
+  const trainingFamilies = Array.isArray(trainingProfile.patternFamilies) ? trainingProfile.patternFamilies : [];
+  capability.training = {
+    currentStage: normText(trainingProfile.currentStage),
+    equalized: Boolean(trainingProfile.equalized),
+    supportedModelTypes: Array.isArray(trainingProfile.supportedModelTypes) ? trainingProfile.supportedModelTypes.slice() : [],
+    supportedGeometryProfiles: Array.isArray(trainingProfile.supportedGeometryProfiles) ? trainingProfile.supportedGeometryProfiles.slice() : [],
+    intentTags: Array.isArray(trainingProfile.intentTags) ? trainingProfile.intentTags.slice() : [],
+    patternFamilies: trainingFamilies.slice(),
+    selectorEvidence: trainingProfile.selectorEvidence || {}
+  };
+  if (!capability.family || capability.family === "trained_effect") {
+    capability.family = trainingFamilies[0] || capability.family;
+  }
+  return capability;
+}
+
 export function getEffectIntentCapability(effectName = "") {
-  return EFFECT_INTENT_CAPABILITIES[normText(effectName)] || null;
+  return mergeTrainingProfileIntoCapability(effectName, EFFECT_INTENT_CAPABILITIES[normText(effectName)] || null);
 }
 
 export function listEffectIntentCapabilities() {
-  return Object.entries(EFFECT_INTENT_CAPABILITIES).map(([effectName, row]) => ({
+  const trainingNames = Object.keys(getStage1TrainedEffectBundle()?.effectsByName || {});
+  return [...new Set([...Object.keys(EFFECT_INTENT_CAPABILITIES), ...trainingNames])].map((effectName) => ({
     effectName,
-    ...row
+    ...getEffectIntentCapability(effectName)
   }));
 }
