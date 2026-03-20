@@ -12,7 +12,8 @@ import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
 import {
   buildStage1TrainingKnowledgeMetadata,
-  recommendTrainedEffectsForTargets
+  recommendTrainedEffectsForTargets,
+  recommendTrainedEffectsForVisualFamilies
 } from "./trained-effect-knowledge.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
 
@@ -299,6 +300,13 @@ function inferEffectNameFromSectionPlan({
 } = {}) {
   const hinted = normArray(effectHints).map((row) => normText(row)).find(Boolean);
   if (hinted) return hinted;
+  const familyDriven = recommendTrainedEffectsForVisualFamilies({
+    preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
+    targetIds,
+    displayElements,
+    limit: 1
+  });
+  if (familyDriven.length) return normText(familyDriven[0]?.effectName);
   const directiveText = [
     normText(sectionDirective?.sectionPurpose),
     normText(sectionDirective?.motionTarget),

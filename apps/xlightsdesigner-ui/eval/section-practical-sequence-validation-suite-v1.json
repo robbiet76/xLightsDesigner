@@ -1,0 +1,55 @@
+{
+  "contract": "section_practical_sequence_validation_suite_v1",
+  "version": "1.0",
+  "summary": "Deterministic section-scoped practical sequencing validation scenarios for the Stage 1 trained baseline.",
+  "scenarios": [
+    {
+      "name": "tree-chorus-spiral-focus",
+      "sectionName": "Chorus 1",
+      "sectionWindow": { "startMs": 44000, "endMs": 62000 },
+      "goal": "Build a tree-led chorus with flowing motion and clear lead emphasis.",
+      "designSummary": "Tree-led spiral chorus",
+      "targets": ["TreeRound"],
+      "primaryFocusTargetIds": ["TreeRound"],
+      "preferredVisualFamilies": ["spiral_flow"],
+      "sourceLines": ["Chorus 1 / TreeRound / shape the chorus using the internal design brief"],
+      "expectedEffects": ["Spirals"]
+    },
+    {
+      "name": "arch-directional-segmentation",
+      "sectionName": "Verse 1",
+      "sectionWindow": { "startMs": 10000, "endMs": 44000 },
+      "goal": "Use the arch as a readable directional support gesture with segmentation.",
+      "designSummary": "Directional segmented arch support",
+      "targets": ["ArchSingle"],
+      "primaryFocusTargetIds": ["ArchSingle"],
+      "preferredVisualFamilies": ["directional_motion", "segmented_motion"],
+      "sourceLines": ["Verse 1 / ArchSingle / shape the verse using the internal design brief"],
+      "expectedEffects": ["Bars", "Marquee"]
+    },
+    {
+      "name": "spinner-restrained-texture",
+      "sectionName": "Bridge",
+      "sectionWindow": { "startMs": 90000, "endMs": 120000 },
+      "goal": "Keep the bridge restrained with textured spinner support instead of large fill motion.",
+      "designSummary": "Restrained spinner texture",
+      "targets": ["SpinnerStandard"],
+      "primaryFocusTargetIds": ["SpinnerStandard"],
+      "preferredVisualFamilies": ["soft_texture"],
+      "sourceLines": ["Bridge / SpinnerStandard / shape the bridge using the internal design brief"],
+      "expectedEffects": ["Twinkle", "Shimmer"]
+    },
+    {
+      "name": "star-radial-rotation-accent",
+      "sectionName": "Final Chorus",
+      "sectionWindow": { "startMs": 120000, "endMs": 156000 },
+      "goal": "Use the star as a radial accent with stronger rotation in the final chorus.",
+      "designSummary": "Radial rotating star accent",
+      "targets": ["StarSingle"],
+      "primaryFocusTargetIds": ["StarSingle"],
+      "preferredVisualFamilies": ["radial_rotation"],
+      "sourceLines": ["Final Chorus / StarSingle / shape the final chorus using the internal design brief"],
+      "expectedEffects": ["Pinwheel", "Shockwave"]
+    }
+  ]
+}

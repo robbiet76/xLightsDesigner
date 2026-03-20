@@ -46,6 +46,20 @@ const EFFECT_KEYWORDS = Object.freeze({
   'Twinkle': ['twinkle', 'strobe', 'random', 'texture']
 });
 
+export const VISUAL_FAMILY_EFFECT_MAP = Object.freeze({
+  spiral_flow: ['Spirals'],
+  helical_spiral_flow: ['Spirals'],
+  segmented_motion: ['Bars', 'Marquee'],
+  directional_motion: ['Bars', 'Marquee', 'SingleStrand', 'Spirals'],
+  bounce_motion: ['SingleStrand'],
+  radial_rotation: ['Pinwheel', 'Shockwave'],
+  diffuse_expand: ['Shockwave'],
+  soft_texture: ['Twinkle', 'Shimmer'],
+  crisp_texture: ['Twinkle', 'Shockwave'],
+  static_fill: ['Color Wash', 'On'],
+  fill: ['Color Wash', 'On', 'Bars', 'Marquee', 'Shockwave']
+});
+
 function buildDisplayElementIndex(displayElements = []) {
   const index = new Map();
   for (const row of Array.isArray(displayElements) ? displayElements : []) {
@@ -187,6 +201,27 @@ export function recommendTrainedEffectsForTargets({
 } = {}) {
   const targetModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
   return recommendTrainedEffects({ summary, energy, density, targetModelTypes, limit });
+}
+
+export function recommendTrainedEffectsForVisualFamilies({
+  preferredVisualFamilies = [],
+  targetIds = [],
+  displayElements = [],
+  limit = 5
+} = {}) {
+  const targetModelTypes = inferModelBucketsForTargets({ targetIds, displayElements });
+  const preferred = unique(preferredVisualFamilies).flatMap((row) => VISUAL_FAMILY_EFFECT_MAP[row] || []);
+  const supported = unique(preferred).filter((effectName) => {
+    const profile = getStage1TrainedEffectProfile(effectName);
+    if (!profile) return false;
+    return !targetModelTypes.length || effectSupportsAnyBucket(profile, targetModelTypes);
+  });
+  return supported.slice(0, Math.max(1, Number(limit) || 5)).map((effectName, index) => ({
+    effectName,
+    score: 100 - index,
+    reasons: ['preferred_visual_family'],
+    profile: getStage1TrainedEffectProfile(effectName)
+  }));
 }
 
 export function buildStage1TrainingKnowledgeMetadata() {
