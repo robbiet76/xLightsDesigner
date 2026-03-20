@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "description": "Effect-local retrieval evaluation for Shimmer structural intent coverage.",
+  "cases": [
+    {
+      "caseId": "shimmer_linear_texture",
+      "description": "Linear shimmer texture should retrieve restrained Shimmer regions on vertical lines.",
+      "requiredIntents": ["steady"],
+      "requiredPatternFamilies": ["shimmer"],
+      "geometryProfiles": ["single_line_vertical"],
+      "effects": ["Shimmer"],
+      "expectedTop": {
+        "effect": "Shimmer",
+        "geometryProfile": "single_line_vertical",
+        "patternFamiliesAny": ["shimmer"]
+      }
+    },
+    {
+      "caseId": "shimmer_radial_spinner",
+      "description": "Spinner sparkle texture should retrieve Shimmer radial sparkle regions.",
+      "requiredIntents": ["steady"],
+      "requiredPatternFamilies": ["radial_sparkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Shimmer"],
+      "expectedTop": {
+        "effect": "Shimmer",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_sparkle"]
+      }
+    },
+    {
+      "caseId": "shimmer_matrix_texture",
+      "description": "Matrix sparkle-fit texture should retrieve Shimmer matrix regions.",
+      "requiredIntents": ["steady"],
+      "requiredStructuralLabels": ["matrix_sparkle_fit"],
+      "geometryProfiles": ["matrix_high_density"],
+      "effects": ["Shimmer"],
+      "expectedTop": {
+        "effect": "Shimmer",
+        "geometryProfile": "matrix_high_density",
+        "intentTagsAll": ["steady"]
+      }
+    }
+  ]
+}

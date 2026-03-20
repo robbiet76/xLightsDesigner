@@ -73,9 +73,11 @@ def effect_maturity(effect_name: str, summary: dict, intent_map: dict, eval_inde
     controlled_vocab_results = controlled_vocab_eval_index.get(effect_name, [])
     controlled_vocab_ready = all_cases_passed(controlled_vocab_results)
 
+    structurally_observable = bool(high_impact or interaction_suspected or retrieval_ready)
+
     stages = {
         'execution_ready': True,
-        'structurally_observable': bool(high_impact),
+        'structurally_observable': structurally_observable,
         'structurally_retrievable': retrieval_ready,
         'selector_ready': in_selector and retrieval_ready and selection_ready,
         'designer_language_candidate': False,

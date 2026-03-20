@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "description": "Effect-local retrieval evaluation for Color Wash structural intent coverage.",
+  "cases": [
+    {
+      "caseId": "colorwash_linear_horizontal_fade",
+      "description": "Horizontal line fades should retrieve Color Wash horizontal-fade regions on linear props.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "requiredStructuralLabels": ["horizontal_fade"],
+      "geometryProfiles": ["single_line_horizontal"],
+      "effects": ["Color Wash"],
+      "expectedTop": {
+        "effect": "Color Wash",
+        "geometryProfile": "single_line_horizontal",
+        "intentTagsAll": ["clean", "fill", "steady"]
+      }
+    },
+    {
+      "caseId": "colorwash_radial_fill_spinner",
+      "description": "Radial clean fill on spinner should retrieve Color Wash radial-fill regions.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "requiredPatternFamilies": ["radial_fill"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Color Wash"],
+      "expectedTop": {
+        "effect": "Color Wash",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["radial_fill"]
+      }
+    },
+    {
+      "caseId": "colorwash_tree_fill_round",
+      "description": "Round-tree clean fill should retrieve Color Wash tree-fill regions.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "requiredPatternFamilies": ["tree_fill"],
+      "geometryProfiles": ["tree_360_round"],
+      "effects": ["Color Wash"],
+      "expectedTop": {
+        "effect": "Color Wash",
+        "geometryProfile": "tree_360_round",
+        "patternFamiliesAny": ["tree_fill"]
+      }
+    },
+    {
+      "caseId": "colorwash_matrix_vertical_fade",
+      "description": "Matrix vertical fades should retrieve Color Wash matrix fill regions with vertical fade structure.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "requiredStructuralLabels": ["vertical_fade", "matrix_fill"],
+      "geometryProfiles": ["matrix_high_density"],
+      "effects": ["Color Wash"],
+      "expectedTop": {
+        "effect": "Color Wash",
+        "geometryProfile": "matrix_high_density",
+        "intentTagsAll": ["clean", "fill", "steady"]
+      }
+    }
+  ]
+}

@@ -82,6 +82,81 @@
       "geometryProfiles": ["tree_flat_single_layer"],
       "effects": ["SingleStrand", "Spirals", "Twinkle"],
       "expectedSelection": "SingleStrand"
+    },
+    {
+      "caseId": "select_colorwash_spinner_fill",
+      "description": "Clean steady radial fill on the spinner should prefer Color Wash over texture and motion effects.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "requiredPatternFamilies": ["radial_fill"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Color Wash", "Shockwave", "Twinkle"],
+      "expectedSelection": "Color Wash"
+    },
+    {
+      "caseId": "select_colorwash_tree_fill",
+      "description": "Clean steady round-tree fill should prefer Color Wash over Spirals and Shockwave.",
+      "requiredIntents": ["clean", "fill", "steady"],
+      "requiredPatternFamilies": ["tree_fill"],
+      "geometryProfiles": ["tree_360_round"],
+      "effects": ["Color Wash", "Spirals", "Shockwave"],
+      "expectedSelection": "Color Wash"
+    },
+    {
+      "caseId": "select_on_ramp_up_line",
+      "description": "Ramp-up static hold on a vertical line should prefer On over Color Wash and Bars.",
+      "requiredIntents": ["clean", "restrained"],
+      "requiredStructuralLabels": ["ramp_up"],
+      "requiredPatternFamilies": ["static_hold"],
+      "geometryProfiles": ["single_line_vertical"],
+      "effects": ["On", "Color Wash", "Bars"],
+      "expectedSelection": "On"
+    },
+    {
+      "caseId": "select_on_ramp_down_spinner",
+      "description": "Ramp-down static fill on the spinner should prefer On over Color Wash and Twinkle.",
+      "requiredIntents": ["clean", "fill", "restrained"],
+      "requiredStructuralLabels": ["ramp_down"],
+      "requiredPatternFamilies": ["static_fill"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["On", "Color Wash", "Twinkle"],
+      "expectedSelection": "On"
+    },
+    {
+      "caseId": "select_on_shimmer_tree",
+      "description": "Restrained shimmer-hold on spiral trees should prefer On over Shockwave and Twinkle.",
+      "requiredIntents": ["animated", "restrained"],
+      "requiredStructuralLabels": ["shimmer_hold"],
+      "requiredPatternFamilies": ["static_fill"],
+      "geometryProfiles": ["tree_360_spiral"],
+      "effects": ["On", "Shockwave", "Twinkle"],
+      "expectedSelection": "On"
+    },
+    {
+      "caseId": "select_shimmer_spinner_texture",
+      "description": "Steady radial sparkle texture on the spinner should prefer Shimmer over Twinkle and On.",
+      "requiredIntents": ["steady"],
+      "requiredPatternFamilies": ["radial_sparkle"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["Shimmer", "Twinkle", "On"],
+      "expectedSelection": "Shimmer"
+    },
+    {
+      "caseId": "select_shimmer_linear_texture",
+      "description": "Steady linear shimmer texture should prefer Shimmer over Twinkle and Color Wash.",
+      "requiredIntents": ["steady"],
+      "requiredPatternFamilies": ["shimmer"],
+      "geometryProfiles": ["single_line_vertical"],
+      "effects": ["Shimmer", "Twinkle", "Color Wash"],
+      "expectedSelection": "Shimmer"
+    },
+    {
+      "caseId": "select_shimmer_matrix_texture",
+      "description": "Matrix sparkle-fit texture should prefer Shimmer over Twinkle and Color Wash.",
+      "requiredIntents": ["steady"],
+      "requiredStructuralLabels": ["matrix_sparkle_fit"],
+      "geometryProfiles": ["matrix_high_density"],
+      "effects": ["Shimmer", "Twinkle", "Color Wash"],
+      "expectedSelection": "Shimmer"
     }
   ]
 }

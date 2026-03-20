@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "description": "Effect-local retrieval evaluation for On structural intent coverage.",
+  "cases": [
+    {
+      "caseId": "on_ramp_up_line",
+      "description": "Line ramp-up holds should retrieve On start-level regions.",
+      "requiredIntents": ["clean", "restrained"],
+      "requiredStructuralLabels": ["ramp_up"],
+      "requiredPatternFamilies": ["static_hold"],
+      "geometryProfiles": ["single_line_vertical"],
+      "effects": ["On"],
+      "expectedTop": {
+        "effect": "On",
+        "geometryProfile": "single_line_vertical",
+        "intentTagsAll": ["clean", "restrained"]
+      }
+    },
+    {
+      "caseId": "on_ramp_down_spinner",
+      "description": "Spinner ramp-down fills should retrieve On end-level regions.",
+      "requiredIntents": ["clean", "fill", "restrained"],
+      "requiredStructuralLabels": ["ramp_down"],
+      "requiredPatternFamilies": ["static_fill"],
+      "geometryProfiles": ["spinner_standard"],
+      "effects": ["On"],
+      "expectedTop": {
+        "effect": "On",
+        "geometryProfile": "spinner_standard",
+        "patternFamiliesAny": ["static_fill"]
+      }
+    },
+    {
+      "caseId": "on_shimmer_tree",
+      "description": "Tree shimmer-hold behavior should retrieve On shimmer regions.",
+      "requiredIntents": ["animated", "restrained"],
+      "requiredStructuralLabels": ["shimmer_hold"],
+      "requiredPatternFamilies": ["static_fill"],
+      "geometryProfiles": ["tree_360_spiral"],
+      "effects": ["On"],
+      "expectedTop": {
+        "effect": "On",
+        "geometryProfile": "tree_360_spiral",
+        "patternFamiliesAny": ["static_fill"]
+      }
+    },
+    {
+      "caseId": "on_matrix_ramp_up",
+      "description": "Matrix ramp-up holds should retrieve On start-level matrix regions.",
+      "requiredIntents": ["clean", "fill", "restrained"],
+      "requiredStructuralLabels": ["ramp_up", "matrix_fill"],
+      "geometryProfiles": ["matrix_high_density"],
+      "effects": ["On"],
+      "expectedTop": {
+        "effect": "On",
+        "geometryProfile": "matrix_high_density",
+        "intentTagsAll": ["clean", "fill", "restrained"]
+      }
+    }
+  ]
+}
