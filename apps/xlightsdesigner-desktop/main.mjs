@@ -722,6 +722,85 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
   let activeSequencePath = "";
   const refreshedSequences = new Set();
   const analyzedContexts = new Set();
+
+  function extractObservedTargets({ practicalValidation = null, applyResponse = null } = {}) {
+    const fromPractical = arr(practicalValidation?.designAlignment?.observedTargets);
+    const fromApplyPractical = arr(applyResponse?.applyOutcome?.applyResult?.practicalValidation?.designAlignment?.observedTargets);
+    const fromLatestApply = arr(applyResponse?.latestApply?.verification?.designAlignment?.observedTargets);
+    const fromChecks = arr(applyResponse?.latestApply?.verification?.checks)
+      .map((row) => {
+        const target = str(row?.target);
+        return target.includes("@") ? target.split("@")[0] : target;
+      })
+      .filter(Boolean);
+    return uniqueStrings([
+      ...fromPractical,
+      ...fromApplyPractical,
+      ...fromLatestApply,
+      ...fromChecks
+    ]);
+  }
+
+  function evaluateScenarioAssertions({
+    scenario = {},
+    practicalValidation = null,
+    observedEffectNames = [],
+    matchedExpectedEffects = [],
+    observedTargets = []
+  } = {}) {
+    const assertions = [];
+    const requiredTargets = uniqueStrings(arr(scenario?.requiredObservedTargets).length
+      ? arr(scenario.requiredObservedTargets)
+      : arr(scenario?.targets));
+    const forbiddenEffects = uniqueStrings(arr(scenario?.forbiddenEffects));
+    const minimumMatchedEffects = Number.isFinite(Number(scenario?.minimumMatchedEffects))
+      ? Math.max(0, Number(scenario.minimumMatchedEffects))
+      : (arr(scenario?.expectedEffects).length ? 1 : 0);
+    const requirePracticalValidation = scenario?.requirePracticalValidation !== false;
+
+    if (requirePracticalValidation) {
+      assertions.push({
+        kind: "practical_validation",
+        ok: practicalValidation?.overallOk === true,
+        expected: "overallOk=true",
+        actual: practicalValidation?.overallOk === true ? "overallOk=true" : "overallOk=false"
+      });
+    }
+
+    if (minimumMatchedEffects > 0) {
+      assertions.push({
+        kind: "effect_match_count",
+        ok: matchedExpectedEffects.length >= minimumMatchedEffects,
+        expected: `>=${minimumMatchedEffects}`,
+        actual: String(matchedExpectedEffects.length)
+      });
+    }
+
+    if (requiredTargets.length) {
+      const missingTargets = requiredTargets.filter((row) => !observedTargets.includes(row));
+      assertions.push({
+        kind: "required_targets",
+        ok: missingTargets.length === 0,
+        expected: requiredTargets.join(", "),
+        actual: observedTargets.join(", "),
+        missingTargets
+      });
+    }
+
+    if (forbiddenEffects.length) {
+      const presentForbiddenEffects = forbiddenEffects.filter((row) => observedEffectNames.includes(row));
+      assertions.push({
+        kind: "forbidden_effects",
+        ok: presentForbiddenEffects.length === 0,
+        expected: "none",
+        actual: presentForbiddenEffects.join(", "),
+        presentForbiddenEffects
+      });
+    }
+
+    return assertions;
+  }
+
   for (const scenario of scenarios) {
     const scenarioStartedAtMs = nowMs();
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
@@ -789,9 +868,17 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       ...arr(applyResponse?.applyOutcome?.applyResult?.practicalValidation?.designAlignment?.observedEffectNames),
       ...arr(applyResponse?.latestApply?.verification?.designAlignment?.observedEffectNames)
     ]).map((row) => str(row)).filter(Boolean);
+    const observedTargets = extractObservedTargets({ practicalValidation, applyResponse });
     const expectedEffects = arr(scenario?.expectedEffects).map((row) => str(row)).filter(Boolean);
     const matchedExpectedEffects = expectedEffects.filter((row) => observedEffectNames.includes(row));
-    const ok = practicalValidation?.overallOk === true && matchedExpectedEffects.length > 0;
+    const assertions = evaluateScenarioAssertions({
+      scenario,
+      practicalValidation,
+      observedEffectNames,
+      matchedExpectedEffects,
+      observedTargets
+    });
+    const ok = assertions.every((row) => row?.ok === true);
 
     results.push({
       name,
@@ -807,7 +894,9 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       ok,
       expectedEffects,
       observedEffectNames,
+      observedTargets,
       matchedExpectedEffects,
+      assertions,
       practicalValidation,
       generateResponse,
       applyResponse
