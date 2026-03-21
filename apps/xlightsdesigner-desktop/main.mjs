@@ -744,15 +744,42 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
   function evaluateScenarioAssertions({
     scenario = {},
     practicalValidation = null,
+    generateResponse = null,
     observedEffectNames = [],
     matchedExpectedEffects = [],
     observedTargets = []
   } = {}) {
     const assertions = [];
+    const designAlignment = practicalValidation?.designAlignment && typeof practicalValidation.designAlignment === "object"
+      ? practicalValidation.designAlignment
+      : {};
+    const sequencingDesignHandoff = generateResponse?.intentHandoff?.sequencingDesignHandoff || null;
+    const executionStrategy = generateResponse?.intentHandoff?.executionStrategy || {};
+    const derivedPrimaryFocusTargets = uniqueStrings([
+      ...arr(designAlignment?.primaryFocusTargetIds),
+      ...arr(sequencingDesignHandoff?.focusPlan?.primaryTargets),
+      ...arr(scenario?.targets)
+    ]);
+    const relevantSectionNames = new Set(arr(scenario?.sections).map((row) => str(row)).filter(Boolean));
+    const derivedPreferredEffectHints = uniqueStrings([
+      ...arr(designAlignment?.preferredEffectHints),
+      ...arr(executionStrategy?.sectionPlans)
+        .filter((row) => {
+          const section = str(row?.section);
+          return !relevantSectionNames.size || relevantSectionNames.has(section);
+        })
+        .flatMap((row) => arr(row?.effectHints)),
+      ...(scenario?.requirePreferredEffectAlignment === true ? arr(scenario?.expectedEffects) : [])
+    ]);
     const requiredTargets = uniqueStrings(arr(scenario?.requiredObservedTargets).length
       ? arr(scenario.requiredObservedTargets)
       : arr(scenario?.targets));
     const forbiddenEffects = uniqueStrings(arr(scenario?.forbiddenEffects));
+    const requiredFocusTargets = uniqueStrings(arr(scenario?.requiredFocusTargets).length
+      ? arr(scenario.requiredFocusTargets)
+      : derivedPrimaryFocusTargets);
+    const requireFocusCoverage = scenario?.requireFocusCoverage !== false;
+    const requirePreferredEffectAlignment = scenario?.requirePreferredEffectAlignment === true;
     const minimumMatchedEffects = Number.isFinite(Number(scenario?.minimumMatchedEffects))
       ? Math.max(0, Number(scenario.minimumMatchedEffects))
       : (arr(scenario?.expectedEffects).length ? 1 : 0);
@@ -784,6 +811,32 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
         expected: requiredTargets.join(", "),
         actual: observedTargets.join(", "),
         missingTargets
+      });
+    }
+
+    if (requireFocusCoverage && requiredFocusTargets.length) {
+      const coveredPrimaryFocusTargetIds = uniqueStrings([
+        ...arr(designAlignment?.coveredPrimaryFocusTargetIds),
+        ...observedTargets.filter((row) => requiredFocusTargets.includes(row))
+      ]);
+      const missingFocusTargets = requiredFocusTargets.filter((row) => !coveredPrimaryFocusTargetIds.includes(row));
+      assertions.push({
+        kind: "focus_coverage",
+        ok: missingFocusTargets.length === 0,
+        expected: requiredFocusTargets.join(", "),
+        actual: coveredPrimaryFocusTargetIds.join(", "),
+        missingFocusTargets
+      });
+    }
+
+    if (requirePreferredEffectAlignment) {
+      const matchedPreferredEffects = derivedPreferredEffectHints.filter((row) => observedEffectNames.includes(row));
+      assertions.push({
+        kind: "preferred_effect_alignment",
+        ok: matchedPreferredEffects.length > 0,
+        expected: derivedPreferredEffectHints.join(", "),
+        actual: matchedPreferredEffects.join(", "),
+        matchedPreferredEffects
       });
     }
 
@@ -874,6 +927,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     const assertions = evaluateScenarioAssertions({
       scenario,
       practicalValidation,
+      generateResponse,
       observedEffectNames,
       matchedExpectedEffects,
       observedTargets

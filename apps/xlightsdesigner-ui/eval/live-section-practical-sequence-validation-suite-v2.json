@@ -13,6 +13,7 @@
       "expectedEffects": ["Spirals"],
       "requiredObservedTargets": ["SpiralTrees"],
       "forbiddenEffects": ["Bars", "Marquee"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -25,6 +26,7 @@
       "expectedEffects": ["Twinkle", "Shimmer"],
       "requiredObservedTargets": ["Spinners"],
       "forbiddenEffects": ["Shockwave", "Pinwheel"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -37,6 +39,7 @@
       "expectedEffects": ["Shimmer"],
       "requiredObservedTargets": ["Snowman"],
       "forbiddenEffects": ["Bars", "Shockwave"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -49,6 +52,7 @@
       "expectedEffects": ["Bars"],
       "requiredObservedTargets": ["Border_Segments"],
       "forbiddenEffects": ["Twinkle", "Shimmer"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -61,6 +65,7 @@
       "expectedEffects": ["Marquee"],
       "requiredObservedTargets": ["Border_Segments"],
       "forbiddenEffects": ["Color Wash", "Twinkle"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -73,6 +78,7 @@
       "expectedEffects": ["Color Wash"],
       "requiredObservedTargets": ["PorchTree"],
       "forbiddenEffects": ["Bars", "Pinwheel", "SingleStrand"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -85,6 +91,7 @@
       "expectedEffects": ["On", "Color Wash"],
       "requiredObservedTargets": ["Snowman"],
       "forbiddenEffects": ["Bars", "Twinkle", "Shockwave"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -97,6 +104,7 @@
       "expectedEffects": ["Pinwheel"],
       "requiredObservedTargets": ["Star"],
       "forbiddenEffects": ["Twinkle", "Shockwave"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -109,6 +117,7 @@
       "expectedEffects": ["Shockwave"],
       "requiredObservedTargets": ["Star"],
       "forbiddenEffects": ["Twinkle", "Pinwheel"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     },
     {
@@ -121,6 +130,7 @@
       "expectedEffects": ["SingleStrand"],
       "requiredObservedTargets": ["CandyCanes"],
       "forbiddenEffects": ["Color Wash", "Pinwheel"],
+      "requirePreferredEffectAlignment": true,
       "minimumMatchedEffects": 1
     }
   ]
