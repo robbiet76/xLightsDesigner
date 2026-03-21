@@ -755,6 +755,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       : {};
     const sequencingDesignHandoff = generateResponse?.intentHandoff?.sequencingDesignHandoff || null;
     const executionStrategy = generateResponse?.intentHandoff?.executionStrategy || {};
+    const sectionPlans = arr(executionStrategy?.sectionPlans);
     const derivedPrimaryFocusTargets = uniqueStrings([
       ...arr(designAlignment?.primaryFocusTargetIds),
       ...arr(sequencingDesignHandoff?.focusPlan?.primaryTargets),
@@ -780,6 +781,13 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       : derivedPrimaryFocusTargets);
     const requireFocusCoverage = scenario?.requireFocusCoverage !== false;
     const requirePreferredEffectAlignment = scenario?.requirePreferredEffectAlignment === true;
+    const sectionExpectedEffects = scenario?.sectionExpectedEffects && typeof scenario.sectionExpectedEffects === "object"
+      ? scenario.sectionExpectedEffects
+      : {};
+    const sectionForbiddenEffects = scenario?.sectionForbiddenEffects && typeof scenario.sectionForbiddenEffects === "object"
+      ? scenario.sectionForbiddenEffects
+      : {};
+    const requireDistinctPrimarySectionEffects = scenario?.requireDistinctPrimarySectionEffects === true;
     const minimumMatchedEffects = Number.isFinite(Number(scenario?.minimumMatchedEffects))
       ? Math.max(0, Number(scenario.minimumMatchedEffects))
       : (arr(scenario?.expectedEffects).length ? 1 : 0);
@@ -848,6 +856,59 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
         expected: "none",
         actual: presentForbiddenEffects.join(", "),
         presentForbiddenEffects
+      });
+    }
+
+    for (const [sectionName, expectedEffectsForSectionRaw] of Object.entries(sectionExpectedEffects)) {
+      const expectedEffectsForSection = uniqueStrings(arr(expectedEffectsForSectionRaw));
+      if (!expectedEffectsForSection.length) continue;
+      const matchingPlan = sectionPlans.find((row) => str(row?.section) === str(sectionName));
+      const sectionHints = uniqueStrings(arr(matchingPlan?.effectHints));
+      const matchedSectionEffects = expectedEffectsForSection.filter((row) => sectionHints.includes(row));
+      assertions.push({
+        kind: "section_effect_alignment",
+        section: str(sectionName),
+        ok: matchedSectionEffects.length > 0,
+        expected: expectedEffectsForSection.join(", "),
+        actual: sectionHints.join(", "),
+        matchedSectionEffects
+      });
+    }
+
+    for (const [sectionName, forbiddenEffectsForSectionRaw] of Object.entries(sectionForbiddenEffects)) {
+      const forbiddenEffectsForSection = uniqueStrings(arr(forbiddenEffectsForSectionRaw));
+      if (!forbiddenEffectsForSection.length) continue;
+      const matchingPlan = sectionPlans.find((row) => str(row?.section) === str(sectionName));
+      const sectionHints = uniqueStrings(arr(matchingPlan?.effectHints));
+      const presentSectionForbiddenEffects = forbiddenEffectsForSection.filter((row) => sectionHints.includes(row));
+      assertions.push({
+        kind: "section_forbidden_effects",
+        section: str(sectionName),
+        ok: presentSectionForbiddenEffects.length === 0,
+        expected: "none",
+        actual: presentSectionForbiddenEffects.join(", "),
+        presentForbiddenEffects: presentSectionForbiddenEffects
+      });
+    }
+
+    if (requireDistinctPrimarySectionEffects) {
+      const relevantSectionNamesOrdered = arr(scenario?.sections).map((row) => str(row)).filter(Boolean);
+      const primaryEffects = relevantSectionNamesOrdered
+        .map((sectionName) => {
+          const matchingPlan = sectionPlans.find((row) => str(row?.section) === sectionName);
+          return {
+            sectionName,
+            effectName: str(arr(matchingPlan?.effectHints)[0])
+          };
+        })
+        .filter((row) => row.sectionName && row.effectName);
+      const distinctCount = new Set(primaryEffects.map((row) => row.effectName)).size;
+      assertions.push({
+        kind: "section_effect_contrast",
+        ok: primaryEffects.length >= 2 ? distinctCount === primaryEffects.length : true,
+        expected: "distinct primary effects per scoped section",
+        actual: primaryEffects.map((row) => `${row.sectionName}:${row.effectName}`).join(", "),
+        distinctCount
       });
     }
 

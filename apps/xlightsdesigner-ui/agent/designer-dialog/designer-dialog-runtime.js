@@ -688,7 +688,7 @@ function buildSectionEffectHints({
     return pickDistinctEffects(["Bars"], ["Marquee"]);
   }
   if (/\b(shockwave|ring burst|ring|radial expansion|burst)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Shockwave"], ["Pinwheel"]);
+    return pickDistinctEffects(["Shockwave"]);
   }
   if (/\b(pinwheel|radial spin|radial rotation|clear radial spin|rotating radial)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["Pinwheel"]);

@@ -1099,4 +1099,34 @@ test("designer runtime preserves explicit segmented bars and radial spin cues in
   });
   const radialPlans = radialResult.proposalBundle.executionPlan.sectionPlans;
   assert.deepEqual(radialPlans[1].effectHints, ["Pinwheel"]);
+
+  const starTransition = executeDesignerDialogFlow({
+    requestId: "req-19",
+    sequenceRevision: "rev-19",
+    promptText: "Use Star as a centered shockwave ring in the Bridge, then switch it to a clear pinwheel-style radial spin in the Final Chorus. Make the Final Chorus read as the stronger resolved payoff rather than repeating the same radial family.",
+    goals: "Use Star as a centered shockwave ring in the Bridge, then switch it to a clear pinwheel-style radial spin in the Final Chorus. Make the Final Chorus read as the stronger resolved payoff rather than repeating the same radial family.",
+    selectedSections: ["Bridge", "Final Chorus"],
+    selectedTargetIds: ["Star"],
+    models: [{ id: "Star", name: "Star", type: "Model" }],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 150000, endMs: 170000, energy: "medium", density: "moderate" },
+          { label: "Final Chorus", startMs: 170000, endMs: 205000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Bridge", energy: "medium", density: "moderate" },
+        { label: "Final Chorus", energy: "high", density: "dense" }
+      ]
+    }
+  });
+  assert.deepEqual(
+    starTransition.proposalBundle.executionPlan.sectionPlans.map((row) => row.effectHints),
+    [["Shockwave"], ["Pinwheel"]]
+  );
 });
