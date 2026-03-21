@@ -684,11 +684,14 @@ function buildSectionEffectHints({
   if (/\b(marquee|marching marquee|marquee-band|marquee band|segmented chaser|chaser)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["Marquee"], ["Bars"]);
   }
+  if (/\b(segmented bars?|bars read|clean segmented|striped bars?)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Bars"], ["Marquee"]);
+  }
   if (/\b(shockwave|ring burst|ring|radial expansion|burst)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["Shockwave"], ["Pinwheel"]);
   }
   if (/\b(pinwheel|radial spin|radial rotation|clear radial spin|rotating radial)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Pinwheel"], ["Shockwave"]);
+    return pickDistinctEffects(["Pinwheel"]);
   }
   if (/\b(single\s*strand|traveling strand|travelling strand|directional traveling strand|directional chase|chase motion)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["SingleStrand"], ["Bars"]);

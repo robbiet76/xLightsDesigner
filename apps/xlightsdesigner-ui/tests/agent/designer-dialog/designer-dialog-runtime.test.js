@@ -1036,3 +1036,67 @@ test("designer runtime scopes multi-section effect hints to their matching secti
   assert.ok(finalChorusPlan.effectHints.includes("Pinwheel"));
   assert.ok(!finalChorusPlan.effectHints.includes("Twinkle"));
 });
+
+test("designer runtime preserves explicit segmented bars and radial spin cues in multi-section prompts", () => {
+  const barsResult = executeDesignerDialogFlow({
+    requestId: "req-17",
+    sequenceRevision: "rev-17",
+    promptText: "Use Border_Segments as a clean segmented bars read in Verse 1, then escalate them into an obvious marquee-band chase in Chorus 2. Keep the chorus visibly more assertive than the verse.",
+    goals: "Use Border_Segments as a clean segmented bars read in Verse 1, then escalate them into an obvious marquee-band chase in Chorus 2. Keep the chorus visibly more assertive than the verse.",
+    selectedSections: ["Verse 1", "Chorus 2"],
+    selectedTargetIds: ["Border_Segments"],
+    models: [{ id: "Border_Segments", name: "Border_Segments", type: "Model" }],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 10000, endMs: 40000, energy: "medium", density: "moderate" },
+          { label: "Chorus 2", startMs: 40000, endMs: 70000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 2", energy: "high", density: "dense" }
+      ]
+    }
+  });
+  const barsPlans = barsResult.proposalBundle.executionPlan.sectionPlans;
+  assert.deepEqual(
+    barsPlans.map((row) => row.effectHints),
+    [["Bars", "Marquee"], ["Marquee", "Bars"]]
+  );
+
+  const radialResult = executeDesignerDialogFlow({
+    requestId: "req-18",
+    sequenceRevision: "rev-18",
+    promptText: "Keep Spinners restrained and texture-led in the Bridge with a softer twinkle feel, then shift to a clear radial spin on Star in the Final Chorus. The Final Chorus should read as the stronger visual payoff.",
+    goals: "Keep Spinners restrained and texture-led in the Bridge with a softer twinkle feel, then shift to a clear radial spin on Star in the Final Chorus. The Final Chorus should read as the stronger visual payoff.",
+    selectedSections: ["Bridge", "Final Chorus"],
+    selectedTargetIds: ["Spinners", "Star"],
+    models: [
+      { id: "Spinners", name: "Spinners", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 150000, endMs: 170000, energy: "medium", density: "moderate" },
+          { label: "Final Chorus", startMs: 170000, endMs: 205000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Bridge", energy: "medium", density: "moderate" },
+        { label: "Final Chorus", energy: "high", density: "dense" }
+      ]
+    }
+  });
+  const radialPlans = radialResult.proposalBundle.executionPlan.sectionPlans;
+  assert.deepEqual(radialPlans[1].effectHints, ["Pinwheel"]);
+});
