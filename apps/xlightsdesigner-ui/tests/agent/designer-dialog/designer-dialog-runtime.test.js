@@ -994,3 +994,45 @@ test("designer runtime ignores negated effect cues and preserves explicit marque
     [["Color Wash"]]
   );
 });
+
+test("designer runtime scopes multi-section effect hints to their matching section clauses", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-16",
+    sequenceRevision: "rev-16",
+    promptText: "Keep Spinners restrained and texture-led in the Bridge with a softer twinkle feel, then shift to a clear radial spin on Star in the Final Chorus. The Final Chorus should read as the stronger visual payoff.",
+    goals: "Keep Spinners restrained and texture-led in the Bridge with a softer twinkle feel, then shift to a clear radial spin on Star in the Final Chorus. The Final Chorus should read as the stronger visual payoff.",
+    selectedSections: ["Bridge", "Final Chorus"],
+    selectedTargetIds: ["Spinners", "Star"],
+    models: [
+      { id: "Spinners", name: "Spinners", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Bridge", startMs: 150000, endMs: 170000, energy: "medium", density: "moderate" },
+          { label: "Final Chorus", startMs: 170000, endMs: 205000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Bridge", energy: "medium", density: "moderate" },
+        { label: "Final Chorus", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  const sectionPlans = result.proposalBundle.executionPlan.sectionPlans;
+  const bridgePlan = sectionPlans.find((row) => row.section === "Bridge");
+  const finalChorusPlan = sectionPlans.find((row) => row.section === "Final Chorus");
+
+  assert.ok(bridgePlan);
+  assert.ok(finalChorusPlan);
+  assert.ok(bridgePlan.effectHints.includes("Twinkle") || bridgePlan.effectHints.includes("Shimmer"));
+  assert.ok(!bridgePlan.effectHints.includes("Pinwheel"));
+  assert.ok(finalChorusPlan.effectHints.includes("Pinwheel"));
+  assert.ok(!finalChorusPlan.effectHints.includes("Twinkle"));
+});

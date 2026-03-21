@@ -300,6 +300,46 @@ function stripNegativeCueClauses(value = "") {
     .trim();
 }
 
+function normalizeSectionLabelForGoalMatch(value = "") {
+  return str(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function extractSectionScopedGoal({
+  goal = "",
+  section = "",
+  sectionNames = []
+} = {}) {
+  const rawGoal = str(goal);
+  const sectionLabel = str(section);
+  if (!rawGoal || !sectionLabel) return rawGoal;
+  const normalizedSection = normalizeSectionLabelForGoalMatch(sectionLabel);
+  if (!normalizedSection) return rawGoal;
+  const clauses = rawGoal
+    .split(/(?:(?<=[.?!;])\s+|\s*,\s*(?=then\b)|\s+\bthen\b\s+)/i)
+    .map((row) => str(row))
+    .filter(Boolean);
+  if (!clauses.length) return rawGoal;
+  const normalizedSections = arr(sectionNames)
+    .map((row) => normalizeSectionLabelForGoalMatch(row))
+    .filter(Boolean);
+  const matchingClauses = clauses.filter((clause) => {
+    const normalizedClause = normalizeSectionLabelForGoalMatch(clause);
+    return normalizedClause.includes(normalizedSection);
+  });
+  if (matchingClauses.length) {
+    return matchingClauses.join(". ");
+  }
+  const otherSections = normalizedSections.filter((row) => row !== normalizedSection);
+  const genericClauses = clauses.filter((clause) => {
+    const normalizedClause = normalizeSectionLabelForGoalMatch(clause);
+    return !otherSections.some((other) => normalizedClause.includes(other));
+  });
+  return genericClauses.length ? genericClauses.join(". ") : rawGoal;
+}
+
 function resolveEffectOverrideHints(effectOverrides = [], goal = "") {
   const overrides = arr(effectOverrides).map((row) => canonicalizeDesignerEffectHint(row)).filter(Boolean);
   const lowerGoal = stripNegativeCueClauses(goal).toLowerCase();
@@ -646,6 +686,9 @@ function buildSectionEffectHints({
   }
   if (/\b(shockwave|ring burst|ring|radial expansion|burst)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["Shockwave"], ["Pinwheel"]);
+  }
+  if (/\b(pinwheel|radial spin|radial rotation|clear radial spin|rotating radial)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Pinwheel"], ["Shockwave"]);
   }
   if (/\b(single\s*strand|traveling strand|travelling strand|directional traveling strand|directional chase|chase motion)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["SingleStrand"], ["Bars"]);
@@ -1544,6 +1587,7 @@ function buildDesignerExecutionPlan({
         ? "single_section"
         : "whole_sequence";
   const sharedRevisionDesignId = reviseInPlace && !allowGlobalRewrite && explicitSections.length ? "DES-001" : "";
+  const useGlobalEffectOverrides = arr(intent.effectOverrides).length > 0 && explicitSections.length <= 1;
   const primarySections = (
     allowGlobalRewrite
       ? availableSections.map((row) => row.label)
@@ -1558,6 +1602,11 @@ function buildDesignerExecutionPlan({
       const match = availableSections.find((row) => str(row.label) === str(label));
       const energy = str(match?.energy);
       const density = str(match?.density);
+      const sectionGoal = extractSectionScopedGoal({
+        goal: intent.goal || "",
+        section: label,
+        sectionNames: normalizedSections
+      });
       return {
         designId: sharedRevisionDesignId || `DES-${String(idx + 1).padStart(3, "0")}`,
         designRevision: 0,
@@ -1569,7 +1618,7 @@ function buildDesignerExecutionPlan({
           section: label,
           energy,
           density,
-          goal: intent.goal || ""
+          goal: sectionGoal
         }),
         targetIds: chooseExecutionTargets({
           explicitTargetIds: scopedTargetIds,
@@ -1585,13 +1634,13 @@ function buildDesignerExecutionPlan({
           section: label,
           goal: intent.goal || ""
         }).slice(0, 40),
-        effectHints: arr(intent.effectOverrides).length
+        effectHints: useGlobalEffectOverrides
           ? resolveEffectOverrideHints(intent.effectOverrides, intent.goal || "")
           : buildSectionEffectHints({
               section: label,
               energy,
               density,
-              goal: intent.goal || "",
+              goal: sectionGoal,
               sectionIndex: idx,
               sectionCount: normalizedSections.length,
               directorPreferences,
