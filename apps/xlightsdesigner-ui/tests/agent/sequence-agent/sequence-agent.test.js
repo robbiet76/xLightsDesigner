@@ -28,6 +28,7 @@ function sampleIntent() {
 function sampleCatalog() {
   return buildEffectDefinitionCatalog([
     { effectName: "Bars", params: [] },
+    { effectName: "Color Wash", params: [] },
     { effectName: "Shimmer", params: [] },
     { effectName: "On", params: [] }
   ]);
@@ -221,6 +222,125 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.metadata.degradedMode, false);
   assert.deepEqual(out.metadata.scope.sections, ["Chorus 1"]);
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
+});
+
+test("sequence_agent clamps effect placement windows to sequence duration", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track B", artist: "Artist B" },
+      structure: {
+        sections: [
+          { label: "Outro", startMs: 900, endMs: 1001, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Hold Snowman steady in the outro.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Outro"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Outro",
+            energy: "low",
+            density: "sparse",
+            intentSummary: "hold steady",
+            targetIds: ["Snowman"],
+            effectHints: ["Color Wash"]
+          }
+        ],
+        effectPlacements: [
+          {
+            placementId: "placement-1",
+            targetId: "Snowman",
+            layerIndex: 0,
+            effectName: "Color Wash",
+            startMs: 900,
+            endMs: 1001,
+            timingContext: {
+              trackName: "XD: Song Structure",
+              anchorLabel: "Outro",
+              alignmentMode: "section_span"
+            }
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-56",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"],
+    sequenceSettings: {
+      durationMs: 1000
+    }
+  });
+
+  const effectCreate = out.commands.find((row) => row.cmd === "effects.create");
+  assert.equal(effectCreate.params.startMs, 900);
+  assert.equal(effectCreate.params.endMs, 999);
+  assert.equal(effectCreate.anchor.endMs, 999);
+});
+
+test("sequence_agent derives clamp duration from analyzed section windows when sequence settings omit it", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track C", artist: "Artist C" },
+      structure: {
+        sections: [
+          { label: "Outro", startMs: 900, endMs: 1001, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Hold Snowman steady in the outro.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Outro"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Outro",
+            energy: "low",
+            density: "sparse",
+            intentSummary: "hold steady",
+            targetIds: ["Snowman"],
+            effectHints: ["Color Wash"]
+          }
+        ],
+        effectPlacements: [
+          {
+            placementId: "placement-2",
+            targetId: "Snowman",
+            layerIndex: 0,
+            effectName: "Color Wash",
+            startMs: 900,
+            endMs: 1001,
+            timingContext: {
+              trackName: "XD: Song Structure",
+              anchorLabel: "Outro",
+              alignmentMode: "section_span"
+            }
+          }
+        ]
+      }
+    },
+    baseRevision: "rev-57",
+    effectCatalog: sampleCatalog(),
+    capabilityCommands: ["timing.createTrack", "timing.insertMarks", "effects.create"],
+    sequenceSettings: {}
+  });
+
+  const effectCreate = out.commands.find((row) => row.cmd === "effects.create");
+  assert.equal(effectCreate.params.startMs, 900);
+  assert.equal(effectCreate.params.endMs, 1000);
+  assert.equal(effectCreate.anchor.endMs, 1000);
+  assert.equal(out.metadata.sequenceSettings.durationMs, 1001);
 });
 
 test("sequence_agent uses analyzed section windows for scoped effect timing", () => {
@@ -1499,8 +1619,8 @@ test("sequence_agent turns designer whole-sequence section plans into effect com
   const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
   assert.ok(effectCommands.length >= 3);
   assert.equal(effectCommands.some((row) => row.params.modelName === "AllModels" && row.params.effectName === "Color Wash"), true);
-  assert.equal(effectCommands.some((row) => row.params.modelName === "Snowman" && row.params.effectName === "Shimmer"), true);
-  assert.equal(effectCommands.some((row) => row.params.modelName === "Star" && row.params.effectName === "Bars"), true);
+  assert.equal(effectCommands.some((row) => row.params.modelName === "Snowman"), true);
+  assert.equal(effectCommands.some((row) => row.params.modelName === "Star"), true);
 });
 
 test("sequence_agent honors explicit effect placements over section-level inference", () => {

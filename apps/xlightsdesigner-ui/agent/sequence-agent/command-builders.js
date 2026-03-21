@@ -40,7 +40,9 @@ function normalizeSequenceSettings(sequenceSettings = {}) {
     : {};
   return {
     sequenceType: normText(row.sequenceType || "Media") || "Media",
-    supportsModelBlending: Boolean(row.supportsModelBlending)
+    supportsModelBlending: Boolean(row.supportsModelBlending),
+    durationMs: Number.isFinite(Number(row.durationMs)) ? Number(row.durationMs) : null,
+    frameMs: Number.isFinite(Number(row.frameMs)) ? Number(row.frameMs) : null
   };
 }
 

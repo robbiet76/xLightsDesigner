@@ -248,6 +248,12 @@ export function translatePlacementIntentToXlights({
     ...buildRenderSettingsFromIntent(asObject(placement?.renderIntent))
   };
   const translatedPalette = buildPaletteFromIntent(asObject(placement?.paletteIntent));
+  if (effectName === 'On') {
+    return {
+      settings: {},
+      palette: {}
+    };
+  }
   return {
     settings: {
       ...translatedSettings,

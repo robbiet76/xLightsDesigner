@@ -106,9 +106,19 @@ function extractChangeTolerance(text = "", mode = "revise") {
   return "moderate";
 }
 
+function stripNegativeCueClauses(text = "") {
+  return cleanText(text)
+    .replace(/\bdo not turn it into\b[\s\S]*$/i, "")
+    .replace(/\brather than\b[\s\S]*$/i, "")
+    .replace(/\binstead of\b[\s\S]*$/i, "")
+    .replace(/,\s*not\b[\s\S]*$/i, "")
+    .replace(/\bavoid\b[\s\S]*$/i, "")
+    .trim();
+}
+
 function extractEffectOverrides(text) {
-  const lower = String(text || "").toLowerCase();
-  const known = ["on", "off", "twinkle", "bars", "pinwheel", "butterfly", "spirals", "meteors", "color wash", "colorwash", "shimmer"];
+  const lower = stripNegativeCueClauses(text).toLowerCase();
+  const known = ["on", "off", "twinkle", "bars", "pinwheel", "butterfly", "spirals", "meteors", "color wash", "colorwash", "shimmer", "marquee", "shockwave", "single strand", "singlestrand"];
   return known.filter((name) => {
     if (name === "on") {
       return /\b(on effect|apply on(?: effect)?|make (?:it )?on|set (?:it )?on|put (?:an? )?on effect|use on(?: effect)?)\b/i.test(lower);

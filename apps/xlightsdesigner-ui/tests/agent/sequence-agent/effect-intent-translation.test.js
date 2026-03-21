@@ -157,3 +157,24 @@ test("effect intent translation skips enum settings when the requested direction
 
   assert.equal(Object.prototype.hasOwnProperty.call(out.settings, "E_CHOICE_Pinwheel_Style"), false);
 });
+
+test("effect intent translation keeps On effect payload minimal for live apply", () => {
+  const out = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "On",
+      settingsIntent: {
+        intensity: "medium",
+        motion: "wash"
+      },
+      paletteIntent: {
+        colors: ["gold", "white"],
+        brightness: "medium_high",
+        contrast: "high"
+      }
+    },
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.deepEqual(out.settings, {});
+  assert.deepEqual(out.palette, {});
+});

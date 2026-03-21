@@ -227,6 +227,26 @@ function deriveSectionWindowsByName({ analysisHandoff = {}, sectionNames = [], i
   return windows;
 }
 
+function deriveEffectiveSequenceSettings({ sequenceSettings = {}, analysisHandoff = {} } = {}) {
+  const base = sequenceSettings && typeof sequenceSettings === "object" && !Array.isArray(sequenceSettings)
+    ? { ...sequenceSettings }
+    : {};
+  if (Number.isFinite(Number(base.durationMs)) && Number(base.durationMs) > 0) {
+    return base;
+  }
+  const rows = Array.isArray(analysisHandoff?.structure?.sections) ? analysisHandoff.structure.sections : [];
+  let maxEndMs = null;
+  for (const row of rows) {
+    const endMs = Number(row?.endMs);
+    if (!Number.isFinite(endMs) || endMs <= 0) continue;
+    maxEndMs = maxEndMs == null ? endMs : Math.max(maxEndMs, endMs);
+  }
+  if (maxEndMs != null) {
+    base.durationMs = maxEndMs;
+  }
+  return base;
+}
+
 function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sourceLines = [] } = {}) {
   const mode = normText(intentHandoff?.mode) || "create";
   const sequencingDesignHandoff = deriveSequencingDesignHandoff(intentHandoff);
@@ -475,6 +495,26 @@ function buildPlacementMarks({ effectPlacements = [], sectionWindowsByName = nul
     .slice(0, 64);
 }
 
+function clampPlacementWindow({ startMs, endMs, sequenceSettings = {} } = {}) {
+  const maxEnd = Number.isFinite(Number(sequenceSettings?.durationMs)) ? Number(sequenceSettings.durationMs) : null;
+  const lastValidEnd = maxEnd != null && maxEnd > 1 ? maxEnd - 1 : maxEnd;
+  let start = Number(startMs);
+  let end = Number(endMs);
+  if (!Number.isFinite(start)) start = 0;
+  if (!Number.isFinite(end)) end = start + 1;
+  start = Math.max(0, start);
+  if (lastValidEnd != null && lastValidEnd > 0) {
+    end = Math.min(end, lastValidEnd);
+    if (start >= end) {
+      start = Math.max(0, Math.min(start, lastValidEnd - 1));
+      end = Math.max(start + 1, Math.min(lastValidEnd, start + 1));
+    }
+  } else if (end <= start) {
+    end = start + 1;
+  }
+  return { startMs: start, endMs: end };
+}
+
 function buildCommandsFromEffectPlacements({
   effectPlacements = [],
   targetIds = [],
@@ -531,6 +571,11 @@ function buildCommandsFromEffectPlacements({
       placement,
       effectCatalog
     });
+    const window = clampPlacementWindow({
+      startMs: placement.startMs,
+      endMs: placement.endMs,
+      sequenceSettings
+    });
     return {
       id: placement.placementId || `effect.${index + 1}`,
       designId: normText(placement?.designId),
@@ -544,8 +589,8 @@ function buildCommandsFromEffectPlacements({
         kind: "timing_track",
         trackName: normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan",
         markLabel: normText(placement?.timingContext?.anchorLabel),
-        startMs: Number(placement.startMs),
-        endMs: Number(placement.endMs),
+        startMs: window.startMs,
+        endMs: window.endMs,
         basis: normText(placement?.timingContext?.alignmentMode || "explicit_window") || "explicit_window"
       },
       cmd: "effects.create",
@@ -553,8 +598,8 @@ function buildCommandsFromEffectPlacements({
         modelName: normText(placement.targetId),
         layerIndex: Number(placement.layerIndex),
         effectName: normText(placement.effectName),
-        startMs: Number(placement.startMs),
-        endMs: Number(placement.endMs),
+        startMs: window.startMs,
+        endMs: window.endMs,
         settings: translated.settings,
         palette: translated.palette
       },
@@ -784,6 +829,10 @@ export function buildSequenceAgentPlan({
 
   const safeAnalysis = hasAnalysis ? analysisHandoff : {};
   const safeIntent = intentHandoff;
+  const effectiveSequenceSettings = deriveEffectiveSequenceSettings({
+    sequenceSettings,
+    analysisHandoff: safeAnalysis
+  });
 
   const scope = runStage({
     stage: STAGE_ORDER[0],
@@ -821,7 +870,7 @@ export function buildSequenceAgentPlan({
           warnings,
           capabilityCommands,
           effectCatalog,
-          sequenceSettings,
+          sequenceSettings: effectiveSequenceSettings,
           targetIds: scope.targetIds,
           displayElements,
           groupIds,
@@ -851,7 +900,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     metadata: {
       layoutMode: normalizedLayoutMode,
-      sequenceSettings,
+      sequenceSettings: effectiveSequenceSettings,
       displayElementCount: Array.isArray(displayElements) ? displayElements.length : 0,
       groupCount: Array.isArray(groupIds) ? groupIds.length : 0,
       groupGraphCount: groupsById && typeof groupsById === "object" ? Object.keys(groupsById).length : 0,

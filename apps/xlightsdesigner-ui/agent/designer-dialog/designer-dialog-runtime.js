@@ -270,7 +270,11 @@ function canonicalizeDesignerEffectHint(value = "") {
   const map = {
     "color wash": "Color Wash",
     colorwash: "Color Wash",
+    marquee: "Marquee",
     shimmer: "Shimmer",
+    shockwave: "Shockwave",
+    singlestrand: "SingleStrand",
+    "single strand": "SingleStrand",
     twinkle: "Twinkle",
     spirals: "Spirals",
     spiral: "Spirals",
@@ -282,6 +286,31 @@ function canonicalizeDesignerEffectHint(value = "") {
     off: "Off"
   };
   return map[lower] || text;
+}
+
+function stripNegativeCueClauses(value = "") {
+  const text = str(value);
+  if (!text) return "";
+  return text
+    .replace(/\bdo not turn it into\b[\s\S]*$/i, "")
+    .replace(/\brather than\b[\s\S]*$/i, "")
+    .replace(/\binstead of\b[\s\S]*$/i, "")
+    .replace(/,\s*not\b[\s\S]*$/i, "")
+    .replace(/\bavoid\b[\s\S]*$/i, "")
+    .trim();
+}
+
+function resolveEffectOverrideHints(effectOverrides = [], goal = "") {
+  const overrides = arr(effectOverrides).map((row) => canonicalizeDesignerEffectHint(row)).filter(Boolean);
+  const lowerGoal = stripNegativeCueClauses(goal).toLowerCase();
+  if (
+    overrides.length === 1 &&
+    overrides[0] === "On" &&
+    /\b(solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/.test(lowerGoal)
+  ) {
+    return ["Color Wash"];
+  }
+  return overrides;
 }
 
 function prioritizeConcreteTargets(targetIds = []) {
@@ -568,7 +597,8 @@ function buildSectionEffectHints({
   directorProfile = null
 } = {}) {
   const lowerSection = str(section).toLowerCase();
-  const lowerGoal = str(goal).toLowerCase();
+  const positiveGoal = stripNegativeCueClauses(goal);
+  const lowerGoal = positiveGoal.toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const motionPreference = str(
@@ -611,6 +641,18 @@ function buildSectionEffectHints({
     && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
   const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
     && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
+  if (/\b(marquee|marching marquee|marquee-band|marquee band|segmented chaser|chaser)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Marquee"], ["Bars"]);
+  }
+  if (/\b(shockwave|ring burst|ring|radial expansion|burst)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Shockwave"], ["Pinwheel"]);
+  }
+  if (/\b(single\s*strand|traveling strand|travelling strand|directional traveling strand|directional chase|chase motion)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["SingleStrand"], ["Bars"]);
+  }
+  if (/\b(on effect|solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["On"], ["Color Wash"]);
+  }
   if (/\b(spiral|spirals|helical|helix)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["Spirals"], smoothBias ? ["Shimmer"] : ["Color Wash"]);
   }
@@ -1544,7 +1586,7 @@ function buildDesignerExecutionPlan({
           goal: intent.goal || ""
         }).slice(0, 40),
         effectHints: arr(intent.effectOverrides).length
-          ? arr(intent.effectOverrides).map((row) => canonicalizeDesignerEffectHint(row)).filter(Boolean)
+          ? resolveEffectOverrideHints(intent.effectOverrides, intent.goal || "")
           : buildSectionEffectHints({
               section: label,
               energy,

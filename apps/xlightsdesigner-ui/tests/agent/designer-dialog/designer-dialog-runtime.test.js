@@ -915,3 +915,82 @@ test("designer runtime keeps multi-section revise requests inside one conceptual
   assert.deepEqual(placementConceptIds, ["DES-001"]);
   assert.deepEqual(Array.from(new Set(sectionPlans.map((row) => row.section))).sort(), ["Chorus 1", "Verse 1"]);
 });
+
+test("designer runtime ignores negated effect cues and preserves explicit marquee/shockwave/singlestrand/on requests", () => {
+  const shared = {
+    requestId: "req-15",
+    sequenceRevision: "rev-15",
+    models: [
+      { id: "Border_Segments", name: "Border_Segments", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" },
+      { id: "CandyCanes", name: "CandyCanes", type: "Model" },
+      { id: "Snowman", name: "Snowman", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Chorus 2", startMs: 170783, endMs: 185899, energy: "high", density: "dense" },
+          { label: "Verse 2", startMs: 119815, endMs: 170783, energy: "medium", density: "moderate" },
+          { label: "Outro", startMs: 217780, endMs: 237829, energy: "low", density: "sparse" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Chorus 2", energy: "high", density: "dense" },
+        { label: "Verse 2", energy: "medium", density: "moderate" },
+        { label: "Outro", energy: "low", density: "sparse" }
+      ]
+    }
+  };
+
+  const marquee = executeDesignerDialogFlow({
+    ...shared,
+    promptText: "For Chorus 2, use Border_Segments as a marching marquee-band read with obvious segmented chase structure rather than broad wash or sparkle.",
+    goals: "For Chorus 2, use Border_Segments as a marching marquee-band read with obvious segmented chase structure rather than broad wash or sparkle.",
+    selectedSections: ["Chorus 2"],
+    selectedTargetIds: ["Border_Segments"]
+  });
+  assert.deepEqual(
+    marquee.proposalBundle.executionPlan.sectionPlans.map((row) => row.effectHints),
+    [["Marquee"]]
+  );
+
+  const shockwave = executeDesignerDialogFlow({
+    ...shared,
+    promptText: "For Chorus 2, use Star as a centered shockwave ring burst with radial expansion. Do not turn it into a soft twinkle texture or pinwheel spin.",
+    goals: "For Chorus 2, use Star as a centered shockwave ring burst with radial expansion. Do not turn it into a soft twinkle texture or pinwheel spin.",
+    selectedSections: ["Chorus 2"],
+    selectedTargetIds: ["Star"]
+  });
+  assert.deepEqual(
+    shockwave.proposalBundle.executionPlan.sectionPlans.map((row) => row.effectHints),
+    [["Shockwave"]]
+  );
+
+  const strand = executeDesignerDialogFlow({
+    ...shared,
+    promptText: "In Verse 2, make CandyCanes read as a directional traveling strand with chase motion, not a broad wash or radial treatment.",
+    goals: "In Verse 2, make CandyCanes read as a directional traveling strand with chase motion, not a broad wash or radial treatment.",
+    selectedSections: ["Verse 2"],
+    selectedTargetIds: ["CandyCanes"]
+  });
+  assert.deepEqual(
+    strand.proposalBundle.executionPlan.sectionPlans.map((row) => row.effectHints),
+    [["SingleStrand", "Bars"]]
+  );
+
+  const onHold = executeDesignerDialogFlow({
+    ...shared,
+    promptText: "For the Outro, keep Snowman on a solid steady hold with minimal movement. Use an On effect rather than sparkle, bars, or ring motion.",
+    goals: "For the Outro, keep Snowman on a solid steady hold with minimal movement. Use an On effect rather than sparkle, bars, or ring motion.",
+    selectedSections: ["Outro"],
+    selectedTargetIds: ["Snowman"]
+  });
+  assert.deepEqual(
+    onHold.proposalBundle.executionPlan.sectionPlans.map((row) => row.effectHints),
+    [["Color Wash"]]
+  );
+});

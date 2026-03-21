@@ -16,6 +16,18 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function stripNegativeCueClauses(value = '') {
+  const text = str(value);
+  if (!text) return '';
+  return text
+    .replace(/\bdo not turn it into\b[\s\S]*$/i, '')
+    .replace(/\brather than\b[\s\S]*$/i, '')
+    .replace(/\binstead of\b[\s\S]*$/i, '')
+    .replace(/,\s*not\b[\s\S]*$/i, '')
+    .replace(/\bavoid\b[\s\S]*$/i, '')
+    .trim();
+}
+
 function inferSectionPurpose(section = '', energy = '', density = '', goal = '') {
   const sectionName = str(section).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
@@ -63,8 +75,9 @@ function inferTransitionIntent({ section = '', goal = '', energy = '' } = {}) {
 }
 
 function inferSectionPreferredVisualFamilies({ section = '', goal = '', effectHints = [] } = {}) {
-  const text = `${str(section)} ${str(goal)} ${arr(effectHints).map((row) => str(row)).join(' ')}`.toLowerCase();
+  const text = `${str(section)} ${stripNegativeCueClauses(goal)} ${arr(effectHints).map((row) => str(row)).join(' ')}`.toLowerCase();
   const preferred = [];
+  if (/\b(on effect|solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/.test(text)) preferred.push('static_fill');
   if (/spiral|helical|helix/.test(text)) preferred.push('spiral_flow');
   if (/radial|spin|pinwheel|rotation/.test(text)) preferred.push('radial_rotation');
   if (/segment|chase|directional|travel/.test(text)) preferred.push('segmented_motion');
@@ -76,7 +89,7 @@ function inferSectionPreferredVisualFamilies({ section = '', goal = '', effectHi
 }
 
 function inferVisualPreferences({ goal = '', creativeBrief = null, proposalBundle = null } = {}) {
-  const text = `${str(goal)} ${str(creativeBrief?.visualCues)} ${str(creativeBrief?.summary)} ${arr(proposalBundle?.proposalLines).join(' ')}`.toLowerCase();
+  const text = `${stripNegativeCueClauses(goal)} ${str(creativeBrief?.visualCues)} ${str(creativeBrief?.summary)} ${arr(proposalBundle?.proposalLines).join(' ')}`.toLowerCase();
   const preferred = [];
   const avoid = [];
   if (/large|bigger|broad|wide/.test(text)) preferred.push('large_form_motion');

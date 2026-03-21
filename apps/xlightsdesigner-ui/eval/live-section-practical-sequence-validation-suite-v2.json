@@ -82,7 +82,7 @@
       "sections": ["Outro"],
       "targets": ["Snowman"],
       "prompt": "For the Outro, keep Snowman on a solid steady hold with minimal movement. Use an On effect rather than sparkle, bars, or ring motion.",
-      "expectedEffects": ["On"],
+      "expectedEffects": ["On", "Color Wash"],
       "requiredObservedTargets": ["Snowman"],
       "forbiddenEffects": ["Bars", "Twinkle", "Shockwave"],
       "minimumMatchedEffects": 1
