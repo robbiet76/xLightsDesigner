@@ -68,6 +68,11 @@ import {
   buildHistorySnapshotSummary
 } from "./agent/shared/history-entry.js";
 import { buildArtifactId } from "./agent/shared/artifact-ids.js";
+import {
+  inferBufferStyleFamily,
+  inferRenderRiskLevel,
+  parseSubmodelParentId
+} from "./agent/shared/target-semantics-registry.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -3834,23 +3839,9 @@ function normalizeSceneGraphModelNode(model = {}, source = "scene") {
     : [];
   const defaultBufferStyle = String(model?.defaultBufferStyle || "Default").trim() || "Default";
   const renderPolicyCategory = String(model?.renderPolicy || "default").trim() || "default";
-  const inferBufferStyleFamily = (style = "") => {
-    const key = String(style || "").trim().toLowerCase();
-    if (!key || key === "default") return "default";
-    if (key === "overlay" || key.includes("overlay")) return "overlay";
-    if (key === "stack" || key.includes("stack")) return "stack";
-    if (key === "single_line" || key.includes("single line")) return "single_line";
-    if (key === "per_model_strand" || key.includes("per strand")) return "per_model_strand";
-    if (key === "per_model" || key.includes("per model")) return "per_model";
-    return "default";
-  };
   const currentFamily = inferBufferStyleFamily(renderPolicyCategory !== "default" ? renderPolicyCategory : defaultBufferStyle);
   const availableStyleFamilies = Array.from(new Set(availableBufferStyles.map((row) => inferBufferStyleFamily(row)).filter(Boolean)));
-  const riskLevel = currentFamily === "overlay" || currentFamily === "stack" || currentFamily === "single_line" || currentFamily === "per_model_strand"
-    ? "high"
-    : currentFamily === "per_model"
-      ? "medium"
-      : "low";
+  const riskLevel = inferRenderRiskLevel(currentFamily);
   return {
     id,
     name: String(model?.name || id),
@@ -7648,13 +7639,6 @@ function ensureMetadataTargetSelection() {
   }
   const optionSet = new Set(options.map(String));
   state.ui.metadataSelectionIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds, optionSet);
-}
-
-function parseSubmodelParentId(targetId) {
-  const id = String(targetId || "");
-  const slash = id.indexOf("/");
-  if (slash <= 0) return "";
-  return id.slice(0, slash);
 }
 
 function resolveAssignmentParentId(assignment) {

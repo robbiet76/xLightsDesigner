@@ -1,3 +1,5 @@
+import { parseSubmodelParentId } from "../shared/target-semantics-registry.js";
+
 function normalizeName(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -42,7 +44,7 @@ function mapLiveTargets(models = [], submodels = []) {
       id,
       name: String(submodel?.name || id),
       type: "submodel",
-      parentId: String(submodel?.parentId || "").trim()
+      parentId: String(submodel?.parentId || parseSubmodelParentId(id)).trim()
     });
   }
   return uniqueById(rows);
