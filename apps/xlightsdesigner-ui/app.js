@@ -3249,7 +3249,7 @@ async function onGenerate(intentOverride = "", options = {}) {
     ? options.selectedTagNames.map((row) => String(row || "").trim()).filter(Boolean)
     : [];
   const directSequenceMode = proposalRole === "sequence_agent";
-  const revisionTarget = normalizeDesignRevisionTarget(state.ui.designRevisionTarget);
+  const revisionTarget = normalizeDesignRevisionTarget(options?.revisionTarget || state.ui.designRevisionTarget);
   const postGenerateFailureMessage = (text = "") => {
     const message = String(text || "").trim();
     if (!message) return;
@@ -3442,14 +3442,20 @@ async function onGenerate(intentOverride = "", options = {}) {
     render();
     return;
   }
+  const normalizedProposalOrchestration = revisionTarget
+    ? ensureRevisionTargetAppliedToOrchestration(resolvedProposalOrchestration, revisionTarget)
+    : resolvedProposalOrchestration;
   if (directSequenceMode) {
     applyDesignerDraftSuccessState(state, {
-      proposalBundle: resolvedProposalOrchestration.proposalBundle || null,
-      proposalLines: Array.isArray(resolvedProposalOrchestration.proposalLines) ? resolvedProposalOrchestration.proposalLines : [],
+      proposalBundle: normalizedProposalOrchestration.proposalBundle || null,
+      proposalLines: Array.isArray(normalizedProposalOrchestration.proposalLines) ? normalizedProposalOrchestration.proposalLines : [],
       sequencePath: currentSequencePathForSidecar()
     });
   } else {
-    applyDesignerProposalSuccessToState(state, resolvedProposalOrchestration);
+    applyDesignerProposalSuccessToState(state, normalizedProposalOrchestration);
+  }
+  if (revisionTarget) {
+    applyRevisionTargetToCurrentDesignerState(revisionTarget);
   }
   markOrchestrationStage(
     orchestrationRun,
@@ -3459,10 +3465,33 @@ async function onGenerate(intentOverride = "", options = {}) {
       ? "direct technical sequencing request normalized into canonical intent handoff"
       : "designer runtime built brief + proposal"
   );
-  const intentHandoff = hydrateIntentHandoffExecutionStrategy(
-    resolvedProposalOrchestration.intentHandoff,
-    resolvedProposalOrchestration.proposalBundle
+  let intentHandoff = hydrateIntentHandoffExecutionStrategy(
+    normalizedProposalOrchestration.intentHandoff,
+    normalizedProposalOrchestration.proposalBundle
   );
+  if (revisionTarget && isPlainObject(intentHandoff)) {
+    const normalizedTarget = normalizeDesignRevisionTarget(revisionTarget);
+    const revisedExecutionStrategy = retagExecutionPlanForRevisionTarget(
+      intentHandoff.executionStrategy,
+      normalizedTarget
+    );
+    intentHandoff = {
+      ...intentHandoff,
+      designId: normalizedTarget.designId,
+      designRevision: normalizedTarget.designRevision,
+      designAuthor: normalizedTarget.designAuthor,
+      executionStrategy: revisedExecutionStrategy
+    };
+    if (state.creative?.proposalBundle && typeof state.creative.proposalBundle === "object" && revisedExecutionStrategy) {
+      const rebuiltBundle = rebuildProposalBundleFromExecutionPlan(
+        state.creative.proposalBundle,
+        revisedExecutionStrategy
+      );
+      if (rebuiltBundle) {
+        state.creative.proposalBundle = rebuiltBundle;
+      }
+    }
+  }
   state.creative = state.creative || {};
   state.creative.intentHandoff = isPlainObject(intentHandoff) ? structuredClone(intentHandoff) : null;
   const intentSet = setAgentHandoff(
@@ -3486,13 +3515,13 @@ async function onGenerate(intentOverride = "", options = {}) {
   }
   setAgentActiveRole("sequence_agent");
   markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
-  const guidedQuestions = resolvedProposalOrchestration.guidedQuestions;
-  const designerExecutionSeedLines = buildDesignerExecutionSeedLines(resolvedProposalOrchestration);
+  const guidedQuestions = normalizedProposalOrchestration.guidedQuestions;
+  const designerExecutionSeedLines = buildDesignerExecutionSeedLines(normalizedProposalOrchestration);
   const proposalSeedLines = designerExecutionSeedLines.length
     ? designerExecutionSeedLines
-    : (shouldUseExecutionStrategySeedLines({ directSequenceMode, proposalOrchestration: resolvedProposalOrchestration })
+    : (shouldUseExecutionStrategySeedLines({ directSequenceMode, proposalOrchestration: normalizedProposalOrchestration })
         ? []
-        : resolvedProposalOrchestration.proposalLines);
+        : normalizedProposalOrchestration.proposalLines);
   const sequenceAgentInput = buildSequenceAgentInput({
     requestId: `${orchestrationRun.id}-generate`,
     endpoint: state.endpoint,
@@ -3601,6 +3630,31 @@ async function onGenerate(intentOverride = "", options = {}) {
           degradedMode: !analysisHandoff
         }
   };
+  if (revisionTarget) {
+    const normalizedTarget = normalizeDesignRevisionTarget(revisionTarget);
+    const retagCommand = (command = {}) => {
+      if (String(command?.designId || "").trim() !== normalizedTarget.designId) return command;
+      return {
+        ...command,
+        designId: normalizedTarget.designId,
+        designRevision: normalizedTarget.designRevision,
+        designAuthor: normalizedTarget.designAuthor,
+        intent: command?.intent && typeof command.intent === "object"
+          ? {
+              ...command.intent,
+              designId: normalizedTarget.designId,
+              designRevision: normalizedTarget.designRevision,
+              designAuthor: normalizedTarget.designAuthor
+            }
+          : command?.intent
+      };
+    };
+    planHandoff.commands = Array.isArray(planHandoff.commands) ? planHandoff.commands.map(retagCommand) : [];
+    planHandoff.metadata = {
+      ...(planHandoff.metadata && typeof planHandoff.metadata === "object" ? planHandoff.metadata : {}),
+      designRevisionTarget: normalizedTarget
+    };
+  }
   planHandoff.createdAt = new Date().toISOString();
   planHandoff.artifactId = buildArtifactId("plan_handoff_v1", planHandoff);
   const planGraphGate = validateCommandGraph(planHandoff.commands);
@@ -7235,6 +7289,112 @@ function applyRevisionTargetToOrchestration(proposalOrchestration = null, revisi
     },
     summary: String(proposalOrchestration.summary || `Revised ${buildDesignDisplay(normalizedTarget.designId, normalizedTarget.designRevision)}.`).trim()
   };
+}
+
+function ensureRevisionTargetAppliedToOrchestration(proposalOrchestration = null, revisionTarget = null) {
+  const normalizedTarget = normalizeDesignRevisionTarget(revisionTarget);
+  if (!proposalOrchestration || typeof proposalOrchestration !== "object" || !normalizedTarget) return proposalOrchestration;
+  const executionPlan = getExecutionPlanFromArtifacts({
+    proposalBundle: proposalOrchestration.proposalBundle,
+    intentHandoff: proposalOrchestration.intentHandoff
+  });
+  if (!executionPlan) return proposalOrchestration;
+
+  const retagRow = (row = {}) => {
+    if (String(row?.designId || "").trim() !== normalizedTarget.designId) return row;
+    return {
+      ...row,
+      designId: normalizedTarget.designId,
+      designRevision: normalizedTarget.designRevision,
+      designAuthor: normalizedTarget.designAuthor
+    };
+  };
+
+  const normalizedExecutionPlan = {
+    ...executionPlan,
+    designId: normalizedTarget.designId,
+    designRevision: normalizedTarget.designRevision,
+    designAuthor: normalizedTarget.designAuthor,
+    sectionPlans: (Array.isArray(executionPlan.sectionPlans) ? executionPlan.sectionPlans : []).map(retagRow),
+    effectPlacements: (Array.isArray(executionPlan.effectPlacements) ? executionPlan.effectPlacements : []).map(retagRow)
+  };
+  const rebuiltBundle = proposalOrchestration.proposalBundle
+    ? rebuildProposalBundleFromExecutionPlan(proposalOrchestration.proposalBundle, normalizedExecutionPlan)
+    : null;
+
+  return {
+    ...proposalOrchestration,
+    proposalBundle: rebuiltBundle || proposalOrchestration.proposalBundle || null,
+    proposalLines: Array.isArray(rebuiltBundle?.proposalLines)
+      ? rebuiltBundle.proposalLines
+      : (Array.isArray(proposalOrchestration.proposalLines) ? proposalOrchestration.proposalLines : []),
+    intentHandoff: {
+      ...(proposalOrchestration.intentHandoff && typeof proposalOrchestration.intentHandoff === "object"
+        ? proposalOrchestration.intentHandoff
+        : {}),
+      designId: normalizedTarget.designId,
+      designRevision: normalizedTarget.designRevision,
+      designAuthor: normalizedTarget.designAuthor,
+      executionStrategy: normalizedExecutionPlan
+    }
+  };
+}
+
+function retagExecutionPlanForRevisionTarget(executionPlan = null, revisionTarget = null) {
+  const normalizedTarget = normalizeDesignRevisionTarget(revisionTarget);
+  const plan = executionPlan && typeof executionPlan === "object" ? executionPlan : null;
+  if (!normalizedTarget || !plan) return plan;
+  const retagRow = (row = {}) => {
+    if (String(row?.designId || "").trim() !== normalizedTarget.designId) return row;
+    return {
+      ...row,
+      designId: normalizedTarget.designId,
+      designRevision: normalizedTarget.designRevision,
+      designAuthor: normalizedTarget.designAuthor
+    };
+  };
+  return {
+    ...plan,
+    designId: normalizedTarget.designId,
+    designRevision: normalizedTarget.designRevision,
+    designAuthor: normalizedTarget.designAuthor,
+    sectionPlans: (Array.isArray(plan.sectionPlans) ? plan.sectionPlans : []).map(retagRow),
+    effectPlacements: (Array.isArray(plan.effectPlacements) ? plan.effectPlacements : []).map(retagRow)
+  };
+}
+
+function applyRevisionTargetToCurrentDesignerState(revisionTarget = null) {
+  const normalizedTarget = normalizeDesignRevisionTarget(revisionTarget);
+  if (!normalizedTarget) return;
+  const currentBundle = state.creative?.proposalBundle && typeof state.creative.proposalBundle === "object"
+    ? state.creative.proposalBundle
+    : null;
+  const currentIntentHandoff = state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object"
+    ? state.creative.intentHandoff
+    : null;
+  const executionPlan = retagExecutionPlanForRevisionTarget(
+    getExecutionPlanFromArtifacts({ proposalBundle: currentBundle, intentHandoff: currentIntentHandoff }),
+    normalizedTarget
+  );
+  if (!executionPlan) return;
+  if (currentBundle) {
+    const rebuiltBundle = rebuildProposalBundleFromExecutionPlan(currentBundle, executionPlan);
+    if (rebuiltBundle) {
+      state.creative.proposalBundle = rebuiltBundle;
+      if (Array.isArray(rebuiltBundle.proposalLines)) {
+        state.proposed = [...rebuiltBundle.proposalLines];
+      }
+    }
+  }
+  if (currentIntentHandoff) {
+    state.creative.intentHandoff = {
+      ...currentIntentHandoff,
+      designId: normalizedTarget.designId,
+      designRevision: normalizedTarget.designRevision,
+      designAuthor: normalizedTarget.designAuthor,
+      executionStrategy: executionPlan
+    };
+  }
 }
 
 function filterDesignerExecutionPlanByDesignId(executionPlan = null, designId = "") {
@@ -11139,8 +11299,34 @@ async function dispatchAutomationPrompt(prompt = "") {
 async function generateAutomationProposal(payload = {}) {
   const prompt = String(payload?.prompt || "").trim();
   const requestedRole = String(payload?.requestedRole || "designer_dialog").trim();
+  let normalizedRevisionTarget = null;
   if (!prompt) {
     return { ok: false, error: "Prompt is required." };
+  }
+  if (payload?.clearRevisionTarget === true) {
+    clearDesignRevisionTarget();
+  } else if (payload?.revisionTarget && typeof payload.revisionTarget === "object") {
+    normalizedRevisionTarget = normalizeDesignRevisionTarget(payload.revisionTarget);
+    if (!normalizedRevisionTarget) {
+      return { ok: false, error: "revisionTarget is invalid." };
+    }
+    state.ui.designRevisionTarget = normalizedRevisionTarget;
+  } else if (String(payload?.revisionDesignId || "").trim()) {
+    normalizedRevisionTarget = normalizeDesignRevisionTarget({
+      designId: payload.revisionDesignId,
+      designRevision: payload.revisionDesignRevision,
+      priorDesignRevision: payload.revisionPriorDesignRevision,
+      designAuthor: payload.revisionDesignAuthor,
+      sections: Array.isArray(payload?.revisionSections) ? payload.revisionSections : [],
+      targetIds: Array.isArray(payload?.revisionTargetIds) ? payload.revisionTargetIds : [],
+      summary: payload.revisionSummary,
+      designLabel: payload.revisionDesignLabel,
+      requestedAt: payload.revisionRequestedAt
+    });
+    if (!normalizedRevisionTarget) {
+      return { ok: false, error: "flat revision target is invalid." };
+    }
+    state.ui.designRevisionTarget = normalizedRevisionTarget;
   }
   if (payload?.forceFresh === true) {
     clearDesignerDraft(state);
@@ -11162,10 +11348,75 @@ async function generateAutomationProposal(payload = {}) {
   }
   await onGenerate(prompt, {
     requestedRole,
+    revisionTarget: normalizedRevisionTarget,
     selectedSections: Array.isArray(payload?.selectedSections) ? payload.selectedSections : [],
     selectedTargetIds: Array.isArray(payload?.selectedTargetIds) ? payload.selectedTargetIds : [],
     selectedTagNames: Array.isArray(payload?.selectedTagNames) ? payload.selectedTagNames : []
   });
+  if (normalizedRevisionTarget) {
+    const supersededConceptRecord = buildSupersededConceptRecordById(
+      normalizedRevisionTarget.designId,
+      normalizedRevisionTarget.designRevision
+    );
+    const revisedExecutionPlan = retagExecutionPlanForRevisionTarget(
+      getExecutionPlanFromArtifacts({
+        proposalBundle: state.creative?.proposalBundle || null,
+        intentHandoff: state.creative?.intentHandoff || null
+      }),
+      normalizedRevisionTarget
+    );
+    if (revisedExecutionPlan) {
+      if (state.creative?.proposalBundle && typeof state.creative.proposalBundle === "object") {
+        const rebuiltBundle = rebuildProposalBundleFromExecutionPlan(state.creative.proposalBundle, revisedExecutionPlan);
+        if (rebuiltBundle) {
+          state.creative.proposalBundle = rebuiltBundle;
+        }
+      }
+      if (state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object") {
+        state.creative.intentHandoff = {
+          ...state.creative.intentHandoff,
+          designId: normalizedRevisionTarget.designId,
+          designRevision: normalizedRevisionTarget.designRevision,
+          designAuthor: normalizedRevisionTarget.designAuthor,
+          executionStrategy: revisedExecutionPlan
+        };
+        setAgentHandoff("intent_handoff_v1", state.creative.intentHandoff, "designer_dialog");
+      }
+      if (state.agentPlan?.handoff && typeof state.agentPlan.handoff === "object") {
+        const retagCommand = (command = {}) => {
+          if (String(command?.designId || "").trim() !== normalizedRevisionTarget.designId) return command;
+          return {
+            ...command,
+            designId: normalizedRevisionTarget.designId,
+            designRevision: normalizedRevisionTarget.designRevision,
+            designAuthor: normalizedRevisionTarget.designAuthor,
+            intent: command?.intent && typeof command.intent === "object"
+              ? {
+                  ...command.intent,
+                  designId: normalizedRevisionTarget.designId,
+                  designRevision: normalizedRevisionTarget.designRevision,
+                  designAuthor: normalizedRevisionTarget.designAuthor
+                }
+              : command?.intent
+          };
+        };
+        state.agentPlan.handoff = {
+          ...state.agentPlan.handoff,
+          commands: Array.isArray(state.agentPlan.handoff.commands) ? state.agentPlan.handoff.commands.map(retagCommand) : [],
+          metadata: {
+            ...(state.agentPlan.handoff.metadata && typeof state.agentPlan.handoff.metadata === "object"
+              ? state.agentPlan.handoff.metadata
+              : {}),
+            designRevisionTarget: normalizedRevisionTarget
+          }
+        };
+        setAgentHandoff("plan_handoff_v1", state.agentPlan.handoff, "sequence_agent");
+      }
+      if (supersededConceptRecord) {
+        upsertSupersededConceptRecord(supersededConceptRecord);
+      }
+    }
+  }
   let debugReplay = null;
   if (payload?.debugReplay === true && requestedRole === "designer_dialog") {
     try {
@@ -11218,6 +11469,15 @@ async function generateAutomationProposal(payload = {}) {
     hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
     reviewReady: applyReadyForApprovalGate(),
     requestedRole,
+    requestedRevisionTarget: normalizedRevisionTarget,
+    activeRevisionTarget: normalizeDesignRevisionTarget(state.ui?.designRevisionTarget),
+    debugCurrentIntentRevision: state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object"
+      ? {
+          designId: String(state.creative.intentHandoff.designId || ""),
+          designRevision: Number(state.creative.intentHandoff.designRevision || 0),
+          firstSectionPlanRevision: Number(state.creative.intentHandoff.executionStrategy?.sectionPlans?.[0]?.designRevision || 0)
+        }
+      : null,
     lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null,
     creativeIntentHandoff: isPlainObject(state.creative?.intentHandoff)
       ? {

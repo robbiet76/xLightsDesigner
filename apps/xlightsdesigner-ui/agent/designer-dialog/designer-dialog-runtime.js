@@ -1592,7 +1592,15 @@ function buildDesignerExecutionPlan({
       : explicitSections.length === 1
         ? "single_section"
         : "whole_sequence";
-  const sharedRevisionDesignId = reviseInPlace && !allowGlobalRewrite && explicitSections.length ? "DES-001" : "";
+  const sharedRevisionDesignId = reviseInPlace && !allowGlobalRewrite && explicitSections.length
+    ? str(intent?.designId || "DES-001")
+    : "";
+  const sharedRevisionDesignRevision = reviseInPlace && !allowGlobalRewrite && explicitSections.length
+    ? (Number.isInteger(Number(intent?.designRevision)) ? Number(intent.designRevision) : 0)
+    : 0;
+  const sharedRevisionDesignAuthor = reviseInPlace && !allowGlobalRewrite && explicitSections.length
+    ? str(intent?.designAuthor || "designer") || "designer"
+    : "designer";
   const useGlobalEffectOverrides = arr(intent.effectOverrides).length > 0 && explicitSections.length <= 1;
   const primarySections = (
     allowGlobalRewrite
@@ -1618,8 +1626,8 @@ function buildDesignerExecutionPlan({
         : sectionGoal;
       return {
         designId: sharedRevisionDesignId || `DES-${String(idx + 1).padStart(3, "0")}`,
-        designRevision: 0,
-        designAuthor: "designer",
+        designRevision: sharedRevisionDesignId ? sharedRevisionDesignRevision : 0,
+        designAuthor: sharedRevisionDesignId ? sharedRevisionDesignAuthor : "designer",
         section: str(label),
         energy,
         density,

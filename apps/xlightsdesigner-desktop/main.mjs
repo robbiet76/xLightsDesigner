@@ -910,6 +910,349 @@ function buildSequencerGapReport({
   };
 }
 
+function parseDesignRevisionLabel(value = "") {
+  const match = str(value).match(/^D(\d+)\.(\d+)$/i);
+  if (!match) return { designOrdinal: null, designRevision: null };
+  return {
+    designOrdinal: Number.parseInt(match[1], 10),
+    designRevision: Number.parseInt(match[2], 10)
+  };
+}
+
+function extractObservedEffectNamesFromRevisionRun({
+  practicalValidation = null,
+  applyResponse = null,
+  latestSnapshot = null,
+  expectedTargets = []
+} = {}) {
+  const targetSet = new Set(uniqueStrings(expectedTargets));
+  const fromPractical = arr(practicalValidation?.designAlignment?.observedEffectNames);
+  const fromApplyPractical = arr(applyResponse?.applyOutcome?.applyResult?.practicalValidation?.designAlignment?.observedEffectNames);
+  const fromLatestApply = arr(applyResponse?.latestApply?.verification?.designAlignment?.observedEffectNames);
+  const sequenceRows = arr(latestSnapshot?.pageStates?.sequence?.data?.rows);
+  const fromRows = sequenceRows
+    .filter((row) => !targetSet.size || targetSet.has(str(row?.target)))
+    .flatMap((row) => arr(row?.effectNames || row?.effects || []))
+    .map((row) => str(row))
+    .filter(Boolean);
+  return uniqueStrings([
+    ...fromPractical,
+    ...fromApplyPractical,
+    ...fromLatestApply,
+    ...fromRows
+  ]);
+}
+
+function extractPracticalValidationArtifact(applyResponse = null, latestSnapshot = null) {
+  return applyResponse?.latestPracticalValidation
+    || applyResponse?.applyOutcome?.applyResult?.practicalValidation
+    || latestSnapshot?.latestPracticalValidation
+    || null;
+}
+
+function findMatchingSectionPlan(sectionPlans = [], { section = "", targets = [] } = {}) {
+  const normalizedSection = str(section);
+  const normalizedTargets = uniqueStrings(targets);
+  const normalizedTargetSet = new Set(normalizedTargets);
+  return arr(sectionPlans).find((row) => {
+    if (normalizedSection && str(row?.section) !== normalizedSection) return false;
+    const rowTargets = uniqueStrings(arr(row?.targetIds));
+    if (!normalizedTargetSet.size) return rowTargets.length > 0;
+    return normalizedTargets.every((targetId) => rowTargets.includes(targetId));
+  }) || null;
+}
+
+function buildRevisionTargetFromSectionPlan(sectionPlan = null) {
+  const plan = sectionPlan && typeof sectionPlan === "object" ? sectionPlan : null;
+  if (!plan) return null;
+  const designId = str(plan?.designId);
+  if (!designId) return null;
+  const priorDesignRevision = Number.isInteger(Number(plan?.designRevision)) ? Number(plan.designRevision) : 0;
+  const nextDesignRevision = priorDesignRevision + 1;
+  return {
+    designId,
+    designRevision: nextDesignRevision,
+    priorDesignRevision,
+    designAuthor: str(plan?.designAuthor || "designer") || "designer",
+    sections: uniqueStrings([plan?.section]),
+    targetIds: uniqueStrings(arr(plan?.targetIds)),
+    summary: str(plan?.intentSummary),
+    designLabel: `D${String(designId).replace(/^DES-0*/i, "") || designId}.${nextDesignRevision}`,
+    requestedAt: new Date().toISOString()
+  };
+}
+
+async function runLiveRevisionPracticalSequenceValidationSuiteFromDesktop(expected = {}) {
+  const suiteStartedAtMs = nowMs();
+  const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
+  if (!scenarios.length) {
+    throw new Error("Live revision practical sequence validation suite requires at least one scenario.");
+  }
+  const suiteBaselineSequencePath = str(expected?.baselineSequencePath);
+  const results = [];
+  let activeSequencePath = "";
+  const analyzedContexts = new Set();
+
+  for (const scenario of scenarios) {
+    const scenarioStartedAtMs = nowMs();
+    const name = str(scenario?.name || `scenario-${results.length + 1}`);
+    const sequencePath = str(scenario?.sequencePath);
+    const baselineSequencePath = str(scenario?.baselineSequencePath || suiteBaselineSequencePath);
+    const timings = {};
+    logStartup(`automation:live-revision-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
+    if (sequencePath && baselineSequencePath) {
+      const restoreStartedAtMs = nowMs();
+      await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
+      timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
+      activeSequencePath = "";
+      for (const key of Array.from(analyzedContexts)) {
+        if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
+      }
+    }
+    if (sequencePath && sequencePath !== activeSequencePath) {
+      const openStartedAtMs = nowMs();
+      await openSequenceFromDesktop(sequencePath);
+      timings.openSequenceMs = nowMs() - openStartedAtMs;
+      activeSequencePath = sequencePath;
+    }
+
+    const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
+    if (scenario?.refreshFirst !== false) {
+      const refreshStartedAtMs = nowMs();
+      await invokeRendererAutomation("refreshFromXLights", {});
+      timings.refreshMs = nowMs() - refreshStartedAtMs;
+    }
+
+    const analyzePrompt = str(scenario?.analyzePrompt);
+    const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
+    if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+      const requiredCueTypes = inferRequiredCueTypesFromScenario(scenario);
+      const reuse = await canReuseCurrentAnalysis({
+        sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
+        analyzePrompt,
+        requiredCueTypes
+      });
+      if (reuse) {
+        timings.analyzeMs = 0;
+      } else {
+        const analyzeStartedAtMs = nowMs();
+        await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+        timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+      }
+      analyzedContexts.add(analysisContextKey);
+    }
+
+    const seedGenerateStartedAtMs = nowMs();
+    const seedGenerateResponse = await invokeRendererAutomation("generateProposal", {
+      prompt: str(scenario?.seedPrompt),
+      requestedRole: "designer_dialog",
+      forceFresh: true,
+      clearRevisionTarget: true,
+      selectedSections: arr(scenario?.sections),
+      selectedTargetIds: arr(scenario?.targets),
+      selectedTagNames: arr(scenario?.tagNames)
+    });
+    timings.seedGenerateMs = nowMs() - seedGenerateStartedAtMs;
+
+    let seedApplyResponse = null;
+    if (seedGenerateResponse?.planHandoff || seedGenerateResponse?.hasDraftProposal) {
+      const seedApplyStartedAtMs = nowMs();
+      seedApplyResponse = await invokeRendererAutomation("applyCurrentProposal", {});
+      timings.seedApplyMs = nowMs() - seedApplyStartedAtMs;
+    }
+
+    const seedSectionPlan = findMatchingSectionPlan(
+      arr(seedGenerateResponse?.intentHandoff?.executionStrategy?.sectionPlans),
+      {
+        section: str(arr(scenario?.sections)[0]),
+        targets: arr(scenario?.targets)
+      }
+    );
+    const revisionTarget = buildRevisionTargetFromSectionPlan(seedSectionPlan);
+
+    let revisedGenerateResponse = null;
+    let revisedApplyResponse = null;
+    let latestSnapshot = null;
+    let practicalValidation = null;
+    let assertions = [];
+
+    if (revisionTarget) {
+      const revisedGenerateStartedAtMs = nowMs();
+      revisedGenerateResponse = await invokeRendererAutomation("generateProposal", {
+        prompt: str(scenario?.revisionPrompt),
+        requestedRole: "designer_dialog",
+        revisionTarget,
+        revisionDesignId: revisionTarget.designId,
+        revisionDesignRevision: revisionTarget.designRevision,
+        revisionPriorDesignRevision: revisionTarget.priorDesignRevision,
+        revisionDesignAuthor: revisionTarget.designAuthor,
+        revisionSections: arr(revisionTarget.sections),
+        revisionTargetIds: arr(revisionTarget.targetIds),
+        revisionSummary: revisionTarget.summary,
+        revisionDesignLabel: revisionTarget.designLabel,
+        revisionRequestedAt: revisionTarget.requestedAt,
+        selectedSections: arr(scenario?.sections),
+        selectedTargetIds: arr(scenario?.targets),
+        selectedTagNames: arr(scenario?.tagNames)
+      });
+      timings.revisionGenerateMs = nowMs() - revisedGenerateStartedAtMs;
+
+      if (revisedGenerateResponse?.planHandoff || revisedGenerateResponse?.hasDraftProposal) {
+        const revisedApplyStartedAtMs = nowMs();
+        revisedApplyResponse = await invokeRendererAutomation("applyCurrentProposal", {});
+        timings.revisionApplyMs = nowMs() - revisedApplyStartedAtMs;
+      }
+
+      latestSnapshot = await invokeRendererAutomation("getSequencerValidationSnapshot", {});
+      practicalValidation = extractPracticalValidationArtifact(revisedApplyResponse, latestSnapshot);
+
+      const revisedSectionPlan = findMatchingSectionPlan(
+        arr(revisedGenerateResponse?.intentHandoff?.executionStrategy?.sectionPlans),
+        {
+          section: str(arr(scenario?.sections)[0]),
+          targets: arr(scenario?.targets)
+        }
+      );
+      const observedTargets = uniqueStrings([
+        ...arr(practicalValidation?.designAlignment?.observedTargets),
+        ...arr(scenario?.targets)
+      ]);
+      const observedEffectNames = extractObservedEffectNamesFromRevisionRun({
+        practicalValidation,
+        applyResponse: revisedApplyResponse,
+        latestSnapshot,
+        expectedTargets: arr(scenario?.targets)
+      });
+      const seedPracticalValidation = extractPracticalValidationArtifact(seedApplyResponse, null);
+      const seedObservedEffectNames = uniqueStrings([
+        ...arr(seedPracticalValidation?.designAlignment?.observedEffectNames),
+        ...arr(seedApplyResponse?.applyOutcome?.applyResult?.verification?.designAlignment?.observedEffectNames),
+        ...arr(seedApplyResponse?.latestApply?.verification?.designAlignment?.observedEffectNames)
+      ]);
+      const matchedSeedEffects = uniqueStrings(arr(scenario?.seedExpectedEffects)).filter((row) => seedObservedEffectNames.includes(row));
+      const matchedRevisedEffects = uniqueStrings(arr(scenario?.revisedExpectedEffects)).filter((row) => observedEffectNames.includes(row));
+      const forbiddenEffects = uniqueStrings(arr(scenario?.forbiddenEffects));
+      const presentForbiddenEffects = forbiddenEffects.filter((row) => observedEffectNames.includes(row));
+      const requireSeedEffectRemoved = scenario?.requireSeedEffectRemoved === true;
+      const currentConceptRow = arr(latestSnapshot?.pageStates?.design?.data?.executionPlan?.conceptRows)
+        .find((row) => str(row?.designId) === str(revisionTarget?.designId)) || null;
+      const conceptLabelInfo = parseDesignRevisionLabel(currentConceptRow?.designLabel);
+      const supersededRevisionCount = Number(currentConceptRow?.supersededRevisionCount || 0);
+
+      assertions = [
+        {
+          kind: "practical_validation",
+          ok: practicalValidation?.overallOk === true,
+          expected: "overallOk=true",
+          actual: practicalValidation?.overallOk === true ? "overallOk=true" : "overallOk=false"
+        },
+        {
+          kind: "seed_effect_presence",
+          ok: matchedSeedEffects.length > 0,
+          expected: uniqueStrings(arr(scenario?.seedExpectedEffects)).join(", "),
+          actual: observedEffectNames.join(", ")
+        },
+        {
+          kind: "revision_effect_alignment",
+          ok: matchedRevisedEffects.length > 0,
+          expected: uniqueStrings(arr(scenario?.revisedExpectedEffects)).join(", "),
+          actual: observedEffectNames.join(", ")
+        },
+        {
+          kind: "revision_identity_preserved",
+          ok: str(revisedSectionPlan?.designId) === str(revisionTarget?.designId)
+            && Number(revisedSectionPlan?.designRevision) === Number(revisionTarget?.designRevision),
+          expected: `${str(revisionTarget?.designId)}@${Number(revisionTarget?.designRevision)}`,
+          actual: `${str(revisedSectionPlan?.designId)}@${Number(revisedSectionPlan?.designRevision)}`
+        },
+        {
+          kind: "revision_scope_preserved",
+          ok: arr(scenario?.targets).every((targetId) => observedTargets.includes(str(targetId))),
+          expected: uniqueStrings(arr(scenario?.targets)).join(", "),
+          actual: observedTargets.join(", ")
+        },
+        {
+          kind: "revision_dashboard_current",
+          ok: str(currentConceptRow?.designId) === str(revisionTarget?.designId)
+            && (Number(conceptLabelInfo.designRevision) === Number(revisionTarget?.designRevision) || supersededRevisionCount >= 1),
+          expected: `${str(revisionTarget?.designId)} current revision ${Number(revisionTarget?.designRevision)}`,
+          actual: `${str(currentConceptRow?.designId)} ${str(currentConceptRow?.designLabel)} superseded=${supersededRevisionCount}`
+        },
+        {
+          kind: "forbidden_effects",
+          ok: presentForbiddenEffects.length === 0,
+          expected: "none",
+          actual: presentForbiddenEffects.join(", ")
+        }
+      ];
+
+      if (requireSeedEffectRemoved) {
+        const stillPresentSeedEffects = uniqueStrings(arr(scenario?.seedExpectedEffects)).filter((row) => observedEffectNames.includes(row));
+        assertions.push({
+          kind: "seed_effect_removed",
+          ok: stillPresentSeedEffects.length === 0,
+          expected: "none",
+          actual: stillPresentSeedEffects.join(", ")
+        });
+      }
+    } else {
+      assertions = [
+        {
+          kind: "revision_target_resolution",
+          ok: false,
+          expected: "seed section plan resolved",
+          actual: "no matching seed section plan"
+        }
+      ];
+    }
+
+    const scenarioResult = {
+      name,
+      seedGenerateResponse,
+      seedApplyResponse,
+      generateResponse: revisedGenerateResponse,
+      applyResponse: revisedApplyResponse,
+      practicalValidation: practicalValidation
+        ? {
+            overallOk: practicalValidation?.overallOk === true,
+            failures: {
+              readback: arr(practicalValidation?.failures?.readback),
+              design: arr(practicalValidation?.failures?.design)
+            }
+          }
+        : null,
+      revisionTarget,
+      assertions
+    };
+    results.push(scenarioResult);
+    logStartup(`automation:live-revision-suite:scenario:finish name=${name} ok=${assertions.every((row) => row?.ok !== false) ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
+  }
+
+  const failed = results.filter((row) => arr(row?.assertions).some((assertion) => assertion?.ok === false));
+  const gapReport = buildSequencerGapReport({
+    suiteName: str(expected?.name || "live_revision_practical_sequence_validation_suite"),
+    suiteContract: "live_revision_practical_sequence_validation_suite_v1",
+    scenarioCount: results.length,
+    results
+  });
+  return {
+    contract: "live_revision_practical_sequence_validation_suite_run_v1",
+    version: "1.0",
+    ok: failed.length === 0,
+    summary: failed.length === 0
+      ? `Live revision suite passed ${results.length}/${results.length} scenarios.`
+      : `Live revision suite passed ${results.length - failed.length}/${results.length} scenarios.`,
+    timings: {
+      totalMs: nowMs() - suiteStartedAtMs
+    },
+    scenarioCount: results.length,
+    failedScenarioCount: failed.length,
+    failedScenarioNames: failed.map((row) => row.name),
+    results,
+    gapReport
+  };
+}
+
 async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expected = {}) {
   const suiteStartedAtMs = nowMs();
   const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
@@ -1382,6 +1725,7 @@ async function processAutomationRequests() {
     requestTimeoutMsForAction: ({ action }) => {
       if (action === "runLiveDesignValidationSuite") return 1800000;
       if (action === "runLiveSectionPracticalSequenceValidationSuite") return 1800000;
+      if (action === "runLiveRevisionPracticalSequenceValidationSuite") return 1800000;
       if (action === "runLiveDesignCanarySuite") return 900000;
       if (action === "runLiveDesignCanaryValidation") return 300000;
       if (action === "runComparativeLiveDesignValidation") return 900000;
@@ -1445,6 +1789,9 @@ async function processAutomationRequests() {
       }
       if (action === "runLiveSectionPracticalSequenceValidationSuite") {
         return runLiveSectionPracticalSequenceValidationSuiteFromDesktop(request?.payload || {});
+      }
+      if (action === "runLiveRevisionPracticalSequenceValidationSuite") {
+        return runLiveRevisionPracticalSequenceValidationSuiteFromDesktop(request?.payload || {});
       }
       if (action === "runLiveDesignCanarySuite") {
         return runLiveDesignCanarySuiteFromDesktop(request?.payload || {});

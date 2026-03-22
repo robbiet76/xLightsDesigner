@@ -10,6 +10,7 @@ Current contents:
 - `live-section-practical-sequence-validation-canary-v1.json`: stable single-scenario live canary used to gate the combined benchmark runner
 - `live-multisection-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live multi-section benchmark
 - `live-wholesequence-practical-validation-suite-v1.json`: promoted Phase 2 clean-baseline whole-sequence benchmark
+- `live-revision-practical-sequence-validation-suite-v1.json`: first live revision-focused Phase 2 suite for bounded in-place concept edits
 - `live-design-canary-suite-v1.json`: fastest one-prompt live canary scenarios for frequent iteration loops
 - `live-design-validation-suite-smoke-v1.json`: fast canary live comparative scenarios for frequent iteration loops
 - `live-design-validation-suite-v1.json`: canonical live comparative validation scenarios for real saved sequences, including scoped focus, stage-lighting, composition, motion-language, and render-discipline slices
@@ -35,6 +36,7 @@ Current policy:
 - the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
 - the desktop live-suite runner now reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
 - use `run-live-practical-benchmark.mjs` as the Stage 1 practical gate once the clean `Phase2` baseline is loaded
+- use the revision live suite to start Phase 2 bounded-edit validation without changing the frozen Stage 1 gate
 
 Runner modes:
 - `default`: normal single-output pass/fail eval
@@ -73,4 +75,14 @@ Baseline comparison:
 node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
   /tmp/live-practical-benchmark-phase2-final/live-practical-benchmark-report.json \
   apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json
+```
+
+Phase 2 revision suite:
+
+```bash
+node scripts/desktop/automation.mjs \
+  --channel dev \
+  --result-file /tmp/live-revision-practical-sequence-validation-suite-v1.json \
+  run-live-revision-practical-sequence-validation-suite \
+  --payload-file apps/xlightsdesigner-ui/eval/live-revision-practical-sequence-validation-suite-v1.json
 ```
