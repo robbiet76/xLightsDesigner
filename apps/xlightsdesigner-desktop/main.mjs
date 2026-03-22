@@ -752,6 +752,110 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
   };
 }
 
+function buildSequencerGapReport({
+  suiteName = "",
+  suiteContract = "",
+  scenarioCount = 0,
+  results = []
+} = {}) {
+  const safeResults = arr(results).filter((row) => row && typeof row === "object");
+  const issues = [];
+  const counts = {
+    designer_gap: 0,
+    sequencer_gap: 0,
+    apply_gap: 0,
+    validation_gap: 0
+  };
+
+  function pushIssue(issue) {
+    if (!issue || typeof issue !== "object") return;
+    const category = str(issue.category);
+    if (counts[category] != null) counts[category] += 1;
+    issues.push(issue);
+  }
+
+  for (const result of safeResults) {
+    const scenarioName = str(result?.name || "");
+    const practicalValidation = result?.practicalValidation || null;
+    const generateResponse = result?.generateResponse || null;
+    const applyResponse = result?.applyResponse || null;
+    const assertions = arr(result?.assertions);
+    const failedAssertions = assertions.filter((row) => row?.ok === false);
+
+    if (generateResponse?.ok !== true) {
+      pushIssue({
+        category: "designer_gap",
+        scenarioName,
+        detail: str(generateResponse?.error || generateResponse?.status?.text || "Proposal generation failed."),
+        artifactHint: "generateResponse"
+      });
+    }
+
+    if (generateResponse?.ok === true && !generateResponse?.planHandoff && !generateResponse?.hasDraftProposal) {
+      pushIssue({
+        category: "designer_gap",
+        scenarioName,
+        detail: "Proposal generation completed without a usable plan handoff.",
+        artifactHint: "generateResponse.planHandoff"
+      });
+    }
+
+    if (applyResponse && applyResponse?.ok !== true) {
+      pushIssue({
+        category: "apply_gap",
+        scenarioName,
+        detail: str(
+          applyResponse?.applyOutcome?.message
+          || applyResponse?.status?.text
+          || applyResponse?.error
+          || "Apply failed."
+        ),
+        artifactHint: "applyResponse"
+      });
+    }
+
+    if (practicalValidation && practicalValidation?.overallOk !== true) {
+      const readbackFailureCount = arr(practicalValidation?.failures?.readback).length;
+      const designFailureCount = arr(practicalValidation?.failures?.design).length;
+      pushIssue({
+        category: readbackFailureCount > 0 ? "apply_gap" : "validation_gap",
+        scenarioName,
+        detail: readbackFailureCount > 0
+          ? `Practical validation failed with ${readbackFailureCount} readback failure(s).`
+          : `Practical validation failed with ${designFailureCount} design failure(s).`,
+        artifactHint: "practicalValidation"
+      });
+    }
+
+    for (const assertion of failedAssertions) {
+      const kind = str(assertion?.kind);
+      let category = "validation_gap";
+      if (kind === "practical_validation") category = "validation_gap";
+      else if (kind.startsWith("section_") || kind === "section_effect_contrast") category = "sequencer_gap";
+      else if (kind === "effect_match_count" || kind === "preferred_effect_alignment" || kind === "forbidden_effects") category = "sequencer_gap";
+      else if (kind === "required_targets" || kind === "focus_coverage") category = "apply_gap";
+      pushIssue({
+        category,
+        scenarioName,
+        detail: `${kind}: expected ${str(assertion?.expected || "")} but saw ${str(assertion?.actual || "")}`.trim(),
+        artifactHint: `assertions.${kind}`
+      });
+    }
+  }
+
+  return {
+    artifactType: "sequencer_gap_report_v1",
+    artifactVersion: "1.0",
+    createdAt: new Date().toISOString(),
+    suiteName: str(suiteName),
+    suiteContract: str(suiteContract),
+    scenarioCount: Number.isFinite(Number(scenarioCount)) ? Number(scenarioCount) : safeResults.length,
+    issueCount: issues.length,
+    issueCounts: counts,
+    issues
+  };
+}
+
 async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expected = {}) {
   const suiteStartedAtMs = nowMs();
   const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
@@ -1074,6 +1178,12 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
   }
 
   const failed = results.filter((row) => row?.ok !== true);
+  const gapReport = buildSequencerGapReport({
+    suiteName: str(expected?.name || "live_section_practical_sequence_validation_suite"),
+    suiteContract: "live_section_practical_sequence_validation_suite_run_v1",
+    scenarioCount: results.length,
+    results
+  });
   return {
     contract: "live_section_practical_sequence_validation_suite_run_v1",
     version: "1.0",
@@ -1087,7 +1197,8 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     scenarioCount: results.length,
     failedScenarioCount: failed.length,
     failedScenarioNames: failed.map((row) => row.name),
-    results
+    results,
+    gapReport
   };
 }
 
