@@ -14,9 +14,8 @@ import { buildProposalLifecycle } from "./designer-dialog-lifecycle.js";
 import { buildDesignSceneContext } from "./design-scene-context.js";
 import { buildMusicDesignContext } from "./music-design-context.js";
 import {
-  DESIGNER_FAMILY_POOLS,
   canonicalizeEffectNameAlias,
-  pickDistinctEffects,
+  resolveContextualEffectCandidates,
   resolveDirectCueEffectCandidates,
   resolveSectionContextEffectCandidates
 } from "../shared/effect-semantics-registry.js";
@@ -651,76 +650,81 @@ function buildSectionEffectHints({
   }
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return smoothBias
-        ? pickDistinctEffects(["Color Wash", "Wave"], nearEnd ? ["Spirals", "Shimmer"] : ["Candle", "Shimmer"])
-        : pickDistinctEffects(["Color Wash", "Shimmer"], crispBias ? ["Bars", "Pinwheel"] : ["Pinwheel", "Fireworks", "Meteors"]);
+      return resolveContextualEffectCandidates({
+        contextKey: "lightingCue",
+        variant: smoothBias ? "highSmooth" : (crispBias ? "highCrisp" : "highDefault")
+      });
     }
     if (/bridge/.test(lowerSection)) {
-      return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
+      return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "bridge" });
     }
     if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-      return pickDistinctEffects(["Color Wash", "Candle"], ["On", "Wave"]);
+      return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "low" });
     }
-    return pickDistinctEffects(["Color Wash", "Wave"], ["Butterfly", "Circles"]);
+    return resolveContextualEffectCandidates({ contextKey: "lightingCue", variant: "default" });
   }
   if (/\b(phrase|transition|release|breath)\b/.test(lowerGoal) && /bridge/.test(lowerSection)) {
     if (suspendedBridge) {
-      return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "Spirals"]);
+      return resolveContextualEffectCandidates({ contextKey: "phraseBridge", variant: "suspended" });
     }
     if (chorusLikeBridge) {
-      return pickDistinctEffects(["Bars", "Shimmer"], ["Meteors", "Pinwheel"]);
+      return resolveContextualEffectCandidates({ contextKey: "phraseBridge", variant: "chorusLike" });
     }
-    return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
+    return resolveContextualEffectCandidates({ contextKey: "phraseBridge", variant: "default" });
   }
   if (/rhythm|pulse|groove|drive/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return nearEnd
-        ? pickDistinctEffects(["Bars", "Shockwave"], ["Meteors", "Pinwheel"])
-        : pickDistinctEffects(["Meteors", "Pinwheel"], ["Shimmer", "Bars"]);
+      return resolveContextualEffectCandidates({
+        contextKey: "rhythm",
+        variant: nearEnd ? "highNearEnd" : "highDefault"
+      });
     }
     if (/bridge/.test(lowerSection)) {
-      return pickDistinctEffects(["Bars", "Shockwave"], ["Wave", "Warp"]);
+      return resolveContextualEffectCandidates({ contextKey: "rhythm", variant: "bridge" });
     }
-    return pickDistinctEffects(["Wave", "Circles"], ["Butterfly", "Twinkle"]);
+    return resolveContextualEffectCandidates({ contextKey: "rhythm", variant: "default" });
   }
   if (!uniformHierarchy && /perimeter|frame|framing|negative space|centerpiece/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
-      return pickDistinctEffects(["Color Wash", "Pinwheel"], ["Shimmer", "Spirals"]);
+      return resolveContextualEffectCandidates({ contextKey: "framing", variant: "high" });
     }
     if (/bridge/.test(lowerSection)) {
-      return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
+      return resolveContextualEffectCandidates({ contextKey: "framing", variant: "bridge" });
     }
     if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-      return pickDistinctEffects(["Color Wash", "Candle"], ["Snowflakes", "On"]);
+      return resolveContextualEffectCandidates({ contextKey: "framing", variant: "low" });
     }
-    return pickDistinctEffects(["Wave", "Butterfly"], ["Bars", "Circles"]);
+    return resolveContextualEffectCandidates({ contextKey: "framing", variant: "default" });
   }
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(lowerSection)) {
     if (/drop/.test(lowerSection) && focusedDrop) {
-      return pickDistinctEffects(["Shockwave", "Bars"], ["Meteors", "Pinwheel"]);
+      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "dropFocused" });
     }
     if (/drop/.test(lowerSection) && diffusedDrop) {
-      return pickDistinctEffects(["Wave", "Color Wash"], ["Spirals", "Morph"]);
+      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "dropDiffused" });
     }
     if (/final chorus|finale/.test(lowerSection) && controlledFinale) {
-      return pickDistinctEffects(["Bars", "Wave"], ["Shimmer", "Color Wash"]);
+      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "finaleControlled" });
     }
     if (/final chorus|finale/.test(lowerSection) && floodedFinale) {
-      return pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"]);
+      return resolveContextualEffectCandidates({ contextKey: "highEnergy", variant: "finaleFlooded" });
     }
     if (smoothBias) {
-      return nearEnd
-        ? pickDistinctEffects(["Spirals", "Wave"], ["Color Wash", "Shimmer"])
-        : pickDistinctEffects(["Color Wash", "Wave"], ["Shimmer", "Butterfly"]);
+      return resolveContextualEffectCandidates({
+        contextKey: "highEnergy",
+        variant: nearEnd ? "smoothNearEnd" : "smoothDefault"
+      });
     }
     if (crispBias) {
-      return nearEnd
-        ? pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"])
-        : pickDistinctEffects(["Shimmer", "Bars"], ["Pinwheel", "Color Wash"]);
+      return resolveContextualEffectCandidates({
+        contextKey: "highEnergy",
+        variant: nearEnd ? "crispNearEnd" : "crispDefault"
+      });
     }
-    return nearEnd
-      ? pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Fireworks", "Pinwheel"])
-      : pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
+    return resolveContextualEffectCandidates({
+      contextKey: "highEnergy",
+      variant: nearEnd ? "nearEnd" : "default"
+    });
   }
   if (/tag/.test(lowerSection)) {
     return resolveSectionContextEffectCandidates({
@@ -759,29 +763,33 @@ function buildSectionEffectHints({
     return resolveSectionContextEffectCandidates({ sectionKey: "solo", variant: "chorusLike" });
   }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.bridge, DESIGNER_FAMILY_POOLS.wide);
+    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "wide" });
   }
   if (escalationGoal && /verse 1/.test(lowerSection)) {
-    return flattenedEscalation
-      ? pickDistinctEffects(["Shimmer", "Bars"], ["Wave", "Color Wash"])
-      : pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Butterfly"]);
+    return resolveContextualEffectCandidates({
+      contextKey: "genericFlow",
+      variant: flattenedEscalation ? "escalationVerseFlat" : "escalationVerseOpen"
+    });
   }
   if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-    return pickDistinctEffects(/outro|coda/.test(lowerSection) ? DESIGNER_FAMILY_POOLS.outro : DESIGNER_FAMILY_POOLS.intro, DESIGNER_FAMILY_POOLS.gentle);
+    return resolveContextualEffectCandidates({
+      contextKey: "genericFlow",
+      variant: /outro|coda/.test(lowerSection) ? "lowOutro" : "low"
+    });
   }
   if (nearPeak) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.dense, DESIGNER_FAMILY_POOLS.chorus);
+    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "nearPeak" });
   }
   if (nearEnd) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.outro, DESIGNER_FAMILY_POOLS.bridge);
+    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "nearEnd" });
   }
   if (nearStart) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.intro, DESIGNER_FAMILY_POOLS.gentle);
+    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "nearStart" });
   }
   if (/pulse|rhythm|drive|movement/.test(lowerGoal)) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.bridge, DESIGNER_FAMILY_POOLS.default);
+    return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "pulse" });
   }
-  return pickDistinctEffects(DESIGNER_FAMILY_POOLS.verse, DESIGNER_FAMILY_POOLS.default);
+  return resolveContextualEffectCandidates({ contextKey: "genericFlow", variant: "default" });
 }
 
 function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {

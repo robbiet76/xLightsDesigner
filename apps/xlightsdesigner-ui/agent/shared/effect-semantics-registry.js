@@ -137,6 +137,58 @@ export const SECTION_CONTEXT_RULES = Object.freeze({
   }
 });
 
+export const CONTEXTUAL_EFFECT_RULES = Object.freeze({
+  lightingCue: {
+    highSmooth: { primary: ["Color Wash", "Wave"], secondary: ["Spirals", "Shimmer"] },
+    highCrisp: { primary: ["Color Wash", "Shimmer"], secondary: ["Bars", "Pinwheel"] },
+    highDefault: { primary: ["Color Wash", "Shimmer"], secondary: ["Pinwheel", "Fireworks", "Meteors"] },
+    bridge: { primary: ["Wave", "Bars"], secondary: ["Spirals", "Color Wash"] },
+    low: { primary: ["Color Wash", "Candle"], secondary: ["On", "Wave"] },
+    default: { primary: ["Color Wash", "Wave"], secondary: ["Butterfly", "Circles"] }
+  },
+  phraseBridge: {
+    suspended: { primary: ["Wave", "Color Wash"], secondary: ["Candle", "Spirals"] },
+    chorusLike: { primary: ["Bars", "Shimmer"], secondary: ["Meteors", "Pinwheel"] },
+    default: { primary: ["Wave", "Bars"], secondary: ["Spirals", "Color Wash"] }
+  },
+  rhythm: {
+    highNearEnd: { primary: ["Bars", "Shockwave"], secondary: ["Meteors", "Pinwheel"] },
+    highDefault: { primary: ["Meteors", "Pinwheel"], secondary: ["Shimmer", "Bars"] },
+    bridge: { primary: ["Bars", "Shockwave"], secondary: ["Wave", "Warp"] },
+    default: { primary: ["Wave", "Circles"], secondary: ["Butterfly", "Twinkle"] }
+  },
+  framing: {
+    high: { primary: ["Color Wash", "Pinwheel"], secondary: ["Shimmer", "Spirals"] },
+    bridge: { primary: ["Wave", "Bars"], secondary: ["Spirals", "Color Wash"] },
+    low: { primary: ["Color Wash", "Candle"], secondary: ["Snowflakes", "On"] },
+    default: { primary: ["Wave", "Butterfly"], secondary: ["Bars", "Circles"] }
+  },
+  highEnergy: {
+    dropFocused: { primary: ["Shockwave", "Bars"], secondary: ["Meteors", "Pinwheel"] },
+    dropDiffused: { primary: ["Wave", "Color Wash"], secondary: ["Spirals", "Morph"] },
+    finaleControlled: { primary: ["Bars", "Wave"], secondary: ["Shimmer", "Color Wash"] },
+    finaleFlooded: { primary: ["Bars", "Meteors"], secondary: ["Shimmer", "Pinwheel"] },
+    smoothNearEnd: { primary: ["Spirals", "Wave"], secondary: ["Color Wash", "Shimmer"] },
+    smoothDefault: { primary: ["Color Wash", "Wave"], secondary: ["Shimmer", "Butterfly"] },
+    crispNearEnd: { primary: ["Bars", "Meteors"], secondary: ["Shimmer", "Pinwheel"] },
+    crispDefault: { primary: ["Shimmer", "Bars"], secondary: ["Pinwheel", "Color Wash"] },
+    nearEnd: { primary: ["Bars", "Meteors"], secondary: ["Shimmer", "Fireworks", "Pinwheel"] },
+    default: { primary: DESIGNER_FAMILY_POOLS.chorus, secondary: DESIGNER_FAMILY_POOLS.dense }
+  },
+  genericFlow: {
+    wide: { primary: DESIGNER_FAMILY_POOLS.bridge, secondary: DESIGNER_FAMILY_POOLS.wide },
+    escalationVerseFlat: { primary: ["Shimmer", "Bars"], secondary: ["Wave", "Color Wash"] },
+    escalationVerseOpen: { primary: ["Color Wash", "Candle"], secondary: ["Wave", "Butterfly"] },
+    low: { primary: DESIGNER_FAMILY_POOLS.intro, secondary: DESIGNER_FAMILY_POOLS.gentle },
+    lowOutro: { primary: DESIGNER_FAMILY_POOLS.outro, secondary: DESIGNER_FAMILY_POOLS.gentle },
+    nearPeak: { primary: DESIGNER_FAMILY_POOLS.dense, secondary: DESIGNER_FAMILY_POOLS.chorus },
+    nearEnd: { primary: DESIGNER_FAMILY_POOLS.outro, secondary: DESIGNER_FAMILY_POOLS.bridge },
+    nearStart: { primary: DESIGNER_FAMILY_POOLS.intro, secondary: DESIGNER_FAMILY_POOLS.gentle },
+    pulse: { primary: DESIGNER_FAMILY_POOLS.bridge, secondary: DESIGNER_FAMILY_POOLS.default },
+    default: { primary: DESIGNER_FAMILY_POOLS.verse, secondary: DESIGNER_FAMILY_POOLS.default }
+  }
+});
+
 export function canonicalizeEffectNameAlias(value = "") {
   const text = str(value);
   if (!text) return "";
@@ -199,6 +251,17 @@ export function resolveSectionContextEffectCandidates({
   const sectionRules = SECTION_CONTEXT_RULES[str(sectionKey)] || null;
   if (!sectionRules) return [];
   const rule = sectionRules[str(variant)] || sectionRules.default || null;
+  if (!rule) return [];
+  return pickDistinctEffects(rule.primary, rule.secondary);
+}
+
+export function resolveContextualEffectCandidates({
+  contextKey = "",
+  variant = "default"
+} = {}) {
+  const contextRules = CONTEXTUAL_EFFECT_RULES[str(contextKey)] || null;
+  if (!contextRules) return [];
+  const rule = contextRules[str(variant)] || contextRules.default || null;
   if (!rule) return [];
   return pickDistinctEffects(rule.primary, rule.secondary);
 }
