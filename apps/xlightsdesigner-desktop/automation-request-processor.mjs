@@ -23,6 +23,7 @@ export function flushAutomationRequests({
   responsePathForId,
   reason = "Cleared stale automation request.",
   olderThanMs = 0,
+  olderThanEpochMs = 0,
   nowMs = () => Date.now(),
   fsImpl = fs
 } = {}) {
@@ -31,6 +32,17 @@ export function flushAutomationRequests({
     .sort();
   for (const name of files) {
     const fullPath = path.join(requestsDir, name);
+    if (olderThanEpochMs > 0) {
+      try {
+        const stats = fsImpl.statSync(fullPath);
+        const mtimeMs = Number(stats.mtimeMs || 0);
+        if (mtimeMs >= olderThanEpochMs) {
+          continue;
+        }
+      } catch {
+        // If stat fails, treat the request as flushable during startup cleanup.
+      }
+    }
     if (olderThanMs > 0) {
       try {
         const stats = fsImpl.statSync(fullPath);

@@ -72,11 +72,13 @@ const AUTOMATION_CHANNEL = app.isPackaged ? "packaged" : "dev";
 const AUTOMATION_ROOT = `/tmp/xld-automation-${AUTOMATION_CHANNEL}`;
 const AUTOMATION_REQUESTS_DIR = path.join(AUTOMATION_ROOT, "requests");
 const AUTOMATION_RESPONSES_DIR = path.join(AUTOMATION_ROOT, "responses");
+const AUTOMATION_APP_LAUNCH_MS = Date.now();
 let automationPollTimer = null;
 let automationRequestProcessor = null;
 let automationHeartbeatTimer = null;
 let automationRequestWatcher = null;
 let automationPowerSaveBlockerId = null;
+let rendererAutomationReadyPromise = null;
 const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
@@ -487,7 +489,37 @@ const {
   nowMs
 });
 
+async function openSequenceFromDesktop(sequencePath = "") {
+  const file = str(sequencePath);
+  if (!file) {
+    throw new Error("sequencePath is required.");
+  }
+  try {
+    const runtime = await getRendererAgentRuntimeSnapshot();
+    const currentPath = str(runtime?.sequencePathInput);
+    if (currentPath && currentPath === file) {
+      return {
+        ok: true,
+        skipped: true,
+        activeSequence: str(runtime?.activeSequence),
+        sequencePath: file
+      };
+    }
+  } catch {
+    // best-effort precheck only
+  }
+  const opened = await invokeRendererAutomation("openSequence", {
+    sequencePath: file
+  });
+  return {
+    ok: true,
+    activeSequence: str(opened?.activeSequence),
+    sequencePath: file
+  };
+}
+
 async function invokeRendererAutomation(action = "", payload = {}) {
+  await waitForRendererAutomationReady();
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
   }
@@ -499,6 +531,70 @@ async function invokeRendererAutomation(action = "", payload = {}) {
     return runtime[${JSON.stringify(action)}](${JSON.stringify(payload)});
   })()`;
   return mainWindow.webContents.executeJavaScript(script, true);
+}
+
+async function waitForRendererAutomationReady({ timeoutMs = 120000 } = {}) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    throw new Error("xLightsDesigner window is not available");
+  }
+  if (rendererAutomationReadyPromise) {
+    return rendererAutomationReadyPromise;
+  }
+  const targetWindow = mainWindow;
+  rendererAutomationReadyPromise = (async () => {
+    if (targetWindow.webContents.isLoadingMainFrame()) {
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error("Renderer did not finish loading in time"));
+        }, Math.min(timeoutMs, 60000));
+        const onFinish = () => {
+          cleanup();
+          resolve();
+        };
+        const onFail = (_event, code, desc) => {
+          cleanup();
+          reject(new Error(`Renderer failed to load (${code}): ${desc}`));
+        };
+        function cleanup() {
+          clearTimeout(timer);
+          targetWindow.webContents.off("did-finish-load", onFinish);
+          targetWindow.webContents.off("did-fail-load", onFail);
+        }
+        targetWindow.webContents.once("did-finish-load", onFinish);
+        targetWindow.webContents.once("did-fail-load", onFail);
+      });
+    }
+    const deadline = Date.now() + Math.max(1000, Number(timeoutMs || 0));
+    while (Date.now() <= deadline) {
+      if (!mainWindow || mainWindow !== targetWindow || targetWindow.isDestroyed()) {
+        throw new Error("xLightsDesigner window is not available");
+      }
+      try {
+        const ready = await targetWindow.webContents.executeJavaScript(`(() => {
+          const runtime = window.xLightsDesignerRuntime;
+          if (!runtime || typeof runtime.isAutomationReady !== "function") return false;
+          try {
+            const state = runtime.isAutomationReady();
+            return Boolean(state && state.ready === true);
+          } catch {
+            return false;
+          }
+        })()`, true);
+        if (ready) {
+          return true;
+        }
+      } catch {
+        // Keep polling until the renderer bootstrap finishes.
+      }
+      await sleep(250);
+    }
+    throw new Error("Renderer automation runtime did not become ready in time");
+  })().catch((err) => {
+    rendererAutomationReadyPromise = null;
+    throw err;
+  });
+  return rendererAutomationReadyPromise;
 }
 
 async function processAutomationRequests() {
@@ -595,7 +691,7 @@ function startAutomationPolling() {
     requestsDir: AUTOMATION_REQUESTS_DIR,
     responsePathForId: automationResponsePath,
     reason: "Cleared stale automation request during app startup.",
-    olderThanMs: 10000
+    olderThanEpochMs: AUTOMATION_APP_LAUNCH_MS
   });
   if (automationPollTimer) return;
   if (!automationRequestProcessor) {
@@ -878,6 +974,7 @@ function createWindow() {
     logStartup("window:closed");
     if (mainWindow === win) {
       mainWindow = null;
+      rendererAutomationReadyPromise = null;
     }
   });
 
@@ -895,6 +992,9 @@ function createWindow() {
 
   win.webContents.on("render-process-gone", (_event, details) => {
     logStartup(`webContents:render-process-gone reason=${details?.reason || "unknown"} exitCode=${details?.exitCode || 0}`);
+    if (mainWindow === win) {
+      rendererAutomationReadyPromise = null;
+    }
   });
 
   if (UI_URL) {

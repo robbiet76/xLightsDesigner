@@ -709,8 +709,18 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  function getAutomationReadyState() {
+    return {
+      ok: true,
+      ready: true,
+      activeSequence: state.activeSequence || "",
+      status: state.status || null
+    };
+  }
+
   function exposeRuntimeValidationHooks() {
     window.xLightsDesignerRuntime = {
+      isAutomationReady: getAutomationReadyState,
       dispatchPrompt: dispatchAutomationPrompt,
       generateProposal: generateAutomationProposal,
       openSequence: openAutomationSequence,

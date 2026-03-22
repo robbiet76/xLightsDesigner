@@ -149,3 +149,47 @@ test("flushAutomationRequests clears queued requests and writes failure response
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test("flushAutomationRequests keeps requests created after the current app launch", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-automation-"));
+  const requestsDir = path.join(root, "requests");
+  const responsesDir = path.join(root, "responses");
+  fs.mkdirSync(requestsDir, { recursive: true });
+  fs.mkdirSync(responsesDir, { recursive: true });
+
+  const olderRequestPath = path.join(requestsDir, "req-old.json");
+  const freshRequestPath = path.join(requestsDir, "req-fresh.json");
+
+  fs.writeFileSync(
+    olderRequestPath,
+    JSON.stringify({ id: "req-old", action: "ping", payload: {} }),
+    "utf8"
+  );
+  fs.writeFileSync(
+    freshRequestPath,
+    JSON.stringify({ id: "req-fresh", action: "ping", payload: {} }),
+    "utf8"
+  );
+
+  const appLaunchMs = Date.now();
+  fs.utimesSync(olderRequestPath, new Date(appLaunchMs - 60000), new Date(appLaunchMs - 60000));
+  fs.utimesSync(freshRequestPath, new Date(appLaunchMs + 1000), new Date(appLaunchMs + 1000));
+
+  flushAutomationRequests({
+    requestsDir,
+    responsePathForId: (id) => path.join(responsesDir, `${id}.json`),
+    reason: "Cleared stale automation request during app startup.",
+    olderThanEpochMs: appLaunchMs
+  });
+
+  assert.deepEqual(fs.readdirSync(requestsDir), ["req-fresh.json"]);
+  assert.deepEqual(fs.readdirSync(responsesDir), ["req-old.json"]);
+  assert.deepEqual(readJson(path.join(responsesDir, "req-old.json")), {
+    ok: false,
+    id: "req-old",
+    action: "ping",
+    error: "Cleared stale automation request during app startup."
+  });
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
