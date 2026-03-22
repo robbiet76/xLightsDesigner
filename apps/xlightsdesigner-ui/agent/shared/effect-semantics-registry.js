@@ -70,6 +70,42 @@ export const SAFE_EFFECT_FALLBACKS = Object.freeze({
   trainedOnAlternate: ["Color Wash", "Shimmer"]
 });
 
+export const DIRECT_CUE_RULES = Object.freeze([
+  {
+    patterns: [/\b(marquee|marching marquee|marquee-band|marquee band|segmented chaser|chaser)\b/],
+    primary: ["Marquee"],
+    secondary: ["Bars"]
+  },
+  {
+    patterns: [/\b(segmented bars?|bars read|clean segmented|striped bars?)\b/],
+    primary: ["Bars"],
+    secondary: ["Marquee"]
+  },
+  {
+    patterns: [/\b(shockwave|ring burst|ring|radial expansion|burst)\b/],
+    primary: ["Shockwave"]
+  },
+  {
+    patterns: [/\b(pinwheel|radial spin|radial rotation|clear radial spin|rotating radial)\b/],
+    primary: ["Pinwheel"]
+  },
+  {
+    patterns: [/\b(single\s*strand|traveling strand|travelling strand|directional traveling strand|directional chase|chase motion)\b/],
+    primary: ["SingleStrand"],
+    secondary: ["Bars"]
+  },
+  {
+    patterns: [/\b(on effect|solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/],
+    primary: ["On"],
+    secondary: ["Color Wash"]
+  },
+  {
+    patterns: [/\b(flowing spiral motion|spiral motion|spiral flow|helical motion|helix motion)\b/],
+    primary: ["Spirals"],
+    secondary: ["Wave"]
+  }
+]);
+
 export function canonicalizeEffectNameAlias(value = "") {
   const text = str(value);
   if (!text) return "";
@@ -98,6 +134,31 @@ export function firstAvailableEffect(effectNames = [], availableEffects = null) 
 
 export function chooseSafeFallbackChain(kind = "") {
   return SAFE_EFFECT_FALLBACKS[str(kind)] || [];
+}
+
+export function resolveDirectCueEffectCandidates({
+  goalText = "",
+  smoothBias = false
+} = {}) {
+  const text = str(goalText).toLowerCase();
+  if (!text) return [];
+
+  for (const rule of DIRECT_CUE_RULES) {
+    if (arr(rule.patterns).some((pattern) => pattern?.test?.(text))) {
+      return pickDistinctEffects(rule.primary, rule.secondary);
+    }
+  }
+
+  if (/\b(spiral|spirals|helical|helix)\b/.test(text)) {
+    return pickDistinctEffects(["Spirals"], smoothBias ? ["Shimmer"] : ["Color Wash"]);
+  }
+
+  if ((/\b(twinkle|shimmer)\b/.test(text) || /\btexture-?led|soft(er)? texture|soft texture\b/.test(text))
+    && !/\b(directional|segmented|bars?)\b/.test(text)) {
+    return pickDistinctEffects(["Shimmer", "Twinkle"], smoothBias ? ["Color Wash"] : ["Bars"]);
+  }
+
+  return [];
 }
 
 export function recommendEffectsForVisualFamilies(args = {}) {

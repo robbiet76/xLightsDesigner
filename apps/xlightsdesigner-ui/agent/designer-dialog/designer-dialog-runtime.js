@@ -16,7 +16,8 @@ import { buildMusicDesignContext } from "./music-design-context.js";
 import {
   DESIGNER_FAMILY_POOLS,
   canonicalizeEffectNameAlias,
-  pickDistinctEffects
+  pickDistinctEffects,
+  resolveDirectCueEffectCandidates
 } from "../shared/effect-semantics-registry.js";
 
 function str(value = "") {
@@ -640,33 +641,12 @@ function buildSectionEffectHints({
     && /\b(feature|featured|spotlight|detour|narrower focus)\b/.test(lowerGoal);
   const chorusLikeSolo = /(^|\b)(solo|instrumental solo)\b/.test(lowerSection)
     && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
-  if (/\b(marquee|marching marquee|marquee-band|marquee band|segmented chaser|chaser)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Marquee"], ["Bars"]);
-  }
-  if (/\b(segmented bars?|bars read|clean segmented|striped bars?)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Bars"], ["Marquee"]);
-  }
-  if (/\b(shockwave|ring burst|ring|radial expansion|burst)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Shockwave"]);
-  }
-  if (/\b(pinwheel|radial spin|radial rotation|clear radial spin|rotating radial)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Pinwheel"]);
-  }
-  if (/\b(single\s*strand|traveling strand|travelling strand|directional traveling strand|directional chase|chase motion)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["SingleStrand"], ["Bars"]);
-  }
-  if (/\b(on effect|solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["On"], ["Color Wash"]);
-  }
-  if (/\b(flowing spiral motion|spiral motion|spiral flow|helical motion|helix motion)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Spirals"], ["Wave"]);
-  }
-  if (/\b(spiral|spirals|helical|helix)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Spirals"], smoothBias ? ["Shimmer"] : ["Color Wash"]);
-  }
-  if ((/\b(twinkle|shimmer)\b/.test(lowerGoal) || /\btexture-?led|soft(er)? texture|soft texture\b/.test(lowerGoal))
-    && !/\b(directional|segmented|bars?)\b/.test(lowerGoal)) {
-    return pickDistinctEffects(["Shimmer", "Twinkle"], smoothBias ? ["Color Wash"] : ["Bars"]);
+  const directCueCandidates = resolveDirectCueEffectCandidates({
+    goalText: lowerGoal,
+    smoothBias
+  });
+  if (directCueCandidates.length) {
+    return directCueCandidates;
   }
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch|visual weight|impact budget/.test(lowerGoal)) {
     if (normalizedEnergy === "high" || /chorus|final/.test(lowerSection)) {
