@@ -17,7 +17,8 @@ Current contents:
 - `live-design-validation-suite-extended-v1.json`: slower extended live pack that adds alternate saved-sequence coverage beyond the promoted baseline pack, including additional whole-pass composition checks on alternate saved-sequence families
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `run-section-practical-sequence-validation.mjs`: offline runner for the first sequencer-side practical validation pass
-- `run-live-practical-benchmark.mjs`: one-command runner that executes the promoted section, multi-section, and whole-sequence live suites and emits a combined report
+- `run-live-practical-benchmark.mjs`: one-command runner that executes the promoted section, multi-section, whole-sequence, and revision live suites and emits a combined report
+- `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
 - `live-practical-benchmark-baseline.v1.json`: frozen Stage 1 practical benchmark baseline contract
 - `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
@@ -36,7 +37,7 @@ Current policy:
 - the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
 - the desktop live-suite runner now reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
 - use `run-live-practical-benchmark.mjs` as the Stage 1 practical gate once the clean `Phase2` baseline is loaded
-- use the revision live suite to start Phase 2 bounded-edit validation without changing the frozen Stage 1 gate
+- use the revision live suite as part of the promoted Phase 2 practical gate
 
 Runner modes:
 - `default`: normal single-output pass/fail eval
@@ -75,6 +76,14 @@ Baseline comparison:
 node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
   /tmp/live-practical-benchmark-phase2-final/live-practical-benchmark-report.json \
   apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json
+```
+
+Phase 2 issue ledger:
+
+```bash
+node apps/xlightsdesigner-ui/eval/build-phase2-issue-ledger.mjs \
+  --report /tmp/live-practical-benchmark-current/live-practical-benchmark-report.json \
+  --output /tmp/live-practical-benchmark-current/phase2-issue-ledger.json
 ```
 
 Phase 2 revision suite:

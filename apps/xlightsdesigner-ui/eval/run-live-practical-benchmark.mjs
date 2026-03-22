@@ -92,6 +92,12 @@ function buildSuiteCatalog(repoRoot) {
       action: "run-live-design-validation-suite",
       suitePath: path.join(evalDir, "live-wholesequence-practical-validation-suite-v1.json"),
       resultFileName: "live-wholesequence-suite.json"
+    },
+    {
+      key: "revision",
+      action: "run-live-revision-practical-sequence-validation-suite",
+      suitePath: path.join(evalDir, "live-revision-practical-sequence-validation-suite-v1.json"),
+      resultFileName: "live-revision-suite.json"
     }
   ];
 }

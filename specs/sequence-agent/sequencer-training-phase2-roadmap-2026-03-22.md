@@ -221,6 +221,11 @@ If this comparator is red:
 4. Add a structured Phase 2 issue ledger fed by `sequencer_gap_report_v1`.
 5. Draft the initial internal lighting-language spec.
 
+Current implementation progress:
+- benchmark/validation artifacts produce `sequencer_gap_report_v1`
+- issue-ledger builder:
+  - [build-phase2-issue-ledger.mjs](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/eval/build-phase2-issue-ledger.mjs)
+
 ## Exit Criteria
 Phase 2 is complete when:
 - the expanded practical benchmark is green
