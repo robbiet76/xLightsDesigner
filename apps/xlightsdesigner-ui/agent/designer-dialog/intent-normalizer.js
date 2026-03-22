@@ -367,9 +367,17 @@ export function normalizeIntent({
       ),
     keepSuccessfulMoments: !hasAnyText(goal, [/(replace everything|completely different|start over)/])
   };
+  const normalizedSections = (
+    preservationConstraints.allowGlobalRewrite
+    && !hasSemanticExplicitSections
+    && !explicitSections.length
+    && sections.length <= 1
+  )
+    ? []
+    : sections;
   const fieldSources = buildFieldSources({
     goal,
-    sections,
+    sections: normalizedSections,
     targetIds,
     tags,
     explicitTags: selectedTags,
@@ -381,7 +389,7 @@ export function normalizeIntent({
   });
   const assumptions = buildAssumptions({
     fieldSources,
-    sections,
+    sections: normalizedSections,
     targetIds,
     tags,
     focusHierarchy,
@@ -393,7 +401,7 @@ export function normalizeIntent({
   return {
     goal,
     mode,
-    sections,
+    sections: normalizedSections,
     tags,
     targetIds,
     tempoIntent,

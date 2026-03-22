@@ -413,6 +413,8 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   const strongGenerateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt: strongPrompt,
+    forceFresh: true,
+    disableDesignerCloud: true,
     requestedRole: "designer_dialog",
     selectedSections: arr(expected?.sections),
     selectedTargetIds: arr(expected?.targets),
@@ -424,6 +426,8 @@ async function runComparativeLiveDesignValidationFromDesktop(expected = {}) {
   const weakGenerateStartedAtMs = nowMs();
   await invokeRendererAutomation("generateProposal", {
     prompt: weakPrompt,
+    forceFresh: true,
+    disableDesignerCloud: true,
     requestedRole: "designer_dialog",
     selectedSections: arr(expected?.sections),
     selectedTargetIds: arr(expected?.altTargets),

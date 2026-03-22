@@ -3242,6 +3242,7 @@ async function onApplyAll() {
 
 async function onGenerate(intentOverride = "", options = {}) {
   const requestedRole = String(options?.requestedRole || "").trim();
+  const disableDesignerCloud = options?.disableDesignerCloud === true;
   const proposalRole = ["sequence_agent", "designer_dialog"].includes(requestedRole)
     ? requestedRole
     : "designer_dialog";
@@ -3335,7 +3336,7 @@ async function onGenerate(intentOverride = "", options = {}) {
     ? revisionTarget.targetIds
     : (state.ui.metadataSelectionIds || []);
   let designerCloudResponse = null;
-  if (!directSequenceMode && bridge && typeof bridge.runDesignerConversation === "function") {
+  if (!directSequenceMode && !disableDesignerCloud && bridge && typeof bridge.runDesignerConversation === "function") {
     const cloud = await bridge.runDesignerConversation({
       userMessage: intentText,
       messages: buildRecentChatHistory(),
@@ -5419,6 +5420,9 @@ function shouldCarryDesignerSelectionContext(promptText = "") {
 function inferPromptSectionSelection(promptText = "", musicDesignContext = null) {
   const text = String(promptText || "").trim().toLowerCase();
   if (!text) return [];
+  if (/\b(whole show|whole sequence|entire sequence|full show|full song|entire song|across the song|throughout the song)\b/.test(text)) {
+    return [];
+  }
   const candidateSections = [
     ...getSectionChoiceList(),
     ...(Array.isArray(musicDesignContext?.sectionArc)

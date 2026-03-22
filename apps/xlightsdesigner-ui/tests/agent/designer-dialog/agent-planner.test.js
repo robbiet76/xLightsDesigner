@@ -85,6 +85,16 @@ test('normalizeIntent keeps whole-song rewrite permission when named sections ar
   assert.deepEqual(normalized.sections, ['Bridge', 'Final Chorus']);
 });
 
+test('normalizeIntent does not narrow whole-song scope from a single narrative section mention', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.',
+    availableSectionNames: ['Intro', 'Verse 1', 'Bridge', 'Final Chorus', 'Outro']
+  });
+
+  assert.equal(normalized.preservationConstraints.allowGlobalRewrite, true);
+  assert.deepEqual(normalized.sections, []);
+});
+
 test('normalizeIntent keeps explicit selected sections even when the prompt references another section narratively', () => {
   const normalized = normalizeIntent({
     promptText: 'Shape the Pre-Chorus like a lift that holds tension before Chorus 1 opens up.',

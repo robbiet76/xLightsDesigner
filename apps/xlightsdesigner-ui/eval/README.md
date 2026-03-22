@@ -20,6 +20,7 @@ Current contents:
 - `run-live-practical-benchmark.mjs`: one-command runner that executes the promoted section, multi-section, whole-sequence, and revision live suites and emits a combined report
 - `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
 - `live-practical-benchmark-baseline.v1.json`: frozen Stage 1 practical benchmark baseline contract
+- `live-practical-benchmark-baseline.v2.json`: frozen revision-inclusive practical benchmark baseline contract
 - `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
 
@@ -76,6 +77,10 @@ Baseline comparison:
 node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
   /tmp/live-practical-benchmark-phase2-final/live-practical-benchmark-report.json \
   apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json
+
+node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
+  /tmp/live-practical-benchmark-phase2-v2-final2/live-practical-benchmark-report.json \
+  apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v2.json
 ```
 
 Phase 2 issue ledger:

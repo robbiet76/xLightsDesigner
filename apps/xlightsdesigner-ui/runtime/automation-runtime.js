@@ -112,10 +112,14 @@ export function createAutomationRuntime(deps = {}) {
       if (state.ui && typeof state.ui === "object") {
         state.ui.reviewHistorySnapshot = null;
         state.ui.selectedHistorySnapshot = null;
+        state.ui.sectionSelections = ["all"];
+        state.ui.metadataSelectionIds = [];
+        state.ui.metadataSelectedTags = [];
       }
     }
     await onGenerate(prompt, {
       requestedRole,
+      disableDesignerCloud: payload?.disableDesignerCloud === true,
       revisionTarget: normalizedRevisionTarget,
       selectedSections: Array.isArray(payload?.selectedSections) ? payload.selectedSections : [],
       selectedTargetIds: Array.isArray(payload?.selectedTargetIds) ? payload.selectedTargetIds : [],
