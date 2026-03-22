@@ -90,6 +90,59 @@ export const SAFE_EFFECT_FALLBACKS = Object.freeze({
   trainedOnAlternate: ["Color Wash", "Shimmer"]
 });
 
+export const TEMPLATE_EFFECT_PREFERENCES = Object.freeze([
+  "On",
+  "Bars",
+  "Color Wash",
+  "Butterfly",
+  "Shimmer"
+]);
+
+export const SUMMARY_FALLBACK_RULES = Object.freeze([
+  {
+    key: "sparklyTexture",
+    patterns: [/\b(shimmer|sparkle|twinkle|glitter)\b/],
+    defaultEffect: "Shimmer"
+  },
+  {
+    key: "rhythmicMotion",
+    patterns: [/\b(bars|pulse|strobe|rhythm|chop)\b/],
+    defaultEffect: "Bars"
+  },
+  {
+    key: "staticFill",
+    patterns: [/\b(on effect|solid|hold|steady)\b/],
+    defaultEffect: "On"
+  },
+  {
+    key: "cinematicWarmHigh",
+    patterns: [/\b(warm|amber|gold|cinematic|glow|smooth)\b/, /\b(chorus|payoff|finale)\b/],
+    mode: "all",
+    defaultEffect: "Shimmer"
+  },
+  {
+    key: "cinematicWarmLow",
+    patterns: [/\b(warm|amber|gold|cinematic|glow|smooth)\b/],
+    defaultEffect: "Color Wash"
+  },
+  {
+    key: "highEnergy",
+    patterns: [/\b(chorus|payoff|finale)\b/],
+    defaultEffect: "Shimmer"
+  },
+  {
+    key: "denseBridge",
+    patterns: [/\bbridge\b/, /\bdense\b/],
+    mode: "any",
+    defaultEffect: "Bars"
+  },
+  {
+    key: "default",
+    patterns: [],
+    defaultEffect: "Color Wash"
+  }
+]);
+
 export const DIRECT_CUE_RULES = Object.freeze([
   {
     patterns: [/\b(marquee|marching marquee|marquee-band|marquee band|segmented chaser|chaser)\b/],
@@ -304,6 +357,17 @@ export function chooseSafeFallbackChain(kind = "") {
   return SAFE_EFFECT_FALLBACKS[str(kind)] || [];
 }
 
+export function choosePreferredTemplateEffect(effectCatalog = null) {
+  const byName = effectCatalog && typeof effectCatalog === "object" && effectCatalog.byName && typeof effectCatalog.byName === "object"
+    ? effectCatalog.byName
+    : {};
+  for (const name of TEMPLATE_EFFECT_PREFERENCES) {
+    if (Object.prototype.hasOwnProperty.call(byName, name)) return name;
+  }
+  const names = Object.keys(byName);
+  return names.length ? names[0] : "";
+}
+
 export function resolveDirectCueEffectCandidates({
   goalText = "",
   smoothBias = false
@@ -349,6 +413,22 @@ export function resolveContextualEffectCandidates({
   const rule = contextRules[str(variant)] || contextRules.default || null;
   if (!rule) return [];
   return pickDistinctEffects(rule.primary, rule.secondary);
+}
+
+export function resolveSummaryFallbackEffect(summary = "", availableEffects = null) {
+  const text = str(summary).toLowerCase();
+  for (const rule of SUMMARY_FALLBACK_RULES) {
+    const patterns = arr(rule.patterns);
+    const mode = str(rule.mode || "any").toLowerCase();
+    const matched = !patterns.length
+      ? true
+      : (mode === "all"
+          ? patterns.every((pattern) => pattern?.test?.(text))
+          : patterns.some((pattern) => pattern?.test?.(text)));
+    if (!matched) continue;
+    return firstAvailableEffect(chooseSafeFallbackChain(rule.key), availableEffects) || str(rule.defaultEffect);
+  }
+  return "";
 }
 
 export function resolveSectionIntentSummary({

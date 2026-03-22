@@ -15,6 +15,7 @@ import {
 } from "./trained-effect-knowledge.js";
 import {
   chooseSafeFallbackChain,
+  resolveSummaryFallbackEffect,
   firstAvailableEffect,
   recommendEffectsForTargets,
   recommendEffectsForVisualFamilies
@@ -372,28 +373,9 @@ function inferEffectNameFromSectionPlan({
     return trainedChosen;
   }
 
-  if (/shimmer|sparkle|twinkle|glitter/.test(summary)) {
-    return firstAvailableEffect(chooseSafeFallbackChain("sparklyTexture"), availableEffects) || "Shimmer";
-  }
-  if (/bars|pulse|strobe|rhythm|chop/.test(summary)) {
-    return firstAvailableEffect(chooseSafeFallbackChain("rhythmicMotion"), availableEffects) || "Bars";
-  }
-  if (explicitStaticCue) {
-    return firstAvailableEffect(chooseSafeFallbackChain("staticFill"), availableEffects) || "On";
-  }
-  if (cinematicWarmCue) {
-    if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) {
-      return firstAvailableEffect(chooseSafeFallbackChain("cinematicWarmHigh"), availableEffects) || "Shimmer";
-    }
-    return firstAvailableEffect(chooseSafeFallbackChain("cinematicWarmLow"), availableEffects) || "Color Wash";
-  }
-  if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) {
-    return firstAvailableEffect(chooseSafeFallbackChain("highEnergy"), availableEffects) || "Shimmer";
-  }
-  if (normalizedDensity === "dense" || /bridge/.test(summary)) {
-    return firstAvailableEffect(chooseSafeFallbackChain("denseBridge"), availableEffects) || "Bars";
-  }
-  return firstAvailableEffect(chooseSafeFallbackChain("default"), availableEffects) || "Color Wash";
+  return resolveSummaryFallbackEffect(summary, availableEffects)
+    || firstAvailableEffect(chooseSafeFallbackChain("default"), availableEffects)
+    || "Color Wash";
 }
 
 function buildStructuredExecutionLine({

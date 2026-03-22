@@ -1,4 +1,5 @@
 import {
+  choosePreferredTemplateEffect,
   inferLegacyEffectCandidates,
   recommendEffectsForTargets
 } from "../shared/effect-semantics-registry.js";
@@ -569,13 +570,7 @@ function normalizeEffectCatalog(effectCatalog = null) {
 }
 
 function chooseTemplateEffectName(effectCatalog = null) {
-  const byName = normalizeEffectCatalog(effectCatalog);
-  const preferred = ["On", "Bars", "Color Wash", "Butterfly", "Shimmer"];
-  for (const name of preferred) {
-    if (Object.prototype.hasOwnProperty.call(byName, name)) return name;
-  }
-  const names = Object.keys(byName);
-  return names.length ? names[0] : "";
+  return choosePreferredTemplateEffect(effectCatalog);
 }
 
 function inferTargets(source = [], explicitTargetIds = []) {
