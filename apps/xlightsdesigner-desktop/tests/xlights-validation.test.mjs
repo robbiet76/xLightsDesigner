@@ -263,3 +263,157 @@ test("comparative live validation prefers restrained render discipline over a bu
   assert.equal(out.ok, true);
   assert.ok(Number(out.metrics.strongScore) > Number(out.metrics.weakScore));
 });
+
+test("comparative live validation penalizes busy whole-song anti-discipline plans with excessive concepts and focus spread", () => {
+  const strong = {
+    diagnose: {
+      activeSequence: "Validation-Clean-Phase2",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"],
+        effectPlacementCount: 41
+      },
+      intentHandoffSummary: {
+        goal: "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"],
+          effectPlacementCount: 41
+        }
+      },
+      rawPlan: Array.from({ length: 41 }, (_, idx) => ({
+        cmd: "effects.create",
+        params: { effectName: ["Bars", "Candle", "Color Wash", "Morph", "Pinwheel", "Shimmer", "Spirals", "Wave"][idx % 8] },
+        anchor: { trackName: "XD: Song Structure", basis: idx % 4 === 0 ? "within_section" : "section_span" }
+      }))
+    },
+    pageStates: {
+      design: {
+        data: {
+          executionPlan: {
+            conceptRows: Array.from({ length: 8 }, (_, idx) => ({
+              anchor: `Section-${idx + 1}`,
+              focus: [
+                "AllModels",
+                "AllModels_NoFloods",
+                "AllModels_NoMatrix",
+                "AllModels_NoMatrix_Floods",
+                "Border-01/Left",
+                "Border-01/Segments",
+                "Border-02/Left",
+                "Border_Segments",
+                "Borders",
+                "CandyCane-01/Diagonals",
+                "CandyCane-01/Fill",
+                "CandyCane-01/Outline",
+                "CandyCane-02/Diagonals",
+                "CandyCane-02/Rows",
+                "CandyCane-03/Little Canes",
+                "FrontHouse"
+              ]
+            }))
+          }
+        }
+      },
+      sequence: {
+        data: {
+          rows: Array.from({ length: 33 }, (_, idx) => ({
+            target: `Target-${idx + 1}`,
+            section: `Section-${(idx % 8) + 1}`,
+            summary: ["Bars", "Candle", "Color Wash", "Morph", "Pinwheel", "Shimmer", "Spirals", "Wave"][idx % 8]
+          }))
+        }
+      }
+    }
+  };
+
+  const weak = {
+    diagnose: {
+      activeSequence: "Validation-Clean-Phase2",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Verse 2", "Verse 3", "Pre-Chorus", "Chorus 1", "Verse 4", "Chorus 2", "Verse 5", "Chorus 3", "Chorus 4", "Chorus 5", "Verse 6", "Bridge", "Outro"],
+        effectPlacementCount: 46
+      },
+      intentHandoffSummary: {
+        goal: "Keep changing textures aggressively across the whole song with busier sparkle, harder texture swaps, and less restraint in the base look.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Verse 2", "Verse 3", "Pre-Chorus", "Chorus 1", "Verse 4", "Chorus 2", "Verse 5", "Chorus 3", "Chorus 4", "Chorus 5", "Verse 6", "Bridge", "Outro"],
+          effectPlacementCount: 46
+        }
+      },
+      rawPlan: Array.from({ length: 46 }, (_, idx) => ({
+        cmd: "effects.create",
+        params: { effectName: ["Bars", "Candle", "Color Wash", "Morph", "Pinwheel", "Shimmer", "Spirals", "Wave"][idx % 8] },
+        anchor: { trackName: "XD: Song Structure", basis: idx % 4 === 0 ? "within_section" : "section_span" }
+      }))
+    },
+    pageStates: {
+      design: {
+        data: {
+          executionPlan: {
+            conceptRows: Array.from({ length: 15 }, (_, idx) => ({
+              anchor: `Section-${idx + 1}`,
+              focus: [
+                "Border-01/Left",
+                "Border-01/Segments",
+                "Border-02/Left",
+                "Border-02/Mid",
+                "Border-02/Right",
+                "Border-03/Segments",
+                "Border_Segments",
+                "Borders",
+                "Bulbs_All",
+                "CandyCane-01/Diagonals",
+                "CandyCane-01/Fill",
+                "CandyCane-01/Little Canes",
+                "CandyCane-01/Outline",
+                "CandyCane-02/Diagonals",
+                "CandyCane-02/Outline",
+                "CandyCane-02/Rows",
+                "CandyCanes",
+                "CandyCanes_Diagonals",
+                "Floods Front",
+                "SpiralTreeStars",
+                "SpiralTrees",
+                "Train",
+                "Train_Hubs",
+                "Train_NoMatrix",
+                "Train_Outlines",
+                "Train_Rings",
+                "Train_Spokes",
+                "Train_Wheels",
+                "UpperProps",
+                "Wreathes",
+                "Wreathes_All"
+              ]
+            }))
+          }
+        }
+      },
+      sequence: {
+        data: {
+          rows: Array.from({ length: 30 }, (_, idx) => ({
+            target: `Target-${idx + 1}`,
+            section: `Section-${(idx % 15) + 1}`,
+            summary: ["Bars", "Candle", "Color Wash", "Morph", "Pinwheel", "Shimmer", "Spirals", "Wave"][idx % 8]
+          }))
+        }
+      }
+    }
+  };
+
+  const out = validateComparativeLiveDesignState({ strong, weak });
+
+  assert.equal(out.ok, true);
+  assert.ok(Number(out.metrics.strongScore) > Number(out.metrics.weakScore));
+});

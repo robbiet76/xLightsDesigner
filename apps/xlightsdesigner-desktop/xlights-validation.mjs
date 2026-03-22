@@ -632,7 +632,7 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
     if (targetScopeCount > 0 && targetScopeCount <= 2) adjustment -= 1.8;
   }
 
-  if (/restrained glowing base|smoother texture transitions|selective sparkle|render feels polished|less restraint in the base look/.test(lowerGoal)) {
+  if (/restrained glowing base|smoother texture transitions|selective sparkle|render feels polished/.test(lowerGoal)) {
     if (familyCount <= 6) adjustment += 1.2;
     if (familyCount >= 7) adjustment -= 1.2;
     if (placementCount <= 42) adjustment += 1.0;
@@ -641,7 +641,20 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
     if (focusTargetCount >= 18) adjustment -= 1.4;
     if (sequenceRowCount <= 34) adjustment += 0.8;
     if (sequenceRowCount >= 36) adjustment -= 1.0;
+    if (sectionCount <= 8) adjustment += 1.0;
+    if (sectionCount >= 12) adjustment -= 1.2;
+    if (designConceptCount <= 8) adjustment += 1.0;
+    if (designConceptCount >= 12) adjustment -= 1.4;
     if (targetScopeCount > 0 && targetScopeCount <= 2) adjustment -= 1.4;
+  }
+
+  if (/changing textures aggressively|busier sparkle|harder texture swaps|less restraint in the base look|busy texture/.test(lowerGoal)) {
+    if (familyCount >= 7) adjustment -= 2.2;
+    if (placementCount >= 44) adjustment -= 1.8;
+    if (focusTargetCount >= 18) adjustment -= 2.0;
+    if (sequenceRowCount >= 30) adjustment -= 1.4;
+    if (sectionCount >= 12) adjustment -= 1.4;
+    if (designConceptCount >= 12) adjustment -= 1.6;
   }
 
   return Number(adjustment.toFixed(2));

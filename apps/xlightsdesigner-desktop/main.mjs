@@ -782,21 +782,7 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
                 design: []
               }
             }
-          : null,
-        generateResponse: {
-          ok: validation?.ok === true,
-          status: {
-            text: str(validation?.summary || "")
-          }
-        },
-        applyResponse: validation?.ok === true
-          ? { ok: true }
-          : {
-              ok: false,
-              status: {
-                text: str(validation?.summary || "Whole-sequence validation failed.")
-              }
-            }
+          : null
       };
     })
   });
@@ -843,12 +829,14 @@ function buildSequencerGapReport({
   for (const result of safeResults) {
     const scenarioName = str(result?.name || "");
     const practicalValidation = result?.practicalValidation || null;
-    const generateResponse = result?.generateResponse || null;
-    const applyResponse = result?.applyResponse || null;
+    const hasGenerateResponse = Object.prototype.hasOwnProperty.call(result, "generateResponse");
+    const hasApplyResponse = Object.prototype.hasOwnProperty.call(result, "applyResponse");
+    const generateResponse = hasGenerateResponse ? (result?.generateResponse || null) : null;
+    const applyResponse = hasApplyResponse ? (result?.applyResponse || null) : null;
     const assertions = arr(result?.assertions);
     const failedAssertions = assertions.filter((row) => row?.ok === false);
 
-    if (generateResponse?.ok !== true) {
+    if (hasGenerateResponse && generateResponse?.ok !== true) {
       pushIssue({
         category: "designer_gap",
         scenarioName,
@@ -857,7 +845,7 @@ function buildSequencerGapReport({
       });
     }
 
-    if (generateResponse?.ok === true && !generateResponse?.planHandoff && !generateResponse?.hasDraftProposal) {
+    if (hasGenerateResponse && generateResponse?.ok === true && !generateResponse?.planHandoff && !generateResponse?.hasDraftProposal) {
       pushIssue({
         category: "designer_gap",
         scenarioName,
