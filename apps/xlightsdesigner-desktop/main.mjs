@@ -735,6 +735,71 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
   }
 
   const failed = results.filter((row) => row?.validation?.ok !== true);
+  const gapReport = buildSequencerGapReport({
+    suiteName: str(expected?.name || "live_design_validation_suite"),
+    suiteContract: "live_design_validation_suite_run_v1",
+    scenarioCount: results.length,
+    results: results.map((row) => {
+      const validation = row?.validation || null;
+      const metrics = validation?.metrics && typeof validation.metrics === "object"
+        ? validation.metrics
+        : {};
+      const comparison = row?.comparison && typeof row.comparison === "object"
+        ? row.comparison
+        : {};
+      const assertions = [];
+      if (validation) {
+        assertions.push({
+          kind: "practical_validation",
+          ok: validation?.ok === true,
+          expected: "overallOk=true",
+          actual: validation?.ok === true ? "overallOk=true" : "overallOk=false"
+        });
+      }
+      if (Number.isFinite(Number(metrics?.strongScore)) && Number.isFinite(Number(metrics?.weakScore))) {
+        assertions.push({
+          kind: "comparative_preference",
+          ok: Number(metrics.strongScore) > Number(metrics.weakScore),
+          expected: "strongScore>weakScore",
+          actual: `strong=${Number(metrics.strongScore)} weak=${Number(metrics.weakScore)}`
+        });
+      } else if (str(comparison?.preferred)) {
+        assertions.push({
+          kind: "comparative_preference",
+          ok: str(comparison.preferred) === "strong",
+          expected: "preferred=strong",
+          actual: `preferred=${str(comparison.preferred)}`
+        });
+      }
+      return {
+        name: row?.name,
+        assertions,
+        practicalValidation: validation
+          ? {
+              overallOk: validation?.ok === true,
+              failures: {
+                readback: arr(validation?.failures),
+                design: []
+              }
+            }
+          : null,
+        generateResponse: {
+          ok: validation?.ok === true,
+          status: {
+            text: str(validation?.summary || "")
+          }
+        },
+        applyResponse: validation?.ok === true
+          ? { ok: true }
+          : {
+              ok: false,
+              status: {
+                text: str(validation?.summary || "Whole-sequence validation failed.")
+              }
+            }
+      };
+    })
+  });
   return {
     contract: "live_design_validation_suite_run_v1",
     version: "1.0",
@@ -748,7 +813,8 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     scenarioCount: results.length,
     failedScenarioCount: failed.length,
     failedScenarioNames: failed.map((row) => row.name),
-    results
+    results,
+    gapReport
   };
 }
 
