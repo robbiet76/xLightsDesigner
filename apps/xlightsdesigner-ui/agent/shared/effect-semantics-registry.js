@@ -106,6 +106,37 @@ export const DIRECT_CUE_RULES = Object.freeze([
   }
 ]);
 
+export const SECTION_CONTEXT_RULES = Object.freeze({
+  tag: {
+    resolving: { primary: ["Color Wash", "Candle"], secondary: ["Wave", "Shimmer"] },
+    overblown: { primary: ["Bars", "Meteors"], secondary: ["Shimmer", "Pinwheel"] },
+    default: { primary: ["Wave", "Color Wash"], secondary: ["Candle", "Shimmer"] }
+  },
+  coda: {
+    resolving: { primary: ["Wave", "Color Wash"], secondary: ["Candle", "On"] },
+    overblown: { primary: ["Bars", "Meteors"], secondary: ["Shimmer", "Pinwheel"] },
+    default: { primary: ["Color Wash", "Candle"], secondary: ["Wave", "On"] }
+  },
+  middle8: {
+    contrasting: { primary: ["Wave", "Color Wash"], secondary: ["Candle", "Spirals"] },
+    chorusLike: { primary: ["Bars", "Shimmer"], secondary: ["Meteors", "Pinwheel"] },
+    default: { primary: ["Wave", "Bars"], secondary: ["Spirals", "Color Wash"] }
+  },
+  postChorus: {
+    hookEcho: { primary: ["Shimmer", "Wave"], secondary: ["Color Wash", "Candle"] },
+    verseLike: { primary: ["Color Wash", "Candle"], secondary: ["Wave", "Butterfly"] },
+    default: { primary: ["Shimmer", "Color Wash"], secondary: ["Wave", "Bars"] }
+  },
+  rap: {
+    focused: { primary: DESIGNER_FAMILY_POOLS.rap, secondary: ["Bars", "Shockwave"] },
+    chorusLike: { primary: DESIGNER_FAMILY_POOLS.chorus, secondary: DESIGNER_FAMILY_POOLS.dense }
+  },
+  solo: {
+    focused: { primary: DESIGNER_FAMILY_POOLS.solo, secondary: ["Pinwheel", "Color Wash"] },
+    chorusLike: { primary: DESIGNER_FAMILY_POOLS.chorus, secondary: DESIGNER_FAMILY_POOLS.dense }
+  }
+});
+
 export function canonicalizeEffectNameAlias(value = "") {
   const text = str(value);
   if (!text) return "";
@@ -159,6 +190,17 @@ export function resolveDirectCueEffectCandidates({
   }
 
   return [];
+}
+
+export function resolveSectionContextEffectCandidates({
+  sectionKey = "",
+  variant = "default"
+} = {}) {
+  const sectionRules = SECTION_CONTEXT_RULES[str(sectionKey)] || null;
+  if (!sectionRules) return [];
+  const rule = sectionRules[str(variant)] || sectionRules.default || null;
+  if (!rule) return [];
+  return pickDistinctEffects(rule.primary, rule.secondary);
 }
 
 export function recommendEffectsForVisualFamilies(args = {}) {

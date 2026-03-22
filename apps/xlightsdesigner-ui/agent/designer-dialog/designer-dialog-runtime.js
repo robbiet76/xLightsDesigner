@@ -17,7 +17,8 @@ import {
   DESIGNER_FAMILY_POOLS,
   canonicalizeEffectNameAlias,
   pickDistinctEffects,
-  resolveDirectCueEffectCandidates
+  resolveDirectCueEffectCandidates,
+  resolveSectionContextEffectCandidates
 } from "../shared/effect-semantics-registry.js";
 
 function str(value = "") {
@@ -722,52 +723,40 @@ function buildSectionEffectHints({
       : pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
   }
   if (/tag/.test(lowerSection)) {
-    if (resolvingTag) {
-      return pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Shimmer"]);
-    }
-    if (overblownTag) {
-      return pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"]);
-    }
-    return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "Shimmer"]);
+    return resolveSectionContextEffectCandidates({
+      sectionKey: "tag",
+      variant: resolvingTag ? "resolving" : (overblownTag ? "overblown" : "default")
+    });
   }
   if (/coda/.test(lowerSection)) {
-    if (resolvingCoda) {
-      return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "On"]);
-    }
-    if (overblownCoda) {
-      return pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Pinwheel"]);
-    }
-    return pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "On"]);
+    return resolveSectionContextEffectCandidates({
+      sectionKey: "coda",
+      variant: resolvingCoda ? "resolving" : (overblownCoda ? "overblown" : "default")
+    });
   }
   if (/middle 8/.test(lowerSection)) {
-    if (contrastingMiddle8) {
-      return pickDistinctEffects(["Wave", "Color Wash"], ["Candle", "Spirals"]);
-    }
-    if (chorusLikeMiddle8) {
-      return pickDistinctEffects(["Bars", "Shimmer"], ["Meteors", "Pinwheel"]);
-    }
-    return pickDistinctEffects(["Wave", "Bars"], ["Spirals", "Color Wash"]);
+    return resolveSectionContextEffectCandidates({
+      sectionKey: "middle8",
+      variant: contrastingMiddle8 ? "contrasting" : (chorusLikeMiddle8 ? "chorusLike" : "default")
+    });
   }
   if (/post-?chorus/.test(lowerSection)) {
-    if (hookEchoPostChorus) {
-      return pickDistinctEffects(["Shimmer", "Wave"], ["Color Wash", "Candle"]);
-    }
-    if (verseLikePostChorus) {
-      return pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Butterfly"]);
-    }
-    return pickDistinctEffects(["Shimmer", "Color Wash"], ["Wave", "Bars"]);
+    return resolveSectionContextEffectCandidates({
+      sectionKey: "postChorus",
+      variant: hookEchoPostChorus ? "hookEcho" : (verseLikePostChorus ? "verseLike" : "default")
+    });
   }
   if (focusedRap) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.rap, ["Bars", "Shockwave"]);
+    return resolveSectionContextEffectCandidates({ sectionKey: "rap", variant: "focused" });
   }
   if (chorusLikeRap) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
+    return resolveSectionContextEffectCandidates({ sectionKey: "rap", variant: "chorusLike" });
   }
   if (focusedSolo) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.solo, ["Pinwheel", "Color Wash"]);
+    return resolveSectionContextEffectCandidates({ sectionKey: "solo", variant: "focused" });
   }
   if (chorusLikeSolo) {
-    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
+    return resolveSectionContextEffectCandidates({ sectionKey: "solo", variant: "chorusLike" });
   }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
     return pickDistinctEffects(DESIGNER_FAMILY_POOLS.bridge, DESIGNER_FAMILY_POOLS.wide);
