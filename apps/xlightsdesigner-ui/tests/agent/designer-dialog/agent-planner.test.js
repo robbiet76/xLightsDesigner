@@ -95,6 +95,19 @@ test('normalizeIntent keeps explicit selected sections even when the prompt refe
   assert.deepEqual(normalized.sections, ['Pre-Chorus']);
 });
 
+test('normalizeIntent does not widen create requests when explicit section and target scope is present', () => {
+  const normalized = normalizeIntent({
+    promptText: 'Create a Final Chorus concept for Star as a strong pinwheel-style radial spin.',
+    selectedSections: ['Final Chorus'],
+    selectedTargetIds: ['Star'],
+    availableSectionNames: ['Intro', 'Verse 1', 'Final Chorus', 'Outro']
+  });
+
+  assert.deepEqual(normalized.sections, ['Final Chorus']);
+  assert.deepEqual(normalized.targetIds, ['Star']);
+  assert.equal(normalized.preservationConstraints.allowGlobalRewrite, false);
+});
+
 test('resolveTargets honors explicit target ids and metadata tags', () => {
   const normalizedIntent = normalizeIntent({
     promptText: 'Bring up energy on focal rhythm-driver elements',

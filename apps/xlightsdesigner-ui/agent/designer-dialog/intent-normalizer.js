@@ -354,10 +354,12 @@ export function normalizeIntent({
   const startHint = extractStartHint(goal);
   const safetyConstraints = extractSafetyConstraints(goal);
   const preserveTimingTracks = !hasAnyText(goal, [/(rebuild timing|replace timing|rewrite timing)/]);
+  const hasExplicitScopedSelection = explicitSections.length > 0 || targetIds.length > 0 || selectedTags.length > 0;
   const preservationConstraints = {
     preserveTimingTracks,
     preserveDisplayOrder: true,
     allowGlobalRewrite:
+      !hasExplicitScopedSelection &&
       !hasNegatedGlobalRewrite(goal) &&
       (
         mode === "create" ||
