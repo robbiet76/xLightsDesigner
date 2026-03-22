@@ -7,3 +7,7 @@ These docs cover:
 - sequence-agent implementation checklist
 - model/group/submodel/effect/display-element audits
 - training-package architecture and integration harness guidance
+- practical benchmark and next-phase training roadmaps
+
+Current active roadmap:
+- [sequencer-training-phase2-roadmap-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-phase2-roadmap-2026-03-22.md)
