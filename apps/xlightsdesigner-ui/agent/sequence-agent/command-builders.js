@@ -3,6 +3,19 @@ import {
   inferLegacyEffectCandidates,
   recommendEffectsForTargets
 } from "../shared/effect-semantics-registry.js";
+import {
+  inferBufferStyleFamily,
+  inferGroupDistributionStrategy,
+  inferRenderRiskLevel,
+  isGenericScopeToken,
+  isHighRiskGroupRenderPolicy,
+  isMaterialSubmodelRenderOverride,
+  looksLikeAggregateTarget,
+  normalizeGroupGraph,
+  normalizeSubmodelGraph,
+  parseSubmodelParentId,
+  sortAggregateTargets
+} from "../shared/target-semantics-registry.js";
 
 export function estimateImpactCount(sourceLines = []) {
   const count = Array.isArray(sourceLines) ? sourceLines.filter(Boolean).length : 0;
@@ -11,31 +24,6 @@ export function estimateImpactCount(sourceLines = []) {
 
 function normText(value = "") {
   return String(value || "").trim();
-}
-
-function parseSubmodelParentId(targetId = "") {
-  const id = normText(targetId);
-  const slash = id.indexOf("/");
-  if (slash <= 0) return "";
-  return id.slice(0, slash);
-}
-
-function inferBufferStyleFamily(style = "") {
-  const key = normText(style).toLowerCase();
-  if (!key || key === "default") return "default";
-  if (key === "overlay" || key.includes("overlay")) return "overlay";
-  if (key === "stack" || key.includes("stack")) return "stack";
-  if (key === "single_line" || key.includes("single line")) return "single_line";
-  if (key === "per_model_strand" || key.includes("per strand")) return "per_model_strand";
-  if (key === "per_model" || key.includes("per model")) return "per_model";
-  return "default";
-}
-
-function inferRenderRiskLevel(family = "") {
-  const key = normText(family).toLowerCase();
-  if (key === "overlay" || key === "stack" || key === "single_line" || key === "per_model_strand") return "high";
-  if (key === "per_model") return "medium";
-  return "low";
 }
 
 function normalizeSequenceSettings(sequenceSettings = {}) {
@@ -59,115 +47,6 @@ function splitModelTokenList(raw = "") {
   return rows.filter((row) => !genericScopes.has(row.toLowerCase()));
 }
 
-function normalizeSubmodelGraph(submodelsById = {}) {
-  const out = {};
-  if (submodelsById && typeof submodelsById === "object" && !Array.isArray(submodelsById)) {
-    for (const [key, value] of Object.entries(submodelsById)) {
-      const id = normText(key || value?.id);
-      if (!id) continue;
-      const submodelType = normText(value?.renderPolicy?.submodelType || value?.submodelType || "ranges").toLowerCase() || "ranges";
-      const bufferStyle = normText(value?.renderPolicy?.bufferStyle || value?.bufferStyle || "Default") || "Default";
-      out[id] = {
-        id,
-        parentId: normText(value?.parentId || parseSubmodelParentId(id)),
-        nodeChannels: new Set(
-          Array.isArray(value?.membership?.nodeChannels)
-            ? value.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v))
-            : []
-        ),
-        renderPolicy: {
-          submodelType,
-          bufferStyle,
-          availableBufferStyles: Array.isArray(value?.renderPolicy?.availableBufferStyles || value?.availableBufferStyles)
-            ? (value?.renderPolicy?.availableBufferStyles || value?.availableBufferStyles).map((row) => normText(row)).filter(Boolean)
-            : []
-        }
-      };
-    }
-  }
-  return out;
-}
-
-function isMaterialSubmodelRenderOverride(entry = null) {
-  const submodelType = normText(entry?.renderPolicy?.submodelType || "ranges").toLowerCase() || "ranges";
-  const bufferStyle = normText(entry?.renderPolicy?.bufferStyle || "Default");
-  return submodelType !== "ranges" || (bufferStyle && bufferStyle.toLowerCase() !== "default");
-}
-
-function isGenericScopeToken(raw = "") {
-  const key = normText(raw).toLowerCase();
-  return new Set(["whole show", "whole yard", "global", "all", "all props"]).has(key);
-}
-
-function normalizeGroupGraph(groupsById = {}, groupIds = []) {
-  const out = {};
-  const ids = new Set(Array.isArray(groupIds) ? groupIds.map((v) => normText(v)).filter(Boolean) : []);
-  if (groupsById && typeof groupsById === "object" && !Array.isArray(groupsById)) {
-    for (const [key, value] of Object.entries(groupsById)) {
-      const id = normText(key);
-      if (!id) continue;
-      ids.add(id);
-      const direct = Array.isArray(value?.members?.direct) ? value.members.direct : [];
-      const flattened = Array.isArray(value?.members?.flattenedAll) ? value.members.flattenedAll
-        : Array.isArray(value?.members?.flattened) ? value.members.flattened
-          : direct;
-      out[id] = {
-        id,
-        direct: new Set(direct.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
-        flattened: new Set(flattened.map((row) => normText(row?.id || row?.name)).filter(Boolean)),
-        renderPolicy: (() => {
-          const defaultBufferStyle = normText(value?.renderPolicy?.defaultBufferStyle || "Default") || "Default";
-          const availableBufferStyles = Array.isArray(value?.renderPolicy?.availableBufferStyles)
-            ? value.renderPolicy.availableBufferStyles.map((row) => normText(row)).filter(Boolean)
-            : [];
-          const currentFamily = inferBufferStyleFamily(
-            normText(value?.renderPolicy?.category) && normText(value?.renderPolicy?.category) !== "default"
-              ? normText(value?.renderPolicy?.category)
-              : defaultBufferStyle
-          );
-          const availableFamilies = Array.from(new Set(availableBufferStyles.map((row) => inferBufferStyleFamily(row)).filter(Boolean)));
-          return {
-            layout: normText(value?.renderPolicy?.layout),
-            defaultBufferStyle,
-            category: normText(value?.renderPolicy?.category || currentFamily || "default") || "default",
-            currentFamily,
-            riskLevel: inferRenderRiskLevel(currentFamily),
-            availableBufferStyles,
-            availableFamilies
-          };
-        })()
-      };
-    }
-  }
-  for (const id of ids) {
-    if (!out[id]) {
-      out[id] = {
-        id,
-        direct: new Set(),
-        flattened: new Set(),
-        renderPolicy: {
-          layout: "",
-          defaultBufferStyle: "Default",
-          category: "default",
-          currentFamily: "default",
-          riskLevel: "low",
-          availableBufferStyles: [],
-          availableFamilies: ["default"]
-        }
-      };
-    }
-  }
-  return out;
-}
-
-function looksLikeAggregateTarget(name = "", groupIds = [], groupsById = {}) {
-  const text = normText(name);
-  if (!text) return false;
-  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
-  if (groupGraph[text]) return true;
-  return /(all|group|props|outlines|borders|greens|floods|wreath|snowflakes|spirals|train|front|upper|bulbs)/i.test(text);
-}
-
 function scoreAggregateTarget(id = "", orderedTargets = [], groupGraph = {}) {
   const group = groupGraph[id];
   if (!group) return Number.NEGATIVE_INFINITY;
@@ -188,73 +67,6 @@ function choosePrimaryAggregateTarget(orderedTargets = [], groupIds = [], groups
     .map((id) => ({ id, score: scoreAggregateTarget(id, orderedTargets, groupGraph) }))
     .sort((a, b) => b.score - a.score);
   return scored[0]?.id || aggregateCandidates[0] || "";
-}
-
-function sortAggregateTargets(targetIds = [], groupIds = [], groupsById = {}) {
-  const groupGraph = normalizeGroupGraph(groupsById, groupIds);
-  return targetIds
-    .filter((id) => looksLikeAggregateTarget(id, groupIds, groupsById))
-    .slice()
-    .sort((a, b) => scoreAggregateTarget(b, targetIds, groupGraph) - scoreAggregateTarget(a, targetIds, groupGraph));
-}
-
-function shouldExpandGroupTarget(description = "") {
-  const text = normText(description).toLowerCase();
-  return [
-    "each member",
-    "each prop",
-    "per member",
-    "per prop",
-    "fan out",
-    "spread across members",
-    "distribute across members",
-    "split across members",
-    "stagger members",
-    "alternate members"
-  ].some((needle) => text.includes(needle));
-}
-
-function hasExplicitMemberExpansionOverride(description = "") {
-  const text = normText(description).toLowerCase();
-  return [
-    "each member",
-    "each prop",
-    "per member",
-    "per prop",
-    "flatten members",
-    "all nested members",
-    "expand nested groups",
-    "direct members"
-  ].some((needle) => text.includes(needle));
-}
-
-function hasForceRenderPolicyExpansionOverride(description = "") {
-  const text = normText(description).toLowerCase();
-  return [
-    "flatten members",
-    "all nested members",
-    "expand nested groups",
-    "direct members",
-    "force member expansion"
-  ].some((needle) => text.includes(needle));
-}
-
-function inferGroupDistributionStrategy(description = "") {
-  const text = normText(description).toLowerCase();
-  return {
-    expand: shouldExpandGroupTarget(text),
-    explicitOverride: hasExplicitMemberExpansionOverride(text),
-    forceOverride: hasForceRenderPolicyExpansionOverride(text),
-    flatten: text.includes("flatten members") || text.includes("all nested members") || text.includes("expand nested groups"),
-    stagger: text.includes("stagger members") || text.includes("fan out") || text.includes("spread across members"),
-    fanout: text.includes("fan out members") || text.includes("round robin members") || text.includes("rotate members"),
-    mirror: text.includes("mirror members") || text.includes("reverse members"),
-    alternate: text.includes("alternate members")
-  };
-}
-
-function isHighRiskGroupRenderPolicy(category = "") {
-  return inferRenderRiskLevel(category) === "high";
 }
 
 function orderDistributedMembers(members = [], strategy = {}, alternationSeed = 0) {

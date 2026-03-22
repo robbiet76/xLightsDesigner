@@ -1,4 +1,8 @@
 import { VISUAL_FAMILY_EFFECT_MAP } from "./trained-effect-knowledge.js";
+import {
+  normalizeSubmodelGraph,
+  parseSubmodelParentId
+} from "../shared/target-semantics-registry.js";
 
 function timingMarksSignature(marks = []) {
   const rows = (Array.isArray(marks) ? marks : [])
@@ -21,13 +25,6 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
-function parseSubmodelParentId(target = "") {
-  const name = String(target || "").trim();
-  const idx = name.indexOf("/");
-  if (idx <= 0) return "";
-  return name.slice(0, idx);
-}
-
 function effectPlanKey(modelName = "", layerIndex = 0, startMs = 0, endMs = 0, effectName = "") {
   return [
     String(modelName || "").trim(),
@@ -36,25 +33,6 @@ function effectPlanKey(modelName = "", layerIndex = 0, startMs = 0, endMs = 0, e
     Number(endMs),
     String(effectName || "").trim()
   ].join("|");
-}
-
-function normalizeSubmodelGraph(submodelsById = {}) {
-  const out = {};
-  if (!submodelsById || typeof submodelsById !== "object" || Array.isArray(submodelsById)) return out;
-  for (const [key, value] of Object.entries(submodelsById)) {
-    const id = String(key || value?.id || "").trim();
-    if (!id) continue;
-    out[id] = {
-      id,
-      parentId: String(value?.parentId || "").trim(),
-      nodeChannels: new Set(
-        Array.isArray(value?.membership?.nodeChannels)
-          ? value.membership.nodeChannels.map((v) => Number(v)).filter((v) => Number.isFinite(v))
-          : []
-      )
-    };
-  }
-  return out;
 }
 
 function buildReadbackDesignContext(planMetadata = {}, sequencingDesignHandoff = null) {
