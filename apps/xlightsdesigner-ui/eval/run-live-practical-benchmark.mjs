@@ -90,7 +90,7 @@ function buildSuiteCatalog(repoRoot) {
     {
       key: "wholesequence",
       action: "run-live-design-validation-suite",
-      suitePath: path.join(evalDir, "live-wholesequence-practical-validation-suite-v1.json"),
+      suitePath: path.join(evalDir, "live-wholesequence-practical-validation-suite-v2.json"),
       resultFileName: "live-wholesequence-suite.json"
     },
     {
@@ -204,16 +204,24 @@ async function main() {
   const preflightSuite = buildPreflightSuite(repoRoot);
   const suiteResults = [];
 
-  const refreshResult = await runAutomationAction({
+  await runAutomationAction({
+    repoRoot,
+    automationScript,
+    channel: options.channel,
+    action: "reset-automation-state",
+    resultPath: path.join(outDir, "reset-automation-state.json")
+  });
+
+  const postResetRefreshResult = await runAutomationAction({
     repoRoot,
     automationScript,
     channel: options.channel,
     action: "refresh-from-xlights",
     resultPath: path.join(outDir, "refresh-from-xlights.json")
   });
-  if (!isHealthyRefreshResult(refreshResult)) {
+  if (!isHealthyRefreshResult(postResetRefreshResult)) {
     throw new Error(
-      `refresh-from-xlights not healthy: ${str(refreshResult?.result?.status?.text || refreshResult?.error || refreshResult?.result?.error || "")}`
+      `refresh-from-xlights not healthy: ${str(postResetRefreshResult?.result?.status?.text || postResetRefreshResult?.error || postResetRefreshResult?.result?.error || "")}`
     );
   }
 
@@ -253,8 +261,8 @@ async function main() {
     totalDurationMs: Date.now() - startedAt,
     preflight: {
       refreshFromXLights: {
-        ok: isHealthyRefreshResult(refreshResult),
-        status: refreshResult?.result?.status || null
+        ok: isHealthyRefreshResult(postResetRefreshResult),
+        status: postResetRefreshResult?.result?.status || null
       },
       sectionCanary: canarySummary
     },

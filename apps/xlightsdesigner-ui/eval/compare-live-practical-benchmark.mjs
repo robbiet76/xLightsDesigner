@@ -86,10 +86,10 @@ async function main() {
   const cwd = process.cwd();
   const reportPath = process.argv[2]
     ? path.resolve(cwd, process.argv[2])
-    : path.join(cwd, "apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json");
+    : path.join(cwd, "apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v3.json");
   const baselinePath = process.argv[3]
     ? path.resolve(cwd, process.argv[3])
-    : path.join(cwd, "apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json");
+    : path.join(cwd, "apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v3.json");
 
   const report = readJson(reportPath);
   const baseline = readJson(baselinePath);

@@ -638,6 +638,9 @@ async function processAutomationRequests() {
       if (action === "ping") {
         return { ok: true, appReady: true };
       }
+      if (action === "resetAutomationState") {
+        return invokeRendererAutomation("resetAutomationState", request?.payload || {});
+      }
       if (action === "refreshFromXLights") {
         return invokeRendererAutomation("refreshFromXLights", request?.payload || {});
       }

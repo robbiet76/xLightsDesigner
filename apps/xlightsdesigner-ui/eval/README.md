@@ -9,8 +9,8 @@ Current contents:
 - `live-section-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live section benchmark
 - `live-section-practical-sequence-validation-canary-v1.json`: stable single-scenario live canary used to gate the combined benchmark runner
 - `live-multisection-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live multi-section benchmark
-- `live-wholesequence-practical-validation-suite-v1.json`: promoted Phase 2 clean-baseline whole-sequence benchmark
-- `live-wholesequence-practical-validation-suite-v2.json`: expanded whole-sequence role-identity and progression benchmark for Phase 2 gap discovery
+- `live-wholesequence-practical-validation-suite-v1.json`: original promoted Phase 2 clean-baseline whole-sequence benchmark
+- `live-wholesequence-practical-validation-suite-v2.json`: promoted whole-sequence role-identity and progression benchmark
 - `live-revision-practical-sequence-validation-suite-v1.json`: first live revision-focused Phase 2 suite for bounded in-place concept edits
 - `live-design-canary-suite-v1.json`: fastest one-prompt live canary scenarios for frequent iteration loops
 - `live-design-validation-suite-smoke-v1.json`: fast canary live comparative scenarios for frequent iteration loops
@@ -22,6 +22,7 @@ Current contents:
 - `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
 - `live-practical-benchmark-baseline.v1.json`: frozen Stage 1 practical benchmark baseline contract
 - `live-practical-benchmark-baseline.v2.json`: frozen revision-inclusive practical benchmark baseline contract
+- `live-practical-benchmark-baseline.v3.json`: frozen repeated-role whole-sequence practical benchmark baseline contract
 - `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
 
@@ -76,12 +77,12 @@ Baseline comparison:
 
 ```bash
 node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
-  /tmp/live-practical-benchmark-phase2-final/live-practical-benchmark-report.json \
-  apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json
-
-node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
   /tmp/live-practical-benchmark-phase2-v2-final2/live-practical-benchmark-report.json \
   apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v2.json
+
+node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
+  /tmp/live-practical-benchmark-phase2-v3/live-practical-benchmark-report.json \
+  apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v3.json
 ```
 
 Phase 2 issue ledger:

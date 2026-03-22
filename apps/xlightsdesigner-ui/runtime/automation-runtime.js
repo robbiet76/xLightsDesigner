@@ -588,6 +588,41 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  async function resetAutomationState() {
+    clearDesignerDraft(state);
+    state.agentPlan = null;
+    clearSequencingHandoffsForSequenceChange("automation reset state");
+    clearDesignRevisionTarget();
+    state.creative = {
+      goals: "",
+      inspiration: "",
+      notes: "",
+      references: [],
+      brief: null,
+      proposalBundle: null,
+      intentHandoff: null
+    };
+    if (state.ui && typeof state.ui === "object") {
+      state.ui.reviewHistorySnapshot = null;
+      state.ui.selectedHistorySnapshot = null;
+      state.ui.sectionSelections = ["all"];
+      state.ui.metadataSelectionIds = [];
+      state.ui.metadataSelectedTags = [];
+      state.ui.applyApprovalChecked = false;
+      state.ui.designRevisionTarget = null;
+    }
+    setStatus({ level: "info", text: "Automation state reset." });
+    persist();
+    render();
+    return {
+      ok: true,
+      status: state.status || null,
+      activeSequence: state.activeSequence || "",
+      sequencePathInput: state.sequencePathInput || "",
+      proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
+    };
+  }
+
   async function analyzeAutomationAudio(payload = {}) {
     await onAnalyzeAudio({ userPrompt: String(payload?.prompt || "").trim() });
     return {
@@ -745,6 +780,7 @@ export function createAutomationRuntime(deps = {}) {
       isAutomationReady: getAutomationReadyState,
       dispatchPrompt: dispatchAutomationPrompt,
       generateProposal: generateAutomationProposal,
+      resetAutomationState,
       openSequence: openAutomationSequence,
       refreshFromXLights: refreshAutomationFromXLights,
       analyzeAudio: analyzeAutomationAudio,
@@ -762,6 +798,7 @@ export function createAutomationRuntime(deps = {}) {
   return {
     dispatchAutomationPrompt,
     generateAutomationProposal,
+    resetAutomationState,
     applyAutomationCurrentProposal,
     diagnoseAutomationCurrentProposal,
     getAutomationComparativeValidationSnapshot,
