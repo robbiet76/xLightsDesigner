@@ -329,14 +329,14 @@ function extractSectionScopedGoal({
     const normalizedClause = normalizeSectionLabelForGoalMatch(clause);
     return normalizedClause.includes(normalizedSection);
   });
-  if (matchingClauses.length) {
-    return matchingClauses.join(". ");
-  }
   const otherSections = normalizedSections.filter((row) => row !== normalizedSection);
   const genericClauses = clauses.filter((clause) => {
     const normalizedClause = normalizeSectionLabelForGoalMatch(clause);
     return !otherSections.some((other) => normalizedClause.includes(other));
   });
+  if (matchingClauses.length) {
+    return uniqueStrings([...matchingClauses, ...genericClauses]).join(". ");
+  }
   return genericClauses.length ? genericClauses.join(". ") : rawGoal;
 }
 
@@ -698,6 +698,9 @@ function buildSectionEffectHints({
   }
   if (/\b(on effect|solid steady hold|solid hold|steady hold|static hold|minimal movement)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["On"], ["Color Wash"]);
+  }
+  if (/\b(flowing spiral motion|spiral motion|spiral flow|helical motion|helix motion)\b/.test(lowerGoal)) {
+    return pickDistinctEffects(["Spirals"], ["Wave"]);
   }
   if (/\b(spiral|spirals|helical|helix)\b/.test(lowerGoal)) {
     return pickDistinctEffects(["Spirals"], smoothBias ? ["Shimmer"] : ["Color Wash"]);
@@ -1610,6 +1613,9 @@ function buildDesignerExecutionPlan({
         section: label,
         sectionNames: normalizedSections
       });
+      const effectHintGoal = passScope === "single_section"
+        ? uniqueStrings([sectionGoal, str(intent.goal || "")]).join(". ")
+        : sectionGoal;
       return {
         designId: sharedRevisionDesignId || `DES-${String(idx + 1).padStart(3, "0")}`,
         designRevision: 0,
@@ -1643,7 +1649,7 @@ function buildDesignerExecutionPlan({
               section: label,
               energy,
               density,
-              goal: sectionGoal,
+              goal: effectHintGoal,
               sectionIndex: idx,
               sectionCount: normalizedSections.length,
               directorPreferences,

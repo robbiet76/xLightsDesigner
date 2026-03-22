@@ -1130,3 +1130,50 @@ test("designer runtime preserves explicit segmented bars and radial spin cues in
     [["Shockwave"], ["Pinwheel"]]
   );
 });
+
+test("designer runtime prefers explicit spiral motion cues on tree chorus requests with live scene context", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-20",
+    sequenceRevision: "rev-20",
+    promptText: "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill. Do not rewrite the whole show.",
+    goals: "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill. Do not rewrite the whole show.",
+    selectedSections: ["Chorus 1"],
+    selectedTargetIds: ["SpiralTrees"],
+    models: [
+      { id: "SpiralTrees", name: "SpiralTrees", type: "Model" },
+      { id: "Border", name: "Border", type: "Model" },
+      { id: "Star", name: "Star", type: "Model" }
+    ],
+    submodels: [],
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 16080, endMs: 55440, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 55440, endMs: 90840, energy: "high", density: "dense" },
+          { label: "Verse 2", startMs: 90840, endMs: 126240, energy: "medium", density: "moderate" }
+        ]
+      }
+    },
+    designSceneContext: {
+      metadata: { layoutMode: "2d" },
+      focalCandidates: [],
+      coverageDomains: {
+        broad: ["AllModels", "AllModels_NoFloods"],
+        detail: ["Border/Segments", "Star/Rays"]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Verse 2", energy: "medium", density: "moderate" }
+      ]
+    }
+  });
+
+  assert.deepEqual(
+    result.proposalBundle.executionPlan.sectionPlans.map((row) => row.effectHints),
+    [["Spirals", "Wave"]]
+  );
+});

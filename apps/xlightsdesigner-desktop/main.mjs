@@ -1009,6 +1009,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     const generateResponse = await invokeRendererAutomation("generateProposal", {
       prompt: str(scenario?.prompt || scenario?.strongPrompt),
       requestedRole: "designer_dialog",
+      forceFresh: true,
       selectedSections: arr(scenario?.sections),
       selectedTargetIds: arr(scenario?.targets),
       selectedTagNames: arr(scenario?.tagNames)
@@ -1298,7 +1299,7 @@ function startAutomationPolling() {
     requestsDir: AUTOMATION_REQUESTS_DIR,
     responsePathForId: automationResponsePath,
     reason: "Cleared stale automation request during app startup.",
-    olderThanMs: 120000
+    olderThanMs: 10000
   });
   if (automationPollTimer) return;
   if (!automationRequestProcessor) {

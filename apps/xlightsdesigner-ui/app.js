@@ -11127,12 +11127,74 @@ async function generateAutomationProposal(payload = {}) {
   if (!prompt) {
     return { ok: false, error: "Prompt is required." };
   }
+  if (payload?.forceFresh === true) {
+    clearDesignerDraft(state);
+    state.agentPlan = null;
+    clearSequencingHandoffsForSequenceChange("automation force-fresh proposal");
+    state.creative = {
+      goals: "",
+      inspiration: "",
+      notes: "",
+      references: [],
+      brief: null,
+      proposalBundle: null,
+      intentHandoff: null
+    };
+    if (state.ui && typeof state.ui === "object") {
+      state.ui.reviewHistorySnapshot = null;
+      state.ui.selectedHistorySnapshot = null;
+    }
+  }
   await onGenerate(prompt, {
     requestedRole,
     selectedSections: Array.isArray(payload?.selectedSections) ? payload.selectedSections : [],
     selectedTargetIds: Array.isArray(payload?.selectedTargetIds) ? payload.selectedTargetIds : [],
     selectedTagNames: Array.isArray(payload?.selectedTagNames) ? payload.selectedTagNames : []
   });
+  let debugReplay = null;
+  if (payload?.debugReplay === true && requestedRole === "designer_dialog") {
+    try {
+      const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+      const designSceneContext = buildCurrentDesignSceneContext();
+      const musicDesignContext = buildCurrentMusicDesignContext();
+      const replay = executeDesignerProposalOrchestration({
+        requestId: `automation-debug-${Date.now()}`,
+        sequenceRevision: String(state.draftBaseRevision || state.revision || "unknown"),
+        promptText: prompt,
+        selectedSections: Array.isArray(payload?.selectedSections) ? payload.selectedSections : [],
+        selectedTagNames: Array.isArray(payload?.selectedTagNames) ? payload.selectedTagNames : [],
+        selectedTargetIds: Array.isArray(payload?.selectedTargetIds) ? payload.selectedTargetIds : [],
+        goals: state.creative?.goals || "",
+        inspiration: state.creative?.inspiration || "",
+        notes: state.creative?.notes || "",
+        references: state.creative?.references || [],
+        priorBrief: state.creative?.brief || null,
+        analysisHandoff,
+        analysisArtifact: state.audioAnalysis?.artifact || null,
+        directorProfile: state.directorProfile || null,
+        designSceneContext,
+        musicDesignContext,
+        models: state.models || [],
+        submodels: state.submodels || [],
+        displayElements: state.displayElements || [],
+        metadataAssignments: state.metadata?.assignments || [],
+        elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
+      });
+      debugReplay = {
+        ok: replay?.ok === true,
+        summary: String(replay?.summary || ""),
+        sectionPlans: Array.isArray(replay?.proposalBundle?.executionPlan?.sectionPlans)
+          ? replay.proposalBundle.executionPlan.sectionPlans
+          : [],
+        intentGoal: String(replay?.intentHandoff?.goal || ""),
+        sequencingSections: Array.isArray(replay?.intentHandoff?.sequencingDesignHandoff?.sectionDirectives)
+          ? replay.intentHandoff.sequencingDesignHandoff.sectionDirectives
+          : []
+      };
+    } catch (err) {
+      debugReplay = { ok: false, error: String(err?.message || err) };
+    }
+  }
   return {
     ok: true,
     status: state.status || null,
@@ -11148,6 +11210,7 @@ async function generateAutomationProposal(payload = {}) {
           goal: String(state.creative.intentHandoff.goal || "")
         }
       : null,
+    debugReplay,
     intentHandoff: getValidHandoff("intent_handoff_v1") || null,
     planHandoff: getValidHandoff("plan_handoff_v1") || null
   };
