@@ -17,6 +17,7 @@ import {
   canonicalizeEffectNameAlias,
   resolveContextualEffectCandidates,
   resolveDirectCueEffectCandidates,
+  resolveSectionIntentSummary,
   resolveSectionContextEffectCandidates
 } from "../shared/effect-semantics-registry.js";
 
@@ -793,14 +794,12 @@ function buildSectionEffectHints({
 }
 
 function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {
-  const label = str(section);
-  const lowerSection = label.toLowerCase();
+  const lowerSection = str(section).toLowerCase();
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
   const warm = /warm|amber|gold|red|cinematic|glow|theatrical/.test(lowerGoal);
-  const warmClause = warm ? ' with warm cinematic color and glow control' : '';
   const suspendedBridge = isSuspendedBridgeGoal(lowerGoal);
   const chorusLikeBridge = isChorusLikeBridgeGoal(lowerGoal);
   const controlledFinale = isControlledFinaleGoal(lowerGoal);
@@ -825,110 +824,110 @@ function buildSectionIntentSummary({ section = "", energy = "", density = "", go
     && /\b(broad chorus pass|same broad chorus language|spread.*everywhere)\b/.test(lowerGoal);
   if (!uniformHierarchy && /key light|fill|lighting cue|wash|silhouette|blackout|punch/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
-      return `build a clearer key-vs-fill hierarchy${warmClause} with stronger punch on the main reveal`;
+      return resolveSectionIntentSummary({ summaryKey: "lightingCue", variant: "high", warm });
     }
     if (/intro|outro|coda/.test(lowerSection) || normalizedEnergy === 'low') {
-      return `hold the lighting stack back${warmClause} with restrained washes and cleaner negative space`;
+      return resolveSectionIntentSummary({ summaryKey: "lightingCue", variant: "low", warm });
     }
-    return `shape the section like a lighting cue${warmClause} with readable support and controlled depth`;
+    return resolveSectionIntentSummary({ summaryKey: "lightingCue", variant: "default", warm });
   }
   if (!uniformHierarchy && /negative space|frame|framing|centerpiece|perimeter/.test(lowerGoal)) {
     if (normalizedEnergy === 'high' || /chorus|final chorus|finale/.test(lowerSection)) {
-      return `frame the reveal${warmClause} with cleaner negative space and tighter focal contrast`;
+      return resolveSectionIntentSummary({ summaryKey: "framing", variant: "high", warm });
     }
     if (normalizedEnergy === 'low' || /intro|outro|coda/.test(lowerSection)) {
-      return `hold more negative space${warmClause} so the frame stays calm and uncluttered`;
+      return resolveSectionIntentSummary({ summaryKey: "framing", variant: "low", warm });
     }
-    return `use cleaner framing${warmClause} with more negative space and clearer focal boundaries`;
+    return resolveSectionIntentSummary({ summaryKey: "framing", variant: "default", warm });
   }
   if (normalizedEnergy === 'high' || /chorus|final chorus|payoff/.test(lowerSection)) {
     if (/drop/.test(lowerSection)) {
       if (focusedDrop) {
-        return `let the drop land${warmClause} with concentrated release, tighter impact, and a cleaner post-buildup hit`;
+        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "dropFocused", warm });
       }
       if (diffusedDrop) {
-        return `keep the drop broader${warmClause} and more transitional so the release stays diffused rather than landing hard`;
+        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "dropDiffused", warm });
       }
-      return `let the drop open up${warmClause} with sharper release and a more concentrated impact window`;
+      return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "dropDefault", warm });
     }
     if (/final chorus|finale/.test(lowerSection)) {
       if (controlledFinale) {
-        return `push the final payoff${warmClause} with clear hero emphasis, controlled width, and restraint around the main reveal`;
+        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "finaleControlled", warm });
       }
       if (floodedFinale) {
-        return `push the final payoff${warmClause} as a full-yard flood with constant output and minimal restraint`;
+        return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "finaleFlooded", warm });
       }
-      return `push the final payoff${warmClause} with broader contrast, clearer hierarchy, and a stronger closing lift`;
+      return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "finaleDefault", warm });
     }
     if (/chorus/.test(lowerSection)) {
-      return `open the main reveal${warmClause} with clearer focal emphasis and controlled contrast`;
+      return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "chorus", warm });
     }
-    return `build stronger visual payoff${warmClause} using layered shimmer, glow, and clearer focal emphasis`;
+    return resolveSectionIntentSummary({ summaryKey: "highEnergy", variant: "default", warm });
   }
   if (/bridge/.test(lowerSection)) {
     if (suspendedBridge) {
-      return `hold the bridge transition wider${warmClause} with suspended motion, cleaner breath, and delayed release`;
+      return resolveSectionIntentSummary({ summaryKey: "bridge", variant: "suspended", warm });
     }
     if (chorusLikeBridge) {
-      return `push the bridge harder${warmClause} like a payoff hit with denser overlay energy and less suspension`;
+      return resolveSectionIntentSummary({ summaryKey: "bridge", variant: "chorusLike", warm });
     }
-    return `widen the picture${warmClause} with smoother transitions and controlled contrast lift`;
+    return resolveSectionIntentSummary({ summaryKey: "bridge", variant: "default", warm });
   }
   if (/tag/.test(lowerSection)) {
     if (resolvingTag) {
-      return `let the tag resolve${warmClause} like a shorter afterglow, echoing the final hook without opening a new climax`;
+      return resolveSectionIntentSummary({ summaryKey: "tag", variant: "resolving", warm });
     }
     if (overblownTag) {
-      return `treat the tag${warmClause} like another full climax with the same density and payoff weight as the final chorus`;
+      return resolveSectionIntentSummary({ summaryKey: "tag", variant: "overblown", warm });
     }
-    return `let the tag settle${warmClause} with a cleaner echo and narrower closing energy`;
+    return resolveSectionIntentSummary({ summaryKey: "tag", variant: "default", warm });
   }
   if (/coda/.test(lowerSection)) {
     if (resolvingCoda) {
-      return `let the coda resolve${warmClause} as a final release with less information and lower payoff weight than the final chorus`;
+      return resolveSectionIntentSummary({ summaryKey: "coda", variant: "resolving", warm });
     }
     if (overblownCoda) {
-      return `treat the coda${warmClause} like another full climax instead of a final release`;
+      return resolveSectionIntentSummary({ summaryKey: "coda", variant: "overblown", warm });
     }
-    return `let the coda settle${warmClause} as a cleaner closing release with restrained afterglow`;
+    return resolveSectionIntentSummary({ summaryKey: "coda", variant: "default", warm });
   }
   if (/middle 8/.test(lowerSection)) {
     if (contrastingMiddle8) {
-      return `let the middle 8 open wider${warmClause} as a contrasting detour before the final lift instead of repeating chorus payoff language`;
+      return resolveSectionIntentSummary({ summaryKey: "middle8", variant: "contrasting", warm });
     }
     if (chorusLikeMiddle8) {
-      return `treat the middle 8${warmClause} like another chorus with the same payoff language and little contrast`;
+      return resolveSectionIntentSummary({ summaryKey: "middle8", variant: "chorusLike", warm });
     }
-    return `give the middle 8${warmClause} a wider contrasting breath before the closing payoff`;
+    return resolveSectionIntentSummary({ summaryKey: "middle8", variant: "default", warm });
   }
   if (/post-?chorus/.test(lowerSection)) {
     if (hookEchoPostChorus) {
-      return `let the post-chorus echo the hook${warmClause} with a lighter extension instead of opening a whole new section arc`;
+      return resolveSectionIntentSummary({ summaryKey: "postChorus", variant: "hookEcho", warm });
     }
     if (verseLikePostChorus) {
-      return `treat the post-chorus${warmClause} like a fresh verse-sized section with a new arc instead of reinforcing the hook`;
+      return resolveSectionIntentSummary({ summaryKey: "postChorus", variant: "verseLike", warm });
     }
-    return `let the post-chorus${warmClause} reinforce the hook with a cleaner extension and lighter follow-through`;
+    return resolveSectionIntentSummary({ summaryKey: "postChorus", variant: "default", warm });
   }
   if (focusedRap) {
-    return `tighten the rap section${warmClause} around a clipped rhythmic delivery with narrower focus and stronger pulse control`;
+    return resolveSectionIntentSummary({ summaryKey: "rap", variant: "focused", warm });
   }
   if (chorusLikeRap) {
-    return `treat the rap section${warmClause} like another broad singing chorus pass instead of tightening around the rhythmic delivery`;
+    return resolveSectionIntentSummary({ summaryKey: "rap", variant: "chorusLike", warm });
   }
   if (focusedSolo) {
-    return `feature the solo${warmClause} like a spotlighted detour with narrower focus and clearer individual emphasis`;
+    return resolveSectionIntentSummary({ summaryKey: "solo", variant: "focused", warm });
   }
   if (chorusLikeSolo) {
-    return `treat the solo${warmClause} like another broad chorus pass with the same payoff language spread across the picture`;
+    return resolveSectionIntentSummary({ summaryKey: "solo", variant: "chorusLike", warm });
   }
   if (normalizedEnergy === 'low' || /intro|outro|coda/.test(lowerSection)) {
-    return `keep the pass restrained${warmClause} with slower fades, cleaner spacing, and readable atmosphere`;
+    return resolveSectionIntentSummary({ summaryKey: "generic", variant: "low", warm });
   }
   if (normalizedDensity === 'dense') {
-    return `develop the section${warmClause} with richer layering while keeping the read controlled`;
+    return resolveSectionIntentSummary({ summaryKey: "generic", variant: "dense", warm });
   }
-  return `develop warmth and continuity${warmClause} with smooth motion and balanced supporting texture`;
+  return resolveSectionIntentSummary({ summaryKey: "generic", variant: "default", warm });
 }
 
 function sanitizeDesignerSummaryText(promptText = "") {

@@ -189,6 +189,67 @@ export const CONTEXTUAL_EFFECT_RULES = Object.freeze({
   }
 });
 
+export const SECTION_INTENT_SUMMARY_RULES = Object.freeze({
+  lightingCue: {
+    high: "build a clearer key-vs-fill hierarchy{warmClause} with stronger punch on the main reveal",
+    low: "hold the lighting stack back{warmClause} with restrained washes and cleaner negative space",
+    default: "shape the section like a lighting cue{warmClause} with readable support and controlled depth"
+  },
+  framing: {
+    high: "frame the reveal{warmClause} with cleaner negative space and tighter focal contrast",
+    low: "hold more negative space{warmClause} so the frame stays calm and uncluttered",
+    default: "use cleaner framing{warmClause} with more negative space and clearer focal boundaries"
+  },
+  highEnergy: {
+    dropFocused: "let the drop land{warmClause} with concentrated release, tighter impact, and a cleaner post-buildup hit",
+    dropDiffused: "keep the drop broader{warmClause} and more transitional so the release stays diffused rather than landing hard",
+    dropDefault: "let the drop open up{warmClause} with sharper release and a more concentrated impact window",
+    finaleControlled: "push the final payoff{warmClause} with clear hero emphasis, controlled width, and restraint around the main reveal",
+    finaleFlooded: "push the final payoff{warmClause} as a full-yard flood with constant output and minimal restraint",
+    finaleDefault: "push the final payoff{warmClause} with broader contrast, clearer hierarchy, and a stronger closing lift",
+    chorus: "open the main reveal{warmClause} with clearer focal emphasis and controlled contrast",
+    default: "build stronger visual payoff{warmClause} using layered shimmer, glow, and clearer focal emphasis"
+  },
+  bridge: {
+    suspended: "hold the bridge transition wider{warmClause} with suspended motion, cleaner breath, and delayed release",
+    chorusLike: "push the bridge harder{warmClause} like a payoff hit with denser overlay energy and less suspension",
+    default: "widen the picture{warmClause} with smoother transitions and controlled contrast lift"
+  },
+  tag: {
+    resolving: "let the tag resolve{warmClause} like a shorter afterglow, echoing the final hook without opening a new climax",
+    overblown: "treat the tag{warmClause} like another full climax with the same density and payoff weight as the final chorus",
+    default: "let the tag settle{warmClause} with a cleaner echo and narrower closing energy"
+  },
+  coda: {
+    resolving: "let the coda resolve{warmClause} as a final release with less information and lower payoff weight than the final chorus",
+    overblown: "treat the coda{warmClause} like another full climax instead of a final release",
+    default: "let the coda settle{warmClause} as a cleaner closing release with restrained afterglow"
+  },
+  middle8: {
+    contrasting: "let the middle 8 open wider{warmClause} as a contrasting detour before the final lift instead of repeating chorus payoff language",
+    chorusLike: "treat the middle 8{warmClause} like another chorus with the same payoff language and little contrast",
+    default: "give the middle 8{warmClause} a wider contrasting breath before the closing payoff"
+  },
+  postChorus: {
+    hookEcho: "let the post-chorus echo the hook{warmClause} with a lighter extension instead of opening a whole new section arc",
+    verseLike: "treat the post-chorus{warmClause} like a fresh verse-sized section with a new arc instead of reinforcing the hook",
+    default: "let the post-chorus{warmClause} reinforce the hook with a cleaner extension and lighter follow-through"
+  },
+  rap: {
+    focused: "tighten the rap section{warmClause} around a clipped rhythmic delivery with narrower focus and stronger pulse control",
+    chorusLike: "treat the rap section{warmClause} like another broad singing chorus pass instead of tightening around the rhythmic delivery"
+  },
+  solo: {
+    focused: "feature the solo{warmClause} like a spotlighted detour with narrower focus and clearer individual emphasis",
+    chorusLike: "treat the solo{warmClause} like another broad chorus pass with the same payoff language spread across the picture"
+  },
+  generic: {
+    low: "keep the pass restrained{warmClause} with slower fades, cleaner spacing, and readable atmosphere",
+    dense: "develop the section{warmClause} with richer layering while keeping the read controlled",
+    default: "develop warmth and continuity{warmClause} with smooth motion and balanced supporting texture"
+  }
+});
+
 export function canonicalizeEffectNameAlias(value = "") {
   const text = str(value);
   if (!text) return "";
@@ -264,6 +325,19 @@ export function resolveContextualEffectCandidates({
   const rule = contextRules[str(variant)] || contextRules.default || null;
   if (!rule) return [];
   return pickDistinctEffects(rule.primary, rule.secondary);
+}
+
+export function resolveSectionIntentSummary({
+  summaryKey = "",
+  variant = "default",
+  warm = false
+} = {}) {
+  const summaryRules = SECTION_INTENT_SUMMARY_RULES[str(summaryKey)] || null;
+  if (!summaryRules) return "";
+  const template = summaryRules[str(variant)] || summaryRules.default || "";
+  if (!template) return "";
+  const warmClause = warm ? " with warm cinematic color and glow control" : "";
+  return str(template).replaceAll("{warmClause}", warmClause);
 }
 
 export function recommendEffectsForVisualFamilies(args = {}) {
