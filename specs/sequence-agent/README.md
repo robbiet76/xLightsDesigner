@@ -11,3 +11,6 @@ These docs cover:
 
 Current active roadmap:
 - [sequencer-training-phase2-roadmap-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-phase2-roadmap-2026-03-22.md)
+
+Current architecture audit:
+- [effect-knowledge-architecture-audit-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-knowledge-architecture-audit-2026-03-22.md)

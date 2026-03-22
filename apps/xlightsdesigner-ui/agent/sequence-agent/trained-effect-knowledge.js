@@ -33,7 +33,7 @@ function unique(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => normText(row)).filter(Boolean))];
 }
 
-const EFFECT_KEYWORDS = Object.freeze({
+export const EFFECT_KEYWORDS = Object.freeze({
   'Bars': ['bars', 'bar', 'striped', 'pulse', 'compress', 'expand', 'segmented'],
   'Color Wash': ['wash', 'sweep', 'fill', 'fade', 'gradient'],
   'Marquee': ['marquee', 'band', 'segmented', 'chaser', 'skip'],

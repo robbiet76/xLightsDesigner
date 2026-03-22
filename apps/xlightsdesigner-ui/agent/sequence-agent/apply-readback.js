@@ -1,3 +1,5 @@
+import { VISUAL_FAMILY_EFFECT_MAP } from "./trained-effect-knowledge.js";
+
 function timingMarksSignature(marks = []) {
   const rows = (Array.isArray(marks) ? marks : [])
     .map((m) => {
@@ -18,20 +20,6 @@ function str(value = "") {
 function arr(value) {
   return Array.isArray(value) ? value : [];
 }
-
-const VISUAL_FAMILY_EFFECT_MAP = {
-  spiral_flow: ["Spirals"],
-  helical_spiral_flow: ["Spirals"],
-  segmented_motion: ["Bars", "Marquee"],
-  directional_motion: ["Bars", "Marquee", "SingleStrand", "Spirals"],
-  bounce_motion: ["SingleStrand"],
-  radial_rotation: ["Pinwheel", "Shockwave"],
-  diffuse_expand: ["Shockwave"],
-  soft_texture: ["Twinkle", "Shimmer"],
-  crisp_texture: ["Twinkle", "Shockwave"],
-  static_fill: ["Color Wash", "On"],
-  fill: ["Color Wash", "On", "Bars", "Marquee", "Shockwave"]
-};
 
 function parseSubmodelParentId(target = "") {
   const name = String(target || "").trim();
