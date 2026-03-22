@@ -2,6 +2,7 @@
   "contract": "live_section_practical_sequence_validation_suite_v1",
   "version": "1.0",
   "summary": "Live section-scoped sequencer validation scenarios built on the Stage 1 trained baseline and practical validation artifact.",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
   "scenarios": [
     {
       "name": "live-clean-phase-tree-chorus-spiral-focus",

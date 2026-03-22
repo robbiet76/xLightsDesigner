@@ -2,6 +2,7 @@
   "contract": "live_section_practical_sequence_validation_suite_v2",
   "version": "2.0",
   "summary": "Expanded live section-scoped sequencer validation benchmark across the equalized Stage 1 effect set with design-fidelity assertions.",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
   "scenarios": [
     {
       "name": "tree-chorus-spiral-lead",

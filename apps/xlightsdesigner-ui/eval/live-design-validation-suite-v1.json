@@ -2,6 +2,7 @@
   "contract": "live_design_validation_suite_v1",
   "version": "1.0",
   "summary": "Repeatable live comparative validation scenarios for real saved xLights sequences.",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
   "scenarios": [
     {
       "name": "whole-sequence-chorus-focus",

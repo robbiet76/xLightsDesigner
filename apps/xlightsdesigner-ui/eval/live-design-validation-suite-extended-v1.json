@@ -2,6 +2,7 @@
   "contract": "live_design_validation_suite_extended_v1",
   "version": "1.0",
   "summary": "Extended live comparative validation scenarios, including alternate saved-sequence coverage beyond the promoted baseline pack.",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
   "scenarios": [
     {
       "name": "whole-sequence-chorus-focus",

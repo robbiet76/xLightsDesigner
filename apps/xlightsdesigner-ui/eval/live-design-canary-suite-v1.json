@@ -2,6 +2,7 @@
   "contract": "live_design_canary_suite_v1",
   "version": "1.0",
   "summary": "Single-prompt live canary scenarios for frequent attended and unattended iteration loops.",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
   "scenarios": [
     {
       "name": "canary-chorus-focus",

@@ -2,6 +2,7 @@
   "contract": "live_design_validation_suite_smoke_v1",
   "version": "1.0",
   "summary": "Fast canary live comparative validation scenarios for frequent iteration loops.",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
   "scenarios": [
     {
       "name": "smoke-chorus-focus",

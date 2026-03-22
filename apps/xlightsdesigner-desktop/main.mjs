@@ -619,12 +619,40 @@ async function openSequenceFromDesktop(sequencePath = "") {
   };
 }
 
+function backupSiblingPathForSequence(sequencePath = "") {
+  const file = str(sequencePath);
+  if (!file) return "";
+  const dir = path.dirname(file);
+  const ext = path.extname(file);
+  const name = path.basename(file, ext || undefined);
+  return path.join(dir, `${name}.xbkp`);
+}
+
+async function restoreValidationSequenceFromBaseline({
+  sequencePath = "",
+  baselineSequencePath = ""
+} = {}) {
+  const workingPath = str(sequencePath);
+  const baselinePath = str(baselineSequencePath);
+  if (!workingPath || !baselinePath) {
+    return { ok: false, restored: false, reason: "missing_paths" };
+  }
+  if (!fs.existsSync(baselinePath)) {
+    throw new Error(`Validation baseline does not exist: ${baselinePath}`);
+  }
+  fs.mkdirSync(path.dirname(workingPath), { recursive: true });
+  fs.copyFileSync(baselinePath, workingPath);
+  removeFileIfExists(backupSiblingPathForSequence(workingPath));
+  return { ok: true, restored: true, sequencePath: workingPath, baselineSequencePath: baselinePath };
+}
+
 async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
   const suiteStartedAtMs = nowMs();
   const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
   if (!scenarios.length) {
     throw new Error("Live design validation suite requires at least one scenario.");
   }
+  const suiteBaselineSequencePath = str(expected?.baselineSequencePath);
   const results = [];
   let activeSequencePath = "";
   const refreshedSequences = new Set();
@@ -633,8 +661,19 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
     const scenarioStartedAtMs = nowMs();
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
     const sequencePath = str(scenario?.sequencePath);
+    const baselineSequencePath = str(scenario?.baselineSequencePath || suiteBaselineSequencePath);
     const timings = {};
     logStartup(`automation:live-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
+    if (sequencePath && baselineSequencePath) {
+      const restoreStartedAtMs = nowMs();
+      await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
+      timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
+      activeSequencePath = "";
+      refreshedSequences.delete(sequencePath);
+      for (const key of Array.from(analyzedContexts)) {
+        if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
+      }
+    }
     if (sequencePath && sequencePath !== activeSequencePath) {
       const openStartedAtMs = nowMs();
       await openSequenceFromDesktop(sequencePath);
@@ -680,6 +719,7 @@ async function runLiveDesignValidationSuiteFromDesktop(expected = {}) {
       sequencePath,
       timings: {
         totalMs: nowMs() - scenarioStartedAtMs,
+        restoreBaselineMs: Number(comparison?.timings?.restoreBaselineMs || timings.restoreBaselineMs || 0),
         openSequenceMs: Number(comparison?.timings?.openSequenceMs || timings.openSequenceMs || 0),
         refreshMs: Number(comparison?.timings?.refreshMs || timings.refreshMs || 0),
         analyzeMs: Number(comparison?.timings?.analyzeMs || timings.analyzeMs || 0),
@@ -718,6 +758,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
   if (!scenarios.length) {
     throw new Error("Live section practical sequence validation suite requires at least one scenario.");
   }
+  const suiteBaselineSequencePath = str(expected?.baselineSequencePath);
   const results = [];
   let activeSequencePath = "";
   const refreshedSequences = new Set();
@@ -919,8 +960,19 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
     const scenarioStartedAtMs = nowMs();
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
     const sequencePath = str(scenario?.sequencePath);
+    const baselineSequencePath = str(scenario?.baselineSequencePath || suiteBaselineSequencePath);
     const timings = {};
     logStartup(`automation:live-sequencer-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
+    if (sequencePath && baselineSequencePath) {
+      const restoreStartedAtMs = nowMs();
+      await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
+      timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
+      activeSequencePath = "";
+      refreshedSequences.delete(sequencePath);
+      for (const key of Array.from(analyzedContexts)) {
+        if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
+      }
+    }
     if (sequencePath && sequencePath !== activeSequencePath) {
       const openStartedAtMs = nowMs();
       await openSequenceFromDesktop(sequencePath);
@@ -1000,6 +1052,7 @@ async function runLiveSectionPracticalSequenceValidationSuiteFromDesktop(expecte
       sequencePath,
       timings: {
         totalMs: nowMs() - scenarioStartedAtMs,
+        restoreBaselineMs: Number(timings.restoreBaselineMs || 0),
         openSequenceMs: Number(timings.openSequenceMs || 0),
         refreshMs: Number(timings.refreshMs || 0),
         analyzeMs: Number(timings.analyzeMs || 0),
@@ -1043,6 +1096,7 @@ async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
   if (!scenarios.length) {
     throw new Error("Live design canary suite requires at least one scenario.");
   }
+  const suiteBaselineSequencePath = str(expected?.baselineSequencePath);
   const results = [];
   let activeSequencePath = "";
   const refreshedSequences = new Set();
@@ -1050,10 +1104,21 @@ async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
   for (const scenario of scenarios) {
     const name = str(scenario?.name || `scenario-${results.length + 1}`);
     const sequencePath = str(scenario?.sequencePath);
+    const baselineSequencePath = str(scenario?.baselineSequencePath || suiteBaselineSequencePath);
     const scenarioStartedAtMs = nowMs();
     const timings = {};
     logStartup(`automation:canary-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
 
+    if (sequencePath && baselineSequencePath) {
+      const restoreStartedAtMs = nowMs();
+      await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
+      timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
+      activeSequencePath = "";
+      refreshedSequences.delete(sequencePath);
+      for (const key of Array.from(analyzedContexts)) {
+        if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
+      }
+    }
     if (sequencePath && sequencePath !== activeSequencePath) {
       const openStartedAtMs = nowMs();
       await openSequenceFromDesktop(sequencePath);
