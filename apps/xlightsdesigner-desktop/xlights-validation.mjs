@@ -474,6 +474,34 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
   const timingTrackNames = new Set();
   const anchorBases = new Set();
   const sectionFamilyMap = new Map();
+  function normalizeSectionRole(sectionName = "") {
+    const lower = str(sectionName).toLowerCase();
+    if (!lower) return "";
+    if (/(^|[^a-z])final chorus([^a-z]|$)/.test(lower)) return "chorus";
+    if (/(^|[^a-z])chorus([^a-z]|$)/.test(lower)) return "chorus";
+    if (/(^|[^a-z])pre-?chorus([^a-z]|$)/.test(lower)) return "prechorus";
+    if (/(^|[^a-z])post-?chorus([^a-z]|$)/.test(lower)) return "postchorus";
+    if (/(^|[^a-z])verse([^a-z]|$)/.test(lower)) return "verse";
+    if (/(^|[^a-z])bridge([^a-z]|$)/.test(lower)) return "bridge";
+    if (/(^|[^a-z])intro([^a-z]|$)/.test(lower)) return "intro";
+    if (/(^|[^a-z])outro([^a-z]|$)/.test(lower)) return "outro";
+    if (/(^|[^a-z])tag([^a-z]|$)/.test(lower)) return "tag";
+    if (/(^|[^a-z])solo([^a-z]|$)/.test(lower)) return "solo";
+    return "";
+  }
+  function sectionOrdinal(sectionName = "") {
+    const lower = str(sectionName).toLowerCase();
+    if (!lower) return 0;
+    if (/final chorus/.test(lower)) return 999;
+    const match = lower.match(/\b(\d+)\b/);
+    return match ? Number(match[1] || 0) : 0;
+  }
+  function familySimilarity(left = new Set(), right = new Set()) {
+    const union = new Set([...left, ...right]);
+    if (!union.size) return 0;
+    const intersection = [...left].filter((family) => right.has(family)).length;
+    return Number((intersection / union.size).toFixed(3));
+  }
   function addFamilyUsage(sectionName = "", familyName = "") {
     const family = str(familyName);
     if (!family) return;
@@ -548,6 +576,61 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
   const sectionSignatureUniqueness = sectionKeys.length > 0
     ? Number((uniqueSectionSignatures / sectionKeys.length).toFixed(3))
     : 0;
+  const sectionRoleGroups = new Map();
+  for (const key of sectionKeys) {
+    const role = normalizeSectionRole(key);
+    if (!role) continue;
+    if (!sectionRoleGroups.has(role)) sectionRoleGroups.set(role, []);
+    sectionRoleGroups.get(role).push({
+      section: key,
+      ordinal: sectionOrdinal(key),
+      families: new Set([...(sectionFamilyMap.get(key) || new Set())])
+    });
+  }
+  const sectionRoleRows = [];
+  let repeatedRoleSimilarityTotal = 0;
+  let repeatedRoleSimilarityPairs = 0;
+  let chorusProgressionScore = 0;
+  for (const [role, rows] of sectionRoleGroups.entries()) {
+    const ordered = rows.slice().sort((left, right) => left.ordinal - right.ordinal || left.section.localeCompare(right.section));
+    let similarityTotal = 0;
+    let similarityPairs = 0;
+    let progressionTotal = 0;
+    let progressionPairs = 0;
+    for (let idx = 1; idx < ordered.length; idx += 1) {
+      const prev = ordered[idx - 1];
+      const next = ordered[idx];
+      const similarity = familySimilarity(prev.families, next.families);
+      similarityTotal += similarity;
+      similarityPairs += 1;
+      if (role === "chorus") {
+        const prevSize = prev.families.size;
+        const nextSize = next.families.size;
+        if (nextSize > prevSize) progressionTotal += 1;
+        else if (nextSize === prevSize) progressionTotal += 0.5;
+        progressionPairs += 1;
+      }
+    }
+    const averageSimilarity = similarityPairs > 0 ? Number((similarityTotal / similarityPairs).toFixed(3)) : null;
+    const progression = progressionPairs > 0 ? Number((progressionTotal / progressionPairs).toFixed(3)) : null;
+    sectionRoleRows.push({
+      role,
+      sectionCount: ordered.length,
+      averageSimilarity,
+      progression,
+      sections: ordered.map((row) => row.section)
+    });
+    if (similarityPairs > 0) {
+      repeatedRoleSimilarityTotal += similarityTotal / similarityPairs;
+      repeatedRoleSimilarityPairs += 1;
+    }
+    if (role === "chorus" && progression != null) {
+      chorusProgressionScore = progression;
+    }
+  }
+  const repeatedRoleSimilarityScore = repeatedRoleSimilarityPairs > 0
+    ? Number((repeatedRoleSimilarityTotal / repeatedRoleSimilarityPairs).toFixed(3))
+    : 0;
   const flattenedFocusTargets = [...new Set(
     conceptRows.flatMap((row) => arr(row?.focus)).map((row) => str(row)).filter(Boolean)
   )].sort();
@@ -567,6 +650,9 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
     dominantFamilyShare,
     sectionContrastScore,
     sectionSignatureUniqueness,
+    sectionRoleCoherence: sectionRoleRows.sort((left, right) => left.role.localeCompare(right.role)),
+    repeatedRoleSimilarityScore,
+    chorusProgressionScore,
     focusTargets: flattenedFocusTargets,
     timingTrackNames: [...timingTrackNames].sort(),
     anchorBases: [...anchorBases].sort()
@@ -582,6 +668,8 @@ function comparativeLiveScore(metrics = {}) {
   score += Number(metrics.sequenceRowCount || 0) * 0.1;
   score += Number(metrics.sectionContrastScore || 0) * 1.5;
   score += Number(metrics.sectionSignatureUniqueness || 0) * 1.0;
+  score += Number(metrics.repeatedRoleSimilarityScore || 0) * 1.2;
+  score += Number(metrics.chorusProgressionScore || 0) * 0.9;
   score -= Number(metrics.dominantFamilyShare || 0) * 1.2;
   return Number(score.toFixed(2));
 }
@@ -658,6 +746,8 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
   const sectionContrastScore = Number(metrics.sectionContrastScore || 0);
   const sectionSignatureUniqueness = Number(metrics.sectionSignatureUniqueness || 0);
   const dominantFamilyShare = Number(metrics.dominantFamilyShare || 0);
+  const repeatedRoleSimilarityScore = Number(metrics.repeatedRoleSimilarityScore || 0);
+  const chorusProgressionScore = Number(metrics.chorusProgressionScore || 0);
 
   if (/stage-lighting|stage lighting|cue stack|key-vs-fill|key light|fill|restrained washes|restrained wash/.test(lowerGoal)) {
     if (familyCount >= 4 && familyCount <= 6) adjustment += 1.8;
@@ -733,13 +823,28 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
   if (/smooth connected transitions|broader cinematic motion|flowing rise|connected motion/.test(lowerGoal)) {
     if (sectionContrastScore >= 0.3 && sectionContrastScore <= 0.85) adjustment += 1.1;
     if (sectionContrastScore < 0.15) adjustment -= 1.0;
+    if (sectionContrastScore > 0.9) adjustment -= 0.9;
     if (sectionSignatureUniqueness >= 0.5) adjustment += 0.7;
+    if (sectionSignatureUniqueness > 0.9) adjustment -= 0.7;
     if (dominantFamilyShare >= 0.7) adjustment -= 0.8;
+    if (familyCount > 7) adjustment -= 1.1;
+    if (repeatedRoleSimilarityScore >= 0.2) adjustment += 0.6;
+    if (repeatedRoleSimilarityScore < 0.15) adjustment -= 1.2;
+    if (chorusProgressionScore >= 0.5) adjustment += 0.7;
   }
 
   if (/choppier|staccato|punchy pulse changes|sharper accents|less connected motion/.test(lowerGoal)) {
     if (sectionContrastScore >= 0.45) adjustment += 0.6;
     if (sectionSignatureUniqueness >= 0.55) adjustment += 0.4;
+  }
+
+  if (/finale punch|flowing rise into the final chorus|final chorus/.test(lowerGoal)) {
+    if (chorusProgressionScore >= 0.5) adjustment += 0.8;
+    if (chorusProgressionScore === 0) adjustment -= 0.8;
+  }
+
+  if (/whole song|full song|full show/.test(lowerGoal) && /chorus|verse|bridge|outro|intro/.test(lowerGoal)) {
+    if (repeatedRoleSimilarityScore >= 0.18) adjustment += 0.5;
   }
 
   return Number(adjustment.toFixed(2));
