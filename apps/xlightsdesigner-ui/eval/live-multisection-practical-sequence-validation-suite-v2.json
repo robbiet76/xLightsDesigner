@@ -2,11 +2,11 @@
   "contract": "live_multisection_practical_sequence_validation_suite_v2",
   "version": "2.0",
   "summary": "Expanded live multi-section benchmark for section contrast, target fidelity, and explicit section-level effect routing.",
-  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
   "scenarios": [
     {
       "name": "intro-to-chorus-tree-contrast",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Intro", "Chorus 1"],
       "targets": ["PorchTree", "SpiralTrees"],
@@ -28,7 +28,7 @@
     },
     {
       "name": "verse-to-chorus-border-escalation",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Verse 1", "Chorus 2"],
       "targets": ["Border_Segments"],
@@ -50,7 +50,7 @@
     },
     {
       "name": "bridge-to-finalchorus-radial-shift",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Bridge", "Final Chorus"],
       "targets": ["Spinners", "Star"],
@@ -72,7 +72,7 @@
     },
     {
       "name": "verse-to-outro-snowman-release",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Verse 1", "Outro"],
       "targets": ["Snowman"],
@@ -94,7 +94,7 @@
     },
     {
       "name": "verse-to-chorus-canes-to-border-shift",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Verse 2", "Chorus 2"],
       "targets": ["CandyCanes", "Border_Segments"],
@@ -116,7 +116,7 @@
     },
     {
       "name": "bridge-to-chorus-star-ring-to-spin",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Bridge", "Final Chorus"],
       "targets": ["Star"],

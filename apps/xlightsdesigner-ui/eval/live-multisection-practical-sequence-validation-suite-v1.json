@@ -2,11 +2,11 @@
   "contract": "live_multisection_practical_sequence_validation_suite_v1",
   "version": "1.0",
   "summary": "Small live multi-section practical benchmark for transition contrast and cross-section target fidelity.",
-  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Baseline.xsq",
+  "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
   "scenarios": [
     {
       "name": "intro-to-chorus-tree-contrast",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Intro", "Chorus 1"],
       "targets": ["PorchTree", "SpiralTrees"],
@@ -19,7 +19,7 @@
     },
     {
       "name": "verse-to-chorus-border-escalation",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Verse 1", "Chorus 2"],
       "targets": ["Border_Segments"],
@@ -32,7 +32,7 @@
     },
     {
       "name": "bridge-to-finalchorus-radial-shift",
-      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase1.xsq",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "sections": ["Bridge", "Final Chorus"],
       "targets": ["Spinners", "Star"],
