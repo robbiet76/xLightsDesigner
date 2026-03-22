@@ -2,6 +2,7 @@ import {
   getStage1TrainedEffectBundle,
   getStage1TrainedEffectProfile
 } from "./trained-effect-knowledge.js";
+import { getCanonicalEffectFamily } from "../shared/effect-semantics-registry.js";
 
 function normText(value = "") {
   return String(value || "").trim();
@@ -9,7 +10,6 @@ function normText(value = "") {
 
 const EFFECT_INTENT_CAPABILITIES = {
   "Color Wash": {
-    family: "wash",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -20,7 +20,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Shimmer: {
-    family: "sparkle",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -31,7 +30,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Bars: {
-    family: "rhythmic",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -44,7 +42,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   On: {
-    family: "hold",
     supportedSettingsIntent: ["intensity", "coverage", "motion"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -52,7 +49,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     effectParamPatterns: {}
   },
   Butterfly: {
-    family: "motion_texture",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -64,7 +60,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Circles: {
-    family: "particle_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -75,7 +70,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Curtain: {
-    family: "transition_motion",
     supportedSettingsIntent: ["intensity", "speed", "coverage", "motion", "direction", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -86,7 +80,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Fan: {
-    family: "radial_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -98,7 +91,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Fire: {
-    family: "organic_texture",
     supportedSettingsIntent: ["intensity", "speed", "coverage", "motion", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -110,7 +102,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Morph: {
-    family: "path_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -123,7 +114,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Meteors: {
-    family: "particle_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -136,7 +126,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Pinwheel: {
-    family: "radial_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -149,7 +138,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   SingleStrand: {
-    family: "strand_pattern",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -162,7 +150,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Snowflakes: {
-    family: "particle_motion",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -174,7 +161,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Spirals: {
-    family: "motion_texture",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -187,7 +173,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   "VU Meter": {
-    family: "audio_reactive",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -199,7 +184,6 @@ const EFFECT_INTENT_CAPABILITIES = {
     }
   },
   Wave: {
-    family: "motion_texture",
     supportedSettingsIntent: ["intensity", "speed", "density", "coverage", "motion", "direction", "thickness", "variation"],
     supportedPaletteIntent: ["colors", "temperature", "contrast", "brightness", "saturation", "accentUsage"],
     supportedLayerIntent: ["priority", "blendRole", "mixAmount", "overlayPolicy"],
@@ -216,14 +200,18 @@ const EFFECT_INTENT_CAPABILITIES = {
 function mergeTrainingProfileIntoCapability(effectName = "", baseCapability = null) {
   const trainingProfile = getStage1TrainedEffectProfile(effectName);
   if (!baseCapability && !trainingProfile) return null;
+  const canonicalFamily = getCanonicalEffectFamily(effectName);
   const capability = baseCapability ? { ...baseCapability } : {
-    family: "trained_effect",
+    family: canonicalFamily || "trained_effect",
     supportedSettingsIntent: [],
     supportedPaletteIntent: [],
     supportedLayerIntent: [],
     supportedRenderIntent: [],
     effectParamPatterns: {}
   };
+  if (!capability.family && canonicalFamily) {
+    capability.family = canonicalFamily;
+  }
   if (!trainingProfile) return capability;
   const trainingFamilies = Array.isArray(trainingProfile.patternFamilies) ? trainingProfile.patternFamilies : [];
   capability.training = {
@@ -235,7 +223,7 @@ function mergeTrainingProfileIntoCapability(effectName = "", baseCapability = nu
     patternFamilies: trainingFamilies.slice(),
     selectorEvidence: trainingProfile.selectorEvidence || {}
   };
-  if (!capability.family || capability.family === "trained_effect") {
+  if ((!capability.family || capability.family === "trained_effect") && !canonicalFamily) {
     capability.family = trainingFamilies[0] || capability.family;
   }
   return capability;

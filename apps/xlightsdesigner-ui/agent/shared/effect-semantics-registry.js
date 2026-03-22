@@ -44,6 +44,26 @@ export const EFFECT_NAME_ALIASES = Object.freeze({
   off: "Off"
 });
 
+export const EFFECT_FAMILY_BY_NAME = Object.freeze({
+  "Color Wash": "wash",
+  Shimmer: "sparkle",
+  Bars: "rhythmic",
+  On: "hold",
+  Butterfly: "motion_texture",
+  Circles: "particle_motion",
+  Curtain: "transition_motion",
+  Fan: "radial_motion",
+  Fire: "organic_texture",
+  Morph: "path_motion",
+  Meteors: "particle_motion",
+  Pinwheel: "radial_motion",
+  SingleStrand: "strand_pattern",
+  Snowflakes: "particle_motion",
+  Spirals: "motion_texture",
+  "VU Meter": "audio_reactive",
+  Wave: "motion_texture"
+});
+
 export const DESIGNER_FAMILY_POOLS = Object.freeze({
   intro: ["Color Wash", "Candle", "On", "Snowflakes"],
   verse: ["Color Wash", "Butterfly", "Circles", "Wave", "Twinkle"],
@@ -254,6 +274,10 @@ export function canonicalizeEffectNameAlias(value = "") {
   const text = str(value);
   if (!text) return "";
   return EFFECT_NAME_ALIASES[text.toLowerCase()] || text;
+}
+
+export function getCanonicalEffectFamily(effectName = "") {
+  return EFFECT_FAMILY_BY_NAME[canonicalizeEffectNameAlias(effectName)] || "";
 }
 
 export function pickDistinctEffects(primary = [], secondary = [], count = 2) {
