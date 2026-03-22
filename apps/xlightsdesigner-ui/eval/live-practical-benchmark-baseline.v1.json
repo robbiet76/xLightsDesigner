@@ -1,0 +1,50 @@
+{
+  "artifactType": "live_practical_benchmark_baseline_v1",
+  "artifactVersion": "1.0",
+  "createdAt": "2026-03-22T02:27:15.382Z",
+  "label": "stage1_practical_phase2_green",
+  "sourceReport": "/tmp/live-practical-benchmark-phase2-final/live-practical-benchmark-report.json",
+  "expected": {
+    "artifactType": "live_practical_benchmark_run_v1",
+    "artifactVersion": "1.0",
+    "ok": true,
+    "suiteCount": 3,
+    "failedSuiteCount": 0,
+    "preflight": {
+      "refreshFromXLights": true,
+      "sectionCanaryOk": true
+    },
+    "suites": [
+      {
+        "key": "section",
+        "ok": true,
+        "scenarioCount": 10,
+        "failedScenarioCount": 0,
+        "summary": "Live section practical sequence suite passed 10/10 scenarios."
+      },
+      {
+        "key": "multisection",
+        "ok": true,
+        "scenarioCount": 6,
+        "failedScenarioCount": 0,
+        "summary": "Live section practical sequence suite passed 6/6 scenarios."
+      },
+      {
+        "key": "wholesequence",
+        "ok": true,
+        "scenarioCount": 4,
+        "failedScenarioCount": 0,
+        "summary": "Live validation suite passed 4/4 scenarios."
+      }
+    ],
+    "gapReport": {
+      "issueCount": 0,
+      "issueCounts": {
+        "designer_gap": 0,
+        "sequencer_gap": 0,
+        "apply_gap": 0,
+        "validation_gap": 0
+      }
+    }
+  }
+}

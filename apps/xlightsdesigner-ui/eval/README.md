@@ -17,6 +17,8 @@ Current contents:
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `run-section-practical-sequence-validation.mjs`: offline runner for the first sequencer-side practical validation pass
 - `run-live-practical-benchmark.mjs`: one-command runner that executes the promoted section, multi-section, and whole-sequence live suites and emits a combined report
+- `live-practical-benchmark-baseline.v1.json`: frozen Stage 1 practical benchmark baseline contract
+- `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
 
 Current policy:
@@ -64,3 +66,11 @@ Output:
 Runner behavior:
 - fails fast if `refresh-from-xlights` is only warning-level or otherwise unhealthy
 - fails fast if the section live canary is not green before the full benchmark batch starts
+
+Baseline comparison:
+
+```bash
+node apps/xlightsdesigner-ui/eval/compare-live-practical-benchmark.mjs \
+  /tmp/live-practical-benchmark-phase2-final/live-practical-benchmark-report.json \
+  apps/xlightsdesigner-ui/eval/live-practical-benchmark-baseline.v1.json
+```
