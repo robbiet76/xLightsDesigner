@@ -417,3 +417,160 @@ test("comparative live validation penalizes busy whole-song anti-discipline plan
   assert.equal(out.ok, true);
   assert.ok(Number(out.metrics.strongScore) > Number(out.metrics.weakScore));
 });
+
+test("comparative live validation reports whole-sequence overuse and section contrast metrics", () => {
+  const strong = {
+    diagnose: {
+      activeSequence: "Validation-Clean-Phase2",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+        effectPlacementCount: 8
+      },
+      intentHandoffSummary: {
+        goal: "Shape the full song with smooth connected transitions, broader cinematic motion, and a more flowing rise into the final chorus.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+          effectPlacementCount: 8
+        }
+      },
+      rawPlan: [
+        { cmd: "effects.create", params: { effectName: "Color Wash" }, anchor: { section: "Intro" } },
+        { cmd: "effects.create", params: { effectName: "Wave" }, anchor: { section: "Intro" } },
+        { cmd: "effects.create", params: { effectName: "Wave" }, anchor: { section: "Verse 1" } },
+        { cmd: "effects.create", params: { effectName: "Shimmer" }, anchor: { section: "Verse 1" } },
+        { cmd: "effects.create", params: { effectName: "Spirals" }, anchor: { section: "Chorus 1" } },
+        { cmd: "effects.create", params: { effectName: "Pinwheel" }, anchor: { section: "Chorus 1" } },
+        { cmd: "effects.create", params: { effectName: "Shimmer" }, anchor: { section: "Bridge" } },
+        { cmd: "effects.create", params: { effectName: "Twinkle" }, anchor: { section: "Bridge" } }
+      ]
+    },
+    pageStates: {
+      design: { data: { executionPlan: { conceptRows: [] } } },
+      sequence: { data: { rows: [] } }
+    }
+  };
+
+  const weak = {
+    diagnose: {
+      activeSequence: "Validation-Clean-Phase2",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+        effectPlacementCount: 8
+      },
+      intentHandoffSummary: {
+        goal: "Make the full song choppier and more staccato with punchy pulse changes, sharper accents, and less connected motion between sections.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+          effectPlacementCount: 8
+        }
+      },
+      rawPlan: [
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Intro" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Intro" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Verse 1" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Verse 1" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Chorus 1" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Chorus 1" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Bridge" } },
+        { cmd: "effects.create", params: { effectName: "Bars" }, anchor: { section: "Bridge" } }
+      ]
+    },
+    pageStates: {
+      design: { data: { executionPlan: { conceptRows: [] } } },
+      sequence: { data: { rows: [] } }
+    }
+  };
+
+  const out = validateComparativeLiveDesignState({ strong, weak });
+
+  assert.equal(out.ok, true);
+  assert.equal(out.metrics.strong.dominantFamily, "Shimmer");
+  assert.equal(out.metrics.weak.dominantFamily, "Bars");
+  assert.ok(Number(out.metrics.strong.dominantFamilyShare) < Number(out.metrics.weak.dominantFamilyShare));
+  assert.ok(Number(out.metrics.strong.sectionContrastScore) > Number(out.metrics.weak.sectionContrastScore));
+  assert.ok(Number(out.metrics.strong.sectionSignatureUniqueness) > Number(out.metrics.weak.sectionSignatureUniqueness));
+});
+
+test("comparative live validation penalizes whole-sequence overuse when a single family dominates", () => {
+  const strong = {
+    diagnose: {
+      activeSequence: "Validation-Clean-Phase2",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+        effectPlacementCount: 12
+      },
+      intentHandoffSummary: {
+        goal: "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+          effectPlacementCount: 12
+        }
+      },
+      rawPlan: [
+        { cmd: "effects.create", params: { effectName: "Color Wash" }, anchor: { section: "Intro" } },
+        { cmd: "effects.create", params: { effectName: "Shimmer" }, anchor: { section: "Intro" } },
+        { cmd: "effects.create", params: { effectName: "Wave" }, anchor: { section: "Verse 1" } },
+        { cmd: "effects.create", params: { effectName: "Shimmer" }, anchor: { section: "Verse 1" } },
+        { cmd: "effects.create", params: { effectName: "Spirals" }, anchor: { section: "Chorus 1" } },
+        { cmd: "effects.create", params: { effectName: "Pinwheel" }, anchor: { section: "Chorus 1" } },
+        { cmd: "effects.create", params: { effectName: "Color Wash" }, anchor: { section: "Bridge" } },
+        { cmd: "effects.create", params: { effectName: "Twinkle" }, anchor: { section: "Bridge" } }
+      ]
+    },
+    pageStates: { design: { data: { executionPlan: { conceptRows: [] } } }, sequence: { data: { rows: [] } } }
+  };
+
+  const weak = {
+    diagnose: {
+      activeSequence: "Validation-Clean-Phase2",
+      proposalScope: { sections: [] },
+      executionPlanSummary: {
+        passScope: "whole_sequence",
+        implementationMode: "whole_sequence_pass",
+        primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+        effectPlacementCount: 12
+      },
+      intentHandoffSummary: {
+        goal: "Design the full song with a restrained glowing base, smoother texture transitions, and selective sparkle only on the bigger lifts so the render feels polished instead of busy.",
+        scope: { sections: [], targetIds: [] },
+        executionStrategy: {
+          passScope: "whole_sequence",
+          implementationMode: "whole_sequence_pass",
+          primarySections: ["Intro", "Verse 1", "Chorus 1", "Bridge"],
+          effectPlacementCount: 12
+        }
+      },
+      rawPlan: Array.from({ length: 12 }, (_, idx) => ({
+        cmd: "effects.create",
+        params: { effectName: idx < 10 ? "Color Wash" : "Shimmer" },
+        anchor: { section: ["Intro", "Verse 1", "Chorus 1", "Bridge"][Math.floor(idx / 3)] || "Bridge" }
+      }))
+    },
+    pageStates: { design: { data: { executionPlan: { conceptRows: [] } } }, sequence: { data: { rows: [] } } }
+  };
+
+  const out = validateComparativeLiveDesignState({ strong, weak });
+
+  assert.equal(out.ok, true);
+  assert.ok(Number(out.metrics.strong.dominantFamilyShare) < 0.4);
+  assert.ok(Number(out.metrics.weak.dominantFamilyShare) > 0.8);
+  assert.ok(Number(out.metrics.strongScore) > Number(out.metrics.weakScore));
+});

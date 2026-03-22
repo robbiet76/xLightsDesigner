@@ -470,12 +470,28 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
   const proposalScope = diagnose?.proposalScope || {};
   const executionPlanSummary = diagnose?.executionPlanSummary || {};
   const distinctFamilies = new Set();
+  const familyUsageCounts = new Map();
   const timingTrackNames = new Set();
   const anchorBases = new Set();
+  const sectionFamilyMap = new Map();
+  function addFamilyUsage(sectionName = "", familyName = "") {
+    const family = str(familyName);
+    if (!family) return;
+    familyUsageCounts.set(family, Number(familyUsageCounts.get(family) || 0) + 1);
+    const sectionKey = str(sectionName);
+    if (!sectionKey) return;
+    if (!sectionFamilyMap.has(sectionKey)) {
+      sectionFamilyMap.set(sectionKey, new Set());
+    }
+    sectionFamilyMap.get(sectionKey).add(family);
+  }
   for (const row of arr(diagnose?.rawPlan)) {
     if (str(row?.cmd) !== "effects.create") continue;
     const effectName = str(row?.params?.effectName);
-    if (effectName) distinctFamilies.add(effectName);
+    if (effectName) {
+      distinctFamilies.add(effectName);
+      addFamilyUsage(str(row?.anchor?.section || row?.anchor?.sectionName || ""), effectName);
+    }
     const trackName = str(row?.anchor?.trackName);
     const basis = str(row?.anchor?.basis);
     if (trackName) timingTrackNames.add(trackName);
@@ -485,10 +501,53 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
     for (const row of sequenceRows) {
       for (const part of str(row?.summary).split(",")) {
         const family = str(part.replace(/\+\d+\s+more$/i, ""));
-        if (family) distinctFamilies.add(family);
+        if (family) {
+          distinctFamilies.add(family);
+          addFamilyUsage(str(row?.section), family);
+        }
       }
     }
   }
+  if (!sectionFamilyMap.size) {
+    for (const row of conceptRows) {
+      for (const family of arr(row?.effectFamilies)) {
+        addFamilyUsage(str(row?.anchor), family);
+      }
+    }
+  }
+  const usageRows = [...familyUsageCounts.entries()]
+    .map(([family, count]) => ({ family, count: Number(count || 0) }))
+    .sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+      return left.family.localeCompare(right.family);
+    });
+  const totalFamilyAssignments = usageRows.reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const dominantFamily = usageRows[0]?.family || "";
+  const dominantFamilyCount = Number(usageRows[0]?.count || 0);
+  const dominantFamilyShare = totalFamilyAssignments > 0
+    ? Number((dominantFamilyCount / totalFamilyAssignments).toFixed(3))
+    : 0;
+  const sectionKeys = [...sectionFamilyMap.keys()].filter(Boolean);
+  let sectionContrastTotal = 0;
+  let sectionContrastPairs = 0;
+  for (let idx = 1; idx < sectionKeys.length; idx += 1) {
+    const prevSet = sectionFamilyMap.get(sectionKeys[idx - 1]) || new Set();
+    const nextSet = sectionFamilyMap.get(sectionKeys[idx]) || new Set();
+    const union = new Set([...prevSet, ...nextSet]);
+    const intersectionSize = [...prevSet].filter((family) => nextSet.has(family)).length;
+    const contrast = union.size > 0 ? 1 - (intersectionSize / union.size) : 0;
+    sectionContrastTotal += contrast;
+    sectionContrastPairs += 1;
+  }
+  const sectionContrastScore = sectionContrastPairs > 0
+    ? Number((sectionContrastTotal / sectionContrastPairs).toFixed(3))
+    : 0;
+  const uniqueSectionSignatures = new Set(
+    sectionKeys.map((key) => [...(sectionFamilyMap.get(key) || new Set())].sort().join("|")).filter(Boolean)
+  ).size;
+  const sectionSignatureUniqueness = sectionKeys.length > 0
+    ? Number((uniqueSectionSignatures / sectionKeys.length).toFixed(3))
+    : 0;
   const flattenedFocusTargets = [...new Set(
     conceptRows.flatMap((row) => arr(row?.focus)).map((row) => str(row)).filter(Boolean)
   )].sort();
@@ -502,6 +561,12 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
     sequenceRowCount: sequenceRows.length,
     distinctFamilyCount: distinctFamilies.size,
     distinctFamilies: [...distinctFamilies].sort(),
+    familyUsage: usageRows,
+    dominantFamily,
+    dominantFamilyCount,
+    dominantFamilyShare,
+    sectionContrastScore,
+    sectionSignatureUniqueness,
     focusTargets: flattenedFocusTargets,
     timingTrackNames: [...timingTrackNames].sort(),
     anchorBases: [...anchorBases].sort()
@@ -515,6 +580,9 @@ function comparativeLiveScore(metrics = {}) {
   score += Number(metrics.designConceptCount || 0) * 0.5;
   score += Number(metrics.sectionCount || 0) * 0.35;
   score += Number(metrics.sequenceRowCount || 0) * 0.1;
+  score += Number(metrics.sectionContrastScore || 0) * 1.5;
+  score += Number(metrics.sectionSignatureUniqueness || 0) * 1.0;
+  score -= Number(metrics.dominantFamilyShare || 0) * 1.2;
   return Number(score.toFixed(2));
 }
 
@@ -587,6 +655,9 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
   const focusTargetCount = sortedNormalizedList(metrics.focusTargets).length;
   const timingTrackNames = sortedNormalizedList(metrics.timingTrackNames);
   const anchorBases = sortedNormalizedList(metrics.anchorBases);
+  const sectionContrastScore = Number(metrics.sectionContrastScore || 0);
+  const sectionSignatureUniqueness = Number(metrics.sectionSignatureUniqueness || 0);
+  const dominantFamilyShare = Number(metrics.dominantFamilyShare || 0);
 
   if (/stage-lighting|stage lighting|cue stack|key-vs-fill|key light|fill|restrained washes|restrained wash/.test(lowerGoal)) {
     if (familyCount >= 4 && familyCount <= 6) adjustment += 1.8;
@@ -646,6 +717,8 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
     if (designConceptCount <= 8) adjustment += 1.0;
     if (designConceptCount >= 12) adjustment -= 1.4;
     if (targetScopeCount > 0 && targetScopeCount <= 2) adjustment -= 1.4;
+    if (dominantFamilyShare <= 0.45) adjustment += 0.8;
+    if (dominantFamilyShare >= 0.7) adjustment -= 0.9;
   }
 
   if (/changing textures aggressively|busier sparkle|harder texture swaps|less restraint in the base look|busy texture/.test(lowerGoal)) {
@@ -655,6 +728,18 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
     if (sequenceRowCount >= 30) adjustment -= 1.4;
     if (sectionCount >= 12) adjustment -= 1.4;
     if (designConceptCount >= 12) adjustment -= 1.6;
+  }
+
+  if (/smooth connected transitions|broader cinematic motion|flowing rise|connected motion/.test(lowerGoal)) {
+    if (sectionContrastScore >= 0.3 && sectionContrastScore <= 0.85) adjustment += 1.1;
+    if (sectionContrastScore < 0.15) adjustment -= 1.0;
+    if (sectionSignatureUniqueness >= 0.5) adjustment += 0.7;
+    if (dominantFamilyShare >= 0.7) adjustment -= 0.8;
+  }
+
+  if (/choppier|staccato|punchy pulse changes|sharper accents|less connected motion/.test(lowerGoal)) {
+    if (sectionContrastScore >= 0.45) adjustment += 0.6;
+    if (sectionSignatureUniqueness >= 0.55) adjustment += 0.4;
   }
 
   return Number(adjustment.toFixed(2));
