@@ -101,7 +101,7 @@ function buildPreflightSuite(repoRoot) {
   return {
     key: "section_canary",
     action: "run-live-section-practical-sequence-validation-suite",
-    suitePath: path.join(evalDir, "live-section-practical-sequence-validation-suite-v1.json"),
+    suitePath: path.join(evalDir, "live-section-practical-sequence-validation-canary-v1.json"),
     resultFileName: "section-canary-suite.json"
   };
 }

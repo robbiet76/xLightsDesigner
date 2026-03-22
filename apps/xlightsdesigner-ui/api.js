@@ -10,6 +10,26 @@ function sanitizeEndpoint(endpoint) {
   return String(endpoint || "").trim();
 }
 
+function buildCommandEndpointCandidates(endpoint) {
+  const raw = sanitizeEndpoint(endpoint);
+  const candidates = [];
+  if (raw) candidates.push(raw);
+  try {
+    const url = new URL(raw);
+    const isDevProxy =
+      (url.hostname === "127.0.0.1" || url.hostname === "localhost") &&
+      url.port === "8080" &&
+      url.pathname === "/xlDoAutomation";
+    if (isDevProxy) {
+      candidates.push("http://127.0.0.1:49914/xlDoAutomation");
+      candidates.push("http://127.0.0.1:49913/xlDoAutomation");
+    }
+  } catch {
+    // ignore malformed endpoint; caller will fail on the original target
+  }
+  return [...new Set(candidates.filter(Boolean))];
+}
+
 function sanitizeOwnedBase(endpoint) {
   return String(endpoint || "").trim().replace(/\/+$/, "");
 }
@@ -118,23 +138,32 @@ export async function postCommand(endpoint, cmd, params = {}, options = {}) {
     params,
     options
   };
-  const targetEndpoint = sanitizeEndpoint(endpoint);
-  const text = await readResponseText(targetEndpoint, JSON.stringify(payload));
-  const normalized = normalizeBody(text);
-  let json;
-  try {
-    json = JSON.parse(normalized);
-  } catch (err) {
-    throw new Error(`Invalid JSON from xLights endpoint ${targetEndpoint} (${err.message})`);
-  }
+  const endpointCandidates = buildCommandEndpointCandidates(endpoint);
+  const errors = [];
 
-  if (json.res !== 200) {
-    const code = json?.error?.code || "UNKNOWN";
-    const message = json?.error?.message || "Command failed";
-    throw new Error(`${cmd} failed (${code}): ${message}`);
-  }
+  for (const targetEndpoint of endpointCandidates) {
+    try {
+      const text = await readResponseText(targetEndpoint, JSON.stringify(payload));
+      const normalized = normalizeBody(text);
+      let json;
+      try {
+        json = JSON.parse(normalized);
+      } catch (err) {
+        throw new Error(`Invalid JSON from xLights endpoint ${targetEndpoint} (${err.message})`);
+      }
 
-  return json;
+      if (json.res !== 200) {
+        const code = json?.error?.code || "UNKNOWN";
+        const message = json?.error?.message || "Command failed";
+        throw new Error(`${cmd} failed (${code}): ${message}`);
+      }
+
+      return json;
+    } catch (err) {
+      errors.push(String(err?.message || err || "unknown command error"));
+    }
+  }
+  throw new Error(errors[errors.length - 1] || `${cmd} failed`);
 }
 
 export async function pingCapabilities(endpoint) {

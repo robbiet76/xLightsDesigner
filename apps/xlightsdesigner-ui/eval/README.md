@@ -7,6 +7,7 @@ Current contents:
 - `section-practical-sequence-validation-suite-v1.json`: deterministic section-scoped sequencer validation scenarios tied to the Stage 1 trained baseline
 - `live-section-practical-sequence-validation-suite-v1.json`: live apply section-scoped sequencer validation scenarios that reuse the practical validation artifact
 - `live-section-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live section benchmark
+- `live-section-practical-sequence-validation-canary-v1.json`: stable single-scenario live canary used to gate the combined benchmark runner
 - `live-multisection-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live multi-section benchmark
 - `live-wholesequence-practical-validation-suite-v1.json`: promoted Phase 2 clean-baseline whole-sequence benchmark
 - `live-design-canary-suite-v1.json`: fastest one-prompt live canary scenarios for frequent iteration loops

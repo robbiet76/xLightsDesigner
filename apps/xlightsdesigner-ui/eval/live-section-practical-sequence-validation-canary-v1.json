@@ -1,0 +1,42 @@
+{
+  "contract": "live_section_practical_sequence_validation_suite_v1",
+  "version": "1.0",
+  "name": "live_section_practical_sequence_validation_canary",
+  "scenarios": [
+    {
+      "name": "tree-chorus-spiral-lead-canary",
+      "sequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2.xsq",
+      "baselineSequencePath": "/Users/robterry/Projects/xLightsDesigner/sequence-validation-show/Test/Validation-Clean-Phase2-Baseline.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "sectionName": "Chorus 1",
+      "sectionWindow": {
+        "startMs": 44000,
+        "endMs": 62000
+      },
+      "targets": [
+        "SpiralTrees"
+      ],
+      "primaryFocusTargetIds": [
+        "SpiralTrees"
+      ],
+      "prompt": "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill. Do not rewrite the whole show.",
+      "goal": "Flowing spiral lead for SpiralTrees in Chorus 1.",
+      "designSummary": "SpiralTrees should carry a flowing spiral lead in Chorus 1.",
+      "preferredVisualFamilies": [
+        "spiral_flow"
+      ],
+      "expectedEffects": [
+        "Spirals"
+      ],
+      "requiredObservedTargets": [
+        "SpiralTrees"
+      ],
+      "forbiddenEffects": [
+        "Bars",
+        "Marquee",
+        "On"
+      ],
+      "requirePreferredEffectAlignment": true
+    }
+  ]
+}

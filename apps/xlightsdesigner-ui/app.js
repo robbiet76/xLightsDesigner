@@ -134,11 +134,26 @@ const app = document.getElementById("app");
 const STORAGE_KEY = "xlightsdesigner.ui.state.v1";
 const PROJECTS_KEY = "xlightsdesigner.ui.projects.v1";
 const RESET_PRESERVE_KEY = "xlightsdesigner.ui.reset-preserve.v1";
-const PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+function detectDevProxyXLightsEndpoint() {
+  try {
+    const origin = String(window?.location?.origin || "").trim();
+    if (/^https?:\/\/(127\.0\.0\.1|localhost):8080$/i.test(origin)) {
+      return `${origin}/xlDoAutomation`;
+    }
+  } catch {
+    // ignore window/location access failures
+  }
+  return "";
+}
+
+const DIRECT_PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const DEV_PROXY_XLIGHTS_ENDPOINT = detectDevProxyXLightsEndpoint();
+const PREFERRED_XLIGHTS_ENDPOINT = DEV_PROXY_XLIGHTS_ENDPOINT || DIRECT_PREFERRED_XLIGHTS_ENDPOINT;
 const FALLBACK_XLIGHTS_ENDPOINTS = [
+  DEV_PROXY_XLIGHTS_ENDPOINT,
   "http://127.0.0.1:49913/xlDoAutomation",
   "http://127.0.0.1:49914/xlDoAutomation"
-];
+].filter(Boolean);
 const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
 const CONNECTIVITY_POLL_MS = 10000;
 const FOCUS_SYNC_COOLDOWN_MS = 1200;
