@@ -13,6 +13,18 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function readJsonIfExists(filePath = "") {
+  const target = str(filePath);
+  if (!target || !fs.existsSync(target)) return null;
+  return readJson(target);
+}
+
+function optionalNumber(value) {
+  if (value == null || value === "") return null;
+  const out = Number(value);
+  return Number.isFinite(out) ? out : null;
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -48,12 +60,34 @@ function classifyPriority(issue = {}) {
 }
 
 function buildLedger(report = {}, reportPath = "") {
-  const suites = arr(report?.suites);
-  const gapReport = report?.gapReport && typeof report.gapReport === "object" ? report.gapReport : {};
+  const root = report?.result && typeof report.result === "object" ? report.result : report;
+  const suites = arr(root?.suites);
+  const gapReport = root?.gapReport && typeof root.gapReport === "object" ? root.gapReport : {};
+  const defaultSuiteKey = str(root?.name || root?.suiteName || gapReport?.suiteName || path.basename(reportPath, path.extname(reportPath)));
   const suiteByKey = new Map(suites.map((suite) => [str(suite?.key), suite]));
+  const suiteArtifactByKey = new Map(
+    suites
+      .map((suite) => [str(suite?.key), readJsonIfExists(str(suite?.artifactPath))])
+  );
+  if (!suiteByKey.size) {
+    suiteByKey.set(defaultSuiteKey, {
+      key: defaultSuiteKey,
+      summary: str(root?.summary || gapReport?.suiteName || ""),
+      artifactPath: reportPath
+    });
+    suiteArtifactByKey.set(defaultSuiteKey, report);
+  }
   const issues = arr(gapReport?.issues).map((issue, index) => {
-    const suiteKey = str(issue?.suiteKey);
+    const suiteKey = str(issue?.suiteKey || defaultSuiteKey);
     const suite = suiteByKey.get(suiteKey);
+    const suiteArtifact = suiteArtifactByKey.get(suiteKey);
+    const suiteResult = suiteArtifact?.result && typeof suiteArtifact.result === "object"
+      ? suiteArtifact.result
+      : suiteArtifact;
+    const scenarioName = str(issue?.scenarioName);
+    const scenario = arr(suiteResult?.results).find((row) => str(row?.name) === scenarioName) || null;
+    const validation = scenario?.validation && typeof scenario.validation === "object" ? scenario.validation : null;
+    const metrics = validation?.metrics && typeof validation.metrics === "object" ? validation.metrics : null;
     return {
       issueId: `phase2-${index + 1}`,
       category: str(issue?.category || issue?.kind || "unknown"),
@@ -62,8 +96,24 @@ function buildLedger(report = {}, reportPath = "") {
       suiteSummary: str(suite?.summary),
       summary: str(issue?.summary || issue?.detail || issue?.message || issue?.target || "Unclassified issue"),
       target: str(issue?.target),
+      scenarioName,
       detail: str(issue?.detail),
-      sourceReport: reportPath
+      sourceReport: reportPath,
+      suiteArtifactPath: str(suite?.artifactPath),
+      metrics: metrics
+        ? {
+            strongScore: optionalNumber(metrics?.strongScore),
+            weakScore: optionalNumber(metrics?.weakScore),
+            strongDominantFamilyShare: optionalNumber(metrics?.strong?.dominantFamilyShare),
+            weakDominantFamilyShare: optionalNumber(metrics?.weak?.dominantFamilyShare),
+            strongSectionContrastScore: optionalNumber(metrics?.strong?.sectionContrastScore),
+            weakSectionContrastScore: optionalNumber(metrics?.weak?.sectionContrastScore),
+            strongRepeatedRoleSimilarityScore: optionalNumber(metrics?.strong?.repeatedRoleSimilarityScore),
+            weakRepeatedRoleSimilarityScore: optionalNumber(metrics?.weak?.repeatedRoleSimilarityScore),
+            strongChorusProgressionScore: optionalNumber(metrics?.strong?.chorusProgressionScore),
+            weakChorusProgressionScore: optionalNumber(metrics?.weak?.chorusProgressionScore)
+          }
+        : null
     };
   });
 
@@ -72,7 +122,7 @@ function buildLedger(report = {}, reportPath = "") {
     artifactVersion: "1.0",
     createdAt: nowIso(),
     sourceReport: reportPath,
-    benchmarkOk: Boolean(report?.ok),
+    benchmarkOk: Boolean(root?.ok),
     issueCount: issues.length,
     issueCounts: gapReport?.issueCounts || {},
     issues

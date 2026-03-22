@@ -137,7 +137,7 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function summarizeSuiteResult(key, payload = {}) {
+function summarizeSuiteResult(key, payload = {}, artifactPath = "") {
   const result = payload?.result && typeof payload.result === "object" ? payload.result : {};
   const gapReport = result?.gapReport && typeof result.gapReport === "object" ? result.gapReport : null;
   return {
@@ -147,7 +147,8 @@ function summarizeSuiteResult(key, payload = {}) {
     scenarioCount: Number(result?.scenarioCount || 0),
     failedScenarioCount: Number(result?.failedScenarioCount || 0),
     failedScenarioNames: arr(result?.failedScenarioNames).map((row) => str(row)).filter(Boolean),
-    gapReport
+    gapReport,
+    artifactPath: str(artifactPath)
   };
 }
 
@@ -239,7 +240,7 @@ async function main() {
       payloadFile: suite.suitePath,
       resultPath
     });
-    suiteResults.push(summarizeSuiteResult(suite.key, payload));
+    suiteResults.push(summarizeSuiteResult(suite.key, payload, resultPath));
   }
 
   const failedSuites = suiteResults.filter((row) => row.ok !== true);

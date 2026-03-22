@@ -10,6 +10,7 @@ Current contents:
 - `live-section-practical-sequence-validation-canary-v1.json`: stable single-scenario live canary used to gate the combined benchmark runner
 - `live-multisection-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live multi-section benchmark
 - `live-wholesequence-practical-validation-suite-v1.json`: promoted Phase 2 clean-baseline whole-sequence benchmark
+- `live-wholesequence-practical-validation-suite-v2.json`: expanded whole-sequence role-identity and progression benchmark for Phase 2 gap discovery
 - `live-revision-practical-sequence-validation-suite-v1.json`: first live revision-focused Phase 2 suite for bounded in-place concept edits
 - `live-design-canary-suite-v1.json`: fastest one-prompt live canary scenarios for frequent iteration loops
 - `live-design-validation-suite-smoke-v1.json`: fast canary live comparative scenarios for frequent iteration loops
