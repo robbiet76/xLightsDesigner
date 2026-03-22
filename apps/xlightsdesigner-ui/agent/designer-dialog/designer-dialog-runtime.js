@@ -13,6 +13,11 @@ import { buildProposalFromIntent } from "./planner.js";
 import { buildProposalLifecycle } from "./designer-dialog-lifecycle.js";
 import { buildDesignSceneContext } from "./design-scene-context.js";
 import { buildMusicDesignContext } from "./music-design-context.js";
+import {
+  DESIGNER_FAMILY_POOLS,
+  canonicalizeEffectNameAlias,
+  pickDistinctEffects
+} from "../shared/effect-semantics-registry.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -238,54 +243,8 @@ function rotateStrings(values = [], seed = "") {
   return rows.slice(offset).concat(rows.slice(0, offset));
 }
 
-const FAMILY_POOLS = {
-  intro: ["Color Wash", "Candle", "On", "Snowflakes"],
-  verse: ["Color Wash", "Butterfly", "Circles", "Wave", "Twinkle"],
-  chorus: ["Shimmer", "Pinwheel", "Meteors", "Fireworks", "Color Wash"],
-  bridge: ["Bars", "Morph", "Shockwave", "Spirals", "Ripple"],
-  rap: ["Bars", "Shockwave", "Wave", "Color Wash", "Meteors"],
-  solo: ["Pinwheel", "Meteors", "Color Wash", "Wave", "Shimmer"],
-  outro: ["Spirals", "Wave", "Snowstorm", "Color Wash", "On"],
-  wide: ["Bars", "Morph", "Shockwave", "Warp", "Ripple"],
-  dense: ["Shimmer", "Pinwheel", "Meteors", "Galaxy", "Fireworks"],
-  gentle: ["Color Wash", "Candle", "Snowflakes", "On", "Wave"],
-  default: ["Color Wash", "Butterfly", "Shimmer", "Bars", "Twinkle"]
-};
-
-function pickDistinctEffects(primary = [], secondary = [], count = 2) {
-  const out = [];
-  for (const name of [...arr(primary), ...arr(secondary)]) {
-    const effectName = str(name);
-    if (!effectName || out.includes(effectName)) continue;
-    out.push(effectName);
-    if (out.length >= count) break;
-  }
-  return out;
-}
-
 function canonicalizeDesignerEffectHint(value = "") {
-  const text = str(value);
-  if (!text) return "";
-  const lower = text.toLowerCase();
-  const map = {
-    "color wash": "Color Wash",
-    colorwash: "Color Wash",
-    marquee: "Marquee",
-    shimmer: "Shimmer",
-    shockwave: "Shockwave",
-    singlestrand: "SingleStrand",
-    "single strand": "SingleStrand",
-    twinkle: "Twinkle",
-    spirals: "Spirals",
-    spiral: "Spirals",
-    bars: "Bars",
-    pinwheel: "Pinwheel",
-    butterfly: "Butterfly",
-    meteors: "Meteors",
-    on: "On",
-    off: "Off"
-  };
-  return map[lower] || text;
+  return canonicalizeEffectNameAlias(value);
 }
 
 function stripNegativeCueClauses(value = "") {
@@ -780,7 +739,7 @@ function buildSectionEffectHints({
     }
     return nearEnd
       ? pickDistinctEffects(["Bars", "Meteors"], ["Shimmer", "Fireworks", "Pinwheel"])
-      : pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
+      : pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
   }
   if (/tag/.test(lowerSection)) {
     if (resolvingTag) {
@@ -819,19 +778,19 @@ function buildSectionEffectHints({
     return pickDistinctEffects(["Shimmer", "Color Wash"], ["Wave", "Bars"]);
   }
   if (focusedRap) {
-    return pickDistinctEffects(FAMILY_POOLS.rap, ["Bars", "Shockwave"]);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.rap, ["Bars", "Shockwave"]);
   }
   if (chorusLikeRap) {
-    return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
   }
   if (focusedSolo) {
-    return pickDistinctEffects(FAMILY_POOLS.solo, ["Pinwheel", "Color Wash"]);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.solo, ["Pinwheel", "Color Wash"]);
   }
   if (chorusLikeSolo) {
-    return pickDistinctEffects(FAMILY_POOLS.chorus, FAMILY_POOLS.dense);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.chorus, DESIGNER_FAMILY_POOLS.dense);
   }
   if (normalizedDensity === "wide" || /bridge|instrumental|interlude/.test(lowerSection)) {
-    return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.wide);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.bridge, DESIGNER_FAMILY_POOLS.wide);
   }
   if (escalationGoal && /verse 1/.test(lowerSection)) {
     return flattenedEscalation
@@ -839,21 +798,21 @@ function buildSectionEffectHints({
       : pickDistinctEffects(["Color Wash", "Candle"], ["Wave", "Butterfly"]);
   }
   if (normalizedEnergy === "low" || /intro|outro|coda/.test(lowerSection)) {
-    return pickDistinctEffects(/outro|coda/.test(lowerSection) ? FAMILY_POOLS.outro : FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
+    return pickDistinctEffects(/outro|coda/.test(lowerSection) ? DESIGNER_FAMILY_POOLS.outro : DESIGNER_FAMILY_POOLS.intro, DESIGNER_FAMILY_POOLS.gentle);
   }
   if (nearPeak) {
-    return pickDistinctEffects(FAMILY_POOLS.dense, FAMILY_POOLS.chorus);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.dense, DESIGNER_FAMILY_POOLS.chorus);
   }
   if (nearEnd) {
-    return pickDistinctEffects(FAMILY_POOLS.outro, FAMILY_POOLS.bridge);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.outro, DESIGNER_FAMILY_POOLS.bridge);
   }
   if (nearStart) {
-    return pickDistinctEffects(FAMILY_POOLS.intro, FAMILY_POOLS.gentle);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.intro, DESIGNER_FAMILY_POOLS.gentle);
   }
   if (/pulse|rhythm|drive|movement/.test(lowerGoal)) {
-    return pickDistinctEffects(FAMILY_POOLS.bridge, FAMILY_POOLS.default);
+    return pickDistinctEffects(DESIGNER_FAMILY_POOLS.bridge, DESIGNER_FAMILY_POOLS.default);
   }
-  return pickDistinctEffects(FAMILY_POOLS.verse, FAMILY_POOLS.default);
+  return pickDistinctEffects(DESIGNER_FAMILY_POOLS.verse, DESIGNER_FAMILY_POOLS.default);
 }
 
 function buildSectionIntentSummary({ section = "", energy = "", density = "", goal = "" } = {}) {

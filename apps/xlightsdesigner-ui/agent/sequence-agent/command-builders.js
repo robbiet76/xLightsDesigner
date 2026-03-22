@@ -1,4 +1,7 @@
-import { recommendTrainedEffectsForTargets } from "./trained-effect-knowledge.js";
+import {
+  inferLegacyEffectCandidates,
+  recommendEffectsForTargets
+} from "../shared/effect-semantics-registry.js";
 
 export function estimateImpactCount(sourceLines = []) {
   const count = Array.isArray(sourceLines) ? sourceLines.filter(Boolean).length : 0;
@@ -676,21 +679,13 @@ function buildSequenceSettingsCommand({ effectCommands = [], groupIds = [], sequ
 
 function inferEffectNameFromDescription(description = "", effectCatalog = null, options = {}) {
   const byName = normalizeEffectCatalog(effectCatalog);
-  const text = normText(description).toLowerCase();
   const hasCatalog = Object.keys(byName).length > 0;
-  const aliases = [
-    { effectName: "On", patterns: [" on effect", "apply on", "make on", "simple on", "effect on"] },
-    { effectName: "Bars", patterns: ["bars", "bar hits", "striped"] },
-    { effectName: "Shimmer", patterns: ["shimmer", "sparkle", "twinkle", "glitter"] },
-    { effectName: "Color Wash", patterns: ["wash", "color wash", "sweep"] },
-    { effectName: "Butterfly", patterns: ["butterfly"] },
-    { effectName: "On", patterns: ["hold", "solid", "steady", "glow"] }
-  ];
-  for (const row of aliases) {
-    if (hasCatalog && !Object.prototype.hasOwnProperty.call(byName, row.effectName)) continue;
-    if (row.patterns.some((pattern) => text.includes(pattern))) return row.effectName;
+  const legacyCandidates = inferLegacyEffectCandidates(description, { limit: 4 });
+  for (const effectName of legacyCandidates) {
+    if (hasCatalog && !Object.prototype.hasOwnProperty.call(byName, effectName)) continue;
+    return effectName;
   }
-  const trained = recommendTrainedEffectsForTargets({
+  const trained = recommendEffectsForTargets({
     summary: description,
     targetIds: options?.targetIds || [],
     displayElements: options?.displayElements || [],

@@ -11,10 +11,14 @@ import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js"
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
 import { translatePlacementIntentToXlights } from "./effect-intent-translation.js";
 import {
-  buildStage1TrainingKnowledgeMetadata,
-  recommendTrainedEffectsForTargets,
-  recommendTrainedEffectsForVisualFamilies
+  buildStage1TrainingKnowledgeMetadata
 } from "./trained-effect-knowledge.js";
+import {
+  chooseSafeFallbackChain,
+  firstAvailableEffect,
+  recommendEffectsForTargets,
+  recommendEffectsForVisualFamilies
+} from "../shared/effect-semantics-registry.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
@@ -315,14 +319,6 @@ function buildAvailableEffectSet(effectCatalog = null) {
   return names.length ? new Set(names) : null;
 }
 
-function firstAvailableEffect(candidates = [], availableEffects = null) {
-  const normalized = normArray(candidates).map((row) => normText(row)).filter(Boolean);
-  if (!availableEffects || !(availableEffects instanceof Set) || !availableEffects.size) {
-    return normalized.find(Boolean) || "";
-  }
-  return normalized.find((row) => availableEffects.has(row)) || "";
-}
-
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -336,7 +332,7 @@ function inferEffectNameFromSectionPlan({
 } = {}) {
   const hinted = firstAvailableEffect(effectHints, availableEffects);
   if (hinted) return hinted;
-  const familyDriven = recommendTrainedEffectsForVisualFamilies({
+  const familyDriven = recommendEffectsForVisualFamilies({
     preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
     targetIds,
     displayElements,
@@ -356,7 +352,7 @@ function inferEffectNameFromSectionPlan({
   const normalizedDensity = normText(density).toLowerCase();
   const explicitStaticCue = /\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary);
   const cinematicWarmCue = /warm|amber|gold|cinematic|glow|smooth/.test(summary);
-  const trained = recommendTrainedEffectsForTargets({
+  const trained = recommendEffectsForTargets({
     summary,
     energy: normalizedEnergy,
     density: normalizedDensity,
@@ -370,34 +366,34 @@ function inferEffectNameFromSectionPlan({
       const alternate = firstAvailableEffect(
         trained.map((row) => row?.effectName).filter((row) => normText(row) !== "On"),
         availableEffects
-      ) || firstAvailableEffect(["Color Wash", "Shimmer"], availableEffects);
+      ) || firstAvailableEffect(chooseSafeFallbackChain("trainedOnAlternate"), availableEffects);
       if (alternate) return alternate;
     }
     return trainedChosen;
   }
 
   if (/shimmer|sparkle|twinkle|glitter/.test(summary)) {
-    return firstAvailableEffect(["Shimmer", "Twinkle"], availableEffects) || "Shimmer";
+    return firstAvailableEffect(chooseSafeFallbackChain("sparklyTexture"), availableEffects) || "Shimmer";
   }
   if (/bars|pulse|strobe|rhythm|chop/.test(summary)) {
-    return firstAvailableEffect(["Bars", "Marquee", "SingleStrand"], availableEffects) || "Bars";
+    return firstAvailableEffect(chooseSafeFallbackChain("rhythmicMotion"), availableEffects) || "Bars";
   }
   if (explicitStaticCue) {
-    return firstAvailableEffect(["On", "Color Wash"], availableEffects) || "On";
+    return firstAvailableEffect(chooseSafeFallbackChain("staticFill"), availableEffects) || "On";
   }
   if (cinematicWarmCue) {
     if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) {
-      return firstAvailableEffect(["Shimmer", "Color Wash", "On"], availableEffects) || "Shimmer";
+      return firstAvailableEffect(chooseSafeFallbackChain("cinematicWarmHigh"), availableEffects) || "Shimmer";
     }
-    return firstAvailableEffect(["Color Wash", "Shimmer", "On"], availableEffects) || "Color Wash";
+    return firstAvailableEffect(chooseSafeFallbackChain("cinematicWarmLow"), availableEffects) || "Color Wash";
   }
   if (normalizedEnergy === "high" || /chorus|payoff|finale/.test(summary)) {
-    return firstAvailableEffect(["Shimmer", "Bars", "Pinwheel"], availableEffects) || "Shimmer";
+    return firstAvailableEffect(chooseSafeFallbackChain("highEnergy"), availableEffects) || "Shimmer";
   }
   if (normalizedDensity === "dense" || /bridge/.test(summary)) {
-    return firstAvailableEffect(["Bars", "Shimmer", "Color Wash"], availableEffects) || "Bars";
+    return firstAvailableEffect(chooseSafeFallbackChain("denseBridge"), availableEffects) || "Bars";
   }
-  return firstAvailableEffect(["Color Wash", "On", "Shimmer"], availableEffects) || "Color Wash";
+  return firstAvailableEffect(chooseSafeFallbackChain("default"), availableEffects) || "Color Wash";
 }
 
 function buildStructuredExecutionLine({
