@@ -262,6 +262,37 @@ export const CONTEXTUAL_EFFECT_RULES = Object.freeze({
   }
 });
 
+export const REPEATED_ROLE_RULES = Object.freeze({
+  chorus: {
+    coherentBuild: {
+      basePrimary: ["Shimmer", "Pinwheel"],
+      baseSecondary: ["Bars", "Meteors"],
+      growthPrimary: ["Shimmer", "Pinwheel", "Meteors"],
+      growthSecondary: ["Bars", "Shockwave"]
+    },
+    unrelated: {
+      alternates: [
+        ["Bars", "Meteors"],
+        ["Pinwheel", "Shimmer"],
+        ["Color Wash", "Wave"]
+      ]
+    }
+  },
+  verse: {
+    coherentSupport: {
+      basePrimary: ["Color Wash", "Candle"],
+      baseSecondary: ["Wave", "Spirals"]
+    },
+    unrelated: {
+      alternates: [
+        ["Color Wash", "Candle"],
+        ["Spirals", "Wave"],
+        ["Bars", "Shimmer"]
+      ]
+    }
+  }
+});
+
 export const SECTION_INTENT_SUMMARY_RULES = Object.freeze({
   lightingCue: {
     high: "build a clearer key-vs-fill hierarchy{warmClause} with stronger punch on the main reveal",
@@ -413,6 +444,31 @@ export function resolveContextualEffectCandidates({
   const rule = contextRules[str(variant)] || contextRules.default || null;
   if (!rule) return [];
   return pickDistinctEffects(rule.primary, rule.secondary);
+}
+
+export function resolveRepeatedRoleEffectCandidates({
+  roleKey = "",
+  variant = "",
+  repeatedRoleIndex = 0,
+  repeatedRoleCount = 0
+} = {}) {
+  const roleRules = REPEATED_ROLE_RULES[str(roleKey)] || null;
+  if (!roleRules) return [];
+  const rule = roleRules[str(variant)] || null;
+  if (!rule) return [];
+  if (Array.isArray(rule.alternates) && rule.alternates.length) {
+    const idx = Math.max(0, Number(repeatedRoleIndex) || 0) % rule.alternates.length;
+    const next = rule.alternates[idx] || [];
+    const secondary = rule.alternates[(idx + 1) % rule.alternates.length] || [];
+    return pickDistinctEffects(next, secondary);
+  }
+  const count = Math.max(0, Number(repeatedRoleCount) || 0);
+  const idx = Math.max(0, Number(repeatedRoleIndex) || 0);
+  const useGrowth = count > 1 && idx >= count - 1 && (arr(rule.growthPrimary).length || arr(rule.growthSecondary).length);
+  if (useGrowth) {
+    return pickDistinctEffects(rule.growthPrimary, rule.growthSecondary);
+  }
+  return pickDistinctEffects(rule.basePrimary, rule.baseSecondary);
 }
 
 export function resolveSummaryFallbackEffect(summary = "", availableEffects = null) {

@@ -590,6 +590,80 @@ test("designer runtime broad whole-sequence passes now use multiple supported ef
   assert.ok(effectNames.length >= 5);
 });
 
+test("designer runtime keeps chorus family resemblance cues coherent while allowing final chorus build", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-role-chorus",
+    sequenceRevision: "rev-role-chorus",
+    promptText: "Give the choruses a recognizable common visual language so Chorus 1, Chorus 2, and the Final Chorus feel related, then let each chorus build in size and payoff with the Final Chorus clearly landing biggest.",
+    goals: "Give the choruses a recognizable common visual language so Chorus 1, Chorus 2, and the Final Chorus feel related, then let each chorus build in size and payoff with the Final Chorus clearly landing biggest.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 20000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 20000, endMs: 40000, energy: "high", density: "dense" },
+          { label: "Verse 2", startMs: 40000, endMs: 60000, energy: "medium", density: "moderate" },
+          { label: "Chorus 2", startMs: 60000, endMs: 80000, energy: "high", density: "dense" },
+          { label: "Bridge", startMs: 80000, endMs: 100000, energy: "medium", density: "wide" },
+          { label: "Final Chorus", startMs: 100000, endMs: 125000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Verse 2", energy: "medium", density: "moderate" },
+        { label: "Chorus 2", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "wide" },
+        { label: "Final Chorus", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  const plans = result.proposalBundle.executionPlan.sectionPlans.filter((row) => /chorus/i.test(row.section));
+  const chorus1 = plans.find((row) => row.section === "Chorus 1");
+  const chorus2 = plans.find((row) => row.section === "Chorus 2");
+  const finalChorus = plans.find((row) => row.section === "Final Chorus");
+  assert.deepEqual(chorus1.effectHints, ["Shimmer", "Pinwheel"]);
+  assert.deepEqual(chorus2.effectHints, ["Shimmer", "Pinwheel"]);
+  assert.deepEqual(finalChorus.effectHints, ["Shimmer", "Pinwheel"]);
+});
+
+test("designer runtime can intentionally break verse family identity when prompt asks for unrelated verses", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-role-verse",
+    sequenceRevision: "rev-role-verse",
+    promptText: "Make each verse feel unrelated to the other sections with no need for Verse 1 and Verse 2 to share a supporting identity.",
+    goals: "Make each verse feel unrelated to the other sections with no need for Verse 1 and Verse 2 to share a supporting identity.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 20000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 20000, endMs: 40000, energy: "high", density: "dense" },
+          { label: "Verse 2", startMs: 40000, endMs: 60000, energy: "medium", density: "moderate" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Verse 2", energy: "medium", density: "moderate" }
+      ]
+    }
+  });
+
+  const plans = result.proposalBundle.executionPlan.sectionPlans.filter((row) => /verse/i.test(row.section));
+  assert.deepEqual(plans[0].effectHints, ["Color Wash", "Candle"]);
+  assert.deepEqual(plans[1].effectHints, ["Spirals", "Wave"]);
+});
+
 test("designer runtime does not treat inferred focal language as explicit metadata scope in broad passes", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-8d",

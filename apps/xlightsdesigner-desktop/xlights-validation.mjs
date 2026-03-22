@@ -466,9 +466,22 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
   const design = pageStates?.design || {};
   const sequence = pageStates?.sequence || {};
   const conceptRows = arr(design?.data?.executionPlan?.conceptRows);
+  const executionPlanSections = arr(diagnose?.executionPlanSections);
+  const intentSectionPlans = arr(diagnose?.intentSectionPlans);
   const sequenceRows = arr(sequence?.data?.rows);
   const proposalScope = diagnose?.proposalScope || {};
   const executionPlanSummary = diagnose?.executionPlanSummary || {};
+  const preferredSectionPlans = executionPlanSections.length ? executionPlanSections : intentSectionPlans;
+  const scopedSections = arr(proposalScope?.sections).length
+    ? arr(proposalScope.sections)
+    : (preferredSectionPlans.length
+        ? preferredSectionPlans.map((row) => row?.section)
+        : conceptRows.map((row) => row?.anchor));
+  const primarySections = arr(executionPlanSummary?.primarySections).length
+    ? arr(executionPlanSummary.primarySections)
+    : (preferredSectionPlans.length
+        ? preferredSectionPlans.map((row) => row?.section)
+        : conceptRows.map((row) => row?.anchor));
   const distinctFamilies = new Set();
   const familyUsageCounts = new Map();
   const timingTrackNames = new Set();
@@ -513,12 +526,25 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
     }
     sectionFamilyMap.get(sectionKey).add(family);
   }
+  if (preferredSectionPlans.length) {
+    for (const row of preferredSectionPlans) {
+      const sectionName = str(row?.section);
+      for (const family of arr(row?.effectHints)) {
+        const effectFamily = str(family);
+        if (!effectFamily) continue;
+        distinctFamilies.add(effectFamily);
+        addFamilyUsage(sectionName, effectFamily);
+      }
+    }
+  }
   for (const row of arr(diagnose?.rawPlan)) {
     if (str(row?.cmd) !== "effects.create") continue;
     const effectName = str(row?.params?.effectName);
     if (effectName) {
       distinctFamilies.add(effectName);
-      addFamilyUsage(str(row?.anchor?.section || row?.anchor?.sectionName || ""), effectName);
+      if (!preferredSectionPlans.length) {
+        addFamilyUsage(str(row?.anchor?.section || row?.anchor?.sectionName || ""), effectName);
+      }
     }
     const trackName = str(row?.anchor?.trackName);
     const basis = str(row?.anchor?.basis);
@@ -636,11 +662,11 @@ function liveProposalMetrics({ diagnose = null, pageStates = {} } = {}) {
   )].sort();
   return {
     activeSequence: str(diagnose?.activeSequence || pageStates?.project?.data?.sequenceContext?.activeSequence),
-    sectionScope: arr(proposalScope?.sections || conceptRows.map((row) => row?.anchor)).map((row) => str(row)).filter(Boolean),
+    sectionScope: arr(scopedSections).map((row) => str(row)).filter(Boolean),
     targetScope: arr(proposalScope?.targetIds || flattenedFocusTargets).map((row) => str(row)).filter(Boolean).sort(),
     effectPlacementCount: Number(executionPlanSummary?.effectPlacementCount || sequenceRows.reduce((sum, row) => sum + Number(row?.effects || 0), 0) || 0),
-    sectionCount: arr(executionPlanSummary?.primarySections || conceptRows.map((row) => row?.anchor)).filter(Boolean).length,
-    designConceptCount: conceptRows.length,
+    sectionCount: arr(primarySections).filter(Boolean).length,
+    designConceptCount: preferredSectionPlans.length || conceptRows.length,
     sequenceRowCount: sequenceRows.length,
     distinctFamilyCount: distinctFamilies.size,
     distinctFamilies: [...distinctFamilies].sort(),
@@ -836,6 +862,38 @@ function comparativeLivePromptAdjustment(metrics = {}, goalText = "") {
   if (/choppier|staccato|punchy pulse changes|sharper accents|less connected motion/.test(lowerGoal)) {
     if (sectionContrastScore >= 0.45) adjustment += 0.6;
     if (sectionSignatureUniqueness >= 0.55) adjustment += 0.4;
+  }
+
+  if (/common visual language|family resemblance|feel related|recognizable common/.test(lowerGoal) && /chorus/.test(lowerGoal)) {
+    if (repeatedRoleSimilarityScore >= 0.85) adjustment += 1.8;
+    else if (repeatedRoleSimilarityScore >= 0.6) adjustment += 1.0;
+    if (repeatedRoleSimilarityScore < 0.3) adjustment -= 2.0;
+    if (chorusProgressionScore >= 0.5) adjustment += 0.9;
+    if (sectionSignatureUniqueness <= 0.5) adjustment += 0.6;
+    if (sectionSignatureUniqueness > 0.75) adjustment -= 1.1;
+    if (familyCount <= 3) adjustment += 0.9;
+    if (familyCount > 4) adjustment -= 1.2;
+    if (dominantFamilyShare >= 0.4 && dominantFamilyShare <= 0.75) adjustment += 0.5;
+  }
+
+  if (/(separate unrelated|no family resemblance|no build pattern|do not need to share)/.test(lowerGoal) && /chorus/.test(lowerGoal)) {
+    if (repeatedRoleSimilarityScore >= 0.6) adjustment -= 1.6;
+    if (sectionSignatureUniqueness <= 0.5) adjustment -= 0.8;
+    if (sectionSignatureUniqueness >= 0.9) adjustment -= 0.9;
+    if (familyCount >= 5) adjustment -= 1.1;
+    if (chorusProgressionScore >= 0.5) adjustment -= 0.8;
+  }
+
+  if (/shared supporting visual language|same narrative world|share a supporting identity/.test(lowerGoal)) {
+    if (repeatedRoleSimilarityScore >= 0.6) adjustment += 1.1;
+    if (familyCount <= 3) adjustment += 0.9;
+    if (familyCount > 3) adjustment -= 1.1;
+  }
+
+  if (/each verse feel unrelated|no need for verse 1 and verse 2 to share|no need to share a supporting identity|unrelated to the other sections/.test(lowerGoal)) {
+    if (repeatedRoleSimilarityScore >= 0.6) adjustment -= 1.5;
+    if (familyCount <= 3) adjustment -= 0.8;
+    if (sectionSignatureUniqueness <= 0.5) adjustment -= 0.8;
   }
 
   if (/finale punch|flowing rise into the final chorus|final chorus/.test(lowerGoal)) {

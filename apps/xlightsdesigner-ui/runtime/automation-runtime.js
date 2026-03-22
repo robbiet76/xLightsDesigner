@@ -477,6 +477,22 @@ export function createAutomationRuntime(deps = {}) {
       : [];
   }
 
+  function summarizeComparativeValidationSectionPlans(sectionPlans = []) {
+    return Array.isArray(sectionPlans)
+      ? sectionPlans.map((row) => ({
+          designId: String(row?.designId || ""),
+          designRevision: Number(row?.designRevision || 0) || 0,
+          section: String(row?.section || ""),
+          targetIds: Array.isArray(row?.targetIds)
+            ? row.targetIds.map((value) => String(value || "").trim()).filter(Boolean)
+            : [],
+          effectHints: Array.isArray(row?.effectHints)
+            ? row.effectHints.map((value) => String(value || "").trim()).filter(Boolean)
+            : []
+        }))
+      : [];
+  }
+
   async function getAutomationComparativeValidationSnapshot() {
     const sourceLines = filteredProposed();
     const intentHandoff = getValidHandoff("intent_handoff_v1");
@@ -540,6 +556,7 @@ export function createAutomationRuntime(deps = {}) {
             effectPlacementCount: Array.isArray(executionPlan.effectPlacements) ? executionPlan.effectPlacements.length : 0
           }
         : null,
+      executionPlanSections: summarizeComparativeValidationSectionPlans(executionPlan?.sectionPlans),
       intentHandoffSummary: intentHandoff
         ? {
             goal: intentHandoff.goal || "",
@@ -554,6 +571,7 @@ export function createAutomationRuntime(deps = {}) {
               : null
           }
         : null,
+      intentSectionPlans: summarizeComparativeValidationSectionPlans(intentHandoff?.executionStrategy?.sectionPlans),
       rawPlan: summarizeComparativeValidationRawPlan(rawPlan),
       pageStates: summarizeComparativeValidationPageStates()
     };
