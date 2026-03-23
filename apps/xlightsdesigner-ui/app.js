@@ -5310,7 +5310,7 @@ function getRouteChatContext() {
   if (route === "sequence") {
     return {
       title: "Sequence translation workspace",
-      note: "Use team chat to inspect how the current design is translating into technical sequence changes before review and apply."
+      note: ""
     };
   }
   if (route === "design") {

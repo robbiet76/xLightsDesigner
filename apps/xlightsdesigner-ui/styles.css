@@ -80,6 +80,7 @@ button.danger-action:hover {
   --edge-pad: 14px;
   --top-row-height: 56px;
   --bottom-row-height: 56px;
+  --workspace-header-height: 88px;
   width: 100vw;
   height: 100vh;
   max-width: none;
@@ -288,6 +289,17 @@ button.danger-action:hover {
   flex-direction: column;
   min-height: 0;
   overflow: auto;
+}
+
+.coach-panel-header {
+  min-height: var(--workspace-header-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.coach-panel-header h3 {
+  margin: 0;
 }
 
 .bottom-input-row {
@@ -629,6 +641,9 @@ button.danger-action:hover {
     var(--panel);
   border-color: rgba(126, 147, 255, 0.24);
   padding: 10px 14px;
+  min-height: var(--workspace-header-height);
+  display: flex;
+  align-items: center;
 }
 
 .journey-card h3 {

@@ -38,10 +38,13 @@ export function buildAppShell({ state, screenContent, helpers }) {
   }
 
   function persistentCoachPanel() {
+    const note = String(chatContext?.note || "Use chat to direct the design team and review the active conversation.").trim();
     return `
       <aside class="coach-panel card">
-        <h3>Design Team Chat</h3>
-        <p class="team-chat-context">${escapeHtml(String(chatContext?.note || "Use chat to direct the design team and review the active conversation."))}</p>
+        <div class="coach-panel-header">
+          <h3>Design Team Chat</h3>
+          ${note ? `<p class="team-chat-context">${escapeHtml(note)}</p>` : ""}
+        </div>
         <div class="panel-window chat-window">
           <div class="chat-thread">
             ${(state.chat || [])
