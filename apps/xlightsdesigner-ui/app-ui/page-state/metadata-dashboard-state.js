@@ -89,25 +89,8 @@ function uniqueOrdered(values = []) {
 function buildSmartSuggestionOptions({
   field = "",
   active = {},
-  commonValues = []
+  projectValues = []
 } = {}) {
-  const blockedByField = {
-    semanticHints: new Set([
-      "aggregate",
-      "model_group",
-      "body",
-      "letters",
-      "center",
-      "inner ring",
-      "outer ring",
-      "left half",
-      "right half",
-      "top",
-      "bottom",
-      "spokes"
-    ]),
-    effectAvoidances: new Set()
-  };
   const baseByField = {
     semanticHints: [
       "character",
@@ -134,24 +117,12 @@ function buildSmartSuggestionOptions({
       "strobing"
     ]
   };
-  const activeTraits = Array.isArray(active?.inferredSemanticTraits) ? active.inferredSemanticTraits : [];
   const selectedValues = Array.isArray(active?.[field]) ? active[field] : [];
-  const dynamic = [];
-  if (field === "semanticHints") {
-    dynamic.push(...activeTraits);
-    const type = str(active?.canonicalType);
-    if (type && type !== "model_group" && type !== "aggregate") dynamic.push(type);
-  }
-  if (field === "effectAvoidances") {
-    if ((activeTraits || []).includes("character")) dynamic.push("fast motion", "dense texture");
-    if ((activeTraits || []).includes("text")) dynamic.push("full coverage", "large bursts");
-  }
   return uniqueOrdered([
     ...selectedValues,
-    ...dynamic,
     ...baseByField[field],
-    ...commonValues
-  ]).filter((value) => !blockedByField[field]?.has(str(value).toLowerCase())).slice(0, 16);
+    ...projectValues
+  ]).slice(0, 16);
 }
 
 function buildActiveTargetSummary(active = {}) {
@@ -395,12 +366,12 @@ export function buildMetadataDashboardState({
       semanticHints: buildSmartSuggestionOptions({
         field: "semanticHints",
         active: activeTargetData,
-        commonValues: buildCommonPreferenceValues(preferencesByTargetId, "semanticHints")
+        projectValues: buildCommonPreferenceValues(preferencesByTargetId, "semanticHints")
       }),
       effectAvoidances: buildSmartSuggestionOptions({
         field: "effectAvoidances",
         active: activeTargetData,
-        commonValues: buildCommonPreferenceValues(preferencesByTargetId, "effectAvoidances")
+        projectValues: buildCommonPreferenceValues(preferencesByTargetId, "effectAvoidances")
       })
     };
     activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
