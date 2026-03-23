@@ -97,6 +97,15 @@ function supportStateLabel({ trainedBuckets = [] } = {}) {
   return trainedBuckets.length ? "trained_supported" : "runtime_targetable_only";
 }
 
+function metadataCompletenessLabel({ canonicalType = "", preference = {}, userTags = [] } = {}) {
+  if (low(canonicalType) !== "custom") return "";
+  const hasHints = arr(preference?.semanticHints).map((row) => norm(row)).filter(Boolean).length > 0;
+  const hasTags = unique(userTags).length > 0;
+  if (hasHints) return "metadata_ready";
+  if (hasTags) return "metadata_partial";
+  return "metadata_needed";
+}
+
 function buildProvenanceDetail({
   trainedBuckets = [],
   canonicalType = "",
@@ -152,6 +161,12 @@ function buildProvenanceDetail({
         ? `Current metadata tags applied: ${userTags.join(", ")}.`
         : "No metadata tags applied."
     },
+    metadataCompleteness: {
+      source: "metadata_framework",
+      detail: low(canonicalType) === "custom"
+        ? "Metadata completeness is derived from explicit semantic hints and tags for custom models."
+        : "Metadata completeness is not used for non-custom models."
+    },
     training: {
       source: "training_bundle",
       detail: `Training artifact version ${norm(artifactVersion || "1.0")}.`
@@ -193,6 +208,11 @@ export function buildNormalizedTargetMetadataRecords({
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
     const userTags = unique(assignment?.tags || []);
     const confidence = trainedBuckets.length ? 1 : (classification?.canonicalType === "custom" ? 0.25 : 0.5);
+    const metadataCompleteness = metadataCompletenessLabel({
+      canonicalType: classification?.canonicalType,
+      preference,
+      userTags
+    });
     records.push({
       targetId,
       targetKind: "model",
@@ -214,7 +234,8 @@ export function buildNormalizedTargetMetadataRecords({
           userTags,
           semanticHints: unique(preference?.semanticHints)
         }),
-        supportState: supportStateLabel({ trainedBuckets })
+        supportState: supportStateLabel({ trainedBuckets }),
+        metadataCompleteness
       },
       training: {
         trainedModelBuckets: trainedBuckets,

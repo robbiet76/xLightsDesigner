@@ -18,7 +18,7 @@ function buildHelpers() {
         targetId: "Snowman",
         targetKind: "model",
         identity: { canonicalType: "custom" },
-        semantics: { supportState: "runtime_targetable_only", inferredRole: "focal", inferredSemanticTraits: ["character", "focal"] },
+        semantics: { supportState: "runtime_targetable_only", metadataCompleteness: "metadata_partial", inferredRole: "focal", inferredSemanticTraits: ["character", "focal"] },
         training: { trainedSupportState: "out_of_stage1_model_support" },
         user: { rolePreference: "support" },
         provenance: {
@@ -34,7 +34,7 @@ function buildHelpers() {
         targetId: "SpiralTrees",
         targetKind: "model",
         identity: { canonicalType: "tree" },
-        semantics: { supportState: "trained_supported", inferredRole: "", inferredSemanticTraits: ["tree"] },
+        semantics: { supportState: "trained_supported", metadataCompleteness: "", inferredRole: "", inferredSemanticTraits: ["tree"] },
         training: { trainedSupportState: "trained_supported" },
         user: { rolePreference: "" },
         provenance: { confidence: 1, updatedAt: "2026-03-22T10:00:00.000Z", fields: {} }
@@ -63,6 +63,7 @@ test("metadata dashboard summarizes tag and target state", () => {
         metadataFilterName: "",
         metadataFilterType: "",
         metadataFilterTags: "",
+        metadataFilterMetadata: "",
         metadataNewTag: ""
       },
       health: {}
@@ -78,10 +79,15 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.hasSelectedTags, true);
   assert.equal(dashboard.data.targetsSummary.trainedSupportedModels, 1);
   assert.equal(dashboard.data.targetsSummary.runtimeOnlyModels, 1);
+  assert.equal(dashboard.data.targetsSummary.customMetadataReadyModels, 0);
+  assert.equal(dashboard.data.targetsSummary.customMetadataPartialModels, 1);
+  assert.equal(dashboard.data.targetsSummary.customMetadataNeededModels, 0);
   assert.equal(dashboard.data.targetsSummary.controlledTagCount, 2);
   assert.equal(dashboard.data.targetsSummary.customTagCount, 0);
   assert.equal(dashboard.data.rows[0].supportState.length > 0, true);
+  assert.equal(dashboard.data.rows[0].metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
+  assert.equal(dashboard.data.activeTarget.metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
   assert.equal(dashboard.data.activeTarget.provenanceUpdatedAt, "2026-03-22T10:00:00.000Z");
   assert.equal(dashboard.data.activeTarget.provenanceFields.length, 2);
@@ -99,6 +105,30 @@ test("metadata dashboard applies filters to target rows", () => {
         metadataFilterName: "snow",
         metadataFilterType: "",
         metadataFilterTags: "",
+        metadataFilterMetadata: "",
+        metadataNewTag: ""
+      },
+      health: {}
+    },
+    helpers: buildHelpers()
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].displayName, "Snowman");
+});
+
+test("metadata dashboard applies metadata completeness filter to target rows", () => {
+  const dashboard = buildMetadataDashboardState({
+    state: {
+      submodels: [],
+      metadata: { assignments: [] },
+      ui: {
+        metadataSelectedTags: [],
+        metadataSelectionIds: [],
+        metadataFilterName: "",
+        metadataFilterType: "",
+        metadataFilterTags: "",
+        metadataFilterMetadata: "metadata_partial",
         metadataNewTag: ""
       },
       health: {}

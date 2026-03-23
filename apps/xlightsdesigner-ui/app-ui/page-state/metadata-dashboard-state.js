@@ -42,6 +42,7 @@ export function buildMetadataDashboardState({
   const typeFilter = String(state.ui?.metadataFilterType || "");
   const tagsFilter = String(state.ui?.metadataFilterTags || "");
   const supportFilter = String(state.ui?.metadataFilterSupport || "");
+  const metadataFilter = String(state.ui?.metadataFilterMetadata || "");
   const filteredModels = modelOptions.filter((m) => {
     const rowName = str(m?.raw?.displayName).toLowerCase();
     const rowType = str(m?.raw?.type).toLowerCase();
@@ -49,10 +50,12 @@ export function buildMetadataDashboardState({
     const normalized = normalizedByTargetId.get(String(m.id));
     const rowTags = escapeTagList(assignment?.tags).join(", ").toLowerCase();
     const rowSupport = str(normalized?.semantics?.supportState).toLowerCase();
+    const rowMetadataCompleteness = str(normalized?.semantics?.metadataCompleteness).toLowerCase();
     if (!matchesMetadataFilterValue(rowName, nameFilter)) return false;
     if (!matchesMetadataFilterValue(rowType, typeFilter)) return false;
     if (!matchesMetadataFilterValue(rowTags, tagsFilter)) return false;
     if (!matchesMetadataFilterValue(rowSupport, supportFilter)) return false;
+    if (!matchesMetadataFilterValue(rowMetadataCompleteness, metadataFilter)) return false;
     return true;
   });
   const submodelCount = modelOptions.filter((target) => target.raw.type === "submodel").length;
@@ -109,6 +112,9 @@ export function buildMetadataDashboardState({
         submodelCount,
         trainedSupportedModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState === "trained_supported").length,
         runtimeOnlyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState !== "trained_supported").length,
+        customMetadataReadyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness === "metadata_ready").length,
+        customMetadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness === "metadata_partial").length,
+        customMetadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness === "metadata_needed").length,
         controlledTagCount: tags.filter((row) => row.controlled === true).length,
         customTagCount: tags.filter((row) => row.controlled !== true).length
       },
@@ -119,6 +125,7 @@ export function buildMetadataDashboardState({
             type: str(activeTarget?.raw?.type || activeNormalized?.targetKind),
             canonicalType: str(activeNormalized?.identity?.canonicalType),
             supportState: str(activeNormalized?.semantics?.supportState),
+            metadataCompleteness: str(activeNormalized?.semantics?.metadataCompleteness),
             trainedSupportState: str(activeNormalized?.training?.trainedSupportState),
             trainedBuckets: escapeTagList(activeNormalized?.training?.trainedModelBuckets),
             inferredRole: str(activeNormalized?.semantics?.inferredRole),
@@ -146,6 +153,7 @@ export function buildMetadataDashboardState({
           selected: selectedIds.has(str(m.id)),
           focused: activeTargetId === str(m.id),
           supportState: str(normalized?.semantics?.supportState),
+          metadataCompleteness: str(normalized?.semantics?.metadataCompleteness),
           canonicalType: str(normalized?.identity?.canonicalType),
           inferredRole: str(normalized?.semantics?.inferredRole),
           inferredSemanticTraits: escapeTagList(normalized?.semantics?.inferredSemanticTraits),
