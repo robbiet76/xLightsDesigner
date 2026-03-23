@@ -339,6 +339,20 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     `;
   }
 
+  function renderWorkspaceFrame(kind = "", body = "", pageClass = "") {
+    const className = pageClass ? ` ${pageClass}` : "";
+    return `
+      <div class="workspace-page${className}">
+        ${renderJourneyCard(kind)}
+        <section class="card workspace-content-window">
+          <div class="workspace-content-body">
+            ${body}
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
   function parseTranslatedTarget(line = "") {
     const text = String(line || "").trim();
     if (!text) return "";
@@ -494,9 +508,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const lifecycle = data.lifecycle || {};
     const summary = data.summary || {};
     const sequenceContext = data.sequenceContext || {};
-    return `
+    return renderWorkspaceFrame("project", `
       <div class="screen-grid">
-        ${renderJourneyCard("project")}
         <section class="card">
           <h3>Project Lifecycle</h3>
           <div class="banner">${lifecycle.hasSavedProject ? `Current Project: ${escapeHtml(String(lifecycle.projectName || "(unnamed)"))}` : "No project file is open yet."}</div>
@@ -574,16 +587,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <p class="banner">Revision: ${escapeHtml(String(sequenceContext.revision || "(not loaded)"))}</p>
         </section>
       </div>
-    `;
+    `, "project-screen");
   }
 
   function settingsScreen() {
-    return `
+    return renderWorkspaceFrame("settings", `
       <div class="screen-grid settings-screen">
-        ${renderJourneyCard("settings")}
         ${buildSettingsContent({ state, helpers, pageState: pageStates?.settings || null, includeClose: false })}
       </div>
-    `;
+    `, "settings-screen");
   }
 
   function renderAudioLiveDashboardCard() {
@@ -668,9 +680,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
   function audioScreen() {
     const dashboard = pageStates?.audio || {};
     const emptyState = dashboard?.data?.emptyState || null;
-    return `
+    return renderWorkspaceFrame("audio", `
       <div class="screen-grid audio-screen">
-        ${renderJourneyCard("audio")}
         ${renderAudioLiveDashboardCard()}
         ${renderArtifactDetailPanel()}
         ${
@@ -684,7 +695,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             : ""
         }
       </div>
-    `;
+    `, "audio-screen");
   }
 
   function renderSequenceContextArtifactCard() {
@@ -821,12 +832,11 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
   }
 
   function sequenceScreen() {
-    return `
+    return renderWorkspaceFrame("sequence", `
       <div class="screen-grid sequence-screen">
-        ${renderJourneyCard("sequence")}
         ${renderSequenceTranslationGrid()}
       </div>
-    `;
+    `, "sequence-screen");
   }
 
   function referenceMediaPanel() {
@@ -1106,9 +1116,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
   function designScreen() {
     const dashboard = pageStates?.design || {};
     const lastAppliedSnapshot = dashboard?.data?.lastAppliedSnapshot || null;
-    return `
+    return renderWorkspaceFrame("design", `
       <div class="screen-grid design-screen">
-        ${renderJourneyCard("design")}
         ${renderDesignerLiveDashboardCard()}
         ${
           lastAppliedSnapshot
@@ -1141,7 +1150,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         }
         ${renderArtifactDetailPanel()}
       </div>
-    `;
+    `, "design-screen");
   }
 
   function renderReviewPlanArtifactCard() {
@@ -1188,7 +1197,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const counts = data.counts || {};
     const verification = data.verification || null;
     const rows = Array.isArray(data.rows) ? data.rows : [];
-    return `
+    return renderWorkspaceFrame("review", `
       ${
         stale.active
           ? `
@@ -1211,7 +1220,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       }
 
       <div class="screen-grid review-screen">
-        ${renderJourneyCard("review")}
         ${renderArtifactDetailPanel()}
       </div>
 
@@ -1350,7 +1358,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         <button id="mobile-apply-all" ${data.apply?.canApplyAll ? "" : "disabled"}>Apply All</button>
         <span class="banner ${data.applyReady ? "" : "warning"}">${escapeHtml(String(data.mobileStatusText || ""))}</span>
       </div>
-    `;
+    `, "review-screen");
   }
 
   function historyScreen() {
@@ -1359,9 +1367,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       const data = dashboard?.data || {};
       const rows = Array.isArray(data.rows) ? data.rows : [];
       const selected = data.selected || null;
-      return `
+      return renderWorkspaceFrame("history", `
       <div class="screen-grid">
-        ${renderJourneyCard("history")}
         ${
           !rows.length
             ? `
@@ -1453,11 +1460,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           }
         </section>
       </div>
-    `;
+    `, "history-screen");
     } catch (err) {
-      return `
+      return renderWorkspaceFrame("history", `
         <div class="screen-grid">
-          ${renderJourneyCard("history")}
           <section class="card full-span">
             <div class="artifact-kicker">History</div>
             <h3>History is temporarily unavailable</h3>
@@ -1465,16 +1471,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p class="banner warning">${escapeHtml(String(err?.message || err || "Unknown history render error."))}</p>
           </section>
         </div>
-      `;
+      `, "history-screen");
     }
   }
 
   function metadataScreen() {
     const dashboard = pageStates?.metadata || {};
     const data = dashboard?.data || {};
-    return `
+    return renderWorkspaceFrame("metadata", `
       <div class="screen-grid metadata-workspace">
-        ${renderJourneyCard("metadata")}
         <section class="card metadata-panel">
           <div class="metadata-panel-header">
             <div>
@@ -1615,7 +1620,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           </details>
         </section>
       </div>
-    `;
+    `, "metadata-screen");
   }
 
   if (state.route === "project") return projectScreen();

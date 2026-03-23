@@ -274,7 +274,9 @@ button.danger-action:hover {
 .content {
   padding: 14px;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .coach-panel {
@@ -352,6 +354,28 @@ button.danger-action:hover {
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  align-content: start;
+}
+
+.workspace-page {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 14px;
+}
+
+.workspace-content-window {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspace-content-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .artifact-grid {
