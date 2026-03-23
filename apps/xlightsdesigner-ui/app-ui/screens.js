@@ -1500,11 +1500,58 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <h4>${String(data.progressSummary || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
             <p class="metadata-helper-copy">Use the grid to choose any target manually.</p>
           </section>
+          <section class="card metadata-bulk-card">
+            <div class="metadata-bulk-header">
+              <strong>${Number(data.selectedCount || 0)} selected</strong>
+              <div class="row">
+                <button id="metadata-select-visible">Select Visible</button>
+                <button id="metadata-clear-selection" ${data.selectedCount ? "" : "disabled"}>Clear</button>
+              </div>
+            </div>
+            <div class="metadata-bulk-grid">
+              <div>
+                <strong>Set Role</strong>
+                <div class="metadata-add-row">
+                  <select id="metadata-bulk-role">
+                    <option value="">Choose role...</option>
+                    ${["focal", "support", "background", "frame", "accent"].map((value) => `<option value="${value}">${value}</option>`).join("")}
+                  </select>
+                  <span></span>
+                  <button id="metadata-bulk-apply-role" ${data.selectedCount ? "" : "disabled"}>Apply</button>
+                </div>
+              </div>
+              <div>
+                <strong>Add Visual Hint</strong>
+                <div class="metadata-add-row">
+                  <select id="metadata-bulk-visual-hint">
+                    <option value="">Choose one...</option>
+                    ${((data.bulkOptions?.semanticHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                    <option value="__other__">Other...</option>
+                  </select>
+                  <input id="metadata-bulk-visual-hint-other" placeholder="Add custom visual hint" disabled />
+                  <button id="metadata-bulk-apply-visual-hint" ${data.selectedCount ? "" : "disabled"}>Apply</button>
+                </div>
+              </div>
+              <div>
+                <strong>Add Effect Avoidance</strong>
+                <div class="metadata-add-row">
+                  <select id="metadata-bulk-effect-avoidance">
+                    <option value="">Choose one...</option>
+                    ${((data.bulkOptions?.effectAvoidances || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                    <option value="__other__">Other...</option>
+                  </select>
+                  <input id="metadata-bulk-effect-avoidance-other" placeholder="Add custom avoidance" disabled />
+                  <button id="metadata-bulk-apply-effect-avoidance" ${data.selectedCount ? "" : "disabled"}>Apply</button>
+                </div>
+              </div>
+            </div>
+          </section>
           <section class="metadata-advanced metadata-grid-view" open>
             <div class="metadata-grid-wrap metadata-targets-wrap">
               <table class="metadata-grid metadata-target-grid">
                 <thead>
                   <tr>
+                    <th style="width: 44px;">Sel</th>
                     <th>Name</th>
                     <th>Type</th>
                     <th>Role</th>
@@ -1534,6 +1581,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                               : "-";
                             const focused = m.focused ? ' class="active-chip"' : "";
                             return `<tr>
+                              <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${m.selected ? "checked" : ""} /></td>
                               <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
                               <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                               <td>${role.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
@@ -1542,7 +1590,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                             </tr>`;
                           })
                           .join("")
-                      : `<tr><td colspan="5">No targets found.</td></tr>`
+                      : `<tr><td colspan="6">No targets found.</td></tr>`
                   }
                 </tbody>
               </table>

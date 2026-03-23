@@ -8107,6 +8107,55 @@ function removeMetadataTargetEffectAvoidance(targetId, value = "") {
   return updateMetadataTargetEffectAvoidances(id, next.join(", "));
 }
 
+function bulkSetMetadataRolePreference(rolePreference = "") {
+  const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
+  if (!selectedIds.length) {
+    setStatus("warning", "Select one or more layout targets first.");
+    return render();
+  }
+  let touched = 0;
+  for (const id of selectedIds) {
+    if (updateMetadataTargetRolePreference(id, rolePreference)) touched += 1;
+  }
+  saveMetadataAndRender(`Updated role preference for ${touched} target${touched === 1 ? "" : "s"}.`);
+}
+
+function bulkAddMetadataSemanticHint(value = "") {
+  const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
+  const nextValue = String(value || "").trim();
+  if (!selectedIds.length) {
+    setStatus("warning", "Select one or more layout targets first.");
+    return render();
+  }
+  if (!nextValue) {
+    setStatus("warning", "Choose or enter a visual hint first.");
+    return render();
+  }
+  let touched = 0;
+  for (const id of selectedIds) {
+    if (addMetadataTargetSemanticHint(id, nextValue)) touched += 1;
+  }
+  saveMetadataAndRender(`Added visual hint to ${touched} target${touched === 1 ? "" : "s"}.`);
+}
+
+function bulkAddMetadataEffectAvoidance(value = "") {
+  const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
+  const nextValue = String(value || "").trim();
+  if (!selectedIds.length) {
+    setStatus("warning", "Select one or more layout targets first.");
+    return render();
+  }
+  if (!nextValue) {
+    setStatus("warning", "Choose or enter an effect avoidance first.");
+    return render();
+  }
+  let touched = 0;
+  for (const id of selectedIds) {
+    if (addMetadataTargetEffectAvoidance(id, nextValue)) touched += 1;
+  }
+  saveMetadataAndRender(`Added effect avoidance to ${touched} target${touched === 1 ? "" : "s"}.`);
+}
+
 function applyTagsToSelectedMetadataTargets() {
   const selectedIds = normalizeMetadataSelectionIds(state.ui.metadataSelectionIds);
   if (!selectedIds.length) {
@@ -12231,6 +12280,9 @@ function bindEvents() {
     removeMetadataTargetSubmodelHint,
     addMetadataTargetEffectAvoidance,
     removeMetadataTargetEffectAvoidance,
+    bulkSetMetadataRolePreference,
+    bulkAddMetadataSemanticHint,
+    bulkAddMetadataEffectAvoidance,
     ignoreMetadataOrphan,
     remapMetadataOrphan,
     onUseRecent,

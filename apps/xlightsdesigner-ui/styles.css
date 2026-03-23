@@ -1573,6 +1573,23 @@ button.danger-action:hover {
   margin-top: 10px;
 }
 
+.metadata-bulk-card {
+  margin-top: 10px;
+}
+
+.metadata-bulk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.metadata-bulk-grid {
+  display: grid;
+  gap: 12px;
+}
+
 .metadata-toolbar {
   margin-top: 10px;
   gap: 8px;

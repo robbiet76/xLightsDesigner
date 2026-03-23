@@ -48,6 +48,9 @@ export function bindScreenEvents({
   removeMetadataTargetSubmodelHint,
   addMetadataTargetEffectAvoidance,
   removeMetadataTargetEffectAvoidance,
+  bulkSetMetadataRolePreference,
+  bulkAddMetadataSemanticHint,
+  bulkAddMetadataEffectAvoidance,
   ignoreMetadataOrphan,
   remapMetadataOrphan,
   onUseRecent,
@@ -301,6 +304,60 @@ export function bindScreenEvents({
 
   const metadataClearSelectionBtn = app.querySelector("#metadata-clear-selection");
   if (metadataClearSelectionBtn) metadataClearSelectionBtn.addEventListener("click", clearMetadataSelection);
+
+  const metadataBulkVisualSelect = app.querySelector("#metadata-bulk-visual-hint");
+  const metadataBulkVisualOther = app.querySelector("#metadata-bulk-visual-hint-other");
+  if (metadataBulkVisualSelect && metadataBulkVisualOther) {
+    const syncBulkVisualOther = () => {
+      const needsOther = String(metadataBulkVisualSelect.value || "") === "__other__";
+      metadataBulkVisualOther.disabled = !needsOther;
+      if (!needsOther) metadataBulkVisualOther.value = "";
+    };
+    metadataBulkVisualSelect.addEventListener("change", syncBulkVisualOther);
+    syncBulkVisualOther();
+  }
+
+  const metadataBulkAvoidSelect = app.querySelector("#metadata-bulk-effect-avoidance");
+  const metadataBulkAvoidOther = app.querySelector("#metadata-bulk-effect-avoidance-other");
+  if (metadataBulkAvoidSelect && metadataBulkAvoidOther) {
+    const syncBulkAvoidOther = () => {
+      const needsOther = String(metadataBulkAvoidSelect.value || "") === "__other__";
+      metadataBulkAvoidOther.disabled = !needsOther;
+      if (!needsOther) metadataBulkAvoidOther.value = "";
+    };
+    metadataBulkAvoidSelect.addEventListener("change", syncBulkAvoidOther);
+    syncBulkAvoidOther();
+  }
+
+  const metadataBulkApplyRoleBtn = app.querySelector("#metadata-bulk-apply-role");
+  if (metadataBulkApplyRoleBtn) {
+    metadataBulkApplyRoleBtn.addEventListener("click", () => {
+      const select = app.querySelector("#metadata-bulk-role");
+      bulkSetMetadataRolePreference(String(select?.value || ""));
+    });
+  }
+
+  const metadataBulkApplyVisualBtn = app.querySelector("#metadata-bulk-apply-visual-hint");
+  if (metadataBulkApplyVisualBtn) {
+    metadataBulkApplyVisualBtn.addEventListener("click", () => {
+      const select = app.querySelector("#metadata-bulk-visual-hint");
+      const other = app.querySelector("#metadata-bulk-visual-hint-other");
+      const selectedValue = String(select?.value || "").trim();
+      const nextValue = selectedValue === "__other__" ? String(other?.value || "").trim() : selectedValue;
+      bulkAddMetadataSemanticHint(nextValue);
+    });
+  }
+
+  const metadataBulkApplyAvoidBtn = app.querySelector("#metadata-bulk-apply-effect-avoidance");
+  if (metadataBulkApplyAvoidBtn) {
+    metadataBulkApplyAvoidBtn.addEventListener("click", () => {
+      const select = app.querySelector("#metadata-bulk-effect-avoidance");
+      const other = app.querySelector("#metadata-bulk-effect-avoidance-other");
+      const selectedValue = String(select?.value || "").trim();
+      const nextValue = selectedValue === "__other__" ? String(other?.value || "").trim() : selectedValue;
+      bulkAddMetadataEffectAvoidance(nextValue);
+    });
+  }
 
   app.querySelectorAll("[data-metadata-select]").forEach((input) => {
     input.addEventListener("change", () => {

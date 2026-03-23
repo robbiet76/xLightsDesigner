@@ -430,6 +430,18 @@ export function buildMetadataDashboardState({
       callToAction,
       primaryRecommendation,
       recommendationTypeSummary: buildRecommendationTypeSummary(recommendationWorklist).slice(0, 3),
+      bulkOptions: {
+        semanticHints: buildSmartSuggestionOptions({
+          field: "semanticHints",
+          active: {},
+          projectValues: buildCommonPreferenceValues(preferencesByTargetId, "semanticHints")
+        }),
+        effectAvoidances: buildSmartSuggestionOptions({
+          field: "effectAvoidances",
+          active: {},
+          projectValues: buildCommonPreferenceValues(preferencesByTargetId, "effectAvoidances")
+        })
+      },
       guidedTargetOrder,
       guidedIndex: activeGuidedIndex >= 0 ? activeGuidedIndex + 1 : 0,
       guidedTotal: guidedTargetOrder.length,
