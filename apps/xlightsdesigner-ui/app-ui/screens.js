@@ -1593,15 +1593,48 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       </p></div>
                       <div>
                         <strong>Semantic Hints</strong>
-                        <p><input data-metadata-semantic-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.semanticHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="character, radial_like, lyric" /></p>
+                        <div class="metadata-value-list">
+                          ${(Array.isArray(data.activeTarget.semanticHints) ? data.activeTarget.semanticHints : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}
+                        </div>
+                        <div class="metadata-add-row">
+                          <select data-metadata-suggestion-select="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                            <option value="">Choose one...</option>
+                            ${((data.activeTarget.smartOptions?.semanticHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                            <option value="__other__">Other...</option>
+                          </select>
+                          <input data-metadata-other-input="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add custom semantic hint" disabled />
+                          <button data-metadata-add-item="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">Add</button>
+                        </div>
                       </div>
                       <div>
                         <strong>Submodel Hints</strong>
-                        <p><input data-metadata-submodel-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.submodelHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="inner ring, spokes, outline, left-half" /></p>
+                        <div class="metadata-value-list">
+                          ${(Array.isArray(data.activeTarget.submodelHints) ? data.activeTarget.submodelHints : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}
+                        </div>
+                        <div class="metadata-add-row">
+                          <select data-metadata-suggestion-select="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                            <option value="">Choose one...</option>
+                            ${((data.activeTarget.smartOptions?.submodelHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                            <option value="__other__">Other...</option>
+                          </select>
+                          <input data-metadata-other-input="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add custom submodel hint" disabled />
+                          <button data-metadata-add-item="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">Add</button>
+                        </div>
                       </div>
                       <div>
                         <strong>Effect Avoidances</strong>
-                        <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
+                        <div class="metadata-value-list">
+                          ${(Array.isArray(data.activeTarget.effectAvoidances) ? data.activeTarget.effectAvoidances : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="effectAvoidances" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}
+                        </div>
+                        <div class="metadata-add-row">
+                          <select data-metadata-suggestion-select="effectAvoidances" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                            <option value="">Choose one...</option>
+                            ${((data.activeTarget.smartOptions?.effectAvoidances || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                            <option value="__other__">Other...</option>
+                          </select>
+                          <input data-metadata-other-input="effectAvoidances" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add custom avoidance" disabled />
+                          <button data-metadata-add-item="effectAvoidances" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">Add</button>
+                        </div>
                       </div>
                     </div>
                     <div>

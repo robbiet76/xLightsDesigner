@@ -8008,6 +8008,22 @@ function updateMetadataTargetSemanticHints(targetId, rawValue = "") {
   return true;
 }
 
+function addMetadataTargetSemanticHint(targetId, value = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const current = state.metadata?.preferencesByTargetId?.[id]?.semanticHints || [];
+  const next = Array.from(new Set([...current, ...parseMetadataPreferenceList(value)]));
+  return updateMetadataTargetSemanticHints(id, next.join(", "));
+}
+
+function removeMetadataTargetSemanticHint(targetId, value = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const current = state.metadata?.preferencesByTargetId?.[id]?.semanticHints || [];
+  const next = current.filter((row) => String(row || "").trim().toLowerCase() !== String(value || "").trim().toLowerCase());
+  return updateMetadataTargetSemanticHints(id, next.join(", "));
+}
+
 function updateMetadataTargetSubmodelHints(targetId, rawValue = "") {
   const id = String(targetId || "").trim();
   if (!id) return false;
@@ -8032,6 +8048,22 @@ function updateMetadataTargetSubmodelHints(targetId, rawValue = "") {
   return true;
 }
 
+function addMetadataTargetSubmodelHint(targetId, value = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const current = state.metadata?.preferencesByTargetId?.[id]?.submodelHints || [];
+  const next = Array.from(new Set([...current, ...parseMetadataPreferenceList(value)]));
+  return updateMetadataTargetSubmodelHints(id, next.join(", "));
+}
+
+function removeMetadataTargetSubmodelHint(targetId, value = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const current = state.metadata?.preferencesByTargetId?.[id]?.submodelHints || [];
+  const next = current.filter((row) => String(row || "").trim().toLowerCase() !== String(value || "").trim().toLowerCase());
+  return updateMetadataTargetSubmodelHints(id, next.join(", "));
+}
+
 function updateMetadataTargetEffectAvoidances(targetId, rawValue = "") {
   const id = String(targetId || "").trim();
   if (!id) return false;
@@ -8054,6 +8086,22 @@ function updateMetadataTargetEffectAvoidances(targetId, rawValue = "") {
   invalidatePlanHandoff("metadata effect avoidances changed");
   saveMetadataAndRender(`Updated effect avoidances for ${target.displayName || id}.`);
   return true;
+}
+
+function addMetadataTargetEffectAvoidance(targetId, value = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const current = state.metadata?.preferencesByTargetId?.[id]?.effectAvoidances || [];
+  const next = Array.from(new Set([...current, ...parseMetadataPreferenceList(value)]));
+  return updateMetadataTargetEffectAvoidances(id, next.join(", "));
+}
+
+function removeMetadataTargetEffectAvoidance(targetId, value = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const current = state.metadata?.preferencesByTargetId?.[id]?.effectAvoidances || [];
+  const next = current.filter((row) => String(row || "").trim().toLowerCase() !== String(value || "").trim().toLowerCase());
+  return updateMetadataTargetEffectAvoidances(id, next.join(", "));
 }
 
 function applyTagsToSelectedMetadataTargets() {
@@ -12174,6 +12222,12 @@ function bindEvents() {
     updateMetadataTargetSemanticHints,
     updateMetadataTargetSubmodelHints,
     updateMetadataTargetEffectAvoidances,
+    addMetadataTargetSemanticHint,
+    removeMetadataTargetSemanticHint,
+    addMetadataTargetSubmodelHint,
+    removeMetadataTargetSubmodelHint,
+    addMetadataTargetEffectAvoidance,
+    removeMetadataTargetEffectAvoidance,
     ignoreMetadataOrphan,
     remapMetadataOrphan,
     onUseRecent,

@@ -1546,6 +1546,37 @@ button.danger-action:hover {
   line-height: 1.45;
 }
 
+.metadata-value-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 30px;
+  margin-top: 8px;
+}
+
+.metadata-value-list .artifact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metadata-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.metadata-add-row select,
+.metadata-add-row input {
+  width: 100%;
+}
+
+.metadata-add-row button {
+  white-space: nowrap;
+}
+
 .tag-library {
   display: flex;
   flex-wrap: wrap;

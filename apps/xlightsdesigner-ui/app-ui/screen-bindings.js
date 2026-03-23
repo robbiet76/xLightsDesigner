@@ -42,6 +42,12 @@ export function bindScreenEvents({
   updateMetadataTargetSemanticHints,
   updateMetadataTargetSubmodelHints,
   updateMetadataTargetEffectAvoidances,
+  addMetadataTargetSemanticHint,
+  removeMetadataTargetSemanticHint,
+  addMetadataTargetSubmodelHint,
+  removeMetadataTargetSubmodelHint,
+  addMetadataTargetEffectAvoidance,
+  removeMetadataTargetEffectAvoidance,
   ignoreMetadataOrphan,
   remapMetadataOrphan,
   onUseRecent,
@@ -317,45 +323,58 @@ export function bindScreenEvents({
     });
   });
 
-  app.querySelectorAll("[data-metadata-semantic-hints]").forEach((input) => {
-    const commit = () => {
-      updateMetadataTargetSemanticHints(input.dataset.metadataSemanticHints, input.value);
-      render();
+  app.querySelectorAll("[data-metadata-suggestion-select]").forEach((select) => {
+    const syncOtherState = () => {
+      const field = String(select.dataset.metadataSuggestionSelect || "").trim();
+      const targetId = String(select.dataset.metadataTargetId || "").trim();
+      const otherInput = app.querySelector(`[data-metadata-other-input="${field}"][data-metadata-target-id="${targetId}"]`);
+      if (!otherInput) return;
+      const needsOther = String(select.value || "") === "__other__";
+      otherInput.disabled = !needsOther;
+      if (needsOther) otherInput.focus();
+      else otherInput.value = "";
     };
-    input.addEventListener("change", commit);
-    input.addEventListener("blur", commit);
-    input.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      commit();
+    select.addEventListener("change", syncOtherState);
+    syncOtherState();
+  });
+
+  app.querySelectorAll("[data-metadata-add-item]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const field = String(btn.dataset.metadataAddItem || "").trim();
+      const targetId = String(btn.dataset.metadataTargetId || "").trim();
+      const select = app.querySelector(`[data-metadata-suggestion-select="${field}"][data-metadata-target-id="${targetId}"]`);
+      const otherInput = app.querySelector(`[data-metadata-other-input="${field}"][data-metadata-target-id="${targetId}"]`);
+      const selectedValue = String(select?.value || "").trim();
+      const customValue = String(otherInput?.value || "").trim();
+      const nextValue = selectedValue === "__other__" ? customValue : selectedValue;
+      if (!nextValue) return;
+      if (field === "semanticHints") addMetadataTargetSemanticHint(targetId, nextValue);
+      if (field === "submodelHints") addMetadataTargetSubmodelHint(targetId, nextValue);
+      if (field === "effectAvoidances") addMetadataTargetEffectAvoidance(targetId, nextValue);
+      render();
     });
   });
 
-  app.querySelectorAll("[data-metadata-submodel-hints]").forEach((input) => {
-    const commit = () => {
-      updateMetadataTargetSubmodelHints(input.dataset.metadataSubmodelHints, input.value);
-      render();
-    };
-    input.addEventListener("change", commit);
-    input.addEventListener("blur", commit);
+  app.querySelectorAll("[data-metadata-other-input]").forEach((input) => {
     input.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
-      commit();
+      const field = String(input.dataset.metadataOtherInput || "").trim();
+      const targetId = String(input.dataset.metadataTargetId || "").trim();
+      const btn = app.querySelector(`[data-metadata-add-item="${field}"][data-metadata-target-id="${targetId}"]`);
+      btn?.click();
     });
   });
 
-  app.querySelectorAll("[data-metadata-effect-avoidances]").forEach((input) => {
-    const commit = () => {
-      updateMetadataTargetEffectAvoidances(input.dataset.metadataEffectAvoidances, input.value);
+  app.querySelectorAll("[data-metadata-remove-item]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const field = String(btn.dataset.metadataRemoveItem || "").trim();
+      const targetId = String(btn.dataset.metadataTargetId || "").trim();
+      const value = String(btn.dataset.metadataValue || "").trim();
+      if (field === "semanticHints") removeMetadataTargetSemanticHint(targetId, value);
+      if (field === "submodelHints") removeMetadataTargetSubmodelHint(targetId, value);
+      if (field === "effectAvoidances") removeMetadataTargetEffectAvoidance(targetId, value);
       render();
-    };
-    input.addEventListener("change", commit);
-    input.addEventListener("blur", commit);
-    input.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      commit();
     });
   });
 

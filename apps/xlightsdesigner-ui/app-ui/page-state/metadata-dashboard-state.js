@@ -59,6 +59,103 @@ function buildMetadataProgressSummary(targetsSummary = {}) {
   return `${ready} ready, ${partial} partial, ${needed} still need attention.`;
 }
 
+function buildCommonPreferenceValues(preferencesByTargetId = {}, field = "") {
+  const counts = new Map();
+  for (const pref of Object.values(preferencesByTargetId || {})) {
+    const values = Array.isArray(pref?.[field]) ? pref[field] : [];
+    for (const value of values) {
+      const key = str(value);
+      if (!key) continue;
+      counts.set(key, Number(counts.get(key) || 0) + 1);
+    }
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([value]) => value);
+}
+
+function uniqueOrdered(values = []) {
+  const out = [];
+  const seen = new Set();
+  for (const value of Array.isArray(values) ? values : []) {
+    const key = str(value);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
+}
+
+function buildSmartSuggestionOptions({
+  field = "",
+  active = {},
+  commonValues = []
+} = {}) {
+  const baseByField = {
+    semanticHints: [
+      "character",
+      "text",
+      "outline",
+      "radial",
+      "linear",
+      "centerpiece",
+      "accent",
+      "background",
+      "matrix-like",
+      "tree-like"
+    ],
+    submodelHints: [
+      "outline",
+      "center",
+      "inner ring",
+      "outer ring",
+      "left half",
+      "right half",
+      "top",
+      "bottom",
+      "spokes",
+      "face",
+      "body",
+      "letters"
+    ],
+    effectAvoidances: [
+      "dense texture",
+      "fast motion",
+      "sharp flashes",
+      "large bursts",
+      "full coverage",
+      "rapid alternation",
+      "strobing"
+    ]
+  };
+  const activeTraits = Array.isArray(active?.inferredSemanticTraits) ? active.inferredSemanticTraits : [];
+  const selectedValues = Array.isArray(active?.[field]) ? active[field] : [];
+  const dynamic = [];
+  if (field === "semanticHints") {
+    dynamic.push(...activeTraits);
+    const type = str(active?.canonicalType);
+    if (type) dynamic.push(type);
+  }
+  if (field === "submodelHints") {
+    const meta = active?.submodelMetadata || {};
+    if (Number(meta.submodelCount || 0) > 0) {
+      dynamic.push("outline", "center");
+      if (Number(meta.submodelCount || 0) >= 2) dynamic.push("left half", "right half", "top", "bottom");
+      if (Number(meta.submodelCount || 0) >= 4) dynamic.push("inner ring", "outer ring", "spokes");
+    }
+  }
+  if (field === "effectAvoidances") {
+    if ((activeTraits || []).includes("character")) dynamic.push("fast motion", "dense texture");
+    if ((activeTraits || []).includes("text")) dynamic.push("full coverage", "large bursts");
+  }
+  return uniqueOrdered([
+    ...selectedValues,
+    ...dynamic,
+    ...baseByField[field],
+    ...commonValues
+  ]).slice(0, 16);
+}
+
 function buildActiveTargetSummary(active = {}) {
   if (!active || typeof active !== "object") return "";
   const lines = [];
@@ -207,6 +304,9 @@ export function buildMetadataDashboardState({
   const assignmentByTargetId = new Map(assignments.map((a) => [String(a.targetId), a]));
   const normalizedRecords = buildNormalizedTargetMetadataRecords();
   const normalizedByTargetId = new Map(normalizedRecords.map((row) => [String(row.targetId), row]));
+  const preferencesByTargetId = state.metadata?.preferencesByTargetId && typeof state.metadata.preferencesByTargetId === "object"
+    ? state.metadata.preferencesByTargetId
+    : {};
   const nameFilter = String(state.ui?.metadataFilterName || "");
   const typeFilter = String(state.ui?.metadataFilterType || "");
   const metadataFilter = String(state.ui?.metadataFilterMetadata || "");
@@ -291,6 +391,23 @@ export function buildMetadataDashboardState({
       }
     : null;
   if (activeTargetData) {
+    activeTargetData.smartOptions = {
+      semanticHints: buildSmartSuggestionOptions({
+        field: "semanticHints",
+        active: activeTargetData,
+        commonValues: buildCommonPreferenceValues(preferencesByTargetId, "semanticHints")
+      }),
+      submodelHints: buildSmartSuggestionOptions({
+        field: "submodelHints",
+        active: activeTargetData,
+        commonValues: buildCommonPreferenceValues(preferencesByTargetId, "submodelHints")
+      }),
+      effectAvoidances: buildSmartSuggestionOptions({
+        field: "effectAvoidances",
+        active: activeTargetData,
+        commonValues: buildCommonPreferenceValues(preferencesByTargetId, "effectAvoidances")
+      })
+    };
     activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
   }
   const activeGuidedIndex = guidedTargetOrder.indexOf(activeTargetId);
