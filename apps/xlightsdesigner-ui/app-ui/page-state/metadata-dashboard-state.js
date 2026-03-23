@@ -130,6 +130,22 @@ function buildRecommendationWorklist(records = []) {
     });
 }
 
+function buildRecommendationTypeSummary(worklist = []) {
+  const counts = new Map();
+  for (const row of Array.isArray(worklist) ? worklist : []) {
+    const key = str(row?.type);
+    if (!key) continue;
+    counts.set(key, Number(counts.get(key) || 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([type, count]) => ({
+      type,
+      typeLabel: humanizeRecommendationType(type),
+      count
+    }))
+    .sort((a, b) => b.count - a.count || a.typeLabel.localeCompare(b.typeLabel));
+}
+
 export function buildMetadataDashboardState({
   state = {},
   helpers = {}
@@ -171,7 +187,10 @@ export function buildMetadataDashboardState({
   const submodelCount = modelOptions.filter((target) => target.raw.type === "submodel").length;
   const selectedIds = new Set(normalizeMetadataSelectionIds(state.ui?.metadataSelectionIds));
   const selectedCount = selectedIds.size;
-  const activeTargetId = str(state.ui?.metadataTargetId || filteredModels[0]?.id || "");
+  const recommendationSummary = summarizeRecommendations(normalizedRecords);
+  const recommendationWorklist = buildRecommendationWorklist(normalizedRecords);
+  const primaryRecommendation = recommendationWorklist[0] || null;
+  const activeTargetId = str(state.ui?.metadataTargetId || primaryRecommendation?.targetId || filteredModels[0]?.id || "");
   const activeTarget = activeTargetId ? modelOptions.find((target) => str(target.id) === activeTargetId) : null;
   const activeNormalized = activeTargetId ? normalizedByTargetId.get(activeTargetId) : null;
   const hasVisibleTargets = filteredModels.length > 0;
@@ -232,9 +251,6 @@ export function buildMetadataDashboardState({
   if (activeTargetData) {
     activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
   }
-  const recommendationSummary = summarizeRecommendations(normalizedRecords);
-  const recommendationWorklist = buildRecommendationWorklist(normalizedRecords);
-  const primaryRecommendation = recommendationWorklist[0] || null;
   const callToAction = recommendationSummary.total
     ? {
         title: recommendationSummary.highPriority
@@ -275,6 +291,8 @@ export function buildMetadataDashboardState({
       activeTargetId,
       metadataFilterDimension,
       callToAction,
+      primaryRecommendation,
+      recommendationTypeSummary: buildRecommendationTypeSummary(recommendationWorklist).slice(0, 3),
       targetsSummary: {
         total: modelOptions.length,
         submodelCount,
@@ -284,6 +302,7 @@ export function buildMetadataDashboardState({
         recommendationSummary
       },
       recommendationWorklist: recommendationWorklist.slice(0, 8),
+      recommendationQueue: recommendationWorklist.slice(1, 5),
       activeTarget: activeTargetData,
       rows: filteredModels.slice(0, 200).map((m) => {
         const assignment = assignmentByTargetId.get(String(m.id));

@@ -291,46 +291,39 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     `;
   }
 
-  function renderJourneyCard(kind = "") {
-    const selectedSequence = String(state.activeSequence || state.sequencePathInput || "").trim();
-    const hasAudioArtifact = Boolean(getValidHandoff("analysis_handoff_v1"));
-    const hasBrief = Boolean(state.creative?.brief);
-    const hasProposal = Boolean(state.creative?.proposalBundle);
-    const hasDraft = Boolean(state.flags?.hasDraftProposal);
-    const reviewReady = Boolean(hasDraft && !state.flags?.proposalStale);
-
+  function getWorkspaceFrameDefinition(kind = "") {
     const definitions = {
       project: {
-        summary: "Set the project context: project file, show folder, media path, and active sequence.",
-        next: selectedSequence ? "Project context is configured. Continue into Audio to inspect analysis or Design to start shaping the sequence." : "Create or open the project, then choose the active sequence before moving into Audio or Design."
+        summary: "Set the project context: project file, show folder, media path, and active sequence."
+      },
+      metadata: {
+        summary: "Confirm the layout details that help the app understand props, groups, and submodels before sequencing."
       },
       audio: {
-        summary: "Analyze the song and capture the timing and structure the rest of the workflow will use.",
-        next: hasAudioArtifact ? "Audio artifact is ready. Continue to Design to shape the creative direction." : "Run or reuse audio analysis, then continue to Design."
+        summary: "Analyze the song and capture the timing and structure the rest of the workflow will use."
       },
       design: {
-        summary: "Shape the creative direction and let the designer capture the sequence brief live from conversation.",
-        next: hasProposal ? "Proposal bundle is ready. Continue to Sequence to inspect the technical translation before review." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
+        summary: "Shape the creative direction and let the designer capture the sequence brief live from conversation."
       },
       sequence: {
-        summary: "Inspect how the current design is being translated into actual sequencing changes.",
-        next: hasProposal ? "Translation is visible. Continue to Review to approve and apply the current change set." : "Develop the design first, then inspect the sequence translation here before apply."
+        summary: "Inspect how the current design is being translated into actual sequencing changes."
       },
       review: {
-        summary: "Review the current design and sequence snapshot, then approve and apply it deliberately.",
-        next: reviewReady ? "Draft is ready for review and apply. Approve only after checking warnings and scope." : "If the draft is stale or incomplete, return to Design or refresh before apply."
+        summary: "Review the current design and sequence snapshot, then approve and apply it deliberately."
       },
       history: {
-        summary: "Audit what design and sequence state was actually implemented at each applied revision.",
-        next: "Open a snapshot to inspect the design, translation, and execution state captured at apply time."
+        summary: "Audit what design and sequence state was actually implemented at each applied revision."
       },
       settings: {
-        summary: "Manage app-level connections, services, identities, and safety controls.",
-        next: "Use Settings first on a new install. Project-specific work belongs on the Project screen."
+        summary: "Manage app-level connections, services, identities, and safety controls."
       }
     };
 
-    const row = definitions[kind];
+    return definitions[kind] || null;
+  }
+
+  function renderJourneyCard(kind = "") {
+    const row = getWorkspaceFrameDefinition(kind);
     if (!row) return "";
     return `
       <section class="card journey-card full-span">
@@ -1482,7 +1475,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const data = dashboard?.data || {};
     return renderWorkspaceFrame("metadata", `
       <div class="screen-grid metadata-workspace">
-        <section class="card metadata-panel">
+        <div class="metadata-panel">
           <div class="metadata-panel-header">
             <div>
               <div class="artifact-kicker">Layout</div>
@@ -1494,6 +1487,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <div>
               <h4>${String(data.callToAction?.title || "Metadata helps improve sequence quality").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
               <p>${String(data.callToAction?.body || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+              ${
+                Array.isArray(data.recommendationTypeSummary) && data.recommendationTypeSummary.length
+                  ? `<div class="artifact-chip-row metadata-cta-chips">
+                      ${data.recommendationTypeSummary.map((row) => `<span class="artifact-chip">${String(row.typeLabel || row.type).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}: ${Number(row.count || 0)}</span>`).join("")}
+                    </div>`
+                  : ""
+              }
             </div>
             ${data.callToAction?.actionTargetId && data.callToAction?.actionLabel
               ? `<button data-metadata-focus="${String(data.callToAction.actionTargetId).replace(/"/g, "&quot;")}">${String(data.callToAction.actionLabel).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button>`
@@ -1504,25 +1504,36 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <div class="metadata-panel-header">
                   <div>
                     <div class="artifact-kicker">Recommended</div>
-                    <h4>Start With These</h4>
+                    <h4>Recommended Next Step</h4>
                   </div>
                   <span class="banner">High impact: ${data.targetsSummary.recommendationSummary.highPriority || 0}</span>
                 </div>
-                <p class="metadata-helper-copy">You do not need to update every target. Focus on the items below first.</p>
-                <div class="metadata-recommendation-list">
-                  ${(Array.isArray(data.recommendationWorklist) && data.recommendationWorklist.length
-                    ? data.recommendationWorklist
-                    : []).map((row) => `<button class="metadata-recommendation-item" data-metadata-focus="${String(row.targetId).replace(/"/g, "&quot;")}">
+                <p class="metadata-helper-copy">You do not need to update every target. Start with the next item below, then move on only if you want more control.</p>
+                ${data.primaryRecommendation
+                  ? `<button class="metadata-recommendation-item metadata-recommendation-item-primary" data-metadata-focus="${String(data.primaryRecommendation.targetId).replace(/"/g, "&quot;")}">
                       <span class="metadata-recommendation-head">
-                        <span><strong>${String(row.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong> <span class="banner">${String(row.targetType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span></span>
-                        <span class="banner">${String(row.priority || "normal").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                        <span><strong>${String(data.primaryRecommendation.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong> <span class="banner">${String(data.primaryRecommendation.targetType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span></span>
+                        <span class="banner">${String(data.primaryRecommendation.priority || "normal").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                       </span>
                       <span class="metadata-recommendation-body">
-                        <span class="banner">${String(row.typeLabel || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                        <span>${String(row.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                        <span class="banner">${String(data.primaryRecommendation.typeLabel || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                        <span>${String(data.primaryRecommendation.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                       </span>
-                    </button>`).join("")}
-                </div>
+                    </button>`
+                  : ""}
+                ${
+                  Array.isArray(data.recommendationQueue) && data.recommendationQueue.length
+                    ? `<div class="metadata-next-list">
+                        <div class="artifact-kicker">Up Next</div>
+                        <div class="metadata-next-items">
+                          ${data.recommendationQueue.map((row) => `<button class="metadata-next-item" data-metadata-focus="${String(row.targetId).replace(/"/g, "&quot;")}">
+                            <strong>${String(row.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong>
+                            <span>${String(row.typeLabel || row.type || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                          </button>`).join("")}
+                        </div>
+                      </div>`
+                    : ""
+                }
               </section>`
             : `<p class="banner">No metadata action is needed right now.</p>`}
           ${
@@ -1620,7 +1631,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
               </table>
             </div>
           </details>
-        </section>
+        </div>
       </div>
     `, "metadata-screen");
   }

@@ -1378,6 +1378,10 @@ button.danger-action:hover {
   color: var(--muted);
 }
 
+.metadata-cta-chips {
+  margin-top: 10px;
+}
+
 .metadata-recommendation-list {
   display: grid;
   gap: 8px;
@@ -1393,6 +1397,10 @@ button.danger-action:hover {
   padding: 10px 12px;
 }
 
+.metadata-recommendation-item-primary {
+  margin-top: 10px;
+}
+
 .metadata-recommendation-head,
 .metadata-recommendation-body {
   display: flex;
@@ -1403,6 +1411,34 @@ button.danger-action:hover {
 
 .metadata-recommendation-body {
   margin-top: 8px;
+}
+
+.metadata-next-list {
+  margin-top: 12px;
+}
+
+.metadata-next-items {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.metadata-next-item {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.metadata-next-item strong {
+  font-weight: 600;
+}
+
+.metadata-next-item span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .metadata-advanced summary {
