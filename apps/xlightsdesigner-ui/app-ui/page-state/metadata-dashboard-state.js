@@ -91,6 +91,23 @@ function buildSmartSuggestionOptions({
   active = {},
   commonValues = []
 } = {}) {
+  const blockedByField = {
+    semanticHints: new Set([
+      "aggregate",
+      "model_group",
+      "body",
+      "letters",
+      "center",
+      "inner ring",
+      "outer ring",
+      "left half",
+      "right half",
+      "top",
+      "bottom",
+      "spokes"
+    ]),
+    effectAvoidances: new Set()
+  };
   const baseByField = {
     semanticHints: [
       "character",
@@ -105,9 +122,7 @@ function buildSmartSuggestionOptions({
       "background",
       "matrix-like",
       "tree-like",
-      "face",
-      "body",
-      "letters"
+      "face"
     ],
     effectAvoidances: [
       "dense texture",
@@ -136,7 +151,7 @@ function buildSmartSuggestionOptions({
     ...dynamic,
     ...baseByField[field],
     ...commonValues
-  ]).slice(0, 16);
+  ]).filter((value) => !blockedByField[field]?.has(str(value).toLowerCase())).slice(0, 16);
 }
 
 function buildActiveTargetSummary(active = {}) {
