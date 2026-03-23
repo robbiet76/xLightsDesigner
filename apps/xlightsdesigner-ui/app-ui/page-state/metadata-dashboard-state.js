@@ -100,9 +100,6 @@ function buildSmartSuggestionOptions({
       "outline",
       "radial",
       "linear",
-      "centerpiece",
-      "accent",
-      "background",
       "matrix-like",
       "tree-like",
       "face"

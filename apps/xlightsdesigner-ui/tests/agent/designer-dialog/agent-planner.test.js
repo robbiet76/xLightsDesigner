@@ -206,7 +206,7 @@ test('planner includes submodel metadata hints in planning guidance', () => {
   });
 
   const combined = result.proposalLines.join('\n').toLowerCase();
-  assert.ok(combined.includes('prop hints'));
+  assert.ok(combined.includes('visual hints'));
   assert.ok(combined.includes('crown'));
 });
 

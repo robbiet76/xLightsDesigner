@@ -320,7 +320,7 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
 
     const semanticHints = arr(assignment?.semanticHints).map((row) => str(row)).filter(Boolean);
     if (semanticHints.length) {
-      lines.push(`${scope} / ${targetName} / treat this target with these prop hints: ${semanticHints.join(", ")}`);
+      lines.push(`${scope} / ${targetName} / treat this target with these visual hints: ${semanticHints.join(", ")}`);
     }
 
     const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);

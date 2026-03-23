@@ -225,8 +225,8 @@ function buildProvenanceDetail({
     semanticHints: {
       source: (arr(preference?.semanticHints).length || arr(preference?.submodelHints).length) ? "user_override" : "none",
       detail: (arr(preference?.semanticHints).length || arr(preference?.submodelHints).length)
-        ? `User prop hints: ${unique([...(preference.semanticHints || []), ...(preference.submodelHints || [])]).join(", ")}.`
-        : "No explicit prop hints."
+        ? `User visual hints: ${unique([...(preference.semanticHints || []), ...(preference.submodelHints || [])]).join(", ")}.`
+        : "No explicit visual hints."
     },
     effectAvoidances: {
       source: arr(preference?.effectAvoidances).length ? "user_override" : "none",
@@ -280,7 +280,7 @@ function buildMetadataRecommendations({
     recs.push({
       type: "prop_hints",
       priority: semanticState === "metadata_needed" ? "high" : "medium",
-      message: `${name}: add a small number of prop hints to describe what this target is for and which parts matter most.`
+      message: `${name}: add a small number of visual hints to describe what this target is and what kind of content or look it supports.`
     });
   }
 
@@ -289,19 +289,19 @@ function buildMetadataRecommendations({
       recs.push({
         type: "prop_hints",
         priority: "high",
-        message: `${name}: add prop hints so the app understands what the child regions do, not just that they exist.`
+        message: `${name}: add visual hints so the app understands what the child regions do, not just that they exist.`
       });
     } else if (targetKind === "group" && submodelMetadata?.hasSubmodelMembers) {
       recs.push({
         type: "prop_hints",
         priority: "high",
-        message: `${name}: this group includes submodels; add prop hints so scoped planning can target the right internal regions.`
+        message: `${name}: this group includes submodels; add visual hints so scoped planning can target the right internal regions.`
       });
     } else if (targetKind === "submodel") {
       recs.push({
         type: "prop_hints",
         priority: "high",
-        message: `${name}: add prop hints that describe this region's function or visual role.`
+        message: `${name}: add visual hints that describe this region's function or visual role.`
       });
     }
   }
