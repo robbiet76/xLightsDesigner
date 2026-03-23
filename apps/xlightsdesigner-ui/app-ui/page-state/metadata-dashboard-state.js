@@ -100,6 +100,7 @@ function buildSmartSuggestionOptions({
       "outline",
       "radial",
       "linear",
+      "beat-sync",
       "matrix-like",
       "tree-like",
       "face"
