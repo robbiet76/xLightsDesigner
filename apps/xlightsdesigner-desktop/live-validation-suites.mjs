@@ -322,6 +322,15 @@ export function createLiveValidationSuites({
     return { ok: true, restored: true, sequencePath: workingPath, baselineSequencePath: baselinePath };
   }
 
+  async function restoreSuiteSequencesToBaseline(sequencePairs = []) {
+    for (const row of arr(sequencePairs)) {
+      const sequencePath = str(row?.sequencePath);
+      const baselineSequencePath = str(row?.baselineSequencePath);
+      if (!sequencePath || !baselineSequencePath) continue;
+      await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
+    }
+  }
+
   async function runLiveDesignCanaryValidationFromDesktop(expected = {}) {
     const runStartedAtMs = nowMs();
     const prompt = str(expected?.prompt || expected?.strongPrompt);
@@ -395,6 +404,8 @@ export function createLiveValidationSuites({
     let activeSequencePath = "";
     const refreshedSequences = new Set();
     const analyzedContexts = new Set();
+    const suiteRestorePairs = new Map();
+    try {
     for (const scenario of scenarios) {
       const scenarioStartedAtMs = nowMs();
       const name = str(scenario?.name || `scenario-${results.length + 1}`);
@@ -403,14 +414,12 @@ export function createLiveValidationSuites({
       const timings = {};
       logStartup(`automation:live-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
       if (sequencePath && baselineSequencePath) {
+        suiteRestorePairs.set(sequencePath, { sequencePath, baselineSequencePath });
         const restoreStartedAtMs = nowMs();
         await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
         timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
         activeSequencePath = "";
         refreshedSequences.delete(sequencePath);
-        for (const key of Array.from(analyzedContexts)) {
-          if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
-        }
       }
       if (sequencePath && sequencePath !== activeSequencePath) {
         const openStartedAtMs = nowMs();
@@ -470,6 +479,9 @@ export function createLiveValidationSuites({
         weak: comparison?.weak || null
       });
       logStartup(`automation:live-suite:scenario:finish name=${name} ok=${comparison?.validation?.ok === true ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
+    }
+    } finally {
+      await restoreSuiteSequencesToBaseline([...suiteRestorePairs.values()]);
     }
 
     const failed = results.filter((row) => row?.validation?.ok !== true);
@@ -552,7 +564,9 @@ export function createLiveValidationSuites({
     const results = [];
     let activeSequencePath = "";
     const analyzedContexts = new Set();
+    const suiteRestorePairs = new Map();
 
+    try {
     for (const scenario of scenarios) {
       const scenarioStartedAtMs = nowMs();
       const name = str(scenario?.name || `scenario-${results.length + 1}`);
@@ -561,13 +575,11 @@ export function createLiveValidationSuites({
       const timings = {};
       logStartup(`automation:live-revision-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
       if (sequencePath && baselineSequencePath) {
+        suiteRestorePairs.set(sequencePath, { sequencePath, baselineSequencePath });
         const restoreStartedAtMs = nowMs();
         await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
         timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
         activeSequencePath = "";
-        for (const key of Array.from(analyzedContexts)) {
-          if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
-        }
       }
       if (sequencePath && sequencePath !== activeSequencePath) {
         const openStartedAtMs = nowMs();
@@ -786,6 +798,9 @@ export function createLiveValidationSuites({
       };
       results.push(scenarioResult);
       logStartup(`automation:live-revision-suite:scenario:finish name=${name} ok=${assertions.every((row) => row?.ok !== false) ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
+    }
+    } finally {
+      await restoreSuiteSequencesToBaseline([...suiteRestorePairs.values()]);
     }
 
     const failed = results.filter((row) => arr(row?.assertions).some((assertion) => assertion?.ok === false));
@@ -1016,7 +1031,9 @@ export function createLiveValidationSuites({
     let activeSequencePath = "";
     const refreshedSequences = new Set();
     const analyzedContexts = new Set();
+    const suiteRestorePairs = new Map();
 
+    try {
     for (const scenario of scenarios) {
       const scenarioStartedAtMs = nowMs();
       const name = str(scenario?.name || `scenario-${results.length + 1}`);
@@ -1025,14 +1042,12 @@ export function createLiveValidationSuites({
       const timings = {};
       logStartup(`automation:live-sequencer-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
       if (sequencePath && baselineSequencePath) {
+        suiteRestorePairs.set(sequencePath, { sequencePath, baselineSequencePath });
         const restoreStartedAtMs = nowMs();
         await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
         timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
         activeSequencePath = "";
         refreshedSequences.delete(sequencePath);
-        for (const key of Array.from(analyzedContexts)) {
-          if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
-        }
       }
       if (sequencePath && sequencePath !== activeSequencePath) {
         const openStartedAtMs = nowMs();
@@ -1133,6 +1148,9 @@ export function createLiveValidationSuites({
       });
       logStartup(`automation:live-sequencer-suite:scenario:finish name=${name} ok=${ok ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
     }
+    } finally {
+      await restoreSuiteSequencesToBaseline([...suiteRestorePairs.values()]);
+    }
 
     const failed = results.filter((row) => row?.ok !== true);
     const gapReport = buildSequencerGapReport({
@@ -1170,6 +1188,8 @@ export function createLiveValidationSuites({
     let activeSequencePath = "";
     const refreshedSequences = new Set();
     const analyzedContexts = new Set();
+    const suiteRestorePairs = new Map();
+    try {
     for (const scenario of scenarios) {
       const name = str(scenario?.name || `scenario-${results.length + 1}`);
       const sequencePath = str(scenario?.sequencePath);
@@ -1179,14 +1199,12 @@ export function createLiveValidationSuites({
       logStartup(`automation:canary-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
 
       if (sequencePath && baselineSequencePath) {
+        suiteRestorePairs.set(sequencePath, { sequencePath, baselineSequencePath });
         const restoreStartedAtMs = nowMs();
         await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
         timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
         activeSequencePath = "";
         refreshedSequences.delete(sequencePath);
-        for (const key of Array.from(analyzedContexts)) {
-          if (key.startsWith(`${sequencePath}::`)) analyzedContexts.delete(key);
-        }
       }
       if (sequencePath && sequencePath !== activeSequencePath) {
         const openStartedAtMs = nowMs();
@@ -1243,6 +1261,9 @@ export function createLiveValidationSuites({
         validation: run?.validation || null
       });
       logStartup(`automation:canary-suite:scenario:finish name=${name} ok=${run?.validation?.ok === true ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
+    }
+    } finally {
+      await restoreSuiteSequencesToBaseline([...suiteRestorePairs.values()]);
     }
 
     const failed = results.filter((row) => row?.validation?.ok !== true);
