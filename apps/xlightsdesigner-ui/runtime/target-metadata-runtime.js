@@ -109,6 +109,72 @@ function supportStateLabel({ trainedBuckets = [] } = {}) {
   return trainedBuckets.length ? "trained_supported" : "runtime_targetable_only";
 }
 
+function buildProvenanceDetail({
+  trainedBuckets = [],
+  canonicalType = "",
+  userTags = [],
+  preference = {},
+  artifactVersion = "",
+  confidence = 0
+} = {}) {
+  return {
+    canonicalType: {
+      source: "derived_layout",
+      detail: canonicalType ? `Derived from layout/model display type as ${canonicalType}.` : "Canonical type not inferred."
+    },
+    supportState: {
+      source: trainedBuckets.length ? "training_bundle" : "runtime_only",
+      detail: trainedBuckets.length
+        ? `Mapped into Stage 1 trained buckets: ${trainedBuckets.join(", ")}.`
+        : "No Stage 1 trained bucket currently mapped for this target."
+    },
+    inferredRole: {
+      source: userTags.length ? "metadata_tags" : "derived_layout",
+      detail: userTags.length
+        ? `Role inferred from current metadata tags: ${userTags.join(", ")}.`
+        : "Role inferred from structure/layout context."
+    },
+    inferredSemanticTraits: {
+      source: userTags.length ? "derived_plus_tags" : "derived_layout",
+      detail: userTags.length
+        ? `Traits inferred from layout facts plus metadata tags: ${userTags.join(", ")}.`
+        : "Traits inferred from layout facts and target identity."
+    },
+    rolePreference: {
+      source: preference?.rolePreference ? "user_override" : "auto",
+      detail: preference?.rolePreference
+        ? `User override set to ${norm(preference.rolePreference)}.`
+        : "No explicit user override; using automatic role inference."
+    },
+    semanticHints: {
+      source: arr(preference?.semanticHints).length ? "user_override" : "none",
+      detail: arr(preference?.semanticHints).length
+        ? `User semantic hints: ${unique(preference.semanticHints).join(", ")}.`
+        : "No explicit semantic hints."
+    },
+    effectAvoidances: {
+      source: arr(preference?.effectAvoidances).length ? "user_override" : "none",
+      detail: arr(preference?.effectAvoidances).length
+        ? `User effect avoidances: ${unique(preference.effectAvoidances).join(", ")}.`
+        : "No explicit effect avoidances."
+    },
+    tags: {
+      source: userTags.length ? "controlled_or_project_tags" : "none",
+      detail: userTags.length
+        ? `Current metadata tags applied: ${userTags.join(", ")}.`
+        : "No metadata tags applied."
+    },
+    training: {
+      source: "training_bundle",
+      detail: `Training artifact version ${norm(artifactVersion || "1.0")}.`
+    },
+    confidence: {
+      source: "runtime_estimate",
+      detail: `Current normalized metadata confidence is ${Number(confidence || 0).toFixed(2)}.`
+    }
+  };
+}
+
 export function buildNormalizedTargetMetadataRecords({
   sceneGraph = {},
   metadataAssignments = [],
@@ -138,6 +204,7 @@ export function buildNormalizedTargetMetadataRecords({
     const trainedBuckets = mapClassificationToTrainingBuckets(classification).filter((bucket) => trainedModelBuckets.has(bucket));
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
     const userTags = unique(assignment?.tags || []);
+    const confidence = trainedBuckets.length ? 1 : (classification?.canonicalType === "custom" ? 0.25 : 0.5);
     records.push({
       targetId,
       targetKind: "model",
@@ -175,7 +242,15 @@ export function buildNormalizedTargetMetadataRecords({
       },
       provenance: {
         updatedAt: now,
-        confidence: trainedBuckets.length ? 1 : (classification?.canonicalType === "custom" ? 0.25 : 0.5)
+        confidence,
+        fields: buildProvenanceDetail({
+          trainedBuckets,
+          canonicalType: norm(classification?.canonicalType),
+          userTags,
+          preference,
+          artifactVersion,
+          confidence
+        })
       }
     });
   }
@@ -187,6 +262,7 @@ export function buildNormalizedTargetMetadataRecords({
     const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const userTags = unique(assignment?.tags || []);
     const flattened = Array.isArray(group?.members?.flattened) ? group.members.flattened : [];
+    const confidence = 0.5;
     records.push({
       targetId,
       targetKind: "group",
@@ -219,7 +295,15 @@ export function buildNormalizedTargetMetadataRecords({
       },
       provenance: {
         updatedAt: now,
-        confidence: 0.5
+        confidence,
+        fields: buildProvenanceDetail({
+          trainedBuckets: [],
+          canonicalType: "model_group",
+          userTags,
+          preference,
+          artifactVersion,
+          confidence
+        })
       }
     });
   }
@@ -231,6 +315,7 @@ export function buildNormalizedTargetMetadataRecords({
     const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const userTags = unique(assignment?.tags || []);
     const parentId = norm(submodel?.parentId);
+    const confidence = 0.5;
     records.push({
       targetId,
       targetKind: "submodel",
@@ -263,7 +348,15 @@ export function buildNormalizedTargetMetadataRecords({
       },
       provenance: {
         updatedAt: now,
-        confidence: 0.5
+        confidence,
+        fields: buildProvenanceDetail({
+          trainedBuckets: [],
+          canonicalType: "submodel",
+          userTags,
+          preference,
+          artifactVersion,
+          confidence
+        })
       }
     });
   }

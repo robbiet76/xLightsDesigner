@@ -6,6 +6,15 @@ function escapeTagList(tags = []) {
   return Array.isArray(tags) ? tags.map((tag) => str(tag)).filter(Boolean) : [];
 }
 
+function mapProvenanceFields(fields = {}) {
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) return [];
+  return Object.entries(fields).map(([field, meta]) => ({
+    field: str(field),
+    source: str(meta?.source || ""),
+    detail: str(meta?.detail || "")
+  })).filter((row) => row.field);
+}
+
 export function buildMetadataDashboardState({
   state = {},
   helpers = {}
@@ -121,7 +130,9 @@ export function buildMetadataDashboardState({
             confidence: Number(activeNormalized?.provenance?.confidence || 0),
             groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
             submodelCount: Number(activeNormalized?.structure?.submodelCount || 0),
-            memberCount: Number(activeNormalized?.structure?.memberCount || 0)
+            memberCount: Number(activeNormalized?.structure?.memberCount || 0),
+            provenanceUpdatedAt: str(activeNormalized?.provenance?.updatedAt),
+            provenanceFields: mapProvenanceFields(activeNormalized?.provenance?.fields)
           }
         : null,
       rows: filteredModels.slice(0, 200).map((m) => {

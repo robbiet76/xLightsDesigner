@@ -21,7 +21,14 @@ function buildHelpers() {
         semantics: { supportState: "runtime_targetable_only", inferredRole: "focal", inferredSemanticTraits: ["character", "focal"] },
         training: { trainedSupportState: "out_of_stage1_model_support" },
         user: { rolePreference: "support" },
-        provenance: { confidence: 0.25 }
+        provenance: {
+          confidence: 0.25,
+          updatedAt: "2026-03-22T10:00:00.000Z",
+          fields: {
+            canonicalType: { source: "derived_layout", detail: "Derived from layout/model display type as custom." },
+            rolePreference: { source: "user_override", detail: "User override set to support." }
+          }
+        }
       },
       {
         targetId: "SpiralTrees",
@@ -30,7 +37,7 @@ function buildHelpers() {
         semantics: { supportState: "trained_supported", inferredRole: "", inferredSemanticTraits: ["tree"] },
         training: { trainedSupportState: "trained_supported" },
         user: { rolePreference: "" },
-        provenance: { confidence: 1 }
+        provenance: { confidence: 1, updatedAt: "2026-03-22T10:00:00.000Z", fields: {} }
       }
     ],
     matchesMetadataFilterValue: (value, filter) => {
@@ -76,6 +83,9 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.rows[0].supportState.length > 0, true);
   assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
+  assert.equal(dashboard.data.activeTarget.provenanceUpdatedAt, "2026-03-22T10:00:00.000Z");
+  assert.equal(dashboard.data.activeTarget.provenanceFields.length, 2);
+  assert.equal(dashboard.data.activeTarget.provenanceFields[0].source.length > 0, true);
 });
 
 test("metadata dashboard applies filters to target rows", () => {

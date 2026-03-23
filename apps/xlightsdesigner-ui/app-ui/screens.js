@@ -1597,6 +1597,28 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     ${Array.isArray(data.activeTarget.inferredSemanticTraits) && data.activeTarget.inferredSemanticTraits.length
                       ? `<p>${data.activeTarget.inferredSemanticTraits.map((v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).join(", ")}</p>`
                       : `<p class="banner">No inferred semantic traits yet.</p>`}
+                    <h4>Provenance</h4>
+                    <p class="banner">Updated: ${String(data.activeTarget.provenanceUpdatedAt || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+                    ${Array.isArray(data.activeTarget.provenanceFields) && data.activeTarget.provenanceFields.length
+                      ? `<div class="metadata-grid-wrap metadata-tag-grid-wrap">
+                          <table class="metadata-grid metadata-tag-grid">
+                            <thead>
+                              <tr>
+                                <th style="width:180px;">Field</th>
+                                <th style="width:160px;">Source</th>
+                                <th>Detail</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${data.activeTarget.provenanceFields.map((row) => `<tr>
+                                <td>${String(row.field || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                                <td><span class="banner">${String(row.source || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</span></td>
+                                <td>${String(row.detail || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                              </tr>`).join("")}
+                            </tbody>
+                          </table>
+                        </div>`
+                      : `<p class="banner">No provenance details available yet.</p>`}
                   </div>
                 </details>`
               : ""
