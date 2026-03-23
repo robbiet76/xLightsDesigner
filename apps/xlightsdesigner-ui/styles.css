@@ -1332,6 +1332,18 @@ button.danger-action:hover {
   overflow: auto;
 }
 
+.metadata-summary-block {
+  margin: 8px 0 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  line-height: 1.45;
+}
+
 .tag-library {
   display: flex;
   flex-wrap: wrap;

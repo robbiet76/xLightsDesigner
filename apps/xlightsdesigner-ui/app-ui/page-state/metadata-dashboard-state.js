@@ -40,6 +40,66 @@ function summarizeRecommendations(records = []) {
   };
 }
 
+function humanizeCompletenessLabel(value = "") {
+  const text = str(value).replace(/^metadata_/, "").replace(/_/g, " ");
+  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : "";
+}
+
+function buildActiveTargetSummary(active = {}) {
+  if (!active || typeof active !== "object") return "";
+  const lines = [];
+  const name = str(active.displayName);
+  const type = str(active.canonicalType || active.type);
+  const overall = humanizeCompletenessLabel(active.metadataCompleteness);
+  if (name) lines.push(`Name: ${name}`);
+  if (type) lines.push(`Type: ${type}`);
+  if (overall) lines.push(`Metadata completeness: ${overall}`);
+
+  const detail = active.metadataCompletenessDetail || {};
+  const detailParts = [
+    ["Structure", humanizeCompletenessLabel(detail.structure)],
+    ["Semantic", humanizeCompletenessLabel(detail.semantic)],
+    ["Role", humanizeCompletenessLabel(detail.role)],
+    ["Submodel", humanizeCompletenessLabel(detail.submodel)],
+    ["Sequencing", humanizeCompletenessLabel(detail.sequencing)]
+  ].filter(([, value]) => value).map(([label, value]) => `${label} ${value.toLowerCase()}`);
+  if (detailParts.length) lines.push(`Breakdown: ${detailParts.join(", ")}.`);
+
+  const inferredRole = str(active.inferredRole);
+  if (inferredRole) lines.push(`Inferred role: ${inferredRole}.`);
+
+  const inferredTraits = escapeTagList(active.inferredSemanticTraits);
+  if (inferredTraits.length) lines.push(`Inferred traits: ${inferredTraits.join(", ")}.`);
+
+  const groups = escapeTagList(active.groupMemberships);
+  if (groups.length) lines.push(`Groups: ${groups.join(", ")}.`);
+
+  if (active.submodelMetadata && typeof active.submodelMetadata === "object") {
+    const meta = active.submodelMetadata;
+    const parts = [];
+    if (meta.parentName || meta.parentId) parts.push(`parent ${str(meta.parentName || meta.parentId)}`);
+    if (Number(meta.submodelCount || 0) > 0) parts.push(`${Number(meta.submodelCount)} submodels`);
+    if (Number(meta.memberCount || 0) > 0) parts.push(`${Number(meta.memberCount)} group members`);
+    if (Number(meta.nodeCount || 0) > 0) parts.push(`${Number(meta.nodeCount)} nodes`);
+    if (parts.length) lines.push(`Structure: ${parts.join(", ")}.`);
+  }
+
+  const recommendations = Array.isArray(active.recommendations) ? active.recommendations : [];
+  if (recommendations.length) {
+    lines.push(`Recommended next metadata: ${recommendations.map((row) => str(row.message)).filter(Boolean).join(" ")}`);
+  }
+
+  const provenance = Array.isArray(active.provenanceFields) ? active.provenanceFields : [];
+  if (provenance.length) {
+    const topSources = Array.from(new Set(provenance.map((row) => str(row.source)).filter(Boolean))).slice(0, 4);
+    if (topSources.length) lines.push(`Sources: ${topSources.join(", ")}.`);
+  }
+  const updatedAt = str(active.provenanceUpdatedAt);
+  if (updatedAt) lines.push(`Updated: ${updatedAt}.`);
+
+  return lines.join("\n");
+}
+
 export function buildMetadataDashboardState({
   state = {},
   helpers = {}
@@ -89,6 +149,59 @@ export function buildMetadataDashboardState({
   const submodelBanner = state.health?.submodelDiscoveryError
     ? `Submodels unavailable: ${state.health.submodelDiscoveryError}`
     : "No submodels found in current show data.";
+  const activeTargetData = activeNormalized
+    ? {
+        id: activeTargetId,
+        displayName: str(activeTarget?.raw?.displayName || activeNormalized?.identity?.displayName || activeTargetId),
+        type: str(activeTarget?.raw?.type || activeNormalized?.targetKind),
+        canonicalType: str(activeNormalized?.identity?.canonicalType),
+        metadataCompleteness: str(activeNormalized?.semantics?.metadataCompleteness?.overall),
+        metadataCompletenessDetail: activeNormalized?.semantics?.metadataCompleteness && typeof activeNormalized.semantics.metadataCompleteness === "object"
+          ? {
+              structure: str(activeNormalized.semantics.metadataCompleteness.structure),
+              semantic: str(activeNormalized.semantics.metadataCompleteness.semantic),
+              role: str(activeNormalized.semantics.metadataCompleteness.role),
+              submodel: str(activeNormalized.semantics.metadataCompleteness.submodel),
+              sequencing: str(activeNormalized.semantics.metadataCompleteness.sequencing)
+            }
+          : null,
+        inferredRole: str(activeNormalized?.semantics?.inferredRole),
+        inferredSemanticTraits: escapeTagList(activeNormalized?.semantics?.inferredSemanticTraits),
+        rolePreference: str(activeNormalized?.user?.rolePreference),
+        semanticHints: escapeTagList(activeNormalized?.user?.semanticHints),
+        submodelHints: escapeTagList(activeNormalized?.user?.submodelHints),
+        effectAvoidances: escapeTagList(activeNormalized?.user?.effectAvoidances),
+        confidence: Number(activeNormalized?.provenance?.confidence || 0),
+        groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
+        submodelCount: Number(activeNormalized?.structure?.submodelCount || 0),
+        memberCount: Number(activeNormalized?.structure?.memberCount || 0),
+        submodelMetadata: activeNormalized?.structure?.submodelMetadata && typeof activeNormalized.structure.submodelMetadata === "object"
+          ? {
+              hasSubmodels: activeNormalized.structure.submodelMetadata.hasSubmodels === true,
+              submodelCount: Number(activeNormalized.structure.submodelMetadata.submodelCount || 0),
+              memberCount: Number(activeNormalized.structure.submodelMetadata.memberCount || 0),
+              modelMemberCount: Number(activeNormalized.structure.submodelMetadata.modelMemberCount || 0),
+              submodelMemberCount: Number(activeNormalized.structure.submodelMetadata.submodelMemberCount || 0),
+              hasSubmodelMembers: activeNormalized.structure.submodelMetadata.hasSubmodelMembers === true,
+              parentId: str(activeNormalized.structure.submodelMetadata.parentId),
+              parentName: str(activeNormalized.structure.submodelMetadata.parentName),
+              nodeCount: Number(activeNormalized.structure.submodelMetadata.nodeCount || 0)
+            }
+          : null,
+        recommendations: Array.isArray(activeNormalized?.recommendations)
+          ? activeNormalized.recommendations.map((row) => ({
+              type: str(row?.type),
+              priority: str(row?.priority),
+              message: str(row?.message)
+            })).filter((row) => row.message)
+          : [],
+        provenanceUpdatedAt: str(activeNormalized?.provenance?.updatedAt),
+        provenanceFields: mapProvenanceFields(activeNormalized?.provenance?.fields)
+      }
+    : null;
+  if (activeTargetData) {
+    activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
+  }
 
   return {
     contract: "metadata_dashboard_state_v1",
@@ -121,56 +234,7 @@ export function buildMetadataDashboardState({
         metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length,
         recommendationSummary: summarizeRecommendations(normalizedRecords)
       },
-      activeTarget: activeNormalized
-        ? {
-            id: activeTargetId,
-            displayName: str(activeTarget?.raw?.displayName || activeNormalized?.identity?.displayName || activeTargetId),
-            type: str(activeTarget?.raw?.type || activeNormalized?.targetKind),
-            canonicalType: str(activeNormalized?.identity?.canonicalType),
-            metadataCompleteness: str(activeNormalized?.semantics?.metadataCompleteness?.overall),
-            metadataCompletenessDetail: activeNormalized?.semantics?.metadataCompleteness && typeof activeNormalized.semantics.metadataCompleteness === "object"
-              ? {
-                  structure: str(activeNormalized.semantics.metadataCompleteness.structure),
-                  semantic: str(activeNormalized.semantics.metadataCompleteness.semantic),
-                  role: str(activeNormalized.semantics.metadataCompleteness.role),
-                  submodel: str(activeNormalized.semantics.metadataCompleteness.submodel),
-                  sequencing: str(activeNormalized.semantics.metadataCompleteness.sequencing)
-                }
-              : null,
-            inferredRole: str(activeNormalized?.semantics?.inferredRole),
-            inferredSemanticTraits: escapeTagList(activeNormalized?.semantics?.inferredSemanticTraits),
-            rolePreference: str(activeNormalized?.user?.rolePreference),
-            semanticHints: escapeTagList(activeNormalized?.user?.semanticHints),
-            submodelHints: escapeTagList(activeNormalized?.user?.submodelHints),
-            effectAvoidances: escapeTagList(activeNormalized?.user?.effectAvoidances),
-            confidence: Number(activeNormalized?.provenance?.confidence || 0),
-            groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
-            submodelCount: Number(activeNormalized?.structure?.submodelCount || 0),
-            memberCount: Number(activeNormalized?.structure?.memberCount || 0),
-            submodelMetadata: activeNormalized?.structure?.submodelMetadata && typeof activeNormalized.structure.submodelMetadata === "object"
-              ? {
-                  hasSubmodels: activeNormalized.structure.submodelMetadata.hasSubmodels === true,
-                  submodelCount: Number(activeNormalized.structure.submodelMetadata.submodelCount || 0),
-                  memberCount: Number(activeNormalized.structure.submodelMetadata.memberCount || 0),
-                  modelMemberCount: Number(activeNormalized.structure.submodelMetadata.modelMemberCount || 0),
-                  submodelMemberCount: Number(activeNormalized.structure.submodelMetadata.submodelMemberCount || 0),
-                  hasSubmodelMembers: activeNormalized.structure.submodelMetadata.hasSubmodelMembers === true,
-                  parentId: str(activeNormalized.structure.submodelMetadata.parentId),
-                  parentName: str(activeNormalized.structure.submodelMetadata.parentName),
-                  nodeCount: Number(activeNormalized.structure.submodelMetadata.nodeCount || 0)
-                }
-              : null,
-            recommendations: Array.isArray(activeNormalized?.recommendations)
-              ? activeNormalized.recommendations.map((row) => ({
-                  type: str(row?.type),
-                  priority: str(row?.priority),
-                  message: str(row?.message)
-                })).filter((row) => row.message)
-              : [],
-            provenanceUpdatedAt: str(activeNormalized?.provenance?.updatedAt),
-            provenanceFields: mapProvenanceFields(activeNormalized?.provenance?.fields)
-          }
-        : null,
+      activeTarget: activeTargetData,
       rows: filteredModels.slice(0, 200).map((m) => {
         const assignment = assignmentByTargetId.get(String(m.id));
         const normalized = normalizedByTargetId.get(String(m.id));

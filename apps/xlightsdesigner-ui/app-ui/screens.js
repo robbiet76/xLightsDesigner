@@ -1510,14 +1510,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   </summary>
                   <div class="field metadata-tag-manager-body">
                     <div class="artifact-detail-grid">
-                      <div><strong>Name</strong><p>${String(data.activeTarget.displayName || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Type</strong><p>${String(data.activeTarget.canonicalType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Metadata</strong><p>${String(data.activeTarget.metadataCompleteness || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Confidence</strong><p>${Number.isFinite(Number(data.activeTarget.confidence)) ? Number(data.activeTarget.confidence).toFixed(2) : "-"}</p></div>
-                    </div>
-                    <div class="artifact-detail-grid">
-                      <div><strong>Inferred Role</strong><p>${String(data.activeTarget.inferredRole || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>User Role Preference</strong><p>
+                      <div><strong>Role Preference</strong><p>
                         <select data-metadata-role-preference="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
                           ${["", "focal", "support", "background", "frame", "accent"].map((value) => {
                             const selected = String(data.activeTarget.rolePreference || "") === value ? "selected" : "";
@@ -1526,21 +1519,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                           }).join("")}
                         </select>
                       </p></div>
-                      <div><strong>Groups</strong><p>${(Array.isArray(data.activeTarget.groupMemberships) && data.activeTarget.groupMemberships.length ? data.activeTarget.groupMemberships.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Submodels</strong><p>${String(data.activeTarget.submodelCount || data.activeTarget.memberCount || 0)}</p></div>
-                    </div>
-                    ${data.activeTarget.submodelMetadata
-                      ? `<div class="artifact-detail-grid">
-                          <div><strong>Parent Target</strong><p>${String(data.activeTarget.submodelMetadata.parentName || data.activeTarget.submodelMetadata.parentId || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                          <div><strong>Has Submodels</strong><p>${data.activeTarget.submodelMetadata.hasSubmodels ? "Yes" : "No"}</p></div>
-                          <div><strong>Submodel Count</strong><p>${String(data.activeTarget.submodelMetadata.submodelCount || 0)}</p></div>
-                          <div><strong>Group Members</strong><p>${String(data.activeTarget.submodelMetadata.memberCount || 0)}</p></div>
-                          <div><strong>Model Members</strong><p>${String(data.activeTarget.submodelMetadata.modelMemberCount || 0)}</p></div>
-                          <div><strong>Submodel Members</strong><p>${String(data.activeTarget.submodelMetadata.submodelMemberCount || 0)}</p></div>
-                          <div><strong>Submodel Nodes</strong><p>${String(data.activeTarget.submodelMetadata.nodeCount || 0)}</p></div>
-                        </div>`
-                      : ""}
-                    <div class="artifact-detail-grid">
                       <div>
                         <strong>Semantic Hints</strong>
                         <p><input data-metadata-semantic-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.semanticHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="character, radial_like, lyric" /></p>
@@ -1554,45 +1532,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
                       </div>
                     </div>
-                    ${data.activeTarget.metadataCompletenessDetail
-                      ? `<div class="artifact-detail-grid">
-                          <div><strong>Structure Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.structure || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                          <div><strong>Semantic Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.semantic || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                          <div><strong>Role Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.role || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                          <div><strong>Submodel Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.submodel || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                          <div><strong>Sequencing Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.sequencing || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                        </div>`
-                      : ""}
-                    <h4>Recommended Next Metadata</h4>
-                    ${Array.isArray(data.activeTarget.recommendations) && data.activeTarget.recommendations.length
-                      ? `<ul class="artifact-detail-list">${data.activeTarget.recommendations.map((row) => `<li><strong>${String(row.priority || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "info"}</strong>: ${String(row.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</li>`).join("")}</ul>`
-                      : `<p class="banner">No metadata recommendations for this target right now.</p>`}
-                    <h4>Inferred Semantic Traits</h4>
-                    ${Array.isArray(data.activeTarget.inferredSemanticTraits) && data.activeTarget.inferredSemanticTraits.length
-                      ? `<p>${data.activeTarget.inferredSemanticTraits.map((v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).join(", ")}</p>`
-                      : `<p class="banner">No inferred semantic traits yet.</p>`}
-                    <h4>Provenance</h4>
-                    <p class="banner">Updated: ${String(data.activeTarget.provenanceUpdatedAt || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
-                    ${Array.isArray(data.activeTarget.provenanceFields) && data.activeTarget.provenanceFields.length
-                      ? `<div class="metadata-grid-wrap metadata-tag-grid-wrap">
-                          <table class="metadata-grid metadata-tag-grid">
-                            <thead>
-                              <tr>
-                                <th style="width:180px;">Field</th>
-                                <th style="width:160px;">Source</th>
-                                <th>Detail</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              ${data.activeTarget.provenanceFields.map((row) => `<tr>
-                                <td>${String(row.field || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-                                <td><span class="banner">${String(row.source || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</span></td>
-                                <td>${String(row.detail || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
-                              </tr>`).join("")}
-                            </tbody>
-                          </table>
-                        </div>`
-                      : `<p class="banner">No provenance details available yet.</p>`}
+                    <div>
+                      <strong>Summary</strong>
+                      <pre class="metadata-summary-block">${String(data.activeTarget.summaryText || "No summary available yet.").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+                    </div>
                   </div>
                 </details>`
               : ""
