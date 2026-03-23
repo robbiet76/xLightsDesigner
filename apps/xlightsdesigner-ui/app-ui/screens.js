@@ -1492,6 +1492,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <span class="banner">Controlled tags: ${data.targetsSummary?.controlledTagCount || 0}</span>
             <span class="banner">Custom tags: ${data.targetsSummary?.customTagCount || 0}</span>
           </div>
+          ${data.targetsSummary?.recommendationSummary?.total
+            ? `<div class="metadata-toolbar row">
+                <span class="banner">Recommended actions: ${data.targetsSummary.recommendationSummary.total}</span>
+                <span class="banner">High priority: ${data.targetsSummary.recommendationSummary.highPriority || 0}</span>
+                ${Array.isArray(data.targetsSummary.recommendationSummary.items)
+                  ? data.targetsSummary.recommendationSummary.items.slice(0, 4).map((row) => `<span class="banner">${String(row.type || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}: ${Number(row.count || 0)}</span>`).join("")
+                  : ""}
+              </div>`
+            : ""}
           <details class="metadata-tag-manager">
             <summary>
               <span>Tag Library</span>

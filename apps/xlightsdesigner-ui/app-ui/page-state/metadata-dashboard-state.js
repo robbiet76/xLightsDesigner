@@ -15,6 +15,31 @@ function mapProvenanceFields(fields = {}) {
   })).filter((row) => row.field);
 }
 
+function summarizeRecommendations(records = []) {
+  const summary = {
+    total: 0,
+    byType: {},
+    highPriority: 0
+  };
+  for (const record of Array.isArray(records) ? records : []) {
+    for (const recommendation of Array.isArray(record?.recommendations) ? record.recommendations : []) {
+      const type = str(recommendation?.type || "unknown");
+      const priority = str(recommendation?.priority || "");
+      if (!type) continue;
+      summary.total += 1;
+      summary.byType[type] = Number(summary.byType[type] || 0) + 1;
+      if (priority === "high") summary.highPriority += 1;
+    }
+  }
+  return {
+    total: summary.total,
+    highPriority: summary.highPriority,
+    items: Object.entries(summary.byType)
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type))
+  };
+}
+
 export function buildMetadataDashboardState({
   state = {},
   helpers = {}
@@ -122,7 +147,8 @@ export function buildMetadataDashboardState({
         metadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_partial").length,
         metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length,
         controlledTagCount: tags.filter((row) => row.controlled === true).length,
-        customTagCount: tags.filter((row) => row.controlled !== true).length
+        customTagCount: tags.filter((row) => row.controlled !== true).length,
+        recommendationSummary: summarizeRecommendations(normalizedRecords)
       },
       activeTarget: activeNormalized
         ? {
