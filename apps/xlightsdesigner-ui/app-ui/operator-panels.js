@@ -4,6 +4,10 @@ export function buildSettingsContent({ state, helpers, pageState = null, include
     getManualLockedXdTracks,
     getTeamChatIdentities
   } = helpers;
+  const safety = state?.safety && typeof state.safety === "object" ? state.safety : {};
+  const ui = state?.ui && typeof state.ui === "object" ? state.ui : {};
+  const health = state?.health && typeof state.health === "object" ? state.health : {};
+  const flags = state?.flags && typeof state.flags === "object" ? state.flags : {};
   const data = pageState?.data || {};
   const rolloutMode = data.rolloutMode || getAgentApplyRolloutMode();
   const manualXdLocks = Array.isArray(data.manualXdLocks) ? data.manualXdLocks : getManualLockedXdTracks();
@@ -35,20 +39,20 @@ export function buildSettingsContent({ state, helpers, pageState = null, include
         <section class="field">
           <label>Apply Confirmation Mode</label>
           <select id="confirm-mode-input">
-            <option value="large-only" ${state.safety.applyConfirmMode === "large-only" ? "selected" : ""}>Large changes only</option>
-            <option value="always" ${state.safety.applyConfirmMode === "always" ? "selected" : ""}>Always confirm</option>
-            <option value="never" ${state.safety.applyConfirmMode === "never" ? "selected" : ""}>Never confirm</option>
+            <option value="large-only" ${safety.applyConfirmMode === "large-only" ? "selected" : ""}>Large changes only</option>
+            <option value="always" ${safety.applyConfirmMode === "always" ? "selected" : ""}>Always confirm</option>
+            <option value="never" ${safety.applyConfirmMode === "never" ? "selected" : ""}>Never confirm</option>
           </select>
         </section>
         <section class="field">
           <label>Large Change Threshold (approx effects impacted)</label>
-          <input id="threshold-input" type="number" min="1" value="${state.safety.largeChangeThreshold}" />
+          <input id="threshold-input" type="number" min="1" value="${safety.largeChangeThreshold ?? ""}" />
         </section>
         <section class="field">
           <label>Sequence Switch (when unsaved changes exist)</label>
           <select id="sequence-switch-policy-input">
-            <option value="save-if-needed" ${state.safety.sequenceSwitchUnsavedPolicy !== "discard-unsaved" ? "selected" : ""}>Save then switch</option>
-            <option value="discard-unsaved" ${state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "selected" : ""}>Discard and switch</option>
+            <option value="save-if-needed" ${safety.sequenceSwitchUnsavedPolicy !== "discard-unsaved" ? "selected" : ""}>Save then switch</option>
+            <option value="discard-unsaved" ${safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "selected" : ""}>Discard and switch</option>
           </select>
         </section>
         <section class="field">
@@ -61,27 +65,27 @@ export function buildSettingsContent({ state, helpers, pageState = null, include
         </section>
         <section class="field">
           <label>Cloud Agent Configuration</label>
-          <input id="agent-base-url-input" placeholder="Base URL (optional)" value="${String(state.ui.agentBaseUrlDraft || "").replace(/\"/g, "&quot;")}" />
-          <input id="agent-model-input" placeholder="Model (optional)" value="${String(state.ui.agentModelDraft || "").replace(/\"/g, "&quot;")}" />
-          <input id="agent-api-key-input" type="password" placeholder="${state.health.agentHasStoredApiKey ? "Stored API key is set. Enter to replace." : "Enter API key to enable cloud chat"}" value="" />
+          <input id="agent-base-url-input" placeholder="Base URL (optional)" value="${String(ui.agentBaseUrlDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="agent-model-input" placeholder="Model (optional)" value="${String(ui.agentModelDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="agent-api-key-input" type="password" placeholder="${health.agentHasStoredApiKey ? "Stored API key is set. Enter to replace." : "Enter API key to enable cloud chat"}" value="" />
           <div class="row" style="margin-top:6px;">
             <button id="save-agent-config">Save Cloud Config</button>
-            <button id="clear-agent-key" ${state.health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
+            <button id="clear-agent-key" ${health.agentHasStoredApiKey ? "" : "disabled"}>Clear Stored API Key</button>
             <button id="test-agent-cloud">Test Cloud Agent</button>
             <button id="test-agent-orchestration">Test Orchestration</button>
             <button id="test-agent-orchestration-matrix">Run Orchestration Matrix</button>
           </div>
-          <p class="banner">Source: ${state.health.agentConfigSource || "none"} | Stored key: ${state.health.agentHasStoredApiKey ? "yes" : "no"}</p>
-          <p class="banner">Last cloud test: ${state.ui.agentLastTestStatus || "not run in this session"}</p>
-          <p class="banner">Last orchestration test: ${state.ui.agentLastOrchestrationTestStatus || "not run in this session"}</p>
-          <p class="banner">Last orchestration matrix: ${state.ui.agentLastOrchestrationMatrixStatus || "not run in this session"}</p>
+          <p class="banner">Source: ${health.agentConfigSource || "none"} | Stored key: ${health.agentHasStoredApiKey ? "yes" : "no"}</p>
+          <p class="banner">Last cloud test: ${ui.agentLastTestStatus || "not run in this session"}</p>
+          <p class="banner">Last orchestration test: ${ui.agentLastOrchestrationTestStatus || "not run in this session"}</p>
+          <p class="banner">Last orchestration matrix: ${ui.agentLastOrchestrationMatrixStatus || "not run in this session"}</p>
         </section>
         <section class="field">
           <label>Audio Analysis Service</label>
-          <input id="analysis-service-url-input" placeholder="Service base URL (e.g. http://127.0.0.1:5055)" value="${String(state.ui.analysisServiceUrlDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="analysis-service-url-input" placeholder="Service base URL (e.g. http://127.0.0.1:5055)" value="${String(ui.analysisServiceUrlDraft || "").replace(/\"/g, "&quot;")}" />
           <p class="banner">Provider: Librosa only.</p>
-          <input id="analysis-service-api-key-input" type="password" placeholder="x-api-key (optional)" value="${String(state.ui.analysisServiceApiKeyDraft || "").replace(/\"/g, "&quot;")}" />
-          <input id="analysis-service-bearer-input" type="password" placeholder="Bearer token (optional)" value="${String(state.ui.analysisServiceAuthBearerDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="analysis-service-api-key-input" type="password" placeholder="x-api-key (optional)" value="${String(ui.analysisServiceApiKeyDraft || "").replace(/\"/g, "&quot;")}" />
+          <input id="analysis-service-bearer-input" type="password" placeholder="Bearer token (optional)" value="${String(ui.analysisServiceAuthBearerDraft || "").replace(/\"/g, "&quot;")}" />
           <p class="banner">Thin client mode: app sends audio to this service and writes returned beats/bars/sections.</p>
         </section>
         <section class="field">
@@ -96,7 +100,7 @@ export function buildSettingsContent({ state, helpers, pageState = null, include
           <button id="test-connection">Test Connection</button>
           <button id="check-health">Recheck Health</button>
           <button id="clear-xd-track-locks" ${manualXdLocks.length ? "" : "disabled"}>Clear XD Locks</button>
-          <button id="plan-toggle" ${planOnlyToggleForced ? `disabled title="${planOnlyToggleTitle}"` : ""}>${state.flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
+          <button id="plan-toggle" ${planOnlyToggleForced ? `disabled title="${planOnlyToggleTitle}"` : ""}>${flags.planOnlyMode ? "Exit Plan Only" : "Plan Only"}</button>
         </div>
         <div class="row">
           <button id="reset-app-install-state" class="danger-action">Reset App To First Run</button>
