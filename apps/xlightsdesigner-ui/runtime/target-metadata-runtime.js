@@ -150,6 +150,7 @@ function buildMetadataCompleteness({
 } = {}) {
   const normalizedCanonical = low(canonicalType);
   const semanticHints = arr(preference?.semanticHints).map((row) => norm(row)).filter(Boolean);
+  const submodelHints = arr(preference?.submodelHints).map((row) => norm(row)).filter(Boolean);
   const tags = unique(userTags);
   const structure = normalizedCanonical ? "metadata_ready" : "metadata_needed";
   const semantic = semanticHints.length
@@ -161,10 +162,12 @@ function buildMetadataCompleteness({
     ? "metadata_ready"
     : ((targetKind === "group" || tags.length) ? "metadata_partial" : "metadata_needed");
   const submodel = targetKind === "submodel"
-    ? "metadata_ready"
+    ? (submodelHints.length ? "metadata_ready" : "metadata_partial")
     : targetKind === "group"
-      ? (memberCount > 0 ? "metadata_partial" : "metadata_needed")
-      : (Number(submodelCount) > 0 ? "metadata_partial" : "metadata_ready");
+      ? (submodelHints.length ? "metadata_ready" : (memberCount > 0 ? "metadata_partial" : "metadata_needed"))
+      : (Number(submodelCount) > 0
+          ? (submodelHints.length ? "metadata_ready" : "metadata_partial")
+          : "metadata_ready");
   const sequencing = trainedBuckets.length
     ? "metadata_ready"
     : normalizedCanonical
@@ -222,6 +225,12 @@ function buildProvenanceDetail({
       detail: arr(preference?.semanticHints).length
         ? `User semantic hints: ${unique(preference.semanticHints).join(", ")}.`
         : "No explicit semantic hints."
+    },
+    submodelHints: {
+      source: arr(preference?.submodelHints).length ? "user_override" : "none",
+      detail: arr(preference?.submodelHints).length
+        ? `User submodel hints: ${unique(preference.submodelHints).join(", ")}.`
+        : "No explicit submodel hints."
     },
     effectAvoidances: {
       source: arr(preference?.effectAvoidances).length ? "user_override" : "none",
@@ -330,6 +339,7 @@ export function buildNormalizedTargetMetadataRecords({
       user: {
         rolePreference: norm(preference?.rolePreference),
         semanticHints: unique(preference?.semanticHints),
+        submodelHints: unique(preference?.submodelHints),
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
@@ -407,6 +417,7 @@ export function buildNormalizedTargetMetadataRecords({
       user: {
         rolePreference: norm(preference?.rolePreference),
         semanticHints: unique(preference?.semanticHints),
+        submodelHints: unique(preference?.submodelHints),
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
@@ -481,6 +492,7 @@ export function buildNormalizedTargetMetadataRecords({
       user: {
         rolePreference: norm(preference?.rolePreference),
         semanticHints: unique(preference?.semanticHints),
+        submodelHints: unique(preference?.submodelHints),
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },

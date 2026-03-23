@@ -32,7 +32,7 @@ function buildHelpers() {
           inferredSemanticTraits: ["character", "focal"]
         },
         training: { trainedSupportState: "out_of_stage1_model_support" },
-        user: { rolePreference: "support" },
+        user: { rolePreference: "support", submodelHints: ["face", "hat"] },
         structure: {
           submodelMetadata: {
             hasSubmodels: false,
@@ -44,7 +44,8 @@ function buildHelpers() {
           updatedAt: "2026-03-22T10:00:00.000Z",
           fields: {
             canonicalType: { source: "derived_layout", detail: "Derived from layout/model display type as custom." },
-            rolePreference: { source: "user_override", detail: "User override set to support." }
+            rolePreference: { source: "user_override", detail: "User override set to support." },
+            submodelHints: { source: "user_override", detail: "User submodel hints: face, hat." }
           }
         }
       },
@@ -126,9 +127,10 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.activeTarget.metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.metadataCompletenessDetail.semantic, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
+  assert.equal(dashboard.data.activeTarget.submodelHints.join(","), "face,hat");
   assert.equal(dashboard.data.activeTarget.submodelMetadata.hasSubmodels, false);
   assert.equal(dashboard.data.activeTarget.provenanceUpdatedAt, "2026-03-22T10:00:00.000Z");
-  assert.equal(dashboard.data.activeTarget.provenanceFields.length, 2);
+  assert.equal(dashboard.data.activeTarget.provenanceFields.length, 3);
   assert.equal(dashboard.data.activeTarget.provenanceFields[0].source.length > 0, true);
 });
 

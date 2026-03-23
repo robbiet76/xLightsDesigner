@@ -7748,6 +7748,7 @@ function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignm
       ...assignment,
       tags: mergedTags,
       semanticHints: arr(pref?.semanticHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      submodelHints: arr(pref?.submodelHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
       effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
       rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
     };
@@ -8003,6 +8004,30 @@ function updateMetadataTargetSemanticHints(targetId, rawValue = "") {
   state.metadata.preferencesByTargetId = next;
   invalidatePlanHandoff("metadata semantic hints changed");
   saveMetadataAndRender(`Updated semantic hints for ${target.displayName || id}.`);
+  return true;
+}
+
+function updateMetadataTargetSubmodelHints(targetId, rawValue = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const target = getMetadataTargetById(id);
+  if (!target) return false;
+  const nextValues = parseMetadataPreferenceList(rawValue);
+  const current = state.metadata?.preferencesByTargetId && typeof state.metadata.preferencesByTargetId === "object"
+    ? state.metadata.preferencesByTargetId
+    : {};
+  const previous = current[id] && typeof current[id] === "object" ? current[id] : {};
+  const previousValues = Array.isArray(previous.submodelHints) ? previous.submodelHints : [];
+  if (JSON.stringify(previousValues) === JSON.stringify(nextValues)) return true;
+  const next = { ...current };
+  const reduced = { ...previous };
+  if (nextValues.length) reduced.submodelHints = nextValues;
+  else delete reduced.submodelHints;
+  if (Object.keys(reduced).length) next[id] = reduced;
+  else delete next[id];
+  state.metadata.preferencesByTargetId = next;
+  invalidatePlanHandoff("metadata submodel hints changed");
+  saveMetadataAndRender(`Updated submodel hints for ${target.displayName || id}.`);
   return true;
 }
 
@@ -12146,6 +12171,7 @@ function bindEvents() {
     setMetadataFocusedTarget,
     updateMetadataTargetRolePreference,
     updateMetadataTargetSemanticHints,
+    updateMetadataTargetSubmodelHints,
     updateMetadataTargetEffectAvoidances,
     ignoreMetadataOrphan,
     remapMetadataOrphan,

@@ -1604,6 +1604,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <p><input data-metadata-semantic-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.semanticHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="character, radial_like, lyric" /></p>
                       </div>
                       <div>
+                        <strong>Submodel Hints</strong>
+                        <p><input data-metadata-submodel-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.submodelHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="inner ring, spokes, outline, left-half" /></p>
+                      </div>
+                      <div>
                         <strong>Effect Avoidances</strong>
                         <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
                       </div>

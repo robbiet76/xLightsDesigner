@@ -22,7 +22,11 @@ function buildEffectiveMetadataAssignments(assignments = [], preferencesByTarget
     ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
     return {
       ...assignment,
-      tags
+      tags,
+      semanticHints: arr(pref?.semanticHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      submodelHints: arr(pref?.submodelHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
     };
   });
 }

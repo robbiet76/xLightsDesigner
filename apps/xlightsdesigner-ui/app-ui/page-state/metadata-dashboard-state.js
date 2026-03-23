@@ -148,6 +148,7 @@ export function buildMetadataDashboardState({
             userTags: escapeTagList(activeAssignment?.tags || activeNormalized?.user?.tags),
             rolePreference: str(activeNormalized?.user?.rolePreference),
             semanticHints: escapeTagList(activeNormalized?.user?.semanticHints),
+            submodelHints: escapeTagList(activeNormalized?.user?.submodelHints),
             effectAvoidances: escapeTagList(activeNormalized?.user?.effectAvoidances),
             confidence: Number(activeNormalized?.provenance?.confidence || 0),
             groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),

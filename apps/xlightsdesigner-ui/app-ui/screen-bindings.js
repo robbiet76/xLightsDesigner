@@ -47,6 +47,7 @@ export function bindScreenEvents({
   setMetadataFocusedTarget,
   updateMetadataTargetRolePreference,
   updateMetadataTargetSemanticHints,
+  updateMetadataTargetSubmodelHints,
   updateMetadataTargetEffectAvoidances,
   ignoreMetadataOrphan,
   remapMetadataOrphan,
@@ -418,6 +419,20 @@ export function bindScreenEvents({
   app.querySelectorAll("[data-metadata-semantic-hints]").forEach((input) => {
     const commit = () => {
       updateMetadataTargetSemanticHints(input.dataset.metadataSemanticHints, input.value);
+      render();
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commit();
+    });
+  });
+
+  app.querySelectorAll("[data-metadata-submodel-hints]").forEach((input) => {
+    const commit = () => {
+      updateMetadataTargetSubmodelHints(input.dataset.metadataSubmodelHints, input.value);
       render();
     };
     input.addEventListener("change", commit);
