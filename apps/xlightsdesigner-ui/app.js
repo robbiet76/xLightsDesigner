@@ -392,6 +392,8 @@ const defaultState = {
     metadataFilterType: "",
     metadataFilterSupport: "",
     metadataFilterTags: "",
+    metadataFilterMetadata: "",
+    metadataFilterDimension: "overall",
     metadataSelectionIds: [],
     proposedSelection: [],
     sequenceMode: "existing",
@@ -766,6 +768,8 @@ if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterNam
 if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
 if (typeof state.ui?.metadataFilterSupport !== "string") state.ui.metadataFilterSupport = "";
 if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
+if (typeof state.ui?.metadataFilterMetadata !== "string") state.ui.metadataFilterMetadata = "";
+if (typeof state.ui?.metadataFilterDimension !== "string") state.ui.metadataFilterDimension = "overall";
 if (!isPlainObject(state.sceneGraph)) {
   state.sceneGraph = structuredClone(defaultState.sceneGraph);
 } else {
@@ -9676,6 +9680,8 @@ function onResetProjectWorkspace() {
   state.ui.metadataFilterType = "";
   state.ui.metadataFilterSupport = "";
   state.ui.metadataFilterTags = "";
+  state.ui.metadataFilterMetadata = "";
+  state.ui.metadataFilterDimension = "overall";
   state.ui.detailsOpen = false;
   state.chat = [];
   state.ui.chatDraft = "";

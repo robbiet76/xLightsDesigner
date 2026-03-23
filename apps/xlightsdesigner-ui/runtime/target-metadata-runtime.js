@@ -74,6 +74,39 @@ function buildGroupMembershipIndex(groupsById = {}) {
   return out;
 }
 
+function buildSubmodelMetadata({
+  targetKind = "",
+  parentId = "",
+  parentName = "",
+  submodelCount = 0,
+  memberCount = 0,
+  modelMemberCount = 0,
+  submodelMemberCount = 0
+} = {}) {
+  if (targetKind === "model") {
+    return {
+      hasSubmodels: Number(submodelCount) > 0,
+      submodelCount: Number(submodelCount) || 0
+    };
+  }
+  if (targetKind === "group") {
+    return {
+      memberCount: Number(memberCount) || 0,
+      modelMemberCount: Number(modelMemberCount) || 0,
+      submodelMemberCount: Number(submodelMemberCount) || 0,
+      hasSubmodelMembers: Number(submodelMemberCount) > 0
+    };
+  }
+  if (targetKind === "submodel") {
+    return {
+      parentId: norm(parentId),
+      parentName: norm(parentName),
+      nodeCount: Number(memberCount) || 0
+    };
+  }
+  return {};
+}
+
 function inferSemanticTraits({ canonicalType = "", userTags = [], semanticHints = [] } = {}) {
   const traits = new Set();
   const canonical = low(canonicalType);
@@ -254,6 +287,10 @@ export function buildNormalizedTargetMetadataRecords({
       userTags,
       semanticHints: unique(preference?.semanticHints)
     });
+    const submodelMetadata = buildSubmodelMetadata({
+      targetKind: "model",
+      submodelCount
+    });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "model",
       canonicalType: classification?.canonicalType,
@@ -276,7 +313,8 @@ export function buildNormalizedTargetMetadataRecords({
       },
       structure: {
         groupMemberships,
-        submodelCount
+        submodelCount,
+        submodelMetadata
       },
       semantics: {
         inferredRole,
@@ -317,9 +355,19 @@ export function buildNormalizedTargetMetadataRecords({
     const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const userTags = unique(assignment?.tags || []);
     const flattened = Array.isArray(group?.members?.flattened) ? group.members.flattened : [];
+    const modelIds = new Set(Object.keys(modelsById || {}).map((row) => norm(row)));
+    const submodelIds = new Set(Object.keys(submodelsById || {}).map((row) => norm(row)));
+    const modelMemberCount = flattened.filter((row) => modelIds.has(norm(row?.id || row?.name))).length;
+    const submodelMemberCount = flattened.filter((row) => submodelIds.has(norm(row?.id || row?.name))).length;
     const confidence = 0.5;
     const inferredRole = inferRole({ userTags, targetKind: "group", groupMemberships: [] });
     const inferredSemanticTraits = unique(["aggregate", ...userTags, ...unique(preference?.semanticHints)]);
+    const submodelMetadata = buildSubmodelMetadata({
+      targetKind: "group",
+      memberCount: flattened.length,
+      modelMemberCount,
+      submodelMemberCount
+    });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "group",
       canonicalType: "model_group",
@@ -342,7 +390,8 @@ export function buildNormalizedTargetMetadataRecords({
       },
       structure: {
         groupMemberships: [],
-        memberCount: flattened.length
+        memberCount: flattened.length,
+        submodelMetadata
       },
       semantics: {
         inferredRole,
@@ -386,6 +435,13 @@ export function buildNormalizedTargetMetadataRecords({
     const confidence = 0.5;
     const inferredRole = inferRole({ userTags, targetKind: "submodel", groupMemberships: [] });
     const inferredSemanticTraits = unique(["submodel", ...userTags, ...unique(preference?.semanticHints)]);
+    const nodeCount = Number(submodel?.membership?.nodeCount || 0);
+    const submodelMetadata = buildSubmodelMetadata({
+      targetKind: "submodel",
+      parentId,
+      parentName: parentId,
+      memberCount: nodeCount
+    });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "submodel",
       canonicalType: "submodel",
@@ -394,7 +450,7 @@ export function buildNormalizedTargetMetadataRecords({
       preference,
       userTags,
       trainedBuckets: [],
-      memberCount: Number(submodel?.membership?.nodeCount || 0)
+      memberCount: nodeCount
     });
     records.push({
       targetId,
@@ -408,7 +464,8 @@ export function buildNormalizedTargetMetadataRecords({
       },
       structure: {
         groupMemberships: unique(groupMembershipIndex.get(targetId) || []),
-        memberCount: Number(submodel?.membership?.nodeCount || 0)
+        memberCount: nodeCount,
+        submodelMetadata
       },
       semantics: {
         inferredRole,

@@ -43,6 +43,7 @@ export function buildMetadataDashboardState({
   const tagsFilter = String(state.ui?.metadataFilterTags || "");
   const supportFilter = String(state.ui?.metadataFilterSupport || "");
   const metadataFilter = String(state.ui?.metadataFilterMetadata || "");
+  const metadataFilterDimension = String(state.ui?.metadataFilterDimension || "overall");
   const filteredModels = modelOptions.filter((m) => {
     const rowName = str(m?.raw?.displayName).toLowerCase();
     const rowType = str(m?.raw?.type).toLowerCase();
@@ -50,7 +51,11 @@ export function buildMetadataDashboardState({
     const normalized = normalizedByTargetId.get(String(m.id));
     const rowTags = escapeTagList(assignment?.tags).join(", ").toLowerCase();
     const rowSupport = str(normalized?.semantics?.supportState).toLowerCase();
-    const rowMetadataCompleteness = str(normalized?.semantics?.metadataCompleteness?.overall).toLowerCase();
+    const rowMetadataCompleteness = str(
+      metadataFilterDimension === "overall"
+        ? normalized?.semantics?.metadataCompleteness?.overall
+        : normalized?.semantics?.metadataCompleteness?.[metadataFilterDimension]
+    ).toLowerCase();
     if (!matchesMetadataFilterValue(rowName, nameFilter)) return false;
     if (!matchesMetadataFilterValue(rowType, typeFilter)) return false;
     if (!matchesMetadataFilterValue(rowTags, tagsFilter)) return false;
@@ -107,6 +112,7 @@ export function buildMetadataDashboardState({
       hasSelectedTargets,
       hasSelectedTags,
       activeTargetId,
+      metadataFilterDimension,
       targetsSummary: {
         total: modelOptions.length,
         submodelCount,
@@ -147,6 +153,19 @@ export function buildMetadataDashboardState({
             groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
             submodelCount: Number(activeNormalized?.structure?.submodelCount || 0),
             memberCount: Number(activeNormalized?.structure?.memberCount || 0),
+            submodelMetadata: activeNormalized?.structure?.submodelMetadata && typeof activeNormalized.structure.submodelMetadata === "object"
+              ? {
+                  hasSubmodels: activeNormalized.structure.submodelMetadata.hasSubmodels === true,
+                  submodelCount: Number(activeNormalized.structure.submodelMetadata.submodelCount || 0),
+                  memberCount: Number(activeNormalized.structure.submodelMetadata.memberCount || 0),
+                  modelMemberCount: Number(activeNormalized.structure.submodelMetadata.modelMemberCount || 0),
+                  submodelMemberCount: Number(activeNormalized.structure.submodelMetadata.submodelMemberCount || 0),
+                  hasSubmodelMembers: activeNormalized.structure.submodelMetadata.hasSubmodelMembers === true,
+                  parentId: str(activeNormalized.structure.submodelMetadata.parentId),
+                  parentName: str(activeNormalized.structure.submodelMetadata.parentName),
+                  nodeCount: Number(activeNormalized.structure.submodelMetadata.nodeCount || 0)
+                }
+              : null,
             provenanceUpdatedAt: str(activeNormalized?.provenance?.updatedAt),
             provenanceFields: mapProvenanceFields(activeNormalized?.provenance?.fields)
           }

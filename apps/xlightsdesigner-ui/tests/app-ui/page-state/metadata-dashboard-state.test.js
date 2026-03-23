@@ -33,6 +33,12 @@ function buildHelpers() {
         },
         training: { trainedSupportState: "out_of_stage1_model_support" },
         user: { rolePreference: "support" },
+        structure: {
+          submodelMetadata: {
+            hasSubmodels: false,
+            submodelCount: 0
+          }
+        },
         provenance: {
           confidence: 0.25,
           updatedAt: "2026-03-22T10:00:00.000Z",
@@ -61,6 +67,12 @@ function buildHelpers() {
         },
         training: { trainedSupportState: "trained_supported" },
         user: { rolePreference: "" },
+        structure: {
+          submodelMetadata: {
+            hasSubmodels: true,
+            submodelCount: 8
+          }
+        },
         provenance: { confidence: 1, updatedAt: "2026-03-22T10:00:00.000Z", fields: {} }
       }
     ],
@@ -114,6 +126,7 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.activeTarget.metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.metadataCompletenessDetail.semantic, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
+  assert.equal(dashboard.data.activeTarget.submodelMetadata.hasSubmodels, false);
   assert.equal(dashboard.data.activeTarget.provenanceUpdatedAt, "2026-03-22T10:00:00.000Z");
   assert.equal(dashboard.data.activeTarget.provenanceFields.length, 2);
   assert.equal(dashboard.data.activeTarget.provenanceFields[0].source.length > 0, true);
@@ -163,4 +176,29 @@ test("metadata dashboard applies metadata completeness filter to target rows", (
 
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.rows[0].displayName, "Snowman");
+});
+
+test("metadata dashboard applies metadata completeness dimension filter to target rows", () => {
+  const dashboard = buildMetadataDashboardState({
+    state: {
+      submodels: [],
+      metadata: { assignments: [] },
+      ui: {
+        metadataSelectedTags: [],
+        metadataSelectionIds: [],
+        metadataFilterName: "",
+        metadataFilterType: "",
+        metadataFilterTags: "",
+        metadataFilterMetadata: "metadata_needed",
+        metadataFilterDimension: "role",
+        metadataNewTag: ""
+      },
+      health: {}
+    },
+    helpers: buildHelpers()
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].displayName, "SpiralTrees");
+  assert.equal(dashboard.data.metadataFilterDimension, "role");
 });

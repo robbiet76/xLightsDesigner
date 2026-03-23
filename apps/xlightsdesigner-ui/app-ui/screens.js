@@ -1587,6 +1587,17 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       <div><strong>Submodels</strong><p>${String(data.activeTarget.submodelCount || data.activeTarget.memberCount || 0)}</p></div>
                       <div><strong>User Tags</strong><p>${(Array.isArray(data.activeTarget.userTags) && data.activeTarget.userTags.length ? data.activeTarget.userTags.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                     </div>
+                    ${data.activeTarget.submodelMetadata
+                      ? `<div class="artifact-detail-grid">
+                          <div><strong>Parent Target</strong><p>${String(data.activeTarget.submodelMetadata.parentName || data.activeTarget.submodelMetadata.parentId || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                          <div><strong>Has Submodels</strong><p>${data.activeTarget.submodelMetadata.hasSubmodels ? "Yes" : "No"}</p></div>
+                          <div><strong>Submodel Count</strong><p>${String(data.activeTarget.submodelMetadata.submodelCount || 0)}</p></div>
+                          <div><strong>Group Members</strong><p>${String(data.activeTarget.submodelMetadata.memberCount || 0)}</p></div>
+                          <div><strong>Model Members</strong><p>${String(data.activeTarget.submodelMetadata.modelMemberCount || 0)}</p></div>
+                          <div><strong>Submodel Members</strong><p>${String(data.activeTarget.submodelMetadata.submodelMemberCount || 0)}</p></div>
+                          <div><strong>Submodel Nodes</strong><p>${String(data.activeTarget.submodelMetadata.nodeCount || 0)}</p></div>
+                        </div>`
+                      : ""}
                     <div class="artifact-detail-grid">
                       <div>
                         <strong>Semantic Hints</strong>
@@ -1661,8 +1672,20 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
                   <th><input id="metadata-filter-type" value="${(state.ui.metadataFilterType || "").replace(/"/g, "&quot;")}" placeholder="type (comma-separated)..." /></th>
                   <th><input id="metadata-filter-support" value="${(state.ui.metadataFilterSupport || "").replace(/"/g, "&quot;")}" placeholder="support..." /></th>
-                  <th><input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." /></th>
-                  <th></th>
+                  <th>
+                    <input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." />
+                    <select id="metadata-filter-dimension">
+                      ${[
+                        ["overall", "overall"],
+                        ["structure", "structure"],
+                        ["semantic", "semantic"],
+                        ["role", "role"],
+                        ["submodel", "submodel"],
+                        ["sequencing", "sequencing"]
+                      ].map(([value, label]) => `<option value="${value}" ${String(data.metadataFilterDimension || "overall") === value ? "selected" : ""}>${label}</option>`).join("")}
+                    </select>
+                  </th>
+                  <th><span class="banner">filter dim</span></th>
                   <th></th>
                   <th><input id="metadata-filter-tags" value="${(state.ui.metadataFilterTags || "").replace(/"/g, "&quot;")}" placeholder="tags (comma-separated)..." /></th>
                 </tr>

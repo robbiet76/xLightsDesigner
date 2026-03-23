@@ -320,6 +320,19 @@ export function bindScreenEvents({
     metadataFilterMetadataInput.addEventListener("blur", commitMetadataFilter);
   }
 
+  const metadataFilterDimensionSelect = app.querySelector("#metadata-filter-dimension");
+  if (metadataFilterDimensionSelect) {
+    const commitMetadataFilterDimension = () => {
+      const next = metadataFilterDimensionSelect.value;
+      if (next === state.ui.metadataFilterDimension) return;
+      state.ui.metadataFilterDimension = next;
+      persist();
+      render();
+    };
+    metadataFilterDimensionSelect.addEventListener("change", commitMetadataFilterDimension);
+    metadataFilterDimensionSelect.addEventListener("blur", commitMetadataFilterDimension);
+  }
+
   const metadataNewTagInput = app.querySelector("#metadata-new-tag");
   if (metadataNewTagInput) {
     metadataNewTagInput.addEventListener("input", () => {
