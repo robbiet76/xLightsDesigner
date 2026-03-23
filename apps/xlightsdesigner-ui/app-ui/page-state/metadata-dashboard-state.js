@@ -2,6 +2,11 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function finiteOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function sortDisplayValues(values = []) {
   return [...values].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: "base" }));
 }
@@ -156,11 +161,37 @@ function buildActiveTargetSummary(active = {}) {
   const inferredRole = str(active.inferredRole);
   if (inferredRole) lines.push(`Inferred role: ${inferredRole}.`);
 
-  const inferredTraits = escapeTagList(active.inferredSemanticTraits);
-  if (inferredTraits.length) lines.push(`Inferred traits: ${inferredTraits.join(", ")}.`);
-
   const groups = escapeTagList(active.groupMemberships);
   if (groups.length) lines.push(`Groups: ${groups.join(", ")}.`);
+
+  if (active.locationMetadata && typeof active.locationMetadata === "object") {
+    const position = active.locationMetadata.position || {};
+    const zones = active.locationMetadata.zones || {};
+    const source = str(active.locationMetadata.source);
+    const coords = [
+      Number.isFinite(Number(position.x)) ? `x ${Number(position.x)}` : "",
+      Number.isFinite(Number(position.y)) ? `y ${Number(position.y)}` : "",
+      Number.isFinite(Number(position.z)) ? `z ${Number(position.z)}` : ""
+    ].filter(Boolean);
+    const placement = [str(zones.horizontal), str(zones.vertical), str(zones.depth)].filter(Boolean);
+    const parts = [];
+    if (placement.length) parts.push(placement.join(", "));
+    if (coords.length) parts.push(coords.join(", "));
+    if (source === "parent") parts.push("derived from parent");
+    if (parts.length) lines.push(`Location: ${parts.join(" | ")}.`);
+  }
+
+  if (active.densityMetadata && typeof active.densityMetadata === "object") {
+    const density = active.densityMetadata;
+    const parts = [];
+    if (str(density.label)) parts.push(str(density.label));
+    if (Number.isFinite(Number(density.value))) {
+      const basis = str(density.basis) === "area" ? "nodes per area" : "nodes per span";
+      parts.push(`${Number(density.value)} ${basis}`);
+    }
+    if (Number.isFinite(Number(density.nodeCount))) parts.push(`${Number(density.nodeCount)} nodes`);
+    if (parts.length) lines.push(`Density: ${parts.join(" | ")}.`);
+  }
 
   if (active.submodelMetadata && typeof active.submodelMetadata === "object") {
     const meta = active.submodelMetadata;
@@ -170,11 +201,6 @@ function buildActiveTargetSummary(active = {}) {
     if (Number(meta.memberCount || 0) > 0) parts.push(`${Number(meta.memberCount)} group members`);
     if (Number(meta.nodeCount || 0) > 0) parts.push(`${Number(meta.nodeCount)} nodes`);
     if (parts.length) lines.push(`Structure: ${parts.join(", ")}.`);
-  }
-
-  const recommendations = Array.isArray(active.recommendations) ? active.recommendations : [];
-  if (recommendations.length) {
-    lines.push(`Recommended next metadata: ${recommendations.map((row) => str(row.message)).filter(Boolean).join(" ")}`);
   }
 
   const provenance = Array.isArray(active.provenanceFields) ? active.provenanceFields : [];
@@ -356,6 +382,36 @@ export function buildMetadataDashboardState({
               parentId: str(activeNormalized.structure.submodelMetadata.parentId),
               parentName: str(activeNormalized.structure.submodelMetadata.parentName),
               nodeCount: Number(activeNormalized.structure.submodelMetadata.nodeCount || 0)
+            }
+          : null,
+        locationMetadata: activeNormalized?.structure?.locationMetadata && typeof activeNormalized.structure.locationMetadata === "object"
+          ? {
+              source: str(activeNormalized.structure.locationMetadata.source),
+              position: {
+                x: finiteOrNull(activeNormalized.structure.locationMetadata.position?.x),
+                y: finiteOrNull(activeNormalized.structure.locationMetadata.position?.y),
+                z: finiteOrNull(activeNormalized.structure.locationMetadata.position?.z)
+              },
+              zones: {
+                horizontal: str(activeNormalized.structure.locationMetadata.zones?.horizontal),
+                vertical: str(activeNormalized.structure.locationMetadata.zones?.vertical),
+                depth: str(activeNormalized.structure.locationMetadata.zones?.depth)
+              }
+            }
+          : null,
+        densityMetadata: activeNormalized?.structure?.densityMetadata && typeof activeNormalized.structure.densityMetadata === "object"
+          ? {
+              basis: str(activeNormalized.structure.densityMetadata.basis),
+              value: finiteOrNull(activeNormalized.structure.densityMetadata.value),
+              label: str(activeNormalized.structure.densityMetadata.label),
+              nodeCount: finiteOrNull(activeNormalized.structure.densityMetadata.nodeCount),
+              footprint: {
+                width: finiteOrNull(activeNormalized.structure.densityMetadata.footprint?.width),
+                height: finiteOrNull(activeNormalized.structure.densityMetadata.footprint?.height),
+                depth: finiteOrNull(activeNormalized.structure.densityMetadata.footprint?.depth),
+                area: finiteOrNull(activeNormalized.structure.densityMetadata.footprint?.area),
+                span: finiteOrNull(activeNormalized.structure.densityMetadata.footprint?.span)
+              }
             }
           : null,
         recommendations: Array.isArray(activeNormalized?.recommendations)

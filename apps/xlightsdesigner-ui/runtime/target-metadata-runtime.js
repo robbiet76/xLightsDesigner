@@ -17,6 +17,116 @@ function unique(values = []) {
   return [...new Set(arr(values).map((row) => norm(row)).filter(Boolean))];
 }
 
+function toFiniteOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function safeFixed(value, digits = 1) {
+  return Number.isFinite(Number(value)) ? Number(Number(value).toFixed(digits)) : null;
+}
+
+function classifyThirdsZone(value, min, max, lowLabel = "", midLabel = "", highLabel = "") {
+  const v = toFiniteOrNull(value);
+  const lo = toFiniteOrNull(min);
+  const hi = toFiniteOrNull(max);
+  if (v == null || lo == null || hi == null || lo === hi) return "";
+  const first = lo + (hi - lo) / 3;
+  const second = lo + ((hi - lo) * 2) / 3;
+  if (v <= first) return lowLabel;
+  if (v >= second) return highLabel;
+  return midLabel;
+}
+
+function buildLocationMetadata({
+  targetKind = "",
+  node = null,
+  parentNode = null,
+  bounds = null
+} = {}) {
+  const sourceNode = node && node.transform?.position
+    ? node
+    : (targetKind === "submodel" && parentNode?.transform?.position ? parentNode : null);
+  const position = sourceNode?.transform?.position || {};
+  const x = toFiniteOrNull(position.x);
+  const y = toFiniteOrNull(position.y);
+  const z = toFiniteOrNull(position.z);
+  const hasPosition = x != null || y != null || z != null;
+  if (!hasPosition) return null;
+
+  const min = bounds?.min || {};
+  const max = bounds?.max || {};
+  return {
+    source: sourceNode === node ? "direct" : "parent",
+    position: {
+      x: safeFixed(x),
+      y: safeFixed(y),
+      z: safeFixed(z)
+    },
+    zones: {
+      horizontal: classifyThirdsZone(x, min.x, max.x, "left", "center", "right"),
+      vertical: classifyThirdsZone(y, min.y, max.y, "low", "mid", "high"),
+      depth: classifyThirdsZone(z, min.z, max.z, "foreground", "midground", "background")
+    }
+  };
+}
+
+function normalizePositive(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function densityLabel(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  if (n < 0.75) return "sparse";
+  if (n > 2.5) return "dense";
+  return "balanced";
+}
+
+function buildDensityMetadata({
+  targetKind = "",
+  node = null,
+  submodelMetadata = {}
+} = {}) {
+  if (!node || typeof node !== "object") return null;
+  const dims = node.dimensions || {};
+  const width = normalizePositive(dims.width);
+  const height = normalizePositive(dims.height);
+  const depth = normalizePositive(dims.depth);
+  const attrs = node.attributes || {};
+  const nodeCount = targetKind === "submodel"
+    ? normalizePositive(submodelMetadata?.nodeCount)
+    : normalizePositive(
+        node?.nodeCount
+        || attrs?.PixelCount
+        || attrs?.NumPoints
+        || attrs?.pixelCount
+        || attrs?.numPoints
+      );
+
+  const area = width && height ? width * height : null;
+  const linearSpan = width || height || depth || null;
+  const areaDensity = area && nodeCount ? nodeCount / area : null;
+  const linearDensity = !area && linearSpan && nodeCount ? nodeCount / linearSpan : null;
+  const value = areaDensity ?? linearDensity;
+  if (!Number.isFinite(value)) return null;
+
+  return {
+    basis: areaDensity != null ? "area" : "linear",
+    value: safeFixed(value, 3),
+    label: densityLabel(value),
+    nodeCount: nodeCount != null ? Number(nodeCount) : null,
+    footprint: {
+      width: safeFixed(width),
+      height: safeFixed(height),
+      depth: safeFixed(depth),
+      area: safeFixed(area),
+      span: safeFixed(linearSpan)
+    }
+  };
+}
+
 function mapClassificationToTrainingBuckets(classification = {}) {
   const rawType = low(classification?.rawType);
   const canonicalType = low(classification?.canonicalType);
@@ -333,6 +443,7 @@ export function buildNormalizedTargetMetadataRecords({
   const trainedBundle = getStage1TrainedEffectBundle();
   const trainedModelBuckets = new Set(Object.keys(trainedBundle?.modelTypeIndex || {}));
   const artifactVersion = norm(trainedBundle?.artifactVersion || "1.0");
+  const bounds = sceneGraph?.stats?.bounds || null;
   const now = new Date().toISOString();
   const records = [];
 
@@ -358,6 +469,16 @@ export function buildNormalizedTargetMetadataRecords({
       targetKind: "model",
       submodelCount
     });
+    const locationMetadata = buildLocationMetadata({
+      targetKind: "model",
+      node: model,
+      bounds
+    });
+    const densityMetadata = buildDensityMetadata({
+      targetKind: "model",
+      node: model,
+      submodelMetadata
+    });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "model",
       canonicalType: classification?.canonicalType,
@@ -381,7 +502,9 @@ export function buildNormalizedTargetMetadataRecords({
       structure: {
         groupMemberships,
         submodelCount,
-        submodelMetadata
+        submodelMetadata,
+        locationMetadata,
+        densityMetadata
       },
       semantics: {
         inferredRole,
@@ -442,6 +565,16 @@ export function buildNormalizedTargetMetadataRecords({
       modelMemberCount,
       submodelMemberCount
     });
+    const locationMetadata = buildLocationMetadata({
+      targetKind: "group",
+      node: group,
+      bounds
+    });
+    const densityMetadata = buildDensityMetadata({
+      targetKind: "group",
+      node: group,
+      submodelMetadata
+    });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "group",
       canonicalType: "model_group",
@@ -465,7 +598,9 @@ export function buildNormalizedTargetMetadataRecords({
       structure: {
         groupMemberships: [],
         memberCount: flattened.length,
-        submodelMetadata
+        submodelMetadata,
+        locationMetadata,
+        densityMetadata
       },
       semantics: {
         inferredRole,
@@ -517,11 +652,23 @@ export function buildNormalizedTargetMetadataRecords({
     const inferredRole = inferRole({ userTags, targetKind: "submodel", groupMemberships: [] });
     const inferredSemanticTraits = unique(["submodel", ...userTags, ...unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])])]);
     const nodeCount = Number(submodel?.membership?.nodeCount || 0);
+    const parentNode = modelsById[parentId] || groupsById[parentId] || null;
     const submodelMetadata = buildSubmodelMetadata({
       targetKind: "submodel",
       parentId,
       parentName: parentId,
       memberCount: nodeCount
+    });
+    const locationMetadata = buildLocationMetadata({
+      targetKind: "submodel",
+      node: submodel,
+      parentNode,
+      bounds
+    });
+    const densityMetadata = buildDensityMetadata({
+      targetKind: "submodel",
+      node: parentNode,
+      submodelMetadata
     });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "submodel",
@@ -546,7 +693,9 @@ export function buildNormalizedTargetMetadataRecords({
       structure: {
         groupMemberships: unique(groupMembershipIndex.get(targetId) || []),
         memberCount: nodeCount,
-        submodelMetadata
+        submodelMetadata,
+        locationMetadata,
+        densityMetadata
       },
       semantics: {
         inferredRole,
