@@ -1539,6 +1539,46 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <span class="banner">Selected targets: ${data.selectedCount || 0}</span>
             <span class="banner">Active tags: ${data.selectedTagNames?.length ? data.selectedTagNames.join(", ") : "none"}</span>
           </div>
+          ${
+            data.activeTarget
+              ? `<details class="metadata-tag-manager" open>
+                  <summary>
+                    <span>Target Detail</span>
+                    <span class="banner">${String(data.activeTarget.displayName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                  </summary>
+                  <div class="field metadata-tag-manager-body">
+                    <div class="artifact-detail-grid">
+                      <div><strong>Name</strong><p>${String(data.activeTarget.displayName || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Type</strong><p>${String(data.activeTarget.type || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Canonical</strong><p>${String(data.activeTarget.canonicalType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Support</strong><p>${String(data.activeTarget.supportState || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Training</strong><p>${String(data.activeTarget.trainedSupportState || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Confidence</strong><p>${Number.isFinite(Number(data.activeTarget.confidence)) ? Number(data.activeTarget.confidence).toFixed(2) : "-"}</p></div>
+                    </div>
+                    <div class="artifact-detail-grid">
+                      <div><strong>Inferred Role</strong><p>${String(data.activeTarget.inferredRole || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>User Role Preference</strong><p>
+                        <select data-metadata-role-preference="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                          ${["", "focal", "support", "background", "frame", "accent"].map((value) => {
+                            const selected = String(data.activeTarget.rolePreference || "") === value ? "selected" : "";
+                            const label = value || "Auto";
+                            return `<option value="${String(value).replace(/"/g, "&quot;")}" ${selected}>${label}</option>`;
+                          }).join("")}
+                        </select>
+                      </p></div>
+                      <div><strong>Trained Buckets</strong><p>${(Array.isArray(data.activeTarget.trainedBuckets) && data.activeTarget.trainedBuckets.length ? data.activeTarget.trainedBuckets.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Groups</strong><p>${(Array.isArray(data.activeTarget.groupMemberships) && data.activeTarget.groupMemberships.length ? data.activeTarget.groupMemberships.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Submodels</strong><p>${String(data.activeTarget.submodelCount || data.activeTarget.memberCount || 0)}</p></div>
+                      <div><strong>User Tags</strong><p>${(Array.isArray(data.activeTarget.userTags) && data.activeTarget.userTags.length ? data.activeTarget.userTags.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                    </div>
+                    <h4>Inferred Semantic Traits</h4>
+                    ${Array.isArray(data.activeTarget.inferredSemanticTraits) && data.activeTarget.inferredSemanticTraits.length
+                      ? `<p>${data.activeTarget.inferredSemanticTraits.map((v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).join(", ")}</p>`
+                      : `<p class="banner">No inferred semantic traits yet.</p>`}
+                  </div>
+                </details>`
+              : ""
+          }
           <div class="metadata-toolbar row">
             <button id="metadata-select-visible" ${data.hasVisibleTargets ? "" : "disabled"}>Select Visible</button>
             <button id="metadata-clear-selection" ${data.hasSelectedTargets ? "" : "disabled"}>Clear Selection</button>
@@ -1581,9 +1621,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                             : (String(m?.inferredRole || "") || "-");
                           const tagList = Array.isArray(m?.tags) && m.tags.length ? m.tags.join(", ") : "-";
                           const selected = m.selected ? "checked" : "";
+                          const focused = m.focused ? ' class="active-chip"' : "";
                           return `<tr>
                             <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${selected} /></td>
-                            <td>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                            <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
                             <td>${type.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${support.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>

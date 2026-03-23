@@ -20,6 +20,7 @@ function buildHelpers() {
         identity: { canonicalType: "custom" },
         semantics: { supportState: "runtime_targetable_only", inferredRole: "focal", inferredSemanticTraits: ["character", "focal"] },
         training: { trainedSupportState: "out_of_stage1_model_support" },
+        user: { rolePreference: "support" },
         provenance: { confidence: 0.25 }
       },
       {
@@ -28,6 +29,7 @@ function buildHelpers() {
         identity: { canonicalType: "tree" },
         semantics: { supportState: "trained_supported", inferredRole: "", inferredSemanticTraits: ["tree"] },
         training: { trainedSupportState: "trained_supported" },
+        user: { rolePreference: "" },
         provenance: { confidence: 1 }
       }
     ],
@@ -69,6 +71,8 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.targetsSummary.trainedSupportedModels, 1);
   assert.equal(dashboard.data.targetsSummary.runtimeOnlyModels, 1);
   assert.equal(dashboard.data.rows[0].supportState.length > 0, true);
+  assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
+  assert.equal(dashboard.data.activeTarget.rolePreference, "support");
 });
 
 test("metadata dashboard applies filters to target rows", () => {

@@ -44,6 +44,8 @@ export function bindScreenEvents({
   toggleMetadataSelectionId,
   removeMetadataTag,
   removeMetadataAssignment,
+  setMetadataFocusedTarget,
+  updateMetadataTargetRolePreference,
   ignoreMetadataOrphan,
   remapMetadataOrphan,
   onUseRecent,
@@ -362,6 +364,20 @@ export function bindScreenEvents({
   app.querySelectorAll("[data-metadata-select]").forEach((input) => {
     input.addEventListener("change", () => {
       toggleMetadataSelectionId(input.dataset.metadataSelect);
+      render();
+    });
+  });
+
+  app.querySelectorAll("[data-metadata-focus]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setMetadataFocusedTarget(btn.dataset.metadataFocus);
+      render();
+    });
+  });
+
+  app.querySelectorAll("[data-metadata-role-preference]").forEach((select) => {
+    select.addEventListener("change", () => {
+      updateMetadataTargetRolePreference(select.dataset.metadataRolePreference, select.value);
       render();
     });
   });

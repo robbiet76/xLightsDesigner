@@ -111,12 +111,16 @@ function supportStateLabel({ trainedBuckets = [] } = {}) {
 
 export function buildNormalizedTargetMetadataRecords({
   sceneGraph = {},
-  metadataAssignments = []
+  metadataAssignments = [],
+  metadataPreferencesByTargetId = {}
 } = {}) {
   const modelsById = sceneGraph?.modelsById || {};
   const groupsById = sceneGraph?.groupsById || {};
   const submodelsById = sceneGraph?.submodelsById || {};
   const assignmentIndex = buildAssignmentIndex(metadataAssignments);
+  const preferenceIndex = metadataPreferencesByTargetId && typeof metadataPreferencesByTargetId === "object"
+    ? metadataPreferencesByTargetId
+    : {};
   const groupMembershipIndex = buildGroupMembershipIndex(groupsById);
   const trainedBundle = getStage1TrainedEffectBundle();
   const trainedModelBuckets = new Set(Object.keys(trainedBundle?.modelTypeIndex || {}));
@@ -128,6 +132,7 @@ export function buildNormalizedTargetMetadataRecords({
     const targetId = norm(model?.id || model?.name);
     if (!targetId) continue;
     const assignment = assignmentIndex.get(targetId) || {};
+    const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const displayType = norm(model?.displayAs || model?.type || model?.displayType || "");
     const classification = classifyModelDisplayType(displayType);
     const trainedBuckets = mapClassificationToTrainingBuckets(classification).filter((bucket) => trainedModelBuckets.has(bucket));
@@ -163,6 +168,7 @@ export function buildNormalizedTargetMetadataRecords({
         trainingArtifactVersion: artifactVersion
       },
       user: {
+        rolePreference: norm(preference?.rolePreference),
         tags: userTags
       },
       provenance: {
@@ -176,6 +182,7 @@ export function buildNormalizedTargetMetadataRecords({
     const targetId = norm(group?.id || group?.name);
     if (!targetId) continue;
     const assignment = assignmentIndex.get(targetId) || {};
+    const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const userTags = unique(assignment?.tags || []);
     const flattened = Array.isArray(group?.members?.flattened) ? group.members.flattened : [];
     records.push({
@@ -203,6 +210,7 @@ export function buildNormalizedTargetMetadataRecords({
         trainingArtifactVersion: artifactVersion
       },
       user: {
+        rolePreference: norm(preference?.rolePreference),
         tags: userTags
       },
       provenance: {
@@ -216,6 +224,7 @@ export function buildNormalizedTargetMetadataRecords({
     const targetId = norm(submodel?.id || submodel?.name);
     if (!targetId) continue;
     const assignment = assignmentIndex.get(targetId) || {};
+    const preference = preferenceIndex[targetId] && typeof preferenceIndex[targetId] === "object" ? preferenceIndex[targetId] : {};
     const userTags = unique(assignment?.tags || []);
     const parentId = norm(submodel?.parentId);
     records.push({
@@ -243,6 +252,7 @@ export function buildNormalizedTargetMetadataRecords({
         trainingArtifactVersion: artifactVersion
       },
       user: {
+        rolePreference: norm(preference?.rolePreference),
         tags: userTags
       },
       provenance: {

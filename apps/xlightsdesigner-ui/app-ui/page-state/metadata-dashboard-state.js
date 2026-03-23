@@ -51,6 +51,10 @@ export function buildMetadataDashboardState({
   const selectedCount = selectedIds.size;
   const selectedEditorTags = normalizeMetadataSelectedTags(state.ui?.metadataSelectedTags);
   const draftTagName = str(state.ui?.metadataNewTag);
+  const activeTargetId = str(state.ui?.metadataTargetId || filteredModels[0]?.id || "");
+  const activeTarget = activeTargetId ? modelOptions.find((target) => str(target.id) === activeTargetId) : null;
+  const activeAssignment = activeTargetId ? assignmentByTargetId.get(activeTargetId) : null;
+  const activeNormalized = activeTargetId ? normalizedByTargetId.get(activeTargetId) : null;
   const hasVisibleTargets = filteredModels.length > 0;
   const hasSelectedTargets = selectedCount > 0;
   const hasSelectedTags = selectedEditorTags.length > 0;
@@ -87,12 +91,32 @@ export function buildMetadataDashboardState({
       hasVisibleTargets,
       hasSelectedTargets,
       hasSelectedTags,
+      activeTargetId,
       targetsSummary: {
         total: modelOptions.length,
         submodelCount,
         trainedSupportedModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState === "trained_supported").length,
         runtimeOnlyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState !== "trained_supported").length
       },
+      activeTarget: activeNormalized
+        ? {
+            id: activeTargetId,
+            displayName: str(activeTarget?.raw?.displayName || activeNormalized?.identity?.displayName || activeTargetId),
+            type: str(activeTarget?.raw?.type || activeNormalized?.targetKind),
+            canonicalType: str(activeNormalized?.identity?.canonicalType),
+            supportState: str(activeNormalized?.semantics?.supportState),
+            trainedSupportState: str(activeNormalized?.training?.trainedSupportState),
+            trainedBuckets: escapeTagList(activeNormalized?.training?.trainedModelBuckets),
+            inferredRole: str(activeNormalized?.semantics?.inferredRole),
+            inferredSemanticTraits: escapeTagList(activeNormalized?.semantics?.inferredSemanticTraits),
+            userTags: escapeTagList(activeAssignment?.tags || activeNormalized?.user?.tags),
+            rolePreference: str(activeNormalized?.user?.rolePreference),
+            confidence: Number(activeNormalized?.provenance?.confidence || 0),
+            groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
+            submodelCount: Number(activeNormalized?.structure?.submodelCount || 0),
+            memberCount: Number(activeNormalized?.structure?.memberCount || 0)
+          }
+        : null,
       rows: filteredModels.slice(0, 200).map((m) => {
         const assignment = assignmentByTargetId.get(String(m.id));
         const normalized = normalizedByTargetId.get(String(m.id));
@@ -102,11 +126,13 @@ export function buildMetadataDashboardState({
           type: str(m.raw?.type),
           tags: escapeTagList(assignment?.tags),
           selected: selectedIds.has(str(m.id)),
+          focused: activeTargetId === str(m.id),
           supportState: str(normalized?.semantics?.supportState),
           canonicalType: str(normalized?.identity?.canonicalType),
           inferredRole: str(normalized?.semantics?.inferredRole),
           inferredSemanticTraits: escapeTagList(normalized?.semantics?.inferredSemanticTraits),
-          confidence: Number(normalized?.provenance?.confidence || 0)
+          confidence: Number(normalized?.provenance?.confidence || 0),
+          rolePreference: str(normalized?.user?.rolePreference)
         };
       })
     }

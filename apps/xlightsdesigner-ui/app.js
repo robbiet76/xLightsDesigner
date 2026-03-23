@@ -491,6 +491,7 @@ const defaultState = {
   metadata: {
     tags: ["focal", "rhythm-driver", "ambient-fill"],
     assignments: [],
+    preferencesByTargetId: {},
     ignoredOrphanTargetIds: []
   },
   projectSequences: [],
@@ -654,6 +655,9 @@ if (!Array.isArray(state.ui?.proposedSelection)) {
 }
 if (!Array.isArray(state.ui?.metadataSelectionIds)) {
   state.ui.metadataSelectionIds = [];
+}
+if (typeof state.metadata?.preferencesByTargetId !== "object" || !state.metadata?.preferencesByTargetId || Array.isArray(state.metadata?.preferencesByTargetId)) {
+  state.metadata.preferencesByTargetId = {};
 }
 if (!Array.isArray(state.ui?.metadataSelectedTags)) {
   state.ui.metadataSelectedTags = [];
@@ -7632,6 +7636,14 @@ function getMetadataTargetNameById(id) {
   return found ? found.displayName : String(id || "");
 }
 
+function setMetadataFocusedTarget(targetId) {
+  const id = String(targetId || "").trim();
+  if (!id) return;
+  if (state.ui.metadataTargetId === id) return;
+  state.ui.metadataTargetId = id;
+  persist();
+}
+
 function ensureMetadataTargetSelection() {
   const options = buildMetadataTargets({ includeSubmodels: true })
     .map((target) => target.id)
@@ -7905,6 +7917,37 @@ function upsertMetadataAssignmentTags(targetId, tagsToAdd = [], tagsToRemove = [
   state.metadata.ignoredOrphanTargetIds = (state.metadata?.ignoredOrphanTargetIds || []).filter(
     (orphanId) => String(orphanId) !== id
   );
+  return true;
+}
+
+function updateMetadataTargetRolePreference(targetId, rolePreference = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const target = getMetadataTargetById(id);
+  if (!target) return false;
+  const value = String(rolePreference || "").trim().toLowerCase();
+  const allowed = new Set(["", "focal", "support", "background", "frame", "accent"]);
+  if (!allowed.has(value)) return false;
+  const current = state.metadata?.preferencesByTargetId && typeof state.metadata.preferencesByTargetId === "object"
+    ? state.metadata.preferencesByTargetId
+    : {};
+  const previous = current[id] && typeof current[id] === "object" ? current[id] : {};
+  if (String(previous.rolePreference || "") === value) return true;
+  const next = { ...current };
+  if (!value) {
+    const reduced = { ...previous };
+    delete reduced.rolePreference;
+    if (Object.keys(reduced).length) next[id] = reduced;
+    else delete next[id];
+  } else {
+    next[id] = {
+      ...previous,
+      rolePreference: value
+    };
+  }
+  state.metadata.preferencesByTargetId = next;
+  invalidatePlanHandoff("metadata role preference changed");
+  saveMetadataAndRender(`Updated role preference for ${target.displayName || id}.`);
   return true;
 }
 
@@ -11223,7 +11266,8 @@ function buildPageStateHelpers() {
     buildMetadataTargets,
     buildNormalizedTargetMetadataRecords: () => buildNormalizedTargetMetadataRecords({
       sceneGraph: state.sceneGraph || {},
-      metadataAssignments: state.metadata?.assignments || []
+      metadataAssignments: state.metadata?.assignments || [],
+      metadataPreferencesByTargetId: state.metadata?.preferencesByTargetId || {}
     }),
     matchesMetadataFilterValue,
     normalizeMetadataSelectionIds,
@@ -12018,6 +12062,8 @@ function bindEvents() {
     toggleMetadataSelectionId,
     removeMetadataTag,
     removeMetadataAssignment,
+    setMetadataFocusedTarget,
+    updateMetadataTargetRolePreference,
     ignoreMetadataOrphan,
     remapMetadataOrphan,
     onUseRecent,
