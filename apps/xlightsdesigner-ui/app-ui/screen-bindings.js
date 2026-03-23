@@ -333,7 +333,8 @@ export function bindScreenEvents({
   if (metadataBulkApplyRoleBtn) {
     metadataBulkApplyRoleBtn.addEventListener("click", () => {
       const select = app.querySelector("#metadata-bulk-role");
-      bulkSetMetadataRolePreference(String(select?.value || ""));
+      const value = String(select?.value || "").trim();
+      bulkSetMetadataRolePreference(value === "__auto__" ? "" : value);
     });
   }
 

@@ -1508,7 +1508,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <button id="metadata-clear-selection" ${data.selectedCount ? "" : "disabled"}>Clear</button>
               </div>
             </div>
-            <div class="metadata-bulk-grid">
+            <div class="artifact-detail-grid metadata-bulk-grid">
               <div>
                 <div class="metadata-field-label-row">
                   <strong>Role Preference</strong>
@@ -1527,6 +1527,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <div class="metadata-add-row">
                   <select id="metadata-bulk-role">
                     <option value="">Choose role...</option>
+                    <option value="__auto__">Auto</option>
                     ${["focal", "support", "background", "frame", "accent"].map((value) => `<option value="${value}">${value}</option>`).join("")}
                   </select>
                   <span></span>
