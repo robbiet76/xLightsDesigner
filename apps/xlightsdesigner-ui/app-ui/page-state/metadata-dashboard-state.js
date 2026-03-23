@@ -50,6 +50,15 @@ function humanizeCompletenessLabel(value = "") {
   return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : "";
 }
 
+function buildMetadataProgressSummary(targetsSummary = {}) {
+  const ready = Number(targetsSummary?.metadataReadyModels || 0);
+  const partial = Number(targetsSummary?.metadataPartialModels || 0);
+  const needed = Number(targetsSummary?.metadataNeededModels || 0);
+  const total = ready + partial + needed;
+  if (!total) return "Layout metadata has not been analyzed yet.";
+  return `${ready} ready, ${partial} partial, ${needed} still need attention.`;
+}
+
 function buildActiveTargetSummary(active = {}) {
   if (!active || typeof active !== "object") return "";
   const lines = [];
@@ -290,6 +299,7 @@ export function buildMetadataDashboardState({
       hasSelectedTargets,
       activeTargetId,
       metadataFilterDimension,
+      metadataView: str(state.ui?.metadataView || "guided") === "grid" ? "grid" : "guided",
       callToAction,
       primaryRecommendation,
       recommendationTypeSummary: buildRecommendationTypeSummary(recommendationWorklist).slice(0, 3),
@@ -301,8 +311,11 @@ export function buildMetadataDashboardState({
         metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length,
         recommendationSummary
       },
-      recommendationWorklist: recommendationWorklist.slice(0, 8),
-      recommendationQueue: recommendationWorklist.slice(1, 5),
+      progressSummary: buildMetadataProgressSummary({
+        metadataReadyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_ready").length,
+        metadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_partial").length,
+        metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length
+      }),
       activeTarget: activeTargetData,
       rows: filteredModels.slice(0, 200).map((m) => {
         const assignment = assignmentByTargetId.get(String(m.id));

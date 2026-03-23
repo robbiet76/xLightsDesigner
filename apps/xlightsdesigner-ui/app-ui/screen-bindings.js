@@ -224,6 +224,16 @@ export function bindScreenEvents({
   const refreshModelsBtn = app.querySelector("#refresh-models");
   if (refreshModelsBtn) refreshModelsBtn.addEventListener("click", onRefreshModels);
 
+  app.querySelectorAll("[data-metadata-view]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = String(btn.dataset.metadataView || "").trim() === "grid" ? "grid" : "guided";
+      if (next === state.ui.metadataView) return;
+      state.ui.metadataView = next;
+      persist();
+      render();
+    });
+  });
+
   const metadataFilterNameInput = app.querySelector("#metadata-filter-name");
   if (metadataFilterNameInput) {
     const commitNameFilter = () => {

@@ -1473,111 +1473,54 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
   function metadataScreen() {
     const dashboard = pageStates?.metadata || {};
     const data = dashboard?.data || {};
+    const view = String(data.metadataView || "guided") === "grid" ? "grid" : "guided";
+    const activeTargetName = String(data.activeTarget?.displayName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return renderWorkspaceFrame("metadata", `
       <div class="screen-grid metadata-workspace">
         <div class="metadata-panel">
           <div class="metadata-panel-header">
             <div>
               <div class="artifact-kicker">Layout</div>
-              <h3>Layout Overview</h3>
+              <h3>${view === "guided" ? "Guided Update" : "Grid View"}</h3>
             </div>
-            <span class="banner">Targets: ${data.targetsSummary?.total || 0} total (${data.targetsSummary?.submodelCount || 0} submodels)</span>
-          </div>
-          <div class="metadata-cta">
-            <div>
-              <h4>${String(data.callToAction?.title || "Metadata helps improve sequence quality").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
-              <p>${String(data.callToAction?.body || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
-              ${
-                Array.isArray(data.recommendationTypeSummary) && data.recommendationTypeSummary.length
-                  ? `<div class="artifact-chip-row metadata-cta-chips">
-                      ${data.recommendationTypeSummary.map((row) => `<span class="artifact-chip">${String(row.typeLabel || row.type).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}: ${Number(row.count || 0)}</span>`).join("")}
-                    </div>`
-                  : ""
-              }
+            <div class="row">
+              <button data-metadata-view="guided" class="${view === "guided" ? "active-chip" : ""}">Guided</button>
+              <button data-metadata-view="grid" class="${view === "grid" ? "active-chip" : ""}">Grid</button>
             </div>
-            ${data.callToAction?.actionTargetId && data.callToAction?.actionLabel
-              ? `<button data-metadata-focus="${String(data.callToAction.actionTargetId).replace(/"/g, "&quot;")}">${String(data.callToAction.actionLabel).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button>`
-              : ""}
           </div>
-          ${data.targetsSummary?.recommendationSummary?.total
+          ${
+            view === "guided"
+              ? `
+          <section class="card metadata-progress-card">
+            <h4>${String(data.progressSummary || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
+          </section>
+          ${data.primaryRecommendation
             ? `<section class="metadata-recommendations">
                 <div class="metadata-panel-header">
                   <div>
                     <div class="artifact-kicker">Recommended</div>
-                    <h4>Recommended Next Step</h4>
+                    <h4>Recommended Next Model</h4>
                   </div>
-                  <span class="banner">High impact: ${data.targetsSummary.recommendationSummary.highPriority || 0}</span>
+                  <span class="banner">${String(data.primaryRecommendation.priority || "normal").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                 </div>
-                <p class="metadata-helper-copy">You do not need to update every target. Start with the next item below, then move on only if you want more control.</p>
-                ${data.primaryRecommendation
-                  ? `<button class="metadata-recommendation-item metadata-recommendation-item-primary" data-metadata-focus="${String(data.primaryRecommendation.targetId).replace(/"/g, "&quot;")}">
+                <button class="metadata-recommendation-item metadata-recommendation-item-primary" data-metadata-focus="${String(data.primaryRecommendation.targetId).replace(/"/g, "&quot;")}">
                       <span class="metadata-recommendation-head">
                         <span><strong>${String(data.primaryRecommendation.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong> <span class="banner">${String(data.primaryRecommendation.targetType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span></span>
-                        <span class="banner">${String(data.primaryRecommendation.priority || "normal").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                        <span class="banner">${String(data.primaryRecommendation.typeLabel || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                       </span>
                       <span class="metadata-recommendation-body">
-                        <span class="banner">${String(data.primaryRecommendation.typeLabel || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                         <span>${String(data.primaryRecommendation.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                       </span>
-                    </button>`
-                  : ""}
-                ${
-                  Array.isArray(data.recommendationQueue) && data.recommendationQueue.length
-                    ? `<div class="metadata-next-list">
-                        <div class="artifact-kicker">Up Next</div>
-                        <div class="metadata-next-items">
-                          ${data.recommendationQueue.map((row) => `<button class="metadata-next-item" data-metadata-focus="${String(row.targetId).replace(/"/g, "&quot;")}">
-                            <strong>${String(row.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong>
-                            <span>${String(row.typeLabel || row.type || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                          </button>`).join("")}
-                        </div>
-                      </div>`
-                    : ""
-                }
+                    </button>
               </section>`
             : `<p class="banner">No metadata action is needed right now.</p>`}
-          ${
-            data.activeTarget
-              ? `<details class="metadata-tag-manager" open>
-                  <summary>
-                    <span>Update Metadata</span>
-                    <span class="banner">${String(data.activeTarget.displayName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                  </summary>
-                  <div class="field metadata-tag-manager-body">
-                    <div class="artifact-detail-grid">
-                      <div><strong>Role Preference</strong><p>
-                        <select data-metadata-role-preference="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
-                          ${["", "focal", "support", "background", "frame", "accent"].map((value) => {
-                            const selected = String(data.activeTarget.rolePreference || "") === value ? "selected" : "";
-                            const label = value || "Auto";
-                            return `<option value="${String(value).replace(/"/g, "&quot;")}" ${selected}>${label}</option>`;
-                          }).join("")}
-                        </select>
-                      </p></div>
-                      <div>
-                        <strong>Semantic Hints</strong>
-                        <p><input data-metadata-semantic-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.semanticHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="character, radial_like, lyric" /></p>
-                      </div>
-                      <div>
-                        <strong>Submodel Hints</strong>
-                        <p><input data-metadata-submodel-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.submodelHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="inner ring, spokes, outline, left-half" /></p>
-                      </div>
-                      <div>
-                        <strong>Effect Avoidances</strong>
-                        <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
-                      </div>
-                    </div>
-                    <div>
-                      <strong>Summary</strong>
-                      <pre class="metadata-summary-block">${String(data.activeTarget.summaryText || "No summary available yet.").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-                    </div>
-                  </div>
-                </details>`
-              : ""
-          }
-          ${data.submodelsAvailable ? "" : `<p class="banner">${String(data.submodelBanner || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}
-          <details class="metadata-advanced">
-            <summary>Advanced Layout Metadata</summary>
+          `
+              : `
+          <section class="card metadata-progress-card">
+            <h4>${String(data.progressSummary || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
+            <p class="metadata-helper-copy">Use the grid to choose any target manually.</p>
+          </section>
+          <section class="metadata-advanced metadata-grid-view" open>
             <div class="metadata-grid-wrap metadata-targets-wrap">
               <table class="metadata-grid metadata-target-grid">
                 <thead>
@@ -1630,7 +1573,51 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 </tbody>
               </table>
             </div>
-          </details>
+          </section>
+          `
+          }
+          ${
+            data.activeTarget
+              ? `<section class="metadata-editor-card">
+                  <div class="metadata-panel-header">
+                    <div>
+                      <div class="artifact-kicker">Update Metadata</div>
+                      <h4>${activeTargetName || "Selected target"}</h4>
+                    </div>
+                  </div>
+                  <div class="field metadata-tag-manager-body">
+                    <div class="artifact-detail-grid">
+                      <div><strong>Role Preference</strong><p>
+                        <select data-metadata-role-preference="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                          ${["", "focal", "support", "background", "frame", "accent"].map((value) => {
+                            const selected = String(data.activeTarget.rolePreference || "") === value ? "selected" : "";
+                            const label = value || "Auto";
+                            return `<option value="${String(value).replace(/"/g, "&quot;")}" ${selected}>${label}</option>`;
+                          }).join("")}
+                        </select>
+                      </p></div>
+                      <div>
+                        <strong>Semantic Hints</strong>
+                        <p><input data-metadata-semantic-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.semanticHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="character, radial_like, lyric" /></p>
+                      </div>
+                      <div>
+                        <strong>Submodel Hints</strong>
+                        <p><input data-metadata-submodel-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.submodelHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="inner ring, spokes, outline, left-half" /></p>
+                      </div>
+                      <div>
+                        <strong>Effect Avoidances</strong>
+                        <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
+                      </div>
+                    </div>
+                    <div>
+                      <strong>Summary</strong>
+                      <pre class="metadata-summary-block">${String(data.activeTarget.summaryText || "No summary available yet.").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+                    </div>
+                  </div>
+                </section>`
+              : ""
+          }
+          ${data.submodelsAvailable ? "" : `<p class="banner">${String(data.submodelBanner || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}
         </div>
       </div>
     `, "metadata-screen");

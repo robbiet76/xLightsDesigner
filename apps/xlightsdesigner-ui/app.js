@@ -394,6 +394,7 @@ const defaultState = {
     metadataFilterTags: "",
     metadataFilterMetadata: "",
     metadataFilterDimension: "overall",
+    metadataView: "guided",
     metadataSelectionIds: [],
     proposedSelection: [],
     sequenceMode: "existing",
@@ -770,6 +771,7 @@ if (typeof state.ui?.metadataFilterSupport !== "string") state.ui.metadataFilter
 if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
 if (typeof state.ui?.metadataFilterMetadata !== "string") state.ui.metadataFilterMetadata = "";
 if (typeof state.ui?.metadataFilterDimension !== "string") state.ui.metadataFilterDimension = "overall";
+if (typeof state.ui?.metadataView !== "string") state.ui.metadataView = "guided";
 if (!isPlainObject(state.sceneGraph)) {
   state.sceneGraph = structuredClone(defaultState.sceneGraph);
 } else {
@@ -5310,7 +5312,7 @@ function getRouteChatContext() {
   if (route === "sequence") {
     return {
       title: "Sequence translation workspace",
-      note: ""
+      note: "Use team chat to inspect how the current design is translating into technical sequence changes before review and apply."
     };
   }
   if (route === "design") {

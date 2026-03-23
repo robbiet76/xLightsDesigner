@@ -1441,6 +1441,16 @@ button.danger-action:hover {
   font-size: 12px;
 }
 
+.metadata-progress-card,
+.metadata-editor-card {
+  margin-top: 10px;
+}
+
+.metadata-progress-card h4,
+.metadata-editor-card h4 {
+  margin: 0;
+}
+
 .metadata-advanced summary {
   cursor: pointer;
   font-weight: 600;
@@ -1474,6 +1484,20 @@ button.danger-action:hover {
 
 .metadata-tag-manager-body {
   padding: 0 12px 12px;
+}
+
+.metadata-editor-card {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(16, 25, 35, 0.98), rgba(16, 25, 35, 0.96));
+  padding: 12px;
+}
+
+.metadata-grid-view {
+  margin-top: 10px;
 }
 
 .metadata-toolbar {
