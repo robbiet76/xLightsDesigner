@@ -1478,8 +1478,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         <section class="card metadata-panel">
           <div class="metadata-panel-header">
             <div>
-              <div class="artifact-kicker">Metadata</div>
-              <h3>Metadata Overview</h3>
+              <div class="artifact-kicker">Layout</div>
+              <h3>Layout Overview</h3>
             </div>
             <span class="banner">Targets: ${data.targetsSummary?.total || 0} total (${data.targetsSummary?.submodelCount || 0} submodels)</span>
           </div>

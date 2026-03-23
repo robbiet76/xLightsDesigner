@@ -25,11 +25,11 @@ export function buildAppShell({ state, screenContent, helpers }) {
   function navButton(id, label) {
     const icons = {
       project: "P",
+      metadata: "L",
       audio: "A",
       sequence: "S",
       design: "D",
       review: "R",
-      metadata: "M",
       history: "H",
       settings: "⚙"
     };
@@ -159,11 +159,11 @@ export function buildAppShell({ state, screenContent, helpers }) {
           </div>
           <div class="nav-links">
             ${navButton("project", "Project")}
+            ${navButton("metadata", "Layout")}
             ${navButton("audio", "Audio")}
             ${navButton("design", "Design")}
             ${navButton("sequence", "Sequence")}
             ${navButton("review", "Review")}
-            ${navButton("metadata", "Metadata")}
             ${navButton("history", "History")}
           </div>
         </nav>

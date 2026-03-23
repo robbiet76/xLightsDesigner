@@ -202,9 +202,9 @@ const CHAT_QUICK_PROMPTS_BY_ROUTE = {
     "Hey Patch, make the trees less blinky in Chorus 3."
   ],
   metadata: [
-    "Help me tag the focal props for the chorus sections.",
-    "What metadata tags would help the designer and sequencer most?",
-    "Review the current metadata and point out obvious gaps."
+    "Review the layout details that would improve sequencing quality most.",
+    "Which props or submodels need more layout detail before I sequence?",
+    "Walk me through the highest-impact layout updates first."
   ],
   settings: [
     "Help me connect xLights and explain what endpoint settings matter.",
@@ -2453,7 +2453,7 @@ function tryLoadProjectSnapshot(projectName, showFolder) {
   return true;
 }
 
-const routes = ["settings", "project", "audio", "sequence", "design", "review", "metadata", "history"];
+const routes = ["settings", "project", "metadata", "audio", "sequence", "design", "review", "history"];
 
 function setRoute(route) {
   const normalizedRoute = route === "inspiration"
@@ -5287,7 +5287,7 @@ function getRouteChatPlaceholder(route = "") {
   if (key === "sequence") return "Ask about sequence context, scope, or loaded xLights state...";
   if (key === "design") return "Describe the feeling, references, or design direction you want...";
   if (key === "review") return "Ask what will change, what to review, or request a scoped sequence revision...";
-  if (key === "metadata") return "Ask about tags, targeting, and semantic organization...";
+  if (key === "metadata") return "Ask how layout details affect targeting, submodels, and sequencing quality...";
   if (key === "settings") return "Ask about connection, cloud chat, analysis services, and app configuration...";
   if (key === "history") return "Ask about prior versions, applies, or rollback options...";
   return "Tell the team what to change or ask for guidance...";
@@ -5327,8 +5327,8 @@ function getRouteChatContext() {
   }
   if (route === "metadata") {
     return {
-      title: "Metadata workspace",
-      note: "Use team chat to organize tags and improve targeting for the designer and sequencer."
+      title: "Layout workspace",
+      note: "Use team chat to improve how the app understands props, groups, and submodels before sequencing."
     };
   }
   if (route === "settings") {

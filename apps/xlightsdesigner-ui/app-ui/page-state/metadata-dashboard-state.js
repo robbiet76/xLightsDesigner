@@ -255,7 +255,7 @@ export function buildMetadataDashboardState({
     contract: "metadata_dashboard_state_v1",
     version: "1.0",
     page: "metadata",
-    title: "Metadata",
+    title: "Layout",
     summary: `Targets: ${modelOptions.length} total (${submodelCount} submodels)`,
     status: "active",
     readiness: {
