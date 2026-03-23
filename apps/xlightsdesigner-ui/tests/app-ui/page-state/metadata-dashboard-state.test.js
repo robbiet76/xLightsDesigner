@@ -111,7 +111,10 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.total, 2);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.highPriority, 1);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.items[0].type, "prop_hints");
-  assert.equal(dashboard.data.rows[0].metadataCompleteness, "metadata_partial");
+  assert.equal(dashboard.data.rows[0].canonicalType, "custom");
+  assert.equal(dashboard.data.rows[0].rolePreference, "support");
+  assert.equal(dashboard.data.rows[0].visualHints.join(","), "face,hat");
+  assert.equal(dashboard.data.rows[0].effectAvoidances.join(","), "");
   assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
   assert.equal(dashboard.data.activeTarget.metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.metadataCompletenessDetail.semantic, "metadata_partial");

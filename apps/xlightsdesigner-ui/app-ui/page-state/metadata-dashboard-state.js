@@ -445,20 +445,22 @@ export function buildMetadataDashboardState({
       }),
       activeTarget: activeTargetData,
       rows: filteredModels.slice(0, 200).map((m) => {
-        const assignment = assignmentByTargetId.get(String(m.id));
         const normalized = normalizedByTargetId.get(String(m.id));
+        const visualHints = escapeTagList([
+          ...escapeTagList(normalized?.user?.semanticHints),
+          ...escapeTagList(normalized?.user?.submodelHints)
+        ]);
+        const effectAvoidances = escapeTagList(normalized?.user?.effectAvoidances);
         return {
           id: str(m.id),
           displayName: str(m.raw?.displayName || "(unnamed)"),
           type: str(m.raw?.type),
           selected: selectedIds.has(str(m.id)),
           focused: activeTargetId === str(m.id),
-          metadataCompleteness: str(normalized?.semantics?.metadataCompleteness?.overall),
           canonicalType: str(normalized?.identity?.canonicalType),
-          inferredRole: str(normalized?.semantics?.inferredRole),
-          inferredSemanticTraits: escapeTagList(normalized?.semantics?.inferredSemanticTraits),
-          confidence: Number(normalized?.provenance?.confidence || 0),
-          rolePreference: str(normalized?.user?.rolePreference)
+          rolePreference: str(normalized?.user?.rolePreference),
+          visualHints,
+          effectAvoidances
         };
       })
     }

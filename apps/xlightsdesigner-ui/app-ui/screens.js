@@ -1506,26 +1506,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Metadata</th>
                     <th>Type</th>
-                    <th>Inferred</th>
+                    <th>Role</th>
+                    <th>Visual Hints</th>
+                    <th>Effect Avoidances</th>
                   </tr>
                   <tr class="metadata-filter-row">
                     <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
-                    <th>
-                      <input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." />
-                      <select id="metadata-filter-dimension">
-                        ${[
-                          ["overall", "overall"],
-                          ["structure", "structure"],
-                          ["semantic", "semantic"],
-                          ["role", "role"],
-                          ["submodel", "submodel"],
-                          ["sequencing", "sequencing"]
-                        ].map(([value, label]) => `<option value="${value}" ${String(data.metadataFilterDimension || "overall") === value ? "selected" : ""}>${label}</option>`).join("")}
-                      </select>
-                    </th>
-                    <th><span class="banner">filter dim</span></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                     <th></th>
                   </tr>
                 </thead>
@@ -1534,21 +1524,25 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     data.rows?.length
                       ? data.rows
                           .map((m) => {
-                            const metadataCompleteness = String(m?.metadataCompleteness || "");
                             const canonical = String(m?.canonicalType || "");
-                            const inferred = Array.isArray(m?.inferredSemanticTraits) && m.inferredSemanticTraits.length
-                              ? m.inferredSemanticTraits.slice(0, 3).join(", ")
-                              : (String(m?.inferredRole || "") || "-");
+                            const role = String(m?.rolePreference || "Auto");
+                            const visualHints = Array.isArray(m?.visualHints) && m.visualHints.length
+                              ? m.visualHints.join(", ")
+                              : "-";
+                            const effectAvoidances = Array.isArray(m?.effectAvoidances) && m.effectAvoidances.length
+                              ? m.effectAvoidances.join(", ")
+                              : "-";
                             const focused = m.focused ? ' class="active-chip"' : "";
                             return `<tr>
                               <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
-                              <td>${metadataCompleteness.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                               <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
-                              <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                              <td>${role.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                              <td>${visualHints.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                              <td>${effectAvoidances.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                             </tr>`;
                           })
                           .join("")
-                      : `<tr><td colspan="4">No targets found.</td></tr>`
+                      : `<tr><td colspan="5">No targets found.</td></tr>`
                   }
                 </tbody>
               </table>
