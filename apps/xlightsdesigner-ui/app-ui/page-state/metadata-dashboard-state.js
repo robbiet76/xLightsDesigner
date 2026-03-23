@@ -2,8 +2,13 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function sortDisplayValues(values = []) {
+  return [...values].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: "base" }));
+}
+
 function escapeTagList(tags = []) {
-  return Array.isArray(tags) ? tags.map((tag) => str(tag)).filter(Boolean) : [];
+  const values = Array.isArray(tags) ? tags.map((tag) => str(tag)).filter(Boolean) : [];
+  return sortDisplayValues(values);
 }
 
 function mapProvenanceFields(fields = {}) {
