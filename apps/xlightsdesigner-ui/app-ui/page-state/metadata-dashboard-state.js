@@ -167,6 +167,13 @@ export function buildMetadataDashboardState({
                   nodeCount: Number(activeNormalized.structure.submodelMetadata.nodeCount || 0)
                 }
               : null,
+            recommendations: Array.isArray(activeNormalized?.recommendations)
+              ? activeNormalized.recommendations.map((row) => ({
+                  type: str(row?.type),
+                  priority: str(row?.priority),
+                  message: str(row?.message)
+                })).filter((row) => row.message)
+              : [],
             provenanceUpdatedAt: str(activeNormalized?.provenance?.updatedAt),
             provenanceFields: mapProvenanceFields(activeNormalized?.provenance?.fields)
           }

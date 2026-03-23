@@ -39,6 +39,10 @@ function buildHelpers() {
             submodelCount: 0
           }
         },
+        recommendations: [
+          { type: "semantic_hints", priority: "medium", message: "Snowman: add a small number of semantic hints." },
+          { type: "submodel_hints", priority: "high", message: "Snowman: add submodel hints." }
+        ],
         provenance: {
           confidence: 0.25,
           updatedAt: "2026-03-22T10:00:00.000Z",
@@ -129,6 +133,8 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
   assert.equal(dashboard.data.activeTarget.submodelHints.join(","), "face,hat");
   assert.equal(dashboard.data.activeTarget.submodelMetadata.hasSubmodels, false);
+  assert.equal(dashboard.data.activeTarget.recommendations.length, 2);
+  assert.equal(dashboard.data.activeTarget.recommendations[1].priority, "high");
   assert.equal(dashboard.data.activeTarget.provenanceUpdatedAt, "2026-03-22T10:00:00.000Z");
   assert.equal(dashboard.data.activeTarget.provenanceFields.length, 3);
   assert.equal(dashboard.data.activeTarget.provenanceFields[0].source.length > 0, true);

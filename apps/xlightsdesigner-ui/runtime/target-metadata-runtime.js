@@ -259,6 +259,68 @@ function buildProvenanceDetail({
   };
 }
 
+function buildMetadataRecommendations({
+  targetKind = "",
+  displayName = "",
+  metadataCompleteness = {},
+  inferredRole = "",
+  submodelMetadata = {}
+} = {}) {
+  const recs = [];
+  const roleState = low(metadataCompleteness?.role);
+  const semanticState = low(metadataCompleteness?.semantic);
+  const submodelState = low(metadataCompleteness?.submodel);
+  const name = norm(displayName) || "This target";
+
+  if (roleState === "metadata_needed") {
+    recs.push({
+      type: "role_preference",
+      priority: "high",
+      message: `${name}: set a role preference so the planner understands whether this target should lead, support, frame, or sit in the background.`
+    });
+  }
+
+  if (semanticState !== "metadata_ready") {
+    recs.push({
+      type: "semantic_hints",
+      priority: semanticState === "metadata_needed" ? "high" : "medium",
+      message: `${name}: add a small number of semantic hints to describe what this target is for, rather than relying on generic structure alone.`
+    });
+  }
+
+  if (submodelState === "metadata_partial") {
+    if (targetKind === "model" && Number(submodelMetadata?.submodelCount || 0) > 0) {
+      recs.push({
+        type: "submodel_hints",
+        priority: "high",
+        message: `${name}: add submodel hints so the app understands what the child regions do, not just that they exist.`
+      });
+    } else if (targetKind === "group" && submodelMetadata?.hasSubmodelMembers) {
+      recs.push({
+        type: "submodel_group_hints",
+        priority: "high",
+        message: `${name}: this group includes submodels; add submodel-oriented hints so scoped planning can target the right internal regions.`
+      });
+    } else if (targetKind === "submodel") {
+      recs.push({
+        type: "submodel_hints",
+        priority: "high",
+        message: `${name}: add submodel hints that describe this region's function or visual role.`
+      });
+    }
+  }
+
+  if (!norm(inferredRole) && targetKind === "group") {
+    recs.push({
+      type: "group_role",
+      priority: "medium",
+      message: `${name}: clarify whether this group acts as a focal collection, support bed, or framing layer.`
+    });
+  }
+
+  return recs;
+}
+
 export function buildNormalizedTargetMetadataRecords({
   sceneGraph = {},
   metadataAssignments = [],
@@ -343,6 +405,13 @@ export function buildNormalizedTargetMetadataRecords({
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
+      recommendations: buildMetadataRecommendations({
+        targetKind: "model",
+        displayName: norm(model?.name || targetId),
+        metadataCompleteness,
+        inferredRole,
+        submodelMetadata
+      }),
       provenance: {
         updatedAt: now,
         confidence,
@@ -421,6 +490,13 @@ export function buildNormalizedTargetMetadataRecords({
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
+      recommendations: buildMetadataRecommendations({
+        targetKind: "group",
+        displayName: norm(group?.name || targetId),
+        metadataCompleteness,
+        inferredRole,
+        submodelMetadata
+      }),
       provenance: {
         updatedAt: now,
         confidence,
@@ -496,6 +572,13 @@ export function buildNormalizedTargetMetadataRecords({
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
+      recommendations: buildMetadataRecommendations({
+        targetKind: "submodel",
+        displayName: parentId ? `${parentId} / ${norm(submodel?.name || targetId)}` : norm(submodel?.name || targetId),
+        metadataCompleteness,
+        inferredRole,
+        submodelMetadata
+      }),
       provenance: {
         updatedAt: now,
         confidence,

@@ -1621,6 +1621,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                           <div><strong>Sequencing Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.sequencing || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                         </div>`
                       : ""}
+                    <h4>Recommended Next Metadata</h4>
+                    ${Array.isArray(data.activeTarget.recommendations) && data.activeTarget.recommendations.length
+                      ? `<ul class="artifact-detail-list">${data.activeTarget.recommendations.map((row) => `<li><strong>${String(row.priority || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "info"}</strong>: ${String(row.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</li>`).join("")}</ul>`
+                      : `<p class="banner">No metadata recommendations for this target right now.</p>`}
                     <h4>Inferred Semantic Traits</h4>
                     ${Array.isArray(data.activeTarget.inferredSemanticTraits) && data.activeTarget.inferredSemanticTraits.length
                       ? `<p>${data.activeTarget.inferredSemanticTraits.map((v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).join(", ")}</p>`
