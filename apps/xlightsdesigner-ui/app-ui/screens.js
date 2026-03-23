@@ -310,7 +310,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       },
       design: {
         summary: "Shape the creative direction and let the designer capture the sequence brief live from conversation.",
-        next: hasProposal ? "Proposal bundle is ready. Continue to Sequence to inspect the technical translation." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
+        next: hasProposal ? "Proposal bundle is ready. Continue to Sequence to inspect the technical translation before review." : hasBrief ? "Creative brief is ready. Generate or refine the proposal bundle next." : "Build the creative brief first, then generate a proposal bundle."
       },
       sequence: {
         summary: "Inspect how the current design is being translated into actual sequencing changes.",
@@ -724,7 +724,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <span class="artifact-chip">${metadataSelectionCount} tagged targets selected</span>
           <span class="artifact-chip">${Array.isArray(state.models) ? state.models.length : 0} models loaded</span>
         </div>
-        <p class="banner">Use this screen to choose and confirm the active sequence context before design and review.</p>
+        <p class="banner">This scope is the technical boundary the current design will translate into before review and apply.</p>
         ${buildArtifactInspectActions("sequence-scope")}
       </section>
     `;
@@ -757,7 +757,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       <section class="card full-span sequence-translation-card">
         <div class="artifact-kicker">Sequence Translation</div>
         <h3>${escapeHtml(String(dashboard.summary || "Live technical translation of the current design conversation."))}</h3>
-        <p class="artifact-body">The grid below is the current sequence-side interpretation of the design conversation and should scale cleanly to large change sets.</p>
+        <p class="artifact-body">The grid below shows how the current design conversation is turning into technical sequence changes for inspection before review and apply.</p>
         <div class="artifact-chip-row">
           <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.translationSource || "Pending"))}</span>
           <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(data.changeLineCount || 0))} change lines</span>

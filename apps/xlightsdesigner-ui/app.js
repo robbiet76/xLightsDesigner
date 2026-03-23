@@ -187,9 +187,9 @@ const CHAT_QUICK_PROMPTS_BY_ROUTE = {
     "Explain what changed in the current audio artifact."
   ],
   sequence: [
-    "Open the working sequence and tell me what context is loaded.",
-    "Refresh the sequence state and show me the current scope.",
-    "What sequence settings matter before I start designing?"
+    "Show me how the current design is translating into sequence changes.",
+    "Refresh the sequence view and summarize the active technical scope.",
+    "What in the current sequence translation needs attention before review?"
   ],
   design: [
     "Build a first design proposal from the current brief and references.",
@@ -5284,7 +5284,7 @@ function getRouteChatPlaceholder(route = "") {
   const key = String(route || "").trim();
   if (key === "project") return "Ask for setup help, project guidance, or first-run checks...";
   if (key === "audio") return "Ask about analysis, tempo, sections, lyrics, or rerunning the audio pass...";
-  if (key === "sequence") return "Ask about sequence context, scope, or loaded xLights state...";
+  if (key === "sequence") return "Ask about technical translation, scope, sequence context, or what needs attention before review...";
   if (key === "design") return "Describe the feeling, references, or design direction you want...";
   if (key === "review") return "Ask what will change, what to review, or request a scoped sequence revision...";
   if (key === "metadata") return "Ask how layout details affect targeting, submodels, and sequencing quality...";
@@ -5309,8 +5309,8 @@ function getRouteChatContext() {
   }
   if (route === "sequence") {
     return {
-      title: "Sequence context workspace",
-      note: "Use team chat to verify the active sequence, current revision, scope, and sequencing prerequisites."
+      title: "Sequence translation workspace",
+      note: "Use team chat to inspect how the current design is translating into technical sequence changes before review and apply."
     };
   }
   if (route === "design") {
