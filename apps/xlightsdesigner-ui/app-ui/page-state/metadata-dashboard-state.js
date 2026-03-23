@@ -104,6 +104,8 @@ function buildSmartSuggestionOptions({
       "radial",
       "linear",
       "beat-sync",
+      "flood light",
+      "spot light",
       "matrix-like",
       "tree-like",
       "face"
