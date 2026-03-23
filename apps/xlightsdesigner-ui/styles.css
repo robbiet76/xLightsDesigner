@@ -1289,6 +1289,66 @@ button.danger-action:hover {
   flex-wrap: wrap;
 }
 
+.metadata-cta,
+.metadata-recommendations,
+.metadata-advanced {
+  margin-top: 10px;
+}
+
+.metadata-cta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  align-items: start;
+}
+
+.metadata-cta h4,
+.metadata-recommendations h4 {
+  margin: 0 0 6px;
+}
+
+.metadata-cta p,
+.metadata-helper-copy {
+  margin: 0;
+  color: var(--muted);
+}
+
+.metadata-recommendation-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.metadata-recommendation-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 10px 12px;
+}
+
+.metadata-recommendation-head,
+.metadata-recommendation-body {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.metadata-recommendation-body {
+  margin-top: 8px;
+}
+
+.metadata-advanced summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .metadata-tag-manager {
   margin-top: 10px;
   border: 1px solid var(--line);
@@ -1481,6 +1541,13 @@ button.danger-action:hover {
     height: auto;
     position: static;
     overflow: visible;
+  }
+
+  .metadata-cta,
+  .metadata-recommendation-head,
+  .metadata-recommendation-body {
+    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .metadata-targets-wrap {

@@ -1483,29 +1483,46 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             </div>
             <span class="banner">Targets: ${data.targetsSummary?.total || 0} total (${data.targetsSummary?.submodelCount || 0} submodels)</span>
           </div>
-          <div class="metadata-toolbar row">
-            <span class="banner">Metadata ready: ${data.targetsSummary?.metadataReadyModels || 0}</span>
-            <span class="banner">Metadata partial: ${data.targetsSummary?.metadataPartialModels || 0}</span>
-            <span class="banner">Metadata needed: ${data.targetsSummary?.metadataNeededModels || 0}</span>
+          <div class="metadata-cta">
+            <div>
+              <h4>${String(data.callToAction?.title || "Metadata helps improve sequence quality").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
+              <p>${String(data.callToAction?.body || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+            </div>
+            ${data.callToAction?.actionTargetId && data.callToAction?.actionLabel
+              ? `<button data-metadata-focus="${String(data.callToAction.actionTargetId).replace(/"/g, "&quot;")}">${String(data.callToAction.actionLabel).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button>`
+              : ""}
           </div>
           ${data.targetsSummary?.recommendationSummary?.total
-            ? `<div class="metadata-toolbar row">
-                <span class="banner">Recommended actions: ${data.targetsSummary.recommendationSummary.total}</span>
-                <span class="banner">High priority: ${data.targetsSummary.recommendationSummary.highPriority || 0}</span>
-                ${Array.isArray(data.targetsSummary.recommendationSummary.items)
-                  ? data.targetsSummary.recommendationSummary.items.slice(0, 4).map((row) => `<span class="banner">${String(row.type || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}: ${Number(row.count || 0)}</span>`).join("")
-                  : ""}
-              </div>`
-            : ""}
-          <div class="metadata-toolbar row">
-            <span class="banner">Selected targets: ${data.selectedCount || 0}</span>
-            <span class="banner">Structured metadata only</span>
-          </div>
+            ? `<section class="metadata-recommendations">
+                <div class="metadata-panel-header">
+                  <div>
+                    <div class="artifact-kicker">Recommended</div>
+                    <h4>Start With These</h4>
+                  </div>
+                  <span class="banner">High impact: ${data.targetsSummary.recommendationSummary.highPriority || 0}</span>
+                </div>
+                <p class="metadata-helper-copy">You do not need to update every target. Focus on the items below first.</p>
+                <div class="metadata-recommendation-list">
+                  ${(Array.isArray(data.recommendationWorklist) && data.recommendationWorklist.length
+                    ? data.recommendationWorklist
+                    : []).map((row) => `<button class="metadata-recommendation-item" data-metadata-focus="${String(row.targetId).replace(/"/g, "&quot;")}">
+                      <span class="metadata-recommendation-head">
+                        <span><strong>${String(row.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong> <span class="banner">${String(row.targetType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span></span>
+                        <span class="banner">${String(row.priority || "normal").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                      </span>
+                      <span class="metadata-recommendation-body">
+                        <span class="banner">${String(row.typeLabel || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                        <span>${String(row.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+                      </span>
+                    </button>`).join("")}
+                </div>
+              </section>`
+            : `<p class="banner">No metadata action is needed right now.</p>`}
           ${
             data.activeTarget
               ? `<details class="metadata-tag-manager" open>
                   <summary>
-                    <span>Target Detail</span>
+                    <span>Update Metadata</span>
                     <span class="banner">${String(data.activeTarget.displayName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                   </summary>
                   <div class="field metadata-tag-manager-body">
@@ -1540,68 +1557,62 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 </details>`
               : ""
           }
-          <div class="metadata-toolbar row">
-            <button id="metadata-select-visible" ${data.hasVisibleTargets ? "" : "disabled"}>Select Visible</button>
-            <button id="metadata-clear-selection" ${data.hasSelectedTargets ? "" : "disabled"}>Clear Selection</button>
-          </div>
           ${data.submodelsAvailable ? "" : `<p class="banner">${String(data.submodelBanner || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}
-          <div class="metadata-grid-wrap metadata-targets-wrap">
-            <table class="metadata-grid metadata-target-grid">
-              <thead>
-                <tr>
-                  <th style="width:36px;">Sel</th>
-                  <th>Name</th>
-                  <th>Metadata</th>
-                  <th>Type</th>
-                  <th>Inferred</th>
-                </tr>
-                <tr class="metadata-filter-row">
-                  <th></th>
-                  <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
-                  <th>
-                    <input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." />
-                    <select id="metadata-filter-dimension">
-                      ${[
-                        ["overall", "overall"],
-                        ["structure", "structure"],
-                        ["semantic", "semantic"],
-                        ["role", "role"],
-                        ["submodel", "submodel"],
-                        ["sequencing", "sequencing"]
-                      ].map(([value, label]) => `<option value="${value}" ${String(data.metadataFilterDimension || "overall") === value ? "selected" : ""}>${label}</option>`).join("")}
-                    </select>
-                  </th>
-                  <th><span class="banner">filter dim</span></th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  data.rows?.length
-                    ? data.rows
-                        .map((m) => {
-                          const support = String(m?.supportState || "");
-                          const metadataCompleteness = String(m?.metadataCompleteness || "");
-                          const canonical = String(m?.canonicalType || "");
-                          const inferred = Array.isArray(m?.inferredSemanticTraits) && m.inferredSemanticTraits.length
-                            ? m.inferredSemanticTraits.slice(0, 3).join(", ")
-                            : (String(m?.inferredRole || "") || "-");
-                          const selected = m.selected ? "checked" : "";
-                          const focused = m.focused ? ' class="active-chip"' : "";
-                          return `<tr>
-                            <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${selected} /></td>
-                            <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
-                            <td>${metadataCompleteness.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
-                            <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
-                            <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-                          </tr>`;
-                        })
-                        .join("")
-                    : `<tr><td colspan="5">No targets found.</td></tr>`
-                }
-              </tbody>
-            </table>
-          </div>
+          <details class="metadata-advanced">
+            <summary>Advanced Layout Metadata</summary>
+            <div class="metadata-grid-wrap metadata-targets-wrap">
+              <table class="metadata-grid metadata-target-grid">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Metadata</th>
+                    <th>Type</th>
+                    <th>Inferred</th>
+                  </tr>
+                  <tr class="metadata-filter-row">
+                    <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
+                    <th>
+                      <input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." />
+                      <select id="metadata-filter-dimension">
+                        ${[
+                          ["overall", "overall"],
+                          ["structure", "structure"],
+                          ["semantic", "semantic"],
+                          ["role", "role"],
+                          ["submodel", "submodel"],
+                          ["sequencing", "sequencing"]
+                        ].map(([value, label]) => `<option value="${value}" ${String(data.metadataFilterDimension || "overall") === value ? "selected" : ""}>${label}</option>`).join("")}
+                      </select>
+                    </th>
+                    <th><span class="banner">filter dim</span></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    data.rows?.length
+                      ? data.rows
+                          .map((m) => {
+                            const metadataCompleteness = String(m?.metadataCompleteness || "");
+                            const canonical = String(m?.canonicalType || "");
+                            const inferred = Array.isArray(m?.inferredSemanticTraits) && m.inferredSemanticTraits.length
+                              ? m.inferredSemanticTraits.slice(0, 3).join(", ")
+                              : (String(m?.inferredRole || "") || "-");
+                            const focused = m.focused ? ' class="active-chip"' : "";
+                            return `<tr>
+                              <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
+                              <td>${metadataCompleteness.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                              <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                              <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+                            </tr>`;
+                          })
+                          .join("")
+                      : `<tr><td colspan="4">No targets found.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
         </section>
       </div>
     `;

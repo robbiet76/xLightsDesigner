@@ -40,6 +40,11 @@ function summarizeRecommendations(records = []) {
   };
 }
 
+function humanizeRecommendationType(value = "") {
+  const text = str(value).replace(/_/g, " ");
+  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : "";
+}
+
 function humanizeCompletenessLabel(value = "") {
   const text = str(value).replace(/^metadata_/, "").replace(/_/g, " ");
   return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : "";
@@ -98,6 +103,31 @@ function buildActiveTargetSummary(active = {}) {
   if (updatedAt) lines.push(`Updated: ${updatedAt}.`);
 
   return lines.join("\n");
+}
+
+function buildRecommendationWorklist(records = []) {
+  return (Array.isArray(records) ? records : [])
+    .flatMap((record) => {
+      const displayName = str(record?.identity?.displayName || record?.targetId);
+      const targetId = str(record?.targetId);
+      const type = str(record?.identity?.canonicalType || record?.targetKind);
+      return (Array.isArray(record?.recommendations) ? record.recommendations : []).map((recommendation, index) => ({
+        key: `${targetId}:${index}`,
+        targetId,
+        displayName,
+        targetType: type,
+        type: str(recommendation?.type),
+        typeLabel: humanizeRecommendationType(recommendation?.type),
+        priority: str(recommendation?.priority || "normal"),
+        message: str(recommendation?.message)
+      })).filter((row) => row.targetId && row.message);
+    })
+    .sort((a, b) => {
+      const priorityRank = (value) => (value === "high" ? 0 : value === "medium" ? 1 : 2);
+      return priorityRank(a.priority) - priorityRank(b.priority)
+        || a.displayName.localeCompare(b.displayName)
+        || a.message.localeCompare(b.message);
+    });
 }
 
 export function buildMetadataDashboardState({
@@ -202,6 +232,24 @@ export function buildMetadataDashboardState({
   if (activeTargetData) {
     activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
   }
+  const recommendationSummary = summarizeRecommendations(normalizedRecords);
+  const recommendationWorklist = buildRecommendationWorklist(normalizedRecords);
+  const primaryRecommendation = recommendationWorklist[0] || null;
+  const callToAction = recommendationSummary.total
+    ? {
+        title: recommendationSummary.highPriority
+          ? `${recommendationSummary.highPriority} high-impact metadata updates recommended`
+          : `${recommendationSummary.total} metadata updates recommended`,
+        body: "You do not need to fill out metadata for every target. Start with the recommended items below to improve target selection, submodel use, and sequencing quality.",
+        actionLabel: primaryRecommendation ? `Review ${primaryRecommendation.displayName}` : "Review recommendations",
+        actionTargetId: primaryRecommendation?.targetId || ""
+      }
+    : {
+        title: "No metadata action is required right now",
+        body: "The app is managing the current metadata state. Revisit this page when the sequencer highlights new recommendations or you want to refine a specific target.",
+        actionLabel: activeTargetData ? `Review ${activeTargetData.displayName}` : "",
+        actionTargetId: activeTargetData?.id || ""
+      };
 
   return {
     contract: "metadata_dashboard_state_v1",
@@ -226,14 +274,16 @@ export function buildMetadataDashboardState({
       hasSelectedTargets,
       activeTargetId,
       metadataFilterDimension,
+      callToAction,
       targetsSummary: {
         total: modelOptions.length,
         submodelCount,
         metadataReadyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_ready").length,
         metadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_partial").length,
         metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length,
-        recommendationSummary: summarizeRecommendations(normalizedRecords)
+        recommendationSummary
       },
+      recommendationWorklist: recommendationWorklist.slice(0, 8),
       activeTarget: activeTargetData,
       rows: filteredModels.slice(0, 200).map((m) => {
         const assignment = assignmentByTargetId.get(String(m.id));
