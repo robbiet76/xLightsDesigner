@@ -242,24 +242,6 @@ export function bindScreenEvents({
     metadataFilterNameInput.addEventListener("blur", commitNameFilter);
   }
 
-  const metadataFilterTypeInput = app.querySelector("#metadata-filter-type");
-  if (metadataFilterTypeInput) {
-    const commitTypeFilter = () => {
-      const next = metadataFilterTypeInput.value;
-      if (next === state.ui.metadataFilterType) return;
-      state.ui.metadataFilterType = next;
-      persist();
-      render();
-    };
-    metadataFilterTypeInput.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      commitTypeFilter();
-    });
-    metadataFilterTypeInput.addEventListener("change", commitTypeFilter);
-    metadataFilterTypeInput.addEventListener("blur", commitTypeFilter);
-  }
-
   const metadataFilterMetadataInput = app.querySelector("#metadata-filter-metadata");
   if (metadataFilterMetadataInput) {
     const commitMetadataFilter = () => {

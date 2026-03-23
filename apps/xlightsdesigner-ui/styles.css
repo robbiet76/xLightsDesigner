@@ -1278,7 +1278,7 @@ button.danger-action:hover {
   height: clamp(520px, 68vh, 860px);
   position: sticky;
   top: 10px;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .metadata-panel-header {
@@ -1329,6 +1329,7 @@ button.danger-action:hover {
   flex: 1;
   min-height: 220px;
   max-height: 100%;
+  overflow: auto;
 }
 
 .tag-library {
