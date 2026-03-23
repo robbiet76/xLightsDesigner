@@ -95,6 +95,8 @@ function buildSmartSuggestionOptions({
     semanticHints: [
       "character",
       "text",
+      "image",
+      "video",
       "outline",
       "radial",
       "linear",
@@ -103,14 +105,6 @@ function buildSmartSuggestionOptions({
       "background",
       "matrix-like",
       "tree-like",
-      "center",
-      "inner ring",
-      "outer ring",
-      "left half",
-      "right half",
-      "top",
-      "bottom",
-      "spokes",
       "face",
       "body",
       "letters"
@@ -131,13 +125,7 @@ function buildSmartSuggestionOptions({
   if (field === "semanticHints") {
     dynamic.push(...activeTraits);
     const type = str(active?.canonicalType);
-    if (type) dynamic.push(type);
-    const meta = active?.submodelMetadata || {};
-    if (Number(meta.submodelCount || 0) > 0) {
-      dynamic.push("outline", "center");
-      if (Number(meta.submodelCount || 0) >= 2) dynamic.push("left half", "right half", "top", "bottom");
-      if (Number(meta.submodelCount || 0) >= 4) dynamic.push("inner ring", "outer ring", "spokes");
-    }
+    if (type && type !== "model_group" && type !== "aggregate") dynamic.push(type);
   }
   if (field === "effectAvoidances") {
     if ((activeTraits || []).includes("character")) dynamic.push("fast motion", "dense texture");
