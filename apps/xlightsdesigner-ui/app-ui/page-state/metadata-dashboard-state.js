@@ -102,10 +102,7 @@ function buildSmartSuggestionOptions({
       "accent",
       "background",
       "matrix-like",
-      "tree-like"
-    ],
-    submodelHints: [
-      "outline",
+      "tree-like",
       "center",
       "inner ring",
       "outer ring",
@@ -135,8 +132,6 @@ function buildSmartSuggestionOptions({
     dynamic.push(...activeTraits);
     const type = str(active?.canonicalType);
     if (type) dynamic.push(type);
-  }
-  if (field === "submodelHints") {
     const meta = active?.submodelMetadata || {};
     if (Number(meta.submodelCount || 0) > 0) {
       dynamic.push("outline", "center");
@@ -359,8 +354,10 @@ export function buildMetadataDashboardState({
         inferredRole: str(activeNormalized?.semantics?.inferredRole),
         inferredSemanticTraits: escapeTagList(activeNormalized?.semantics?.inferredSemanticTraits),
         rolePreference: str(activeNormalized?.user?.rolePreference),
-        semanticHints: escapeTagList(activeNormalized?.user?.semanticHints),
-        submodelHints: escapeTagList(activeNormalized?.user?.submodelHints),
+        semanticHints: escapeTagList([
+          ...escapeTagList(activeNormalized?.user?.semanticHints),
+          ...escapeTagList(activeNormalized?.user?.submodelHints)
+        ]),
         effectAvoidances: escapeTagList(activeNormalized?.user?.effectAvoidances),
         confidence: Number(activeNormalized?.provenance?.confidence || 0),
         groupMemberships: escapeTagList(activeNormalized?.structure?.groupMemberships),
@@ -396,11 +393,6 @@ export function buildMetadataDashboardState({
         field: "semanticHints",
         active: activeTargetData,
         commonValues: buildCommonPreferenceValues(preferencesByTargetId, "semanticHints")
-      }),
-      submodelHints: buildSmartSuggestionOptions({
-        field: "submodelHints",
-        active: activeTargetData,
-        commonValues: buildCommonPreferenceValues(preferencesByTargetId, "submodelHints")
       }),
       effectAvoidances: buildSmartSuggestionOptions({
         field: "effectAvoidances",

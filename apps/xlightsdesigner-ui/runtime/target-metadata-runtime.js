@@ -149,8 +149,10 @@ function buildMetadataCompleteness({
   memberCount = 0
 } = {}) {
   const normalizedCanonical = low(canonicalType);
-  const semanticHints = arr(preference?.semanticHints).map((row) => norm(row)).filter(Boolean);
-  const submodelHints = arr(preference?.submodelHints).map((row) => norm(row)).filter(Boolean);
+  const semanticHints = unique([
+    ...arr(preference?.semanticHints).map((row) => norm(row)).filter(Boolean),
+    ...arr(preference?.submodelHints).map((row) => norm(row)).filter(Boolean)
+  ]);
   const tags = unique(userTags);
   const structure = normalizedCanonical ? "metadata_ready" : "metadata_needed";
   const semantic = semanticHints.length
@@ -162,11 +164,11 @@ function buildMetadataCompleteness({
     ? "metadata_ready"
     : ((targetKind === "group" || tags.length) ? "metadata_partial" : "metadata_needed");
   const submodel = targetKind === "submodel"
-    ? (submodelHints.length ? "metadata_ready" : "metadata_partial")
+    ? (semanticHints.length ? "metadata_ready" : "metadata_partial")
     : targetKind === "group"
-      ? (submodelHints.length ? "metadata_ready" : (memberCount > 0 ? "metadata_partial" : "metadata_needed"))
+      ? (semanticHints.length ? "metadata_ready" : (memberCount > 0 ? "metadata_partial" : "metadata_needed"))
       : (Number(submodelCount) > 0
-          ? (submodelHints.length ? "metadata_ready" : "metadata_partial")
+          ? (semanticHints.length ? "metadata_ready" : "metadata_partial")
           : "metadata_ready");
   const sequencing = trainedBuckets.length
     ? "metadata_ready"
@@ -221,16 +223,10 @@ function buildProvenanceDetail({
         : "No explicit user override; using automatic role inference."
     },
     semanticHints: {
-      source: arr(preference?.semanticHints).length ? "user_override" : "none",
-      detail: arr(preference?.semanticHints).length
-        ? `User semantic hints: ${unique(preference.semanticHints).join(", ")}.`
-        : "No explicit semantic hints."
-    },
-    submodelHints: {
-      source: arr(preference?.submodelHints).length ? "user_override" : "none",
-      detail: arr(preference?.submodelHints).length
-        ? `User submodel hints: ${unique(preference.submodelHints).join(", ")}.`
-        : "No explicit submodel hints."
+      source: (arr(preference?.semanticHints).length || arr(preference?.submodelHints).length) ? "user_override" : "none",
+      detail: (arr(preference?.semanticHints).length || arr(preference?.submodelHints).length)
+        ? `User prop hints: ${unique([...(preference.semanticHints || []), ...(preference.submodelHints || [])]).join(", ")}.`
+        : "No explicit prop hints."
     },
     effectAvoidances: {
       source: arr(preference?.effectAvoidances).length ? "user_override" : "none",
@@ -282,30 +278,30 @@ function buildMetadataRecommendations({
 
   if (semanticState !== "metadata_ready") {
     recs.push({
-      type: "semantic_hints",
+      type: "prop_hints",
       priority: semanticState === "metadata_needed" ? "high" : "medium",
-      message: `${name}: add a small number of semantic hints to describe what this target is for, rather than relying on generic structure alone.`
+      message: `${name}: add a small number of prop hints to describe what this target is for and which parts matter most.`
     });
   }
 
   if (submodelState === "metadata_partial") {
     if (targetKind === "model" && Number(submodelMetadata?.submodelCount || 0) > 0) {
       recs.push({
-        type: "submodel_hints",
+        type: "prop_hints",
         priority: "high",
-        message: `${name}: add submodel hints so the app understands what the child regions do, not just that they exist.`
+        message: `${name}: add prop hints so the app understands what the child regions do, not just that they exist.`
       });
     } else if (targetKind === "group" && submodelMetadata?.hasSubmodelMembers) {
       recs.push({
-        type: "submodel_group_hints",
+        type: "prop_hints",
         priority: "high",
-        message: `${name}: this group includes submodels; add submodel-oriented hints so scoped planning can target the right internal regions.`
+        message: `${name}: this group includes submodels; add prop hints so scoped planning can target the right internal regions.`
       });
     } else if (targetKind === "submodel") {
       recs.push({
-        type: "submodel_hints",
+        type: "prop_hints",
         priority: "high",
-        message: `${name}: add submodel hints that describe this region's function or visual role.`
+        message: `${name}: add prop hints that describe this region's function or visual role.`
       });
     }
   }
@@ -356,7 +352,7 @@ export function buildNormalizedTargetMetadataRecords({
     const inferredSemanticTraits = inferSemanticTraits({
       canonicalType: classification?.canonicalType,
       userTags,
-      semanticHints: unique(preference?.semanticHints)
+      semanticHints: unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])])
     });
     const submodelMetadata = buildSubmodelMetadata({
       targetKind: "model",
@@ -400,8 +396,7 @@ export function buildNormalizedTargetMetadataRecords({
       },
       user: {
         rolePreference: norm(preference?.rolePreference),
-        semanticHints: unique(preference?.semanticHints),
-        submodelHints: unique(preference?.submodelHints),
+        semanticHints: unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])]),
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
@@ -440,7 +435,7 @@ export function buildNormalizedTargetMetadataRecords({
     const submodelMemberCount = flattened.filter((row) => submodelIds.has(norm(row?.id || row?.name))).length;
     const confidence = 0.5;
     const inferredRole = inferRole({ userTags, targetKind: "group", groupMemberships: [] });
-    const inferredSemanticTraits = unique(["aggregate", ...userTags, ...unique(preference?.semanticHints)]);
+    const inferredSemanticTraits = unique(["aggregate", ...userTags, ...unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])])]);
     const submodelMetadata = buildSubmodelMetadata({
       targetKind: "group",
       memberCount: flattened.length,
@@ -485,8 +480,7 @@ export function buildNormalizedTargetMetadataRecords({
       },
       user: {
         rolePreference: norm(preference?.rolePreference),
-        semanticHints: unique(preference?.semanticHints),
-        submodelHints: unique(preference?.submodelHints),
+        semanticHints: unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])]),
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
@@ -521,7 +515,7 @@ export function buildNormalizedTargetMetadataRecords({
     const parentId = norm(submodel?.parentId);
     const confidence = 0.5;
     const inferredRole = inferRole({ userTags, targetKind: "submodel", groupMemberships: [] });
-    const inferredSemanticTraits = unique(["submodel", ...userTags, ...unique(preference?.semanticHints)]);
+    const inferredSemanticTraits = unique(["submodel", ...userTags, ...unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])])]);
     const nodeCount = Number(submodel?.membership?.nodeCount || 0);
     const submodelMetadata = buildSubmodelMetadata({
       targetKind: "submodel",
@@ -567,8 +561,7 @@ export function buildNormalizedTargetMetadataRecords({
       },
       user: {
         rolePreference: norm(preference?.rolePreference),
-        semanticHints: unique(preference?.semanticHints),
-        submodelHints: unique(preference?.submodelHints),
+        semanticHints: unique([...(preference?.semanticHints || []), ...(preference?.submodelHints || [])]),
         effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },

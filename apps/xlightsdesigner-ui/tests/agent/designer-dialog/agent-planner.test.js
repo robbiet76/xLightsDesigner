@@ -19,7 +19,7 @@ const submodels = [
 
 const metadataAssignments = [
   { targetId: 'MegaTree', tags: ['focal', 'hero'] },
-  { targetId: 'MegaTree/TopHalf', tags: ['rhythm-driver'], submodelHints: ['top-half', 'crown'] },
+  { targetId: 'MegaTree/TopHalf', tags: ['rhythm-driver'], semanticHints: ['top-half', 'crown'] },
   { targetId: 'Roofline', tags: ['ambient-fill'] }
 ];
 
@@ -206,7 +206,7 @@ test('planner includes submodel metadata hints in planning guidance', () => {
   });
 
   const combined = result.proposalLines.join('\n').toLowerCase();
-  assert.ok(combined.includes('preserve submodel intent and structure hints'));
+  assert.ok(combined.includes('prop hints'));
   assert.ok(combined.includes('crown'));
 });
 

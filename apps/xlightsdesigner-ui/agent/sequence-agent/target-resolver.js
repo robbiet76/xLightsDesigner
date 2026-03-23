@@ -114,8 +114,7 @@ export function resolveTargetSelection({
   const metadataTermsForAssignment = (assignment = {}) => {
     const tags = Array.isArray(assignment?.tags) ? assignment.tags : [];
     const semanticHints = Array.isArray(assignment?.semanticHints) ? assignment.semanticHints : [];
-    const submodelHints = Array.isArray(assignment?.submodelHints) ? assignment.submodelHints : [];
-    return [...new Set([...tags, ...semanticHints, ...submodelHints].map(normalizeName).filter(Boolean))];
+    return [...new Set([...tags, ...semanticHints].map(normalizeName).filter(Boolean))];
   };
 
   const isWritableTarget = (target) => {

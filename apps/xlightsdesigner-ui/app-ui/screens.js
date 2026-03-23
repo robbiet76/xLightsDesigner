@@ -1592,7 +1592,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         </select>
                       </p></div>
                       <div>
-                        <strong>Semantic Hints</strong>
+                        <strong>Prop Hints</strong>
                         <div class="metadata-value-list">
                           ${(Array.isArray(data.activeTarget.semanticHints) ? data.activeTarget.semanticHints : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}
                         </div>
@@ -1602,23 +1602,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                             ${((data.activeTarget.smartOptions?.semanticHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
                             <option value="__other__">Other...</option>
                           </select>
-                          <input data-metadata-other-input="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add custom semantic hint" disabled />
+                          <input data-metadata-other-input="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add custom prop hint" disabled />
                           <button data-metadata-add-item="semanticHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">Add</button>
-                        </div>
-                      </div>
-                      <div>
-                        <strong>Submodel Hints</strong>
-                        <div class="metadata-value-list">
-                          ${(Array.isArray(data.activeTarget.submodelHints) ? data.activeTarget.submodelHints : []).map((value) => `<button class="artifact-chip" data-metadata-remove-item="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" data-metadata-value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")} ×</button>`).join("") || `<span class="banner">None selected</span>`}
-                        </div>
-                        <div class="metadata-add-row">
-                          <select data-metadata-suggestion-select="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
-                            <option value="">Choose one...</option>
-                            ${((data.activeTarget.smartOptions?.submodelHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
-                            <option value="__other__">Other...</option>
-                          </select>
-                          <input data-metadata-other-input="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" placeholder="Add custom submodel hint" disabled />
-                          <button data-metadata-add-item="submodelHints" data-metadata-target-id="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">Add</button>
                         </div>
                       </div>
                       <div>

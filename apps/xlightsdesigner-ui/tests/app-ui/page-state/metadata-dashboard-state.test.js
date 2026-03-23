@@ -27,7 +27,7 @@ function buildHelpers() {
           inferredSemanticTraits: ["character", "focal"]
         },
         training: { trainedSupportState: "out_of_stage1_model_support" },
-        user: { rolePreference: "support", submodelHints: ["face", "hat"] },
+        user: { rolePreference: "support", semanticHints: ["face", "hat"] },
         structure: {
           submodelMetadata: {
             hasSubmodels: false,
@@ -35,8 +35,8 @@ function buildHelpers() {
           }
         },
         recommendations: [
-          { type: "semantic_hints", priority: "medium", message: "Snowman: add a small number of semantic hints." },
-          { type: "submodel_hints", priority: "high", message: "Snowman: add submodel hints." }
+          { type: "prop_hints", priority: "medium", message: "Snowman: add a small number of prop hints." },
+          { type: "prop_hints", priority: "high", message: "Snowman: add prop hints for child regions." }
         ],
         provenance: {
           confidence: 0.25,
@@ -44,7 +44,7 @@ function buildHelpers() {
           fields: {
             canonicalType: { source: "derived_layout", detail: "Derived from layout/model display type as custom." },
             rolePreference: { source: "user_override", detail: "User override set to support." },
-            submodelHints: { source: "user_override", detail: "User submodel hints: face, hat." }
+            semanticHints: { source: "user_override", detail: "User prop hints: face, hat." }
           }
         }
       },
@@ -110,13 +110,13 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.targetsSummary.metadataNeededModels, 1);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.total, 2);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.highPriority, 1);
-  assert.equal(dashboard.data.targetsSummary.recommendationSummary.items[0].type, "semantic_hints");
+  assert.equal(dashboard.data.targetsSummary.recommendationSummary.items[0].type, "prop_hints");
   assert.equal(dashboard.data.rows[0].metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
   assert.equal(dashboard.data.activeTarget.metadataCompleteness, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.metadataCompletenessDetail.semantic, "metadata_partial");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");
-  assert.equal(dashboard.data.activeTarget.submodelHints.join(","), "face,hat");
+  assert.equal(dashboard.data.activeTarget.semanticHints.join(","), "face,hat");
   assert.equal(dashboard.data.activeTarget.submodelMetadata.hasSubmodels, false);
   assert.equal(dashboard.data.activeTarget.recommendations.length, 2);
   assert.equal(dashboard.data.activeTarget.recommendations[1].priority, "high");

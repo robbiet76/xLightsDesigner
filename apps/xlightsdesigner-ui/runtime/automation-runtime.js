@@ -15,16 +15,19 @@ function buildEffectiveMetadataAssignments(assignments = [], preferencesByTarget
     const targetId = String(assignment?.targetId || "").trim();
     const pref = targetId && prefIndex[targetId] && typeof prefIndex[targetId] === "object" ? prefIndex[targetId] : null;
     if (!pref) return assignment;
+    const semanticHints = Array.from(new Set([
+      ...arr(pref?.semanticHints),
+      ...arr(pref?.submodelHints)
+    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
     const tags = Array.from(new Set([
       ...arr(assignment?.tags),
       ...(pref?.rolePreference ? [pref.rolePreference] : []),
-      ...arr(pref?.semanticHints)
+      ...semanticHints
     ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
     return {
       ...assignment,
       tags,
-      semanticHints: arr(pref?.semanticHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
-      submodelHints: arr(pref?.submodelHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      semanticHints,
       effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
       rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
     };

@@ -349,7 +349,6 @@ export function bindScreenEvents({
       const nextValue = selectedValue === "__other__" ? customValue : selectedValue;
       if (!nextValue) return;
       if (field === "semanticHints") addMetadataTargetSemanticHint(targetId, nextValue);
-      if (field === "submodelHints") addMetadataTargetSubmodelHint(targetId, nextValue);
       if (field === "effectAvoidances") addMetadataTargetEffectAvoidance(targetId, nextValue);
       render();
     });
@@ -372,7 +371,6 @@ export function bindScreenEvents({
       const targetId = String(btn.dataset.metadataTargetId || "").trim();
       const value = String(btn.dataset.metadataValue || "").trim();
       if (field === "semanticHints") removeMetadataTargetSemanticHint(targetId, value);
-      if (field === "submodelHints") removeMetadataTargetSubmodelHint(targetId, value);
       if (field === "effectAvoidances") removeMetadataTargetEffectAvoidance(targetId, value);
       render();
     });

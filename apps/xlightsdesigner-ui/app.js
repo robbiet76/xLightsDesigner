@@ -7741,16 +7741,19 @@ function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignm
     const targetId = String(assignment?.targetId || "").trim();
     const pref = targetId && prefIndex[targetId] && typeof prefIndex[targetId] === "object" ? prefIndex[targetId] : null;
     if (!pref) return assignment;
+    const mergedHints = Array.from(new Set([
+      ...arr(pref?.semanticHints),
+      ...arr(pref?.submodelHints)
+    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
     const mergedTags = Array.from(new Set([
       ...arr(assignment?.tags),
       ...(pref?.rolePreference ? [pref.rolePreference] : []),
-      ...arr(pref?.semanticHints)
+      ...mergedHints
     ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
     return {
       ...assignment,
       tags: mergedTags,
-      semanticHints: arr(pref?.semanticHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
-      submodelHints: arr(pref?.submodelHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      semanticHints: mergedHints,
       effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
       rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
     };

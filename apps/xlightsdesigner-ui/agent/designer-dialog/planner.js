@@ -320,12 +320,7 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
 
     const semanticHints = arr(assignment?.semanticHints).map((row) => str(row)).filter(Boolean);
     if (semanticHints.length) {
-      lines.push(`${scope} / ${targetName} / treat this target with semantic hints: ${semanticHints.join(", ")}`);
-    }
-
-    const submodelHints = arr(assignment?.submodelHints).map((row) => str(row)).filter(Boolean);
-    if (submodelHints.length) {
-      lines.push(`${scope} / ${targetName} / preserve submodel intent and structure hints here: ${submodelHints.join(", ")}`);
+      lines.push(`${scope} / ${targetName} / treat this target with these prop hints: ${semanticHints.join(", ")}`);
     }
 
     const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);
