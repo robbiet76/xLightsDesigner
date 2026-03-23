@@ -19,7 +19,7 @@ const submodels = [
 
 const metadataAssignments = [
   { targetId: 'MegaTree', tags: ['focal', 'hero'] },
-  { targetId: 'MegaTree/TopHalf', tags: ['rhythm-driver'] },
+  { targetId: 'MegaTree/TopHalf', tags: ['rhythm-driver'], submodelHints: ['top-half', 'crown'] },
   { targetId: 'Roofline', tags: ['ambient-fill'] }
 ];
 
@@ -139,6 +139,23 @@ test('resolveTargets honors explicit target ids and metadata tags', () => {
   assert.ok(ids.includes('MegaTree/TopHalf'));
 });
 
+test('resolveTargets honors submodel metadata hints as scoped metadata terms', () => {
+  const normalizedIntent = normalizeIntent({
+    promptText: 'Focus the crown detail with a tighter local pattern',
+    selectedTagNames: ['crown']
+  });
+
+  const targets = resolveTargets({
+    normalizedIntent,
+    models,
+    submodels,
+    metadataAssignments,
+    displayElements
+  });
+
+  assert.deepEqual(targets.map((t) => t.id), ['MegaTree/TopHalf']);
+});
+
 test('planner produces concrete first-pass sequencing lines from director-level prompt', () => {
   const result = buildProposalFromIntent({
     promptText: 'I want chorus 2 to feel bigger and more energetic',
@@ -175,6 +192,22 @@ test('planner includes explicit low-level effect preferences as override constra
   assert.ok(combined.includes('honor explicit user effect preferences'));
   assert.ok(combined.includes('twinkle'));
   assert.ok(combined.includes('bars'));
+});
+
+test('planner includes submodel metadata hints in planning guidance', () => {
+  const result = buildProposalFromIntent({
+    promptText: 'Keep the crown area precise during the chorus',
+    selectedSections: ['Chorus'],
+    selectedTagNames: ['crown'],
+    models,
+    submodels,
+    metadataAssignments,
+    displayElements
+  });
+
+  const combined = result.proposalLines.join('\n').toLowerCase();
+  assert.ok(combined.includes('preserve submodel intent and structure hints'));
+  assert.ok(combined.includes('crown'));
 });
 
 test('planner output is deterministic for same input', () => {

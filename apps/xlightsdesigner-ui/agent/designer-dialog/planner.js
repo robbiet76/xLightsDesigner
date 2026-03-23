@@ -323,6 +323,11 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
       lines.push(`${scope} / ${targetName} / treat this target with semantic hints: ${semanticHints.join(", ")}`);
     }
 
+    const submodelHints = arr(assignment?.submodelHints).map((row) => str(row)).filter(Boolean);
+    if (submodelHints.length) {
+      lines.push(`${scope} / ${targetName} / preserve submodel intent and structure hints here: ${submodelHints.join(", ")}`);
+    }
+
     const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);
     if (effectAvoidances.length) {
       lines.push(`${scope} / ${targetName} / avoid these effect families or effects here unless explicitly requested: ${effectAvoidances.join(", ")}`);

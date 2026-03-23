@@ -111,6 +111,13 @@ export function resolveTargetSelection({
   const unresolved = new Map();
   let resolutionSource = "none";
 
+  const metadataTermsForAssignment = (assignment = {}) => {
+    const tags = Array.isArray(assignment?.tags) ? assignment.tags : [];
+    const semanticHints = Array.isArray(assignment?.semanticHints) ? assignment.semanticHints : [];
+    const submodelHints = Array.isArray(assignment?.submodelHints) ? assignment.submodelHints : [];
+    return [...new Set([...tags, ...semanticHints, ...submodelHints].map(normalizeName).filter(Boolean))];
+  };
+
   const isWritableTarget = (target) => {
     if (!target) return false;
     if (!displayByName.size) return true;
@@ -141,8 +148,8 @@ export function resolveTargetSelection({
     for (const assignment of metadataAssignments || []) {
       const id = String(assignment?.targetId || "").trim();
       if (!id || !byId.has(id)) continue;
-      const tags = Array.isArray(assignment?.tags) ? assignment.tags : [];
-      const matches = tags.some((tag) => tagSet.has(normalizeName(tag)));
+      const terms = metadataTermsForAssignment(assignment);
+      const matches = terms.some((term) => tagSet.has(term));
       if (!matches) continue;
       const target = byId.get(id);
       if (isWritableTarget(target)) {

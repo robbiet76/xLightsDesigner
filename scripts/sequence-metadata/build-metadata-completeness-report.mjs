@@ -67,6 +67,54 @@ function summarizeModelSlices(records = []) {
   };
 }
 
+function summarizePriorityGaps(records = []) {
+  const rows = arr(records);
+  const structurallyKnownButRoleNeeded = rows.filter((row) =>
+    norm(row?.semantics?.metadataCompleteness?.structure) === "metadata_ready" &&
+    norm(row?.semantics?.metadataCompleteness?.role) === "metadata_needed"
+  );
+  const structurallyKnownButSubmodelPartial = rows.filter((row) =>
+    norm(row?.semantics?.metadataCompleteness?.structure) === "metadata_ready" &&
+    norm(row?.semantics?.metadataCompleteness?.submodel) === "metadata_partial"
+  );
+  const submodelsStructurallyKnownButRoleNeeded = rows.filter((row) =>
+    norm(row?.targetKind) === "submodel" &&
+    norm(row?.semantics?.metadataCompleteness?.structure) === "metadata_ready" &&
+    norm(row?.semantics?.metadataCompleteness?.role) === "metadata_needed"
+  );
+  return {
+    structurallyKnownButRoleNeeded: structurallyKnownButRoleNeeded.length,
+    structurallyKnownButSubmodelPartial: structurallyKnownButSubmodelPartial.length,
+    submodelsStructurallyKnownButRoleNeeded: submodelsStructurallyKnownButRoleNeeded.length
+  };
+}
+
+function extractPriorityGapExamples(records = [], limit = 20) {
+  return arr(records)
+    .filter((row) =>
+      norm(row?.semantics?.metadataCompleteness?.structure) === "metadata_ready" &&
+      (
+        norm(row?.semantics?.metadataCompleteness?.role) === "metadata_needed" ||
+        norm(row?.semantics?.metadataCompleteness?.submodel) === "metadata_partial"
+      )
+    )
+    .sort((a, b) => {
+      const kindCmp = norm(a?.targetKind).localeCompare(norm(b?.targetKind));
+      if (kindCmp !== 0) return kindCmp;
+      return norm(a?.identity?.displayName || a?.targetId).localeCompare(norm(b?.identity?.displayName || b?.targetId));
+    })
+    .slice(0, Math.max(1, Number(limit) || 20))
+    .map((row) => ({
+      targetId: norm(row?.targetId),
+      targetKind: norm(row?.targetKind),
+      displayName: norm(row?.identity?.displayName || row?.targetId),
+      canonicalType: norm(row?.identity?.canonicalType),
+      role: norm(row?.semantics?.metadataCompleteness?.role),
+      submodel: norm(row?.semantics?.metadataCompleteness?.submodel),
+      submodelMetadata: row?.structure?.submodelMetadata || {}
+    }));
+}
+
 function extractGapExamples(records = [], limit = 20) {
   return arr(records)
     .filter((row) => norm(row?.semantics?.metadataCompleteness?.overall) !== "metadata_ready")
@@ -108,9 +156,11 @@ function main() {
     summary: {
       totalTargets: records.length,
       byTargetKind: summarizeByTargetKind(records),
-      modelSlices: summarizeModelSlices(records)
+      modelSlices: summarizeModelSlices(records),
+      priorityGaps: summarizePriorityGaps(records)
     },
-    gapExamples: extractGapExamples(records, 40)
+    gapExamples: extractGapExamples(records, 40),
+    priorityGapExamples: extractPriorityGapExamples(records, 40)
   };
   fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
   console.log(outputPath);
