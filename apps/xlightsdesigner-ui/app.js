@@ -7735,7 +7735,10 @@ function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignm
     ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
     return {
       ...assignment,
-      tags: mergedTags
+      tags: mergedTags,
+      semanticHints: arr(pref?.semanticHints).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+      rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
     };
   });
 }

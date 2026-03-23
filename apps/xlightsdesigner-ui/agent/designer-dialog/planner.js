@@ -298,6 +298,37 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
     }
   }
 
+  for (const assignment of metadataAssignments || []) {
+    const targetId = str(assignment?.targetId);
+    const target = arr(targets).find((row) => str(row?.id || row?.name) === targetId);
+    if (!target) continue;
+    const targetName = str(target?.name || target?.id);
+    if (!targetName) continue;
+
+    const rolePreference = normalizeName(assignment?.rolePreference);
+    if (rolePreference === "focal") {
+      lines.push(`${scope} / ${targetName} / preserve this prop as a focal read unless the request explicitly broadens away from it`);
+    } else if (rolePreference === "support") {
+      lines.push(`${scope} / ${targetName} / keep this prop in a support role and avoid letting it dominate the scene`);
+    } else if (rolePreference === "background") {
+      lines.push(`${scope} / ${targetName} / keep this prop in the background layer unless the request explicitly promotes it`);
+    } else if (rolePreference === "frame") {
+      lines.push(`${scope} / ${targetName} / use this prop mainly as framing support rather than as the lead read`);
+    } else if (rolePreference === "accent") {
+      lines.push(`${scope} / ${targetName} / use this prop as an accent layer instead of broad base coverage`);
+    }
+
+    const semanticHints = arr(assignment?.semanticHints).map((row) => str(row)).filter(Boolean);
+    if (semanticHints.length) {
+      lines.push(`${scope} / ${targetName} / treat this target with semantic hints: ${semanticHints.join(", ")}`);
+    }
+
+    const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);
+    if (effectAvoidances.length) {
+      lines.push(`${scope} / ${targetName} / avoid these effect families or effects here unless explicitly requested: ${effectAvoidances.join(", ")}`);
+    }
+  }
+
   return lines;
 }
 
