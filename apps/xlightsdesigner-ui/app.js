@@ -12208,39 +12208,59 @@ function render() {
   const buildLabel = getBuildLabel();
   const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
   const pageStates = getPageStates();
-  app.innerHTML = buildAppShell({
-    state,
-    screenContent: screenContent(pageStates),
-    helpers: {
-      escapeHtml,
-      renderInlineChipSentence,
-      getTeamChatIdentity,
-      getTeamChatSpeakerLabel,
-      getSections,
-      getSelectedSections,
-      hasAllSectionsSelected,
-      getSectionName,
-      applyReadyForApprovalGate,
-      applyEnabled,
-      applyDisabledReason,
-      getDiagnosticsCounts,
-      getAgentApplyRolloutMode,
-      getManualLockedXdTracks,
-      getTeamChatIdentities,
-      chatQuickPrompts: getRouteChatQuickPrompts(state.route),
-      chatPlaceholder: getRouteChatPlaceholder(state.route),
-      chatContext: getRouteChatContext(),
-      analysisHeaderBadge,
-      buildLabel,
-      pageStates
-    }
-  });
+  try {
+    app.innerHTML = buildAppShell({
+      state,
+      screenContent: screenContent(pageStates),
+      helpers: {
+        escapeHtml,
+        renderInlineChipSentence,
+        getTeamChatIdentity,
+        getTeamChatSpeakerLabel,
+        getSections,
+        getSelectedSections,
+        hasAllSectionsSelected,
+        getSectionName,
+        applyReadyForApprovalGate,
+        applyEnabled,
+        applyDisabledReason,
+        getDiagnosticsCounts,
+        getAgentApplyRolloutMode,
+        getManualLockedXdTracks,
+        getTeamChatIdentities,
+        chatQuickPrompts: getRouteChatQuickPrompts(state.route),
+        chatPlaceholder: getRouteChatPlaceholder(state.route),
+        chatContext: getRouteChatContext(),
+        analysisHeaderBadge,
+        buildLabel,
+        pageStates
+      }
+    });
 
-  bindEvents();
-  restoreRenderFocusState(focusSnapshot);
-  const chatThread = app.querySelector(".chat-thread");
-  if (chatThread) {
-    chatThread.scrollTop = chatThread.scrollHeight;
+    bindEvents();
+    restoreRenderFocusState(focusSnapshot);
+    const chatThread = app.querySelector(".chat-thread");
+    if (chatThread) {
+      chatThread.scrollTop = chatThread.scrollHeight;
+    }
+  } catch (error) {
+    const message = String(error?.stack || error?.message || error || "Unknown render error");
+    console.error(`[renderer:render] ${message}`);
+    app.innerHTML = `
+      <div class="app-shell">
+        <div class="main-grid">
+          <div class="main-shell">
+            <main class="content">
+              <section class="card full-span">
+                <div class="artifact-kicker">Renderer Error</div>
+                <h3>The app could not render this screen.</h3>
+                <pre class="artifact-body" style="white-space: pre-wrap;">${escapeHtml(message)}</pre>
+              </section>
+            </main>
+          </div>
+        </div>
+      </div>
+    `;
   }
 }
 
