@@ -1511,8 +1511,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <div class="field metadata-tag-manager-body">
                     <div class="artifact-detail-grid">
                       <div><strong>Name</strong><p>${String(data.activeTarget.displayName || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Type</strong><p>${String(data.activeTarget.type || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Canonical</strong><p>${String(data.activeTarget.canonicalType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                      <div><strong>Type</strong><p>${String(data.activeTarget.canonicalType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Metadata</strong><p>${String(data.activeTarget.metadataCompleteness || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Confidence</strong><p>${Number.isFinite(Number(data.activeTarget.confidence)) ? Number(data.activeTarget.confidence).toFixed(2) : "-"}</p></div>
                     </div>
@@ -1609,15 +1608,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <tr>
                   <th style="width:36px;">Sel</th>
                   <th>Name</th>
-                  <th>Type</th>
                   <th>Metadata</th>
-                  <th>Canonical</th>
+                  <th>Type</th>
                   <th>Inferred</th>
                 </tr>
                 <tr class="metadata-filter-row">
                   <th></th>
                   <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
-                  <th><input id="metadata-filter-type" value="${(state.ui.metadataFilterType || "").replace(/"/g, "&quot;")}" placeholder="type (comma-separated)..." /></th>
                   <th>
                     <input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." />
                     <select id="metadata-filter-dimension">
@@ -1640,7 +1637,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   data.rows?.length
                     ? data.rows
                         .map((m) => {
-                          const type = String(m?.type || "");
                           const support = String(m?.supportState || "");
                           const metadataCompleteness = String(m?.metadataCompleteness || "");
                           const canonical = String(m?.canonicalType || "");
@@ -1652,14 +1648,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                           return `<tr>
                             <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${selected} /></td>
                             <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
-                            <td>${type.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${metadataCompleteness.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                           </tr>`;
                         })
                         .join("")
-                    : `<tr><td colspan="6">No targets found.</td></tr>`
+                    : `<tr><td colspan="5">No targets found.</td></tr>`
                 }
               </tbody>
             </table>
