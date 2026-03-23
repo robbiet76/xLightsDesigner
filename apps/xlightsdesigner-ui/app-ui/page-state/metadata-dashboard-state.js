@@ -50,7 +50,7 @@ export function buildMetadataDashboardState({
     const normalized = normalizedByTargetId.get(String(m.id));
     const rowTags = escapeTagList(assignment?.tags).join(", ").toLowerCase();
     const rowSupport = str(normalized?.semantics?.supportState).toLowerCase();
-    const rowMetadataCompleteness = str(normalized?.semantics?.metadataCompleteness).toLowerCase();
+    const rowMetadataCompleteness = str(normalized?.semantics?.metadataCompleteness?.overall).toLowerCase();
     if (!matchesMetadataFilterValue(rowName, nameFilter)) return false;
     if (!matchesMetadataFilterValue(rowType, typeFilter)) return false;
     if (!matchesMetadataFilterValue(rowTags, tagsFilter)) return false;
@@ -112,9 +112,9 @@ export function buildMetadataDashboardState({
         submodelCount,
         trainedSupportedModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState === "trained_supported").length,
         runtimeOnlyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState !== "trained_supported").length,
-        customMetadataReadyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness === "metadata_ready").length,
-        customMetadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness === "metadata_partial").length,
-        customMetadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness === "metadata_needed").length,
+        metadataReadyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_ready").length,
+        metadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_partial").length,
+        metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length,
         controlledTagCount: tags.filter((row) => row.controlled === true).length,
         customTagCount: tags.filter((row) => row.controlled !== true).length
       },
@@ -125,7 +125,16 @@ export function buildMetadataDashboardState({
             type: str(activeTarget?.raw?.type || activeNormalized?.targetKind),
             canonicalType: str(activeNormalized?.identity?.canonicalType),
             supportState: str(activeNormalized?.semantics?.supportState),
-            metadataCompleteness: str(activeNormalized?.semantics?.metadataCompleteness),
+            metadataCompleteness: str(activeNormalized?.semantics?.metadataCompleteness?.overall),
+            metadataCompletenessDetail: activeNormalized?.semantics?.metadataCompleteness && typeof activeNormalized.semantics.metadataCompleteness === "object"
+              ? {
+                  structure: str(activeNormalized.semantics.metadataCompleteness.structure),
+                  semantic: str(activeNormalized.semantics.metadataCompleteness.semantic),
+                  role: str(activeNormalized.semantics.metadataCompleteness.role),
+                  submodel: str(activeNormalized.semantics.metadataCompleteness.submodel),
+                  sequencing: str(activeNormalized.semantics.metadataCompleteness.sequencing)
+                }
+              : null,
             trainedSupportState: str(activeNormalized?.training?.trainedSupportState),
             trainedBuckets: escapeTagList(activeNormalized?.training?.trainedModelBuckets),
             inferredRole: str(activeNormalized?.semantics?.inferredRole),
@@ -153,7 +162,7 @@ export function buildMetadataDashboardState({
           selected: selectedIds.has(str(m.id)),
           focused: activeTargetId === str(m.id),
           supportState: str(normalized?.semantics?.supportState),
-          metadataCompleteness: str(normalized?.semantics?.metadataCompleteness),
+          metadataCompleteness: str(normalized?.semantics?.metadataCompleteness?.overall),
           canonicalType: str(normalized?.identity?.canonicalType),
           inferredRole: str(normalized?.semantics?.inferredRole),
           inferredSemanticTraits: escapeTagList(normalized?.semantics?.inferredSemanticTraits),

@@ -1486,9 +1486,9 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div class="metadata-toolbar row">
             <span class="banner">Trained-supported models: ${data.targetsSummary?.trainedSupportedModels || 0}</span>
             <span class="banner">Runtime-only models: ${data.targetsSummary?.runtimeOnlyModels || 0}</span>
-            <span class="banner">Metadata ready: ${data.targetsSummary?.customMetadataReadyModels || 0}</span>
-            <span class="banner">Metadata partial: ${data.targetsSummary?.customMetadataPartialModels || 0}</span>
-            <span class="banner">Metadata needed: ${data.targetsSummary?.customMetadataNeededModels || 0}</span>
+            <span class="banner">Metadata ready: ${data.targetsSummary?.metadataReadyModels || 0}</span>
+            <span class="banner">Metadata partial: ${data.targetsSummary?.metadataPartialModels || 0}</span>
+            <span class="banner">Metadata needed: ${data.targetsSummary?.metadataNeededModels || 0}</span>
             <span class="banner">Controlled tags: ${data.targetsSummary?.controlledTagCount || 0}</span>
             <span class="banner">Custom tags: ${data.targetsSummary?.customTagCount || 0}</span>
           </div>
@@ -1597,6 +1597,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                         <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
                       </div>
                     </div>
+                    ${data.activeTarget.metadataCompletenessDetail
+                      ? `<div class="artifact-detail-grid">
+                          <div><strong>Structure Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.structure || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                          <div><strong>Semantic Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.semantic || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                          <div><strong>Role Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.role || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                          <div><strong>Submodel Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.submodel || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                          <div><strong>Sequencing Completeness</strong><p>${String(data.activeTarget.metadataCompletenessDetail.sequencing || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
+                        </div>`
+                      : ""}
                     <h4>Inferred Semantic Traits</h4>
                     ${Array.isArray(data.activeTarget.inferredSemanticTraits) && data.activeTarget.inferredSemanticTraits.length
                       ? `<p>${data.activeTarget.inferredSemanticTraits.map((v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).join(", ")}</p>`

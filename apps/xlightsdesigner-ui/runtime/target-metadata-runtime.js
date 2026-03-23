@@ -97,13 +97,54 @@ function supportStateLabel({ trainedBuckets = [] } = {}) {
   return trainedBuckets.length ? "trained_supported" : "runtime_targetable_only";
 }
 
-function metadataCompletenessLabel({ canonicalType = "", preference = {}, userTags = [] } = {}) {
-  if (low(canonicalType) !== "custom") return "";
-  const hasHints = arr(preference?.semanticHints).map((row) => norm(row)).filter(Boolean).length > 0;
-  const hasTags = unique(userTags).length > 0;
-  if (hasHints) return "metadata_ready";
-  if (hasTags) return "metadata_partial";
-  return "metadata_needed";
+function worstMetadataCompleteness(values = []) {
+  const normalized = arr(values).map((row) => low(row)).filter(Boolean);
+  if (normalized.includes("metadata_needed")) return "metadata_needed";
+  if (normalized.includes("metadata_partial")) return "metadata_partial";
+  return "metadata_ready";
+}
+
+function buildMetadataCompleteness({
+  targetKind = "",
+  canonicalType = "",
+  inferredRole = "",
+  inferredSemanticTraits = [],
+  preference = {},
+  userTags = [],
+  trainedBuckets = [],
+  submodelCount = 0,
+  memberCount = 0
+} = {}) {
+  const normalizedCanonical = low(canonicalType);
+  const semanticHints = arr(preference?.semanticHints).map((row) => norm(row)).filter(Boolean);
+  const tags = unique(userTags);
+  const structure = normalizedCanonical ? "metadata_ready" : "metadata_needed";
+  const semantic = semanticHints.length
+    ? "metadata_ready"
+    : (arr(inferredSemanticTraits).length > 0 || tags.length || normalizedCanonical)
+      ? "metadata_partial"
+      : "metadata_needed";
+  const role = norm(preference?.rolePreference) || norm(inferredRole)
+    ? "metadata_ready"
+    : ((targetKind === "group" || tags.length) ? "metadata_partial" : "metadata_needed");
+  const submodel = targetKind === "submodel"
+    ? "metadata_ready"
+    : targetKind === "group"
+      ? (memberCount > 0 ? "metadata_partial" : "metadata_needed")
+      : (Number(submodelCount) > 0 ? "metadata_partial" : "metadata_ready");
+  const sequencing = trainedBuckets.length
+    ? "metadata_ready"
+    : normalizedCanonical
+      ? "metadata_partial"
+      : "metadata_needed";
+  return {
+    structure,
+    semantic,
+    role,
+    submodel,
+    sequencing,
+    overall: worstMetadataCompleteness([structure, semantic, role, submodel, sequencing])
+  };
 }
 
 function buildProvenanceDetail({
@@ -163,9 +204,7 @@ function buildProvenanceDetail({
     },
     metadataCompleteness: {
       source: "metadata_framework",
-      detail: low(canonicalType) === "custom"
-        ? "Metadata completeness is derived from explicit semantic hints and tags for custom models."
-        : "Metadata completeness is not used for non-custom models."
+      detail: "Metadata completeness is computed across structure, semantic, role, submodel, and sequencing dimensions."
     },
     training: {
       source: "training_bundle",
@@ -208,10 +247,22 @@ export function buildNormalizedTargetMetadataRecords({
     const groupMemberships = unique(groupMembershipIndex.get(targetId) || []);
     const userTags = unique(assignment?.tags || []);
     const confidence = trainedBuckets.length ? 1 : (classification?.canonicalType === "custom" ? 0.25 : 0.5);
-    const metadataCompleteness = metadataCompletenessLabel({
+    const submodelCount = Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId).length;
+    const inferredRole = inferRole({ userTags, targetKind: "model", groupMemberships });
+    const inferredSemanticTraits = inferSemanticTraits({
       canonicalType: classification?.canonicalType,
+      userTags,
+      semanticHints: unique(preference?.semanticHints)
+    });
+    const metadataCompleteness = buildMetadataCompleteness({
+      targetKind: "model",
+      canonicalType: classification?.canonicalType,
+      inferredRole,
+      inferredSemanticTraits,
       preference,
-      userTags
+      userTags,
+      trainedBuckets,
+      submodelCount
     });
     records.push({
       targetId,
@@ -225,15 +276,11 @@ export function buildNormalizedTargetMetadataRecords({
       },
       structure: {
         groupMemberships,
-        submodelCount: Object.values(submodelsById).filter((row) => norm(row?.parentId) === targetId).length
+        submodelCount
       },
       semantics: {
-        inferredRole: inferRole({ userTags, targetKind: "model", groupMemberships }),
-        inferredSemanticTraits: inferSemanticTraits({
-          canonicalType: classification?.canonicalType,
-          userTags,
-          semanticHints: unique(preference?.semanticHints)
-        }),
+        inferredRole,
+        inferredSemanticTraits,
         supportState: supportStateLabel({ trainedBuckets }),
         metadataCompleteness
       },
@@ -271,6 +318,18 @@ export function buildNormalizedTargetMetadataRecords({
     const userTags = unique(assignment?.tags || []);
     const flattened = Array.isArray(group?.members?.flattened) ? group.members.flattened : [];
     const confidence = 0.5;
+    const inferredRole = inferRole({ userTags, targetKind: "group", groupMemberships: [] });
+    const inferredSemanticTraits = unique(["aggregate", ...userTags, ...unique(preference?.semanticHints)]);
+    const metadataCompleteness = buildMetadataCompleteness({
+      targetKind: "group",
+      canonicalType: "model_group",
+      inferredRole,
+      inferredSemanticTraits,
+      preference,
+      userTags,
+      trainedBuckets: [],
+      memberCount: flattened.length
+    });
     records.push({
       targetId,
       targetKind: "group",
@@ -286,9 +345,10 @@ export function buildNormalizedTargetMetadataRecords({
         memberCount: flattened.length
       },
       semantics: {
-        inferredRole: inferRole({ userTags, targetKind: "group", groupMemberships: [] }),
-        inferredSemanticTraits: unique(["aggregate", ...userTags]),
-        supportState: "runtime_targetable_only"
+        inferredRole,
+        inferredSemanticTraits,
+        supportState: "runtime_targetable_only",
+        metadataCompleteness
       },
       training: {
         trainedModelBuckets: [],
@@ -324,6 +384,18 @@ export function buildNormalizedTargetMetadataRecords({
     const userTags = unique(assignment?.tags || []);
     const parentId = norm(submodel?.parentId);
     const confidence = 0.5;
+    const inferredRole = inferRole({ userTags, targetKind: "submodel", groupMemberships: [] });
+    const inferredSemanticTraits = unique(["submodel", ...userTags, ...unique(preference?.semanticHints)]);
+    const metadataCompleteness = buildMetadataCompleteness({
+      targetKind: "submodel",
+      canonicalType: "submodel",
+      inferredRole,
+      inferredSemanticTraits,
+      preference,
+      userTags,
+      trainedBuckets: [],
+      memberCount: Number(submodel?.membership?.nodeCount || 0)
+    });
     records.push({
       targetId,
       targetKind: "submodel",
@@ -339,9 +411,10 @@ export function buildNormalizedTargetMetadataRecords({
         memberCount: Number(submodel?.membership?.nodeCount || 0)
       },
       semantics: {
-        inferredRole: inferRole({ userTags, targetKind: "submodel", groupMemberships: [] }),
-        inferredSemanticTraits: unique(["submodel", ...userTags]),
-        supportState: "runtime_targetable_only"
+        inferredRole,
+        inferredSemanticTraits,
+        supportState: "runtime_targetable_only",
+        metadataCompleteness
       },
       training: {
         trainedModelBuckets: [],
