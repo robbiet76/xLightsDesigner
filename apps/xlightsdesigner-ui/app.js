@@ -3378,7 +3378,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         submodels: state.submodels || [],
         displayElements: state.displayElements || [],
         effectCatalog: state.effectCatalog,
-        metadataAssignments: state.metadata?.assignments || [],
+        metadataAssignments: buildEffectiveMetadataAssignments(),
         existingDesignIds: collectCurrentDesignIds(),
         elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
       })
@@ -3403,7 +3403,7 @@ async function onGenerate(intentOverride = "", options = {}) {
         models: state.models || [],
         submodels: state.submodels || [],
         displayElements: state.displayElements || [],
-        metadataAssignments: state.metadata?.assignments || [],
+        metadataAssignments: buildEffectiveMetadataAssignments(),
         elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
       });
   if (!proposalOrchestration.ok) {
@@ -6947,7 +6947,7 @@ function seedTechnicalIntentHandoffFromChatPrompt(promptText = "", producer = "a
     submodels: state.submodels || [],
     displayElements: state.displayElements || [],
     effectCatalog: state.effectCatalog,
-    metadataAssignments: state.metadata?.assignments || [],
+    metadataAssignments: buildEffectiveMetadataAssignments(),
     existingDesignIds: collectCurrentDesignIds(),
     elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
   });
@@ -7712,6 +7712,34 @@ function normalizeMetadataTagDescription(description) {
   return String(description || "").trim();
 }
 
+function parseMetadataPreferenceList(raw) {
+  return Array.from(new Set(
+    String(raw || "")
+      .split(/[,;|]/)
+      .map((row) => normalizeMetadataTagName(row))
+      .filter(Boolean)
+  ));
+}
+
+function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignments || [], preferencesByTargetId = state.metadata?.preferencesByTargetId || {}) {
+  const base = Array.isArray(assignments) ? assignments : [];
+  const prefIndex = preferencesByTargetId && typeof preferencesByTargetId === "object" ? preferencesByTargetId : {};
+  return base.map((assignment) => {
+    const targetId = String(assignment?.targetId || "").trim();
+    const pref = targetId && prefIndex[targetId] && typeof prefIndex[targetId] === "object" ? prefIndex[targetId] : null;
+    if (!pref) return assignment;
+    const mergedTags = Array.from(new Set([
+      ...arr(assignment?.tags),
+      ...(pref?.rolePreference ? [pref.rolePreference] : []),
+      ...arr(pref?.semanticHints)
+    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
+    return {
+      ...assignment,
+      tags: mergedTags
+    };
+  });
+}
+
 function getMetadataTagRecords() {
   const raw = Array.isArray(state.metadata?.tags) ? state.metadata.tags : [];
   const byName = new Map();
@@ -7948,6 +7976,54 @@ function updateMetadataTargetRolePreference(targetId, rolePreference = "") {
   state.metadata.preferencesByTargetId = next;
   invalidatePlanHandoff("metadata role preference changed");
   saveMetadataAndRender(`Updated role preference for ${target.displayName || id}.`);
+  return true;
+}
+
+function updateMetadataTargetSemanticHints(targetId, rawValue = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const target = getMetadataTargetById(id);
+  if (!target) return false;
+  const nextValues = parseMetadataPreferenceList(rawValue);
+  const current = state.metadata?.preferencesByTargetId && typeof state.metadata.preferencesByTargetId === "object"
+    ? state.metadata.preferencesByTargetId
+    : {};
+  const previous = current[id] && typeof current[id] === "object" ? current[id] : {};
+  const previousValues = Array.isArray(previous.semanticHints) ? previous.semanticHints : [];
+  if (JSON.stringify(previousValues) === JSON.stringify(nextValues)) return true;
+  const next = { ...current };
+  const reduced = { ...previous };
+  if (nextValues.length) reduced.semanticHints = nextValues;
+  else delete reduced.semanticHints;
+  if (Object.keys(reduced).length) next[id] = reduced;
+  else delete next[id];
+  state.metadata.preferencesByTargetId = next;
+  invalidatePlanHandoff("metadata semantic hints changed");
+  saveMetadataAndRender(`Updated semantic hints for ${target.displayName || id}.`);
+  return true;
+}
+
+function updateMetadataTargetEffectAvoidances(targetId, rawValue = "") {
+  const id = String(targetId || "").trim();
+  if (!id) return false;
+  const target = getMetadataTargetById(id);
+  if (!target) return false;
+  const nextValues = parseMetadataPreferenceList(rawValue);
+  const current = state.metadata?.preferencesByTargetId && typeof state.metadata.preferencesByTargetId === "object"
+    ? state.metadata.preferencesByTargetId
+    : {};
+  const previous = current[id] && typeof current[id] === "object" ? current[id] : {};
+  const previousValues = Array.isArray(previous.effectAvoidances) ? previous.effectAvoidances : [];
+  if (JSON.stringify(previousValues) === JSON.stringify(nextValues)) return true;
+  const next = { ...current };
+  const reduced = { ...previous };
+  if (nextValues.length) reduced.effectAvoidances = nextValues;
+  else delete reduced.effectAvoidances;
+  if (Object.keys(reduced).length) next[id] = reduced;
+  else delete next[id];
+  state.metadata.preferencesByTargetId = next;
+  invalidatePlanHandoff("metadata effect avoidances changed");
+  saveMetadataAndRender(`Updated effect avoidances for ${target.displayName || id}.`);
   return true;
 }
 
@@ -11266,7 +11342,7 @@ function buildPageStateHelpers() {
     buildMetadataTargets,
     buildNormalizedTargetMetadataRecords: () => buildNormalizedTargetMetadataRecords({
       sceneGraph: state.sceneGraph || {},
-      metadataAssignments: state.metadata?.assignments || [],
+      metadataAssignments: buildEffectiveMetadataAssignments(),
       metadataPreferencesByTargetId: state.metadata?.preferencesByTargetId || {}
     }),
     matchesMetadataFilterValue,
@@ -12064,6 +12140,8 @@ function bindEvents() {
     removeMetadataAssignment,
     setMetadataFocusedTarget,
     updateMetadataTargetRolePreference,
+    updateMetadataTargetSemanticHints,
+    updateMetadataTargetEffectAvoidances,
     ignoreMetadataOrphan,
     remapMetadataOrphan,
     onUseRecent,

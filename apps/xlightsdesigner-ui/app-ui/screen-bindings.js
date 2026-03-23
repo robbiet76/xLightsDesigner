@@ -46,6 +46,8 @@ export function bindScreenEvents({
   removeMetadataAssignment,
   setMetadataFocusedTarget,
   updateMetadataTargetRolePreference,
+  updateMetadataTargetSemanticHints,
+  updateMetadataTargetEffectAvoidances,
   ignoreMetadataOrphan,
   remapMetadataOrphan,
   onUseRecent,
@@ -379,6 +381,34 @@ export function bindScreenEvents({
     select.addEventListener("change", () => {
       updateMetadataTargetRolePreference(select.dataset.metadataRolePreference, select.value);
       render();
+    });
+  });
+
+  app.querySelectorAll("[data-metadata-semantic-hints]").forEach((input) => {
+    const commit = () => {
+      updateMetadataTargetSemanticHints(input.dataset.metadataSemanticHints, input.value);
+      render();
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commit();
+    });
+  });
+
+  app.querySelectorAll("[data-metadata-effect-avoidances]").forEach((input) => {
+    const commit = () => {
+      updateMetadataTargetEffectAvoidances(input.dataset.metadataEffectAvoidances, input.value);
+      render();
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commit();
     });
   });
 

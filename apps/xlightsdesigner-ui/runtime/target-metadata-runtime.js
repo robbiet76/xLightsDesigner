@@ -169,6 +169,8 @@ export function buildNormalizedTargetMetadataRecords({
       },
       user: {
         rolePreference: norm(preference?.rolePreference),
+        semanticHints: unique(preference?.semanticHints),
+        effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
       provenance: {
@@ -211,6 +213,8 @@ export function buildNormalizedTargetMetadataRecords({
       },
       user: {
         rolePreference: norm(preference?.rolePreference),
+        semanticHints: unique(preference?.semanticHints),
+        effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
       provenance: {
@@ -253,6 +257,8 @@ export function buildNormalizedTargetMetadataRecords({
       },
       user: {
         rolePreference: norm(preference?.rolePreference),
+        semanticHints: unique(preference?.semanticHints),
+        effectAvoidances: unique(preference?.effectAvoidances),
         tags: userTags
       },
       provenance: {

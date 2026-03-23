@@ -6,6 +6,33 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function normalizeMetadataTagName(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function buildEffectiveMetadataAssignments(assignments = [], preferencesByTargetId = {}) {
+  const base = Array.isArray(assignments) ? assignments : [];
+  const prefIndex = preferencesByTargetId && typeof preferencesByTargetId === "object" ? preferencesByTargetId : {};
+  return base.map((assignment) => {
+    const targetId = String(assignment?.targetId || "").trim();
+    const pref = targetId && prefIndex[targetId] && typeof prefIndex[targetId] === "object" ? prefIndex[targetId] : null;
+    if (!pref) return assignment;
+    const tags = Array.from(new Set([
+      ...arr(assignment?.tags),
+      ...(pref?.rolePreference ? [pref.rolePreference] : []),
+      ...arr(pref?.semanticHints)
+    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
+    return {
+      ...assignment,
+      tags
+    };
+  });
+}
+
 export function createAutomationRuntime(deps = {}) {
   const {
     state,
@@ -215,7 +242,10 @@ export function createAutomationRuntime(deps = {}) {
           models: state.models || [],
           submodels: state.submodels || [],
           displayElements: state.displayElements || [],
-          metadataAssignments: state.metadata?.assignments || [],
+          metadataAssignments: buildEffectiveMetadataAssignments(
+            state.metadata?.assignments || [],
+            state.metadata?.preferencesByTargetId || {}
+          ),
           elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
         });
         debugReplay = {

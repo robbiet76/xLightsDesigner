@@ -1571,6 +1571,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       <div><strong>Submodels</strong><p>${String(data.activeTarget.submodelCount || data.activeTarget.memberCount || 0)}</p></div>
                       <div><strong>User Tags</strong><p>${(Array.isArray(data.activeTarget.userTags) && data.activeTarget.userTags.length ? data.activeTarget.userTags.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                     </div>
+                    <div class="artifact-detail-grid">
+                      <div>
+                        <strong>Semantic Hints</strong>
+                        <p><input data-metadata-semantic-hints="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.semanticHints || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="character, radial_like, lyric" /></p>
+                      </div>
+                      <div>
+                        <strong>Effect Avoidances</strong>
+                        <p><input data-metadata-effect-avoidances="${String(data.activeTarget.id).replace(/"/g, "&quot;")}" value="${String((data.activeTarget.effectAvoidances || []).join(", ")).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="Shockwave, dense texture" /></p>
+                      </div>
+                    </div>
                     <h4>Inferred Semantic Traits</h4>
                     ${Array.isArray(data.activeTarget.inferredSemanticTraits) && data.activeTarget.inferredSemanticTraits.length
                       ? `<p>${data.activeTarget.inferredSemanticTraits.map((v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).join(", ")}</p>`
