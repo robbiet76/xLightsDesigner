@@ -84,6 +84,9 @@ export function buildMetadataDashboardState({
       tags: tags.map((tag) => ({
         name: str(tag.name),
         description: str(tag.description),
+        category: str(tag.category || ""),
+        source: str(tag.source || ""),
+        controlled: tag.controlled === true,
         selected: selectedEditorTags.includes(str(tag.name))
       })),
       selectedTagNames: selectedEditorTags,
@@ -96,7 +99,9 @@ export function buildMetadataDashboardState({
         total: modelOptions.length,
         submodelCount,
         trainedSupportedModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState === "trained_supported").length,
-        runtimeOnlyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState !== "trained_supported").length
+        runtimeOnlyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.training?.trainedSupportState !== "trained_supported").length,
+        controlledTagCount: tags.filter((row) => row.controlled === true).length,
+        customTagCount: tags.filter((row) => row.controlled !== true).length
       },
       activeTarget: activeNormalized
         ? {

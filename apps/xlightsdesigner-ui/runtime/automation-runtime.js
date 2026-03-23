@@ -1,17 +1,11 @@
+import { normalizeMetadataTagName } from "./metadata-tag-schema.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
-}
-
-function normalizeMetadataTagName(value = "") {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 function buildEffectiveMetadataAssignments(assignments = [], preferencesByTargetId = {}) {

@@ -6,8 +6,8 @@ import { buildMetadataDashboardState } from "../../../app-ui/page-state/metadata
 function buildHelpers() {
   return {
     getMetadataTagRecords: () => [
-      { name: "character", description: "Character prop" },
-      { name: "support", description: "Supporting prop" }
+      { name: "character", description: "Character prop", category: "semantic", source: "controlled", controlled: true },
+      { name: "support", description: "Supporting prop", category: "role", source: "controlled", controlled: true }
     ],
     buildMetadataTargets: () => [
       { id: "Snowman", displayName: "Snowman", type: "model" },
@@ -65,11 +65,14 @@ test("metadata dashboard summarizes tag and target state", () => {
 
   assert.equal(dashboard.page, "metadata");
   assert.equal(dashboard.data.tags.length, 2);
+  assert.equal(dashboard.data.tags[0].category.length > 0, true);
   assert.equal(dashboard.data.rows.length, 2);
   assert.equal(dashboard.data.selectedCount, 1);
   assert.equal(dashboard.data.hasSelectedTags, true);
   assert.equal(dashboard.data.targetsSummary.trainedSupportedModels, 1);
   assert.equal(dashboard.data.targetsSummary.runtimeOnlyModels, 1);
+  assert.equal(dashboard.data.targetsSummary.controlledTagCount, 2);
+  assert.equal(dashboard.data.targetsSummary.customTagCount, 0);
   assert.equal(dashboard.data.rows[0].supportState.length > 0, true);
   assert.equal(dashboard.data.activeTarget.displayName, "Snowman");
   assert.equal(dashboard.data.activeTarget.rolePreference, "support");

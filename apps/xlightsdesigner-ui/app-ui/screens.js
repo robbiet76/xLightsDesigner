@@ -1486,6 +1486,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div class="metadata-toolbar row">
             <span class="banner">Trained-supported models: ${data.targetsSummary?.trainedSupportedModels || 0}</span>
             <span class="banner">Runtime-only models: ${data.targetsSummary?.runtimeOnlyModels || 0}</span>
+            <span class="banner">Controlled tags: ${data.targetsSummary?.controlledTagCount || 0}</span>
+            <span class="banner">Custom tags: ${data.targetsSummary?.customTagCount || 0}</span>
           </div>
           <details class="metadata-tag-manager">
             <summary>
@@ -1499,6 +1501,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <tr>
                       <th style="width:42px;">Use</th>
                       <th style="width:220px;">Tag</th>
+                      <th style="width:110px;">Class</th>
                       <th>Description</th>
                       <th style="width:70px;"></th>
                     </tr>
@@ -1506,7 +1509,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <tbody>
                     <tr class="new-tag-row">
                       <td></td>
-                      <td><input id="metadata-new-tag" value="${(data.draftTagName || "").replace(/"/g, "&quot;")}" placeholder="new tag" /></td>
+                      <td><input id="metadata-new-tag" value="${(data.draftTagName || "").replace(/"/g, "&quot;")}" placeholder="new project tag" /></td>
+                      <td><span class="banner">custom</span></td>
                       <td><input id="metadata-new-tag-description" value="${(state.ui.metadataNewTagDescription || "").replace(/"/g, "&quot;")}" placeholder="description (optional)" /></td>
                       <td><button id="metadata-add-tag" ${data.draftTagName ? "" : "disabled"}>Add</button></td>
                     </tr>
@@ -1516,15 +1520,23 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                             .map((tag) => {
                               const safeTag = String(tag.name).replace(/\"/g, "&quot;");
                               const checked = tag.selected ? "checked" : "";
+                              const safeCategory = String(tag.category || tag.source || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                              const deleteCell = tag.controlled
+                                ? `<span class="banner">System</span>`
+                                : `<button data-remove-tag="${safeTag}">Delete</button>`;
+                              const descriptionCell = tag.controlled
+                                ? `${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}`
+                                : `<input data-metadata-tag-description="${safeTag}" value="${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="description" />`;
                               return `<tr>
                                 <td><input type="checkbox" data-metadata-tag-toggle="${safeTag}" ${checked} /></td>
                                 <td>${String(tag.name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-                                <td><input data-metadata-tag-description="${safeTag}" value="${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="description" /></td>
-                                <td><button data-remove-tag="${safeTag}">Delete</button></td>
+                                <td><span class="banner">${safeCategory}</span></td>
+                                <td>${descriptionCell}</td>
+                                <td>${deleteCell}</td>
                               </tr>`;
                             })
                             .join("")
-                        : `<tr><td colspan="4">No tags yet.</td></tr>`
+                        : `<tr><td colspan="5">No tags yet.</td></tr>`
                     }
                   </tbody>
                 </table>

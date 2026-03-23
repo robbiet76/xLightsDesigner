@@ -73,6 +73,12 @@ import {
   inferRenderRiskLevel,
   parseSubmodelParentId
 } from "./agent/shared/target-semantics-registry.js";
+import {
+  isControlledMetadataTag,
+  mergeMetadataTagRecords,
+  normalizeMetadataTagName,
+  toStoredMetadataTagRecords
+} from "./runtime/metadata-tag-schema.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -7704,10 +7710,6 @@ function saveMetadataAndRender(statusText = "") {
   render();
 }
 
-function normalizeMetadataTagName(name) {
-  return normalizeSectionLabel(name);
-}
-
 function normalizeMetadataTagDescription(description) {
   return String(description || "").trim();
 }
@@ -7745,32 +7747,17 @@ function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignm
 
 function getMetadataTagRecords() {
   const raw = Array.isArray(state.metadata?.tags) ? state.metadata.tags : [];
-  const byName = new Map();
-  raw.forEach((entry) => {
-    if (typeof entry === "string") {
-      const name = normalizeMetadataTagName(entry);
-      if (!name || byName.has(name)) return;
-      byName.set(name, { name, description: "" });
-      return;
-    }
-    if (!entry || typeof entry !== "object") return;
-    const name = normalizeMetadataTagName(entry.name);
-    if (!name || byName.has(name)) return;
-    byName.set(name, { name, description: normalizeMetadataTagDescription(entry.description) });
-  });
-  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+  return mergeMetadataTagRecords(raw);
 }
 
 function setMetadataTagRecords(records) {
-  state.metadata.tags = records.map((record) => ({
-    name: String(record.name),
-    description: String(record.description || "")
-  }));
+  state.metadata.tags = toStoredMetadataTagRecords(records);
 }
 
 function updateMetadataTagDescription(tagName, description) {
   const name = normalizeMetadataTagName(tagName);
   if (!name) return;
+  if (isControlledMetadataTag(name)) return;
   const nextDescription = normalizeMetadataTagDescription(description);
   const records = getMetadataTagRecords();
   const idx = records.findIndex((record) => record.name === name);
@@ -7802,6 +7789,10 @@ function addMetadataTag() {
 function removeMetadataTag(tagName) {
   const name = normalizeMetadataTagName(tagName);
   if (!name) return;
+  if (isControlledMetadataTag(name)) {
+    setStatus("warning", `Controlled tag cannot be removed: ${name}`);
+    return render();
+  }
   const records = getMetadataTagRecords().filter((record) => record.name !== name);
   setMetadataTagRecords(records);
   // Remove tag from assignments too.
