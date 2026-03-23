@@ -1582,15 +1582,31 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   </div>
                   <div class="field metadata-tag-manager-body">
                     <div class="artifact-detail-grid">
-                      <div><strong>Role Preference</strong><p>
-                        <select data-metadata-role-preference="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
-                          ${["", "focal", "support", "background", "frame", "accent"].map((value) => {
-                            const selected = String(data.activeTarget.rolePreference || "") === value ? "selected" : "";
-                            const label = value || "Auto";
-                            return `<option value="${String(value).replace(/"/g, "&quot;")}" ${selected}>${label}</option>`;
-                          }).join("")}
-                        </select>
-                      </p></div>
+                      <div>
+                        <div class="metadata-field-label-row">
+                          <strong>Role Preference</strong>
+                          <details class="metadata-help-toggle">
+                            <summary aria-label="Role preference help">?</summary>
+                            <div class="metadata-help-popover">
+                              <p><strong>Auto</strong>: Let the app decide.</p>
+                              <p><strong>Focal</strong>: Main visual lead; draws the eye first.</p>
+                              <p><strong>Support</strong>: Reinforces the lead without dominating.</p>
+                              <p><strong>Background</strong>: Low-priority texture or fill.</p>
+                              <p><strong>Frame</strong>: Edge or perimeter structure that shapes the scene.</p>
+                              <p><strong>Accent</strong>: Short hits or punctuation, not broad base coverage.</p>
+                            </div>
+                          </details>
+                        </div>
+                        <p>
+                          <select data-metadata-role-preference="${String(data.activeTarget.id).replace(/"/g, "&quot;")}">
+                            ${["", "focal", "support", "background", "frame", "accent"].map((value) => {
+                              const selected = String(data.activeTarget.rolePreference || "") === value ? "selected" : "";
+                              const label = value || "Auto";
+                              return `<option value="${String(value).replace(/"/g, "&quot;")}" ${selected}>${label}</option>`;
+                            }).join("")}
+                          </select>
+                        </p>
+                      </div>
                       <div>
                         <strong>Visual Hints</strong>
                         <div class="metadata-value-list">

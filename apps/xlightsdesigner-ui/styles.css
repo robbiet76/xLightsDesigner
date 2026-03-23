@@ -1517,6 +1517,58 @@ button.danger-action:hover {
   flex-wrap: wrap;
 }
 
+.metadata-field-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metadata-help-toggle {
+  position: relative;
+}
+
+.metadata-help-toggle summary {
+  list-style: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.metadata-help-toggle summary::-webkit-details-marker {
+  display: none;
+}
+
+.metadata-help-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  z-index: 10;
+}
+
+.metadata-help-popover p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.metadata-help-popover p:last-child {
+  margin-bottom: 0;
+}
+
 .metadata-grid-view {
   margin-top: 10px;
 }
