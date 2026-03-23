@@ -1451,6 +1451,16 @@ button.danger-action:hover {
   margin: 0;
 }
 
+.metadata-guided-nav {
+  align-items: center;
+  gap: 8px;
+}
+
+.metadata-guided-nav button {
+  min-width: 36px;
+  padding: 6px 10px;
+}
+
 .metadata-advanced summary {
   cursor: pointer;
   font-weight: 600;
@@ -1494,6 +1504,17 @@ button.danger-action:hover {
   border-radius: 10px;
   background: linear-gradient(180deg, rgba(16, 25, 35, 0.98), rgba(16, 25, 35, 0.96));
   padding: 12px;
+}
+
+.metadata-editor-active {
+  margin-bottom: 10px;
+}
+
+.metadata-editor-active > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .metadata-grid-view {

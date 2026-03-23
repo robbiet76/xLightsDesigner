@@ -155,6 +155,38 @@ function buildRecommendationTypeSummary(worklist = []) {
     .sort((a, b) => b.count - a.count || a.typeLabel.localeCompare(b.typeLabel));
 }
 
+function completenessRank(value = "") {
+  const key = str(value);
+  if (key === "metadata_needed") return 0;
+  if (key === "metadata_partial") return 1;
+  if (key === "metadata_ready") return 2;
+  return 3;
+}
+
+function buildGuidedTargetOrder({ modelOptions = [], normalizedRecords = [], recommendationWorklist = [] } = {}) {
+  const normalizedByTargetId = new Map(
+    (Array.isArray(normalizedRecords) ? normalizedRecords : []).map((row) => [str(row?.targetId), row])
+  );
+  const unique = [];
+  const seen = new Set();
+  for (const row of Array.isArray(recommendationWorklist) ? recommendationWorklist : []) {
+    const id = str(row?.targetId);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    unique.push(id);
+  }
+  const remaining = (Array.isArray(modelOptions) ? modelOptions : [])
+    .map((row) => ({
+      id: str(row?.id),
+      name: str(row?.name || row?.raw?.displayName || row?.id),
+      completeness: str(normalizedByTargetId.get(str(row?.id))?.semantics?.metadataCompleteness?.overall)
+    }))
+    .filter((row) => row.id && !seen.has(row.id))
+    .sort((a, b) => completenessRank(a.completeness) - completenessRank(b.completeness) || a.name.localeCompare(b.name))
+    .map((row) => row.id);
+  return [...unique, ...remaining];
+}
+
 export function buildMetadataDashboardState({
   state = {},
   helpers = {}
@@ -199,7 +231,8 @@ export function buildMetadataDashboardState({
   const recommendationSummary = summarizeRecommendations(normalizedRecords);
   const recommendationWorklist = buildRecommendationWorklist(normalizedRecords);
   const primaryRecommendation = recommendationWorklist[0] || null;
-  const activeTargetId = str(state.ui?.metadataTargetId || primaryRecommendation?.targetId || filteredModels[0]?.id || "");
+  const guidedTargetOrder = buildGuidedTargetOrder({ modelOptions, normalizedRecords, recommendationWorklist });
+  const activeTargetId = str(state.ui?.metadataTargetId || guidedTargetOrder[0] || filteredModels[0]?.id || "");
   const activeTarget = activeTargetId ? modelOptions.find((target) => str(target.id) === activeTargetId) : null;
   const activeNormalized = activeTargetId ? normalizedByTargetId.get(activeTargetId) : null;
   const hasVisibleTargets = filteredModels.length > 0;
@@ -260,6 +293,9 @@ export function buildMetadataDashboardState({
   if (activeTargetData) {
     activeTargetData.summaryText = buildActiveTargetSummary(activeTargetData);
   }
+  const activeGuidedIndex = guidedTargetOrder.indexOf(activeTargetId);
+  const previousGuidedTargetId = activeGuidedIndex > 0 ? guidedTargetOrder[activeGuidedIndex - 1] : "";
+  const nextGuidedTargetId = activeGuidedIndex >= 0 && activeGuidedIndex < guidedTargetOrder.length - 1 ? guidedTargetOrder[activeGuidedIndex + 1] : "";
   const callToAction = recommendationSummary.total
     ? {
         title: recommendationSummary.highPriority
@@ -303,6 +339,11 @@ export function buildMetadataDashboardState({
       callToAction,
       primaryRecommendation,
       recommendationTypeSummary: buildRecommendationTypeSummary(recommendationWorklist).slice(0, 3),
+      guidedTargetOrder,
+      guidedIndex: activeGuidedIndex >= 0 ? activeGuidedIndex + 1 : 0,
+      guidedTotal: guidedTargetOrder.length,
+      previousGuidedTargetId,
+      nextGuidedTargetId,
       targetsSummary: {
         total: modelOptions.length,
         submodelCount,

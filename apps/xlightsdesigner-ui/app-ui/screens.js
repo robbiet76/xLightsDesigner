@@ -1494,26 +1494,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <section class="card metadata-progress-card">
             <h4>${String(data.progressSummary || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h4>
           </section>
-          ${data.primaryRecommendation
-            ? `<section class="metadata-recommendations">
-                <div class="metadata-panel-header">
-                  <div>
-                    <div class="artifact-kicker">Recommended</div>
-                    <h4>Recommended Next Model</h4>
-                  </div>
-                  <span class="banner">${String(data.primaryRecommendation.priority || "normal").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                </div>
-                <button class="metadata-recommendation-item metadata-recommendation-item-primary" data-metadata-focus="${String(data.primaryRecommendation.targetId).replace(/"/g, "&quot;")}">
-                      <span class="metadata-recommendation-head">
-                        <span><strong>${String(data.primaryRecommendation.displayName).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong> <span class="banner">${String(data.primaryRecommendation.targetType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span></span>
-                        <span class="banner">${String(data.primaryRecommendation.typeLabel || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                      </span>
-                      <span class="metadata-recommendation-body">
-                        <span>${String(data.primaryRecommendation.message || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
-                      </span>
-                    </button>
-              </section>`
-            : `<p class="banner">No metadata action is needed right now.</p>`}
           `
               : `
           <section class="card metadata-progress-card">
@@ -1581,8 +1561,23 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
               ? `<section class="metadata-editor-card">
                   <div class="metadata-panel-header">
                     <div>
-                      <div class="artifact-kicker">Update Metadata</div>
-                      <h4>${activeTargetName || "Selected target"}</h4>
+                      <div class="artifact-kicker">${view === "guided" ? "Recommended" : "Update Metadata"}</div>
+                      <h4>${view === "guided" ? "Recommended Next Model" : activeTargetName || "Selected target"}</h4>
+                    </div>
+                    ${
+                      view === "guided"
+                        ? `<div class="row metadata-guided-nav">
+                            <button ${data.previousGuidedTargetId ? `data-metadata-focus="${String(data.previousGuidedTargetId).replace(/"/g, "&quot;")}"` : "disabled"} aria-label="Previous model">‹</button>
+                            <span class="banner">${Number(data.guidedIndex || 0)}/${Number(data.guidedTotal || 0)}</span>
+                            <button ${data.nextGuidedTargetId ? `data-metadata-focus="${String(data.nextGuidedTargetId).replace(/"/g, "&quot;")}"` : "disabled"} aria-label="Next model">›</button>
+                          </div>`
+                        : ""
+                    }
+                  </div>
+                  <div class="metadata-editor-active">
+                    <div>
+                      <strong>${activeTargetName || "Selected target"}</strong>
+                      ${view === "guided" ? `<span class="banner">${String(data.activeTarget.metadataCompleteness || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>` : ""}
                     </div>
                   </div>
                   <div class="field metadata-tag-manager-body">
