@@ -13,6 +13,24 @@ function buildHelpers() {
       { id: "Snowman", displayName: "Snowman", type: "model" },
       { id: "SpiralTrees", displayName: "SpiralTrees", type: "model" }
     ],
+    buildNormalizedTargetMetadataRecords: () => [
+      {
+        targetId: "Snowman",
+        targetKind: "model",
+        identity: { canonicalType: "custom" },
+        semantics: { supportState: "runtime_targetable_only", inferredRole: "focal", inferredSemanticTraits: ["character", "focal"] },
+        training: { trainedSupportState: "out_of_stage1_model_support" },
+        provenance: { confidence: 0.25 }
+      },
+      {
+        targetId: "SpiralTrees",
+        targetKind: "model",
+        identity: { canonicalType: "tree" },
+        semantics: { supportState: "trained_supported", inferredRole: "", inferredSemanticTraits: ["tree"] },
+        training: { trainedSupportState: "trained_supported" },
+        provenance: { confidence: 1 }
+      }
+    ],
     matchesMetadataFilterValue: (value, filter) => {
       const tokens = String(filter || "").toLowerCase().split(",").map((row) => row.trim()).filter(Boolean);
       if (!tokens.length) return true;
@@ -48,6 +66,9 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.rows.length, 2);
   assert.equal(dashboard.data.selectedCount, 1);
   assert.equal(dashboard.data.hasSelectedTags, true);
+  assert.equal(dashboard.data.targetsSummary.trainedSupportedModels, 1);
+  assert.equal(dashboard.data.targetsSummary.runtimeOnlyModels, 1);
+  assert.equal(dashboard.data.rows[0].supportState.length > 0, true);
 });
 
 test("metadata dashboard applies filters to target rows", () => {

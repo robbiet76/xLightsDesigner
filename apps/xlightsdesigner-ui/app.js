@@ -121,6 +121,7 @@ import {
   resolveTeamChatIdentity
 } from "./agent/app-assistant/app-assistant-contracts.js";
 import { buildPageStates } from "./app-ui/page-state/index.js";
+import { buildNormalizedTargetMetadataRecords } from "./runtime/target-metadata-runtime.js";
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
 import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
@@ -383,6 +384,7 @@ const defaultState = {
     metadataTypeFilter: "all",
     metadataFilterName: "",
     metadataFilterType: "",
+    metadataFilterSupport: "",
     metadataFilterTags: "",
     metadataSelectionIds: [],
     proposedSelection: [],
@@ -752,6 +754,7 @@ if (!state.orchestrationMatrix || typeof state.orchestrationMatrix !== "object")
 }
 if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterName = "";
 if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
+if (typeof state.ui?.metadataFilterSupport !== "string") state.ui.metadataFilterSupport = "";
 if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
 if (!isPlainObject(state.sceneGraph)) {
   state.sceneGraph = structuredClone(defaultState.sceneGraph);
@@ -9553,6 +9556,7 @@ function onResetProjectWorkspace() {
   state.ui.agentResponseId = "";
   state.ui.metadataFilterName = "";
   state.ui.metadataFilterType = "";
+  state.ui.metadataFilterSupport = "";
   state.ui.metadataFilterTags = "";
   state.ui.detailsOpen = false;
   state.chat = [];
@@ -11217,6 +11221,10 @@ function buildPageStateHelpers() {
     buildCurrentReviewSnapshotSummary,
     getMetadataTagRecords,
     buildMetadataTargets,
+    buildNormalizedTargetMetadataRecords: () => buildNormalizedTargetMetadataRecords({
+      sceneGraph: state.sceneGraph || {},
+      metadataAssignments: state.metadata?.assignments || []
+    }),
     matchesMetadataFilterValue,
     normalizeMetadataSelectionIds,
     normalizeMetadataSelectedTags,

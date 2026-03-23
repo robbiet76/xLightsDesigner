@@ -280,6 +280,24 @@ export function bindScreenEvents({
     metadataFilterTagsInput.addEventListener("blur", commitTagsFilter);
   }
 
+  const metadataFilterSupportInput = app.querySelector("#metadata-filter-support");
+  if (metadataFilterSupportInput) {
+    const commitSupportFilter = () => {
+      const next = metadataFilterSupportInput.value;
+      if (next === state.ui.metadataFilterSupport) return;
+      state.ui.metadataFilterSupport = next;
+      persist();
+      render();
+    };
+    metadataFilterSupportInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      commitSupportFilter();
+    });
+    metadataFilterSupportInput.addEventListener("change", commitSupportFilter);
+    metadataFilterSupportInput.addEventListener("blur", commitSupportFilter);
+  }
+
   const metadataNewTagInput = app.querySelector("#metadata-new-tag");
   if (metadataNewTagInput) {
     metadataNewTagInput.addEventListener("input", () => {

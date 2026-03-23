@@ -1483,6 +1483,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             </div>
             <span class="banner">Targets: ${data.targetsSummary?.total || 0} total (${data.targetsSummary?.submodelCount || 0} submodels)</span>
           </div>
+          <div class="metadata-toolbar row">
+            <span class="banner">Trained-supported models: ${data.targetsSummary?.trainedSupportedModels || 0}</span>
+            <span class="banner">Runtime-only models: ${data.targetsSummary?.runtimeOnlyModels || 0}</span>
+          </div>
           <details class="metadata-tag-manager">
             <summary>
               <span>Tag Library</span>
@@ -1549,12 +1553,18 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th style="width:36px;">Sel</th>
                   <th>Name</th>
                   <th>Type</th>
+                  <th>Support</th>
+                  <th>Canonical</th>
+                  <th>Inferred</th>
                   <th>Tags</th>
                 </tr>
                 <tr class="metadata-filter-row">
                   <th></th>
                   <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
                   <th><input id="metadata-filter-type" value="${(state.ui.metadataFilterType || "").replace(/"/g, "&quot;")}" placeholder="type (comma-separated)..." /></th>
+                  <th><input id="metadata-filter-support" value="${(state.ui.metadataFilterSupport || "").replace(/"/g, "&quot;")}" placeholder="support..." /></th>
+                  <th></th>
+                  <th></th>
                   <th><input id="metadata-filter-tags" value="${(state.ui.metadataFilterTags || "").replace(/"/g, "&quot;")}" placeholder="tags (comma-separated)..." /></th>
                 </tr>
               </thead>
@@ -1564,17 +1574,25 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     ? data.rows
                         .map((m) => {
                           const type = String(m?.type || "");
+                          const support = String(m?.supportState || "");
+                          const canonical = String(m?.canonicalType || "");
+                          const inferred = Array.isArray(m?.inferredSemanticTraits) && m.inferredSemanticTraits.length
+                            ? m.inferredSemanticTraits.slice(0, 3).join(", ")
+                            : (String(m?.inferredRole || "") || "-");
                           const tagList = Array.isArray(m?.tags) && m.tags.length ? m.tags.join(", ") : "-";
                           const selected = m.selected ? "checked" : "";
                           return `<tr>
                             <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${selected} /></td>
                             <td>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                             <td>${type.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                            <td>${support.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                            <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
+                            <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                             <td>${tagList.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                           </tr>`;
                         })
                         .join("")
-                    : `<tr><td colspan="4">No targets found.</td></tr>`
+                    : `<tr><td colspan="7">No targets found.</td></tr>`
                 }
               </tbody>
             </table>
