@@ -75,14 +75,13 @@ function deriveCandidateBucketsFromTraits(traits = new Set()) {
 
 function classifyCustomModelStage1Candidate(record = {}) {
   const canonicalType = low(record?.identity?.canonicalType);
-  const traits = buildTraitSet(record);
   const explicitMetadataTraits = buildExplicitMetadataTraitSet(record);
   const rolePreference = low(record?.user?.rolePreference);
   const trainedBuckets = arr(record?.training?.trainedModelBuckets).map((row) => norm(row)).filter(Boolean);
 
   if (canonicalType && canonicalType !== "custom") {
     return {
-      status: trainedBuckets.length ? "already_supported" : "non_custom_runtime_only",
+      status: trainedBuckets.length ? "stage1_mapped" : "metadata_partial",
       candidateBuckets: trainedBuckets,
       confidence: Number(record?.provenance?.confidence || 0),
       reasons: [
@@ -96,25 +95,11 @@ function classifyCustomModelStage1Candidate(record = {}) {
   const explicit = deriveCandidateBucketsFromTraits(explicitMetadataTraits);
   if (explicit.candidateBuckets.length) {
     return {
-      status: "metadata_promotable",
+      status: "metadata_ready",
       candidateBuckets: explicit.candidateBuckets,
       confidence: Math.max(0.5, Number(record?.provenance?.confidence || 0)),
       basis: "explicit_metadata",
       reasons: explicit.reasons
-    };
-  }
-
-  const inferred = deriveCandidateBucketsFromTraits(traits);
-  if (inferred.candidateBuckets.length) {
-    return {
-      status: "inference_promotable",
-      candidateBuckets: inferred.candidateBuckets,
-      confidence: Number(record?.provenance?.confidence || 0),
-      basis: "current_inference",
-      reasons: [
-        ...inferred.reasons,
-        "Promotion signal currently comes from inferred traits, not explicit user metadata."
-      ]
     };
   }
 
@@ -126,7 +111,7 @@ function classifyCustomModelStage1Candidate(record = {}) {
 
   if (metadataSignals.length) {
     return {
-      status: "metadata_present_but_unmapped",
+      status: "metadata_partial",
       candidateBuckets: [],
       confidence: Math.max(0.35, Number(record?.provenance?.confidence || 0)),
       basis: "explicit_metadata",
@@ -137,7 +122,7 @@ function classifyCustomModelStage1Candidate(record = {}) {
   }
 
   return {
-    status: "needs_metadata",
+    status: "metadata_needed",
     candidateBuckets: [],
     confidence: Number(record?.provenance?.confidence || 0),
     basis: "none",

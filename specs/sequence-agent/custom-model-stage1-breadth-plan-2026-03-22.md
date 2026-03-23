@@ -47,13 +47,13 @@ Stage 1 custom-model support must be driven by:
 
 For a custom model, the classifier should emit one of:
 
-- `metadata_promotable`
-- `metadata_present_but_unmapped`
-- `needs_metadata`
+- `metadata_ready`
+- `metadata_partial`
+- `metadata_needed`
 
-### `metadata_promotable`
+### `metadata_ready`
 
-The custom model already exposes enough metadata or inferred traits to map to an existing Stage 1 bucket.
+The custom model already exposes enough explicit metadata to map to an existing Stage 1 bucket.
 
 Examples of metadata-level signals:
 
@@ -68,7 +68,7 @@ Important:
 
 These are metadata traits, not hardcoded prop names.
 
-### `metadata_present_but_unmapped`
+### `metadata_partial`
 
 The model has:
 
@@ -80,7 +80,7 @@ but those signals do not yet map cleanly into an existing Stage 1 bucket.
 
 This means the metadata model is ahead of the training/support map.
 
-### `needs_metadata`
+### `metadata_needed`
 
 The model is custom and runtime-targetable, but there is not enough reliable metadata yet to classify it safely.
 
@@ -92,9 +92,9 @@ This should be the main discovery bucket, not a failure bucket.
 2. build a custom-model candidate report
 3. separate custom props into:
    - already supported
-   - metadata promotable
-   - metadata present but unmapped
-   - needs metadata
+   - metadata ready
+   - metadata partial
+   - metadata needed
 4. expand Stage 1 support in that order
 
 ## Promotion Rule

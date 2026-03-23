@@ -74,24 +74,12 @@ function buildGroupMembershipIndex(groupsById = {}) {
   return out;
 }
 
-function inferSemanticTraits({ canonicalType = "", targetId = "", groupMemberships = [], userTags = [] } = {}) {
+function inferSemanticTraits({ canonicalType = "", userTags = [], semanticHints = [] } = {}) {
   const traits = new Set();
   const canonical = low(canonicalType);
   if (canonical) traits.add(canonical);
   for (const tag of unique(userTags)) traits.add(low(tag));
-  const haystack = `${norm(targetId)} ${unique(groupMemberships).join(" ")}`.toLowerCase();
-  if (canonical === "custom" && /snowman|train|present|tune|sign|wreath|snowflake|snowball/.test(haystack)) {
-    traits.add("figure_like");
-  }
-  if (canonical === "custom" && /spinner|star|radial/.test(haystack)) {
-    traits.add("radial_like");
-  }
-  if (canonical === "custom" && /cane/.test(haystack)) {
-    traits.add("linear_like");
-  }
-  if (canonical === "custom" && /tree/.test(haystack)) {
-    traits.add("tree_like");
-  }
+  for (const hint of unique(semanticHints)) traits.add(low(hint));
   return [...traits];
 }
 
@@ -223,9 +211,8 @@ export function buildNormalizedTargetMetadataRecords({
         inferredRole: inferRole({ userTags, targetKind: "model", groupMemberships }),
         inferredSemanticTraits: inferSemanticTraits({
           canonicalType: classification?.canonicalType,
-          targetId,
-          groupMemberships,
-          userTags
+          userTags,
+          semanticHints: unique(preference?.semanticHints)
         }),
         supportState: supportStateLabel({ trainedBuckets })
       },
