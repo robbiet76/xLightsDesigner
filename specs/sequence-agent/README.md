@@ -17,3 +17,4 @@ Current architecture audit:
 - [sequence-agent-semantics-architecture-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-agent-semantics-architecture-2026-03-22.md)
 - [model-metadata-ownership-and-tagging-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-ownership-and-tagging-2026-03-22.md)
 - [model-metadata-record-contract-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-record-contract-2026-03-22.md)
+- [custom-model-stage1-breadth-plan-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/custom-model-stage1-breadth-plan-2026-03-22.md)
