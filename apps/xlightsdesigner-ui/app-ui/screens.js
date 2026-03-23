@@ -1510,18 +1510,33 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             </div>
             <div class="metadata-bulk-grid">
               <div>
-                <strong>Set Role</strong>
+                <div class="metadata-field-label-row">
+                  <strong>Role Preference</strong>
+                  <details class="metadata-help-toggle">
+                    <summary aria-label="Role preference help">?</summary>
+                    <div class="metadata-help-popover">
+                      <p><strong>Auto</strong>: Let the app decide.</p>
+                      <p><strong>Focal</strong>: Main visual lead; draws the eye first.</p>
+                      <p><strong>Support</strong>: Reinforces the lead without dominating.</p>
+                      <p><strong>Background</strong>: Low-priority texture or fill.</p>
+                      <p><strong>Frame</strong>: Edge or perimeter structure that shapes the scene.</p>
+                      <p><strong>Accent</strong>: Short hits or punctuation, not broad base coverage.</p>
+                    </div>
+                  </details>
+                </div>
                 <div class="metadata-add-row">
                   <select id="metadata-bulk-role">
                     <option value="">Choose role...</option>
                     ${["focal", "support", "background", "frame", "accent"].map((value) => `<option value="${value}">${value}</option>`).join("")}
                   </select>
                   <span></span>
-                  <button id="metadata-bulk-apply-role" ${data.selectedCount ? "" : "disabled"}>Apply</button>
+                  <button id="metadata-bulk-apply-role" ${data.selectedCount ? "" : "disabled"}>Set</button>
                 </div>
               </div>
               <div>
-                <strong>Add Visual Hint</strong>
+                <div class="metadata-field-label-row">
+                  <strong>Visual Hints</strong>
+                </div>
                 <div class="metadata-add-row">
                   <select id="metadata-bulk-visual-hint">
                     <option value="">Choose one...</option>
@@ -1529,11 +1544,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <option value="__other__">Other...</option>
                   </select>
                   <input id="metadata-bulk-visual-hint-other" placeholder="Add custom visual hint" disabled />
-                  <button id="metadata-bulk-apply-visual-hint" ${data.selectedCount ? "" : "disabled"}>Apply</button>
+                  <button id="metadata-bulk-apply-visual-hint" ${data.selectedCount ? "" : "disabled"}>Add</button>
                 </div>
               </div>
               <div>
-                <strong>Add Effect Avoidance</strong>
+                <div class="metadata-field-label-row">
+                  <strong>Effect Avoidances</strong>
+                </div>
                 <div class="metadata-add-row">
                   <select id="metadata-bulk-effect-avoidance">
                     <option value="">Choose one...</option>
@@ -1541,7 +1558,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <option value="__other__">Other...</option>
                   </select>
                   <input id="metadata-bulk-effect-avoidance-other" placeholder="Add custom avoidance" disabled />
-                  <button id="metadata-bulk-apply-effect-avoidance" ${data.selectedCount ? "" : "disabled"}>Apply</button>
+                  <button id="metadata-bulk-apply-effect-avoidance" ${data.selectedCount ? "" : "disabled"}>Add</button>
                 </div>
               </div>
             </div>
