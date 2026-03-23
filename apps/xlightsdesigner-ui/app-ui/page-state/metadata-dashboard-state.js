@@ -64,24 +64,27 @@ function buildCommonPreferenceValues(preferencesByTargetId = {}, field = "") {
   for (const pref of Object.values(preferencesByTargetId || {})) {
     const values = Array.isArray(pref?.[field]) ? pref[field] : [];
     for (const value of values) {
-      const key = str(value);
+      const raw = str(value);
+      const key = raw.toLowerCase();
       if (!key) continue;
-      counts.set(key, Number(counts.get(key) || 0) + 1);
+      const current = counts.get(key) || { value: raw, count: 0 };
+      counts.set(key, { value: current.value, count: Number(current.count || 0) + 1 });
     }
   }
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([value]) => value);
+  return Array.from(counts.values())
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    .map((row) => row.value);
 }
 
 function uniqueOrdered(values = []) {
   const out = [];
   const seen = new Set();
   for (const value of Array.isArray(values) ? values : []) {
-    const key = str(value);
+    const raw = str(value);
+    const key = raw.toLowerCase();
     if (!key || seen.has(key)) continue;
     seen.add(key);
-    out.push(key);
+    out.push(raw);
   }
   return out;
 }
@@ -117,8 +120,8 @@ function buildSmartSuggestionOptions({
   };
   const selectedValues = Array.isArray(active?.[field]) ? active[field] : [];
   return uniqueOrdered([
-    ...selectedValues,
     ...baseByField[field],
+    ...selectedValues,
     ...projectValues
   ]).slice(0, 16);
 }
