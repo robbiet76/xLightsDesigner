@@ -3598,6 +3598,7 @@ async function onGenerate(intentOverride = "", options = {}) {
       groupsById: state.sceneGraph?.groupsById || {},
       submodelsById: state.sceneGraph?.submodelsById || {},
       timingOwnership: getSequenceTimingOwnershipRows(),
+      metadataAssignments: buildEffectiveMetadataAssignments(),
       allowTimingWrites: true
     });
     emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
@@ -6017,6 +6018,7 @@ async function onRunOrchestrationMatrix() {
         effectCatalog: state.effectCatalog,
         layoutMode: currentLayoutMode(),
         timingOwnership: getSequenceTimingOwnershipRows(),
+        metadataAssignments: buildEffectiveMetadataAssignments(),
         allowTimingWrites: true
       });
       return {
@@ -6039,6 +6041,7 @@ async function onRunOrchestrationMatrix() {
         effectCatalog: state.effectCatalog,
         layoutMode: currentLayoutMode(),
         timingOwnership: getSequenceTimingOwnershipRows(),
+        metadataAssignments: buildEffectiveMetadataAssignments(),
         allowTimingWrites: true
       });
       return {
@@ -6070,6 +6073,7 @@ async function onRunOrchestrationMatrix() {
         effectCatalog: state.effectCatalog,
         layoutMode: currentLayoutMode(),
         timingOwnership: getSequenceTimingOwnershipRows(),
+        metadataAssignments: buildEffectiveMetadataAssignments(),
         allowTimingWrites: true
       }).commands;
       return {
@@ -7478,6 +7482,7 @@ function rebuildSequenceAgentStateFromCurrentIntent() {
     groupsById: state.sceneGraph?.groupsById || {},
     submodelsById: state.sceneGraph?.submodelsById || {},
     timingOwnership: getSequenceTimingOwnershipRows(),
+    metadataAssignments: buildEffectiveMetadataAssignments(),
     allowTimingWrites: true
   });
   const planGate = validateSequenceAgentContractGate("plan", sequencerPlan, "design-id-rebuild");

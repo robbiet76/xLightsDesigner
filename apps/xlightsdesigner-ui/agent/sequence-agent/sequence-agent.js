@@ -14,6 +14,8 @@ import {
   buildStage1TrainingKnowledgeMetadata
 } from "./trained-effect-knowledge.js";
 import {
+  filterAvoidedEffects,
+  selectPreferredEffect,
   chooseSafeFallbackChain,
   resolveSummaryFallbackEffect,
   firstAvailableEffect,
@@ -320,6 +322,32 @@ function buildAvailableEffectSet(effectCatalog = null) {
   return names.length ? new Set(names) : null;
 }
 
+function buildMetadataAssignmentIndex(metadataAssignments = []) {
+  const out = new Map();
+  for (const row of normArray(metadataAssignments)) {
+    const targetId = normText(row?.targetId);
+    if (!targetId) continue;
+    out.set(targetId, row);
+  }
+  return out;
+}
+
+function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
+  const out = [];
+  const seen = new Set();
+  for (const targetId of normArray(targetIds).map((row) => normText(row)).filter(Boolean)) {
+    const assignment = metadataAssignmentIndex.get(targetId);
+    const values = normArray(assignment?.effectAvoidances).map((row) => normText(row)).filter(Boolean);
+    for (const value of values) {
+      const key = value.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(value);
+    }
+  }
+  return out;
+}
+
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -329,9 +357,10 @@ function inferEffectNameFromSectionPlan({
   targetIds = [],
   displayElements = [],
   sectionDirective = null,
-  availableEffects = null
+  availableEffects = null,
+  effectAvoidances = []
 } = {}) {
-  const hinted = firstAvailableEffect(effectHints, availableEffects);
+  const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
   if (hinted) return hinted;
   const familyDriven = recommendEffectsForVisualFamilies({
     preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
@@ -339,7 +368,7 @@ function inferEffectNameFromSectionPlan({
     displayElements,
     limit: 1
   });
-  const familyChosen = firstAvailableEffect(familyDriven.map((row) => row?.effectName), availableEffects);
+  const familyChosen = selectPreferredEffect(familyDriven.map((row) => row?.effectName), { availableEffects, effectAvoidances });
   if (familyChosen) return familyChosen;
   const directiveText = [
     normText(sectionDirective?.sectionPurpose),
@@ -361,20 +390,24 @@ function inferEffectNameFromSectionPlan({
     displayElements,
     limit: 1
   });
-  const trainedChosen = firstAvailableEffect(trained.map((row) => row?.effectName), availableEffects);
+  const trainedEffectNames = filterAvoidedEffects(trained.map((row) => row?.effectName), effectAvoidances);
+  const trainedChosen = firstAvailableEffect(trainedEffectNames, availableEffects);
   if (trainedChosen) {
     if (trainedChosen === "On" && cinematicWarmCue && !explicitStaticCue) {
-      const alternate = firstAvailableEffect(
-        trained.map((row) => row?.effectName).filter((row) => normText(row) !== "On"),
-        availableEffects
-      ) || firstAvailableEffect(chooseSafeFallbackChain("trainedOnAlternate"), availableEffects);
+      const alternate = selectPreferredEffect(
+        trainedEffectNames.filter((row) => normText(row) !== "On"),
+        { availableEffects, effectAvoidances }
+      ) || selectPreferredEffect(chooseSafeFallbackChain("trainedOnAlternate"), { availableEffects, effectAvoidances });
       if (alternate) return alternate;
     }
     return trainedChosen;
   }
 
-  return resolveSummaryFallbackEffect(summary, availableEffects)
-    || firstAvailableEffect(chooseSafeFallbackChain("default"), availableEffects)
+  return selectPreferredEffect(
+    [resolveSummaryFallbackEffect(summary, availableEffects)].filter(Boolean),
+    { availableEffects, effectAvoidances }
+  )
+    || selectPreferredEffect(chooseSafeFallbackChain("default"), { availableEffects, effectAvoidances })
     || "Color Wash";
 }
 
@@ -396,16 +429,18 @@ function buildStructuredExecutionLine({
   return `${sectionText} / ${targetText} / apply ${effectText} effect${paletteClause} for the requested duration using the current target timing`;
 }
 
-function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null } = {}) {
+function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null, metadataAssignments = [] } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
   const effectPlacements = normArray(scope?.executionStrategy?.effectPlacements);
   const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
   const availableEffects = buildAvailableEffectSet(effectCatalog);
+  const metadataAssignmentIndex = buildMetadataAssignmentIndex(metadataAssignments);
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
+        const effectAvoidances = collectEffectAvoidancesForTargets(row?.targetIds || scope.targetIds, metadataAssignmentIndex);
         const effectName = inferEffectNameFromSectionPlan({
           section: row?.section,
           energy: sectionDirective?.energyTarget || row?.energy,
@@ -415,7 +450,8 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           targetIds: row?.targetIds || scope.targetIds,
           displayElements,
           sectionDirective,
-          availableEffects
+          availableEffects,
+          effectAvoidances
         });
         return buildStructuredExecutionLine({
           section: row?.section,
@@ -790,6 +826,7 @@ export function buildSequenceAgentPlan({
   submodelsById = {},
   timingOwnership = [],
   allowTimingWrites = true,
+  metadataAssignments = [],
   stageOverrides = {}
 } = {}) {
   const warnings = [];
@@ -833,7 +870,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.effect_strategy === "function"
       ? stageOverrides.effect_strategy({ scope, analysisHandoff: safeAnalysis, timing })
-      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog }))
+      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog, metadataAssignments }))
   });
 
   const graph = runStage({

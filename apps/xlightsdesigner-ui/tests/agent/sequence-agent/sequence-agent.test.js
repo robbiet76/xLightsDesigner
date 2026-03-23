@@ -224,6 +224,51 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
 });
 
+test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track C", artist: "Artist C" },
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 0, endMs: 1000, energy: "high", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Give the chorus a rhythmic pulse.",
+      mode: "revise",
+      scope: {
+        targetIds: ["MegaTree"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Chorus 1",
+            energy: "high",
+            density: "medium",
+            intentSummary: "rhythmic pulse",
+            targetIds: ["MegaTree"],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    metadataAssignments: [
+      {
+        targetId: "MegaTree",
+        effectAvoidances: ["Bars"]
+      }
+    ],
+    effectCatalog: sampleCatalog()
+  });
+
+  const combined = out.executionLines.join("\n");
+  assert.match(combined, /Shimmer|Color Wash|On/);
+  assert.doesNotMatch(combined, /\bBars\b/);
+});
+
 test("sequence_agent clamps effect placement windows to sequence duration", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

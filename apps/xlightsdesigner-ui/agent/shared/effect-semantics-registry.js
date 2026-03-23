@@ -384,6 +384,37 @@ export function firstAvailableEffect(effectNames = [], availableEffects = null) 
   return normalized.find((row) => availableEffects.has(row)) || "";
 }
 
+export function buildEffectAvoidanceSet(effectAvoidances = []) {
+  const blocked = new Set();
+  for (const raw of arr(effectAvoidances)) {
+    const text = str(raw);
+    if (!text) continue;
+    const canonical = canonicalizeEffectNameAlias(text);
+    if (canonical) {
+      blocked.add(canonical.toLowerCase());
+      const family = getCanonicalEffectFamily(canonical);
+      if (family) blocked.add(`family:${family.toLowerCase()}`);
+      continue;
+    }
+    blocked.add(text.toLowerCase());
+  }
+  return blocked;
+}
+
+export function filterAvoidedEffects(effectNames = [], effectAvoidances = []) {
+  const normalized = uniqueStrings(effectNames);
+  if (!normalized.length) return [];
+  const blocked = buildEffectAvoidanceSet(effectAvoidances);
+  if (!blocked.size) return normalized;
+  return normalized.filter((name) => {
+    const canonical = canonicalizeEffectNameAlias(name);
+    const family = getCanonicalEffectFamily(canonical);
+    if (blocked.has(canonical.toLowerCase())) return false;
+    if (family && blocked.has(`family:${family.toLowerCase()}`)) return false;
+    return true;
+  });
+}
+
 export function chooseSafeFallbackChain(kind = "") {
   return SAFE_EFFECT_FALLBACKS[str(kind)] || [];
 }
@@ -485,6 +516,11 @@ export function resolveSummaryFallbackEffect(summary = "", availableEffects = nu
     return firstAvailableEffect(chooseSafeFallbackChain(rule.key), availableEffects) || str(rule.defaultEffect);
   }
   return "";
+}
+
+export function selectPreferredEffect(effectNames = [], { availableEffects = null, effectAvoidances = [] } = {}) {
+  const filtered = filterAvoidedEffects(effectNames, effectAvoidances);
+  return firstAvailableEffect(filtered, availableEffects);
 }
 
 export function resolveSectionIntentSummary({
