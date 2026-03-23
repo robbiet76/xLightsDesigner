@@ -2453,7 +2453,7 @@ function tryLoadProjectSnapshot(projectName, showFolder) {
   return true;
 }
 
-const routes = ["settings", "project", "metadata", "audio", "sequence", "design", "review", "history"];
+const routes = ["settings", "project", "metadata", "audio", "design", "sequence", "review", "history"];
 
 function setRoute(route) {
   const normalizedRoute = route === "inspiration"
