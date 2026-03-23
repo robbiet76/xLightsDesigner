@@ -1484,8 +1484,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <span class="banner">Targets: ${data.targetsSummary?.total || 0} total (${data.targetsSummary?.submodelCount || 0} submodels)</span>
           </div>
           <div class="metadata-toolbar row">
-            <span class="banner">Trained-supported models: ${data.targetsSummary?.trainedSupportedModels || 0}</span>
-            <span class="banner">Runtime-only models: ${data.targetsSummary?.runtimeOnlyModels || 0}</span>
             <span class="banner">Metadata ready: ${data.targetsSummary?.metadataReadyModels || 0}</span>
             <span class="banner">Metadata partial: ${data.targetsSummary?.metadataPartialModels || 0}</span>
             <span class="banner">Metadata needed: ${data.targetsSummary?.metadataNeededModels || 0}</span>
@@ -1515,9 +1513,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       <div><strong>Name</strong><p>${String(data.activeTarget.displayName || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Type</strong><p>${String(data.activeTarget.type || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Canonical</strong><p>${String(data.activeTarget.canonicalType || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Support</strong><p>${String(data.activeTarget.supportState || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Metadata</strong><p>${String(data.activeTarget.metadataCompleteness || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
-                      <div><strong>Training</strong><p>${String(data.activeTarget.trainedSupportState || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Confidence</strong><p>${Number.isFinite(Number(data.activeTarget.confidence)) ? Number(data.activeTarget.confidence).toFixed(2) : "-"}</p></div>
                     </div>
                     <div class="artifact-detail-grid">
@@ -1531,7 +1527,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                           }).join("")}
                         </select>
                       </p></div>
-                      <div><strong>Trained Buckets</strong><p>${(Array.isArray(data.activeTarget.trainedBuckets) && data.activeTarget.trainedBuckets.length ? data.activeTarget.trainedBuckets.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Groups</strong><p>${(Array.isArray(data.activeTarget.groupMemberships) && data.activeTarget.groupMemberships.length ? data.activeTarget.groupMemberships.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Submodels</strong><p>${String(data.activeTarget.submodelCount || data.activeTarget.memberCount || 0)}</p></div>
                     </div>
@@ -1615,7 +1610,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th style="width:36px;">Sel</th>
                   <th>Name</th>
                   <th>Type</th>
-                  <th>Support</th>
                   <th>Metadata</th>
                   <th>Canonical</th>
                   <th>Inferred</th>
@@ -1624,7 +1618,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th></th>
                   <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
                   <th><input id="metadata-filter-type" value="${(state.ui.metadataFilterType || "").replace(/"/g, "&quot;")}" placeholder="type (comma-separated)..." /></th>
-                  <th><input id="metadata-filter-support" value="${(state.ui.metadataFilterSupport || "").replace(/"/g, "&quot;")}" placeholder="support..." /></th>
                   <th>
                     <input id="metadata-filter-metadata" value="${(state.ui.metadataFilterMetadata || "").replace(/"/g, "&quot;")}" placeholder="metadata..." />
                     <select id="metadata-filter-dimension">
@@ -1660,14 +1653,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                             <td><input type="checkbox" data-metadata-select="${String(m.id).replace(/\"/g, "&quot;")}" ${selected} /></td>
                             <td><button data-metadata-focus="${String(m.id).replace(/\"/g, "&quot;")}"${focused}>${String(m.displayName || "(unnamed)").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</button></td>
                             <td>${type.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
-                            <td>${support.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${metadataCompleteness.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                           </tr>`;
                         })
                         .join("")
-                    : `<tr><td colspan="7">No targets found.</td></tr>`
+                    : `<tr><td colspan="6">No targets found.</td></tr>`
                 }
               </tbody>
             </table>
