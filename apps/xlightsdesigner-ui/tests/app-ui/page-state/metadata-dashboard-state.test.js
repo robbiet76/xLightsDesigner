@@ -5,10 +5,6 @@ import { buildMetadataDashboardState } from "../../../app-ui/page-state/metadata
 
 function buildHelpers() {
   return {
-    getMetadataTagRecords: () => [
-      { name: "character", description: "Character prop", category: "semantic", source: "controlled", controlled: true },
-      { name: "support", description: "Supporting prop", category: "role", source: "controlled", controlled: true }
-    ],
     buildMetadataTargets: () => [
       { id: "Snowman", displayName: "Snowman", type: "model" },
       { id: "SpiralTrees", displayName: "SpiralTrees", type: "model" }
@@ -86,8 +82,7 @@ function buildHelpers() {
       if (!tokens.length) return true;
       return tokens.some((token) => String(value || "").includes(token));
     },
-    normalizeMetadataSelectionIds: (ids) => Array.isArray(ids) ? ids.map(String) : [],
-    normalizeMetadataSelectedTags: (tags) => Array.isArray(tags) ? tags.map(String) : []
+    normalizeMetadataSelectionIds: (ids) => Array.isArray(ids) ? ids.map(String) : []
   };
 }
 
@@ -99,13 +94,10 @@ test("metadata dashboard summarizes tag and target state", () => {
         assignments: [{ targetId: "Snowman", tags: ["character"] }]
       },
       ui: {
-        metadataSelectedTags: ["character"],
         metadataSelectionIds: ["Snowman"],
         metadataFilterName: "",
         metadataFilterType: "",
-        metadataFilterTags: "",
-        metadataFilterMetadata: "",
-        metadataNewTag: ""
+        metadataFilterMetadata: ""
       },
       health: {}
     },
@@ -113,18 +105,13 @@ test("metadata dashboard summarizes tag and target state", () => {
   });
 
   assert.equal(dashboard.page, "metadata");
-  assert.equal(dashboard.data.tags.length, 2);
-  assert.equal(dashboard.data.tags[0].category.length > 0, true);
   assert.equal(dashboard.data.rows.length, 2);
   assert.equal(dashboard.data.selectedCount, 1);
-  assert.equal(dashboard.data.hasSelectedTags, true);
   assert.equal(dashboard.data.targetsSummary.trainedSupportedModels, 1);
   assert.equal(dashboard.data.targetsSummary.runtimeOnlyModels, 1);
   assert.equal(dashboard.data.targetsSummary.metadataReadyModels, 0);
   assert.equal(dashboard.data.targetsSummary.metadataPartialModels, 1);
   assert.equal(dashboard.data.targetsSummary.metadataNeededModels, 1);
-  assert.equal(dashboard.data.targetsSummary.controlledTagCount, 2);
-  assert.equal(dashboard.data.targetsSummary.customTagCount, 0);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.total, 2);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.highPriority, 1);
   assert.equal(dashboard.data.targetsSummary.recommendationSummary.items[0].type, "semantic_hints");
@@ -149,13 +136,10 @@ test("metadata dashboard applies filters to target rows", () => {
       submodels: [],
       metadata: { assignments: [] },
       ui: {
-        metadataSelectedTags: [],
         metadataSelectionIds: [],
         metadataFilterName: "snow",
         metadataFilterType: "",
-        metadataFilterTags: "",
-        metadataFilterMetadata: "",
-        metadataNewTag: ""
+        metadataFilterMetadata: ""
       },
       health: {}
     },
@@ -172,13 +156,10 @@ test("metadata dashboard applies metadata completeness filter to target rows", (
       submodels: [],
       metadata: { assignments: [] },
       ui: {
-        metadataSelectedTags: [],
         metadataSelectionIds: [],
         metadataFilterName: "",
         metadataFilterType: "",
-        metadataFilterTags: "",
-        metadataFilterMetadata: "metadata_partial",
-        metadataNewTag: ""
+        metadataFilterMetadata: "metadata_partial"
       },
       health: {}
     },
@@ -195,14 +176,11 @@ test("metadata dashboard applies metadata completeness dimension filter to targe
       submodels: [],
       metadata: { assignments: [] },
       ui: {
-        metadataSelectedTags: [],
         metadataSelectionIds: [],
         metadataFilterName: "",
         metadataFilterType: "",
-        metadataFilterTags: "",
         metadataFilterMetadata: "metadata_needed",
-        metadataFilterDimension: "role",
-        metadataNewTag: ""
+        metadataFilterDimension: "role"
       },
       health: {}
     },

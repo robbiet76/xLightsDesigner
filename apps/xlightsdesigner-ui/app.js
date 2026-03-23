@@ -7756,8 +7756,7 @@ function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignm
 }
 
 function getMetadataTagRecords() {
-  const raw = Array.isArray(state.metadata?.tags) ? state.metadata.tags : [];
-  return mergeMetadataTagRecords(raw);
+  return mergeMetadataTagRecords([]);
 }
 
 function setMetadataTagRecords(records) {

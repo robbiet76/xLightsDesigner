@@ -33,16 +33,9 @@ export function bindScreenEvents({
   onToggleReferenceEligible,
   removePaletteSwatch,
   onRefreshModels,
-  addMetadataTag,
-  applyTagsToSelectedMetadataTargets,
-  removeTagsFromSelectedMetadataTargets,
-  clearMetadataSelectedTags,
   selectAllMetadataTargets,
   clearMetadataSelection,
-  toggleMetadataSelectedTag,
-  updateMetadataTagDescription,
   toggleMetadataSelectionId,
-  removeMetadataTag,
   removeMetadataAssignment,
   setMetadataFocusedTarget,
   updateMetadataTargetRolePreference,
@@ -267,24 +260,6 @@ export function bindScreenEvents({
     metadataFilterTypeInput.addEventListener("blur", commitTypeFilter);
   }
 
-  const metadataFilterTagsInput = app.querySelector("#metadata-filter-tags");
-  if (metadataFilterTagsInput) {
-    const commitTagsFilter = () => {
-      const next = metadataFilterTagsInput.value;
-      if (next === state.ui.metadataFilterTags) return;
-      state.ui.metadataFilterTags = next;
-      persist();
-      render();
-    };
-    metadataFilterTagsInput.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      commitTagsFilter();
-    });
-    metadataFilterTagsInput.addEventListener("change", commitTagsFilter);
-    metadataFilterTagsInput.addEventListener("blur", commitTagsFilter);
-  }
-
   const metadataFilterSupportInput = app.querySelector("#metadata-filter-support");
   if (metadataFilterSupportInput) {
     const commitSupportFilter = () => {
@@ -334,34 +309,6 @@ export function bindScreenEvents({
     metadataFilterDimensionSelect.addEventListener("blur", commitMetadataFilterDimension);
   }
 
-  const metadataNewTagInput = app.querySelector("#metadata-new-tag");
-  if (metadataNewTagInput) {
-    metadataNewTagInput.addEventListener("input", () => {
-      state.ui.metadataNewTag = metadataNewTagInput.value;
-      persist();
-    });
-  }
-
-  const metadataNewTagDescriptionInput = app.querySelector("#metadata-new-tag-description");
-  if (metadataNewTagDescriptionInput) {
-    metadataNewTagDescriptionInput.addEventListener("input", () => {
-      state.ui.metadataNewTagDescription = metadataNewTagDescriptionInput.value;
-      persist();
-    });
-  }
-
-  const metadataAddTagBtn = app.querySelector("#metadata-add-tag");
-  if (metadataAddTagBtn) metadataAddTagBtn.addEventListener("click", addMetadataTag);
-
-  const metadataApplySelectedBtn = app.querySelector("#metadata-apply-selected-tags");
-  if (metadataApplySelectedBtn) metadataApplySelectedBtn.addEventListener("click", applyTagsToSelectedMetadataTargets);
-
-  const metadataRemoveSelectedBtn = app.querySelector("#metadata-remove-selected-tags");
-  if (metadataRemoveSelectedBtn) metadataRemoveSelectedBtn.addEventListener("click", removeTagsFromSelectedMetadataTargets);
-
-  const metadataClearTagsBtn = app.querySelector("#metadata-clear-tags");
-  if (metadataClearTagsBtn) metadataClearTagsBtn.addEventListener("click", clearMetadataSelectedTags);
-
   const metadataSelectVisibleBtn = app.querySelector("#metadata-select-visible");
   if (metadataSelectVisibleBtn) {
     metadataSelectVisibleBtn.addEventListener("click", () => {
@@ -374,26 +321,6 @@ export function bindScreenEvents({
 
   const metadataClearSelectionBtn = app.querySelector("#metadata-clear-selection");
   if (metadataClearSelectionBtn) metadataClearSelectionBtn.addEventListener("click", clearMetadataSelection);
-
-  app.querySelectorAll("[data-metadata-tag-toggle]").forEach((input) => {
-    input.addEventListener("change", () => {
-      toggleMetadataSelectedTag(input.dataset.metadataTagToggle);
-      render();
-    });
-  });
-
-  app.querySelectorAll("[data-metadata-tag-description]").forEach((input) => {
-    const commit = () => {
-      updateMetadataTagDescription(input.dataset.metadataTagDescription, input.value);
-    };
-    input.addEventListener("change", commit);
-    input.addEventListener("blur", commit);
-    input.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      commit();
-    });
-  });
 
   app.querySelectorAll("[data-metadata-select]").forEach((input) => {
     input.addEventListener("change", () => {
@@ -456,10 +383,6 @@ export function bindScreenEvents({
       event.preventDefault();
       commit();
     });
-  });
-
-  app.querySelectorAll("[data-remove-tag]").forEach((btn) => {
-    btn.addEventListener("click", () => removeMetadataTag(btn.dataset.removeTag));
   });
 
   app.querySelectorAll("[data-remove-assignment]").forEach((btn) => {

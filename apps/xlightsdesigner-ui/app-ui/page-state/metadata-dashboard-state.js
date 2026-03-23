@@ -45,12 +45,10 @@ export function buildMetadataDashboardState({
   helpers = {}
 } = {}) {
   const {
-    getMetadataTagRecords = () => [],
     buildMetadataTargets = () => [],
     buildNormalizedTargetMetadataRecords = () => [],
     matchesMetadataFilterValue = () => true,
-    normalizeMetadataSelectionIds = () => [],
-    normalizeMetadataSelectedTags = () => []
+    normalizeMetadataSelectionIds = () => []
   } = helpers;
 
   const hasLoadedSubmodels = (state.submodels || []).length > 0;
@@ -59,22 +57,18 @@ export function buildMetadataDashboardState({
     .map((target) => ({ id: target.id, name: target.displayName, raw: target }))
     .filter((target) => target.id);
   const assignments = state.metadata?.assignments || [];
-  const tags = getMetadataTagRecords();
   const assignmentByTargetId = new Map(assignments.map((a) => [String(a.targetId), a]));
   const normalizedRecords = buildNormalizedTargetMetadataRecords();
   const normalizedByTargetId = new Map(normalizedRecords.map((row) => [String(row.targetId), row]));
   const nameFilter = String(state.ui?.metadataFilterName || "");
   const typeFilter = String(state.ui?.metadataFilterType || "");
-  const tagsFilter = String(state.ui?.metadataFilterTags || "");
   const supportFilter = String(state.ui?.metadataFilterSupport || "");
   const metadataFilter = String(state.ui?.metadataFilterMetadata || "");
   const metadataFilterDimension = String(state.ui?.metadataFilterDimension || "overall");
   const filteredModels = modelOptions.filter((m) => {
     const rowName = str(m?.raw?.displayName).toLowerCase();
     const rowType = str(m?.raw?.type).toLowerCase();
-    const assignment = assignmentByTargetId.get(String(m.id));
     const normalized = normalizedByTargetId.get(String(m.id));
-    const rowTags = escapeTagList(assignment?.tags).join(", ").toLowerCase();
     const rowSupport = str(normalized?.semantics?.supportState).toLowerCase();
     const rowMetadataCompleteness = str(
       metadataFilterDimension === "overall"
@@ -83,7 +77,6 @@ export function buildMetadataDashboardState({
     ).toLowerCase();
     if (!matchesMetadataFilterValue(rowName, nameFilter)) return false;
     if (!matchesMetadataFilterValue(rowType, typeFilter)) return false;
-    if (!matchesMetadataFilterValue(rowTags, tagsFilter)) return false;
     if (!matchesMetadataFilterValue(rowSupport, supportFilter)) return false;
     if (!matchesMetadataFilterValue(rowMetadataCompleteness, metadataFilter)) return false;
     return true;
@@ -91,15 +84,11 @@ export function buildMetadataDashboardState({
   const submodelCount = modelOptions.filter((target) => target.raw.type === "submodel").length;
   const selectedIds = new Set(normalizeMetadataSelectionIds(state.ui?.metadataSelectionIds));
   const selectedCount = selectedIds.size;
-  const selectedEditorTags = normalizeMetadataSelectedTags(state.ui?.metadataSelectedTags);
-  const draftTagName = str(state.ui?.metadataNewTag);
   const activeTargetId = str(state.ui?.metadataTargetId || filteredModels[0]?.id || "");
   const activeTarget = activeTargetId ? modelOptions.find((target) => str(target.id) === activeTargetId) : null;
-  const activeAssignment = activeTargetId ? assignmentByTargetId.get(activeTargetId) : null;
   const activeNormalized = activeTargetId ? normalizedByTargetId.get(activeTargetId) : null;
   const hasVisibleTargets = filteredModels.length > 0;
   const hasSelectedTargets = selectedCount > 0;
-  const hasSelectedTags = selectedEditorTags.length > 0;
   const submodelBanner = state.health?.submodelDiscoveryError
     ? `Submodels unavailable: ${state.health.submodelDiscoveryError}`
     : "No submodels found in current show data.";
@@ -122,20 +111,9 @@ export function buildMetadataDashboardState({
     data: {
       submodelsAvailable: hasLoadedSubmodels,
       submodelBanner,
-      draftTagName,
-      tags: tags.map((tag) => ({
-        name: str(tag.name),
-        description: str(tag.description),
-        category: str(tag.category || ""),
-        source: str(tag.source || ""),
-        controlled: tag.controlled === true,
-        selected: selectedEditorTags.includes(str(tag.name))
-      })),
-      selectedTagNames: selectedEditorTags,
       selectedCount,
       hasVisibleTargets,
       hasSelectedTargets,
-      hasSelectedTags,
       activeTargetId,
       metadataFilterDimension,
       targetsSummary: {
@@ -146,8 +124,6 @@ export function buildMetadataDashboardState({
         metadataReadyModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_ready").length,
         metadataPartialModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_partial").length,
         metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length,
-        controlledTagCount: tags.filter((row) => row.controlled === true).length,
-        customTagCount: tags.filter((row) => row.controlled !== true).length,
         recommendationSummary: summarizeRecommendations(normalizedRecords)
       },
       activeTarget: activeNormalized
@@ -171,7 +147,6 @@ export function buildMetadataDashboardState({
             trainedBuckets: escapeTagList(activeNormalized?.training?.trainedModelBuckets),
             inferredRole: str(activeNormalized?.semantics?.inferredRole),
             inferredSemanticTraits: escapeTagList(activeNormalized?.semantics?.inferredSemanticTraits),
-            userTags: escapeTagList(activeAssignment?.tags || activeNormalized?.user?.tags),
             rolePreference: str(activeNormalized?.user?.rolePreference),
             semanticHints: escapeTagList(activeNormalized?.user?.semanticHints),
             submodelHints: escapeTagList(activeNormalized?.user?.submodelHints),
@@ -211,7 +186,6 @@ export function buildMetadataDashboardState({
           id: str(m.id),
           displayName: str(m.raw?.displayName || "(unnamed)"),
           type: str(m.raw?.type),
-          tags: escapeTagList(assignment?.tags),
           selected: selectedIds.has(str(m.id)),
           focused: activeTargetId === str(m.id),
           supportState: str(normalized?.semantics?.supportState),

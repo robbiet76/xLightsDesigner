@@ -1479,7 +1479,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div class="metadata-panel-header">
             <div>
               <div class="artifact-kicker">Metadata</div>
-              <h3>Tag Application Grid</h3>
+              <h3>Metadata Overview</h3>
             </div>
             <span class="banner">Targets: ${data.targetsSummary?.total || 0} total (${data.targetsSummary?.submodelCount || 0} submodels)</span>
           </div>
@@ -1489,8 +1489,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <span class="banner">Metadata ready: ${data.targetsSummary?.metadataReadyModels || 0}</span>
             <span class="banner">Metadata partial: ${data.targetsSummary?.metadataPartialModels || 0}</span>
             <span class="banner">Metadata needed: ${data.targetsSummary?.metadataNeededModels || 0}</span>
-            <span class="banner">Controlled tags: ${data.targetsSummary?.controlledTagCount || 0}</span>
-            <span class="banner">Custom tags: ${data.targetsSummary?.customTagCount || 0}</span>
           </div>
           ${data.targetsSummary?.recommendationSummary?.total
             ? `<div class="metadata-toolbar row">
@@ -1501,67 +1499,9 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   : ""}
               </div>`
             : ""}
-          <details class="metadata-tag-manager">
-            <summary>
-              <span>Tag Library</span>
-              <span class="banner">${data.tags?.length || 0} tags</span>
-            </summary>
-            <div class="field metadata-tag-manager-body">
-              <div class="metadata-grid-wrap metadata-tag-grid-wrap">
-                <table class="metadata-grid metadata-tag-grid">
-                  <thead>
-                    <tr>
-                      <th style="width:42px;">Use</th>
-                      <th style="width:220px;">Tag</th>
-                      <th style="width:110px;">Class</th>
-                      <th>Description</th>
-                      <th style="width:70px;"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr class="new-tag-row">
-                      <td></td>
-                      <td><input id="metadata-new-tag" value="${(data.draftTagName || "").replace(/"/g, "&quot;")}" placeholder="new project tag" /></td>
-                      <td><span class="banner">custom</span></td>
-                      <td><input id="metadata-new-tag-description" value="${(state.ui.metadataNewTagDescription || "").replace(/"/g, "&quot;")}" placeholder="description (optional)" /></td>
-                      <td><button id="metadata-add-tag" ${data.draftTagName ? "" : "disabled"}>Add</button></td>
-                    </tr>
-                    ${
-                      data.tags?.length
-                        ? data.tags
-                            .map((tag) => {
-                              const safeTag = String(tag.name).replace(/\"/g, "&quot;");
-                              const checked = tag.selected ? "checked" : "";
-                              const safeCategory = String(tag.category || tag.source || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                              const deleteCell = tag.controlled
-                                ? `<span class="banner">System</span>`
-                                : `<button data-remove-tag="${safeTag}">Delete</button>`;
-                              const descriptionCell = tag.controlled
-                                ? `${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}`
-                                : `<input data-metadata-tag-description="${safeTag}" value="${String(tag.description || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")}" placeholder="description" />`;
-                              return `<tr>
-                                <td><input type="checkbox" data-metadata-tag-toggle="${safeTag}" ${checked} /></td>
-                                <td>${String(tag.name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-                                <td><span class="banner">${safeCategory}</span></td>
-                                <td>${descriptionCell}</td>
-                                <td>${deleteCell}</td>
-                              </tr>`;
-                            })
-                            .join("")
-                        : `<tr><td colspan="5">No tags yet.</td></tr>`
-                    }
-                  </tbody>
-                </table>
-              </div>
-              <div class="metadata-toolbar row">
-                <button id="metadata-clear-tags" ${data.hasSelectedTags ? "" : "disabled"}>Clear Tag Picks</button>
-                <span class="banner">Active tags: ${data.selectedTagNames?.length || 0}</span>
-              </div>
-            </div>
-          </details>
           <div class="metadata-toolbar row">
             <span class="banner">Selected targets: ${data.selectedCount || 0}</span>
-            <span class="banner">Active tags: ${data.selectedTagNames?.length ? data.selectedTagNames.join(", ") : "none"}</span>
+            <span class="banner">Structured metadata only</span>
           </div>
           ${
             data.activeTarget
@@ -1594,7 +1534,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                       <div><strong>Trained Buckets</strong><p>${(Array.isArray(data.activeTarget.trainedBuckets) && data.activeTarget.trainedBuckets.length ? data.activeTarget.trainedBuckets.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Groups</strong><p>${(Array.isArray(data.activeTarget.groupMemberships) && data.activeTarget.groupMemberships.length ? data.activeTarget.groupMemberships.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                       <div><strong>Submodels</strong><p>${String(data.activeTarget.submodelCount || data.activeTarget.memberCount || 0)}</p></div>
-                      <div><strong>User Tags</strong><p>${(Array.isArray(data.activeTarget.userTags) && data.activeTarget.userTags.length ? data.activeTarget.userTags.join(", ") : "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>
                     </div>
                     ${data.activeTarget.submodelMetadata
                       ? `<div class="artifact-detail-grid">
@@ -1667,8 +1606,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <div class="metadata-toolbar row">
             <button id="metadata-select-visible" ${data.hasVisibleTargets ? "" : "disabled"}>Select Visible</button>
             <button id="metadata-clear-selection" ${data.hasSelectedTargets ? "" : "disabled"}>Clear Selection</button>
-            <button id="metadata-apply-selected-tags" ${(data.hasSelectedTargets && data.hasSelectedTags) ? "" : "disabled"}>Apply Tags To Selected</button>
-            <button id="metadata-remove-selected-tags" ${(data.hasSelectedTargets && data.hasSelectedTags) ? "" : "disabled"}>Remove Tags From Selected</button>
           </div>
           ${data.submodelsAvailable ? "" : `<p class="banner">${String(data.submodelBanner || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}
           <div class="metadata-grid-wrap metadata-targets-wrap">
@@ -1682,7 +1619,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   <th>Metadata</th>
                   <th>Canonical</th>
                   <th>Inferred</th>
-                  <th>Tags</th>
                 </tr>
                 <tr class="metadata-filter-row">
                   <th></th>
@@ -1704,7 +1640,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                   </th>
                   <th><span class="banner">filter dim</span></th>
                   <th></th>
-                  <th><input id="metadata-filter-tags" value="${(state.ui.metadataFilterTags || "").replace(/"/g, "&quot;")}" placeholder="tags (comma-separated)..." /></th>
                 </tr>
               </thead>
               <tbody>
@@ -1719,7 +1654,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                           const inferred = Array.isArray(m?.inferredSemanticTraits) && m.inferredSemanticTraits.length
                             ? m.inferredSemanticTraits.slice(0, 3).join(", ")
                             : (String(m?.inferredRole || "") || "-");
-                          const tagList = Array.isArray(m?.tags) && m.tags.length ? m.tags.join(", ") : "-";
                           const selected = m.selected ? "checked" : "";
                           const focused = m.focused ? ' class="active-chip"' : "";
                           return `<tr>
@@ -1730,11 +1664,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                             <td>${metadataCompleteness.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${canonical.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") || "-"}</td>
                             <td>${inferred.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-                            <td>${tagList.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
                           </tr>`;
                         })
                         .join("")
-                    : `<tr><td colspan="8">No targets found.</td></tr>`
+                    : `<tr><td colspan="7">No targets found.</td></tr>`
                 }
               </tbody>
             </table>
