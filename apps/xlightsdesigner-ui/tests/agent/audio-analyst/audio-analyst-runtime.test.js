@@ -93,6 +93,12 @@ test("audio analyst runtime builds canonical artifact from pipeline result", () 
   assert.equal(artifact.structure.sections.length, 1);
   assert.equal(artifact.provenance.service.providerUsed, "beatnet");
   assert.deepEqual(artifact.provenance.evidence.sources, ["https://songbpm.example/song"]);
+  assert.equal(artifact.modules.identity.data.title, "Song");
+  assert.equal(artifact.modules.rhythm.data.bars.length, 1);
+  assert.equal(artifact.modules.harmony.data.chords.length, 1);
+  assert.equal(artifact.modules.lyrics.data.lines.length, 1);
+  assert.equal(artifact.modules.structureBackbone.data.segments.length, 1);
+  assert.equal(artifact.modules.semanticStructure.data.sections.length, 1);
 });
 
 test("audio analyst runtime derives analysis handoff from canonical artifact", () => {
@@ -178,6 +184,8 @@ test("audio analyst runtime preserves generic section labels without fabricated 
   );
   const handoff = buildAnalysisHandoffFromArtifact(artifact);
   assert.deepEqual(handoff.structure.sections, []);
+  assert.equal(artifact.modules.structureBackbone.data.segments.length, 6);
+  assert.equal(artifact.modules.semanticStructure.data.sections.length, 0);
 });
 
 test("audio analyst input gate blocks sequence-aware payloads", () => {

@@ -84,6 +84,13 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.equal(artifact.capabilities.lyrics.available, true);
   assert.equal(artifact.capabilities.structure.source, "service+llm");
   assert.equal(artifact.provenance.evidence.webValidation.confidence, "high");
+  assert.equal(typeof artifact.modules, "object");
+  assert.equal(artifact.modules.identity.data.title, "Song");
+  assert.equal(artifact.modules.rhythm.data.timeSignature, "4/4");
+  assert.equal(artifact.modules.harmony.data.chords.length, 1);
+  assert.equal(artifact.modules.lyrics.data.lines.length, 1);
+  assert.equal(artifact.modules.structureBackbone.data.segments.length, 1);
+  assert.equal(artifact.modules.semanticStructure.data.sections.length, 1);
 });
 
 test("analysis handoff remains distilled while artifact keeps richer evidence", () => {
@@ -95,7 +102,9 @@ test("analysis handoff remains distilled while artifact keeps richer evidence", 
   const handoff = buildAnalysisHandoffFromArtifact(artifact, null);
 
   assert.equal(typeof artifact.capabilities, "object");
+  assert.equal(typeof artifact.modules, "object");
   assert.equal(handoff.timing.bpm, 128);
   assert.equal(handoff.evidence.serviceSummary.includes("128 BPM"), true);
   assert.equal(Object.prototype.hasOwnProperty.call(handoff, "capabilities"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(handoff, "modules"), false);
 });

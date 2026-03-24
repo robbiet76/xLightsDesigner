@@ -45,6 +45,29 @@ function pushRequiredObject(errors, obj, path, label = "") {
   if (!isPlainObject(getByPath(obj, path))) errors.push(`${label || path} is required`);
 }
 
+function validateAnalysisModule(errors, obj, path, label = "") {
+  const prefix = label || path;
+  const moduleObj = getByPath(obj, path);
+  if (moduleObj == null) return;
+  if (!isPlainObject(moduleObj)) {
+    errors.push(`${prefix} must be an object when provided`);
+    return;
+  }
+  if (!isPlainObject(moduleObj.data)) errors.push(`${prefix}.data is required`);
+  if (moduleObj.confidence != null && !Number.isFinite(Number(moduleObj.confidence))) {
+    errors.push(`${prefix}.confidence must be numeric when provided`);
+  }
+  if (moduleObj.sources != null && !Array.isArray(moduleObj.sources)) {
+    errors.push(`${prefix}.sources must be an array when provided`);
+  }
+  if (moduleObj.diagnostics != null && !Array.isArray(moduleObj.diagnostics)) {
+    errors.push(`${prefix}.diagnostics must be an array when provided`);
+  }
+  if (moduleObj.cacheKey != null && typeof moduleObj.cacheKey !== "string") {
+    errors.push(`${prefix}.cacheKey must be a string when provided`);
+  }
+}
+
 export function validateAudioAnalystInput(payload = {}) {
   const errors = [];
   const obj = isPlainObject(payload) ? payload : {};
@@ -125,6 +148,14 @@ export function validateAnalysisArtifact(payload = {}) {
   if (obj.lyrics?.lines != null && !Array.isArray(obj.lyrics.lines)) errors.push("lyrics.lines must be an array when provided");
   if (obj.structure?.sections != null && !Array.isArray(obj.structure.sections)) errors.push("structure.sections must be an array when provided");
   if (obj.diagnostics?.warnings != null && !Array.isArray(obj.diagnostics.warnings)) errors.push("diagnostics.warnings must be an array when provided");
+  if (obj.modules != null && !isPlainObject(obj.modules)) errors.push("modules must be an object when provided");
+
+  validateAnalysisModule(errors, obj, "modules.identity");
+  validateAnalysisModule(errors, obj, "modules.rhythm");
+  validateAnalysisModule(errors, obj, "modules.harmony");
+  validateAnalysisModule(errors, obj, "modules.lyrics");
+  validateAnalysisModule(errors, obj, "modules.structureBackbone");
+  validateAnalysisModule(errors, obj, "modules.semanticStructure");
 
   return errors;
 }

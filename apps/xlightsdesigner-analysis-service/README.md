@@ -132,6 +132,27 @@ Output metrics:
 - `startMaeMs` / `endMaeMs` (boundary timing error)
 - per-case mismatches for quick review
 
+## Downbeat Provider Comparison
+
+Use this to compare current service beat/bar outputs against a direct `madmom`
+downbeat pass on the same local audio.
+
+```bash
+cd apps/xlightsdesigner-analysis-service
+./.venv310/bin/python eval/compare_downbeat_providers.py \
+  "/path/to/song.mp3" \
+  --out /tmp/xld-downbeat-compare.json
+```
+
+This reports, per provider:
+- `bpm`
+- `timeSignature`
+- `beatsPerBar`
+- `beatCount`
+- `barCount`
+- `downbeatCount`
+- `medianBeatMs`
+
 ### Stanza Split Parameter Optimization
 
 Use this to tune stanza segmentation systematically (instead of manual trial/error).

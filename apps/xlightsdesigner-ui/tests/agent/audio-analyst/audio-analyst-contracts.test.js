@@ -105,7 +105,7 @@ test("audio analyst failure taxonomy prefers partial artifact state", () => {
   assert.equal(classifyAudioAnalysisFailureReason("artifact", "", artifact), "lyrics_unavailable");
 });
 
-test("audio analyst artifact relabels generic section names into semantic fallback labels", () => {
+test("audio analyst artifact preserves generic section names and excludes them from semantic modules", () => {
   const artifact = buildAnalysisArtifactFromPipelineResult({
     audioPath: "/tmp/Song.mp3",
     mediaId: "media-456",
@@ -143,6 +143,8 @@ test("audio analyst artifact relabels generic section names into semantic fallba
 
   assert.deepEqual(
     artifact.structure.sections.map((row) => row.label),
-    ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"]
+    ["Section 1", "Section 2", "Section 3", "Section 4", "Section 5", "Section 6", "Section 7", "Section 8"]
   );
+  assert.equal(artifact.modules.structureBackbone.data.segments.length, 8);
+  assert.equal(artifact.modules.semanticStructure.data.sections.length, 0);
 });

@@ -136,6 +136,150 @@ function isGenericStructureSection(section = {}) {
   return Boolean(section?.provenance?.genericLabel) || looksGenericSectionLabel(section?.label || section?.name);
 }
 
+function confidenceScore(label = "") {
+  const lower = str(label).toLowerCase();
+  if (lower === "high") return 0.85;
+  if (lower === "medium") return 0.6;
+  if (lower === "low") return 0.3;
+  const n = Number(label);
+  if (Number.isFinite(n)) return Math.max(0, Math.min(1, n));
+  return 0;
+}
+
+function buildAnalysisModules({
+  audioPath = "",
+  mediaId = "",
+  identity = {},
+  timing = {},
+  harmonic = {},
+  lyrics = {},
+  structure = {},
+  pipeline = {},
+  rawMeta = {},
+  requestedProvider = "",
+  analysisBaseUrl = ""
+} = {}) {
+  const resolvedMediaId = str(mediaId) || deriveFallbackMediaId(audioPath);
+  const timingConfidence = timing?.beats?.length > 0 && timing?.bars?.length > 0
+    ? "high"
+    : ((timing?.beats?.length > 0 || timing?.bars?.length > 0) ? "medium" : "low");
+  const harmonicConfidence = str(harmonic?.confidence || (Array.isArray(harmonic?.chords) && harmonic.chords.length ? "medium" : "low"));
+  const lyricsConfidence = Array.isArray(lyrics?.lines) && lyrics.lines.length ? "high" : "low";
+  const structureConfidence = str(structure?.confidence || (Array.isArray(structure?.sections) && structure.sections.length ? "medium" : "low"));
+  const structureSections = rows(structure?.sections);
+  const semanticSections = structureSections.filter((row) => !isGenericStructureSection(row));
+  const backboneFamilies = Array.from(new Set(
+    structureSections
+      .map((row) => str(row?.family || row?.groupId || row?.canonicalLabel || row?.label))
+      .filter(Boolean)
+  )).map((family, index) => ({
+    familyId: `family-${index + 1}`,
+    label: family
+  }));
+  const provenanceSources = [
+    str(rawMeta?.engine || requestedProvider),
+    str(rawMeta?.trackIdentity?.provider || identity?.provider),
+    str(rawMeta?.lyricsSource || lyrics?.source),
+    str(rawMeta?.sectionSource || structure?.source),
+    str(rawMeta?.chordAnalysis?.engine || harmonic?.source),
+    str(analysisBaseUrl)
+  ].filter(Boolean);
+  const baseDiagnostics = {
+    identity: [
+      str(identity?.provider ? `identity provider: ${identity.provider}` : ""),
+      str(identity?.title || identity?.artist ? "track identity resolved" : "track identity unresolved")
+    ].filter(Boolean),
+    rhythm: [
+      str(timing?.bpm != null ? `tempo=${timing.bpm}` : ""),
+      str(timing?.timeSignature ? `timeSignature=${timing.timeSignature}` : ""),
+      str(timing?.beats?.length ? `beats=${timing.beats.length}` : ""),
+      str(timing?.bars?.length ? `bars=${timing.bars.length}` : "")
+    ].filter(Boolean),
+    harmony: [
+      str(harmonic?.chords?.length ? `chords=${harmonic.chords.length}` : "no chords"),
+      str(harmonic?.source ? `source=${harmonic.source}` : "")
+    ].filter(Boolean),
+    lyrics: [
+      str(lyrics?.source ? `source=${lyrics.source}` : ""),
+      str(lyrics?.lines?.length ? `lines=${lyrics.lines.length}` : "no lyrics")
+    ].filter(Boolean),
+    structureBackbone: [
+      str(structure?.source ? `source=${structure.source}` : ""),
+      str(structureSections.length ? `segments=${structureSections.length}` : "no segments"),
+      str(backboneFamilies.length ? `families=${backboneFamilies.length}` : "")
+    ].filter(Boolean),
+    semanticStructure: [
+      str(semanticSections.length ? `semanticSections=${semanticSections.length}` : "no semantic sections"),
+      str(semanticSections.length !== structureSections.length ? "generic sections excluded from semantic layer" : "")
+    ].filter(Boolean)
+  };
+
+  return {
+    identity: {
+      data: {
+        title: str(identity?.title),
+        artist: str(identity?.artist),
+        album: str(identity?.album),
+        isrc: str(identity?.isrc)
+      },
+      confidence: identity?.title || identity?.artist || identity?.isrc ? 0.8 : 0,
+      sources: Array.from(new Set([str(identity?.provider || rawMeta?.trackIdentity?.provider), str(analysisBaseUrl)]).values()).filter(Boolean),
+      diagnostics: baseDiagnostics.identity,
+      cacheKey: `${resolvedMediaId}:identity:v1`
+    },
+    rhythm: {
+      data: {
+        bpm: finiteOrNull(timing?.bpm),
+        timeSignature: str(timing?.timeSignature || "unknown"),
+        beats: rows(timing?.beats),
+        bars: rows(timing?.bars)
+      },
+      confidence: confidenceScore(timingConfidence),
+      sources: Array.from(new Set([str(rawMeta?.engine || requestedProvider), str(analysisBaseUrl)]).values()).filter(Boolean),
+      diagnostics: baseDiagnostics.rhythm,
+      cacheKey: `${resolvedMediaId}:rhythm:v1`
+    },
+    harmony: {
+      data: {
+        chords: rows(harmonic?.chords)
+      },
+      confidence: confidenceScore(harmonicConfidence),
+      sources: Array.from(new Set([str(harmonic?.source || rawMeta?.chordAnalysis?.engine), str(analysisBaseUrl)]).values()).filter(Boolean),
+      diagnostics: baseDiagnostics.harmony,
+      cacheKey: `${resolvedMediaId}:harmony:v1`
+    },
+    lyrics: {
+      data: {
+        hasSyncedLyrics: Boolean(lyrics?.hasSyncedLyrics),
+        lines: rows(lyrics?.lines)
+      },
+      confidence: confidenceScore(lyricsConfidence),
+      sources: Array.from(new Set([str(lyrics?.source || rawMeta?.lyricsSource), str(analysisBaseUrl)]).values()).filter(Boolean),
+      diagnostics: baseDiagnostics.lyrics,
+      cacheKey: `${resolvedMediaId}:lyrics:v1`
+    },
+    structureBackbone: {
+      data: {
+        segments: structureSections,
+        families: backboneFamilies
+      },
+      confidence: confidenceScore(structureConfidence),
+      sources: Array.from(new Set([str(structure?.source || rawMeta?.sectionSource), str(analysisBaseUrl)]).values()).filter(Boolean),
+      diagnostics: baseDiagnostics.structureBackbone,
+      cacheKey: `${resolvedMediaId}:structure-backbone:v1`
+    },
+    semanticStructure: {
+      data: {
+        sections: semanticSections
+      },
+      confidence: semanticSections.length ? confidenceScore(structureConfidence) : 0,
+      sources: provenanceSources,
+      diagnostics: baseDiagnostics.semanticStructure,
+      cacheKey: `${resolvedMediaId}:semantic-structure:v1`
+    }
+  };
+}
+
 export const AUDIO_ANALYST_ARTIFACT_TYPE = "analysis_artifact_v1";
 export const AUDIO_ANALYST_ARTIFACT_VERSION = AUDIO_ANALYST_CONTRACT_VERSION;
 
@@ -163,6 +307,49 @@ export function buildAnalysisArtifactFromPipelineResult({
   const lyricsLines = rows(raw?.lyrics);
   const sections = normalizeStructureSections(raw?.sections);
   const webTempoEvidence = isPlainObject(rawMeta?.webTempoEvidence) ? rawMeta.webTempoEvidence : {};
+  const identityBlock = {
+    title: str(identity?.title),
+    artist: str(identity?.artist),
+    album: str(identity?.album),
+    isrc: str(identity?.isrc),
+    provider: str(identity?.provider || rawMeta?.trackIdentity?.provider)
+  };
+  const timingBlock = {
+    bpm: finiteOrNull(timing?.tempoEstimate ?? raw?.bpm),
+    timeSignature: str(timing?.timeSignature || raw?.timeSignature || "unknown"),
+    beats,
+    bars
+  };
+  const harmonicBlock = {
+    chords,
+    confidence: str(rawMeta?.chordAnalysis?.avgMarginConfidence),
+    source: str(rawMeta?.chordAnalysis?.engine || "analysis-service")
+  };
+  const lyricsBlock = {
+    hasSyncedLyrics: Boolean(timing?.hasLyricsTrack || lyricsLines.length),
+    lines: lyricsLines,
+    source: str(rawMeta?.lyricsSource || "none"),
+    sourceError: str(rawMeta?.lyricsSourceError),
+    shiftMs: finiteOrNull(rawMeta?.lyricsGlobalShiftMs)
+  };
+  const structureBlock = {
+    sections,
+    source: str(rawMeta?.sectionSource || (pipeline.structureDerived ? "service+llm" : "pending")),
+    confidence: pipeline.structureDerived ? "medium" : "low"
+  };
+  const modules = buildAnalysisModules({
+    audioPath,
+    mediaId,
+    identity: identityBlock,
+    timing: timingBlock,
+    harmonic: harmonicBlock,
+    lyrics: lyricsBlock,
+    structure: structureBlock,
+    pipeline,
+    rawMeta,
+    requestedProvider,
+    analysisBaseUrl
+  });
 
   return finalizeArtifact({
     artifactType: AUDIO_ANALYST_ARTIFACT_TYPE,
@@ -176,35 +363,12 @@ export function buildAnalysisArtifactFromPipelineResult({
       sampleRate: finiteOrNull(media?.sampleRate),
       channels: finiteOrNull(media?.channels)
     },
-    identity: {
-      title: str(identity?.title),
-      artist: str(identity?.artist),
-      album: str(identity?.album),
-      isrc: str(identity?.isrc),
-      provider: str(identity?.provider || rawMeta?.trackIdentity?.provider)
-    },
-    timing: {
-      bpm: finiteOrNull(timing?.tempoEstimate ?? raw?.bpm),
-      timeSignature: str(timing?.timeSignature || raw?.timeSignature || "unknown"),
-      beats,
-      bars
-    },
-    harmonic: {
-      chords,
-      confidence: str(rawMeta?.chordAnalysis?.avgMarginConfidence)
-    },
-    lyrics: {
-      hasSyncedLyrics: Boolean(timing?.hasLyricsTrack || lyricsLines.length),
-      lines: lyricsLines,
-      source: str(rawMeta?.lyricsSource || "none"),
-      sourceError: str(rawMeta?.lyricsSourceError),
-      shiftMs: finiteOrNull(rawMeta?.lyricsGlobalShiftMs)
-    },
-    structure: {
-      sections,
-      source: str(rawMeta?.sectionSource || (pipeline.structureDerived ? "service+llm" : "pending")),
-      confidence: pipeline.structureDerived ? "medium" : "low"
-    },
+    identity: identityBlock,
+    timing: timingBlock,
+    harmonic: harmonicBlock,
+    lyrics: lyricsBlock,
+    structure: structureBlock,
+    modules,
     capabilities: {
       identity: {
         available: Boolean(str(identity?.title) || str(identity?.artist) || str(identity?.isrc)),
@@ -278,7 +442,14 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
   const harmonic = isPlainObject(artifact?.harmonic) ? artifact.harmonic : {};
   const lyrics = isPlainObject(artifact?.lyrics) ? artifact.lyrics : {};
   const structure = isPlainObject(artifact?.structure) ? artifact.structure : {};
-  const semanticSections = rows(structure?.sections).filter((row) => !isGenericStructureSection(row));
+  const modules = isPlainObject(artifact?.modules) ? artifact.modules : {};
+  const moduleSemantic = isPlainObject(modules?.semanticStructure) ? modules.semanticStructure : {};
+  const moduleRhythm = isPlainObject(modules?.rhythm) ? modules.rhythm : {};
+  const moduleHarmony = isPlainObject(modules?.harmony) ? modules.harmony : {};
+  const moduleLyrics = isPlainObject(modules?.lyrics) ? modules.lyrics : {};
+  const semanticSections = rows(moduleSemantic?.data?.sections).length
+    ? rows(moduleSemantic.data.sections)
+    : rows(structure?.sections).filter((row) => !isGenericStructureSection(row));
   const provenance = isPlainObject(artifact?.provenance) ? artifact.provenance : {};
   const evidence = isPlainObject(provenance?.evidence) ? provenance.evidence : {};
   const briefSeed = isPlainObject(artifact?.briefSeed) ? artifact.briefSeed : {};
@@ -291,24 +462,40 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
       isrc: str(identity?.isrc)
     },
     timing: {
-      bpm: finiteOrNull(timing?.bpm),
-      timeSignature: str(timing?.timeSignature || "unknown"),
-      beatsArtifact: Array.isArray(timing?.beats) && timing.beats.length ? "beats" : "",
-      barsArtifact: Array.isArray(timing?.bars) && timing.bars.length ? "bars" : ""
+      bpm: finiteOrNull(moduleRhythm?.data?.bpm ?? timing?.bpm),
+      timeSignature: str(moduleRhythm?.data?.timeSignature || timing?.timeSignature || "unknown"),
+      beatsArtifact: Array.isArray(moduleRhythm?.data?.beats) && moduleRhythm.data.beats.length
+        ? "beats"
+        : (Array.isArray(timing?.beats) && timing.beats.length ? "beats" : ""),
+      barsArtifact: Array.isArray(moduleRhythm?.data?.bars) && moduleRhythm.data.bars.length
+        ? "bars"
+        : (Array.isArray(timing?.bars) && timing.bars.length ? "bars" : "")
     },
     structure: {
       sections: semanticSections,
-      source: str(structure?.source),
-      confidence: semanticSections.length ? str(structure?.confidence || "low") : "low"
+      source: str(moduleSemantic?.sources?.[0] || structure?.source),
+      confidence: semanticSections.length
+        ? str(structure?.confidence || (moduleSemantic?.confidence != null ? moduleSemantic.confidence : "low"))
+        : "low"
     },
     lyrics: {
-      hasSyncedLyrics: Boolean(lyrics?.hasSyncedLyrics),
-      lyricsArtifact: Array.isArray(lyrics?.lines) && lyrics.lines.length ? "lyrics" : ""
+      hasSyncedLyrics: Boolean(moduleLyrics?.data?.hasSyncedLyrics ?? lyrics?.hasSyncedLyrics),
+      lyricsArtifact: Array.isArray(moduleLyrics?.data?.lines) && moduleLyrics.data.lines.length
+        ? "lyrics"
+        : (Array.isArray(lyrics?.lines) && lyrics.lines.length ? "lyrics" : "")
     },
     chords: {
-      hasChords: Array.isArray(harmonic?.chords) && harmonic.chords.length > 0,
-      chordsArtifact: Array.isArray(harmonic?.chords) && harmonic.chords.length ? "chords" : "",
-      confidence: str(harmonic?.confidence || ((Array.isArray(harmonic?.chords) && harmonic.chords.length) ? "medium" : "low"))
+      hasChords: Array.isArray(moduleHarmony?.data?.chords) && moduleHarmony.data.chords.length > 0
+        ? true
+        : (Array.isArray(harmonic?.chords) && harmonic.chords.length > 0),
+      chordsArtifact: Array.isArray(moduleHarmony?.data?.chords) && moduleHarmony.data.chords.length
+        ? "chords"
+        : (Array.isArray(harmonic?.chords) && harmonic.chords.length ? "chords" : ""),
+      confidence: str(
+        harmonic?.confidence
+        || (moduleHarmony?.confidence != null ? moduleHarmony.confidence : "")
+        || ((Array.isArray(harmonic?.chords) && harmonic.chords.length) ? "medium" : "low")
+      )
     },
     briefSeed: {
       tone: str(briefSeed?.songContext),

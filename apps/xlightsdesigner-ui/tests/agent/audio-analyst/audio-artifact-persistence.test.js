@@ -247,6 +247,10 @@ test("persisted canonical artifact retains full capability payloads for downstre
   assert.equal(readRes.artifact.capabilities.timing.available, true);
   assert.equal(readRes.artifact.capabilities.lyrics.available, true);
   assert.equal(readRes.artifact.capabilities.structure.available, true);
+  assert.equal(readRes.artifact.modules.rhythm.data.beats.length, 1);
+  assert.equal(readRes.artifact.modules.lyrics.data.lines.length, 1);
+  assert.equal(readRes.artifact.modules.structureBackbone.data.segments.length, 1);
+  assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 1);
 });
 
 test("persisted partial artifact preserves degraded status and missing-capability truth", async (t) => {
@@ -279,5 +283,8 @@ test("persisted partial artifact preserves degraded status and missing-capabilit
   assert.equal(readRes.artifact.capabilities.structure.available, false);
   assert.equal(readRes.artifact.lyrics.lines.length, 0);
   assert.equal(readRes.artifact.structure.sections.length, 0);
+  assert.equal(readRes.artifact.modules.rhythm.data.beats.length, 1);
+  assert.equal(readRes.artifact.modules.lyrics.data.lines.length, 0);
+  assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 0);
   assert.ok(readRes.artifact.diagnostics.warnings.some((row) => row.includes("no synced lyrics")));
 });
