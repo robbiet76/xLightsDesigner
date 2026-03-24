@@ -108,3 +108,41 @@ test("buildMusicDesignContext derives fallback phrase cues from bars when lyric 
     ]
   );
 });
+
+test("buildMusicDesignContext falls back to analysisHandoff timing data when analysisArtifact is absent", () => {
+  const context = buildMusicDesignContext({
+    analysisArtifact: null,
+    analysisHandoff: {
+      timing: {
+        beats: [
+          { startMs: 1000, endMs: 1500, label: "1" },
+          { startMs: 1500, endMs: 2000, label: "2" }
+        ],
+        bars: [
+          { startMs: 1000, endMs: 2000, label: "Bar 1" },
+          { startMs: 2000, endMs: 3000, label: "Bar 2" }
+        ]
+      },
+      lyrics: {
+        lines: [
+          { startMs: 1000, endMs: 2000, label: "Phrase One" }
+        ],
+        sections: [{ label: "Chorus" }]
+      },
+      harmonic: {
+        chords: [
+          { startMs: 1000, endMs: 2000, label: "C" }
+        ]
+      },
+      structure: {
+        sections: [
+          { label: "Chorus", startMs: 1000, endMs: 3000 }
+        ]
+      }
+    }
+  });
+
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.beat[0].trackName, "XD: Beat Grid");
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.chord[0].trackName, "XD: Chord Changes");
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
+});

@@ -787,6 +787,93 @@ test("sequence_agent clamps final non-structure cue mark to duration minus one",
   ]);
 });
 
+test("sequence_agent writes complete cue tracks for scoped sections, not only referenced placement fragments", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 1000, endMs: 5000 },
+          { label: "Chorus 1", startMs: 5000, endMs: 9000 }
+        ]
+      },
+      timing: {
+        beats: [
+          { startMs: 5000, endMs: 5500, label: "1" },
+          { startMs: 5500, endMs: 6000, label: "2" },
+          { startMs: 6000, endMs: 6500, label: "3" },
+          { startMs: 6500, endMs: 7000, label: "4" }
+        ],
+        bars: [
+          { startMs: 5000, endMs: 7000, label: "Bar 1" },
+          { startMs: 7000, endMs: 9000, label: "Bar 2" }
+        ]
+      },
+      lyrics: {
+        lines: [
+          { startMs: 5000, endMs: 7000, label: "Phrase Hold" },
+          { startMs: 7000, endMs: 9000, label: "Phrase Release" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Build a whole-sequence pass.",
+      mode: "create",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: []
+      },
+      executionStrategy: {
+        passScope: "whole_sequence",
+        primarySections: ["Verse 1", "Chorus 1"],
+        effectPlacements: [
+          {
+            placementId: "phrase-fragment",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 0,
+            effectName: "Wave",
+            startMs: 7000,
+            endMs: 9000,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase Release",
+              anchorStartMs: 7000,
+              anchorEndMs: 9000,
+              alignmentMode: "phrase_window"
+            }
+          }
+        ]
+      }
+    },
+    sourceLines: ["General / Snowman / whole-sequence pass"],
+    sequenceSettings: {
+      durationMs: 9000
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Wave", params: [] }
+    ])
+  });
+
+  const beatGridMarks = out.commands.find(
+    (row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Beat Grid"
+  );
+  const phraseCueMarks = out.commands.find(
+    (row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Phrase Cues"
+  );
+
+  assert.deepEqual(beatGridMarks.params.marks, [
+    { startMs: 5000, endMs: 5500, label: "1" },
+    { startMs: 5500, endMs: 6000, label: "2" },
+    { startMs: 6000, endMs: 6500, label: "3" },
+    { startMs: 6500, endMs: 7000, label: "4" }
+  ]);
+  assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 5000, endMs: 7000, label: "Phrase Hold" },
+    { startMs: 7000, endMs: 8999, label: "Phrase Release" }
+  ]);
+});
+
 test("sequence_agent allows decomposed multi-line direct requests", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

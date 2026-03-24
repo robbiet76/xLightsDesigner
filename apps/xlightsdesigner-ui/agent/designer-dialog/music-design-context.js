@@ -227,10 +227,10 @@ export function buildMusicDesignContext({
     .map((row) => row.label)
     .slice(0, 8);
 
-  const beats = rows(analysisArtifact?.timing?.beats);
-  const bars = rows(analysisArtifact?.timing?.bars);
-  const chords = rows(analysisArtifact?.harmonic?.chords);
-  const lyricLines = rows(analysisArtifact?.lyrics?.lines);
+  const beats = rows(analysisArtifact?.timing?.beats || analysisHandoff?.timing?.beats);
+  const bars = rows(analysisArtifact?.timing?.bars || analysisHandoff?.timing?.bars);
+  const chords = rows(analysisArtifact?.harmonic?.chords || analysisHandoff?.harmonic?.chords);
+  const lyricLines = rows(analysisArtifact?.lyrics?.lines || analysisHandoff?.lyrics?.lines);
   const cueWindowsBySection = buildCueWindowsBySection({
     sections,
     beats,

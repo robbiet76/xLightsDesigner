@@ -23,6 +23,7 @@ import {
   recommendEffectsForVisualFamilies
 } from "../shared/effect-semantics-registry.js";
 import { buildArtifactId } from "../shared/artifact-ids.js";
+import { buildMusicDesignContext } from "../designer-dialog/music-design-context.js";
 
 const STAGE_ORDER = ["scope_resolution", "timing_asset_decision", "effect_strategy", "command_graph_synthesis"];
 
@@ -252,6 +253,36 @@ function deriveEffectiveSequenceSettings({ sequenceSettings = {}, analysisHandof
     base.durationMs = maxEndMs;
   }
   return base;
+}
+
+function buildCueTrackMarksByTrack({ analysisHandoff = {}, sectionNames = [], includeAll = false } = {}) {
+  const musicDesignContext = buildMusicDesignContext({ analysisHandoff });
+  const cueWindowsBySection = musicDesignContext?.designCues?.cueWindowsBySection;
+  if (!cueWindowsBySection || typeof cueWindowsBySection !== "object") return new Map();
+  const requestedSections = includeAll
+    ? Object.keys(cueWindowsBySection)
+    : normArray(sectionNames).map((row) => normText(row)).filter(Boolean);
+  const out = new Map();
+  const seen = new Set();
+  for (const sectionName of requestedSections) {
+    const sectionCues = cueWindowsBySection?.[sectionName];
+    if (!sectionCues || typeof sectionCues !== "object") continue;
+    for (const cueRows of Object.values(sectionCues)) {
+      for (const row of normArray(cueRows)) {
+        const trackName = normText(row?.trackName);
+        const label = normText(row?.label);
+        const startMs = Number(row?.startMs);
+        const endMs = Number(row?.endMs);
+        if (!trackName || !label || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+        const key = `${trackName}::${label}::${startMs}::${endMs}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (!out.has(trackName)) out.set(trackName, []);
+        out.get(trackName).push({ label, startMs, endMs });
+      }
+    }
+  }
+  return out;
 }
 
 function stageScopeResolution({ analysisHandoff = {}, intentHandoff = {}, sourceLines = [] } = {}) {
@@ -532,7 +563,13 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
   };
 }
 
-function buildPlacementMarksByTrack({ effectPlacements = [], sectionWindowsByName = null, defaultTrackName = "", sequenceSettings = {} } = {}) {
+function buildPlacementMarksByTrack({
+  effectPlacements = [],
+  sectionWindowsByName = null,
+  cueTrackMarksByTrack = null,
+  defaultTrackName = "",
+  sequenceSettings = {}
+} = {}) {
   const marksByTrack = new Map();
 
   function ensureTrackEntry(trackName = "") {
@@ -563,6 +600,14 @@ function buildPlacementMarksByTrack({ effectPlacements = [], sectionWindowsByNam
         startMs: window?.startMs,
         endMs: window?.endMs
       });
+    }
+  }
+
+  if (cueTrackMarksByTrack instanceof Map) {
+    for (const [trackName, marks] of cueTrackMarksByTrack.entries()) {
+      for (const mark of normArray(marks)) {
+        addMark(trackName, mark);
+      }
     }
   }
 
@@ -648,6 +693,7 @@ function buildCommandsFromEffectPlacements({
   targetIds = [],
   trackName = "XD: Sequencer Plan",
   sectionWindowsByName = null,
+  cueTrackMarksByTrack = null,
   sequenceSettings = {},
   groupIds = [],
   displayElements = [],
@@ -665,6 +711,7 @@ function buildCommandsFromEffectPlacements({
   const marksByTrack = buildPlacementMarksByTrack({
     effectPlacements: placements,
     sectionWindowsByName,
+    cueTrackMarksByTrack,
     defaultTrackName: trackName,
     sequenceSettings
   });
@@ -781,6 +828,7 @@ function stageCommandGraphSynthesis({
   sourceLines = [],
   effect = {},
   executionStrategy = {},
+  analysisHandoff = {},
   warnings = [],
   capabilityCommands = [],
   effectCatalog = null,
@@ -807,11 +855,18 @@ function stageCommandGraphSynthesis({
   const advertisedCapabilities = Array.isArray(capabilityCommands) ? capabilityCommands.map((row) => normText(row)).filter(Boolean) : [];
   const enableEffectTimingAlignment = !advertisedCapabilities.length || advertisedCapabilities.includes("effects.alignToTiming");
   if (Array.isArray(effect?.effectPlacements) && effect.effectPlacements.length) {
+    const includeAllCueSections = normText(executionStrategy?.passScope) === "whole_sequence";
+    const cueTrackMarksByTrack = buildCueTrackMarksByTrack({
+      analysisHandoff,
+      sectionNames: sectionWindowsByName instanceof Map ? Array.from(sectionWindowsByName.keys()) : [],
+      includeAll: includeAllCueSections
+    });
     const placementGraph = buildCommandsFromEffectPlacements({
       effectPlacements: effect.effectPlacements,
       targetIds,
       trackName,
       sectionWindowsByName,
+      cueTrackMarksByTrack,
       sequenceSettings,
       groupIds,
       displayElements,
@@ -1008,6 +1063,7 @@ export function buildSequenceAgentPlan({
           sourceLines,
           effect,
           executionStrategy: scope.executionStrategy,
+          analysisHandoff: safeAnalysis,
           warnings,
           capabilityCommands,
           effectCatalog,
