@@ -146,6 +146,28 @@ function confidenceScore(label = "") {
   return 0;
 }
 
+function deriveTimingConfidence({ beats = [], bars = [], rhythmProviderAgreement = null } = {}) {
+  let label = "low";
+  if (Array.isArray(beats) && beats.length && Array.isArray(bars) && bars.length) {
+    label = "high";
+  } else if ((Array.isArray(beats) && beats.length) || (Array.isArray(bars) && bars.length)) {
+    label = "medium";
+  }
+  if (
+    rhythmProviderAgreement
+    && rhythmProviderAgreement.enabled
+    && rhythmProviderAgreement.available
+    && (
+      rhythmProviderAgreement.agreedOnTimeSignature === false
+      || rhythmProviderAgreement.agreedOnBeatsPerBar === false
+    )
+  ) {
+    if (label === "high") return "medium";
+    if (label === "medium") return "low";
+  }
+  return label;
+}
+
 function buildAnalysisModules({
   audioPath = "",
   mediaId = "",
@@ -160,15 +182,17 @@ function buildAnalysisModules({
   analysisBaseUrl = ""
 } = {}) {
   const resolvedMediaId = str(mediaId) || deriveFallbackMediaId(audioPath);
-  const timingConfidence = timing?.beats?.length > 0 && timing?.bars?.length > 0
-    ? "high"
-    : ((timing?.beats?.length > 0 || timing?.bars?.length > 0) ? "medium" : "low");
   const harmonicConfidence = str(harmonic?.confidence || (Array.isArray(harmonic?.chords) && harmonic.chords.length ? "medium" : "low"));
   const lyricsConfidence = Array.isArray(lyrics?.lines) && lyrics.lines.length ? "high" : "low";
   const structureConfidence = str(structure?.confidence || (Array.isArray(structure?.sections) && structure.sections.length ? "medium" : "low"));
   const structureSections = rows(structure?.sections);
   const semanticSections = structureSections.filter((row) => !isGenericStructureSection(row));
   const rhythmProviderAgreement = isPlainObject(rawMeta?.rhythmProviderAgreement) ? rawMeta.rhythmProviderAgreement : {};
+  const derivedTimingConfidence = deriveTimingConfidence({
+    beats: timing?.beats,
+    bars: timing?.bars,
+    rhythmProviderAgreement
+  });
   const backboneFamilies = Array.from(new Set(
     structureSections
       .map((row) => str(row?.family || row?.groupId || row?.canonicalLabel || row?.label))
@@ -236,7 +260,7 @@ function buildAnalysisModules({
         bars: rows(timing?.bars),
         providerAgreement: rhythmProviderAgreement
       },
-      confidence: confidenceScore(timingConfidence),
+      confidence: confidenceScore(derivedTimingConfidence),
       sources: Array.from(new Set([str(rawMeta?.engine || requestedProvider), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: [
         ...baseDiagnostics.rhythm,
@@ -347,6 +371,7 @@ export function buildAnalysisArtifactFromPipelineResult({
     source: str(rawMeta?.sectionSource || (pipeline.structureDerived ? "service+llm" : "pending")),
     confidence: pipeline.structureDerived ? "medium" : "low"
   };
+  const rhythmProviderAgreement = isPlainObject(rawMeta?.rhythmProviderAgreement) ? rawMeta.rhythmProviderAgreement : {};
   const modules = buildAnalysisModules({
     audioPath,
     mediaId,
@@ -386,9 +411,13 @@ export function buildAnalysisArtifactFromPipelineResult({
       },
       timing: {
         available: beats.length > 0 || bars.length > 0 || finiteOrNull(timing?.tempoEstimate ?? raw?.bpm) != null,
-        confidence: beats.length > 0 && bars.length > 0 ? "high" : ((beats.length > 0 || bars.length > 0) ? "medium" : "low"),
-        source: "analysis-service"
-      },
+      confidence: deriveTimingConfidence({
+        beats,
+        bars,
+        rhythmProviderAgreement
+      }),
+      source: "analysis-service"
+    },
       harmonic: {
         available: chords.length > 0,
         confidence: str(rawMeta?.chordAnalysis?.avgMarginConfidence || (chords.length ? "medium" : "low")),

@@ -908,6 +908,7 @@ function buildAnalysisServiceEnv() {
   if (!next.ENABLE_WEB_TEMPO_LOOKUP) next.ENABLE_WEB_TEMPO_LOOKUP = "1";
   if (!next.ENABLE_LYRICS_LOOKUP) next.ENABLE_LYRICS_LOOKUP = "1";
   if (!next.ENABLE_MADMOM_CHORDS) next.ENABLE_MADMOM_CHORDS = "1";
+  if (!next.ENABLE_MADMOM_DOWNBEAT_CROSSCHECK) next.ENABLE_MADMOM_DOWNBEAT_CROSSCHECK = "1";
   return next;
 }
 

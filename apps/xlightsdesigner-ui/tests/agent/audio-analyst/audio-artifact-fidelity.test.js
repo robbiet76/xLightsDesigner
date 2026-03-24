@@ -90,7 +90,7 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   });
 
   assert.equal(artifact.capabilities.identity.available, true);
-  assert.equal(artifact.capabilities.timing.confidence, "high");
+  assert.equal(artifact.capabilities.timing.confidence, "medium");
   assert.equal(artifact.capabilities.harmonic.confidence, "0.83");
   assert.equal(artifact.capabilities.lyrics.available, true);
   assert.equal(artifact.capabilities.structure.source, "service+llm");
@@ -99,6 +99,7 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.equal(artifact.modules.identity.data.title, "Song");
   assert.equal(artifact.modules.rhythm.data.timeSignature, "4/4");
   assert.equal(artifact.modules.rhythm.data.providerAgreement.secondary.timeSignature, "3/4");
+  assert.ok(artifact.modules.rhythm.diagnostics.some((line) => line.includes("timeSignature disagreement")));
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
   assert.equal(artifact.modules.structureBackbone.data.segments.length, 1);
