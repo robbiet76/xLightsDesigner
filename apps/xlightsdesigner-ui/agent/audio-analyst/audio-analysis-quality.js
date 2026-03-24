@@ -143,6 +143,7 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   const allBpb = sectionMetrics.map((row) => row?.beatsPerBarObserved).filter((row) => Number.isFinite(row));
   const medianBpb = median(allBpb);
   const expectedBpb = parseBeatsPerBarFromTimeSignature(timeSignature);
+  const providerAgreement = artifact?.modules?.rhythm?.data?.providerAgreement;
 
   if (hasGenericStructureLabels(artifact)) issues.push("generic_structure_labels_present");
   if (!hasCompleteSemanticSongStructure(artifact)) issues.push("missing_semantic_song_structure");
@@ -156,6 +157,12 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   }
   if (Number.isFinite(expectedBpb) && Number.isFinite(medianBpb) && Math.abs(medianBpb - expectedBpb) > 0.35) {
     issues.push("bars_do_not_match_time_signature");
+  }
+  if (providerAgreement?.enabled && providerAgreement?.available && providerAgreement?.agreedOnTimeSignature === false) {
+    issues.push("rhythm_provider_time_signature_disagreement");
+  }
+  if (providerAgreement?.enabled && providerAgreement?.available && providerAgreement?.agreedOnBeatsPerBar === false) {
+    issues.push("rhythm_provider_bar_grouping_disagreement");
   }
   if (timeSignature === "2/4" && Number.isFinite(medianBpb) && medianBpb <= 2.1) {
     issues.push("timing_locked_to_duple_meter");
@@ -228,7 +235,8 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
       sectionCount: sections.length,
       timingConfidence: str(artifact?.capabilities?.timing?.confidence),
       structureConfidence: str(artifact?.structure?.confidence),
-      harmonicConfidence: str(artifact?.harmonic?.confidence)
+      harmonicConfidence: str(artifact?.harmonic?.confidence),
+      rhythmProviderAgreement: artifact?.modules?.rhythm?.data?.providerAgreement || null
     },
     provenance: {
       structureSource: str(artifact?.structure?.source),

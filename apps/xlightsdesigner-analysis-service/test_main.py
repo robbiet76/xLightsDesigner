@@ -58,6 +58,27 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertAlmostEqual(scores[2], 0.206)
         self.assertAlmostEqual(scores[4], 0.189)
 
+    def test_build_rhythm_provider_agreement_flags_meter_disagreement(self):
+        agreement = main._build_rhythm_provider_agreement(
+            primary_provider="librosa",
+            primary_beats_per_bar=4,
+            primary_time_signature="4/4",
+            primary_bpm=112.36,
+            secondary_summary={
+                "enabled": True,
+                "available": True,
+                "provider": "madmom_downbeat",
+                "beatsPerBar": 3,
+                "timeSignature": "3/4",
+                "bpm": 95.24,
+            },
+        )
+        self.assertTrue(agreement["enabled"])
+        self.assertTrue(agreement["available"])
+        self.assertFalse(agreement["agreedOnBeatsPerBar"])
+        self.assertFalse(agreement["agreedOnTimeSignature"])
+        self.assertAlmostEqual(agreement["bpmDelta"], 17.12)
+
 
 if __name__ == "__main__":
     unittest.main()

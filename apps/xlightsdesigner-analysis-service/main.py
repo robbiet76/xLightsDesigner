@@ -31,6 +31,8 @@ BeatNetEstimator = None
 CNNChordFeatureProcessor = None
 CRFChordRecognitionProcessor = None
 MadmomSignal = None
+RNNDownBeatProcessor = None
+DBNDownBeatTrackingProcessor = None
 _LIBROSA_IMPORT_ATTEMPTED = False
 _BEATNET_IMPORT_ATTEMPTED = False
 _MADMOM_IMPORT_ATTEMPTED = False
@@ -47,6 +49,9 @@ ENABLE_LYRICS_AUTO_SHIFT = (
 )
 ENABLE_MADMOM_CHORDS = (
     str(os.getenv("ENABLE_MADMOM_CHORDS", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
+ENABLE_MADMOM_DOWNBEAT_CROSSCHECK = (
+    str(os.getenv("ENABLE_MADMOM_DOWNBEAT_CROSSCHECK", "0")).strip().lower() in {"1", "true", "yes", "on"}
 )
 ENABLE_REMOTE_IDENTITY_LOOKUP = (
     str(os.getenv("ENABLE_REMOTE_IDENTITY_LOOKUP", "0")).strip().lower() in {"1", "true", "yes", "on"}
@@ -97,18 +102,23 @@ def _ensure_beatnet():
 
 
 def _ensure_madmom_chords():
-    global CNNChordFeatureProcessor, CRFChordRecognitionProcessor, MadmomSignal, _MADMOM_IMPORT_ATTEMPTED
+    global CNNChordFeatureProcessor, CRFChordRecognitionProcessor, MadmomSignal, RNNDownBeatProcessor, DBNDownBeatTrackingProcessor, _MADMOM_IMPORT_ATTEMPTED
     if not _MADMOM_IMPORT_ATTEMPTED:
         try:
             from madmom.features.chords import CNNChordFeatureProcessor as _CNNChordFeatureProcessor, CRFChordRecognitionProcessor as _CRFChordRecognitionProcessor  # type: ignore
+            from madmom.features.downbeats import RNNDownBeatProcessor as _RNNDownBeatProcessor, DBNDownBeatTrackingProcessor as _DBNDownBeatTrackingProcessor  # type: ignore
             from madmom.audio.signal import Signal as _MadmomSignal  # type: ignore
             CNNChordFeatureProcessor = _CNNChordFeatureProcessor
             CRFChordRecognitionProcessor = _CRFChordRecognitionProcessor
             MadmomSignal = _MadmomSignal
+            RNNDownBeatProcessor = _RNNDownBeatProcessor
+            DBNDownBeatTrackingProcessor = _DBNDownBeatTrackingProcessor
         except Exception:
             CNNChordFeatureProcessor = None
             CRFChordRecognitionProcessor = None
             MadmomSignal = None
+            RNNDownBeatProcessor = None
+            DBNDownBeatTrackingProcessor = None
         _MADMOM_IMPORT_ATTEMPTED = True
     return CNNChordFeatureProcessor, CRFChordRecognitionProcessor, MadmomSignal
 
@@ -154,6 +164,7 @@ def _provider_config_state() -> Dict[str, Any]:
         "webTempoLookupEnabled": bool(ENABLE_WEB_TEMPO_LOOKUP),
         "lyricsLookupEnabled": bool(ENABLE_LYRICS_LOOKUP),
         "madmomChordsEnabled": bool(ENABLE_MADMOM_CHORDS),
+        "madmomDownbeatCrosscheckEnabled": bool(ENABLE_MADMOM_DOWNBEAT_CROSSCHECK),
         "dspFallbackEnabled": bool(ENABLE_DSP_SECTION_FALLBACK),
         "identityCachePath": IDENTITY_CACHE_PATH,
         "missing": missing,
@@ -1217,6 +1228,126 @@ def _derive_bars_from_labeled_beats(
     return _bars_from_beats(beats, beats_per_bar)
 
 
+def _estimate_bpm_from_beat_starts(beat_starts_ms: List[int]) -> Optional[float]:
+    if len(beat_starts_ms) < 2:
+        return None
+    diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
+    med = float(np.median(diffs)) if diffs.size else 0.0
+    if med <= 0:
+        return None
+    return round(60000.0 / med, 2)
+
+
+def _median_beat_ms_from_starts(beat_starts_ms: List[int]) -> Optional[float]:
+    if len(beat_starts_ms) < 2:
+        return None
+    diffs = [int(b) - int(a) for a, b in zip(beat_starts_ms, beat_starts_ms[1:]) if int(b) > int(a)]
+    if not diffs:
+        return None
+    return float(np.median(np.asarray(diffs, dtype=float)))
+
+
+def _detect_madmom_downbeat_summary(y: np.ndarray, sr: int, duration_ms: int) -> Dict[str, Any]:
+    if not ENABLE_MADMOM_DOWNBEAT_CROSSCHECK:
+        return {"enabled": False, "available": False, "reason": "disabled"}
+    _ensure_madmom_chords()
+    if MadmomSignal is None or RNNDownBeatProcessor is None or DBNDownBeatTrackingProcessor is None:
+        return {"enabled": True, "available": False, "reason": "madmom_unavailable"}
+
+    try:
+        signal = MadmomSignal(y.astype("float32"), sample_rate=sr, num_channels=1)
+        activations = RNNDownBeatProcessor()(signal)
+        tracker = DBNDownBeatTrackingProcessor(beats_per_bar=[3, 4], fps=100)
+        result = tracker(activations)
+    except Exception as err:
+        return {"enabled": True, "available": False, "reason": str(err)}
+
+    beat_starts_ms: List[int] = []
+    downbeat_starts: List[int] = []
+    beat_flags: List[int] = []
+    for row in result:
+        try:
+            t = float(row[0])
+            beat_num = int(round(float(row[1])))
+        except Exception:
+            continue
+        ms = int(round(t * 1000.0))
+        if 0 <= ms < duration_ms:
+            beat_starts_ms.append(ms)
+            beat_flags.append(beat_num)
+            if beat_num == 1:
+                downbeat_starts.append(ms)
+
+    beat_starts_ms = sorted(set(beat_starts_ms))
+    if not beat_starts_ms:
+        return {"enabled": True, "available": False, "reason": "no_beats"}
+
+    detected_bpb = max(1, max(beat_flags)) if beat_flags else DEFAULT_BEATS_PER_BAR
+    beats_out: List[Dict[str, Any]] = []
+    for i, start in enumerate(beat_starts_ms):
+        if i + 1 < len(beat_starts_ms):
+            end = int(beat_starts_ms[i + 1])
+        else:
+            step = int(round(_median_beat_ms_from_starts(beat_starts_ms) or 500))
+            end = min(duration_ms, start + max(1, step))
+        beats_out.append({"startMs": int(start), "endMs": max(int(start) + 1, int(end))})
+
+    beats_out = _label_beats_from_downbeats(beats_out, downbeat_starts, detected_bpb)
+    beats_out = _sanitize_marks(beats_out)
+    bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, detected_bpb)
+
+    return {
+        "enabled": True,
+        "available": True,
+        "provider": "madmom_downbeat",
+        "timeSignature": f"{detected_bpb}/4",
+        "beatsPerBar": int(detected_bpb),
+        "beatCount": len(beats_out),
+        "barCount": len(bars_out),
+        "downbeatCount": len([row for row in beats_out if str(row.get("label", "")).strip() == "1"]),
+        "bpm": _estimate_bpm_from_beat_starts([int(row["startMs"]) for row in beats_out]),
+        "medianBeatMs": _median_beat_ms_from_starts([int(row["startMs"]) for row in beats_out]),
+    }
+
+
+def _build_rhythm_provider_agreement(
+    *,
+    primary_provider: str,
+    primary_beats_per_bar: int,
+    primary_time_signature: str,
+    primary_bpm: Optional[float],
+    secondary_summary: Dict[str, Any],
+) -> Dict[str, Any]:
+    enabled = bool(secondary_summary.get("enabled"))
+    available = bool(secondary_summary.get("available"))
+    secondary_bpb = int(secondary_summary.get("beatsPerBar") or 0) if available else 0
+    secondary_sig = str(secondary_summary.get("timeSignature") or "") if available else ""
+    secondary_bpm = secondary_summary.get("bpm") if available else None
+    primary_bpm_num = float(primary_bpm) if primary_bpm is not None else None
+    secondary_bpm_num = float(secondary_bpm) if secondary_bpm is not None else None
+    bpm_delta = None
+    if primary_bpm_num is not None and secondary_bpm_num is not None:
+        bpm_delta = round(abs(primary_bpm_num - secondary_bpm_num), 2)
+
+    return {
+        "enabled": enabled,
+        "available": available,
+        "primaryProvider": str(primary_provider),
+        "secondaryProvider": str(secondary_summary.get("provider") or "madmom_downbeat"),
+        "primary": {
+            "beatsPerBar": int(primary_beats_per_bar),
+            "timeSignature": str(primary_time_signature),
+            "bpm": primary_bpm_num,
+        },
+        "secondary": secondary_summary if available else {
+            "reason": str(secondary_summary.get("reason") or "unavailable")
+        },
+        "agreedOnBeatsPerBar": bool(available and secondary_bpb == int(primary_beats_per_bar)),
+        "agreedOnTimeSignature": bool(available and secondary_sig == str(primary_time_signature)),
+        "bpmDelta": bpm_delta,
+    }
+
+
 def _label_beats_from_downbeats(
     beats: List[Dict[str, Any]],
     downbeat_starts: List[int],
@@ -2115,6 +2246,13 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
         med = float(np.median(diffs)) if diffs.size else 0.0
         if med > 0:
             bpm_est = round(60000.0 / med, 2)
+    rhythm_provider_agreement = _build_rhythm_provider_agreement(
+        primary_provider="beatnet",
+        primary_beats_per_bar=detected_beats_per_bar,
+        primary_time_signature=f"{detected_beats_per_bar}/4",
+        primary_bpm=bpm_est,
+        secondary_summary=_detect_madmom_downbeat_summary(y, sr, duration_ms),
+    )
 
     identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path)
     provider_sections: List[Dict[str, Any]] = []
@@ -2163,6 +2301,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
                 "librosa": quality_librosa,
             },
             "beatGridSelection": beat_grid_info,
+            "rhythmProviderAgreement": rhythm_provider_agreement,
             "chordAnalysis": chord_meta,
         },
     }
@@ -2207,6 +2346,13 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         med = float(np.median(diffs)) if diffs.size else 0.0
         if med > 0:
             bpm_est = float(round(60000.0 / med, 2))
+    rhythm_provider_agreement = _build_rhythm_provider_agreement(
+        primary_provider="librosa",
+        primary_beats_per_bar=int(max(1, int(inferred_bpb))),
+        primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
+        primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+        secondary_summary=_detect_madmom_downbeat_summary(y, sr, duration_ms),
+    )
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
@@ -2256,6 +2402,7 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
                 "selectedSource": "librosa",
                 "librosa": beat_quality,
             },
+            "rhythmProviderAgreement": rhythm_provider_agreement,
             "chordAnalysis": chord_meta,
         },
     }

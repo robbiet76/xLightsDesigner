@@ -168,6 +168,7 @@ function buildAnalysisModules({
   const structureConfidence = str(structure?.confidence || (Array.isArray(structure?.sections) && structure.sections.length ? "medium" : "low"));
   const structureSections = rows(structure?.sections);
   const semanticSections = structureSections.filter((row) => !isGenericStructureSection(row));
+  const rhythmProviderAgreement = isPlainObject(rawMeta?.rhythmProviderAgreement) ? rawMeta.rhythmProviderAgreement : {};
   const backboneFamilies = Array.from(new Set(
     structureSections
       .map((row) => str(row?.family || row?.groupId || row?.canonicalLabel || row?.label))
@@ -232,11 +233,20 @@ function buildAnalysisModules({
         bpm: finiteOrNull(timing?.bpm),
         timeSignature: str(timing?.timeSignature || "unknown"),
         beats: rows(timing?.beats),
-        bars: rows(timing?.bars)
+        bars: rows(timing?.bars),
+        providerAgreement: rhythmProviderAgreement
       },
       confidence: confidenceScore(timingConfidence),
       sources: Array.from(new Set([str(rawMeta?.engine || requestedProvider), str(analysisBaseUrl)]).values()).filter(Boolean),
-      diagnostics: baseDiagnostics.rhythm,
+      diagnostics: [
+        ...baseDiagnostics.rhythm,
+        str(rhythmProviderAgreement?.enabled ? `madmomCrosscheck=${rhythmProviderAgreement.available ? "available" : "unavailable"}` : ""),
+        str(
+          rhythmProviderAgreement?.available && rhythmProviderAgreement?.agreedOnTimeSignature === false
+            ? `timeSignature disagreement: ${rhythmProviderAgreement?.primary?.timeSignature || "unknown"} vs ${rhythmProviderAgreement?.secondary?.timeSignature || "unknown"}`
+            : ""
+        )
+      ].filter(Boolean),
       cacheKey: `${resolvedMediaId}:rhythm:v1`
     },
     harmony: {

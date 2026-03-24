@@ -50,6 +50,23 @@ function sampleArtifact() {
         source: "librosa-chroma-template-v2-independent"
       }
     },
+    modules: {
+      rhythm: {
+        data: {
+          providerAgreement: {
+            enabled: true,
+            available: true,
+            primaryProvider: "librosa",
+            secondaryProvider: "madmom_downbeat",
+            primary: { beatsPerBar: 2, timeSignature: "2/4", bpm: 112.36 },
+            secondary: { provider: "madmom_downbeat", beatsPerBar: 4, timeSignature: "4/4", bpm: 112.9 },
+            agreedOnBeatsPerBar: false,
+            agreedOnTimeSignature: false,
+            bpmDelta: 0.54
+          }
+        }
+      }
+    },
     briefSeed: {
       summaryLines: [
         "Song structure: Section 1, Section 2"
@@ -78,6 +95,8 @@ test("audio analysis quality report flags missing lyric/chord support without in
   assert.equal(report.topLevelIssues.includes("missing_semantic_song_structure"), false);
   assert.ok(report.topLevelIssues.includes("very_low_harmonic_confidence"));
   assert.ok(report.topLevelIssues.includes("timing_locked_to_duple_meter"));
+  assert.ok(report.topLevelIssues.includes("rhythm_provider_time_signature_disagreement"));
+  assert.ok(report.topLevelIssues.includes("rhythm_provider_bar_grouping_disagreement"));
   assert.equal(report.readiness.minimumContract.beatsPresent, true);
   assert.equal(report.readiness.minimumContract.barsPresent, true);
   assert.equal(report.readiness.minimumContract.semanticSongStructurePresent, true);

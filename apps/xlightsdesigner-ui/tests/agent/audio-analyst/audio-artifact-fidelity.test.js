@@ -56,6 +56,17 @@ function samplePipelineResult() {
         engine: "beatnet",
         lyricsSource: "lrclib",
         sectionSource: "service+llm",
+        rhythmProviderAgreement: {
+          enabled: true,
+          available: true,
+          primaryProvider: "beatnet",
+          secondaryProvider: "madmom_downbeat",
+          primary: { beatsPerBar: 4, timeSignature: "4/4", bpm: 128 },
+          secondary: { provider: "madmom_downbeat", beatsPerBar: 3, timeSignature: "3/4", bpm: 126.5 },
+          agreedOnBeatsPerBar: false,
+          agreedOnTimeSignature: false,
+          bpmDelta: 1.5
+        },
         chordAnalysis: {
           engine: "madmom",
           avgMarginConfidence: "0.83"
@@ -87,6 +98,7 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.equal(typeof artifact.modules, "object");
   assert.equal(artifact.modules.identity.data.title, "Song");
   assert.equal(artifact.modules.rhythm.data.timeSignature, "4/4");
+  assert.equal(artifact.modules.rhythm.data.providerAgreement.secondary.timeSignature, "3/4");
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
   assert.equal(artifact.modules.structureBackbone.data.segments.length, 1);
