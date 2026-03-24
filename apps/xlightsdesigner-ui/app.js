@@ -6180,6 +6180,8 @@ async function onSendChat() {
 
   const explicitVisualHintDefinition = parseExplicitVisualHintDefinitionIntent(raw);
   if (explicitVisualHintDefinition) {
+    const normalizedName = normalizeMetadataTagName(explicitVisualHintDefinition.name);
+    const existingHint = getVisualHintDefinitionRecords().find((row) => row.name === normalizedName) || null;
     const record = definePersistedVisualHint(explicitVisualHintDefinition.name, {
       description: explicitVisualHintDefinition.description,
       semanticClass: "custom",
@@ -6188,17 +6190,20 @@ async function onSendChat() {
       source: "managed",
       learnedFrom: "chat_dialog"
     });
+    const acknowledgement = existingHint
+      ? `Updated visual hint definition for ${record?.name || explicitVisualHintDefinition.name}.`
+      : `Saved visual hint definition for ${record?.name || explicitVisualHintDefinition.name}.`;
     state.ui.agentThinking = false;
     addStructuredChatMessage(
       "agent",
-      `Saved visual hint definition for ${record?.name || explicitVisualHintDefinition.name}.`,
+      acknowledgement,
       {
         roleId: "app_assistant",
         displayName: getTeamChatSpeakerLabel("app_assistant"),
         handledBy: "app_assistant"
       }
     );
-    setStatus("info", `Saved visual hint definition for ${record?.name || explicitVisualHintDefinition.name}.`);
+    setStatus("info", acknowledgement);
     saveCurrentProjectSnapshot();
     persist();
     render();

@@ -9,6 +9,7 @@ test("parseExplicitVisualHintDefinitionIntent recognizes explicit define syntax"
   );
 
   assert.deepEqual(out, {
+    mode: "define",
     name: "cool",
     description: "props that should favor cooler color direction and restrained motion",
     behavioralIntent: "props that should favor cooler color direction and restrained motion"
@@ -21,9 +22,23 @@ test("parseExplicitVisualHintDefinitionIntent recognizes means syntax", () => {
   );
 
   assert.deepEqual(out, {
+    mode: "define",
     name: "beat-sync",
     description: "props that are good for visible pulse, hits, and rhythmic support",
     behavioralIntent: "props that are good for visible pulse, hits, and rhythmic support"
+  });
+});
+
+test("parseExplicitVisualHintDefinitionIntent recognizes explicit update syntax", () => {
+  const out = parseExplicitVisualHintDefinitionIntent(
+    'Update visual hint "cool" to mean props that should favor cool tones and restrained motion.'
+  );
+
+  assert.deepEqual(out, {
+    mode: "update",
+    name: "cool",
+    description: "props that should favor cool tones and restrained motion",
+    behavioralIntent: "props that should favor cool tones and restrained motion"
   });
 });
 
