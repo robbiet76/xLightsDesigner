@@ -66,7 +66,7 @@ function buildLocationMetadata({
     zones: {
       horizontal: classifyThirdsZone(x, min.x, max.x, "left", "center", "right"),
       vertical: classifyThirdsZone(y, min.y, max.y, "low", "mid", "high"),
-      depth: classifyThirdsZone(z, min.z, max.z, "foreground", "midground", "background")
+      depth: classifyThirdsZone(z, min.z, max.z, "front", "middle", "rear")
     }
   };
 }
@@ -76,18 +76,149 @@ function normalizePositive(value) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function densityLabel(value) {
+function countCustomModelPixels(customModel = "") {
+  const source = norm(customModel);
+  if (!source) return null;
+  const matches = source.match(/\d+/g);
+  if (!matches?.length) return null;
+  const ids = new Set();
+  for (const match of matches) {
+    const numeric = Number(match);
+    if (Number.isFinite(numeric) && numeric > 0) ids.add(numeric);
+  }
+  return ids.size || null;
+}
+
+function parsePointDataTriplets(value = "") {
+  const raw = norm(value);
+  if (!raw) return [];
+  const parts = raw.split(",").map((row) => Number(row)).filter((row) => Number.isFinite(row));
+  const points = [];
+  for (let index = 0; index + 2 < parts.length; index += 3) {
+    points.push({ x: parts[index], y: parts[index + 1], z: parts[index + 2] });
+  }
+  return points;
+}
+
+function computeScaledPolylineLength(node = {}) {
+  const attrs = node?.attributes || {};
+  const points = parsePointDataTriplets(attrs?.PointData);
+  if (points.length < 2) return null;
+  const scale = node?.transform?.scale || {};
+  const sx = normalizePositive(scale.x) || normalizePositive(attrs?.ScaleX) || 1;
+  const sy = normalizePositive(scale.y) || normalizePositive(attrs?.ScaleY) || 1;
+  const sz = normalizePositive(scale.z) || normalizePositive(attrs?.ScaleZ) || 1;
+  let total = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    const prev = points[index - 1];
+    const next = points[index];
+    const dx = (next.x - prev.x) * sx;
+    const dy = (next.y - prev.y) * sy;
+    const dz = (next.z - prev.z) * sz;
+    total += Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
+  }
+  return normalizePositive(total);
+}
+
+function percentile(values = [], p = 0) {
+  const rows = arr(values).map((row) => Number(row)).filter((row) => Number.isFinite(row)).sort((a, b) => a - b);
+  if (!rows.length) return null;
+  if (rows.length === 1) return rows[0];
+  const clamped = Math.max(0, Math.min(1, Number(p) || 0));
+  const index = (rows.length - 1) * clamped;
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return rows[lower];
+  const t = index - lower;
+  return rows[lower] * (1 - t) + rows[upper] * t;
+}
+
+function labelVisualWeight(value, thresholds = {}) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "";
-  if (n < 0.75) return "sparse";
-  if (n > 2.5) return "dense";
-  return "balanced";
+  const lower = Number(thresholds?.p25);
+  const upper = Number(thresholds?.p75);
+  if (!Number.isFinite(lower) || !Number.isFinite(upper)) return "medium";
+  if (n <= lower) return "light";
+  if (n >= upper) return "heavy";
+  return "medium";
+}
+
+function applyVisualWeightBands(records = []) {
+  const values = arr(records)
+    .map((row) => row?.structure?.densityMetadata?.value)
+    .map((row) => Number(row))
+    .filter((row) => Number.isFinite(row));
+  if (!values.length) return records;
+  const thresholds = {
+    p25: percentile(values, 0.25),
+    p75: percentile(values, 0.75)
+  };
+  for (const record of arr(records)) {
+    const density = record?.structure?.densityMetadata;
+    if (!density) continue;
+    density.label = labelVisualWeight(density.value, thresholds);
+  }
+  return records;
+}
+
+function inferNodeCountFromAttributes(attrs = {}, canonicalType = "") {
+  const canonical = low(canonicalType);
+  if (canonical === "poly_line") {
+    const polylinePixels = normalizePositive(attrs?.parm2);
+    if (polylinePixels != null) return polylinePixels;
+  }
+  if (canonical === "single_line") {
+    const lineStrings = normalizePositive(attrs?.parm1);
+    const linePixelsPerString = normalizePositive(attrs?.parm2);
+    if (lineStrings != null && linePixelsPerString != null) return lineStrings * linePixelsPerString;
+    if (linePixelsPerString != null) return linePixelsPerString;
+  }
+  if (canonical === "tree") {
+    const treeStrings = normalizePositive(attrs?.parm1);
+    const treePixelsPerString = normalizePositive(attrs?.parm2);
+    if (treeStrings != null && treePixelsPerString != null) return treeStrings * treePixelsPerString;
+    if (treePixelsPerString != null) return treePixelsPerString;
+  }
+  if (canonical === "icicles") {
+    const icicleStrings = normalizePositive(attrs?.parm1);
+    const iciclePixelsPerString = normalizePositive(attrs?.parm2);
+    if (icicleStrings != null && iciclePixelsPerString != null) return icicleStrings * iciclePixelsPerString;
+    if (iciclePixelsPerString != null) return iciclePixelsPerString;
+  }
+  if (canonical === "star") {
+    const starStrings = normalizePositive(attrs?.parm1);
+    const starPixelsPerString = normalizePositive(attrs?.parm2);
+    if (starStrings != null && starPixelsPerString != null) return starStrings * starPixelsPerString;
+    if (starPixelsPerString != null) return starPixelsPerString;
+  }
+
+  const direct = normalizePositive(
+    attrs?.PixelCount
+    || attrs?.NumPoints
+    || attrs?.pixelCount
+    || attrs?.numPoints
+  );
+  if (direct != null) return direct;
+
+  if (canonical === "custom") {
+    const customPixels = countCustomModelPixels(attrs?.CustomModel);
+    if (customPixels != null) return customPixels;
+  }
+
+  if (canonical === "matrix_horizontal" || canonical === "matrix_vertical" || canonical === "matrix") {
+    const cols = normalizePositive(attrs?.parm1);
+    const rows = normalizePositive(attrs?.parm2);
+    if (cols != null && rows != null) return cols * rows;
+  }
+  return null;
 }
 
 function buildDensityMetadata({
   targetKind = "",
   node = null,
-  submodelMetadata = {}
+  submodelMetadata = {},
+  canonicalType = ""
 } = {}) {
   if (!node || typeof node !== "object") return null;
   const dims = node.dimensions || {};
@@ -95,27 +226,29 @@ function buildDensityMetadata({
   const height = normalizePositive(dims.height);
   const depth = normalizePositive(dims.depth);
   const attrs = node.attributes || {};
+  const canonical = low(canonicalType || node?.canonicalType || node?.type);
   const nodeCount = targetKind === "submodel"
     ? normalizePositive(submodelMetadata?.nodeCount)
     : normalizePositive(
         node?.nodeCount
-        || attrs?.PixelCount
-        || attrs?.NumPoints
-        || attrs?.pixelCount
-        || attrs?.numPoints
+        || inferNodeCountFromAttributes(attrs, canonical)
       );
 
+  const forceLinear = canonical === "single_line"
+    || canonical === "poly_line"
+    || canonical === "icicles";
   const area = width && height ? width * height : null;
-  const linearSpan = width || height || depth || null;
-  const areaDensity = area && nodeCount ? nodeCount / area : null;
-  const linearDensity = !area && linearSpan && nodeCount ? nodeCount / linearSpan : null;
+  const derivedPolylineLength = forceLinear ? computeScaledPolylineLength(node) : null;
+  const linearSpan = derivedPolylineLength || width || height || depth || null;
+  const areaDensity = !forceLinear && area && nodeCount ? nodeCount / area : null;
+  const linearDensity = linearSpan && nodeCount ? nodeCount / linearSpan : null;
   const value = areaDensity ?? linearDensity;
   if (!Number.isFinite(value)) return null;
 
   return {
     basis: areaDensity != null ? "area" : "linear",
     value: safeFixed(value, 3),
-    label: densityLabel(value),
+    label: "",
     nodeCount: nodeCount != null ? Number(nodeCount) : null,
     footprint: {
       width: safeFixed(width),
@@ -477,7 +610,8 @@ export function buildNormalizedTargetMetadataRecords({
     const densityMetadata = buildDensityMetadata({
       targetKind: "model",
       node: model,
-      submodelMetadata
+      submodelMetadata,
+      canonicalType: classification?.canonicalType
     });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "model",
@@ -573,7 +707,8 @@ export function buildNormalizedTargetMetadataRecords({
     const densityMetadata = buildDensityMetadata({
       targetKind: "group",
       node: group,
-      submodelMetadata
+      submodelMetadata,
+      canonicalType: "model_group"
     });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "group",
@@ -668,7 +803,8 @@ export function buildNormalizedTargetMetadataRecords({
     const densityMetadata = buildDensityMetadata({
       targetKind: "submodel",
       node: parentNode,
-      submodelMetadata
+      submodelMetadata,
+      canonicalType: parentNode?.canonicalType || parentNode?.type
     });
     const metadataCompleteness = buildMetadataCompleteness({
       targetKind: "submodel",
@@ -736,7 +872,7 @@ export function buildNormalizedTargetMetadataRecords({
     });
   }
 
-  return records;
+  return applyVisualWeightBands(records);
 }
 
 export function summarizeNormalizedTargetMetadata(records = []) {

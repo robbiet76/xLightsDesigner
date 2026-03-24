@@ -190,7 +190,7 @@ function buildActiveTargetSummary(active = {}) {
       parts.push(`${Number(density.value)} ${basis}`);
     }
     if (Number.isFinite(Number(density.nodeCount))) parts.push(`${Number(density.nodeCount)} nodes`);
-    if (parts.length) lines.push(`Density: ${parts.join(" | ")}.`);
+    if (parts.length) lines.push(`Visual Weight: ${parts.join(" | ")}.`);
   }
 
   if (active.submodelMetadata && typeof active.submodelMetadata === "object") {

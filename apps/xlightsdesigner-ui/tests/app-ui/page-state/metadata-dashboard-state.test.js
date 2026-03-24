@@ -32,14 +32,14 @@ function buildHelpers() {
           densityMetadata: {
             basis: "area",
             value: 1.234,
-            label: "balanced",
+            label: "medium",
             nodeCount: 48,
             footprint: { width: 10, height: 5, depth: 0, area: 50, span: 10 }
           },
           locationMetadata: {
             source: "direct",
             position: { x: 10.5, y: 2.1, z: 0.4 },
-            zones: { horizontal: "left", vertical: "mid", depth: "foreground" }
+            zones: { horizontal: "left", vertical: "mid", depth: "front" }
           },
           submodelMetadata: {
             hasSubmodels: false,
@@ -139,9 +139,9 @@ test("metadata dashboard summarizes tag and target state", () => {
   assert.equal(dashboard.data.activeTarget.provenanceFields.length, 3);
   assert.equal(dashboard.data.activeTarget.provenanceFields[0].source.length > 0, true);
   assert.equal(dashboard.data.activeTarget.locationMetadata.zones.horizontal, "left");
-  assert.match(dashboard.data.activeTarget.summaryText, /Location: left, mid, foreground \| x 10.5, y 2.1, z 0.4\./);
-  assert.equal(dashboard.data.activeTarget.densityMetadata.label, "balanced");
-  assert.match(dashboard.data.activeTarget.summaryText, /Density: balanced \| 1.234 nodes per area \| 48 nodes\./);
+  assert.match(dashboard.data.activeTarget.summaryText, /Location: left, mid, front \| x 10.5, y 2.1, z 0.4\./);
+  assert.equal(dashboard.data.activeTarget.densityMetadata.label, "medium");
+  assert.match(dashboard.data.activeTarget.summaryText, /Visual Weight: medium \| 1.234 nodes per area \| 48 nodes\./);
 });
 
 test("metadata dashboard applies filters to target rows", () => {
