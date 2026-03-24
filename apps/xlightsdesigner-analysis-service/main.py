@@ -519,28 +519,77 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
                 if s < b and e > a:
                     chorus_stanza_idx.add(idx)
 
+    chorus_spans: List[tuple[int, int]] = []
+    if best_window and best_starts:
+        k = len(best_window)
+        for sidx in best_starts:
+            eidx = min(len(rows) - 1, sidx + k - 1)
+            start_ms = int(rows[sidx].get("startMs", 0))
+            end_ms = int(rows[eidx].get("endMs", start_ms + 1))
+            if end_ms > start_ms:
+                chorus_spans.append((start_ms, end_ms))
+    chorus_spans.sort()
+    merged_chorus_spans: List[tuple[int, int]] = []
+    for start_ms, end_ms in chorus_spans:
+        if not merged_chorus_spans or start_ms > merged_chorus_spans[-1][1]:
+            merged_chorus_spans.append((start_ms, end_ms))
+        else:
+            prev_start, prev_end = merged_chorus_spans[-1]
+            merged_chorus_spans[-1] = (prev_start, max(prev_end, end_ms))
+
+    def _rows_in_window(start_ms: int, end_ms: int) -> List[Dict[str, Any]]:
+        return [
+            row for row in rows
+            if int(row.get("startMs", 0)) < end_ms and int(row.get("endMs", row.get("startMs", 0))) > start_ms
+        ]
+
     segments: List[Dict[str, Any]] = []
     first_start = int(rows[0]["startMs"])
     if first_start > 500:
         segments.append({"startMs": 0, "endMs": first_start, "label": "Intro"})
 
-    prev_end = first_start
-    for idx, (a, b) in enumerate(stanzas):
-        if a >= b:
-            continue
-        s = int(rows[a].get("startMs", 0))
-        e = int(rows[b - 1].get("endMs", s + 1))
-        if e <= s:
-            continue
-        if s - prev_end >= stanza_gap_ms:
-            segments.append({"startMs": prev_end, "endMs": s, "label": "Instrumental"})
-        label = "Chorus" if idx in chorus_stanza_idx else "Verse"
-        segments.append({"startMs": s, "endMs": e, "label": label})
-        prev_end = e
+    if merged_chorus_spans:
+        prev_boundary = first_start
+        chorus_count = 0
+        for idx, (chorus_start, chorus_end) in enumerate(merged_chorus_spans):
+            non_chorus_rows = _rows_in_window(prev_boundary, chorus_start)
+            if chorus_start - prev_boundary >= 500:
+                if non_chorus_rows:
+                    label = "Verse"
+                    if chorus_count >= 1 and idx == len(merged_chorus_spans) - 1:
+                        label = "Bridge"
+                    segments.append({"startMs": prev_boundary, "endMs": chorus_start, "label": label})
+                else:
+                    segments.append({"startMs": prev_boundary, "endMs": chorus_start, "label": "Instrumental"})
+            chorus_count += 1
+            segments.append({"startMs": chorus_start, "endMs": chorus_end, "label": "Chorus"})
+            prev_boundary = chorus_end
+        if duration_ms - prev_boundary >= 500:
+            tail_rows = _rows_in_window(prev_boundary, duration_ms)
+            if tail_rows:
+                tail_duration = duration_ms - prev_boundary
+                tail_label = "Outro" if tail_duration <= max(12000, stanza_gap_ms * 2) else "Verse"
+                segments.append({"startMs": prev_boundary, "endMs": duration_ms, "label": tail_label})
+            else:
+                segments.append({"startMs": prev_boundary, "endMs": duration_ms, "label": "Outro"})
+    else:
+        prev_end = first_start
+        for idx, (a, b) in enumerate(stanzas):
+            if a >= b:
+                continue
+            s = int(rows[a].get("startMs", 0))
+            e = int(rows[b - 1].get("endMs", s + 1))
+            if e <= s:
+                continue
+            if s - prev_end >= stanza_gap_ms:
+                segments.append({"startMs": prev_end, "endMs": s, "label": "Instrumental"})
+            label = "Chorus" if idx in chorus_stanza_idx else "Verse"
+            segments.append({"startMs": s, "endMs": e, "label": label})
+            prev_end = e
 
-    if duration_ms - prev_end >= 500:
-        tail_label = "Outro" if duration_ms - prev_end <= max(12000, stanza_gap_ms * 2) else "Instrumental"
-        segments.append({"startMs": prev_end, "endMs": duration_ms, "label": tail_label})
+        if duration_ms - prev_end >= 500:
+            tail_label = "Outro" if duration_ms - prev_end <= max(12000, stanza_gap_ms * 2) else "Instrumental"
+            segments.append({"startMs": prev_end, "endMs": duration_ms, "label": tail_label})
 
     cleaned: List[Dict[str, Any]] = []
     for seg in sorted(segments, key=lambda x: int(x.get("startMs", 0))):
@@ -1426,6 +1475,13 @@ def _infer_beats_per_bar_from_accent(
             best_offset = int(off)
     if best_score < 0.05:
         return max(1, int(default_bpb or 4)), 0, scores
+    # 2/4 vs 4/4 is the most common ambiguity in this repertoire. When the
+    # accent evidence is nearly tied, prefer 4/4 because it produces musically
+    # safer bar resets for pop/holiday material than collapsing to 2/4.
+    if best_bpb == 2:
+        score4 = float(scores.get(4, -1.0))
+        if score4 >= max(0.05, best_score - 0.02):
+            return 4, int(offsets.get(4, 0)), scores
     return best_bpb, best_offset, scores
 
 
@@ -1714,14 +1770,29 @@ def _estimate_lyrics_global_shift_ms(
 
 
 def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def base_label(raw: Any) -> str:
+        label = str(raw or "Section").strip() or "Section"
+        m = re.match(r"^(Intro|Outro|Bridge|Instrumental|Verse|Chorus)(?:\s+\d+)?$", label, flags=re.IGNORECASE)
+        if not m:
+            return label
+        normalized = m.group(1).strip().lower()
+        return {
+            "intro": "Intro",
+            "outro": "Outro",
+            "bridge": "Bridge",
+            "instrumental": "Instrumental",
+            "verse": "Verse",
+            "chorus": "Chorus",
+        }.get(normalized, label)
+
     counts: Dict[str, int] = {}
     totals: Dict[str, int] = {}
     for seg in segments:
-        base = str(seg.get("label", "Section")).strip() or "Section"
+        base = base_label(seg.get("label", "Section"))
         totals[base] = totals.get(base, 0) + 1
     out: List[Dict[str, Any]] = []
     for seg in segments:
-        base = str(seg.get("label", "Section")).strip() or "Section"
+        base = base_label(seg.get("label", "Section"))
         counts[base] = counts.get(base, 0) + 1
         suffix = f" {counts[base]}" if totals.get(base, 1) > 1 else ""
         out.append(
@@ -1732,6 +1803,40 @@ def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, A
             }
         )
     return out
+
+
+def _looks_generic_section_label(label: str) -> bool:
+    return bool(re.match(r"^section(?:\s+\d+)?$", str(label or "").strip(), flags=re.IGNORECASE))
+
+
+def _refine_audio_sections_with_semantic_spans(
+    audio_sections: List[Dict[str, Any]],
+    semantic_sections: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    if not audio_sections or not semantic_sections:
+        return audio_sections
+    refined: List[Dict[str, Any]] = []
+    for section in audio_sections:
+        start_ms = int(section.get("startMs", 0))
+        end_ms = int(section.get("endMs", start_ms + 1))
+        current_label = str(section.get("label", "Section")).strip() or "Section"
+        if not _looks_generic_section_label(current_label):
+            refined.append({"startMs": start_ms, "endMs": end_ms, "label": current_label})
+            continue
+        best_label = current_label
+        best_overlap = -1
+        for semantic in semantic_sections:
+            semantic_label = str(semantic.get("label", "")).strip()
+            if not semantic_label or _looks_generic_section_label(semantic_label):
+                continue
+            overlap = min(end_ms, int(semantic.get("endMs", 0))) - max(start_ms, int(semantic.get("startMs", 0)))
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_label = semantic_label
+        if best_overlap > 0:
+            current_label = best_label
+        refined.append({"startMs": start_ms, "endMs": end_ms, "label": current_label})
+    return _build_numbered_sections(refined)
 
 
 def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
@@ -1789,6 +1894,17 @@ def _label_song_sections(
                 verse_anchor = cand
                 break
 
+    chorus_idxs = groups.get(chorus_anchor, []) if chorus_anchor >= 0 else []
+    exposition_idx = -1
+    dominant_theme_verse_idxs: set[int] = set()
+    if chorus_idxs:
+        chorus_cover_ratio = len(chorus_idxs) / max(1, n)
+        if chorus_idxs[0] == 0 or chorus_cover_ratio >= 0.5:
+            exposition_idx = int(chorus_idxs[0])
+        if chorus_cover_ratio >= 0.5:
+            split = max(1, int(math.ceil(len(chorus_idxs) / 2.0)))
+            dominant_theme_verse_idxs = set(int(idx) for idx in chorus_idxs[:split])
+
     labels = ["Section"] * n
     if n >= 1:
         first_len = durations[0]
@@ -1801,18 +1917,23 @@ def _label_song_sections(
 
     for i in range(n):
         anchor = anchor_for[i]
-        if anchor == chorus_anchor:
+        if i == exposition_idx or i in dominant_theme_verse_idxs:
+            labels[i] = "Verse"
+        elif anchor == chorus_anchor:
             labels[i] = "Chorus"
         elif anchor == verse_anchor:
             labels[i] = "Verse"
 
     if chorus_anchor >= 0:
-        chorus_idxs = groups.get(chorus_anchor, [])
         if chorus_idxs:
             cmin, cmax = min(chorus_idxs), max(chorus_idxs)
             for i in range(cmin + 1, cmax):
                 if labels[i] == "Section" and anchor_for[i] not in (chorus_anchor, verse_anchor):
                     labels[i] = "Bridge"
+
+    for i in range(n):
+        if labels[i] == "Section":
+            labels[i] = "Verse"
 
     out = []
     for i, seg in enumerate(segments):
@@ -2090,8 +2211,16 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
     sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
+    lyric_sections: List[Dict[str, Any]] = []
+    if lyrics_marks:
+        try:
+            lyric_sections = _infer_sections_from_lyrics(lyrics_marks, duration_ms)
+        except Exception:
+            lyric_sections = []
+    if lyric_sections:
+        sections = _refine_audio_sections_with_semantic_spans(sections, lyric_sections)
     has_semantic_sections = any(
-        str(row.get("label", "")).strip() and not str(row.get("label", "")).strip().startswith("Section")
+        str(row.get("label", "")).strip() and not _looks_generic_section_label(str(row.get("label", "")).strip())
         for row in sections
     )
     return {
@@ -2105,7 +2234,11 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         "lyrics": lyrics_marks,
         "meta": {
             "engine": "librosa",
-            "sectionSource": "audio-structural-heuristic" if has_semantic_sections else "audio-segmentation-generic",
+            "sectionSource": (
+                "audio+lyrics-semantic"
+                if lyric_sections and has_semantic_sections
+                else ("audio-structural-heuristic" if has_semantic_sections else "audio-segmentation-generic")
+            ),
             "trackIdentity": identity,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,

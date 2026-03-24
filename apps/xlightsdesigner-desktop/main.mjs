@@ -887,25 +887,27 @@ function buildAnalysisServiceEnv() {
   const analysisDir = resolveAnalysisServiceDir();
   next.MPLCONFIGDIR = String(process.env.MPLCONFIGDIR || "/tmp/mplcache-xld");
   next.PYTHONUNBUFFERED = "1";
-  if (!next.AUDD_API_TOKEN) {
-    const envFile = analysisDir ? path.join(analysisDir, ".env.local") : "";
-    if (fs.existsSync(envFile)) {
-      try {
-        const lines = fs.readFileSync(envFile, "utf8").split(/\r?\n/);
-        for (const line of lines) {
-          const trimmed = String(line || "").trim();
-          if (!trimmed || trimmed.startsWith("#")) continue;
-          const idx = trimmed.indexOf("=");
-          if (idx <= 0) continue;
-          const k = trimmed.slice(0, idx).trim();
-          const v = trimmed.slice(idx + 1).trim().replace(/^['"]|['"]$/g, "");
-          if (!next[k]) next[k] = v;
-        }
-      } catch {
-        // best effort
+  const envFile = analysisDir ? path.join(analysisDir, ".env.local") : "";
+  if (fs.existsSync(envFile)) {
+    try {
+      const lines = fs.readFileSync(envFile, "utf8").split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = String(line || "").trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const idx = trimmed.indexOf("=");
+        if (idx <= 0) continue;
+        const k = trimmed.slice(0, idx).trim();
+        const v = trimmed.slice(idx + 1).trim().replace(/^['"]|['"]$/g, "");
+        if (!next[k]) next[k] = v;
       }
+    } catch {
+      // best effort
     }
   }
+  if (!next.ENABLE_REMOTE_IDENTITY_LOOKUP) next.ENABLE_REMOTE_IDENTITY_LOOKUP = "1";
+  if (!next.ENABLE_WEB_TEMPO_LOOKUP) next.ENABLE_WEB_TEMPO_LOOKUP = "1";
+  if (!next.ENABLE_LYRICS_LOOKUP) next.ENABLE_LYRICS_LOOKUP = "1";
+  if (!next.ENABLE_MADMOM_CHORDS) next.ENABLE_MADMOM_CHORDS = "1";
   return next;
 }
 
