@@ -34,6 +34,7 @@ export function createAutomationRuntime(deps = {}) {
     currentLayoutMode,
     getSequenceTimingOwnershipRows,
     applyReadyForApprovalGate,
+    definePersistedVisualHint,
     persist,
     render,
     setStatus,
@@ -632,6 +633,33 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  function defineAutomationVisualHint(payload = {}) {
+    const hintName = String(payload?.name || payload?.hintName || "").trim();
+    if (!hintName) {
+      return { ok: false, error: "name is required." };
+    }
+    if (typeof definePersistedVisualHint !== "function") {
+      return { ok: false, error: "visual hint definition runtime unavailable." };
+    }
+
+    const record = definePersistedVisualHint(hintName, {
+      description: payload?.description,
+      semanticClass: payload?.semanticClass,
+      behavioralIntent: payload?.behavioralIntent,
+      behavioralTags: Array.isArray(payload?.behavioralTags) ? payload.behavioralTags : [],
+      definedBy: payload?.definedBy || "agent",
+      source: payload?.source || "managed",
+      learnedFrom: payload?.learnedFrom || "chat_dialog",
+      timestamp: payload?.timestamp
+    });
+    persist();
+    render();
+    return {
+      ok: true,
+      hint: record
+    };
+  }
+
   async function openAutomationSequence(payload = {}) {
     const targetPath = String(payload?.sequencePath || "").trim();
     if (!targetPath) {
@@ -782,6 +810,7 @@ export function createAutomationRuntime(deps = {}) {
       openSequence: openAutomationSequence,
       refreshFromXLights: refreshAutomationFromXLights,
       analyzeAudio: analyzeAutomationAudio,
+      defineVisualHint: defineAutomationVisualHint,
       applyCurrentProposal: applyAutomationCurrentProposal,
       diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
       getComparativeValidationSnapshot: getAutomationComparativeValidationSnapshot,
@@ -802,6 +831,7 @@ export function createAutomationRuntime(deps = {}) {
     getAutomationComparativeValidationSnapshot,
     refreshAutomationFromXLights,
     analyzeAutomationAudio,
+    defineAutomationVisualHint,
     openAutomationSequence,
     getAutomationAgentRuntimeSnapshot,
     getAutomationPageStatesSnapshot,
