@@ -309,48 +309,27 @@ export function createAutomationRuntime(deps = {}) {
     const proposalBundle = state.creative?.proposalBundle || null;
     const executionPlan = proposalBundle?.executionPlan || null;
     const musicDesignContext = buildCurrentMusicDesignContext();
-    const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
-    const currentFiltered = filteredProposed();
-    const fullScopeApply = arraysEqualOrdered(sourceLines, currentFiltered);
     let planSource = "generated";
-    let fallbackReason = "";
     let rawPlan = [];
     let graph = null;
-
-    if (handoffCommands.length > 0 && fullScopeApply) {
-      graph = validateCommandGraph(handoffCommands);
-      if (graph.ok) {
-        planSource = "handoff_graph";
-        rawPlan = handoffCommands;
-      } else {
-        fallbackReason = `handoff graph invalid (${graph.errors.join(" | ")})`;
-      }
-    } else if (handoffCommands.length > 0 && !fullScopeApply) {
-      fallbackReason = "non-default partial-scope apply requested";
-    } else {
-      fallbackReason = "plan_handoff_v1 commands unavailable";
-    }
-
-    if (!rawPlan.length) {
-      const generated = buildSequenceAgentPlan({
-        analysisHandoff,
-        intentHandoff,
-        sourceLines,
-        baseRevision: state.draftBaseRevision,
-        capabilityCommands: state.health.capabilityCommands || [],
-        effectCatalog: state.effectCatalog,
-        sequenceSettings: state.sequenceSettings,
-        layoutMode: currentLayoutMode(),
-        displayElements: state.displayElements,
-        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-        groupsById: state.sceneGraph?.groupsById || {},
-        submodelsById: state.sceneGraph?.submodelsById || {},
-        timingOwnership: getSequenceTimingOwnershipRows(),
-        allowTimingWrites: true
-      });
-      rawPlan = Array.isArray(generated?.commands) ? generated.commands : [];
-      graph = validateCommandGraph(rawPlan);
-    }
+    const generated = buildSequenceAgentPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines,
+      baseRevision: state.draftBaseRevision,
+      capabilityCommands: state.health.capabilityCommands || [],
+      effectCatalog: state.effectCatalog,
+      sequenceSettings: state.sequenceSettings,
+      layoutMode: currentLayoutMode(),
+      displayElements: state.displayElements,
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      timingOwnership: getSequenceTimingOwnershipRows(),
+      allowTimingWrites: true
+    });
+    rawPlan = Array.isArray(generated?.commands) ? generated.commands : [];
+    graph = validateCommandGraph(rawPlan);
 
     const ownedBatchPlan = buildOwnedSequencingBatchPlan(rawPlan);
     let ownedHealth = null;
@@ -368,7 +347,9 @@ export function createAutomationRuntime(deps = {}) {
       status: state.status || null,
       proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0,
       planSource,
-      fallbackReason,
+      fallbackReason: Array.isArray(planHandoff?.commands) && planHandoff.commands.length
+        ? "ignoring stored plan_handoff_v1 command graph and regenerating from current proposal"
+        : "plan_handoff_v1 commands unavailable",
       proposalScope: proposalBundle?.scope || null,
       executionPlanSummary: executionPlan
         ? {
@@ -397,7 +378,7 @@ export function createAutomationRuntime(deps = {}) {
               : null
           }
         : null,
-      handoffCommandCount: handoffCommands.length,
+      handoffCommandCount: Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0,
       rawPlanCount: rawPlan.length,
       rawPlan,
       graph,
@@ -500,52 +481,33 @@ export function createAutomationRuntime(deps = {}) {
     const analysisHandoff = getValidHandoff("analysis_handoff_v1");
     const proposalBundle = state.creative?.proposalBundle || null;
     const executionPlan = proposalBundle?.executionPlan || null;
-    const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
-    const currentFiltered = filteredProposed();
-    const fullScopeApply = arraysEqualOrdered(sourceLines, currentFiltered);
     let planSource = "generated";
-    let fallbackReason = "";
     let rawPlan = [];
-
-    if (handoffCommands.length > 0 && fullScopeApply) {
-      const graph = validateCommandGraph(handoffCommands);
-      if (graph.ok) {
-        planSource = "handoff_graph";
-        rawPlan = handoffCommands;
-      } else {
-        fallbackReason = `handoff graph invalid (${graph.errors.join(" | ")})`;
-      }
-    } else if (handoffCommands.length > 0 && !fullScopeApply) {
-      fallbackReason = "non-default partial-scope apply requested";
-    } else {
-      fallbackReason = "plan_handoff_v1 commands unavailable";
-    }
-
-    if (!rawPlan.length) {
-      const generated = buildSequenceAgentPlan({
-        analysisHandoff,
-        intentHandoff,
-        sourceLines,
-        baseRevision: state.draftBaseRevision,
-        capabilityCommands: state.health.capabilityCommands || [],
-        effectCatalog: state.effectCatalog,
-        sequenceSettings: state.sequenceSettings,
-        layoutMode: currentLayoutMode(),
-        displayElements: state.displayElements,
-        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-        groupsById: state.sceneGraph?.groupsById || {},
-        submodelsById: state.sceneGraph?.submodelsById || {},
-        timingOwnership: getSequenceTimingOwnershipRows(),
-        allowTimingWrites: true
-      });
-      rawPlan = Array.isArray(generated?.commands) ? generated.commands : [];
-    }
+    const generated = buildSequenceAgentPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines,
+      baseRevision: state.draftBaseRevision,
+      capabilityCommands: state.health.capabilityCommands || [],
+      effectCatalog: state.effectCatalog,
+      sequenceSettings: state.sequenceSettings,
+      layoutMode: currentLayoutMode(),
+      displayElements: state.displayElements,
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      timingOwnership: getSequenceTimingOwnershipRows(),
+      allowTimingWrites: true
+    });
+    rawPlan = Array.isArray(generated?.commands) ? generated.commands : [];
 
     return {
       ok: true,
       activeSequence: state.activeSequence || "",
       planSource,
-      fallbackReason,
+      fallbackReason: Array.isArray(planHandoff?.commands) && planHandoff.commands.length
+        ? "ignoring stored plan_handoff_v1 command graph and regenerating from current proposal"
+        : "plan_handoff_v1 commands unavailable",
       proposalScope: proposalBundle?.scope || null,
       executionPlanSummary: executionPlan
         ? {

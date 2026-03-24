@@ -2,26 +2,7 @@
 import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practical-sequence-validation.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
-  const commands = Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
-  const hasAnalysisSections = Array.isArray(analysisHandoff?.structure?.sections) && analysisHandoff.structure.sections.length > 0;
-  if (!hasAnalysisSections) return commands;
-
-  const timingCreate = commands.find((row) => String(row?.cmd || "").trim() === "timing.createTrack");
-  const timingInsert = commands.find((row) => String(row?.cmd || "").trim() === "timing.insertMarks");
-  const trackName = String(timingInsert?.params?.trackName || timingCreate?.params?.trackName || "").trim();
-  if (trackName !== "XD: Song Structure") return commands;
-
-  const removedIds = new Set(
-    [timingCreate?.id, timingInsert?.id].map((row) => String(row || "").trim()).filter(Boolean)
-  );
-  if (!removedIds.size) return commands;
-
-  return commands
-    .filter((row) => !removedIds.has(String(row?.id || "").trim()))
-    .map((row) => {
-      const dependsOn = Array.isArray(row?.dependsOn) ? row.dependsOn.filter((dep) => !removedIds.has(String(dep || "").trim())) : row?.dependsOn;
-      return dependsOn === row?.dependsOn ? row : { ...row, dependsOn };
-    });
+  return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
 }
 
 export async function executeApplyCore({
@@ -139,65 +120,43 @@ export async function executeApplyCore({
       };
     }
 
-    const currentFiltered = filteredProposed();
+    let planSource = "generated";
+    let sequencerPlan = null;
     const handoffCommands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
     const hasHandoffGraph = handoffCommands.length > 0;
-    const fullScopeApply = applyLabel === "all proposed changes" && arraysEqualOrdered(sourceLines, currentFiltered);
-
-    let planSource = "generated";
-    let fallbackReason = "";
-    let sequencerPlan = null;
-
-    if (hasHandoffGraph && fullScopeApply) {
-      const graphGate = validateCommandGraph(handoffCommands);
-      if (graphGate.ok) {
-        planSource = "handoff_graph";
-        markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=plan_handoff_v1 nodes=${graphGate.nodeCount}`);
-        sequencerPlan = {
-          commands: handoffCommands,
-          warnings: Array.isArray(planHandoff.warnings) ? planHandoff.warnings : []
-        };
-      } else {
-        fallbackReason = `handoff graph invalid (${graphGate.errors.join(" | ")})`;
-        markOrchestrationStage(orchestrationRun, "graph_validation", "error", fallbackReason);
-      }
-    } else if (hasHandoffGraph && !fullScopeApply) {
-      fallbackReason = "non-default partial-scope apply requested";
-      markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
-    } else {
-      fallbackReason = "plan_handoff_v1 commands unavailable";
-      markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
-    }
+    markOrchestrationStage(
+      orchestrationRun,
+      "graph_validation",
+      hasHandoffGraph ? "warning" : "warning",
+      hasHandoffGraph
+        ? "ignoring stored plan_handoff_v1 command graph and regenerating from current proposal"
+        : "plan_handoff_v1 commands unavailable; generating from current proposal"
+    );
 
     const metadataAssignments = typeof deps.buildEffectiveMetadataAssignments === "function"
       ? deps.buildEffectiveMetadataAssignments()
       : [];
 
-    if (!sequencerPlan) {
-      sequencerPlan = buildSequenceAgentPlan({
-        analysisHandoff,
-        intentHandoff,
-        sourceLines,
-        baseRevision: state.draftBaseRevision,
-        capabilityCommands: state.health.capabilityCommands || [],
-        effectCatalog: state.effectCatalog,
-        sequenceSettings: state.sequenceSettings,
-        layoutMode: currentLayoutMode(),
-        displayElements: state.displayElements,
-        groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
-        groupsById: state.sceneGraph?.groupsById || {},
-        submodelsById: state.sceneGraph?.submodelsById || {},
-        metadataAssignments,
-        timingOwnership: getSequenceTimingOwnershipRows(),
-        allowTimingWrites: true
-      });
-      emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
-      if (fallbackReason) {
-        pushDiagnostic("warning", `Apply fallback from handoff graph to generated plan: ${fallbackReason}`);
-      }
-    }
+    sequencerPlan = buildSequenceAgentPlan({
+      analysisHandoff,
+      intentHandoff,
+      sourceLines,
+      baseRevision: state.draftBaseRevision,
+      capabilityCommands: state.health.capabilityCommands || [],
+      effectCatalog: state.effectCatalog,
+      sequenceSettings: state.sequenceSettings,
+      layoutMode: currentLayoutMode(),
+      displayElements: state.displayElements,
+      groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
+      groupsById: state.sceneGraph?.groupsById || {},
+      submodelsById: state.sceneGraph?.submodelsById || {},
+      metadataAssignments,
+      timingOwnership: getSequenceTimingOwnershipRows(),
+      allowTimingWrites: true
+    });
+    emitSequenceAgentStageTelemetry(orchestrationRun, sequencerPlan);
 
-    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", planSource === "handoff_graph" ? "using plan_handoff_v1 command graph" : "apply plan built");
+    markOrchestrationStage(orchestrationRun, "sequencer_plan", "ok", "apply plan built");
     const rawPlan = normalizePlanForLiveApply(
       Array.isArray(sequencerPlan?.commands) ? sequencerPlan.commands : [],
       { analysisHandoff }
@@ -220,14 +179,12 @@ export async function executeApplyCore({
       markOrchestrationStage(orchestrationRun, "capability_gate", "ok", `required=${capabilityGate.requiredCapabilities.length}`);
     }
 
-    if (planSource !== "handoff_graph") {
-      const generatedGraph = validateCommandGraph(rawPlan);
-      if (!generatedGraph.ok) {
-        markOrchestrationStage(orchestrationRun, "graph_validation", "error", generatedGraph.errors.join(" | "));
-        throw new Error(`Generated command graph invalid: ${generatedGraph.errors.join("; ")}`);
-      }
-      markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=generated nodes=${generatedGraph.nodeCount}`);
+    const generatedGraph = validateCommandGraph(rawPlan);
+    if (!generatedGraph.ok) {
+      markOrchestrationStage(orchestrationRun, "graph_validation", "error", generatedGraph.errors.join(" | "));
+      throw new Error(`Generated command graph invalid: ${generatedGraph.errors.join("; ")}`);
     }
+    markOrchestrationStage(orchestrationRun, "graph_validation", "ok", `source=generated nodes=${generatedGraph.nodeCount}`);
 
     const pendingGenerated = new Map();
     for (const step of rawPlan) {

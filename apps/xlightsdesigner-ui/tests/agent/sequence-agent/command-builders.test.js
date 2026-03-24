@@ -893,3 +893,25 @@ test("command builders rotate fanout member order across repeated lines", () => 
     ]
   );
 });
+
+test("command builders clamp final XD song structure mark to duration minus one", () => {
+  const commands = buildDesignerPlanCommands([
+    "Intro / MegaTree / color wash",
+    "Verse 1 / Roofline / shimmer"
+  ], {
+    trackName: "XD: Song Structure",
+    sequenceSettings: { durationMs: 2000 },
+    sectionWindowsByName: new Map([
+      ["Intro", { startMs: 0, endMs: 1000 }],
+      ["Verse 1", { startMs: 1000, endMs: 2000 }]
+    ]),
+    targetIds: ["MegaTree", "Roofline"],
+    effectCatalog: sampleCatalog()
+  });
+
+  const timingInsert = commands.find((row) => row.cmd === "timing.insertMarks");
+  assert.deepEqual(timingInsert.params.marks, [
+    { startMs: 0, endMs: 1000, label: "Intro" },
+    { startMs: 1000, endMs: 1999, label: "Verse 1" }
+  ]);
+});

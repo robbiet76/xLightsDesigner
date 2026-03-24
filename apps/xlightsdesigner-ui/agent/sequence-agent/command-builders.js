@@ -782,6 +782,12 @@ export function buildDesignerPlanCommands(
   const sectionWindows = buildSectionWindows(source, parsed, sectionWindowsByName);
   const marks = buildTimingMarks(source, parsed, sectionWindows, {
     useAllKnownSections: normText(trackName) === "XD: Song Structure"
+  }).map((mark, index, rows) => {
+    const durationMs = Number(sequenceSettings?.durationMs);
+    if (!Number.isFinite(durationMs) || durationMs <= 1) return mark;
+    if (index !== rows.length - 1 || mark.endMs !== durationMs) return mark;
+    const endMs = Math.max(mark.startMs + 1, durationMs - 1);
+    return endMs === mark.endMs ? mark : { ...mark, endMs };
   });
 
   const baseCommands = [

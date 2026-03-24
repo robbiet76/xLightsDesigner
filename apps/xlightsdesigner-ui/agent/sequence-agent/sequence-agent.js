@@ -259,13 +259,14 @@ function buildCueTrackMarksByTrack({ analysisHandoff = {}, sectionNames = [], in
   const musicDesignContext = buildMusicDesignContext({ analysisHandoff });
   const cueWindowsBySection = musicDesignContext?.designCues?.cueWindowsBySection;
   if (!cueWindowsBySection || typeof cueWindowsBySection !== "object") return new Map();
+  const sectionWindowsByName = deriveSectionWindowsByName({ analysisHandoff, sectionNames, includeAll });
   const requestedSections = includeAll
-    ? Object.keys(cueWindowsBySection)
+    ? Array.from(sectionWindowsByName.keys())
     : normArray(sectionNames).map((row) => normText(row)).filter(Boolean);
   const out = new Map();
   const seen = new Set();
   for (const sectionName of requestedSections) {
-    const sectionCues = cueWindowsBySection?.[sectionName];
+    const sectionCues = cueWindowsBySection && typeof cueWindowsBySection === "object" ? cueWindowsBySection?.[sectionName] : null;
     if (!sectionCues || typeof sectionCues !== "object") continue;
     for (const cueRows of Object.values(sectionCues)) {
       for (const row of normArray(cueRows)) {
@@ -629,28 +630,29 @@ function buildPlacementMarksByTrack({
       }))
       .filter((row) => row.label)
       .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
+    let normalizedMarks;
     if (trackName === "XD: Song Structure") {
-      return sortedMarks.slice(0, 64);
+      normalizedMarks = sortedMarks.slice(0, 64);
+    } else {
+      // xLights timing rows reject overlapping marks. Prefer the most specific windows
+      // and drop broader containers such as Phrase Hold-Phrase Release.
+      const specificFirst = sortedMarks
+        .slice()
+        .sort((a, b) => {
+          const aDuration = a.endMs - a.startMs;
+          const bDuration = b.endMs - b.startMs;
+          return aDuration - bDuration || a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label);
+        });
+      const kept = [];
+      for (const mark of specificFirst) {
+        const overlapsExisting = kept.some((row) => Math.max(row.startMs, mark.startMs) < Math.min(row.endMs, mark.endMs));
+        if (overlapsExisting) continue;
+        kept.push(mark);
+      }
+      normalizedMarks = kept
+        .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
+        .slice(0, 64);
     }
-
-    // xLights timing rows reject overlapping marks. Prefer the most specific windows
-    // and drop broader containers such as Phrase Hold-Phrase Release.
-    const specificFirst = sortedMarks
-      .slice()
-      .sort((a, b) => {
-        const aDuration = a.endMs - a.startMs;
-        const bDuration = b.endMs - b.startMs;
-        return aDuration - bDuration || a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label);
-      });
-    const kept = [];
-    for (const mark of specificFirst) {
-      const overlapsExisting = kept.some((row) => Math.max(row.startMs, mark.startMs) < Math.min(row.endMs, mark.endMs));
-      if (overlapsExisting) continue;
-      kept.push(mark);
-    }
-    const normalizedMarks = kept
-      .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
-      .slice(0, 64);
     const durationMs = Number(sequenceSettings?.durationMs);
     const maxCueEndMs = Number.isFinite(durationMs) && durationMs > 1 ? durationMs - 1 : null;
     if (maxCueEndMs == null) return normalizedMarks;
@@ -844,8 +846,11 @@ function stageCommandGraphSynthesis({
 } = {}) {
   const proposed = normArray(sourceLines).map((line) => normText(line)).filter(Boolean);
   const synthesized = normArray(effect.executionSeedLines).filter(Boolean);
-  const shouldPreferSynthesized = Boolean(effect?.preferSynthesized) && synthesized.length && (
+  const passScope = normText(executionStrategy?.passScope);
+  const forceSynthesizedForStructuredPass = passScope === "whole_sequence" || passScope === "multi_section";
+  const shouldPreferSynthesized = (forceSynthesizedForStructuredPass || Boolean(effect?.preferSynthesized)) && synthesized.length && (
     !proposed.length
+    || forceSynthesizedForStructuredPass
     || proposed.every((line) => isGenericExecutionLine(line))
     || proposed.some((line) => !isExecutableSequencingLine(line))
   );
@@ -855,11 +860,10 @@ function stageCommandGraphSynthesis({
   const advertisedCapabilities = Array.isArray(capabilityCommands) ? capabilityCommands.map((row) => normText(row)).filter(Boolean) : [];
   const enableEffectTimingAlignment = !advertisedCapabilities.length || advertisedCapabilities.includes("effects.alignToTiming");
   if (Array.isArray(effect?.effectPlacements) && effect.effectPlacements.length) {
-    const includeAllCueSections = normText(executionStrategy?.passScope) === "whole_sequence";
     const cueTrackMarksByTrack = buildCueTrackMarksByTrack({
       analysisHandoff,
       sectionNames: sectionWindowsByName instanceof Map ? Array.from(sectionWindowsByName.keys()) : [],
-      includeAll: includeAllCueSections
+      includeAll: true
     });
     const placementGraph = buildCommandsFromEffectPlacements({
       effectPlacements: effect.effectPlacements,

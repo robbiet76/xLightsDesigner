@@ -471,7 +471,7 @@ test("sequence_agent uses analyzed section windows for scoped effect timing", ()
   assert.deepEqual(markInsert.params.marks, [
     { startMs: 0, endMs: 10000, label: "Intro" },
     { startMs: 10000, endMs: 44000, label: "Verse 1" },
-    { startMs: 44000, endMs: 62000, label: "Chorus 1" }
+    { startMs: 44000, endMs: 61999, label: "Chorus 1" }
   ]);
   assert.equal(markInsert.params.trackName, "XD: Song Structure");
   assert.equal(effectCreate.params.startMs, 44000);
@@ -591,7 +591,7 @@ test("sequence_agent writes all timing tracks referenced by placements into the 
   assert.deepEqual(songStructureMarks.params.marks, [
     { startMs: 0, endMs: 10000, label: "Intro" },
     { startMs: 10000, endMs: 44000, label: "Verse 1" },
-    { startMs: 44000, endMs: 62000, label: "Chorus 1" }
+    { startMs: 44000, endMs: 61999, label: "Chorus 1" }
   ]);
   assert.deepEqual(beatGridMarks.params.marks, [
     { startMs: 44000, endMs: 46000, label: "Beat 1" }
@@ -709,81 +709,6 @@ test("sequence_agent drops overlapping timing marks on non-structure cue tracks"
   assert.deepEqual(phraseCueMarks.params.marks, [
     { startMs: 44000, endMs: 46000, label: "Phrase Hold" },
     { startMs: 46000, endMs: 48000, label: "Phrase Release" }
-  ]);
-});
-
-test("sequence_agent clamps final non-structure cue mark to duration minus one", () => {
-  const out = buildSequenceAgentPlan({
-    analysisHandoff: {
-      trackIdentity: { title: "Track A", artist: "Artist A" },
-      structure: {
-        sections: [
-          { label: "Final Chorus", startMs: 200000, endMs: 237829 }
-        ]
-      }
-    },
-    intentHandoff: {
-      goal: "Build a phrase-aware final chorus pass.",
-      mode: "revise",
-      scope: {
-        targetIds: ["Snowman"],
-        tagNames: [],
-        sections: ["Final Chorus"]
-      },
-      executionStrategy: {
-        effectPlacements: [
-          {
-            placementId: "phrase-1",
-            designId: "design-1",
-            targetId: "Snowman",
-            layerIndex: 0,
-            effectName: "Color Wash",
-            startMs: 217780,
-            endMs: 227068,
-            timingContext: {
-              trackName: "XD: Phrase Cues",
-              anchorLabel: "Phrase Hold",
-              anchorStartMs: 217780,
-              anchorEndMs: 227068,
-              alignmentMode: "phrase_window"
-            }
-          },
-          {
-            placementId: "phrase-2",
-            designId: "design-1",
-            targetId: "Snowman",
-            layerIndex: 1,
-            effectName: "Wave",
-            startMs: 227068,
-            endMs: 237829,
-            timingContext: {
-              trackName: "XD: Phrase Cues",
-              anchorLabel: "Phrase Release",
-              anchorStartMs: 227068,
-              anchorEndMs: 237829,
-              alignmentMode: "phrase_window"
-            }
-          }
-        ]
-      }
-    },
-    sourceLines: ["Final Chorus / Snowman / build a phrase-aware pass"],
-    sequenceSettings: {
-      durationMs: 237829
-    },
-    effectCatalog: buildEffectDefinitionCatalog([
-      { effectName: "Color Wash", params: [] },
-      { effectName: "Wave", params: [] }
-    ])
-  });
-
-  const phraseCueMarks = out.commands.find(
-    (row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Phrase Cues"
-  );
-
-  assert.deepEqual(phraseCueMarks.params.marks, [
-    { startMs: 217780, endMs: 227068, label: "Phrase Hold" },
-    { startMs: 227068, endMs: 237828, label: "Phrase Release" }
   ]);
 });
 
@@ -1994,7 +1919,7 @@ test("sequence_agent honors designer whole-sequence execution strategy over narr
     { startMs: 0, endMs: 10000, label: "Intro" },
     { startMs: 10000, endMs: 30000, label: "Verse 1" },
     { startMs: 30000, endMs: 50000, label: "Chorus 1" },
-    { startMs: 50000, endMs: 70000, label: "Bridge" }
+    { startMs: 50000, endMs: 69999, label: "Bridge" }
   ]);
 });
 
@@ -2259,7 +2184,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
   const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
   assert.deepEqual(markInsert.params.marks, [
     { label: "Chorus 1", startMs: 30000, endMs: 50000 },
-    { label: "Bridge", startMs: 50000, endMs: 70000 }
+    { label: "Bridge", startMs: 50000, endMs: 69999 }
   ]);
 });
 
