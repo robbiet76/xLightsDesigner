@@ -114,7 +114,17 @@ export function resolveTargetSelection({
   const metadataTermsForAssignment = (assignment = {}) => {
     const tags = Array.isArray(assignment?.tags) ? assignment.tags : [];
     const semanticHints = Array.isArray(assignment?.semanticHints) ? assignment.semanticHints : [];
-    return [...new Set([...tags, ...semanticHints].map(normalizeName).filter(Boolean))];
+    const visualHintDefinitions = Array.isArray(assignment?.visualHintDefinitions) ? assignment.visualHintDefinitions : [];
+    const definedHintTerms = visualHintDefinitions.flatMap((definition) => {
+      const status = normalizeName(definition?.status);
+      if (status && status !== "defined") return [];
+      return [
+        definition?.name,
+        definition?.semanticClass,
+        ...(Array.isArray(definition?.behavioralTags) ? definition.behavioralTags : [])
+      ];
+    });
+    return [...new Set([...tags, ...semanticHints, ...definedHintTerms].map(normalizeName).filter(Boolean))];
   };
 
   const isWritableTarget = (target) => {

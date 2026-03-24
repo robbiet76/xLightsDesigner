@@ -322,6 +322,15 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
     if (semanticHints.length) {
       lines.push(`${scope} / ${targetName} / treat this target with these visual hints: ${semanticHints.join(", ")}`);
     }
+    const definedHintIntents = arr(assignment?.visualHintDefinitions)
+      .map((row) => ({
+        name: str(row?.name),
+        behavioralIntent: str(row?.behavioralIntent)
+      }))
+      .filter((row) => row.name && row.behavioralIntent);
+    for (const hint of definedHintIntents) {
+      lines.push(`${scope} / ${targetName} / ${hint.name}: ${hint.behavioralIntent}`);
+    }
 
     const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);
     if (effectAvoidances.length) {

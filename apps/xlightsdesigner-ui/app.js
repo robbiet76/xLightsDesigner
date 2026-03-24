@@ -79,6 +79,12 @@ import {
   normalizeMetadataTagName,
   toStoredMetadataTagRecords
 } from "./runtime/metadata-tag-schema.js";
+import { buildEffectiveMetadataAssignments as buildRuntimeEffectiveMetadataAssignments } from "./runtime/effective-metadata-assignments.js";
+import {
+  mergeVisualHintDefinitions,
+  ensureVisualHintDefinitions,
+  toStoredVisualHintDefinitions
+} from "./runtime/visual-hint-definitions.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -333,6 +339,8 @@ const defaultState = {
     sceneGraphWarnings: [],
     sceneGraphSpatialNodeCount: 0,
     sceneGraphLayoutMode: "2d",
+    excludedUnassignedModelCount: 0,
+    excludedUnassignedModelNames: [],
     sequenceOpen: false,
     runtimeReady: false,
     desktopFileDialogReady: false,
@@ -390,6 +398,9 @@ const defaultState = {
     metadataTypeFilter: "all",
     metadataFilterName: "",
     metadataFilterType: "",
+    metadataFilterRole: "",
+    metadataFilterVisualHints: "",
+    metadataFilterEffectAvoidances: "",
     metadataFilterSupport: "",
     metadataFilterTags: "",
     metadataFilterMetadata: "",
@@ -501,6 +512,7 @@ const defaultState = {
     tags: ["focal", "rhythm-driver", "ambient-fill"],
     assignments: [],
     preferencesByTargetId: {},
+    visualHintDefinitions: [],
     ignoredOrphanTargetIds: []
   },
   projectSequences: [],
@@ -668,6 +680,9 @@ if (!Array.isArray(state.ui?.metadataSelectionIds)) {
 if (typeof state.metadata?.preferencesByTargetId !== "object" || !state.metadata?.preferencesByTargetId || Array.isArray(state.metadata?.preferencesByTargetId)) {
   state.metadata.preferencesByTargetId = {};
 }
+if (!Array.isArray(state.metadata?.visualHintDefinitions)) {
+  state.metadata.visualHintDefinitions = [];
+}
 if (!Array.isArray(state.ui?.metadataSelectedTags)) {
   state.ui.metadataSelectedTags = [];
 }
@@ -767,6 +782,9 @@ if (!state.orchestrationMatrix || typeof state.orchestrationMatrix !== "object")
 }
 if (typeof state.ui?.metadataFilterName !== "string") state.ui.metadataFilterName = "";
 if (typeof state.ui?.metadataFilterType !== "string") state.ui.metadataFilterType = "";
+if (typeof state.ui?.metadataFilterRole !== "string") state.ui.metadataFilterRole = "";
+if (typeof state.ui?.metadataFilterVisualHints !== "string") state.ui.metadataFilterVisualHints = "";
+if (typeof state.ui?.metadataFilterEffectAvoidances !== "string") state.ui.metadataFilterEffectAvoidances = "";
 if (typeof state.ui?.metadataFilterSupport !== "string") state.ui.metadataFilterSupport = "";
 if (typeof state.ui?.metadataFilterTags !== "string") state.ui.metadataFilterTags = "";
 if (typeof state.ui?.metadataFilterMetadata !== "string") state.ui.metadataFilterMetadata = "";
@@ -4182,7 +4200,15 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
   }
 
   const modelBody = await getModels(state.endpoint);
-  state.models = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
+  const fetchedModels = Array.isArray(modelBody?.data?.models) ? modelBody.data.models : [];
+  const excludedUnassignedModels = fetchedModels.filter((row) => isModelInUnassignedPreview(row));
+  state.models = fetchedModels.filter((row) => !isModelInUnassignedPreview(row));
+  const includedModelIds = new Set(state.models.map((row) => modelStableId(row)).filter(Boolean));
+  state.health.excludedUnassignedModelCount = excludedUnassignedModels.length;
+  state.health.excludedUnassignedModelNames = excludedUnassignedModels
+    .map((row) => String(row?.name || modelStableId(row) || "").trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
   const groupMembersById = await fetchGroupMembershipsFromXLights(state.models);
 
   try {
@@ -4211,6 +4237,9 @@ async function refreshMetadataTargetsFromXLights({ warnOnSubmodelFailure = false
           nodeRefs: Array.isArray(membership?.nodeRefs) ? membership.nodeRefs : []
         }
       };
+    }).filter((row) => {
+      const parentId = String(row?.parentId || parseSubmodelParentId(row?.id)).trim();
+      return !parentId || includedModelIds.has(parentId);
     });
     state.health.submodelDiscoveryError = "";
   } catch (err) {
@@ -7605,6 +7634,13 @@ function normalizeElementType(type) {
   return raw.toLowerCase();
 }
 
+function isModelInUnassignedPreview(model) {
+  const attrs = isPlainObject(model?.attributes) ? model.attributes : {};
+  const layoutGroup = String(model?.layoutGroup || attrs?.LayoutGroup || "").trim().toLowerCase();
+  const preview = String(model?.preview || attrs?.Preview || "").trim().toLowerCase();
+  return layoutGroup === "unassigned" || preview === "unassigned";
+}
+
 function buildMetadataTargets({ includeSubmodels = true } = {}) {
   const byId = new Map();
 
@@ -7721,6 +7757,23 @@ function saveMetadataAndRender(statusText = "") {
   render();
 }
 
+function getVisualHintDefinitionRecords() {
+  return mergeVisualHintDefinitions(state.metadata?.visualHintDefinitions || []);
+}
+
+function setVisualHintDefinitionRecords(records) {
+  state.metadata.visualHintDefinitions = toStoredVisualHintDefinitions(records);
+}
+
+function ensurePersistedVisualHintDefinitions(hintNames = []) {
+  const next = ensureVisualHintDefinitions(
+    getVisualHintDefinitionRecords(),
+    hintNames,
+    { timestamp: new Date().toISOString() }
+  );
+  setVisualHintDefinitionRecords(next);
+}
+
 function normalizeMetadataTagDescription(description) {
   return String(description || "").trim();
 }
@@ -7735,28 +7788,8 @@ function parseMetadataPreferenceList(raw) {
 }
 
 function buildEffectiveMetadataAssignments(assignments = state.metadata?.assignments || [], preferencesByTargetId = state.metadata?.preferencesByTargetId || {}) {
-  const base = Array.isArray(assignments) ? assignments : [];
-  const prefIndex = preferencesByTargetId && typeof preferencesByTargetId === "object" ? preferencesByTargetId : {};
-  return base.map((assignment) => {
-    const targetId = String(assignment?.targetId || "").trim();
-    const pref = targetId && prefIndex[targetId] && typeof prefIndex[targetId] === "object" ? prefIndex[targetId] : null;
-    if (!pref) return assignment;
-    const mergedHints = Array.from(new Set([
-      ...arr(pref?.semanticHints),
-      ...arr(pref?.submodelHints)
-    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
-    const mergedTags = Array.from(new Set([
-      ...arr(assignment?.tags),
-      ...(pref?.rolePreference ? [pref.rolePreference] : []),
-      ...mergedHints
-    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
-    return {
-      ...assignment,
-      tags: mergedTags,
-      semanticHints: mergedHints,
-      effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
-      rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
-    };
+  return buildRuntimeEffectiveMetadataAssignments(assignments, preferencesByTargetId, {
+    resolveTarget: (targetId) => getMetadataTargetById(targetId)
   });
 }
 
@@ -7879,7 +7912,14 @@ function matchesMetadataFilterValue(haystack, rawFilter) {
   const terms = parseMetadataFilterTerms(rawFilter);
   if (!terms.length) return true;
   const text = String(haystack || "").toLowerCase();
-  return terms.some((term) => text.includes(term));
+  const includeTerms = terms.filter((term) => !term.startsWith("!"));
+  const excludeTerms = terms
+    .filter((term) => term.startsWith("!"))
+    .map((term) => term.slice(1))
+    .filter(Boolean);
+  if (excludeTerms.some((term) => text.includes(term))) return false;
+  if (!includeTerms.length) return true;
+  return includeTerms.some((term) => text.includes(term));
 }
 
 function setMetadataSelectionIds(selectionIds, { save = true } = {}) {
@@ -8006,6 +8046,7 @@ function updateMetadataTargetSemanticHints(targetId, rawValue = "") {
   if (Object.keys(reduced).length) next[id] = reduced;
   else delete next[id];
   state.metadata.preferencesByTargetId = next;
+  ensurePersistedVisualHintDefinitions(nextValues);
   invalidatePlanHandoff("metadata semantic hints changed");
   saveMetadataAndRender(`Updated semantic hints for ${target.displayName || id}.`);
   return true;
@@ -9804,6 +9845,9 @@ function onResetProjectWorkspace() {
   state.ui.agentResponseId = "";
   state.ui.metadataFilterName = "";
   state.ui.metadataFilterType = "";
+  state.ui.metadataFilterRole = "";
+  state.ui.metadataFilterVisualHints = "";
+  state.ui.metadataFilterEffectAvoidances = "";
   state.ui.metadataFilterSupport = "";
   state.ui.metadataFilterTags = "";
   state.ui.metadataFilterMetadata = "";

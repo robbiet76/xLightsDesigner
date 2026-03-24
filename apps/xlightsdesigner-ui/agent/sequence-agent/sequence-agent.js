@@ -348,6 +348,25 @@ function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentInd
   return out;
 }
 
+function collectDefinedVisualHintBehaviorTextForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
+  const out = [];
+  const seen = new Set();
+  for (const targetId of normArray(targetIds).map((row) => normText(row)).filter(Boolean)) {
+    const assignment = metadataAssignmentIndex.get(targetId);
+    const definitions = normArray(assignment?.visualHintDefinitions);
+    for (const definition of definitions) {
+      const value = normText(definition?.behavioralIntent);
+      const status = normText(definition?.status).toLowerCase();
+      if (!value || (status && status !== "defined")) continue;
+      const key = value.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(value);
+    }
+  }
+  return out;
+}
+
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -358,7 +377,8 @@ function inferEffectNameFromSectionPlan({
   displayElements = [],
   sectionDirective = null,
   availableEffects = null,
-  effectAvoidances = []
+  effectAvoidances = [],
+  visualHintBehaviorText = []
 } = {}) {
   const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
   if (hinted) return hinted;
@@ -377,7 +397,8 @@ function inferEffectNameFromSectionPlan({
     normText(sectionDirective?.transitionIntent),
     ...normArray(sectionDirective?.preferredVisualFamilies)
   ].join(" ");
-  const summary = `${normText(intentSummary)} ${normText(section)} ${directiveText}`.toLowerCase();
+  const hintBehavior = normArray(visualHintBehaviorText).map((row) => normText(row)).filter(Boolean).join(" ");
+  const summary = `${normText(intentSummary)} ${normText(section)} ${directiveText} ${hintBehavior}`.toLowerCase();
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
   const explicitStaticCue = /\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary);
@@ -441,6 +462,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     ? strategySectionPlans.map((row) => {
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
         const effectAvoidances = collectEffectAvoidancesForTargets(row?.targetIds || scope.targetIds, metadataAssignmentIndex);
+        const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(row?.targetIds || scope.targetIds, metadataAssignmentIndex);
         const effectName = inferEffectNameFromSectionPlan({
           section: row?.section,
           energy: sectionDirective?.energyTarget || row?.energy,
@@ -451,7 +473,8 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           displayElements,
           sectionDirective,
           availableEffects,
-          effectAvoidances
+          effectAvoidances,
+          visualHintBehaviorText
         });
         return buildStructuredExecutionLine({
           section: row?.section,

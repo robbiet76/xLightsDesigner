@@ -269,6 +269,56 @@ test("sequence_agent honors target effect avoidances when choosing inferred effe
   assert.doesNotMatch(combined, /\bBars\b/);
 });
 
+test("sequence_agent uses defined visual hint behavior text to steer fallback effect choice", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track B", artist: "Artist B" },
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 0, endMs: 1000, energy: "medium", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Keep this support prop readable.",
+      mode: "revise",
+      scope: {
+        targetIds: ["CandyCane-01"],
+        tagNames: [],
+        sections: ["Verse 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Verse 1",
+            energy: "medium",
+            density: "medium",
+            intentSummary: "keep this support prop readable",
+            targetIds: ["CandyCane-01"],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    metadataAssignments: [
+      {
+        targetId: "CandyCane-01",
+        visualHintDefinitions: [
+          {
+            name: "Beat-Sync",
+            status: "defined",
+            behavioralIntent: "Prefer this target when the design calls for visible pulse, hits, or rhythmic support."
+          }
+        ]
+      }
+    ],
+    effectCatalog: sampleCatalog()
+  });
+
+  const combined = out.executionLines.join("\n");
+  assert.match(combined, /\bBars\b/);
+});
+
 test("sequence_agent clamps effect placement windows to sequence duration", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

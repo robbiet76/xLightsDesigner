@@ -1,38 +1,4 @@
-import { normalizeMetadataTagName } from "./metadata-tag-schema.js";
-
-function str(value = "") {
-  return String(value || "").trim();
-}
-
-function arr(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function buildEffectiveMetadataAssignments(assignments = [], preferencesByTargetId = {}) {
-  const base = Array.isArray(assignments) ? assignments : [];
-  const prefIndex = preferencesByTargetId && typeof preferencesByTargetId === "object" ? preferencesByTargetId : {};
-  return base.map((assignment) => {
-    const targetId = String(assignment?.targetId || "").trim();
-    const pref = targetId && prefIndex[targetId] && typeof prefIndex[targetId] === "object" ? prefIndex[targetId] : null;
-    if (!pref) return assignment;
-    const semanticHints = Array.from(new Set([
-      ...arr(pref?.semanticHints),
-      ...arr(pref?.submodelHints)
-    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
-    const tags = Array.from(new Set([
-      ...arr(assignment?.tags),
-      ...(pref?.rolePreference ? [pref.rolePreference] : []),
-      ...semanticHints
-    ].map((row) => normalizeMetadataTagName(row)).filter(Boolean)));
-    return {
-      ...assignment,
-      tags,
-      semanticHints,
-      effectAvoidances: arr(pref?.effectAvoidances).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
-      rolePreference: pref?.rolePreference ? normalizeMetadataTagName(pref.rolePreference) : ""
-    };
-  });
-}
+import { buildEffectiveMetadataAssignments } from "./effective-metadata-assignments.js";
 
 export function createAutomationRuntime(deps = {}) {
   const {
@@ -245,7 +211,8 @@ export function createAutomationRuntime(deps = {}) {
           displayElements: state.displayElements || [],
           metadataAssignments: buildEffectiveMetadataAssignments(
             state.metadata?.assignments || [],
-            state.metadata?.preferencesByTargetId || {}
+            state.metadata?.preferencesByTargetId || {},
+            { visualHintDefinitions: state.metadata?.visualHintDefinitions || [] }
           ),
           elevatedRiskConfirmed: Boolean(state.ui.applyApprovalChecked)
         });

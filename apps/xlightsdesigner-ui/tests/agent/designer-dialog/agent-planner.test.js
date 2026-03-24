@@ -19,7 +19,14 @@ const submodels = [
 
 const metadataAssignments = [
   { targetId: 'MegaTree', tags: ['focal', 'hero'] },
-  { targetId: 'MegaTree/TopHalf', tags: ['rhythm-driver'], semanticHints: ['top-half', 'crown'] },
+  {
+    targetId: 'MegaTree/TopHalf',
+    tags: ['rhythm-driver'],
+    semanticHints: ['top-half', 'crown'],
+    visualHintDefinitions: [
+      { name: 'Crown', behavioralIntent: 'Keep this target precise and localized.', status: 'defined' }
+    ]
+  },
   { targetId: 'Roofline', tags: ['ambient-fill'] }
 ];
 
@@ -156,6 +163,36 @@ test('resolveTargets honors submodel metadata hints as scoped metadata terms', (
   assert.deepEqual(targets.map((t) => t.id), ['MegaTree/TopHalf']);
 });
 
+test('resolveTargets honors defined visual hint semantics as scoped metadata terms', () => {
+  const normalizedIntent = normalizeIntent({
+    promptText: 'Focus the precise localized crown detail',
+    selectedTagNames: ['precise localized']
+  });
+
+  const scopedMetadataAssignments = [
+    {
+      targetId: 'MegaTree/TopHalf',
+      visualHintDefinitions: [
+        {
+          name: 'Crown',
+          semanticClass: 'precise localized',
+          status: 'defined'
+        }
+      ]
+    }
+  ];
+
+  const targets = resolveTargets({
+    normalizedIntent,
+    models,
+    submodels,
+    metadataAssignments: scopedMetadataAssignments,
+    displayElements
+  });
+
+  assert.deepEqual(targets.map((t) => t.id), ['MegaTree/TopHalf']);
+});
+
 test('planner produces concrete first-pass sequencing lines from director-level prompt', () => {
   const result = buildProposalFromIntent({
     promptText: 'I want chorus 2 to feel bigger and more energetic',
@@ -208,6 +245,7 @@ test('planner includes submodel metadata hints in planning guidance', () => {
   const combined = result.proposalLines.join('\n').toLowerCase();
   assert.ok(combined.includes('visual hints'));
   assert.ok(combined.includes('crown'));
+  assert.ok(combined.includes('keep this target precise and localized'));
 });
 
 test('planner output is deterministic for same input', () => {
