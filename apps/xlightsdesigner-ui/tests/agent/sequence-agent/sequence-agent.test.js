@@ -479,6 +479,139 @@ test("sequence_agent uses analyzed section windows for scoped effect timing", ()
   assert.equal(effectCreate.anchor.markLabel, "Chorus 1");
 });
 
+test("sequence_agent writes all timing tracks referenced by placements into the sequence", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Verse 1", startMs: 10000, endMs: 44000 },
+          { label: "Chorus 1", startMs: 44000, endMs: 62000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Build a section-aware pass.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman", "Border-01"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            designId: "design-1",
+            section: "Chorus 1",
+            energy: "high",
+            density: "medium",
+            intentSummary: "drive the chorus",
+            targetIds: ["Snowman", "Border-01"],
+            effectHints: []
+          }
+        ],
+        effectPlacements: [
+          {
+            placementId: "placement-song-structure",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 0,
+            effectName: "Color Wash",
+            startMs: 44000,
+            endMs: 62000,
+            timingContext: {
+              trackName: "XD: Song Structure",
+              anchorLabel: "Chorus 1",
+              anchorStartMs: 44000,
+              anchorEndMs: 62000,
+              alignmentMode: "section_window"
+            }
+          },
+          {
+            placementId: "placement-beat-grid",
+            designId: "design-1",
+            targetId: "Border-01",
+            layerIndex: 0,
+            effectName: "Bars",
+            startMs: 44000,
+            endMs: 46000,
+            timingContext: {
+              trackName: "XD: Beat Grid",
+              anchorLabel: "Beat 1",
+              anchorStartMs: 44000,
+              anchorEndMs: 46000,
+              alignmentMode: "beat_window"
+            }
+          },
+          {
+            placementId: "placement-phrase-cues",
+            designId: "design-1",
+            targetId: "Border-01",
+            layerIndex: 1,
+            effectName: "Wave",
+            startMs: 46000,
+            endMs: 62000,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase A",
+              anchorStartMs: 46000,
+              anchorEndMs: 62000,
+              alignmentMode: "phrase_window"
+            }
+          }
+        ]
+      }
+    },
+    sourceLines: ["General / Snowman, Border-01 / build a section-aware pass"],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Bars", params: [] },
+      { effectName: "Wave", params: [] }
+    ])
+  });
+
+  const createTrackCommands = out.commands.filter((row) => row.cmd === "timing.createTrack");
+  const insertMarkCommands = out.commands.filter((row) => row.cmd === "timing.insertMarks");
+  const effectCommands = out.commands.filter((row) => row.cmd === "effects.create");
+
+  assert.deepEqual(
+    createTrackCommands.map((row) => row.params.trackName).sort(),
+    ["XD: Beat Grid", "XD: Phrase Cues", "XD: Song Structure"]
+  );
+  assert.deepEqual(
+    insertMarkCommands.map((row) => row.params.trackName).sort(),
+    ["XD: Beat Grid", "XD: Phrase Cues", "XD: Song Structure"]
+  );
+
+  const songStructureMarks = insertMarkCommands.find((row) => row.params.trackName === "XD: Song Structure");
+  const beatGridMarks = insertMarkCommands.find((row) => row.params.trackName === "XD: Beat Grid");
+  const phraseCueMarks = insertMarkCommands.find((row) => row.params.trackName === "XD: Phrase Cues");
+
+  assert.deepEqual(songStructureMarks.params.marks, [
+    { startMs: 0, endMs: 10000, label: "Intro" },
+    { startMs: 10000, endMs: 44000, label: "Verse 1" },
+    { startMs: 44000, endMs: 62000, label: "Chorus 1" }
+  ]);
+  assert.deepEqual(beatGridMarks.params.marks, [
+    { startMs: 44000, endMs: 46000, label: "Beat 1" }
+  ]);
+  assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 46000, endMs: 62000, label: "Phrase A" }
+  ]);
+
+  const snowmanEffect = effectCommands.find((row) => row.params.modelName === "Snowman");
+  const barsEffect = effectCommands.find((row) => row.params.effectName === "Bars");
+  const waveEffect = effectCommands.find((row) => row.params.effectName === "Wave");
+
+  assert.equal(snowmanEffect.anchor.trackName, "XD: Song Structure");
+  assert.equal(barsEffect.anchor.trackName, "XD: Beat Grid");
+  assert.equal(waveEffect.anchor.trackName, "XD: Phrase Cues");
+  assert.ok(snowmanEffect.dependsOn.some((id) => id.includes("timing.marks.insert:xd-song-structure")));
+  assert.ok(barsEffect.dependsOn.some((id) => id.includes("timing.marks.insert:xd-beat-grid")));
+  assert.ok(waveEffect.dependsOn.some((id) => id.includes("timing.marks.insert:xd-phrase-cues")));
+});
+
 test("sequence_agent allows decomposed multi-line direct requests", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

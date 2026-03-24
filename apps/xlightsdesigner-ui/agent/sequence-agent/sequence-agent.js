@@ -532,33 +532,58 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
   };
 }
 
-function buildPlacementMarks({ effectPlacements = [], sectionWindowsByName = null, trackName = "" } = {}) {
-  const normalizedTrackName = normText(trackName);
-  const marks = [];
-  const seen = new Set();
-  if (sectionWindowsByName instanceof Map && normalizedTrackName === "XD: Song Structure") {
+function buildPlacementMarksByTrack({ effectPlacements = [], sectionWindowsByName = null, defaultTrackName = "" } = {}) {
+  const marksByTrack = new Map();
+
+  function ensureTrackEntry(trackName = "") {
+    const normalizedTrackName = normText(trackName);
+    if (!normalizedTrackName) return null;
+    if (!marksByTrack.has(normalizedTrackName)) {
+      marksByTrack.set(normalizedTrackName, { marks: [], seen: new Set() });
+    }
+    return marksByTrack.get(normalizedTrackName);
+  }
+
+  function addMark(trackName = "", { label = "", startMs, endMs } = {}) {
+    const entry = ensureTrackEntry(trackName);
+    const markLabel = normText(label);
+    const start = Number(startMs);
+    const end = Number(endMs);
+    if (!entry || !markLabel || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+    const key = `${markLabel}::${start}::${end}`;
+    if (entry.seen.has(key)) return;
+    entry.seen.add(key);
+    entry.marks.push({ label: markLabel, startMs: start, endMs: end });
+  }
+
+  if (sectionWindowsByName instanceof Map) {
     for (const [label, window] of sectionWindowsByName.entries()) {
-      const markLabel = normText(label);
-      const startMs = Number(window?.startMs);
-      const endMs = Number(window?.endMs);
-      if (!markLabel || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
-      marks.push({ label: markLabel, startMs, endMs });
-      seen.add(`${markLabel}::${startMs}::${endMs}`);
+      addMark("XD: Song Structure", {
+        label,
+        startMs: window?.startMs,
+        endMs: window?.endMs
+      });
     }
   }
+
   for (const placement of normArray(effectPlacements)) {
-    const label = normText(placement?.timingContext?.anchorLabel);
-    const startMs = Number(placement?.timingContext?.anchorStartMs);
-    const endMs = Number(placement?.timingContext?.anchorEndMs);
-    if (!label || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
-    const key = `${label}::${startMs}::${endMs}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    marks.push({ label, startMs, endMs });
+    addMark(normText(placement?.timingContext?.trackName || defaultTrackName), {
+      label: placement?.timingContext?.anchorLabel,
+      startMs: placement?.timingContext?.anchorStartMs,
+      endMs: placement?.timingContext?.anchorEndMs
+    });
   }
-  return marks
-    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
-    .slice(0, 64);
+
+  const normalizedByTrack = new Map();
+  for (const [trackName, entry] of marksByTrack.entries()) {
+    normalizedByTrack.set(
+      trackName,
+      entry.marks
+        .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
+        .slice(0, 64)
+    );
+  }
+  return normalizedByTrack;
 }
 
 function clampPlacementWindow({ startMs, endMs, sequenceSettings = {} } = {}) {
@@ -600,26 +625,36 @@ function buildCommandsFromEffectPlacements({
       validationReady: false
     };
   }
-  const marks = buildPlacementMarks({ effectPlacements: placements, sectionWindowsByName, trackName });
+  const marksByTrack = buildPlacementMarksByTrack({
+    effectPlacements: placements,
+    sectionWindowsByName,
+    defaultTrackName: trackName
+  });
   const commands = [];
-  if (marks.length) {
+  const timingInsertCommandIdsByTrack = new Map();
+  for (const [markTrackName, marks] of marksByTrack.entries()) {
+    if (!marks.length) continue;
+    const safeTrackSlug = markTrackName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "track";
+    const createId = `timing.track.create:${safeTrackSlug}`;
+    const insertId = `timing.marks.insert:${safeTrackSlug}`;
     commands.push({
-      id: "timing.track.create",
+      id: createId,
       cmd: "timing.createTrack",
       params: {
-        trackName,
+        trackName: markTrackName,
         replaceIfExists: true
       }
     });
     commands.push({
-      id: "timing.marks.insert",
-      dependsOn: ["timing.track.create"],
+      id: insertId,
+      dependsOn: [createId],
       cmd: "timing.insertMarks",
       params: {
-        trackName,
+        trackName: markTrackName,
         marks
       }
     });
+    timingInsertCommandIdsByTrack.set(markTrackName, insertId);
   }
   const displayTargetIds = Array.from(new Set([
     ...normArray(targetIds).map((row) => normText(row)).filter(Boolean),
@@ -637,6 +672,7 @@ function buildCommandsFromEffectPlacements({
       placement,
       effectCatalog
     });
+    const placementTrackName = normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan";
     const window = clampPlacementWindow({
       startMs: placement.startMs,
       endMs: placement.endMs,
@@ -648,12 +684,12 @@ function buildCommandsFromEffectPlacements({
       designRevision: Number.isInteger(Number(placement?.designRevision)) ? Number(placement.designRevision) : 0,
       designAuthor: normText(placement?.designAuthor),
       dependsOn: [
-        ...(marks.length ? ["timing.marks.insert"] : []),
+        ...(timingInsertCommandIdsByTrack.has(placementTrackName) ? [timingInsertCommandIdsByTrack.get(placementTrackName)] : []),
         ...(displayOrderCommand ? [displayOrderCommand.id] : [])
       ],
       anchor: {
         kind: "timing_track",
-        trackName: normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan",
+        trackName: placementTrackName,
         markLabel: normText(placement?.timingContext?.anchorLabel),
         startMs: window.startMs,
         endMs: window.endMs,
