@@ -79,6 +79,34 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertFalse(agreement["agreedOnTimeSignature"])
         self.assertAlmostEqual(agreement["bpmDelta"], 17.12)
 
+    def test_should_prefer_secondary_meter_only_for_measured_triple_override_case(self):
+        self.assertTrue(
+            main._should_prefer_secondary_meter(
+                primary_beats_per_bar=4,
+                primary_beat_count=242,
+                primary_bpm=95.69,
+                secondary_candidate={
+                    "available": True,
+                    "beatsPerBar": 3,
+                    "beatCount": 236,
+                    "bpm": 95.24,
+                },
+            )
+        )
+        self.assertFalse(
+            main._should_prefer_secondary_meter(
+                primary_beats_per_bar=4,
+                primary_beat_count=445,
+                primary_bpm=112.36,
+                secondary_candidate={
+                    "available": True,
+                    "beatsPerBar": 4,
+                    "beatCount": 442,
+                    "bpm": 113.21,
+                },
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

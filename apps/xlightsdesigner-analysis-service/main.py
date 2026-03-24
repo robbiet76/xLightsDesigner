@@ -1307,7 +1307,47 @@ def _detect_madmom_downbeat_summary(y: np.ndarray, sr: int, duration_ms: int) ->
         "downbeatCount": len([row for row in beats_out if str(row.get("label", "")).strip() == "1"]),
         "bpm": _estimate_bpm_from_beat_starts([int(row["startMs"]) for row in beats_out]),
         "medianBeatMs": _median_beat_ms_from_starts([int(row["startMs"]) for row in beats_out]),
+        "beats": beats_out,
+        "bars": bars_out,
     }
+
+
+def _summarize_secondary_rhythm(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(candidate, dict):
+        return {"enabled": False, "available": False, "reason": "invalid"}
+    summary = dict(candidate)
+    summary.pop("beats", None)
+    summary.pop("bars", None)
+    return summary
+
+
+def _should_prefer_secondary_meter(
+    *,
+    primary_beats_per_bar: int,
+    primary_beat_count: int,
+    primary_bpm: Optional[float],
+    secondary_candidate: Dict[str, Any],
+) -> bool:
+    if not isinstance(secondary_candidate, dict):
+        return False
+    if not secondary_candidate.get("available"):
+        return False
+    secondary_bpb = int(secondary_candidate.get("beatsPerBar") or 0)
+    if int(primary_beats_per_bar) != 4 or secondary_bpb != 3:
+        return False
+    secondary_bpm = secondary_candidate.get("bpm")
+    if primary_bpm is None or secondary_bpm is None:
+        return False
+    bpm_delta = abs(float(primary_bpm) - float(secondary_bpm))
+    if bpm_delta > 2.0:
+        return False
+    secondary_beat_count = int(secondary_candidate.get("beatCount") or 0)
+    if primary_beat_count <= 0 or secondary_beat_count <= 0:
+        return False
+    beat_ratio = secondary_beat_count / float(primary_beat_count)
+    if beat_ratio < 0.9 or beat_ratio > 1.1:
+        return False
+    return True
 
 
 def _build_rhythm_provider_agreement(
@@ -2346,13 +2386,36 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         med = float(np.median(diffs)) if diffs.size else 0.0
         if med > 0:
             bpm_est = float(round(60000.0 / med, 2))
+    madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms)
     rhythm_provider_agreement = _build_rhythm_provider_agreement(
         primary_provider="librosa",
         primary_beats_per_bar=int(max(1, int(inferred_bpb))),
         primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
         primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
-        secondary_summary=_detect_madmom_downbeat_summary(y, sr, duration_ms),
+        secondary_summary=_summarize_secondary_rhythm(madmom_candidate),
     )
+    chosen_meter_source = "librosa_accent"
+    if _should_prefer_secondary_meter(
+        primary_beats_per_bar=int(max(1, int(inferred_bpb))),
+        primary_beat_count=len(beat_starts_ms),
+        primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+        secondary_candidate=madmom_candidate,
+    ):
+        secondary_bpb = int(madmom_candidate.get("beatsPerBar") or inferred_bpb)
+        secondary_sig = str(madmom_candidate.get("timeSignature") or f"{secondary_bpb}/4")
+        secondary_beats = _sanitize_marks(madmom_candidate.get("beats") or [])
+        secondary_bars = _sanitize_marks(madmom_candidate.get("bars") or [])
+        if secondary_beats and secondary_bars:
+            inferred_bpb = secondary_bpb
+            beats_out = secondary_beats
+            bars_out = secondary_bars
+            bpm_est = madmom_candidate.get("bpm") if madmom_candidate.get("bpm") is not None else bpm_est
+            chosen_meter_source = "madmom_downbeat"
+            rhythm_provider_agreement["primary"]["beatsPerBar"] = int(inferred_bpb)
+            rhythm_provider_agreement["primary"]["timeSignature"] = secondary_sig
+            rhythm_provider_agreement["primary"]["bpm"] = float(bpm_est) if bpm_est is not None else None
+            rhythm_provider_agreement["agreedOnBeatsPerBar"] = True
+            rhythm_provider_agreement["agreedOnTimeSignature"] = True
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
@@ -2397,6 +2460,7 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
             "beatsPerBar": int(max(1, int(inferred_bpb))),
             "meterAccentOffset": int(inferred_offset),
             "meterAccentScores": inferred_scores,
+            "meterSource": chosen_meter_source,
             "beatGridSelection": beat_grid_info,
             "beatQuality": {
                 "selectedSource": "librosa",
