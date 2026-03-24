@@ -10,6 +10,7 @@ import {
 } from "../../../agent/audio-analyst/audio-analyst-runtime.js";
 import {
   buildAnalysisArtifactPaths,
+  buildProfiledAnalysisArtifactPath,
   writeAnalysisArtifactToProject,
   readAnalysisArtifactFromProject
 } from "../../../../xlightsdesigner-desktop/analysis-artifact-store.mjs";
@@ -123,6 +124,16 @@ function partialPipelineResult() {
         lyricsSource: "none",
         sectionSource: "pending"
       }
+    }
+  };
+}
+
+function withProfile(artifact, mode) {
+  return {
+    ...artifact,
+    provenance: {
+      ...(artifact?.provenance || {}),
+      analysisProfile: { mode }
     }
   };
 }
@@ -287,4 +298,90 @@ test("persisted partial artifact preserves degraded status and missing-capabilit
   assert.equal(readRes.artifact.modules.lyrics.data.lines.length, 0);
   assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 0);
   assert.ok(readRes.artifact.diagnostics.warnings.some((row) => row.includes("no synced lyrics")));
+});
+
+test("analysis artifact store persists profile-specific fast and deep artifacts separately", async (t) => {
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "xld-audio-profiled-"));
+  t.after(() => fs.rmSync(tmpRoot, { recursive: true, force: true }));
+
+  const projectDir = path.join(tmpRoot, "projects", "Christmas 2026");
+  fs.mkdirSync(projectDir, { recursive: true });
+  const projectFilePath = path.join(projectDir, "Christmas 2026.xdproj");
+  fs.writeFileSync(projectFilePath, JSON.stringify({ name: "Christmas 2026" }, null, 2), "utf8");
+
+  const mediaFilePath = path.join(tmpRoot, "media", "Song.mp3");
+  fs.mkdirSync(path.dirname(mediaFilePath), { recursive: true });
+  fs.writeFileSync(mediaFilePath, "fake-audio", "utf8");
+
+  const fastArtifact = withProfile(buildAnalysisArtifactFromPipelineResult({
+    audioPath: mediaFilePath,
+    result: partialPipelineResult(),
+    requestedProvider: "auto",
+    generatedAt: "2026-03-12T12:00:00.000Z"
+  }), "fast");
+  const deepArtifact = withProfile(buildAnalysisArtifactFromPipelineResult({
+    audioPath: mediaFilePath,
+    result: samplePipelineResult(),
+    requestedProvider: "auto",
+    generatedAt: "2026-03-12T12:05:00.000Z"
+  }), "deep");
+
+  const fastWrite = writeAnalysisArtifactToProject({ projectFilePath, mediaFilePath, artifact: fastArtifact });
+  const deepWrite = writeAnalysisArtifactToProject({ projectFilePath, mediaFilePath, artifact: deepArtifact });
+  const fastPath = buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath, "fast");
+  const deepPath = buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath, "deep");
+
+  assert.equal(fastWrite.ok, true);
+  assert.equal(deepWrite.ok, true);
+  assert.ok(fs.existsSync(fastPath.profileArtifactPath));
+  assert.ok(fs.existsSync(deepPath.profileArtifactPath));
+
+  const readDefault = readAnalysisArtifactFromProject({ projectFilePath, mediaFilePath });
+  const readFast = readAnalysisArtifactFromProject({ projectFilePath, mediaFilePath, preferredProfileMode: "fast" });
+  const readDeep = readAnalysisArtifactFromProject({ projectFilePath, mediaFilePath, preferredProfileMode: "deep" });
+
+  assert.equal(readDefault.ok, true);
+  assert.equal(readDefault.artifact.provenance.analysisProfile.mode, "deep");
+  assert.equal(readFast.ok, true);
+  assert.equal(readFast.artifact.provenance.analysisProfile.mode, "fast");
+  assert.equal(readDeep.ok, true);
+  assert.equal(readDeep.artifact.provenance.analysisProfile.mode, "deep");
+});
+
+test("fast profile write does not replace existing deep canonical artifact", async (t) => {
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "xld-audio-profile-preserve-"));
+  t.after(() => fs.rmSync(tmpRoot, { recursive: true, force: true }));
+
+  const projectDir = path.join(tmpRoot, "projects", "Christmas 2026");
+  fs.mkdirSync(projectDir, { recursive: true });
+  const projectFilePath = path.join(projectDir, "Christmas 2026.xdproj");
+  fs.writeFileSync(projectFilePath, JSON.stringify({ name: "Christmas 2026" }, null, 2), "utf8");
+
+  const mediaFilePath = path.join(tmpRoot, "media", "Song.mp3");
+  fs.mkdirSync(path.dirname(mediaFilePath), { recursive: true });
+  fs.writeFileSync(mediaFilePath, "fake-audio", "utf8");
+
+  const deepArtifact = withProfile(buildAnalysisArtifactFromPipelineResult({
+    audioPath: mediaFilePath,
+    result: samplePipelineResult(),
+    requestedProvider: "auto",
+    generatedAt: "2026-03-12T12:05:00.000Z"
+  }), "deep");
+  const fastArtifact = withProfile(buildAnalysisArtifactFromPipelineResult({
+    audioPath: mediaFilePath,
+    result: partialPipelineResult(),
+    requestedProvider: "auto",
+    generatedAt: "2026-03-12T12:10:00.000Z"
+  }), "fast");
+
+  writeAnalysisArtifactToProject({ projectFilePath, mediaFilePath, artifact: deepArtifact });
+  writeAnalysisArtifactToProject({ projectFilePath, mediaFilePath, artifact: fastArtifact });
+
+  const readDefault = readAnalysisArtifactFromProject({ projectFilePath, mediaFilePath });
+  const readFast = readAnalysisArtifactFromProject({ projectFilePath, mediaFilePath, preferredProfileMode: "fast" });
+
+  assert.equal(readDefault.ok, true);
+  assert.equal(readDefault.artifact.provenance.analysisProfile.mode, "deep");
+  assert.equal(readFast.ok, true);
+  assert.equal(readFast.artifact.provenance.analysisProfile.mode, "fast");
 });

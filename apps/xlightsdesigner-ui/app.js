@@ -1075,7 +1075,8 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
   try {
     const res = await bridge.readAnalysisArtifact({
       projectFilePath,
-      mediaFilePath
+      mediaFilePath,
+      preferredProfileMode: "deep"
     });
     if (res?.ok !== true || !res.artifact || typeof res.artifact !== "object") {
       return { ok: false, reason: String(res?.code || "not_found") };

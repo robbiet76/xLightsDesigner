@@ -321,6 +321,7 @@ export function buildAnalysisArtifactFromPipelineResult({
   audioPath = "",
   mediaId = "",
   result = {},
+  analysisProfile = null,
   requestedProvider = "",
   analysisBaseUrl = "",
   generatedAt = ""
@@ -445,6 +446,7 @@ export function buildAnalysisArtifactFromPipelineResult({
         providerRequested: str(requestedProvider),
         providerUsed: str(rawMeta?.engine || requestedProvider)
       },
+      analysisProfile: isPlainObject(analysisProfile) ? analysisProfile : {},
       pipeline,
       runtime: {
         audioAnalystRole: AUDIO_ANALYST_ROLE,
@@ -637,6 +639,7 @@ export async function executeAudioAnalystFlow({
   const artifact = buildAnalysisArtifactFromPipelineResult({
     audioPath: getByPath(input, ["context", "media", "path"]),
     result: pipelineResult,
+    analysisProfile: input?.analysisProfile,
     requestedProvider: getByPath(input, ["context", "service", "provider"]),
     analysisBaseUrl: getByPath(input, ["context", "service", "baseUrl"]),
     generatedAt
