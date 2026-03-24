@@ -335,19 +335,19 @@ test("designer runtime emits exact effect placements when analyzed section timin
   const placements = result.proposalBundle.executionPlan.effectPlacements;
   assert.ok(Array.isArray(placements));
   assert.ok(placements.length >= 6);
-  const introPrimary = placements.find((row) => row.timingContext?.anchorLabel === "Intro" && row.layerIndex === 0);
-  const chorusOverlay = placements.find((row) => row.timingContext?.anchorLabel === "Chorus 1" && row.layerIndex === 1);
+  const introPrimary = placements.find((row) => row.sourceSectionLabel === "Intro" && row.layerIndex === 0);
+  const chorusOverlay = placements.find((row) => row.sourceSectionLabel === "Chorus 1" && row.layerIndex === 1);
   assert.equal(introPrimary.designId, "DES-001");
   assert.equal(introPrimary.designRevision, 0);
   assert.equal(chorusOverlay.designId, "DES-002");
   assert.equal(chorusOverlay.designRevision, 0);
   assert.equal(introPrimary.startMs, 0);
-  assert.equal(introPrimary.endMs, 10000);
-  assert.equal(introPrimary.timingContext.alignmentMode, "section_span");
-  assert.equal(chorusOverlay.timingContext.anchorStartMs, 30000);
-  assert.equal(chorusOverlay.timingContext.anchorEndMs, 50000);
-  assert.equal(chorusOverlay.startMs, 30000);
-  assert.equal(chorusOverlay.endMs, 50000);
+  assert.ok(introPrimary.endMs <= 10000);
+  assert.ok(["section_span", "section_slice"].includes(introPrimary.timingContext.alignmentMode));
+  assert.ok(chorusOverlay.timingContext.anchorStartMs >= 30000);
+  assert.ok(chorusOverlay.timingContext.anchorEndMs <= 50000);
+  assert.ok(chorusOverlay.startMs >= 30000);
+  assert.ok(chorusOverlay.endMs <= 50000);
   assert.ok(chorusOverlay.layerIntent);
   assert.ok(chorusOverlay.renderIntent);
   assert.ok(chorusOverlay.settingsIntent);
@@ -581,6 +581,59 @@ test("designer runtime keeps whole-sequence passes section-scoped even when the 
   assert.ok(placements.every((row) => row.timingContext.alignmentMode !== "beat_window"));
   assert.ok(placements.some((row) => row.timingContext.alignmentMode === "section_span"));
   assert.deepEqual(result.handoff.scope.tagNames, []);
+});
+
+test("designer runtime subdivides whole-sequence placements within sections for denser timing-anchored coverage", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-8g",
+    sequenceRevision: "rev-8g",
+    promptText: "Create a full-song sequence with stronger contrast and fuller coverage across the whole song.",
+    goals: "Create a full-song sequence with stronger contrast and fuller coverage across the whole song.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Verse 1", startMs: 10000, endMs: 30000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 30000, endMs: 50000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ],
+      designCues: {
+        cueWindowsBySection: {
+          "Verse 1": {
+            phrase: [
+              { label: "Phrase 1", trackName: "XD: Phrase Cues", startMs: 10000, endMs: 18000 },
+              { label: "Phrase 2", trackName: "XD: Phrase Cues", startMs: 18000, endMs: 30000 }
+            ]
+          },
+          "Chorus 1": {
+            beat: [
+              { label: "1", trackName: "XD: Beat Grid", startMs: 30000, endMs: 35000 },
+              { label: "2", trackName: "XD: Beat Grid", startMs: 35000, endMs: 40000 },
+              { label: "3", trackName: "XD: Beat Grid", startMs: 40000, endMs: 45000 },
+              { label: "4", trackName: "XD: Beat Grid", startMs: 45000, endMs: 50000 }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  const versePlacements = placements.filter((row) => row.sourceSectionLabel === "Verse 1");
+  const chorusPlacements = placements.filter((row) => row.sourceSectionLabel === "Chorus 1");
+  assert.ok(versePlacements.length > 0);
+  assert.ok(chorusPlacements.length > 0);
+  assert.ok(new Set(versePlacements.map((row) => `${row.startMs}-${row.endMs}`)).size >= 2);
+  assert.ok(new Set(chorusPlacements.map((row) => `${row.startMs}-${row.endMs}`)).size >= 3);
+  assert.ok(chorusPlacements.some((row) => /beat_group|section_slice/.test(row.timingContext.alignmentMode)));
 });
 
 test("designer runtime broad whole-sequence passes now use multiple supported effect families", () => {

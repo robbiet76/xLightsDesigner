@@ -1148,10 +1148,10 @@ function buildCueWindowIndex(musicDesignContext = null) {
 function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
-  if (normalizedEnergy === "high") return 8;
-  if (normalizedDensity === "wide") return 7;
-  if (normalizedEnergy === "low") return 5;
-  return 6;
+  if (normalizedEnergy === "high") return 14;
+  if (normalizedDensity === "wide") return 12;
+  if (normalizedEnergy === "low") return 8;
+  return 10;
 }
 
 function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex = 0, sectionCount = 0 } = {}) {
@@ -1473,6 +1473,133 @@ function buildPlacementWindow({ startMs = 0, endMs = 0, effectIndex = 0, effectC
   };
 }
 
+function partitionRowsIntoSlices(rows = [], desiredSlices = 1) {
+  const validRows = arr(rows).filter((row) => Number.isFinite(row?.startMs) && Number.isFinite(row?.endMs) && row.endMs > row.startMs);
+  if (!validRows.length) return [];
+  const sliceCount = Math.max(1, Math.min(validRows.length, Number(desiredSlices) || 1));
+  const out = [];
+  for (let idx = 0; idx < sliceCount; idx += 1) {
+    const startIndex = Math.floor((idx * validRows.length) / sliceCount);
+    const endIndex = Math.floor((((idx + 1) * validRows.length) / sliceCount)) - 1;
+    const group = validRows.slice(startIndex, endIndex + 1);
+    if (!group.length) continue;
+    out.push({
+      label: group.length === 1 ? group[0].label : `${group[0].label || idx + 1}-${group[group.length - 1].label || idx + 1}`,
+      trackName: str(group[0].trackName),
+      startMs: Number(group[0].startMs),
+      endMs: Number(group[group.length - 1].endMs)
+    });
+  }
+  return out.filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs);
+}
+
+function buildEqualSectionSlices({ startMs = 0, endMs = 0, count = 1, trackName = "XD: Song Structure", labelPrefix = "Slice" } = {}) {
+  const start = Number(startMs);
+  const end = Number(endMs);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return [];
+  const sliceCount = Math.max(1, Number(count) || 1);
+  if (sliceCount === 1) {
+    return [{ label: labelPrefix, trackName, startMs: start, endMs: end }];
+  }
+  const total = end - start;
+  const out = [];
+  for (let idx = 0; idx < sliceCount; idx += 1) {
+    const sliceStart = start + Math.floor((total * idx) / sliceCount);
+    const sliceEnd = idx === sliceCount - 1
+      ? end
+      : start + Math.floor((total * (idx + 1)) / sliceCount);
+    if (sliceEnd <= sliceStart) continue;
+    out.push({
+      label: `${labelPrefix} ${idx + 1}`,
+      trackName,
+      startMs: sliceStart,
+      endMs: sliceEnd
+    });
+  }
+  return out;
+}
+
+function derivePlacementSlices({
+  timed = null,
+  cueWindowIndex = null,
+  passScope = "",
+  energy = "",
+  density = "",
+  targetRole = "primary",
+  effectIndex = 0
+} = {}) {
+  const startMs = Number(timed?.startMs);
+  const endMs = Number(timed?.endMs);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return [];
+  if (str(passScope).toLowerCase() !== "whole_sequence") {
+    return [{
+      label: str(timed?.label || "Section"),
+      trackName: "XD: Song Structure",
+      startMs,
+      endMs,
+      alignmentMode: "section_span"
+    }];
+  }
+
+  const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
+  const supportTarget = targetRole === "support" || targetRole === "secondary";
+  const desiredSlices = normalizedEnergy === "high"
+    ? (supportTarget ? 3 : 4)
+    : normalizedEnergy === "low"
+      ? (supportTarget ? 1 : 2)
+      : (supportTarget ? 2 : 3);
+  const beats = cueWindowIndex?.beat?.get(str(timed?.label)) || [];
+  const phrases = cueWindowIndex?.phrase?.get(str(timed?.label)) || [];
+  const chords = cueWindowIndex?.chord?.get(str(timed?.label)) || [];
+
+  let sourceSlices = [];
+  let alignmentMode = "section_span";
+  if (normalizedEnergy === "high" && beats.length >= 3) {
+    sourceSlices = partitionRowsIntoSlices(beats, desiredSlices);
+    alignmentMode = "beat_group";
+  } else if (phrases.length >= 2) {
+    sourceSlices = partitionRowsIntoSlices(phrases, desiredSlices);
+    alignmentMode = "phrase_group";
+  } else if (chords.length >= 2 && (normalizedEnergy !== "low" || normalizedDensity === "wide")) {
+    sourceSlices = partitionRowsIntoSlices(chords, desiredSlices);
+    alignmentMode = "chord_group";
+  } else {
+    sourceSlices = buildEqualSectionSlices({
+      startMs,
+      endMs,
+      count: desiredSlices,
+      trackName: "XD: Song Structure",
+      labelPrefix: str(timed?.label || "Section")
+    });
+    alignmentMode = desiredSlices > 1 ? "section_slice" : "section_span";
+  }
+
+  const filteredSlices = sourceSlices
+    .filter((row) => Number.isFinite(row?.startMs) && Number.isFinite(row?.endMs) && row.endMs > row.startMs)
+    .map((row) => ({
+      label: str(row?.label || timed?.label || "Section"),
+      trackName: str(row?.trackName || "XD: Song Structure"),
+      startMs: Number(row.startMs),
+      endMs: Number(row.endMs),
+      alignmentMode
+    }));
+  if (!filteredSlices.length) {
+    return [{
+      label: str(timed?.label || "Section"),
+      trackName: "XD: Song Structure",
+      startMs,
+      endMs,
+      alignmentMode: "section_span"
+    }];
+  }
+
+  if (effectIndex > 0 && filteredSlices.length > 1) {
+    return filteredSlices.filter((_, idx) => idx % 2 === (supportTarget ? 1 : 0));
+  }
+  return filteredSlices;
+}
+
 function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), goal = "", musicDesignContext = null, passScope = "" } = {}) {
   const placements = [];
   const plans = arr(sectionPlans);
@@ -1511,75 +1638,86 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
         const cueWindow = cueWindows.length && passScope !== "whole_sequence"
           ? cueWindows[Math.min(effectIndex, cueWindows.length - 1)]
           : null;
-        const window = cueWindow
-          ? { startMs: cueWindow.startMs, endMs: cueWindow.endMs }
-          : buildPlacementWindow({
-              startMs: timed.startMs,
-              endMs: timed.endMs,
-              effectIndex,
-              effectCount: perTargetEffectHints.length,
-              energy: plan?.energy
+        const sliceWindows = cueWindow
+          ? [{
+              label: cueWindow.label,
+              trackName: cueWindow.trackName,
+              startMs: cueWindow.startMs,
+              endMs: cueWindow.endMs,
+              alignmentMode: `${anchorMode}_window`
+            }]
+          : derivePlacementSlices({
+              timed: { ...timed, label: section },
+              cueWindowIndex,
+              passScope,
+              energy: plan?.energy,
+              density: plan?.density,
+              targetRole,
+              effectIndex
             });
-        placements.push({
-          placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}`,
-          designId: str(plan?.designId),
-          designRevision: Number.isInteger(Number(plan?.designRevision)) ? Number(plan.designRevision) : 0,
-          designAuthor: str(plan?.designAuthor || "designer"),
-          targetId,
-          layerIndex: effectIndex,
-          effectName,
-          startMs: window.startMs,
-          endMs: window.endMs,
-          timingContext: {
-            trackName: cueWindow?.trackName || "XD: Song Structure",
-            anchorLabel: cueWindow?.label || section,
-            anchorStartMs: cueWindow?.startMs || timed.startMs,
-            anchorEndMs: cueWindow?.endMs || timed.endMs,
-            alignmentMode: cueWindow ? `${anchorMode}_window` : "section_span"
-          },
-          creative: {
-            role: effectIndex === 0
-              ? (targetRole === "support" ? "section_support" : "section_foundation")
-              : "section_accent",
-            purpose: str(plan?.intentSummary),
-            notes: effectIndex === 0
-              ? `Primary ${effectName} layer for ${section}.`
-              : `Overlay ${effectName} accent for ${section}.`
-          },
-          settingsIntent: inferPlacementSettingsIntent({
-            effectName,
-            energy: plan?.energy,
-            density: plan?.density,
-            effectIndex,
-            targetRole,
-            goal
-          }),
-          paletteIntent: inferPlacementPaletteIntent({
-            goal,
-            effectName,
-            sectionIndex,
-            sectionCount
-          }),
-          layerIntent: inferPlacementLayerIntent({
-            effectIndex,
-            effectName,
-            targetRole,
-            energy: plan?.energy,
-            goal
-          }),
-          renderIntent: inferPlacementRenderIntent({
+        for (let sliceIndex = 0; sliceIndex < sliceWindows.length; sliceIndex += 1) {
+          const window = sliceWindows[sliceIndex];
+          placements.push({
+            placementId: `placement-${sectionIndex + 1}-${targetIndex + 1}-${effectIndex + 1}-${sliceIndex + 1}`,
+            designId: str(plan?.designId),
+            designRevision: Number.isInteger(Number(plan?.designRevision)) ? Number(plan.designRevision) : 0,
+            designAuthor: str(plan?.designAuthor || "designer"),
             targetId,
-            targetRole,
-            goal,
-            effectName
-          }),
-          constraints: {
-            mustAlignToTiming: true,
-            preserveExistingEffects: false,
-            mustNotOverlap: false
-          },
-          sourceSectionLabel: section
-        });
+            layerIndex: effectIndex,
+            effectName,
+            startMs: window.startMs,
+            endMs: window.endMs,
+            timingContext: {
+              trackName: window?.trackName || "XD: Song Structure",
+              anchorLabel: window?.label || section,
+              anchorStartMs: window?.startMs || timed.startMs,
+              anchorEndMs: window?.endMs || timed.endMs,
+              alignmentMode: str(window?.alignmentMode || "section_span")
+            },
+            creative: {
+              role: effectIndex === 0
+                ? (targetRole === "support" ? "section_support" : "section_foundation")
+                : "section_accent",
+              purpose: str(plan?.intentSummary),
+              notes: effectIndex === 0
+                ? `Primary ${effectName} layer for ${section}.`
+                : `Overlay ${effectName} accent for ${section}.`
+            },
+            settingsIntent: inferPlacementSettingsIntent({
+              effectName,
+              energy: plan?.energy,
+              density: plan?.density,
+              effectIndex,
+              targetRole,
+              goal
+            }),
+            paletteIntent: inferPlacementPaletteIntent({
+              goal,
+              effectName,
+              sectionIndex,
+              sectionCount
+            }),
+            layerIntent: inferPlacementLayerIntent({
+              effectIndex,
+              effectName,
+              targetRole,
+              energy: plan?.energy,
+              goal
+            }),
+            renderIntent: inferPlacementRenderIntent({
+              targetId,
+              targetRole,
+              goal,
+              effectName
+            }),
+            constraints: {
+              mustAlignToTiming: true,
+              preserveExistingEffects: false,
+              mustNotOverlap: false
+            },
+            sourceSectionLabel: section
+          });
+        }
       }
     }
   }

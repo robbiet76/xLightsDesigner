@@ -190,3 +190,52 @@ test("practical sequence validation fails sparse low-diversity sequence plans", 
   assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /effect_monoculture/);
   assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /empty_sections/);
 });
+
+test("practical sequence validation fails under-scaled whole-song plans", () => {
+  const commands = [];
+  for (let index = 0; index < 40; index += 1) {
+    commands.push({
+      cmd: "effects.create",
+      params: {
+        modelName: `Model-${(index % 5) + 1}`,
+        layerIndex: index % 2,
+        effectName: index % 2 === 0 ? "Bars" : "Wave",
+        startMs: index * 1000,
+        endMs: (index * 1000) + 1000
+      }
+    });
+  }
+  const artifact = buildPracticalSequenceValidation({
+    planHandoff: {
+      planId: "plan-4",
+      commands,
+      metadata: {
+        sequenceSettings: { durationMs: 240000 },
+        sectionPlans: Array.from({ length: 10 }, (_, idx) => ({ section: `Section ${idx + 1}` })),
+        effectPlacements: Array.from({ length: 40 }, (_, idx) => ({ sourceSectionLabel: `Section ${(idx % 10) + 1}` })),
+        metadataAssignments: []
+      }
+    },
+    applyResult: {
+      artifactId: "apply-4",
+      status: "applied"
+    },
+    verification: {
+      revisionAdvanced: true,
+      expectedMutationsPresent: true,
+      checks: [],
+      designAlignment: {
+        observedTargets: ["Model-1", "Model-2", "Model-3", "Model-4", "Model-5"],
+        observedEffectNames: ["Bars", "Wave"]
+      },
+      designChecks: []
+    }
+  });
+
+  assert.equal(artifact.overallOk, false);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /effect_count_scale/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /effect_density_scale/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /active_target_scale/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /section_density_scale/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /layer_utilization_scale/);
+});

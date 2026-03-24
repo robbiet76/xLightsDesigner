@@ -74,6 +74,7 @@ function summarizePlanQuality(planHandoff = null) {
   const dominantEffectCount = effectCounts.size ? Math.max(...effectCounts.values()) : 0;
   const sectionPlans = arr(planHandoff?.metadata?.sectionPlans);
   const effectPlacements = arr(planHandoff?.metadata?.effectPlacements);
+  const placementCount = effectPlacements.length;
   const sectionLabels = sectionPlans.map((row) => str(row?.section)).filter(Boolean);
   const perSectionCounts = new Map(sectionLabels.map((label) => [label, 0]));
   for (const placement of effectPlacements) {
@@ -106,6 +107,23 @@ function summarizePlanQuality(planHandoff = null) {
   const aggregateTargetShare = windows.length > 0 ? aggregateTargetCommands.length / windows.length : 0;
   const coverageRatio = durationMs > 0 ? coveredMs / durationMs : 0;
   const dominantEffectShare = windows.length > 0 ? dominantEffectCount / windows.length : 0;
+  const durationMinutes = durationMs > 0 ? durationMs / 60000 : 0;
+  const effectCommandsPerMinute = durationMinutes > 0 ? effectCommands.length / durationMinutes : 0;
+  const placementsPerSection = sectionLabels.length > 0 ? placementCount / sectionLabels.length : 0;
+  const activeTargetCount = Array.from(new Set(windows.map((row) => row.target).filter(Boolean))).length;
+  const activeTargetRatio = sectionPlans.length > 0
+    ? activeTargetCount / Math.max(1, Number(planHandoff?.metadata?.scope?.targetIds?.length || activeTargetCount))
+    : 0;
+  const multiLayerTargetCount = Array.from(
+    effectCommands.reduce((map, row) => {
+      const target = str(row?.params?.modelName);
+      const layerIndex = Number(row?.params?.layerIndex);
+      if (!target || !Number.isFinite(layerIndex)) return map;
+      if (!map.has(target)) map.set(target, new Set());
+      map.get(target).add(layerIndex);
+      return map;
+    }, new Map()).entries()
+  ).filter(([, layers]) => layers.size > 1).length;
   const floatingBoundaryCommands = effectCommands
     .map((row) => ({
       target: str(row?.params?.modelName),
@@ -120,12 +138,16 @@ function summarizePlanQuality(planHandoff = null) {
     timelineCoverageRatio: coverageRatio,
     dominantEffectShare,
     aggregateTargetShare,
+    effectCommandsPerMinute,
+    placementsPerSection,
     perSectionPlacementCounts: Object.fromEntries(perSectionCounts),
     emptySections,
     repeatedSectionEffectPatterns,
     floatingBoundaryCount: floatingBoundaryCommands.length,
     floatingBoundaryCommands,
-    targetCount: Array.from(new Set(windows.map((row) => row.target).filter(Boolean))).length
+    targetCount: activeTargetCount,
+    activeTargetRatio,
+    multiLayerTargetCount
   };
 }
 
@@ -195,6 +217,9 @@ export function buildPracticalSequenceValidation({
   const metadataCoverage = summarizeObservedTargetMetadata(designAlignment?.observedTargets, metadataAssignments);
   const planQuality = summarizePlanQuality(planHandoff);
   const qualityFailures = [];
+  const durationMs = Number(planHandoff?.metadata?.sequenceSettings?.durationMs || 0);
+  const sectionCount = arr(planHandoff?.metadata?.sectionPlans).length;
+  const isWholeSongScale = durationMs >= 120000 || sectionCount >= 8;
   if (planQuality.timelineCoverageRatio < 0.55) {
     qualityFailures.push({
       kind: "timeline_coverage",
@@ -242,6 +267,41 @@ export function buildPracticalSequenceValidation({
       kind: "floating_boundaries",
       target: "sequence",
       detail: `${planQuality.floatingBoundaryCount} effect commands are not anchored to timing marks or aligned effect boundaries.`
+    });
+  }
+  if (isWholeSongScale && planQuality.effectCommandCount < 200) {
+    qualityFailures.push({
+      kind: "effect_count_scale",
+      target: "sequence",
+      detail: `Whole-song effect command count too low (${planQuality.effectCommandCount}).`
+    });
+  }
+  if (isWholeSongScale && planQuality.effectCommandsPerMinute < 45) {
+    qualityFailures.push({
+      kind: "effect_density_scale",
+      target: "sequence",
+      detail: `Whole-song effect density too low (${planQuality.effectCommandsPerMinute.toFixed(1)} commands/minute).`
+    });
+  }
+  if (isWholeSongScale && planQuality.targetCount < 18) {
+    qualityFailures.push({
+      kind: "active_target_scale",
+      target: "sequence",
+      detail: `Whole-song active target breadth too low (${planQuality.targetCount} active targets).`
+    });
+  }
+  if (isWholeSongScale && planQuality.placementsPerSection < 8) {
+    qualityFailures.push({
+      kind: "section_density_scale",
+      target: "sequence",
+      detail: `Whole-song section placement density too low (${planQuality.placementsPerSection.toFixed(1)} placements/section).`
+    });
+  }
+  if (isWholeSongScale && planQuality.multiLayerTargetCount < 6) {
+    qualityFailures.push({
+      kind: "layer_utilization_scale",
+      target: "sequence",
+      detail: `Whole-song multi-layer usage too low (${planQuality.multiLayerTargetCount} multi-layer targets).`
     });
   }
 
