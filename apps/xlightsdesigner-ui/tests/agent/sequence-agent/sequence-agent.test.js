@@ -597,7 +597,7 @@ test("sequence_agent writes all timing tracks referenced by placements into the 
     { startMs: 44000, endMs: 46000, label: "Beat 1" }
   ]);
   assert.deepEqual(phraseCueMarks.params.marks, [
-    { startMs: 46000, endMs: 62000, label: "Phrase A" }
+    { startMs: 46000, endMs: 61999, label: "Phrase A" }
   ]);
 
   const snowmanEffect = effectCommands.find((row) => row.params.modelName === "Snowman");
@@ -610,6 +610,181 @@ test("sequence_agent writes all timing tracks referenced by placements into the 
   assert.ok(snowmanEffect.dependsOn.some((id) => id.includes("timing.marks.insert:xd-song-structure")));
   assert.ok(barsEffect.dependsOn.some((id) => id.includes("timing.marks.insert:xd-beat-grid")));
   assert.ok(waveEffect.dependsOn.some((id) => id.includes("timing.marks.insert:xd-phrase-cues")));
+});
+
+test("sequence_agent drops overlapping timing marks on non-structure cue tracks", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 44000, endMs: 62000 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Build a cue-aware chorus pass.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            designId: "design-1",
+            section: "Chorus 1",
+            energy: "high",
+            density: "medium",
+            intentSummary: "drive the chorus",
+            targetIds: ["Snowman"],
+            effectHints: []
+          }
+        ],
+        effectPlacements: [
+          {
+            placementId: "phrase-hold",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 0,
+            effectName: "Color Wash",
+            startMs: 44000,
+            endMs: 46000,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase Hold",
+              anchorStartMs: 44000,
+              anchorEndMs: 46000,
+              alignmentMode: "phrase_window"
+            }
+          },
+          {
+            placementId: "phrase-release",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 1,
+            effectName: "Wave",
+            startMs: 46000,
+            endMs: 48000,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase Release",
+              anchorStartMs: 46000,
+              anchorEndMs: 48000,
+              alignmentMode: "phrase_window"
+            }
+          },
+          {
+            placementId: "phrase-combined",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 2,
+            effectName: "Bars",
+            startMs: 44000,
+            endMs: 48000,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase Hold-Phrase Release",
+              anchorStartMs: 44000,
+              anchorEndMs: 48000,
+              alignmentMode: "phrase_window"
+            }
+          }
+        ]
+      }
+    },
+    sourceLines: ["Chorus 1 / Snowman / build a cue-aware chorus pass"],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Wave", params: [] },
+      { effectName: "Bars", params: [] }
+    ])
+  });
+
+  const phraseCueMarks = out.commands.find(
+    (row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Phrase Cues"
+  );
+
+  assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 44000, endMs: 46000, label: "Phrase Hold" },
+    { startMs: 46000, endMs: 48000, label: "Phrase Release" }
+  ]);
+});
+
+test("sequence_agent clamps final non-structure cue mark to duration minus one", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track A", artist: "Artist A" },
+      structure: {
+        sections: [
+          { label: "Final Chorus", startMs: 200000, endMs: 237829 }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Build a phrase-aware final chorus pass.",
+      mode: "revise",
+      scope: {
+        targetIds: ["Snowman"],
+        tagNames: [],
+        sections: ["Final Chorus"]
+      },
+      executionStrategy: {
+        effectPlacements: [
+          {
+            placementId: "phrase-1",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 0,
+            effectName: "Color Wash",
+            startMs: 217780,
+            endMs: 227068,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase Hold",
+              anchorStartMs: 217780,
+              anchorEndMs: 227068,
+              alignmentMode: "phrase_window"
+            }
+          },
+          {
+            placementId: "phrase-2",
+            designId: "design-1",
+            targetId: "Snowman",
+            layerIndex: 1,
+            effectName: "Wave",
+            startMs: 227068,
+            endMs: 237829,
+            timingContext: {
+              trackName: "XD: Phrase Cues",
+              anchorLabel: "Phrase Release",
+              anchorStartMs: 227068,
+              anchorEndMs: 237829,
+              alignmentMode: "phrase_window"
+            }
+          }
+        ]
+      }
+    },
+    sourceLines: ["Final Chorus / Snowman / build a phrase-aware pass"],
+    sequenceSettings: {
+      durationMs: 237829
+    },
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Color Wash", params: [] },
+      { effectName: "Wave", params: [] }
+    ])
+  });
+
+  const phraseCueMarks = out.commands.find(
+    (row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Phrase Cues"
+  );
+
+  assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 217780, endMs: 227068, label: "Phrase Hold" },
+    { startMs: 227068, endMs: 237828, label: "Phrase Release" }
+  ]);
 });
 
 test("sequence_agent allows decomposed multi-line direct requests", () => {

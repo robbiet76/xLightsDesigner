@@ -532,7 +532,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
   };
 }
 
-function buildPlacementMarksByTrack({ effectPlacements = [], sectionWindowsByName = null, defaultTrackName = "" } = {}) {
+function buildPlacementMarksByTrack({ effectPlacements = [], sectionWindowsByName = null, defaultTrackName = "", sequenceSettings = {} } = {}) {
   const marksByTrack = new Map();
 
   function ensureTrackEntry(trackName = "") {
@@ -574,14 +574,51 @@ function buildPlacementMarksByTrack({ effectPlacements = [], sectionWindowsByNam
     });
   }
 
+  function normalizeTrackMarks(trackName = "", marks = []) {
+    const sortedMarks = normArray(marks)
+      .filter((row) => Number.isFinite(Number(row?.startMs)) && Number.isFinite(Number(row?.endMs)) && Number(row.endMs) > Number(row.startMs))
+      .map((row) => ({
+        label: normText(row?.label),
+        startMs: Number(row.startMs),
+        endMs: Number(row.endMs)
+      }))
+      .filter((row) => row.label)
+      .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
+    if (trackName === "XD: Song Structure") {
+      return sortedMarks.slice(0, 64);
+    }
+
+    // xLights timing rows reject overlapping marks. Prefer the most specific windows
+    // and drop broader containers such as Phrase Hold-Phrase Release.
+    const specificFirst = sortedMarks
+      .slice()
+      .sort((a, b) => {
+        const aDuration = a.endMs - a.startMs;
+        const bDuration = b.endMs - b.startMs;
+        return aDuration - bDuration || a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label);
+      });
+    const kept = [];
+    for (const mark of specificFirst) {
+      const overlapsExisting = kept.some((row) => Math.max(row.startMs, mark.startMs) < Math.min(row.endMs, mark.endMs));
+      if (overlapsExisting) continue;
+      kept.push(mark);
+    }
+    const normalizedMarks = kept
+      .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
+      .slice(0, 64);
+    const durationMs = Number(sequenceSettings?.durationMs);
+    const maxCueEndMs = Number.isFinite(durationMs) && durationMs > 1 ? durationMs - 1 : null;
+    if (maxCueEndMs == null) return normalizedMarks;
+    return normalizedMarks.map((mark) => {
+      if (!Number.isFinite(mark?.endMs) || mark.endMs !== durationMs) return mark;
+      const endMs = Math.max(mark.startMs + 1, maxCueEndMs);
+      return endMs === mark.endMs ? mark : { ...mark, endMs };
+    });
+  }
+
   const normalizedByTrack = new Map();
   for (const [trackName, entry] of marksByTrack.entries()) {
-    normalizedByTrack.set(
-      trackName,
-      entry.marks
-        .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label))
-        .slice(0, 64)
-    );
+    normalizedByTrack.set(trackName, normalizeTrackMarks(trackName, entry.marks));
   }
   return normalizedByTrack;
 }
@@ -628,7 +665,8 @@ function buildCommandsFromEffectPlacements({
   const marksByTrack = buildPlacementMarksByTrack({
     effectPlacements: placements,
     sectionWindowsByName,
-    defaultTrackName: trackName
+    defaultTrackName: trackName,
+    sequenceSettings
   });
   const commands = [];
   const timingInsertCommandIdsByTrack = new Map();
