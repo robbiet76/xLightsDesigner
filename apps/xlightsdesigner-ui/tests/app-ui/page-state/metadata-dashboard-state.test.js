@@ -88,9 +88,21 @@ function buildHelpers() {
       }
     ],
     matchesMetadataFilterValue: (value, filter) => {
-      const tokens = String(filter || "").toLowerCase().split(",").map((row) => row.trim()).filter(Boolean);
+      const tokens = String(filter || "")
+        .toLowerCase()
+        .split(/[,;|]/)
+        .map((row) => row.trim())
+        .filter(Boolean);
       if (!tokens.length) return true;
-      return tokens.some((token) => String(value || "").includes(token));
+      const text = String(value || "").toLowerCase();
+      const includeTokens = tokens.filter((token) => !token.startsWith("!"));
+      const excludeTokens = tokens
+        .filter((token) => token.startsWith("!"))
+        .map((token) => token.slice(1))
+        .filter(Boolean);
+      if (excludeTokens.some((token) => text.includes(token))) return false;
+      if (!includeTokens.length) return true;
+      return includeTokens.some((token) => text.includes(token));
     },
     normalizeMetadataSelectionIds: (ids) => Array.isArray(ids) ? ids.map(String) : []
   };
@@ -164,7 +176,7 @@ test("metadata dashboard applies filters to target rows", () => {
   assert.equal(dashboard.data.rows[0].displayName, "Snowman");
 });
 
-test("metadata dashboard applies metadata completeness filter to target rows", () => {
+test("metadata dashboard applies role filter to target rows", () => {
   const dashboard = buildMetadataDashboardState({
     state: {
       submodels: [],
@@ -173,7 +185,7 @@ test("metadata dashboard applies metadata completeness filter to target rows", (
         metadataSelectionIds: [],
         metadataFilterName: "",
         metadataFilterType: "",
-        metadataFilterMetadata: "metadata_partial"
+        metadataFilterRole: "support"
       },
       health: {}
     },
@@ -184,7 +196,7 @@ test("metadata dashboard applies metadata completeness filter to target rows", (
   assert.equal(dashboard.data.rows[0].displayName, "Snowman");
 });
 
-test("metadata dashboard applies metadata completeness dimension filter to target rows", () => {
+test("metadata dashboard applies visual hints filter to target rows", () => {
   const dashboard = buildMetadataDashboardState({
     state: {
       submodels: [],
@@ -193,8 +205,25 @@ test("metadata dashboard applies metadata completeness dimension filter to targe
         metadataSelectionIds: [],
         metadataFilterName: "",
         metadataFilterType: "",
-        metadataFilterMetadata: "metadata_needed",
-        metadataFilterDimension: "role"
+        metadataFilterVisualHints: "face"
+      },
+      health: {}
+    },
+    helpers: buildHelpers()
+  });
+
+  assert.equal(dashboard.data.rows.length, 1);
+  assert.equal(dashboard.data.rows[0].displayName, "Snowman");
+});
+
+test("metadata dashboard supports exclusion terms in filters", () => {
+  const dashboard = buildMetadataDashboardState({
+    state: {
+      submodels: [],
+      metadata: { assignments: [] },
+      ui: {
+        metadataSelectionIds: [],
+        metadataFilterName: "!snow"
       },
       health: {}
     },
@@ -203,5 +232,4 @@ test("metadata dashboard applies metadata completeness dimension filter to targe
 
   assert.equal(dashboard.data.rows.length, 1);
   assert.equal(dashboard.data.rows[0].displayName, "SpiralTrees");
-  assert.equal(dashboard.data.metadataFilterDimension, "role");
 });

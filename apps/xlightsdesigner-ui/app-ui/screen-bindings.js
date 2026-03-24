@@ -261,36 +261,29 @@ export function bindScreenEvents({
     metadataFilterNameInput.addEventListener("blur", commitNameFilter);
   }
 
-  const metadataFilterMetadataInput = app.querySelector("#metadata-filter-metadata");
-  if (metadataFilterMetadataInput) {
-    const commitMetadataFilter = () => {
-      const next = metadataFilterMetadataInput.value;
-      if (next === state.ui.metadataFilterMetadata) return;
-      state.ui.metadataFilterMetadata = next;
+  const bindMetadataGridFilter = (selector, stateKey) => {
+    const input = app.querySelector(selector);
+    if (!input) return;
+    const commit = () => {
+      const next = input.value;
+      if (next === state.ui[stateKey]) return;
+      state.ui[stateKey] = next;
       persist();
       render();
     };
-    metadataFilterMetadataInput.addEventListener("keydown", (event) => {
+    input.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
-      commitMetadataFilter();
+      commit();
     });
-    metadataFilterMetadataInput.addEventListener("change", commitMetadataFilter);
-    metadataFilterMetadataInput.addEventListener("blur", commitMetadataFilter);
-  }
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", commit);
+  };
 
-  const metadataFilterDimensionSelect = app.querySelector("#metadata-filter-dimension");
-  if (metadataFilterDimensionSelect) {
-    const commitMetadataFilterDimension = () => {
-      const next = metadataFilterDimensionSelect.value;
-      if (next === state.ui.metadataFilterDimension) return;
-      state.ui.metadataFilterDimension = next;
-      persist();
-      render();
-    };
-    metadataFilterDimensionSelect.addEventListener("change", commitMetadataFilterDimension);
-    metadataFilterDimensionSelect.addEventListener("blur", commitMetadataFilterDimension);
-  }
+  bindMetadataGridFilter("#metadata-filter-type", "metadataFilterType");
+  bindMetadataGridFilter("#metadata-filter-role", "metadataFilterRole");
+  bindMetadataGridFilter("#metadata-filter-visual-hints", "metadataFilterVisualHints");
+  bindMetadataGridFilter("#metadata-filter-effect-avoidances", "metadataFilterEffectAvoidances");
 
   const metadataSelectVisibleBtn = app.querySelector("#metadata-select-visible");
   if (metadataSelectVisibleBtn) {
@@ -361,16 +354,58 @@ export function bindScreenEvents({
   }
 
   app.querySelectorAll("[data-metadata-select]").forEach((input) => {
+    const renderPreservingMetadataGridScroll = () => {
+      const workspaceBody = app.querySelector(".workspace-content-body");
+      const wrap = app.querySelector(".metadata-targets-wrap");
+      const workspaceTop = workspaceBody ? workspaceBody.scrollTop : null;
+      const workspaceLeft = workspaceBody ? workspaceBody.scrollLeft : null;
+      const top = wrap ? wrap.scrollTop : null;
+      const left = wrap ? wrap.scrollLeft : null;
+      render();
+      if (workspaceTop == null && workspaceLeft == null && top == null && left == null) return;
+      requestAnimationFrame(() => {
+        const nextWorkspaceBody = app.querySelector(".workspace-content-body");
+        const nextWrap = app.querySelector(".metadata-targets-wrap");
+        if (nextWorkspaceBody) {
+          if (workspaceTop != null) nextWorkspaceBody.scrollTop = workspaceTop;
+          if (workspaceLeft != null) nextWorkspaceBody.scrollLeft = workspaceLeft;
+        }
+        if (!nextWrap) return;
+        if (top != null) nextWrap.scrollTop = top;
+        if (left != null) nextWrap.scrollLeft = left;
+      });
+    };
     input.addEventListener("change", () => {
       toggleMetadataSelectionId(input.dataset.metadataSelect);
-      render();
+      renderPreservingMetadataGridScroll();
     });
   });
 
   app.querySelectorAll("[data-metadata-focus]").forEach((btn) => {
+    const renderPreservingMetadataGridScroll = () => {
+      const workspaceBody = app.querySelector(".workspace-content-body");
+      const wrap = app.querySelector(".metadata-targets-wrap");
+      const workspaceTop = workspaceBody ? workspaceBody.scrollTop : null;
+      const workspaceLeft = workspaceBody ? workspaceBody.scrollLeft : null;
+      const top = wrap ? wrap.scrollTop : null;
+      const left = wrap ? wrap.scrollLeft : null;
+      render();
+      if (workspaceTop == null && workspaceLeft == null && top == null && left == null) return;
+      requestAnimationFrame(() => {
+        const nextWorkspaceBody = app.querySelector(".workspace-content-body");
+        const nextWrap = app.querySelector(".metadata-targets-wrap");
+        if (nextWorkspaceBody) {
+          if (workspaceTop != null) nextWorkspaceBody.scrollTop = workspaceTop;
+          if (workspaceLeft != null) nextWorkspaceBody.scrollLeft = workspaceLeft;
+        }
+        if (!nextWrap) return;
+        if (top != null) nextWrap.scrollTop = top;
+        if (left != null) nextWrap.scrollLeft = left;
+      });
+    };
     btn.addEventListener("click", () => {
       setMetadataFocusedTarget(btn.dataset.metadataFocus);
-      render();
+      renderPreservingMetadataGridScroll();
     });
   });
 

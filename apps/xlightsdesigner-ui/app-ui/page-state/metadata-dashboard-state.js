@@ -312,20 +312,24 @@ export function buildMetadataDashboardState({
     : {};
   const nameFilter = String(state.ui?.metadataFilterName || "");
   const typeFilter = String(state.ui?.metadataFilterType || "");
-  const metadataFilter = String(state.ui?.metadataFilterMetadata || "");
-  const metadataFilterDimension = String(state.ui?.metadataFilterDimension || "overall");
+  const roleFilter = String(state.ui?.metadataFilterRole || "");
+  const visualHintsFilter = String(state.ui?.metadataFilterVisualHints || "");
+  const effectAvoidancesFilter = String(state.ui?.metadataFilterEffectAvoidances || "");
   const filteredModels = modelOptions.filter((m) => {
     const rowName = str(m?.raw?.displayName).toLowerCase();
-    const rowType = str(m?.raw?.type).toLowerCase();
     const normalized = normalizedByTargetId.get(String(m.id));
-    const rowMetadataCompleteness = str(
-      metadataFilterDimension === "overall"
-        ? normalized?.semantics?.metadataCompleteness?.overall
-        : normalized?.semantics?.metadataCompleteness?.[metadataFilterDimension]
-    ).toLowerCase();
+    const rowType = str(normalized?.identity?.canonicalType || m?.raw?.type).toLowerCase();
+    const rowRole = str(normalized?.user?.rolePreference || "Auto").toLowerCase();
+    const rowVisualHints = escapeTagList([
+      ...escapeTagList(normalized?.user?.semanticHints),
+      ...escapeTagList(normalized?.user?.submodelHints)
+    ]).join(", ").toLowerCase();
+    const rowEffectAvoidances = escapeTagList(normalized?.user?.effectAvoidances).join(", ").toLowerCase();
     if (!matchesMetadataFilterValue(rowName, nameFilter)) return false;
     if (!matchesMetadataFilterValue(rowType, typeFilter)) return false;
-    if (!matchesMetadataFilterValue(rowMetadataCompleteness, metadataFilter)) return false;
+    if (!matchesMetadataFilterValue(rowRole, roleFilter)) return false;
+    if (!matchesMetadataFilterValue(rowVisualHints, visualHintsFilter)) return false;
+    if (!matchesMetadataFilterValue(rowEffectAvoidances, effectAvoidancesFilter)) return false;
     return true;
   });
   const submodelCount = modelOptions.filter((target) => target.raw.type === "submodel").length;
@@ -481,7 +485,6 @@ export function buildMetadataDashboardState({
       hasVisibleTargets,
       hasSelectedTargets,
       activeTargetId,
-      metadataFilterDimension,
       metadataView: str(state.ui?.metadataView || "guided") === "grid" ? "grid" : "guided",
       callToAction,
       primaryRecommendation,
@@ -517,7 +520,7 @@ export function buildMetadataDashboardState({
         metadataNeededModels: normalizedRecords.filter((row) => row.targetKind === "model" && row.semantics?.metadataCompleteness?.overall === "metadata_needed").length
       }),
       activeTarget: activeTargetData,
-      rows: filteredModels.slice(0, 200).map((m) => {
+      rows: filteredModels.map((m) => {
         const normalized = normalizedByTargetId.get(String(m.id));
         const visualHints = escapeTagList([
           ...escapeTagList(normalized?.user?.semanticHints),

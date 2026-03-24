@@ -1508,58 +1508,60 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 <button id="metadata-clear-selection" ${data.selectedCount ? "" : "disabled"}>Clear</button>
               </div>
             </div>
-            <div class="artifact-detail-grid metadata-bulk-grid">
-              <div>
-                <div class="metadata-field-label-row">
-                  <strong>Role Preference</strong>
-                  <details class="metadata-help-toggle">
-                    <summary aria-label="Role preference help">?</summary>
-                    <div class="metadata-help-popover">
-                      <p><strong>Auto</strong>: Let the app decide.</p>
-                      <p><strong>Focal</strong>: Main visual lead; draws the eye first.</p>
-                      <p><strong>Support</strong>: Reinforces the lead without dominating.</p>
-                      <p><strong>Background</strong>: Low-priority texture or fill.</p>
-                      <p><strong>Frame</strong>: Edge or perimeter structure that shapes the scene.</p>
-                      <p><strong>Accent</strong>: Short hits or punctuation, not broad base coverage.</p>
-                    </div>
-                  </details>
+            <div class="field metadata-tag-manager-body">
+              <div class="artifact-detail-grid metadata-bulk-grid">
+                <div>
+                  <div class="metadata-field-label-row">
+                    <strong>Role Preference</strong>
+                    <details class="metadata-help-toggle">
+                      <summary aria-label="Role preference help">?</summary>
+                      <div class="metadata-help-popover">
+                        <p><strong>Auto</strong>: Let the app decide.</p>
+                        <p><strong>Focal</strong>: Main visual lead; draws the eye first.</p>
+                        <p><strong>Support</strong>: Reinforces the lead without dominating.</p>
+                        <p><strong>Background</strong>: Low-priority texture or fill.</p>
+                        <p><strong>Frame</strong>: Edge or perimeter structure that shapes the scene.</p>
+                        <p><strong>Accent</strong>: Short hits or punctuation, not broad base coverage.</p>
+                      </div>
+                    </details>
+                  </div>
+                  <div class="metadata-add-row">
+                    <select id="metadata-bulk-role">
+                      <option value="">Choose role...</option>
+                      <option value="__auto__">Auto</option>
+                      ${["focal", "support", "background", "frame", "accent"].map((value) => `<option value="${value}">${value}</option>`).join("")}
+                    </select>
+                    <span></span>
+                    <button id="metadata-bulk-apply-role" ${data.selectedCount ? "" : "disabled"}>Set</button>
+                  </div>
                 </div>
-                <div class="metadata-add-row">
-                  <select id="metadata-bulk-role">
-                    <option value="">Choose role...</option>
-                    <option value="__auto__">Auto</option>
-                    ${["focal", "support", "background", "frame", "accent"].map((value) => `<option value="${value}">${value}</option>`).join("")}
-                  </select>
-                  <span></span>
-                  <button id="metadata-bulk-apply-role" ${data.selectedCount ? "" : "disabled"}>Set</button>
+                <div>
+                  <div class="metadata-field-label-row">
+                    <strong>Visual Hints</strong>
+                  </div>
+                  <div class="metadata-add-row">
+                    <select id="metadata-bulk-visual-hint">
+                      <option value="">Choose one...</option>
+                      ${((data.bulkOptions?.semanticHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                      <option value="__other__">Other...</option>
+                    </select>
+                    <input id="metadata-bulk-visual-hint-other" placeholder="Add custom visual hint" disabled />
+                    <button id="metadata-bulk-apply-visual-hint" ${data.selectedCount ? "" : "disabled"}>Add</button>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div class="metadata-field-label-row">
-                  <strong>Visual Hints</strong>
-                </div>
-                <div class="metadata-add-row">
-                  <select id="metadata-bulk-visual-hint">
-                    <option value="">Choose one...</option>
-                    ${((data.bulkOptions?.semanticHints || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
-                    <option value="__other__">Other...</option>
-                  </select>
-                  <input id="metadata-bulk-visual-hint-other" placeholder="Add custom visual hint" disabled />
-                  <button id="metadata-bulk-apply-visual-hint" ${data.selectedCount ? "" : "disabled"}>Add</button>
-                </div>
-              </div>
-              <div>
-                <div class="metadata-field-label-row">
-                  <strong>Effect Avoidances</strong>
-                </div>
-                <div class="metadata-add-row">
-                  <select id="metadata-bulk-effect-avoidance">
-                    <option value="">Choose one...</option>
-                    ${((data.bulkOptions?.effectAvoidances || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
-                    <option value="__other__">Other...</option>
-                  </select>
-                  <input id="metadata-bulk-effect-avoidance-other" placeholder="Add custom avoidance" disabled />
-                  <button id="metadata-bulk-apply-effect-avoidance" ${data.selectedCount ? "" : "disabled"}>Add</button>
+                <div>
+                  <div class="metadata-field-label-row">
+                    <strong>Effect Avoidances</strong>
+                  </div>
+                  <div class="metadata-add-row">
+                    <select id="metadata-bulk-effect-avoidance">
+                      <option value="">Choose one...</option>
+                      ${((data.bulkOptions?.effectAvoidances || []).map((value) => `<option value="${String(value).replace(/"/g, "&quot;")}">${String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</option>`).join(""))}
+                      <option value="__other__">Other...</option>
+                    </select>
+                    <input id="metadata-bulk-effect-avoidance-other" placeholder="Add custom avoidance" disabled />
+                    <button id="metadata-bulk-apply-effect-avoidance" ${data.selectedCount ? "" : "disabled"}>Add</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1577,11 +1579,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                     <th>Effect Avoidances</th>
                   </tr>
                   <tr class="metadata-filter-row">
+                    <th></th>
                     <th><input id="metadata-filter-name" value="${(state.ui.metadataFilterName || "").replace(/"/g, "&quot;")}" placeholder="name (comma-separated)..." /></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
+                    <th><input id="metadata-filter-type" value="${(state.ui.metadataFilterType || "").replace(/"/g, "&quot;")}" placeholder="type..." /></th>
+                    <th><input id="metadata-filter-role" value="${(state.ui.metadataFilterRole || "").replace(/"/g, "&quot;")}" placeholder="role..." /></th>
+                    <th><input id="metadata-filter-visual-hints" value="${(state.ui.metadataFilterVisualHints || "").replace(/"/g, "&quot;")}" placeholder="visual hints..." /></th>
+                    <th><input id="metadata-filter-effect-avoidances" value="${(state.ui.metadataFilterEffectAvoidances || "").replace(/"/g, "&quot;")}" placeholder="effect avoidances..." /></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1617,27 +1620,23 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           `
           }
           ${
-            data.activeTarget
+            view === "guided" && data.activeTarget
               ? `<section class="metadata-editor-card">
                   <div class="metadata-panel-header">
                     <div>
-                      <div class="artifact-kicker">${view === "guided" ? "Recommended" : "Update Metadata"}</div>
-                      <h4>${view === "guided" ? "Recommended Next Model" : activeTargetName || "Selected target"}</h4>
+                      <div class="artifact-kicker">Recommended</div>
+                      <h4>Recommended Next Model</h4>
                     </div>
-                    ${
-                      view === "guided"
-                        ? `<div class="row metadata-guided-nav">
-                            <button ${data.previousGuidedTargetId ? `data-metadata-focus="${String(data.previousGuidedTargetId).replace(/"/g, "&quot;")}"` : "disabled"} aria-label="Previous model">‹</button>
-                            <span class="banner">${Number(data.guidedIndex || 0)}/${Number(data.guidedTotal || 0)}</span>
-                            <button ${data.nextGuidedTargetId ? `data-metadata-focus="${String(data.nextGuidedTargetId).replace(/"/g, "&quot;")}"` : "disabled"} aria-label="Next model">›</button>
-                          </div>`
-                        : ""
-                    }
+                    <div class="row metadata-guided-nav">
+                      <button ${data.previousGuidedTargetId ? `data-metadata-focus="${String(data.previousGuidedTargetId).replace(/"/g, "&quot;")}"` : "disabled"} aria-label="Previous model">‹</button>
+                      <span class="banner">${Number(data.guidedIndex || 0)}/${Number(data.guidedTotal || 0)}</span>
+                      <button ${data.nextGuidedTargetId ? `data-metadata-focus="${String(data.nextGuidedTargetId).replace(/"/g, "&quot;")}"` : "disabled"} aria-label="Next model">›</button>
+                    </div>
                   </div>
                   <div class="metadata-editor-active">
                     <div>
                       <strong>${activeTargetName || "Selected target"}</strong>
-                      ${view === "guided" ? `<span class="banner">${String(data.activeTarget.metadataCompleteness || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>` : ""}
+                      <span class="banner">${String(data.activeTarget.metadataCompleteness || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
                     </div>
                   </div>
                   <div class="field metadata-tag-manager-body">
