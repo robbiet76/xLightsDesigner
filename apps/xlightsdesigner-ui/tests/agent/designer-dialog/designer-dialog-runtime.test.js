@@ -278,7 +278,8 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.match(sectionPlans[0].intentSummary, /restrained|slower fades|readable atmosphere/i);
   assert.match(sectionPlans[2].intentSummary, /stronger visual payoff|layered shimmer|focal emphasis/i);
   assert.notEqual(sectionPlans[0].intentSummary, result.handoff.goal);
-  assert.deepEqual(sectionPlans[0].targetIds.slice(0, 2), ["Snowman/Face2-Head", "Border-01/Segments"]);
+  assert.ok(sectionPlans[0].targetIds.slice(0, 2).every((targetId) => !/(^|\/)(allmodels|allmodels_)/i.test(targetId)));
+  assert.ok(sectionPlans[0].targetIds.includes("Snowman"));
   assert.ok(sectionPlans[0].targetIds.length >= 2);
   assert.equal(sectionPlans[0].designId, "DES-001");
   assert.equal(sectionPlans[0].designRevision, 0);
@@ -685,6 +686,46 @@ test("designer runtime broad whole-sequence passes now use multiple supported ef
   assert.ok(effectNames.some((row) => ["Pinwheel", "Meteors", "Bars"].includes(row)));
   assert.ok(effectNames.includes("Morph"));
   assert.ok(effectNames.length >= 5);
+});
+
+test("designer runtime whole-sequence passes prefer concrete targets over aggregate domains when concrete coverage exists", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-concrete-whole-sequence",
+    sequenceRevision: "rev-concrete-whole-sequence",
+    promptText: "Rework the whole show into a fuller cinematic pass with stronger contrast across sections.",
+    goals: "Create a full-song cinematic holiday treatment with stronger contrast across sections.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000, energy: "low", density: "sparse" },
+          { label: "Verse 1", startMs: 10000, endMs: 25000, energy: "medium", density: "moderate" },
+          { label: "Chorus 1", startMs: 25000, endMs: 45000, energy: "high", density: "dense" }
+        ]
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["Snowman", "PorchTree", "Train"],
+      coverageDomains: {
+        broad: ["AllModels", "FrontHouse", "FrontProps"],
+        detail: ["Border-01/Segments", "Spinner-01", "Snowflake_Large-01"]
+      },
+      metadata: { layoutMode: "2d" }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Verse 1", energy: "medium", density: "moderate" },
+        { label: "Chorus 1", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  const sectionPlans = result.proposalBundle.executionPlan.sectionPlans;
+  assert.ok(sectionPlans.every((row) => row.targetIds.length >= 4));
+  assert.ok(sectionPlans.every((row) => row.targetIds.filter((id) => /(^|\/)(allmodels|fronthouse|frontprops)/i.test(id)).length <= 1));
 });
 
 test("designer runtime keeps chorus family resemblance cues coherent while allowing final chorus build", () => {

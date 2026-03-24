@@ -397,6 +397,17 @@ function prioritizeConcreteTargets(targetIds = []) {
   return concrete.length ? [...concrete, ...aggregate] : aggregate;
 }
 
+function splitAggregateTargets(targetIds = []) {
+  const aggregatePattern = /(^|\/)(allmodels|allmodels_|.*_all$|.*_nofloods$|.*_nomatrix$|fronthouse$|frontprops$)/i;
+  const concrete = [];
+  const aggregate = [];
+  for (const targetId of uniqueStrings(targetIds)) {
+    if (aggregatePattern.test(str(targetId))) aggregate.push(targetId);
+    else concrete.push(targetId);
+  }
+  return { concrete, aggregate };
+}
+
 function chooseExecutionTargets({
   explicitTargetIds = [],
   fallbackTargetIds = [],
@@ -409,7 +420,8 @@ function chooseExecutionTargets({
   energy = "",
   density = "",
   section = "",
-  goal = ""
+  goal = "",
+  wholeSequence = false
 } = {}) {
   const explicit = uniqueStrings(explicitTargetIds);
   if (explicit.length) return explicit.slice(0, 8);
@@ -426,6 +438,19 @@ function chooseExecutionTargets({
   const left = uniqueStrings(arr(zones.left));
   const right = uniqueStrings(arr(zones.right));
   const center = uniqueStrings(arr(zones.center));
+  const concretePools = splitAggregateTargets([
+    ...focal,
+    ...detail,
+    ...fallback,
+    ...broad,
+    ...foreground,
+    ...background,
+    ...left,
+    ...right,
+    ...center
+  ]);
+  const concreteFallback = concretePools.concrete;
+  const aggregateFallback = concretePools.aggregate;
   const key = str(section).toLowerCase();
   const lowerGoal = str(goal).toLowerCase();
   const uniformHierarchy = /same emphasis|share the same emphasis|visually even|even look|no real focal hierarchy|minimal hierarchy/.test(lowerGoal);
@@ -564,6 +589,25 @@ function chooseExecutionTargets({
       ...fallback.slice(0, 3),
       ...broad.slice(0, 1)
     ]).slice(0, 8);
+  }
+  if (wholeSequence && !singleScope && !tagDriven) {
+    const concreteOnly = prioritizeConcreteTargets([
+      ...focal.slice(0, 3),
+      ...detail.slice(0, 3),
+      ...left.slice(0, 1),
+      ...right.slice(0, 1),
+      ...center.slice(0, 1),
+      ...fallback.slice(0, 4),
+      ...broad.slice(0, 1)
+    ]).filter((targetId) => !aggregateFallback.includes(targetId));
+    if (concreteOnly.length >= 6) {
+      return concreteOnly.slice(0, isPeak ? 12 : (isWide ? 11 : 9));
+    }
+    return prioritizeConcreteTargets([
+      ...concreteOnly,
+      ...concreteFallback.slice(0, 6),
+      ...aggregateFallback.slice(0, 1)
+    ]).slice(0, isPeak ? 12 : 9);
   }
   if (variedHierarchy) {
     return prioritizeConcreteTargets([
@@ -1148,10 +1192,10 @@ function buildCueWindowIndex(musicDesignContext = null) {
 function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
-  if (normalizedEnergy === "high") return 14;
-  if (normalizedDensity === "wide") return 12;
-  if (normalizedEnergy === "low") return 8;
-  return 10;
+  if (normalizedEnergy === "high") return 18;
+  if (normalizedDensity === "wide") return 15;
+  if (normalizedEnergy === "low") return 10;
+  return 12;
 }
 
 function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex = 0, sectionCount = 0 } = {}) {
@@ -1861,6 +1905,7 @@ function buildDesignerExecutionPlan({
           spatialZones,
           singleScope: passScope === "single_section",
           tagDriven: tagNames.length > 0,
+          wholeSequence: passScope === "whole_sequence",
           energy,
           density,
           section: label,
