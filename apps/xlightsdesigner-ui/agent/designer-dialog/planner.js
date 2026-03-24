@@ -320,7 +320,7 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
 
     const semanticHints = arr(assignment?.semanticHints).map((row) => str(row)).filter(Boolean);
     if (semanticHints.length) {
-      lines.push(`${scope} / ${targetName} / treat this target with these visual hints: ${semanticHints.join(", ")}`);
+      lines.push(`${scope} / ${targetName} / this target can support these visual treatments when they fit the section intent: ${semanticHints.join(", ")}`);
     }
     const definedHintIntents = arr(assignment?.visualHintDefinitions)
       .map((row) => ({
@@ -329,7 +329,7 @@ function buildMetadataGuidanceLines({ normalizedIntent = null, targets = [], met
       }))
       .filter((row) => row.name && row.behavioralIntent);
     for (const hint of definedHintIntents) {
-      lines.push(`${scope} / ${targetName} / ${hint.name}: ${hint.behavioralIntent}`);
+      lines.push(`${scope} / ${targetName} / ${hint.name}: when useful, ${hint.behavioralIntent.charAt(0).toLowerCase()}${hint.behavioralIntent.slice(1)}`);
     }
 
     const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);

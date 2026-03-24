@@ -278,7 +278,7 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.match(sectionPlans[0].intentSummary, /restrained|slower fades|readable atmosphere/i);
   assert.match(sectionPlans[2].intentSummary, /stronger visual payoff|layered shimmer|focal emphasis/i);
   assert.notEqual(sectionPlans[0].intentSummary, result.handoff.goal);
-  assert.deepEqual(sectionPlans[0].targetIds.slice(0, 2), ["AllModels", "AllModels_NoFloods"]);
+  assert.deepEqual(sectionPlans[0].targetIds.slice(0, 2), ["Snowman/Face2-Head", "Border-01/Segments"]);
   assert.ok(sectionPlans[0].targetIds.length >= 2);
   assert.equal(sectionPlans[0].designId, "DES-001");
   assert.equal(sectionPlans[0].designRevision, 0);
@@ -287,8 +287,8 @@ test("designer runtime builds actionable whole-sequence section plans instead of
   assert.ok(sectionPlans[2].targetIds.includes("Snowman"));
   assert.ok(sectionPlans[2].targetIds.includes("PorchTree"));
   assert.deepEqual(sectionPlans[0].effectHints, ["Color Wash", "Candle"]);
-  assert.deepEqual(sectionPlans[2].effectHints, ["Color Wash", "Wave"]);
-  assert.deepEqual(sectionPlans[3].effectHints, ["Bars", "Morph"]);
+  assert.deepEqual(sectionPlans[2].effectHints, ["Bars", "Meteors"]);
+  assert.deepEqual(sectionPlans[3].effectHints.sort(), ["Morph", "Spirals"]);
   assert.ok(sectionPlans[3].targetIds.some((row) => /Border-01\/Segments|Snowman\/Face2-Head/i.test(row)));
 });
 
@@ -346,8 +346,8 @@ test("designer runtime emits exact effect placements when analyzed section timin
   assert.equal(introPrimary.timingContext.alignmentMode, "section_span");
   assert.equal(chorusOverlay.timingContext.anchorStartMs, 30000);
   assert.equal(chorusOverlay.timingContext.anchorEndMs, 50000);
-  assert.ok(chorusOverlay.startMs > 30000);
-  assert.ok(chorusOverlay.endMs < 50000);
+  assert.equal(chorusOverlay.startMs, 30000);
+  assert.equal(chorusOverlay.endMs, 50000);
   assert.ok(chorusOverlay.layerIntent);
   assert.ok(chorusOverlay.renderIntent);
   assert.ok(chorusOverlay.settingsIntent);
@@ -539,6 +539,50 @@ test("designer runtime derives phrase windows from beat cues when phrase cues ar
   assert.deepEqual(alignmentModes, ["phrase_window"]);
 });
 
+test("designer runtime keeps whole-sequence passes section-scoped even when the goal mentions beat sync", () => {
+  const result = executeDesignerDialogFlow({
+    requestId: "req-8f",
+    sequenceRevision: "rev-8f",
+    promptText: "Create a full-song sequence with stronger beat sync and bigger contrast across the whole song.",
+    goals: "Create a full-song sequence with stronger beat sync and bigger contrast across the whole song.",
+    models,
+    submodels,
+    metadataAssignments,
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000, energy: "low", density: "sparse" },
+          { label: "Chorus 1", startMs: 30000, endMs: 50000, energy: "high", density: "dense" },
+          { label: "Bridge", startMs: 50000, endMs: 70000, energy: "medium", density: "wide" }
+        ]
+      }
+    },
+    musicDesignContext: {
+      sectionArc: [
+        { label: "Intro", energy: "low", density: "sparse" },
+        { label: "Chorus 1", energy: "high", density: "dense" },
+        { label: "Bridge", energy: "medium", density: "wide" }
+      ],
+      designCues: {
+        cueWindowsBySection: {
+          "Chorus 1": {
+            beat: [
+              { label: "Beat 1", trackName: "XD: Beat Grid", startMs: 30000, endMs: 30500 },
+              { label: "Beat 2", trackName: "XD: Beat Grid", startMs: 30500, endMs: 31000 }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  const placements = result.proposalBundle.executionPlan.effectPlacements;
+  assert.ok(placements.length > 0);
+  assert.ok(placements.every((row) => row.timingContext.alignmentMode !== "beat_window"));
+  assert.ok(placements.some((row) => row.timingContext.alignmentMode === "section_span"));
+  assert.deepEqual(result.handoff.scope.tagNames, []);
+});
+
 test("designer runtime broad whole-sequence passes now use multiple supported effect families", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-8",
@@ -585,7 +629,7 @@ test("designer runtime broad whole-sequence passes now use multiple supported ef
 
   const effectNames = Array.from(new Set(result.proposalBundle.executionPlan.effectPlacements.map((row) => row.effectName)));
   assert.ok(effectNames.includes("Candle"));
-  assert.ok(effectNames.includes("Pinwheel"));
+  assert.ok(effectNames.some((row) => ["Pinwheel", "Meteors", "Bars"].includes(row)));
   assert.ok(effectNames.includes("Morph"));
   assert.ok(effectNames.length >= 5);
 });

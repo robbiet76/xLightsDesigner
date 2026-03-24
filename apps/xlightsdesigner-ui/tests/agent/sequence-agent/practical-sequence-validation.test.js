@@ -7,7 +7,38 @@ test("practical sequence validation summarizes readback and design alignment", (
   const artifact = buildPracticalSequenceValidation({
     planHandoff: {
       planId: "plan-1",
+      commands: [
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Spirals", startMs: 0, endMs: 20000 }
+        },
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Wave", startMs: 20000, endMs: 40000 }
+        },
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Bars", startMs: 40000, endMs: 60000 }
+        },
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Color Wash", startMs: 60000, endMs: 80000 }
+        },
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Twinkle", startMs: 80000, endMs: 100000 }
+        }
+      ],
       metadata: {
+        sequenceSettings: { durationMs: 100000 },
+        sectionPlans: [
+          { section: "Verse 1" },
+          { section: "Chorus 1" }
+        ],
+        effectPlacements: [
+          { sourceSectionLabel: "Verse 1" },
+          { sourceSectionLabel: "Chorus 1" }
+        ],
         sequencingDesignHandoffSummary: "Tree chorus",
         sequencingSectionDirectiveCount: 1,
         metadataAssignments: [
@@ -105,4 +136,57 @@ test("practical sequence validation reports missing and pending visual hint meta
   assert.deepEqual(artifact.metadataCoverage.pendingOnlyVisualHintTargetIds, ["TreeRound"]);
   assert.match(artifact.failures.metadata.map((row) => row.kind).join(","), /missing_metadata/);
   assert.match(artifact.failures.metadata.map((row) => row.kind).join(","), /pending_visual_hint_definition/);
+});
+
+test("practical sequence validation fails sparse low-diversity sequence plans", () => {
+  const artifact = buildPracticalSequenceValidation({
+    planHandoff: {
+      planId: "plan-3",
+      commands: [
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Shimmer", startMs: 0, endMs: 5000 }
+        },
+        {
+          cmd: "effects.create",
+          params: { modelName: "TreeRound", effectName: "Shimmer", startMs: 10000, endMs: 15000 }
+        }
+      ],
+      metadata: {
+        sequenceSettings: { durationMs: 60000 },
+        sectionPlans: [
+          { section: "Intro" },
+          { section: "Verse 1" },
+          { section: "Chorus 1" }
+        ],
+        effectPlacements: [
+          { sourceSectionLabel: "Intro" },
+          { sourceSectionLabel: "Verse 1" }
+        ],
+        metadataAssignments: []
+      }
+    },
+    applyResult: {
+      artifactId: "apply-3",
+      status: "applied"
+    },
+    verification: {
+      revisionAdvanced: true,
+      expectedMutationsPresent: true,
+      checks: [],
+      designAlignment: {
+        observedTargets: ["TreeRound"],
+        observedEffectNames: ["Shimmer"]
+      },
+      designChecks: []
+    }
+  });
+
+  assert.equal(artifact.overallOk, false);
+  assert.equal(artifact.planQuality.distinctEffectCount, 1);
+  assert.ok(artifact.planQuality.timelineCoverageRatio < 0.55);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /timeline_coverage/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /effect_diversity/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /effect_monoculture/);
+  assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /empty_sections/);
 });

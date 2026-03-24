@@ -174,6 +174,19 @@ function collectKnownMetadataTags(metadataAssignments = []) {
   return uniqueStrings(tags);
 }
 
+function isSemanticTagDiscussion(text = "", variant = "") {
+  const lower = normalizeName(text);
+  const token = normalizeName(variant);
+  if (!lower || !token) return false;
+  const tokenIndex = lower.indexOf(token);
+  if (tokenIndex < 0) return false;
+  const windowStart = Math.max(0, tokenIndex - 40);
+  const windowEnd = Math.min(lower.length, tokenIndex + token.length + 80);
+  const nearby = lower.slice(windowStart, windowEnd);
+  if (!/\btag\b|\btags\b/.test(nearby)) return false;
+  return /\b(mean|means|indicate|indicates|capability|capabilities|support|supports|supportive|possibilit(?:y|ies)|not obligation|not required|can be|could be)\b/.test(nearby);
+}
+
 function collectPromptInferredTags(text = "", metadataAssignments = []) {
   const lower = normalizeName(text);
   const matches = [];
@@ -195,6 +208,7 @@ function collectPromptInferredTags(text = "", metadataAssignments = []) {
     for (const pattern of patterns) {
       const match = lower.match(pattern);
       if (!match || typeof match.index !== "number") continue;
+      if (isSemanticTagDiscussion(lower, match[0])) continue;
       index = Math.min(index, match.index);
     }
     if (Number.isFinite(index)) {

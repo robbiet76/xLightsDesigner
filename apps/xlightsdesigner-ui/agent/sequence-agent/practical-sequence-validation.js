@@ -39,6 +39,96 @@ function buildMetadataAssignmentIndex(metadataAssignments = []) {
   return out;
 }
 
+function summarizePlanQuality(planHandoff = null) {
+  const commands = arr(planHandoff?.commands);
+  const effectCommands = commands.filter((row) => str(row?.cmd) === "effects.create");
+  const aggregatePattern = /(^|\/)(allmodels|allmodels_|.*_all$|.*_nofloods$|.*_nomatrix$|fronthouse$|frontprops$)/i;
+  const durationMs = Number(planHandoff?.metadata?.sequenceSettings?.durationMs);
+  const windows = effectCommands
+    .map((row) => ({
+      startMs: Number(row?.params?.startMs),
+      endMs: Number(row?.params?.endMs),
+      effectName: str(row?.params?.effectName),
+      target: str(row?.params?.modelName)
+    }))
+    .filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs);
+  const sortedWindows = windows
+    .map((row) => ({ ...row }))
+    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  const merged = [];
+  for (const window of sortedWindows) {
+    const last = merged[merged.length - 1];
+    if (!last || window.startMs > last.endMs) {
+      merged.push({ startMs: window.startMs, endMs: window.endMs });
+      continue;
+    }
+    last.endMs = Math.max(last.endMs, window.endMs);
+  }
+  const coveredMs = merged.reduce((sum, row) => sum + Math.max(0, row.endMs - row.startMs), 0);
+  const effectCounts = new Map();
+  for (const row of windows) {
+    const key = row.effectName.toLowerCase();
+    effectCounts.set(key, (effectCounts.get(key) || 0) + 1);
+  }
+  const uniqueEffects = Array.from(new Set(windows.map((row) => row.effectName).filter(Boolean)));
+  const dominantEffectCount = effectCounts.size ? Math.max(...effectCounts.values()) : 0;
+  const sectionPlans = arr(planHandoff?.metadata?.sectionPlans);
+  const effectPlacements = arr(planHandoff?.metadata?.effectPlacements);
+  const sectionLabels = sectionPlans.map((row) => str(row?.section)).filter(Boolean);
+  const perSectionCounts = new Map(sectionLabels.map((label) => [label, 0]));
+  for (const placement of effectPlacements) {
+    const section = str(placement?.sourceSectionLabel || placement?.section);
+    if (!section) continue;
+    perSectionCounts.set(section, (perSectionCounts.get(section) || 0) + 1);
+  }
+  const emptySections = Array.from(perSectionCounts.entries())
+    .filter(([, count]) => Number(count || 0) === 0)
+    .map(([label]) => label);
+  const sectionEffectPatterns = new Map();
+  for (const placement of effectPlacements) {
+    const section = str(placement?.sourceSectionLabel || placement?.section);
+    const effectName = str(placement?.effectName);
+    if (!section || !effectName) continue;
+    if (!sectionEffectPatterns.has(section)) sectionEffectPatterns.set(section, []);
+    sectionEffectPatterns.get(section).push(effectName);
+  }
+  const repeatedSectionPatterns = new Map();
+  for (const [section, effectNames] of sectionEffectPatterns.entries()) {
+    const patternKey = uniqueStrings(effectNames).slice(0, 2).map((row) => row.toLowerCase()).join("|");
+    if (!patternKey) continue;
+    if (!repeatedSectionPatterns.has(patternKey)) repeatedSectionPatterns.set(patternKey, []);
+    repeatedSectionPatterns.get(patternKey).push(section);
+  }
+  const repeatedSectionEffectPatterns = Array.from(repeatedSectionPatterns.entries())
+    .filter(([, sections]) => arr(sections).length >= 3)
+    .map(([pattern, sections]) => ({ pattern, sections }));
+  const aggregateTargetCommands = windows.filter((row) => aggregatePattern.test(row.target));
+  const aggregateTargetShare = windows.length > 0 ? aggregateTargetCommands.length / windows.length : 0;
+  const coverageRatio = durationMs > 0 ? coveredMs / durationMs : 0;
+  const dominantEffectShare = windows.length > 0 ? dominantEffectCount / windows.length : 0;
+  const floatingBoundaryCommands = effectCommands
+    .map((row) => ({
+      target: str(row?.params?.modelName),
+      effectName: str(row?.params?.effectName),
+      basis: str(row?.anchor?.basis)
+    }))
+    .filter((row) => ["within_section", "explicit_window"].includes(row.basis));
+  return {
+    effectCommandCount: effectCommands.length,
+    distinctEffectCount: uniqueEffects.length,
+    distinctEffects: uniqueEffects,
+    timelineCoverageRatio: coverageRatio,
+    dominantEffectShare,
+    aggregateTargetShare,
+    perSectionPlacementCounts: Object.fromEntries(perSectionCounts),
+    emptySections,
+    repeatedSectionEffectPatterns,
+    floatingBoundaryCount: floatingBoundaryCommands.length,
+    floatingBoundaryCommands,
+    targetCount: Array.from(new Set(windows.map((row) => row.target).filter(Boolean))).length
+  };
+}
+
 function summarizeObservedTargetMetadata(observedTargets = [], metadataAssignments = []) {
   const targetIds = Array.from(new Set(arr(observedTargets).map((row) => str(row)).filter(Boolean)));
   const assignmentIndex = buildMetadataAssignmentIndex(metadataAssignments);
@@ -103,6 +193,57 @@ export function buildPracticalSequenceValidation({
   const readbackChecks = summarizeChecks(verification?.checks);
   const designChecks = summarizeChecks(verification?.designChecks);
   const metadataCoverage = summarizeObservedTargetMetadata(designAlignment?.observedTargets, metadataAssignments);
+  const planQuality = summarizePlanQuality(planHandoff);
+  const qualityFailures = [];
+  if (planQuality.timelineCoverageRatio < 0.55) {
+    qualityFailures.push({
+      kind: "timeline_coverage",
+      target: "sequence",
+      detail: `Timeline coverage too low (${planQuality.timelineCoverageRatio.toFixed(3)}).`
+    });
+  }
+  if (planQuality.distinctEffectCount < 5) {
+    qualityFailures.push({
+      kind: "effect_diversity",
+      target: "sequence",
+      detail: `Effect diversity too low (${planQuality.distinctEffectCount} distinct effects).`
+    });
+  }
+  if (planQuality.dominantEffectShare > 0.45) {
+    qualityFailures.push({
+      kind: "effect_monoculture",
+      target: "sequence",
+      detail: `Dominant effect share too high (${planQuality.dominantEffectShare.toFixed(3)}).`
+    });
+  }
+  if (planQuality.aggregateTargetShare > 0.35) {
+    qualityFailures.push({
+      kind: "aggregate_target_overuse",
+      target: "sequence",
+      detail: `Aggregate target share too high (${planQuality.aggregateTargetShare.toFixed(3)}).`
+    });
+  }
+  if (planQuality.repeatedSectionEffectPatterns.length) {
+    qualityFailures.push({
+      kind: "section_effect_repetition",
+      target: "sequence",
+      detail: `Section effect patterns repeat too often: ${planQuality.repeatedSectionEffectPatterns.map((row) => `${row.pattern} -> ${row.sections.join(", ")}`).join(" ; ")}`
+    });
+  }
+  if (planQuality.emptySections.length) {
+    qualityFailures.push({
+      kind: "empty_sections",
+      target: "sequence",
+      detail: `No placements generated for sections: ${planQuality.emptySections.join(", ")}`
+    });
+  }
+  if (planQuality.floatingBoundaryCount > 0) {
+    qualityFailures.push({
+      kind: "floating_boundaries",
+      target: "sequence",
+      detail: `${planQuality.floatingBoundaryCount} effect commands are not anchored to timing marks or aligned effect boundaries.`
+    });
+  }
 
   const artifact = {
     artifactType: "practical_sequence_validation_v1",
@@ -114,7 +255,8 @@ export function buildPracticalSequenceValidation({
     overallOk: Boolean(
       verification?.revisionAdvanced === true &&
       verification?.expectedMutationsPresent === true &&
-      designChecks.failed === 0
+      designChecks.failed === 0 &&
+      qualityFailures.length === 0
     ),
     designSummary: str(designContext?.designSummary || meta?.sequencingDesignHandoffSummary),
     sectionDirectiveCount: Number(designContext?.sectionDirectiveCount || meta?.sequencingSectionDirectiveCount || 0),
@@ -126,7 +268,8 @@ export function buildPracticalSequenceValidation({
       expectedMutationsPresent: verification?.expectedMutationsPresent === true,
       readbackChecks,
       designChecks,
-      metadataCoverage: metadataCoverage.counts
+      metadataCoverage: metadataCoverage.counts,
+      planQuality
     },
     designAlignment: {
       primaryFocusTargetIds: arr(designAlignment?.primaryFocusTargetIds),
@@ -139,6 +282,7 @@ export function buildPracticalSequenceValidation({
       roleCoverage: arr(designAlignment?.roleCoverage)
     },
     metadataCoverage,
+    planQuality,
     failures: {
       readback: compactFailures(verification?.checks),
       design: compactFailures(verification?.designChecks),
@@ -153,7 +297,8 @@ export function buildPracticalSequenceValidation({
           target: targetId,
           detail: "Observed target relies on visual hints that are still pending definition."
         }))
-      ]
+      ],
+      quality: qualityFailures
     }
   };
 

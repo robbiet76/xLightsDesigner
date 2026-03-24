@@ -246,6 +246,58 @@ function rotateStrings(values = [], seed = "") {
   return rows.slice(offset).concat(rows.slice(0, offset));
 }
 
+function rotateOffset(values = [], offset = 0) {
+  const rows = uniqueStrings(values);
+  if (rows.length <= 1) return rows;
+  const normalizedOffset = Math.max(0, Number(offset) || 0) % rows.length;
+  return rows.slice(normalizedOffset).concat(rows.slice(0, normalizedOffset));
+}
+
+function classifySectionEffectPool(section = "", energy = "", density = "") {
+  const lowerSection = str(section).toLowerCase();
+  const normalizedEnergy = str(energy).toLowerCase();
+  const normalizedDensity = str(density).toLowerCase();
+  if (/intro/.test(lowerSection)) return ["Color Wash", "Candle", "Wave", "On"];
+  if (/outro|coda/.test(lowerSection)) return ["Wave", "Spirals", "Color Wash", "On"];
+  if (/bridge|middle 8|interlude|instrumental/.test(lowerSection)) return ["Bars", "Morph", "Shockwave", "Spirals"];
+  if (/chorus|final chorus|drop|payoff|finale/.test(lowerSection) || normalizedEnergy === "high") {
+    return ["Bars", "Meteors", "Pinwheel", "Wave", "Shimmer"];
+  }
+  if (/verse/.test(lowerSection)) return ["Color Wash", "Wave", "Butterfly", "Bars", "Circles"];
+  if (normalizedDensity === "wide") return ["Bars", "Morph", "Wave", "Shockwave"];
+  return ["Color Wash", "Wave", "Butterfly", "Bars"];
+}
+
+function diversifyWholeSequenceEffectHints({
+  baseEffectHints = [],
+  section = "",
+  energy = "",
+  density = "",
+  sectionIndex = 0,
+  repeatedRoleIndex = 0,
+  previousEffectHints = []
+} = {}) {
+  const base = uniqueStrings(baseEffectHints);
+  const sectionPool = classifySectionEffectPool(section, energy, density);
+  const merged = rotateOffset(uniqueStrings([...base, ...sectionPool]), sectionIndex + repeatedRoleIndex);
+  const previous = uniqueStrings(previousEffectHints).map((row) => str(row).toLowerCase());
+  const previousPrimary = previous[0] || "";
+  const previousSecondary = previous[1] || "";
+  const filtered = merged.filter((effectName, idx) => {
+    const lower = str(effectName).toLowerCase();
+    if (idx === 0 && previousPrimary && lower === previousPrimary) return false;
+    if (idx <= 1 && previousSecondary && lower === previousSecondary) return false;
+    return true;
+  });
+  const diversified = filtered.length ? filtered : merged;
+  const primary = diversified[0] || base[0] || sectionPool[0] || "Color Wash";
+  const secondaryCandidates = diversified
+    .slice(1)
+    .filter((effectName) => str(effectName).toLowerCase() !== str(primary).toLowerCase());
+  const secondary = secondaryCandidates[0] || base[1] || sectionPool[1] || "Wave";
+  return uniqueStrings([primary, secondary]).slice(0, 2);
+}
+
 function canonicalizeDesignerEffectHint(value = "") {
   return canonicalizeEffectNameAlias(value);
 }
@@ -395,7 +447,7 @@ function chooseExecutionTargets({
   const floodedFinale = isFloodedFinaleGoal(lowerGoal);
   const variedHierarchy = !uniformHierarchy && isVariedHierarchyGoal(lowerGoal);
   if (/foreground/.test(lowerGoal) || /background/.test(lowerGoal)) {
-    return uniqueStrings([
+    return prioritizeConcreteTargets([
       ...foreground.slice(0, 1),
       ...background.slice(0, 2),
       ...center.slice(0, 1),
@@ -405,7 +457,7 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (/left side|left\b|right side|right\b/.test(lowerGoal)) {
-    return uniqueStrings([
+    return prioritizeConcreteTargets([
       ...left.slice(0, 2),
       ...right.slice(0, 2),
       ...center.slice(0, 1),
@@ -499,14 +551,14 @@ function chooseExecutionTargets({
       ]).slice(0, 8);
     }
     if (isGentle) {
-      return uniqueStrings([
+      return prioritizeConcreteTargets([
         ...focal.slice(0, 2),
         ...detail.slice(0, 2),
         ...fallback.slice(0, 3),
         ...broad.slice(0, 1)
       ]).slice(0, 8);
     }
-    return uniqueStrings([
+    return prioritizeConcreteTargets([
       ...focal.slice(0, 2),
       ...detail.slice(0, 2),
       ...fallback.slice(0, 3),
@@ -531,26 +583,26 @@ function chooseExecutionTargets({
   }
   if (isPeak) {
     if (/final chorus|finale/.test(key) && controlledFinale) {
-      return uniqueStrings([
+      return prioritizeConcreteTargets([
         ...focal.slice(0, 2),
         ...detail.slice(0, 2),
         ...fallback.slice(0, 2)
       ]).slice(0, 5);
     }
     if (/final chorus|finale/.test(key) && floodedFinale) {
-      return uniqueStrings([
+      return prioritizeConcreteTargets([
         ...focal.slice(0, 2),
         ...detail.slice(0, 2),
         ...broad.slice(0, 2),
         ...fallback.slice(0, 2)
       ]).slice(0, 8);
     }
-    return uniqueStrings([
+    return prioritizeConcreteTargets([
       ...focal.slice(0, 2),
       ...detail.slice(0, 2),
       ...broad.slice(0, 2),
       ...fallback.slice(0, 2)
-    ]).slice(0, 8);
+    ]).slice(0, 10);
   }
   if (focusedRap) {
     return prioritizeConcreteTargets([
@@ -585,7 +637,7 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (isWide) {
-    return uniqueStrings([
+    return prioritizeConcreteTargets([
       ...broad.slice(0, 1),
       ...detail.slice(0, 2),
       ...focal.slice(0, 1),
@@ -593,17 +645,18 @@ function chooseExecutionTargets({
     ]).slice(0, 8);
   }
   if (isGentle) {
-    return uniqueStrings([
-      ...broad.slice(0, 2),
-      ...detail.slice(0, 1),
-      ...fallback.slice(0, 2)
-    ]).slice(0, 8);
+    return prioritizeConcreteTargets([
+      ...detail.slice(0, 2),
+      ...focal.slice(0, 1),
+      ...fallback.slice(0, 3),
+      ...broad.slice(0, 1)
+    ]).slice(0, 7);
   }
-  return uniqueStrings([
-    ...broad.slice(0, 2),
-    ...focal.slice(0, 1),
-    ...detail.slice(0, 1),
-    ...fallback.slice(0, 2)
+  return prioritizeConcreteTargets([
+    ...focal.slice(0, 2),
+    ...detail.slice(0, 2),
+    ...fallback.slice(0, 3),
+    ...broad.slice(0, 1)
   ]).slice(0, 8);
 }
 
@@ -1016,9 +1069,16 @@ function buildTimedSectionMap(analysisHandoff = null) {
   return map;
 }
 
-function inferPlacementAnchorMode(goal = "") {
+function inferPlacementAnchorMode(goal = "", { passScope = "" } = {}) {
   const lowerGoal = str(goal).toLowerCase();
+  const normalizedPassScope = str(passScope).toLowerCase();
+  const explicitBeatLock = /\b(every beat|each beat|beat-by-beat|per-beat|beat locked every beat|lock to each beat)\b/.test(lowerGoal);
+  const explicitPhraseLock = /\b(phrase by phrase|per phrase|phrase-locked|phrase release|phrase transitions?)\b/.test(lowerGoal);
   if (/\b(ignore the phrase release|ignore phrase release|ignore the chord changes|ignore chord changes|ignore the beat grid|ignore beat grid|ignore the beats|ignore beats|ignore the pulse)\b/.test(lowerGoal)) {
+    return "section";
+  }
+  if (normalizedPassScope === "whole_sequence" && !explicitBeatLock) {
+    if (explicitPhraseLock) return "phrase";
     return "section";
   }
   if (/\b(beat|downbeat|upbeat|pulse|beat grid)\b/.test(lowerGoal)) return "beat";
@@ -1088,10 +1148,10 @@ function buildCueWindowIndex(musicDesignContext = null) {
 function inferTargetLimitForSection({ energy = "", density = "" } = {}) {
   const normalizedEnergy = str(energy).toLowerCase();
   const normalizedDensity = str(density).toLowerCase();
-  if (normalizedEnergy === "high") return 6;
-  if (normalizedDensity === "wide") return 5;
-  if (normalizedEnergy === "low") return 3;
-  return 4;
+  if (normalizedEnergy === "high") return 8;
+  if (normalizedDensity === "wide") return 7;
+  if (normalizedEnergy === "low") return 5;
+  return 6;
 }
 
 function inferPlacementPaletteIntent({ goal = "", effectName = "", sectionIndex = 0, sectionCount = 0 } = {}) {
@@ -1407,22 +1467,9 @@ function inferPlacementRenderIntent({ targetId = "", targetRole = "primary", goa
 function buildPlacementWindow({ startMs = 0, endMs = 0, effectIndex = 0, effectCount = 1, energy = "" } = {}) {
   const start = Number(startMs);
   const end = Number(endMs);
-  const duration = Math.max(1, end - start);
-  const normalizedEnergy = str(energy).toLowerCase();
-  if (effectCount <= 1 || effectIndex <= 0) {
-    return { startMs: start, endMs: end };
-  }
-  if (effectIndex === 1) {
-    const offsetStart = normalizedEnergy === "high" ? 0.18 : 0.24;
-    const offsetEnd = normalizedEnergy === "high" ? 0.82 : 0.76;
-    return {
-      startMs: Math.round(start + (duration * offsetStart)),
-      endMs: Math.round(start + (duration * offsetEnd))
-    };
-  }
   return {
-    startMs: Math.round(start + (duration * 0.52)),
-    endMs: Math.round(start + (duration * 0.92))
+    startMs: start,
+    endMs: end
   };
 }
 
@@ -1430,7 +1477,7 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
   const placements = [];
   const plans = arr(sectionPlans);
   const sectionCount = plans.length;
-  const anchorMode = inferPlacementAnchorMode(goal);
+  const anchorMode = inferPlacementAnchorMode(goal, { passScope });
   const cueWindowIndex = buildCueWindowIndex(musicDesignContext);
   for (let sectionIndex = 0; sectionIndex < plans.length; sectionIndex += 1) {
     const plan = plans[sectionIndex];
@@ -1461,7 +1508,9 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
         : effectHints.slice(0, 1);
       for (let effectIndex = 0; effectIndex < perTargetEffectHints.length; effectIndex += 1) {
         const effectName = perTargetEffectHints[effectIndex];
-        const cueWindow = cueWindows.length ? cueWindows[Math.min(effectIndex, cueWindows.length - 1)] : null;
+        const cueWindow = cueWindows.length && passScope !== "whole_sequence"
+          ? cueWindows[Math.min(effectIndex, cueWindows.length - 1)]
+          : null;
         const window = cueWindow
           ? { startMs: cueWindow.startMs, endMs: cueWindow.endMs }
           : buildPlacementWindow({
@@ -1486,7 +1535,7 @@ function buildEffectPlacements({ sectionPlans = [], timedSections = new Map(), g
             anchorLabel: cueWindow?.label || section,
             anchorStartMs: cueWindow?.startMs || timed.startMs,
             anchorEndMs: cueWindow?.endMs || timed.endMs,
-            alignmentMode: cueWindow ? `${anchorMode}_window` : effectIndex === 0 ? "section_span" : "within_section"
+            alignmentMode: cueWindow ? `${anchorMode}_window` : "section_span"
           },
           creative: {
             role: effectIndex === 0
@@ -1604,6 +1653,7 @@ function buildDesignerExecutionPlan({
   ).slice(0, 24);
   const normalizedSections = (primarySections.length ? primarySections : availableSections.map((row) => row.label))
     .slice(0, 24);
+  let previousWholeSequenceEffectHints = [];
   const sectionPlans = normalizedSections
     .map((label, idx) => {
       const match = availableSections.find((row) => str(row.label) === str(label));
@@ -1623,6 +1673,34 @@ function buildDesignerExecutionPlan({
       const effectHintGoal = passScope === "single_section"
         ? uniqueStrings([sectionGoal, str(intent.goal || "")]).join(". ")
         : sectionGoal;
+      const baseEffectHints = useGlobalEffectOverrides
+        ? resolveEffectOverrideHints(intent.effectOverrides, intent.goal || "")
+        : buildSectionEffectHints({
+            section: label,
+            energy,
+            density,
+            goal: effectHintGoal,
+            sectionIndex: idx,
+            sectionCount: normalizedSections.length,
+            repeatedRoleIndex,
+            repeatedRoleCount,
+            directorPreferences,
+            directorProfile
+          });
+      const resolvedEffectHints = passScope === "whole_sequence"
+        ? diversifyWholeSequenceEffectHints({
+            baseEffectHints: rotateOffset(baseEffectHints, idx + repeatedRoleIndex),
+            section: label,
+            energy,
+            density,
+            sectionIndex: idx,
+            repeatedRoleIndex,
+            previousEffectHints: previousWholeSequenceEffectHints
+          })
+        : baseEffectHints;
+      if (passScope === "whole_sequence") {
+        previousWholeSequenceEffectHints = resolvedEffectHints;
+      }
       return {
         designId: sharedRevisionDesignId || `DES-${String(idx + 1).padStart(3, "0")}`,
         designRevision: sharedRevisionDesignId ? sharedRevisionDesignRevision : 0,
@@ -1650,20 +1728,7 @@ function buildDesignerExecutionPlan({
           section: label,
           goal: intent.goal || ""
         }).slice(0, 40),
-        effectHints: useGlobalEffectOverrides
-          ? resolveEffectOverrideHints(intent.effectOverrides, intent.goal || "")
-          : buildSectionEffectHints({
-              section: label,
-              energy,
-              density,
-              goal: effectHintGoal,
-              sectionIndex: idx,
-              sectionCount: normalizedSections.length,
-              repeatedRoleIndex,
-              repeatedRoleCount,
-              directorPreferences,
-              directorProfile
-            })
+        effectHints: resolvedEffectHints
       };
     });
   const effectPlacements = buildEffectPlacements({

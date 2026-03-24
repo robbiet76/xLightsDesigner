@@ -3286,6 +3286,9 @@ async function onGenerate(intentOverride = "", options = {}) {
   const proposalRole = ["sequence_agent", "designer_dialog"].includes(requestedRole)
     ? requestedRole
     : "designer_dialog";
+  const hasExplicitSelectedSections = Object.prototype.hasOwnProperty.call(options || {}, "selectedSections");
+  const hasExplicitSelectedTargetIds = Object.prototype.hasOwnProperty.call(options || {}, "selectedTargetIds");
+  const hasExplicitSelectedTagNames = Object.prototype.hasOwnProperty.call(options || {}, "selectedTagNames");
   const explicitSelectedSections = Array.isArray(options?.selectedSections)
     ? options.selectedSections.map((row) => String(row || "").trim()).filter(Boolean)
     : [];
@@ -3352,7 +3355,9 @@ async function onGenerate(intentOverride = "", options = {}) {
   const musicDesignContext = buildCurrentMusicDesignContext();
   const inferredPromptSections = inferPromptSectionSelection(intentText, musicDesignContext);
   const usingAll = hasAllSectionsSelected();
-  const selected = explicitSelectedSections.length
+  const selected = hasExplicitSelectedSections
+    ? explicitSelectedSections
+    : explicitSelectedSections.length
     ? explicitSelectedSections
     : revisionTarget?.sections?.length
     ? revisionTarget.sections
@@ -3362,15 +3367,21 @@ async function onGenerate(intentOverride = "", options = {}) {
             ? getSectionChoiceList()
             : getSelectedSections().filter((s) => s !== "all")));
   const includeDesignerSelection = shouldCarryDesignerSelectionContext(intentText);
-  const designerSelectedTags = explicitSelectedTagNames.length
+  const designerSelectedTags = hasExplicitSelectedTagNames
+    ? explicitSelectedTagNames
+    : explicitSelectedTagNames.length
     ? explicitSelectedTagNames
     : (includeDesignerSelection ? (state.ui.metadataSelectedTags || []) : []);
-  const designerSelectedTargetIds = explicitSelectedTargetIds.length
+  const designerSelectedTargetIds = hasExplicitSelectedTargetIds
+    ? explicitSelectedTargetIds
+    : explicitSelectedTargetIds.length
     ? explicitSelectedTargetIds
     : revisionTarget?.targetIds?.length
     ? revisionTarget.targetIds
     : (includeDesignerSelection ? (state.ui.metadataSelectionIds || []) : []);
-  const directSelectedTargetIds = explicitSelectedTargetIds.length
+  const directSelectedTargetIds = hasExplicitSelectedTargetIds
+    ? explicitSelectedTargetIds
+    : explicitSelectedTargetIds.length
     ? explicitSelectedTargetIds
     : revisionTarget?.targetIds?.length
     ? revisionTarget.targetIds
