@@ -18,6 +18,41 @@ function getArtifactProfileMode(artifact = null) {
   return normalizeAnalysisProfileMode(mode);
 }
 
+function normalizeArtifactModulesForProfile(artifact = null, profileMode = "", mediaId = "") {
+  if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) return artifact;
+  const mode = normalizeAnalysisProfileMode(profileMode);
+  if (!mode) return artifact;
+  const modules = artifact.modules && typeof artifact.modules === "object" ? artifact.modules : null;
+  if (!modules) return artifact;
+  const nextModules = {};
+  for (const [key, value] of Object.entries(modules)) {
+    const moduleObj = value && typeof value === "object" && !Array.isArray(value) ? value : value;
+    if (!moduleObj || typeof moduleObj !== "object" || Array.isArray(moduleObj)) {
+      nextModules[key] = value;
+      continue;
+    }
+    const metadata = moduleObj.metadata && typeof moduleObj.metadata === "object" && !Array.isArray(moduleObj.metadata)
+      ? moduleObj.metadata
+      : {};
+    const moduleId = String(metadata.moduleId || key || "").trim();
+    const moduleVersion = String(metadata.moduleVersion || "v1").trim();
+    nextModules[key] = {
+      ...moduleObj,
+      metadata: {
+        ...metadata,
+        profileMode: mode,
+        invalidationKey: mediaId && moduleId && moduleVersion
+          ? `${mediaId}:${mode}:${moduleId}:${moduleVersion}`
+          : String(metadata.invalidationKey || "")
+      }
+    };
+  }
+  return {
+    ...artifact,
+    modules: nextModules
+  };
+}
+
 export function ensureProjectStructure(projectDir) {
   fs.mkdirSync(projectDir, { recursive: true });
   for (const dirName of PROJECT_REQUIRED_SUBDIRS) {
@@ -114,8 +149,9 @@ export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFile
       path: paths.mediaPath
     }
   };
+  const normalizedDoc = normalizeArtifactModulesForProfile(doc, profileMode, paths.mediaId);
   if (profiledPaths.profileMode) {
-    fs.writeFileSync(profiledPaths.profileArtifactPath, JSON.stringify(doc, null, 2), "utf8");
+    fs.writeFileSync(profiledPaths.profileArtifactPath, JSON.stringify(normalizedDoc, null, 2), "utf8");
   }
   let shouldUpdateCanonical = true;
   if (profiledPaths.profileMode === "fast" && fs.existsSync(paths.artifactPath)) {
@@ -127,7 +163,7 @@ export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFile
     }
   }
   if (shouldUpdateCanonical) {
-    fs.writeFileSync(paths.artifactPath, JSON.stringify(doc, null, 2), "utf8");
+    fs.writeFileSync(paths.artifactPath, JSON.stringify(normalizedDoc, null, 2), "utf8");
   }
   return {
     ok: true,
@@ -135,6 +171,6 @@ export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFile
     artifactPath: shouldUpdateCanonical ? paths.artifactPath : profiledPaths.profileArtifactPath,
     canonicalArtifactPath: paths.artifactPath,
     profileArtifactPath: profiledPaths.profileArtifactPath,
-    artifact: doc
+    artifact: normalizedDoc
   };
 }

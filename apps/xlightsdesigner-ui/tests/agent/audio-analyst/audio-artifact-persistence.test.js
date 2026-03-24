@@ -262,6 +262,8 @@ test("persisted canonical artifact retains full capability payloads for downstre
   assert.equal(readRes.artifact.modules.lyrics.data.lines.length, 1);
   assert.equal(readRes.artifact.modules.structureBackbone.data.segments.length, 1);
   assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 1);
+  assert.equal(readRes.artifact.modules.rhythm.metadata.profileMode, "deep");
+  assert.equal(readRes.artifact.modules.harmony.metadata.moduleVersion, "v1");
 });
 
 test("persisted partial artifact preserves degraded status and missing-capability truth", async (t) => {
@@ -297,6 +299,7 @@ test("persisted partial artifact preserves degraded status and missing-capabilit
   assert.equal(readRes.artifact.modules.rhythm.data.beats.length, 1);
   assert.equal(readRes.artifact.modules.lyrics.data.lines.length, 0);
   assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 0);
+  assert.equal(readRes.artifact.modules.semanticStructure.metadata.profileMode, "deep");
   assert.ok(readRes.artifact.diagnostics.warnings.some((row) => row.includes("no synced lyrics")));
 });
 
@@ -342,8 +345,10 @@ test("analysis artifact store persists profile-specific fast and deep artifacts 
 
   assert.equal(readDefault.ok, true);
   assert.equal(readDefault.artifact.provenance.analysisProfile.mode, "deep");
+  assert.equal(readDefault.artifact.modules.identity.metadata.profileMode, "deep");
   assert.equal(readFast.ok, true);
   assert.equal(readFast.artifact.provenance.analysisProfile.mode, "fast");
+  assert.equal(readFast.artifact.modules.identity.metadata.profileMode, "fast");
   assert.equal(readDeep.ok, true);
   assert.equal(readDeep.artifact.provenance.analysisProfile.mode, "deep");
 });

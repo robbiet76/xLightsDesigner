@@ -176,12 +176,16 @@ function buildAnalysisModules({
   harmonic = {},
   lyrics = {},
   structure = {},
+  analysisProfile = null,
+  generatedAt = "",
   pipeline = {},
   rawMeta = {},
   requestedProvider = "",
   analysisBaseUrl = ""
 } = {}) {
   const resolvedMediaId = str(mediaId) || deriveFallbackMediaId(audioPath);
+  const generatedAtValue = str(generatedAt) || new Date().toISOString();
+  const profileMode = str(analysisProfile?.mode || "deep").toLowerCase() || "deep";
   const harmonicConfidence = str(harmonic?.confidence || (Array.isArray(harmonic?.chords) && harmonic.chords.length ? "medium" : "low"));
   const lyricsConfidence = Array.isArray(lyrics?.lines) && lyrics.lines.length ? "high" : "low";
   const structureConfidence = str(structure?.confidence || (Array.isArray(structure?.sections) && structure.sections.length ? "medium" : "low"));
@@ -238,6 +242,14 @@ function buildAnalysisModules({
       str(semanticSections.length !== structureSections.length ? "generic sections excluded from semantic layer" : "")
     ].filter(Boolean)
   };
+  const buildModuleMetadata = (moduleId = "", version = "v1") => ({
+    moduleId: str(moduleId),
+    moduleVersion: str(version),
+    generatedAt: generatedAtValue,
+    profileMode,
+    freshness: "current",
+    invalidationKey: `${resolvedMediaId}:${profileMode}:${moduleId}:${version}`
+  });
 
   return {
     identity: {
@@ -250,7 +262,8 @@ function buildAnalysisModules({
       confidence: identity?.title || identity?.artist || identity?.isrc ? 0.8 : 0,
       sources: Array.from(new Set([str(identity?.provider || rawMeta?.trackIdentity?.provider), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.identity,
-      cacheKey: `${resolvedMediaId}:identity:v1`
+      cacheKey: `${resolvedMediaId}:identity:v1`,
+      metadata: buildModuleMetadata("identity", "v1")
     },
     rhythm: {
       data: {
@@ -271,7 +284,8 @@ function buildAnalysisModules({
             : ""
         )
       ].filter(Boolean),
-      cacheKey: `${resolvedMediaId}:rhythm:v1`
+      cacheKey: `${resolvedMediaId}:rhythm:v1`,
+      metadata: buildModuleMetadata("rhythm", "v2")
     },
     harmony: {
       data: {
@@ -280,7 +294,8 @@ function buildAnalysisModules({
       confidence: confidenceScore(harmonicConfidence),
       sources: Array.from(new Set([str(harmonic?.source || rawMeta?.chordAnalysis?.engine), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.harmony,
-      cacheKey: `${resolvedMediaId}:harmony:v1`
+      cacheKey: `${resolvedMediaId}:harmony:v1`,
+      metadata: buildModuleMetadata("harmony", "v1")
     },
     lyrics: {
       data: {
@@ -290,7 +305,8 @@ function buildAnalysisModules({
       confidence: confidenceScore(lyricsConfidence),
       sources: Array.from(new Set([str(lyrics?.source || rawMeta?.lyricsSource), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.lyrics,
-      cacheKey: `${resolvedMediaId}:lyrics:v1`
+      cacheKey: `${resolvedMediaId}:lyrics:v1`,
+      metadata: buildModuleMetadata("lyrics", "v1")
     },
     structureBackbone: {
       data: {
@@ -300,7 +316,8 @@ function buildAnalysisModules({
       confidence: confidenceScore(structureConfidence),
       sources: Array.from(new Set([str(structure?.source || rawMeta?.sectionSource), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.structureBackbone,
-      cacheKey: `${resolvedMediaId}:structure-backbone:v1`
+      cacheKey: `${resolvedMediaId}:structure-backbone:v1`,
+      metadata: buildModuleMetadata("structure-backbone", "v1")
     },
     semanticStructure: {
       data: {
@@ -309,7 +326,8 @@ function buildAnalysisModules({
       confidence: semanticSections.length ? confidenceScore(structureConfidence) : 0,
       sources: provenanceSources,
       diagnostics: baseDiagnostics.semanticStructure,
-      cacheKey: `${resolvedMediaId}:semantic-structure:v1`
+      cacheKey: `${resolvedMediaId}:semantic-structure:v1`,
+      metadata: buildModuleMetadata("semantic-structure", "v1")
     }
   };
 }
@@ -381,6 +399,8 @@ export function buildAnalysisArtifactFromPipelineResult({
     harmonic: harmonicBlock,
     lyrics: lyricsBlock,
     structure: structureBlock,
+    analysisProfile,
+    generatedAt: artifactGeneratedAt,
     pipeline,
     rawMeta,
     requestedProvider,

@@ -66,6 +66,23 @@ function validateAnalysisModule(errors, obj, path, label = "") {
   if (moduleObj.cacheKey != null && typeof moduleObj.cacheKey !== "string") {
     errors.push(`${prefix}.cacheKey must be a string when provided`);
   }
+  if (moduleObj.metadata != null && !isPlainObject(moduleObj.metadata)) {
+    errors.push(`${prefix}.metadata must be an object when provided`);
+  }
+  if (isPlainObject(moduleObj.metadata)) {
+    if (moduleObj.metadata.moduleVersion != null && typeof moduleObj.metadata.moduleVersion !== "string") {
+      errors.push(`${prefix}.metadata.moduleVersion must be a string when provided`);
+    }
+    if (moduleObj.metadata.generatedAt != null && typeof moduleObj.metadata.generatedAt !== "string") {
+      errors.push(`${prefix}.metadata.generatedAt must be a string when provided`);
+    }
+    if (moduleObj.metadata.profileMode != null && typeof moduleObj.metadata.profileMode !== "string") {
+      errors.push(`${prefix}.metadata.profileMode must be a string when provided`);
+    }
+    if (moduleObj.metadata.invalidationKey != null && typeof moduleObj.metadata.invalidationKey !== "string") {
+      errors.push(`${prefix}.metadata.invalidationKey must be a string when provided`);
+    }
+  }
 }
 
 export function validateAudioAnalystInput(payload = {}) {

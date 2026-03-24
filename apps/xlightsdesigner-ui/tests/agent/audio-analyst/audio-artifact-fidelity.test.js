@@ -97,8 +97,11 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.equal(artifact.provenance.evidence.webValidation.confidence, "high");
   assert.equal(typeof artifact.modules, "object");
   assert.equal(artifact.modules.identity.data.title, "Song");
+  assert.equal(artifact.modules.identity.metadata.moduleVersion, "v1");
+  assert.equal(artifact.modules.identity.metadata.profileMode, "deep");
   assert.equal(artifact.modules.rhythm.data.timeSignature, "4/4");
   assert.equal(artifact.modules.rhythm.data.providerAgreement.secondary.timeSignature, "3/4");
+  assert.ok(artifact.modules.rhythm.metadata.invalidationKey.includes(":deep:rhythm:"));
   assert.ok(artifact.modules.rhythm.diagnostics.some((line) => line.includes("timeSignature disagreement")));
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
