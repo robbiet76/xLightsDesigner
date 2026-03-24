@@ -96,3 +96,41 @@ test("automation runtime rejects empty visual hint definition requests", () => {
   assert.equal(out.ok, false);
   assert.match(out.error, /name is required/i);
 });
+
+test("automation runtime exposes visual hint definition snapshot", () => {
+  const runtime = createAutomationRuntime(buildDeps({
+    state: {
+      status: { level: "info", text: "ready" },
+      activeSequence: "",
+      sequencePathInput: "",
+      proposed: [],
+      chat: [],
+      flags: {},
+      ui: {},
+      creative: {},
+      metadata: {
+        visualHintDefinitions: [
+          {
+            name: "Cool",
+            status: "pending_definition",
+            source: "custom",
+            definedBy: "user"
+          },
+          {
+            name: "Warm Accent",
+            status: "defined",
+            source: "managed",
+            definedBy: "agent"
+          }
+        ]
+      }
+    }
+  }));
+
+  const out = runtime.getAutomationVisualHintDefinitionsSnapshot();
+  assert.equal(out.ok, true);
+  assert.equal(out.counts.systemDefined > 0, true);
+  assert.equal(out.counts.userPending, 1);
+  assert.equal(out.counts.managedDefined, 1);
+  assert.equal(Array.isArray(out.records), true);
+});

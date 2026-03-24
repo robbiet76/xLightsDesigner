@@ -1,4 +1,5 @@
 import { buildEffectiveMetadataAssignments } from "./effective-metadata-assignments.js";
+import { mergeVisualHintDefinitions } from "./visual-hint-definitions.js";
 
 export function createAutomationRuntime(deps = {}) {
   const {
@@ -792,6 +793,26 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  function getAutomationVisualHintDefinitionsSnapshot() {
+    const records = mergeVisualHintDefinitions(state.metadata?.visualHintDefinitions || []);
+    const counts = {
+      total: records.length,
+      systemDefined: records.filter((row) => String(row?.source || "").trim().toLowerCase() === "system").length,
+      userPending: records.filter((row) => String(row?.status || "").trim().toLowerCase() === "pending_definition").length,
+      managedDefined: records.filter((row) => {
+        const source = String(row?.source || "").trim().toLowerCase();
+        const status = String(row?.status || "").trim().toLowerCase();
+        return source !== "system" && status === "defined";
+      }).length
+    };
+    return {
+      ok: true,
+      status: state.status || null,
+      counts,
+      records
+    };
+  }
+
   function getAutomationReadyState() {
     return {
       ok: true,
@@ -815,6 +836,7 @@ export function createAutomationRuntime(deps = {}) {
       diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
       getComparativeValidationSnapshot: getAutomationComparativeValidationSnapshot,
       getSequencerValidationSnapshot: getAutomationSequencerValidationSnapshot,
+      getVisualHintDefinitionsSnapshot: getAutomationVisualHintDefinitionsSnapshot,
       getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,
       getPageStatesSnapshot: getAutomationPageStatesSnapshot,
       runDirectSequenceValidation: runCurrentDirectSequenceValidation,
@@ -836,6 +858,7 @@ export function createAutomationRuntime(deps = {}) {
     getAutomationAgentRuntimeSnapshot,
     getAutomationPageStatesSnapshot,
     getAutomationSequencerValidationSnapshot,
+    getAutomationVisualHintDefinitionsSnapshot,
     exposeRuntimeValidationHooks
   };
 }
