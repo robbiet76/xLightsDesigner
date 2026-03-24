@@ -66,6 +66,46 @@ function samplePipelineResult() {
         engine: "beatnet",
         lyricsSource: "lrclib",
         sectionSource: "service+llm",
+        rhythmProviderAgreement: {
+          enabled: true,
+          available: true,
+          primaryProvider: "beatnet",
+          secondaryProvider: "madmom_downbeat",
+          primary: { beatsPerBar: 4, timeSignature: "4/4", bpm: 128 },
+          secondary: { provider: "madmom_downbeat", beatsPerBar: 3, timeSignature: "3/4", bpm: 126.5 },
+          agreedOnBeatsPerBar: false,
+          agreedOnTimeSignature: false,
+          bpmDelta: 1.5
+        },
+        rhythmProviderResults: {
+          selectedProvider: "beatnet",
+          providers: {
+            beatnet: {
+              provider: "beatnet",
+              available: true,
+              selected: true,
+              beatsPerBar: 4,
+              timeSignature: "4/4",
+              bpm: 128,
+              beatCount: 1,
+              barCount: 1,
+              beats: [{ startMs: 0, endMs: 500, label: "1" }],
+              bars: [{ startMs: 0, endMs: 2000, label: "1" }]
+            },
+            madmom_downbeat: {
+              provider: "madmom_downbeat",
+              available: true,
+              selected: false,
+              beatsPerBar: 3,
+              timeSignature: "3/4",
+              bpm: 126.5,
+              beatCount: 1,
+              barCount: 1,
+              beats: [{ startMs: 0, endMs: 500, label: "1" }],
+              bars: [{ startMs: 0, endMs: 1500, label: "1" }]
+            }
+          }
+        },
         chordAnalysis: {
           avgMarginConfidence: "0.83"
         }
@@ -263,6 +303,7 @@ test("persisted canonical artifact retains full capability payloads for downstre
   assert.equal(readRes.artifact.modules.structureBackbone.data.segments.length, 1);
   assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 1);
   assert.equal(readRes.artifact.modules.rhythm.metadata.profileMode, "deep");
+  assert.equal(readRes.artifact.modules.rhythm.data.providerResults.providers.beatnet.timeSignature, "4/4");
   assert.equal(readRes.artifact.modules.harmony.metadata.moduleVersion, "v1");
 });
 

@@ -1350,6 +1350,54 @@ def _summarize_secondary_rhythm(candidate: Dict[str, Any]) -> Dict[str, Any]:
     return summary
 
 
+def _build_rhythm_provider_results(
+    *,
+    primary_provider: str,
+    primary_beats_per_bar: int,
+    primary_time_signature: str,
+    primary_bpm: Optional[float],
+    primary_beats: List[Dict[str, Any]],
+    primary_bars: List[Dict[str, Any]],
+    secondary_candidate: Dict[str, Any],
+    selected_provider: str,
+) -> Dict[str, Any]:
+    primary_summary = {
+        "provider": str(primary_provider or "unknown"),
+        "available": True,
+        "selected": str(selected_provider or "") == str(primary_provider or ""),
+        "beatsPerBar": int(primary_beats_per_bar),
+        "timeSignature": str(primary_time_signature or ""),
+        "bpm": float(primary_bpm) if primary_bpm is not None else None,
+        "beatCount": len(primary_beats or []),
+        "barCount": len(primary_bars or []),
+        "beats": _sanitize_marks(primary_beats or []),
+        "bars": _sanitize_marks(primary_bars or []),
+    }
+    secondary_full = dict(secondary_candidate) if isinstance(secondary_candidate, dict) else {}
+    secondary_provider = str(secondary_full.get("provider") or "madmom_downbeat")
+    secondary_available = bool(secondary_full.get("available"))
+    if secondary_available:
+        secondary_full["selected"] = str(selected_provider or "") == secondary_provider
+        secondary_full["beats"] = _sanitize_marks(secondary_full.get("beats") or [])
+        secondary_full["bars"] = _sanitize_marks(secondary_full.get("bars") or [])
+    else:
+        secondary_full = {
+            "provider": secondary_provider,
+            "enabled": bool(secondary_full.get("enabled")),
+            "available": False,
+            "selected": False,
+            "reason": str(secondary_full.get("reason") or "unavailable"),
+        }
+
+    return {
+        "selectedProvider": str(selected_provider or primary_provider or "unknown"),
+        "providers": {
+            str(primary_provider or "unknown"): primary_summary,
+            secondary_provider: secondary_full,
+        },
+    }
+
+
 def _should_prefer_secondary_meter(
     *,
     primary_beats_per_bar: int,
@@ -2325,6 +2373,16 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
         primary_bpm=bpm_est,
         secondary_summary=_summarize_secondary_rhythm(_detect_madmom_downbeat_summary(y, sr, duration_ms, profile)),
     )
+    rhythm_provider_results = _build_rhythm_provider_results(
+        primary_provider="beatnet",
+        primary_beats_per_bar=detected_beats_per_bar,
+        primary_time_signature=f"{detected_beats_per_bar}/4",
+        primary_bpm=bpm_est,
+        primary_beats=beats_out,
+        primary_bars=bars_out,
+        secondary_candidate=_detect_madmom_downbeat_summary(y, sr, duration_ms, profile),
+        selected_provider="beatnet",
+    )
 
     identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path, profile)
     provider_sections: List[Dict[str, Any]] = []
@@ -2375,6 +2433,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             },
             "beatGridSelection": beat_grid_info,
             "rhythmProviderAgreement": rhythm_provider_agreement,
+            "rhythmProviderResults": rhythm_provider_results,
             "chordAnalysis": chord_meta,
         },
     }
@@ -2451,6 +2510,17 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             rhythm_provider_agreement["agreedOnBeatsPerBar"] = True
             rhythm_provider_agreement["agreedOnTimeSignature"] = True
 
+    rhythm_provider_results = _build_rhythm_provider_results(
+        primary_provider="librosa",
+        primary_beats_per_bar=int(max(1, int(inferred_bpb))),
+        primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
+        primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+        primary_beats=beats_out,
+        primary_bars=bars_out,
+        secondary_candidate=madmom_candidate,
+        selected_provider=chosen_meter_source,
+    )
+
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
@@ -2502,6 +2572,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
                 "librosa": beat_quality,
             },
             "rhythmProviderAgreement": rhythm_provider_agreement,
+            "rhythmProviderResults": rhythm_provider_results,
             "chordAnalysis": chord_meta,
         },
     }

@@ -192,6 +192,7 @@ function buildAnalysisModules({
   const structureSections = rows(structure?.sections);
   const semanticSections = structureSections.filter((row) => !isGenericStructureSection(row));
   const rhythmProviderAgreement = isPlainObject(rawMeta?.rhythmProviderAgreement) ? rawMeta.rhythmProviderAgreement : {};
+  const rhythmProviderResults = isPlainObject(rawMeta?.rhythmProviderResults) ? rawMeta.rhythmProviderResults : {};
   const derivedTimingConfidence = deriveTimingConfidence({
     beats: timing?.beats,
     bars: timing?.bars,
@@ -271,7 +272,8 @@ function buildAnalysisModules({
         timeSignature: str(timing?.timeSignature || "unknown"),
         beats: rows(timing?.beats),
         bars: rows(timing?.bars),
-        providerAgreement: rhythmProviderAgreement
+        providerAgreement: rhythmProviderAgreement,
+        providerResults: rhythmProviderResults
       },
       confidence: confidenceScore(derivedTimingConfidence),
       sources: Array.from(new Set([str(rawMeta?.engine || requestedProvider), str(analysisBaseUrl)]).values()).filter(Boolean),
@@ -284,8 +286,8 @@ function buildAnalysisModules({
             : ""
         )
       ].filter(Boolean),
-      cacheKey: `${resolvedMediaId}:rhythm:v1`,
-      metadata: buildModuleMetadata("rhythm", "v2")
+      cacheKey: `${resolvedMediaId}:rhythm:v2`,
+      metadata: buildModuleMetadata("rhythm", "v3")
     },
     harmony: {
       data: {

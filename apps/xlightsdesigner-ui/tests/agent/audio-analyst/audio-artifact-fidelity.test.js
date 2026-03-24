@@ -67,6 +67,35 @@ function samplePipelineResult() {
           agreedOnTimeSignature: false,
           bpmDelta: 1.5
         },
+        rhythmProviderResults: {
+          selectedProvider: "beatnet",
+          providers: {
+            beatnet: {
+              provider: "beatnet",
+              available: true,
+              selected: true,
+              beatsPerBar: 4,
+              timeSignature: "4/4",
+              bpm: 128,
+              beatCount: 1,
+              barCount: 1,
+              beats: [{ startMs: 0, endMs: 500, label: "1" }],
+              bars: [{ startMs: 0, endMs: 2000, label: "1" }]
+            },
+            madmom_downbeat: {
+              provider: "madmom_downbeat",
+              available: true,
+              selected: false,
+              beatsPerBar: 3,
+              timeSignature: "3/4",
+              bpm: 126.5,
+              beatCount: 1,
+              barCount: 1,
+              beats: [{ startMs: 0, endMs: 500, label: "1" }],
+              bars: [{ startMs: 0, endMs: 1500, label: "1" }]
+            }
+          }
+        },
         chordAnalysis: {
           engine: "madmom",
           avgMarginConfidence: "0.83"
@@ -101,6 +130,7 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.equal(artifact.modules.identity.metadata.profileMode, "deep");
   assert.equal(artifact.modules.rhythm.data.timeSignature, "4/4");
   assert.equal(artifact.modules.rhythm.data.providerAgreement.secondary.timeSignature, "3/4");
+  assert.equal(artifact.modules.rhythm.data.providerResults.providers.madmom_downbeat.timeSignature, "3/4");
   assert.ok(artifact.modules.rhythm.metadata.invalidationKey.includes(":deep:rhythm:"));
   assert.ok(artifact.modules.rhythm.diagnostics.some((line) => line.includes("timeSignature disagreement")));
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
