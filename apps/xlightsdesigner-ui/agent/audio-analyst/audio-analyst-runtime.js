@@ -132,6 +132,10 @@ function normalizeStructureSections(sections = []) {
   });
 }
 
+function isGenericStructureSection(section = {}) {
+  return Boolean(section?.provenance?.genericLabel) || looksGenericSectionLabel(section?.label || section?.name);
+}
+
 export const AUDIO_ANALYST_ARTIFACT_TYPE = "analysis_artifact_v1";
 export const AUDIO_ANALYST_ARTIFACT_VERSION = AUDIO_ANALYST_CONTRACT_VERSION;
 
@@ -274,6 +278,7 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
   const harmonic = isPlainObject(artifact?.harmonic) ? artifact.harmonic : {};
   const lyrics = isPlainObject(artifact?.lyrics) ? artifact.lyrics : {};
   const structure = isPlainObject(artifact?.structure) ? artifact.structure : {};
+  const semanticSections = rows(structure?.sections).filter((row) => !isGenericStructureSection(row));
   const provenance = isPlainObject(artifact?.provenance) ? artifact.provenance : {};
   const evidence = isPlainObject(provenance?.evidence) ? provenance.evidence : {};
   const briefSeed = isPlainObject(artifact?.briefSeed) ? artifact.briefSeed : {};
@@ -292,9 +297,9 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
       barsArtifact: Array.isArray(timing?.bars) && timing.bars.length ? "bars" : ""
     },
     structure: {
-      sections: rows(structure?.sections),
+      sections: semanticSections,
       source: str(structure?.source),
-      confidence: str(structure?.confidence || "low")
+      confidence: semanticSections.length ? str(structure?.confidence || "low") : "low"
     },
     lyrics: {
       hasSyncedLyrics: Boolean(lyrics?.hasSyncedLyrics),

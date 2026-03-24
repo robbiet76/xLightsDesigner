@@ -139,3 +139,24 @@ test("buildMusicDesignContext falls back to analysisHandoff timing data when ana
   assert.equal(context.designCues.cueWindowsBySection.Chorus.chord[0].trackName, "XD: Chord Changes");
   assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
 });
+
+test("buildMusicDesignContext ignores generic structure sections", () => {
+  const context = buildMusicDesignContext({
+    analysisArtifact: {
+      capabilities: {
+        structure: {
+          sections: [
+            { label: "Section 1", startMs: 0, endMs: 1000, provenance: { genericLabel: true } },
+            { label: "Section 2", startMs: 1000, endMs: 2000, provenance: { genericLabel: true } }
+          ]
+        }
+      },
+      timing: {
+        beats: [{ startMs: 0, endMs: 500, label: "1" }]
+      }
+    }
+  });
+
+  assert.deepEqual(context.sectionArc, []);
+  assert.deepEqual(context.designCues.cueWindowsBySection, {});
+});

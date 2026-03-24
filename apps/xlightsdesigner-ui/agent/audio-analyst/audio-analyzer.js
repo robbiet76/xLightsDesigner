@@ -52,6 +52,10 @@ function extractSectionRowsFromMarks(marks = []) {
   return rows.sort((a, b) => a.startMs - b.startMs);
 }
 
+function looksGenericSectionLabel(value = "") {
+  return /^section\s+\d+$/i.test(String(value || "").trim());
+}
+
 export function analyzeAudioContext({
   audioPath = "",
   mediaMetadata = null,
@@ -79,7 +83,7 @@ export function analyzeAudioContext({
   const structureMarks = structureTrackName ? (trackMarksByName?.[structureTrackName] || []) : [];
   const structureRows = extractSectionRowsFromMarks(structureMarks);
   const effectiveSections = structureRows.length
-    ? Array.from(new Set(structureRows.map((row) => row.label)))
+    ? Array.from(new Set(structureRows.map((row) => row.label))).filter((label) => !looksGenericSectionLabel(label))
     : sections;
   const inferredBpm = Number.isFinite(Number(detectedTempoBpm))
     ? Number(detectedTempoBpm)
@@ -99,7 +103,7 @@ export function analyzeAudioContext({
   return {
     source: audioPath || "(none)",
     trackName,
-    structure: effectiveSections.length ? effectiveSections : ["Intro", "Verse", "Chorus", "Bridge", "Outro"],
+    structure: effectiveSections,
     timing: {
       tempoEstimate: inferredBpm || (hasBeatTrack ? "derived-from-beat-track" : "pending"),
       timeSignature: timeSignatureText,
@@ -124,12 +128,12 @@ export function analyzeAudioContext({
     summaryLines: [
       `Audio source: ${trackName || "(none)"}`,
       `Media metadata: ${Number.isFinite(durationMs) ? `${Math.round(durationMs)}ms` : "duration pending"}, ${Number.isFinite(channels) ? `${channels}ch` : "ch?"}, ${Number.isFinite(sampleRate) ? `${sampleRate}Hz` : "rate?"}`,
-      `Song structure: ${(effectiveSections.length ? effectiveSections.join(", ") : "pending")}`,
+      `Song structure: ${(effectiveSections.length ? effectiveSections.join(", ") : "generic or unavailable")}`,
       `Section map: ${sectionRows.length ? sectionRows.join(" | ") : "pending"}`,
       `Song context: ${String(songContextSummary || "").trim() || "pending"}`,
       `Tempo/time signature: ${inferredBpm ? `${inferredBpm} BPM (inferred)` : (hasBeatTrack ? "beat track detected (BPM pending)" : "pending explicit beat analysis")} / ${timeSignatureText}`,
       `Timing tracks: beat=${hasBeatTrack ? "yes" : "no"}, bars=${hasBarTrack ? "yes" : "no"}, chords=${hasChordTrack ? "yes" : "no"}, lyrics=${hasLyricsTrack ? "yes" : "no"}`,
-      `Creative brief seed: ${effectiveSections.length ? "structure-aware" : "needs section analysis"}`
+      `Creative brief seed: ${effectiveSections.length ? "structure-aware" : "needs semantic section analysis"}`
     ]
   };
 }

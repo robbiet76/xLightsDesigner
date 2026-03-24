@@ -17,6 +17,14 @@ function rows(value) {
   return arr(value).filter((row) => row && typeof row === "object" && !Array.isArray(row));
 }
 
+function looksGenericSectionLabel(value = "") {
+  return /^section\s+\d+$/i.test(str(value));
+}
+
+function isGenericStructureSection(section = {}) {
+  return Boolean(section?.provenance?.genericLabel) || looksGenericSectionLabel(section?.label || section?.name);
+}
+
 function normalizeEnergyLabel(value = "") {
   const lower = str(value).toLowerCase();
   if (!lower) return "unknown";
@@ -134,7 +142,7 @@ export function buildMusicDesignContext({
     analysisArtifact?.structure ||
     analysisHandoff?.structure?.sections ||
     []
-  );
+  ).filter((section) => !isGenericStructureSection(section));
 
   const sectionArc = sections.map((section) => ({
     label: str(section?.label || section?.name || "Section"),

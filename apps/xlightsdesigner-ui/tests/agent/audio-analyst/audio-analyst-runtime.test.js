@@ -176,6 +176,8 @@ test("audio analyst runtime preserves generic section labels without fabricated 
     artifact.structure.sections.map((row) => row.sectionType),
     ["section", "section", "section", "section", "section", "section"]
   );
+  const handoff = buildAnalysisHandoffFromArtifact(artifact);
+  assert.deepEqual(handoff.structure.sections, []);
 });
 
 test("audio analyst input gate blocks sequence-aware payloads", () => {
