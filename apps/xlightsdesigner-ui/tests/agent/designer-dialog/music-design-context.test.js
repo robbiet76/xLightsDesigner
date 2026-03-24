@@ -62,7 +62,7 @@ test("buildMusicDesignContext derives section arc and design cues", () => {
   assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
 });
 
-test("buildMusicDesignContext derives fallback phrase cues from bars when lyric lines are absent", () => {
+test("buildMusicDesignContext leaves phrase cues empty when lyric lines are absent", () => {
   const context = buildMusicDesignContext({
     analysisArtifact: {
       mediaId: "media-2",
@@ -99,14 +99,7 @@ test("buildMusicDesignContext derives fallback phrase cues from bars when lyric 
     }
   });
 
-  assert.equal(context.designCues.cueWindowsBySection.Bridge.phrase[0].trackName, "XD: Phrase Cues");
-  assert.deepEqual(
-    context.designCues.cueWindowsBySection.Bridge.phrase.map((row) => [row.label, row.startMs, row.endMs]),
-    [
-      ["Phrase Hold", 2000, 3000],
-      ["Phrase Release", 3000, 4000]
-    ]
-  );
+  assert.equal(context.designCues.cueWindowsBySection.Bridge.phrase, undefined);
 });
 
 test("buildMusicDesignContext falls back to analysisHandoff timing data when analysisArtifact is absent", () => {

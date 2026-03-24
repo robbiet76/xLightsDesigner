@@ -495,7 +495,7 @@ test("designer runtime aligns placements to beat, chord, and phrase cue windows 
   assert.deepEqual(preChorusSections, ["Pre-Chorus"]);
 });
 
-test("designer runtime derives phrase windows from beat cues when phrase cues are missing", () => {
+test("designer runtime does not fabricate phrase windows from beat cues when phrase cues are missing", () => {
   const result = executeDesignerDialogFlow({
     requestId: "req-8e",
     sequenceRevision: "rev-8e",
@@ -536,8 +536,8 @@ test("designer runtime derives phrase windows from beat cues when phrase cues ar
   const placements = result.proposalBundle.executionPlan.effectPlacements;
   const trackNames = Array.from(new Set(placements.map((row) => row.timingContext.trackName)));
   const alignmentModes = Array.from(new Set(placements.map((row) => row.timingContext.alignmentMode)));
-  assert.deepEqual(trackNames, ["XD: Phrase Cues"]);
-  assert.deepEqual(alignmentModes, ["phrase_window"]);
+  assert.ok(!trackNames.includes("XD: Phrase Cues"));
+  assert.ok(!alignmentModes.includes("phrase_window"));
 });
 
 test("designer runtime keeps whole-sequence passes section-scoped even when the goal mentions beat sync", () => {

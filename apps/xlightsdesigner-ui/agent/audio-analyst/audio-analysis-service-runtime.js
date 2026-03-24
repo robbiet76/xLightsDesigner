@@ -18,35 +18,6 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
-function buildFallbackSectionMarks({ durationMs = 0 } = {}) {
-  const total = Math.round(Number(durationMs));
-  if (!Number.isFinite(total) || total < 15000) return [];
-
-  const templates =
-    total >= 150000
-      ? ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"]
-      : total >= 105000
-        ? ["Intro", "Verse 1", "Chorus 1", "Bridge", "Chorus 2", "Outro"]
-        : ["Intro", "Verse", "Chorus", "Bridge", "Outro"];
-  const count = templates.length;
-  const rows = [];
-
-  for (let index = 0; index < count; index += 1) {
-    const startMs = Math.round((total * index) / count);
-    const endMs =
-      index === count - 1
-        ? Math.max(startMs + 1, total - 1)
-        : Math.max(startMs + 1, Math.round((total * (index + 1)) / count) - 1);
-    rows.push({
-      label: templates[index],
-      startMs,
-      endMs
-    });
-  }
-
-  return rows;
-}
-
 export function createAudioAnalysisPipelineState() {
   return {
     mediaAttached: false,
@@ -304,20 +275,6 @@ export async function runAudioAnalysisServicePass({
         } else if (str(relabeled?.trainingPackageError)) {
           addDiag(`Training package fallback: ${str(relabeled.trainingPackageError)}`);
         }
-      }
-    }
-
-    if ((!Array.isArray(effectiveSections) || !effectiveSections.length)) {
-      const durationForFallback =
-        (Number.isFinite(serviceDurationMs) && serviceDurationMs > 1 ? Math.round(serviceDurationMs) : null) ||
-        (Number.isFinite(nextSequenceDurationMs) && nextSequenceDurationMs > 1 ? Math.round(nextSequenceDurationMs) : null) ||
-        (Number.isFinite(Number(nextMediaMetadata?.durationMs)) && Number(nextMediaMetadata.durationMs) > 1
-          ? Math.round(Number(nextMediaMetadata.durationMs))
-          : 0);
-      const heuristicSections = buildFallbackSectionMarks({ durationMs: durationForFallback });
-      if (heuristicSections.length) {
-        effectiveSections = heuristicSections;
-        addDiag(`Generated heuristic song sections from track duration (${heuristicSections.length} sections).`);
       }
     }
 

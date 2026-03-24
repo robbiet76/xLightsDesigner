@@ -68,12 +68,11 @@ function sampleArtifact() {
   };
 }
 
-test("audio analysis quality report flags relabeled generic sections and missing lyric/chord support", () => {
+test("audio analysis quality report flags missing lyric/chord support without inventing semantic structure", () => {
   const report = buildAudioAnalysisQualityReport(sampleArtifact());
 
   assert.equal(report.trackIdentity.title, "Song");
-  assert.equal(report.provenance.structureRelabeledFromGeneric, true);
-  assert.ok(report.topLevelIssues.includes("generic_structure_labels_promoted_to_semantic_labels"));
+  assert.equal(report.provenance.structureHasOnlyGenericLabels, false);
   assert.ok(report.topLevelIssues.includes("no_synced_lyrics"));
   assert.ok(report.topLevelIssues.includes("no_chords"));
   assert.ok(report.topLevelIssues.includes("very_low_harmonic_confidence"));
@@ -81,4 +80,17 @@ test("audio analysis quality report flags relabeled generic sections and missing
   assert.equal(report.sections.length, 2);
   assert.equal(report.sections[0].beatCount, 2);
   assert.equal(report.sections[0].barCount, 1);
+});
+
+test("audio analysis quality report flags generic structure labels directly", () => {
+  const artifact = sampleArtifact();
+  artifact.structure.sections = [
+    { startMs: 0, endMs: 1000, label: "Section 1" },
+    { startMs: 1000, endMs: 2000, label: "Section 2" }
+  ];
+
+  const report = buildAudioAnalysisQualityReport(artifact);
+
+  assert.equal(report.provenance.structureHasOnlyGenericLabels, true);
+  assert.ok(report.topLevelIssues.includes("generic_structure_labels_present"));
 });

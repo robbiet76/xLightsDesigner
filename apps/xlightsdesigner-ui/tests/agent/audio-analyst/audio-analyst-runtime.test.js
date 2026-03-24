@@ -151,7 +151,7 @@ test("audio analyst runtime classifies extended section taxonomy labels", () => 
   assert.equal(artifact.structure.sections[8].label, "Ad Lib");
 });
 
-test("audio analyst runtime assigns section types to fallback semantic templates", () => {
+test("audio analyst runtime preserves generic section labels without fabricated semantics", () => {
   const pipeline = samplePipelineResult();
   pipeline.raw.sections = [
     { startMs: 0, endMs: 10000, label: "Section 1" },
@@ -170,11 +170,11 @@ test("audio analyst runtime assigns section types to fallback semantic templates
 
   assert.deepEqual(
     artifact.structure.sections.map((row) => row.label),
-    ["Intro", "Verse 1", "Chorus 1", "Bridge", "Final Chorus", "Outro"]
+    ["Section 1", "Section 2", "Section 3", "Section 4", "Section 5", "Section 6"]
   );
   assert.deepEqual(
     artifact.structure.sections.map((row) => row.sectionType),
-    ["intro", "verse", "chorus", "bridge", "chorus", "outro"]
+    ["section", "section", "section", "section", "section", "section"]
   );
 });
 

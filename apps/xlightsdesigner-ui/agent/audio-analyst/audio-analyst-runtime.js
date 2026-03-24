@@ -47,27 +47,6 @@ function deriveFallbackMediaId(audioPath = "") {
   return `media-${(hash >>> 0).toString(16)}`;
 }
 
-function buildFallbackSectionTemplates(count = 0) {
-  const n = Math.max(0, Math.round(Number(count) || 0));
-  if (n <= 0) return [];
-  const known = {
-    5: ["Intro", "Verse 1", "Chorus 1", "Bridge", "Outro"],
-    6: ["Intro", "Verse 1", "Chorus 1", "Bridge", "Final Chorus", "Outro"],
-    7: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Bridge", "Final Chorus", "Outro"],
-    8: ["Intro", "Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Bridge", "Final Chorus", "Outro"]
-  };
-  if (known[n]) return known[n];
-  const labels = [];
-  for (let i = 0; i < n; i += 1) {
-    if (i === 0) labels.push("Intro");
-    else if (i === n - 1) labels.push("Outro");
-    else if (i === n - 2) labels.push("Final Chorus");
-    else if (i % 2 === 1) labels.push(`Verse ${Math.ceil(i / 2)}`);
-    else labels.push(`Chorus ${Math.ceil(i / 2)}`);
-  }
-  return labels;
-}
-
 function titleCaseWords(value = "") {
   return str(value)
     .split(/\s+/)
@@ -137,27 +116,20 @@ function looksGenericSectionLabel(value = "") {
 function normalizeStructureSections(sections = []) {
   const src = rows(sections);
   if (!src.length) return [];
-  const genericOnly = src.every((row) => looksGenericSectionLabel(row?.label || row?.name));
-  if (!genericOnly) {
-    return src.map((row) => {
-      const label = str(row?.label || row?.name);
-      const sectionType = classifySectionType(label);
-      return {
-        ...row,
-        label: canonicalizeSectionLabel(label, sectionType),
-        sectionType,
-        canonicalLabel: canonicalizeSectionLabel(label, sectionType)
-      };
-    });
-  }
-  const fallback = buildFallbackSectionTemplates(src.length);
-  if (fallback.length !== src.length) return src;
-  return src.map((row, index) => ({
-    ...row,
-    label: fallback[index],
-    sectionType: classifySectionType(fallback[index]),
-    canonicalLabel: canonicalizeSectionLabel(fallback[index], classifySectionType(fallback[index]))
-  }));
+  return src.map((row) => {
+    const label = str(row?.label || row?.name);
+    const sectionType = classifySectionType(label);
+    return {
+      ...row,
+      label,
+      sectionType,
+      canonicalLabel: canonicalizeSectionLabel(label, sectionType),
+      provenance: {
+        ...(isPlainObject(row?.provenance) ? row.provenance : {}),
+        genericLabel: looksGenericSectionLabel(label)
+      }
+    };
+  });
 }
 
 export const AUDIO_ANALYST_ARTIFACT_TYPE = "analysis_artifact_v1";

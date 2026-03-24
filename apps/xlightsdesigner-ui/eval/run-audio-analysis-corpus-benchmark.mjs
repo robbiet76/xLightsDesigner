@@ -147,9 +147,8 @@ function scoreReport(report = {}) {
   const issues = Array.isArray(report?.topLevelIssues) ? report.topLevelIssues : [];
   const missingLyrics = issues.includes("no_synced_lyrics") ? 1 : 0;
   const missingChords = issues.includes("no_chords") ? 1 : 0;
-  const relabeledStructure = issues.includes("generic_structure_labels_promoted_to_semantic_labels") ? 1 : 0;
+  const genericStructure = issues.includes("generic_structure_labels_present") ? 1 : 0;
   const dupleLock = issues.includes("timing_locked_to_duple_meter") ? 1 : 0;
-  const fakePhraseRisk = issues.includes("phrase_logic_would_depend_on_non-lyric_fallbacks") ? 1 : 0;
   const harmonicPenalty = (() => {
     const n = Number(report?.summary?.harmonicConfidence);
     return Number.isFinite(n) ? (n < 0.2 ? 1 : 0) : 0;
@@ -157,7 +156,7 @@ function scoreReport(report = {}) {
   const sectionIssueCount = (Array.isArray(report?.sections) ? report.sections : [])
     .reduce((sum, row) => sum + (Array.isArray(row?.issues) ? row.issues.length : 0), 0);
   return {
-    score: missingLyrics + missingChords + relabeledStructure + dupleLock + fakePhraseRisk + harmonicPenalty + sectionIssueCount,
+    score: missingLyrics + missingChords + genericStructure + dupleLock + harmonicPenalty + sectionIssueCount,
     sectionIssueCount
   };
 }

@@ -42,22 +42,9 @@ function looksGenericSectionLabel(value = "") {
   return /^section\s+\d+$/i.test(str(value));
 }
 
-function extractSummaryLine(artifact = {}, prefix = "") {
-  return arr(artifact?.briefSeed?.summaryLines).find((line) => str(line).toLowerCase().startsWith(prefix.toLowerCase())) || "";
-}
-
-function inferStructureRelabeling(artifact = {}) {
-  const summaryLine = extractSummaryLine(artifact, "Song structure:");
-  const summaryTail = summaryLine.replace(/^song structure:\s*/i, "");
-  const summaryLabels = summaryTail
-    .split(/\s*,\s*/)
-    .map((row) => str(row))
-    .filter(Boolean);
-  const artifactLabels = rows(artifact?.structure?.sections).map((row) => str(row?.label)).filter(Boolean);
-  if (!summaryLabels.length || !artifactLabels.length) return false;
-  const summaryAllGeneric = summaryLabels.every((row) => looksGenericSectionLabel(row));
-  const artifactAnySemantic = artifactLabels.some((row) => !looksGenericSectionLabel(row));
-  return summaryAllGeneric && artifactAnySemantic;
+function hasGenericStructureLabels(artifact = {}) {
+  const labels = rows(artifact?.structure?.sections).map((row) => str(row?.label)).filter(Boolean);
+  return labels.length > 0 && labels.every((row) => looksGenericSectionLabel(row));
 }
 
 function findSectionRowsWithin(rowsInput = [], startMs = 0, endMs = 0) {
@@ -133,7 +120,7 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   const allBpb = sectionMetrics.map((row) => row?.beatsPerBarObserved).filter((row) => Number.isFinite(row));
   const medianBpb = median(allBpb);
 
-  if (inferStructureRelabeling(artifact)) issues.push("generic_structure_labels_promoted_to_semantic_labels");
+  if (hasGenericStructureLabels(artifact)) issues.push("generic_structure_labels_present");
   if (diagnostics.some((row) => /Generated heuristic song sections/i.test(row))) issues.push("heuristic_song_structure_generated");
   if (!lyricsCount) issues.push("no_synced_lyrics");
   if (!chordCount) issues.push("no_chords");
@@ -142,9 +129,6 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   }
   if (timeSignature === "2/4" && Number.isFinite(medianBpb) && medianBpb <= 2.1) {
     issues.push("timing_locked_to_duple_meter");
-  }
-  if (sectionMetrics.some((row) => arr(row?.issues).includes("missing_lyrics"))) {
-    issues.push("phrase_logic_would_depend_on_non-lyric_fallbacks");
   }
   return issues;
 }
@@ -163,7 +147,7 @@ function buildServiceAssessment(artifact = {}) {
     gaps: [
       rows(artifact?.lyrics?.lines).length ? null : "lyrics service unavailable or disabled",
       rows(artifact?.harmonic?.chords).length ? null : "harmonic analysis yielded no usable chords",
-      inferStructureRelabeling(artifact) ? "section semantics depend on relabeling, not direct service labels" : null
+      hasGenericStructureLabels(artifact) ? "structure labels are generic and do not carry trusted semantics" : null
     ].filter(Boolean)
   };
 }
@@ -199,7 +183,7 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
     },
     provenance: {
       structureSource: str(artifact?.structure?.source),
-      structureRelabeledFromGeneric: inferStructureRelabeling(artifact),
+      structureHasOnlyGenericLabels: hasGenericStructureLabels(artifact),
       diagnostics: arr(artifact?.diagnostics?.warnings).map((row) => str(row)).filter(Boolean)
     },
     serviceAssessment: buildServiceAssessment(artifact),
