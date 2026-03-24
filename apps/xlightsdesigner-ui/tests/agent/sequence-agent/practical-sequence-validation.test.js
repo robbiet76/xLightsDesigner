@@ -10,6 +10,16 @@ test("practical sequence validation summarizes readback and design alignment", (
       metadata: {
         sequencingDesignHandoffSummary: "Tree chorus",
         sequencingSectionDirectiveCount: 1,
+        metadataAssignments: [
+          {
+            targetId: "TreeRound",
+            rolePreference: "focal",
+            semanticHints: ["radial"],
+            visualHintDefinitions: [
+              { name: "Radial", status: "defined" }
+            ]
+          }
+        ],
         trainingKnowledge: {
           artifactType: "sequencer_stage1_training_bundle",
           artifactVersion: "1.0"
@@ -52,4 +62,47 @@ test("practical sequence validation summarizes readback and design alignment", (
   assert.equal(artifact.trainingKnowledge.artifactType, "sequencer_stage1_training_bundle");
   assert.equal(artifact.summary.readbackChecks.passed, 1);
   assert.equal(artifact.summary.designChecks.passed, 2);
+  assert.equal(artifact.summary.metadataCoverage.missingMetadata, 0);
+  assert.equal(artifact.summary.metadataCoverage.definedVisualHints, 1);
+  assert.deepEqual(artifact.failures.metadata, []);
+});
+
+test("practical sequence validation reports missing and pending visual hint metadata on observed targets", () => {
+  const artifact = buildPracticalSequenceValidation({
+    planHandoff: {
+      planId: "plan-2",
+      metadata: {
+        metadataAssignments: [
+          {
+            targetId: "TreeRound",
+            rolePreference: "support",
+            semanticHints: [],
+            visualHintDefinitions: [
+              { name: "Custom Pulse", status: "pending_definition" }
+            ]
+          }
+        ]
+      }
+    },
+    applyResult: {
+      artifactId: "apply-2",
+      status: "applied"
+    },
+    verification: {
+      revisionAdvanced: true,
+      expectedMutationsPresent: true,
+      checks: [],
+      designAlignment: {
+        observedTargets: ["TreeRound", "MissingModel"]
+      },
+      designChecks: []
+    }
+  });
+
+  assert.equal(artifact.summary.metadataCoverage.missingMetadata, 1);
+  assert.equal(artifact.summary.metadataCoverage.pendingOnlyVisualHints, 1);
+  assert.deepEqual(artifact.metadataCoverage.missingMetadataTargetIds, ["MissingModel"]);
+  assert.deepEqual(artifact.metadataCoverage.pendingOnlyVisualHintTargetIds, ["TreeRound"]);
+  assert.match(artifact.failures.metadata.map((row) => row.kind).join(","), /missing_metadata/);
+  assert.match(artifact.failures.metadata.map((row) => row.kind).join(","), /pending_visual_hint_definition/);
 });

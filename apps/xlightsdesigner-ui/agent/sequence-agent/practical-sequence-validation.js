@@ -29,6 +29,64 @@ function compactFailures(checks = [], limit = 8) {
     .slice(0, limit);
 }
 
+function buildMetadataAssignmentIndex(metadataAssignments = []) {
+  const out = new Map();
+  for (const assignment of arr(metadataAssignments)) {
+    const targetId = str(assignment?.targetId);
+    if (!targetId) continue;
+    out.set(targetId, assignment);
+  }
+  return out;
+}
+
+function summarizeObservedTargetMetadata(observedTargets = [], metadataAssignments = []) {
+  const targetIds = Array.from(new Set(arr(observedTargets).map((row) => str(row)).filter(Boolean)));
+  const assignmentIndex = buildMetadataAssignmentIndex(metadataAssignments);
+  const missingMetadataTargetIds = [];
+  const roleOnlyTargetIds = [];
+  const definedVisualHintTargetIds = [];
+  const pendingVisualHintTargetIds = [];
+  const pendingOnlyVisualHintTargetIds = [];
+
+  for (const targetId of targetIds) {
+    const assignment = assignmentIndex.get(targetId);
+    if (!assignment) {
+      missingMetadataTargetIds.push(targetId);
+      continue;
+    }
+
+    const rolePreference = str(assignment?.rolePreference);
+    const semanticHints = arr(assignment?.semanticHints).map((row) => str(row)).filter(Boolean);
+    const effectAvoidances = arr(assignment?.effectAvoidances).map((row) => str(row)).filter(Boolean);
+    const visualHintDefinitions = arr(assignment?.visualHintDefinitions).filter((row) => row && typeof row === "object");
+    const definedDefinitions = visualHintDefinitions.filter((row) => str(row?.status).toLowerCase() === "defined");
+    const pendingDefinitions = visualHintDefinitions.filter((row) => str(row?.status).toLowerCase() === "pending_definition");
+
+    if (definedDefinitions.length) definedVisualHintTargetIds.push(targetId);
+    if (pendingDefinitions.length) pendingVisualHintTargetIds.push(targetId);
+    if (pendingDefinitions.length && !definedDefinitions.length) pendingOnlyVisualHintTargetIds.push(targetId);
+    if (rolePreference && !semanticHints.length && !effectAvoidances.length && !visualHintDefinitions.length) {
+      roleOnlyTargetIds.push(targetId);
+    }
+  }
+
+  return {
+    observedTargetCount: targetIds.length,
+    missingMetadataTargetIds,
+    roleOnlyTargetIds,
+    definedVisualHintTargetIds,
+    pendingVisualHintTargetIds,
+    pendingOnlyVisualHintTargetIds,
+    counts: {
+      missingMetadata: missingMetadataTargetIds.length,
+      roleOnly: roleOnlyTargetIds.length,
+      definedVisualHints: definedVisualHintTargetIds.length,
+      pendingVisualHints: pendingVisualHintTargetIds.length,
+      pendingOnlyVisualHints: pendingOnlyVisualHintTargetIds.length
+    }
+  };
+}
+
 export function buildPracticalSequenceValidation({
   planHandoff = null,
   applyResult = null,
@@ -41,8 +99,10 @@ export function buildPracticalSequenceValidation({
   const designAlignment = verification?.designAlignment && typeof verification.designAlignment === "object"
     ? verification.designAlignment
     : {};
+  const metadataAssignments = arr(meta?.metadataAssignments);
   const readbackChecks = summarizeChecks(verification?.checks);
   const designChecks = summarizeChecks(verification?.designChecks);
+  const metadataCoverage = summarizeObservedTargetMetadata(designAlignment?.observedTargets, metadataAssignments);
 
   const artifact = {
     artifactType: "practical_sequence_validation_v1",
@@ -65,7 +125,8 @@ export function buildPracticalSequenceValidation({
       revisionAdvanced: verification?.revisionAdvanced === true,
       expectedMutationsPresent: verification?.expectedMutationsPresent === true,
       readbackChecks,
-      designChecks
+      designChecks,
+      metadataCoverage: metadataCoverage.counts
     },
     designAlignment: {
       primaryFocusTargetIds: arr(designAlignment?.primaryFocusTargetIds),
@@ -77,9 +138,22 @@ export function buildPracticalSequenceValidation({
       observedEffectNames: arr(designAlignment?.observedEffectNames),
       roleCoverage: arr(designAlignment?.roleCoverage)
     },
+    metadataCoverage,
     failures: {
       readback: compactFailures(verification?.checks),
-      design: compactFailures(verification?.designChecks)
+      design: compactFailures(verification?.designChecks),
+      metadata: [
+        ...metadataCoverage.missingMetadataTargetIds.map((targetId) => ({
+          kind: "missing_metadata",
+          target: targetId,
+          detail: "Observed target has no metadata assignment."
+        })),
+        ...metadataCoverage.pendingOnlyVisualHintTargetIds.map((targetId) => ({
+          kind: "pending_visual_hint_definition",
+          target: targetId,
+          detail: "Observed target relies on visual hints that are still pending definition."
+        }))
+      ]
     }
   };
 

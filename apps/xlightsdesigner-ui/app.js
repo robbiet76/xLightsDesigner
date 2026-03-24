@@ -3186,6 +3186,7 @@ async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal"
         buildApplyHistoryEntry,
         buildChatArtifactCard,
         getTeamChatSpeakerLabel,
+        buildEffectiveMetadataAssignments,
         getRevision,
         validateCommands,
         beginTransaction,

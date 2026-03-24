@@ -332,6 +332,35 @@ function buildMetadataAssignmentIndex(metadataAssignments = []) {
   return out;
 }
 
+function sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments = []) {
+  return normArray(metadataAssignments)
+    .map((assignment) => {
+      const targetId = normText(assignment?.targetId);
+      if (!targetId) return null;
+      return {
+        targetId,
+        tags: normArray(assignment?.tags).map((row) => normText(row)).filter(Boolean),
+        semanticHints: normArray(assignment?.semanticHints).map((row) => normText(row)).filter(Boolean),
+        effectAvoidances: normArray(assignment?.effectAvoidances).map((row) => normText(row)).filter(Boolean),
+        rolePreference: normText(assignment?.rolePreference),
+        visualHintDefinitions: normArray(assignment?.visualHintDefinitions)
+          .map((definition) => {
+            const name = normText(definition?.name);
+            if (!name) return null;
+            return {
+              name,
+              status: normText(definition?.status),
+              semanticClass: normText(definition?.semanticClass),
+              behavioralIntent: normText(definition?.behavioralIntent),
+              behavioralTags: normArray(definition?.behavioralTags).map((row) => normText(row)).filter(Boolean)
+            };
+          })
+          .filter(Boolean)
+      };
+    })
+    .filter(Boolean);
+}
+
 function collectEffectAvoidancesForTargets(targetIds = [], metadataAssignmentIndex = new Map()) {
   const out = [];
   const seen = new Set();
@@ -969,7 +998,8 @@ export function buildSequenceAgentPlan({
       sequencingSectionDirectiveCount: Array.isArray(scope?.sequencingDesignHandoff?.sectionDirectives)
         ? scope.sequencingDesignHandoff.sectionDirectives.length
         : 0,
-      trainingKnowledge: buildStage1TrainingKnowledgeMetadata()
+      trainingKnowledge: buildStage1TrainingKnowledgeMetadata(),
+      metadataAssignments: sanitizeMetadataAssignmentsForPlanMetadata(metadataAssignments)
     }
   };
   plan.createdAt = new Date().toISOString();

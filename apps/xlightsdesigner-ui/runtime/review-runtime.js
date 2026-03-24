@@ -169,6 +169,10 @@ export async function executeApplyCore({
       markOrchestrationStage(orchestrationRun, "graph_validation", "warning", fallbackReason);
     }
 
+    const metadataAssignments = typeof deps.buildEffectiveMetadataAssignments === "function"
+      ? deps.buildEffectiveMetadataAssignments()
+      : [];
+
     if (!sequencerPlan) {
       sequencerPlan = buildSequenceAgentPlan({
         analysisHandoff,
@@ -183,6 +187,7 @@ export async function executeApplyCore({
         groupIds: Object.keys(state.sceneGraph?.groupsById || {}),
         groupsById: state.sceneGraph?.groupsById || {},
         submodelsById: state.sceneGraph?.submodelsById || {},
+        metadataAssignments,
         timingOwnership: getSequenceTimingOwnershipRows(),
         allowTimingWrites: true
       });
