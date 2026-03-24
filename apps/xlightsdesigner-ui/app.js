@@ -86,6 +86,7 @@ import {
   defineVisualHint,
   toStoredVisualHintDefinitions
 } from "./runtime/visual-hint-definitions.js";
+import { parseExplicitVisualHintDefinitionIntent } from "./runtime/visual-hint-definition-intent.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
 import {
   buildDesignerPlanCommands as buildDesignerPlanCommandsFromLines,
@@ -6176,6 +6177,33 @@ async function onSendChat() {
   state.ui.chatDraft = "";
   state.ui.agentThinking = true;
   render();
+
+  const explicitVisualHintDefinition = parseExplicitVisualHintDefinitionIntent(raw);
+  if (explicitVisualHintDefinition) {
+    const record = definePersistedVisualHint(explicitVisualHintDefinition.name, {
+      description: explicitVisualHintDefinition.description,
+      semanticClass: "custom",
+      behavioralIntent: explicitVisualHintDefinition.behavioralIntent,
+      definedBy: "user",
+      source: "managed",
+      learnedFrom: "chat_dialog"
+    });
+    state.ui.agentThinking = false;
+    addStructuredChatMessage(
+      "agent",
+      `Saved visual hint definition for ${record?.name || explicitVisualHintDefinition.name}.`,
+      {
+        roleId: "app_assistant",
+        displayName: getTeamChatSpeakerLabel("app_assistant"),
+        handledBy: "app_assistant"
+      }
+    );
+    setStatus("info", `Saved visual hint definition for ${record?.name || explicitVisualHintDefinition.name}.`);
+    saveCurrentProjectSnapshot();
+    persist();
+    render();
+    return;
+  }
 
   const bridge = getDesktopAgentConversationBridge();
   if (!bridge) {
