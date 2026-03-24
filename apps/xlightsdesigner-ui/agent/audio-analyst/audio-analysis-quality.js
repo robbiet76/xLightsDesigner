@@ -47,6 +47,22 @@ function hasGenericStructureLabels(artifact = {}) {
   return labels.length > 0 && labels.every((row) => looksGenericSectionLabel(row));
 }
 
+function parseBeatsPerBarFromTimeSignature(value = "") {
+  const match = /^(\d+)\s*\/\s*(\d+)$/.exec(str(value));
+  if (!match) return null;
+  const numerator = Number(match[1]);
+  return Number.isFinite(numerator) && numerator > 0 ? numerator : null;
+}
+
+function hasSemanticStructureSections(artifact = {}) {
+  const sections = rows(artifact?.structure?.sections);
+  if (!sections.length) return false;
+  return sections.some((row) => {
+    const label = str(row?.label || row?.name);
+    return label && !looksGenericSectionLabel(label) && str(row?.sectionType) !== "section";
+  });
+}
+
 function findSectionRowsWithin(rowsInput = [], startMs = 0, endMs = 0) {
   return rows(rowsInput).filter((row) => {
     const start = finite(row?.startMs);
@@ -119,13 +135,20 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   const diagnostics = arr(artifact?.diagnostics?.warnings).map((row) => str(row));
   const allBpb = sectionMetrics.map((row) => row?.beatsPerBarObserved).filter((row) => Number.isFinite(row));
   const medianBpb = median(allBpb);
+  const expectedBpb = parseBeatsPerBarFromTimeSignature(timeSignature);
 
   if (hasGenericStructureLabels(artifact)) issues.push("generic_structure_labels_present");
+  if (!hasSemanticStructureSections(artifact)) issues.push("missing_semantic_song_structure");
   if (diagnostics.some((row) => /Generated heuristic song sections/i.test(row))) issues.push("heuristic_song_structure_generated");
+  if (!rows(artifact?.timing?.beats).length) issues.push("missing_beats");
+  if (!rows(artifact?.timing?.bars).length) issues.push("missing_bars");
   if (!lyricsCount) issues.push("no_synced_lyrics");
   if (!chordCount) issues.push("no_chords");
   if (harmonicConfidence && Number.isFinite(Number(harmonicConfidence)) && Number(harmonicConfidence) < 0.2) {
     issues.push("very_low_harmonic_confidence");
+  }
+  if (Number.isFinite(expectedBpb) && Number.isFinite(medianBpb) && Math.abs(medianBpb - expectedBpb) > 0.35) {
+    issues.push("bars_do_not_match_time_signature");
   }
   if (timeSignature === "2/4" && Number.isFinite(medianBpb) && medianBpb <= 2.1) {
     issues.push("timing_locked_to_duple_meter");
@@ -162,6 +185,25 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
     .map((row) => buildSectionMetric(row, beats, bars, chords, lyrics))
     .filter(Boolean);
   const topLevelIssues = buildTopLevelIssues(artifact, sectionMetrics);
+  const expectedBeatsPerBar = parseBeatsPerBarFromTimeSignature(artifact?.timing?.timeSignature);
+  const observedBeatsPerBar = median(sectionMetrics.map((row) => row?.beatsPerBarObserved).filter((row) => Number.isFinite(row)));
+  const readiness = {
+    minimumContract: {
+      beatsPresent: beats.length > 0,
+      barsPresent: bars.length > 0,
+      semanticSongStructurePresent: hasSemanticStructureSections(artifact),
+      barsMatchTimeSignature:
+        !Number.isFinite(expectedBeatsPerBar) || !Number.isFinite(observedBeatsPerBar)
+          ? false
+          : Math.abs(observedBeatsPerBar - expectedBeatsPerBar) <= 0.35
+    }
+  };
+  readiness.ok = Boolean(
+    readiness.minimumContract.beatsPresent &&
+    readiness.minimumContract.barsPresent &&
+    readiness.minimumContract.semanticSongStructurePresent &&
+    readiness.minimumContract.barsMatchTimeSignature
+  );
   return {
     artifactType: "audio_analysis_quality_report_v1",
     createdAt: new Date().toISOString(),
@@ -186,6 +228,7 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
       structureHasOnlyGenericLabels: hasGenericStructureLabels(artifact),
       diagnostics: arr(artifact?.diagnostics?.warnings).map((row) => str(row)).filter(Boolean)
     },
+    readiness,
     serviceAssessment: buildServiceAssessment(artifact),
     topLevelIssues,
     sections: sectionMetrics

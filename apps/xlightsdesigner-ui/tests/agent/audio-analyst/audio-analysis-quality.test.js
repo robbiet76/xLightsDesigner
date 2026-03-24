@@ -75,8 +75,14 @@ test("audio analysis quality report flags missing lyric/chord support without in
   assert.equal(report.provenance.structureHasOnlyGenericLabels, false);
   assert.ok(report.topLevelIssues.includes("no_synced_lyrics"));
   assert.ok(report.topLevelIssues.includes("no_chords"));
+  assert.equal(report.topLevelIssues.includes("missing_semantic_song_structure"), false);
   assert.ok(report.topLevelIssues.includes("very_low_harmonic_confidence"));
   assert.ok(report.topLevelIssues.includes("timing_locked_to_duple_meter"));
+  assert.equal(report.readiness.minimumContract.beatsPresent, true);
+  assert.equal(report.readiness.minimumContract.barsPresent, true);
+  assert.equal(report.readiness.minimumContract.semanticSongStructurePresent, true);
+  assert.equal(report.readiness.minimumContract.barsMatchTimeSignature, true);
+  assert.equal(report.readiness.ok, true);
   assert.equal(report.sections.length, 2);
   assert.equal(report.sections[0].beatCount, 2);
   assert.equal(report.sections[0].barCount, 1);
@@ -93,4 +99,18 @@ test("audio analysis quality report flags generic structure labels directly", ()
 
   assert.equal(report.provenance.structureHasOnlyGenericLabels, true);
   assert.ok(report.topLevelIssues.includes("generic_structure_labels_present"));
+  assert.ok(report.topLevelIssues.includes("missing_semantic_song_structure"));
+  assert.equal(report.readiness.minimumContract.semanticSongStructurePresent, false);
+  assert.equal(report.readiness.ok, false);
+});
+
+test("audio analysis quality report fails readiness when bars do not match time signature", () => {
+  const artifact = sampleArtifact();
+  artifact.timing.timeSignature = "4/4";
+
+  const report = buildAudioAnalysisQualityReport(artifact);
+
+  assert.ok(report.topLevelIssues.includes("bars_do_not_match_time_signature"));
+  assert.equal(report.readiness.minimumContract.barsMatchTimeSignature, false);
+  assert.equal(report.readiness.ok, false);
 });
