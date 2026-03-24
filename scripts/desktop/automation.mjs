@@ -24,7 +24,7 @@ const launchRoot = "/tmp/xld-desktop-launch";
 const launchRequestsDir = path.join(launchRoot, "requests");
 
 function usage() {
-  console.error("usage: automation.mjs [--channel packaged|dev] [--result-file path] ping | reset-automation-state | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | generate-proposal <json-payload|--payload-file path> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-section-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-revision-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
+  console.error("usage: automation.mjs [--channel packaged|dev] [--result-file path] ping | reset-automation-state | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | generate-proposal <json-payload|--payload-file path> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-section-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-revision-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-wholesequence-practical-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
   process.exit(2);
 }
 
@@ -122,6 +122,9 @@ if (command === "dispatch-prompt") {
 } else if (command === "run-live-revision-practical-sequence-validation-suite") {
   action = "runLiveRevisionPracticalSequenceValidationSuite";
   payload = readJsonPayload(rest);
+} else if (command === "run-live-wholesequence-practical-validation-suite") {
+  action = "runLiveWholeSequencePracticalValidationSuite";
+  payload = readJsonPayload(rest);
 } else if (command === "run-live-design-canary-suite") {
   action = "runLiveDesignCanarySuite";
   payload = readJsonPayload(rest);
@@ -151,6 +154,12 @@ function computeTimeoutMs(currentAction = "", currentPayload = {}) {
     const scenarioCount = Array.isArray(currentPayload?.scenarios) ? currentPayload.scenarios.length : 0;
     const baseMs = 300000;
     const perScenarioMs = 120000;
+    return Math.max(baseMs, baseMs + (scenarioCount * perScenarioMs));
+  }
+  if (currentAction === "runLiveWholeSequencePracticalValidationSuite") {
+    const scenarioCount = Array.isArray(currentPayload?.scenarios) ? currentPayload.scenarios.length : 0;
+    const baseMs = 300000;
+    const perScenarioMs = 150000;
     return Math.max(baseMs, baseMs + (scenarioCount * perScenarioMs));
   }
   if (currentAction === "runComparativeLiveDesignValidation") {

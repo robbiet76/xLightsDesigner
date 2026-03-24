@@ -8,6 +8,10 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
+}
+
 function summarizeChecks(checks = []) {
   const rows = arr(checks);
   return {
@@ -44,12 +48,16 @@ function summarizePlanQuality(planHandoff = null) {
   const effectCommands = commands.filter((row) => str(row?.cmd) === "effects.create");
   const aggregatePattern = /(^|\/)(allmodels|allmodels_|.*_all$|.*_nofloods$|.*_nomatrix$|fronthouse$|frontprops$)/i;
   const durationMs = Number(planHandoff?.metadata?.sequenceSettings?.durationMs);
+  const executionStrategy = planHandoff?.metadata?.executionStrategy && typeof planHandoff.metadata.executionStrategy === "object"
+    ? planHandoff.metadata.executionStrategy
+    : {};
   const windows = effectCommands
     .map((row) => ({
       startMs: Number(row?.params?.startMs),
       endMs: Number(row?.params?.endMs),
       effectName: str(row?.params?.effectName),
-      target: str(row?.params?.modelName)
+      target: str(row?.params?.modelName),
+      section: str(row?.intent?.section || row?.anchor?.section || row?.anchor?.sectionLabel)
     }))
     .filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs);
   const sortedWindows = windows
@@ -72,13 +80,26 @@ function summarizePlanQuality(planHandoff = null) {
   }
   const uniqueEffects = Array.from(new Set(windows.map((row) => row.effectName).filter(Boolean)));
   const dominantEffectCount = effectCounts.size ? Math.max(...effectCounts.values()) : 0;
-  const sectionPlans = arr(planHandoff?.metadata?.sectionPlans);
-  const effectPlacements = arr(planHandoff?.metadata?.effectPlacements);
+  const sectionPlans = arr(planHandoff?.metadata?.sectionPlans).length
+    ? arr(planHandoff?.metadata?.sectionPlans)
+    : arr(executionStrategy?.sectionPlans);
+  const effectPlacements = arr(planHandoff?.metadata?.effectPlacements).length
+    ? arr(planHandoff?.metadata?.effectPlacements)
+    : arr(executionStrategy?.effectPlacements);
+  const designIdToSection = new Map(
+    sectionPlans
+      .map((row) => [str(row?.designId), str(row?.section)])
+      .filter(([designId, section]) => designId && section)
+  );
   const placementCount = effectPlacements.length;
-  const sectionLabels = sectionPlans.map((row) => str(row?.section)).filter(Boolean);
+  const sectionLabels = uniqueStrings([
+    ...sectionPlans.map((row) => str(row?.section)),
+    ...effectPlacements.map((row) => str(row?.sourceSectionLabel || row?.section || designIdToSection.get(str(row?.designId)))),
+    ...windows.map((row) => str(row?.section))
+  ]);
   const perSectionCounts = new Map(sectionLabels.map((label) => [label, 0]));
   for (const placement of effectPlacements) {
-    const section = str(placement?.sourceSectionLabel || placement?.section);
+    const section = str(placement?.sourceSectionLabel || placement?.section || designIdToSection.get(str(placement?.designId)));
     if (!section) continue;
     perSectionCounts.set(section, (perSectionCounts.get(section) || 0) + 1);
   }
@@ -87,7 +108,7 @@ function summarizePlanQuality(planHandoff = null) {
     .map(([label]) => label);
   const sectionEffectPatterns = new Map();
   for (const placement of effectPlacements) {
-    const section = str(placement?.sourceSectionLabel || placement?.section);
+    const section = str(placement?.sourceSectionLabel || placement?.section || designIdToSection.get(str(placement?.designId)));
     const effectName = str(placement?.effectName);
     if (!section || !effectName) continue;
     if (!sectionEffectPatterns.has(section)) sectionEffectPatterns.set(section, []);
@@ -111,9 +132,18 @@ function summarizePlanQuality(planHandoff = null) {
   const effectCommandsPerMinute = durationMinutes > 0 ? effectCommands.length / durationMinutes : 0;
   const placementsPerSection = sectionLabels.length > 0 ? placementCount / sectionLabels.length : 0;
   const activeTargetCount = Array.from(new Set(windows.map((row) => row.target).filter(Boolean))).length;
-  const activeTargetRatio = sectionPlans.length > 0
-    ? activeTargetCount / Math.max(1, Number(planHandoff?.metadata?.scope?.targetIds?.length || activeTargetCount))
-    : 0;
+  const sectionPlanTargetCount = Array.from(
+    new Set(sectionPlans.flatMap((row) => arr(row?.targetIds).map((targetId) => str(targetId)).filter(Boolean)))
+  ).length;
+  const scopedTargetCount = Math.max(
+    1,
+    Number(planHandoff?.metadata?.scope?.targetIds?.length || 0),
+    Number(planHandoff?.metadata?.targetIds?.length || 0),
+    Number(executionStrategy?.targetCount || 0),
+    Number(sectionPlanTargetCount || 0),
+    activeTargetCount
+  );
+  const activeTargetRatio = activeTargetCount > 0 ? activeTargetCount / scopedTargetCount : 0;
   const multiLayerTargetCount = Array.from(
     effectCommands.reduce((map, row) => {
       const target = str(row?.params?.modelName);

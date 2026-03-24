@@ -483,11 +483,13 @@ const {
   runLiveDesignValidationSuiteFromDesktop,
   runLiveRevisionPracticalSequenceValidationSuiteFromDesktop,
   runLiveSectionPracticalSequenceValidationSuiteFromDesktop,
+  runLiveWholeSequencePracticalValidationSuiteFromDesktop,
   runLiveDesignCanarySuiteFromDesktop
 } = createLiveValidationSuites({
   invokeRendererAutomation,
   getRendererAgentRuntimeSnapshot,
   runComparativeLiveDesignValidationFromDesktop,
+  runWholeSequenceApplyValidationFromDesktop,
   validateDesignConceptState,
   logStartup,
   nowMs
@@ -610,6 +612,7 @@ async function processAutomationRequests() {
       if (action === "runLiveDesignValidationSuite") return 1800000;
       if (action === "runLiveSectionPracticalSequenceValidationSuite") return 1800000;
       if (action === "runLiveRevisionPracticalSequenceValidationSuite") return 1800000;
+      if (action === "runLiveWholeSequencePracticalValidationSuite") return 1800000;
       if (action === "runLiveDesignCanarySuite") return 900000;
       if (action === "runLiveDesignCanaryValidation") return 300000;
       if (action === "runComparativeLiveDesignValidation") return 900000;
@@ -679,6 +682,9 @@ async function processAutomationRequests() {
       }
       if (action === "runLiveRevisionPracticalSequenceValidationSuite") {
         return runLiveRevisionPracticalSequenceValidationSuiteFromDesktop(request?.payload || {});
+      }
+      if (action === "runLiveWholeSequencePracticalValidationSuite") {
+        return runLiveWholeSequencePracticalValidationSuiteFromDesktop(request?.payload || {});
       }
       if (action === "runLiveDesignCanarySuite") {
         return runLiveDesignCanarySuiteFromDesktop(request?.payload || {});

@@ -41,6 +41,7 @@ Current policy:
 - the desktop live-suite runner now reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
 - use `run-live-practical-benchmark.mjs` as the Stage 1 practical gate once the clean `Phase2` baseline is loaded
 - use the revision live suite as part of the promoted Phase 2 practical gate
+- the whole-sequence slot in the practical benchmark now uses apply-level validation, not comparative design preference scoring
 
 Runner modes:
 - `default`: normal single-output pass/fail eval
@@ -101,4 +102,10 @@ node scripts/desktop/automation.mjs \
   --result-file /tmp/live-revision-practical-sequence-validation-suite-v1.json \
   run-live-revision-practical-sequence-validation-suite \
   --payload-file apps/xlightsdesigner-ui/eval/live-revision-practical-sequence-validation-suite-v1.json
+
+node scripts/desktop/automation.mjs \
+  --channel dev \
+  --result-file /tmp/live-wholesequence-practical-validation-suite-v2.json \
+  run-live-wholesequence-practical-validation-suite \
+  --payload-file apps/xlightsdesigner-ui/eval/live-wholesequence-practical-validation-suite-v2.json
 ```

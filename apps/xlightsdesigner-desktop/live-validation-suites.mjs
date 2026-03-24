@@ -245,6 +245,7 @@ export function createLiveValidationSuites({
   invokeRendererAutomation,
   getRendererAgentRuntimeSnapshot,
   runComparativeLiveDesignValidationFromDesktop,
+  runWholeSequenceApplyValidationFromDesktop,
   validateDesignConceptState,
   logStartup,
   nowMs
@@ -1177,6 +1178,182 @@ export function createLiveValidationSuites({
     };
   }
 
+  async function runLiveWholeSequencePracticalValidationSuiteFromDesktop(expected = {}) {
+    const suiteStartedAtMs = nowMs();
+    const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
+    if (!scenarios.length) {
+      throw new Error("Live whole-sequence practical validation suite requires at least one scenario.");
+    }
+    const suiteBaselineSequencePath = str(expected?.baselineSequencePath);
+    const results = [];
+    let activeSequencePath = "";
+    const refreshedSequences = new Set();
+    const analyzedContexts = new Set();
+    const suiteRestorePairs = new Map();
+
+    try {
+    for (const scenario of scenarios) {
+      const scenarioStartedAtMs = nowMs();
+      const name = str(scenario?.name || `scenario-${results.length + 1}`);
+      const sequencePath = str(scenario?.sequencePath);
+      const baselineSequencePath = str(scenario?.baselineSequencePath || suiteBaselineSequencePath);
+      const timings = {};
+      logStartup(`automation:live-wholesequence-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
+      if (sequencePath && baselineSequencePath) {
+        suiteRestorePairs.set(sequencePath, { sequencePath, baselineSequencePath });
+        const restoreStartedAtMs = nowMs();
+        await restoreValidationSequenceFromBaseline({ sequencePath, baselineSequencePath });
+        timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
+        activeSequencePath = "";
+        refreshedSequences.delete(sequencePath);
+      }
+      if (sequencePath && sequencePath !== activeSequencePath) {
+        const openStartedAtMs = nowMs();
+        await openSequenceFromDesktop(sequencePath);
+        timings.openSequenceMs = nowMs() - openStartedAtMs;
+        activeSequencePath = sequencePath;
+      }
+
+      const sequenceContextKey = sequencePath || activeSequencePath || "__current__";
+      if (!refreshedSequences.has(sequenceContextKey) && scenario?.refreshFirst !== false) {
+        const refreshStartedAtMs = nowMs();
+        await invokeRendererAutomation("refreshFromXLights", {});
+        timings.refreshMs = nowMs() - refreshStartedAtMs;
+        refreshedSequences.add(sequenceContextKey);
+      }
+
+      const analyzePrompt = str(scenario?.analyzePrompt);
+      const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
+      if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
+        const requiredCueTypes = inferRequiredCueTypesFromScenario(scenario);
+        const reuse = await canReuseCurrentAnalysis({
+          sequencePath: sequenceContextKey === "__current__" ? "" : sequenceContextKey,
+          analyzePrompt,
+          requiredCueTypes
+        });
+        if (reuse) {
+          timings.analyzeMs = 0;
+        } else {
+          const analyzeStartedAtMs = nowMs();
+          await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+          timings.analyzeMs = nowMs() - analyzeStartedAtMs;
+        }
+        analyzedContexts.add(analysisContextKey);
+      }
+
+      const generateStartedAtMs = nowMs();
+      const generateResponse = await invokeRendererAutomation("generateProposal", {
+        prompt: str(scenario?.prompt || scenario?.strongPrompt),
+        requestedRole: "designer_dialog",
+        forceFresh: true,
+        clearRevisionTarget: true,
+        selectedSections: arr(scenario?.sections),
+        selectedTargetIds: arr(scenario?.targets),
+        selectedTagNames: arr(scenario?.tagNames)
+      });
+      timings.generateMs = nowMs() - generateStartedAtMs;
+
+      let applyResponse = null;
+      if (generateResponse?.planHandoff || generateResponse?.hasDraftProposal) {
+        const applyStartedAtMs = nowMs();
+        applyResponse = await invokeRendererAutomation("applyCurrentProposal", {});
+        timings.applyMs = nowMs() - applyStartedAtMs;
+      } else {
+        timings.applyMs = 0;
+      }
+
+      const validationStartedAtMs = nowMs();
+      const validationRun = await runWholeSequenceApplyValidationFromDesktop({
+        sequenceName: scenario?.sequenceName,
+        minConceptCount: Number(scenario?.minConceptCount || 8),
+        minPlacementCount: Number(scenario?.minPlacementCount || 200)
+      });
+      timings.validationMs = nowMs() - validationStartedAtMs;
+      const validation = validationRun?.validation || null;
+      const snapshot = await invokeRendererAutomation("getSequencerValidationSnapshot", {});
+      const practicalValidation = snapshot?.latestPracticalValidation
+        || applyResponse?.latestPracticalValidation
+        || applyResponse?.applyOutcome?.applyResult?.practicalValidation
+        || null;
+      const observedTargets = uniqueStrings([
+        ...arr(practicalValidation?.designAlignment?.observedTargets),
+        ...arr(snapshot?.pageStates?.sequence?.data?.rows).map((row) => row?.target)
+      ]);
+      const observedEffectNames = uniqueStrings([
+        ...arr(practicalValidation?.designAlignment?.observedEffectNames),
+        ...arr(applyResponse?.applyOutcome?.applyResult?.practicalValidation?.designAlignment?.observedEffectNames),
+        ...arr(applyResponse?.latestApply?.verification?.designAlignment?.observedEffectNames)
+      ]);
+
+      const assertions = [
+        {
+          kind: "practical_validation",
+          ok: practicalValidation?.overallOk === true,
+          expected: "overallOk=true",
+          actual: practicalValidation?.overallOk === true ? "overallOk=true" : "overallOk=false"
+        },
+        {
+          kind: "whole_sequence_apply_validation",
+          ok: validation?.ok === true,
+          expected: "whole_sequence_apply_validation ok",
+          actual: validation?.ok === true ? "ok" : arr(validation?.issues).map((row) => str(row?.code)).filter(Boolean).join(", ")
+        }
+      ];
+      const ok = assertions.every((row) => row?.ok === true);
+
+      results.push({
+        name,
+        sequencePath,
+        timings: {
+          totalMs: nowMs() - scenarioStartedAtMs,
+          restoreBaselineMs: Number(timings.restoreBaselineMs || 0),
+          openSequenceMs: Number(timings.openSequenceMs || 0),
+          refreshMs: Number(timings.refreshMs || 0),
+          analyzeMs: Number(timings.analyzeMs || 0),
+          generateMs: Number(timings.generateMs || 0),
+          applyMs: Number(timings.applyMs || 0),
+          validationMs: Number(timings.validationMs || 0)
+        },
+        ok,
+        assertions,
+        practicalValidation,
+        wholeSequenceApplyValidation: validationRun,
+        observedTargets,
+        observedEffectNames,
+        generateResponse,
+        applyResponse
+      });
+      logStartup(`automation:live-wholesequence-suite:scenario:finish name=${name} ok=${ok ? "true" : "false"} totalMs=${nowMs() - scenarioStartedAtMs}`);
+    }
+    } finally {
+      await restoreSuiteSequencesToBaseline([...suiteRestorePairs.values()]);
+    }
+
+    const failed = results.filter((row) => row?.ok !== true);
+    const gapReport = buildSequencerGapReport({
+      suiteName: str(expected?.name || "live_wholesequence_practical_validation_suite"),
+      suiteContract: "live_wholesequence_practical_validation_suite_run_v1",
+      scenarioCount: results.length,
+      results
+    });
+    return {
+      contract: "live_wholesequence_practical_validation_suite_run_v1",
+      version: "1.0",
+      ok: failed.length === 0,
+      summary: failed.length === 0
+        ? `Live whole-sequence practical suite passed ${results.length}/${results.length} scenarios.`
+        : `Live whole-sequence practical suite passed ${results.length - failed.length}/${results.length} scenarios.`,
+      timings: {
+        totalMs: nowMs() - suiteStartedAtMs
+      },
+      scenarioCount: results.length,
+      failedScenarioCount: failed.length,
+      failedScenarioNames: failed.map((row) => row.name),
+      results,
+      gapReport
+    };
+  }
+
   async function runLiveDesignCanarySuiteFromDesktop(expected = {}) {
     const suiteStartedAtMs = nowMs();
     const scenarios = arr(expected?.scenarios).filter((row) => row && typeof row === "object");
@@ -1292,6 +1469,7 @@ export function createLiveValidationSuites({
     runLiveDesignValidationSuiteFromDesktop,
     runLiveRevisionPracticalSequenceValidationSuiteFromDesktop,
     runLiveSectionPracticalSequenceValidationSuiteFromDesktop,
+    runLiveWholeSequencePracticalValidationSuiteFromDesktop,
     runLiveDesignCanarySuiteFromDesktop
   };
 }
