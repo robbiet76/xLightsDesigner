@@ -114,3 +114,17 @@ test("audio analysis quality report fails readiness when bars do not match time 
   assert.equal(report.readiness.minimumContract.barsMatchTimeSignature, false);
   assert.equal(report.readiness.ok, false);
 });
+
+test("audio analysis quality report fails readiness for mixed semantic and generic section labels", () => {
+  const artifact = sampleArtifact();
+  artifact.structure.sections = [
+    { startMs: 0, endMs: 1000, label: "Verse 1", sectionType: "verse" },
+    { startMs: 1000, endMs: 2000, label: "Section 2", sectionType: "section" }
+  ];
+
+  const report = buildAudioAnalysisQualityReport(artifact);
+
+  assert.ok(report.topLevelIssues.includes("missing_semantic_song_structure"));
+  assert.equal(report.readiness.minimumContract.semanticSongStructurePresent, false);
+  assert.equal(report.readiness.ok, false);
+});

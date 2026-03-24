@@ -1538,6 +1538,9 @@ def _detect_sections_from_audio(
     beat_times_ms: Optional[List[int]] = None,
 ) -> List[Dict[str, Any]]:
     chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
+    chroma_frame_times = librosa.times_like(chroma, sr=sr)
+    rms = librosa.feature.rms(y=y)[0]
+    rms_frame_times = librosa.times_like(rms, sr=sr)
     beat_frames = np.array([], dtype=int)
     beat_times_sync = np.array([], dtype=float)
     if beat_times_ms and len(beat_times_ms) >= 8:
@@ -1598,7 +1601,33 @@ def _detect_sections_from_audio(
         if end_ms <= start_ms:
             continue
         segs.append({"startMs": start_ms, "endMs": end_ms, "label": "Section"})
-    return _build_numbered_sections(segs)
+    if not segs:
+        return []
+
+    section_chroma: List[np.ndarray] = []
+    section_energy: List[float] = []
+    for seg in segs:
+        start_sec = max(0.0, float(seg["startMs"]) / 1000.0)
+        end_sec = max(start_sec, float(seg["endMs"]) / 1000.0)
+
+        chroma_mask = (chroma_frame_times >= start_sec) & (chroma_frame_times < end_sec)
+        if not np.any(chroma_mask):
+            chroma_idx = int(np.clip(np.searchsorted(chroma_frame_times, start_sec, side="left"), 0, chroma.shape[1] - 1))
+            chroma_profile = np.asarray(chroma[:, chroma_idx], dtype=float)
+        else:
+            chroma_profile = np.asarray(np.median(chroma[:, chroma_mask], axis=1), dtype=float)
+        section_chroma.append(chroma_profile)
+
+        rms_mask = (rms_frame_times >= start_sec) & (rms_frame_times < end_sec)
+        if not np.any(rms_mask):
+            rms_idx = int(np.clip(np.searchsorted(rms_frame_times, start_sec, side="left"), 0, len(rms) - 1))
+            energy = float(rms[rms_idx])
+        else:
+            energy = float(np.mean(rms[rms_mask]))
+        section_energy.append(energy)
+
+    labeled = _label_song_sections(segs, section_chroma, section_energy, duration_ms)
+    return labeled if labeled else _build_numbered_sections(segs)
 
 
 def _apply_global_shift_to_marks(
@@ -2061,6 +2090,10 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
     sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
+    has_semantic_sections = any(
+        str(row.get("label", "")).strip() and not str(row.get("label", "")).strip().startswith("Section")
+        for row in sections
+    )
     return {
         "bpm": bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
         "timeSignature": f"{max(1, int(inferred_bpb))}/4",
@@ -2072,6 +2105,7 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         "lyrics": lyrics_marks,
         "meta": {
             "engine": "librosa",
+            "sectionSource": "audio-structural-heuristic" if has_semantic_sections else "audio-segmentation-generic",
             "trackIdentity": identity,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,

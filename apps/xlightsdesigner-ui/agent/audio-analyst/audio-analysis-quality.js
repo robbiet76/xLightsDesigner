@@ -39,12 +39,12 @@ function coefficientOfVariation(values = []) {
 }
 
 function looksGenericSectionLabel(value = "") {
-  return /^section\s+\d+$/i.test(str(value));
+  return /^section(?:\s+\d+)?$/i.test(str(value));
 }
 
 function hasGenericStructureLabels(artifact = {}) {
   const labels = rows(artifact?.structure?.sections).map((row) => str(row?.label)).filter(Boolean);
-  return labels.length > 0 && labels.every((row) => looksGenericSectionLabel(row));
+  return labels.some((row) => looksGenericSectionLabel(row));
 }
 
 function parseBeatsPerBarFromTimeSignature(value = "") {
@@ -61,6 +61,13 @@ function hasSemanticStructureSections(artifact = {}) {
     const label = str(row?.label || row?.name);
     return label && !looksGenericSectionLabel(label) && str(row?.sectionType) !== "section";
   });
+}
+
+function hasCompleteSemanticSongStructure(artifact = {}) {
+  const sections = rows(artifact?.structure?.sections);
+  if (!sections.length) return false;
+  if (hasGenericStructureLabels(artifact)) return false;
+  return hasSemanticStructureSections(artifact);
 }
 
 function findSectionRowsWithin(rowsInput = [], startMs = 0, endMs = 0) {
@@ -138,7 +145,7 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   const expectedBpb = parseBeatsPerBarFromTimeSignature(timeSignature);
 
   if (hasGenericStructureLabels(artifact)) issues.push("generic_structure_labels_present");
-  if (!hasSemanticStructureSections(artifact)) issues.push("missing_semantic_song_structure");
+  if (!hasCompleteSemanticSongStructure(artifact)) issues.push("missing_semantic_song_structure");
   if (diagnostics.some((row) => /Generated heuristic song sections/i.test(row))) issues.push("heuristic_song_structure_generated");
   if (!rows(artifact?.timing?.beats).length) issues.push("missing_beats");
   if (!rows(artifact?.timing?.bars).length) issues.push("missing_bars");
@@ -191,7 +198,7 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
     minimumContract: {
       beatsPresent: beats.length > 0,
       barsPresent: bars.length > 0,
-      semanticSongStructurePresent: hasSemanticStructureSections(artifact),
+      semanticSongStructurePresent: hasCompleteSemanticSongStructure(artifact),
       barsMatchTimeSignature:
         !Number.isFinite(expectedBeatsPerBar) || !Number.isFinite(observedBeatsPerBar)
           ? false
