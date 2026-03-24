@@ -83,6 +83,7 @@ import { buildEffectiveMetadataAssignments as buildRuntimeEffectiveMetadataAssig
 import {
   mergeVisualHintDefinitions,
   ensureVisualHintDefinitions,
+  defineVisualHint,
   toStoredVisualHintDefinitions
 } from "./runtime/visual-hint-definitions.js";
 import { validateTrainingAgentRegistry } from "./agent/agent-registry-validator.js";
@@ -7773,6 +7774,16 @@ function ensurePersistedVisualHintDefinitions(hintNames = []) {
     { timestamp: new Date().toISOString() }
   );
   setVisualHintDefinitionRecords(next);
+}
+
+function definePersistedVisualHint(rawName, definition = {}) {
+  const next = defineVisualHint(getVisualHintDefinitionRecords(), rawName, {
+    ...definition,
+    timestamp: definition?.timestamp || new Date().toISOString()
+  });
+  setVisualHintDefinitionRecords(next);
+  invalidatePlanHandoff(`visual hint definition updated: ${String(rawName || "").trim()}`);
+  return next.find((row) => row.name === normalizeMetadataTagName(rawName)) || null;
 }
 
 function normalizeMetadataTagDescription(description) {

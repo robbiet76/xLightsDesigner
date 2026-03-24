@@ -112,6 +112,7 @@ export function mergeVisualHintDefinitions(rawRecords = []) {
       description: str(entry.description),
       semanticClass: str(entry.semanticClass || "custom").toLowerCase(),
       behavioralIntent: str(entry.behavioralIntent),
+      behavioralTags: arr(entry.behavioralTags).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
       controlled: false,
       source: str(entry.source || "custom").toLowerCase() || "custom",
       status: str(entry.status || "pending_definition").toLowerCase() || "pending_definition",
@@ -136,6 +137,7 @@ export function toStoredVisualHintDefinitions(records = []) {
       description: str(row.description),
       semanticClass: str(row.semanticClass || "custom").toLowerCase(),
       behavioralIntent: str(row.behavioralIntent),
+      behavioralTags: arr(row.behavioralTags).map((value) => normalizeMetadataTagName(value)).filter(Boolean),
       source: str(row.source || "custom").toLowerCase() || "custom",
       status: str(row.status || "pending_definition").toLowerCase() || "pending_definition",
       definedBy: str(row.definedBy || "user").toLowerCase() || "user",
@@ -180,4 +182,48 @@ export function ensureVisualHintDefinitions(records = [], hintNames = [], { time
   return changed
     ? Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name))
     : merged;
+}
+
+export function defineVisualHint(records = [], rawName = "", {
+  description = "",
+  semanticClass = "custom",
+  behavioralIntent = "",
+  behavioralTags = [],
+  definedBy = "agent",
+  source = "managed",
+  learnedFrom = "chat_dialog",
+  timestamp = ""
+} = {}) {
+  const name = normalizeMetadataTagName(rawName);
+  if (!name) return mergeVisualHintDefinitions(records);
+
+  const merged = mergeVisualHintDefinitions(records);
+  const byName = new Map(merged.map((row) => [row.name, row]));
+  const existing = byName.get(name);
+  const iso = str(timestamp);
+
+  if (existing?.controlled === true && existing?.source === "system") {
+    return merged;
+  }
+
+  byName.set(name, {
+    ...(existing && typeof existing === "object" ? existing : {}),
+    name,
+    description: str(description) || str(existing?.description),
+    semanticClass: str(semanticClass || existing?.semanticClass || "custom").toLowerCase(),
+    behavioralIntent: str(behavioralIntent) || str(existing?.behavioralIntent),
+    behavioralTags: arr(behavioralTags).map((row) => normalizeMetadataTagName(row)).filter(Boolean),
+    controlled: false,
+    source: str(source || existing?.source || "managed").toLowerCase() || "managed",
+    status: "defined",
+    definedBy: str(definedBy || existing?.definedBy || "agent").toLowerCase() || "agent",
+    provenance: {
+      source: str(source || existing?.provenance?.source || existing?.source || "managed").toLowerCase() || "managed",
+      learnedFrom: str(learnedFrom || existing?.provenance?.learnedFrom || "chat_dialog"),
+      createdAt: str(existing?.provenance?.createdAt),
+      updatedAt: iso || str(existing?.provenance?.updatedAt)
+    }
+  });
+
+  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
 }

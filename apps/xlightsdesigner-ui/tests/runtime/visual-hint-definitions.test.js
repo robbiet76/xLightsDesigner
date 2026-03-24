@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  defineVisualHint,
   ensureVisualHintDefinitions,
   getSystemVisualHintDefinitions,
   mergeVisualHintDefinitions,
@@ -45,4 +46,40 @@ test("merge/toStored preserve custom hint definitions but exclude system hints",
   const stored = toStoredVisualHintDefinitions(merged);
   assert.equal(stored.some((row) => row.name === "Beat-Sync"), false);
   assert.equal(stored.some((row) => row.name === "Cool" && row.status === "defined"), true);
+});
+
+test("defineVisualHint promotes a pending custom hint into a managed defined hint", () => {
+  const pending = ensureVisualHintDefinitions([], ["cool"], { timestamp: "2026-03-24T12:00:00.000Z" });
+  const defined = defineVisualHint(pending, "cool", {
+    description: "Used for cool-toned props and scenes.",
+    semanticClass: "color_direction",
+    behavioralIntent: "Prefer cooler color direction and restrained motion when the prompt calls for a cool look.",
+    behavioralTags: ["cool-tone", "restrained"],
+    definedBy: "agent",
+    source: "managed",
+    learnedFrom: "chat_dialog",
+    timestamp: "2026-03-24T12:05:00.000Z"
+  });
+
+  const custom = defined.find((row) => row.name === "Cool");
+  assert.ok(custom);
+  assert.equal(custom.status, "defined");
+  assert.equal(custom.definedBy, "agent");
+  assert.equal(custom.semanticClass, "color_direction");
+  assert.deepEqual(custom.behavioralTags, ["Cool-Tone", "Restrained"]);
+  assert.equal(custom.provenance.learnedFrom, "chat_dialog");
+  assert.equal(custom.provenance.updatedAt, "2026-03-24T12:05:00.000Z");
+});
+
+test("defineVisualHint does not override system-defined hints", () => {
+  const defined = defineVisualHint([], "Beat-Sync", {
+    description: "Should not override the built-in definition.",
+    semanticClass: "wrong",
+    behavioralIntent: "Wrong."
+  });
+
+  const system = defined.find((row) => row.name === "Beat-Sync");
+  assert.ok(system);
+  assert.equal(system.semanticClass, "rhythmic_capability");
+  assert.notEqual(system.behavioralIntent, "Wrong.");
 });
