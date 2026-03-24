@@ -1622,6 +1622,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
     const baseUrl = String(payload?.baseUrl || "").trim().replace(/\/+$/, "");
     const requestedProvider = "librosa";
     let provider = requestedProvider;
+    const analysisProfileMode = String(payload?.analysisProfileMode || "").trim().toLowerCase();
     const apiKey = String(payload?.apiKey || "").trim();
     const authBearer = String(payload?.authBearer || "").trim();
     const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "90000"), 10);
@@ -1656,6 +1657,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
       try {
         const form = new FormData();
         form.append("provider", provider);
+        if (analysisProfileMode) form.append("analysisProfileMode", analysisProfileMode);
         form.append("fileName", path.basename(filePath));
         form.append("file", new Blob([buf]), path.basename(filePath));
         const headers = {};
@@ -1678,6 +1680,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
           return {
             ok: true,
             provider,
+            analysisProfileMode,
             baseUrl,
             attempts: attempt,
             data: parsed?.data || parsed || {}

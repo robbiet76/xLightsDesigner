@@ -18,6 +18,7 @@ test("buildAudioAnalysisServiceRequest normalizes fields for service bridge", ()
     filePath: " /tmp/Song.mp3 ",
     baseUrl: "http://127.0.0.1:5055/",
     provider: "bad-provider",
+    analysisProfileMode: " FAST ",
     apiKey: " key ",
     authBearer: ""
   });
@@ -25,6 +26,7 @@ test("buildAudioAnalysisServiceRequest normalizes fields for service bridge", ()
   assert.equal(request.filePath, "/tmp/Song.mp3");
   assert.equal(request.baseUrl, "http://127.0.0.1:5055");
   assert.equal(request.provider, "librosa");
+  assert.equal(request.analysisProfileMode, "fast");
   assert.equal(request.apiKey, "key");
   assert.equal(request.authBearer, undefined);
 });

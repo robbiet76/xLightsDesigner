@@ -67,7 +67,31 @@ IDENTITY_CACHE_PATH = os.getenv(
     os.path.join(os.path.dirname(__file__), ".cache", "track-identity-cache.json"),
 ).strip()
 
+ANALYSIS_PROFILE_MODES = {"fast", "deep"}
+
 app = FastAPI(title="xLightsDesigner Analysis Service", version="0.1.0")
+
+
+def _normalize_analysis_profile(mode: str = "") -> Dict[str, Any]:
+    value = str(mode or "").strip().lower()
+    normalized = value if value in ANALYSIS_PROFILE_MODES else "deep"
+    if normalized == "fast":
+        return {
+            "mode": "fast",
+            "enableRemoteIdentity": False,
+            "enableWebTempo": False,
+            "enableLyrics": False,
+            "enableMadmomChords": False,
+            "enableMadmomDownbeatCrosscheck": False,
+        }
+    return {
+        "mode": "deep",
+        "enableRemoteIdentity": bool(ENABLE_REMOTE_IDENTITY_LOOKUP),
+        "enableWebTempo": bool(ENABLE_WEB_TEMPO_LOOKUP),
+        "enableLyrics": bool(ENABLE_LYRICS_LOOKUP),
+        "enableMadmomChords": bool(ENABLE_MADMOM_CHORDS),
+        "enableMadmomDownbeatCrosscheck": bool(ENABLE_MADMOM_DOWNBEAT_CROSSCHECK),
+    }
 
 
 def _module_available(name: str) -> bool:
@@ -640,8 +664,9 @@ def _first_lrc_timestamp_ms(lrc_text: str) -> Optional[int]:
     return first
 
 
-def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
-    if not ENABLE_LYRICS_LOOKUP:
+def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+    profile = analysis_profile or _normalize_analysis_profile("")
+    if not profile.get("enableLyrics"):
         return [], "lrclib skipped: lookup disabled", {}
     title = str(identity.get("title", "")).strip()
     artist = str(identity.get("artist", "")).strip()
@@ -731,14 +756,15 @@ def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int) -> tuple[Li
         return [], f"lrclib fetch failed: {err}", {}
 
 
-def _identify_track_with_audd(path: str) -> tuple[Dict[str, Any], bool]:
+def _identify_track_with_audd(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[Dict[str, Any], bool]:
+    profile = analysis_profile or _normalize_analysis_profile("")
     fingerprint = _audio_fingerprint(path)
     cached = _identity_cache_get(fingerprint)
     # Always prefer cached identity for the same audio fingerprint to avoid
     # repeated AudD usage on subsequent analyses of the same track.
     if cached:
         return cached, True
-    if not ENABLE_REMOTE_IDENTITY_LOOKUP:
+    if not profile.get("enableRemoteIdentity"):
         return {}, False
     if not AUDD_API_TOKEN:
         return {}, False
@@ -939,8 +965,10 @@ def _detect_chords(
     y: np.ndarray,
     sr: int,
     duration_ms: int,
+    analysis_profile: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    if not ENABLE_MADMOM_CHORDS:
+    profile = analysis_profile or _normalize_analysis_profile("")
+    if not profile.get("enableMadmomChords"):
         chords_fb, meta_fb = _detect_chords_independent(y, sr, duration_ms)
         meta_fb["engine"] = str(meta_fb.get("engine") or "librosa-chroma-template")
         meta_fb["madmomDisabled"] = True
@@ -1247,8 +1275,9 @@ def _median_beat_ms_from_starts(beat_starts_ms: List[int]) -> Optional[float]:
     return float(np.median(np.asarray(diffs, dtype=float)))
 
 
-def _detect_madmom_downbeat_summary(y: np.ndarray, sr: int, duration_ms: int) -> Dict[str, Any]:
-    if not ENABLE_MADMOM_DOWNBEAT_CROSSCHECK:
+def _detect_madmom_downbeat_summary(y: np.ndarray, sr: int, duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    profile = analysis_profile or _normalize_analysis_profile("")
+    if not profile.get("enableMadmomDownbeatCrosscheck"):
         return {"enabled": False, "available": False, "reason": "disabled"}
     _ensure_madmom_chords()
     if MadmomSignal is None or RNNDownBeatProcessor is None or DBNDownBeatTrackingProcessor is None:
@@ -1710,7 +1739,8 @@ def _select_best_beat_grid(
     }
 
 
-def _resolve_identity_and_web(path: str) -> tuple[Dict[str, Any], bool, Dict[str, Any], str]:
+def _resolve_identity_and_web(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[Dict[str, Any], bool, Dict[str, Any], str]:
+    profile = analysis_profile or _normalize_analysis_profile("")
     identity: Dict[str, Any] = {}
     identity_cache_hit = False
     web_tempo_evidence: Dict[str, Any] = {
@@ -1723,10 +1753,10 @@ def _resolve_identity_and_web(path: str) -> tuple[Dict[str, Any], bool, Dict[str
     }
     error = ""
     try:
-        identity, identity_cache_hit = _identify_track_with_audd(path)
+        identity, identity_cache_hit = _identify_track_with_audd(path, profile)
     except Exception as err:
         error = f"audd identify failed: {err}"
-    if identity and ENABLE_WEB_TEMPO_LOOKUP:
+    if identity and profile.get("enableWebTempo"):
         try:
             web_tempo_evidence = _fetch_songbpm_evidence(identity)
         except Exception as err:
@@ -1739,13 +1769,14 @@ def _resolve_lyrics(
     y: np.ndarray,
     sr: int,
     duration_ms: int,
+    analysis_profile: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[Dict[str, Any]], str, int, Dict[str, Any]]:
     lyrics_marks: List[Dict[str, Any]] = []
     lyrics_error = ""
     lyrics_shift_ms = 0
     lyrics_info: Dict[str, Any] = {}
     try:
-        lyrics_marks, lyrics_error, lyrics_info = _fetch_lrclib_lyrics(identity, duration_ms)
+        lyrics_marks, lyrics_error, lyrics_info = _fetch_lrclib_lyrics(identity, duration_ms, analysis_profile)
     except Exception as err:
         lyrics_error = f"lrclib runtime failed: {err}"
     if lyrics_marks and ENABLE_LYRICS_AUTO_SHIFT:
@@ -2118,7 +2149,8 @@ def _label_song_sections(
     return _build_numbered_sections(out)
 
 
-def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
+def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    profile = analysis_profile or _normalize_analysis_profile("")
     _ensure_librosa()
     _ensure_beatnet()
     if BeatNetEstimator is None:
@@ -2278,7 +2310,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
     beats_out = _label_beats_from_downbeats(beats_out, downbeat_starts, detected_beats_per_bar)
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, detected_beats_per_bar)
-    chords_out, chord_meta = _detect_chords(y, sr, duration_ms)
+    chords_out, chord_meta = _detect_chords(y, sr, duration_ms, profile)
 
     bpm_est = None
     if len(beat_times_ms) >= 2:
@@ -2291,16 +2323,16 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
         primary_beats_per_bar=detected_beats_per_bar,
         primary_time_signature=f"{detected_beats_per_bar}/4",
         primary_bpm=bpm_est,
-        secondary_summary=_detect_madmom_downbeat_summary(y, sr, duration_ms),
+        secondary_summary=_summarize_secondary_rhythm(_detect_madmom_downbeat_summary(y, sr, duration_ms, profile)),
     )
 
-    identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path)
+    identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path, profile)
     provider_sections: List[Dict[str, Any]] = []
     provider_name = ""
 
     sections: List[Dict[str, Any]] = provider_sections
 
-    lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
+    lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     if not sections and lyrics_marks:
         try:
             sections = _infer_sections_from_lyrics(lyrics_marks, duration_ms)
@@ -2333,6 +2365,7 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
             "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
             "lyricsLookup": lyrics_info,
             "sectionProviderConfig": _provider_config_state(),
+            "analysisProfile": profile,
             "downbeatCount": len(downbeat_starts),
             "beatsPerBar": detected_beats_per_bar,
             "beatQuality": {
@@ -2347,7 +2380,8 @@ def _analyze_with_beatnet(path: str) -> Dict[str, Any]:
     }
 
 
-def _analyze_with_librosa(path: str) -> Dict[str, Any]:
+def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    profile = analysis_profile or _normalize_analysis_profile("")
     _ensure_librosa()
     if librosa is None:
         raise RuntimeError("librosa is not installed in this runtime.")
@@ -2379,14 +2413,14 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
         beats_out.append({"startMs": start, "endMs": end, "label": str(beat_num)})
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb)))
-    chords_out, chord_meta = _detect_chords(y, sr, duration_ms)
+    chords_out, chord_meta = _detect_chords(y, sr, duration_ms, profile)
     bpm_est = None
     if len(beat_starts_ms) >= 2:
         diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
         med = float(np.median(diffs)) if diffs.size else 0.0
         if med > 0:
             bpm_est = float(round(60000.0 / med, 2))
-    madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms)
+    madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms, profile)
     rhythm_provider_agreement = _build_rhythm_provider_agreement(
         primary_provider="librosa",
         primary_beats_per_bar=int(max(1, int(inferred_bpb))),
@@ -2417,8 +2451,8 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
             rhythm_provider_agreement["agreedOnBeatsPerBar"] = True
             rhythm_provider_agreement["agreedOnTimeSignature"] = True
 
-    identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path)
-    lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms)
+    identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
+    lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
     lyric_sections: List[Dict[str, Any]] = []
     if lyrics_marks:
@@ -2457,6 +2491,7 @@ def _analyze_with_librosa(path: str) -> Dict[str, Any]:
             "lyricsGlobalShiftMs": int(lyrics_shift_ms),
             "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
             "lyricsLookup": lyrics_info,
+            "analysisProfile": profile,
             "beatsPerBar": int(max(1, int(inferred_bpb))),
             "meterAccentOffset": int(inferred_offset),
             "meterAccentScores": inferred_scores,
@@ -2498,12 +2533,12 @@ def _analysis_quality_score(data: Dict[str, Any]) -> float:
     return max(scores) if scores else -999.0
 
 
-def _analyze_auto(path: str) -> Dict[str, Any]:
+def _analyze_auto(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     candidates: List[Dict[str, Any]] = []
     errors: Dict[str, str] = {}
     for name, fn in (("beatnet", _analyze_with_beatnet), ("librosa", _analyze_with_librosa)):
         try:
-            out = fn(path)
+            out = fn(path, analysis_profile)
             meta = out.get("meta") if isinstance(out, dict) else {}
             if isinstance(meta, dict):
                 meta["autoCandidateProvider"] = name
@@ -2545,10 +2580,10 @@ def _analyze_auto(path: str) -> Dict[str, Any]:
     return best
 
 
-def _analyze(path: str, provider: str) -> Dict[str, Any]:
+def _analyze(path: str, provider: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     p = (provider or "librosa").strip().lower()
     if p == "librosa":
-        return _analyze_with_librosa(path)
+        return _analyze_with_librosa(path, analysis_profile)
     raise HTTPException(status_code=422, detail=f"Unsupported provider: {provider}. Only librosa is enabled.")
 
 
@@ -2569,6 +2604,7 @@ def health() -> Dict[str, Any]:
 async def analyze(
     file: UploadFile = File(...),
     provider: str = Form("librosa"),
+    analysisProfileMode: str = Form(""),
     fileName: str = Form(""),
     x_api_key: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
@@ -2580,7 +2616,7 @@ async def analyze(
         payload = await file.read()
         with open(temp_path, "wb") as fh:
             fh.write(payload)
-        data = _analyze(temp_path, provider)
+        data = _analyze(temp_path, provider, _normalize_analysis_profile(analysisProfileMode))
         data["beats"] = _sanitize_marks(data.get("beats") or [])
         data["bars"] = _sanitize_marks(data.get("bars") or [])
         data["chords"] = _sanitize_marks(data.get("chords") or [])

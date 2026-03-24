@@ -113,6 +113,7 @@ import {
   buildAudioAnalystInput,
   executeAudioAnalystFlow
 } from "./agent/audio-analyst/audio-analyst-runtime.js";
+import { buildAudioAnalysisQualityReport } from "./agent/audio-analyst/audio-analysis-quality.js";
 import {
   resetAudioAnalysisView,
   buildPendingAudioAnalysisPipeline,
@@ -11261,9 +11262,20 @@ async function runSongContextWebFallback(audioPath = "") {
   }
 }
 
-async function runAudioAnalysisPipeline() {
+function shouldEscalateAudioAnalysisProfile(report = {}) {
+  const issues = Array.isArray(report?.topLevelIssues) ? report.topLevelIssues : [];
+  const readiness = report?.readiness?.minimumContract || {};
+  return Boolean(
+    readiness.semanticSongStructurePresent === false
+    || issues.includes("generic_structure_labels_present")
+    || issues.includes("rhythm_provider_time_signature_disagreement")
+    || issues.includes("rhythm_provider_bar_grouping_disagreement")
+  );
+}
+
+async function runAudioAnalysisPipeline({ analysisProfile = null } = {}) {
   const resolvedProvider = "librosa";
-  const out = await runAudioAnalysisOrchestration({
+  const baseArgs = {
     audioPath: String(state.audioPathInput || "").trim(),
     analysisService: {
       baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
@@ -11291,7 +11303,32 @@ async function runAudioAnalysisPipeline() {
       setAudioAnalysisProgress(state.audioAnalysis, { stage, message });
       render();
     }
+  };
+  const requestedProfile = analysisProfile && typeof analysisProfile === "object" ? analysisProfile : { mode: "fast", allowEscalation: true };
+  let out = await runAudioAnalysisOrchestration({
+    ...baseArgs,
+    analysisProfile: requestedProfile
   });
+  if (requestedProfile.mode === "fast" && requestedProfile.allowEscalation !== false) {
+    const fastArtifact = buildAnalysisArtifactFromPipelineResult({
+      audioPath: String(state.audioPathInput || "").trim(),
+      result: out,
+      requestedProvider: resolvedProvider,
+      analysisBaseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "")
+    });
+    const fastReport = buildAudioAnalysisQualityReport(fastArtifact);
+    if (shouldEscalateAudioAnalysisProfile(fastReport)) {
+      setAudioAnalysisProgress(state.audioAnalysis, {
+        stage: "deep_analysis_escalation",
+        message: "Fast analysis found weak structure or rhythm confidence. Escalating to deep analysis."
+      });
+      render();
+      out = await runAudioAnalysisOrchestration({
+        ...baseArgs,
+        analysisProfile: { mode: "deep", allowEscalation: false }
+      });
+    }
+  }
   if (Array.isArray(out.sectionSuggestions) && out.sectionSuggestions.length) {
     state.ui.sectionTrackName = out.sectionTrackName || "Analysis: Song Structure";
     state.sectionSuggestions = out.sectionSuggestions;
@@ -11369,11 +11406,13 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
   const progressTicker = startAudioAnalysisProgressTicker();
   try {
     const resolvedProvider = "librosa";
+    const requestedAnalysisProfile = { mode: "fast", allowEscalation: true };
     const analysisRequest = buildAudioAnalystInput({
       requestId: orchestrationRun.id,
       mediaFilePath: audioPath,
       mediaRootPath: String(state.project?.mediaPath || "").trim(),
       projectFilePath: String(state.projectFilePath || "").trim(),
+      analysisProfile: requestedAnalysisProfile,
       service: {
         baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
         provider: resolvedProvider,
@@ -11383,7 +11422,7 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
     });
     const flow = await executeAudioAnalystFlow({
       input: analysisRequest,
-      runPipeline: async () => runAudioAnalysisPipeline({ refreshTracks: true }),
+      runPipeline: async ({ input }) => runAudioAnalysisPipeline({ analysisProfile: input?.analysisProfile || requestedAnalysisProfile }),
       persistArtifact: async ({ artifact }) => {
         const artifactBridge = getDesktopAnalysisArtifactBridge();
         if (artifactBridge && state.projectFilePath && audioPath) {

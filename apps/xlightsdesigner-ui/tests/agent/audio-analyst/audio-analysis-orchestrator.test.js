@@ -19,6 +19,7 @@ function analyzeAudioContextStub({ audioPath = "", sectionSuggestions = [], dete
 }
 
 test("audio analysis orchestrator composes service and context passes into final analysis", async () => {
+  let capturedRequest = null;
   const out = await runAudioAnalysisOrchestration({
     audioPath: "/tmp/Song.mp3",
     analysisService: {
@@ -27,8 +28,11 @@ test("audio analysis orchestrator composes service and context passes into final
       apiKey: "",
       authBearer: ""
     },
+    analysisProfile: { mode: "fast" },
     analysisBridge: {
-      runAudioAnalysisService: async () => ({
+      runAudioAnalysisService: async (request) => {
+        capturedRequest = request;
+        return ({
         ok: true,
         data: {
           bpm: 64,
@@ -45,7 +49,8 @@ test("audio analysis orchestrator composes service and context passes into final
             webTempoEvidence: {}
           }
         }
-      })
+      });
+      }
     },
     inferLyricStanzaPlan: () => ({ sections: [], lyricalIndices: [] }),
     relabelSectionsWithLlm: async () => ({ sections: [] }),
@@ -80,6 +85,7 @@ test("audio analysis orchestrator composes service and context passes into final
   assert.equal(out.summary, "Summary for Song.mp3");
   assert.equal(out.pipeline.analysisServiceSucceeded, true);
   assert.equal(out.pipeline.webContextDerived, true);
+  assert.equal(capturedRequest.analysisProfileMode, "fast");
   assert.equal(out.sectionSuggestions[0], "Verse 1");
   assert.equal(out.details.trackIdentity.title, "Song");
   assert.equal(out.details.timing.tempoEstimate, 128);

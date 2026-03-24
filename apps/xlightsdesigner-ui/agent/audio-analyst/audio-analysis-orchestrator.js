@@ -8,6 +8,7 @@ function str(value = "") {
 export async function runAudioAnalysisOrchestration({
   audioPath = "",
   analysisService = {},
+  analysisProfile = null,
   analysisBridge = null,
   inferLyricStanzaPlan,
   relabelSectionsWithLlm,
@@ -73,6 +74,7 @@ export async function runAudioAnalysisOrchestration({
     analysisBridge,
     baseUrl: analysisBaseUrl,
     provider: analysisService.provider,
+    analysisProfile,
     apiKey: analysisService.apiKey,
     authBearer: analysisService.authBearer,
     mediaMetadata: null,

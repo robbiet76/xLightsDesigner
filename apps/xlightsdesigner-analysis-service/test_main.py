@@ -7,6 +7,15 @@ import main
 
 
 class AnalysisServiceHeuristicsTests(unittest.TestCase):
+    def test_normalize_analysis_profile_fast_disables_remote_and_heavy_features(self):
+        profile = main._normalize_analysis_profile("fast")
+        self.assertEqual(profile["mode"], "fast")
+        self.assertFalse(profile["enableRemoteIdentity"])
+        self.assertFalse(profile["enableWebTempo"])
+        self.assertFalse(profile["enableLyrics"])
+        self.assertFalse(profile["enableMadmomChords"])
+        self.assertFalse(profile["enableMadmomDownbeatCrosscheck"])
+
     def test_build_numbered_sections_normalizes_existing_suffixes(self):
         rows = [
             {"startMs": 0, "endMs": 10, "label": "Verse 1"},

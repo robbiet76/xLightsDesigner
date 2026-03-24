@@ -76,6 +76,7 @@ export async function runAudioAnalysisServicePass({
   analysisBridge = null,
   baseUrl = "",
   provider = "auto",
+  analysisProfile = null,
   apiKey = "",
   authBearer = "",
   mediaMetadata = null,
@@ -152,6 +153,7 @@ export async function runAudioAnalysisServicePass({
       filePath: audioPath,
       baseUrl,
       provider,
+      analysisProfileMode: str(analysisProfile?.mode || ""),
       apiKey,
       authBearer
     }));

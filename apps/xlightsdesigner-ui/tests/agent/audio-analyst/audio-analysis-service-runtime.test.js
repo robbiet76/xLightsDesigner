@@ -28,10 +28,13 @@ test("normalizeAnalysisMarksForApi clamps marks to known media duration", () => 
 });
 
 test("runAudioAnalysisServicePass normalizes service output into tracks and metadata", async () => {
+  let capturedRequest = null;
   const out = await runAudioAnalysisServicePass({
     audioPath: "/tmp/Song.mp3",
     analysisBridge: {
-      runAudioAnalysisService: async () => ({
+      runAudioAnalysisService: async (request) => {
+        capturedRequest = request;
+        return ({
         ok: true,
         data: {
           bpm: 128,
@@ -48,10 +51,12 @@ test("runAudioAnalysisServicePass normalizes service output into tracks and meta
             chordAnalysis: { avgMarginConfidence: "0.83" }
           }
         }
-      })
+      });
+      }
     },
     baseUrl: "http://127.0.0.1:5055",
     provider: "auto",
+    analysisProfile: { mode: "fast" },
     mediaMetadata: null,
     sequenceDurationMs: null,
     inferLyricStanzaPlan: () => ({ sections: [], lyricalIndices: [] }),
@@ -67,6 +72,7 @@ test("runAudioAnalysisServicePass normalizes service output into tracks and meta
   assert.equal(out.detectedTempoBpm, 128);
   assert.equal(out.detectedTimeSignature, "4/4");
   assert.equal(out.detectedTrackIdentity.title, "Song");
+  assert.equal(capturedRequest.analysisProfileMode, "fast");
   assert.deepEqual(out.analysisTrackNames, [
     "Analysis: Beats",
     "Analysis: Bars",
