@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 const argv = process.argv.slice(2);
 let automationChannel = "packaged";
@@ -46,6 +47,14 @@ function readJsonPayload(args = []) {
 function nudgeApp() {
   if (process.platform !== "darwin") return;
   if (automationChannel !== "packaged") return;
+  try {
+    const output = String(execFileSync("pgrep", ["-f", "/Applications/xLightsDesigner.app/Contents/MacOS/xLightsDesigner"], {
+      stdio: ["ignore", "pipe", "ignore"]
+    }) || "").trim();
+    if (output) return;
+  } catch {
+    // No running packaged app detected; fall through to launch request.
+  }
   try {
     fs.mkdirSync(launchRequestsDir, { recursive: true });
     const id = `launch-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
