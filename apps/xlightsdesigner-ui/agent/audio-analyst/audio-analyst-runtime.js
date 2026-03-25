@@ -253,19 +253,33 @@ function buildAnalysisModules({
   const rhythmProviderResults = isPlainObject(rawMeta?.rhythmProviderResults) ? rawMeta.rhythmProviderResults : {};
   const harmonyProviderResults = isPlainObject(rawMeta?.harmonyProviderResults) ? rawMeta.harmonyProviderResults : {};
   const lyricsProviderResults = isPlainObject(rawMeta?.lyricsProviderResults) ? rawMeta.lyricsProviderResults : {};
+  const structureBackboneMeta = isPlainObject(rawMeta?.structureBackbone) ? rawMeta.structureBackbone : {};
   const derivedTimingConfidence = deriveTimingConfidence({
     beats: timing?.beats,
     bars: timing?.bars,
     rhythmProviderAgreement
   });
-  const backboneFamilies = Array.from(new Set(
-    structureSections
-      .map((row) => str(row?.family || row?.groupId || row?.canonicalLabel || row?.label))
-      .filter(Boolean)
-  )).map((family, index) => ({
-    familyId: `family-${index + 1}`,
-    label: family
-  }));
+  const backboneSegments = rows(structureBackboneMeta?.segments).length
+    ? rows(structureBackboneMeta.segments)
+    : structureSections.map((row, index) => ({
+        startMs: row?.startMs,
+        endMs: row?.endMs,
+        familyId: str(row?.familyId || row?.family || row?.groupId || `family-${index + 1}`),
+        familyLabel: str(row?.familyLabel || row?.canonicalLabel || row?.label || String(index + 1)),
+        anchorIndex: Number.isFinite(Number(row?.anchorIndex)) ? Number(row.anchorIndex) : index,
+        segmentIndex: index
+      }));
+  const backboneFamilies = rows(structureBackboneMeta?.families).length
+    ? rows(structureBackboneMeta.families)
+    : Array.from(new Map(
+      backboneSegments.map((row, index) => {
+        const familyId = str(row?.familyId || `family-${index + 1}`);
+        return [familyId, {
+          familyId,
+          label: str(row?.familyLabel || row?.label || String(index + 1))
+        }];
+      })
+    ).values());
   const provenanceSources = [
     str(rawMeta?.engine || requestedProvider),
     str(rawMeta?.trackIdentity?.provider || identity?.provider),
@@ -374,8 +388,11 @@ function buildAnalysisModules({
     },
     structureBackbone: {
       data: {
-        segments: structureSections,
-        families: backboneFamilies
+        segments: backboneSegments,
+        families: backboneFamilies,
+        sequence: Array.isArray(structureBackboneMeta?.sequence)
+          ? structureBackboneMeta.sequence.map((row) => str(row)).filter(Boolean)
+          : backboneSegments.map((row) => str(row?.familyLabel || "")).filter(Boolean)
       },
       confidence: confidenceScore(structureConfidence),
       sources: Array.from(new Set([str(structure?.source || rawMeta?.sectionSource), str(analysisBaseUrl)]).values()).filter(Boolean),

@@ -69,6 +69,21 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             ["Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"],
         )
 
+    def test_build_section_recurrence_backbone_emits_family_sequence(self):
+        segments = [
+            {"startMs": 0, "endMs": 10},
+            {"startMs": 10, "endMs": 20},
+            {"startMs": 20, "endMs": 30},
+            {"startMs": 30, "endMs": 40},
+        ]
+        a = np.array([1.0, 0.0, 0.0])
+        b = np.array([0.0, 1.0, 0.0])
+        section_chroma = [a, b, a, b]
+        backbone = main._build_section_recurrence_backbone(segments, section_chroma)
+        self.assertEqual(backbone["sequence"], ["A", "B", "A", "B"])
+        self.assertEqual([row["label"] for row in backbone["families"]], ["A", "B"])
+        self.assertEqual(backbone["segments"][2]["familyLabel"], "A")
+
     def test_infer_beats_per_bar_prefers_four_when_two_is_nearly_tied(self):
         with mock.patch.object(
             main,

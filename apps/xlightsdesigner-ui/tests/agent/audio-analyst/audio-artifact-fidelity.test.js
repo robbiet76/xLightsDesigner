@@ -126,6 +126,16 @@ function samplePipelineResult() {
             }
           }
         },
+        structureBackbone: {
+          segments: [
+            { startMs: 0, endMs: 20000, familyId: "family-A", familyLabel: "A", anchorIndex: 0, segmentIndex: 0 }
+          ],
+          families: [
+            { familyId: "family-A", label: "A", anchorIndex: 0, memberIndices: [0], occurrenceCount: 1 }
+          ],
+          sequence: ["A"],
+          anchorFor: [0]
+        },
         webTempoEvidence: {
           confidence: "high"
         }
@@ -164,6 +174,9 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
   assert.equal(artifact.modules.lyrics.data.providerResults.providers.lrclib.lineCount, 1);
   assert.equal(artifact.modules.structureBackbone.data.segments.length, 1);
+  assert.equal(artifact.modules.structureBackbone.data.segments[0].familyLabel, "A");
+  assert.equal(artifact.modules.structureBackbone.data.families[0].label, "A");
+  assert.deepEqual(artifact.modules.structureBackbone.data.sequence, ["A"]);
   assert.equal(artifact.modules.semanticStructure.data.sections.length, 1);
 });
 

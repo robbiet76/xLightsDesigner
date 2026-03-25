@@ -1901,12 +1901,12 @@ def _resolve_lyrics(
     return lyrics_marks, lyrics_error, int(lyrics_shift_ms), lyrics_info
 
 
-def _detect_sections_from_audio(
+def _detect_sections_from_audio_with_backbone(
     y: np.ndarray,
     sr: int,
     duration_ms: int,
     beat_times_ms: Optional[List[int]] = None,
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
     chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
     chroma_frame_times = librosa.times_like(chroma, sr=sr)
     rms = librosa.feature.rms(y=y)[0]
@@ -1972,7 +1972,7 @@ def _detect_sections_from_audio(
             continue
         segs.append({"startMs": start_ms, "endMs": end_ms, "label": "Section"})
     if not segs:
-        return []
+        return [], {"segments": [], "families": [], "sequence": [], "anchorFor": []}
 
     section_chroma: List[np.ndarray] = []
     section_energy: List[float] = []
@@ -1996,8 +1996,19 @@ def _detect_sections_from_audio(
             energy = float(np.mean(rms[rms_mask]))
         section_energy.append(energy)
 
+    backbone = _build_section_recurrence_backbone(segs, section_chroma)
     labeled = _label_song_sections(segs, section_chroma, section_energy, duration_ms)
-    return labeled if labeled else _build_numbered_sections(segs)
+    return (labeled if labeled else _build_numbered_sections(segs)), backbone
+
+
+def _detect_sections_from_audio(
+    y: np.ndarray,
+    sr: int,
+    duration_ms: int,
+    beat_times_ms: Optional[List[int]] = None,
+) -> List[Dict[str, Any]]:
+    sections, _ = _detect_sections_from_audio_with_backbone(y, sr, duration_ms, beat_times_ms)
+    return sections
 
 
 def _apply_global_shift_to_marks(
@@ -2161,20 +2172,22 @@ def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (na * nb))
 
 
-def _label_song_sections(
+def _build_section_recurrence_backbone(
     segments: List[Dict[str, Any]],
     section_chroma: List[np.ndarray],
-    section_energy: List[float],
-    duration_ms: int,
-) -> List[Dict[str, Any]]:
+) -> Dict[str, Any]:
     if not segments:
-        return []
+        return {
+            "segments": [],
+            "families": [],
+            "sequence": [],
+            "anchorFor": [],
+        }
 
     n = len(segments)
     durations = [max(1, int(seg["endMs"]) - int(seg["startMs"])) for seg in segments]
-
-    groups: Dict[int, List[int]] = {}
     anchor_for: List[int] = [-1] * n
+    groups: Dict[int, List[int]] = {}
     for i in range(n):
         best_j = -1
         best_sim = -1.0
@@ -2189,6 +2202,62 @@ def _label_song_sections(
         else:
             anchor_for[i] = i
         groups.setdefault(anchor_for[i], []).append(i)
+
+    ordered_anchors = sorted(groups.keys(), key=lambda anchor: min(groups.get(anchor, [anchor])))
+    family_label_by_anchor: Dict[int, str] = {}
+    family_id_by_anchor: Dict[int, str] = {}
+    for idx, anchor in enumerate(ordered_anchors):
+        label = chr(ord("A") + idx) if idx < 26 else f"A{idx + 1}"
+        family_label_by_anchor[anchor] = label
+        family_id_by_anchor[anchor] = f"family-{label}"
+
+    family_segments: List[Dict[str, Any]] = []
+    for i, seg in enumerate(segments):
+        anchor = anchor_for[i]
+        family_segments.append({
+            "startMs": int(seg["startMs"]),
+            "endMs": int(seg["endMs"]),
+            "familyId": family_id_by_anchor[anchor],
+            "familyLabel": family_label_by_anchor[anchor],
+            "anchorIndex": int(anchor),
+            "segmentIndex": int(i),
+        })
+
+    families: List[Dict[str, Any]] = []
+    for anchor in ordered_anchors:
+        idxs = groups.get(anchor, [])
+        families.append({
+            "familyId": family_id_by_anchor[anchor],
+            "label": family_label_by_anchor[anchor],
+            "anchorIndex": int(anchor),
+            "memberIndices": [int(i) for i in idxs],
+            "occurrenceCount": len(idxs),
+        })
+
+    return {
+        "segments": family_segments,
+        "families": families,
+        "sequence": [family_label_by_anchor[anchor_for[i]] for i in range(n)],
+        "anchorFor": [int(v) for v in anchor_for],
+    }
+
+
+def _label_song_sections(
+    segments: List[Dict[str, Any]],
+    section_chroma: List[np.ndarray],
+    section_energy: List[float],
+    duration_ms: int,
+) -> List[Dict[str, Any]]:
+    if not segments:
+        return []
+
+    n = len(segments)
+    durations = [max(1, int(seg["endMs"]) - int(seg["startMs"])) for seg in segments]
+    backbone = _build_section_recurrence_backbone(segments, section_chroma)
+    anchor_for = [int(v) for v in (backbone.get("anchorFor") or [])]
+    groups: Dict[int, List[int]] = {}
+    for idx, anchor in enumerate(anchor_for):
+        groups.setdefault(int(anchor), []).append(int(idx))
 
     repeated = [idxs for idxs in groups.values() if len(idxs) >= 2]
     primary_anchor = -1
@@ -2484,6 +2553,12 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             provider_error = f"{provider_error} | lyrics-inferred failed: {err}" if provider_error else f"lyrics-inferred failed: {err}"
     if sections and bars_out:
         sections = _align_sections_to_bar_starts(sections, bars_out, duration_ms)
+    structure_backbone = {
+        "segments": [],
+        "families": [],
+        "sequence": [],
+        "anchorFor": [],
+    }
 
     return {
         "bpm": bpm_est,
@@ -2507,6 +2582,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
             "lyricsLookup": lyrics_info,
             "lyricsProviderResults": lyrics_provider_results,
+            "structureBackbone": structure_backbone,
             "sectionProviderConfig": _provider_config_state(),
             "analysisProfile": profile,
             "downbeatCount": len(downbeat_starts),
@@ -2645,7 +2721,26 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
     )
     cached_sections = _cached_structure_segments(cached_modules, duration_ms) if profile.get("mode") == "deep" else []
     reused_cached_structure = bool(cached_sections)
-    sections = cached_sections or _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
+    if reused_cached_structure:
+        sections = cached_sections
+        structure_backbone = {
+            "segments": [
+                {
+                    "startMs": int(row["startMs"]),
+                    "endMs": int(row["endMs"]),
+                    "familyId": str(row.get("familyId") or ""),
+                    "familyLabel": str(row.get("familyLabel") or ""),
+                    "anchorIndex": int(row.get("anchorIndex") or 0),
+                    "segmentIndex": int(row.get("segmentIndex") or idx),
+                }
+                for idx, row in enumerate(cached_sections)
+            ],
+            "families": [],
+            "sequence": [str(row.get("familyLabel") or "") for row in cached_sections if str(row.get("familyLabel") or "")],
+            "anchorFor": [int(row.get("anchorIndex") or idx) for idx, row in enumerate(cached_sections)],
+        }
+    else:
+        sections, structure_backbone = _detect_sections_from_audio_with_backbone(y, sr, duration_ms, beat_starts_ms)
     lyric_sections: List[Dict[str, Any]] = []
     if lyrics_marks:
         try:
@@ -2706,6 +2801,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
                 "rhythm": reused_cached_rhythm,
                 "structureBackbone": reused_cached_structure,
             },
+            "structureBackbone": structure_backbone,
             "rhythmProviderAgreement": rhythm_provider_agreement,
             "rhythmProviderResults": rhythm_provider_results,
             "chordAnalysis": chord_meta,
@@ -2809,6 +2905,22 @@ def _cached_structure_segments(cached_modules: Optional[Dict[str, Any]], duratio
         label = str(row.get("label", "")).strip()
         if label:
             next_row["label"] = label
+        family_id = str(row.get("familyId", "")).strip()
+        family_label = str(row.get("familyLabel", "")).strip()
+        if family_id:
+            next_row["familyId"] = family_id
+        if family_label:
+            next_row["familyLabel"] = family_label
+        if row.get("anchorIndex") is not None:
+            try:
+                next_row["anchorIndex"] = int(row.get("anchorIndex"))
+            except Exception:
+                pass
+        if row.get("segmentIndex") is not None:
+            try:
+                next_row["segmentIndex"] = int(row.get("segmentIndex"))
+            except Exception:
+                pass
         out.append(next_row)
     return _sanitize_marks(out)
 
