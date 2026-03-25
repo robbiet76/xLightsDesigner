@@ -370,6 +370,15 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertIn("Chorus 2", labels)
         self.assertEqual(labels[-1], "Outro")
 
+    def test_lyric_window_looks_like_outro_for_repeated_hook_tail(self):
+        rows = [
+            {"startMs": 0, "endMs": 1000, "label": "Holiday Road"},
+            {"startMs": 1000, "endMs": 2000, "label": "Holiday Road"},
+            {"startMs": 2000, "endMs": 3000, "label": "(Oh-oh-oh-oh-oh)"},
+            {"startMs": 3000, "endMs": 4000, "label": "(Oh-oh-oh-oh-oh)"},
+        ]
+        self.assertTrue(main._lyric_window_looks_like_outro(rows))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -506,6 +506,24 @@ def _stanza_similarity(a_lines: List[str], b_lines: List[str]) -> float:
     return (token_sim * 0.6) + (line_count_ratio * 0.15) + (exact_line_score * 0.25)
 
 
+def _lyric_window_looks_like_outro(rows: List[Dict[str, Any]]) -> bool:
+    if not rows:
+        return False
+    normalized = [_normalize_lyric_text(row.get("label", "")) for row in rows]
+    normalized = [text for text in normalized if text]
+    if not normalized:
+        return True
+    all_tokens: List[str] = []
+    for text in normalized:
+        all_tokens.extend([token for token in text.split(" ") if token])
+    unique_tokens = {token for token in all_tokens if token}
+    if len(unique_tokens) <= 3:
+        return True
+    repeated_line_share = 1.0 - (len(set(normalized)) / max(1.0, float(len(normalized))))
+    short_line_share = sum(1 for text in normalized if len(_lyric_token_set(text)) <= 2) / max(1.0, float(len(normalized)))
+    return repeated_line_share >= 0.45 and short_line_share >= 0.5
+
+
 def _find_repeated_lyric_line_spans(rows: List[Dict[str, Any]]) -> List[tuple[int, int]]:
     if len(rows) < 4:
         return []
@@ -732,7 +750,13 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             tail_rows = _rows_in_window(prev_boundary, duration_ms)
             if tail_rows:
                 tail_duration = duration_ms - prev_boundary
-                tail_label = "Outro" if tail_duration <= max(12000, stanza_gap_ms * 2) else "Verse"
+                tail_label = "Outro" if (
+                    tail_duration <= max(12000, stanza_gap_ms * 2)
+                    or (
+                        tail_duration <= max(24000, stanza_gap_ms * 3)
+                        and _lyric_window_looks_like_outro(tail_rows)
+                    )
+                ) else "Verse"
                 segments.append({"startMs": prev_boundary, "endMs": duration_ms, "label": tail_label})
             else:
                 segments.append({"startMs": prev_boundary, "endMs": duration_ms, "label": "Outro"})
