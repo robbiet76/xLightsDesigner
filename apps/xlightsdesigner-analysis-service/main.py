@@ -1906,6 +1906,8 @@ def _detect_sections_from_audio_with_backbone(
     sr: int,
     duration_ms: int,
     beat_times_ms: Optional[List[int]] = None,
+    *,
+    lyrics_available: bool = False,
 ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
     chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
     chroma_frame_times = librosa.times_like(chroma, sr=sr)
@@ -1997,7 +1999,13 @@ def _detect_sections_from_audio_with_backbone(
         section_energy.append(energy)
 
     backbone = _build_section_recurrence_backbone(segs, section_chroma)
-    labeled = _label_song_sections(segs, section_chroma, section_energy, duration_ms)
+    labeled = _label_song_sections(
+        segs,
+        section_chroma,
+        section_energy,
+        duration_ms,
+        lyrics_available=lyrics_available,
+    )
     return (labeled if labeled else _build_numbered_sections(segs)), backbone
 
 
@@ -2006,8 +2014,16 @@ def _detect_sections_from_audio(
     sr: int,
     duration_ms: int,
     beat_times_ms: Optional[List[int]] = None,
+    *,
+    lyrics_available: bool = False,
 ) -> List[Dict[str, Any]]:
-    sections, _ = _detect_sections_from_audio_with_backbone(y, sr, duration_ms, beat_times_ms)
+    sections, _ = _detect_sections_from_audio_with_backbone(
+        y,
+        sr,
+        duration_ms,
+        beat_times_ms,
+        lyrics_available=lyrics_available,
+    )
     return sections
 
 
@@ -2247,6 +2263,8 @@ def _label_song_sections(
     section_chroma: List[np.ndarray],
     section_energy: List[float],
     duration_ms: int,
+    *,
+    lyrics_available: bool = False,
 ) -> List[Dict[str, Any]]:
     if not segments:
         return []
@@ -2255,6 +2273,8 @@ def _label_song_sections(
     durations = [max(1, int(seg["endMs"]) - int(seg["startMs"])) for seg in segments]
     backbone = _build_section_recurrence_backbone(segments, section_chroma)
     anchor_for = [int(v) for v in (backbone.get("anchorFor") or [])]
+    family_sequence = [str(v) for v in (backbone.get("sequence") or []) if str(v)]
+    unique_family_count = len(set(family_sequence))
     groups: Dict[int, List[int]] = {}
     for idx, anchor in enumerate(anchor_for):
         groups.setdefault(int(anchor), []).append(int(idx))
@@ -2290,10 +2310,12 @@ def _label_song_sections(
         # when the backbone looks like a real contrasting repeated form. Otherwise
         # fall back to Theme/Refrain/Contrast.
         has_contrast_repeat = secondary_anchor >= 0 and secondary_count >= 2
+        audio_only_pop_form = unique_family_count <= 3
         chorus_eligible = (
             primary_first_idx > 0
             and primary_coverage < 0.5
             and has_contrast_repeat
+            and (lyrics_available or audio_only_pop_form)
         )
         if chorus_eligible:
             primary_label = "Chorus"
@@ -2760,7 +2782,13 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "anchorFor": [int(row.get("anchorIndex") or idx) for idx, row in enumerate(cached_sections)],
         }
     else:
-        sections, structure_backbone = _detect_sections_from_audio_with_backbone(y, sr, duration_ms, beat_starts_ms)
+        sections, structure_backbone = _detect_sections_from_audio_with_backbone(
+            y,
+            sr,
+            duration_ms,
+            beat_starts_ms,
+            lyrics_available=bool(lyrics_marks),
+        )
     lyric_sections: List[Dict[str, Any]] = []
     if lyrics_marks:
         try:
