@@ -2206,6 +2206,24 @@ def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, A
 
 
 def _merge_adjacent_same_label_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def base_label(raw: Any) -> str:
+        label = str(raw or "Section").strip() or "Section"
+        match = re.match(r"^(Intro|Outro|Bridge|Instrumental|Verse|Chorus|Theme|Contrast|Refrain)(?:\s+\d+)?$", label, flags=re.IGNORECASE)
+        if not match:
+            return label
+        normalized = match.group(1).strip().lower()
+        return {
+            "intro": "Intro",
+            "outro": "Outro",
+            "bridge": "Bridge",
+            "instrumental": "Instrumental",
+            "verse": "Verse",
+            "chorus": "Chorus",
+            "theme": "Theme",
+            "contrast": "Contrast",
+            "refrain": "Refrain",
+        }.get(normalized, label)
+
     merged: List[Dict[str, Any]] = []
     for seg in sorted(segments or [], key=lambda row: int(row.get("startMs", 0))):
         start_ms = int(seg.get("startMs", 0))
@@ -2216,7 +2234,7 @@ def _merge_adjacent_same_label_sections(segments: List[Dict[str, Any]]) -> List[
         if merged:
             prev = merged[-1]
             prev_label = str(prev.get("label", "")).strip()
-            if prev_label == label and int(prev.get("endMs", 0)) >= start_ms:
+            if base_label(prev_label) == base_label(label) and int(prev.get("endMs", 0)) >= start_ms:
                 prev["endMs"] = max(int(prev.get("endMs", 0)), end_ms)
                 continue
         merged.append({"startMs": start_ms, "endMs": end_ms, "label": label})

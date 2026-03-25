@@ -289,6 +289,20 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             [(0, 4000, "Verse")],
         )
 
+    def test_merge_adjacent_same_label_sections_merges_numbered_variants(self):
+        out = main._merge_adjacent_same_label_sections([
+            {"startMs": 0, "endMs": 1000, "label": "Verse 4"},
+            {"startMs": 1000, "endMs": 2200, "label": "Verse 5"},
+            {"startMs": 2200, "endMs": 3000, "label": "Outro"},
+        ])
+        self.assertEqual(
+            out,
+            [
+                {"startMs": 0, "endMs": 2200, "label": "Verse 4"},
+                {"startMs": 2200, "endMs": 3000, "label": "Outro"},
+            ],
+        )
+
     def test_refine_audio_sections_keeps_short_contrastive_lyric_span_inside_long_section(self):
         audio_sections = [
             {"startMs": 0, "endMs": 10000, "label": "Chorus 1"},
