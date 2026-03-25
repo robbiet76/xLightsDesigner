@@ -210,6 +210,38 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             )
         )
 
+    def test_refine_audio_sections_promotes_weak_audio_labels_from_lyrics(self):
+        audio_sections = [
+            {"startMs": 0, "endMs": 1000, "label": "Theme 1"},
+            {"startMs": 1000, "endMs": 2000, "label": "Refrain 1"},
+            {"startMs": 2000, "endMs": 3000, "label": "Contrast 1"},
+        ]
+        lyric_sections = [
+            {"startMs": 0, "endMs": 1000, "label": "Verse"},
+            {"startMs": 1000, "endMs": 2000, "label": "Chorus"},
+            {"startMs": 2000, "endMs": 3000, "label": "Bridge"},
+        ]
+        out = main._refine_audio_sections_with_semantic_spans(audio_sections, lyric_sections)
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Verse", "Chorus", "Bridge"],
+        )
+
+    def test_refine_audio_sections_keeps_specific_pop_labels_when_lyrics_disagree(self):
+        audio_sections = [
+            {"startMs": 0, "endMs": 1000, "label": "Verse 1"},
+            {"startMs": 1000, "endMs": 2000, "label": "Chorus 1"},
+        ]
+        lyric_sections = [
+            {"startMs": 0, "endMs": 1000, "label": "Chorus"},
+            {"startMs": 1000, "endMs": 2000, "label": "Verse"},
+        ]
+        out = main._refine_audio_sections_with_semantic_spans(audio_sections, lyric_sections)
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Verse", "Chorus"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

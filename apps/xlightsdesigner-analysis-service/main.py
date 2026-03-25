@@ -2156,14 +2156,13 @@ def _refine_audio_sections_with_semantic_spans(
 ) -> List[Dict[str, Any]]:
     if not audio_sections or not semantic_sections:
         return audio_sections
+    lyric_preferred_prefixes = ("verse", "chorus", "bridge", "intro", "outro")
+    weak_audio_prefixes = ("theme", "refrain", "contrast", "instrumental")
     refined: List[Dict[str, Any]] = []
     for section in audio_sections:
         start_ms = int(section.get("startMs", 0))
         end_ms = int(section.get("endMs", start_ms + 1))
         current_label = str(section.get("label", "Section")).strip() or "Section"
-        if not _looks_generic_section_label(current_label):
-            refined.append({"startMs": start_ms, "endMs": end_ms, "label": current_label})
-            continue
         best_label = current_label
         best_overlap = -1
         for semantic in semantic_sections:
@@ -2174,7 +2173,19 @@ def _refine_audio_sections_with_semantic_spans(
             if overlap > best_overlap:
                 best_overlap = overlap
                 best_label = semantic_label
-        if best_overlap > 0:
+        section_duration = max(1, end_ms - start_ms)
+        overlap_ratio = (best_overlap / section_duration) if best_overlap > 0 else 0.0
+        current_lower = current_label.lower()
+        best_lower = best_label.lower()
+        should_promote = (
+            _looks_generic_section_label(current_label)
+            or (
+                overlap_ratio >= 0.5
+                and current_lower.startswith(weak_audio_prefixes)
+                and best_lower.startswith(lyric_preferred_prefixes)
+            )
+        )
+        if best_overlap > 0 and should_promote:
             current_label = best_label
         refined.append({"startMs": start_ms, "endMs": end_ms, "label": current_label})
     return _build_numbered_sections(refined)
