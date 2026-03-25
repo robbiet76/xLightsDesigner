@@ -89,6 +89,20 @@ def normalize_compare_text(text: str) -> str:
     return value
 
 
+def extract_lyrics_lines(text: str) -> List[str]:
+    rows: List[str] = []
+    for line in str(text or "").replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        normalized = normalize_compare_text(line)
+        normalized = re.sub(r"\b\d*embed\b", " ", normalized)
+        normalized = re.sub(r"\s+", " ", normalized).strip()
+        if not normalized:
+            continue
+        if normalized in {"lyrics"}:
+            continue
+        rows.append(normalized)
+    return rows
+
+
 def classify_match_quality(result: Dict[str, Any]) -> Tuple[str, float, bool]:
     query_title = normalize_compare_text(result.get("queryTitle", ""))
     matched_title = normalize_compare_text(result.get("matchedTitle", ""))
@@ -146,6 +160,8 @@ def probe_track(genius: Any, mod: Any, track_path: Path) -> Dict[str, Any]:
         {
             "matched": bool(lyrics),
             "lyricsLength": len(lyrics),
+            "lyricsText": lyrics,
+            "lyricsLines": extract_lyrics_lines(lyrics),
             "matchedTitle": str(getattr(song, "title", "") or "").strip(),
             "matchedArtist": str(getattr(song, "artist", "") or "").strip(),
             "geniusId": getattr(song, "id", None),
