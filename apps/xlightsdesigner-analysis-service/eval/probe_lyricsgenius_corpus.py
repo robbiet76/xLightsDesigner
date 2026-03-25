@@ -122,16 +122,38 @@ def best_identity_for_track(mod: Any, track_path: Path) -> Dict[str, Any]:
     return {}
 
 
-def probe_track(genius: Any, mod: Any, track_path: Path) -> Dict[str, Any]:
+def build_canonical_identity(mod: Any, track_path: Path) -> Dict[str, Any]:
     ident = best_identity_for_track(mod, track_path)
     if ident:
         title = str(ident.get("title") or "").strip()
         artist = str(ident.get("artist") or "").strip()
-        query_source = "identity-cache"
-    else:
-        title, artist, query_source = infer_query_from_filename(track_path.name)
+        if title:
+            return {
+                "title": title,
+                "artist": artist,
+                "source": "identity-cache",
+                "strong": True,
+            }
+    title, artist, source = infer_query_from_filename(track_path.name)
+    return {
+        "title": title,
+        "artist": artist,
+        "source": source,
+        "strong": False,
+    }
+
+
+def probe_track(genius: Any, mod: Any, track_path: Path) -> Dict[str, Any]:
+    canonical = build_canonical_identity(mod, track_path)
+    title = str(canonical.get("title") or "").strip()
+    artist = str(canonical.get("artist") or "").strip()
+    query_source = str(canonical.get("source") or "filename")
     result: Dict[str, Any] = {
         "track": track_path.name,
+        "canonicalTitle": title,
+        "canonicalArtist": artist,
+        "canonicalSource": query_source,
+        "canonicalStrong": bool(canonical.get("strong")),
         "queryTitle": title,
         "queryArtist": artist,
         "querySource": query_source,
@@ -169,6 +191,18 @@ def probe_track(genius: Any, mod: Any, track_path: Path) -> Dict[str, Any]:
             "matchQuality": quality,
             "titleSimilarity": round(title_ratio, 3),
             "artistMatch": bool(artist_ok),
+            "canonicalTitleAgreement": round(
+                difflib.SequenceMatcher(
+                    None,
+                    normalize_compare_text(title),
+                    normalize_compare_text(str(getattr(song, "title", "") or "")),
+                ).ratio() if title else 0.0,
+                3,
+            ),
+            "canonicalArtistAgreement": (
+                normalize_compare_text(artist) == normalize_compare_text(str(getattr(song, "artist", "") or ""))
+                if artist else False
+            ),
         }
     )
     return result
