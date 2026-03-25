@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  ANALYSIS_MODULE_VERSIONS,
   AUDIO_ANALYST_ARTIFACT_TYPE,
   AUDIO_ANALYST_ARTIFACT_VERSION,
   buildAnalysisArtifactFromPipelineResult,
   buildAnalysisHandoffFromArtifact,
   buildAudioAnalystInput,
-  executeAudioAnalystFlow
+  executeAudioAnalystFlow,
+  inspectAnalysisArtifactFreshness
 } from "../../../agent/audio-analyst/audio-analyst-runtime.js";
 import {
   AUDIO_ANALYST_ROLE,
@@ -186,6 +188,38 @@ test("audio analyst runtime preserves generic section labels without fabricated 
   assert.deepEqual(handoff.structure.sections, []);
   assert.equal(artifact.modules.structureBackbone.data.segments.length, 6);
   assert.equal(artifact.modules.semanticStructure.data.sections.length, 0);
+});
+
+test("audio analyst freshness inspector accepts current deep artifact", () => {
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Song.mp3",
+    mediaId: "media-123",
+    result: samplePipelineResult(),
+    analysisProfile: { mode: "deep" }
+  });
+
+  const inspection = inspectAnalysisArtifactFreshness(artifact, { preferredProfileMode: "deep" });
+  assert.equal(inspection.ok, true);
+  assert.equal(inspection.expectedProfileMode, "deep");
+  assert.equal(inspection.reasons.length, 0);
+});
+
+test("audio analyst freshness inspector rejects mismatched module version and profile", () => {
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Song.mp3",
+    mediaId: "media-123",
+    result: samplePipelineResult(),
+    analysisProfile: { mode: "fast" }
+  });
+  artifact.modules.rhythm.metadata.moduleVersion = "v0";
+
+  const inspection = inspectAnalysisArtifactFreshness(artifact, {
+    preferredProfileMode: "deep",
+    requiredModules: ["rhythm", "lyrics"]
+  });
+  assert.equal(inspection.ok, false);
+  assert.ok(inspection.reasons.includes("artifact_profile_mismatch:fast!=deep"));
+  assert.ok(inspection.reasons.includes(`module_version_mismatch:rhythm:v0!=${ANALYSIS_MODULE_VERSIONS.rhythm}`));
 });
 
 test("audio analyst input gate blocks sequence-aware payloads", () => {

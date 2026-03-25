@@ -168,6 +168,64 @@ function deriveTimingConfidence({ beats = [], bars = [], rhythmProviderAgreement
   return label;
 }
 
+export const ANALYSIS_MODULE_VERSIONS = Object.freeze({
+  identity: "v1",
+  rhythm: "v3",
+  harmony: "v1",
+  lyrics: "v1",
+  structureBackbone: "v1",
+  semanticStructure: "v1"
+});
+
+function normalizeProfileMode(value = "") {
+  const mode = str(value).toLowerCase();
+  return mode === "fast" || mode === "deep" ? mode : "";
+}
+
+export function inspectAnalysisArtifactFreshness(artifact = {}, { preferredProfileMode = "", requiredModules = [] } = {}) {
+  const modules = isPlainObject(artifact?.modules) ? artifact.modules : {};
+  const expectedProfileMode = normalizeProfileMode(preferredProfileMode);
+  const artifactProfileMode = normalizeProfileMode(artifact?.provenance?.analysisProfile?.mode);
+  const moduleNames = Array.isArray(requiredModules) && requiredModules.length
+    ? requiredModules.filter((name) => Object.prototype.hasOwnProperty.call(ANALYSIS_MODULE_VERSIONS, name))
+    : Object.keys(ANALYSIS_MODULE_VERSIONS);
+  const reasons = [];
+  if (expectedProfileMode && artifactProfileMode !== expectedProfileMode) {
+    reasons.push(`artifact_profile_mismatch:${artifactProfileMode || "missing"}!=${expectedProfileMode}`);
+  }
+  for (const moduleName of moduleNames) {
+    const moduleObj = isPlainObject(modules?.[moduleName]) ? modules[moduleName] : null;
+    if (!moduleObj) {
+      reasons.push(`missing_module:${moduleName}`);
+      continue;
+    }
+    const metadata = isPlainObject(moduleObj.metadata) ? moduleObj.metadata : {};
+    const expectedVersion = ANALYSIS_MODULE_VERSIONS[moduleName];
+    const actualVersion = str(metadata.moduleVersion);
+    const actualProfileMode = normalizeProfileMode(metadata.profileMode || artifactProfileMode);
+    const freshness = str(metadata.freshness || "").toLowerCase();
+    if (actualVersion !== expectedVersion) {
+      reasons.push(`module_version_mismatch:${moduleName}:${actualVersion || "missing"}!=${expectedVersion}`);
+    }
+    if (expectedProfileMode && actualProfileMode !== expectedProfileMode) {
+      reasons.push(`module_profile_mismatch:${moduleName}:${actualProfileMode || "missing"}!=${expectedProfileMode}`);
+    }
+    if (freshness && freshness !== "current") {
+      reasons.push(`module_not_current:${moduleName}:${freshness}`);
+    }
+  }
+  return {
+    ok: reasons.length === 0,
+    artifactProfileMode,
+    expectedProfileMode,
+    reasons
+  };
+}
+
+export function isAnalysisArtifactFreshForRuntime(artifact = {}, options = {}) {
+  return inspectAnalysisArtifactFreshness(artifact, options).ok;
+}
+
 function buildAnalysisModules({
   audioPath = "",
   mediaId = "",

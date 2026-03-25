@@ -111,7 +111,8 @@ import {
   buildAnalysisArtifactFromPipelineResult,
   buildAnalysisHandoffFromArtifact,
   buildAudioAnalystInput,
-  executeAudioAnalystFlow
+  executeAudioAnalystFlow,
+  inspectAnalysisArtifactFreshness
 } from "./agent/audio-analyst/audio-analyst-runtime.js";
 import { buildAudioAnalysisQualityReport } from "./agent/audio-analyst/audio-analysis-quality.js";
 import {
@@ -1068,6 +1069,7 @@ function applyPersistedAnalysisArtifact(artifact = null) {
 
 async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
   const silent = options?.silent !== false;
+  const preferredProfileMode = String(options?.preferredProfileMode || "deep").trim().toLowerCase();
   const bridge = getDesktopAnalysisArtifactBridge();
   const projectFilePath = String(state.projectFilePath || "").trim();
   const mediaFilePath = String(state.audioPathInput || "").trim();
@@ -1076,7 +1078,7 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
     const res = await bridge.readAnalysisArtifact({
       projectFilePath,
       mediaFilePath,
-      preferredProfileMode: "deep"
+      preferredProfileMode
     });
     if (res?.ok !== true || !res.artifact || typeof res.artifact !== "object") {
       return { ok: false, reason: String(res?.code || "not_found") };
@@ -1092,6 +1094,35 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
     }
     return { ok: false, reason: "read_error" };
   }
+}
+
+async function loadReusableAnalysisArtifactForProfile(analysisProfile = null) {
+  const requestedMode = String(analysisProfile?.mode || "fast").trim().toLowerCase() || "fast";
+  const allowEscalation = analysisProfile?.allowEscalation !== false;
+  const readFreshArtifact = async (mode) => {
+    const hydrated = await hydrateAnalysisArtifactForCurrentMedia({
+      silent: true,
+      preferredProfileMode: mode
+    });
+    if (!hydrated?.ok || !hydrated.artifact) return null;
+    const freshness = inspectAnalysisArtifactFreshness(hydrated.artifact, { preferredProfileMode: mode });
+    if (!freshness.ok) return null;
+    return { artifact: hydrated.artifact, freshness, mode };
+  };
+
+  if (requestedMode === "deep") {
+    return await readFreshArtifact("deep");
+  }
+
+  const fast = await readFreshArtifact("fast");
+  if (!fast) return null;
+  if (!allowEscalation) return fast;
+
+  const fastReport = buildAudioAnalysisQualityReport(fast.artifact);
+  if (!shouldEscalateAudioAnalysisProfile(fastReport)) return fast;
+
+  const deep = await readFreshArtifact("deep");
+  return deep || null;
 }
 
 async function ensureCurrentAnalysisHandoff(options = {}) {
@@ -11408,6 +11439,41 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
   try {
     const resolvedProvider = "librosa";
     const requestedAnalysisProfile = { mode: "fast", allowEscalation: true };
+    const reusable = await loadReusableAnalysisArtifactForProfile(requestedAnalysisProfile);
+    if (reusable?.artifact) {
+      progressTicker.stop();
+      const handoff = buildAnalysisHandoffFromArtifact(reusable.artifact, state.creative?.brief || null);
+      setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst");
+      const applied = applyPersistedAnalysisArtifact(reusable.artifact);
+      if (!applied) {
+        throw new Error("Stored analysis artifact was fresh but could not be applied to UI state.");
+      }
+      setAudioAnalysisProgress(state.audioAnalysis, {
+        stage: "artifact_reused",
+        message: `Reused stored ${reusable.mode} audio analysis artifact.`
+      });
+      markOrchestrationStage(orchestrationRun, "audio_pipeline", "ok", `reused stored ${reusable.mode} analysis artifact`);
+      markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
+      addStructuredChatMessage("agent", buildAudioAnalystChatReply(userPrompt, handoff), {
+        roleId: "audio_analyst",
+        displayName: getTeamChatSpeakerLabel("audio_analyst"),
+        handledBy: "audio_analyst",
+        artifact: buildChatArtifactCard("analysis_handoff_v1", {
+          title: String(handoff?.trackIdentity?.title || basenameOfPath(audioPath) || "Audio Analysis").trim(),
+          summary: String(handoff?.summary || state.audioAnalysis?.summary || "").trim(),
+          chips: [
+            handoff?.timing?.bpm != null ? `${handoff.timing.bpm} BPM` : "",
+            String(handoff?.timing?.timeSignature || "").trim(),
+            Array.isArray(handoff?.structure?.sections) ? `${handoff.structure.sections.length} sections` : "",
+            handoff?.chords?.hasChords ? "chords ready" : "",
+            `reused ${reusable.mode}`
+          ]
+        })
+      });
+      setStatus("info", `Loaded stored ${reusable.mode} audio analysis artifact.`);
+      endOrchestrationRun(orchestrationRun, { status: "ok", summary: `reused stored ${reusable.mode} audio analysis artifact` });
+      return;
+    }
     const analysisRequest = buildAudioAnalystInput({
       requestId: orchestrationRun.id,
       mediaFilePath: audioPath,
