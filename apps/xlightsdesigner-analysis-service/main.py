@@ -511,39 +511,51 @@ def _find_repeated_lyric_line_spans(rows: List[Dict[str, Any]]) -> List[tuple[in
         return []
     normalized_lines = [_normalize_lyric_text(row.get("label", "")) for row in rows]
     token_sets = [_lyric_token_set(text) for text in normalized_lines]
-    families: List[List[int]] = []
+    exact_families: List[List[int]] = []
     for idx, text in enumerate(normalized_lines):
         if not text:
             continue
         tokens = token_sets[idx]
-        if len(tokens) < 3:
+        if len(tokens) < 2 or len(tokens) <= 1:
             continue
         matched_family = None
-        for family in families:
+        for family in exact_families:
             ref_idx = family[0]
             sim = _jaccard_similarity(tokens, token_sets[ref_idx])
             if sim >= 0.72:
                 matched_family = family
                 break
         if matched_family is None:
-            families.append([idx])
+            exact_families.append([idx])
         else:
             matched_family.append(idx)
-    anchor_indexes: set[int] = set()
-    for family in families:
-        if len(family) < 2:
-            continue
-        for idx in family:
-            anchor_indexes.add(int(idx))
     prefix_families: Dict[tuple[str, ...], List[int]] = {}
     for idx, text in enumerate(normalized_lines):
         tokens = [token for token in text.split(" ") if token]
-        if len(tokens) < 3:
+        unique_tokens = {token for token in tokens if token}
+        if len(tokens) < 3 or len(unique_tokens) < 2:
             continue
         prefix = tuple(tokens[:3])
         prefix_families.setdefault(prefix, []).append(idx)
-    for family in prefix_families.values():
+    candidate_families: List[List[int]] = []
+    for family in exact_families:
         if len(family) < 2:
+            continue
+        ref_tokens = token_sets[family[0]]
+        if len(ref_tokens) < 3 and len(family) < 3:
+            continue
+        candidate_families.append(list(sorted(set(int(idx) for idx in family))))
+    for family in prefix_families.values():
+        unique_family = list(sorted(set(int(idx) for idx in family)))
+        if len(unique_family) < 3:
+            continue
+        candidate_families.append(unique_family)
+    if not candidate_families:
+        return []
+    best_count = max(len(family) for family in candidate_families)
+    anchor_indexes: set[int] = set()
+    for family in candidate_families:
+        if len(family) < best_count:
             continue
         for idx in family:
             anchor_indexes.add(int(idx))
@@ -665,7 +677,12 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             best_group = group
             best_group_score = score
 
-    if exact_chorus_spans:
+    repeated_line_spans: List[tuple[int, int]] = []
+    if len(stanza_payloads) <= 1:
+        repeated_line_spans = _find_repeated_lyric_line_spans(rows)
+    if repeated_line_spans:
+        chorus_spans.extend(repeated_line_spans)
+    elif exact_chorus_spans:
         chorus_spans.extend(exact_chorus_spans)
     else:
         for group_index in best_group:
@@ -674,8 +691,6 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             end_ms = int(stanza["endMs"])
             if end_ms > start_ms:
                 chorus_spans.append((start_ms, end_ms))
-    if not chorus_spans and len(stanza_payloads) <= 1:
-        chorus_spans.extend(_find_repeated_lyric_line_spans(rows))
     chorus_stanza_idx = set(int(idx) for idx in best_group)
     chorus_spans.sort()
     merged_chorus_spans: List[tuple[int, int]] = []
