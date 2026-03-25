@@ -77,6 +77,7 @@ export async function runAudioAnalysisServicePass({
   baseUrl = "",
   provider = "auto",
   analysisProfile = null,
+  cachedModules = null,
   apiKey = "",
   authBearer = "",
   mediaMetadata = null,
@@ -154,6 +155,7 @@ export async function runAudioAnalysisServicePass({
       baseUrl,
       provider,
       analysisProfileMode: str(analysisProfile?.mode || ""),
+      cachedModulesJson: isPlainObject(cachedModules) ? JSON.stringify(cachedModules) : "",
       apiKey,
       authBearer
     }));

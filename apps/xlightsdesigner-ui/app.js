@@ -11357,7 +11357,8 @@ async function runAudioAnalysisPipeline({ analysisProfile = null } = {}) {
       render();
       out = await runAudioAnalysisOrchestration({
         ...baseArgs,
-        analysisProfile: { mode: "deep", allowEscalation: false }
+        analysisProfile: { mode: "deep", allowEscalation: false },
+        cachedModules: isPlainObject(fastArtifact?.modules) ? fastArtifact.modules : null
       });
     }
   }

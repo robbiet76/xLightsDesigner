@@ -57,6 +57,16 @@ test("runAudioAnalysisServicePass normalizes service output into tracks and meta
     baseUrl: "http://127.0.0.1:5055",
     provider: "auto",
     analysisProfile: { mode: "fast" },
+    cachedModules: {
+      rhythm: {
+        data: {
+          bpm: 128,
+          timeSignature: "4/4",
+          beats: [{ startMs: 0, endMs: 500, label: "1" }],
+          bars: [{ startMs: 0, endMs: 2000, label: "1" }]
+        }
+      }
+    },
     mediaMetadata: null,
     sequenceDurationMs: null,
     inferLyricStanzaPlan: () => ({ sections: [], lyricalIndices: [] }),
@@ -73,6 +83,8 @@ test("runAudioAnalysisServicePass normalizes service output into tracks and meta
   assert.equal(out.detectedTimeSignature, "4/4");
   assert.equal(out.detectedTrackIdentity.title, "Song");
   assert.equal(capturedRequest.analysisProfileMode, "fast");
+  assert.equal(typeof capturedRequest.cachedModulesJson, "string");
+  assert.ok(capturedRequest.cachedModulesJson.includes("\"rhythm\""));
   assert.deepEqual(out.analysisTrackNames, [
     "Analysis: Beats",
     "Analysis: Bars",

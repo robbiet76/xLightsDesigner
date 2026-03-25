@@ -19,6 +19,7 @@ test("buildAudioAnalysisServiceRequest normalizes fields for service bridge", ()
     baseUrl: "http://127.0.0.1:5055/",
     provider: "bad-provider",
     analysisProfileMode: " FAST ",
+    cachedModulesJson: " {\"rhythm\":{}} ",
     apiKey: " key ",
     authBearer: ""
   });
@@ -27,6 +28,7 @@ test("buildAudioAnalysisServiceRequest normalizes fields for service bridge", ()
   assert.equal(request.baseUrl, "http://127.0.0.1:5055");
   assert.equal(request.provider, "librosa");
   assert.equal(request.analysisProfileMode, "fast");
+  assert.equal(request.cachedModulesJson, "{\"rhythm\":{}}");
   assert.equal(request.apiKey, "key");
   assert.equal(request.authBearer, undefined);
 });

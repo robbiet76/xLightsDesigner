@@ -2504,90 +2504,105 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     }
 
 
-def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] = None, cached_modules: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     profile = analysis_profile or _normalize_analysis_profile("")
     _ensure_librosa()
     if librosa is None:
         raise RuntimeError("librosa is not installed in this runtime.")
     y, sr = librosa.load(path, sr=22050, mono=True)
     duration_ms = int(round((len(y) / float(sr)) * 1000))
-    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr, trim=False)
-    beat_times = librosa.frames_to_time(beat_frames, sr=sr)
-    beat_starts_ms: List[int] = []
-    for t in beat_times:
-        ms = int(round(float(t) * 1000))
-        if 0 <= ms < duration_ms:
-            beat_starts_ms.append(ms)
-    beat_starts_ms = sorted(set(beat_starts_ms))
-    beat_starts_ms, beat_grid_info = _select_best_beat_grid(beat_starts_ms, y, sr, duration_ms)
-    beat_quality = _beat_quality_metrics(beat_starts_ms, y, sr, duration_ms)
-    inferred_bpb, inferred_offset, inferred_scores = _infer_beats_per_bar_from_accent(
-        beat_starts_ms, y, sr, DEFAULT_BEATS_PER_BAR
-    )
-    beats_out: List[Dict[str, Any]] = []
-    for i, start in enumerate(beat_starts_ms):
-        if i + 1 < len(beat_starts_ms):
-            end = int(beat_starts_ms[i + 1])
-        else:
-            step = int(round((60.0 / max(float(tempo), 1.0)) * 1000))
-            end = start + max(1, step)
-        if end <= start:
-            end = start + 1
-        beat_num = ((i - int(inferred_offset)) % max(1, inferred_bpb)) + 1
-        beats_out.append({"startMs": start, "endMs": end, "label": str(beat_num)})
-    beats_out = _sanitize_marks(beats_out)
-    bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb)))
+    cached_rhythm = _cached_rhythm_payload(cached_modules, duration_ms) if profile.get("mode") == "deep" else None
+    reused_cached_rhythm = bool(cached_rhythm)
+    beat_grid_info = {"selectedGrid": "cached", "reusedFromCachedModules": True} if reused_cached_rhythm else {}
+    beat_quality = {"selectedSource": "cached_fast_artifact", "score": 1.0} if reused_cached_rhythm else {}
+    inferred_offset = 0
+    inferred_scores: Dict[int, float] = {}
+    madmom_candidate: Dict[str, Any] = {}
+    chosen_meter_source = "cached_fast_artifact" if reused_cached_rhythm else "librosa_accent"
+    if reused_cached_rhythm:
+        beats_out = _sanitize_marks(cached_rhythm.get("beats") or [])
+        bars_out = _sanitize_marks(cached_rhythm.get("bars") or [])
+        beat_starts_ms = list(cached_rhythm.get("beatStartsMs") or [])
+        inferred_bpb = int(cached_rhythm.get("beatsPerBar") or DEFAULT_BEATS_PER_BAR)
+        bpm_est = cached_rhythm.get("bpm")
+        rhythm_provider_agreement = dict(cached_rhythm.get("providerAgreement") or {})
+        rhythm_provider_results = dict(cached_rhythm.get("providerResults") or {})
+    else:
+        tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr, trim=False)
+        beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+        beat_starts_ms = []
+        for t in beat_times:
+            ms = int(round(float(t) * 1000))
+            if 0 <= ms < duration_ms:
+                beat_starts_ms.append(ms)
+        beat_starts_ms = sorted(set(beat_starts_ms))
+        beat_starts_ms, beat_grid_info = _select_best_beat_grid(beat_starts_ms, y, sr, duration_ms)
+        beat_quality = _beat_quality_metrics(beat_starts_ms, y, sr, duration_ms)
+        inferred_bpb, inferred_offset, inferred_scores = _infer_beats_per_bar_from_accent(
+            beat_starts_ms, y, sr, DEFAULT_BEATS_PER_BAR
+        )
+        beats_out = []
+        for i, start in enumerate(beat_starts_ms):
+            if i + 1 < len(beat_starts_ms):
+                end = int(beat_starts_ms[i + 1])
+            else:
+                step = int(round((60.0 / max(float(tempo), 1.0)) * 1000))
+                end = start + max(1, step)
+            if end <= start:
+                end = start + 1
+            beat_num = ((i - int(inferred_offset)) % max(1, inferred_bpb)) + 1
+            beats_out.append({"startMs": start, "endMs": end, "label": str(beat_num)})
+        beats_out = _sanitize_marks(beats_out)
+        bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb)))
+        bpm_est = None
+        if len(beat_starts_ms) >= 2:
+            diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
+            med = float(np.median(diffs)) if diffs.size else 0.0
+            if med > 0:
+                bpm_est = float(round(60000.0 / med, 2))
+        madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms, profile)
+        rhythm_provider_agreement = _build_rhythm_provider_agreement(
+            primary_provider="librosa",
+            primary_beats_per_bar=int(max(1, int(inferred_bpb))),
+            primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
+            primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+            secondary_summary=_summarize_secondary_rhythm(madmom_candidate),
+        )
+        if _should_prefer_secondary_meter(
+            primary_beats_per_bar=int(max(1, int(inferred_bpb))),
+            primary_beat_count=len(beat_starts_ms),
+            primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+            secondary_candidate=madmom_candidate,
+        ):
+            secondary_bpb = int(madmom_candidate.get("beatsPerBar") or inferred_bpb)
+            secondary_sig = str(madmom_candidate.get("timeSignature") or f"{secondary_bpb}/4")
+            secondary_beats = _sanitize_marks(madmom_candidate.get("beats") or [])
+            secondary_bars = _sanitize_marks(madmom_candidate.get("bars") or [])
+            if secondary_beats and secondary_bars:
+                inferred_bpb = secondary_bpb
+                beats_out = secondary_beats
+                bars_out = secondary_bars
+                bpm_est = madmom_candidate.get("bpm") if madmom_candidate.get("bpm") is not None else bpm_est
+                chosen_meter_source = "madmom_downbeat"
+                rhythm_provider_agreement["primary"]["beatsPerBar"] = int(inferred_bpb)
+                rhythm_provider_agreement["primary"]["timeSignature"] = secondary_sig
+                rhythm_provider_agreement["primary"]["bpm"] = float(bpm_est) if bpm_est is not None else None
+                rhythm_provider_agreement["agreedOnBeatsPerBar"] = True
+                rhythm_provider_agreement["agreedOnTimeSignature"] = True
+        rhythm_provider_results = _build_rhythm_provider_results(
+            primary_provider="librosa",
+            primary_beats_per_bar=int(max(1, int(inferred_bpb))),
+            primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
+            primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
+            primary_beats=beats_out,
+            primary_bars=bars_out,
+            secondary_candidate=madmom_candidate,
+            selected_provider=chosen_meter_source,
+        )
     chords_out, chord_meta = _detect_chords(y, sr, duration_ms, profile)
     harmony_provider_results = _build_harmony_provider_results(
         chord_meta=chord_meta,
         chords=chords_out,
-    )
-    bpm_est = None
-    if len(beat_starts_ms) >= 2:
-        diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
-        med = float(np.median(diffs)) if diffs.size else 0.0
-        if med > 0:
-            bpm_est = float(round(60000.0 / med, 2))
-    madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms, profile)
-    rhythm_provider_agreement = _build_rhythm_provider_agreement(
-        primary_provider="librosa",
-        primary_beats_per_bar=int(max(1, int(inferred_bpb))),
-        primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
-        primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
-        secondary_summary=_summarize_secondary_rhythm(madmom_candidate),
-    )
-    chosen_meter_source = "librosa_accent"
-    if _should_prefer_secondary_meter(
-        primary_beats_per_bar=int(max(1, int(inferred_bpb))),
-        primary_beat_count=len(beat_starts_ms),
-        primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
-        secondary_candidate=madmom_candidate,
-    ):
-        secondary_bpb = int(madmom_candidate.get("beatsPerBar") or inferred_bpb)
-        secondary_sig = str(madmom_candidate.get("timeSignature") or f"{secondary_bpb}/4")
-        secondary_beats = _sanitize_marks(madmom_candidate.get("beats") or [])
-        secondary_bars = _sanitize_marks(madmom_candidate.get("bars") or [])
-        if secondary_beats and secondary_bars:
-            inferred_bpb = secondary_bpb
-            beats_out = secondary_beats
-            bars_out = secondary_bars
-            bpm_est = madmom_candidate.get("bpm") if madmom_candidate.get("bpm") is not None else bpm_est
-            chosen_meter_source = "madmom_downbeat"
-            rhythm_provider_agreement["primary"]["beatsPerBar"] = int(inferred_bpb)
-            rhythm_provider_agreement["primary"]["timeSignature"] = secondary_sig
-            rhythm_provider_agreement["primary"]["bpm"] = float(bpm_est) if bpm_est is not None else None
-            rhythm_provider_agreement["agreedOnBeatsPerBar"] = True
-            rhythm_provider_agreement["agreedOnTimeSignature"] = True
-
-    rhythm_provider_results = _build_rhythm_provider_results(
-        primary_provider="librosa",
-        primary_beats_per_bar=int(max(1, int(inferred_bpb))),
-        primary_time_signature=f"{max(1, int(inferred_bpb))}/4",
-        primary_bpm=bpm_est if bpm_est and bpm_est > 0 else (float(round(float(tempo), 2)) if float(tempo) > 0 else None),
-        primary_beats=beats_out,
-        primary_bars=bars_out,
-        secondary_candidate=madmom_candidate,
-        selected_provider=chosen_meter_source,
     )
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
@@ -2646,8 +2661,11 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "meterSource": chosen_meter_source,
             "beatGridSelection": beat_grid_info,
             "beatQuality": {
-                "selectedSource": "librosa",
-                "librosa": beat_quality,
+                "selectedSource": "cached_fast_artifact" if reused_cached_rhythm else "librosa",
+                **({"cached_fast_artifact": beat_quality} if reused_cached_rhythm else {"librosa": beat_quality}),
+            },
+            "reusedCachedModules": {
+                "rhythm": reused_cached_rhythm,
             },
             "rhythmProviderAgreement": rhythm_provider_agreement,
             "rhythmProviderResults": rhythm_provider_results,
@@ -2681,6 +2699,55 @@ def _analysis_quality_score(data: Dict[str, Any]) -> float:
             if np.isfinite(val):
                 scores.append(val)
     return max(scores) if scores else -999.0
+
+
+def _cached_module_rows(module_data: Dict[str, Any], key: str) -> List[Dict[str, Any]]:
+    if not isinstance(module_data, dict):
+        return []
+    return _sanitize_marks(module_data.get(key) or [])
+
+
+def _cached_rhythm_payload(cached_modules: Optional[Dict[str, Any]], duration_ms: int) -> Optional[Dict[str, Any]]:
+    if not isinstance(cached_modules, dict):
+        return None
+    rhythm = cached_modules.get("rhythm")
+    if not isinstance(rhythm, dict):
+        return None
+    data = rhythm.get("data")
+    if not isinstance(data, dict):
+        return None
+    beats = _cached_module_rows(data, "beats")
+    bars = _cached_module_rows(data, "bars")
+    if not beats or not bars:
+        return None
+    time_signature = str(data.get("timeSignature") or "").strip()
+    bpm = data.get("bpm")
+    provider_agreement = data.get("providerAgreement") if isinstance(data.get("providerAgreement"), dict) else {}
+    provider_results = data.get("providerResults") if isinstance(data.get("providerResults"), dict) else {}
+    beat_starts = [int(row.get("startMs", 0)) for row in beats if int(row.get("startMs", 0)) >= 0]
+    if len(beat_starts) >= 2:
+        beat_starts = sorted(set(beat_starts))
+    beats_per_bar = 0
+    if "/" in time_signature:
+        try:
+            beats_per_bar = int(str(time_signature).split("/", 1)[0])
+        except Exception:
+            beats_per_bar = 0
+    if beats_per_bar <= 0:
+        beats_per_bar = int(provider_agreement.get("primary", {}).get("beatsPerBar") or 0) if isinstance(provider_agreement, dict) else 0
+    if beats_per_bar <= 0:
+        beats_per_bar = 4
+    return {
+        "beats": beats,
+        "bars": bars,
+        "beatStartsMs": beat_starts,
+        "bpm": float(bpm) if bpm is not None else None,
+        "timeSignature": time_signature or f"{beats_per_bar}/4",
+        "beatsPerBar": beats_per_bar,
+        "providerAgreement": provider_agreement,
+        "providerResults": provider_results,
+        "durationMs": int(duration_ms),
+    }
 
 
 def _analyze_auto(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -2730,10 +2797,10 @@ def _analyze_auto(path: str, analysis_profile: Optional[Dict[str, Any]] = None) 
     return best
 
 
-def _analyze(path: str, provider: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def _analyze(path: str, provider: str, analysis_profile: Optional[Dict[str, Any]] = None, cached_modules: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     p = (provider or "librosa").strip().lower()
     if p == "librosa":
-        return _analyze_with_librosa(path, analysis_profile)
+        return _analyze_with_librosa(path, analysis_profile, cached_modules=cached_modules)
     raise HTTPException(status_code=422, detail=f"Unsupported provider: {provider}. Only librosa is enabled.")
 
 
@@ -2755,6 +2822,7 @@ async def analyze(
     file: UploadFile = File(...),
     provider: str = Form("librosa"),
     analysisProfileMode: str = Form(""),
+    cachedModulesJson: str = Form(""),
     fileName: str = Form(""),
     x_api_key: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
@@ -2766,7 +2834,15 @@ async def analyze(
         payload = await file.read()
         with open(temp_path, "wb") as fh:
             fh.write(payload)
-        data = _analyze(temp_path, provider, _normalize_analysis_profile(analysisProfileMode))
+        cached_modules = None
+        if str(cachedModulesJson or "").strip():
+            try:
+                parsed = json.loads(cachedModulesJson)
+                if isinstance(parsed, dict):
+                    cached_modules = parsed
+            except Exception:
+                cached_modules = None
+        data = _analyze(temp_path, provider, _normalize_analysis_profile(analysisProfileMode), cached_modules=cached_modules)
         data["beats"] = _sanitize_marks(data.get("beats") or [])
         data["bars"] = _sanitize_marks(data.get("bars") or [])
         data["chords"] = _sanitize_marks(data.get("chords") or [])

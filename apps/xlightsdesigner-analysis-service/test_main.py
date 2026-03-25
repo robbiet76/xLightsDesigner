@@ -102,6 +102,28 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
                 },
             )
         )
+
+    def test_cached_rhythm_payload_extracts_reusable_rows(self):
+        payload = main._cached_rhythm_payload(
+            {
+                "rhythm": {
+                    "data": {
+                        "bpm": 128,
+                        "timeSignature": "4/4",
+                        "beats": [{"startMs": 0, "endMs": 500, "label": "1"}],
+                        "bars": [{"startMs": 0, "endMs": 2000, "label": "1"}],
+                        "providerAgreement": {"primary": {"beatsPerBar": 4}},
+                        "providerResults": {"selectedProvider": "librosa"},
+                    }
+                }
+            },
+            120000,
+        )
+        self.assertIsNotNone(payload)
+        self.assertEqual(payload["beatsPerBar"], 4)
+        self.assertEqual(payload["timeSignature"], "4/4")
+        self.assertEqual(payload["providerResults"]["selectedProvider"], "librosa")
+        self.assertEqual(len(payload["beats"]), 1)
         self.assertFalse(
             main._should_prefer_secondary_meter(
                 primary_beats_per_bar=4,

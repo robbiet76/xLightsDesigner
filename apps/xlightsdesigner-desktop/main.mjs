@@ -1623,6 +1623,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
     const requestedProvider = "librosa";
     let provider = requestedProvider;
     const analysisProfileMode = String(payload?.analysisProfileMode || "").trim().toLowerCase();
+    const cachedModulesJson = String(payload?.cachedModulesJson || "").trim();
     const apiKey = String(payload?.apiKey || "").trim();
     const authBearer = String(payload?.authBearer || "").trim();
     const timeoutMsRaw = Number.parseInt(String(payload?.timeoutMs || "90000"), 10);
@@ -1658,6 +1659,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
         const form = new FormData();
         form.append("provider", provider);
         if (analysisProfileMode) form.append("analysisProfileMode", analysisProfileMode);
+        if (cachedModulesJson) form.append("cachedModulesJson", cachedModulesJson);
         form.append("fileName", path.basename(filePath));
         form.append("file", new Blob([buf]), path.basename(filePath));
         const headers = {};
@@ -1681,6 +1683,7 @@ ipcMain.handle("xld:analysis:run", async (_event, payload = {}) => {
             ok: true,
             provider,
             analysisProfileMode,
+            cachedModulesJsonPresent: Boolean(cachedModulesJson),
             baseUrl,
             attempts: attempt,
             data: parsed?.data || parsed || {}

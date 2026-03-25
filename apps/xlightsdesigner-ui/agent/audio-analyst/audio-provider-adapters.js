@@ -19,6 +19,7 @@ export function buildAudioAnalysisServiceRequest({
   baseUrl = "",
   provider = "librosa",
   analysisProfileMode = "",
+  cachedModulesJson = "",
   apiKey = "",
   authBearer = ""
 } = {}) {
@@ -27,6 +28,7 @@ export function buildAudioAnalysisServiceRequest({
     baseUrl: str(baseUrl).replace(/\/+$/, ""),
     provider: normalizeAudioAnalysisProvider(provider),
     analysisProfileMode: str(analysisProfileMode).toLowerCase() || undefined,
+    cachedModulesJson: str(cachedModulesJson) || undefined,
     apiKey: str(apiKey) || undefined,
     authBearer: str(authBearer) || undefined
   };
