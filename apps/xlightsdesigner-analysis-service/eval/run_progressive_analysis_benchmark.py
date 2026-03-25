@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument('--min-seconds-between-deep-tracks', type=float, default=12.0, help='Minimum delay between completed deep analyses to avoid overusing external APIs')
     ap.add_argument('--retry-backoff-seconds', type=float, default=60.0, help='Delay before retrying a failed track on the same source revision')
     ap.add_argument('--exclude', action='append', default=[], help='Exact track filename to exclude; may be repeated')
+    ap.add_argument('--skip-known-no-lyrics-deep', action='store_true', help='Skip deep analysis for tracks previously seen with successful deep rows that had no lyrics')
     return ap.parse_args()
 
 
@@ -99,6 +100,21 @@ def latest_result_map(results: List[Dict[str, Any]]) -> Dict[Tuple[str, str], Di
     return mapping
 
 
+def known_no_lyrics_tracks(results: List[Dict[str, Any]]) -> List[str]:
+    tracks = set()
+    for row in results:
+        if row.get('mode') != 'deep':
+            continue
+        if row.get('ok') is not True:
+            continue
+        if int(row.get('lyricsCount') or 0) != 0:
+            continue
+        track_name = str(row.get('track') or '').strip()
+        if track_name:
+            tracks.add(track_name)
+    return sorted(tracks)
+
+
 def summarize(results: List[Dict[str, Any]], manifest: Dict[str, Any]) -> Dict[str, Any]:
     summary: Dict[str, Any] = {
         'createdAt': manifest.get('createdAt'),
@@ -107,6 +123,8 @@ def summarize(results: List[Dict[str, Any]], manifest: Dict[str, Any]) -> Dict[s
         'mode': manifest.get('mode'),
         'sourceRevision': manifest.get('sourceRevision'),
         'trackOrder': manifest.get('trackOrder', []),
+        'excludedTracks': manifest.get('excludedTracks', []),
+        'knownNoLyricsTracks': manifest.get('knownNoLyricsTracks', []),
         'counts': {},
         'profiles': {},
     }
@@ -245,6 +263,7 @@ def run_cycle(args: argparse.Namespace, results_path: Path, summary_path: Path, 
     out_dir = Path(args.out_dir).expanduser().resolve()
     tracks, applied_seed = build_track_order(folder, args.limit, args.shuffle, args.seed, excludes=args.exclude)
     source_revision = current_source_revision()
+    known_no_lyrics = known_no_lyrics_tracks(existing_results)
     manifest = {
         'createdAt': time.strftime('%Y-%m-%dT%H:%M:%S'),
         'folder': str(folder),
@@ -255,6 +274,8 @@ def run_cycle(args: argparse.Namespace, results_path: Path, summary_path: Path, 
         'pythonExecutable': select_python_executable(),
         'trackOrder': [p.name for p in tracks],
         'excludedTracks': sorted({str(name).strip() for name in (args.exclude or []) if str(name).strip()}),
+        'knownNoLyricsTracks': known_no_lyrics,
+        'skipKnownNoLyricsDeep': bool(args.skip_known_no_lyrics_deep),
         'loop': bool(args.loop),
         'minSecondsBetweenTracks': float(args.min_seconds_between_tracks or 0.0),
         'minSecondsBetweenDeepTracks': float(args.min_seconds_between_deep_tracks or 0.0),
@@ -268,6 +289,8 @@ def run_cycle(args: argparse.Namespace, results_path: Path, summary_path: Path, 
         mode_started = time.time()
         mode_count = 0
         for track in tracks:
+            if mode == 'deep' and args.skip_known_no_lyrics_deep and track.name in known_no_lyrics:
+                continue
             if not should_run_track(track.name, mode, latest_rows, source_revision, args.retry_backoff_seconds):
                 continue
             if args.max_tracks and mode_count >= args.max_tracks:
