@@ -2178,33 +2178,35 @@ def _label_song_sections(
         groups.setdefault(anchor_for[i], []).append(i)
 
     repeated = [idxs for idxs in groups.values() if len(idxs) >= 2]
-    chorus_anchor = -1
-    verse_anchor = -1
+    primary_anchor = -1
+    primary_label = "Chorus"
+    secondary_anchor = -1
     if repeated:
         scored = []
         for idxs in repeated:
             energy = float(np.mean([section_energy[i] for i in idxs]))
             total_dur = float(np.sum([durations[i] for i in idxs]))
-            score = energy * 0.65 + (total_dur / max(1.0, float(duration_ms))) * 0.35
-            scored.append((score, idxs))
+            coverage = len(idxs) / max(1, n)
+            first_idx = min(idxs)
+            score = energy * 0.50 + (total_dur / max(1.0, float(duration_ms))) * 0.20 + coverage * 0.30
+            scored.append((score, idxs, energy, coverage, first_idx))
         scored.sort(key=lambda x: x[0], reverse=True)
-        chorus_anchor = anchor_for[scored[0][1][0]]
-        for _, idxs in scored[1:]:
+        primary_idxs = scored[0][1]
+        primary_anchor = anchor_for[primary_idxs[0]]
+        primary_coverage = float(scored[0][3])
+        primary_first_idx = int(scored[0][4])
+        # Audio-only classification should be conservative. Repeated material that
+        # begins at the opening or dominates most of the song is more honestly a
+        # refrain/theme than a confident chorus.
+        if primary_first_idx == 0 or primary_coverage >= 0.5:
+            primary_label = "Refrain"
+        for _, idxs, _, _, _ in scored[1:]:
             cand = anchor_for[idxs[0]]
-            if cand != chorus_anchor:
-                verse_anchor = cand
+            if cand != primary_anchor:
+                secondary_anchor = cand
                 break
 
-    chorus_idxs = groups.get(chorus_anchor, []) if chorus_anchor >= 0 else []
-    exposition_idx = -1
-    dominant_theme_verse_idxs: set[int] = set()
-    if chorus_idxs:
-        chorus_cover_ratio = len(chorus_idxs) / max(1, n)
-        if chorus_idxs[0] == 0 or chorus_cover_ratio >= 0.5:
-            exposition_idx = int(chorus_idxs[0])
-        if chorus_cover_ratio >= 0.5:
-            split = max(1, int(math.ceil(len(chorus_idxs) / 2.0)))
-            dominant_theme_verse_idxs = set(int(idx) for idx in chorus_idxs[:split])
+    primary_idxs = groups.get(primary_anchor, []) if primary_anchor >= 0 else []
 
     labels = ["Section"] * n
     if n >= 1:
@@ -2217,24 +2219,30 @@ def _label_song_sections(
             labels[-1] = "Outro"
 
     for i in range(n):
+        if labels[i] in ("Intro", "Outro"):
+            continue
         anchor = anchor_for[i]
-        if i == exposition_idx or i in dominant_theme_verse_idxs:
-            labels[i] = "Verse"
-        elif anchor == chorus_anchor:
-            labels[i] = "Chorus"
-        elif anchor == verse_anchor:
+        if anchor == primary_anchor:
+            labels[i] = primary_label
+        elif anchor == secondary_anchor:
             labels[i] = "Verse"
 
-    if chorus_anchor >= 0:
-        if chorus_idxs:
-            cmin, cmax = min(chorus_idxs), max(chorus_idxs)
-            for i in range(cmin + 1, cmax):
-                if labels[i] == "Section" and anchor_for[i] not in (chorus_anchor, verse_anchor):
-                    labels[i] = "Bridge"
+    if primary_anchor >= 0 and primary_idxs:
+        cmin, cmax = min(primary_idxs), max(primary_idxs)
+        for i in range(cmin + 1, cmax):
+            if labels[i] != "Section":
+                continue
+            if anchor_for[i] not in (primary_anchor, secondary_anchor):
+                labels[i] = "Bridge"
 
     for i in range(n):
         if labels[i] == "Section":
-            labels[i] = "Verse"
+            if primary_anchor >= 0 and i < min(primary_idxs):
+                labels[i] = "Verse"
+            elif primary_anchor >= 0 and i > max(primary_idxs):
+                labels[i] = "Instrumental" if primary_label == "Refrain" else "Verse"
+            else:
+                labels[i] = "Instrumental"
 
     out = []
     for i, seg in enumerate(segments):

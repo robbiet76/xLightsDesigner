@@ -47,7 +47,26 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         out = main._label_song_sections(segments, section_chroma, section_energy, 60)
         self.assertEqual(
             [row["label"] for row in out],
-            ["Verse 1", "Verse 2", "Chorus 1", "Chorus 2", "Verse 3", "Outro"],
+            ["Intro", "Refrain 1", "Refrain 2", "Refrain 3", "Instrumental", "Outro"],
+        )
+
+    def test_label_song_sections_uses_chorus_when_repeated_material_arrives_later(self):
+        segments = [
+            {"startMs": 0, "endMs": 20000},
+            {"startMs": 20000, "endMs": 40000},
+            {"startMs": 40000, "endMs": 60000},
+            {"startMs": 60000, "endMs": 80000},
+            {"startMs": 80000, "endMs": 100000},
+        ]
+        a = np.array([1.0, 0.0, 0.0])
+        b = np.array([0.0, 1.0, 0.0])
+        c = np.array([0.0, 0.0, 1.0])
+        section_chroma = [a, b, c, b, c]
+        section_energy = [0.25, 0.55, 0.45, 0.6, 0.4]
+        out = main._label_song_sections(segments, section_chroma, section_energy, 100000)
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"],
         )
 
     def test_infer_beats_per_bar_prefers_four_when_two_is_nearly_tied(self):
