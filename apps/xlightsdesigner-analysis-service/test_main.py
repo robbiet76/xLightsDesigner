@@ -402,6 +402,36 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         out = main._infer_sections_from_lyrics(lyrics_marks, 10000)
         self.assertEqual(out[-1]["label"], "Outro")
 
+    def test_lookup_genius_lrclib_retry_identity_rejects_custom_title_only_track(self):
+        with mock.patch.object(main, "ENABLE_GENIUS_LRCLIB_RETRY", True), \
+             mock.patch.object(main, "GENIUS_ACCESS_TOKEN", "token"):
+            out = main._lookup_genius_lrclib_retry_identity({"title": "Countdown2", "artist": ""})
+        self.assertEqual(out, {})
+
+    def test_fetch_lrclib_lyrics_retries_with_genius_identity_when_primary_misses(self):
+        with mock.patch.object(
+            main,
+            "_fetch_lrclib_lyrics_direct",
+            side_effect=[
+                ([], "lrclib: no synced lyrics", {}),
+                ([{"startMs": 1000, "endMs": 2000, "label": "line"}], "", {"lrclibId": "123"}),
+            ],
+        ) as fetch_mock, mock.patch.object(
+            main,
+            "_lookup_genius_lrclib_retry_identity",
+            return_value={"title": "Winter Wonderland", "artist": "Bing Crosby", "source": "genius-lrclib-retry", "titleSimilarity": 1.0},
+        ):
+            marks, error, info = main._fetch_lrclib_lyrics(
+                {"title": "Winter Wonderland", "artist": ""},
+                120000,
+                {"enableLyrics": True},
+            )
+        self.assertEqual(len(marks), 1)
+        self.assertEqual(error, "")
+        self.assertEqual(info["lyricsRetrySource"], "genius-lrclib-retry")
+        self.assertEqual(info["lyricsRetryMatchedArtist"], "Bing Crosby")
+        self.assertEqual(fetch_mock.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

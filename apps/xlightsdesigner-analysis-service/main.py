@@ -8,6 +8,7 @@ import time
 import re
 import math
 import importlib.util
+import difflib
 from urllib.parse import quote_plus
 import collections
 import collections.abc
@@ -36,6 +37,8 @@ DBNDownBeatTrackingProcessor = None
 _LIBROSA_IMPORT_ATTEMPTED = False
 _BEATNET_IMPORT_ATTEMPTED = False
 _MADMOM_IMPORT_ATTEMPTED = False
+_LYRICSGENIUS_IMPORT_ATTEMPTED = False
+LyricsGeniusClient = None
 
 
 APP_API_KEY = os.getenv("ANALYSIS_API_KEY", "").strip()
@@ -62,6 +65,10 @@ ENABLE_WEB_TEMPO_LOOKUP = (
 ENABLE_LYRICS_LOOKUP = (
     str(os.getenv("ENABLE_LYRICS_LOOKUP", "0")).strip().lower() in {"1", "true", "yes", "on"}
 )
+ENABLE_GENIUS_LRCLIB_RETRY = (
+    str(os.getenv("ENABLE_GENIUS_LRCLIB_RETRY", "0")).strip().lower() in {"1", "true", "yes", "on"}
+)
+GENIUS_ACCESS_TOKEN = os.getenv("GENIUS_ACCESS_TOKEN", "").strip()
 IDENTITY_CACHE_PATH = os.getenv(
     "ANALYSIS_IDENTITY_CACHE_PATH",
     os.path.join(os.path.dirname(__file__), ".cache", "track-identity-cache.json"),
@@ -123,6 +130,25 @@ def _ensure_beatnet():
             BeatNetEstimator = None
         _BEATNET_IMPORT_ATTEMPTED = True
     return BeatNetEstimator
+
+
+def _ensure_lyricsgenius():
+    global LyricsGeniusClient, _LYRICSGENIUS_IMPORT_ATTEMPTED
+    if not _LYRICSGENIUS_IMPORT_ATTEMPTED:
+        try:
+            import typing
+            if not hasattr(typing, "Self"):
+                try:
+                    from typing_extensions import Self as _Self  # type: ignore
+                    typing.Self = _Self  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+            import lyricsgenius as _lyricsgenius  # type: ignore
+            LyricsGeniusClient = _lyricsgenius
+        except Exception:
+            LyricsGeniusClient = None
+        _LYRICSGENIUS_IMPORT_ATTEMPTED = True
+    return LyricsGeniusClient
 
 
 def _ensure_madmom_chords():
@@ -846,7 +872,101 @@ def _first_lrc_timestamp_ms(lrc_text: str) -> Optional[int]:
     return first
 
 
-def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+def _normalize_compare_text(text: str) -> str:
+    value = str(text or "").lower().strip()
+    value = re.sub(r"\[(.*?)\]", " ", value)
+    value = re.sub(r"\((.*?)\)", " ", value)
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    value = re.sub(r"\b(single|edit|mix|version|live|feat|featuring|spotify|mp3|song|main|intro)\b", " ", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+def _looks_like_custom_or_cut_track_title(title: str) -> bool:
+    value = _normalize_compare_text(title)
+    if not value:
+        return True
+    return any(
+        token in value
+        for token in (
+            "countdown",
+            "medley",
+            "musiconly",
+            "music only",
+            "intro",
+            "main",
+            "edit",
+        )
+    )
+
+
+def _is_generic_lyrics_artist(artist: str) -> bool:
+    value = _normalize_compare_text(artist)
+    return value in {"christmas songs", "christmas carols", "traditional", "various artists"}
+
+
+def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, Any]:
+    if not ENABLE_GENIUS_LRCLIB_RETRY or not GENIUS_ACCESS_TOKEN:
+        return {}
+    title = str(identity.get("title") or "").strip()
+    artist = str(identity.get("artist") or "").strip()
+    if not title:
+        return {}
+    if not artist and _looks_like_custom_or_cut_track_title(title):
+        return {}
+    lyricsgenius = _ensure_lyricsgenius()
+    if not lyricsgenius:
+        return {}
+    try:
+        genius = lyricsgenius.Genius(
+            GENIUS_ACCESS_TOKEN,
+            timeout=10,
+            retries=1,
+            sleep_time=0.2,
+            remove_section_headers=True,
+            skip_non_songs=True,
+            excluded_terms=["(Remix)", "(Live)"],
+            verbose=False,
+        )
+        song = genius.search_song(title=title, artist=artist or None)
+    except Exception:
+        return {}
+    if not song:
+        return {}
+    matched_title = str(getattr(song, "title", "") or "").strip()
+    matched_artist = str(getattr(song, "artist", "") or "").strip()
+    title_ratio = (
+        difflib.SequenceMatcher(
+            None,
+            _normalize_compare_text(title),
+            _normalize_compare_text(matched_title),
+        ).ratio()
+        if title and matched_title else 0.0
+    )
+    if title_ratio < 0.9:
+        return {}
+    if artist:
+        artist_match = _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
+        artist_match = artist_match or _normalize_compare_text(artist) in _normalize_compare_text(matched_artist)
+        artist_match = artist_match or _normalize_compare_text(matched_artist) in _normalize_compare_text(artist)
+        if not artist_match:
+            return {}
+    else:
+        if not matched_artist or _is_generic_lyrics_artist(matched_artist):
+            return {}
+    if _normalize_compare_text(title) == _normalize_compare_text(matched_title) and (
+        not artist or _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
+    ):
+        return {}
+    return {
+        "title": matched_title,
+        "artist": matched_artist,
+        "source": "genius-lrclib-retry",
+        "titleSimilarity": round(title_ratio, 3),
+    }
+
+
+def _fetch_lrclib_lyrics_direct(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
     profile = analysis_profile or _normalize_analysis_profile("")
     if not profile.get("enableLyrics"):
         return [], "lrclib skipped: lookup disabled", {}
@@ -936,6 +1056,33 @@ def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int, analysis_pr
         return marks, "", info
     except Exception as err:
         return [], f"lrclib fetch failed: {err}", {}
+
+
+def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+    marks, error, info = _fetch_lrclib_lyrics_direct(identity, duration_ms, analysis_profile)
+    if marks:
+        return marks, error, info
+    retry_identity = _lookup_genius_lrclib_retry_identity(identity)
+    if not retry_identity:
+        return marks, error, info
+    retry_marks, retry_error, retry_info = _fetch_lrclib_lyrics_direct(
+        {"title": retry_identity.get("title"), "artist": retry_identity.get("artist")},
+        duration_ms,
+        analysis_profile,
+    )
+    if retry_marks:
+        merged_info = {
+            **retry_info,
+            "lyricsRetrySource": str(retry_identity.get("source") or "genius-lrclib-retry"),
+            "lyricsRetryMatchedTitle": str(retry_identity.get("title") or "").strip(),
+            "lyricsRetryMatchedArtist": str(retry_identity.get("artist") or "").strip(),
+            "lyricsRetryTitleSimilarity": retry_identity.get("titleSimilarity"),
+        }
+        return retry_marks, "", merged_info
+    merged_error = error
+    if retry_error:
+        merged_error = f"{error} | genius retry: {retry_error}" if error else f"genius retry: {retry_error}"
+    return marks, merged_error, info
 
 
 def _identify_track_with_audd(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[Dict[str, Any], bool]:
