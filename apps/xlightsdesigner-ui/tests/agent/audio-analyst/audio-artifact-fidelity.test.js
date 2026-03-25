@@ -100,6 +100,32 @@ function samplePipelineResult() {
           engine: "madmom",
           avgMarginConfidence: "0.83"
         },
+        harmonyProviderResults: {
+          selectedProvider: "madmom",
+          providers: {
+            madmom: {
+              provider: "madmom",
+              available: true,
+              selected: true,
+              chordCount: 1,
+              avgMarginConfidence: "0.83",
+              chords: [{ startMs: 0, endMs: 2000, label: "C" }]
+            }
+          }
+        },
+        lyricsProviderResults: {
+          selectedProvider: "lrclib",
+          providers: {
+            lrclib: {
+              provider: "lrclib",
+              available: true,
+              selected: true,
+              lineCount: 1,
+              globalShiftMs: 0,
+              lines: [{ startMs: 300, endMs: 900, label: "hello" }]
+            }
+          }
+        },
         webTempoEvidence: {
           confidence: "high"
         }
@@ -134,7 +160,9 @@ test("analysis artifact preserves per-capability confidence and evidence blocks"
   assert.ok(artifact.modules.rhythm.metadata.invalidationKey.includes(":deep:rhythm:"));
   assert.ok(artifact.modules.rhythm.diagnostics.some((line) => line.includes("timeSignature disagreement")));
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
+  assert.equal(artifact.modules.harmony.data.providerResults.providers.madmom.chordCount, 1);
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
+  assert.equal(artifact.modules.lyrics.data.providerResults.providers.lrclib.lineCount, 1);
   assert.equal(artifact.modules.structureBackbone.data.segments.length, 1);
   assert.equal(artifact.modules.semanticStructure.data.sections.length, 1);
 });

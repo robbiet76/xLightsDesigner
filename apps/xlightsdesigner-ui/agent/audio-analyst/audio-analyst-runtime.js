@@ -171,8 +171,8 @@ function deriveTimingConfidence({ beats = [], bars = [], rhythmProviderAgreement
 export const ANALYSIS_MODULE_VERSIONS = Object.freeze({
   identity: "v1",
   rhythm: "v3",
-  harmony: "v1",
-  lyrics: "v1",
+  harmony: "v2",
+  lyrics: "v2",
   structureBackbone: "v1",
   semanticStructure: "v1"
 });
@@ -251,6 +251,8 @@ function buildAnalysisModules({
   const semanticSections = structureSections.filter((row) => !isGenericStructureSection(row));
   const rhythmProviderAgreement = isPlainObject(rawMeta?.rhythmProviderAgreement) ? rawMeta.rhythmProviderAgreement : {};
   const rhythmProviderResults = isPlainObject(rawMeta?.rhythmProviderResults) ? rawMeta.rhythmProviderResults : {};
+  const harmonyProviderResults = isPlainObject(rawMeta?.harmonyProviderResults) ? rawMeta.harmonyProviderResults : {};
+  const lyricsProviderResults = isPlainObject(rawMeta?.lyricsProviderResults) ? rawMeta.lyricsProviderResults : {};
   const derivedTimingConfidence = deriveTimingConfidence({
     beats: timing?.beats,
     bars: timing?.bars,
@@ -349,24 +351,26 @@ function buildAnalysisModules({
     },
     harmony: {
       data: {
-        chords: rows(harmonic?.chords)
+        chords: rows(harmonic?.chords),
+        providerResults: harmonyProviderResults
       },
       confidence: confidenceScore(harmonicConfidence),
       sources: Array.from(new Set([str(harmonic?.source || rawMeta?.chordAnalysis?.engine), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.harmony,
-      cacheKey: `${resolvedMediaId}:harmony:v1`,
-      metadata: buildModuleMetadata("harmony", "v1")
+      cacheKey: `${resolvedMediaId}:harmony:v2`,
+      metadata: buildModuleMetadata("harmony", "v2")
     },
     lyrics: {
       data: {
         hasSyncedLyrics: Boolean(lyrics?.hasSyncedLyrics),
-        lines: rows(lyrics?.lines)
+        lines: rows(lyrics?.lines),
+        providerResults: lyricsProviderResults
       },
       confidence: confidenceScore(lyricsConfidence),
       sources: Array.from(new Set([str(lyrics?.source || rawMeta?.lyricsSource), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.lyrics,
-      cacheKey: `${resolvedMediaId}:lyrics:v1`,
-      metadata: buildModuleMetadata("lyrics", "v1")
+      cacheKey: `${resolvedMediaId}:lyrics:v2`,
+      metadata: buildModuleMetadata("lyrics", "v2")
     },
     structureBackbone: {
       data: {

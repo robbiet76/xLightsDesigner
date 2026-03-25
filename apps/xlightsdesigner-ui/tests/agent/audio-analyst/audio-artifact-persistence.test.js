@@ -108,6 +108,32 @@ function samplePipelineResult() {
         },
         chordAnalysis: {
           avgMarginConfidence: "0.83"
+        },
+        harmonyProviderResults: {
+          selectedProvider: "analysis-service",
+          providers: {
+            "analysis-service": {
+              provider: "analysis-service",
+              available: true,
+              selected: true,
+              chordCount: 1,
+              avgMarginConfidence: "0.83",
+              chords: [{ startMs: 0, endMs: 2000, label: "C" }]
+            }
+          }
+        },
+        lyricsProviderResults: {
+          selectedProvider: "lrclib",
+          providers: {
+            lrclib: {
+              provider: "lrclib",
+              available: true,
+              selected: true,
+              lineCount: 1,
+              globalShiftMs: 0,
+              lines: [{ startMs: 300, endMs: 900, label: "hello" }]
+            }
+          }
         }
       }
     }
@@ -299,12 +325,15 @@ test("persisted canonical artifact retains full capability payloads for downstre
   assert.equal(readRes.artifact.capabilities.lyrics.available, true);
   assert.equal(readRes.artifact.capabilities.structure.available, true);
   assert.equal(readRes.artifact.modules.rhythm.data.beats.length, 1);
+  assert.equal(readRes.artifact.modules.harmony.data.providerResults.providers["analysis-service"].chordCount, 1);
+  assert.equal(readRes.artifact.modules.lyrics.data.providerResults.providers.lrclib.lineCount, 1);
   assert.equal(readRes.artifact.modules.lyrics.data.lines.length, 1);
   assert.equal(readRes.artifact.modules.structureBackbone.data.segments.length, 1);
   assert.equal(readRes.artifact.modules.semanticStructure.data.sections.length, 1);
   assert.equal(readRes.artifact.modules.rhythm.metadata.profileMode, "deep");
   assert.equal(readRes.artifact.modules.rhythm.data.providerResults.providers.beatnet.timeSignature, "4/4");
-  assert.equal(readRes.artifact.modules.harmony.metadata.moduleVersion, "v1");
+  assert.equal(readRes.artifact.modules.harmony.metadata.moduleVersion, "v2");
+  assert.equal(readRes.artifact.modules.lyrics.metadata.moduleVersion, "v2");
 });
 
 test("persisted partial artifact preserves degraded status and missing-capability truth", async (t) => {

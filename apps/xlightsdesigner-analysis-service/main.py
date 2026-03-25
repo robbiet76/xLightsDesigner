@@ -1398,6 +1398,57 @@ def _build_rhythm_provider_results(
     }
 
 
+def _build_harmony_provider_results(
+    *,
+    chord_meta: Dict[str, Any],
+    chords: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    meta = dict(chord_meta) if isinstance(chord_meta, dict) else {}
+    provider = str(meta.get("engine") or "unknown")
+    provider_summary = {
+        **meta,
+        "provider": provider,
+        "available": bool(chords),
+        "selected": True,
+        "chordCount": len(chords or []),
+        "chords": _sanitize_marks(chords or []),
+    }
+    return {
+        "selectedProvider": provider,
+        "providers": {
+            provider: provider_summary
+        }
+    }
+
+
+def _build_lyrics_provider_results(
+    *,
+    lyrics_source: str,
+    lyrics_error: str,
+    lyrics_shift_ms: int,
+    lyrics_info: Dict[str, Any],
+    lyrics_marks: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    source = str(lyrics_source or "none")
+    info = dict(lyrics_info) if isinstance(lyrics_info, dict) else {}
+    provider_summary = {
+        **info,
+        "provider": source,
+        "available": bool(lyrics_marks),
+        "selected": True,
+        "lineCount": len(lyrics_marks or []),
+        "globalShiftMs": int(lyrics_shift_ms or 0),
+        "error": str(lyrics_error or info.get("error") or "").strip(),
+        "lines": _sanitize_marks(lyrics_marks or []),
+    }
+    return {
+        "selectedProvider": source,
+        "providers": {
+            source: provider_summary
+        }
+    }
+
+
 def _should_prefer_secondary_meter(
     *,
     primary_beats_per_bar: int,
@@ -2359,6 +2410,10 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, detected_beats_per_bar)
     chords_out, chord_meta = _detect_chords(y, sr, duration_ms, profile)
+    harmony_provider_results = _build_harmony_provider_results(
+        chord_meta=chord_meta,
+        chords=chords_out,
+    )
 
     bpm_est = None
     if len(beat_times_ms) >= 2:
@@ -2391,6 +2446,14 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     sections: List[Dict[str, Any]] = provider_sections
 
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
+    lyrics_source = "lrclib" if lyrics_marks else "none"
+    lyrics_provider_results = _build_lyrics_provider_results(
+        lyrics_source=lyrics_source,
+        lyrics_error=lyrics_error,
+        lyrics_shift_ms=int(lyrics_shift_ms),
+        lyrics_info=lyrics_info,
+        lyrics_marks=lyrics_marks,
+    )
     if not sections and lyrics_marks:
         try:
             sections = _infer_sections_from_lyrics(lyrics_marks, duration_ms)
@@ -2417,11 +2480,12 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "sectionSourceError": provider_error or "",
-            "lyricsSource": "lrclib" if lyrics_marks else "none",
+            "lyricsSource": lyrics_source,
             "lyricsSourceError": lyrics_error,
             "lyricsGlobalShiftMs": int(lyrics_shift_ms),
             "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
             "lyricsLookup": lyrics_info,
+            "lyricsProviderResults": lyrics_provider_results,
             "sectionProviderConfig": _provider_config_state(),
             "analysisProfile": profile,
             "downbeatCount": len(downbeat_starts),
@@ -2435,6 +2499,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "rhythmProviderAgreement": rhythm_provider_agreement,
             "rhythmProviderResults": rhythm_provider_results,
             "chordAnalysis": chord_meta,
+            "harmonyProviderResults": harmony_provider_results,
         },
     }
 
@@ -2473,6 +2538,10 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
     beats_out = _sanitize_marks(beats_out)
     bars_out = _derive_bars_from_labeled_beats(beats_out, duration_ms, max(1, int(inferred_bpb)))
     chords_out, chord_meta = _detect_chords(y, sr, duration_ms, profile)
+    harmony_provider_results = _build_harmony_provider_results(
+        chord_meta=chord_meta,
+        chords=chords_out,
+    )
     bpm_est = None
     if len(beat_starts_ms) >= 2:
         diffs = np.diff(np.asarray(beat_starts_ms, dtype=float))
@@ -2523,6 +2592,14 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
+    lyrics_source = "lrclib" if lyrics_marks else "none"
+    lyrics_provider_results = _build_lyrics_provider_results(
+        lyrics_source=lyrics_source,
+        lyrics_error=lyrics_error,
+        lyrics_shift_ms=int(lyrics_shift_ms),
+        lyrics_info=lyrics_info,
+        lyrics_marks=lyrics_marks,
+    )
     sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
     lyric_sections: List[Dict[str, Any]] = []
     if lyrics_marks:
@@ -2556,11 +2633,12 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "identityError": identity_error,
-            "lyricsSource": "lrclib" if lyrics_marks else "none",
+            "lyricsSource": lyrics_source,
             "lyricsSourceError": lyrics_error,
             "lyricsGlobalShiftMs": int(lyrics_shift_ms),
             "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
             "lyricsLookup": lyrics_info,
+            "lyricsProviderResults": lyrics_provider_results,
             "analysisProfile": profile,
             "beatsPerBar": int(max(1, int(inferred_bpb))),
             "meterAccentOffset": int(inferred_offset),
@@ -2574,6 +2652,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "rhythmProviderAgreement": rhythm_provider_agreement,
             "rhythmProviderResults": rhythm_provider_results,
             "chordAnalysis": chord_meta,
+            "harmonyProviderResults": harmony_provider_results,
         },
     }
 
