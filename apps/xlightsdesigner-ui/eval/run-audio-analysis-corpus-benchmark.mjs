@@ -146,6 +146,7 @@ function buildPipelineResult(filePath = "", data = {}, provider = "", baseUrl = 
 function scoreReport(report = {}) {
   const issues = Array.isArray(report?.topLevelIssues) ? report.topLevelIssues : [];
   const readiness = report?.readiness?.minimumContract || {};
+  const semanticAssessment = report?.semanticAssessment || {};
   const readinessFailures = [
     readiness.beatsPresent === false ? "beats_missing" : null,
     readiness.barsPresent === false ? "bars_missing" : null,
@@ -156,6 +157,7 @@ function scoreReport(report = {}) {
   const missingChords = issues.includes("no_chords") ? 1 : 0;
   const genericStructure = issues.includes("generic_structure_labels_present") ? 1 : 0;
   const dupleLock = issues.includes("timing_locked_to_duple_meter") ? 1 : 0;
+  const semanticIssueCount = Array.isArray(semanticAssessment?.issues) ? semanticAssessment.issues.length : 0;
   const harmonicPenalty = (() => {
     const n = Number(report?.summary?.harmonicConfidence);
     return Number.isFinite(n) ? (n < 0.2 ? 1 : 0) : 0;
@@ -163,8 +165,9 @@ function scoreReport(report = {}) {
   const sectionIssueCount = (Array.isArray(report?.sections) ? report.sections : [])
     .reduce((sum, row) => sum + (Array.isArray(row?.issues) ? row.issues.length : 0), 0);
   return {
-    score: (readinessFailures.length * 10) + missingLyrics + missingChords + genericStructure + dupleLock + harmonicPenalty + sectionIssueCount,
+    score: (readinessFailures.length * 10) + missingLyrics + missingChords + genericStructure + dupleLock + harmonicPenalty + sectionIssueCount + (semanticIssueCount * 3),
     sectionIssueCount,
+    semanticIssueCount,
     readinessFailures
   };
 }
@@ -206,11 +209,13 @@ async function main() {
         durationMs: Date.now() - startedAt,
         summary: report.summary,
         readiness: report.readiness,
+        semanticAssessment: report.semanticAssessment,
         topLevelIssues: report.topLevelIssues,
         serviceAssessment: report.serviceAssessment,
         sections: report.sections,
         score: ranking.score,
         sectionIssueCount: ranking.sectionIssueCount,
+        semanticIssueCount: ranking.semanticIssueCount,
         readinessFailures: ranking.readinessFailures
       });
     } catch (error) {

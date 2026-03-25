@@ -70,6 +70,57 @@ function hasCompleteSemanticSongStructure(artifact = {}) {
   return hasSemanticStructureSections(artifact);
 }
 
+function isPopSemanticLabel(value = "") {
+  const lower = str(value).toLowerCase();
+  return /^(verse|chorus|bridge)\b/.test(lower);
+}
+
+function isThemeSemanticLabel(value = "") {
+  const lower = str(value).toLowerCase();
+  return /^(theme|refrain|contrast|instrumental)\b/.test(lower);
+}
+
+function buildSemanticStructureAssessment(artifact = {}) {
+  const sections = rows(artifact?.structure?.sections);
+  const backboneSequence = arr(artifact?.modules?.structureBackbone?.data?.sequence).map((row) => str(row)).filter(Boolean);
+  const lyricsAvailable = rows(artifact?.lyrics?.lines).length > 0;
+  const labels = sections.map((row) => str(row?.label || row?.name)).filter(Boolean);
+  const familyCounts = new Map();
+  for (const family of backboneSequence) {
+    familyCounts.set(family, Number(familyCounts.get(family) || 0) + 1);
+  }
+  const uniqueFamilyCount = familyCounts.size;
+  const dominantFamilyCount = Math.max(0, ...familyCounts.values());
+  const dominantFamilyShare = backboneSequence.length ? dominantFamilyCount / backboneSequence.length : null;
+  const popLabelCount = labels.filter((row) => isPopSemanticLabel(row)).length;
+  const themeLabelCount = labels.filter((row) => isThemeSemanticLabel(row)).length;
+  const issues = [];
+  if (!lyricsAvailable && popLabelCount >= 2 && uniqueFamilyCount >= 4) {
+    issues.push('semantic_labels_overcommit_pop_form_without_lyrics');
+  }
+  if (!lyricsAvailable && popLabelCount > 0 && Number.isFinite(dominantFamilyShare) && dominantFamilyShare >= 0.7) {
+    issues.push('semantic_labels_overcommit_pop_form_on_dominant_theme');
+  }
+  if (!lyricsAvailable && popLabelCount === 0 && themeLabelCount === 0 && uniqueFamilyCount > 0) {
+    issues.push('semantic_labels_do_not_explain_backbone_shape');
+  }
+  let suggestedMode = 'undetermined';
+  if (lyricsAvailable && popLabelCount >= 2) suggestedMode = 'pop-form';
+  else if (!lyricsAvailable && Number.isFinite(dominantFamilyShare) && dominantFamilyShare >= 0.6) suggestedMode = 'theme-contrast';
+  else if (!lyricsAvailable && uniqueFamilyCount >= 4) suggestedMode = 'conservative';
+  else if (popLabelCount >= 2) suggestedMode = 'pop-form';
+  return {
+    backboneSequence,
+    uniqueFamilyCount,
+    dominantFamilyShare: Number.isFinite(dominantFamilyShare) ? Math.round(dominantFamilyShare * 1000) / 1000 : null,
+    lyricsAvailable,
+    popLabelCount,
+    themeLabelCount,
+    suggestedMode,
+    issues
+  };
+}
+
 function findSectionRowsWithin(rowsInput = [], startMs = 0, endMs = 0) {
   return rows(rowsInput).filter((row) => {
     const start = finite(row?.startMs);
@@ -133,7 +184,7 @@ function buildSectionMetric(section = {}, beats = [], bars = [], chords = [], ly
   };
 }
 
-function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
+function buildTopLevelIssues(artifact = {}, sectionMetrics = [], semanticAssessment = {}) {
   const issues = [];
   const timeSignature = str(artifact?.timing?.timeSignature);
   const harmonicConfidence = str(artifact?.harmonic?.confidence);
@@ -167,6 +218,9 @@ function buildTopLevelIssues(artifact = {}, sectionMetrics = []) {
   if (timeSignature === "2/4" && Number.isFinite(medianBpb) && medianBpb <= 2.1) {
     issues.push("timing_locked_to_duple_meter");
   }
+  for (const issue of arr(semanticAssessment?.issues).map((row) => str(row)).filter(Boolean)) {
+    issues.push(issue);
+  }
   return issues;
 }
 
@@ -198,7 +252,8 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
   const sectionMetrics = sections
     .map((row) => buildSectionMetric(row, beats, bars, chords, lyrics))
     .filter(Boolean);
-  const topLevelIssues = buildTopLevelIssues(artifact, sectionMetrics);
+  const semanticAssessment = buildSemanticStructureAssessment(artifact);
+  const topLevelIssues = buildTopLevelIssues(artifact, sectionMetrics, semanticAssessment);
   const expectedBeatsPerBar = parseBeatsPerBarFromTimeSignature(artifact?.timing?.timeSignature);
   const observedBeatsPerBar = median(sectionMetrics.map((row) => row?.beatsPerBarObserved).filter((row) => Number.isFinite(row)));
   const readiness = {
@@ -245,6 +300,7 @@ export function buildAudioAnalysisQualityReport(artifact = {}) {
     },
     readiness,
     serviceAssessment: buildServiceAssessment(artifact),
+    semanticAssessment,
     topLevelIssues,
     sections: sectionMetrics
   };

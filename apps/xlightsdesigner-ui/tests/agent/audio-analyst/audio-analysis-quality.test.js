@@ -51,6 +51,11 @@ function sampleArtifact() {
       }
     },
     modules: {
+      structureBackbone: {
+        data: {
+          sequence: ["A", "B", "C", "D"]
+        }
+      },
       rhythm: {
         data: {
           providerAgreement: {
@@ -146,4 +151,21 @@ test("audio analysis quality report fails readiness for mixed semantic and gener
   assert.ok(report.topLevelIssues.includes("missing_semantic_song_structure"));
   assert.equal(report.readiness.minimumContract.semanticSongStructurePresent, false);
   assert.equal(report.readiness.ok, false);
+});
+
+test("audio analysis quality report flags pop-form overcommit without lyrics on complex backbone", () => {
+  const artifact = sampleArtifact();
+  artifact.structure.sections = [
+    { startMs: 0, endMs: 1000, label: "Verse 1", sectionType: "verse" },
+    { startMs: 1000, endMs: 2000, label: "Chorus 1", sectionType: "chorus" },
+    { startMs: 2000, endMs: 3000, label: "Verse 2", sectionType: "verse" },
+    { startMs: 3000, endMs: 4000, label: "Chorus 2", sectionType: "chorus" }
+  ];
+
+  const report = buildAudioAnalysisQualityReport(artifact);
+
+  assert.equal(report.semanticAssessment.lyricsAvailable, false);
+  assert.equal(report.semanticAssessment.uniqueFamilyCount, 4);
+  assert.ok(report.semanticAssessment.issues.includes("semantic_labels_overcommit_pop_form_without_lyrics"));
+  assert.ok(report.topLevelIssues.includes("semantic_labels_overcommit_pop_form_without_lyrics"));
 });
