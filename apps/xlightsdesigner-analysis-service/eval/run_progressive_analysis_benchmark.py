@@ -33,11 +33,15 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument('--min-seconds-between-tracks', type=float, default=1.5, help='Minimum delay between completed track analyses')
     ap.add_argument('--min-seconds-between-deep-tracks', type=float, default=12.0, help='Minimum delay between completed deep analyses to avoid overusing external APIs')
     ap.add_argument('--retry-backoff-seconds', type=float, default=60.0, help='Delay before retrying a failed track on the same source revision')
+    ap.add_argument('--exclude', action='append', default=[], help='Exact track filename to exclude; may be repeated')
     return ap.parse_args()
 
 
-def list_tracks(folder: Path) -> List[Path]:
+def list_tracks(folder: Path, excludes: List[str] | None = None) -> List[Path]:
+    excluded = {str(name).strip().lower() for name in (excludes or []) if str(name).strip()}
     rows = [p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in AUDIO_EXTS]
+    if excluded:
+        rows = [p for p in rows if p.name.lower() not in excluded]
     return sorted(rows, key=lambda p: p.name.lower())
 
 
@@ -224,8 +228,8 @@ def maybe_sleep_after_track(mode: str, args: argparse.Namespace) -> None:
     return False
 
 
-def build_track_order(folder: Path, limit: int, shuffle: bool, seed: int | None) -> Tuple[List[Path], int | None]:
-    tracks = list_tracks(folder)
+def build_track_order(folder: Path, limit: int, shuffle: bool, seed: int | None, excludes: List[str] | None = None) -> Tuple[List[Path], int | None]:
+    tracks = list_tracks(folder, excludes=excludes)
     if limit > 0:
         tracks = tracks[:limit]
     applied_seed = seed
@@ -239,7 +243,7 @@ def build_track_order(folder: Path, limit: int, shuffle: bool, seed: int | None)
 def run_cycle(args: argparse.Namespace, results_path: Path, summary_path: Path, manifest_path: Path, existing_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     folder = Path(args.folder).expanduser().resolve()
     out_dir = Path(args.out_dir).expanduser().resolve()
-    tracks, applied_seed = build_track_order(folder, args.limit, args.shuffle, args.seed)
+    tracks, applied_seed = build_track_order(folder, args.limit, args.shuffle, args.seed, excludes=args.exclude)
     source_revision = current_source_revision()
     manifest = {
         'createdAt': time.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -250,6 +254,7 @@ def run_cycle(args: argparse.Namespace, results_path: Path, summary_path: Path, 
         'sourceRevision': source_revision,
         'pythonExecutable': select_python_executable(),
         'trackOrder': [p.name for p in tracks],
+        'excludedTracks': sorted({str(name).strip() for name in (args.exclude or []) if str(name).strip()}),
         'loop': bool(args.loop),
         'minSecondsBetweenTracks': float(args.min_seconds_between_tracks or 0.0),
         'minSecondsBetweenDeepTracks': float(args.min_seconds_between_deep_tracks or 0.0),
