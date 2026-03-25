@@ -477,6 +477,35 @@ def _normalize_lyric_text(text: str) -> str:
     return s
 
 
+def _lyric_token_set(text: str) -> set[str]:
+    return {token for token in _normalize_lyric_text(text).split(" ") if token}
+
+
+def _jaccard_similarity(a: set[str], b: set[str]) -> float:
+    if not a or not b:
+        return 0.0
+    union = a | b
+    if not union:
+        return 0.0
+    return float(len(a & b) / len(union))
+
+
+def _stanza_similarity(a_lines: List[str], b_lines: List[str]) -> float:
+    if not a_lines or not b_lines:
+        return 0.0
+    a_tokens = _lyric_token_set(" ".join(a_lines))
+    b_tokens = _lyric_token_set(" ".join(b_lines))
+    token_sim = _jaccard_similarity(a_tokens, b_tokens)
+    line_count_ratio = min(len(a_lines), len(b_lines)) / max(len(a_lines), len(b_lines))
+    exact_line_matches = 0
+    normalized_b = {_normalize_lyric_text(line) for line in b_lines}
+    for line in a_lines:
+        if _normalize_lyric_text(line) in normalized_b:
+            exact_line_matches += 1
+    exact_line_score = exact_line_matches / max(1, min(len(a_lines), len(b_lines)))
+    return (token_sim * 0.6) + (line_count_ratio * 0.15) + (exact_line_score * 0.25)
+
+
 def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms: int) -> List[Dict[str, Any]]:
     rows = sorted(
         [r for r in (lyrics_marks or []) if isinstance(r, dict) and "startMs" in r and "endMs" in r],
@@ -501,39 +530,6 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
 
     texts = [_normalize_lyric_text(r.get("label", "")) for r in rows]
 
-    # Identify repeated multi-line windows (2-4 lines) as chorus anchors.
-    window_hits: Dict[tuple[str, ...], List[int]] = {}
-    n = len(texts)
-    for k in (4, 3, 2):
-        if n < k:
-            continue
-        for i in range(0, n - k + 1):
-            win = tuple(texts[i : i + k])
-            if any(not t for t in win):
-                continue
-            # Ignore overly-short windows that tend to create false positives.
-            if sum(len(t) for t in win) < 20:
-                continue
-            window_hits.setdefault(win, []).append(i)
-
-    best_window: Optional[tuple[str, ...]] = None
-    best_starts: List[int] = []
-    best_score = -1
-    for win, starts in window_hits.items():
-        k = len(win)
-        # Keep non-overlapping occurrences only.
-        chosen: List[int] = []
-        for s in sorted(starts):
-            if not chosen or s >= (chosen[-1] + k):
-                chosen.append(s)
-        if len(chosen) < 2:
-            continue
-        score = len(chosen) * k
-        if score > best_score:
-            best_score = score
-            best_window = win
-            best_starts = chosen
-
     # Split into stanzas by adaptive inter-line silence.
     stanzas: List[tuple[int, int]] = []
     stanza_start = 0
@@ -545,22 +541,82 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             stanza_start = i
     stanzas.append((stanza_start, len(rows)))
 
-    chorus_stanza_idx: set[int] = set()
-    if best_window and best_starts:
-        k = len(best_window)
-        for s in best_starts:
-            e = s + k
-            for idx, (a, b) in enumerate(stanzas):
-                if s < b and e > a:
-                    chorus_stanza_idx.add(idx)
-
     chorus_spans: List[tuple[int, int]] = []
-    if best_window and best_starts:
-        k = len(best_window)
-        for sidx in best_starts:
+    stanza_payloads: List[Dict[str, Any]] = []
+    for idx, (a, b) in enumerate(stanzas):
+        if a >= b:
+            continue
+        start_ms = int(rows[a].get("startMs", 0))
+        end_ms = int(rows[b - 1].get("endMs", start_ms + 1))
+        stanza_lines = [str(rows[line_idx].get("label", "")) for line_idx in range(a, b)]
+        stanza_payloads.append({
+            "index": idx,
+            "range": (a, b),
+            "startMs": start_ms,
+            "endMs": end_ms,
+            "lines": stanza_lines,
+        })
+
+    # Keep exact repeated windows as a strong chorus hint when they exist.
+    window_hits: Dict[tuple[str, ...], List[int]] = {}
+    n = len(texts)
+    for k in (4, 3, 2):
+        if n < k:
+            continue
+        for i in range(0, n - k + 1):
+            win = tuple(texts[i : i + k])
+            if any(not t for t in win):
+                continue
+            if sum(len(t) for t in win) < 20:
+                continue
+            window_hits.setdefault(win, []).append(i)
+
+    exact_chorus_spans: List[tuple[int, int]] = []
+    for win, starts in window_hits.items():
+        k = len(win)
+        chosen: List[int] = []
+        for s in sorted(starts):
+            if not chosen or s >= (chosen[-1] + k):
+                chosen.append(s)
+        if len(chosen) < 2:
+            continue
+        for sidx in chosen:
             eidx = min(len(rows) - 1, sidx + k - 1)
             start_ms = int(rows[sidx].get("startMs", 0))
             end_ms = int(rows[eidx].get("endMs", start_ms + 1))
+            if end_ms > start_ms:
+                exact_chorus_spans.append((start_ms, end_ms))
+
+    similar_groups: List[List[int]] = []
+    for i, stanza in enumerate(stanza_payloads):
+        group = [i]
+        for j in range(i + 1, len(stanza_payloads)):
+            sim = _stanza_similarity(stanza["lines"], stanza_payloads[j]["lines"])
+            if sim >= 0.58:
+                group.append(j)
+        if len(group) >= 2:
+            similar_groups.append(group)
+
+    best_group: List[int] = []
+    best_group_score = -1.0
+    for group in similar_groups:
+        spans = [stanza_payloads[idx] for idx in group]
+        first_idx = min(int(row["index"]) for row in spans)
+        total_lines = sum(len(row["lines"]) for row in spans)
+        total_duration = sum(max(1, int(row["endMs"]) - int(row["startMs"])) for row in spans)
+        coverage = len(group) / max(1.0, float(len(stanza_payloads)))
+        score = (len(group) * 2.0) + (total_lines * 0.15) + (coverage * 1.5) - (first_idx * 0.1) + (total_duration / max(1.0, float(duration_ms)))
+        if score > best_group_score:
+            best_group = group
+            best_group_score = score
+
+    if exact_chorus_spans:
+        chorus_spans.extend(exact_chorus_spans)
+    else:
+        for group_index in best_group:
+            stanza = stanza_payloads[group_index]
+            start_ms = int(stanza["startMs"])
+            end_ms = int(stanza["endMs"])
             if end_ms > start_ms:
                 chorus_spans.append((start_ms, end_ms))
     chorus_spans.sort()
@@ -591,7 +647,7 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             if chorus_start - prev_boundary >= 500:
                 if non_chorus_rows:
                     label = "Verse"
-                    if chorus_count >= 1 and idx == len(merged_chorus_spans) - 1:
+                    if chorus_count >= 2 and idx == len(merged_chorus_spans) - 1:
                         label = "Bridge"
                     segments.append({"startMs": prev_boundary, "endMs": chorus_start, "label": label})
                 else:
@@ -2113,7 +2169,7 @@ def _estimate_lyrics_global_shift_ms(
 def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     def base_label(raw: Any) -> str:
         label = str(raw or "Section").strip() or "Section"
-        m = re.match(r"^(Intro|Outro|Bridge|Instrumental|Verse|Chorus)(?:\s+\d+)?$", label, flags=re.IGNORECASE)
+        m = re.match(r"^(Intro|Outro|Bridge|Instrumental|Verse|Chorus|Theme|Contrast|Refrain)(?:\s+\d+)?$", label, flags=re.IGNORECASE)
         if not m:
             return label
         normalized = m.group(1).strip().lower()
@@ -2124,6 +2180,9 @@ def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, A
             "instrumental": "Instrumental",
             "verse": "Verse",
             "chorus": "Chorus",
+            "theme": "Theme",
+            "contrast": "Contrast",
+            "refrain": "Refrain",
         }.get(normalized, label)
 
     counts: Dict[str, int] = {}
@@ -2146,6 +2205,24 @@ def _build_numbered_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, A
     return out
 
 
+def _merge_adjacent_same_label_sections(segments: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    merged: List[Dict[str, Any]] = []
+    for seg in sorted(segments or [], key=lambda row: int(row.get("startMs", 0))):
+        start_ms = int(seg.get("startMs", 0))
+        end_ms = int(seg.get("endMs", start_ms + 1))
+        label = str(seg.get("label", "Section")).strip() or "Section"
+        if end_ms <= start_ms:
+            continue
+        if merged:
+            prev = merged[-1]
+            prev_label = str(prev.get("label", "")).strip()
+            if prev_label == label and int(prev.get("endMs", 0)) >= start_ms:
+                prev["endMs"] = max(int(prev.get("endMs", 0)), end_ms)
+                continue
+        merged.append({"startMs": start_ms, "endMs": end_ms, "label": label})
+    return merged
+
+
 def _looks_generic_section_label(label: str) -> bool:
     return bool(re.match(r"^section(?:\s+\d+)?$", str(label or "").strip(), flags=re.IGNORECASE))
 
@@ -2163,20 +2240,64 @@ def _refine_audio_sections_with_semantic_spans(
         start_ms = int(section.get("startMs", 0))
         end_ms = int(section.get("endMs", start_ms + 1))
         current_label = str(section.get("label", "Section")).strip() or "Section"
+        section_duration = max(1, end_ms - start_ms)
+        overlaps: List[Dict[str, Any]] = []
         best_label = current_label
         best_overlap = -1
         for semantic in semantic_sections:
             semantic_label = str(semantic.get("label", "")).strip()
             if not semantic_label or _looks_generic_section_label(semantic_label):
                 continue
-            overlap = min(end_ms, int(semantic.get("endMs", 0))) - max(start_ms, int(semantic.get("startMs", 0)))
+            semantic_start = int(semantic.get("startMs", 0))
+            semantic_end = int(semantic.get("endMs", 0))
+            overlap = min(end_ms, semantic_end) - max(start_ms, semantic_start)
             if overlap > best_overlap:
                 best_overlap = overlap
                 best_label = semantic_label
-        section_duration = max(1, end_ms - start_ms)
+            if overlap > 0:
+                overlaps.append({
+                    "startMs": max(start_ms, semantic_start),
+                    "endMs": min(end_ms, semantic_end),
+                    "label": semantic_label,
+                    "overlap": overlap,
+                })
         overlap_ratio = (best_overlap / section_duration) if best_overlap > 0 else 0.0
         current_lower = current_label.lower()
         best_lower = best_label.lower()
+        significant_overlaps = [
+            row for row in overlaps
+            if int(row["overlap"]) >= max(1500, int(section_duration * 0.04))
+        ]
+        unique_overlap_labels = list(dict.fromkeys(str(row["label"]) for row in significant_overlaps))
+        covered_ms = sum(int(row["overlap"]) for row in significant_overlaps)
+        should_split = (
+            len(unique_overlap_labels) >= 2
+            and (covered_ms / section_duration) >= 0.65
+        )
+        if should_split:
+            cursor = start_ms
+            for row in sorted(significant_overlaps, key=lambda item: int(item["startMs"])):
+                row_start = int(row["startMs"])
+                row_end = int(row["endMs"])
+                if row_start > cursor:
+                    refined.append({
+                        "startMs": cursor,
+                        "endMs": row_start,
+                        "label": current_label,
+                    })
+                refined.append({
+                    "startMs": row_start,
+                    "endMs": row_end,
+                    "label": str(row["label"]),
+                })
+                cursor = max(cursor, row_end)
+            if cursor < end_ms:
+                refined.append({
+                    "startMs": cursor,
+                    "endMs": end_ms,
+                    "label": current_label,
+                })
+            continue
         should_promote = (
             _looks_generic_section_label(current_label)
             or (
@@ -2188,7 +2309,7 @@ def _refine_audio_sections_with_semantic_spans(
         if best_overlap > 0 and should_promote:
             current_label = best_label
         refined.append({"startMs": start_ms, "endMs": end_ms, "label": current_label})
-    return _build_numbered_sections(refined)
+    return _build_numbered_sections(_merge_adjacent_same_label_sections(refined))
 
 
 def _cosine_sim(a: np.ndarray, b: np.ndarray) -> float:

@@ -242,6 +242,91 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             ["Verse", "Chorus"],
         )
 
+    def test_refine_audio_sections_splits_coarse_audio_section_by_lyric_boundaries(self):
+        audio_sections = [
+            {"startMs": 0, "endMs": 5000, "label": "Chorus 1"},
+        ]
+        lyric_sections = [
+            {"startMs": 0, "endMs": 2200, "label": "Verse"},
+            {"startMs": 2200, "endMs": 5000, "label": "Chorus"},
+        ]
+        out = main._refine_audio_sections_with_semantic_spans(audio_sections, lyric_sections)
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Verse", "Chorus"],
+        )
+
+    def test_refine_audio_sections_split_preserves_uncovered_gaps(self):
+        audio_sections = [
+            {"startMs": 0, "endMs": 6000, "label": "Theme 1"},
+        ]
+        lyric_sections = [
+            {"startMs": 1000, "endMs": 2500, "label": "Verse"},
+            {"startMs": 3500, "endMs": 6000, "label": "Chorus"},
+        ]
+        out = main._refine_audio_sections_with_semantic_spans(audio_sections, lyric_sections)
+        self.assertEqual(
+            [(row["startMs"], row["endMs"], row["label"]) for row in out],
+            [
+                (0, 1000, "Theme 1"),
+                (1000, 2500, "Verse"),
+                (2500, 3500, "Theme 2"),
+                (3500, 6000, "Chorus"),
+            ],
+        )
+
+    def test_refine_audio_sections_merges_adjacent_same_label_after_split(self):
+        audio_sections = [
+            {"startMs": 0, "endMs": 2000, "label": "Theme 1"},
+            {"startMs": 2000, "endMs": 4000, "label": "Theme 1"},
+        ]
+        lyric_sections = [
+            {"startMs": 0, "endMs": 4000, "label": "Verse"},
+        ]
+        out = main._refine_audio_sections_with_semantic_spans(audio_sections, lyric_sections)
+        self.assertEqual(
+            [(row["startMs"], row["endMs"], row["label"]) for row in out],
+            [(0, 4000, "Verse")],
+        )
+
+    def test_refine_audio_sections_keeps_short_contrastive_lyric_span_inside_long_section(self):
+        audio_sections = [
+            {"startMs": 0, "endMs": 10000, "label": "Chorus 1"},
+        ]
+        lyric_sections = [
+            {"startMs": 0, "endMs": 4000, "label": "Chorus"},
+            {"startMs": 4000, "endMs": 6000, "label": "Verse"},
+            {"startMs": 6000, "endMs": 10000, "label": "Chorus"},
+        ]
+        out = main._refine_audio_sections_with_semantic_spans(audio_sections, lyric_sections)
+        self.assertEqual(
+            [(row["startMs"], row["endMs"], row["label"]) for row in out],
+            [
+                (0, 4000, "Chorus 1"),
+                (4000, 6000, "Verse"),
+                (6000, 10000, "Chorus 2"),
+            ],
+        )
+
+    def test_infer_sections_from_lyrics_detects_similar_repeated_stanzas(self):
+        lyrics_marks = [
+            {"startMs": 0, "endMs": 1000, "label": "I got this feeling inside my bones"},
+            {"startMs": 1100, "endMs": 2100, "label": "It goes electric wavy when I turn it on"},
+            {"startMs": 6000, "endMs": 7000, "label": "Cause I got that sunshine in my pocket"},
+            {"startMs": 7100, "endMs": 8100, "label": "Got that good soul in my feet"},
+            {"startMs": 8200, "endMs": 9200, "label": "I feel that hot blood in my body"},
+            {"startMs": 15000, "endMs": 16000, "label": "I got this feeling inside my bones"},
+            {"startMs": 16100, "endMs": 17100, "label": "It goes electric baby when I turn it on"},
+            {"startMs": 22000, "endMs": 23000, "label": "Cause I got that sunshine in my pocket"},
+            {"startMs": 23100, "endMs": 24100, "label": "Got that good soul in my feet"},
+            {"startMs": 24200, "endMs": 25200, "label": "I feel that hot blood in my body"},
+        ]
+        out = main._infer_sections_from_lyrics(lyrics_marks, 26000)
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
