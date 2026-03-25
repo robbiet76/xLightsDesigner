@@ -96,10 +96,13 @@ def should_retry_with_genius(genius_row: Dict[str, Any], latest_deep_row: Dict[s
     canonical_strong = genius_row.get("canonicalStrong")
     if canonical_strong is None:
         canonical_strong = str(genius_row.get("querySource") or "") == "identity-cache"
+    canonical_artist = str(genius_row.get("canonicalArtist") or genius_row.get("queryArtist") or "").strip()
+    if not canonical_artist:
+        return False
     artist_agreement = genius_row.get("canonicalArtistAgreement")
     if artist_agreement is None:
         artist_agreement = genius_row.get("artistMatch")
-    if canonical_strong and not artist_agreement:
+    if not artist_agreement:
         return False
     return True
 

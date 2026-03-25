@@ -402,7 +402,7 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         out = main._infer_sections_from_lyrics(lyrics_marks, 10000)
         self.assertEqual(out[-1]["label"], "Outro")
 
-    def test_lookup_genius_lrclib_retry_identity_rejects_custom_title_only_track(self):
+    def test_lookup_genius_lrclib_retry_identity_requires_artist_backed_identity(self):
         with mock.patch.object(main, "ENABLE_GENIUS_LRCLIB_RETRY", True), \
              mock.patch.object(main, "GENIUS_ACCESS_TOKEN", "token"):
             out = main._lookup_genius_lrclib_retry_identity({"title": "Countdown2", "artist": ""})

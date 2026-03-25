@@ -882,24 +882,6 @@ def _normalize_compare_text(text: str) -> str:
     return value
 
 
-def _looks_like_custom_or_cut_track_title(title: str) -> bool:
-    value = _normalize_compare_text(title)
-    if not value:
-        return True
-    return any(
-        token in value
-        for token in (
-            "countdown",
-            "medley",
-            "musiconly",
-            "music only",
-            "intro",
-            "main",
-            "edit",
-        )
-    )
-
-
 def _is_generic_lyrics_artist(artist: str) -> bool:
     value = _normalize_compare_text(artist)
     return value in {"christmas songs", "christmas carols", "traditional", "various artists"}
@@ -910,9 +892,7 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
         return {}
     title = str(identity.get("title") or "").strip()
     artist = str(identity.get("artist") or "").strip()
-    if not title:
-        return {}
-    if not artist and _looks_like_custom_or_cut_track_title(title):
+    if not title or not artist:
         return {}
     lyricsgenius = _ensure_lyricsgenius()
     if not lyricsgenius:
@@ -951,9 +931,8 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
         artist_match = artist_match or _normalize_compare_text(matched_artist) in _normalize_compare_text(artist)
         if not artist_match:
             return {}
-    else:
-        if not matched_artist or _is_generic_lyrics_artist(matched_artist):
-            return {}
+    if not matched_artist or _is_generic_lyrics_artist(matched_artist):
+        return {}
     if _normalize_compare_text(title) == _normalize_compare_text(matched_title) and (
         not artist or _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
     ):
