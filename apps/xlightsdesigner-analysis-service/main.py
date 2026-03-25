@@ -2262,6 +2262,7 @@ def _label_song_sections(
     repeated = [idxs for idxs in groups.values() if len(idxs) >= 2]
     primary_anchor = -1
     primary_label = "Chorus"
+    secondary_label = "Verse"
     secondary_anchor = -1
     if repeated:
         scored = []
@@ -2277,16 +2278,35 @@ def _label_song_sections(
         primary_anchor = anchor_for[primary_idxs[0]]
         primary_coverage = float(scored[0][3])
         primary_first_idx = int(scored[0][4])
-        # Audio-only classification should be conservative. Repeated material that
-        # begins at the opening or dominates most of the song is more honestly a
-        # refrain/theme than a confident chorus.
-        if primary_first_idx == 0 or primary_coverage >= 0.5:
-            primary_label = "Refrain"
+        secondary_count = 0
         for _, idxs, _, _, _ in scored[1:]:
             cand = anchor_for[idxs[0]]
             if cand != primary_anchor:
                 secondary_anchor = cand
+                secondary_count = len(idxs)
                 break
+
+        # Audio-only classification should be conservative. Only use Chorus/Verse
+        # when the backbone looks like a real contrasting repeated form. Otherwise
+        # fall back to Theme/Refrain/Contrast.
+        has_contrast_repeat = secondary_anchor >= 0 and secondary_count >= 2
+        chorus_eligible = (
+            primary_first_idx > 0
+            and primary_coverage < 0.5
+            and has_contrast_repeat
+        )
+        if chorus_eligible:
+            primary_label = "Chorus"
+            secondary_label = "Verse"
+        elif primary_first_idx == 0 and primary_coverage >= 0.7:
+            primary_label = "Theme"
+            secondary_label = "Contrast"
+        elif primary_first_idx == 0 or primary_coverage >= 0.5:
+            primary_label = "Refrain"
+            secondary_label = "Contrast"
+        else:
+            primary_label = "Theme"
+            secondary_label = "Contrast"
 
     primary_idxs = groups.get(primary_anchor, []) if primary_anchor >= 0 else []
 
@@ -2307,7 +2327,7 @@ def _label_song_sections(
         if anchor == primary_anchor:
             labels[i] = primary_label
         elif anchor == secondary_anchor:
-            labels[i] = "Verse"
+            labels[i] = secondary_label
 
     if primary_anchor >= 0 and primary_idxs:
         cmin, cmax = min(primary_idxs), max(primary_idxs)
@@ -2315,12 +2335,12 @@ def _label_song_sections(
             if labels[i] != "Section":
                 continue
             if anchor_for[i] not in (primary_anchor, secondary_anchor):
-                labels[i] = "Bridge"
+                labels[i] = "Bridge" if primary_label in ("Chorus", "Refrain") else "Contrast"
 
     for i in range(n):
         if labels[i] == "Section":
             if primary_anchor >= 0 and i < min(primary_idxs):
-                labels[i] = "Verse"
+                labels[i] = secondary_label if secondary_label == "Verse" else "Contrast"
             elif primary_anchor >= 0 and i > max(primary_idxs):
                 labels[i] = "Instrumental" if primary_label == "Refrain" else "Verse"
             else:

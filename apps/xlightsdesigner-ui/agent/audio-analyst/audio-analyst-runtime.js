@@ -70,6 +70,8 @@ function classifySectionType(label = "") {
   if (/^(coda)\b/.test(lower)) return "coda";
   if (/^(interlude|break|turn)\b/.test(lower)) return "interlude";
   if (/^(refrain)\b/.test(lower)) return "refrain";
+  if (/^(theme)\b/.test(lower)) return "theme";
+  if (/^(contrast)\b/.test(lower)) return "contrast";
   if (/^(instrumental solo|solo)\b/.test(lower)) return "solo";
   if (/^(breakdown)\b/.test(lower)) return "breakdown";
   if (/^(drop)\b/.test(lower)) return "drop";
@@ -101,6 +103,8 @@ function canonicalizeSectionLabel(label = "", sectionType = "section") {
     case "bridge":
     case "drop":
     case "refrain":
+    case "theme":
+    case "contrast":
     case "breakdown":
     case "rap":
       return titleCaseWords(value);
