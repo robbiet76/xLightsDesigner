@@ -2275,6 +2275,7 @@ def _label_song_sections(
     anchor_for = [int(v) for v in (backbone.get("anchorFor") or [])]
     family_sequence = [str(v) for v in (backbone.get("sequence") or []) if str(v)]
     unique_family_count = len(set(family_sequence))
+    allow_pop_semantics = bool(lyrics_available or unique_family_count <= 4)
     groups: Dict[int, List[int]] = {}
     for idx, anchor in enumerate(anchor_for):
         groups.setdefault(int(anchor), []).append(int(idx))
@@ -2357,7 +2358,7 @@ def _label_song_sections(
             if labels[i] != "Section":
                 continue
             if anchor_for[i] not in (primary_anchor, secondary_anchor):
-                labels[i] = "Bridge" if primary_label in ("Chorus", "Refrain") else "Contrast"
+                labels[i] = "Bridge" if allow_pop_semantics and primary_label in ("Chorus", "Refrain") else "Contrast"
 
     for i in range(n):
         if labels[i] == "Section":
