@@ -2615,7 +2615,9 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
         lyrics_info=lyrics_info,
         lyrics_marks=lyrics_marks,
     )
-    sections = _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
+    cached_sections = _cached_structure_segments(cached_modules, duration_ms) if profile.get("mode") == "deep" else []
+    reused_cached_structure = bool(cached_sections)
+    sections = cached_sections or _detect_sections_from_audio(y, sr, duration_ms, beat_starts_ms)
     lyric_sections: List[Dict[str, Any]] = []
     if lyrics_marks:
         try:
@@ -2640,9 +2642,17 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
         "meta": {
             "engine": "librosa",
             "sectionSource": (
-                "audio+lyrics-semantic"
-                if lyric_sections and has_semantic_sections
-                else ("audio-structural-heuristic" if has_semantic_sections else "audio-segmentation-generic")
+                "cached-structure+lyrics-semantic"
+                if reused_cached_structure and lyric_sections and has_semantic_sections
+                else (
+                    "audio+lyrics-semantic"
+                    if lyric_sections and has_semantic_sections
+                    else (
+                        "cached-structure"
+                        if reused_cached_structure
+                        else ("audio-structural-heuristic" if has_semantic_sections else "audio-segmentation-generic")
+                    )
+                )
             ),
             "trackIdentity": identity,
             "trackIdentityCacheHit": identity_cache_hit,
@@ -2666,6 +2676,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             },
             "reusedCachedModules": {
                 "rhythm": reused_cached_rhythm,
+                "structureBackbone": reused_cached_structure,
             },
             "rhythmProviderAgreement": rhythm_provider_agreement,
             "rhythmProviderResults": rhythm_provider_results,
@@ -2748,6 +2759,30 @@ def _cached_rhythm_payload(cached_modules: Optional[Dict[str, Any]], duration_ms
         "providerResults": provider_results,
         "durationMs": int(duration_ms),
     }
+
+
+def _cached_structure_segments(cached_modules: Optional[Dict[str, Any]], duration_ms: int) -> List[Dict[str, Any]]:
+    if not isinstance(cached_modules, dict):
+        return []
+    structure_module = cached_modules.get("structureBackbone")
+    if not isinstance(structure_module, dict):
+        return []
+    data = structure_module.get("data")
+    if not isinstance(data, dict):
+        return []
+    segments = _sanitize_marks(data.get("segments") or [])
+    out: List[Dict[str, Any]] = []
+    for row in segments:
+        start = int(row.get("startMs", 0))
+        end = int(row.get("endMs", start + 1))
+        if end <= start:
+            continue
+        next_row: Dict[str, Any] = {"startMs": start, "endMs": min(int(duration_ms), end)}
+        label = str(row.get("label", "")).strip()
+        if label:
+            next_row["label"] = label
+        out.append(next_row)
+    return _sanitize_marks(out)
 
 
 def _analyze_auto(path: str, analysis_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

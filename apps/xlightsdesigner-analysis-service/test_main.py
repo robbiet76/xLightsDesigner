@@ -124,6 +124,24 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(payload["timeSignature"], "4/4")
         self.assertEqual(payload["providerResults"]["selectedProvider"], "librosa")
         self.assertEqual(len(payload["beats"]), 1)
+
+    def test_cached_structure_segments_extracts_reusable_boundaries(self):
+        rows = main._cached_structure_segments(
+            {
+                "structureBackbone": {
+                    "data": {
+                        "segments": [
+                            {"startMs": 0, "endMs": 1000, "label": "Section 1"},
+                            {"startMs": 1000, "endMs": 2000, "label": "Section 2"},
+                        ]
+                    }
+                }
+            },
+            5000,
+        )
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["label"], "Section 1")
+        self.assertEqual(rows[1]["startMs"], 1000)
         self.assertFalse(
             main._should_prefer_secondary_meter(
                 primary_beats_per_bar=4,
