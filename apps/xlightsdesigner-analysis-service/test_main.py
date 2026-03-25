@@ -341,6 +341,19 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             ["Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"],
         )
 
+    def test_infer_sections_from_lyrics_handles_no_repeated_chorus_evidence(self):
+        lyrics_marks = [
+            {"startMs": 1000, "endMs": 2500, "label": "run run rudolph"},
+            {"startMs": 2500, "endMs": 4000, "label": "randolph ain't too far behind"},
+            {"startMs": 9000, "endMs": 10500, "label": "run run rudolph"},
+            {"startMs": 10500, "endMs": 12000, "label": "santa's got to make it to town"},
+        ]
+        out = main._infer_sections_from_lyrics(lyrics_marks, 15000)
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Intro", "Verse", "Outro"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

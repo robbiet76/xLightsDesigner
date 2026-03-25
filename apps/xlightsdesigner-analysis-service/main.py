@@ -619,6 +619,7 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             end_ms = int(stanza["endMs"])
             if end_ms > start_ms:
                 chorus_spans.append((start_ms, end_ms))
+    chorus_stanza_idx = set(int(idx) for idx in best_group)
     chorus_spans.sort()
     merged_chorus_spans: List[tuple[int, int]] = []
     for start_ms, end_ms in chorus_spans:
