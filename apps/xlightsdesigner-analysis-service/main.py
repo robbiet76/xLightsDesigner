@@ -506,6 +506,61 @@ def _stanza_similarity(a_lines: List[str], b_lines: List[str]) -> float:
     return (token_sim * 0.6) + (line_count_ratio * 0.15) + (exact_line_score * 0.25)
 
 
+def _find_repeated_lyric_line_spans(rows: List[Dict[str, Any]]) -> List[tuple[int, int]]:
+    if len(rows) < 4:
+        return []
+    normalized_lines = [_normalize_lyric_text(row.get("label", "")) for row in rows]
+    token_sets = [_lyric_token_set(text) for text in normalized_lines]
+    families: List[List[int]] = []
+    for idx, text in enumerate(normalized_lines):
+        if not text:
+            continue
+        tokens = token_sets[idx]
+        if len(tokens) < 3:
+            continue
+        matched_family = None
+        for family in families:
+            ref_idx = family[0]
+            sim = _jaccard_similarity(tokens, token_sets[ref_idx])
+            if sim >= 0.72:
+                matched_family = family
+                break
+        if matched_family is None:
+            families.append([idx])
+        else:
+            matched_family.append(idx)
+    anchor_indexes: set[int] = set()
+    for family in families:
+        if len(family) < 2:
+            continue
+        for idx in family:
+            anchor_indexes.add(int(idx))
+    prefix_families: Dict[tuple[str, ...], List[int]] = {}
+    for idx, text in enumerate(normalized_lines):
+        tokens = [token for token in text.split(" ") if token]
+        if len(tokens) < 3:
+            continue
+        prefix = tuple(tokens[:3])
+        prefix_families.setdefault(prefix, []).append(idx)
+    for family in prefix_families.values():
+        if len(family) < 2:
+            continue
+        for idx in family:
+            anchor_indexes.add(int(idx))
+    spans: List[tuple[int, int]] = []
+    for idx in sorted(anchor_indexes):
+        start_ms = int(rows[idx].get("startMs", 0))
+        end_ms = int(rows[idx].get("endMs", start_ms + 1))
+        if idx + 1 < len(rows):
+            next_start = int(rows[idx + 1].get("startMs", end_ms))
+            next_end = int(rows[idx + 1].get("endMs", next_start + 1))
+            if 0 <= next_start - end_ms <= 2500 and next_end > end_ms:
+                end_ms = next_end
+        if end_ms > start_ms:
+            spans.append((start_ms, end_ms))
+    return spans
+
+
 def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms: int) -> List[Dict[str, Any]]:
     rows = sorted(
         [r for r in (lyrics_marks or []) if isinstance(r, dict) and "startMs" in r and "endMs" in r],
@@ -619,6 +674,8 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
             end_ms = int(stanza["endMs"])
             if end_ms > start_ms:
                 chorus_spans.append((start_ms, end_ms))
+    if not chorus_spans and len(stanza_payloads) <= 1:
+        chorus_spans.extend(_find_repeated_lyric_line_spans(rows))
     chorus_stanza_idx = set(int(idx) for idx in best_group)
     chorus_spans.sort()
     merged_chorus_spans: List[tuple[int, int]] = []

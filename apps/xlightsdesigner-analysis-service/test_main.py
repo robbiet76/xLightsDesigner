@@ -343,16 +343,32 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
 
     def test_infer_sections_from_lyrics_handles_no_repeated_chorus_evidence(self):
         lyrics_marks = [
-            {"startMs": 1000, "endMs": 2500, "label": "run run rudolph"},
-            {"startMs": 2500, "endMs": 4000, "label": "randolph ain't too far behind"},
-            {"startMs": 9000, "endMs": 10500, "label": "run run rudolph"},
-            {"startMs": 10500, "endMs": 12000, "label": "santa's got to make it to town"},
+            {"startMs": 1000, "endMs": 2500, "label": "first snow is falling"},
+            {"startMs": 2500, "endMs": 4000, "label": "children gather by the fire"},
+            {"startMs": 9000, "endMs": 10500, "label": "silver bells keep ringing"},
+            {"startMs": 10500, "endMs": 12000, "label": "families sing into the night"},
         ]
         out = main._infer_sections_from_lyrics(lyrics_marks, 15000)
         self.assertEqual(
             [row["label"] for row in out],
             ["Intro", "Verse", "Outro"],
         )
+
+    def test_infer_sections_from_lyrics_uses_repeated_lines_when_single_stanza(self):
+        lyrics_marks = [
+            {"startMs": 1000, "endMs": 2500, "label": "Out of all the reindeer you know you're the mastermind"},
+            {"startMs": 3000, "endMs": 4500, "label": "Run run Rudolph Randolph's not too far behind"},
+            {"startMs": 5000, "endMs": 6500, "label": "Santa's got to make it to town"},
+            {"startMs": 8200, "endMs": 9700, "label": "Said Santa to a boy child what have you been longing for"},
+            {"startMs": 10200, "endMs": 11700, "label": "Run run Rudolph Santa's got to make it to town"},
+            {"startMs": 12200, "endMs": 13700, "label": "Tell him he can take the freeway down"},
+        ]
+        out = main._infer_sections_from_lyrics(lyrics_marks, 22000)
+        labels = [row["label"] for row in out]
+        self.assertEqual(labels[0], "Intro")
+        self.assertIn("Chorus 1", labels)
+        self.assertIn("Chorus 2", labels)
+        self.assertEqual(labels[-1], "Outro")
 
 
 if __name__ == "__main__":
