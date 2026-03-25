@@ -379,6 +379,29 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         ]
         self.assertTrue(main._lyric_window_looks_like_outro(rows))
 
+    def test_lyric_window_looks_like_outro_for_hook_variants(self):
+        rows = [
+            {"startMs": 0, "endMs": 1000, "label": "It's the most wonderful time"},
+            {"startMs": 1000, "endMs": 2000, "label": "Yes the most wonderful time"},
+            {"startMs": 2000, "endMs": 3000, "label": "Oh the most wonderful time"},
+            {"startMs": 3000, "endMs": 4000, "label": "Of the year"},
+        ]
+        self.assertTrue(main._lyric_window_looks_like_outro(rows))
+
+    def test_infer_sections_from_lyrics_marks_short_post_chorus_tail_as_outro(self):
+        lyrics_marks = [
+            {"startMs": 0, "endMs": 1000, "label": "it's the most wonderful time of the year"},
+            {"startMs": 1000, "endMs": 2000, "label": "there'll be much mistletoeing"},
+            {"startMs": 2000, "endMs": 3000, "label": "and hearts will be glowing"},
+            {"startMs": 3000, "endMs": 4000, "label": "when loved ones are near"},
+            {"startMs": 5000, "endMs": 6000, "label": "it's the most wonderful time"},
+            {"startMs": 6000, "endMs": 7000, "label": "yes the most wonderful time"},
+            {"startMs": 7000, "endMs": 8000, "label": "oh the most wonderful time"},
+            {"startMs": 8000, "endMs": 9000, "label": "of the year"},
+        ]
+        out = main._infer_sections_from_lyrics(lyrics_marks, 10000)
+        self.assertEqual(out[-1]["label"], "Outro")
+
 
 if __name__ == "__main__":
     unittest.main()

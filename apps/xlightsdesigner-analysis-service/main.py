@@ -521,7 +521,31 @@ def _lyric_window_looks_like_outro(rows: List[Dict[str, Any]]) -> bool:
         return True
     repeated_line_share = 1.0 - (len(set(normalized)) / max(1.0, float(len(normalized))))
     short_line_share = sum(1 for text in normalized if len(_lyric_token_set(text)) <= 2) / max(1.0, float(len(normalized)))
-    return repeated_line_share >= 0.45 and short_line_share >= 0.5
+    if repeated_line_share >= 0.45 and short_line_share >= 0.5:
+        return True
+    prefix_counts: Dict[tuple[str, ...], int] = {}
+    for text in normalized:
+        tokens = [token for token in text.split(" ") if token]
+        if len(tokens) < 3:
+            continue
+        prefix = tuple(tokens[:4])
+        prefix_counts[prefix] = prefix_counts.get(prefix, 0) + 1
+    if prefix_counts:
+        dominant_prefix_count = max(prefix_counts.values())
+        if dominant_prefix_count >= max(2, int(len(normalized) * 0.5)):
+            return True
+    suffix_counts: Dict[tuple[str, ...], int] = {}
+    for text in normalized:
+        tokens = [token for token in text.split(" ") if token]
+        if len(tokens) < 4:
+            continue
+        suffix = tuple(tokens[1:4])
+        suffix_counts[suffix] = suffix_counts.get(suffix, 0) + 1
+    if suffix_counts:
+        dominant_suffix_count = max(suffix_counts.values())
+        if dominant_suffix_count >= max(2, int(len(normalized) * 0.5)):
+            return True
+    return False
 
 
 def _find_repeated_lyric_line_spans(rows: List[Dict[str, Any]]) -> List[tuple[int, int]]:
@@ -755,6 +779,11 @@ def _infer_sections_from_lyrics(lyrics_marks: List[Dict[str, Any]], duration_ms:
                     or (
                         tail_duration <= max(24000, stanza_gap_ms * 3)
                         and _lyric_window_looks_like_outro(tail_rows)
+                    )
+                    or (
+                        idx == len(merged_chorus_spans) - 1
+                        and len(tail_rows) <= 2
+                        and tail_duration <= max(20000, stanza_gap_ms * 3)
                     )
                 ) else "Verse"
                 segments.append({"startMs": prev_boundary, "endMs": duration_ms, "label": tail_label})
