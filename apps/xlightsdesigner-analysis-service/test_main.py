@@ -86,6 +86,26 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertAlmostEqual(scores[2], 0.206)
         self.assertAlmostEqual(scores[4], 0.189)
 
+    def test_should_probe_fast_triple_meter_only_for_close_triple_quad_ambiguity(self):
+        self.assertTrue(
+            main._should_probe_fast_triple_meter(
+                4,
+                {2: 0.1056, 3: 0.0521, 4: 0.1360},
+            )
+        )
+        self.assertFalse(
+            main._should_probe_fast_triple_meter(
+                4,
+                {2: 0.2060, 3: 0.0894, 4: 0.1889},
+            )
+        )
+        self.assertFalse(
+            main._should_probe_fast_triple_meter(
+                4,
+                {2: 0.0502, 3: 0.0261, 4: 0.1453},
+            )
+        )
+
     def test_build_rhythm_provider_agreement_flags_meter_disagreement(self):
         agreement = main._build_rhythm_provider_agreement(
             primary_provider="librosa",

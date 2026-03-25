@@ -1784,6 +1784,19 @@ def _infer_beats_per_bar_from_accent(
     return best_bpb, best_offset, scores
 
 
+def _should_probe_fast_triple_meter(
+    inferred_beats_per_bar: int,
+    scores: Dict[int, float],
+) -> bool:
+    if int(inferred_beats_per_bar) != 4:
+        return False
+    score3 = float(scores.get(3, -1.0))
+    score4 = float(scores.get(4, -1.0))
+    if score3 < 0.05 or score4 < 0.05:
+        return False
+    return (score4 - score3) <= 0.09
+
+
 def _subdivide_beat_times_linear(beat_times_ms: List[int], factor: int = 2) -> List[int]:
     src = sorted(set(int(x) for x in (beat_times_ms or []) if int(x) >= 0))
     f = max(1, int(factor))
@@ -2568,7 +2581,14 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             med = float(np.median(diffs)) if diffs.size else 0.0
             if med > 0:
                 bpm_est = float(round(60000.0 / med, 2))
-        madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms, profile)
+        probe_profile = profile
+        if (
+            profile.get("mode") == "fast"
+            and not profile.get("enableMadmomDownbeatCrosscheck")
+            and _should_probe_fast_triple_meter(int(max(1, int(inferred_bpb))), inferred_scores)
+        ):
+            probe_profile = {**profile, "enableMadmomDownbeatCrosscheck": True}
+        madmom_candidate = _detect_madmom_downbeat_summary(y, sr, duration_ms, probe_profile)
         rhythm_provider_agreement = _build_rhythm_provider_agreement(
             primary_provider="librosa",
             primary_beats_per_bar=int(max(1, int(inferred_bpb))),
