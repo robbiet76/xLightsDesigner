@@ -711,11 +711,13 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             ],
             duration_ms=10000,
         )
-        self.assertEqual(len(out), 4)
+        self.assertEqual(len(out), 2)
         self.assertEqual(out[0]["sectionLabel"], "Verse 1")
         self.assertEqual(out[-1]["sectionLabel"], "Chorus 1")
         self.assertEqual(out[0]["startMs"], 1000)
         self.assertEqual(out[-1]["endMs"], 9000)
+        self.assertEqual(out[0]["sourceLineCount"], 2)
+        self.assertEqual(out[-1]["sourceLineCount"], 2)
 
     def test_maybe_build_plain_lyrics_phrase_fallback_returns_aligned_phrases(self):
         with mock.patch.object(
@@ -746,9 +748,10 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             )
         self.assertTrue(out["available"])
         self.assertEqual(out["lineCount"], 2)
-        self.assertEqual(out["phraseCount"], 2)
+        self.assertEqual(out["phraseCount"], 1)
         self.assertEqual(out["geniusMatchedArtist"], "Mavis Staples")
         self.assertEqual(out["phrases"][0]["sectionLabel"], "Theme 1")
+        self.assertEqual(out["phrases"][0]["sourceLineCount"], 2)
 
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [

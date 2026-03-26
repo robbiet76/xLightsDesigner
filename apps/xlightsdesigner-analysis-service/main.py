@@ -1327,13 +1327,26 @@ def _align_plain_lyrics_to_structure_phrases(
         ]
         if not section_bars:
             section_bars = [{"startMs": start_ms, "endMs": end_ms, "label": str(index + 1)}]
-        bars_per_phrase = max(1, len(section_bars) // max(1, len(chosen_lines)))
-        for line_index, text in enumerate(chosen_lines):
-            bar_start_index = min(len(section_bars) - 1, line_index * bars_per_phrase)
-            if line_index == len(chosen_lines) - 1:
+        target_phrase_count = min(
+            len(chosen_lines),
+            max(1, round(len(section_bars) / 2.5)),
+            max(1, math.ceil(len(chosen_lines) / 2)),
+        )
+        lines_per_phrase = max(1, math.ceil(len(chosen_lines) / max(1, target_phrase_count)))
+        line_groups = [
+            chosen_lines[group_start:group_start + lines_per_phrase]
+            for group_start in range(0, len(chosen_lines), lines_per_phrase)
+        ]
+        bars_per_phrase = max(1, len(section_bars) // max(1, len(line_groups)))
+        for group_index, line_group in enumerate(line_groups):
+            text = " / ".join(str(row).strip() for row in line_group if str(row).strip())
+            if not text:
+                continue
+            bar_start_index = min(len(section_bars) - 1, group_index * bars_per_phrase)
+            if group_index == len(line_groups) - 1:
                 bar_end_index = len(section_bars) - 1
             else:
-                bar_end_index = min(len(section_bars) - 1, ((line_index + 1) * bars_per_phrase) - 1)
+                bar_end_index = min(len(section_bars) - 1, ((group_index + 1) * bars_per_phrase) - 1)
             phrase_start = int(section_bars[bar_start_index].get("startMs", start_ms))
             phrase_end = int(section_bars[bar_end_index].get("endMs", end_ms))
             if phrase_end <= phrase_start:
@@ -1346,6 +1359,7 @@ def _align_plain_lyrics_to_structure_phrases(
                     "snappedStartMs": phrase_start,
                     "snappedEndMs": phrase_end,
                     "sectionLabel": str(section.get("label") or "").strip(),
+                    "sourceLineCount": len(line_group),
                     "score": 0.35,
                     "textScore": 0.35,
                 }
