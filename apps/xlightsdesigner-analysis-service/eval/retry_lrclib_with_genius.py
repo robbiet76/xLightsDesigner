@@ -7,6 +7,7 @@ import json
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List
+import re
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -21,6 +22,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--out", required=True, help="Output JSON report path")
     ap.add_argument("--min-title-agreement", type=float, default=0.9, help="Minimum canonical title agreement")
     ap.add_argument("--request-timeout", type=float, default=5.0, help="Override LRCLIB HTTP timeout for evaluation")
+    ap.add_argument("--allow-title-only", action="store_true", help="Include title-only candidates for review scoring")
     return ap.parse_args()
 
 
@@ -107,6 +109,65 @@ def should_retry_with_genius(genius_row: Dict[str, Any], latest_deep_row: Dict[s
     return True
 
 
+def is_generic_lyrics_artist(artist: str) -> bool:
+    value = re.sub(r"[^a-z0-9]+", " ", str(artist or "").lower()).strip()
+    return value in {"christmas songs", "christmas carols", "traditional", "various artists"}
+
+
+def score_retry_confidence(row: Dict[str, Any]) -> Dict[str, Any]:
+    score = 0
+    reasons: List[str] = []
+    title_agreement = float(row.get("canonicalTitleAgreement") or 0.0)
+    if title_agreement >= 0.98:
+        score += 2
+        reasons.append("exact_title_agreement")
+    elif title_agreement >= 0.9:
+        score += 1
+        reasons.append("strong_title_agreement")
+    canonical_artist = str(row.get("canonicalArtist") or "").strip()
+    if canonical_artist:
+        score += 2
+        reasons.append("canonical_artist_present")
+    if bool(row.get("canonicalArtistAgreement")):
+        score += 3
+        reasons.append("artist_agreement")
+    if bool(row.get("canonicalStrong")):
+        score += 2
+        reasons.append("strong_identity_source")
+    genius_artist = str(row.get("geniusMatchedArtist") or "").strip()
+    if genius_artist and not is_generic_lyrics_artist(genius_artist):
+        score += 1
+        reasons.append("specific_genius_artist")
+    else:
+        score -= 2
+        reasons.append("generic_genius_artist")
+    info = row.get("lrclibInfo") or {}
+    duration_sec = info.get("lrclibDurationSec")
+    local_duration_ms = int(row.get("localDurationMs") or 0)
+    if duration_sec and local_duration_ms > 0:
+        delta = abs(float(duration_sec) * 1000.0 - float(local_duration_ms))
+        row["durationDeltaMs"] = int(round(delta))
+        if delta <= 12000:
+            score += 2
+            reasons.append("duration_close")
+        elif delta <= 25000:
+            score += 1
+            reasons.append("duration_reasonable")
+        else:
+            score -= 2
+            reasons.append("duration_far")
+    label = "reject"
+    if row.get("retrySucceeded"):
+        if score >= 6:
+            label = "likely_correct"
+        elif score >= 3:
+            label = "plausible_but_weak"
+    row["retryConfidenceScore"] = score
+    row["retryConfidenceLabel"] = label
+    row["retryConfidenceReasons"] = reasons
+    return row
+
+
 def main() -> int:
     args = parse_args()
     mod = load_service_module()
@@ -120,7 +181,21 @@ def main() -> int:
     with patched_requests_timeout(mod, float(args.request_timeout or 5.0)):
         for track, genius_row in sorted(genius_by_track.items()):
             latest_row = latest.get(track)
-            if not should_retry_with_genius(genius_row, latest_row or {}, args.min_title_agreement):
+            if args.allow_title_only:
+                if not genius_row or not latest_row:
+                    continue
+                if int((latest_row or {}).get("lyricsCount") or 0) > 0:
+                    continue
+                if str(genius_row.get("matchQuality") or "") != "high":
+                    continue
+                title_agreement = float(
+                    genius_row.get("canonicalTitleAgreement")
+                    or genius_row.get("titleSimilarity")
+                    or 0.0
+                )
+                if title_agreement < float(args.min_title_agreement):
+                    continue
+            elif not should_retry_with_genius(genius_row, latest_row or {}, args.min_title_agreement):
                 continue
             canonical_title = str(genius_row.get("canonicalTitle") or genius_row.get("queryTitle") or "").strip()
             canonical_artist = str(genius_row.get("canonicalArtist") or genius_row.get("queryArtist") or "").strip()
@@ -145,7 +220,7 @@ def main() -> int:
                 duration_ms = int(round(mod._load_audio_mono(str(audio_path))[1] * 1000))
             except Exception:
                 duration_ms = 300000
-            marks, error, info = mod._fetch_lrclib_lyrics(
+            marks, error, info = mod._fetch_lrclib_lyrics_direct(
                 {"title": title, "artist": artist},
                 duration_ms,
                 {"enableLyrics": True},
@@ -161,17 +236,21 @@ def main() -> int:
                     "canonicalTitleAgreement": title_agreement,
                     "canonicalArtistAgreement": bool(artist_agreement),
                     "latestDeepLyricsCount": int(latest_row.get("lyricsCount") or 0) if latest_row else 0,
+                    "localDurationMs": duration_ms,
                     "retrySucceeded": bool(marks),
                     "retriedLyricsCount": len(marks),
                     "lrclibError": str(error or ""),
                     "lrclibInfo": info,
                 }
             )
+            score_retry_confidence(retried[-1])
 
     report = {
         "candidateCount": len(retried),
         "recoveredCount": len([row for row in retried if row.get("retrySucceeded")]),
         "recoveryRate": round(len([row for row in retried if row.get("retrySucceeded")]) / len(retried), 4) if retried else 0.0,
+        "likelyCorrectCount": len([row for row in retried if row.get("retryConfidenceLabel") == "likely_correct"]),
+        "plausibleButWeakCount": len([row for row in retried if row.get("retryConfidenceLabel") == "plausible_but_weak"]),
         "rows": retried,
     }
     out = Path(args.out).expanduser().resolve()

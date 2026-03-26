@@ -166,7 +166,7 @@ def main() -> int:
         identity = mod._identity_cache_get(fp) or {}
         timed_marks: List[Dict[str, Any]] = []
         if identity:
-            timed_marks, _, _ = mod._fetch_lrclib_lyrics(identity, 300000, {"enableLyrics": True})
+            timed_marks, _, _ = mod._fetch_lrclib_lyrics_direct(identity, 300000, {"enableLyrics": True})
         aligned_rows = greedy_align_lines(genius_lines, timed_marks, float(args.min_score))
         out_tracks.append(
             {
