@@ -498,6 +498,20 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertIn("duration mismatch", error)
         self.assertEqual(info, {})
 
+    def test_resolve_lyrics_source_uses_retry_provenance(self):
+        out = main._resolve_lyrics_source(
+            [{"startMs": 0, "endMs": 1000, "label": "hello"}],
+            {"lyricsRetrySource": "genius-lrclib-retry"},
+        )
+        self.assertEqual(out, "lrclib+genius-lrclib-retry")
+
+    def test_resolve_lyrics_source_defaults_to_lrclib_for_direct_hits(self):
+        out = main._resolve_lyrics_source(
+            [{"startMs": 0, "endMs": 1000, "label": "hello"}],
+            {},
+        )
+        self.assertEqual(out, "lrclib")
+
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
             "hello from the start",

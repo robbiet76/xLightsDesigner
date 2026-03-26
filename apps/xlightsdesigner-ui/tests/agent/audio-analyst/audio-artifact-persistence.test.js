@@ -333,7 +333,7 @@ test("persisted canonical artifact retains full capability payloads for downstre
   assert.equal(readRes.artifact.modules.rhythm.metadata.profileMode, "deep");
   assert.equal(readRes.artifact.modules.rhythm.data.providerResults.providers.beatnet.timeSignature, "4/4");
   assert.equal(readRes.artifact.modules.harmony.metadata.moduleVersion, "v2");
-  assert.equal(readRes.artifact.modules.lyrics.metadata.moduleVersion, "v2");
+  assert.equal(readRes.artifact.modules.lyrics.metadata.moduleVersion, "v3");
 });
 
 test("persisted partial artifact preserves degraded status and missing-capability truth", async (t) => {

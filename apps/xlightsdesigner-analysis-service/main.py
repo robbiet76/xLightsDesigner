@@ -1997,6 +1997,15 @@ def _build_lyrics_provider_results(
     }
 
 
+def _resolve_lyrics_source(lyrics_marks: List[Dict[str, Any]], lyrics_info: Dict[str, Any]) -> str:
+    if not lyrics_marks:
+        return "none"
+    retry_source = str((lyrics_info or {}).get("lyricsRetrySource") or "").strip()
+    if retry_source:
+        return f"lrclib+{retry_source}"
+    return "lrclib"
+
+
 def _should_prefer_secondary_meter(
     *,
     primary_beats_per_bar: int,
@@ -3221,7 +3230,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     sections: List[Dict[str, Any]] = provider_sections
 
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
-    lyrics_source = "lrclib" if lyrics_marks else "none"
+    lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
     lyrics_provider_results = _build_lyrics_provider_results(
         lyrics_source=lyrics_source,
         lyrics_error=lyrics_error,
@@ -3396,7 +3405,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
-    lyrics_source = "lrclib" if lyrics_marks else "none"
+    lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
     lyrics_provider_results = _build_lyrics_provider_results(
         lyrics_source=lyrics_source,
         lyrics_error=lyrics_error,

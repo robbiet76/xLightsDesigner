@@ -103,6 +103,41 @@ test("audio analyst runtime builds canonical artifact from pipeline result", () 
   assert.equal(artifact.modules.semanticStructure.data.sections.length, 1);
 });
 
+test("audio analyst runtime preserves lyric retry provenance", () => {
+  const result = samplePipelineResult();
+  result.raw.meta.lyricsSource = "lrclib+genius-lrclib-retry";
+  result.raw.meta.lyricsProviderResults = {
+    selectedProvider: "lrclib+genius-lrclib-retry",
+    providers: {
+      "lrclib+genius-lrclib-retry": {
+        provider: "lrclib+genius-lrclib-retry",
+        available: true,
+        selected: true,
+        lineCount: 1,
+        lyricsRetrySource: "genius-lrclib-retry",
+        lyricsRetryMatchedArtist: "Michael Buble",
+        lyricsRetryMatchedTitle: "It's Beginning to Look a Lot Like Christmas",
+        lines: [{ startMs: 300, endMs: 900, label: "hello" }]
+      }
+    }
+  };
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Song.mp3",
+    mediaId: "media-123",
+    result,
+    requestedProvider: "auto",
+    analysisBaseUrl: "http://127.0.0.1:5055",
+    generatedAt: "2026-03-12T12:00:00.000Z"
+  });
+
+  assert.equal(artifact.lyrics.source, "lrclib+genius-lrclib-retry");
+  assert.equal(artifact.modules.lyrics.metadata.moduleVersion, "v3");
+  assert.equal(
+    artifact.modules.lyrics.data.providerResults.providers["lrclib+genius-lrclib-retry"].lyricsRetryMatchedArtist,
+    "Michael Buble"
+  );
+});
+
 test("audio analyst runtime derives analysis handoff from canonical artifact", () => {
   const artifact = buildAnalysisArtifactFromPipelineResult({
     audioPath: "/tmp/Song.mp3",

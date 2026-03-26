@@ -176,7 +176,7 @@ export const ANALYSIS_MODULE_VERSIONS = Object.freeze({
   identity: "v1",
   rhythm: "v3",
   harmony: "v2",
-  lyrics: "v2",
+  lyrics: "v3",
   structureBackbone: "v1",
   semanticStructure: "v1"
 });
@@ -387,8 +387,8 @@ function buildAnalysisModules({
       confidence: confidenceScore(lyricsConfidence),
       sources: Array.from(new Set([str(lyrics?.source || rawMeta?.lyricsSource), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.lyrics,
-      cacheKey: `${resolvedMediaId}:lyrics:v2`,
-      metadata: buildModuleMetadata("lyrics", "v2")
+      cacheKey: `${resolvedMediaId}:lyrics:v3`,
+      metadata: buildModuleMetadata("lyrics", "v3")
     },
     structureBackbone: {
       data: {
