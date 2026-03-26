@@ -426,6 +426,32 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(out["artist"], "Michael Buble")
         self.assertTrue(out["titleOnly"])
 
+    def test_lookup_genius_lrclib_retry_identity_prefers_stripped_title_variant(self):
+        bad_song = mock.Mock()
+        bad_song.title = "Rockin’ Around the Christmas Tree (Spotify Singles)"
+        bad_song.artist = "Miley Cyrus"
+        good_song = mock.Mock()
+        good_song.title = "Rockin’ Around the Christmas Tree"
+        good_song.artist = "Brenda Lee"
+        genius_client = mock.Mock()
+
+        def search_song(*, title, artist=None):
+            if title == "Rockin' Around the Christmas Tree":
+                return good_song
+            return bad_song
+
+        genius_client.search_song.side_effect = search_song
+        lyricsgenius = mock.Mock()
+        lyricsgenius.Genius.return_value = genius_client
+        with mock.patch.object(main, "ENABLE_GENIUS_LRCLIB_RETRY", True), \
+             mock.patch.object(main, "GENIUS_ACCESS_TOKEN", "token"), \
+             mock.patch.object(main, "_ensure_lyricsgenius", return_value=lyricsgenius):
+            out = main._lookup_genius_lrclib_retry_identity(
+                {"title": "Rockin' Around the Christmas Tree (Single)", "artist": ""}
+            )
+        self.assertEqual(out["title"], "Rockin’ Around the Christmas Tree")
+        self.assertEqual(out["artist"], "Brenda Lee")
+
     def test_fetch_lrclib_lyrics_retries_with_genius_identity_when_primary_misses(self):
         with mock.patch.object(
             main,

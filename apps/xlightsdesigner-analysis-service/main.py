@@ -1081,6 +1081,26 @@ def _is_generic_lyrics_artist(artist: str) -> bool:
     return value in {"christmas songs", "christmas carols", "traditional", "various artists"}
 
 
+def _genius_retry_title_variants(title: str) -> List[str]:
+    values: List[str] = []
+    seen = set()
+
+    def add(value: str) -> None:
+        text = str(value or "").strip()
+        if not text:
+            return
+        key = _normalize_compare_text(text)
+        if not key or key in seen:
+            return
+        seen.add(key)
+        values.append(text)
+
+    add(re.sub(r"\s*\((single|edit|version|remaster[^)]*|live)\)\s*", "", title, flags=re.I))
+    add(re.sub(r"\s*\(feat\.[^)]*\)\s*", "", title, flags=re.I))
+    add(title)
+    return values
+
+
 def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, Any]:
     if not ENABLE_GENIUS_LRCLIB_RETRY or not GENIUS_ACCESS_TOKEN:
         return {}
@@ -1102,7 +1122,12 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
             excluded_terms=["(Remix)", "(Live)"],
             verbose=False,
         )
-        song = genius.search_song(title=title, artist=artist or None)
+        song = None
+        for candidate_title in _genius_retry_title_variants(title):
+            song = genius.search_song(title=candidate_title, artist=artist or None)
+            if song:
+                title = candidate_title
+                break
     except Exception:
         return {}
     if not song:
