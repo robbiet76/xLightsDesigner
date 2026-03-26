@@ -2401,6 +2401,7 @@ def _maybe_build_plain_lyrics_phrase_fallback(
             "phraseCount": 0,
             "lines": [],
             "phrases": [],
+            **plain_info,
         }
     phrases = _align_plain_lyrics_to_structure_phrases(
         plain_lines,

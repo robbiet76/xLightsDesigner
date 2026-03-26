@@ -427,6 +427,8 @@ function buildAnalysisModules({
           matchedTitle: str(plainLyricsPhraseFallback?.geniusMatchedTitle),
           matchedArtist: str(plainLyricsPhraseFallback?.geniusMatchedArtist),
           titleSimilarity: finiteOrNull(plainLyricsPhraseFallback?.geniusTitleSimilarity),
+          artistMatched: Boolean(plainLyricsPhraseFallback?.geniusArtistMatched),
+          blockedReason: str(plainLyricsPhraseFallback?.lyricsRecoveryBlockedReason),
           error: str(plainLyricsPhraseFallback?.error)
         },
         providerResults: lyricsProviderResults
@@ -560,6 +562,8 @@ export function buildAnalysisArtifactFromPipelineResult({
       matchedTitle: str(rawMeta.plainLyricsPhraseFallback?.geniusMatchedTitle),
       matchedArtist: str(rawMeta.plainLyricsPhraseFallback?.geniusMatchedArtist),
       titleSimilarity: finiteOrNull(rawMeta.plainLyricsPhraseFallback?.geniusTitleSimilarity),
+      artistMatched: Boolean(rawMeta.plainLyricsPhraseFallback?.geniusArtistMatched),
+      blockedReason: str(rawMeta.plainLyricsPhraseFallback?.lyricsRecoveryBlockedReason),
       error: str(rawMeta.plainLyricsPhraseFallback?.error)
     } : {}
   };

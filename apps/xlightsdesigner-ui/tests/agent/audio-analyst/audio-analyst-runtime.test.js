@@ -243,6 +243,37 @@ test("audio analyst runtime preserves experimental plain lyric phrase fallback",
   assert.equal(handoff.lyrics.phraseArtifact, "plain-lyrics-phrases");
 });
 
+test("audio analyst runtime preserves blocked plain lyric recovery reason", () => {
+  const result = samplePipelineResult();
+  result.details.timing.hasLyricsTrack = false;
+  result.raw.lyrics = [];
+  result.raw.meta.lyricsSource = "none";
+  result.raw.meta.plainLyricsPhraseFallback = {
+    available: false,
+    provider: "lyricsgenius",
+    lineCount: 0,
+    phraseCount: 0,
+    lines: [],
+    phrases: [],
+    geniusMatchedTitle: "Sleigh Ride",
+    geniusMatchedArtist: "The Ronettes",
+    geniusArtistMatched: false,
+    geniusTitleSimilarity: 1,
+    lyricsRecoveryBlockedReason: "artist_confidence_insufficient",
+    error: "lyricsgenius: artist confidence insufficient"
+  };
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/SleighRide.mp3",
+    mediaId: "media-blocked-fallback",
+    result
+  });
+
+  assert.equal(artifact.lyrics.plainPhraseFallback.available, false);
+  assert.equal(artifact.lyrics.plainPhraseFallback.blockedReason, "artist_confidence_insufficient");
+  assert.equal(artifact.modules.lyrics.data.plainPhraseFallback.matchedArtist, "The Ronettes");
+});
+
 test("audio analyst runtime derives analysis handoff from canonical artifact", () => {
   const artifact = buildAnalysisArtifactFromPipelineResult({
     audioPath: "/tmp/Song.mp3",
