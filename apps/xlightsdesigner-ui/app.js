@@ -2403,6 +2403,116 @@ async function maybeOfferIdentityRecommendationAction({ audioPath = "", trackIde
   };
 }
 
+function buildMissingIdentityMetadataPromptState(artifact = null) {
+  const identity = artifact && typeof artifact === "object" && artifact.identity && typeof artifact.identity === "object"
+    ? artifact.identity
+    : {};
+  const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
+    ? identity.sourceMetadata
+    : {};
+  const metadataRecommendation = identity?.metadataRecommendation && typeof identity.metadataRecommendation === "object"
+    ? identity.metadataRecommendation
+    : {};
+  const current = metadataRecommendation?.current && typeof metadataRecommendation.current === "object"
+    ? metadataRecommendation.current
+    : {};
+  const recommended = metadataRecommendation?.recommended && typeof metadataRecommendation.recommended === "object"
+    ? metadataRecommendation.recommended
+    : {};
+  const currentTitle = String(current?.title || sourceMetadata?.embeddedTitle || identity?.title || "").trim();
+  const currentArtist = String(current?.artist || sourceMetadata?.embeddedArtist || identity?.artist || "").trim();
+  const currentAlbum = String(current?.album || sourceMetadata?.embeddedAlbum || "").trim();
+  const recommendedTitle = String(recommended?.title || identity?.title || "").trim();
+  const recommendedArtist = String(recommended?.artist || identity?.artist || "").trim();
+  return {
+    missingTitle: !currentTitle,
+    missingArtist: !currentArtist,
+    currentTitle,
+    currentArtist,
+    currentAlbum,
+    recommendedTitle,
+    recommendedArtist
+  };
+}
+
+async function maybePromptForMissingIdentityMetadata({
+  audioPath = "",
+  artifact = null,
+  promptAttempted = false
+} = {}) {
+  if (promptAttempted) return { prompted: false, retagged: false };
+  const bridge = getDesktopMediaIdentityBridge();
+  if (!bridge || !artifact || typeof artifact !== "object") return { prompted: false, retagged: false };
+  const promptState = buildMissingIdentityMetadataPromptState(artifact);
+  if (!promptState.missingTitle && !promptState.missingArtist) return { prompted: false, retagged: false };
+
+  const titleValue = promptState.missingTitle
+    ? window.prompt(
+      `Title metadata is missing for ${basenameOfPath(audioPath) || audioPath}.\nEnter the correct track title to improve matching:`,
+      promptState.recommendedTitle || ""
+    )
+    : promptState.currentTitle;
+  if (titleValue == null) return { prompted: true, retagged: false, cancelled: true };
+
+  const artistValue = promptState.missingArtist
+    ? window.prompt(
+      `Artist metadata is missing for ${basenameOfPath(audioPath) || audioPath}.\nEnter the correct artist to improve matching:`,
+      promptState.recommendedArtist || ""
+    )
+    : promptState.currentArtist;
+  if (artistValue == null) return { prompted: true, retagged: false, cancelled: true };
+
+  const nextTitle = String(titleValue || "").trim();
+  const nextArtist = String(artistValue || "").trim();
+  if ((promptState.missingTitle && !nextTitle) || (promptState.missingArtist && !nextArtist)) {
+    return { prompted: true, retagged: false, cancelled: true };
+  }
+  const metadataRecommendation = {
+    current: {
+      title: promptState.currentTitle,
+      artist: promptState.currentArtist,
+      album: promptState.currentAlbum
+    },
+    recommended: {
+      title: nextTitle || promptState.currentTitle,
+      artist: nextArtist || promptState.currentArtist,
+      album: promptState.currentAlbum
+    }
+  };
+  const confirmLines = [
+    "Metadata needed for confident track matching.",
+    "",
+    `File: ${basenameOfPath(audioPath) || audioPath}`,
+    `Title: ${metadataRecommendation.recommended.title || "(missing)"}`,
+    `Artist: ${metadataRecommendation.recommended.artist || "(missing)"}`,
+    "",
+    "Apply these metadata values and rerun analysis now?"
+  ];
+  if (!window.confirm(confirmLines.join("\n"))) return { prompted: true, retagged: false, cancelled: true };
+
+  const res = await bridge.applyMediaIdentityRecommendation({
+    filePath: audioPath,
+    rename: false,
+    retag: true,
+    recommendation: {},
+    metadataRecommendation
+  });
+  if (!res?.ok) {
+    setStatusWithDiagnostics("warning", `Unable to apply metadata required for confident track matching: ${String(res?.error || "unknown error")}`);
+    return { prompted: true, retagged: false, error: String(res?.error || "unknown error") };
+  }
+  applyIdentityRecommendationResultToState({
+    oldPath: audioPath,
+    newPath: String(res?.filePath || audioPath).trim(),
+    renamed: false,
+    retagged: res?.retagged === true
+  });
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+  return { prompted: true, retagged: res?.retagged === true };
+}
+
 function buildProjectSequencesIndex() {
   const paths = [];
   const addPath = (value) => {
@@ -11438,7 +11548,7 @@ function shouldEscalateAudioAnalysisProfile(report = {}) {
   );
 }
 
-async function runAudioAnalysisPipeline({ analysisProfile = null } = {}) {
+async function runAudioAnalysisPipeline({ analysisProfile = null, metadataPromptAttempted = false } = {}) {
   const resolvedProvider = "librosa";
   const baseArgs = {
     audioPath: String(state.audioPathInput || "").trim(),
@@ -11482,7 +11592,24 @@ async function runAudioAnalysisPipeline({ analysisProfile = null } = {}) {
       analysisBaseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, "")
     });
     const fastReport = buildAudioAnalysisQualityReport(fastArtifact);
-    if (shouldEscalateAudioAnalysisProfile(fastReport)) {
+    const shouldEscalate = shouldEscalateAudioAnalysisProfile(fastReport);
+    if (shouldEscalate) {
+      const metadataPrompt = await maybePromptForMissingIdentityMetadata({
+        audioPath: String(state.audioPathInput || "").trim(),
+        artifact: fastArtifact,
+        promptAttempted: metadataPromptAttempted
+      });
+      if (metadataPrompt?.retagged) {
+        setAudioAnalysisProgress(state.audioAnalysis, {
+          stage: "identity_metadata_updated",
+          message: "Applied user-supplied metadata and restarting analysis."
+        });
+        render();
+        return runAudioAnalysisPipeline({
+          analysisProfile,
+          metadataPromptAttempted: true
+        });
+      }
       setAudioAnalysisProgress(state.audioAnalysis, {
         stage: "deep_analysis_escalation",
         message: "Fast analysis found weak structure or rhythm confidence. Escalating to deep analysis."
