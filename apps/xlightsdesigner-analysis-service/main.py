@@ -952,17 +952,17 @@ def _phrase_boundary_bonus(
     start_beat_delta = _nearest_boundary_delta_ms(start_ms, beat_starts)
     end_beat_delta = _nearest_boundary_delta_ms(end_ms, beat_starts)
     if start_section_delta is not None and start_section_delta <= 250:
-        bonus += 0.04
+        bonus += 0.015
     if end_section_delta is not None and end_section_delta <= 250:
-        bonus += 0.03
+        bonus += 0.01
     if start_bar_delta is not None and start_bar_delta <= 180:
-        bonus += 0.03
+        bonus += 0.01
     if end_bar_delta is not None and end_bar_delta <= 220:
-        bonus += 0.02
+        bonus += 0.008
     if start_beat_delta is not None and start_beat_delta <= 90:
-        bonus += 0.01
+        bonus += 0.004
     if end_beat_delta is not None and end_beat_delta <= 120:
-        bonus += 0.01
+        bonus += 0.004
     return bonus
 
 
@@ -1006,7 +1006,8 @@ def _align_plain_lyrics_to_timed_phrases(
     while next_plain_index < len(plain_lines) and next_timed_index < len(timed_marks):
         candidate_windows = [row for row in plain_windows if row["startIndex"] == next_plain_index]
         best_match = None
-        best_score = 0.0
+        best_text_score = 0.0
+        best_total_score = 0.0
         for plain_window in candidate_windows:
             pnorm = _normalize_compare_text(plain_window["text"])
             if not pnorm:
@@ -1017,12 +1018,12 @@ def _align_plain_lyrics_to_timed_phrases(
                 tnorm = _normalize_compare_text(timed_window["text"])
                 if not tnorm:
                     continue
-                score = difflib.SequenceMatcher(None, pnorm, tnorm).ratio()
+                text_score = difflib.SequenceMatcher(None, pnorm, tnorm).ratio()
                 if pnorm in tnorm or tnorm in pnorm:
-                    score = max(score, 0.9)
+                    text_score = max(text_score, 0.9)
                 if plain_window["lineCount"] > 1 and timed_window["lineCount"] > 1:
-                    score = max(score, min(1.0, score + 0.03))
-                score += _phrase_boundary_bonus(
+                    text_score = max(text_score, min(1.0, text_score + 0.005))
+                boundary_bonus = _phrase_boundary_bonus(
                     int(timed_window["startMs"]),
                     int(timed_window["endMs"]),
                     beat_starts_ms=beat_starts_ms,
@@ -1030,12 +1031,16 @@ def _align_plain_lyrics_to_timed_phrases(
                     section_boundaries_ms=section_boundaries_ms,
                 )
                 timing_gap = max(0, int(timed_window["startIndex"]) - int(next_timed_index))
+                total_score = text_score + boundary_bonus
                 if timing_gap:
-                    score -= min(0.15, 0.01 * timing_gap)
-                if score > best_score:
-                    best_score = score
+                    total_score -= min(0.2, 0.015 * timing_gap)
+                better_text = text_score > (best_text_score + 0.02)
+                near_tie = abs(text_score - best_text_score) <= 0.02
+                if better_text or (near_tie and total_score > best_total_score):
+                    best_text_score = text_score
+                    best_total_score = total_score
                     best_match = (plain_window, timed_window, pnorm)
-        if not best_match or best_score < float(min_score):
+        if not best_match or best_text_score < float(min_score):
             next_plain_index += 1
             continue
         plain_window, timed_window, pnorm = best_match
@@ -1058,7 +1063,8 @@ def _align_plain_lyrics_to_timed_phrases(
                 "sourceLineCount": int(plain_window["lineCount"]),
                 "matchedTimedText": timed_window["text"],
                 "matchedTimedLineCount": int(timed_window["lineCount"]),
-                "score": round(best_score, 4),
+                "score": round(best_total_score, 4),
+                "textScore": round(best_text_score, 4),
                 "startMs": int(timed_window["startMs"]),
                 "endMs": int(timed_window["endMs"]),
                 "snappedStartMs": int(min(snapped_start, snapped_end)),
