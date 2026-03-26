@@ -882,6 +882,194 @@ def _normalize_compare_text(text: str) -> str:
     return value
 
 
+def _build_plain_phrase_windows(lines: List[str], max_window: int = 3) -> List[Dict[str, Any]]:
+    windows: List[Dict[str, Any]] = []
+    clean = [str(row).strip() for row in lines if _normalize_compare_text(str(row))]
+    for start in range(len(clean)):
+        for width in range(1, max_window + 1):
+            end = start + width
+            if end > len(clean):
+                break
+            phrase_lines = clean[start:end]
+            windows.append(
+                {
+                    "startIndex": start,
+                    "endIndex": end - 1,
+                    "lineCount": len(phrase_lines),
+                    "text": " ".join(phrase_lines),
+                    "lines": phrase_lines,
+                }
+            )
+    return windows
+
+
+def _build_timed_phrase_windows(timed_marks: List[Dict[str, Any]], max_window: int = 3) -> List[Dict[str, Any]]:
+    windows: List[Dict[str, Any]] = []
+    clean = [row for row in (timed_marks or []) if _normalize_compare_text(row.get("label", ""))]
+    for start in range(len(clean)):
+        for width in range(1, max_window + 1):
+            end = start + width
+            if end > len(clean):
+                break
+            phrase_marks = clean[start:end]
+            windows.append(
+                {
+                    "startIndex": start,
+                    "endIndex": end - 1,
+                    "lineCount": len(phrase_marks),
+                    "text": " ".join(str(row.get("label", "")).strip() for row in phrase_marks),
+                    "marks": phrase_marks,
+                    "startMs": int(phrase_marks[0].get("startMs", 0)),
+                    "endMs": int(phrase_marks[-1].get("endMs", 0)),
+                }
+            )
+    return windows
+
+
+def _nearest_boundary_delta_ms(value_ms: int, boundaries_ms: List[int]) -> Optional[int]:
+    if not boundaries_ms:
+        return None
+    value = int(value_ms)
+    return min(abs(value - int(boundary)) for boundary in boundaries_ms)
+
+
+def _phrase_boundary_bonus(
+    start_ms: int,
+    end_ms: int,
+    *,
+    beat_starts_ms: Optional[List[int]] = None,
+    bar_starts_ms: Optional[List[int]] = None,
+    section_boundaries_ms: Optional[List[int]] = None,
+) -> float:
+    bonus = 0.0
+    beat_starts = [int(v) for v in (beat_starts_ms or [])]
+    bar_starts = [int(v) for v in (bar_starts_ms or [])]
+    section_bounds = [int(v) for v in (section_boundaries_ms or [])]
+    start_bar_delta = _nearest_boundary_delta_ms(start_ms, bar_starts)
+    end_bar_delta = _nearest_boundary_delta_ms(end_ms, bar_starts)
+    start_section_delta = _nearest_boundary_delta_ms(start_ms, section_bounds)
+    end_section_delta = _nearest_boundary_delta_ms(end_ms, section_bounds)
+    start_beat_delta = _nearest_boundary_delta_ms(start_ms, beat_starts)
+    end_beat_delta = _nearest_boundary_delta_ms(end_ms, beat_starts)
+    if start_section_delta is not None and start_section_delta <= 250:
+        bonus += 0.04
+    if end_section_delta is not None and end_section_delta <= 250:
+        bonus += 0.03
+    if start_bar_delta is not None and start_bar_delta <= 180:
+        bonus += 0.03
+    if end_bar_delta is not None and end_bar_delta <= 220:
+        bonus += 0.02
+    if start_beat_delta is not None and start_beat_delta <= 90:
+        bonus += 0.01
+    if end_beat_delta is not None and end_beat_delta <= 120:
+        bonus += 0.01
+    return bonus
+
+
+def _snap_phrase_boundary_ms(
+    value_ms: int,
+    *,
+    beat_starts_ms: Optional[List[int]] = None,
+    bar_starts_ms: Optional[List[int]] = None,
+    section_boundaries_ms: Optional[List[int]] = None,
+    tolerance_ms: int = 250,
+) -> int:
+    candidates = [int(v) for v in (section_boundaries_ms or [])] + [int(v) for v in (bar_starts_ms or [])] + [int(v) for v in (beat_starts_ms or [])]
+    if not candidates:
+        return int(value_ms)
+    target = int(value_ms)
+    nearest = min(candidates, key=lambda v: abs(v - target))
+    if abs(nearest - target) <= int(tolerance_ms):
+        return int(nearest)
+    return target
+
+
+def _align_plain_lyrics_to_timed_phrases(
+    plain_lines: List[str],
+    timed_marks: List[Dict[str, Any]],
+    *,
+    beat_starts_ms: Optional[List[int]] = None,
+    bar_starts_ms: Optional[List[int]] = None,
+    section_segments: Optional[List[Dict[str, Any]]] = None,
+    min_score: float = 0.72,
+) -> List[Dict[str, Any]]:
+    aligned: List[Dict[str, Any]] = []
+    plain_windows = _build_plain_phrase_windows(plain_lines, max_window=3)
+    timed_windows = _build_timed_phrase_windows(timed_marks, max_window=3)
+    next_plain_index = 0
+    next_timed_index = 0
+    section_boundaries_ms = []
+    for row in (section_segments or []):
+        start_ms = int(row.get("startMs", 0))
+        end_ms = int(row.get("endMs", start_ms))
+        section_boundaries_ms.extend([start_ms, end_ms])
+    while next_plain_index < len(plain_lines) and next_timed_index < len(timed_marks):
+        candidate_windows = [row for row in plain_windows if row["startIndex"] == next_plain_index]
+        best_match = None
+        best_score = 0.0
+        for plain_window in candidate_windows:
+            pnorm = _normalize_compare_text(plain_window["text"])
+            if not pnorm:
+                continue
+            for timed_window in timed_windows:
+                if timed_window["startIndex"] < next_timed_index:
+                    continue
+                tnorm = _normalize_compare_text(timed_window["text"])
+                if not tnorm:
+                    continue
+                score = difflib.SequenceMatcher(None, pnorm, tnorm).ratio()
+                if pnorm in tnorm or tnorm in pnorm:
+                    score = max(score, 0.9)
+                if plain_window["lineCount"] > 1 and timed_window["lineCount"] > 1:
+                    score = max(score, min(1.0, score + 0.03))
+                score += _phrase_boundary_bonus(
+                    int(timed_window["startMs"]),
+                    int(timed_window["endMs"]),
+                    beat_starts_ms=beat_starts_ms,
+                    bar_starts_ms=bar_starts_ms,
+                    section_boundaries_ms=section_boundaries_ms,
+                )
+                timing_gap = max(0, int(timed_window["startIndex"]) - int(next_timed_index))
+                if timing_gap:
+                    score -= min(0.15, 0.01 * timing_gap)
+                if score > best_score:
+                    best_score = score
+                    best_match = (plain_window, timed_window, pnorm)
+        if not best_match or best_score < float(min_score):
+            next_plain_index += 1
+            continue
+        plain_window, timed_window, pnorm = best_match
+        snapped_start = _snap_phrase_boundary_ms(
+            int(timed_window["startMs"]),
+            beat_starts_ms=beat_starts_ms,
+            bar_starts_ms=bar_starts_ms,
+            section_boundaries_ms=section_boundaries_ms,
+        )
+        snapped_end = _snap_phrase_boundary_ms(
+            int(timed_window["endMs"]),
+            beat_starts_ms=beat_starts_ms,
+            bar_starts_ms=bar_starts_ms,
+            section_boundaries_ms=section_boundaries_ms,
+        )
+        aligned.append(
+            {
+                "text": plain_window["text"],
+                "normalizedText": pnorm,
+                "sourceLineCount": int(plain_window["lineCount"]),
+                "matchedTimedText": timed_window["text"],
+                "matchedTimedLineCount": int(timed_window["lineCount"]),
+                "score": round(best_score, 4),
+                "startMs": int(timed_window["startMs"]),
+                "endMs": int(timed_window["endMs"]),
+                "snappedStartMs": int(min(snapped_start, snapped_end)),
+                "snappedEndMs": int(max(snapped_start, snapped_end)),
+            }
+        )
+        next_plain_index = int(plain_window["endIndex"]) + 1
+        next_timed_index = int(timed_window["endIndex"]) + 1
+    return aligned
+
+
 def _is_generic_lyrics_artist(artist: str) -> bool:
     value = _normalize_compare_text(artist)
     return value in {"christmas songs", "christmas carols", "traditional", "various artists"}

@@ -432,6 +432,47 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(info["lyricsRetryMatchedArtist"], "Bing Crosby")
         self.assertEqual(fetch_mock.call_count, 2)
 
+    def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
+        plain_lines = [
+            "hello from the start",
+            "and now the chorus",
+        ]
+        timed_marks = [
+            {"startMs": 980, "endMs": 2050, "label": "hello from the start"},
+            {"startMs": 2050, "endMs": 3950, "label": "and now the chorus"},
+        ]
+        out = main._align_plain_lyrics_to_timed_phrases(
+            plain_lines,
+            timed_marks,
+            beat_starts_ms=[1000, 2000, 3000, 4000],
+            bar_starts_ms=[1000, 4000],
+            section_segments=[{"startMs": 0, "endMs": 4000}],
+            min_score=0.7,
+        )
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["sourceLineCount"], 2)
+        self.assertEqual(out[0]["snappedStartMs"], 1000)
+        self.assertEqual(out[0]["snappedEndMs"], 4000)
+
+    def test_align_plain_lyrics_to_timed_phrases_uses_phrase_windows(self):
+        plain_lines = [
+            "run run rudolph",
+            "santa's got to make it to town",
+        ]
+        timed_marks = [
+            {"startMs": 1000, "endMs": 2800, "label": "Run run Rudolph Santa's got to make it to town"},
+        ]
+        out = main._align_plain_lyrics_to_timed_phrases(
+            plain_lines,
+            timed_marks,
+            beat_starts_ms=[1000, 2000, 3000],
+            bar_starts_ms=[1000, 3000],
+            section_segments=[],
+            min_score=0.7,
+        )
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["sourceLineCount"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
