@@ -1429,9 +1429,15 @@ def _lookup_genius_song(identity: Dict[str, Any]) -> Dict[str, Any]:
         song = None
         matched_from_title = ""
         for candidate_title in _genius_retry_title_variants(title):
-            song = genius.search_song(title=candidate_title, artist=artist or None)
+            attempts = [artist] if artist else [None]
+            if artist:
+                attempts.append(None)
+            for candidate_artist in attempts:
+                song = genius.search_song(title=candidate_title, artist=candidate_artist or None)
+                if song:
+                    matched_from_title = candidate_title
+                    break
             if song:
-                matched_from_title = candidate_title
                 break
     except Exception:
         return {}

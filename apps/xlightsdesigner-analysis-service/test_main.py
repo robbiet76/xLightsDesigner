@@ -453,6 +453,32 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(out["title"], "Rockin’ Around the Christmas Tree")
         self.assertEqual(out["artist"], "Brenda Lee")
 
+    def test_lookup_genius_song_retries_title_without_artist_when_artist_search_misses(self):
+        song = mock.Mock()
+        song.title = "Zydeco Christmas"
+        song.artist = "C.J. Chenier & The Red Hot Louisiana Band"
+        song.lyrics = "Merry Christmas"
+        genius_client = mock.Mock()
+
+        def search_song(*, title, artist=None):
+            if title == "Zydeco Christmas" and artist == "C.J. Chenier":
+                return None
+            if title == "Zydeco Christmas" and artist is None:
+                return song
+            return None
+
+        genius_client.search_song.side_effect = search_song
+        lyricsgenius = mock.Mock()
+        lyricsgenius.Genius.return_value = genius_client
+        with mock.patch.object(main, "GENIUS_ACCESS_TOKEN", "token"), \
+             mock.patch.object(main, "_ensure_lyricsgenius", return_value=lyricsgenius):
+            out = main._lookup_genius_song(
+                {"title": "Zydeco Christmas", "artist": "C.J. Chenier"}
+            )
+        self.assertEqual(out["title"], "Zydeco Christmas")
+        self.assertEqual(out["artist"], "C.J. Chenier & The Red Hot Louisiana Band")
+        self.assertTrue(out["artistMatched"])
+
     def test_fetch_lrclib_lyrics_retries_with_genius_identity_when_primary_misses(self):
         with mock.patch.object(
             main,
