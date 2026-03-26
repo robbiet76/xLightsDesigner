@@ -9,6 +9,7 @@ import re
 import math
 import importlib.util
 import difflib
+import subprocess
 from urllib.parse import quote_plus
 import collections
 import collections.abc
@@ -254,6 +255,56 @@ def _fallback_identity_from_path(path: str) -> Dict[str, Any]:
     })
 
 
+def _embedded_identity_from_ffprobe(path: str) -> Dict[str, Any]:
+    path_text = str(path or "").strip()
+    if not path_text:
+        return {}
+    ffprobe = os.getenv("FFPROBE_BIN", "ffprobe").strip() or "ffprobe"
+    try:
+        proc = subprocess.run(
+            [
+                ffprobe,
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
+                "-show_format",
+                path_text,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=10.0,
+        )
+    except Exception:
+        return {}
+    if proc.returncode != 0:
+        return {}
+    try:
+        payload = json.loads(proc.stdout or "{}")
+    except Exception:
+        return {}
+    fmt = payload.get("format")
+    if not isinstance(fmt, dict):
+        return {}
+    tags = fmt.get("tags")
+    if not isinstance(tags, dict):
+        tags = {}
+    title = str(tags.get("title", "")).strip()
+    artist = str(tags.get("artist", "")).strip()
+    album = str(tags.get("album", "")).strip()
+    release_date = str(tags.get("date") or tags.get("TYER") or "").strip()
+    return _normalize_identity(
+        {
+            "provider": "embedded-metadata",
+            "title": title,
+            "artist": artist,
+            "album": album,
+            "releaseDate": release_date,
+        }
+    )
+
+
 def _slugify(s: str) -> str:
     text = str(s or "").strip().lower()
     text = re.sub(r"[^a-z0-9]+", "-", text)
@@ -421,6 +472,46 @@ def _normalize_identity(identity: Dict[str, Any]) -> Dict[str, Any]:
         "isrc": str(identity.get("isrc", "")).strip(),
     }
     return {k: v for k, v in out.items() if v}
+
+
+def _identity_candidate_score(identity: Dict[str, Any]) -> int:
+    if not isinstance(identity, dict) or not identity:
+        return -1
+    provider = str(identity.get("provider", "")).strip().lower()
+    provider_weight = {
+        "audd": 60,
+        "embedded-metadata": 30,
+        "filename": 10,
+    }.get(provider, 0)
+    score = provider_weight
+    if str(identity.get("title", "")).strip():
+        score += 20
+    if str(identity.get("artist", "")).strip():
+        score += 20
+    if str(identity.get("album", "")).strip():
+        score += 5
+    if str(identity.get("releaseDate", "")).strip():
+        score += 3
+    if str(identity.get("isrc", "")).strip():
+        score += 25
+    return score
+
+
+def _merge_identity_candidates(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
+    normalized_candidates = [_normalize_identity(candidate) for candidate in candidates if isinstance(candidate, dict)]
+    normalized_candidates = [candidate for candidate in normalized_candidates if candidate]
+    if not normalized_candidates:
+        return {}
+    ranked = sorted(normalized_candidates, key=_identity_candidate_score, reverse=True)
+    primary = dict(ranked[0])
+    merged: Dict[str, Any] = {"provider": str(primary.get("provider", "")).strip()}
+    for key in ("title", "artist", "album", "releaseDate", "isrc"):
+        for candidate in ranked:
+            value = str(candidate.get(key, "")).strip()
+            if value:
+                merged[key] = value
+                break
+    return _normalize_identity(merged)
 
 
 def _save_identity_cache(cache: Dict[str, Any]) -> None:
@@ -2442,19 +2533,30 @@ def _resolve_identity_and_web(path: str, analysis_profile: Optional[Dict[str, An
         "chosenBeatBpm": None,
         "provider": "songbpm+getsongbpm",
     }
-    error = ""
+    errors: List[str] = []
+    candidates: List[Dict[str, Any]] = []
     try:
         identity, identity_cache_hit = _identify_track_with_audd(path, profile)
+        if identity:
+            candidates.append(identity)
     except Exception as err:
-        error = f"audd identify failed: {err}"
-    if not identity:
-        identity = _fallback_identity_from_path(path)
+        errors.append(f"audd identify failed: {err}")
+    try:
+        embedded_identity = _embedded_identity_from_ffprobe(path)
+        if embedded_identity:
+            candidates.append(embedded_identity)
+    except Exception as err:
+        errors.append(f"embedded identity failed: {err}")
+    fallback_identity = _fallback_identity_from_path(path)
+    if fallback_identity:
+        candidates.append(fallback_identity)
+    identity = _merge_identity_candidates(candidates)
     if identity and profile.get("enableWebTempo"):
         try:
             web_tempo_evidence = _fetch_songbpm_evidence(identity)
         except Exception as err:
-            error = f"{error} | web tempo evidence failed: {err}" if error else f"web tempo evidence failed: {err}"
-    return identity, identity_cache_hit, web_tempo_evidence, error
+            errors.append(f"web tempo evidence failed: {err}")
+    return identity, identity_cache_hit, web_tempo_evidence, " | ".join([e for e in errors if e])
 
 
 def _resolve_lyrics(

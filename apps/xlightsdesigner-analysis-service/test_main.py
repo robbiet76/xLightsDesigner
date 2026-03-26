@@ -1,5 +1,6 @@
 import unittest
 from unittest import mock
+import json
 
 import numpy as np
 
@@ -523,8 +524,28 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(out["title"], "Little Drummer Boy")
         self.assertEqual(out["artist"], "tobyMac")
 
+    def test_embedded_identity_from_ffprobe_extracts_tags(self):
+        payload = {
+            "format": {
+                "tags": {
+                    "title": "Light of Christmas (feat. tobyMac)",
+                    "artist": "Owl City",
+                    "album": "Owl City",
+                    "date": "2013-10-22T07:00:00Z",
+                }
+            }
+        }
+        proc = mock.Mock(returncode=0, stdout=json.dumps(payload))
+        with mock.patch.object(main.subprocess, "run", return_value=proc):
+            out = main._embedded_identity_from_ffprobe("/tmp/test.mp3")
+        self.assertEqual(out["provider"], "embedded-metadata")
+        self.assertEqual(out["title"], "Light of Christmas (feat. tobyMac)")
+        self.assertEqual(out["artist"], "Owl City")
+        self.assertEqual(out["album"], "Owl City")
+
     def test_resolve_identity_and_web_uses_filename_fallback_when_no_remote_identity(self):
-        with mock.patch.object(main, "_identify_track_with_audd", return_value=({}, False)):
+        with mock.patch.object(main, "_identify_track_with_audd", return_value=({}, False)), \
+             mock.patch.object(main, "_embedded_identity_from_ffprobe", return_value={}):
             identity, identity_cache_hit, web_tempo_evidence, error = main._resolve_identity_and_web(
                 "/tmp/01 It's Beginning To Look a Lot Like Christmas.mp3",
                 {"enableWebTempo": False},
@@ -532,6 +553,51 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(identity["title"], "It's Beginning To Look a Lot Like Christmas")
         self.assertEqual(identity["provider"], "filename")
         self.assertFalse(identity_cache_hit)
+
+    def test_resolve_identity_and_web_prefers_embedded_metadata_over_filename(self):
+        with mock.patch.object(main, "_identify_track_with_audd", return_value=({}, False)), \
+             mock.patch.object(
+                 main,
+                 "_embedded_identity_from_ffprobe",
+                 return_value={
+                     "provider": "embedded-metadata",
+                     "title": "Light of Christmas (feat. tobyMac)",
+                     "artist": "Owl City",
+                     "album": "Owl City",
+                 },
+             ):
+            identity, identity_cache_hit, web_tempo_evidence, error = main._resolve_identity_and_web(
+                "/tmp/01 Light of Christmas (feat. tobyMac).mp3",
+                {"enableWebTempo": False},
+            )
+        self.assertEqual(identity["provider"], "embedded-metadata")
+        self.assertEqual(identity["title"], "Light of Christmas (feat. tobyMac)")
+        self.assertEqual(identity["artist"], "Owl City")
+        self.assertFalse(identity_cache_hit)
+
+    def test_resolve_identity_and_web_merges_embedded_fields_into_remote_identity(self):
+        with mock.patch.object(
+            main,
+            "_identify_track_with_audd",
+            return_value=({"provider": "audd", "title": "Light of Christmas (feat. tobyMac)"}, False),
+        ), mock.patch.object(
+            main,
+            "_embedded_identity_from_ffprobe",
+            return_value={
+                "provider": "embedded-metadata",
+                "title": "Light of Christmas (feat. tobyMac)",
+                "artist": "Owl City",
+                "album": "Owl City",
+            },
+        ):
+            identity, identity_cache_hit, web_tempo_evidence, error = main._resolve_identity_and_web(
+                "/tmp/01 Light of Christmas (feat. tobyMac).mp3",
+                {"enableWebTempo": False},
+            )
+        self.assertEqual(identity["provider"], "audd")
+        self.assertEqual(identity["title"], "Light of Christmas (feat. tobyMac)")
+        self.assertEqual(identity["artist"], "Owl City")
+        self.assertEqual(identity["album"], "Owl City")
 
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
