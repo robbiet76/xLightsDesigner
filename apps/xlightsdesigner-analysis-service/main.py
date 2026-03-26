@@ -1086,7 +1086,7 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
         return {}
     title = str(identity.get("title") or "").strip()
     artist = str(identity.get("artist") or "").strip()
-    if not title or not artist:
+    if not title:
         return {}
     lyricsgenius = _ensure_lyricsgenius()
     if not lyricsgenius:
@@ -1119,6 +1119,7 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
     )
     if title_ratio < 0.9:
         return {}
+    artist_match = False
     if artist:
         artist_match = _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
         artist_match = artist_match or _normalize_compare_text(artist) in _normalize_compare_text(matched_artist)
@@ -1127,8 +1128,8 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
             return {}
     if not matched_artist or _is_generic_lyrics_artist(matched_artist):
         return {}
-    if _normalize_compare_text(title) == _normalize_compare_text(matched_title) and (
-        not artist or _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
+    if artist and _normalize_compare_text(title) == _normalize_compare_text(matched_title) and (
+        _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
     ):
         return {}
     return {
@@ -1136,7 +1137,20 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
         "artist": matched_artist,
         "source": "genius-lrclib-retry",
         "titleSimilarity": round(title_ratio, 3),
+        "artistMatched": bool(artist_match),
+        "titleOnly": not bool(artist),
     }
+
+
+def _duration_delta_close_enough(duration_ms: int, info: Dict[str, Any], max_delta_ms: int = 15000) -> bool:
+    try:
+        lrclib_duration_sec = float(info.get("lrclibDurationSec") or 0)
+    except Exception:
+        lrclib_duration_sec = 0.0
+    if lrclib_duration_sec <= 0 or duration_ms <= 0:
+        return False
+    delta_ms = abs(int(round(lrclib_duration_sec * 1000.0)) - int(duration_ms))
+    return delta_ms <= int(max_delta_ms)
 
 
 def _fetch_lrclib_lyrics_direct(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
@@ -1244,12 +1258,19 @@ def _fetch_lrclib_lyrics(identity: Dict[str, Any], duration_ms: int, analysis_pr
         analysis_profile,
     )
     if retry_marks:
+        if not _duration_delta_close_enough(duration_ms, retry_info):
+            merged_error = error
+            duration_error = "genius retry: lrclib duration mismatch"
+            if duration_error:
+                merged_error = f"{error} | {duration_error}" if error else duration_error
+            return marks, merged_error, info
         merged_info = {
             **retry_info,
             "lyricsRetrySource": str(retry_identity.get("source") or "genius-lrclib-retry"),
             "lyricsRetryMatchedTitle": str(retry_identity.get("title") or "").strip(),
             "lyricsRetryMatchedArtist": str(retry_identity.get("artist") or "").strip(),
             "lyricsRetryTitleSimilarity": retry_identity.get("titleSimilarity"),
+            "lyricsRetryTitleOnly": bool(retry_identity.get("titleOnly")),
         }
         return retry_marks, "", merged_info
     merged_error = error

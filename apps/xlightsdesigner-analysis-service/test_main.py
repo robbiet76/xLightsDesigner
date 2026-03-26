@@ -408,13 +408,31 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             out = main._lookup_genius_lrclib_retry_identity({"title": "Countdown2", "artist": ""})
         self.assertEqual(out, {})
 
+    def test_lookup_genius_lrclib_retry_identity_allows_title_only_when_match_is_strong_and_specific(self):
+        song = mock.Mock()
+        song.title = "It's Beginning to Look a Lot Like Christmas"
+        song.artist = "Michael Buble"
+        genius_client = mock.Mock()
+        genius_client.search_song.return_value = song
+        lyricsgenius = mock.Mock()
+        lyricsgenius.Genius.return_value = genius_client
+        with mock.patch.object(main, "ENABLE_GENIUS_LRCLIB_RETRY", True), \
+             mock.patch.object(main, "GENIUS_ACCESS_TOKEN", "token"), \
+             mock.patch.object(main, "_ensure_lyricsgenius", return_value=lyricsgenius):
+            out = main._lookup_genius_lrclib_retry_identity(
+                {"title": "It's Beginning To Look a Lot Like Christmas", "artist": ""}
+            )
+        self.assertEqual(out["title"], "It's Beginning to Look a Lot Like Christmas")
+        self.assertEqual(out["artist"], "Michael Buble")
+        self.assertTrue(out["titleOnly"])
+
     def test_fetch_lrclib_lyrics_retries_with_genius_identity_when_primary_misses(self):
         with mock.patch.object(
             main,
             "_fetch_lrclib_lyrics_direct",
             side_effect=[
                 ([], "lrclib: no synced lyrics", {}),
-                ([{"startMs": 1000, "endMs": 2000, "label": "line"}], "", {"lrclibId": "123"}),
+                ([{"startMs": 1000, "endMs": 2000, "label": "line"}], "", {"lrclibId": "123", "lrclibDurationSec": 120}),
             ],
         ) as fetch_mock, mock.patch.object(
             main,
@@ -431,6 +449,28 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(info["lyricsRetrySource"], "genius-lrclib-retry")
         self.assertEqual(info["lyricsRetryMatchedArtist"], "Bing Crosby")
         self.assertEqual(fetch_mock.call_count, 2)
+
+    def test_fetch_lrclib_lyrics_rejects_genius_retry_when_duration_is_far(self):
+        with mock.patch.object(
+            main,
+            "_fetch_lrclib_lyrics_direct",
+            side_effect=[
+                ([], "lrclib: no synced lyrics", {}),
+                ([{"startMs": 1000, "endMs": 2000, "label": "line"}], "", {"lrclibDurationSec": 400}),
+            ],
+        ), mock.patch.object(
+            main,
+            "_lookup_genius_lrclib_retry_identity",
+            return_value={"title": "Song", "artist": "Artist", "source": "genius-lrclib-retry", "titleSimilarity": 1.0, "titleOnly": True},
+        ):
+            marks, error, info = main._fetch_lrclib_lyrics(
+                {"title": "Song", "artist": ""},
+                200000,
+                {"enableLyrics": True},
+            )
+        self.assertEqual(marks, [])
+        self.assertIn("duration mismatch", error)
+        self.assertEqual(info, {})
 
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
