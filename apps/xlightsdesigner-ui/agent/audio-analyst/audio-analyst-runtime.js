@@ -296,7 +296,8 @@ function buildAnalysisModules({
     identity: [
       str(identity?.provider ? `identity provider: ${identity.provider}` : ""),
       str(identity?.title || identity?.artist ? "track identity resolved" : "track identity unresolved"),
-      str(identity?.recommendation?.shouldRename ? `rename suggestion: ${identity.recommendation.recommendedFileName}` : "")
+      str(identity?.recommendation?.shouldRename ? `rename suggestion: ${identity.recommendation.recommendedFileName}` : ""),
+      str(identity?.metadataRecommendation?.shouldRetag ? "metadata retag recommended" : "")
     ].filter(Boolean),
     rhythm: [
       str(timing?.bpm != null ? `tempo=${timing.bpm}` : ""),
@@ -338,11 +339,34 @@ function buildAnalysisModules({
         artist: str(identity?.artist),
         album: str(identity?.album),
         isrc: str(identity?.isrc),
+        sourceMetadata: isPlainObject(identity?.sourceMetadata) ? {
+          fileName: str(identity.sourceMetadata?.fileName),
+          embeddedTitle: str(identity.sourceMetadata?.embeddedTitle),
+          embeddedArtist: str(identity.sourceMetadata?.embeddedArtist),
+          embeddedAlbum: str(identity.sourceMetadata?.embeddedAlbum),
+          embeddedReleaseDate: str(identity.sourceMetadata?.embeddedReleaseDate),
+          filenameTitleHint: str(identity.sourceMetadata?.filenameTitleHint),
+          filenameArtistHint: str(identity.sourceMetadata?.filenameArtistHint)
+        } : {},
         recommendation: isPlainObject(identity?.recommendation) ? {
           available: Boolean(identity.recommendation?.available),
           recommendedFileName: str(identity.recommendation?.recommendedFileName),
           currentFileName: str(identity.recommendation?.currentFileName),
           shouldRename: Boolean(identity.recommendation?.shouldRename)
+        } : {},
+        metadataRecommendation: isPlainObject(identity?.metadataRecommendation) ? {
+          available: Boolean(identity.metadataRecommendation?.available),
+          shouldRetag: Boolean(identity.metadataRecommendation?.shouldRetag),
+          current: isPlainObject(identity.metadataRecommendation?.current) ? {
+            title: str(identity.metadataRecommendation.current?.title),
+            artist: str(identity.metadataRecommendation.current?.artist),
+            album: str(identity.metadataRecommendation.current?.album)
+          } : {},
+          recommended: isPlainObject(identity.metadataRecommendation?.recommended) ? {
+            title: str(identity.metadataRecommendation.recommended?.title),
+            artist: str(identity.metadataRecommendation.recommended?.artist),
+            album: str(identity.metadataRecommendation.recommended?.album)
+          } : {}
         } : {}
       },
       confidence: identity?.title || identity?.artist || identity?.isrc ? 0.8 : 0,
@@ -458,6 +482,15 @@ export function buildAnalysisArtifactFromPipelineResult({
     album: str(identity?.album),
     isrc: str(identity?.isrc),
     provider: str(identity?.provider || rawMeta?.trackIdentity?.provider),
+    sourceMetadata: isPlainObject(rawMeta?.sourceMetadata) ? {
+      fileName: str(rawMeta.sourceMetadata?.fileName),
+      embeddedTitle: str(rawMeta.sourceMetadata?.embeddedTitle),
+      embeddedArtist: str(rawMeta.sourceMetadata?.embeddedArtist),
+      embeddedAlbum: str(rawMeta.sourceMetadata?.embeddedAlbum),
+      embeddedReleaseDate: str(rawMeta.sourceMetadata?.embeddedReleaseDate),
+      filenameTitleHint: str(rawMeta.sourceMetadata?.filenameTitleHint),
+      filenameArtistHint: str(rawMeta.sourceMetadata?.filenameArtistHint)
+    } : {},
     recommendation: isPlainObject(rawMeta?.identityRecommendation) ? {
       available: Boolean(rawMeta.identityRecommendation?.available),
       title: str(rawMeta.identityRecommendation?.title),
@@ -466,6 +499,20 @@ export function buildAnalysisArtifactFromPipelineResult({
       recommendedFileName: str(rawMeta.identityRecommendation?.recommendedFileName),
       currentFileName: str(rawMeta.identityRecommendation?.currentFileName),
       shouldRename: Boolean(rawMeta.identityRecommendation?.shouldRename)
+    } : {},
+    metadataRecommendation: isPlainObject(rawMeta?.metadataRecommendation) ? {
+      available: Boolean(rawMeta.metadataRecommendation?.available),
+      shouldRetag: Boolean(rawMeta.metadataRecommendation?.shouldRetag),
+      current: isPlainObject(rawMeta.metadataRecommendation?.current) ? {
+        title: str(rawMeta.metadataRecommendation.current?.title),
+        artist: str(rawMeta.metadataRecommendation.current?.artist),
+        album: str(rawMeta.metadataRecommendation.current?.album)
+      } : {},
+      recommended: isPlainObject(rawMeta.metadataRecommendation?.recommended) ? {
+        title: str(rawMeta.metadataRecommendation.recommended?.title),
+        artist: str(rawMeta.metadataRecommendation.recommended?.artist),
+        album: str(rawMeta.metadataRecommendation.recommended?.album)
+      } : {}
     } : {}
   };
   const timingBlock = {
@@ -622,9 +669,27 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
       title: str(identity?.title || media?.fileName),
       artist: str(identity?.artist),
       isrc: str(identity?.isrc),
+      sourceMetadata: isPlainObject(identity?.sourceMetadata) ? {
+        embeddedTitle: str(identity.sourceMetadata?.embeddedTitle),
+        embeddedArtist: str(identity.sourceMetadata?.embeddedArtist),
+        embeddedAlbum: str(identity.sourceMetadata?.embeddedAlbum)
+      } : {},
       recommendation: isPlainObject(identity?.recommendation) ? {
         recommendedFileName: str(identity.recommendation?.recommendedFileName),
         shouldRename: Boolean(identity.recommendation?.shouldRename)
+      } : {},
+      metadataRecommendation: isPlainObject(identity?.metadataRecommendation) ? {
+        shouldRetag: Boolean(identity.metadataRecommendation?.shouldRetag),
+        current: isPlainObject(identity.metadataRecommendation?.current) ? {
+          title: str(identity.metadataRecommendation.current?.title),
+          artist: str(identity.metadataRecommendation.current?.artist),
+          album: str(identity.metadataRecommendation.current?.album)
+        } : {},
+        recommended: isPlainObject(identity.metadataRecommendation?.recommended) ? {
+          title: str(identity.metadataRecommendation.recommended?.title),
+          artist: str(identity.metadataRecommendation.recommended?.artist),
+          album: str(identity.metadataRecommendation.recommended?.album)
+        } : {}
       } : {}
     },
     timing: {

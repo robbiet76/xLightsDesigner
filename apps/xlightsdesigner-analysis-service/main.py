@@ -295,6 +295,53 @@ def _build_identity_recommendation(path: str, identity: Dict[str, Any]) -> Dict[
     }
 
 
+def _source_metadata_from_path(path: str) -> Dict[str, Any]:
+    embedded = _embedded_identity_from_ffprobe(path)
+    filename_hint = _fallback_identity_from_path(path)
+    out = {
+        "fileName": os.path.basename(str(path or "").strip()),
+        "embeddedTitle": str(embedded.get("title") or "").strip(),
+        "embeddedArtist": str(embedded.get("artist") or "").strip(),
+        "embeddedAlbum": str(embedded.get("album") or "").strip(),
+        "embeddedReleaseDate": str(embedded.get("releaseDate") or "").strip(),
+        "embeddedProvider": str(embedded.get("provider") or "").strip(),
+        "filenameTitleHint": str(filename_hint.get("title") or "").strip(),
+        "filenameArtistHint": str(filename_hint.get("artist") or "").strip(),
+    }
+    return {k: v for k, v in out.items() if v not in ("", None)}
+
+
+def _build_metadata_recommendation(source_metadata: Dict[str, Any], identity: Dict[str, Any]) -> Dict[str, Any]:
+    source = source_metadata if isinstance(source_metadata, dict) else {}
+    canonical = _normalize_identity(identity)
+    canonical_title = str(canonical.get("title") or "").strip()
+    canonical_artist = str(canonical.get("artist") or "").strip()
+    canonical_album = str(canonical.get("album") or "").strip()
+    current_title = str(source.get("embeddedTitle") or "").strip()
+    current_artist = str(source.get("embeddedArtist") or "").strip()
+    current_album = str(source.get("embeddedAlbum") or "").strip()
+    diffs = {
+        "title": bool(canonical_title and canonical_title != current_title),
+        "artist": bool(canonical_artist and canonical_artist != current_artist),
+        "album": bool(canonical_album and canonical_album != current_album),
+    }
+    return {
+        "available": bool(canonical_title or canonical_artist or canonical_album),
+        "current": {
+            "title": current_title,
+            "artist": current_artist,
+            "album": current_album,
+        },
+        "recommended": {
+            "title": canonical_title,
+            "artist": canonical_artist,
+            "album": canonical_album,
+        },
+        "shouldRetag": any(diffs.values()),
+        "diff": diffs,
+    }
+
+
 def _embedded_identity_from_ffprobe(path: str) -> Dict[str, Any]:
     path_text = str(path or "").strip()
     if not path_text:
@@ -3390,7 +3437,9 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     )
 
     identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path, profile)
+    source_metadata = _source_metadata_from_path(path)
     identity_recommendation = _build_identity_recommendation(path, identity)
+    metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
     provider_sections: List[Dict[str, Any]] = []
     provider_name = ""
 
@@ -3434,7 +3483,9 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "engine": "beatnet",
             "sectionSource": provider_name or "none",
             "trackIdentity": identity,
+            "sourceMetadata": source_metadata,
             "identityRecommendation": identity_recommendation,
+            "metadataRecommendation": metadata_recommendation,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "sectionSourceError": provider_error or "",
@@ -3572,7 +3623,9 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
     )
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
+    source_metadata = _source_metadata_from_path(path)
     identity_recommendation = _build_identity_recommendation(path, identity)
+    metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
     lyrics_provider_results = _build_lyrics_provider_results(
@@ -3647,7 +3700,9 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
                 )
             ),
             "trackIdentity": identity,
+            "sourceMetadata": source_metadata,
             "identityRecommendation": identity_recommendation,
+            "metadataRecommendation": metadata_recommendation,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "identityError": identity_error,

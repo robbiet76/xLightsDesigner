@@ -75,6 +75,27 @@ function samplePipelineResult() {
           currentFileName: "Song.mp3",
           shouldRename: true
         },
+        sourceMetadata: {
+          fileName: "Song.mp3",
+          embeddedTitle: "Old Song",
+          embeddedArtist: "Artist",
+          embeddedAlbum: "Old Album",
+          embeddedReleaseDate: "2020"
+        },
+        metadataRecommendation: {
+          available: true,
+          shouldRetag: true,
+          current: {
+            title: "Old Song",
+            artist: "Artist",
+            album: "Old Album"
+          },
+          recommended: {
+            title: "Song",
+            artist: "Artist",
+            album: "Album"
+          }
+        },
         chordAnalysis: {
           avgMarginConfidence: "0.83"
         }
@@ -106,6 +127,8 @@ test("audio analyst runtime builds canonical artifact from pipeline result", () 
   assert.deepEqual(artifact.provenance.evidence.sources, ["https://songbpm.example/song"]);
   assert.equal(artifact.modules.identity.data.title, "Song");
   assert.equal(artifact.modules.identity.data.recommendation.recommendedFileName, "Artist - Song.mp3");
+  assert.equal(artifact.modules.identity.data.metadataRecommendation.shouldRetag, true);
+  assert.equal(artifact.modules.identity.data.sourceMetadata.embeddedTitle, "Old Song");
   assert.equal(artifact.modules.rhythm.data.bars.length, 1);
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
@@ -163,6 +186,9 @@ test("audio analyst runtime derives analysis handoff from canonical artifact", (
   assert.equal(handoff.trackIdentity.title, "Song");
   assert.equal(handoff.trackIdentity.recommendation.recommendedFileName, "Artist - Song.mp3");
   assert.equal(handoff.trackIdentity.recommendation.shouldRename, true);
+  assert.equal(handoff.trackIdentity.metadataRecommendation.shouldRetag, true);
+  assert.equal(handoff.trackIdentity.metadataRecommendation.current.title, "Old Song");
+  assert.equal(handoff.trackIdentity.metadataRecommendation.recommended.album, "Album");
   assert.equal(handoff.timing.bpm, 128);
   assert.equal(handoff.timing.beatsArtifact, "beats");
   assert.equal(handoff.structure.sections.length, 1);

@@ -624,6 +624,26 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertTrue(out["available"])
         self.assertFalse(out["shouldRename"])
 
+    def test_build_metadata_recommendation_flags_retag_when_embedded_tags_differ(self):
+        out = main._build_metadata_recommendation(
+            {
+                "embeddedTitle": "Cozy Little Christmas (2018) Single Mp3 Song",
+                "embeddedArtist": "Katy Perry",
+                "embeddedAlbum": "Noisy Album",
+            },
+            {
+                "provider": "embedded-metadata",
+                "title": "Cozy Little Christmas",
+                "artist": "Katy Perry",
+                "album": "Cozy Little Christmas (Amazon Original)",
+            },
+        )
+        self.assertTrue(out["available"])
+        self.assertTrue(out["shouldRetag"])
+        self.assertTrue(out["diff"]["title"])
+        self.assertFalse(out["diff"]["artist"])
+        self.assertTrue(out["diff"]["album"])
+
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
             "hello from the start",
