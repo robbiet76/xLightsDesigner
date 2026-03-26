@@ -255,6 +255,46 @@ def _fallback_identity_from_path(path: str) -> Dict[str, Any]:
     })
 
 
+def _normalized_filename_stem(text: str) -> str:
+    value = str(text or "").strip().lower()
+    value = re.sub(r"\.[a-z0-9]{1,5}$", "", value)
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+def _recommended_filename_from_identity(identity: Dict[str, Any], original_path: str = "") -> str:
+    normalized = _normalize_identity(identity)
+    title = str(normalized.get("title") or "").strip()
+    artist = str(normalized.get("artist") or "").strip()
+    if not title:
+        return ""
+    stem = f"{artist} - {title}" if artist else title
+    ext = os.path.splitext(str(original_path or ""))[1].strip() or ".mp3"
+    return f"{stem}{ext}"
+
+
+def _build_identity_recommendation(path: str, identity: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = _normalize_identity(identity)
+    provider = str(normalized.get("provider") or "").strip().lower()
+    recommended_file_name = _recommended_filename_from_identity(normalized, path)
+    current_file_name = os.path.basename(str(path or "").strip())
+    if not recommended_file_name:
+        return {}
+    current_stem = _normalized_filename_stem(current_file_name)
+    recommended_stem = _normalized_filename_stem(recommended_file_name)
+    should_rename = bool(recommended_stem and current_stem and recommended_stem != current_stem)
+    return {
+        "available": True,
+        "title": str(normalized.get("title") or "").strip(),
+        "artist": str(normalized.get("artist") or "").strip(),
+        "provider": provider,
+        "recommendedFileName": recommended_file_name,
+        "currentFileName": current_file_name,
+        "shouldRename": should_rename,
+    }
+
+
 def _embedded_identity_from_ffprobe(path: str) -> Dict[str, Any]:
     path_text = str(path or "").strip()
     if not path_text:
@@ -3350,6 +3390,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     )
 
     identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path, profile)
+    identity_recommendation = _build_identity_recommendation(path, identity)
     provider_sections: List[Dict[str, Any]] = []
     provider_name = ""
 
@@ -3393,6 +3434,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "engine": "beatnet",
             "sectionSource": provider_name or "none",
             "trackIdentity": identity,
+            "identityRecommendation": identity_recommendation,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "sectionSourceError": provider_error or "",
@@ -3530,6 +3572,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
     )
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
+    identity_recommendation = _build_identity_recommendation(path, identity)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
     lyrics_provider_results = _build_lyrics_provider_results(
@@ -3604,6 +3647,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
                 )
             ),
             "trackIdentity": identity,
+            "identityRecommendation": identity_recommendation,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "identityError": identity_error,

@@ -295,7 +295,8 @@ function buildAnalysisModules({
   const baseDiagnostics = {
     identity: [
       str(identity?.provider ? `identity provider: ${identity.provider}` : ""),
-      str(identity?.title || identity?.artist ? "track identity resolved" : "track identity unresolved")
+      str(identity?.title || identity?.artist ? "track identity resolved" : "track identity unresolved"),
+      str(identity?.recommendation?.shouldRename ? `rename suggestion: ${identity.recommendation.recommendedFileName}` : "")
     ].filter(Boolean),
     rhythm: [
       str(timing?.bpm != null ? `tempo=${timing.bpm}` : ""),
@@ -336,7 +337,13 @@ function buildAnalysisModules({
         title: str(identity?.title),
         artist: str(identity?.artist),
         album: str(identity?.album),
-        isrc: str(identity?.isrc)
+        isrc: str(identity?.isrc),
+        recommendation: isPlainObject(identity?.recommendation) ? {
+          available: Boolean(identity.recommendation?.available),
+          recommendedFileName: str(identity.recommendation?.recommendedFileName),
+          currentFileName: str(identity.recommendation?.currentFileName),
+          shouldRename: Boolean(identity.recommendation?.shouldRename)
+        } : {}
       },
       confidence: identity?.title || identity?.artist || identity?.isrc ? 0.8 : 0,
       sources: Array.from(new Set([str(identity?.provider || rawMeta?.trackIdentity?.provider), str(analysisBaseUrl)]).values()).filter(Boolean),
@@ -450,7 +457,16 @@ export function buildAnalysisArtifactFromPipelineResult({
     artist: str(identity?.artist),
     album: str(identity?.album),
     isrc: str(identity?.isrc),
-    provider: str(identity?.provider || rawMeta?.trackIdentity?.provider)
+    provider: str(identity?.provider || rawMeta?.trackIdentity?.provider),
+    recommendation: isPlainObject(rawMeta?.identityRecommendation) ? {
+      available: Boolean(rawMeta.identityRecommendation?.available),
+      title: str(rawMeta.identityRecommendation?.title),
+      artist: str(rawMeta.identityRecommendation?.artist),
+      provider: str(rawMeta.identityRecommendation?.provider),
+      recommendedFileName: str(rawMeta.identityRecommendation?.recommendedFileName),
+      currentFileName: str(rawMeta.identityRecommendation?.currentFileName),
+      shouldRename: Boolean(rawMeta.identityRecommendation?.shouldRename)
+    } : {}
   };
   const timingBlock = {
     bpm: finiteOrNull(timing?.tempoEstimate ?? raw?.bpm),
@@ -605,7 +621,11 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
     trackIdentity: {
       title: str(identity?.title || media?.fileName),
       artist: str(identity?.artist),
-      isrc: str(identity?.isrc)
+      isrc: str(identity?.isrc),
+      recommendation: isPlainObject(identity?.recommendation) ? {
+        recommendedFileName: str(identity.recommendation?.recommendedFileName),
+        shouldRename: Boolean(identity.recommendation?.shouldRename)
+      } : {}
     },
     timing: {
       bpm: finiteOrNull(moduleRhythm?.data?.bpm ?? timing?.bpm),

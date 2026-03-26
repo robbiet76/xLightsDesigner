@@ -599,6 +599,31 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(identity["artist"], "Owl City")
         self.assertEqual(identity["album"], "Owl City")
 
+    def test_build_identity_recommendation_suggests_rename_when_filename_differs(self):
+        out = main._build_identity_recommendation(
+            "/tmp/Katy Perry - Cozy Little Christmas (2018) Single Mp3 Song.mp3",
+            {
+                "provider": "embedded-metadata",
+                "title": "Cozy Little Christmas",
+                "artist": "Katy Perry",
+            },
+        )
+        self.assertTrue(out["available"])
+        self.assertTrue(out["shouldRename"])
+        self.assertEqual(out["recommendedFileName"], "Katy Perry - Cozy Little Christmas.mp3")
+
+    def test_build_identity_recommendation_suppresses_rename_when_filename_matches(self):
+        out = main._build_identity_recommendation(
+            "/tmp/Owl City - Light of Christmas (feat. tobyMac).mp3",
+            {
+                "provider": "embedded-metadata",
+                "title": "Light of Christmas (feat. tobyMac)",
+                "artist": "Owl City",
+            },
+        )
+        self.assertTrue(out["available"])
+        self.assertFalse(out["shouldRename"])
+
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
             "hello from the start",

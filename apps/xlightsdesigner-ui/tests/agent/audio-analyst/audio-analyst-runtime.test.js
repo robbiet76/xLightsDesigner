@@ -66,6 +66,15 @@ function samplePipelineResult() {
         engine: "beatnet",
         lyricsSource: "lrclib",
         sectionSource: "service+llm",
+        identityRecommendation: {
+          available: true,
+          title: "Song",
+          artist: "Artist",
+          provider: "embedded-metadata",
+          recommendedFileName: "Artist - Song.mp3",
+          currentFileName: "Song.mp3",
+          shouldRename: true
+        },
         chordAnalysis: {
           avgMarginConfidence: "0.83"
         }
@@ -96,6 +105,7 @@ test("audio analyst runtime builds canonical artifact from pipeline result", () 
   assert.equal(artifact.provenance.service.providerUsed, "beatnet");
   assert.deepEqual(artifact.provenance.evidence.sources, ["https://songbpm.example/song"]);
   assert.equal(artifact.modules.identity.data.title, "Song");
+  assert.equal(artifact.modules.identity.data.recommendation.recommendedFileName, "Artist - Song.mp3");
   assert.equal(artifact.modules.rhythm.data.bars.length, 1);
   assert.equal(artifact.modules.harmony.data.chords.length, 1);
   assert.equal(artifact.modules.lyrics.data.lines.length, 1);
@@ -151,6 +161,8 @@ test("audio analyst runtime derives analysis handoff from canonical artifact", (
   });
 
   assert.equal(handoff.trackIdentity.title, "Song");
+  assert.equal(handoff.trackIdentity.recommendation.recommendedFileName, "Artist - Song.mp3");
+  assert.equal(handoff.trackIdentity.recommendation.shouldRename, true);
   assert.equal(handoff.timing.bpm, 128);
   assert.equal(handoff.timing.beatsArtifact, "beats");
   assert.equal(handoff.structure.sections.length, 1);
