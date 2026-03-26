@@ -948,6 +948,13 @@ function getDesktopMediaBridge() {
   return bridge;
 }
 
+function getDesktopMediaIdentityBridge() {
+  const bridge = getDesktopBridge();
+  if (!bridge) return null;
+  if (typeof bridge.applyMediaIdentityRecommendation !== "function") return null;
+  return bridge;
+}
+
 function getDesktopBackupBridge() {
   const bridge = getDesktopBridge();
   if (!bridge) return null;
@@ -2268,6 +2275,132 @@ function basenameOfPath(filePath) {
   if (!raw) return "";
   const parts = raw.split(/[\\/]/);
   return String(parts[parts.length - 1] || "").trim();
+}
+
+function buildIdentityRecommendationOfferKey(audioPath = "", trackIdentity = {}) {
+  const recommendation = trackIdentity?.recommendation && typeof trackIdentity.recommendation === "object"
+    ? trackIdentity.recommendation
+    : {};
+  const metadataRecommendation = trackIdentity?.metadataRecommendation && typeof trackIdentity.metadataRecommendation === "object"
+    ? trackIdentity.metadataRecommendation
+    : {};
+  return JSON.stringify({
+    audioPath: String(audioPath || "").trim(),
+    recommendedFileName: String(recommendation?.recommendedFileName || "").trim(),
+    shouldRename: recommendation?.shouldRename === true,
+    shouldRetag: metadataRecommendation?.shouldRetag === true,
+    recommendedTitle: String(metadataRecommendation?.recommended?.title || "").trim(),
+    recommendedArtist: String(metadataRecommendation?.recommended?.artist || "").trim(),
+    recommendedAlbum: String(metadataRecommendation?.recommended?.album || "").trim()
+  });
+}
+
+function applyIdentityRecommendationResultToState({ oldPath = "", newPath = "", renamed = false, retagged = false } = {}) {
+  const nextPath = String(newPath || oldPath || "").trim();
+  if (!nextPath) return;
+  if (renamed) {
+    state.audioPathInput = nextPath;
+    if (state.audioAnalysis?.artifact?.media) {
+      state.audioAnalysis.artifact.media.path = nextPath;
+      state.audioAnalysis.artifact.media.fileName = basenameOfPath(nextPath);
+    }
+  }
+  const identity = state.audioAnalysis?.artifact?.identity;
+  if (identity && typeof identity === "object") {
+    if (identity.sourceMetadata && typeof identity.sourceMetadata === "object") {
+      identity.sourceMetadata.fileName = basenameOfPath(nextPath);
+    }
+    if (renamed && identity.recommendation && typeof identity.recommendation === "object") {
+      identity.recommendation.currentFileName = basenameOfPath(nextPath);
+      identity.recommendation.shouldRename = false;
+    }
+    if (retagged && identity.metadataRecommendation && typeof identity.metadataRecommendation === "object") {
+      identity.metadataRecommendation.current = {
+        ...(identity.metadataRecommendation.current || {}),
+        ...(identity.metadataRecommendation.recommended || {})
+      };
+      identity.metadataRecommendation.shouldRetag = false;
+      identity.metadataRecommendation.diff = { title: false, artist: false, album: false };
+    }
+  }
+  const handoff = agentRuntime?.handoffs?.analysis_handoff_v1;
+  if (handoff?.trackIdentity && typeof handoff.trackIdentity === "object") {
+    if (handoff.trackIdentity.sourceMetadata && typeof handoff.trackIdentity.sourceMetadata === "object") {
+      handoff.trackIdentity.sourceMetadata.fileName = basenameOfPath(nextPath);
+    }
+    if (renamed && handoff.trackIdentity.recommendation && typeof handoff.trackIdentity.recommendation === "object") {
+      handoff.trackIdentity.recommendation.shouldRename = false;
+      handoff.trackIdentity.recommendation.recommendedFileName = basenameOfPath(nextPath);
+    }
+    if (retagged && handoff.trackIdentity.metadataRecommendation && typeof handoff.trackIdentity.metadataRecommendation === "object") {
+      handoff.trackIdentity.metadataRecommendation.current = {
+        ...(handoff.trackIdentity.metadataRecommendation.current || {}),
+        ...(handoff.trackIdentity.metadataRecommendation.recommended || {})
+      };
+      handoff.trackIdentity.metadataRecommendation.shouldRetag = false;
+    }
+  }
+}
+
+async function maybeOfferIdentityRecommendationAction({ audioPath = "", trackIdentity = null } = {}) {
+  const bridge = getDesktopMediaIdentityBridge();
+  if (!bridge) return { applied: false };
+  const identity = trackIdentity && typeof trackIdentity === "object" ? trackIdentity : {};
+  const recommendation = identity?.recommendation && typeof identity.recommendation === "object" ? identity.recommendation : {};
+  const metadataRecommendation = identity?.metadataRecommendation && typeof identity.metadataRecommendation === "object" ? identity.metadataRecommendation : {};
+  const shouldRename = recommendation?.shouldRename === true;
+  const shouldRetag = metadataRecommendation?.shouldRetag === true;
+  if (!shouldRename && !shouldRetag) return { applied: false };
+  const offerKey = buildIdentityRecommendationOfferKey(audioPath, identity);
+  if (!state.ui) state.ui = {};
+  if (state.ui.lastIdentityRecommendationOfferKey === offerKey) return { applied: false };
+  state.ui.lastIdentityRecommendationOfferKey = offerKey;
+
+  const lines = [
+    "A cleaner canonical track identity is available.",
+    "",
+    `Current file: ${basenameOfPath(audioPath) || audioPath}`,
+    `Canonical: ${String(identity?.artist || "").trim() ? `${identity.artist} - ` : ""}${String(identity?.title || "").trim()}`
+  ];
+  if (shouldRename) lines.push(`Rename file to: ${String(recommendation?.recommendedFileName || "").trim()}`);
+  if (shouldRetag) {
+    const rec = metadataRecommendation?.recommended || {};
+    lines.push("Retag embedded metadata to:");
+    lines.push(`Title: ${String(rec?.title || "").trim() || "(unchanged)"}`);
+    lines.push(`Artist: ${String(rec?.artist || "").trim() || "(unchanged)"}`);
+    lines.push(`Album: ${String(rec?.album || "").trim() || "(unchanged)"}`);
+  }
+  lines.push("", "Apply these changes now?");
+  if (!window.confirm(lines.join("\n"))) return { applied: false };
+
+  const res = await bridge.applyMediaIdentityRecommendation({
+    filePath: audioPath,
+    rename: shouldRename,
+    retag: shouldRetag,
+    recommendation,
+    metadataRecommendation
+  });
+  if (!res?.ok) {
+    setStatusWithDiagnostics("warning", `Unable to apply media naming/metadata recommendation: ${String(res?.error || "unknown error")}`);
+    return { applied: false, error: String(res?.error || "unknown error") };
+  }
+  applyIdentityRecommendationResultToState({
+    oldPath: audioPath,
+    newPath: String(res?.filePath || audioPath).trim(),
+    renamed: res?.renamed === true,
+    retagged: res?.retagged === true
+  });
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+  const actions = [
+    res?.renamed ? `renamed to ${basenameOfPath(res.filePath)}` : "",
+    res?.retagged ? "retagged metadata" : ""
+  ].filter(Boolean);
+  return {
+    applied: true,
+    message: actions.length ? `Applied track identity recommendation: ${actions.join(", ")}.` : "Applied track identity recommendation."
+  };
 }
 
 function buildProjectSequencesIndex() {
@@ -11471,7 +11604,11 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
           ]
         })
       });
-      setStatus("info", `Loaded stored ${reusable.mode} audio analysis artifact.`);
+      const identityAction = await maybeOfferIdentityRecommendationAction({
+        audioPath: String(state.audioPathInput || "").trim(),
+        trackIdentity: handoff?.trackIdentity || reusable.artifact?.identity || null
+      });
+      setStatus("info", identityAction?.applied ? String(identityAction.message || "Applied track identity recommendation.") : `Loaded stored ${reusable.mode} audio analysis artifact.`);
       endOrchestrationRun(orchestrationRun, { status: "ok", summary: `reused stored ${reusable.mode} audio analysis artifact` });
       return;
     }
@@ -11550,7 +11687,11 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
         ]
       })
     });
-    setStatus("info", flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete.");
+    const identityAction = await maybeOfferIdentityRecommendationAction({
+      audioPath: String(state.audioPathInput || "").trim(),
+      trackIdentity: flow.handoff?.trackIdentity || persistedArtifact?.identity || null
+    });
+    setStatus("info", identityAction?.applied ? String(identityAction.message || "Applied track identity recommendation.") : (flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete."));
     endOrchestrationRun(orchestrationRun, {
       status: flow.result.status === "failed" ? "failed" : "ok",
       summary: flow.result.status === "partial" ? "audio analysis complete with warnings" : "audio analysis complete"

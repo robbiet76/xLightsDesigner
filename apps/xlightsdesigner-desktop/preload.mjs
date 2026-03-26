@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld("xlightsDesignerDesktop", {
   readSequenceSidecar: (payload = {}) => ipcRenderer.invoke("xld:sidecar:read", payload),
   writeSequenceSidecar: (payload = {}) => ipcRenderer.invoke("xld:sidecar:write", payload),
   saveReferenceMedia: (payload = {}) => ipcRenderer.invoke("xld:media:save-reference", payload),
+  applyMediaIdentityRecommendation: (payload = {}) => ipcRenderer.invoke("xld:media:apply-identity-recommendation", payload),
   createSequenceBackup: (payload = {}) => ipcRenderer.invoke("xld:backup:create", payload),
   restoreSequenceBackup: (payload = {}) => ipcRenderer.invoke("xld:backup:restore", payload),
   listSequencesInShowFolder: (payload = {}) => ipcRenderer.invoke("xld:sequence:list", payload),

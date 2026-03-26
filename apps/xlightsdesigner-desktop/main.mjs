@@ -136,6 +136,97 @@ function runCurl(args = []) {
   });
 }
 
+function runBinary(command = "", args = []) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(String(command || "").trim(), arr(args).map((row) => String(row)), { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += String(chunk || ""); });
+    child.stderr.on("data", (chunk) => { stderr += String(chunk || ""); });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(stderr.trim() || `${command} exited with code ${code}`));
+        return;
+      }
+      resolve({ stdout, stderr });
+    });
+  });
+}
+
+function sanitizeFileNameComponent(value = "") {
+  return str(value).replace(/[/:*?"<>|]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeMetadataPayload(payload = {}) {
+  const current = payload?.current && typeof payload.current === "object" ? payload.current : {};
+  const recommended = payload?.recommended && typeof payload.recommended === "object" ? payload.recommended : {};
+  return {
+    current: {
+      title: str(current?.title),
+      artist: str(current?.artist),
+      album: str(current?.album)
+    },
+    recommended: {
+      title: str(recommended?.title),
+      artist: str(recommended?.artist),
+      album: str(recommended?.album)
+    }
+  };
+}
+
+async function applyMediaIdentityRecommendation(payload = {}) {
+  const filePath = str(payload?.filePath);
+  if (!filePath) return { ok: false, error: "Missing filePath" };
+  if (!fs.existsSync(filePath)) return { ok: false, error: "Media file not found" };
+
+  const rename = payload?.rename === true;
+  const retag = payload?.retag === true;
+  const recommendation = payload?.recommendation && typeof payload.recommendation === "object" ? payload.recommendation : {};
+  const metadataRecommendation = normalizeMetadataPayload(payload?.metadataRecommendation || {});
+  const parsed = path.parse(filePath);
+  let targetPath = filePath;
+  if (rename) {
+    const requestedName = sanitizeFileNameComponent(str(recommendation?.recommendedFileName));
+    if (!requestedName) return { ok: false, error: "Missing recommended file name" };
+    targetPath = path.join(parsed.dir, requestedName.endsWith(parsed.ext) ? requestedName : `${requestedName}${parsed.ext}`);
+    if (path.resolve(targetPath) !== path.resolve(filePath) && fs.existsSync(targetPath)) {
+      return { ok: false, error: "Target file already exists" };
+    }
+  }
+
+  const ffmpeg = process.env.FFMPEG_BIN || "ffmpeg";
+  const currentPath = filePath;
+  if (retag) {
+    const tmpPath = path.join(parsed.dir, `${parsed.name}.xld-retag-${Date.now()}${parsed.ext}`);
+    const args = ["-y", "-i", currentPath, "-map", "0", "-c", "copy"];
+    const title = str(metadataRecommendation?.recommended?.title);
+    const artist = str(metadataRecommendation?.recommended?.artist);
+    const album = str(metadataRecommendation?.recommended?.album);
+    if (title) args.push("-metadata", `title=${title}`);
+    if (artist) args.push("-metadata", `artist=${artist}`);
+    if (album) args.push("-metadata", `album=${album}`);
+    args.push(tmpPath);
+    await runBinary(ffmpeg, args);
+    if (rename) {
+      fs.unlinkSync(currentPath);
+      fs.renameSync(tmpPath, targetPath);
+    } else {
+      fs.renameSync(tmpPath, currentPath);
+    }
+  } else if (rename && path.resolve(targetPath) !== path.resolve(currentPath)) {
+    fs.renameSync(currentPath, targetPath);
+  }
+
+  return {
+    ok: true,
+    filePath: targetPath,
+    renamed: rename && path.resolve(targetPath) !== path.resolve(filePath),
+    retagged: retag,
+    fileName: path.basename(targetPath)
+  };
+}
+
 async function postXLightsCommand(endpoint = "", cmd = "", params = {}, options = {}) {
   const payload = JSON.stringify({
     apiVersion: 2,
@@ -2434,6 +2525,14 @@ ipcMain.handle("xld:media:save-reference", async (_event, payload = {}) => {
     const absolutePath = path.join(folder, fileName);
     fs.writeFileSync(absolutePath, Buffer.from(bytes));
     return { ok: true, absolutePath };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:media:apply-identity-recommendation", async (_event, payload = {}) => {
+  try {
+    return await applyMediaIdentityRecommendation(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
