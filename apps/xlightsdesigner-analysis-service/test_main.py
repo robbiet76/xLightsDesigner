@@ -684,6 +684,7 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
                 "lyricsLines": ["Hello", "World"],
                 "source": "lyricsgenius",
                 "titleSimilarity": 1.0,
+                "artistMatched": True,
                 "titleOnly": False,
             },
         ):
@@ -693,6 +694,28 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(lines, ["Hello", "World"])
         self.assertEqual(error, "")
         self.assertEqual(info["geniusMatchedArtist"], "Mavis Staples")
+
+    def test_fetch_genius_plain_lyrics_blocks_when_artist_confidence_is_insufficient(self):
+        with mock.patch.object(
+            main,
+            "_lookup_genius_song",
+            return_value={
+                "title": "Sleigh Ride",
+                "artist": "The Ronettes",
+                "lyricsLines": ["Sleigh ride"],
+                "source": "lyricsgenius",
+                "titleSimilarity": 1.0,
+                "artistMatched": False,
+                "titleOnly": True,
+            },
+        ):
+            lines, error, info = main._fetch_genius_plain_lyrics(
+                {"title": "Sleigh Ride", "artist": ""}
+            )
+        self.assertEqual(lines, [])
+        self.assertEqual(error, "lyricsgenius: artist confidence insufficient")
+        self.assertEqual(info["lyricsRecoveryBlockedReason"], "artist_confidence_insufficient")
+        self.assertEqual(info["geniusMatchedArtist"], "The Ronettes")
 
     def test_align_plain_lyrics_to_structure_phrases_distributes_lines_over_lyrical_sections(self):
         out = main._align_plain_lyrics_to_structure_phrases(

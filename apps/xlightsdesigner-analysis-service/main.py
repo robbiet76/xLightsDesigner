@@ -1530,16 +1530,20 @@ def _fetch_genius_plain_lyrics(identity: Dict[str, Any]) -> tuple[List[str], str
     song = _lookup_genius_song(identity)
     if not song:
         return [], "lyricsgenius: no match", {}
-    plain_lines = [str(row).strip() for row in (song.get("lyricsLines") or []) if str(row).strip()]
-    if not plain_lines:
-        return [], "lyricsgenius: lyrics parse empty", {}
     info = {
         "geniusMatchedTitle": str(song.get("title") or "").strip(),
         "geniusMatchedArtist": str(song.get("artist") or "").strip(),
         "geniusSource": str(song.get("source") or "lyricsgenius"),
         "geniusTitleSimilarity": song.get("titleSimilarity"),
         "geniusTitleOnly": bool(song.get("titleOnly")),
+        "geniusArtistMatched": bool(song.get("artistMatched")),
     }
+    if not info["geniusArtistMatched"]:
+        info["lyricsRecoveryBlockedReason"] = "artist_confidence_insufficient"
+        return [], "lyricsgenius: artist confidence insufficient", info
+    plain_lines = [str(row).strip() for row in (song.get("lyricsLines") or []) if str(row).strip()]
+    if not plain_lines:
+        return [], "lyricsgenius: lyrics parse empty", info
     return plain_lines, "", info
 
 
