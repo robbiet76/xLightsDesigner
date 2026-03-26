@@ -176,7 +176,7 @@ export const ANALYSIS_MODULE_VERSIONS = Object.freeze({
   identity: "v1",
   rhythm: "v3",
   harmony: "v2",
-  lyrics: "v3",
+  lyrics: "v4",
   structureBackbone: "v1",
   semanticStructure: "v1"
 });
@@ -257,6 +257,7 @@ function buildAnalysisModules({
   const rhythmProviderResults = isPlainObject(rawMeta?.rhythmProviderResults) ? rawMeta.rhythmProviderResults : {};
   const harmonyProviderResults = isPlainObject(rawMeta?.harmonyProviderResults) ? rawMeta.harmonyProviderResults : {};
   const lyricsProviderResults = isPlainObject(rawMeta?.lyricsProviderResults) ? rawMeta.lyricsProviderResults : {};
+  const plainLyricsPhraseFallback = isPlainObject(rawMeta?.plainLyricsPhraseFallback) ? rawMeta.plainLyricsPhraseFallback : {};
   const structureBackboneMeta = isPlainObject(rawMeta?.structureBackbone) ? rawMeta.structureBackbone : {};
   const derivedTimingConfidence = deriveTimingConfidence({
     beats: timing?.beats,
@@ -311,7 +312,8 @@ function buildAnalysisModules({
     ].filter(Boolean),
     lyrics: [
       str(lyrics?.source ? `source=${lyrics.source}` : ""),
-      str(lyrics?.lines?.length ? `lines=${lyrics.lines.length}` : "no lyrics")
+      str(lyrics?.lines?.length ? `lines=${lyrics.lines.length}` : "no lyrics"),
+      str(rows(plainLyricsPhraseFallback?.phrases).length ? `plainPhraseFallback=${rows(plainLyricsPhraseFallback.phrases).length}` : "")
     ].filter(Boolean),
     structureBackbone: [
       str(structure?.source ? `source=${structure.source}` : ""),
@@ -413,13 +415,27 @@ function buildAnalysisModules({
       data: {
         hasSyncedLyrics: Boolean(lyrics?.hasSyncedLyrics),
         lines: rows(lyrics?.lines),
+        plainPhraseFallback: {
+          available: Boolean(plainLyricsPhraseFallback?.available),
+          provider: str(plainLyricsPhraseFallback?.provider),
+          lineCount: Number.isFinite(Number(plainLyricsPhraseFallback?.lineCount)) ? Number(plainLyricsPhraseFallback.lineCount) : 0,
+          phraseCount: Number.isFinite(Number(plainLyricsPhraseFallback?.phraseCount)) ? Number(plainLyricsPhraseFallback.phraseCount) : 0,
+          lines: Array.isArray(plainLyricsPhraseFallback?.lines)
+            ? plainLyricsPhraseFallback.lines.map((row) => str(row)).filter(Boolean)
+            : [],
+          phrases: rows(plainLyricsPhraseFallback?.phrases),
+          matchedTitle: str(plainLyricsPhraseFallback?.geniusMatchedTitle),
+          matchedArtist: str(plainLyricsPhraseFallback?.geniusMatchedArtist),
+          titleSimilarity: finiteOrNull(plainLyricsPhraseFallback?.geniusTitleSimilarity),
+          error: str(plainLyricsPhraseFallback?.error)
+        },
         providerResults: lyricsProviderResults
       },
       confidence: confidenceScore(lyricsConfidence),
       sources: Array.from(new Set([str(lyrics?.source || rawMeta?.lyricsSource), str(analysisBaseUrl)]).values()).filter(Boolean),
       diagnostics: baseDiagnostics.lyrics,
-      cacheKey: `${resolvedMediaId}:lyrics:v3`,
-      metadata: buildModuleMetadata("lyrics", "v3")
+      cacheKey: `${resolvedMediaId}:lyrics:v4`,
+      metadata: buildModuleMetadata("lyrics", "v4")
     },
     structureBackbone: {
       data: {
@@ -531,7 +547,21 @@ export function buildAnalysisArtifactFromPipelineResult({
     lines: lyricsLines,
     source: str(rawMeta?.lyricsSource || "none"),
     sourceError: str(rawMeta?.lyricsSourceError),
-    shiftMs: finiteOrNull(rawMeta?.lyricsGlobalShiftMs)
+    shiftMs: finiteOrNull(rawMeta?.lyricsGlobalShiftMs),
+    plainPhraseFallback: isPlainObject(rawMeta?.plainLyricsPhraseFallback) ? {
+      available: Boolean(rawMeta.plainLyricsPhraseFallback?.available),
+      provider: str(rawMeta.plainLyricsPhraseFallback?.provider),
+      lineCount: Number.isFinite(Number(rawMeta.plainLyricsPhraseFallback?.lineCount)) ? Number(rawMeta.plainLyricsPhraseFallback.lineCount) : 0,
+      phraseCount: Number.isFinite(Number(rawMeta.plainLyricsPhraseFallback?.phraseCount)) ? Number(rawMeta.plainLyricsPhraseFallback.phraseCount) : 0,
+      lines: Array.isArray(rawMeta.plainLyricsPhraseFallback?.lines)
+        ? rawMeta.plainLyricsPhraseFallback.lines.map((row) => str(row)).filter(Boolean)
+        : [],
+      phrases: rows(rawMeta.plainLyricsPhraseFallback?.phrases),
+      matchedTitle: str(rawMeta.plainLyricsPhraseFallback?.geniusMatchedTitle),
+      matchedArtist: str(rawMeta.plainLyricsPhraseFallback?.geniusMatchedArtist),
+      titleSimilarity: finiteOrNull(rawMeta.plainLyricsPhraseFallback?.geniusTitleSimilarity),
+      error: str(rawMeta.plainLyricsPhraseFallback?.error)
+    } : {}
   };
   const structureBlock = {
     sections,
@@ -711,9 +741,13 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
     },
     lyrics: {
       hasSyncedLyrics: Boolean(moduleLyrics?.data?.hasSyncedLyrics ?? lyrics?.hasSyncedLyrics),
+      hasPlainPhraseFallback: Boolean(moduleLyrics?.data?.plainPhraseFallback?.available ?? lyrics?.plainPhraseFallback?.available),
       lyricsArtifact: Array.isArray(moduleLyrics?.data?.lines) && moduleLyrics.data.lines.length
         ? "lyrics"
-        : (Array.isArray(lyrics?.lines) && lyrics.lines.length ? "lyrics" : "")
+        : (Array.isArray(lyrics?.lines) && lyrics.lines.length ? "lyrics" : ""),
+      phraseArtifact: Array.isArray(moduleLyrics?.data?.plainPhraseFallback?.phrases) && moduleLyrics.data.plainPhraseFallback.phrases.length
+        ? "plain-lyrics-phrases"
+        : (Array.isArray(lyrics?.plainPhraseFallback?.phrases) && lyrics.plainPhraseFallback.phrases.length ? "plain-lyrics-phrases" : "")
     },
     chords: {
       hasChords: Array.isArray(moduleHarmony?.data?.chords) && moduleHarmony.data.chords.length > 0

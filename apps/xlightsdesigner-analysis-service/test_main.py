@@ -691,6 +691,39 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(out[0]["startMs"], 1000)
         self.assertEqual(out[-1]["endMs"], 9000)
 
+    def test_maybe_build_plain_lyrics_phrase_fallback_returns_aligned_phrases(self):
+        with mock.patch.object(
+            main,
+            "_fetch_genius_plain_lyrics",
+            return_value=(
+                ["line one", "line two"],
+                "",
+                {
+                    "geniusMatchedTitle": "Christmas Vacation",
+                    "geniusMatchedArtist": "Mavis Staples",
+                    "geniusTitleSimilarity": 1.0,
+                },
+            ),
+        ):
+            out = main._maybe_build_plain_lyrics_phrase_fallback(
+                identity={"title": "Christmas Vacation", "artist": "Mavis Staples"},
+                lyrics_marks=[],
+                sections=[
+                    {"startMs": 0, "endMs": 1000, "label": "Intro"},
+                    {"startMs": 1000, "endMs": 5000, "label": "Theme 1"},
+                ],
+                bars=[
+                    {"startMs": 1000, "endMs": 3000, "label": "1"},
+                    {"startMs": 3000, "endMs": 5000, "label": "2"},
+                ],
+                duration_ms=5000,
+            )
+        self.assertTrue(out["available"])
+        self.assertEqual(out["lineCount"], 2)
+        self.assertEqual(out["phraseCount"], 2)
+        self.assertEqual(out["geniusMatchedArtist"], "Mavis Staples")
+        self.assertEqual(out["phrases"][0]["sectionLabel"], "Theme 1")
+
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
             "hello from the start",

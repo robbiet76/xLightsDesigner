@@ -2321,6 +2321,7 @@ def _build_lyrics_provider_results(
     lyrics_shift_ms: int,
     lyrics_info: Dict[str, Any],
     lyrics_marks: List[Dict[str, Any]],
+    plain_phrase_fallback: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     source = str(lyrics_source or "none")
     info = dict(lyrics_info) if isinstance(lyrics_info, dict) else {}
@@ -2334,11 +2335,64 @@ def _build_lyrics_provider_results(
         "error": str(lyrics_error or info.get("error") or "").strip(),
         "lines": _sanitize_marks(lyrics_marks or []),
     }
+    providers = {
+        source: provider_summary
+    }
+    fallback = dict(plain_phrase_fallback) if isinstance(plain_phrase_fallback, dict) else {}
+    if fallback:
+        fallback_provider = str(fallback.get("provider") or "lyricsgenius-plain-phrases")
+        providers[fallback_provider] = {
+            **fallback,
+            "provider": fallback_provider,
+            "selected": False,
+            "synced": False,
+            "lineCount": int(fallback.get("lineCount") or len(fallback.get("lines") or [])),
+            "phraseCount": int(fallback.get("phraseCount") or len(fallback.get("phrases") or [])),
+            "lines": list(fallback.get("lines") or []),
+            "phrases": _sanitize_marks(fallback.get("phrases") or []),
+        }
     return {
         "selectedProvider": source,
-        "providers": {
-            source: provider_summary
+        "providers": providers
+    }
+
+
+def _maybe_build_plain_lyrics_phrase_fallback(
+    *,
+    identity: Dict[str, Any],
+    lyrics_marks: List[Dict[str, Any]],
+    sections: List[Dict[str, Any]],
+    bars: List[Dict[str, Any]],
+    duration_ms: int,
+) -> Dict[str, Any]:
+    if lyrics_marks:
+        return {}
+    plain_lines, plain_error, plain_info = _fetch_genius_plain_lyrics(identity)
+    if not plain_lines:
+        return {
+            "available": False,
+            "provider": "lyricsgenius",
+            "error": plain_error,
+            "lineCount": 0,
+            "phraseCount": 0,
+            "lines": [],
+            "phrases": [],
         }
+    phrases = _align_plain_lyrics_to_structure_phrases(
+        plain_lines,
+        sections=sections,
+        bars=bars,
+        duration_ms=duration_ms,
+    )
+    return {
+        "available": bool(phrases),
+        "provider": "lyricsgenius",
+        "error": "",
+        "lineCount": len(plain_lines),
+        "phraseCount": len(phrases),
+        "lines": plain_lines,
+        "phrases": phrases,
+        **plain_info,
     }
 
 
@@ -3592,12 +3646,20 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
 
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
+    plain_lyrics_phrase_fallback = _maybe_build_plain_lyrics_phrase_fallback(
+        identity=identity,
+        lyrics_marks=lyrics_marks,
+        sections=sections,
+        bars=bars_out,
+        duration_ms=duration_ms,
+    )
     lyrics_provider_results = _build_lyrics_provider_results(
         lyrics_source=lyrics_source,
         lyrics_error=lyrics_error,
         lyrics_shift_ms=int(lyrics_shift_ms),
         lyrics_info=lyrics_info,
         lyrics_marks=lyrics_marks,
+        plain_phrase_fallback=plain_lyrics_phrase_fallback,
     )
     if not sections and lyrics_marks:
         try:
@@ -3773,13 +3835,6 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
     metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
-    lyrics_provider_results = _build_lyrics_provider_results(
-        lyrics_source=lyrics_source,
-        lyrics_error=lyrics_error,
-        lyrics_shift_ms=int(lyrics_shift_ms),
-        lyrics_info=lyrics_info,
-        lyrics_marks=lyrics_marks,
-    )
     cached_sections = _cached_structure_segments(cached_modules, duration_ms) if profile.get("mode") == "deep" else []
     reused_cached_structure = bool(cached_sections)
     if reused_cached_structure:
@@ -3816,6 +3871,21 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             lyric_sections = []
     if lyric_sections:
         sections = _refine_audio_sections_with_semantic_spans(sections, lyric_sections)
+    plain_lyrics_phrase_fallback = _maybe_build_plain_lyrics_phrase_fallback(
+        identity=identity,
+        lyrics_marks=lyrics_marks,
+        sections=sections,
+        bars=bars_out,
+        duration_ms=duration_ms,
+    )
+    lyrics_provider_results = _build_lyrics_provider_results(
+        lyrics_source=lyrics_source,
+        lyrics_error=lyrics_error,
+        lyrics_shift_ms=int(lyrics_shift_ms),
+        lyrics_info=lyrics_info,
+        lyrics_marks=lyrics_marks,
+        plain_phrase_fallback=plain_lyrics_phrase_fallback,
+    )
     has_semantic_sections = any(
         str(row.get("label", "")).strip() and not _looks_generic_section_label(str(row.get("label", "")).strip())
         for row in sections
@@ -3857,6 +3927,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "lyricsParserVersion": "lrclib-v2-offset-aware-no-empty-lines",
             "lyricsLookup": lyrics_info,
             "lyricsProviderResults": lyrics_provider_results,
+            "plainLyricsPhraseFallback": plain_lyrics_phrase_fallback,
             "analysisProfile": profile,
             "beatsPerBar": int(max(1, int(inferred_bpb))),
             "meterAccentOffset": int(inferred_offset),

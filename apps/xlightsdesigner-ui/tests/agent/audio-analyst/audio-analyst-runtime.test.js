@@ -164,11 +164,83 @@ test("audio analyst runtime preserves lyric retry provenance", () => {
   });
 
   assert.equal(artifact.lyrics.source, "lrclib+genius-lrclib-retry");
-  assert.equal(artifact.modules.lyrics.metadata.moduleVersion, "v3");
+  assert.equal(artifact.modules.lyrics.metadata.moduleVersion, "v4");
   assert.equal(
     artifact.modules.lyrics.data.providerResults.providers["lrclib+genius-lrclib-retry"].lyricsRetryMatchedArtist,
     "Michael Buble"
   );
+});
+
+test("audio analyst runtime preserves experimental plain lyric phrase fallback", () => {
+  const result = samplePipelineResult();
+  result.details.timing.hasLyricsTrack = false;
+  result.raw.lyrics = [];
+  result.raw.meta.lyricsSource = "none";
+  result.raw.meta.plainLyricsPhraseFallback = {
+    available: true,
+    provider: "lyricsgenius",
+    lineCount: 2,
+    phraseCount: 1,
+    lines: ["Christmas vacation", "we've got a little change in plans"],
+    phrases: [
+      {
+        startMs: 1000,
+        endMs: 4000,
+        label: "Christmas vacation / we've got a little change in plans",
+        sectionLabel: "Theme 1",
+        snappedStartMs: 1000,
+        snappedEndMs: 4000
+      }
+    ],
+    geniusMatchedTitle: "Christmas Vacation",
+    geniusMatchedArtist: "Mavis Staples",
+    geniusTitleSimilarity: 1.0
+  };
+  result.raw.meta.lyricsProviderResults = {
+    selectedProvider: "none",
+    providers: {
+      none: {
+        provider: "none",
+        available: false,
+        selected: true,
+        lineCount: 0,
+        lines: []
+      },
+      lyricsgenius: {
+        provider: "lyricsgenius",
+        available: true,
+        selected: false,
+        lineCount: 2,
+        phraseCount: 1,
+        lines: ["Christmas vacation", "we've got a little change in plans"],
+        phrases: [
+          {
+            startMs: 1000,
+            endMs: 4000,
+            label: "Christmas vacation / we've got a little change in plans",
+            sectionLabel: "Theme 1",
+            snappedStartMs: 1000,
+            snappedEndMs: 4000
+          }
+        ]
+      }
+    }
+  };
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Christmas Vacation.mp3",
+    mediaId: "media-plain-fallback",
+    result
+  });
+  const handoff = buildAnalysisHandoffFromArtifact(artifact);
+
+  assert.equal(artifact.lyrics.hasSyncedLyrics, false);
+  assert.equal(artifact.lyrics.plainPhraseFallback.available, true);
+  assert.equal(artifact.lyrics.plainPhraseFallback.phraseCount, 1);
+  assert.equal(artifact.modules.lyrics.data.plainPhraseFallback.matchedArtist, "Mavis Staples");
+  assert.equal(artifact.modules.lyrics.data.providerResults.providers.lyricsgenius.provider, "lyricsgenius");
+  assert.equal(handoff.lyrics.hasPlainPhraseFallback, true);
+  assert.equal(handoff.lyrics.phraseArtifact, "plain-lyrics-phrases");
 });
 
 test("audio analyst runtime derives analysis handoff from canonical artifact", () => {
