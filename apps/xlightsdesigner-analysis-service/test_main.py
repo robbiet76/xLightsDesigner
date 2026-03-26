@@ -512,6 +512,27 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         )
         self.assertEqual(out, "lrclib")
 
+    def test_fallback_identity_from_path_strips_numeric_prefix(self):
+        out = main._fallback_identity_from_path("/tmp/01 It's Beginning To Look a Lot Like Christmas.mp3")
+        self.assertEqual(out["title"], "It's Beginning To Look a Lot Like Christmas")
+        self.assertNotIn("artist", out)
+        self.assertEqual(out["provider"], "filename")
+
+    def test_fallback_identity_from_path_parses_artist_title(self):
+        out = main._fallback_identity_from_path("/tmp/tobyMac - Little Drummer Boy.mp3")
+        self.assertEqual(out["title"], "Little Drummer Boy")
+        self.assertEqual(out["artist"], "tobyMac")
+
+    def test_resolve_identity_and_web_uses_filename_fallback_when_no_remote_identity(self):
+        with mock.patch.object(main, "_identify_track_with_audd", return_value=({}, False)):
+            identity, identity_cache_hit, web_tempo_evidence, error = main._resolve_identity_and_web(
+                "/tmp/01 It's Beginning To Look a Lot Like Christmas.mp3",
+                {"enableWebTempo": False},
+            )
+        self.assertEqual(identity["title"], "It's Beginning To Look a Lot Like Christmas")
+        self.assertEqual(identity["provider"], "filename")
+        self.assertFalse(identity_cache_hit)
+
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
             "hello from the start",

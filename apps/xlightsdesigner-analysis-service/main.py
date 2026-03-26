@@ -232,6 +232,28 @@ def _audio_fingerprint(path: str) -> str:
     return h.hexdigest()
 
 
+def _fallback_identity_from_path(path: str) -> Dict[str, Any]:
+    stem = os.path.splitext(os.path.basename(str(path) or ""))[0]
+    text = str(stem or "").strip()
+    if not text:
+        return {}
+    text = re.sub(r"_+", " ", text)
+    text = re.sub(r"^\s*\d+\s*[-.)_ ]+\s*", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    artist = ""
+    title = text
+    if " - " in text:
+        left, right = text.split(" - ", 1)
+        if left.strip() and right.strip():
+            artist = left.strip()
+            title = right.strip()
+    return _normalize_identity({
+        "provider": "filename",
+        "title": title,
+        "artist": artist,
+    })
+
+
 def _slugify(s: str) -> str:
     text = str(s or "").strip().lower()
     text = re.sub(r"[^a-z0-9]+", "-", text)
@@ -2425,6 +2447,8 @@ def _resolve_identity_and_web(path: str, analysis_profile: Optional[Dict[str, An
         identity, identity_cache_hit = _identify_track_with_audd(path, profile)
     except Exception as err:
         error = f"audd identify failed: {err}"
+    if not identity:
+        identity = _fallback_identity_from_path(path)
     if identity and profile.get("enableWebTempo"):
         try:
             web_tempo_evidence = _fetch_songbpm_evidence(identity)
