@@ -2435,6 +2435,42 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
   };
 }
 
+function buildLyricsRecoveryGuidance(artifact = null) {
+  const lyrics = artifact && typeof artifact === "object" && artifact.lyrics && typeof artifact.lyrics === "object"
+    ? artifact.lyrics
+    : {};
+  const identity = artifact && typeof artifact === "object" && artifact.identity && typeof artifact.identity === "object"
+    ? artifact.identity
+    : {};
+  const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
+    ? identity.sourceMetadata
+    : {};
+  const plainFallback = lyrics?.plainPhraseFallback && typeof lyrics.plainPhraseFallback === "object"
+    ? lyrics.plainPhraseFallback
+    : {};
+  const blockedReason = String(plainFallback?.blockedReason || "").trim();
+  if (!blockedReason) return null;
+  const embeddedArtist = String(sourceMetadata?.embeddedArtist || "").trim();
+  const resolvedArtist = String(identity?.artist || "").trim();
+  const matchedArtist = String(plainFallback?.matchedArtist || "").trim();
+  if (blockedReason === "artist_confidence_insufficient" && !embeddedArtist) {
+    return {
+      level: "warning",
+      message: "Lyrics recovery blocked: artist metadata is missing. Add artist metadata and rerun analysis."
+    };
+  }
+  if (blockedReason === "artist_confidence_insufficient") {
+    return {
+      level: "warning",
+      message: `Lyrics recovery blocked: matched artist ${matchedArtist || "candidate"} does not have enough confidence against ${resolvedArtist || embeddedArtist || "current metadata"}.`
+    };
+  }
+  return {
+    level: "warning",
+    message: `Lyrics recovery blocked: ${blockedReason}.`
+  };
+}
+
 async function maybePromptForMissingIdentityMetadata({
   audioPath = "",
   artifact = null,
@@ -11735,7 +11771,14 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
         audioPath: String(state.audioPathInput || "").trim(),
         trackIdentity: handoff?.trackIdentity || reusable.artifact?.identity || null
       });
-      setStatus("info", identityAction?.applied ? String(identityAction.message || "Applied track identity recommendation.") : `Loaded stored ${reusable.mode} audio analysis artifact.`);
+      const recoveryGuidance = buildLyricsRecoveryGuidance(reusable.artifact);
+      if (identityAction?.applied) {
+        setStatus("info", String(identityAction.message || "Applied track identity recommendation."));
+      } else if (recoveryGuidance?.message) {
+        setStatus(recoveryGuidance.level || "warning", recoveryGuidance.message);
+      } else {
+        setStatus("info", `Loaded stored ${reusable.mode} audio analysis artifact.`);
+      }
       endOrchestrationRun(orchestrationRun, { status: "ok", summary: `reused stored ${reusable.mode} audio analysis artifact` });
       return;
     }
@@ -11818,7 +11861,14 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
       audioPath: String(state.audioPathInput || "").trim(),
       trackIdentity: flow.handoff?.trackIdentity || persistedArtifact?.identity || null
     });
-    setStatus("info", identityAction?.applied ? String(identityAction.message || "Applied track identity recommendation.") : (flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete."));
+    const recoveryGuidance = buildLyricsRecoveryGuidance(persistedArtifact);
+    if (identityAction?.applied) {
+      setStatus("info", String(identityAction.message || "Applied track identity recommendation."));
+    } else if (recoveryGuidance?.message) {
+      setStatus(recoveryGuidance.level || "warning", recoveryGuidance.message);
+    } else {
+      setStatus("info", flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete.");
+    }
     endOrchestrationRun(orchestrationRun, {
       status: flow.result.status === "failed" ? "failed" : "ok",
       summary: flow.result.status === "partial" ? "audio analysis complete with warnings" : "audio analysis complete"
