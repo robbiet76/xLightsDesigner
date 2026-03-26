@@ -644,6 +644,53 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertFalse(out["diff"]["artist"])
         self.assertTrue(out["diff"]["album"])
 
+    def test_extract_genius_plain_lines_strips_embed_footer_and_blanks(self):
+        out = main._extract_genius_plain_lines("Hello world\n\n123Embed\n[Chorus]\nSing again")
+        self.assertEqual(out, ["Hello world", "Sing again"])
+
+    def test_fetch_genius_plain_lyrics_returns_lines_and_info(self):
+        with mock.patch.object(
+            main,
+            "_lookup_genius_song",
+            return_value={
+                "title": "Christmas Vacation",
+                "artist": "Mavis Staples",
+                "lyricsLines": ["Hello", "World"],
+                "source": "lyricsgenius",
+                "titleSimilarity": 1.0,
+                "titleOnly": False,
+            },
+        ):
+            lines, error, info = main._fetch_genius_plain_lyrics(
+                {"title": "Christmas Vacation", "artist": "Mavis Staples"}
+            )
+        self.assertEqual(lines, ["Hello", "World"])
+        self.assertEqual(error, "")
+        self.assertEqual(info["geniusMatchedArtist"], "Mavis Staples")
+
+    def test_align_plain_lyrics_to_structure_phrases_distributes_lines_over_lyrical_sections(self):
+        out = main._align_plain_lyrics_to_structure_phrases(
+            ["line one", "line two", "line three", "line four"],
+            sections=[
+                {"startMs": 0, "endMs": 1000, "label": "Intro"},
+                {"startMs": 1000, "endMs": 5000, "label": "Verse 1"},
+                {"startMs": 5000, "endMs": 9000, "label": "Chorus 1"},
+                {"startMs": 9000, "endMs": 10000, "label": "Outro"},
+            ],
+            bars=[
+                {"startMs": 1000, "endMs": 3000, "label": "1"},
+                {"startMs": 3000, "endMs": 5000, "label": "2"},
+                {"startMs": 5000, "endMs": 7000, "label": "3"},
+                {"startMs": 7000, "endMs": 9000, "label": "4"},
+            ],
+            duration_ms=10000,
+        )
+        self.assertEqual(len(out), 4)
+        self.assertEqual(out[0]["sectionLabel"], "Verse 1")
+        self.assertEqual(out[-1]["sectionLabel"], "Chorus 1")
+        self.assertEqual(out[0]["startMs"], 1000)
+        self.assertEqual(out[-1]["endMs"], 9000)
+
     def test_align_plain_lyrics_to_timed_phrases_snaps_to_bar_boundaries(self):
         plain_lines = [
             "hello from the start",

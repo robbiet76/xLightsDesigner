@@ -1276,9 +1276,115 @@ def _align_plain_lyrics_to_timed_phrases(
     return aligned
 
 
+def _lyrical_section_rows(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for row in sections or []:
+        label = str(row.get("label") or "").strip().lower()
+        if not label:
+            continue
+        if label.startswith("intro") or label.startswith("outro") or "instrumental" in label or "interlude" in label:
+            continue
+        out.append(row)
+    return out
+
+
+def _align_plain_lyrics_to_structure_phrases(
+    plain_lines: List[str],
+    *,
+    sections: Optional[List[Dict[str, Any]]] = None,
+    bars: Optional[List[Dict[str, Any]]] = None,
+    duration_ms: int = 0,
+) -> List[Dict[str, Any]]:
+    cleaned_lines = [str(row).strip() for row in (plain_lines or []) if str(row).strip()]
+    if not cleaned_lines:
+        return []
+    section_rows = _lyrical_section_rows(sections or [])
+    if not section_rows:
+        if int(duration_ms) <= 0:
+            return []
+        section_rows = [{"startMs": 0, "endMs": int(duration_ms), "label": "Lyrics"}]
+    bar_rows = list(bars or [])
+    aligned: List[Dict[str, Any]] = []
+    remaining_lines = list(cleaned_lines)
+    remaining_sections = len(section_rows)
+    for index, section in enumerate(section_rows):
+        start_ms = int(section.get("startMs", 0))
+        end_ms = int(section.get("endMs", start_ms))
+        if end_ms <= start_ms:
+            continue
+        section_lines = max(1, round(len(remaining_lines) / max(1, remaining_sections)))
+        if index == len(section_rows) - 1:
+            chosen_lines = remaining_lines
+        else:
+            chosen_lines = remaining_lines[:section_lines]
+        remaining_lines = remaining_lines[len(chosen_lines):]
+        remaining_sections -= 1
+        if not chosen_lines:
+            continue
+        section_bars = [
+            row for row in bar_rows
+            if int(row.get("startMs", 0)) >= start_ms and int(row.get("endMs", 0)) <= end_ms
+        ]
+        if not section_bars:
+            section_bars = [{"startMs": start_ms, "endMs": end_ms, "label": str(index + 1)}]
+        bars_per_phrase = max(1, len(section_bars) // max(1, len(chosen_lines)))
+        for line_index, text in enumerate(chosen_lines):
+            bar_start_index = min(len(section_bars) - 1, line_index * bars_per_phrase)
+            if line_index == len(chosen_lines) - 1:
+                bar_end_index = len(section_bars) - 1
+            else:
+                bar_end_index = min(len(section_bars) - 1, ((line_index + 1) * bars_per_phrase) - 1)
+            phrase_start = int(section_bars[bar_start_index].get("startMs", start_ms))
+            phrase_end = int(section_bars[bar_end_index].get("endMs", end_ms))
+            if phrase_end <= phrase_start:
+                phrase_end = max(phrase_start + 1, end_ms)
+            aligned.append(
+                {
+                    "text": text,
+                    "startMs": phrase_start,
+                    "endMs": phrase_end,
+                    "snappedStartMs": phrase_start,
+                    "snappedEndMs": phrase_end,
+                    "sectionLabel": str(section.get("label") or "").strip(),
+                    "score": 0.35,
+                    "textScore": 0.35,
+                }
+            )
+    out: List[Dict[str, Any]] = []
+    for row in aligned:
+        start_ms = int(row.get("startMs", 0))
+        end_ms = int(row.get("endMs", start_ms))
+        if end_ms <= start_ms:
+            end_ms = start_ms + 1
+        out.append({
+            **row,
+            "startMs": start_ms,
+            "endMs": end_ms,
+            "snappedStartMs": int(row.get("snappedStartMs", start_ms)),
+            "snappedEndMs": int(row.get("snappedEndMs", end_ms)),
+        })
+    return out
+
+
 def _is_generic_lyrics_artist(artist: str) -> bool:
     value = _normalize_compare_text(artist)
     return value in {"christmas songs", "christmas carols", "traditional", "various artists"}
+
+
+def _extract_genius_plain_lines(raw_text: str) -> List[str]:
+    text = str(raw_text or "").replace("\r\n", "\n").replace("\r", "\n")
+    rows: List[str] = []
+    for line in text.split("\n"):
+        cleaned = str(line or "").strip()
+        if not cleaned:
+            continue
+        normalized = _normalize_compare_text(cleaned)
+        normalized = re.sub(r"\b\d*embed\b", " ", normalized)
+        normalized = re.sub(r"\s+", " ", normalized).strip()
+        if not normalized or normalized == "lyrics":
+            continue
+        rows.append(cleaned)
+    return rows
 
 
 def _genius_retry_title_variants(title: str) -> List[str]:
@@ -1301,12 +1407,10 @@ def _genius_retry_title_variants(title: str) -> List[str]:
     return values
 
 
-def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, Any]:
-    if not ENABLE_GENIUS_LRCLIB_RETRY or not GENIUS_ACCESS_TOKEN:
-        return {}
+def _lookup_genius_song(identity: Dict[str, Any]) -> Dict[str, Any]:
     title = str(identity.get("title") or "").strip()
     artist = str(identity.get("artist") or "").strip()
-    if not title:
+    if not title or not GENIUS_ACCESS_TOKEN:
         return {}
     lyricsgenius = _ensure_lyricsgenius()
     if not lyricsgenius:
@@ -1323,10 +1427,11 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
             verbose=False,
         )
         song = None
+        matched_from_title = ""
         for candidate_title in _genius_retry_title_variants(title):
             song = genius.search_song(title=candidate_title, artist=artist or None)
             if song:
-                title = candidate_title
+                matched_from_title = candidate_title
                 break
     except Exception:
         return {}
@@ -1337,10 +1442,10 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
     title_ratio = (
         difflib.SequenceMatcher(
             None,
-            _normalize_compare_text(title),
+            _normalize_compare_text(matched_from_title or title),
             _normalize_compare_text(matched_title),
         ).ratio()
-        if title and matched_title else 0.0
+        if (matched_from_title or title) and matched_title else 0.0
     )
     if title_ratio < 0.9:
         return {}
@@ -1353,6 +1458,29 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
             return {}
     if not matched_artist or _is_generic_lyrics_artist(matched_artist):
         return {}
+    return {
+        "title": matched_title,
+        "artist": matched_artist,
+        "lyricsText": str(getattr(song, "lyrics", "") or "").strip(),
+        "lyricsLines": _extract_genius_plain_lines(str(getattr(song, "lyrics", "") or "")),
+        "source": "lyricsgenius",
+        "titleSimilarity": round(title_ratio, 3),
+        "artistMatched": bool(artist_match),
+        "titleOnly": not bool(artist),
+    }
+
+
+def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, Any]:
+    if not ENABLE_GENIUS_LRCLIB_RETRY or not GENIUS_ACCESS_TOKEN:
+        return {}
+    title = str(identity.get("title") or "").strip()
+    artist = str(identity.get("artist") or "").strip()
+    song = _lookup_genius_song(identity)
+    if not song:
+        return {}
+    matched_title = str(song.get("title") or "").strip()
+    matched_artist = str(song.get("artist") or "").strip()
+    title_ratio = float(song.get("titleSimilarity") or 0.0)
     if artist and _normalize_compare_text(title) == _normalize_compare_text(matched_title) and (
         _normalize_compare_text(artist) == _normalize_compare_text(matched_artist)
     ):
@@ -1362,8 +1490,8 @@ def _lookup_genius_lrclib_retry_identity(identity: Dict[str, Any]) -> Dict[str, 
         "artist": matched_artist,
         "source": "genius-lrclib-retry",
         "titleSimilarity": round(title_ratio, 3),
-        "artistMatched": bool(artist_match),
-        "titleOnly": not bool(artist),
+        "artistMatched": bool(song.get("artistMatched")),
+        "titleOnly": bool(song.get("titleOnly")),
     }
 
 
@@ -1376,6 +1504,23 @@ def _duration_delta_close_enough(duration_ms: int, info: Dict[str, Any], max_del
         return False
     delta_ms = abs(int(round(lrclib_duration_sec * 1000.0)) - int(duration_ms))
     return delta_ms <= int(max_delta_ms)
+
+
+def _fetch_genius_plain_lyrics(identity: Dict[str, Any]) -> tuple[List[str], str, Dict[str, Any]]:
+    song = _lookup_genius_song(identity)
+    if not song:
+        return [], "lyricsgenius: no match", {}
+    plain_lines = [str(row).strip() for row in (song.get("lyricsLines") or []) if str(row).strip()]
+    if not plain_lines:
+        return [], "lyricsgenius: lyrics parse empty", {}
+    info = {
+        "geniusMatchedTitle": str(song.get("title") or "").strip(),
+        "geniusMatchedArtist": str(song.get("artist") or "").strip(),
+        "geniusSource": str(song.get("source") or "lyricsgenius"),
+        "geniusTitleSimilarity": song.get("titleSimilarity"),
+        "geniusTitleOnly": bool(song.get("titleOnly")),
+    }
+    return plain_lines, "", info
 
 
 def _fetch_lrclib_lyrics_direct(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
