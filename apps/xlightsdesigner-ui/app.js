@@ -2407,11 +2407,17 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
   const identity = artifact && typeof artifact === "object" && artifact.identity && typeof artifact.identity === "object"
     ? artifact.identity
     : {};
+  const lyrics = artifact && typeof artifact === "object" && artifact.lyrics && typeof artifact.lyrics === "object"
+    ? artifact.lyrics
+    : {};
   const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
     ? identity.sourceMetadata
     : {};
   const metadataRecommendation = identity?.metadataRecommendation && typeof identity.metadataRecommendation === "object"
     ? identity.metadataRecommendation
+    : {};
+  const plainFallback = lyrics?.plainPhraseFallback && typeof lyrics.plainPhraseFallback === "object"
+    ? lyrics.plainPhraseFallback
     : {};
   const current = metadataRecommendation?.current && typeof metadataRecommendation.current === "object"
     ? metadataRecommendation.current
@@ -2423,7 +2429,11 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
   const currentArtist = String(current?.artist || sourceMetadata?.embeddedArtist || identity?.artist || "").trim();
   const currentAlbum = String(current?.album || sourceMetadata?.embeddedAlbum || "").trim();
   const recommendedTitle = String(recommended?.title || identity?.title || "").trim();
-  const recommendedArtist = String(recommended?.artist || identity?.artist || "").trim();
+  const blockedMatchedArtist = String(plainFallback?.matchedArtist || "").trim();
+  const blockedReason = String(plainFallback?.blockedReason || "").trim();
+  const recommendedArtist = String(recommended?.artist || identity?.artist || "").trim() || (
+    blockedReason === "artist_confidence_insufficient" ? blockedMatchedArtist : ""
+  );
   return {
     missingTitle: !currentTitle,
     missingArtist: !currentArtist,
@@ -2431,7 +2441,8 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
     currentArtist,
     currentAlbum,
     recommendedTitle,
-    recommendedArtist
+    recommendedArtist,
+    artistSuggestionFromBlockedLyrics: blockedReason === "artist_confidence_insufficient" && Boolean(blockedMatchedArtist)
   };
 }
 
@@ -2492,7 +2503,7 @@ async function maybePromptForMissingIdentityMetadata({
 
   const artistValue = promptState.missingArtist
     ? window.prompt(
-      `Artist metadata is missing for ${basenameOfPath(audioPath) || audioPath}.\nEnter the correct artist to improve matching:`,
+      `${promptState.artistSuggestionFromBlockedLyrics ? "Artist metadata is missing and a lyrics provider suggested a candidate artist.\nConfirm or replace it to improve matching:" : `Artist metadata is missing for ${basenameOfPath(audioPath) || audioPath}.\nEnter the correct artist to improve matching:`}`,
       promptState.recommendedArtist || ""
     )
     : promptState.currentArtist;
