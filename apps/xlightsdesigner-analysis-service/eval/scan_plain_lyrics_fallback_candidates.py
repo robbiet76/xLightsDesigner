@@ -2,8 +2,23 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 from typing import Any
+
+
+def _load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def _load_main(module_path: Path):
@@ -48,8 +63,14 @@ def main() -> int:
         default=str(Path(__file__).resolve().parents[1] / "main.py"),
         help="Path to analysis-service main.py",
     )
+    ap.add_argument(
+        "--env-file",
+        default=str(Path(__file__).resolve().parents[1] / ".env.local"),
+        help="Optional env file to load before importing the analysis module",
+    )
     args = ap.parse_args()
 
+    _load_env_file(Path(args.env_file).expanduser())
     module = _load_main(Path(args.module_path).expanduser())
     profile_fast = module._normalize_analysis_profile("fast")
     profile_deep = module._normalize_analysis_profile("deep")
