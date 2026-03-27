@@ -1421,6 +1421,51 @@ def _genius_retry_title_variants(title: str) -> List[str]:
     return values
 
 
+def _identity_title_variants(title: str) -> List[str]:
+    values: List[str] = []
+    seen = set()
+
+    def add(value: str) -> None:
+        text = str(value or "").strip()
+        if not text:
+            return
+        key = _normalize_compare_text(text)
+        if not key or key in seen:
+            return
+        seen.add(key)
+        values.append(text)
+
+    for variant in _genius_retry_title_variants(title):
+        add(variant)
+    add(re.split(r"\s*/\s*", title or "", maxsplit=1)[0])
+    add(re.sub(r"\s*\[(instrumental|voice)\]\s*", "", title or "", flags=re.I))
+    add(re.sub(r"\s*/\s*end title.*$", "", title or "", flags=re.I))
+    add(title)
+    return values
+
+
+def _identity_artist_variants(artist: str) -> List[str]:
+    values: List[str] = []
+    seen = set()
+
+    def add(value: str) -> None:
+        text = str(value or "").strip()
+        if not text:
+            return
+        key = _normalize_compare_text(text)
+        if not key or key in seen:
+            return
+        seen.add(key)
+        values.append(text)
+
+    cleaned = re.sub(r"\s*\([^)]*\)\s*", " ", artist or "").strip()
+    add(artist)
+    add(cleaned)
+    primary = re.split(r"\s*(?:;|/|,| feat\. | featuring | w/ | with | & )\s*", cleaned, maxsplit=1, flags=re.I)[0]
+    add(primary)
+    return values
+
+
 def _lookup_genius_song(identity: Dict[str, Any]) -> Dict[str, Any]:
     title = str(identity.get("title") or "").strip()
     artist = str(identity.get("artist") or "").strip()
@@ -1442,9 +1487,11 @@ def _lookup_genius_song(identity: Dict[str, Any]) -> Dict[str, Any]:
         )
         song = None
         matched_from_title = ""
-        for candidate_title in _genius_retry_title_variants(title):
-            attempts = [artist] if artist else [None]
-            if artist:
+        for candidate_title in _identity_title_variants(title):
+            attempts = _identity_artist_variants(artist) if artist else []
+            if not attempts:
+                attempts = [None]
+            elif None not in attempts:
                 attempts.append(None)
             for candidate_artist in attempts:
                 song = genius.search_song(title=candidate_title, artist=candidate_artist or None)
@@ -1582,34 +1629,53 @@ def _fetch_lrclib_lyrics_direct(identity: Dict[str, Any], duration_ms: int, anal
                 payload = {}
             if not selected_payload:
                 # Fallback search if direct get could not locate a record.
-                search = requests.get(
-                    f"{LRCLIB_API_BASE}/search",
-                    params={"track_name": title, "artist_name": artist},
-                    timeout=20.0,
-                )
-                if search.status_code >= 400:
-                    return [], f"lrclib search failed: HTTP {search.status_code}", {}
-                arr = search.json()
-                if isinstance(arr, list) and arr:
-                    # Prefer rows with synced lyrics, then closest duration.
-                    best = None
-                    best_key = None
-                    for row in arr:
-                        if not isinstance(row, dict):
+                best = None
+                best_key = None
+                for search_title in _identity_title_variants(title):
+                    for search_artist in _identity_artist_variants(artist):
+                        search = requests.get(
+                            f"{LRCLIB_API_BASE}/search",
+                            params={"track_name": search_title, "artist_name": search_artist},
+                            timeout=20.0,
+                        )
+                        if search.status_code >= 400:
+                            return [], f"lrclib search failed: HTTP {search.status_code}", {}
+                        arr = search.json()
+                        if not isinstance(arr, list):
                             continue
-                        synced = str(row.get("syncedLyrics") or "").strip()
-                        has_synced = 1 if synced else 0
-                        d = int(row.get("duration") or 0)
-                        delta = abs(d - duration_s) if d > 0 else 10**9
-                        first_ts = _first_lrc_timestamp_ms(synced) if synced else None
-                        # Avoid pathological near-zero first timestamps when better matches exist.
-                        early_penalty = 1 if first_ts is not None and first_ts < 3000 else 0
-                        key = (-has_synced, delta, early_penalty, str(row.get("id", "")))
-                        if best is None or key < best_key:
-                            best = row
-                            best_key = key
-                    payload = best if isinstance(best, dict) else {}
-                    selected_payload = payload if isinstance(payload, dict) else {}
+                        for row in arr:
+                            if not isinstance(row, dict):
+                                continue
+                            synced = str(row.get("syncedLyrics") or "").strip()
+                            has_synced = 1 if synced else 0
+                            d = int(row.get("duration") or 0)
+                            delta = abs(d - duration_s) if d > 0 else 10**9
+                            first_ts = _first_lrc_timestamp_ms(synced) if synced else None
+                            early_penalty = 1 if first_ts is not None and first_ts < 3000 else 0
+                            title_ratio = difflib.SequenceMatcher(
+                                None,
+                                _normalize_compare_text(title),
+                                _normalize_compare_text(str(row.get("trackName") or row.get("name") or "")),
+                            ).ratio()
+                            artist_ratio = difflib.SequenceMatcher(
+                                None,
+                                _normalize_compare_text(artist),
+                                _normalize_compare_text(str(row.get("artistName") or "")),
+                            ).ratio()
+                            key = (
+                                -has_synced,
+                                -round(title_ratio, 3),
+                                -round(artist_ratio, 3),
+                                delta,
+                                early_penalty,
+                                str(row.get("id", "")),
+                            )
+                            if best is None or key < best_key:
+                                best = row
+                                best_key = key
+                if isinstance(best, dict):
+                    payload = best
+                    selected_payload = payload
                 else:
                     return [], "lrclib: no matches from search", {}
             else:

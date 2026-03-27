@@ -479,6 +479,32 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(out["artist"], "C.J. Chenier & The Red Hot Louisiana Band")
         self.assertTrue(out["artistMatched"])
 
+    def test_lookup_genius_song_retries_with_artist_variant_when_full_artist_search_misses(self):
+        song = mock.Mock()
+        song.title = "We Wish You a Merry Christmas"
+        song.artist = "John Denver"
+        song.lyrics = "We wish you a merry christmas"
+        genius_client = mock.Mock()
+
+        def search_song(*, title, artist=None):
+            if title == "We Wish You a Merry Christmas" and artist == "John Denver & The Muppets":
+                return None
+            if title == "We Wish You a Merry Christmas" and artist == "John Denver":
+                return song
+            return None
+
+        genius_client.search_song.side_effect = search_song
+        lyricsgenius = mock.Mock()
+        lyricsgenius.Genius.return_value = genius_client
+        with mock.patch.object(main, "GENIUS_ACCESS_TOKEN", "token"), \
+             mock.patch.object(main, "_ensure_lyricsgenius", return_value=lyricsgenius):
+            out = main._lookup_genius_song(
+                {"title": "We Wish You a Merry Christmas", "artist": "John Denver & The Muppets"}
+            )
+        self.assertEqual(out["title"], "We Wish You a Merry Christmas")
+        self.assertEqual(out["artist"], "John Denver")
+        self.assertTrue(out["artistMatched"])
+
     def test_fetch_lrclib_lyrics_retries_with_genius_identity_when_primary_misses(self):
         with mock.patch.object(
             main,
@@ -502,6 +528,43 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(info["lyricsRetrySource"], "genius-lrclib-retry")
         self.assertEqual(info["lyricsRetryMatchedArtist"], "Bing Crosby")
         self.assertEqual(fetch_mock.call_count, 2)
+
+    def test_fetch_lrclib_lyrics_direct_searches_artist_variants_when_direct_get_misses(self):
+        synced = "[00:07.38]We wish you a merry christmas\n[00:10.00]And a happy new year"
+
+        def fake_get(url, params=None, timeout=None):
+            params = params or {}
+            if url.endswith("/get"):
+                response = mock.Mock()
+                response.status_code = 404
+                return response
+            response = mock.Mock()
+            response.status_code = 200
+            if params.get("artist_name") == "John Denver":
+                response.json.return_value = [
+                    {
+                        "id": "970535",
+                        "trackName": "We Wish You a Merry Christmas",
+                        "artistName": "John Denver & the Muppets",
+                        "albumName": "A Christmas Together - with the Muppets",
+                        "duration": 65,
+                        "syncedLyrics": synced,
+                    }
+                ]
+            else:
+                response.json.return_value = []
+            return response
+
+        with mock.patch.object(main, "requests") as requests_mock:
+            requests_mock.get.side_effect = fake_get
+            marks, error, info = main._fetch_lrclib_lyrics_direct(
+                {"title": "We Wish You a Merry Christmas", "artist": "John Denver & The Muppets", "album": "John Denver"},
+                65365,
+                {"enableLyrics": True},
+            )
+        self.assertEqual(error, "")
+        self.assertGreater(len(marks), 0)
+        self.assertEqual(info["lrclibId"], "970535")
 
     def test_fetch_lrclib_lyrics_rejects_genius_retry_when_duration_is_far(self):
         with mock.patch.object(
