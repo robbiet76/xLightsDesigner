@@ -70,6 +70,69 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             ["Verse 1", "Chorus 1", "Verse 2", "Chorus 2", "Outro"],
         )
 
+    def test_label_song_sections_prefers_vocal_refrain_verse_without_lyrics(self):
+        segments = [
+            {"startMs": 0, "endMs": 10},
+            {"startMs": 10, "endMs": 20},
+            {"startMs": 20, "endMs": 30},
+            {"startMs": 30, "endMs": 40},
+            {"startMs": 40, "endMs": 50},
+            {"startMs": 50, "endMs": 60},
+        ]
+        a = np.array([1.0, 0.0, 0.0])
+        b = np.array([0.0, 1.0, 0.0])
+        c = np.array([0.0, 0.0, 1.0])
+        section_chroma = [a, a, a, a, b, c]
+        section_energy = [0.8, 0.82, 0.81, 0.83, 0.45, 0.3]
+        out = main._label_song_sections(
+            segments,
+            section_chroma,
+            section_energy,
+            60,
+            content_hint="vocal",
+        )
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Intro", "Refrain 1", "Refrain 2", "Refrain 3", "Verse", "Outro"],
+        )
+
+    def test_label_song_sections_uses_verse_for_vocal_through_composed_backbone(self):
+        segments = [
+            {"startMs": 0, "endMs": 20},
+            {"startMs": 20, "endMs": 40},
+            {"startMs": 40, "endMs": 60},
+            {"startMs": 60, "endMs": 80},
+            {"startMs": 80, "endMs": 100},
+        ]
+        a = np.array([1.0, 0.0, 0.0])
+        section_chroma = [a, a, a, a, a]
+        section_energy = [0.3, 0.32, 0.31, 0.34, 0.28]
+        out = main._label_song_sections(
+            segments,
+            section_chroma,
+            section_energy,
+            100,
+            content_hint="vocal",
+        )
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Intro", "Verse 1", "Verse 2", "Verse 3", "Outro"],
+        )
+
+    def test_infer_audio_section_content_hint_distinguishes_instrumental_and_vocal(self):
+        self.assertEqual(
+            main._infer_audio_section_content_hint(
+                {"title": "Christmas/ Sarajevo 12/24 [Instrumental]", "artist": "Trans-Siberian Orchestra"}
+            ),
+            "instrumental",
+        )
+        self.assertEqual(
+            main._infer_audio_section_content_hint(
+                {"title": "Frosty the Snowman", "artist": "Mistletoe Singers"}
+            ),
+            "vocal",
+        )
+
     def test_build_section_recurrence_backbone_emits_family_sequence(self):
         segments = [
             {"startMs": 0, "endMs": 10},

@@ -3172,6 +3172,7 @@ def _detect_sections_from_audio_with_backbone(
     beat_times_ms: Optional[List[int]] = None,
     *,
     lyrics_available: bool = False,
+    content_hint: str = "unknown",
 ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
     chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
     chroma_frame_times = librosa.times_like(chroma, sr=sr)
@@ -3269,6 +3270,7 @@ def _detect_sections_from_audio_with_backbone(
         section_energy,
         duration_ms,
         lyrics_available=lyrics_available,
+        content_hint=content_hint,
     )
     return (labeled if labeled else _build_numbered_sections(segs)), backbone
 
@@ -3280,6 +3282,7 @@ def _detect_sections_from_audio(
     beat_times_ms: Optional[List[int]] = None,
     *,
     lyrics_available: bool = False,
+    content_hint: str = "unknown",
 ) -> List[Dict[str, Any]]:
     sections, _ = _detect_sections_from_audio_with_backbone(
         y,
@@ -3287,8 +3290,36 @@ def _detect_sections_from_audio(
         duration_ms,
         beat_times_ms,
         lyrics_available=lyrics_available,
+        content_hint=content_hint,
     )
     return sections
+
+
+def _infer_audio_section_content_hint(identity: Optional[Dict[str, Any]], *, lyrics_available: bool = False) -> str:
+    if lyrics_available:
+        return "vocal"
+    identity = identity or {}
+    title = str(identity.get("title") or "").strip().lower()
+    artist = str(identity.get("artist") or "").strip().lower()
+    if any(token in title for token in ("instrumental", "karaoke", "backing track")):
+        return "instrumental"
+    instrumental_artist_tokens = (
+        "orchestra",
+        "symphony",
+        "philharmonic",
+        "trio",
+        "quartet",
+        "quintet",
+        "ensemble",
+    )
+    vocal_artist_tokens = ("cast", "singers", "choir", "chorale", "voices", "vocal")
+    if artist and any(token in artist for token in instrumental_artist_tokens) and not any(
+        token in artist for token in vocal_artist_tokens
+    ):
+        return "instrumental"
+    if title or artist:
+        return "vocal"
+    return "unknown"
 
 
 def _apply_global_shift_to_marks(
@@ -3623,6 +3654,7 @@ def _label_song_sections(
     duration_ms: int,
     *,
     lyrics_available: bool = False,
+    content_hint: str = "unknown",
 ) -> List[Dict[str, Any]]:
     if not segments:
         return []
@@ -3633,7 +3665,9 @@ def _label_song_sections(
     anchor_for = [int(v) for v in (backbone.get("anchorFor") or [])]
     family_sequence = [str(v) for v in (backbone.get("sequence") or []) if str(v)]
     unique_family_count = len(set(family_sequence))
-    allow_pop_semantics = bool(lyrics_available or unique_family_count <= 4)
+    vocalish = content_hint == "vocal"
+    instrumentalish = content_hint == "instrumental"
+    allow_pop_semantics = bool(lyrics_available or vocalish or unique_family_count <= 4)
     groups: Dict[int, List[int]] = {}
     for idx, anchor in enumerate(anchor_for):
         groups.setdefault(int(anchor), []).append(int(idx))
@@ -3669,25 +3703,28 @@ def _label_song_sections(
         # when the backbone looks like a real contrasting repeated form. Otherwise
         # fall back to Theme/Refrain/Contrast.
         has_contrast_repeat = secondary_anchor >= 0 and secondary_count >= 2
-        audio_only_pop_form = unique_family_count <= 3
+        audio_only_pop_form = unique_family_count <= (4 if vocalish else 3)
         chorus_eligible = (
             primary_first_idx > 0
             and primary_coverage < 0.5
             and has_contrast_repeat
-            and (lyrics_available or audio_only_pop_form)
+            and (lyrics_available or vocalish or audio_only_pop_form)
         )
         if chorus_eligible:
             primary_label = "Chorus"
             secondary_label = "Verse"
-        elif primary_first_idx == 0 and primary_coverage >= 0.7:
+        elif instrumentalish and primary_first_idx == 0 and primary_coverage >= 0.7:
             primary_label = "Theme"
             secondary_label = "Contrast"
+        elif vocalish and primary_first_idx == 0 and primary_coverage >= 0.7 and not has_contrast_repeat:
+            primary_label = "Verse"
+            secondary_label = "Refrain"
         elif primary_first_idx == 0 or primary_coverage >= 0.5:
             primary_label = "Refrain"
-            secondary_label = "Contrast"
+            secondary_label = "Verse" if vocalish else "Contrast"
         else:
-            primary_label = "Theme"
-            secondary_label = "Contrast"
+            primary_label = "Verse" if vocalish else "Theme"
+            secondary_label = "Refrain" if vocalish else "Contrast"
 
     primary_idxs = groups.get(primary_anchor, []) if primary_anchor >= 0 else []
 
@@ -3723,9 +3760,12 @@ def _label_song_sections(
             if primary_anchor >= 0 and i < min(primary_idxs):
                 labels[i] = secondary_label if secondary_label == "Verse" else "Contrast"
             elif primary_anchor >= 0 and i > max(primary_idxs):
-                labels[i] = "Instrumental" if primary_label == "Refrain" else "Verse"
+                if vocalish:
+                    labels[i] = "Verse"
+                else:
+                    labels[i] = "Instrumental" if primary_label == "Refrain" else "Verse"
             else:
-                labels[i] = "Instrumental"
+                labels[i] = "Verse" if vocalish else "Instrumental"
 
     out = []
     for i, seg in enumerate(segments):
@@ -4167,6 +4207,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             duration_ms,
             beat_starts_ms,
             lyrics_available=bool(lyrics_marks),
+            content_hint=_infer_audio_section_content_hint(identity, lyrics_available=bool(lyrics_marks)),
         )
     lyric_sections: List[Dict[str, Any]] = []
     if lyrics_marks:
