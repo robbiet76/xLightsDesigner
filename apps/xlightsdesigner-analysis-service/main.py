@@ -3716,6 +3716,9 @@ def _label_song_sections(
         elif instrumentalish and primary_first_idx == 0 and primary_coverage >= 0.7:
             primary_label = "Theme"
             secondary_label = "Contrast"
+        elif instrumentalish and (primary_first_idx == 0 or primary_coverage >= 0.5):
+            primary_label = "Theme"
+            secondary_label = "Contrast"
         elif vocalish and primary_first_idx == 0 and primary_coverage >= 0.7 and not has_contrast_repeat:
             primary_label = "Verse"
             secondary_label = "Refrain"
@@ -3763,7 +3766,7 @@ def _label_song_sections(
                 if vocalish:
                     labels[i] = "Verse"
                 else:
-                    labels[i] = "Instrumental" if primary_label == "Refrain" else "Verse"
+                    labels[i] = "Instrumental" if primary_label in ("Refrain", "Theme") else "Verse"
             else:
                 labels[i] = "Verse" if vocalish else "Instrumental"
 

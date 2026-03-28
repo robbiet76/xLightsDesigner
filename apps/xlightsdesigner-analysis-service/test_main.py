@@ -133,6 +133,32 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
             "vocal",
         )
 
+    def test_label_song_sections_keeps_instrumental_backbone_on_theme_contrast(self):
+        segments = [
+            {"startMs": 0, "endMs": 10},
+            {"startMs": 10, "endMs": 20},
+            {"startMs": 20, "endMs": 30},
+            {"startMs": 30, "endMs": 40},
+            {"startMs": 40, "endMs": 50},
+            {"startMs": 50, "endMs": 60},
+        ]
+        a = np.array([1.0, 0.0, 0.0])
+        b = np.array([0.0, 1.0, 0.0])
+        c = np.array([0.0, 0.0, 1.0])
+        section_chroma = [a, a, a, a, b, c]
+        section_energy = [0.8, 0.82, 0.81, 0.83, 0.45, 0.3]
+        out = main._label_song_sections(
+            segments,
+            section_chroma,
+            section_energy,
+            60,
+            content_hint="instrumental",
+        )
+        self.assertEqual(
+            [row["label"] for row in out],
+            ["Intro", "Theme 1", "Theme 2", "Theme 3", "Instrumental", "Outro"],
+        )
+
     def test_build_section_recurrence_backbone_emits_family_sequence(self):
         segments = [
             {"startMs": 0, "endMs": 10},
