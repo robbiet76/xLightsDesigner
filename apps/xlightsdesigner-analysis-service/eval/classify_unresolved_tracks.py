@@ -78,7 +78,7 @@ def _classify_row(meta: Dict[str, Any]) -> str:
         return "identified_instrumental_audio_only"
     if _is_identified(identity):
         if section_source == "audio-structural-heuristic":
-            return "identified_audio_only_provider_miss"
+            return "identified_vocal_lyrics_unavailable"
         return "identified_audio_only"
     return "unidentified_audio_only"
 
