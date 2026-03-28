@@ -809,6 +809,33 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(out["artist"], "Pinkfong")
         self.assertEqual(out["confidence"], "provider-consensus")
 
+    def test_build_identity_verification_marks_synced_or_plain_provider_hits_as_verified(self):
+        out = main._build_identity_verification(
+            {"title": "Jingle Bells", "artist": "The Chipmunks", "provider": "embedded-metadata"},
+            lyrics_source="none",
+            plain_phrase_fallback={"available": True},
+            provider_metadata_suggestion={},
+        )
+        self.assertEqual(out["status"], "verified_content")
+
+    def test_build_identity_verification_marks_complete_local_metadata_as_claimed(self):
+        out = main._build_identity_verification(
+            {"title": "Frosty the Snowman", "artist": "Mistletoe Singers", "provider": "embedded-metadata"},
+            lyrics_source="none",
+            plain_phrase_fallback={},
+            provider_metadata_suggestion={},
+        )
+        self.assertEqual(out["status"], "claimed_identity_only")
+
+    def test_build_identity_verification_marks_missing_artist_with_provider_suggestion_as_metadata_needed(self):
+        out = main._build_identity_verification(
+            {"title": "Baby Shark EDM", "artist": "", "provider": "embedded-metadata"},
+            lyrics_source="none",
+            plain_phrase_fallback={},
+            provider_metadata_suggestion={"available": True, "artist": "Pinkfong"},
+        )
+        self.assertEqual(out["status"], "metadata_needed")
+
     def test_align_plain_lyrics_to_structure_phrases_distributes_lines_over_lyrical_sections(self):
         out = main._align_plain_lyrics_to_structure_phrases(
             ["line one", "line two", "line three", "line four"],

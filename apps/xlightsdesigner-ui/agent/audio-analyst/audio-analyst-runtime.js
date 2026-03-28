@@ -542,6 +542,14 @@ export function buildAnalysisArtifactFromPipelineResult({
         : [],
       titleSimilarity: finiteOrNull(rawMeta.providerMetadataSuggestion?.titleSimilarity),
       durationDeltaMs: finiteOrNull(rawMeta.providerMetadataSuggestion?.durationDeltaMs)
+    } : {},
+    verification: isPlainObject(rawMeta?.identityVerification) ? {
+      status: str(rawMeta.identityVerification?.status),
+      basis: Array.isArray(rawMeta.identityVerification?.basis)
+        ? rawMeta.identityVerification.basis.map((row) => str(row)).filter(Boolean)
+        : [],
+      titlePresent: Boolean(rawMeta.identityVerification?.titlePresent),
+      artistPresent: Boolean(rawMeta.identityVerification?.artistPresent)
     } : {}
   };
   const timingBlock = {
@@ -746,6 +754,14 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
           : [],
         titleSimilarity: finiteOrNull(identity.providerMetadataSuggestion?.titleSimilarity),
         durationDeltaMs: finiteOrNull(identity.providerMetadataSuggestion?.durationDeltaMs)
+      } : {},
+      verification: isPlainObject(identity?.verification) ? {
+        status: str(identity.verification?.status),
+        basis: Array.isArray(identity.verification?.basis)
+          ? identity.verification.basis.map((row) => str(row)).filter(Boolean)
+          : [],
+        titlePresent: Boolean(identity.verification?.titlePresent),
+        artistPresent: Boolean(identity.verification?.artistPresent)
       } : {}
     },
     timing: {

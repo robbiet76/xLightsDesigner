@@ -342,6 +342,46 @@ def _build_metadata_recommendation(source_metadata: Dict[str, Any], identity: Di
     }
 
 
+def _build_identity_verification(identity: Dict[str, Any], *, lyrics_source: str = "", plain_phrase_fallback: Optional[Dict[str, Any]] = None, provider_metadata_suggestion: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    normalized = _normalize_identity(identity)
+    title = str(normalized.get("title") or "").strip()
+    artist = str(normalized.get("artist") or "").strip()
+    provider = str(normalized.get("provider") or "").strip().lower()
+    plain = plain_phrase_fallback if isinstance(plain_phrase_fallback, dict) else {}
+    suggestion = provider_metadata_suggestion if isinstance(provider_metadata_suggestion, dict) else {}
+    has_synced = bool(str(lyrics_source or "").strip() and str(lyrics_source or "").strip() != "none")
+    has_plain = bool(plain.get("available"))
+    has_metadata_suggestion = bool(suggestion.get("available"))
+
+    if has_synced or has_plain or provider == "audd":
+        status = "verified_content"
+    elif title and artist:
+        status = "claimed_identity_only"
+    elif title and has_metadata_suggestion:
+        status = "metadata_needed"
+    elif title:
+        status = "claimed_identity_only"
+    else:
+        status = "unknown"
+
+    basis: List[str] = []
+    if provider:
+        basis.append(provider)
+    if has_synced:
+        basis.append("lyrics-provider")
+    elif has_plain:
+        basis.append("plain-lyrics-provider")
+    elif has_metadata_suggestion:
+        basis.append("provider-metadata-suggestion")
+
+    return {
+        "status": status,
+        "basis": basis,
+        "titlePresent": bool(title),
+        "artistPresent": bool(artist),
+    }
+
+
 def _embedded_identity_from_ffprobe(path: str) -> Dict[str, Any]:
     path_text = str(path or "").strip()
     if not path_text:
@@ -3917,6 +3957,12 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
         lyrics_marks=lyrics_marks,
         plain_phrase_fallback=plain_lyrics_phrase_fallback,
     )
+    identity_verification = _build_identity_verification(
+        identity,
+        lyrics_source=lyrics_source,
+        plain_phrase_fallback=plain_lyrics_phrase_fallback,
+        provider_metadata_suggestion=provider_metadata_suggestion,
+    )
     if not sections and lyrics_marks:
         try:
             sections = _infer_sections_from_lyrics(lyrics_marks, duration_ms)
@@ -3950,6 +3996,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "identityRecommendation": identity_recommendation,
             "metadataRecommendation": metadata_recommendation,
             "providerMetadataSuggestion": provider_metadata_suggestion,
+            "identityVerification": identity_verification,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "sectionSourceError": provider_error or "",
@@ -4144,6 +4191,12 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
         lyrics_marks=lyrics_marks,
         plain_phrase_fallback=plain_lyrics_phrase_fallback,
     )
+    identity_verification = _build_identity_verification(
+        identity,
+        lyrics_source=lyrics_source,
+        plain_phrase_fallback=plain_lyrics_phrase_fallback,
+        provider_metadata_suggestion=provider_metadata_suggestion,
+    )
     has_semantic_sections = any(
         str(row.get("label", "")).strip() and not _looks_generic_section_label(str(row.get("label", "")).strip())
         for row in sections
@@ -4177,6 +4230,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "identityRecommendation": identity_recommendation,
             "metadataRecommendation": metadata_recommendation,
             "providerMetadataSuggestion": provider_metadata_suggestion,
+            "identityVerification": identity_verification,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "identityError": identity_error,

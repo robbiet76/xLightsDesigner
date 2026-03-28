@@ -299,6 +299,27 @@ test("audio analyst runtime preserves provider metadata suggestion", () => {
   assert.equal(handoff.trackIdentity.providerMetadataSuggestion.artist, "Pinkfong");
 });
 
+test("audio analyst runtime preserves identity verification status", () => {
+  const result = samplePipelineResult();
+  result.raw.meta.identityVerification = {
+    status: "claimed_identity_only",
+    basis: ["embedded-metadata"],
+    titlePresent: true,
+    artistPresent: true
+  };
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/Frosty.mp3",
+    mediaId: "media-identity-verification",
+    result
+  });
+  const handoff = buildAnalysisHandoffFromArtifact(artifact);
+
+  assert.equal(artifact.identity.verification.status, "claimed_identity_only");
+  assert.equal(artifact.identity.verification.basis[0], "embedded-metadata");
+  assert.equal(handoff.trackIdentity.verification.status, "claimed_identity_only");
+});
+
 test("audio analyst runtime derives analysis handoff from canonical artifact", () => {
   const artifact = buildAnalysisArtifactFromPipelineResult({
     audioPath: "/tmp/Song.mp3",
