@@ -531,6 +531,17 @@ export function buildAnalysisArtifactFromPipelineResult({
         artist: str(rawMeta.metadataRecommendation.recommended?.artist),
         album: str(rawMeta.metadataRecommendation.recommended?.album)
       } : {}
+    } : {},
+    providerMetadataSuggestion: isPlainObject(rawMeta?.providerMetadataSuggestion) ? {
+      available: Boolean(rawMeta.providerMetadataSuggestion?.available),
+      title: str(rawMeta.providerMetadataSuggestion?.title),
+      artist: str(rawMeta.providerMetadataSuggestion?.artist),
+      confidence: str(rawMeta.providerMetadataSuggestion?.confidence),
+      sources: Array.isArray(rawMeta.providerMetadataSuggestion?.sources)
+        ? rawMeta.providerMetadataSuggestion.sources.map((row) => str(row)).filter(Boolean)
+        : [],
+      titleSimilarity: finiteOrNull(rawMeta.providerMetadataSuggestion?.titleSimilarity),
+      durationDeltaMs: finiteOrNull(rawMeta.providerMetadataSuggestion?.durationDeltaMs)
     } : {}
   };
   const timingBlock = {
@@ -724,6 +735,17 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
           artist: str(identity.metadataRecommendation.recommended?.artist),
           album: str(identity.metadataRecommendation.recommended?.album)
         } : {}
+      } : {},
+      providerMetadataSuggestion: isPlainObject(identity?.providerMetadataSuggestion) ? {
+        available: Boolean(identity.providerMetadataSuggestion?.available),
+        title: str(identity.providerMetadataSuggestion?.title),
+        artist: str(identity.providerMetadataSuggestion?.artist),
+        confidence: str(identity.providerMetadataSuggestion?.confidence),
+        sources: Array.isArray(identity.providerMetadataSuggestion?.sources)
+          ? identity.providerMetadataSuggestion.sources.map((row) => str(row)).filter(Boolean)
+          : [],
+        titleSimilarity: finiteOrNull(identity.providerMetadataSuggestion?.titleSimilarity),
+        durationDeltaMs: finiteOrNull(identity.providerMetadataSuggestion?.durationDeltaMs)
       } : {}
     },
     timing: {

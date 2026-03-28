@@ -274,6 +274,31 @@ test("audio analyst runtime preserves blocked plain lyric recovery reason", () =
   assert.equal(artifact.modules.lyrics.data.plainPhraseFallback.matchedArtist, "The Ronettes");
 });
 
+test("audio analyst runtime preserves provider metadata suggestion", () => {
+  const result = samplePipelineResult();
+  result.raw.meta.providerMetadataSuggestion = {
+    available: true,
+    title: "Baby Shark Edm Remix (2018)",
+    artist: "Pinkfong",
+    confidence: "provider-consensus",
+    sources: ["lrclib-search", "lyricsgenius-title-only"],
+    titleSimilarity: 0.833,
+    durationDeltaMs: 4903
+  };
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/BabySharkEDM.mp3",
+    mediaId: "media-provider-suggestion",
+    result
+  });
+  const handoff = buildAnalysisHandoffFromArtifact(artifact);
+
+  assert.equal(artifact.identity.providerMetadataSuggestion.artist, "Pinkfong");
+  assert.equal(artifact.identity.providerMetadataSuggestion.confidence, "provider-consensus");
+  assert.equal(artifact.identity.providerMetadataSuggestion.sources[0], "lrclib-search");
+  assert.equal(handoff.trackIdentity.providerMetadataSuggestion.artist, "Pinkfong");
+});
+
 test("audio analyst runtime derives analysis handoff from canonical artifact", () => {
   const artifact = buildAnalysisArtifactFromPipelineResult({
     audioPath: "/tmp/Song.mp3",

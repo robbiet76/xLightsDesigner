@@ -2416,6 +2416,9 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
   const metadataRecommendation = identity?.metadataRecommendation && typeof identity.metadataRecommendation === "object"
     ? identity.metadataRecommendation
     : {};
+  const providerMetadataSuggestion = identity?.providerMetadataSuggestion && typeof identity.providerMetadataSuggestion === "object"
+    ? identity.providerMetadataSuggestion
+    : {};
   const plainFallback = lyrics?.plainPhraseFallback && typeof lyrics.plainPhraseFallback === "object"
     ? lyrics.plainPhraseFallback
     : {};
@@ -2431,9 +2434,10 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
   const recommendedTitle = String(recommended?.title || identity?.title || "").trim();
   const blockedMatchedArtist = String(plainFallback?.matchedArtist || "").trim();
   const blockedReason = String(plainFallback?.blockedReason || "").trim();
+  const providerSuggestedArtist = String(providerMetadataSuggestion?.artist || "").trim();
   const recommendedArtist = String(recommended?.artist || identity?.artist || "").trim() || (
     blockedReason === "artist_confidence_insufficient" ? blockedMatchedArtist : ""
-  );
+  ) || providerSuggestedArtist;
   return {
     missingTitle: !currentTitle,
     missingArtist: !currentArtist,
@@ -2442,7 +2446,8 @@ function buildMissingIdentityMetadataPromptState(artifact = null) {
     currentAlbum,
     recommendedTitle,
     recommendedArtist,
-    artistSuggestionFromBlockedLyrics: blockedReason === "artist_confidence_insufficient" && Boolean(blockedMatchedArtist)
+    artistSuggestionFromBlockedLyrics: blockedReason === "artist_confidence_insufficient" && Boolean(blockedMatchedArtist),
+    artistSuggestionFromProviderConsensus: !blockedReason && Boolean(providerSuggestedArtist)
   };
 }
 
@@ -2503,7 +2508,7 @@ async function maybePromptForMissingIdentityMetadata({
 
   const artistValue = promptState.missingArtist
     ? window.prompt(
-      `${promptState.artistSuggestionFromBlockedLyrics ? "Artist metadata is missing and a lyrics provider suggested a candidate artist.\nConfirm or replace it to improve matching:" : `Artist metadata is missing for ${basenameOfPath(audioPath) || audioPath}.\nEnter the correct artist to improve matching:`}`,
+      `${promptState.artistSuggestionFromBlockedLyrics || promptState.artistSuggestionFromProviderConsensus ? "Artist metadata is missing and providers suggested a candidate artist.\nConfirm or replace it to improve matching:" : `Artist metadata is missing for ${basenameOfPath(audioPath) || audioPath}.\nEnter the correct artist to improve matching:`}`,
       promptState.recommendedArtist || ""
     )
     : promptState.currentArtist;

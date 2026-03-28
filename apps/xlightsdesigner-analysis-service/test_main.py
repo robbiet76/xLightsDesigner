@@ -780,6 +780,35 @@ class AnalysisServiceHeuristicsTests(unittest.TestCase):
         self.assertEqual(info["lyricsRecoveryBlockedReason"], "artist_confidence_insufficient")
         self.assertEqual(info["geniusMatchedArtist"], "The Ronettes")
 
+    def test_build_provider_metadata_suggestion_requires_provider_consensus(self):
+        with mock.patch.object(
+            main,
+            "_find_best_lrclib_search_candidate",
+            return_value={
+                "title": "Baby Shark Edm Remix (2018)",
+                "artist": "Pinkfong",
+                "titleSimilarity": 0.824,
+                "durationDeltaMs": 4903,
+                "source": "lrclib-search",
+            },
+        ), mock.patch.object(
+            main,
+            "_find_best_genius_title_candidate",
+            return_value={
+                "title": "Baby Shark",
+                "artist": "Pinkfong (핑크퐁)",
+                "titleSimilarity": 0.833,
+                "source": "lyricsgenius-title-only",
+            },
+        ):
+            out = main._build_provider_metadata_suggestion(
+                {"title": "Baby Shark EDM", "artist": ""},
+                91097,
+            )
+        self.assertTrue(out["available"])
+        self.assertEqual(out["artist"], "Pinkfong")
+        self.assertEqual(out["confidence"], "provider-consensus")
+
     def test_align_plain_lyrics_to_structure_phrases_distributes_lines_over_lyrical_sections(self):
         out = main._align_plain_lyrics_to_structure_phrases(
             ["line one", "line two", "line three", "line four"],

@@ -1594,6 +1594,170 @@ def _fetch_genius_plain_lyrics(identity: Dict[str, Any]) -> tuple[List[str], str
     return plain_lines, "", info
 
 
+def _find_best_lrclib_search_candidate(identity: Dict[str, Any], duration_ms: int) -> Dict[str, Any]:
+    title = str(identity.get("title") or "").strip()
+    artist = str(identity.get("artist") or "").strip()
+    if not title:
+        return {}
+    duration_s = int(round(max(1, duration_ms) / 1000.0)) if duration_ms > 0 else 0
+    best = None
+    best_key = None
+    try:
+        title_variants = _identity_title_variants(title)
+        artist_variants = _identity_artist_variants(artist) if artist else [""]
+        for search_title in title_variants:
+            for search_artist in artist_variants:
+                params = {"track_name": search_title}
+                if search_artist:
+                    params["artist_name"] = search_artist
+                search = requests.get(
+                    f"{LRCLIB_API_BASE}/search",
+                    params=params,
+                    timeout=20.0,
+                )
+                if search.status_code >= 400:
+                    continue
+                arr = search.json()
+                if not isinstance(arr, list):
+                    continue
+                for row in arr:
+                    if not isinstance(row, dict):
+                        continue
+                    matched_title = str(row.get("trackName") or row.get("name") or "").strip()
+                    matched_artist = str(row.get("artistName") or "").strip()
+                    if not matched_title or not matched_artist:
+                        continue
+                    title_ratio = difflib.SequenceMatcher(
+                        None,
+                        _normalize_compare_text(title),
+                        _normalize_compare_text(matched_title),
+                    ).ratio()
+                    artist_ratio = difflib.SequenceMatcher(
+                        None,
+                        _normalize_compare_text(artist),
+                        _normalize_compare_text(matched_artist),
+                    ).ratio() if artist else 0.0
+                    cand_duration = int(row.get("duration") or 0)
+                    delta = abs(cand_duration - duration_s) if cand_duration > 0 and duration_s > 0 else 10**9
+                    key = (
+                        -round(title_ratio, 3),
+                        -round(artist_ratio, 3),
+                        delta,
+                        str(row.get("id", "")),
+                    )
+                    if best is None or key < best_key:
+                        best = row
+                        best_key = key
+    except Exception:
+        return {}
+    if not isinstance(best, dict):
+        return {}
+    matched_title = str(best.get("trackName") or best.get("name") or "").strip()
+    matched_artist = str(best.get("artistName") or "").strip()
+    title_ratio = difflib.SequenceMatcher(
+        None,
+        _normalize_compare_text(title),
+        _normalize_compare_text(matched_title),
+    ).ratio()
+    artist_ratio = difflib.SequenceMatcher(
+        None,
+        _normalize_compare_text(artist),
+        _normalize_compare_text(matched_artist),
+    ).ratio() if artist else 0.0
+    cand_duration = int(best.get("duration") or 0)
+    duration_delta_ms = abs((cand_duration * 1000) - duration_ms) if cand_duration > 0 and duration_ms > 0 else None
+    return {
+        "title": matched_title,
+        "artist": matched_artist,
+        "titleSimilarity": round(title_ratio, 3),
+        "artistSimilarity": round(artist_ratio, 3),
+        "durationDeltaMs": duration_delta_ms,
+        "source": "lrclib-search",
+    }
+
+
+def _find_best_genius_title_candidate(identity: Dict[str, Any]) -> Dict[str, Any]:
+    title = str(identity.get("title") or "").strip()
+    if not title or not GENIUS_ACCESS_TOKEN:
+        return {}
+    lyricsgenius = _ensure_lyricsgenius()
+    if not lyricsgenius:
+        return {}
+    try:
+        genius = lyricsgenius.Genius(
+            GENIUS_ACCESS_TOKEN,
+            timeout=10,
+            retries=1,
+            sleep_time=0.2,
+            remove_section_headers=True,
+            skip_non_songs=True,
+            excluded_terms=["(Remix)", "(Live)"],
+            verbose=False,
+        )
+        best = None
+        best_key = None
+        for candidate_title in _identity_title_variants(title):
+            song = genius.search_song(title=candidate_title, artist=None)
+            if not song:
+                continue
+            matched_title = str(getattr(song, "title", "") or "").strip()
+            matched_artist = str(getattr(song, "artist", "") or "").strip()
+            if not matched_title or not matched_artist or _is_generic_lyrics_artist(matched_artist):
+                continue
+            title_ratio = difflib.SequenceMatcher(
+                None,
+                _normalize_compare_text(title),
+                _normalize_compare_text(matched_title),
+            ).ratio()
+            key = (-round(title_ratio, 3), matched_artist)
+            if best is None or key < best_key:
+                best = {
+                    "title": matched_title,
+                    "artist": matched_artist,
+                    "titleSimilarity": round(title_ratio, 3),
+                    "source": "lyricsgenius-title-only",
+                }
+                best_key = key
+        return best or {}
+    except Exception:
+        return {}
+
+
+def _build_provider_metadata_suggestion(identity: Dict[str, Any], duration_ms: int) -> Dict[str, Any]:
+    title = str(identity.get("title") or "").strip()
+    artist = str(identity.get("artist") or "").strip()
+    if not title or artist:
+        return {}
+    lrclib_candidate = _find_best_lrclib_search_candidate(identity, duration_ms)
+    genius_candidate = _find_best_genius_title_candidate(identity)
+    if not lrclib_candidate or not genius_candidate:
+        return {}
+    if float(lrclib_candidate.get("titleSimilarity") or 0.0) < 0.8:
+        return {}
+    if float(genius_candidate.get("titleSimilarity") or 0.0) < 0.8:
+        return {}
+    lrclib_artist = _normalize_compare_text(str(lrclib_candidate.get("artist") or ""))
+    genius_artist = _normalize_compare_text(str(genius_candidate.get("artist") or ""))
+    if not lrclib_artist or not genius_artist:
+        return {}
+    artist_consensus = (
+        lrclib_artist == genius_artist
+        or lrclib_artist in genius_artist
+        or genius_artist in lrclib_artist
+    )
+    if not artist_consensus:
+        return {}
+    return {
+        "available": True,
+        "title": str(lrclib_candidate.get("title") or genius_candidate.get("title") or "").strip(),
+        "artist": str(lrclib_candidate.get("artist") or genius_candidate.get("artist") or "").strip(),
+        "sources": [str(lrclib_candidate.get("source") or "lrclib-search"), str(genius_candidate.get("source") or "lyricsgenius-title-only")],
+        "confidence": "provider-consensus",
+        "titleSimilarity": max(float(lrclib_candidate.get("titleSimilarity") or 0.0), float(genius_candidate.get("titleSimilarity") or 0.0)),
+        "durationDeltaMs": lrclib_candidate.get("durationDeltaMs"),
+    }
+
+
 def _fetch_lrclib_lyrics_direct(identity: Dict[str, Any], duration_ms: int, analysis_profile: Optional[Dict[str, Any]] = None) -> tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
     profile = analysis_profile or _normalize_analysis_profile("")
     if not profile.get("enableLyrics"):
@@ -3730,6 +3894,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
     source_metadata = _source_metadata_from_path(path)
     identity_recommendation = _build_identity_recommendation(path, identity)
     metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
+    provider_metadata_suggestion = _build_provider_metadata_suggestion(identity, duration_ms)
     provider_sections: List[Dict[str, Any]] = []
     provider_name = ""
 
@@ -3784,6 +3949,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "sourceMetadata": source_metadata,
             "identityRecommendation": identity_recommendation,
             "metadataRecommendation": metadata_recommendation,
+            "providerMetadataSuggestion": provider_metadata_suggestion,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "sectionSourceError": provider_error or "",
@@ -3924,6 +4090,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
     source_metadata = _source_metadata_from_path(path)
     identity_recommendation = _build_identity_recommendation(path, identity)
     metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
+    provider_metadata_suggestion = _build_provider_metadata_suggestion(identity, duration_ms)
     lyrics_marks, lyrics_error, lyrics_shift_ms, lyrics_info = _resolve_lyrics(identity, y, sr, duration_ms, profile)
     lyrics_source = _resolve_lyrics_source(lyrics_marks, lyrics_info)
     cached_sections = _cached_structure_segments(cached_modules, duration_ms) if profile.get("mode") == "deep" else []
@@ -4009,6 +4176,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "sourceMetadata": source_metadata,
             "identityRecommendation": identity_recommendation,
             "metadataRecommendation": metadata_recommendation,
+            "providerMetadataSuggestion": provider_metadata_suggestion,
             "trackIdentityCacheHit": identity_cache_hit,
             "webTempoEvidence": web_tempo_evidence,
             "identityError": identity_error,
