@@ -63,20 +63,24 @@ def _looks_instrumental(identity: Dict[str, Any]) -> bool:
 
 def _classify_row(meta: Dict[str, Any]) -> str:
     identity = meta.get("trackIdentity") or {}
+    verification = meta.get("identityVerification") or {}
+    verification_status = str(verification.get("status") or "").strip()
     lyrics_source = str(meta.get("lyricsSource") or "").strip()
     plain = meta.get("plainLyricsPhraseFallback") or {}
     suggestion = meta.get("providerMetadataSuggestion") or {}
     section_source = str(meta.get("sectionSource") or "").strip()
 
+    if verification_status == "unknown":
+        return "unidentified_audio_only"
     if lyrics_source and lyrics_source != "none":
         return "identified_with_synced_lyrics"
     if bool(plain.get("available")):
         return "identified_plain_phrase_fallback"
-    if bool(suggestion.get("available")):
+    if verification_status == "metadata_needed" or bool(suggestion.get("available")):
         return "identified_metadata_needed"
     if _is_identified(identity) and _looks_instrumental(identity):
         return "identified_instrumental_audio_only"
-    if _is_identified(identity):
+    if verification_status == "claimed_identity_only" or _is_identified(identity):
         if section_source == "audio-structural-heuristic":
             return "identified_vocal_lyrics_unavailable"
         return "identified_audio_only"
@@ -122,6 +126,7 @@ def main() -> int:
                 "artist": identity.get("artist"),
                 "provider": identity.get("provider"),
             },
+            "identityVerification": meta.get("identityVerification") or {},
             "lyricsSource": meta.get("lyricsSource"),
             "sectionSource": meta.get("sectionSource"),
             "plainLyricsPhraseFallback": {
