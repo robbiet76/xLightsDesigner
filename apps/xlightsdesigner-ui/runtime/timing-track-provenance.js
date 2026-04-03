@@ -288,3 +288,32 @@ export function buildTimingTrackProvenanceRecord({
     diff
   };
 }
+
+export function refreshTimingTrackProvenanceRecord(
+  existingRecord = {},
+  {
+    userFinalMarks = [],
+    capturedAt = "",
+    durationMs = 0,
+    fillerLabel = ""
+  } = {}
+) {
+  const prior = existingRecord && typeof existingRecord === "object" ? existingRecord : {};
+  return buildTimingTrackProvenanceRecord({
+    trackType: str(prior?.trackType),
+    trackName: str(prior?.trackName),
+    sourceMarks: asArray(prior?.source?.marks),
+    userFinalMarks,
+    sourceProvenance: prior?.source?.provenance && typeof prior.source.provenance === "object"
+      ? { ...prior.source.provenance }
+      : {},
+    capturedAt,
+    coverageMode: str(prior?.coverageMode || "sparse"),
+    durationMs: num(durationMs, 0) || Math.max(
+      0,
+      ...asArray(prior?.source?.marks).map((mark) => num(mark?.endMs, 0)),
+      ...asArray(userFinalMarks).map((mark) => num(mark?.endMs, 0))
+    ),
+    fillerLabel: str(fillerLabel)
+  });
+}

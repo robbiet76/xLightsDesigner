@@ -5,7 +5,8 @@ import {
   diffTimingTrackMarks,
   buildTimingTrackProvenanceRecord,
   normalizeTimingTrackCoverage,
-  splitMarksAtBoundaries
+  splitMarksAtBoundaries,
+  refreshTimingTrackProvenanceRecord
 } from "../../runtime/timing-track-provenance.js";
 
 test("diffTimingTrackMarks classifies unchanged moved relabeled added and removed marks", () => {
@@ -122,4 +123,40 @@ test("buildTimingTrackProvenanceRecord normalizes complete coverage tracks", () 
     { startMs: 0, endMs: 1500, label: "Intro" },
     { startMs: 1500, endMs: 2000, label: "Verse" }
   ]);
+});
+
+test("refreshTimingTrackProvenanceRecord preserves source and refreshes userFinal diff", () => {
+  const existing = buildTimingTrackProvenanceRecord({
+    trackType: "structure",
+    trackName: "XD: Song Structure",
+    sourceMarks: [
+      { startMs: 0, endMs: 1000, label: "Intro" },
+      { startMs: 1000, endMs: 2000, label: "Verse" }
+    ],
+    userFinalMarks: [
+      { startMs: 0, endMs: 1000, label: "Intro" },
+      { startMs: 1000, endMs: 2000, label: "Verse" }
+    ],
+    coverageMode: "complete",
+    durationMs: 2000
+  });
+
+  const refreshed = refreshTimingTrackProvenanceRecord(existing, {
+    userFinalMarks: [
+      { startMs: 0, endMs: 1200, label: "Intro" },
+      { startMs: 1200, endMs: 2000, label: "Verse" }
+    ],
+    capturedAt: "2026-04-02T23:00:00Z",
+    durationMs: 2000
+  });
+
+  assert.deepEqual(refreshed.source.marks, existing.source.marks);
+  assert.equal(refreshed.userFinal.capturedAt, "2026-04-02T23:00:00Z");
+  assert.deepEqual(refreshed.diff.summary, {
+    unchanged: 0,
+    moved: 2,
+    relabeled: 0,
+    addedByUser: 0,
+    removedFromSource: 0
+  });
 });

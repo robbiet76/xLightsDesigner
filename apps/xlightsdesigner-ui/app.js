@@ -80,6 +80,7 @@ import {
   toStoredMetadataTagRecords
 } from "./runtime/metadata-tag-schema.js";
 import { buildEffectiveMetadataAssignments as buildRuntimeEffectiveMetadataAssignments } from "./runtime/effective-metadata-assignments.js";
+import { refreshTimingTrackProvenanceRecord } from "./runtime/timing-track-provenance.js";
 import {
   mergeVisualHintDefinitions,
   ensureVisualHintDefinitions,
@@ -10044,6 +10045,20 @@ async function fetchSectionSuggestions(options = {}) {
   state.ui.sectionTrackName = preferred;
   const marksResp = await getTimingMarks(state.endpoint, preferred);
   const marks = marksResp?.data?.marks || [];
+  if (isXdTimingTrack(preferred)) {
+    const policyKey = buildGlobalXdTrackPolicyKey(preferred);
+    const provenanceByTrack = getSequenceTimingTrackProvenanceState();
+    const existingRecord = provenanceByTrack?.[policyKey];
+    if (existingRecord && typeof existingRecord === "object" && Array.isArray(existingRecord?.source?.marks)) {
+      provenanceByTrack[policyKey] = refreshTimingTrackProvenanceRecord(existingRecord, {
+        userFinalMarks: marks,
+        capturedAt: new Date().toISOString(),
+        durationMs: Number(state.sequenceSettings?.durationMs || 0),
+        fillerLabel: ""
+      });
+      setSequenceTimingTrackProvenanceState(provenanceByTrack);
+    }
+  }
   const built = buildSectionSuggestions(marks);
   const labels = built.labels;
   state.sectionSuggestions = labels;
@@ -11345,6 +11360,19 @@ function setSequenceTimingGeneratedSignaturesState(signatures = {}) {
     ? state.sequenceAgentRuntime
     : structuredClone(defaultState.sequenceAgentRuntime);
   state.sequenceAgentRuntime.timingGeneratedSignatures = signatures && typeof signatures === "object" ? signatures : {};
+}
+
+function getSequenceTimingTrackProvenanceState() {
+  return state.sequenceAgentRuntime?.timingTrackProvenance && typeof state.sequenceAgentRuntime.timingTrackProvenance === "object"
+    ? state.sequenceAgentRuntime.timingTrackProvenance
+    : {};
+}
+
+function setSequenceTimingTrackProvenanceState(records = {}) {
+  state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+    ? state.sequenceAgentRuntime
+    : structuredClone(defaultState.sequenceAgentRuntime);
+  state.sequenceAgentRuntime.timingTrackProvenance = records && typeof records === "object" ? records : {};
 }
 
 function getSequenceTimingOwnershipRows() {
