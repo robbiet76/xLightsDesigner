@@ -337,6 +337,47 @@ function inferTimingDependency({ sections = [], timingTracks = [], planCommands 
   };
 }
 
+function getRequiredXdTrackNames(planCommands = []) {
+  const names = new Set();
+  for (const command of Array.isArray(planCommands) ? planCommands : []) {
+    const cmd = str(command?.cmd);
+    const params = command?.params && typeof command.params === "object" ? command.params : {};
+    const anchor = command?.anchor && typeof command.anchor === "object" ? command.anchor : {};
+    const candidateNames = [];
+    if (cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") {
+      candidateNames.push(str(params.trackName));
+    }
+    if (str(anchor.trackName)) {
+      candidateNames.push(str(anchor.trackName));
+    }
+    for (const name of candidateNames) {
+      if (isXdTimingTrack(name)) names.add(name);
+    }
+  }
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+function buildTimingReviewGuardrail({ planCommands = [], timingTrackStatus = [] } = {}) {
+  const requiredTrackNames = getRequiredXdTrackNames(planCommands);
+  const rows = Array.isArray(timingTrackStatus) ? timingTrackStatus : [];
+  const blockingRows = requiredTrackNames
+    .map((trackName) => rows.find((row) => norm(row?.trackName) === norm(trackName)))
+    .filter((row) => row && (row.status === "user_edited" || row.status === "stale"));
+  const ready = blockingRows.length === 0;
+  return {
+    ready,
+    requiredTrackNames,
+    blockingRows: blockingRows.map((row) => ({
+      policyKey: str(row.policyKey),
+      trackName: str(row.trackName),
+      status: str(row.status)
+    })),
+    summary: ready
+      ? ""
+      : `Accept timing review for ${blockingRows.map((row) => str(row.trackName)).filter(Boolean).join(", ")} before sequencing apply.`
+  };
+}
+
 export function buildSequenceDashboardState({
   state = {},
   intentHandoff = null,
@@ -368,6 +409,10 @@ export function buildSequenceDashboardState({
     timingTrackPolicies: state.sequenceAgentRuntime?.timingTrackPolicies
   });
   const timingReview = summarizeTimingTrackStatuses(timingTrackStatus);
+  const timingReviewGuardrail = buildTimingReviewGuardrail({
+    planCommands,
+    timingTrackStatus
+  });
   const allRows = buildDashboardRows({
     state,
     proposalLines,
@@ -386,7 +431,7 @@ export function buildSequenceDashboardState({
   if (!proposalLines.length) {
     status = "idle";
     readinessLevel = "blocked";
-  } else if (!timingDependency.ready) {
+  } else if (!timingDependency.ready || !timingReviewGuardrail.ready) {
     status = "partial";
     readinessLevel = "partial";
   } else {
@@ -409,6 +454,13 @@ export function buildSequenceDashboardState({
       message: timingDependency.summary
     });
   }
+  if (!timingReviewGuardrail.ready) {
+    validationIssues.push({
+      code: "timing_review_required",
+      severity: "warning",
+      message: timingReviewGuardrail.summary
+    });
+  }
 
   return {
     contract: "sequence_dashboard_state_v1",
@@ -418,7 +470,7 @@ export function buildSequenceDashboardState({
     summary: str(plan.summary || "Live technical translation of the current design conversation."),
     status,
     readiness: {
-      ok: proposalLines.length > 0 && timingDependency.ready,
+      ok: proposalLines.length > 0 && timingDependency.ready && timingReviewGuardrail.ready,
       level: readinessLevel,
       reasons: validationIssues.map((issue) => issue.code)
     },
@@ -446,6 +498,7 @@ export function buildSequenceDashboardState({
       rows,
       timingTrackStatus,
       timingReview,
+      timingReviewGuardrail,
       scope: {
         sections: sectionScope,
         targetIds: selectedTargets

@@ -81,7 +81,10 @@ import {
 } from "./runtime/metadata-tag-schema.js";
 import { buildEffectiveMetadataAssignments as buildRuntimeEffectiveMetadataAssignments } from "./runtime/effective-metadata-assignments.js";
 import { refreshTimingTrackProvenanceRecord } from "./runtime/timing-track-provenance.js";
-import { reconcileTimingTrackReviewState } from "./runtime/timing-track-status.js";
+import {
+  buildTimingTrackStatusRows,
+  reconcileTimingTrackReviewState
+} from "./runtime/timing-track-status.js";
 import {
   mergeVisualHintDefinitions,
   ensureVisualHintDefinitions,
@@ -2965,9 +2968,39 @@ function applyEnabled() {
   return applyReadyForApprovalGate() && Boolean(state.ui.applyApprovalChecked);
 }
 
+function getCurrentPlanCommandsForTimingReview() {
+  const plan = getValidHandoff("plan_handoff_v1");
+  if (Array.isArray(plan?.commands)) return plan.commands;
+  if (Array.isArray(state.agentPlan?.handoff?.commands)) return state.agentPlan.handoff.commands;
+  return [];
+}
+
+function getBlockingTimingReviewRows(planCommands = getCurrentPlanCommandsForTimingReview()) {
+  const rows = buildTimingTrackStatusRows({
+    timingTrackProvenance: getSequenceTimingTrackProvenanceState(),
+    timingGeneratedSignatures: getSequenceTimingGeneratedSignaturesState(),
+    timingTrackPolicies: getSequenceTimingTrackPoliciesState()
+  });
+  const requiredTrackNames = [...new Set((Array.isArray(planCommands) ? planCommands : []).flatMap((command) => {
+    const cmd = String(command?.cmd || "").trim();
+    const params = command?.params && typeof command.params === "object" ? command.params : {};
+    const anchor = command?.anchor && typeof command.anchor === "object" ? command.anchor : {};
+    const names = [];
+    if (cmd === "timing.createTrack" || cmd === "timing.insertMarks" || cmd === "timing.replaceMarks") {
+      const trackName = String(params?.trackName || "").trim();
+      if (isXdTimingTrack(trackName)) names.push(trackName.toLowerCase());
+    }
+    const anchorTrackName = String(anchor?.trackName || "").trim();
+    if (isXdTimingTrack(anchorTrackName)) names.push(anchorTrackName.toLowerCase());
+    return names;
+  }))];
+  return rows.filter((row) => requiredTrackNames.includes(String(row?.trackName || "").trim().toLowerCase()) && (row?.status === "user_edited" || row?.status === "stale"));
+}
+
 function applyReadyForApprovalGate() {
   const f = state.flags;
   const handoffGate = evaluateApplyHandoffGate();
+  const blockingTimingReviewRows = getBlockingTimingReviewRows();
   return (
     f.hasDraftProposal &&
     f.xlightsConnected &&
@@ -2975,7 +3008,8 @@ function applyReadyForApprovalGate() {
     !f.planOnlyMode &&
     !f.proposalStale &&
     !f.applyInProgress &&
-    handoffGate.ok
+    handoffGate.ok &&
+    blockingTimingReviewRows.length === 0
   );
 }
 
@@ -2998,6 +3032,10 @@ function applyPlanReadinessReason() {
   if (!f.hasDraftProposal) return "Generate a proposal first.";
   const handoffGate = evaluateApplyHandoffGate();
   if (!handoffGate.ok) return handoffGate.message;
+  const blockingTimingReviewRows = getBlockingTimingReviewRows();
+  if (blockingTimingReviewRows.length) {
+    return `Accept timing review for ${blockingTimingReviewRows.map((row) => String(row.trackName || "").trim()).filter(Boolean).join(", ")} before apply.`;
+  }
   if (f.applyInProgress) return "Apply in progress.";
   return "";
 }
