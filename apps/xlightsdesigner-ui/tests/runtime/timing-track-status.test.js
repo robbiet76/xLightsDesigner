@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import {
   timingMarksSignature,
   classifyTimingTrackProvenance,
-  buildTimingTrackStatusRows
+  buildTimingTrackStatusRows,
+  summarizeTimingTrackStatuses
 } from "../../runtime/timing-track-status.js";
 import { buildTimingTrackProvenanceRecord } from "../../runtime/timing-track-provenance.js";
 
@@ -122,4 +123,20 @@ test("buildTimingTrackStatusRows maps provenance records with policy metadata", 
   assert.equal(rows.length, 1);
   assert.equal(rows[0].trackName, "XD: Phrase Cues");
   assert.equal(rows[0].status, "unchanged");
+});
+
+test("summarizeTimingTrackStatuses reports stale and edited counts", () => {
+  const summary = summarizeTimingTrackStatuses([
+    { trackName: "XD: Song Structure", status: "unchanged", manual: false },
+    { trackName: "XD: Phrase Cues", status: "user_edited", manual: false },
+    { trackName: "XD: Beat Grid", status: "stale", manual: true }
+  ]);
+
+  assert.equal(summary.trackCount, 3);
+  assert.equal(summary.unchangedCount, 1);
+  assert.equal(summary.userEditedCount, 1);
+  assert.equal(summary.staleCount, 1);
+  assert.equal(summary.manualCount, 1);
+  assert.equal(summary.needsReview, true);
+  assert.equal(summary.status, "stale");
 });

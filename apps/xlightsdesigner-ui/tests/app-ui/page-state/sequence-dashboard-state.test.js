@@ -135,6 +135,9 @@ test("sequence dashboard exposes timing track provenance status rows", () => {
   assert.equal(dashboard.data.timingTrackStatus.length, 1);
   assert.equal(dashboard.data.timingTrackStatus[0].trackName, "XD: Song Structure");
   assert.equal(dashboard.data.timingTrackStatus[0].status, "user_edited");
+  assert.equal(dashboard.data.timingReview.trackCount, 1);
+  assert.equal(dashboard.data.timingReview.userEditedCount, 1);
+  assert.equal(dashboard.data.timingReview.status, "edited");
 });
 
 test("sequence dashboard aggregates multiple effects on the same target into one row", () => {

@@ -85,3 +85,44 @@ export function buildTimingTrackStatusRows({
     .filter((row) => row.trackName)
     .sort((a, b) => a.trackName.localeCompare(b.trackName));
 }
+
+export function summarizeTimingTrackStatuses(rows = []) {
+  const entries = arr(rows);
+  const summary = {
+    trackCount: entries.length,
+    unchangedCount: 0,
+    userEditedCount: 0,
+    staleCount: 0,
+    manualCount: 0,
+    needsReview: false,
+    status: entries.length ? "clean" : "empty",
+    summaryText: entries.length ? "No timing tracks tracked yet." : "No timing tracks tracked yet."
+  };
+
+  for (const row of entries) {
+    if (row?.manual) summary.manualCount += 1;
+    if (row?.status === "unchanged") summary.unchangedCount += 1;
+    else if (row?.status === "user_edited") summary.userEditedCount += 1;
+    else if (row?.status === "stale") summary.staleCount += 1;
+  }
+
+  summary.needsReview = summary.userEditedCount > 0 || summary.staleCount > 0;
+  if (!entries.length) {
+    summary.status = "empty";
+    summary.summaryText = "No timing tracks tracked yet.";
+    return summary;
+  }
+  if (summary.staleCount > 0) {
+    summary.status = "stale";
+    summary.summaryText = `${summary.staleCount} timing track${summary.staleCount === 1 ? "" : "s"} stale against the latest generated source.`;
+    return summary;
+  }
+  if (summary.userEditedCount > 0) {
+    summary.status = "edited";
+    summary.summaryText = `${summary.userEditedCount} timing track${summary.userEditedCount === 1 ? "" : "s"} contain user edits.`;
+    return summary;
+  }
+  summary.status = "clean";
+  summary.summaryText = `${summary.unchangedCount} timing track${summary.unchangedCount === 1 ? "" : "s"} unchanged.`;
+  return summary;
+}
