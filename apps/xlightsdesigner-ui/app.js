@@ -81,6 +81,7 @@ import {
 } from "./runtime/metadata-tag-schema.js";
 import { buildEffectiveMetadataAssignments as buildRuntimeEffectiveMetadataAssignments } from "./runtime/effective-metadata-assignments.js";
 import { refreshTimingTrackProvenanceRecord } from "./runtime/timing-track-provenance.js";
+import { reconcileTimingTrackReviewState } from "./runtime/timing-track-status.js";
 import {
   mergeVisualHintDefinitions,
   ensureVisualHintDefinitions,
@@ -5991,6 +5992,70 @@ function onClearXdTrackLocks() {
   saveCurrentProjectSnapshot();
   persist();
   render();
+}
+
+async function onAcceptTimingTrackReview({
+  policyKey = "",
+  trackName = "",
+  acceptedAt = "",
+  reviewer = "",
+  note = "",
+  refreshSections = true
+} = {}) {
+  const resolvedTrackName = String(trackName || "").trim() || (isXdTimingTrack(state.ui?.sectionTrackName) ? String(state.ui.sectionTrackName).trim() : "");
+  const resolvedPolicyKey = String(policyKey || "").trim() || (resolvedTrackName ? buildGlobalXdTrackPolicyKey(resolvedTrackName) : "");
+  if (!resolvedPolicyKey) {
+    setStatusWithDiagnostics("warning", "Timing review accept failed: no XD timing track was specified.");
+    render();
+    return { ok: false, error: "missing_timing_track" };
+  }
+
+  const result = reconcileTimingTrackReviewState({
+    policyKey: resolvedPolicyKey,
+    timingTrackProvenance: getSequenceTimingTrackProvenanceState(),
+    timingGeneratedSignatures: getSequenceTimingGeneratedSignaturesState(),
+    acceptedAt,
+    reviewer,
+    note
+  });
+  if (!result.updated || !result.record) {
+    setStatusWithDiagnostics("warning", `Timing review accept failed: no tracked provenance record for ${resolvedTrackName || resolvedPolicyKey}.`);
+    render();
+    return { ok: false, error: "timing_track_not_tracked", policyKey: resolvedPolicyKey };
+  }
+
+  setSequenceTimingTrackProvenanceState(result.timingTrackProvenance);
+  setSequenceTimingGeneratedSignaturesState(result.timingGeneratedSignatures);
+
+  const acceptedTrackName = String(result.record?.trackName || resolvedTrackName || "").trim();
+  if (refreshSections && acceptedTrackName && acceptedTrackName === String(state.ui?.sectionTrackName || "").trim()) {
+    try {
+      await fetchSectionSuggestions({ selectedTrack: acceptedTrackName, refreshTracks: false });
+    } catch (err) {
+      setStatusWithDiagnostics("warning", `Timing review accepted, but section refresh failed: ${String(err?.message || err)}`);
+      saveCurrentProjectSnapshot();
+      persist();
+      render();
+      return {
+        ok: true,
+        policyKey: resolvedPolicyKey,
+        trackName: acceptedTrackName,
+        refreshed: false,
+        warning: String(err?.message || err)
+      };
+    }
+  }
+
+  setStatus("info", `Accepted current timing review for ${acceptedTrackName || resolvedPolicyKey}.`);
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+  return {
+    ok: true,
+    policyKey: resolvedPolicyKey,
+    trackName: acceptedTrackName,
+    refreshed: Boolean(refreshSections && acceptedTrackName && acceptedTrackName === String(state.ui?.sectionTrackName || "").trim())
+  };
 }
 
 async function onTestCloudAgent() {
@@ -12409,6 +12474,7 @@ function exposeRuntimeValidationHooks() {
   automationRuntime.exposeRuntimeValidationHooks();
   window.xLightsDesignerRuntime.showTenEffectGridDemo = showAutomationTenEffectGridDemo;
   window.xLightsDesignerRuntime.showSplitEffectGridDemo = showAutomationSplitEffectGridDemo;
+  window.xLightsDesignerRuntime.acceptTimingTrackReview = onAcceptTimingTrackReview;
 }
 
 function getPageStates() {
