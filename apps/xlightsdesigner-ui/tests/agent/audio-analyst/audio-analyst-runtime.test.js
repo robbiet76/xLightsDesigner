@@ -245,6 +245,26 @@ test("audio analyst runtime preserves experimental plain lyric phrase fallback",
   assert.equal(handoff.lyrics.plainPhraseFallback.phrases[0].label, "Christmas vacation / we've got a little change in plans");
 });
 
+test("audio analyst handoff falls back to raw structure when semantic structure is generic", () => {
+  const result = samplePipelineResult();
+  result.raw.sections = [
+    { startMs: 0, endMs: 5000, label: "Section 1" },
+    { startMs: 5000, endMs: 10000, label: "Section 2" }
+  ];
+
+  const artifact = buildAnalysisArtifactFromPipelineResult({
+    audioPath: "/tmp/GenericSections.mp3",
+    mediaId: "media-generic-structure",
+    result
+  });
+  const handoff = buildAnalysisHandoffFromArtifact(artifact);
+
+  assert.equal(artifact.modules.semanticStructure.data.sections.length, 0);
+  assert.equal(artifact.structure.sections.length, 2);
+  assert.equal(handoff.structure.sections.length, 2);
+  assert.equal(handoff.structure.sections[0].label, "Section 1");
+});
+
 test("audio analyst runtime preserves blocked plain lyric recovery reason", () => {
   const result = samplePipelineResult();
   result.details.timing.hasLyricsTrack = false;
@@ -409,7 +429,10 @@ test("audio analyst runtime preserves generic section labels without fabricated 
     ["section", "section", "section", "section", "section", "section"]
   );
   const handoff = buildAnalysisHandoffFromArtifact(artifact);
-  assert.deepEqual(handoff.structure.sections, []);
+  assert.deepEqual(
+    handoff.structure.sections.map((row) => row.label),
+    ["Section 1", "Section 2", "Section 3", "Section 4", "Section 5", "Section 6"]
+  );
   assert.equal(artifact.modules.structureBackbone.data.segments.length, 6);
   assert.equal(artifact.modules.semanticStructure.data.sections.length, 0);
 });

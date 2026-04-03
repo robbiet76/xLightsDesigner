@@ -162,6 +162,13 @@ fs.writeFileSync(requestPath, JSON.stringify({ id, action, payload }, null, 2), 
 nudgeApp();
 
 function computeTimeoutMs(currentAction = "", currentPayload = {}) {
+  if (currentAction === "analyzeAudio") {
+    const isDeep = String(currentPayload?.analysisProfile?.mode || "").trim().toLowerCase() === "deep";
+    const isForceFresh = currentPayload?.forceFresh === true;
+    if (isDeep && isForceFresh) return 300000;
+    if (isDeep) return 240000;
+    return 120000;
+  }
   if (currentAction === "runLiveDesignValidationSuite") {
     const scenarioCount = Array.isArray(currentPayload?.scenarios) ? currentPayload.scenarios.length : 0;
     const baseMs = 300000;

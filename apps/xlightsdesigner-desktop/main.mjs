@@ -982,6 +982,17 @@ async function probeAnalysisService(baseUrl, timeoutMs = 15000, headers = {}) {
   }
 }
 
+function isManagedLocalAnalysisService(baseUrl = "") {
+  try {
+    const parsed = new URL(String(baseUrl || "").trim());
+    const hostname = String(parsed.hostname || "").trim().toLowerCase();
+    const port = String(parsed.port || "").trim();
+    return (hostname === "127.0.0.1" || hostname === "localhost") && port === ANALYSIS_SERVICE_PORT;
+  } catch {
+    return false;
+  }
+}
+
 function buildAnalysisServiceEnv() {
   const next = { ...process.env };
   const analysisDir = resolveAnalysisServiceDir();
@@ -1013,10 +1024,84 @@ function buildAnalysisServiceEnv() {
   return next;
 }
 
+function analysisServiceNeedsEnvRestart(probe = {}, desiredEnv = {}) {
+  const providers = probe?.data?.sectionProviders && typeof probe.data.sectionProviders === "object"
+    ? probe.data.sectionProviders
+    : {};
+  const desiredRemoteIdentity = String(desiredEnv.ENABLE_REMOTE_IDENTITY_LOOKUP || "").trim().toLowerCase() === "1";
+  const desiredWebTempo = String(desiredEnv.ENABLE_WEB_TEMPO_LOOKUP || "").trim().toLowerCase() === "1";
+  const desiredLyrics = String(desiredEnv.ENABLE_LYRICS_LOOKUP || "").trim().toLowerCase() === "1";
+  const desiredMadmomChords = String(desiredEnv.ENABLE_MADMOM_CHORDS || "").trim().toLowerCase() === "1";
+  const desiredMadmomDownbeat = String(desiredEnv.ENABLE_MADMOM_DOWNBEAT_CROSSCHECK || "").trim().toLowerCase() === "1";
+  return Boolean(
+    (desiredRemoteIdentity && providers.remoteIdentityLookupEnabled === false) ||
+    (desiredWebTempo && providers.webTempoLookupEnabled === false) ||
+    (desiredLyrics && providers.lyricsLookupEnabled === false) ||
+    (desiredMadmomChords && providers.madmomChordsEnabled === false) ||
+    (desiredMadmomDownbeat && providers.madmomDownbeatCrosscheckEnabled === false)
+  );
+}
+
+async function stopAnalysisServicePortOccupant() {
+  try {
+    const { stdout } = await runBinary("bash", ["-lc", `lsof -tiTCP:${ANALYSIS_SERVICE_PORT} -sTCP:LISTEN || true`]);
+    const pids = String(stdout || "")
+      .split(/\s+/)
+      .map((row) => Number.parseInt(String(row).trim(), 10))
+      .filter((row) => Number.isFinite(row) && row > 1);
+    for (const pid of pids) {
+      try {
+        process.kill(pid, "SIGTERM");
+      } catch {
+        // ignore
+      }
+    }
+    if (!pids.length) return;
+    for (let i = 0; i < 20; i += 1) {
+      const { stdout: checkOut } = await runBinary("bash", ["-lc", `lsof -tiTCP:${ANALYSIS_SERVICE_PORT} -sTCP:LISTEN || true`]);
+      if (!String(checkOut || "").trim()) return;
+      await sleep(250);
+    }
+    for (const pid of pids) {
+      try {
+        process.kill(pid, "SIGKILL");
+      } catch {
+        // ignore
+      }
+    }
+  } catch {
+    // best effort
+  }
+}
+
+async function isAnalysisServicePortOccupied() {
+  try {
+    const { stdout } = await runBinary("bash", ["-lc", `lsof -tiTCP:${ANALYSIS_SERVICE_PORT} -sTCP:LISTEN || true`]);
+    return Boolean(String(stdout || "").trim());
+  } catch {
+    return false;
+  }
+}
+
 async function ensureAnalysisServiceRunning(baseUrl, headers = {}) {
+  const desiredEnv = buildAnalysisServiceEnv();
   const current = await probeAnalysisService(baseUrl, 15000, headers);
-  if (current.ok) return current;
-  logStartup(`analysis:self-heal probe failed baseUrl=${baseUrl} err=${current.error || "unknown"}`);
+  const needsRestart = current.ok && isManagedLocalAnalysisService(baseUrl) && analysisServiceNeedsEnvRestart(current, desiredEnv);
+  if (current.ok && !needsRestart) return current;
+  if (
+    !current.ok &&
+    isManagedLocalAnalysisService(baseUrl) &&
+    /timed out/i.test(String(current.error || "")) &&
+    await isAnalysisServicePortOccupied()
+  ) {
+    logStartup(`analysis:self-heal skipping restart for busy local service baseUrl=${baseUrl}`);
+    return current;
+  }
+  if (needsRestart) {
+    logStartup(`analysis:self-heal restarting misconfigured local service baseUrl=${baseUrl}`);
+  } else {
+    logStartup(`analysis:self-heal probe failed baseUrl=${baseUrl} err=${current.error || "unknown"}`);
+  }
   if (analysisServiceStarting) {
     await analysisServiceStarting;
     return probeAnalysisService(baseUrl, 15000, headers);
@@ -1033,11 +1118,12 @@ async function ensureAnalysisServiceRunning(baseUrl, headers = {}) {
         logStartup("analysis:self-heal skipped no-python-cmd");
         return;
       }
+      await stopAnalysisServicePortOccupant();
       const args = [...cmdArgs, "-m", "uvicorn", "main:app", "--host", ANALYSIS_SERVICE_HOST, "--port", ANALYSIS_SERVICE_PORT];
       logStartup(`analysis:self-heal spawn cmd=${cmd} cwd=${analysisDir}`);
       const child = spawn(cmd, args, {
         cwd: analysisDir,
-        env: buildAnalysisServiceEnv(),
+        env: desiredEnv,
         stdio: "ignore",
         detached: true
       });

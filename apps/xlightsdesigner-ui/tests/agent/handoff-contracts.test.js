@@ -7,6 +7,7 @@ test("handoff contracts list is stable", () => {
   assert.deepEqual(AGENT_HANDOFF_CONTRACTS, [
     "analysis_handoff_v1",
     "intent_handoff_v1",
+    "sequencing_design_handoff_v2",
     "plan_handoff_v1"
   ]);
 });

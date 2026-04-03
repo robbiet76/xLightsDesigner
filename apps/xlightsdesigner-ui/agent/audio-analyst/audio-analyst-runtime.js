@@ -709,9 +709,11 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
   const moduleRhythm = isPlainObject(modules?.rhythm) ? modules.rhythm : {};
   const moduleHarmony = isPlainObject(modules?.harmony) ? modules.harmony : {};
   const moduleLyrics = isPlainObject(modules?.lyrics) ? modules.lyrics : {};
+  const rawStructureSections = rows(structure?.sections);
   const semanticSections = rows(moduleSemantic?.data?.sections).length
     ? rows(moduleSemantic.data.sections)
-    : rows(structure?.sections).filter((row) => !isGenericStructureSection(row));
+    : rawStructureSections.filter((row) => !isGenericStructureSection(row));
+  const handoffSections = semanticSections.length ? semanticSections : rawStructureSections;
   const provenance = isPlainObject(artifact?.provenance) ? artifact.provenance : {};
   const evidence = isPlainObject(provenance?.evidence) ? provenance.evidence : {};
   const briefSeed = isPlainObject(artifact?.briefSeed) ? artifact.briefSeed : {};
@@ -775,9 +777,9 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
         : (Array.isArray(timing?.bars) && timing.bars.length ? "bars" : "")
     },
     structure: {
-      sections: semanticSections,
+      sections: handoffSections,
       source: str(moduleSemantic?.sources?.[0] || structure?.source),
-      confidence: semanticSections.length
+      confidence: handoffSections.length
         ? str(structure?.confidence || (moduleSemantic?.confidence != null ? moduleSemantic.confidence : "low"))
         : "low"
     },
