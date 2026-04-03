@@ -10,6 +10,7 @@ export function createAutomationRuntime(deps = {}) {
     onApplyAll,
     onRefresh,
     onAnalyzeAudio,
+    onSeedTimingTracksFromAnalysis,
     onOpenExistingSequence,
     clearDesignRevisionTarget,
     normalizeDesignRevisionTarget,
@@ -550,7 +551,7 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
-  async function resetAutomationState() {
+  async function resetAutomationState(payload = {}) {
     clearDesignerDraft(state);
     state.agentPlan = null;
     clearSequencingHandoffsForSequenceChange("automation reset state");
@@ -574,8 +575,14 @@ export function createAutomationRuntime(deps = {}) {
       state.ui.designRevisionTarget = null;
     }
     setStatus({ level: "info", text: "Automation state reset." });
-    persist();
-    render();
+    const persistState = payload?.persist === true;
+    const rerender = payload?.render === true;
+    if (persistState) {
+      persist();
+    }
+    if (rerender) {
+      render();
+    }
     return {
       ok: true,
       status: state.status || null,
@@ -594,6 +601,13 @@ export function createAutomationRuntime(deps = {}) {
       analysisReady: Boolean(getValidHandoff("analysis_handoff_v1")),
       lastChatMessage: Array.isArray(state.chat) && state.chat.length ? state.chat[state.chat.length - 1] : null
     };
+  }
+
+  async function seedAutomationTimingTracksFromAnalysis(payload = {}) {
+    if (typeof onSeedTimingTracksFromAnalysis !== "function") {
+      return { ok: false, error: "timing track seeding unavailable." };
+    }
+    return await onSeedTimingTracksFromAnalysis(payload);
   }
 
   function defineAutomationVisualHint(payload = {}) {
@@ -793,6 +807,7 @@ export function createAutomationRuntime(deps = {}) {
       openSequence: openAutomationSequence,
       refreshFromXLights: refreshAutomationFromXLights,
       analyzeAudio: analyzeAutomationAudio,
+      seedTimingTracksFromAnalysis: seedAutomationTimingTracksFromAnalysis,
       defineVisualHint: defineAutomationVisualHint,
       applyCurrentProposal: applyAutomationCurrentProposal,
       diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
@@ -815,6 +830,7 @@ export function createAutomationRuntime(deps = {}) {
     getAutomationComparativeValidationSnapshot,
     refreshAutomationFromXLights,
     analyzeAutomationAudio,
+    seedAutomationTimingTracksFromAnalysis,
     defineAutomationVisualHint,
     openAutomationSequence,
     getAutomationAgentRuntimeSnapshot,

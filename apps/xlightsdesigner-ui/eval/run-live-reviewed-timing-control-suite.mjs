@@ -71,9 +71,8 @@ function runCommand(cmd, args, { cwd }) {
 async function runAutomation(repoRoot, channel, resultPath, command, args = []) {
   const script = path.join(repoRoot, "scripts", "desktop", "automation.mjs");
   const commandArgs = [script, "--channel", channel, "--result-file", resultPath, command, ...args];
-  const { stdout } = await runCommand("node", commandArgs, { cwd: repoRoot });
-  const text = str(stdout);
-  return text ? JSON.parse(text) : readJson(resultPath);
+  await runCommand("node", commandArgs, { cwd: repoRoot });
+  return readJson(resultPath);
 }
 
 function summarizeTimingTracks(sequencePageState = {}) {
@@ -100,8 +99,12 @@ function summarizeTimingTracks(sequencePageState = {}) {
 }
 
 function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResult, pageStatesSnapshot, sequencerSnapshot }) {
-  const pageStates = pageStatesSnapshot?.result?.pageStates && typeof pageStatesSnapshot.result.pageStates === "object"
-    ? pageStatesSnapshot.result.pageStates
+  const pageStates = pageStatesSnapshot?.result && typeof pageStatesSnapshot.result === "object"
+    ? {
+        review: pageStatesSnapshot.result.review || null,
+        design: pageStatesSnapshot.result.design || null,
+        sequence: pageStatesSnapshot.result.sequence || null
+      }
     : {};
   const sequencePage = pageStates?.sequence && typeof pageStates.sequence === "object" ? pageStates.sequence : {};
   const timing = summarizeTimingTracks(sequencePage);
@@ -157,6 +160,7 @@ async function main() {
     const refreshResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analyzeResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", analyzePrompt ? [analyzePrompt] : []);
+    await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-seed-timing.json`), "seed-timing-tracks-from-analysis");
     const pageStatesSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-page-states.json`), "get-page-states-snapshot");
     const sequencerSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-sequencer-validation.json`), "get-sequencer-validation-snapshot");
     results.push(buildScenarioSummary({

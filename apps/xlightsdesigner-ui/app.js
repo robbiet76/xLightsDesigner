@@ -80,7 +80,12 @@ import {
   toStoredMetadataTagRecords
 } from "./runtime/metadata-tag-schema.js";
 import { buildEffectiveMetadataAssignments as buildRuntimeEffectiveMetadataAssignments } from "./runtime/effective-metadata-assignments.js";
-import { refreshTimingTrackProvenanceRecord } from "./runtime/timing-track-provenance.js";
+import {
+  buildTimingTrackProvenanceRecord,
+  normalizeTimingTrackCoverage,
+  refreshTimingTrackProvenanceRecord,
+  splitMarksAtBoundaries
+} from "./runtime/timing-track-provenance.js";
 import {
   buildTimingTrackStatusRows,
   reconcileTimingTrackReviewState
@@ -6112,6 +6117,116 @@ async function onAcceptTimingTrackReview({
   };
 }
 
+function getCurrentAnalysisTimingSeed() {
+  const artifact = state.audioAnalysis?.artifact && typeof state.audioAnalysis.artifact === "object"
+    ? state.audioAnalysis.artifact
+    : null;
+  const handoff = getValidHandoff("analysis_handoff_v1");
+  const durationMs = Math.max(
+    1,
+    Number(
+      state.sequenceSettings?.durationMs ||
+      artifact?.audio?.durationMs ||
+      handoff?.audio?.durationMs ||
+      0
+    ) || 1
+  );
+  const structureMarks = Array.isArray(artifact?.structure?.sections)
+    ? artifact.structure.sections
+    : (Array.isArray(handoff?.structure?.sections) ? handoff.structure.sections : []);
+  const phraseMarks = Array.isArray(artifact?.lyrics?.plainPhraseFallback?.phrases)
+    ? artifact.lyrics.plainPhraseFallback.phrases
+    : (Array.isArray(handoff?.lyrics?.plainPhraseFallback?.phrases) ? handoff.lyrics.plainPhraseFallback.phrases : []);
+  return { durationMs, structureMarks, phraseMarks };
+}
+
+async function onSeedTimingTracksFromAnalysis() {
+  if (!state.flags.xlightsConnected) {
+    return { ok: false, error: "xlights_not_connected" };
+  }
+  const { durationMs, structureMarks, phraseMarks } = getCurrentAnalysisTimingSeed();
+  if (!Array.isArray(structureMarks) || !structureMarks.length) {
+    return { ok: false, error: "missing_structure_marks" };
+  }
+
+  const normalizedStructureMarks = normalizeTimingTrackCoverage(structureMarks, {
+    durationMs,
+    fillerLabel: "",
+    preserveAdjacentBoundaries: true
+  });
+  const boundaries = [...new Set(normalizedStructureMarks.flatMap((mark) => [Number(mark?.startMs || 0), Number(mark?.endMs || 0)]))]
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+  const normalizedPhraseMarks = Array.isArray(phraseMarks) && phraseMarks.length
+    ? normalizeTimingTrackCoverage(
+        splitMarksAtBoundaries(phraseMarks, boundaries, { fillerLabel: "" }),
+        {
+          durationMs,
+          fillerLabel: "",
+          preserveAdjacentBoundaries: true
+        }
+      )
+    : [];
+
+  const writeTrack = async (trackName, marks, trackType) => {
+    await createTimingTrack(state.endpoint, { trackName, replaceIfExists: true });
+    await replaceTimingMarks(state.endpoint, { trackName, marks });
+    const actualMarksResp = await getTimingMarks(state.endpoint, trackName);
+    const actualMarks = Array.isArray(actualMarksResp?.data?.marks) ? actualMarksResp.data.marks : marks;
+    const policyKey = buildGlobalXdTrackPolicyKey(trackName);
+    const timingTrackPolicies = {
+      ...getSequenceTimingTrackPoliciesState(),
+      [policyKey]: {
+        manual: false,
+        sourceTrack: trackName,
+        trackName,
+        updatedAt: new Date().toISOString()
+      }
+    };
+    const timingGeneratedSignatures = {
+      ...getSequenceTimingGeneratedSignaturesState(),
+      [policyKey]: timingMarksSignature(marks)
+    };
+    const timingTrackProvenance = {
+      ...getSequenceTimingTrackProvenanceState(),
+      [policyKey]: buildTimingTrackProvenanceRecord({
+        trackType,
+        trackName,
+        sourceMarks: marks,
+        userFinalMarks: actualMarks,
+        sourceProvenance: {
+          generator: "analysis_timing_seed_v1"
+        },
+        capturedAt: new Date().toISOString(),
+        coverageMode: "complete",
+        durationMs,
+        fillerLabel: ""
+      })
+    };
+    setSequenceTimingTrackPoliciesState(timingTrackPolicies);
+    setSequenceTimingGeneratedSignaturesState(timingGeneratedSignatures);
+    setSequenceTimingTrackProvenanceState(timingTrackProvenance);
+  };
+
+  await writeTrack("XD: Song Structure", normalizedStructureMarks, "structure");
+  if (normalizedPhraseMarks.length) {
+    await writeTrack("XD: Phrase Cues", normalizedPhraseMarks, "phrase");
+  }
+
+  try {
+    const tracksResp = await getTimingTracks(state.endpoint);
+    state.timingTracks = Array.isArray(tracksResp?.data?.tracks) ? tracksResp.data.tracks : state.timingTracks;
+  } catch {
+    // Best-effort refresh only.
+  }
+  render();
+  return {
+    ok: true,
+    structureMarkCount: normalizedStructureMarks.length,
+    phraseMarkCount: normalizedPhraseMarks.length
+  };
+}
+
 async function onTestCloudAgent() {
   const bridge = getDesktopAgentConversationBridge();
   if (!bridge) {
@@ -9635,7 +9750,16 @@ function onSelectCatalogSequence() {
 
 async function closeActiveSequenceForSwitch(options = {}) {
   const mode = options?.mode === "discard-unsaved" ? "discard-unsaved" : "policy";
-  if (!state.flags.activeSequenceLoaded) return;
+  let hasLiveOpenSequence = Boolean(state.flags.activeSequenceLoaded);
+  if (!hasLiveOpenSequence) {
+    try {
+      const open = await getOpenSequence(state.endpoint);
+      hasLiveOpenSequence = open?.data?.isOpen === true;
+    } catch {
+      hasLiveOpenSequence = false;
+    }
+  }
+  if (!hasLiveOpenSequence) return;
   try {
     await closeSequence(state.endpoint, false, true);
     state.flags.activeSequenceLoaded = false;
@@ -12236,6 +12360,7 @@ const automationRuntime = createAutomationRuntime({
   onApplyAll,
   onRefresh,
   onAnalyzeAudio,
+  onSeedTimingTracksFromAnalysis,
   onOpenExistingSequence,
   clearDesignRevisionTarget,
   normalizeDesignRevisionTarget,
@@ -12278,6 +12403,7 @@ const {
   getAutomationComparativeValidationSnapshot,
   refreshAutomationFromXLights,
   analyzeAutomationAudio,
+  seedAutomationTimingTracksFromAnalysis,
   defineAutomationVisualHint,
   openAutomationSequence,
   getAutomationAgentRuntimeSnapshot,

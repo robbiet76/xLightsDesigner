@@ -741,6 +741,9 @@ async function processAutomationRequests() {
       if (action === "analyzeAudio") {
         return invokeRendererAutomation("analyzeAudio", request?.payload || {});
       }
+      if (action === "seedTimingTracksFromAnalysis") {
+        return invokeRendererAutomation("seedTimingTracksFromAnalysis", request?.payload || {});
+      }
       if (action === "applyCurrentProposal") {
         return invokeRendererAutomation("applyCurrentProposal", request?.payload || {});
       }
