@@ -16,6 +16,7 @@ import {
   parseSubmodelParentId,
   sortAggregateTargets
 } from "../shared/target-semantics-registry.js";
+import { normalizeTimingTrackCoverage } from "../../runtime/timing-track-provenance.js";
 
 export function estimateImpactCount(sourceLines = []) {
   const count = Array.isArray(sourceLines) ? sourceLines.filter(Boolean).length : 0;
@@ -36,6 +37,25 @@ function normalizeSequenceSettings(sequenceSettings = {}) {
     durationMs: Number.isFinite(Number(row.durationMs)) ? Number(row.durationMs) : null,
     frameMs: Number.isFinite(Number(row.frameMs)) ? Number(row.frameMs) : null
   };
+}
+
+function normalizeXdSongStructureMarks(marks = [], sequenceSettings = {}) {
+  const durationMs = Number(sequenceSettings?.durationMs);
+  const effectiveDurationMs = Number.isFinite(durationMs) && durationMs > 0
+    ? durationMs
+    : Math.max(0, ...((Array.isArray(marks) ? marks : []).map((row) => Number(row?.endMs) || 0)));
+  const normalized = normalizeTimingTrackCoverage(marks, {
+    durationMs: effectiveDurationMs,
+    fillerLabel: ""
+  });
+  if (!(Number.isFinite(durationMs) && durationMs > 1)) return normalized;
+  return normalized.map((mark, index, rows) => {
+    if (index !== rows.length - 1 || mark.endMs !== durationMs) return mark;
+    return {
+      ...mark,
+      endMs: Math.max(mark.startMs + 1, durationMs - 1)
+    };
+  });
 }
 
 function splitModelTokenList(raw = "") {
@@ -780,15 +800,18 @@ export function buildDesignerPlanCommands(
 
   const parsed = source.map((line) => parseProposalLine(line));
   const sectionWindows = buildSectionWindows(source, parsed, sectionWindowsByName);
-  const marks = buildTimingMarks(source, parsed, sectionWindows, {
+  const rawMarks = buildTimingMarks(source, parsed, sectionWindows, {
     useAllKnownSections: normText(trackName) === "XD: Song Structure"
-  }).map((mark, index, rows) => {
+  });
+  const marks = normText(trackName) === "XD: Song Structure"
+    ? normalizeXdSongStructureMarks(rawMarks, sequenceSettings)
+    : rawMarks.map((mark, index, rows) => {
     const durationMs = Number(sequenceSettings?.durationMs);
     if (!Number.isFinite(durationMs) || durationMs <= 1) return mark;
     if (index !== rows.length - 1 || mark.endMs !== durationMs) return mark;
     const endMs = Math.max(mark.startMs + 1, durationMs - 1);
     return endMs === mark.endMs ? mark : { ...mark, endMs };
-  });
+    });
 
   const baseCommands = [
     {

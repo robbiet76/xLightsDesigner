@@ -318,7 +318,8 @@ const defaultState = {
   },
   sequenceAgentRuntime: {
     timingTrackPolicies: {},
-    timingGeneratedSignatures: {}
+    timingGeneratedSignatures: {},
+    timingTrackProvenance: {}
   },
   savePathInput: "",
   lastApplyBackupPath: "",
@@ -1972,7 +1973,11 @@ function buildSequenceSidecarDocument() {
     sequenceAgentRuntime: state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
       ? {
           timingTrackPolicies: getSequenceTimingTrackPoliciesState(),
-          timingGeneratedSignatures: getSequenceTimingGeneratedSignaturesState()
+          timingGeneratedSignatures: getSequenceTimingGeneratedSignaturesState(),
+          timingTrackProvenance:
+            state.sequenceAgentRuntime?.timingTrackProvenance && typeof state.sequenceAgentRuntime.timingTrackProvenance === "object"
+              ? state.sequenceAgentRuntime.timingTrackProvenance
+              : {}
         }
       : structuredClone(defaultState.sequenceAgentRuntime),
     creative: state.creative || {},
@@ -2021,6 +2026,9 @@ function applySequenceSidecarDocument(doc) {
       : {},
     timingGeneratedSignatures: runtimeDoc.timingGeneratedSignatures && typeof runtimeDoc.timingGeneratedSignatures === "object"
       ? { ...runtimeDoc.timingGeneratedSignatures }
+      : {},
+    timingTrackProvenance: runtimeDoc.timingTrackProvenance && typeof runtimeDoc.timingTrackProvenance === "object"
+      ? { ...runtimeDoc.timingTrackProvenance }
       : {}
   };
   if (doc?.metadata && typeof doc.metadata === "object") state.metadata = { ...state.metadata, ...doc.metadata };
@@ -2672,7 +2680,7 @@ function applyProjectSnapshot(snapshot) {
   state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
   state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   state.sequenceAgentRuntime = snapshot?.sequenceAgentRuntime && typeof snapshot.sequenceAgentRuntime === "object"
-    ? {
+      ? {
         timingTrackPolicies:
           snapshot.sequenceAgentRuntime.timingTrackPolicies && typeof snapshot.sequenceAgentRuntime.timingTrackPolicies === "object"
             ? { ...snapshot.sequenceAgentRuntime.timingTrackPolicies }
@@ -2680,6 +2688,10 @@ function applyProjectSnapshot(snapshot) {
         timingGeneratedSignatures:
           snapshot.sequenceAgentRuntime.timingGeneratedSignatures && typeof snapshot.sequenceAgentRuntime.timingGeneratedSignatures === "object"
             ? { ...snapshot.sequenceAgentRuntime.timingGeneratedSignatures }
+            : {},
+        timingTrackProvenance:
+          snapshot.sequenceAgentRuntime.timingTrackProvenance && typeof snapshot.sequenceAgentRuntime.timingTrackProvenance === "object"
+            ? { ...snapshot.sequenceAgentRuntime.timingTrackProvenance }
             : {}
       }
     : structuredClone(defaultState.sequenceAgentRuntime);

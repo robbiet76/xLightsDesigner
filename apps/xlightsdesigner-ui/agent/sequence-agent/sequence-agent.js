@@ -6,6 +6,7 @@ import {
   collectSubmodelRenderWarnings,
   estimateImpactCount
 } from "./command-builders.js";
+import { normalizeTimingTrackCoverage } from "../../runtime/timing-track-provenance.js";
 import { SEQUENCE_AGENT_CONTRACT_VERSION, SEQUENCE_AGENT_PLAN_OUTPUT_CONTRACT, SEQUENCE_AGENT_ROLE } from "./sequence-agent-contracts.js";
 import { evaluateSequencePlanCapabilities } from "./sequence-capability-gate.js";
 import { evaluateEffectCommandCompatibility } from "./effect-compatibility.js";
@@ -253,6 +254,25 @@ function deriveEffectiveSequenceSettings({ sequenceSettings = {}, analysisHandof
     base.durationMs = maxEndMs;
   }
   return base;
+}
+
+function normalizeXdSongStructureMarks(marks = [], sequenceSettings = {}) {
+  const durationMs = Number(sequenceSettings?.durationMs);
+  const effectiveDurationMs = Number.isFinite(durationMs) && durationMs > 0
+    ? durationMs
+    : Math.max(0, ...normArray(marks).map((row) => Number(row?.endMs) || 0));
+  const normalized = normalizeTimingTrackCoverage(marks, {
+    durationMs: effectiveDurationMs,
+    fillerLabel: ""
+  });
+  if (!(Number.isFinite(durationMs) && durationMs > 1)) return normalized;
+  return normalized.map((mark, index, rows) => {
+    if (index !== rows.length - 1 || mark.endMs !== durationMs) return mark;
+    return {
+      ...mark,
+      endMs: Math.max(mark.startMs + 1, durationMs - 1)
+    };
+  });
 }
 
 function buildCueTrackMarksByTrack({ analysisHandoff = {}, sectionNames = [], includeAll = false } = {}) {
@@ -632,7 +652,7 @@ function buildPlacementMarksByTrack({
       .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
     let normalizedMarks;
     if (trackName === "XD: Song Structure") {
-      normalizedMarks = sortedMarks.slice(0, 64);
+      normalizedMarks = normalizeXdSongStructureMarks(sortedMarks, sequenceSettings);
     } else {
       // xLights timing rows reject overlapping marks. Prefer the most specific windows
       // and drop broader containers such as Phrase Hold-Phrase Release.

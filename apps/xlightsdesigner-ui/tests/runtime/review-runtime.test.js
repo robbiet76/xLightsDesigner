@@ -88,7 +88,12 @@ test("executeApplyCore preserves XD song structure timing writes during live app
     health: { capabilityCommands: [] },
     creative: {},
     flags: {},
-    proposed: ["Intro / Snowman / add Color Wash"]
+    proposed: ["Intro / Snowman / add Color Wash"],
+    sequenceAgentRuntime: {
+      timingTrackPolicies: {},
+      timingGeneratedSignatures: {},
+      timingTrackProvenance: {}
+    }
   };
   const result = await executeApplyCore({
     state,
@@ -132,7 +137,19 @@ test("executeApplyCore preserves XD song structure timing writes during live app
         appliedCommands = commands;
         return { ok: true, executedCount: commands.length, currentRevision: "rev-1", nextRevision: "rev-2" };
       },
-      verifyAppliedPlanReadback: async () => ({ checks: [], expectedMutationsPresent: true, revisionAdvanced: true, lockedTracksUnchanged: true }),
+      verifyAppliedPlanReadback: async () => ({
+        checks: [{
+          kind: "timing",
+          target: "XD: Song Structure",
+          ok: true,
+          detail: "mark signature matched",
+          expectedMarks: [{ startMs: 0, endMs: 1000, label: "Intro" }],
+          actualMarks: [{ startMs: 0, endMs: 1000, label: "Intro" }]
+        }],
+        expectedMutationsPresent: true,
+        revisionAdvanced: true,
+        lockedTracksUnchanged: true
+      }),
       buildSequenceAgentApplyResult: () => ({ verification: { revisionAdvanced: true, expectedMutationsPresent: true, lockedTracksUnchanged: true } }),
       classifyOrchestrationFailureReason: () => "",
       getSequenceTimingTrackPoliciesState: () => ({}),
@@ -161,4 +178,7 @@ test("executeApplyCore preserves XD song structure timing writes during live app
   assert.ok(Array.isArray(appliedCommands));
   assert.equal(appliedCommands.some((row) => row.cmd === "timing.createTrack" && row.params?.trackName === "XD: Song Structure"), true);
   assert.equal(appliedCommands.some((row) => row.cmd === "timing.insertMarks" && row.params?.trackName === "XD: Song Structure"), true);
+  assert.ok(state.sequenceAgentRuntime.timingTrackProvenance.key);
+  assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.trackName, "XD: Song Structure");
+  assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.coverageMode, "complete");
 });

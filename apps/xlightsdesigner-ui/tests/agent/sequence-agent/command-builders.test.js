@@ -261,6 +261,7 @@ test("command builders use the full analyzed section set for XD Song Structure t
   assert.deepEqual(marks.params.marks, [
     { startMs: 0, endMs: 8000, label: "Intro" },
     { startMs: 8000, endMs: 26000, label: "Verse 1" },
+    { startMs: 26000, endMs: 44000, label: "" },
     { startMs: 44000, endMs: 62000, label: "Chorus 1" }
   ]);
 });
@@ -913,5 +914,28 @@ test("command builders clamp final XD song structure mark to duration minus one"
   assert.deepEqual(timingInsert.params.marks, [
     { startMs: 0, endMs: 1000, label: "Intro" },
     { startMs: 1000, endMs: 1999, label: "Verse 1" }
+  ]);
+});
+
+test("command builders fill XD song structure gaps with unlabeled segments", () => {
+  const commands = buildDesignerPlanCommands([
+    "Intro / MegaTree / color wash",
+    "Chorus 1 / Roofline / shimmer"
+  ], {
+    trackName: "XD: Song Structure",
+    sequenceSettings: { durationMs: 3000 },
+    sectionWindowsByName: new Map([
+      ["Intro", { startMs: 0, endMs: 1000 }],
+      ["Chorus 1", { startMs: 2000, endMs: 3000 }]
+    ]),
+    targetIds: ["MegaTree", "Roofline"],
+    effectCatalog: sampleCatalog()
+  });
+
+  const timingInsert = commands.find((row) => row.cmd === "timing.insertMarks");
+  assert.deepEqual(timingInsert.params.marks, [
+    { startMs: 0, endMs: 1000, label: "Intro" },
+    { startMs: 1000, endMs: 2000, label: "" },
+    { startMs: 2000, endMs: 2999, label: "Chorus 1" }
   ]);
 });

@@ -195,7 +195,9 @@ export async function verifyAppliedPlanReadback(plan = [], deps = {}) {
           kind: "timing",
           target: trackName,
           ok,
-          detail: ok ? "mark signature matched" : "mark signature mismatch"
+          detail: ok ? "mark signature matched" : "mark signature mismatch",
+          expectedMarks: Array.isArray(params.marks) ? params.marks : [],
+          actualMarks
         };
       })());
     }

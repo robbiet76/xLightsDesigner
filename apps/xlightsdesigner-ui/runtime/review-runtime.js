@@ -1,5 +1,5 @@
-
 import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practical-sequence-validation.js";
+import { buildTimingTrackProvenanceRecord } from "./timing-track-provenance.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -317,6 +317,10 @@ export async function executeApplyCore({
     state.draftBaseRevision = state.revision;
     const timingTrackPolicies = getSequenceTimingTrackPoliciesState();
     const timingGeneratedSignatures = getSequenceTimingGeneratedSignaturesState();
+    const timingTrackProvenance = state.sequenceAgentRuntime?.timingTrackProvenance
+      && typeof state.sequenceAgentRuntime.timingTrackProvenance === "object"
+      ? { ...state.sequenceAgentRuntime.timingTrackProvenance }
+      : {};
     for (const [trackName, row] of pendingGenerated.entries()) {
       const key = String(row?.policyKey || "").trim();
       const sig = String(row?.signature || "").trim();
@@ -326,8 +330,33 @@ export async function executeApplyCore({
       timingGeneratedSignatures[key] = sig;
       timingTrackPolicies[key] = { manual: false, trackName, updatedAt: new Date().toISOString() };
     }
+    for (const check of Array.isArray(verification?.checks) ? verification.checks : []) {
+      if (String(check?.kind || "").trim() !== "timing") continue;
+      const trackName = String(check?.target || "").trim();
+      if (!trackName || !isXdTimingTrack(trackName)) continue;
+      const policyKey = buildGlobalXdTrackPolicyKey(trackName);
+      if (!policyKey) continue;
+      timingTrackProvenance[policyKey] = buildTimingTrackProvenanceRecord({
+        trackType: trackName === "XD: Song Structure" ? "structure" : "timing",
+        trackName,
+        sourceMarks: Array.isArray(check?.expectedMarks) ? check.expectedMarks : [],
+        userFinalMarks: Array.isArray(check?.actualMarks) ? check.actualMarks : [],
+        sourceProvenance: {
+          generator: "sequence_agent_apply_v1",
+          verificationKind: "readback"
+        },
+        capturedAt: new Date().toISOString(),
+        coverageMode: trackName === "XD: Song Structure" ? "complete" : "sparse",
+        durationMs: Number(state.sequenceSettings?.durationMs || 0),
+        fillerLabel: ""
+      });
+    }
     setSequenceTimingTrackPoliciesState(timingTrackPolicies);
     setSequenceTimingGeneratedSignaturesState(timingGeneratedSignatures);
+    state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+      ? state.sequenceAgentRuntime
+      : {};
+    state.sequenceAgentRuntime.timingTrackProvenance = timingTrackProvenance;
     state.flags.proposalStale = false;
     if (String(intentHandoffRecord?.producer || "") === "designer_dialog" && state.creative?.proposalBundle && typeof applyAcceptedProposalToDirectorProfile === "function") {
       state.directorProfile = applyAcceptedProposalToDirectorProfile(state.directorProfile, { proposalBundle: state.creative.proposalBundle });
