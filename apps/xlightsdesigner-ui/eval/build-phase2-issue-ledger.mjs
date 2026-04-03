@@ -87,7 +87,15 @@ function buildLedger(report = {}, reportPath = "") {
     const scenarioName = str(issue?.scenarioName);
     const scenario = arr(suiteResult?.results).find((row) => str(row?.name) === scenarioName) || null;
     const validation = scenario?.validation && typeof scenario.validation === "object" ? scenario.validation : null;
+    const practicalValidation = scenario?.practicalValidation && typeof scenario.practicalValidation === "object"
+      ? scenario.practicalValidation
+      : (validation?.practicalValidation && typeof validation.practicalValidation === "object"
+          ? validation.practicalValidation
+          : (str(validation?.artifactType) === "practical_sequence_validation_v1" ? validation : null));
     const metrics = validation?.metrics && typeof validation.metrics === "object" ? validation.metrics : null;
+    const timingFidelity = practicalValidation?.summary?.timingFidelity && typeof practicalValidation.summary.timingFidelity === "object"
+      ? practicalValidation.summary.timingFidelity
+      : null;
     return {
       issueId: `phase2-${index + 1}`,
       category: str(issue?.category || issue?.kind || "unknown"),
@@ -112,6 +120,16 @@ function buildLedger(report = {}, reportPath = "") {
             weakRepeatedRoleSimilarityScore: optionalNumber(metrics?.weak?.repeatedRoleSimilarityScore),
             strongChorusProgressionScore: optionalNumber(metrics?.strong?.chorusProgressionScore),
             weakChorusProgressionScore: optionalNumber(metrics?.weak?.chorusProgressionScore)
+          }
+        : null,
+      timingFidelity: timingFidelity
+        ? {
+            structureTrackPresent: Boolean(timingFidelity?.structureTrackPresent),
+            phraseTrackPresent: Boolean(timingFidelity?.phraseTrackPresent),
+            crossingStructureCount: optionalNumber(timingFidelity?.crossingStructureCount),
+            timingAwareEffectCount: optionalNumber(timingFidelity?.timingAwareEffectCount),
+            alignedToStructureCount: optionalNumber(timingFidelity?.alignedToStructureCount),
+            alignedToPhraseCount: optionalNumber(timingFidelity?.alignedToPhraseCount)
           }
         : null
     };

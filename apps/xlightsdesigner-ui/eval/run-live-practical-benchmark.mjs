@@ -140,6 +140,7 @@ function readJson(filePath) {
 function summarizeSuiteResult(key, payload = {}, artifactPath = "") {
   const result = payload?.result && typeof payload.result === "object" ? payload.result : {};
   const gapReport = result?.gapReport && typeof result.gapReport === "object" ? result.gapReport : null;
+  const timingSummary = summarizeTimingValidation(result);
   return {
     key,
     ok: payload?.ok === true && result?.ok === true,
@@ -148,6 +149,7 @@ function summarizeSuiteResult(key, payload = {}, artifactPath = "") {
     failedScenarioCount: Number(result?.failedScenarioCount || 0),
     failedScenarioNames: arr(result?.failedScenarioNames).map((row) => str(row)).filter(Boolean),
     gapReport,
+    timingSummary,
     artifactPath: str(artifactPath)
   };
 }
@@ -182,12 +184,81 @@ function aggregateGapReports(suites = []) {
         ...issue
       });
     }
+    const timingSummary = suite?.timingSummary && typeof suite.timingSummary === "object" ? suite.timingSummary : null;
+    if (timingSummary && Number(timingSummary.failureScenarioCount || 0) > 0) {
+      counts.validation_gap += Number(timingSummary.failureScenarioCount || 0);
+      for (const issue of arr(timingSummary?.issues)) {
+        issues.push({
+          suiteKey: str(suite?.key),
+          category: "validation_gap",
+          kind: str(issue?.kind || "timing_validation"),
+          scenarioName: str(issue?.scenarioName),
+          target: str(issue?.target || "sequence"),
+          detail: str(issue?.detail),
+          summary: str(issue?.summary || issue?.detail)
+        });
+      }
+    }
   }
   return {
     artifactType: "sequencer_gap_report_v1",
     artifactVersion: "1.0",
     issueCount: issues.length,
     issueCounts: counts,
+    issues
+  };
+}
+
+function extractPracticalValidation(resultRow = {}) {
+  const direct = resultRow?.practicalValidation;
+  if (direct && typeof direct === "object" && str(direct?.artifactType) === "practical_sequence_validation_v1") return direct;
+  const validation = resultRow?.validation;
+  if (validation && typeof validation === "object") {
+    if (str(validation?.artifactType) === "practical_sequence_validation_v1") return validation;
+    if (validation?.practicalValidation && typeof validation.practicalValidation === "object" && str(validation.practicalValidation?.artifactType) === "practical_sequence_validation_v1") {
+      return validation.practicalValidation;
+    }
+  }
+  return null;
+}
+
+function summarizeTimingValidation(result = {}) {
+  const scenarios = arr(result?.results);
+  const practicalRows = scenarios
+    .map((row) => ({
+      name: str(row?.name),
+      practicalValidation: extractPracticalValidation(row)
+    }))
+    .filter((row) => row.practicalValidation);
+  const timingRows = practicalRows.map((row) => ({
+    name: row.name,
+    timingFidelity: row.practicalValidation?.summary?.timingFidelity && typeof row.practicalValidation.summary.timingFidelity === "object"
+      ? row.practicalValidation.summary.timingFidelity
+      : {},
+    timingFailures: arr(row.practicalValidation?.failures?.timing)
+  }));
+  const issues = [];
+  for (const row of timingRows) {
+    for (const failure of row.timingFailures) {
+      issues.push({
+        scenarioName: row.name,
+        kind: str(failure?.kind),
+        target: str(failure?.target || "sequence"),
+        detail: str(failure?.detail),
+        summary: `${row.name}: ${str(failure?.detail || failure?.kind)}`
+      });
+    }
+  }
+  return {
+    scenarioCount: scenarios.length,
+    scenarioCountWithPracticalValidation: practicalRows.length,
+    scenarioCountWithTimingData: timingRows.filter((row) => row.timingFidelity && Object.keys(row.timingFidelity).length).length,
+    reviewedStructureScenarioCount: timingRows.filter((row) => row.timingFidelity?.structureTrackPresent === true).length,
+    reviewedPhraseScenarioCount: timingRows.filter((row) => row.timingFidelity?.phraseTrackPresent === true).length,
+    timingAwareScenarioCount: timingRows.filter((row) => Number(row.timingFidelity?.timingAwareEffectCount || 0) > 0).length,
+    crossingStructureScenarioCount: timingRows.filter((row) => Number(row.timingFidelity?.crossingStructureCount || 0) > 0).length,
+    timingIgnoredScenarioCount: timingRows.filter((row) => row.timingFailures.some((failure) => str(failure?.kind) === "timing_ignored")).length,
+    failureScenarioCount: timingRows.filter((row) => row.timingFailures.length > 0).length,
     issues
   };
 }
@@ -271,6 +342,13 @@ async function main() {
     failedSuiteKeys: failedSuites.map((row) => row.key),
     ok: failedSuites.length === 0,
     suites: suiteResults,
+    timingSummary: summarizeTimingValidation({
+      results: suiteResults.flatMap((suite) => {
+        const artifact = str(suite?.artifactPath) && fs.existsSync(str(suite.artifactPath)) ? readJson(str(suite.artifactPath)) : null;
+        const result = artifact?.result && typeof artifact.result === "object" ? artifact.result : {};
+        return arr(result?.results);
+      })
+    }),
     gapReport: aggregateGapReports(suiteResults)
   };
 
