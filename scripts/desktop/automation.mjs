@@ -24,7 +24,7 @@ const launchRoot = "/tmp/xld-desktop-launch";
 const launchRequestsDir = path.join(launchRoot, "requests");
 
 function usage() {
-  console.error("usage: automation.mjs [--channel packaged|dev] [--result-file path] ping | reset-automation-state | refresh-from-xlights | analyze-audio [prompt] | dispatch-prompt <prompt> | generate-proposal <json-payload|--payload-file path> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-section-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-revision-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-wholesequence-practical-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
+  console.error("usage: automation.mjs [--channel packaged|dev] [--result-file path] ping | open-sequence <path|json-payload|--payload-file path> | reset-automation-state | refresh-from-xlights | analyze-audio [prompt] | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | dispatch-prompt <prompt> | generate-proposal <json-payload|--payload-file path> | diagnose-current-proposal | apply-current-proposal | run-direct-sequence-validation <json-payload|--payload-file path> | run-design-concept-validation <json-payload|--payload-file path> | run-whole-sequence-apply-validation <json-payload|--payload-file path> | run-comparative-live-design-validation <json-payload|--payload-file path> | run-live-design-canary-validation <json-payload|--payload-file path> | run-live-design-validation-suite <json-payload|--payload-file path> | run-live-section-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-revision-practical-sequence-validation-suite <json-payload|--payload-file path> | run-live-wholesequence-practical-validation-suite <json-payload|--payload-file path> | run-live-design-canary-suite <json-payload|--payload-file path>");
   process.exit(2);
 }
 
@@ -82,6 +82,15 @@ if (command === "dispatch-prompt") {
   if (!prompt) usage();
   action = "dispatchPrompt";
   payload = { prompt };
+} else if (command === "open-sequence") {
+  action = "openSequence";
+  const first = String(rest[0] || "").trim();
+  if (!first) usage();
+  if (first === "--payload-file" || first.startsWith("@") || first.startsWith("{")) {
+    payload = readJsonPayload(rest);
+  } else {
+    payload = { sequencePath: rest.join(" ").trim() };
+  }
 } else if (command === "ping") {
   action = "ping";
 } else if (command === "reset-automation-state") {
@@ -91,6 +100,12 @@ if (command === "dispatch-prompt") {
 } else if (command === "analyze-audio") {
   action = "analyzeAudio";
   payload = { prompt: rest.join(" ").trim() };
+} else if (command === "get-agent-runtime-snapshot") {
+  action = "getAgentRuntimeSnapshot";
+} else if (command === "get-page-states-snapshot") {
+  action = "getPageStatesSnapshot";
+} else if (command === "get-sequencer-validation-snapshot") {
+  action = "getSequencerValidationSnapshot";
 } else if (command === "generate-proposal") {
   action = "generateProposal";
   payload = readJsonPayload(rest);

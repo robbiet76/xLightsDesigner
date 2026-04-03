@@ -19,6 +19,8 @@ Current contents:
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `run-section-practical-sequence-validation.mjs`: offline runner for the first sequencer-side practical validation pass
 - `run-live-practical-benchmark.mjs`: one-command runner that executes the promoted section, multi-section, whole-sequence, and revision live suites and emits a combined report
+- `live-reviewed-timing-control-suite-v1.json`: real-show four-track reviewed-timing control suite using Candy Cane Lane, Christmas Vacation, Grinch, and Christmas Sarajevo
+- `run-live-reviewed-timing-control-suite.mjs`: live runner that opens each real sequence, refreshes/analyzes, and captures current timing-review state snapshots
 - `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
 - `live-practical-benchmark-baseline.v1.json`: frozen Stage 1 practical benchmark baseline contract
 - `live-practical-benchmark-baseline.v2.json`: frozen revision-inclusive practical benchmark baseline contract
@@ -92,6 +94,14 @@ Phase 2 issue ledger:
 node apps/xlightsdesigner-ui/eval/build-phase2-issue-ledger.mjs \
   --report /tmp/live-practical-benchmark-current/live-practical-benchmark-report.json \
   --output /tmp/live-practical-benchmark-current/phase2-issue-ledger.json
+```
+
+Reviewed timing control suite:
+
+```bash
+node apps/xlightsdesigner-ui/eval/run-live-reviewed-timing-control-suite.mjs \
+  --channel dev \
+  --out-dir /tmp/live-reviewed-timing-control-suite
 ```
 
 Phase 2 revision suite:

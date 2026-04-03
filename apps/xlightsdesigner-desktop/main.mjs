@@ -750,6 +750,12 @@ async function processAutomationRequests() {
       if (action === "getAgentRuntimeSnapshot") {
         return invokeRendererAutomation("getAgentRuntimeSnapshot", request?.payload || {});
       }
+      if (action === "getPageStatesSnapshot") {
+        return invokeRendererAutomation("getPageStatesSnapshot", request?.payload || {});
+      }
+      if (action === "getSequencerValidationSnapshot") {
+        return invokeRendererAutomation("getSequencerValidationSnapshot", request?.payload || {});
+      }
       if (action === "runDirectSequenceValidation") {
         return runDirectSequenceValidationFromDesktop(request?.payload || {});
       }

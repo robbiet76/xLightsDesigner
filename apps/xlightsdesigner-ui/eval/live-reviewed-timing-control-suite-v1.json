@@ -1,0 +1,43 @@
+{
+  "contract": "live_reviewed_timing_control_suite_v1",
+  "version": "1.0",
+  "summary": "Live reviewed-timing control set for timing-track roundtrip and sequencing-readiness inspection on four representative real show sequences.",
+  "scenarios": [
+    {
+      "name": "synced_lyrics_vocal_candy_cane_lane",
+      "trackClass": "synced_lyrics_vocal",
+      "trackTitle": "Candy Cane Lane",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CandyCaneLane/CandyCaneLane.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "expectedTimingTracks": ["XD: Song Structure"],
+      "expectsPhraseTrack": false
+    },
+    {
+      "name": "plain_phrase_fallback_christmas_vacation",
+      "trackClass": "plain_phrase_fallback_vocal",
+      "trackTitle": "Christmas Vacation - Mavis Staples",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasVacation/ChristmasVacation.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "expectedTimingTracks": ["XD: Song Structure", "XD: Phrase Cues"],
+      "expectsPhraseTrack": true
+    },
+    {
+      "name": "vocal_audio_only_grinch",
+      "trackClass": "vocal_audio_only",
+      "trackTitle": "Grinch",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Grinch/Grinch.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "expectedTimingTracks": ["XD: Song Structure"],
+      "expectsPhraseTrack": false
+    },
+    {
+      "name": "instrumental_audio_only_christmas_sarajevo",
+      "trackClass": "instrumental_audio_only",
+      "trackTitle": "Christmas Sarajevo",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasEveSarajevo/ChristmasEveSarajevo.xsq",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "expectedTimingTracks": ["XD: Song Structure"],
+      "expectsPhraseTrack": false
+    }
+  ]
+}
