@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 
 import {
   diffTimingTrackMarks,
-  buildTimingTrackProvenanceRecord
+  buildTimingTrackProvenanceRecord,
+  normalizeTimingTrackCoverage,
+  splitMarksAtBoundaries
 } from "../../runtime/timing-track-provenance.js";
 
 test("diffTimingTrackMarks classifies unchanged moved relabeled added and removed marks", () => {
@@ -60,4 +62,64 @@ test("buildTimingTrackProvenanceRecord preserves normalized source and user mark
     addedByUser: 0,
     removedFromSource: 0
   });
+});
+
+test("normalizeTimingTrackCoverage sorts marks fills gaps and resolves overlaps", () => {
+  const out = normalizeTimingTrackCoverage(
+    [
+      { startMs: 2000, endMs: 3000, label: "Chorus" },
+      { startMs: 0, endMs: 1000, label: "Intro" },
+      { startMs: 900, endMs: 1800, label: "Verse" }
+    ],
+    { durationMs: 4000, fillerLabel: "" }
+  );
+
+  assert.deepEqual(out, [
+    { startMs: 0, endMs: 1000, label: "Intro" },
+    { startMs: 1000, endMs: 1800, label: "Verse" },
+    { startMs: 1800, endMs: 2000, label: "" },
+    { startMs: 2000, endMs: 3000, label: "Chorus" },
+    { startMs: 3000, endMs: 4000, label: "" }
+  ]);
+});
+
+test("splitMarksAtBoundaries splits phrase ranges at structure boundaries", () => {
+  const out = splitMarksAtBoundaries(
+    [
+      { startMs: 0, endMs: 2500, label: "Phrase A" },
+      { startMs: 2500, endMs: 5000, label: "Phrase B" }
+    ],
+    [1000, 3000],
+    { fillerLabel: "" }
+  );
+
+  assert.deepEqual(out, [
+    { startMs: 0, endMs: 1000, label: "Phrase A" },
+    { startMs: 1000, endMs: 2500, label: "Phrase A" },
+    { startMs: 2500, endMs: 3000, label: "Phrase B" },
+    { startMs: 3000, endMs: 5000, label: "Phrase B" }
+  ]);
+});
+
+test("buildTimingTrackProvenanceRecord normalizes complete coverage tracks", () => {
+  const record = buildTimingTrackProvenanceRecord({
+    trackType: "structure",
+    trackName: "XD: Song Structure",
+    sourceMarks: [{ startMs: 1000, endMs: 2000, label: "Verse" }],
+    userFinalMarks: [{ startMs: 0, endMs: 1500, label: "Intro" }, { startMs: 1500, endMs: 2000, label: "Verse" }],
+    durationMs: 2000,
+    fillerLabel: "",
+    coverageMode: "complete",
+    capturedAt: "2026-04-02T22:00:00Z"
+  });
+
+  assert.equal(record.coverageMode, "complete");
+  assert.deepEqual(record.source.marks, [
+    { startMs: 0, endMs: 1000, label: "" },
+    { startMs: 1000, endMs: 2000, label: "Verse" }
+  ]);
+  assert.deepEqual(record.userFinal.marks, [
+    { startMs: 0, endMs: 1500, label: "Intro" },
+    { startMs: 1500, endMs: 2000, label: "Verse" }
+  ]);
 });
