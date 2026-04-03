@@ -6,7 +6,8 @@ import {
   buildTimingTrackProvenanceRecord,
   normalizeTimingTrackCoverage,
   splitMarksAtBoundaries,
-  refreshTimingTrackProvenanceRecord
+  refreshTimingTrackProvenanceRecord,
+  acceptTimingTrackUserFinalAsReviewed
 } from "../../runtime/timing-track-provenance.js";
 
 test("diffTimingTrackMarks classifies unchanged moved relabeled added and removed marks", () => {
@@ -155,6 +156,43 @@ test("refreshTimingTrackProvenanceRecord preserves source and refreshes userFina
   assert.deepEqual(refreshed.diff.summary, {
     unchanged: 0,
     moved: 2,
+    relabeled: 0,
+    addedByUser: 0,
+    removedFromSource: 0
+  });
+});
+
+test("acceptTimingTrackUserFinalAsReviewed promotes current userFinal marks into the accepted source", () => {
+  const existing = buildTimingTrackProvenanceRecord({
+    trackType: "structure",
+    trackName: "XD: Song Structure",
+    sourceMarks: [
+      { startMs: 0, endMs: 1000, label: "Intro" },
+      { startMs: 1000, endMs: 2000, label: "Verse" }
+    ],
+    userFinalMarks: [
+      { startMs: 0, endMs: 1200, label: "Intro" },
+      { startMs: 1200, endMs: 2000, label: "Verse" }
+    ],
+    coverageMode: "complete",
+    durationMs: 2000
+  });
+
+  const accepted = acceptTimingTrackUserFinalAsReviewed(existing, {
+    acceptedAt: "2026-04-02T23:30:00Z",
+    reviewer: "rob",
+    note: "Reviewed in xLights"
+  });
+
+  assert.deepEqual(accepted.source.marks, accepted.userFinal.marks);
+  assert.equal(accepted.userFinal.capturedAt, "2026-04-02T23:30:00Z");
+  assert.equal(accepted.source.provenance.reviewState, "accepted_user_final");
+  assert.equal(accepted.source.provenance.acceptedAt, "2026-04-02T23:30:00Z");
+  assert.equal(accepted.source.provenance.reviewer, "rob");
+  assert.equal(accepted.source.provenance.note, "Reviewed in xLights");
+  assert.deepEqual(accepted.diff.summary, {
+    unchanged: 2,
+    moved: 0,
     relabeled: 0,
     addedByUser: 0,
     removedFromSource: 0

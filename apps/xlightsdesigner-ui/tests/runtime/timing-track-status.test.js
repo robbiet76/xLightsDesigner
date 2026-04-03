@@ -5,7 +5,8 @@ import {
   timingMarksSignature,
   classifyTimingTrackProvenance,
   buildTimingTrackStatusRows,
-  summarizeTimingTrackStatuses
+  summarizeTimingTrackStatuses,
+  reconcileTimingTrackReviewState
 } from "../../runtime/timing-track-status.js";
 import { buildTimingTrackProvenanceRecord } from "../../runtime/timing-track-provenance.js";
 
@@ -39,6 +40,7 @@ test("classifyTimingTrackProvenance marks unchanged tracks", () => {
 
   assert.equal(status.status, "unchanged");
   assert.equal(status.unchanged, true);
+  assert.equal(status.canReconcile, false);
 });
 
 test("classifyTimingTrackProvenance marks edited tracks", () => {
@@ -63,6 +65,7 @@ test("classifyTimingTrackProvenance marks edited tracks", () => {
 
   assert.equal(status.status, "user_edited");
   assert.equal(status.userEdited, true);
+  assert.equal(status.canReconcile, true);
 });
 
 test("classifyTimingTrackProvenance marks stale tracks when source no longer matches generated signature", () => {
@@ -87,6 +90,7 @@ test("classifyTimingTrackProvenance marks stale tracks when source no longer mat
 
   assert.equal(status.status, "stale");
   assert.equal(status.stale, true);
+  assert.equal(status.canReconcile, true);
 });
 
 test("buildTimingTrackStatusRows maps provenance records with policy metadata", () => {
@@ -137,6 +141,46 @@ test("summarizeTimingTrackStatuses reports stale and edited counts", () => {
   assert.equal(summary.userEditedCount, 1);
   assert.equal(summary.staleCount, 1);
   assert.equal(summary.manualCount, 1);
+  assert.equal(summary.reconcilableCount, 2);
   assert.equal(summary.needsReview, true);
   assert.equal(summary.status, "stale");
+});
+
+test("reconcileTimingTrackReviewState accepts current userFinal marks and refreshes generated signature", () => {
+  const record = buildTimingTrackProvenanceRecord({
+    trackType: "structure",
+    trackName: "XD: Song Structure",
+    sourceMarks: [
+      { startMs: 0, endMs: 1000, label: "Intro" },
+      { startMs: 1000, endMs: 2000, label: "Verse" }
+    ],
+    userFinalMarks: [
+      { startMs: 0, endMs: 1200, label: "Intro" },
+      { startMs: 1200, endMs: 2000, label: "Verse" }
+    ],
+    coverageMode: "complete",
+    durationMs: 2000
+  });
+  const result = reconcileTimingTrackReviewState({
+    policyKey: "__xd_global__::xd: song structure",
+    timingTrackProvenance: {
+      "__xd_global__::xd: song structure": record
+    },
+    timingGeneratedSignatures: {
+      "__xd_global__::xd: song structure": timingMarksSignature(record.source.marks)
+    },
+    acceptedAt: "2026-04-02T23:35:00Z",
+    reviewer: "rob"
+  });
+
+  assert.equal(result.updated, true);
+  assert.equal(
+    result.timingGeneratedSignatures["__xd_global__::xd: song structure"],
+    timingMarksSignature(result.record.source.marks)
+  );
+  const status = classifyTimingTrackProvenance(result.record, {
+    expectedGeneratedSignature: result.timingGeneratedSignatures["__xd_global__::xd: song structure"]
+  });
+  assert.equal(status.status, "unchanged");
+  assert.equal(status.canReconcile, false);
 });

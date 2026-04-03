@@ -1,3 +1,5 @@
+import { acceptTimingTrackUserFinalAsReviewed } from "./timing-track-provenance.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -48,6 +50,7 @@ export function classifyTimingTrackProvenance(record = {}, { expectedGeneratedSi
     trackType: str(record?.trackType),
     trackName: str(record?.trackName),
     status,
+    canReconcile: status === "user_edited" || status === "stale",
     stale,
     userEdited: hasUserEdits,
     unchanged: !stale && !hasUserEdits,
@@ -94,6 +97,7 @@ export function summarizeTimingTrackStatuses(rows = []) {
     userEditedCount: 0,
     staleCount: 0,
     manualCount: 0,
+    reconcilableCount: 0,
     needsReview: false,
     status: entries.length ? "clean" : "empty",
     summaryText: entries.length ? "No timing tracks tracked yet." : "No timing tracks tracked yet."
@@ -101,6 +105,7 @@ export function summarizeTimingTrackStatuses(rows = []) {
 
   for (const row of entries) {
     if (row?.manual) summary.manualCount += 1;
+    if (row?.canReconcile || row?.status === "user_edited" || row?.status === "stale") summary.reconcilableCount += 1;
     if (row?.status === "unchanged") summary.unchangedCount += 1;
     else if (row?.status === "user_edited") summary.userEditedCount += 1;
     else if (row?.status === "stale") summary.staleCount += 1;
@@ -125,4 +130,43 @@ export function summarizeTimingTrackStatuses(rows = []) {
   summary.status = "clean";
   summary.summaryText = `${summary.unchangedCount} timing track${summary.unchangedCount === 1 ? "" : "s"} unchanged.`;
   return summary;
+}
+
+export function reconcileTimingTrackReviewState({
+  policyKey = "",
+  timingTrackProvenance = {},
+  timingGeneratedSignatures = {},
+  acceptedAt = "",
+  reviewer = "",
+  note = ""
+} = {}) {
+  const key = str(policyKey);
+  const provenance = timingTrackProvenance && typeof timingTrackProvenance === "object"
+    ? { ...timingTrackProvenance }
+    : {};
+  const signatures = timingGeneratedSignatures && typeof timingGeneratedSignatures === "object"
+    ? { ...timingGeneratedSignatures }
+    : {};
+  const existingRecord = provenance?.[key] && typeof provenance[key] === "object" ? provenance[key] : null;
+  if (!key || !existingRecord) {
+    return {
+      updated: false,
+      timingTrackProvenance: provenance,
+      timingGeneratedSignatures: signatures,
+      record: null
+    };
+  }
+  const record = acceptTimingTrackUserFinalAsReviewed(existingRecord, {
+    acceptedAt,
+    reviewer,
+    note
+  });
+  provenance[key] = record;
+  signatures[key] = timingMarksSignature(record.source.marks);
+  return {
+    updated: true,
+    timingTrackProvenance: provenance,
+    timingGeneratedSignatures: signatures,
+    record
+  };
 }

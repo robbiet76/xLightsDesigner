@@ -317,3 +317,40 @@ export function refreshTimingTrackProvenanceRecord(
     fillerLabel: str(fillerLabel)
   });
 }
+
+export function acceptTimingTrackUserFinalAsReviewed(
+  existingRecord = {},
+  {
+    acceptedAt = "",
+    reviewer = "",
+    note = ""
+  } = {}
+) {
+  const prior = existingRecord && typeof existingRecord === "object" ? existingRecord : {};
+  const userFinalMarks = asArray(prior?.userFinal?.marks);
+  const acceptedIso = str(acceptedAt) || new Date().toISOString();
+  const sourceProvenance = prior?.source?.provenance && typeof prior.source.provenance === "object"
+    ? { ...prior.source.provenance }
+    : {};
+  return buildTimingTrackProvenanceRecord({
+    trackType: str(prior?.trackType),
+    trackName: str(prior?.trackName),
+    sourceMarks: userFinalMarks,
+    userFinalMarks,
+    sourceProvenance: {
+      ...sourceProvenance,
+      reviewState: "accepted_user_final",
+      acceptedAt: acceptedIso,
+      reviewer: str(reviewer),
+      note: str(note)
+    },
+    capturedAt: acceptedIso,
+    coverageMode: str(prior?.coverageMode || "sparse"),
+    durationMs: Math.max(
+      0,
+      ...asArray(prior?.source?.marks).map((mark) => num(mark?.endMs, 0)),
+      ...userFinalMarks.map((mark) => num(mark?.endMs, 0))
+    ),
+    fillerLabel: ""
+  });
+}
