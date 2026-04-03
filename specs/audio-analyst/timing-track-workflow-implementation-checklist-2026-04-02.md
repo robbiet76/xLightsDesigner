@@ -2,7 +2,7 @@
 
 Owner: xLightsDesigner Team  
 Date: 2026-04-02  
-Status: Active
+Status: Active, implementation in progress
 
 ## Goal
 
@@ -112,14 +112,14 @@ Implement the timing-track contract and normalization rules before xLights write
 
 Checklist:
 
-- [ ] define normalized timing-track schema in code
-- [ ] define provenance schema for generated tracks
-- [ ] define diff schema for `source -> userFinal`
-- [ ] implement segment sort/normalize utility
-- [ ] implement no-gap/no-overlap coverage normalizer
-- [ ] implement filler insertion for uncovered ranges
-- [ ] implement phrase splitting at structure boundaries
-- [ ] add invariant tests for all normalization rules
+- [x] define normalized timing-track schema in code
+- [x] define provenance schema for generated tracks
+- [x] define diff schema for `source -> userFinal`
+- [x] implement segment sort/normalize utility
+- [x] implement no-gap/no-overlap coverage normalizer
+- [x] implement filler insertion for uncovered ranges
+- [x] implement phrase splitting at structure boundaries
+- [x] add invariant tests for all normalization rules
 
 Exit criteria:
 
@@ -133,11 +133,11 @@ Implement the first end-to-end owned timing track.
 
 Checklist:
 
-- [ ] define ownership/naming policy for `XD:` timing tracks
-- [ ] write `XD: Song Structure` into xLights
-- [ ] replace/update only app-owned `XD:` structure track
-- [ ] do not overwrite non-`XD:` user tracks
-- [ ] validate written marks match normalized source segments
+- [x] define ownership/naming policy for `XD:` timing tracks
+- [x] write `XD: Song Structure` into xLights
+- [x] replace/update only app-owned `XD:` structure track
+- [x] do not overwrite non-`XD:` user tracks
+- [x] validate written marks match normalized source segments
 
 Exit criteria:
 
@@ -151,17 +151,17 @@ Capture user-edited timing state back from xLights.
 
 Checklist:
 
-- [ ] read `XD: Song Structure` back from xLights
-- [ ] normalize imported marks into the same internal segment schema
-- [ ] store generated `source`
-- [ ] store current `userFinal`
-- [ ] compute normalized `diff`
-- [ ] classify diff entries:
-  - [ ] `unchanged`
-  - [ ] `moved`
-  - [ ] `relabeled`
-  - [ ] `added_by_user`
-  - [ ] `removed_from_source`
+- [x] read `XD: Song Structure` back from xLights
+- [x] normalize imported marks into the same internal segment schema
+- [x] store generated `source`
+- [x] store current `userFinal`
+- [x] compute normalized `diff`
+- [x] classify diff entries:
+  - [x] `unchanged`
+  - [x] `moved`
+  - [x] `relabeled`
+  - [x] `added_by_user`
+  - [x] `removed_from_source`
 
 Exit criteria:
 
@@ -176,11 +176,11 @@ Only after `XD: Song Structure` is stable.
 Checklist:
 
 - [ ] finalize phrase track name
-- [ ] normalize phrase output into complete coverage
-- [ ] ensure phrase segments stay inside structure segments
-- [ ] write phrase track into xLights
-- [ ] read phrase track back from xLights
-- [ ] store `source/userFinal/diff`
+- [x] normalize phrase output into complete coverage
+- [x] ensure phrase segments stay inside structure segments
+- [x] write phrase track into xLights
+- [x] read phrase track back from xLights
+- [x] store `source/userFinal/diff`
 
 Exit criteria:
 
@@ -201,19 +201,31 @@ Control set:
 
 Checklist:
 
-- [ ] choose the 4 control tracks
+- [x] choose the 4 control tracks
+- [x] create repeatable control-set validation artifact
+- [x] validate contract behavior for:
+  - [x] synced-lyrics vocal
+  - [x] plain-phrase-fallback vocal
+  - [x] vocal audio-only
+  - [x] instrumental
 - [ ] write timing tracks into xLights
 - [ ] review timing visually in xLights
 - [ ] edit timing manually
-- [ ] read user-final timing back
-- [ ] verify diff correctness
-- [ ] record findings in a repeatable validation artifact
+- [ ] read user-final timing back in the live control set
+- [ ] verify diff correctness from live edits
+- [ ] record live findings in a repeatable validation artifact
 
 Exit criteria:
 
 - all 4 tracks complete the full loop
 - no data loss between source and user edits
 - diff is stable and reviewable
+
+Current note:
+
+- contract-level control-set validation is now scripted in:
+  - `apps/xlightsdesigner-ui/eval/run-timing-track-control-validation.mjs`
+- live xLights roundtrip validation remains the next required step
 
 ## Recommended Initial Control Set
 

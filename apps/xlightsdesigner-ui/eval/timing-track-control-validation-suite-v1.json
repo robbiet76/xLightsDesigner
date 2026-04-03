@@ -1,0 +1,118 @@
+{
+  "contract": "timing_track_control_validation_suite_v1",
+  "version": "1.0",
+  "scenarios": [
+    {
+      "name": "synced_lyrics_vocal_candy_cane_lane",
+      "trackClass": "synced_lyrics_vocal",
+      "trackTitle": "Candy Cane Lane",
+      "timingTracks": [
+        {
+          "trackName": "XD: Song Structure",
+          "trackType": "structure",
+          "coverageMode": "complete",
+          "durationMs": 120000,
+          "sourceMarks": [
+            { "startMs": 0, "endMs": 12000, "label": "Intro" },
+            { "startMs": 12000, "endMs": 42000, "label": "Verse 1" },
+            { "startMs": 42000, "endMs": 72000, "label": "Chorus 1" },
+            { "startMs": 72000, "endMs": 96000, "label": "Verse 2" },
+            { "startMs": 96000, "endMs": 120000, "label": "Outro" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "plain_phrase_fallback_christmas_vacation",
+      "trackClass": "plain_phrase_fallback_vocal",
+      "trackTitle": "Christmas Vacation - Mavis Staples",
+      "timingTracks": [
+        {
+          "trackName": "XD: Song Structure",
+          "trackType": "structure",
+          "coverageMode": "complete",
+          "durationMs": 126000,
+          "sourceMarks": [
+            { "startMs": 0, "endMs": 10000, "label": "Intro" },
+            { "startMs": 10000, "endMs": 36000, "label": "Verse 1" },
+            { "startMs": 36000, "endMs": 62000, "label": "Refrain 1" },
+            { "startMs": 62000, "endMs": 98000, "label": "Verse 2" },
+            { "startMs": 98000, "endMs": 126000, "label": "Outro" }
+          ]
+        },
+        {
+          "trackName": "XD: Phrase Cues",
+          "trackType": "phrase",
+          "coverageMode": "complete",
+          "durationMs": 126000,
+          "sourceMarks": [
+            { "startMs": 0, "endMs": 10000, "label": "" },
+            { "startMs": 10000, "endMs": 18000, "label": "Christmas vacation / we've got a little change in plans" },
+            { "startMs": 18000, "endMs": 26000, "label": "Christmas vacation / need a little escape from it all" },
+            { "startMs": 26000, "endMs": 36000, "label": "" },
+            { "startMs": 36000, "endMs": 50000, "label": "It's that time / christmas time is here" },
+            { "startMs": 50000, "endMs": 62000, "label": "" },
+            { "startMs": 62000, "endMs": 82000, "label": "Everybody's having fun / look at all the decorations" },
+            { "startMs": 82000, "endMs": 98000, "label": "" },
+            { "startMs": 98000, "endMs": 126000, "label": "" }
+          ],
+          "userFinalMarks": [
+            { "startMs": 0, "endMs": 10000, "label": "" },
+            { "startMs": 10000, "endMs": 20000, "label": "Christmas vacation / we've got a little change in plans" },
+            { "startMs": 20000, "endMs": 36000, "label": "" },
+            { "startMs": 36000, "endMs": 52000, "label": "It's that time / christmas time is here" },
+            { "startMs": 52000, "endMs": 98000, "label": "" },
+            { "startMs": 98000, "endMs": 126000, "label": "" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "vocal_audio_only_grinch",
+      "trackClass": "vocal_audio_only",
+      "trackTitle": "Grinch",
+      "timingTracks": [
+        {
+          "trackName": "XD: Song Structure",
+          "trackType": "structure",
+          "coverageMode": "complete",
+          "durationMs": 110000,
+          "sourceMarks": [
+            { "startMs": 0, "endMs": 12000, "label": "Intro" },
+            { "startMs": 12000, "endMs": 38000, "label": "Refrain 1" },
+            { "startMs": 38000, "endMs": 66000, "label": "Verse 1" },
+            { "startMs": 66000, "endMs": 92000, "label": "Refrain 2" },
+            { "startMs": 92000, "endMs": 110000, "label": "Outro" }
+          ],
+          "userFinalMarks": [
+            { "startMs": 0, "endMs": 12000, "label": "Intro" },
+            { "startMs": 12000, "endMs": 40000, "label": "Verse 1" },
+            { "startMs": 40000, "endMs": 70000, "label": "Verse 2" },
+            { "startMs": 70000, "endMs": 94000, "label": "Refrain 1" },
+            { "startMs": 94000, "endMs": 110000, "label": "Outro" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "instrumental_audio_only_christmas_sarajevo",
+      "trackClass": "instrumental_audio_only",
+      "trackTitle": "Christmas Sarajevo",
+      "timingTracks": [
+        {
+          "trackName": "XD: Song Structure",
+          "trackType": "structure",
+          "coverageMode": "complete",
+          "durationMs": 140000,
+          "sourceMarks": [
+            { "startMs": 0, "endMs": 18000, "label": "Intro" },
+            { "startMs": 18000, "endMs": 52000, "label": "Theme" },
+            { "startMs": 52000, "endMs": 90000, "label": "Contrast" },
+            { "startMs": 90000, "endMs": 124000, "label": "Theme" },
+            { "startMs": 124000, "endMs": 140000, "label": "Outro" }
+          ]
+        }
+      ]
+    }
+  ]
+}
