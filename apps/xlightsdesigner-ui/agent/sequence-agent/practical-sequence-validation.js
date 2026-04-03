@@ -33,6 +33,16 @@ function compactFailures(checks = [], limit = 8) {
     .slice(0, limit);
 }
 
+function effectPlanKey(modelName = "", layerIndex = 0, startMs = 0, endMs = 0, effectName = "") {
+  return [
+    str(modelName),
+    Number(layerIndex),
+    Number(startMs),
+    Number(endMs),
+    str(effectName)
+  ].join("|");
+}
+
 function buildMetadataAssignmentIndex(metadataAssignments = []) {
   const out = new Map();
   for (const assignment of arr(metadataAssignments)) {
@@ -229,6 +239,119 @@ function summarizeObservedTargetMetadata(observedTargets = [], metadataAssignmen
   };
 }
 
+function buildTimingTrackIndex(commands = []) {
+  const tracks = new Map();
+  for (const command of arr(commands)) {
+    const cmd = str(command?.cmd);
+    if (cmd !== "timing.insertMarks" && cmd !== "timing.replaceMarks") continue;
+    const trackName = str(command?.params?.trackName);
+    if (!trackName) continue;
+    const marks = arr(command?.params?.marks)
+      .map((row) => ({
+        label: str(row?.label),
+        startMs: Number(row?.startMs),
+        endMs: Number(row?.endMs)
+      }))
+      .filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs)
+      .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label));
+    tracks.set(trackName, marks);
+  }
+  return tracks;
+}
+
+function countOverlappingMarks(marks = [], startMs = 0, endMs = 0, { labeledOnly = false } = {}) {
+  return arr(marks).filter((mark) => {
+    if (labeledOnly && !str(mark?.label)) return false;
+    return Math.max(Number(mark?.startMs || 0), Number(startMs || 0)) < Math.min(Number(mark?.endMs || 0), Number(endMs || 0));
+  });
+}
+
+function summarizeTimingFidelity(planHandoff = null) {
+  const commands = arr(planHandoff?.commands);
+  const timingTracks = buildTimingTrackIndex(commands);
+  const structureMarks = timingTracks.get("XD: Song Structure") || [];
+  const phraseMarks = timingTracks.get("XD: Phrase Cues") || [];
+  const alignCommandsByEffectKey = new Map();
+  for (const command of commands) {
+    if (str(command?.cmd) !== "effects.alignToTiming") continue;
+    const params = command?.params || {};
+    const effectKey = effectPlanKey(
+      params?.modelName,
+      params?.layerIndex,
+      params?.startMs,
+      params?.endMs,
+      ""
+    );
+    if (!alignCommandsByEffectKey.has(effectKey)) alignCommandsByEffectKey.set(effectKey, []);
+    alignCommandsByEffectKey.get(effectKey).push({
+      timingTrackName: str(params?.timingTrackName),
+      mode: str(params?.mode)
+    });
+  }
+  const effectCommands = commands.filter((command) => str(command?.cmd) === "effects.create");
+  let withinStructureCount = 0;
+  let crossingStructureCount = 0;
+  let anchoredToStructureCount = 0;
+  let alignedToStructureCount = 0;
+  let phraseAwareEffectCount = 0;
+  let alignedToPhraseCount = 0;
+  let timingAwareEffectCount = 0;
+  const crossingEffects = [];
+
+  for (const command of effectCommands) {
+    const params = command?.params || {};
+    const startMs = Number(params?.startMs);
+    const endMs = Number(params?.endMs);
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+    const anchorTrackName = str(command?.anchor?.trackName);
+    const aligns = alignCommandsByEffectKey.get(effectPlanKey(
+      params?.modelName,
+      params?.layerIndex,
+      params?.startMs,
+      params?.endMs,
+      ""
+    )) || [];
+    const overlaps = countOverlappingMarks(structureMarks, startMs, endMs);
+    if (structureMarks.length) {
+      if (overlaps.length <= 1) {
+        withinStructureCount += 1;
+      } else {
+        crossingStructureCount += 1;
+        crossingEffects.push({
+          target: str(params?.modelName),
+          effectName: str(params?.effectName),
+          startMs,
+          endMs
+        });
+      }
+    }
+    const anchoredToStructure = anchorTrackName === "XD: Song Structure";
+    const alignedToStructure = aligns.some((row) => row.timingTrackName === "XD: Song Structure");
+    const anchoredToPhrase = anchorTrackName === "XD: Phrase Cues";
+    const alignedToPhrase = aligns.some((row) => row.timingTrackName === "XD: Phrase Cues");
+    const phraseOverlapCount = countOverlappingMarks(phraseMarks, startMs, endMs, { labeledOnly: true }).length;
+    if (anchoredToStructure) anchoredToStructureCount += 1;
+    if (alignedToStructure) alignedToStructureCount += 1;
+    if (alignedToPhrase) alignedToPhraseCount += 1;
+    if (anchoredToPhrase || alignedToPhrase || phraseOverlapCount > 0) phraseAwareEffectCount += 1;
+    if (anchoredToStructure || alignedToStructure || anchoredToPhrase || alignedToPhrase) timingAwareEffectCount += 1;
+  }
+
+  return {
+    effectCount: effectCommands.length,
+    structureTrackPresent: structureMarks.length > 0,
+    phraseTrackPresent: phraseMarks.length > 0,
+    withinStructureCount,
+    crossingStructureCount,
+    anchoredToStructureCount,
+    alignedToStructureCount,
+    alignedToPhraseCount,
+    phraseAwareEffectCount,
+    timingAwareEffectCount,
+    crossingEffects
+  };
+}
+
 export function buildPracticalSequenceValidation({
   planHandoff = null,
   applyResult = null,
@@ -246,46 +369,68 @@ export function buildPracticalSequenceValidation({
   const designChecks = summarizeChecks(verification?.designChecks);
   const metadataCoverage = summarizeObservedTargetMetadata(designAlignment?.observedTargets, metadataAssignments);
   const planQuality = summarizePlanQuality(planHandoff);
+  const timingFidelity = summarizeTimingFidelity(planHandoff);
   const qualityFailures = [];
+  const timingFailures = [];
   const durationMs = Number(planHandoff?.metadata?.sequenceSettings?.durationMs || 0);
   const sectionCount = arr(planHandoff?.metadata?.sectionPlans).length;
+  const passScope = str(planHandoff?.metadata?.executionStrategy?.passScope);
+  const isSectionScoped = passScope === "single_section";
   const isWholeSongScale = durationMs >= 120000 || sectionCount >= 8;
-  if (planQuality.timelineCoverageRatio < 0.55) {
+  if (timingFidelity.structureTrackPresent && timingFidelity.crossingStructureCount > 0) {
+    timingFailures.push({
+      kind: "crosses_structure_boundary",
+      target: "sequence",
+      detail: `${timingFidelity.crossingStructureCount} effect commands cross reviewed structure boundaries.`
+    });
+  }
+  if (
+    timingFidelity.structureTrackPresent &&
+    timingFidelity.effectCount > 0 &&
+    timingFidelity.timingAwareEffectCount === 0
+  ) {
+    timingFailures.push({
+      kind: "timing_ignored",
+      target: "sequence",
+      detail: "Effect commands did not anchor or align to the reviewed structure track."
+    });
+  }
+  if (!isSectionScoped && planQuality.timelineCoverageRatio < 0.55) {
     qualityFailures.push({
       kind: "timeline_coverage",
       target: "sequence",
       detail: `Timeline coverage too low (${planQuality.timelineCoverageRatio.toFixed(3)}).`
     });
   }
-  if (planQuality.distinctEffectCount < 5) {
+  if (!isSectionScoped && planQuality.distinctEffectCount < 5) {
     qualityFailures.push({
       kind: "effect_diversity",
       target: "sequence",
       detail: `Effect diversity too low (${planQuality.distinctEffectCount} distinct effects).`
     });
   }
-  if (planQuality.dominantEffectShare > 0.45) {
+  if (!isSectionScoped && planQuality.dominantEffectShare > 0.45) {
     qualityFailures.push({
       kind: "effect_monoculture",
       target: "sequence",
       detail: `Dominant effect share too high (${planQuality.dominantEffectShare.toFixed(3)}).`
     });
   }
-  if (planQuality.aggregateTargetShare > 0.35) {
+  if (!isSectionScoped && planQuality.aggregateTargetShare > 0.35) {
     qualityFailures.push({
       kind: "aggregate_target_overuse",
       target: "sequence",
       detail: `Aggregate target share too high (${planQuality.aggregateTargetShare.toFixed(3)}).`
     });
   }
-  if (planQuality.repeatedSectionEffectPatterns.length) {
+  if (!isSectionScoped && planQuality.repeatedSectionEffectPatterns.length) {
     qualityFailures.push({
       kind: "section_effect_repetition",
       target: "sequence",
       detail: `Section effect patterns repeat too often: ${planQuality.repeatedSectionEffectPatterns.map((row) => `${row.pattern} -> ${row.sections.join(", ")}`).join(" ; ")}`
     });
   }
-  if (planQuality.emptySections.length) {
+  if (!isSectionScoped && planQuality.emptySections.length) {
     qualityFailures.push({
       kind: "empty_sections",
       target: "sequence",
@@ -299,35 +444,35 @@ export function buildPracticalSequenceValidation({
       detail: `${planQuality.floatingBoundaryCount} effect commands are not anchored to timing marks or aligned effect boundaries.`
     });
   }
-  if (isWholeSongScale && planQuality.effectCommandCount < 200) {
+  if (!isSectionScoped && isWholeSongScale && planQuality.effectCommandCount < 200) {
     qualityFailures.push({
       kind: "effect_count_scale",
       target: "sequence",
       detail: `Whole-song effect command count too low (${planQuality.effectCommandCount}).`
     });
   }
-  if (isWholeSongScale && planQuality.effectCommandsPerMinute < 45) {
+  if (!isSectionScoped && isWholeSongScale && planQuality.effectCommandsPerMinute < 45) {
     qualityFailures.push({
       kind: "effect_density_scale",
       target: "sequence",
       detail: `Whole-song effect density too low (${planQuality.effectCommandsPerMinute.toFixed(1)} commands/minute).`
     });
   }
-  if (isWholeSongScale && planQuality.targetCount < 18) {
+  if (!isSectionScoped && isWholeSongScale && planQuality.targetCount < 18) {
     qualityFailures.push({
       kind: "active_target_scale",
       target: "sequence",
       detail: `Whole-song active target breadth too low (${planQuality.targetCount} active targets).`
     });
   }
-  if (isWholeSongScale && planQuality.placementsPerSection < 8) {
+  if (!isSectionScoped && isWholeSongScale && planQuality.placementsPerSection < 8) {
     qualityFailures.push({
       kind: "section_density_scale",
       target: "sequence",
       detail: `Whole-song section placement density too low (${planQuality.placementsPerSection.toFixed(1)} placements/section).`
     });
   }
-  if (isWholeSongScale && planQuality.multiLayerTargetCount < 6) {
+  if (!isSectionScoped && isWholeSongScale && planQuality.multiLayerTargetCount < 6) {
     qualityFailures.push({
       kind: "layer_utilization_scale",
       target: "sequence",
@@ -346,6 +491,7 @@ export function buildPracticalSequenceValidation({
       verification?.revisionAdvanced === true &&
       verification?.expectedMutationsPresent === true &&
       designChecks.failed === 0 &&
+      timingFailures.length === 0 &&
       qualityFailures.length === 0
     ),
     designSummary: str(designContext?.designSummary || meta?.sequencingDesignHandoffSummary),
@@ -359,7 +505,8 @@ export function buildPracticalSequenceValidation({
       readbackChecks,
       designChecks,
       metadataCoverage: metadataCoverage.counts,
-      planQuality
+      planQuality,
+      timingFidelity
     },
     designAlignment: {
       primaryFocusTargetIds: arr(designAlignment?.primaryFocusTargetIds),
@@ -388,6 +535,7 @@ export function buildPracticalSequenceValidation({
           detail: "Observed target relies on visual hints that are still pending definition."
         }))
       ],
+      timing: timingFailures,
       quality: qualityFailures
     }
   };

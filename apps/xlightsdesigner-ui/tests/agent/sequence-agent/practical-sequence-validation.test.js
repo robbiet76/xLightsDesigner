@@ -9,24 +9,43 @@ test("practical sequence validation summarizes readback and design alignment", (
       planId: "plan-1",
       commands: [
         {
-          cmd: "effects.create",
-          params: { modelName: "TreeRound", effectName: "Spirals", startMs: 0, endMs: 20000 }
+          cmd: "timing.insertMarks",
+          params: {
+            trackName: "XD: Song Structure",
+            marks: [
+              { label: "Verse 1", startMs: 0, endMs: 50000 },
+              { label: "Chorus 1", startMs: 50000, endMs: 100000 }
+            ]
+          }
         },
         {
           cmd: "effects.create",
-          params: { modelName: "TreeRound", effectName: "Wave", startMs: 20000, endMs: 40000 }
+          anchor: { trackName: "XD: Song Structure", section: "Verse 1", startMs: 0, endMs: 20000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Spirals", startMs: 0, endMs: 20000 }
+        },
+        {
+          cmd: "effects.alignToTiming",
+          params: { modelName: "TreeRound", layerIndex: 0, startMs: 0, endMs: 20000, timingTrackName: "XD: Song Structure", mode: "nearest" }
         },
         {
           cmd: "effects.create",
-          params: { modelName: "TreeRound", effectName: "Bars", startMs: 40000, endMs: 60000 }
+          anchor: { trackName: "XD: Song Structure", section: "Verse 1", startMs: 20000, endMs: 40000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Wave", startMs: 20000, endMs: 40000 }
         },
         {
           cmd: "effects.create",
-          params: { modelName: "TreeRound", effectName: "Color Wash", startMs: 60000, endMs: 80000 }
+          anchor: { trackName: "XD: Song Structure", section: "Verse 1", startMs: 40000, endMs: 50000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Bars", startMs: 40000, endMs: 50000 }
         },
         {
           cmd: "effects.create",
-          params: { modelName: "TreeRound", effectName: "Twinkle", startMs: 80000, endMs: 100000 }
+          anchor: { trackName: "XD: Song Structure", section: "Chorus 1", startMs: 50000, endMs: 75000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Color Wash", startMs: 50000, endMs: 75000 }
+        },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", section: "Chorus 1", startMs: 75000, endMs: 100000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Twinkle", startMs: 75000, endMs: 100000 }
         }
       ],
       metadata: {
@@ -95,7 +114,11 @@ test("practical sequence validation summarizes readback and design alignment", (
   assert.equal(artifact.summary.designChecks.passed, 2);
   assert.equal(artifact.summary.metadataCoverage.missingMetadata, 0);
   assert.equal(artifact.summary.metadataCoverage.definedVisualHints, 1);
+  assert.equal(artifact.summary.timingFidelity.structureTrackPresent, true);
+  assert.equal(artifact.summary.timingFidelity.crossingStructureCount, 0);
+  assert.ok(artifact.summary.timingFidelity.timingAwareEffectCount >= 1);
   assert.deepEqual(artifact.failures.metadata, []);
+  assert.deepEqual(artifact.failures.timing, []);
 });
 
 test("practical sequence validation reports missing and pending visual hint metadata on observed targets", () => {
@@ -238,4 +261,58 @@ test("practical sequence validation fails under-scaled whole-song plans", () => 
   assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /active_target_scale/);
   assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /section_density_scale/);
   assert.match(artifact.failures.quality.map((row) => row.kind).join(","), /layer_utilization_scale/);
+});
+
+test("practical sequence validation fails effects that cross reviewed structure boundaries", () => {
+  const artifact = buildPracticalSequenceValidation({
+    planHandoff: {
+      planId: "plan-5",
+      commands: [
+        {
+          cmd: "timing.insertMarks",
+          params: {
+            trackName: "XD: Song Structure",
+            marks: [
+              { label: "Verse 1", startMs: 0, endMs: 30000 },
+              { label: "Chorus 1", startMs: 30000, endMs: 60000 }
+            ]
+          }
+        },
+        {
+          cmd: "effects.create",
+          anchor: { trackName: "XD: Song Structure", section: "Verse 1", startMs: 20000, endMs: 40000 },
+          params: { modelName: "TreeRound", layerIndex: 0, effectName: "Wave", startMs: 20000, endMs: 40000 }
+        }
+      ],
+      metadata: {
+        sequenceSettings: { durationMs: 60000 },
+        sectionPlans: [
+          { section: "Verse 1" },
+          { section: "Chorus 1" }
+        ],
+        effectPlacements: [
+          { sourceSectionLabel: "Verse 1" }
+        ],
+        metadataAssignments: []
+      }
+    },
+    applyResult: {
+      artifactId: "apply-5",
+      status: "applied"
+    },
+    verification: {
+      revisionAdvanced: true,
+      expectedMutationsPresent: true,
+      checks: [],
+      designAlignment: {
+        observedTargets: ["TreeRound"],
+        observedEffectNames: ["Wave"]
+      },
+      designChecks: []
+    }
+  });
+
+  assert.equal(artifact.overallOk, false);
+  assert.equal(artifact.summary.timingFidelity.crossingStructureCount, 1);
+  assert.match(artifact.failures.timing.map((row) => row.kind).join(","), /crosses_structure_boundary/);
 });
