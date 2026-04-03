@@ -275,6 +275,25 @@ function normalizeXdSongStructureMarks(marks = [], sequenceSettings = {}) {
   });
 }
 
+function normalizeXdPhraseCueMarks(marks = [], sequenceSettings = {}) {
+  const durationMs = Number(sequenceSettings?.durationMs);
+  const effectiveDurationMs = Number.isFinite(durationMs) && durationMs > 0
+    ? durationMs
+    : Math.max(0, ...normArray(marks).map((row) => Number(row?.endMs) || 0));
+  const normalized = normalizeTimingTrackCoverage(marks, {
+    durationMs: effectiveDurationMs,
+    fillerLabel: ""
+  });
+  if (!(Number.isFinite(durationMs) && durationMs > 1)) return normalized;
+  return normalized.map((mark, index, rows) => {
+    if (index !== rows.length - 1 || mark.endMs !== durationMs) return mark;
+    return {
+      ...mark,
+      endMs: Math.max(mark.startMs + 1, durationMs - 1)
+    };
+  });
+}
+
 function buildCueTrackMarksByTrack({ analysisHandoff = {}, sectionNames = [], includeAll = false } = {}) {
   const musicDesignContext = buildMusicDesignContext({ analysisHandoff });
   const cueWindowsBySection = musicDesignContext?.designCues?.cueWindowsBySection;
@@ -653,6 +672,24 @@ function buildPlacementMarksByTrack({
     let normalizedMarks;
     if (trackName === "XD: Song Structure") {
       normalizedMarks = normalizeXdSongStructureMarks(sortedMarks, sequenceSettings);
+    } else if (trackName === "XD: Phrase Cues") {
+      const specificFirst = sortedMarks
+        .slice()
+        .sort((a, b) => {
+          const aDuration = a.endMs - a.startMs;
+          const bDuration = b.endMs - b.startMs;
+          return aDuration - bDuration || a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label);
+        });
+      const kept = [];
+      for (const mark of specificFirst) {
+        const overlapsExisting = kept.some((row) => Math.max(row.startMs, mark.startMs) < Math.min(row.endMs, mark.endMs));
+        if (overlapsExisting) continue;
+        kept.push(mark);
+      }
+      normalizedMarks = normalizeXdPhraseCueMarks(
+        kept.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs || a.label.localeCompare(b.label)),
+        sequenceSettings
+      );
     } else {
       // xLights timing rows reject overlapping marks. Prefer the most specific windows
       // and drop broader containers such as Phrase Hold-Phrase Release.

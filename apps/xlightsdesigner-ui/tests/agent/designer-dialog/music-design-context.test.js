@@ -62,6 +62,35 @@ test("buildMusicDesignContext derives section arc and design cues", () => {
   assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].trackName, "XD: Phrase Cues");
 });
 
+test("buildMusicDesignContext prefers plain phrase fallback windows over raw lyric lines", () => {
+  const context = buildMusicDesignContext({
+    analysisArtifact: {
+      mediaId: "media-plain-phrase",
+      lyrics: {
+        lines: [
+          { startMs: 2100, endMs: 2500, label: "raw line 1" },
+          { startMs: 2500, endMs: 3200, label: "raw line 2" }
+        ],
+        plainPhraseFallback: {
+          phrases: [
+            { startMs: 2000, endMs: 4000, label: "grouped phrase" }
+          ]
+        }
+      },
+      capabilities: {
+        structure: {
+          sections: [
+            { label: "Chorus", startMs: 2000, endMs: 4000 }
+          ]
+        }
+      }
+    }
+  });
+
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase.length, 1);
+  assert.equal(context.designCues.cueWindowsBySection.Chorus.phrase[0].label, "grouped phrase");
+});
+
 test("buildMusicDesignContext leaves phrase cues empty when lyric lines are absent", () => {
   const context = buildMusicDesignContext({
     analysisArtifact: {

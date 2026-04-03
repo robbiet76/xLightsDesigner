@@ -597,6 +597,7 @@ test("sequence_agent writes all timing tracks referenced by placements into the 
     { startMs: 44000, endMs: 46000, label: "Beat 1" }
   ]);
   assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 0, endMs: 46000, label: "" },
     { startMs: 46000, endMs: 61999, label: "Phrase A" }
   ]);
 
@@ -707,8 +708,10 @@ test("sequence_agent drops overlapping timing marks on non-structure cue tracks"
   );
 
   assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 0, endMs: 44000, label: "" },
     { startMs: 44000, endMs: 46000, label: "Phrase Hold" },
-    { startMs: 46000, endMs: 48000, label: "Phrase Release" }
+    { startMs: 46000, endMs: 48000, label: "Phrase Release" },
+    { startMs: 48000, endMs: 61999, label: "" }
   ]);
 });
 
@@ -794,6 +797,7 @@ test("sequence_agent writes complete cue tracks for scoped sections, not only re
     { startMs: 6500, endMs: 7000, label: "4" }
   ]);
   assert.deepEqual(phraseCueMarks.params.marks, [
+    { startMs: 0, endMs: 5000, label: "" },
     { startMs: 5000, endMs: 7000, label: "Phrase Hold" },
     { startMs: 7000, endMs: 8999, label: "Phrase Release" }
   ]);
@@ -2183,6 +2187,7 @@ test("sequence_agent honors explicit effect placements over section-level infere
   assert.deepEqual(out.metadata.designIds, ["DES-001", "DES-002"]);
   const markInsert = out.commands.find((row) => row.cmd === "timing.insertMarks");
   assert.deepEqual(markInsert.params.marks, [
+    { label: "", startMs: 0, endMs: 30000 },
     { label: "Chorus 1", startMs: 30000, endMs: 50000 },
     { label: "Bridge", startMs: 50000, endMs: 69999 }
   ]);

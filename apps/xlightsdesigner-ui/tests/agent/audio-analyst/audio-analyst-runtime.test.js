@@ -241,6 +241,8 @@ test("audio analyst runtime preserves experimental plain lyric phrase fallback",
   assert.equal(artifact.modules.lyrics.data.providerResults.providers.lyricsgenius.provider, "lyricsgenius");
   assert.equal(handoff.lyrics.hasPlainPhraseFallback, true);
   assert.equal(handoff.lyrics.phraseArtifact, "plain-lyrics-phrases");
+  assert.equal(handoff.lyrics.plainPhraseFallback.phrases.length, 1);
+  assert.equal(handoff.lyrics.plainPhraseFallback.phrases[0].label, "Christmas vacation / we've got a little change in plans");
 });
 
 test("audio analyst runtime preserves blocked plain lyric recovery reason", () => {

@@ -86,7 +86,8 @@ function buildCueWindowsBySection({
   beats = [],
   chords = [],
   bars = [],
-  lyricLines = []
+  lyricLines = [],
+  phraseLines = []
 } = {}) {
   const out = {};
   for (const section of rows(sections)) {
@@ -113,7 +114,8 @@ function buildCueWindowsBySection({
       .filter(Boolean)
       .slice(0, 8);
 
-    let phraseWindows = rows(lyricLines)
+    const phraseSourceRows = rows(phraseLines).length ? rows(phraseLines) : rows(lyricLines);
+    let phraseWindows = phraseSourceRows
       .filter((row) => overlapsWindow(row, startMs, endMs))
       .map((row, index) => {
         const clipped = clipWindow(row, startMs, endMs, `Phrase ${index + 1}`);
@@ -174,12 +176,17 @@ export function buildMusicDesignContext({
   const bars = rows(analysisArtifact?.timing?.bars || analysisHandoff?.timing?.bars);
   const chords = rows(analysisArtifact?.harmonic?.chords || analysisHandoff?.harmonic?.chords);
   const lyricLines = rows(analysisArtifact?.lyrics?.lines || analysisHandoff?.lyrics?.lines);
+  const phraseLines = rows(
+    analysisArtifact?.lyrics?.plainPhraseFallback?.phrases ||
+    analysisHandoff?.lyrics?.plainPhraseFallback?.phrases
+  );
   const cueWindowsBySection = buildCueWindowsBySection({
     sections,
     beats,
     bars,
     chords,
-    lyricLines
+    lyricLines,
+    phraseLines
   });
 
   return finalizeArtifact({

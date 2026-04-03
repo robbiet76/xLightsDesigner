@@ -784,6 +784,14 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
     lyrics: {
       hasSyncedLyrics: Boolean(moduleLyrics?.data?.hasSyncedLyrics ?? lyrics?.hasSyncedLyrics),
       hasPlainPhraseFallback: Boolean(moduleLyrics?.data?.plainPhraseFallback?.available ?? lyrics?.plainPhraseFallback?.available),
+      plainPhraseFallback: {
+        available: Boolean(moduleLyrics?.data?.plainPhraseFallback?.available ?? lyrics?.plainPhraseFallback?.available),
+        phrases: Array.isArray(moduleLyrics?.data?.plainPhraseFallback?.phrases) && moduleLyrics.data.plainPhraseFallback.phrases.length
+          ? rows(moduleLyrics.data.plainPhraseFallback.phrases)
+          : rows(lyrics?.plainPhraseFallback?.phrases),
+        matchedTitle: str(moduleLyrics?.data?.plainPhraseFallback?.matchedTitle || lyrics?.plainPhraseFallback?.matchedTitle),
+        matchedArtist: str(moduleLyrics?.data?.plainPhraseFallback?.matchedArtist || lyrics?.plainPhraseFallback?.matchedArtist)
+      },
       lyricsArtifact: Array.isArray(moduleLyrics?.data?.lines) && moduleLyrics.data.lines.length
         ? "lyrics"
         : (Array.isArray(lyrics?.lines) && lyrics.lines.length ? "lyrics" : ""),

@@ -337,7 +337,10 @@ export async function executeApplyCore({
       const policyKey = buildGlobalXdTrackPolicyKey(trackName);
       if (!policyKey) continue;
       timingTrackProvenance[policyKey] = buildTimingTrackProvenanceRecord({
-        trackType: trackName === "XD: Song Structure" ? "structure" : "timing",
+        trackType:
+          trackName === "XD: Song Structure"
+            ? "structure"
+            : (trackName === "XD: Phrase Cues" ? "phrase" : "timing"),
         trackName,
         sourceMarks: Array.isArray(check?.expectedMarks) ? check.expectedMarks : [],
         userFinalMarks: Array.isArray(check?.actualMarks) ? check.actualMarks : [],
@@ -346,7 +349,7 @@ export async function executeApplyCore({
           verificationKind: "readback"
         },
         capturedAt: new Date().toISOString(),
-        coverageMode: trackName === "XD: Song Structure" ? "complete" : "sparse",
+        coverageMode: (trackName === "XD: Song Structure" || trackName === "XD: Phrase Cues") ? "complete" : "sparse",
         durationMs: Number(state.sequenceSettings?.durationMs || 0),
         fillerLabel: ""
       });
