@@ -1,3 +1,5 @@
+import { buildTimingTrackStatusRows } from "../../runtime/timing-track-status.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -360,6 +362,11 @@ export function buildSequenceDashboardState({
     timingTracks: Array.isArray(state.timingTracks) ? state.timingTracks : [],
     planCommands
   });
+  const timingTrackStatus = buildTimingTrackStatusRows({
+    timingTrackProvenance: state.sequenceAgentRuntime?.timingTrackProvenance,
+    timingGeneratedSignatures: state.sequenceAgentRuntime?.timingGeneratedSignatures,
+    timingTrackPolicies: state.sequenceAgentRuntime?.timingTrackPolicies
+  });
   const allRows = buildDashboardRows({
     state,
     proposalLines,
@@ -436,6 +443,7 @@ export function buildSequenceDashboardState({
       targetCount: selectedTargets.length,
       sectionCount: sectionScope.length,
       rows,
+      timingTrackStatus,
       scope: {
         sections: sectionScope,
         targetIds: selectedTargets

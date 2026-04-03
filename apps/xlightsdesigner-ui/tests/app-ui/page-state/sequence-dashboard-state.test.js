@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { buildSequenceDashboardState } from "../../../app-ui/page-state/sequence-dashboard-state.js";
+import { buildTimingTrackProvenanceRecord } from "../../../runtime/timing-track-provenance.js";
+import { timingMarksSignature } from "../../../runtime/timing-track-status.js";
 
 test("sequence dashboard state reports blocked when no draft exists", () => {
   const dashboard = buildSequenceDashboardState({
@@ -73,6 +75,66 @@ test("sequence dashboard state exposes direct technical draft rows", () => {
   assert.equal(dashboard.data.rows[0].timing, "XD: Song Structure");
   assert.equal(dashboard.data.rows[0].summary, "Color Wash");
   assert.equal(dashboard.data.commandCount, 3);
+});
+
+test("sequence dashboard exposes timing track provenance status rows", () => {
+  const provenance = buildTimingTrackProvenanceRecord({
+    trackType: "structure",
+    trackName: "XD: Song Structure",
+    sourceMarks: [
+      { startMs: 0, endMs: 1000, label: "Intro" },
+      { startMs: 1000, endMs: 2000, label: "Verse" }
+    ],
+    userFinalMarks: [
+      { startMs: 0, endMs: 1200, label: "Intro" },
+      { startMs: 1200, endMs: 2000, label: "Verse" }
+    ],
+    coverageMode: "complete",
+    durationMs: 2000
+  });
+
+  const dashboard = buildSequenceDashboardState({
+    state: {
+      activeSequence: "Validation-Clean-Phase1.xsq",
+      proposed: ["Intro / Snowman / add Color Wash"],
+      agentPlan: { summary: "Single direct sequencing draft.", warnings: [] },
+      creative: {},
+      timingTracks: [{ name: "XD: Song Structure" }],
+      sequenceAgentRuntime: {
+        timingTrackPolicies: {
+          "__xd_global__::xd: song structure": {
+            trackName: "XD: Song Structure",
+            sourceTrack: "XD: Song Structure",
+            manual: false
+          }
+        },
+        timingGeneratedSignatures: {
+          "__xd_global__::xd: song structure": timingMarksSignature(provenance.source.marks)
+        },
+        timingTrackProvenance: {
+          "__xd_global__::xd: song structure": provenance
+        }
+      }
+    },
+    intentHandoff: {
+      artifactId: "intent-123",
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["Snowman"]
+      }
+    },
+    planHandoff: {
+      artifactId: "plan-123",
+      commands: [
+        { cmd: "timing.createTrack", params: { trackName: "XD: Song Structure" } },
+        { cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } }
+      ]
+    }
+  });
+
+  assert.equal(dashboard.data.timingTrackStatus.length, 1);
+  assert.equal(dashboard.data.timingTrackStatus[0].trackName, "XD: Song Structure");
+  assert.equal(dashboard.data.timingTrackStatus[0].status, "user_edited");
 });
 
 test("sequence dashboard aggregates multiple effects on the same target into one row", () => {
