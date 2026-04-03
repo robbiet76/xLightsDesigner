@@ -99,7 +99,12 @@ if (command === "dispatch-prompt") {
   action = "refreshFromXLights";
 } else if (command === "analyze-audio") {
   action = "analyzeAudio";
-  payload = { prompt: rest.join(" ").trim() };
+  const deep = rest.includes("--deep");
+  const filtered = rest.filter((token) => token !== "--deep");
+  payload = {
+    prompt: filtered.join(" ").trim(),
+    ...(deep ? { analysisProfile: { mode: "deep", allowEscalation: false } } : {})
+  };
 } else if (command === "seed-timing-tracks-from-analysis") {
   action = "seedTimingTracksFromAnalysis";
 } else if (command === "get-agent-runtime-snapshot") {

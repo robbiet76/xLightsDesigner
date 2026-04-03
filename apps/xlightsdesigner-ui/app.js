@@ -9879,7 +9879,9 @@ function readSequencePathFromPayload(sequencePayload, fallbackPath = "") {
 }
 
 function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
+  const previousSequencePath = String(state.sequencePathInput || "").trim();
   const sequencePath = readSequencePathFromPayload(sequencePayload, fallbackPath);
+  const sequenceChanged = Boolean(sequencePath) && sequencePath !== previousSequencePath;
   const sequenceName = String(
     sequencePayload?.name ||
       (sequencePath ? sequencePath.split("/").pop() : "") ||
@@ -9901,8 +9903,13 @@ function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
     addRecentSequence(sequencePath);
   }
   state.sequenceMediaFile = mediaPath;
-  if (!String(state.audioPathInput || "").trim() && mediaPath) {
-    setAudioPathWithAgentPolicy(mediaPath, "open sequence media adopted as initial analysis track");
+  if (mediaPath && (sequenceChanged || !String(state.audioPathInput || "").trim())) {
+    setAudioPathWithAgentPolicy(
+      mediaPath,
+      sequenceChanged
+        ? "open sequence media adopted for sequence switch"
+        : "open sequence media adopted as initial analysis track"
+    );
   }
 }
 
@@ -12005,7 +12012,7 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
   return buildAnalysisHandoffFromArtifact(artifact, state.creative?.brief || null);
 }
 
-async function onAnalyzeAudio({ userPrompt = "" } = {}) {
+async function onAnalyzeAudio({ userPrompt = "", analysisProfile = null } = {}) {
   const audioPath = String(state.audioPathInput || "").trim();
   state.ui.lastAnalysisPrompt = String(userPrompt || "").trim();
   if (!audioPath) {
@@ -12034,7 +12041,12 @@ async function onAnalyzeAudio({ userPrompt = "" } = {}) {
   const progressTicker = startAudioAnalysisProgressTicker();
   try {
     const resolvedProvider = "librosa";
-    const requestedAnalysisProfile = { mode: "fast", allowEscalation: true };
+    const requestedAnalysisProfile = analysisProfile && typeof analysisProfile === "object"
+      ? {
+          mode: String(analysisProfile.mode || "fast").trim().toLowerCase() === "deep" ? "deep" : "fast",
+          allowEscalation: analysisProfile.allowEscalation !== false
+        }
+      : { mode: "fast", allowEscalation: true };
     const reusable = await loadReusableAnalysisArtifactForProfile(requestedAnalysisProfile);
     if (reusable?.artifact) {
       progressTicker.stop();

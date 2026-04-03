@@ -18,6 +18,7 @@
       "trackTitle": "Christmas Vacation - Mavis Staples",
       "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasVacation/ChristmasVacation.xsq",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "analyzeProfile": { "mode": "deep", "allowEscalation": false },
       "expectedTimingTracks": ["XD: Song Structure", "XD: Phrase Cues"],
       "expectsPhraseTrack": true
     },

@@ -159,7 +159,14 @@ async function main() {
     const openResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", [str(scenario?.sequencePath)]);
     const refreshResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
     const analyzePrompt = str(scenario?.analyzePrompt);
-    const analyzeResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", analyzePrompt ? [analyzePrompt] : []);
+    const analyzeArgs = [];
+    if (scenario?.analyzeProfile && typeof scenario.analyzeProfile === "object") {
+      if (str(scenario.analyzeProfile.mode).toLowerCase() === "deep") {
+        analyzeArgs.push("--deep");
+      }
+    }
+    if (analyzePrompt) analyzeArgs.push(analyzePrompt);
+    const analyzeResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", analyzeArgs);
     await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-seed-timing.json`), "seed-timing-tracks-from-analysis");
     const pageStatesSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-page-states.json`), "get-page-states-snapshot");
     const sequencerSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-sequencer-validation.json`), "get-sequencer-validation-snapshot");

@@ -593,7 +593,12 @@ export function createAutomationRuntime(deps = {}) {
   }
 
   async function analyzeAutomationAudio(payload = {}) {
-    await onAnalyzeAudio({ userPrompt: String(payload?.prompt || "").trim() });
+    await onAnalyzeAudio({
+      userPrompt: String(payload?.prompt || "").trim(),
+      analysisProfile: payload?.analysisProfile && typeof payload.analysisProfile === "object"
+        ? payload.analysisProfile
+        : null
+    });
     return {
       ok: true,
       status: state.status || null,
