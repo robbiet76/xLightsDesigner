@@ -3694,6 +3694,22 @@ async function onGenerate(intentOverride = "", options = {}) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
     return render();
   }
+  if (proposalRole === "sequence_agent") {
+    const blockingTimingReviewRows = getBlockingTimingReviewRows();
+    if (blockingTimingReviewRows.length) {
+      const trackList = blockingTimingReviewRows.map((row) => String(row.trackName || "").trim()).filter(Boolean).join(", ");
+      const message = `Sequence proposal blocked: accept timing review for ${trackList} before generating sequencing changes.`;
+      pushDiagnostic("warning", message);
+      addStructuredChatMessage("agent", message, {
+        roleId: "sequence_agent",
+        displayName: getTeamChatSpeakerLabel("sequence_agent"),
+        handledBy: "sequence_agent"
+      });
+      setStatusWithDiagnostics("warning", message);
+      render();
+      return;
+    }
+  }
   if (state.flags.xlightsConnected && !state.flags.planOnlyMode) {
     const revisionState = await syncLatestSequenceRevision({
       onStaleMessage: "Detected newer xLights sequence revision. Regenerating against latest sequence state.",
