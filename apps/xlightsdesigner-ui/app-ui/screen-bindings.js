@@ -77,7 +77,8 @@ export function bindScreenEvents({
   onReapplyVariant,
   onSelectHistoryEntry,
   onInspectArtifact,
-  onCloseArtifactDetail
+  onCloseArtifactDetail,
+  onAcceptTimingTrackReview
 } = {}) {
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
@@ -573,6 +574,15 @@ export function bindScreenEvents({
     state.ui.sequenceDesignFilterId = "";
     persist();
     render();
+  });
+
+  app.querySelectorAll("[data-accept-timing-review]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const policyKey = String(btn.dataset.acceptTimingReview || "").trim();
+      const trackName = String(btn.dataset.trackName || "").trim();
+      if (!policyKey && !trackName) return;
+      await onAcceptTimingTrackReview?.({ policyKey, trackName });
+    });
   });
 
   const removeSelectedProposedBtn = app.querySelector("#remove-selected-proposed");

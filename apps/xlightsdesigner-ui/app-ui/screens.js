@@ -757,6 +757,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const rows = Array.isArray(data.rows) ? data.rows : [];
     const timingDependency = data.timingDependency || {};
     const activeDesignFilter = data.activeDesignFilter || null;
+    const timingStatusRows = Array.isArray(data.timingTrackStatus) ? data.timingTrackStatus : [];
+    const timingReview = data.timingReview || {};
     return `
       <section class="card full-span sequence-translation-card">
         <div class="artifact-kicker">Sequence Translation</div>
@@ -770,6 +772,20 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           <span class="artifact-chip">${escapeHtml(String(data.targetCount || 0))} targets in scope</span>
           <span class="artifact-chip">${escapeHtml(String(data.sectionCount || 0))} sections in scope</span>
         </div>
+        ${
+          timingReview.trackCount
+            ? `
+              <div class="artifact-chip-row">
+                <span class="artifact-chip artifact-chip-accent">Timing Review: ${escapeHtml(String(timingReview.status || "unknown"))}</span>
+                <span class="artifact-chip">${escapeHtml(String(timingReview.trackCount || 0))} tracked</span>
+                <span class="artifact-chip">${escapeHtml(String(timingReview.userEditedCount || 0))} edited</span>
+                <span class="artifact-chip">${escapeHtml(String(timingReview.staleCount || 0))} stale</span>
+                <span class="artifact-chip">${escapeHtml(String(timingReview.reconcilableCount || 0))} reconcilable</span>
+              </div>
+              <div class="banner ${timingReview.needsReview ? "banner-warning" : ""}">${escapeHtml(String(timingReview.summaryText || ""))}</div>
+            `
+            : ""
+        }
         ${
           timingDependency.summary
             ? `<div class="banner ${timingDependency.ready ? "" : "banner-warning"}">${escapeHtml(String(timingDependency.summary))}</div>`
@@ -820,6 +836,43 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 </tbody>
               </table>
         </div>
+        ${
+          timingStatusRows.length
+            ? `
+              <div class="metadata-grid-wrap proposed-grid-wrap sequence-grid-wrap" style="margin-top:12px;">
+                <table class="metadata-grid proposed-grid">
+                  <thead>
+                    <tr>
+                      <th style="width:180px;">Timing Track</th>
+                      <th style="width:120px;">Status</th>
+                      <th style="width:90px;">Coverage</th>
+                      <th style="width:140px;">Captured</th>
+                      <th>Diff</th>
+                      <th style="width:140px;">Review</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${timingStatusRows.map((row) => `
+                      <tr>
+                        <td>${escapeHtml(String(row.trackName || "XD: Track"))}</td>
+                        <td>${escapeHtml(String(row.status || "unknown"))}</td>
+                        <td>${escapeHtml(String(row.coverageMode || "unknown"))}</td>
+                        <td>${escapeHtml(String(row.capturedAt || "—"))}</td>
+                        <td>${escapeHtml(`moved ${Number(row?.diffSummary?.moved || 0)}, relabeled ${Number(row?.diffSummary?.relabeled || 0)}, added ${Number(row?.diffSummary?.addedByUser || 0)}, removed ${Number(row?.diffSummary?.removedFromSource || 0)}`)}</td>
+                        <td>
+                          ${row.canReconcile
+                            ? `<button data-accept-timing-review="${escapeHtml(String(row.policyKey || ""))}" data-track-name="${escapeHtml(String(row.trackName || ""))}">Accept Review</button>`
+                            : `<span class="banner">No action</span>`
+                          }
+                        </td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `
+            : ""
+        }
       </section>
     `;
   }

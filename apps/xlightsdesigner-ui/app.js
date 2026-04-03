@@ -12958,7 +12958,8 @@ function bindEvents() {
     onReapplyVariant,
     onSelectHistoryEntry,
     onInspectArtifact,
-    onCloseArtifactDetail
+    onCloseArtifactDetail,
+    onAcceptTimingTrackReview
   });
 }
 
