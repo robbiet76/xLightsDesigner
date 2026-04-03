@@ -10,6 +10,7 @@ These docs cover:
 - practical benchmark and next-phase training roadmaps
 
 Current active roadmap:
+- [sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md)
 - [sequencer-training-phase2-roadmap-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-phase2-roadmap-2026-03-22.md)
 
 Current architecture audit:
