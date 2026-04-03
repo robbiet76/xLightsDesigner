@@ -597,7 +597,8 @@ export function createAutomationRuntime(deps = {}) {
       userPrompt: String(payload?.prompt || "").trim(),
       analysisProfile: payload?.analysisProfile && typeof payload.analysisProfile === "object"
         ? payload.analysisProfile
-        : null
+        : null,
+      forceFresh: payload?.forceFresh === true
     });
     return {
       ok: true,

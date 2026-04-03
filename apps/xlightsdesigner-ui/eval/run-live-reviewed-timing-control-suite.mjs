@@ -165,6 +165,9 @@ async function main() {
         analyzeArgs.push("--deep");
       }
     }
+    if (scenario?.forceFreshAnalysis === true) {
+      analyzeArgs.push("--force-fresh");
+    }
     if (analyzePrompt) analyzeArgs.push(analyzePrompt);
     const analyzeResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", analyzeArgs);
     await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-seed-timing.json`), "seed-timing-tracks-from-analysis");

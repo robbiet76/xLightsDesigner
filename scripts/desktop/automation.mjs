@@ -100,10 +100,12 @@ if (command === "dispatch-prompt") {
 } else if (command === "analyze-audio") {
   action = "analyzeAudio";
   const deep = rest.includes("--deep");
-  const filtered = rest.filter((token) => token !== "--deep");
+  const forceFresh = rest.includes("--force-fresh");
+  const filtered = rest.filter((token) => token !== "--deep" && token !== "--force-fresh");
   payload = {
     prompt: filtered.join(" ").trim(),
-    ...(deep ? { analysisProfile: { mode: "deep", allowEscalation: false } } : {})
+    ...(deep ? { analysisProfile: { mode: "deep", allowEscalation: false } } : {}),
+    ...(forceFresh ? { forceFresh: true } : {})
   };
 } else if (command === "seed-timing-tracks-from-analysis") {
   action = "seedTimingTracksFromAnalysis";

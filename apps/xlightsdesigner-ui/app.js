@@ -12012,7 +12012,7 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
   return buildAnalysisHandoffFromArtifact(artifact, state.creative?.brief || null);
 }
 
-async function onAnalyzeAudio({ userPrompt = "", analysisProfile = null } = {}) {
+async function onAnalyzeAudio({ userPrompt = "", analysisProfile = null, forceFresh = false } = {}) {
   const audioPath = String(state.audioPathInput || "").trim();
   state.ui.lastAnalysisPrompt = String(userPrompt || "").trim();
   if (!audioPath) {
@@ -12047,7 +12047,7 @@ async function onAnalyzeAudio({ userPrompt = "", analysisProfile = null } = {}) 
           allowEscalation: analysisProfile.allowEscalation !== false
         }
       : { mode: "fast", allowEscalation: true };
-    const reusable = await loadReusableAnalysisArtifactForProfile(requestedAnalysisProfile);
+    const reusable = forceFresh ? null : await loadReusableAnalysisArtifactForProfile(requestedAnalysisProfile);
     if (reusable?.artifact) {
       progressTicker.stop();
       const handoff = buildAnalysisHandoffFromArtifact(reusable.artifact, state.creative?.brief || null);
