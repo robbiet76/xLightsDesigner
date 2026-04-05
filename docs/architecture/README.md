@@ -5,6 +5,4 @@ Cross-project decision and analysis documents that inform implementation, but ar
 ## Key Documents
 - `xlights-agent-high-level-architecture.md`
 - `xlights-automation-api-audit.md`
-- `xlights-automation-design-proposal.md`
-- `two-agent-flow.md`
 - `docs-spec-boundary-audit-2026-03-11.md`
