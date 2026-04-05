@@ -22,6 +22,7 @@ The goal of this phase is to improve sequencing quality on top of that reviewed 
 
 This checklist assumes the timing-track workflow work is the current upstream contract:
 - [timing-track-workflow-implementation-checklist-2026-04-02.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-workflow-implementation-checklist-2026-04-02.md)
+- [timing-track-taxonomy-and-sequencing-uses-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md)
 
 That checklist now provides:
 - complete-coverage `XD: Song Structure`
@@ -57,6 +58,7 @@ What is now fixed enough to depend on:
 Interpretation:
 - timing tracks are now a real contract, not advisory metadata
 - sequencer quality work can now assume a stable musical substrate
+- structure and phrases are the first validated timing layers, with beats and bars as the next planned expansion
 
 ## Phase Goal
 
@@ -87,6 +89,12 @@ Sequencer work in this phase must explicitly consume:
 4. validated target/effect semantics registries
 
 The sequencer should not plan as if timing is provisional when a reviewed track exists.
+
+Near-term sequencing expansion after the current live validation slice:
+
+1. continue consuming reviewed structure and phrases first
+2. prepare the sequencer to consume reviewed beats and bars next
+3. treat beats and bars as the next highest-value timing substrate after the current two-track slice
 
 ## Control Set
 

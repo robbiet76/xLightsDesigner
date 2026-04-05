@@ -4,6 +4,9 @@ Owner: xLightsDesigner Team
 Date: 2026-04-02  
 Status: Active, implementation in progress
 
+Related taxonomy:
+- [timing-track-taxonomy-and-sequencing-uses-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md)
+
 ## Goal
 
 Turn current audio analysis output into a stable timing-track workflow that:
@@ -27,12 +30,16 @@ Initial track scope:
      - `XD: Lyrics Phrases`
      - `XD: Phrase Timing`
 
-Later tracks are out of scope for the first implementation slice:
+Later tracks are out of scope for the first implementation slice, but explicitly in scope for the broader timing-track family:
 
 - beats
 - bars
 - chords
 - lyrics word/phoneme timing
+- energy / intensity
+- accents / hits
+- repeats / motifs
+- sparse windows / breakdowns
 
 ## Non-Negotiable Rules
 
@@ -226,6 +233,31 @@ Current note:
 - contract-level control-set validation is now scripted in:
   - `apps/xlightsdesigner-ui/eval/run-timing-track-control-validation.mjs`
 - live xLights roundtrip validation remains the next required step
+
+### Phase 6: Timing Track Family Expansion
+
+Only after live validation of the first slice is stable.
+
+Next expansion order:
+
+1. `XD: Beats`
+2. `XD: Bars`
+3. `XD: Chords`
+4. `XD: Energy`
+5. `XD: Accents`
+
+Checklist:
+
+- [ ] define `XD: Beats` contract and coverage rules
+- [ ] define `XD: Bars` contract and coverage rules
+- [ ] reuse `source/userFinal/diff` review model for rhythm tracks
+- [ ] define sequencing use cases for each new track type before implementation
+- [ ] add control-set validation for rhythm-track roundtrip
+
+Exit criteria:
+
+- timing-track implementation is understood as a family of sequencing layers, not a two-track special case
+- beats and bars are the next approved expansion after structure/phrase live validation
 
 ## Recommended Initial Control Set
 
