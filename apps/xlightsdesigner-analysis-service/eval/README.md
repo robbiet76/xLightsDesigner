@@ -1,11 +1,24 @@
 # Analysis Eval Folder
 
-This folder is for evaluation tooling and intermediate corpus work for the analysis service.
+Evaluation and probe tooling for the analysis service.
+
+## Directory Layout
+- `runners/`: promoted evaluation and benchmark entrypoints
+- `probes/`: manual investigative scripts and corpus helpers
+- `corpus/`: reference corpus JSON files used for eval and audit work
+- `archive/`: reserved for superseded or low-value probes after review
+- `structure_eval_cases.example.json`: template for local machine-specific eval cases
+- `manifest.v1.json`: tracked lifecycle inventory for this subtree
 
 ## Canonical Data Ownership
 - Runtime packaged corpus source of truth:
   - `training-packages/training-package-v1/modules/audio_track_analysis/datasets/structure_corpus_top50_holiday_keywords.json`
-- Keep only one canonical tracked copy of packaged corpora.
+- Files under `eval/corpus/` are reference material, not the runtime canonical dataset.
+
+## Active Runners
+- `runners/structure_eval.py`
+- `runners/app_level_structure_eval.py`
+- `runners/run_progressive_analysis_benchmark.py`
 
 ## Local-Only Files
 - Use `structure_eval_cases.example.json` as template.
