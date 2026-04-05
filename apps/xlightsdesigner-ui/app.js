@@ -162,6 +162,7 @@ import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js
 import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
 import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
+import { createAudioAnalysisSessionRuntime } from "./runtime/audio-analysis-session-runtime.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
@@ -691,6 +692,7 @@ const state = loadState();
 let timingTrackRuntime = null;
 let uiCompositionRuntime = null;
 let projectCatalogRuntime = null;
+let audioAnalysisSessionRuntime = null;
 if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
@@ -10247,6 +10249,45 @@ projectCatalogRuntime = createProjectCatalogRuntime({
   setAudioPathWithAgentPolicy
 });
 
+audioAnalysisSessionRuntime = createAudioAnalysisSessionRuntime({
+  state,
+  agentRuntime,
+  setStatus,
+  setStatusWithDiagnostics,
+  render,
+  persist,
+  saveCurrentProjectSnapshot,
+  setAgentActiveRole,
+  beginOrchestrationRun,
+  refreshAgentRuntimeHealth,
+  markOrchestrationStage,
+  endOrchestrationRun,
+  resetAudioAnalysisView,
+  buildPendingAudioAnalysisPipeline,
+  setAudioAnalysisProgress,
+  startAudioAnalysisProgressTicker,
+  loadReusableAnalysisArtifactForProfile,
+  buildAnalysisHandoffFromArtifact,
+  setAgentHandoff,
+  applyPersistedAnalysisArtifact,
+  addStructuredChatMessage,
+  buildAudioAnalystChatReply,
+  getTeamChatSpeakerLabel,
+  buildChatArtifactCard,
+  basenameOfPath,
+  maybeOfferIdentityRecommendationAction,
+  buildLyricsRecoveryGuidance,
+  buildAudioAnalystInput,
+  executeAudioAnalystFlow,
+  getDesktopAnalysisArtifactBridge,
+  buildAudioAnalysisStubSummary,
+  applyAudioAnalystFlowSuccessToState,
+  syncSectionSuggestionsFromAnalysisArtifact,
+  pushDiagnostic,
+  applyAudioAnalystFlowFailureToState,
+  runAudioAnalysisPipeline
+});
+
 async function onOpenSelectedProject(selectedKeyArg = "") {
   syncProjectSummaryInputs();
   if (selectedKeyArg && typeof selectedKeyArg === "object") {
@@ -12030,199 +12071,12 @@ async function onAnalyzeAudio({
   forceFresh = false,
   disableInteractivePrompts = false
 } = {}) {
-  const audioPath = String(state.audioPathInput || "").trim();
-  state.ui.lastAnalysisPrompt = String(userPrompt || "").trim();
-  if (!audioPath) {
-    setStatus("warning", "No audio track available for analysis on this sequence.");
-    return render();
-  }
-  setAgentActiveRole("audio_analyst");
-  const orchestrationRun = beginOrchestrationRun({ trigger: "analyze-audio", role: "audio_analyst" });
-  agentRuntime.handoffs.analysis_handoff_v1 = null;
-  refreshAgentRuntimeHealth();
-  markOrchestrationStage(orchestrationRun, "service_health", "ok", "service preflight skipped; analyze call will self-heal backend");
-  state.diagnostics = (state.diagnostics || []).filter(
-    (entry) => !String(entry?.text || "").startsWith("Audio analysis:")
-  );
-  state.sectionSuggestions = [];
-  state.sectionStartByLabel = {};
-  resetAudioAnalysisView(state.audioAnalysis);
-  state.audioAnalysis.pipeline = buildPendingAudioAnalysisPipeline();
-  setAudioAnalysisProgress(state.audioAnalysis, {
-    stage: "pipeline_start",
-    message: "Preparing the audio analysis pipeline."
+  return audioAnalysisSessionRuntime.analyzeAudio({
+    userPrompt,
+    analysisProfile,
+    forceFresh,
+    disableInteractivePrompts
   });
-  state.ui.agentThinking = true;
-  setStatus("info", "Running audio analysis pipeline...");
-  render();
-  const progressTicker = startAudioAnalysisProgressTicker();
-  try {
-    const resolvedProvider = "librosa";
-    const requestedAnalysisProfile = analysisProfile && typeof analysisProfile === "object"
-      ? {
-          mode: String(analysisProfile.mode || "fast").trim().toLowerCase() === "deep" ? "deep" : "fast",
-          allowEscalation: analysisProfile.allowEscalation !== false
-        }
-      : { mode: "fast", allowEscalation: true };
-    const reusable = forceFresh ? null : await loadReusableAnalysisArtifactForProfile(requestedAnalysisProfile);
-    if (reusable?.artifact) {
-      progressTicker.stop();
-      const handoff = buildAnalysisHandoffFromArtifact(reusable.artifact, state.creative?.brief || null);
-      setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst");
-      const applied = applyPersistedAnalysisArtifact(reusable.artifact);
-      if (!applied) {
-        throw new Error("Stored analysis artifact was fresh but could not be applied to UI state.");
-      }
-      setAudioAnalysisProgress(state.audioAnalysis, {
-        stage: "artifact_reused",
-        message: `Reused stored ${reusable.mode} audio analysis artifact.`
-      });
-      markOrchestrationStage(orchestrationRun, "audio_pipeline", "ok", `reused stored ${reusable.mode} analysis artifact`);
-      markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
-      addStructuredChatMessage("agent", buildAudioAnalystChatReply(userPrompt, handoff), {
-        roleId: "audio_analyst",
-        displayName: getTeamChatSpeakerLabel("audio_analyst"),
-        handledBy: "audio_analyst",
-        artifact: buildChatArtifactCard("analysis_handoff_v1", {
-          title: String(handoff?.trackIdentity?.title || basenameOfPath(audioPath) || "Audio Analysis").trim(),
-          summary: String(handoff?.summary || state.audioAnalysis?.summary || "").trim(),
-          chips: [
-            handoff?.timing?.bpm != null ? `${handoff.timing.bpm} BPM` : "",
-            String(handoff?.timing?.timeSignature || "").trim(),
-            Array.isArray(handoff?.structure?.sections) ? `${handoff.structure.sections.length} sections` : "",
-            handoff?.chords?.hasChords ? "chords ready" : "",
-            `reused ${reusable.mode}`
-          ]
-        })
-      });
-      const identityAction = await maybeOfferIdentityRecommendationAction({
-        audioPath: String(state.audioPathInput || "").trim(),
-        trackIdentity: handoff?.trackIdentity || reusable.artifact?.identity || null
-      });
-      const recoveryGuidance = buildLyricsRecoveryGuidance(reusable.artifact);
-      if (identityAction?.applied) {
-        setStatus("info", String(identityAction.message || "Applied track identity recommendation."));
-      } else if (recoveryGuidance?.message) {
-        setStatus(recoveryGuidance.level || "warning", recoveryGuidance.message);
-      } else {
-        setStatus("info", `Loaded stored ${reusable.mode} audio analysis artifact.`);
-      }
-      endOrchestrationRun(orchestrationRun, { status: "ok", summary: `reused stored ${reusable.mode} audio analysis artifact` });
-      return;
-    }
-    const analysisRequest = buildAudioAnalystInput({
-      requestId: orchestrationRun.id,
-      mediaFilePath: audioPath,
-      mediaRootPath: String(state.project?.mediaPath || "").trim(),
-      projectFilePath: String(state.projectFilePath || "").trim(),
-      analysisProfile: requestedAnalysisProfile,
-      service: {
-        baseUrl: String(state.ui.analysisServiceUrlDraft || "").trim().replace(/\/+$/, ""),
-        provider: resolvedProvider,
-        apiKey: String(state.ui.analysisServiceApiKeyDraft || "").trim(),
-        authBearer: String(state.ui.analysisServiceAuthBearerDraft || "").trim()
-      }
-    });
-    const flow = await executeAudioAnalystFlow({
-      input: analysisRequest,
-      runPipeline: async ({ input }) => runAudioAnalysisPipeline({
-        analysisProfile: input?.analysisProfile || requestedAnalysisProfile,
-        disableInteractivePrompts
-      }),
-      persistArtifact: async ({ artifact }) => {
-        const artifactBridge = getDesktopAnalysisArtifactBridge();
-        if (artifactBridge && state.projectFilePath && audioPath) {
-          return artifactBridge.writeAnalysisArtifact({
-            projectFilePath: state.projectFilePath,
-            mediaFilePath: audioPath,
-            artifact
-          });
-        }
-        if (!state.projectFilePath) {
-          return { ok: false, error: "Audio analysis artifact not persisted: project must be saved first." };
-        }
-        return { ok: false, error: "Audio analysis artifact bridge unavailable in this runtime." };
-      },
-      creativeBrief: state.creative?.brief || null
-    });
-    const result = flow.pipelineResult || null;
-    const persistedArtifact = flow.artifact || null;
-    if (!flow.ok || !persistedArtifact || !flow.handoff) {
-      const failureSummary = String(flow?.result?.summary || "audio analysis failed");
-      throw new Error(failureSummary);
-    }
-    markOrchestrationStage(orchestrationRun, "audio_pipeline", flow.result.status === "partial" ? "warning" : "ok", "analysis pipeline complete");
-    if (Array.isArray(flow.result.warnings)) {
-      for (const row of flow.result.warnings) {
-        pushDiagnostic("warning", `Audio analysis: ${row}`);
-      }
-    }
-    const applied = applyAudioAnalystFlowSuccessToState({
-      flow,
-      pipelineResult: result,
-      fallbackSummary: buildAudioAnalysisStubSummary(),
-      audioAnalysisState: state.audioAnalysis,
-      setHandoff: (handoff) => setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst")
-    });
-    if (!applied.ok) {
-      throw new Error("Audio analysis flow did not produce a valid UI projection.");
-    }
-    syncSectionSuggestionsFromAnalysisArtifact(persistedArtifact);
-    setAudioAnalysisProgress(state.audioAnalysis, {
-      stage: "handoff_ready",
-      message: "Analysis finished and handoff is ready."
-    });
-    markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
-    addStructuredChatMessage("agent", buildAudioAnalystChatReply(userPrompt, flow.handoff), {
-      roleId: "audio_analyst",
-      displayName: getTeamChatSpeakerLabel("audio_analyst"),
-      handledBy: "audio_analyst",
-      artifact: buildChatArtifactCard("analysis_handoff_v1", {
-        title: String(flow.handoff?.trackIdentity?.title || basenameOfPath(audioPath) || "Audio Analysis").trim(),
-        summary: String(flow.handoff?.summary || state.audioAnalysis?.summary || "").trim(),
-        chips: [
-          flow.handoff?.timing?.bpm != null ? `${flow.handoff.timing.bpm} BPM` : "",
-          String(flow.handoff?.timing?.timeSignature || "").trim(),
-          Array.isArray(flow.handoff?.structure?.sections) ? `${flow.handoff.structure.sections.length} sections` : "",
-          flow.handoff?.chords?.hasChords ? "chords ready" : ""
-        ]
-      })
-    });
-    const identityAction = await maybeOfferIdentityRecommendationAction({
-      audioPath: String(state.audioPathInput || "").trim(),
-      trackIdentity: flow.handoff?.trackIdentity || persistedArtifact?.identity || null
-    });
-    const recoveryGuidance = buildLyricsRecoveryGuidance(persistedArtifact);
-    if (identityAction?.applied) {
-      setStatus("info", String(identityAction.message || "Applied track identity recommendation."));
-    } else if (recoveryGuidance?.message) {
-      setStatus(recoveryGuidance.level || "warning", recoveryGuidance.message);
-    } else {
-      setStatus("info", flow.result.status === "partial" ? "Audio analysis complete with warnings." : "Audio analysis complete.");
-    }
-    endOrchestrationRun(orchestrationRun, {
-      status: flow.result.status === "failed" ? "failed" : "ok",
-      summary: flow.result.status === "partial" ? "audio analysis complete with warnings" : "audio analysis complete"
-    });
-  } catch (err) {
-    markOrchestrationStage(orchestrationRun, "audio_pipeline", "error", String(err?.message || err));
-    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "audio analysis failed" });
-    applyAudioAnalystFlowFailureToState({
-      audioAnalysisState: state.audioAnalysis,
-      fallbackSummary: buildAudioAnalysisStubSummary()
-    });
-    setAudioAnalysisProgress(state.audioAnalysis, {
-      stage: "failed",
-      message: `Analysis failed: ${String(err?.message || err)}`
-    });
-    setStatusWithDiagnostics("warning", `Audio analysis pipeline failed: ${err.message}`);
-  } finally {
-    progressTicker.stop();
-    state.ui.agentThinking = false;
-  }
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
 }
 
 async function onCloseSequence() {
