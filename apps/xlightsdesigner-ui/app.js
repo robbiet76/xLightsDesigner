@@ -162,6 +162,7 @@ import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js
 import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
 import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
+import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -687,6 +688,7 @@ function loadState() {
 
 const state = loadState();
 let timingTrackRuntime = null;
+let uiCompositionRuntime = null;
 if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
@@ -12420,44 +12422,7 @@ function onNewSession() {
 }
 
 function buildPageStateHelpers() {
-  return {
-    basenameOfPath,
-    getSelectedSections,
-    hasAllSectionsSelected,
-    getSectionName,
-    selectedProposedLinesForApply,
-    summarizeImpactForLines,
-    buildDesignerPlanCommands,
-    applyReadyForApprovalGate,
-    applyDisabledReason,
-    buildCurrentReviewSnapshotSummary,
-    getMetadataTagRecords,
-    buildMetadataTargets,
-    buildNormalizedTargetMetadataRecords: () => buildNormalizedTargetMetadataRecords({
-      sceneGraph: state.sceneGraph || {},
-      metadataAssignments: buildEffectiveMetadataAssignments(),
-      metadataPreferencesByTargetId: state.metadata?.preferencesByTargetId || {}
-    }),
-    matchesMetadataFilterValue,
-    normalizeMetadataSelectionIds,
-    normalizeMetadataSelectedTags,
-    getAgentApplyRolloutMode,
-    getManualLockedXdTracks,
-    getTeamChatIdentities,
-    getDiagnosticsCounts,
-    buildLabel: getBuildLabel()
-  };
-}
-
-function getBuildLabel() {
-  const buildVersion = String(state.health.desktopAppVersion || "").trim();
-  const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
-  const buildTimeLabel = buildTimeIso
-    ? new Date(buildTimeIso).toLocaleString([], { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
-    : "";
-  return buildVersion
-    ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
-    : "Build: unknown";
+  return uiCompositionRuntime.buildPageStateHelpers();
 }
 
 async function runCurrentDirectSequenceValidation(expected = {}) {
@@ -12554,131 +12519,60 @@ const {
   getAutomationSequencerValidationSnapshot
 } = automationRuntime;
 
+uiCompositionRuntime = createUiCompositionRuntime({
+  state,
+  getValidHandoff,
+  buildNormalizedTargetMetadataRecords,
+  buildEffectiveMetadataAssignments,
+  helpers: {
+    basenameOfPath,
+    getSelectedSections,
+    hasAllSectionsSelected,
+    getSectionName,
+    selectedProposedLinesForApply,
+    summarizeImpactForLines,
+    buildDesignerPlanCommands,
+    applyReadyForApprovalGate,
+    applyDisabledReason,
+    buildCurrentReviewSnapshotSummary,
+    getMetadataTagRecords,
+    buildMetadataTargets,
+    matchesMetadataFilterValue,
+    normalizeMetadataSelectionIds,
+    normalizeMetadataSelectedTags,
+    getAgentApplyRolloutMode,
+    getManualLockedXdTracks,
+    getTeamChatIdentities,
+    getDiagnosticsCounts,
+    getAnalysisServiceHeaderBadgeText,
+    escapeHtml,
+    referenceFormatSummaryText,
+    sequenceEligibilityFormatSummaryText,
+    formatBytes,
+    referenceMediaMaxFileBytes: REFERENCE_MEDIA_MAX_FILE_BYTES,
+    referenceMediaMaxItems: REFERENCE_MEDIA_MAX_ITEMS,
+    getSections,
+    sanitizeProposedSelection,
+    getProposedPayloadPreviewText,
+    renderProposedLineHtml,
+    applyPlanReadinessReason,
+    applyEnabled,
+    getMetadataOrphans,
+    ensureVersionSnapshots,
+    versionById
+  }
+});
+
 function getPageStates() {
-  return buildPageStates({
-    state,
-    handoffs: {
-      analysisHandoff: getValidHandoff("analysis_handoff_v1"),
-      intentHandoff: getValidHandoff("intent_handoff_v1"),
-      planHandoff: getValidHandoff("plan_handoff_v1")
-    },
-    helpers: buildPageStateHelpers()
-  });
+  return uiCompositionRuntime.getPageStates();
 }
 
 function screenContent(pageStates = getPageStates()) {
-  return buildScreenContent({
-    state,
-    pageStates,
-    helpers: {
-      basenameOfPath,
-      getAnalysisServiceHeaderBadgeText,
-      getValidHandoff,
-      escapeHtml,
-      referenceFormatSummaryText,
-      sequenceEligibilityFormatSummaryText,
-      formatBytes,
-      referenceMediaMaxFileBytes: REFERENCE_MEDIA_MAX_FILE_BYTES,
-      referenceMediaMaxItems: REFERENCE_MEDIA_MAX_ITEMS,
-      getSections,
-      getSelectedSections,
-      hasAllSectionsSelected,
-      buildDesignerPlanCommands,
-      sanitizeProposedSelection,
-      selectedProposedLinesForApply,
-      summarizeImpactForLines,
-      getProposedPayloadPreviewText,
-      getSectionName,
-      renderProposedLineHtml,
-      applyDisabledReason,
-      applyPlanReadinessReason,
-      applyReadyForApprovalGate,
-      applyEnabled,
-      buildCurrentReviewSnapshotSummary,
-      getMetadataOrphans,
-      getMetadataTagRecords,
-      buildMetadataTargets,
-      matchesMetadataFilterValue,
-      normalizeMetadataSelectionIds,
-      normalizeMetadataSelectedTags,
-      ensureVersionSnapshots,
-      versionById,
-      getAgentApplyRolloutMode,
-      getManualLockedXdTracks,
-      getTeamChatIdentities
-    }
-  });
+  return uiCompositionRuntime.screenContent(pageStates);
 }
 
 function diagnosticsPanel() {
-  if (!state.ui.diagnosticsOpen) return "";
-  const rows = state.diagnostics || [];
-  const filter = state.ui.diagnosticsFilter;
-  const filteredRows =
-    filter === "all" ? rows : rows.filter((d) => d.level === filter);
-  const counts = getDiagnosticsCounts();
-  const applyHistory = Array.isArray(state.applyHistory) ? state.applyHistory.slice(0, 12) : [];
-  return `
-    <section class="card diagnostics-panel">
-      <div class="row" style="justify-content:space-between;">
-        <h3>Diagnostics</h3>
-        <div class="row">
-          <button data-diag-filter="all" class="${filter === "all" ? "active-chip" : ""}">All (${counts.total})</button>
-          <button data-diag-filter="warning" class="${filter === "warning" ? "active-chip" : ""}">Warnings (${counts.warning})</button>
-          <button data-diag-filter="action-required" class="${filter === "action-required" ? "active-chip" : ""}">Action Required (${counts.actionRequired})</button>
-          <button id="export-diagnostics">Export</button>
-          <button id="clear-diagnostics">Clear</button>
-          <button id="close-diagnostics">Close</button>
-        </div>
-      </div>
-      ${
-        filteredRows.length
-          ? `
-        <ul class="list">
-          ${filteredRows
-            .map(
-              (d) => `
-            <li>
-              <strong>[${d.level}]</strong> ${new Date(d.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })} - ${d.text}
-              ${d.details ? `<pre class="diag-details">${d.details}</pre>` : ""}
-            </li>
-          `
-            )
-            .join("")}
-        </ul>
-      `
-          : "<p class=\"banner\">No diagnostics for current filter.</p>"
-      }
-      <div style="margin-top:10px;">
-        <h4 style="margin:0 0 6px;">Recent Applies</h4>
-        ${
-          applyHistory.length
-            ? `
-          <ul class="list">
-            ${applyHistory
-              .map((entry) => {
-                const ts = entry?.createdAt
-                  ? new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                  : "--:--:--";
-                const status = String(entry?.status || "unknown");
-                const count = Number(entry?.commandCount || 0);
-                const summary = String(entry?.summary || "").trim();
-                return `
-                <li>
-                  <strong>[${status}]</strong> ${ts} - ${count} command${count === 1 ? "" : "s"}
-                  ${entry?.applyStage ? ` (${escapeHtml(String(entry.applyStage))})` : ""}
-                  ${summary ? `<div class="banner">${escapeHtml(summary)}</div>` : ""}
-                </li>
-              `;
-              })
-              .join("")}
-          </ul>
-        `
-            : '<p class="banner">No apply history yet.</p>'
-        }
-      </div>
-    </section>
-  `;
+  return uiCompositionRuntime.diagnosticsPanel();
 }
 
 function bindEvents() {
