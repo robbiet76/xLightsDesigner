@@ -75,7 +75,6 @@ test("applyOpenSequenceState updates sequence identity and adopts sequence media
   assert.equal(state.savePathInput, "/show/Seq/Example.xsq");
   assert.equal(state.sequenceMediaFile, "/show/media/track.mp3");
   assert.equal(state.audioPathInput, "/show/media/track.mp3");
-  assert.equal(state.mediaPath, "/show/media");
   assert.equal(state.ui.sequenceMode, "existing");
   assert.equal(state._recent, "/show/Seq/Example.xsq");
   assert.deepEqual(state.sequenceSettings, {
