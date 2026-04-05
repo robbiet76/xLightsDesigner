@@ -3013,15 +3013,25 @@ function getBlockingTimingReviewRows(planCommands = getCurrentPlanCommandsForTim
   return rows.filter((row) => requiredTrackNames.includes(String(row?.trackName || "").trim().toLowerCase()) && (row?.status === "user_edited" || row?.status === "stale"));
 }
 
+function buildCurrentSequenceSession(options = {}) {
+  return buildSequenceSession({
+    state,
+    liveSequencePayload: options?.liveSequencePayload || null
+  });
+}
+
 function applyReadyForApprovalGate() {
   const f = state.flags;
+  const session = buildCurrentSequenceSession();
   const handoffGate = evaluateApplyHandoffGate();
   const blockingTimingReviewRows = getBlockingTimingReviewRows();
   return (
     f.hasDraftProposal &&
-    f.xlightsConnected &&
+    session.xlightsConnected &&
     f.xlightsCompatible &&
-    !f.planOnlyMode &&
+    !session.planOnlyMode &&
+    session.effectiveSequenceLoaded &&
+    session.effectiveSequenceAllowed &&
     !f.proposalStale &&
     !f.applyInProgress &&
     handoffGate.ok &&
@@ -3038,12 +3048,15 @@ function applyDisabledReason() {
 
 function applyPlanReadinessReason() {
   const f = state.flags;
+  const session = buildCurrentSequenceSession();
   const rolloutMode = getAgentApplyRolloutMode();
-  if (!f.xlightsConnected) return "Connect to xLights to apply.";
+  if (!session.xlightsConnected) return "Connect to xLights to apply.";
   if (!f.xlightsCompatible) return "xLights version is below minimum supported floor (2026.1).";
   if (rolloutMode === "disabled") return "Agent apply is disabled by rollout policy.";
   if (rolloutMode === "plan-only") return "Agent rollout is in plan-only mode; apply is disabled.";
-  if (f.planOnlyMode) return "Exit plan-only mode to apply.";
+  if (session.planOnlyMode) return "Exit plan-only mode to apply.";
+  if (!session.effectiveSequenceLoaded) return "Open a sequence first.";
+  if (!session.effectiveSequenceAllowed) return "Open a sequence inside the active Show Directory.";
   if (f.proposalStale) return "Refresh proposal before apply.";
   if (!f.hasDraftProposal) return "Generate a proposal first.";
   const handoffGate = evaluateApplyHandoffGate();
@@ -6971,7 +6984,8 @@ async function onSendChat() {
       });
       return;
     }
-    if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
+    const session = buildCurrentSequenceSession();
+    if (!session.effectiveSequenceLoaded && !session.planOnlyMode) {
       setStatus("warning", "Open a sequence (or use plan-only mode) for proposal generation.");
     } else if (res.routeDecision === "audio_analyst") {
       setStatus("info", "Conversation updated. Audio analysis guidance is ready.");
@@ -7205,8 +7219,10 @@ async function onReferenceMediaSelected() {
 }
 
 function creativeAnalysisDisabledReason() {
-  if (!state.flags.activeSequenceLoaded) return "Open a sequence first.";
-  if (!String(state.sequencePathInput || "").trim()) return "Set a sequence path.";
+  const session = buildCurrentSequenceSession();
+  if (!session.effectiveSequenceLoaded) return "Open a sequence first.";
+  if (!session.effectiveSequenceAllowed) return "Open a sequence inside the active Show Directory.";
+  if (!String(session.effectiveSequencePath || "").trim()) return "Set a sequence path.";
   return "";
 }
 
