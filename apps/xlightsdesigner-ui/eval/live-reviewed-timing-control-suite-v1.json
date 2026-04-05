@@ -17,6 +17,7 @@
       "trackClass": "plain_phrase_fallback_vocal",
       "trackTitle": "Christmas Vacation - Mavis Staples",
       "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasVacation/ChristmasVacation.xsq",
+      "audioPathOverride": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Audio/Mavis Staples - Christmas Vacation.mp3",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
       "forceFreshAnalysis": true,
       "expectedTimingTracks": ["XD: Song Structure", "XD: Phrase Cues"],

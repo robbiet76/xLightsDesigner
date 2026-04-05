@@ -156,8 +156,32 @@ async function main() {
     const scenario = scenarios[index];
     const prefix = `${String(index + 1).padStart(2, "0")}-${str(scenario?.name) || `scenario-${index + 1}`}`;
     await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-reset.json`), "reset-automation-state");
-    const openResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", [str(scenario?.sequencePath)]);
+    const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
+    fs.writeFileSync(openPayloadPath, `${JSON.stringify({
+      sequencePath: str(scenario?.sequencePath),
+      skipPostOpenRefresh: true
+    }, null, 2)}\n`, "utf8");
+    const openResult = await runAutomation(
+      repoRoot,
+      options.channel,
+      path.join(outDir, `${prefix}-open.json`),
+      "open-sequence",
+      ["--payload-file", openPayloadPath]
+    );
     const refreshResult = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
+    if (str(scenario?.audioPathOverride)) {
+      const audioPayloadPath = path.join(outDir, `${prefix}-audio-payload.json`);
+      fs.writeFileSync(audioPayloadPath, `${JSON.stringify({
+        audioPath: str(scenario.audioPathOverride)
+      }, null, 2)}\n`, "utf8");
+      await runAutomation(
+        repoRoot,
+        options.channel,
+        path.join(outDir, `${prefix}-set-audio.json`),
+        "set-audio-path",
+        ["--payload-file", audioPayloadPath]
+      );
+    }
     const analyzePrompt = str(scenario?.analyzePrompt);
     const analyzeArgs = [];
     if (scenario?.analyzeProfile && typeof scenario.analyzeProfile === "object") {

@@ -843,6 +843,9 @@ async function processAutomationRequests() {
       if (action === "openSequence") {
         return invokeRendererAutomation("openSequence", request?.payload || {});
       }
+      if (action === "setAudioPath") {
+        return invokeRendererAutomation("setAudioPath", request?.payload || {});
+      }
       if (action === "ping") {
         return { ok: true, appReady: true };
       }

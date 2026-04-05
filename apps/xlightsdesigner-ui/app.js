@@ -9730,9 +9730,17 @@ async function onRefreshMediaCatalog(options = {}) {
     const sequenceMediaPath = String(state.sequenceMediaFile || "").trim();
     const currentAudioExists = currentAudioPath ? mediaFiles.some((row) => String(row?.path || "").trim() === currentAudioPath) : false;
     const sequenceMediaExists = sequenceMediaPath ? mediaFiles.some((row) => String(row?.path || "").trim() === sequenceMediaPath) : false;
+    let targetIdentity = buildResolvedTrackIdentityForMediaMatching();
+    if (!targetIdentity && ((currentAudioPath && !currentAudioExists) || (sequenceMediaPath && !sequenceMediaExists))) {
+      targetIdentity =
+        await loadPersistedTrackIdentityForMediaPath(currentAudioPath) ||
+        await loadPersistedTrackIdentityForMediaPath(sequenceMediaPath);
+    }
+
     const preferred = resolvePreferredMediaCatalogEntry(mediaFiles, {
       currentAudioPath,
-      sequenceMediaPath
+      sequenceMediaPath,
+      targetIdentity
     });
 
     if (preferred?.row) {
@@ -10036,9 +10044,10 @@ async function onOpenSequence() {
   }
 }
 
-async function onOpenExistingSequence(targetPathInput = "") {
+async function onOpenExistingSequence(targetPathInput = "", options = {}) {
   const previousPath = String(state.sequencePathInput || "").trim();
   const targetPath = String(targetPathInput || state.sequencePathInput || "").trim();
+  const skipPostOpenRefresh = options?.skipPostOpenRefresh === true;
   if (!state.flags.xlightsConnected) {
     setStatus("warning", "Connect to xLights before opening a sequence.");
     return render();
@@ -10075,14 +10084,16 @@ async function onOpenExistingSequence(targetPathInput = "") {
     } catch (err) {
       pushDiagnostic("warning", `Post-open media sync timed out: ${err.message}`);
     }
-    try {
-      await withTimeout(onRefresh(), 6000, "Post-open refresh");
-    } catch (err) {
-      pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
-      setStatus(
-        "warning",
-        "Sequence opened, but refresh is taking too long. You can continue and use Refresh if needed."
-      );
+    if (!skipPostOpenRefresh) {
+      try {
+        await withTimeout(onRefresh(), 6000, "Post-open refresh");
+      } catch (err) {
+        pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
+        setStatus(
+          "warning",
+          "Sequence opened, but refresh is taking too long. You can continue and use Refresh if needed."
+        );
+      }
     }
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
@@ -11639,6 +11650,43 @@ function buildResolvedTrackIdentityForMediaMatching() {
   };
 }
 
+async function loadPersistedTrackIdentityForMediaPath(mediaFilePath = "", options = {}) {
+  const bridge = getDesktopAnalysisArtifactBridge();
+  const projectFilePath = String(state.projectFilePath || "").trim();
+  const targetPath = String(mediaFilePath || "").trim();
+  const preferredProfileMode = String(options?.preferredProfileMode || "deep").trim().toLowerCase() || "deep";
+  if (!bridge || !projectFilePath || !targetPath) return null;
+  try {
+    const res = await bridge.readAnalysisArtifact({
+      projectFilePath,
+      mediaFilePath: targetPath,
+      preferredProfileMode
+    });
+    if (res?.ok !== true || !res.artifact || typeof res.artifact !== "object") return null;
+    const artifact = res.artifact;
+    const identity = artifact?.identity && typeof artifact.identity === "object" ? artifact.identity : {};
+    const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
+      ? identity.sourceMetadata
+      : {};
+    const title = String(identity?.title || sourceMetadata?.embeddedTitle || "").trim();
+    const artist = String(identity?.artist || sourceMetadata?.embeddedArtist || "").trim();
+    const isrc = String(identity?.isrc || "").trim();
+    const contentFingerprint = String(identity?.contentFingerprint || artifact?.media?.contentFingerprint || "").trim().toLowerCase();
+    const durationMs = Number(artifact?.audio?.durationMs || 0) || null;
+    if (!title && !artist && !isrc && !contentFingerprint) return null;
+    return {
+      title,
+      artist,
+      isrc,
+      contentFingerprint,
+      durationMs,
+      identityKey: buildTrackIdentityKey({ title, artist, isrc }, title)
+    };
+  } catch {
+    return null;
+  }
+}
+
 function scoreMediaCatalogIdentityMatch(mediaRow = {}, targetIdentity = null) {
   const target = targetIdentity && typeof targetIdentity === "object" ? targetIdentity : null;
   if (!target) return null;
@@ -11679,7 +11727,7 @@ function scoreMediaCatalogIdentityMatch(mediaRow = {}, targetIdentity = null) {
   return { matched: true, score, matchBasis };
 }
 
-function resolvePreferredMediaCatalogEntry(mediaFiles = [], { currentAudioPath = "", sequenceMediaPath = "" } = {}) {
+function resolvePreferredMediaCatalogEntry(mediaFiles = [], { currentAudioPath = "", sequenceMediaPath = "", targetIdentity = null } = {}) {
   const rows = Array.isArray(mediaFiles) ? mediaFiles : [];
   const currentPath = String(currentAudioPath || "").trim();
   const sequencePath = String(sequenceMediaPath || "").trim();
@@ -11689,12 +11737,14 @@ function resolvePreferredMediaCatalogEntry(mediaFiles = [], { currentAudioPath =
     null;
   if (exact) return { row: exact, basis: "exact_path" };
 
-  const targetIdentity = buildResolvedTrackIdentityForMediaMatching();
-  if (!targetIdentity) return { row: null, basis: "" };
+  const resolvedTargetIdentity = targetIdentity && typeof targetIdentity === "object"
+    ? targetIdentity
+    : buildResolvedTrackIdentityForMediaMatching();
+  if (!resolvedTargetIdentity) return { row: null, basis: "" };
 
   const scored = rows
     .map((row) => {
-      const match = scoreMediaCatalogIdentityMatch(row, targetIdentity);
+      const match = scoreMediaCatalogIdentityMatch(row, resolvedTargetIdentity);
       if (!match) return null;
       return { row, ...match };
     })
@@ -12524,6 +12574,9 @@ const automationRuntime = createAutomationRuntime({
   onAnalyzeAudio,
   onSeedTimingTracksFromAnalysis,
   onOpenExistingSequence,
+  setAudioPath: setAudioPathWithAgentPolicy,
+  adoptMediaDirectoryFromPath,
+  onRefreshMediaCatalog,
   clearDesignRevisionTarget,
   normalizeDesignRevisionTarget,
   clearDesignerDraft,
@@ -12568,6 +12621,7 @@ const {
   seedAutomationTimingTracksFromAnalysis,
   defineAutomationVisualHint,
   openAutomationSequence,
+  setAutomationAudioPath,
   getAutomationAgentRuntimeSnapshot,
   getAutomationPageStatesSnapshot,
   getAutomationSequencerValidationSnapshot

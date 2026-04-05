@@ -12,6 +12,9 @@ export function createAutomationRuntime(deps = {}) {
     onAnalyzeAudio,
     onSeedTimingTracksFromAnalysis,
     onOpenExistingSequence,
+    setAudioPath,
+    adoptMediaDirectoryFromPath,
+    onRefreshMediaCatalog,
     clearDesignRevisionTarget,
     normalizeDesignRevisionTarget,
     clearDesignerDraft,
@@ -610,6 +613,31 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  async function setAutomationAudioPath(payload = {}) {
+    const targetPath = String(payload?.audioPath || "").trim();
+    if (!targetPath) {
+      return { ok: false, error: "audioPath is required." };
+    }
+    if (typeof adoptMediaDirectoryFromPath === "function") {
+      const changed = adoptMediaDirectoryFromPath(targetPath);
+      if (changed && typeof onRefreshMediaCatalog === "function") {
+        await onRefreshMediaCatalog({ silent: true });
+      }
+    }
+    if (typeof setAudioPath !== "function") {
+      return { ok: false, error: "audio path automation unavailable." };
+    }
+    setAudioPath(targetPath, "automation audio path override");
+    persist();
+    render();
+    return {
+      ok: true,
+      status: state.status || null,
+      activeSequence: state.activeSequence || "",
+      audioPathInput: state.audioPathInput || ""
+    };
+  }
+
   async function seedAutomationTimingTracksFromAnalysis(payload = {}) {
     if (typeof onSeedTimingTracksFromAnalysis !== "function") {
       return { ok: false, error: "timing track seeding unavailable." };
@@ -649,7 +677,9 @@ export function createAutomationRuntime(deps = {}) {
     if (!targetPath) {
       return { ok: false, error: "sequencePath is required." };
     }
-    await onOpenExistingSequence(targetPath);
+    await onOpenExistingSequence(targetPath, {
+      skipPostOpenRefresh: payload?.skipPostOpenRefresh === true
+    });
     return {
       ok: true,
       status: state.status || null,
@@ -812,6 +842,7 @@ export function createAutomationRuntime(deps = {}) {
       generateProposal: generateAutomationProposal,
       resetAutomationState,
       openSequence: openAutomationSequence,
+      setAudioPath: setAutomationAudioPath,
       refreshFromXLights: refreshAutomationFromXLights,
       analyzeAudio: analyzeAutomationAudio,
       seedTimingTracksFromAnalysis: seedAutomationTimingTracksFromAnalysis,
@@ -840,6 +871,7 @@ export function createAutomationRuntime(deps = {}) {
     seedAutomationTimingTracksFromAnalysis,
     defineAutomationVisualHint,
     openAutomationSequence,
+    setAutomationAudioPath,
     getAutomationAgentRuntimeSnapshot,
     getAutomationPageStatesSnapshot,
     getAutomationSequencerValidationSnapshot,
