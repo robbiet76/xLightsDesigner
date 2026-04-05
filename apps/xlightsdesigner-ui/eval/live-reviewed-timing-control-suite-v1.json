@@ -2,6 +2,7 @@
   "contract": "live_reviewed_timing_control_suite_v1",
   "version": "1.0",
   "summary": "Live reviewed-timing control set for timing-track roundtrip and sequencing-readiness inspection on four representative real show sequences.",
+  "showFolder": "/Users/robterry/Documents/Lights/Current/Christmas/Show",
   "scenarios": [
     {
       "name": "synced_lyrics_vocal_candy_cane_lane",

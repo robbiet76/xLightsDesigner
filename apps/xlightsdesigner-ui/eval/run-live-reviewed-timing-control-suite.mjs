@@ -177,6 +177,19 @@ async function main() {
     const scenario = scenarios[index];
     const prefix = `${String(index + 1).padStart(2, "0")}-${str(scenario?.name) || `scenario-${index + 1}`}`;
     await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-reset.json`), "reset-automation-state");
+    if (str(scenario?.showFolder || suite?.showFolder)) {
+      const showFolderPayloadPath = path.join(outDir, `${prefix}-show-folder-payload.json`);
+      fs.writeFileSync(showFolderPayloadPath, `${JSON.stringify({
+        showFolder: str(scenario?.showFolder || suite?.showFolder)
+      }, null, 2)}\n`, "utf8");
+      await runAutomation(
+        repoRoot,
+        options.channel,
+        path.join(outDir, `${prefix}-show-folder.json`),
+        "set-show-folder",
+        ["--payload-file", showFolderPayloadPath]
+      );
+    }
     const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
     fs.writeFileSync(openPayloadPath, `${JSON.stringify({
       sequencePath: str(scenario?.sequencePath),

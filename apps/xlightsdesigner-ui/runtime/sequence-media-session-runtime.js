@@ -36,6 +36,7 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
     noteIgnoredExternalSequence = () => {},
     pushDiagnostic = () => {},
     withTimeout = async (promise) => promise,
+    resolveReachableEndpoint = null,
     closeActiveSequenceForSwitch = async () => {},
     traceSequenceFileLifecycle = async (_label, _path, fn) => fn(),
     openSequenceApi = async () => ({}),
@@ -52,6 +53,18 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
     onRefresh = async () => {},
     basenameOfPath = () => ""
   } = deps;
+
+  async function resolveActiveEndpoint() {
+    if (typeof resolveReachableEndpoint !== "function") {
+      return str(state.endpoint);
+    }
+    const resolved = await resolveReachableEndpoint(str(state.endpoint));
+    const endpoint = str(resolved?.endpoint || state.endpoint);
+    if (endpoint) {
+      state.endpoint = endpoint;
+    }
+    return endpoint;
+  }
 
   function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated") {
     const prev = str(state.audioPathInput);
@@ -94,7 +107,8 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
 
   async function syncAudioPathFromMediaStatus() {
     try {
-      const mediaBody = await getMediaStatus(state.endpoint);
+      const endpoint = await resolveActiveEndpoint();
+      const mediaBody = await getMediaStatus(endpoint);
       const mediaFile = str(mediaBody?.data?.mediaFile);
       state.sequenceMediaFile = mediaFile || "";
       const mediaDirChanged = mediaFile ? adoptMediaDirectoryFromPath(mediaFile) : false;
@@ -106,7 +120,8 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
       }
     } catch {
       try {
-        const open = await getOpenSequence(state.endpoint);
+        const endpoint = await resolveActiveEndpoint();
+        const open = await getOpenSequence(endpoint);
         const seq = open?.data?.sequence;
         applySequenceMediaToAudioPath(seq);
       } catch {
@@ -154,10 +169,11 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
     state.ui.firstRunMode = false;
     const prevDraftSequencePath = str(state.draftSequencePath);
     try {
+      const endpoint = await resolveActiveEndpoint();
       await hydrateAgentHealth();
       await executeXLightsRefreshCycle({
         state,
-        endpoint: state.endpoint,
+        endpoint,
         deps: {
           getOpen: getOpenSequence,
           syncRevision: () => syncLatestSequenceRevision({
@@ -236,14 +252,26 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
 
     setStatus("info", isNewSequence ? "Creating sequence..." : "Opening sequence...");
     render();
+    let failureStage = "open";
     try {
-      await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
+      failureStage = "resolve_endpoint";
+      const endpoint = await resolveActiveEndpoint();
+      if (!isNewSequence) {
+        try {
+          failureStage = "pre_close";
+          await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
+        } catch (err) {
+          pushDiagnostic("warning", `Pre-open close failed; forcing sequence switch: ${err?.message || err}`);
+        }
+      }
+      failureStage = isNewSequence ? "sequence_create" : "sequence_open";
       const body = isNewSequence
-        ? await createSequenceApi(state.endpoint, { file: targetPath, mediaFile, durationMs, frameMs })
-        : await traceSequenceFileLifecycle("sequence.open", targetPath, () => openSequenceApi(state.endpoint, targetPath, false, false));
+        ? await createSequenceApi(endpoint, { file: targetPath, mediaFile, durationMs, frameMs })
+        : await traceSequenceFileLifecycle("sequence.open", targetPath, () => openSequenceApi(endpoint, targetPath, true, false));
       if (isNewSequence) {
+        failureStage = "sequence_save";
         await traceSequenceFileLifecycle("sequence.create+save", targetPath, async () => {
-          await saveSequenceApi(state.endpoint, targetPath);
+          await saveSequenceApi(endpoint, targetPath);
           if (typeof deps.assertSequenceFileSafeAfterSave === "function") {
             await deps.assertSequenceFileSafeAfterSave(targetPath, "New sequence save");
           }
@@ -263,17 +291,20 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
       render();
 
       try {
+        failureStage = "sidecar_hydrate";
         await withTimeout(hydrateSidecarForCurrentSequence(), 3000, "Hydrate sidecar");
       } catch (err) {
         pushDiagnostic("warning", `Post-open sidecar hydrate timed out: ${err.message}`);
       }
       try {
+        failureStage = "media_sync";
         await withTimeout(syncAudioPathFromMediaStatus(), 3000, "Sync media status");
       } catch (err) {
         pushDiagnostic("warning", `Post-open media sync timed out: ${err.message}`);
       }
       if (!skipPostOpenRefresh) {
         try {
+          failureStage = "post_open_refresh";
           await withTimeout(onRefresh(), 6000, "Post-open refresh");
         } catch (err) {
           pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
@@ -281,7 +312,7 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
         }
       }
     } catch (err) {
-      setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err?.stack || "");
+      setStatusWithDiagnostics("action-required", `Open failed [${failureStage}]: ${err.message}`, err?.stack || "");
       render();
     } finally {
       saveCurrentProjectSnapshot();
@@ -337,7 +368,8 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
     setStatus("info", "Closing sequence...");
     render();
     try {
-      await closeSequenceApi(state.endpoint, true, false);
+      const endpoint = await resolveActiveEndpoint();
+      await closeSequenceApi(endpoint, true, false);
       state.flags.activeSequenceLoaded = false;
       state.revision = "unknown";
       state.activeSequence = "(none)";

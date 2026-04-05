@@ -1,3 +1,43 @@
+function areMetersCompatibleDefault(a = "", b = "") {
+  const parse = (sig) => {
+    const m = String(sig || "").trim().toLowerCase().match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (!m) return null;
+    const n = Number(m[1]);
+    const d = Number(m[2]);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || n <= 0 || d <= 0) return null;
+    return { n, d, barLen: n / d };
+  };
+  const left = parse(a);
+  const right = parse(b);
+  if (!left || !right) return false;
+  if (left.n === right.n && left.d === right.d) return true;
+  return Math.abs(left.barLen - right.barLen) <= 1e-6;
+}
+
+function extractNumericCandidatesDefault(values = []) {
+  const out = [];
+  for (const item of Array.isArray(values) ? values : []) {
+    const text = String(item || "");
+    const matches = text.match(/\d+(?:\.\d+)?/g) || [];
+    for (const match of matches) {
+      const value = Number(match);
+      if (Number.isFinite(value) && value > 0) out.push(value);
+    }
+  }
+  return out;
+}
+
+function medianNumberDefault(values = []) {
+  const nums = (Array.isArray(values) ? values : [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+  if (!nums.length) return NaN;
+  const mid = Math.floor(nums.length / 2);
+  if (nums.length % 2) return nums[mid];
+  return (nums[mid - 1] + nums[mid]) / 2;
+}
+
 export function createAudioAnalysisPipelineRuntime(deps = {}) {
   const {
     state,

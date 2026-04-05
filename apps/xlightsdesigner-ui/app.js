@@ -6735,10 +6735,18 @@ function onSelectCatalogSequence() {
 
 async function closeActiveSequenceForSwitch(options = {}) {
   const mode = options?.mode === "discard-unsaved" ? "discard-unsaved" : "policy";
+  let endpoint = String(state.endpoint || "").trim();
+  try {
+    const resolved = await resolveReachableEndpoint(endpoint);
+    endpoint = String(resolved?.endpoint || endpoint).trim();
+    if (endpoint) state.endpoint = endpoint;
+  } catch {
+    endpoint = String(state.endpoint || "").trim();
+  }
   let hasLiveOpenSequence = Boolean(state.flags.activeSequenceLoaded);
   if (!hasLiveOpenSequence) {
     try {
-      const open = await getOpenSequence(state.endpoint);
+      const open = await getOpenSequence(endpoint);
       hasLiveOpenSequence = open?.data?.isOpen === true;
     } catch {
       hasLiveOpenSequence = false;
@@ -6746,7 +6754,7 @@ async function closeActiveSequenceForSwitch(options = {}) {
   }
   if (!hasLiveOpenSequence) return;
   try {
-    await closeSequence(state.endpoint, false, true);
+    await closeSequence(endpoint, false, true);
     state.flags.activeSequenceLoaded = false;
     state.health.sequenceOpen = false;
     return;
@@ -6762,15 +6770,15 @@ async function closeActiveSequenceForSwitch(options = {}) {
     : (state.safety.sequenceSwitchUnsavedPolicy === "discard-unsaved" ? "discard-unsaved" : "save-if-needed");
 
   if (policy === "discard-unsaved") {
-    await closeSequence(state.endpoint, true, true);
+    await closeSequence(endpoint, true, true);
     state.flags.activeSequenceLoaded = false;
     state.health.sequenceOpen = false;
     return;
   }
 
-  await saveSequence(state.endpoint);
+  await saveSequence(endpoint);
   await flushSidecarPersistIfDirty(currentSequencePathForSidecar());
-  await closeSequence(state.endpoint, false, true);
+  await closeSequence(endpoint, false, true);
   state.flags.activeSequenceLoaded = false;
   state.health.sequenceOpen = false;
 }
@@ -7254,6 +7262,7 @@ sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
   noteIgnoredExternalSequence,
   pushDiagnostic,
   withTimeout,
+  resolveReachableEndpoint,
   closeActiveSequenceForSwitch,
   traceSequenceFileLifecycle,
   openSequenceApi: openSequence,

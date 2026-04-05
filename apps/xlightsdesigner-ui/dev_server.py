@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
-import http.client
 import os
+import subprocess
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
@@ -34,16 +34,36 @@ class DevHandler(SimpleHTTPRequestHandler):
         last_error = None
         for host, port in UPSTREAMS:
             try:
-                conn = http.client.HTTPConnection(host, port, timeout=5)
-                conn.request(
-                    "POST",
-                    "/xlDoAutomation",
-                    body=payload,
-                    headers={"Content-Type": "application/json"},
+                target = f"http://{host}:{port}/xlDoAutomation"
+                proc = subprocess.run(
+                    [
+                        "curl",
+                        "-sS",
+                        "-X",
+                        "POST",
+                        target,
+                        "-H",
+                        "Content-Type: application/json",
+                        "--data-binary",
+                        "@-",
+                        "-w",
+                        "\n%{http_code}",
+                    ],
+                    input=payload,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=False,
+                    timeout=5,
                 )
-                resp = conn.getresponse()
-                body = resp.read()
-                self.send_response(resp.status)
+                if proc.returncode != 0:
+                    raise RuntimeError(proc.stderr.decode("utf-8", "replace").strip() or f"curl failed for {target}")
+                raw = proc.stdout
+                split = raw.rsplit(b"\n", 1)
+                if len(split) != 2:
+                    raise RuntimeError(f"curl proxy response missing status trailer for {target}")
+                body, status_raw = split
+                status = int(status_raw.decode("utf-8", "replace").strip() or "502")
+                self.send_response(status)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
