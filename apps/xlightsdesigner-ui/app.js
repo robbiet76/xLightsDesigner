@@ -959,7 +959,7 @@ function applyPersistedAnalysisArtifact(artifact = null) {
     artifact,
     creativeBrief: state.creative?.brief || null,
     audioAnalysisState: state.audioAnalysis,
-    setHandoff: (handoff) => setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst")
+    setHandoff: (handoff) => agentRuntimeState.setAgentHandoff("analysis_handoff_v1", handoff, "audio_analyst")
   });
   if (out.ok === true) syncSectionSuggestionsFromAnalysisArtifact(artifact);
   return out.ok === true;
@@ -1025,13 +1025,13 @@ async function loadReusableAnalysisArtifactForProfile(analysisProfile = null) {
 
 async function ensureCurrentAnalysisHandoff(options = {}) {
   if (hasUsableCurrentAudioAnalysis()) {
-    return getValidHandoff("analysis_handoff_v1");
+    return agentRuntimeState.getValidHandoff("analysis_handoff_v1");
   }
   const hydrated = await hydrateAnalysisArtifactForCurrentMedia(options);
   if (hydrated?.ok) {
-    return getValidHandoff("analysis_handoff_v1");
+    return agentRuntimeState.getValidHandoff("analysis_handoff_v1");
   }
-  return getValidHandoff("analysis_handoff_v1");
+  return agentRuntimeState.getValidHandoff("analysis_handoff_v1");
 }
 
 function dirnameRelPath(relPath = "") {
@@ -1065,24 +1065,21 @@ function hydrateIntentHandoffExecutionStrategy(intentHandoff = null, proposalBun
   };
 }
 
-function getAgentHandoffReadyCount() {
-  return agentRuntimeState.getAgentHandoffReadyCount();
+
+function agentRuntimeState.refreshAgentRuntimeHealth() {
+  return agentRuntimeState.agentRuntimeState.refreshAgentRuntimeHealth();
 }
 
-function refreshAgentRuntimeHealth() {
-  return agentRuntimeState.refreshAgentRuntimeHealth();
+function agentRuntimeState.beginOrchestrationRun({ trigger = "", role = "" } = {}) {
+  return agentRuntimeState.agentRuntimeState.beginOrchestrationRun({ trigger, role });
 }
 
-function beginOrchestrationRun({ trigger = "", role = "" } = {}) {
-  return agentRuntimeState.beginOrchestrationRun({ trigger, role });
+function agentRuntimeState.markOrchestrationStage(run, stage = "", status = "ok", detail = "") {
+  return agentRuntimeState.agentRuntimeState.markOrchestrationStage(run, stage, status, detail);
 }
 
-function markOrchestrationStage(run, stage = "", status = "ok", detail = "") {
-  return agentRuntimeState.markOrchestrationStage(run, stage, status, detail);
-}
-
-function endOrchestrationRun(run, { status = "ok", summary = "" } = {}) {
-  return agentRuntimeState.endOrchestrationRun(run, { status, summary });
+function agentRuntimeState.endOrchestrationRun(run, { status = "ok", summary = "" } = {}) {
+  return agentRuntimeState.agentRuntimeState.endOrchestrationRun(run, { status, summary });
 }
 
 function pushSequenceAgentContractDiagnostic(report = {}) {
@@ -1111,7 +1108,7 @@ function emitSequenceAgentStageTelemetry(orchestrationRun, sequencePlan = {}) {
     ]
       .filter(Boolean)
       .join(" | ");
-    markOrchestrationStage(orchestrationRun, stage, status, detail);
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, stage, status, detail);
   }
 }
 
@@ -1145,48 +1142,42 @@ function arraysEqualOrdered(a = [], b = []) {
   return true;
 }
 
-function buildAgentPersistenceContext() {
-  return agentRuntimeState.buildAgentPersistenceContext();
+function agentRuntimeState.buildAgentPersistenceContext() {
+  return agentRuntimeState.agentRuntimeState.buildAgentPersistenceContext();
 }
 
-function setAgentActiveRole(roleId = "") {
-  return agentRuntimeState.setAgentActiveRole(roleId);
+function agentRuntimeState.setAgentActiveRole(roleId = "") {
+  return agentRuntimeState.agentRuntimeState.setAgentActiveRole(roleId);
 }
 
-function setAgentHandoff(contract = "", payload = {}, producer = "") {
-  return agentRuntimeState.setAgentHandoff(contract, payload, producer);
+function agentRuntimeState.setAgentHandoff(contract = "", payload = {}, producer = "") {
+  return agentRuntimeState.agentRuntimeState.setAgentHandoff(contract, payload, producer);
 }
 
-function getValidHandoff(contract = "") {
-  return agentRuntimeState.getValidHandoff(contract);
+function agentRuntimeState.getValidHandoff(contract = "") {
+  return agentRuntimeState.agentRuntimeState.getValidHandoff(contract);
 }
 
-function getValidHandoffRecord(contract = "") {
-  return agentRuntimeState.getValidHandoffRecord(contract);
+function agentRuntimeState.getValidHandoffRecord(contract = "") {
+  return agentRuntimeState.agentRuntimeState.getValidHandoffRecord(contract);
 }
 
-function clearAgentHandoff(contract = "", reason = "", { pushLog = true } = {}) {
-  return agentRuntimeState.clearAgentHandoff(contract, reason, { pushLog });
+function agentRuntimeState.clearAgentHandoff(contract = "", reason = "", { pushLog = true } = {}) {
+  return agentRuntimeState.agentRuntimeState.clearAgentHandoff(contract, reason, { pushLog });
 }
 
-function invalidatePlanHandoff(reason = "context changed") {
-  return agentRuntimeState.invalidatePlanHandoff(reason);
+function agentRuntimeState.invalidatePlanHandoff(reason = "context changed") {
+  return agentRuntimeState.agentRuntimeState.invalidatePlanHandoff(reason);
 }
 
-function invalidateAnalysisHandoff(reason = "audio changed", { cascadePlan = true } = {}) {
-  return agentRuntimeState.invalidateAnalysisHandoff(reason, { cascadePlan });
+function agentRuntimeState.invalidateAnalysisHandoff(reason = "audio changed", { cascadePlan = true } = {}) {
+  return agentRuntimeState.agentRuntimeState.invalidateAnalysisHandoff(reason, { cascadePlan });
 }
 
-function reconcileHandoffsAgainstCurrentContext({ reasonPrefix = "context drift" } = {}) {
-  return agentRuntimeState.reconcileHandoffsAgainstCurrentContext({ reasonPrefix });
-}
 
-function clearAgentHandoffs() {
-  return agentRuntimeState.clearAgentHandoffs();
-}
 
-function clearSequencingHandoffsForSequenceChange(reason = "sequence changed") {
-  return agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason);
+function agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason = "sequence changed") {
+  return agentRuntimeState.agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason);
 }
 
 
@@ -1328,7 +1319,7 @@ function buildSequenceSidecarDocument() {
       contract,
       producer: String(row.producer || "").trim(),
       payload: row.payload,
-      context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+      context: isPlainObject(row.context) ? row.context : agentRuntimeState.buildAgentPersistenceContext(),
       at: String(row.at || "")
     };
   }
@@ -1421,7 +1412,7 @@ function applySequenceSidecarDocument(doc) {
   if (doc?.agentRuntime && isPlainObject(doc.agentRuntime)) {
     const runtimeRole = String(doc.agentRuntime.activeRole || "").trim();
     if (runtimeRole) {
-      setAgentActiveRole(runtimeRole);
+      agentRuntimeState.setAgentActiveRole(runtimeRole);
     }
     const persisted = isPlainObject(doc.agentRuntime.handoffs) ? doc.agentRuntime.handoffs : {};
     for (const contract of AGENT_HANDOFF_CONTRACTS) {
@@ -1433,13 +1424,13 @@ function applySequenceSidecarDocument(doc) {
         contract,
         producer: String(row.producer || "").trim(),
         payload: row.payload,
-        context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+        context: isPlainObject(row.context) ? row.context : agentRuntimeState.buildAgentPersistenceContext(),
         valid: true,
         errors: [],
         at: String(row.at || new Date().toISOString())
       };
     }
-    refreshAgentRuntimeHealth();
+    agentRuntimeState.refreshAgentRuntimeHealth();
     reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "sidecar hydrate" });
   }
 }
@@ -1991,7 +1982,7 @@ function extractProjectSnapshot() {
       contract,
       producer: String(row.producer || "").trim(),
       payload: row.payload,
-      context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+      context: isPlainObject(row.context) ? row.context : agentRuntimeState.buildAgentPersistenceContext(),
       at: String(row.at || "")
     };
   }
@@ -2126,7 +2117,7 @@ function applyProjectSnapshot(snapshot) {
   if (snapshot?.agentRuntime && isPlainObject(snapshot.agentRuntime)) {
     const runtimeRole = String(snapshot.agentRuntime.activeRole || "").trim();
     if (runtimeRole) {
-      setAgentActiveRole(runtimeRole);
+      agentRuntimeState.setAgentActiveRole(runtimeRole);
     }
     const persisted = isPlainObject(snapshot.agentRuntime.handoffs) ? snapshot.agentRuntime.handoffs : {};
     for (const contract of AGENT_HANDOFF_CONTRACTS) {
@@ -2138,20 +2129,20 @@ function applyProjectSnapshot(snapshot) {
         contract,
         producer: String(row.producer || "").trim(),
         payload: row.payload,
-        context: isPlainObject(row.context) ? row.context : buildAgentPersistenceContext(),
+        context: isPlainObject(row.context) ? row.context : agentRuntimeState.buildAgentPersistenceContext(),
         valid: true,
         errors: [],
         at: String(row.at || new Date().toISOString())
       };
     }
-    refreshAgentRuntimeHealth();
+    agentRuntimeState.refreshAgentRuntimeHealth();
     reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "project snapshot hydrate" });
   }
-  if (!getValidHandoff("intent_handoff_v1") && isPlainObject(state.creative?.intentHandoff)) {
-    setAgentHandoff("intent_handoff_v1", state.creative.intentHandoff, "designer_dialog");
+  if (!agentRuntimeState.getValidHandoff("intent_handoff_v1") && isPlainObject(state.creative?.intentHandoff)) {
+    agentRuntimeState.setAgentHandoff("intent_handoff_v1", state.creative.intentHandoff, "designer_dialog");
   }
-  if (!getValidHandoff("plan_handoff_v1") && isPlainObject(state.agentPlan?.handoff)) {
-    setAgentHandoff("plan_handoff_v1", state.agentPlan.handoff, "sequence_agent");
+  if (!agentRuntimeState.getValidHandoff("plan_handoff_v1") && isPlainObject(state.agentPlan?.handoff)) {
+    agentRuntimeState.setAgentHandoff("plan_handoff_v1", state.agentPlan.handoff, "sequence_agent");
   }
   state.flags.planOnlyMode = Boolean(snapshot?.flags?.planOnlyMode);
   state.safety = { ...state.safety, ...(snapshot.safety || {}) };
@@ -2608,7 +2599,7 @@ function setSectionSelections(values) {
   }
   const after = normalizeStringArray(getSelectedSections());
   if (!arraysEqualAsSets(before, after)) {
-    invalidatePlanHandoff("section selection changed");
+    agentRuntimeState.invalidatePlanHandoff("section selection changed");
   }
   invalidateApplyApproval();
   saveCurrentProjectSnapshot();
@@ -3140,7 +3131,7 @@ async function syncLatestSequenceRevision({
     state.revision = revisionState.revision;
 
     if (revisionState.shouldInvalidatePlanHandoff) {
-      invalidatePlanHandoff("sequence revision changed");
+      agentRuntimeState.invalidatePlanHandoff("sequence revision changed");
     }
 
     if (revisionState.shouldMarkDesignerDraftStale) {
@@ -3680,8 +3671,8 @@ function currentArtifactRefs({ planHandoff = null, applyResult = null } = {}) {
     directorProfile: state.directorProfile || null,
     creativeBrief: state.creative?.brief || null,
     proposalBundle: state.creative?.proposalBundle || null,
-    intentHandoff: state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1"),
-    planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
+    intentHandoff: state.creative?.intentHandoff || agentRuntimeState.getValidHandoff("intent_handoff_v1"),
+    planHandoff: planHandoff || agentRuntimeState.getValidHandoff("plan_handoff_v1"),
     applyResult
   });
 }
@@ -4156,7 +4147,7 @@ function getCurrentAnalysisTimingSeed() {
   const artifact = state.audioAnalysis?.artifact && typeof state.audioAnalysis.artifact === "object"
     ? state.audioAnalysis.artifact
     : null;
-  const handoff = getValidHandoff("analysis_handoff_v1");
+  const handoff = agentRuntimeState.getValidHandoff("analysis_handoff_v1");
   const durationMs = Math.max(
     1,
     Number(
@@ -4371,7 +4362,7 @@ function buildOrchestrationTestAnalysisHandoff() {
 }
 
 async function onTestAgentOrchestration() {
-  const orchestrationRun = beginOrchestrationRun({ trigger: "orchestration-test", role: "audio_analyst" });
+  const orchestrationRun = agentRuntimeState.beginOrchestrationRun({ trigger: "orchestration-test", role: "audio_analyst" });
   state.ui.agentThinking = true;
   state.ui.diagnosticsOpen = true;
   state.ui.diagnosticsFilter = "all";
@@ -4382,35 +4373,35 @@ async function onTestAgentOrchestration() {
   try {
     const runtimeReady = await agentSupportRuntime.hydrateAgentRuntime({ force: true, quiet: true });
     if (!runtimeReady) {
-      markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "agent runtime unavailable" });
+      agentRuntimeState.markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
+      agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "agent runtime unavailable" });
       const msg = `Failed: agent runtime unavailable (${agentRuntime.error || "unknown error"})`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
-    markOrchestrationStage(orchestrationRun, "runtime_load", "ok", "agent runtime loaded");
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "runtime_load", "ok", "agent runtime loaded");
     clearAgentHandoffs();
 
-    setAgentActiveRole("audio_analyst");
-    const analysisSet = setAgentHandoff(
+    agentRuntimeState.setAgentActiveRole("audio_analyst");
+    const analysisSet = agentRuntimeState.setAgentHandoff(
       "analysis_handoff_v1",
       buildOrchestrationTestAnalysisHandoff(),
       "audio_analyst"
     );
     if (!analysisSet.ok) {
-      markOrchestrationStage(orchestrationRun, "analysis_handoff", "error", analysisSet.errors.join("; "));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "analysis handoff failed" });
+      agentRuntimeState.markOrchestrationStage(orchestrationRun, "analysis_handoff", "error", analysisSet.errors.join("; "));
+      agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "analysis handoff failed" });
       const msg = `Failed at analysis handoff: ${analysisSet.errors.join("; ")}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
-    markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "analysis_handoff", "ok", "analysis_handoff_v1 ready");
 
-    setAgentActiveRole("designer_dialog");
+    agentRuntimeState.setAgentActiveRole("designer_dialog");
     const chatIntent = latestUserIntentText() || "Test intent for orchestration";
-    const intentSet = setAgentHandoff(
+    const intentSet = agentRuntimeState.setAgentHandoff(
       "intent_handoff_v1",
       {
         goal: chatIntent,
@@ -4440,16 +4431,16 @@ async function onTestAgentOrchestration() {
       "designer_dialog"
     );
     if (!intentSet.ok) {
-      markOrchestrationStage(orchestrationRun, "intent_handoff", "error", intentSet.errors.join("; "));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "intent handoff failed" });
+      agentRuntimeState.markOrchestrationStage(orchestrationRun, "intent_handoff", "error", intentSet.errors.join("; "));
+      agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "intent handoff failed" });
       const msg = `Failed at intent handoff: ${intentSet.errors.join("; ")}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
-    markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "intent_handoff", "ok", "intent_handoff_v1 ready");
 
-    setAgentActiveRole("sequence_agent");
+    agentRuntimeState.setAgentActiveRole("sequence_agent");
     const planSource = (Array.isArray(state.proposed) && state.proposed.length)
       ? state.proposed
       : buildDemoProposedLines().slice(0, 3);
@@ -4462,7 +4453,7 @@ async function onTestAgentOrchestration() {
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
-    const planSet = setAgentHandoff(
+    const planSet = agentRuntimeState.setAgentHandoff(
       "plan_handoff_v1",
       {
         planId: `orchestration-test-${Date.now()}`,
@@ -4476,23 +4467,23 @@ async function onTestAgentOrchestration() {
       "sequence_agent"
     );
     if (!planSet.ok) {
-      markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "plan handoff failed" });
+      agentRuntimeState.markOrchestrationStage(orchestrationRun, "plan_handoff", "error", planSet.errors.join("; "));
+      agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "plan handoff failed" });
       const msg = `Failed at plan handoff: ${planSet.errors.join("; ")}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
       setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
       return;
     }
-    markOrchestrationStage(orchestrationRun, "plan_handoff", "ok", "plan_handoff_v1 ready");
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "plan_handoff", "ok", "plan_handoff_v1 ready");
 
     const readyCount = state.health.agentHandoffsReady || "0/3";
     state.ui.agentLastOrchestrationTestStatus = `Passed (${readyCount} handoffs ready).`;
     setStatus("info", `Agent orchestration test passed (${readyCount}).`);
     pushDiagnostic("info", `Agent orchestration test passed (${readyCount}).`);
-    endOrchestrationRun(orchestrationRun, { status: "ok", summary: `orchestration test passed (${readyCount})` });
+    agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "ok", summary: `orchestration test passed (${readyCount})` });
   } catch (err) {
-    markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
-    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "orchestration test error" });
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
+    agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "orchestration test error" });
     const msg = String(err?.message || err);
     state.ui.agentLastOrchestrationTestStatus = `Failed: ${msg}`;
     setStatusWithDiagnostics("warning", "Agent orchestration test failed.", msg);
@@ -4513,7 +4504,7 @@ function cloneHandoffsMap(handoffs = {}) {
 }
 
 async function onRunOrchestrationMatrix() {
-  const orchestrationRun = beginOrchestrationRun({ trigger: "orchestration-matrix", role: "designer_dialog" });
+  const orchestrationRun = agentRuntimeState.beginOrchestrationRun({ trigger: "orchestration-matrix", role: "designer_dialog" });
   state.ui.agentThinking = true;
   state.ui.diagnosticsOpen = true;
   state.ui.diagnosticsFilter = "all";
@@ -4533,13 +4524,13 @@ async function onRunOrchestrationMatrix() {
   try {
     const runtimeReady = await agentSupportRuntime.hydrateAgentRuntime({ force: true, quiet: true });
     if (!runtimeReady) {
-      markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
-      endOrchestrationRun(orchestrationRun, { status: "failed", summary: "runtime unavailable" });
+      agentRuntimeState.markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
+      agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "runtime unavailable" });
       state.ui.agentLastOrchestrationMatrixStatus = "Failed: runtime unavailable";
       setStatusWithDiagnostics("warning", "Orchestration matrix failed: runtime unavailable.");
       return;
     }
-    markOrchestrationStage(orchestrationRun, "runtime_load", "ok", "agent runtime loaded");
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "runtime_load", "ok", "agent runtime loaded");
 
     const runScenario = (name, fn) => {
       clearAgentHandoffs();
@@ -4556,7 +4547,7 @@ async function onRunOrchestrationMatrix() {
       }
       const elapsed = Math.max(0, nowMs() - startedAt);
       results.push({ name, ok, note, elapsedMs: elapsed });
-      markOrchestrationStage(
+      agentRuntimeState.markOrchestrationStage(
         orchestrationRun,
         `scenario:${name}`,
         ok ? "ok" : "error",
@@ -4565,8 +4556,8 @@ async function onRunOrchestrationMatrix() {
     };
 
     runScenario("happy-path-gate", () => {
-      const analysis = setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
-      const intent = setAgentHandoff("intent_handoff_v1", {
+      const analysis = agentRuntimeState.setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
+      const intent = agentRuntimeState.setAgentHandoff("intent_handoff_v1", {
         goal: "Matrix happy path intent",
         mode: "revise",
         scope: { targetIds: [], tagNames: [], sections: [], timeRangeMs: null },
@@ -4574,7 +4565,7 @@ async function onRunOrchestrationMatrix() {
         directorPreferences: { styleDirection: "", energyArc: "hold", focusElements: [], colorDirection: "" },
         approvalPolicy: { requiresExplicitApprove: true, elevatedRiskConfirmed: false }
       }, "designer_dialog");
-      const plan = setAgentHandoff("plan_handoff_v1", {
+      const plan = agentRuntimeState.setAgentHandoff("plan_handoff_v1", {
         planId: `matrix-plan-${nowMs()}`,
         summary: "matrix happy path",
         estimatedImpact: 11,
@@ -4588,8 +4579,8 @@ async function onRunOrchestrationMatrix() {
     });
 
     runScenario("missing-intent-blocked", () => {
-      setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
-      setAgentHandoff("plan_handoff_v1", {
+      agentRuntimeState.setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
+      agentRuntimeState.setAgentHandoff("plan_handoff_v1", {
         planId: `matrix-plan-${nowMs()}`,
         summary: "missing intent case",
         estimatedImpact: 11,
@@ -4603,7 +4594,7 @@ async function onRunOrchestrationMatrix() {
     });
 
     runScenario("revision-mismatch-blocked", () => {
-      setAgentHandoff("intent_handoff_v1", {
+      agentRuntimeState.setAgentHandoff("intent_handoff_v1", {
         goal: "revision mismatch case",
         mode: "revise",
         scope: { targetIds: [], tagNames: [], sections: [], timeRangeMs: null },
@@ -4611,7 +4602,7 @@ async function onRunOrchestrationMatrix() {
         directorPreferences: { styleDirection: "", energyArc: "hold", focusElements: [], colorDirection: "" },
         approvalPolicy: { requiresExplicitApprove: true, elevatedRiskConfirmed: false }
       }, "designer_dialog");
-      setAgentHandoff("plan_handoff_v1", {
+      agentRuntimeState.setAgentHandoff("plan_handoff_v1", {
         planId: `matrix-plan-${nowMs()}`,
         summary: "revision mismatch",
         estimatedImpact: 11,
@@ -4625,7 +4616,7 @@ async function onRunOrchestrationMatrix() {
     });
 
     runScenario("section-change-invalidates-plan", () => {
-      setAgentHandoff("intent_handoff_v1", {
+      agentRuntimeState.setAgentHandoff("intent_handoff_v1", {
         goal: "section drift case",
         mode: "revise",
         scope: { targetIds: [], tagNames: [], sections: ["Verse 1"], timeRangeMs: null },
@@ -4633,7 +4624,7 @@ async function onRunOrchestrationMatrix() {
         directorPreferences: { styleDirection: "", energyArc: "hold", focusElements: [], colorDirection: "" },
         approvalPolicy: { requiresExplicitApprove: true, elevatedRiskConfirmed: false }
       }, "designer_dialog");
-      setAgentHandoff("plan_handoff_v1", {
+      agentRuntimeState.setAgentHandoff("plan_handoff_v1", {
         planId: `matrix-plan-${nowMs()}`,
         summary: "section invalidation",
         estimatedImpact: 11,
@@ -4645,18 +4636,18 @@ async function onRunOrchestrationMatrix() {
       state.ui.sectionSelections = ["Verse 2"];
       reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix section-change" });
       return {
-        ok: !getValidHandoff("plan_handoff_v1"),
+        ok: !agentRuntimeState.getValidHandoff("plan_handoff_v1"),
         note: "plan_handoff_v1 cleared after section change"
       };
     });
 
     runScenario("audio-change-invalidates-analysis", () => {
       const beforeAudio = String(state.audioPathInput || "");
-      setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
+      agentRuntimeState.setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
       const changed = beforeAudio ? `${beforeAudio}.matrix` : "/tmp/matrix-audio.mp3";
       sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(changed, "matrix audio change");
-      const analysisCleared = !getValidHandoff("analysis_handoff_v1");
-      const planCleared = !getValidHandoff("plan_handoff_v1");
+      const analysisCleared = !agentRuntimeState.getValidHandoff("analysis_handoff_v1");
+      const planCleared = !agentRuntimeState.getValidHandoff("plan_handoff_v1");
       return {
         ok: analysisCleared && planCleared,
         note: "analysis and dependent plan cleared after audio change"
@@ -4758,14 +4749,14 @@ async function onRunOrchestrationMatrix() {
       pushDiagnostic(level, `Orchestration matrix [${row.ok ? "PASS" : "FAIL"}] ${row.name}: ${row.note}`);
     }
     const finalOk = failed === 0;
-    endOrchestrationRun(orchestrationRun, {
+    agentRuntimeState.endOrchestrationRun(orchestrationRun, {
       status: finalOk ? "ok" : "failed",
       summary: `matrix ${passed}/${total} passed`
     });
     setStatus(finalOk ? "info" : "warning", `Orchestration matrix complete: ${passed}/${total} passed.`);
   } catch (err) {
-    markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
-    endOrchestrationRun(orchestrationRun, { status: "failed", summary: "matrix run error" });
+    agentRuntimeState.markOrchestrationStage(orchestrationRun, "exception", "error", String(err?.message || err));
+    agentRuntimeState.endOrchestrationRun(orchestrationRun, { status: "failed", summary: "matrix run error" });
     const msg = String(err?.message || err);
     state.ui.agentLastOrchestrationMatrixStatus = `Failed: ${msg}`;
     setStatusWithDiagnostics("warning", `Orchestration matrix failed: ${msg}`);
@@ -4779,7 +4770,7 @@ async function onRunOrchestrationMatrix() {
     state.revision = previousRevision;
     state.draftBaseRevision = previousDraftBase;
     setSequenceTimingTrackPoliciesState(previousTimingTrackPolicies);
-    refreshAgentRuntimeHealth();
+    agentRuntimeState.refreshAgentRuntimeHealth();
     reconcileHandoffsAgainstCurrentContext({ reasonPrefix: "matrix restore" });
     state.ui.agentThinking = false;
     persist();
@@ -4794,7 +4785,7 @@ async function onSendChat() {
     roleId: "user",
     displayName: "You"
   });
-  setAgentActiveRole("app_assistant");
+  agentRuntimeState.setAgentActiveRole("app_assistant");
   state.ui.chatDraft = "";
   state.ui.agentThinking = true;
   render();
@@ -4873,7 +4864,7 @@ async function onSendChat() {
         handledBy: String(res?.handledBy || "app_assistant"),
         addressedTo: String(res?.addressedTo || "")
       });
-      setAgentActiveRole(String(res?.routeDecision || "app_assistant"));
+      agentRuntimeState.setAgentActiveRole(String(res?.routeDecision || "app_assistant"));
       setStatusWithDiagnostics("action-required", "Cloud agent conversation failed.", errText);
       await agentSupportRuntime.hydrateAgentHealth();
       saveCurrentProjectSnapshot();
@@ -4913,14 +4904,14 @@ async function onSendChat() {
         addressedTo: String(res.addressedTo || "")
       });
     }
-    setAgentActiveRole(nextRole);
+    agentRuntimeState.setAgentActiveRole(nextRole);
     state.ui.agentResponseId = String(res.responseId || state.ui.agentResponseId || "");
     state.health.agentProvider = String(res.provider || "openai");
     state.health.agentModel = String(res.model || state.health.agentModel || "");
     state.health.agentConfigured = true;
 
     if (shouldAnswerExistingAudio) {
-      const analysis = getValidHandoff("analysis_handoff_v1");
+      const analysis = agentRuntimeState.getValidHandoff("analysis_handoff_v1");
       addStructuredChatMessage("agent", buildAudioAnalystChatReply(raw, analysis), {
         roleId: "audio_analyst",
         displayName: getTeamChatSpeakerLabel("audio_analyst"),
@@ -5345,14 +5336,14 @@ function buildCurrentDesignSceneContext() {
 function buildCurrentMusicDesignContext() {
   return buildMusicDesignContext({
     analysisArtifact: state.audioAnalysis?.artifact || null,
-    analysisHandoff: getValidHandoff("analysis_handoff_v1")
+    analysisHandoff: agentRuntimeState.getValidHandoff("analysis_handoff_v1")
   });
 }
 
 function hasUsableCurrentAudioAnalysis() {
   const currentAudioPath = String(state.audioPathInput || "").trim();
   if (!currentAudioPath) return false;
-  const handoffRecord = getValidHandoffRecord("analysis_handoff_v1");
+  const handoffRecord = agentRuntimeState.getValidHandoffRecord("analysis_handoff_v1");
   const handoff = handoffRecord?.payload || null;
   const handoffAudioPath = String(handoffRecord?.context?.audioPath || "").trim();
   const sameTrack = handoffAudioPath && handoffAudioPath === currentAudioPath;
@@ -5539,7 +5530,7 @@ function buildAudioAnalystChatReply(userPrompt = "", handoff = {}) {
 function shouldAnswerAudioFromExistingAnalysis(res = {}, raw = "") {
   const routeDecision = String(res?.routeDecision || "").trim();
   if (routeDecision !== "audio_analyst") return false;
-  const analysis = getValidHandoff("analysis_handoff_v1");
+  const analysis = agentRuntimeState.getValidHandoff("analysis_handoff_v1");
   if (!hasUsableCurrentAudioAnalysis() || !analysis) {
     return false;
   }
@@ -5579,7 +5570,7 @@ function collectCurrentDesignIds() {
 }
 
 function seedTechnicalIntentHandoffFromChatPrompt(promptText = "", producer = "app_assistant") {
-  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const analysisHandoff = agentRuntimeState.getValidHandoff("analysis_handoff_v1");
   const explicitSections = hasAllSectionsSelected()
     ? getSectionChoiceList()
     : getSelectedSections().filter((s) => s !== "all");
@@ -5604,7 +5595,7 @@ function seedTechnicalIntentHandoffFromChatPrompt(promptText = "", producer = "a
   }
   state.creative = state.creative || {};
   state.creative.intentHandoff = structuredClone(directIntent.intentHandoff);
-  return setAgentHandoff("intent_handoff_v1", directIntent.intentHandoff, producer);
+  return agentRuntimeState.setAgentHandoff("intent_handoff_v1", directIntent.intentHandoff, producer);
 }
 
 function shouldContinueToProposalAfterAudio(res = {}, raw = "") {
@@ -6099,10 +6090,10 @@ function rebuildProposalBundleFromExecutionPlan(proposalBundle = null, execution
 }
 
 function rebuildSequenceAgentStateFromCurrentIntent() {
-  const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+  const analysisHandoff = agentRuntimeState.getValidHandoff("analysis_handoff_v1");
   let intentHandoff = state.creative?.intentHandoff && typeof state.creative.intentHandoff === "object"
     ? state.creative.intentHandoff
-    : getValidHandoff("intent_handoff_v1");
+    : agentRuntimeState.getValidHandoff("intent_handoff_v1");
   intentHandoff = hydrateIntentHandoffExecutionStrategy(intentHandoff, state.creative?.proposalBundle || null);
   if (!intentHandoff) return { ok: false, reason: "missing_intent_handoff" };
 
@@ -6133,8 +6124,8 @@ function rebuildSequenceAgentStateFromCurrentIntent() {
     handoff: sequencerPlan,
     executionLines: Array.isArray(sequencerPlan?.executionLines) ? sequencerPlan.executionLines : []
   };
-  setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
-  setAgentHandoff("plan_handoff_v1", sequencerPlan, "sequence_agent");
+  agentRuntimeState.setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
+  agentRuntimeState.setAgentHandoff("plan_handoff_v1", sequencerPlan, "sequence_agent");
   return { ok: true };
 }
 
@@ -6383,7 +6374,7 @@ function definePersistedVisualHint(rawName, definition = {}) {
     timestamp: definition?.timestamp || new Date().toISOString()
   });
   setVisualHintDefinitionRecords(next);
-  invalidatePlanHandoff(`visual hint definition updated: ${String(rawName || "").trim()}`);
+  agentRuntimeState.invalidatePlanHandoff(`visual hint definition updated: ${String(rawName || "").trim()}`);
   return next.find((row) => row.name === normalizeMetadataTagName(rawName)) || null;
 }
 
@@ -6486,7 +6477,7 @@ function toggleMetadataSelectedTag(tagName) {
   state.ui.metadataSelectedTags = normalizeMetadataSelectedTags(Array.from(selected));
   const after = normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
   if (!arraysEqualAsSets(before, after)) {
-    invalidatePlanHandoff("selected tags changed");
+    agentRuntimeState.invalidatePlanHandoff("selected tags changed");
   }
   persist();
 }
@@ -6495,7 +6486,7 @@ function clearMetadataSelectedTags() {
   const before = normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags));
   state.ui.metadataSelectedTags = [];
   if (before.length) {
-    invalidatePlanHandoff("selected tags cleared");
+    agentRuntimeState.invalidatePlanHandoff("selected tags cleared");
   }
   persist();
   render();
@@ -6540,7 +6531,7 @@ function setMetadataSelectionIds(selectionIds, { save = true } = {}) {
   state.ui.metadataSelectionIds = normalizeMetadataSelectionIds(selectionIds);
   const after = normalizeStringArray(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds));
   if (!arraysEqualAsSets(before, after)) {
-    invalidatePlanHandoff("target selection changed");
+    agentRuntimeState.invalidatePlanHandoff("target selection changed");
   }
   if (save) persist();
 }
@@ -6635,7 +6626,7 @@ function updateMetadataTargetRolePreference(targetId, rolePreference = "") {
     };
   }
   state.metadata.preferencesByTargetId = next;
-  invalidatePlanHandoff("metadata role preference changed");
+  agentRuntimeState.invalidatePlanHandoff("metadata role preference changed");
   saveMetadataAndRender(`Updated role preference for ${target.displayName || id}.`);
   return true;
 }
@@ -6660,7 +6651,7 @@ function updateMetadataTargetSemanticHints(targetId, rawValue = "") {
   else delete next[id];
   state.metadata.preferencesByTargetId = next;
   ensurePersistedVisualHintDefinitions(nextValues);
-  invalidatePlanHandoff("metadata semantic hints changed");
+  agentRuntimeState.invalidatePlanHandoff("metadata semantic hints changed");
   saveMetadataAndRender(`Updated semantic hints for ${target.displayName || id}.`);
   return true;
 }
@@ -6700,7 +6691,7 @@ function updateMetadataTargetSubmodelHints(targetId, rawValue = "") {
   if (Object.keys(reduced).length) next[id] = reduced;
   else delete next[id];
   state.metadata.preferencesByTargetId = next;
-  invalidatePlanHandoff("metadata submodel hints changed");
+  agentRuntimeState.invalidatePlanHandoff("metadata submodel hints changed");
   saveMetadataAndRender(`Updated submodel hints for ${target.displayName || id}.`);
   return true;
 }
@@ -6740,7 +6731,7 @@ function updateMetadataTargetEffectAvoidances(targetId, rawValue = "") {
   if (Object.keys(reduced).length) next[id] = reduced;
   else delete next[id];
   state.metadata.preferencesByTargetId = next;
-  invalidatePlanHandoff("metadata effect avoidances changed");
+  agentRuntimeState.invalidatePlanHandoff("metadata effect avoidances changed");
   saveMetadataAndRender(`Updated effect avoidances for ${target.displayName || id}.`);
   return true;
 }
@@ -6968,8 +6959,8 @@ function onRemoveAllProposed() {
   state.proposed = [];
   state.ui.proposedSelection = [];
   state.flags.hasDraftProposal = false;
-  clearAgentHandoff("intent_handoff_v1", "draft cleared", { pushLog: false });
-  clearAgentHandoff("plan_handoff_v1", "draft cleared", { pushLog: false });
+  agentRuntimeState.clearAgentHandoff("intent_handoff_v1", "draft cleared", { pushLog: false });
+  agentRuntimeState.clearAgentHandoff("plan_handoff_v1", "draft cleared", { pushLog: false });
   invalidateApplyApproval();
   setStatus("info", "Deleted all proposed changes.");
   saveCurrentProjectSnapshot();
@@ -8350,9 +8341,9 @@ async function runCurrentDirectSequenceValidation(expected = {}) {
     endpoint: state.endpoint,
     state,
     handoffs: {
-      analysisHandoff: getValidHandoff("analysis_handoff_v1"),
-      intentHandoff: getValidHandoff("intent_handoff_v1"),
-      planHandoff: getValidHandoff("plan_handoff_v1")
+      analysisHandoff: agentRuntimeState.getValidHandoff("analysis_handoff_v1"),
+      intentHandoff: agentRuntimeState.getValidHandoff("intent_handoff_v1"),
+      planHandoff: agentRuntimeState.getValidHandoff("plan_handoff_v1")
     },
     helpers: buildPageStateHelpers(),
     expected,
@@ -8368,9 +8359,9 @@ function getCurrentDirectSequenceValidationSnapshot() {
     pageStates: uiCompositionRuntime.getPageStates(),
     activeSequence: state.activeSequence || "",
     handoffs: {
-      analysisHandoff: getValidHandoff("analysis_handoff_v1"),
-      intentHandoff: getValidHandoff("intent_handoff_v1"),
-      planHandoff: getValidHandoff("plan_handoff_v1")
+      analysisHandoff: agentRuntimeState.getValidHandoff("analysis_handoff_v1"),
+      intentHandoff: agentRuntimeState.getValidHandoff("intent_handoff_v1"),
+      planHandoff: agentRuntimeState.getValidHandoff("plan_handoff_v1")
     }
   };
 }
