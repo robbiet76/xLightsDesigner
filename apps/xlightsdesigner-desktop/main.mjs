@@ -78,6 +78,7 @@ let automationRequestProcessor = null;
 let automationHeartbeatTimer = null;
 let automationRequestWatcher = null;
 let automationPowerSaveBlockerId = null;
+let automationLastKickAtMs = 0;
 let rendererAutomationReadyPromise = null;
 const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
@@ -911,6 +912,13 @@ async function processAutomationRequests() {
   });
 }
 
+function kickAutomationProcessor(reason = "unspecified") {
+  if (!automationRequestProcessor) return;
+  automationLastKickAtMs = Date.now();
+  logStartup(`automation:kick reason=${reason}`);
+  automationRequestProcessor.processPending();
+}
+
 function startAutomationPolling() {
   ensureAutomationDirs();
   if (automationPowerSaveBlockerId == null || !powerSaveBlocker.isStarted(automationPowerSaveBlockerId)) {
@@ -932,17 +940,19 @@ function startAutomationPolling() {
       }
     });
   }
-  automationRequestProcessor.processPending();
+  logStartup("automation:poll start");
+  kickAutomationProcessor("startup");
   automationPollTimer = setInterval(() => {
-    automationRequestProcessor.processPending();
-  }, 500);
+    kickAutomationProcessor("interval");
+  }, 1000);
   if (!automationHeartbeatTimer) {
     automationHeartbeatTimer = setInterval(() => {
       try {
         const pending = fs.readdirSync(AUTOMATION_REQUESTS_DIR).filter((name) => name.endsWith(".json")).length;
+        const ageMs = automationLastKickAtMs > 0 ? Math.max(0, Date.now() - automationLastKickAtMs) : -1;
         if (pending > 0) {
-          logStartup(`automation:heartbeat pending=${pending}`);
-          automationRequestProcessor.processPending();
+          logStartup(`automation:heartbeat pending=${pending} lastKickAgeMs=${ageMs}`);
+          kickAutomationProcessor("heartbeat");
         }
       } catch (err) {
         logStartup(`automation:heartbeat error=${String(err?.message || err)}`);
@@ -955,7 +965,7 @@ function startAutomationPolling() {
         const name = String(filename || "").trim();
         if (!name.endsWith(".json")) return;
         logStartup(`automation:watch event file=${name}`);
-        automationRequestProcessor.processPending();
+        kickAutomationProcessor(`watch:${name}`);
       });
     } catch (err) {
       logStartup(`automation:watch error=${String(err?.message || err)}`);
