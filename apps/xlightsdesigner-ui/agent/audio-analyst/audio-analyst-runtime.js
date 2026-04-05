@@ -341,6 +341,7 @@ function buildAnalysisModules({
         artist: str(identity?.artist),
         album: str(identity?.album),
         isrc: str(identity?.isrc),
+        contentFingerprint: str(identity?.contentFingerprint),
         sourceMetadata: isPlainObject(identity?.sourceMetadata) ? {
           fileName: str(identity.sourceMetadata?.fileName),
           embeddedTitle: str(identity.sourceMetadata?.embeddedTitle),
@@ -499,6 +500,7 @@ export function buildAnalysisArtifactFromPipelineResult({
     artist: str(identity?.artist),
     album: str(identity?.album),
     isrc: str(identity?.isrc),
+    contentFingerprint: str(rawMeta?.contentFingerprint),
     provider: str(identity?.provider || rawMeta?.trackIdentity?.provider),
     sourceMetadata: isPlainObject(rawMeta?.sourceMetadata) ? {
       fileName: str(rawMeta.sourceMetadata?.fileName),
@@ -724,6 +726,7 @@ export function buildAnalysisHandoffFromArtifact(artifact = {}, creativeBrief = 
       title: str(identity?.title || media?.fileName),
       artist: str(identity?.artist),
       isrc: str(identity?.isrc),
+      contentFingerprint: str(identity?.contentFingerprint),
       sourceMetadata: isPlainObject(identity?.sourceMetadata) ? {
         embeddedTitle: str(identity.sourceMetadata?.embeddedTitle),
         embeddedArtist: str(identity.sourceMetadata?.embeddedArtist),

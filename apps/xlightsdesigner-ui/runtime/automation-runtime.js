@@ -598,7 +598,8 @@ export function createAutomationRuntime(deps = {}) {
       analysisProfile: payload?.analysisProfile && typeof payload.analysisProfile === "object"
         ? payload.analysisProfile
         : null,
-      forceFresh: payload?.forceFresh === true
+      forceFresh: payload?.forceFresh === true,
+      disableInteractivePrompts: true
     });
     return {
       ok: true,

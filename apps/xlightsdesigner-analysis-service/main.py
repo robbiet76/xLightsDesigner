@@ -3975,6 +3975,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
 
     identity, identity_cache_hit, web_tempo_evidence, provider_error = _resolve_identity_and_web(path, profile)
     source_metadata = _source_metadata_from_path(path)
+    content_fingerprint = _audio_fingerprint(path)
     identity_recommendation = _build_identity_recommendation(path, identity)
     metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
     provider_metadata_suggestion = _build_provider_metadata_suggestion(identity, duration_ms)
@@ -4035,6 +4036,7 @@ def _analyze_with_beatnet(path: str, analysis_profile: Optional[Dict[str, Any]] 
             "engine": "beatnet",
             "sectionSource": provider_name or "none",
             "trackIdentity": identity,
+            "contentFingerprint": content_fingerprint,
             "sourceMetadata": source_metadata,
             "identityRecommendation": identity_recommendation,
             "metadataRecommendation": metadata_recommendation,
@@ -4178,6 +4180,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
 
     identity, identity_cache_hit, web_tempo_evidence, identity_error = _resolve_identity_and_web(path, profile)
     source_metadata = _source_metadata_from_path(path)
+    content_fingerprint = _audio_fingerprint(path)
     identity_recommendation = _build_identity_recommendation(path, identity)
     metadata_recommendation = _build_metadata_recommendation(source_metadata, identity)
     provider_metadata_suggestion = _build_provider_metadata_suggestion(identity, duration_ms)
@@ -4270,6 +4273,7 @@ def _analyze_with_librosa(path: str, analysis_profile: Optional[Dict[str, Any]] 
                 )
             ),
             "trackIdentity": identity,
+            "contentFingerprint": content_fingerprint,
             "sourceMetadata": source_metadata,
             "identityRecommendation": identity_recommendation,
             "metadataRecommendation": metadata_recommendation,

@@ -83,6 +83,7 @@ const ANALYSIS_SERVICE_HOST = "127.0.0.1";
 const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
 let analysisServiceStarting = null;
+const MEDIA_IDENTITY_PROBE_CACHE = new Map();
 
 app.on("second-instance", () => {
   if (!mainWindow) return;
@@ -156,6 +157,119 @@ function runBinary(command = "", args = []) {
 
 function sanitizeFileNameComponent(value = "") {
   return str(value).replace(/[/:*?"<>|]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeMediaIdentityToken(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function buildMediaIdentityKey({ isrc = "", title = "", artist = "" } = {}) {
+  const normalizedIsrc = normalizeMediaIdentityToken(isrc);
+  if (normalizedIsrc) return `isrc:${normalizedIsrc}`;
+  const normalizedTitle = normalizeMediaIdentityToken(title);
+  const normalizedArtist = normalizeMediaIdentityToken(artist);
+  if (!normalizedTitle) return "";
+  return `title:${normalizedTitle}|artist:${normalizedArtist || "unknown"}`;
+}
+
+function computeFileContentFingerprint(filePath = "") {
+  const absolutePath = str(filePath);
+  if (!absolutePath || !fs.existsSync(absolutePath)) return "";
+  const h = crypto.createHash("sha256");
+  const fh = fs.openSync(absolutePath, "r");
+  try {
+    const buffer = Buffer.allocUnsafe(1024 * 1024);
+    for (;;) {
+      const read = fs.readSync(fh, buffer, 0, buffer.length, null);
+      if (!read) break;
+      h.update(read === buffer.length ? buffer : buffer.subarray(0, read));
+    }
+  } finally {
+    fs.closeSync(fh);
+  }
+  return h.digest("hex");
+}
+
+function readMediaIdentityFromFile(filePath = "", options = {}) {
+  const absolutePath = str(filePath);
+  if (!absolutePath || !fs.existsSync(absolutePath)) return null;
+  const includeFingerprint = options?.includeFingerprint === true;
+  let stats = null;
+  try {
+    stats = fs.statSync(absolutePath);
+  } catch {
+    stats = null;
+  }
+  const cacheKey = stats
+    ? `${absolutePath}::${Number(stats.mtimeMs || 0)}::${Number(stats.size || 0)}`
+    : absolutePath;
+  if (MEDIA_IDENTITY_PROBE_CACHE.has(cacheKey)) {
+    const cached = MEDIA_IDENTITY_PROBE_CACHE.get(cacheKey);
+    if (!includeFingerprint || str(cached?.contentFingerprint)) {
+      return cached;
+    }
+  }
+
+  const ffprobe = str(process.env.FFPROBE_BIN || "ffprobe") || "ffprobe";
+  let parsed = {};
+  try {
+    const { stdout } = spawnSyncCompat(ffprobe, [
+      "-v", "error",
+      "-show_entries", "format=duration:format_tags=title,artist,album,date,isrc",
+      "-of", "json",
+      absolutePath
+    ]);
+    parsed = JSON.parse(String(stdout || "{}"));
+  } catch {
+    parsed = {};
+  }
+
+  const format = parsed?.format && typeof parsed.format === "object" ? parsed.format : {};
+  const tags = format?.tags && typeof format.tags === "object" ? format.tags : {};
+  const title = str(tags?.title);
+  const artist = str(tags?.artist);
+  const album = str(tags?.album);
+  const date = str(tags?.date);
+  const isrc = str(tags?.isrc);
+  let durationMs = null;
+  try {
+    const rawDuration = Number(format?.duration);
+    durationMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.round(rawDuration * 1000) : null;
+  } catch {
+    durationMs = null;
+  }
+
+  const identity = {
+    title,
+    artist,
+    album,
+    date,
+    isrc,
+    durationMs,
+    identityKey: buildMediaIdentityKey({ isrc, title, artist }),
+    contentFingerprint: includeFingerprint ? computeFileContentFingerprint(absolutePath) : ""
+  };
+  MEDIA_IDENTITY_PROBE_CACHE.set(cacheKey, identity);
+  return identity;
+}
+
+function spawnSyncCompat(command = "", args = []) {
+  const childProcess = require("node:child_process");
+  const result = childProcess.spawnSync(String(command || "").trim(), arr(args).map((row) => String(row)), {
+    encoding: "utf8"
+  });
+  if (result?.error) throw result.error;
+  if (Number(result?.status) !== 0) {
+    throw new Error(String(result?.stderr || `${command} exited with code ${result?.status}`));
+  }
+  return {
+    stdout: String(result?.stdout || ""),
+    stderr: String(result?.stderr || "")
+  };
 }
 
 function normalizeMetadataPayload(payload = {}) {
@@ -2481,10 +2595,12 @@ function listSequenceFilesRecursive(rootFolder) {
   );
 }
 
-function listMediaFilesRecursive(rootFolder, extensions = []) {
+function listMediaFilesRecursive(rootFolder, extensions = [], options = {}) {
   const root = String(rootFolder || "").trim();
   if (!root) return [];
   if (!fs.existsSync(root)) return [];
+  const includeIdentity = options?.includeIdentity === true;
+  const includeFingerprint = options?.includeFingerprint === true;
 
   const allowed = new Set(
     (Array.isArray(extensions) ? extensions : [])
@@ -2516,12 +2632,35 @@ function listMediaFilesRecursive(rootFolder, extensions = []) {
       const ext = path.extname(entry.name).toLowerCase().replace(/^\./, "");
       if (allowed.size && !allowed.has(ext)) continue;
       const relativePath = path.relative(root, abs) || entry.name;
-      results.push({
+      const nextRow = {
         path: abs,
         relativePath,
         fileName: path.basename(abs),
         extension: ext
-      });
+      };
+      if (includeIdentity) {
+        const identity = readMediaIdentityFromFile(abs, { includeFingerprint });
+        nextRow.identity = identity ? {
+          title: str(identity?.title),
+          artist: str(identity?.artist),
+          album: str(identity?.album),
+          date: str(identity?.date),
+          isrc: str(identity?.isrc),
+          durationMs: Number.isFinite(Number(identity?.durationMs)) ? Number(identity.durationMs) : null,
+          identityKey: str(identity?.identityKey),
+          contentFingerprint: str(identity?.contentFingerprint)
+        } : {
+          title: "",
+          artist: "",
+          album: "",
+          date: "",
+          isrc: "",
+          durationMs: null,
+          identityKey: "",
+          contentFingerprint: ""
+        };
+      }
+      results.push(nextRow);
     }
   }
 
@@ -2688,7 +2827,10 @@ ipcMain.handle("xld:media:list", async (_event, payload = {}) => {
     const mediaFolder = String(payload?.mediaFolder || "").trim();
     if (!mediaFolder) return { ok: false, error: "Missing mediaFolder" };
     const extensions = Array.isArray(payload?.extensions) ? payload.extensions : [];
-    const mediaFiles = listMediaFilesRecursive(mediaFolder, extensions);
+    const mediaFiles = listMediaFilesRecursive(mediaFolder, extensions, {
+      includeIdentity: payload?.includeIdentity === true,
+      includeFingerprint: payload?.includeFingerprint === true
+    });
     return { ok: true, mediaFolder, mediaFiles };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };

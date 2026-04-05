@@ -2508,13 +2508,17 @@ function buildLyricsRecoveryGuidance(artifact = null) {
 async function maybePromptForMissingIdentityMetadata({
   audioPath = "",
   artifact = null,
-  promptAttempted = false
+  promptAttempted = false,
+  disableInteractivePrompts = false
 } = {}) {
   if (promptAttempted) return { prompted: false, retagged: false };
   const bridge = getDesktopMediaIdentityBridge();
   if (!bridge || !artifact || typeof artifact !== "object") return { prompted: false, retagged: false };
   const promptState = buildMissingIdentityMetadataPromptState(artifact);
   if (!promptState.missingTitle && !promptState.missingArtist) return { prompted: false, retagged: false };
+  if (disableInteractivePrompts) {
+    return { prompted: false, retagged: false, skipped: true, reason: "interactive_prompts_disabled" };
+  }
 
   const titleValue = promptState.missingTitle
     ? window.prompt(
@@ -6995,10 +6999,21 @@ function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated
   }
 }
 
+function adoptMediaDirectoryFromPath(mediaFilePath = "") {
+  const mediaPath = String(mediaFilePath || "").trim();
+  if (!mediaPath || !mediaPath.includes("/")) return false;
+  const nextMediaDir = mediaPath.slice(0, mediaPath.lastIndexOf("/")).trim();
+  if (!nextMediaDir) return false;
+  if (String(state.mediaPath || "").trim() === nextMediaDir) return false;
+  state.mediaPath = nextMediaDir;
+  return true;
+}
+
 function applySequenceMediaToAudioPath(sequenceData) {
   if (!sequenceData || typeof sequenceData !== "object") return;
   const mediaFile = String(sequenceData.mediaFile || "").trim();
   state.sequenceMediaFile = mediaFile || "";
+  if (mediaFile) adoptMediaDirectoryFromPath(mediaFile);
   if (!String(state.audioPathInput || "").trim() && mediaFile) {
     setAudioPathWithAgentPolicy(mediaFile, "sequence media adopted as initial analysis track");
   }
@@ -7009,6 +7024,10 @@ async function syncAudioPathFromMediaStatus() {
     const mediaBody = await getMediaStatus(state.endpoint);
     const mediaFile = String(mediaBody?.data?.mediaFile || "").trim();
     state.sequenceMediaFile = mediaFile || "";
+    const mediaDirChanged = mediaFile ? adoptMediaDirectoryFromPath(mediaFile) : false;
+    if (mediaDirChanged) {
+      await onRefreshMediaCatalog({ silent: true });
+    }
     if (!String(state.audioPathInput || "").trim() && mediaFile) {
       setAudioPathWithAgentPolicy(mediaFile, "media status adopted as initial analysis track");
     }
@@ -9699,7 +9718,9 @@ async function onRefreshMediaCatalog(options = {}) {
   try {
     const res = await bridge.listMediaFilesInFolder({
       mediaFolder,
-      extensions: Array.from(SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS)
+      extensions: Array.from(SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS),
+      includeIdentity: true,
+      includeFingerprint: true
     });
     if (!res?.ok) throw new Error(res?.error || "Unable to list media files.");
     const mediaFiles = Array.isArray(res.mediaFiles) ? res.mediaFiles : [];
@@ -9707,14 +9728,19 @@ async function onRefreshMediaCatalog(options = {}) {
 
     const currentAudioPath = String(state.audioPathInput || "").trim();
     const sequenceMediaPath = String(state.sequenceMediaFile || "").trim();
-    const preferred =
-      mediaFiles.find((row) => String(row?.path || "") === currentAudioPath) ||
-      mediaFiles.find((row) => String(row?.path || "") === sequenceMediaPath) ||
-      null;
+    const preferred = resolvePreferredMediaCatalogEntry(mediaFiles, {
+      currentAudioPath,
+      sequenceMediaPath
+    });
 
-    if (preferred) {
-      if (String(preferred.path || "").trim() !== currentAudioPath) {
-        setAudioPathWithAgentPolicy(String(preferred.path || "").trim(), "media catalog preferred track");
+    if (preferred?.row) {
+      if (String(preferred.row.path || "").trim() !== currentAudioPath) {
+        setAudioPathWithAgentPolicy(
+          String(preferred.row.path || "").trim(),
+          preferred.basis === "exact_path"
+            ? "media catalog preferred track"
+            : `media catalog identity match (${preferred.basis})`
+        );
       }
     } else if (currentAudioPath) {
       // Keep current external selection if it is outside the media library.
@@ -11574,6 +11600,106 @@ function buildTrackIdentityKey(trackIdentity = null, trackTitleHint = "") {
   return `title:${title}|artist:${artist || "unknown"}`;
 }
 
+function buildResolvedTrackIdentityForMediaMatching() {
+  const handoff = getValidHandoff("analysis_handoff_v1");
+  const artifactIdentity = state.audioAnalysis?.artifact?.identity && typeof state.audioAnalysis.artifact.identity === "object"
+    ? state.audioAnalysis.artifact.identity
+    : null;
+  const handoffIdentity = handoff?.trackIdentity && typeof handoff.trackIdentity === "object"
+    ? handoff.trackIdentity
+    : null;
+  const identity = artifactIdentity || handoffIdentity || null;
+  if (!identity) return null;
+  const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
+    ? identity.sourceMetadata
+    : {};
+  const title = String(identity?.title || sourceMetadata?.embeddedTitle || "").trim();
+  const artist = String(identity?.artist || sourceMetadata?.embeddedArtist || "").trim();
+  const isrc = String(identity?.isrc || "").trim();
+  const contentFingerprint = String(identity?.contentFingerprint || "").trim().toLowerCase();
+  const durationMs = Number(state.audioAnalysis?.artifact?.audio?.durationMs || handoff?.audio?.durationMs || 0) || 0;
+  if (!title && !artist && !isrc && !contentFingerprint) return null;
+  return {
+    title,
+    artist,
+    isrc,
+    contentFingerprint,
+    durationMs: durationMs > 0 ? durationMs : null,
+    identityKey: buildTrackIdentityKey({ title, artist, isrc }, title)
+  };
+}
+
+function scoreMediaCatalogIdentityMatch(mediaRow = {}, targetIdentity = null) {
+  const target = targetIdentity && typeof targetIdentity === "object" ? targetIdentity : null;
+  if (!target) return null;
+  const identity = mediaRow?.identity && typeof mediaRow.identity === "object" ? mediaRow.identity : {};
+  const targetFingerprint = String(target?.contentFingerprint || "").trim().toLowerCase();
+  const rowFingerprint = String(identity?.contentFingerprint || "").trim().toLowerCase();
+  const targetIsrc = String(target?.isrc || "").trim().toLowerCase();
+  const rowIsrc = String(identity?.isrc || "").trim().toLowerCase();
+  const targetTitle = normalizeTrackIdentityToken(String(target?.title || "").trim());
+  const rowTitle = normalizeTrackIdentityToken(String(identity?.title || "").trim());
+  const targetArtist = normalizeTrackIdentityToken(String(target?.artist || "").trim());
+  const rowArtist = normalizeTrackIdentityToken(String(identity?.artist || "").trim());
+  const rowDurationMs = Number(identity?.durationMs || 0);
+  const targetDurationMs = Number(target?.durationMs || 0);
+
+  let score = 0;
+  let matchBasis = "";
+
+  if (targetFingerprint && rowFingerprint && targetFingerprint === rowFingerprint) {
+    score = 120;
+    matchBasis = "content_fingerprint";
+  } else if (targetIsrc && rowIsrc && targetIsrc === rowIsrc) {
+    score = 100;
+    matchBasis = "isrc";
+  } else if (targetTitle && rowTitle && targetTitle === rowTitle && targetArtist && rowArtist === targetArtist) {
+    score = 90;
+    matchBasis = "title_artist";
+  } else {
+    return null;
+  }
+
+  if (targetDurationMs > 0 && rowDurationMs > 0) {
+    const delta = Math.abs(targetDurationMs - rowDurationMs);
+    if (delta <= 2000) score += 10;
+    else if (delta <= 10000) score += 5;
+  }
+
+  return { matched: true, score, matchBasis };
+}
+
+function resolvePreferredMediaCatalogEntry(mediaFiles = [], { currentAudioPath = "", sequenceMediaPath = "" } = {}) {
+  const rows = Array.isArray(mediaFiles) ? mediaFiles : [];
+  const currentPath = String(currentAudioPath || "").trim();
+  const sequencePath = String(sequenceMediaPath || "").trim();
+  const exact =
+    rows.find((row) => String(row?.path || "").trim() === currentPath) ||
+    rows.find((row) => String(row?.path || "").trim() === sequencePath) ||
+    null;
+  if (exact) return { row: exact, basis: "exact_path" };
+
+  const targetIdentity = buildResolvedTrackIdentityForMediaMatching();
+  if (!targetIdentity) return { row: null, basis: "" };
+
+  const scored = rows
+    .map((row) => {
+      const match = scoreMediaCatalogIdentityMatch(row, targetIdentity);
+      if (!match) return null;
+      return { row, ...match };
+    })
+    .filter(Boolean)
+    .sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
+
+  if (!scored.length) return { row: null, basis: "" };
+  const best = scored[0];
+  const second = scored[1];
+  if (second && Number(second.score || 0) === Number(best.score || 0)) {
+    return { row: null, basis: "" };
+  }
+  return { row: best.row, basis: `identity:${best.matchBasis}` };
+}
+
 function buildGlobalXdTrackPolicyKey(trackName = "") {
   const name = String(trackName || "").trim().toLowerCase();
   if (!name) return "";
@@ -11890,7 +12016,11 @@ function shouldEscalateAudioAnalysisProfile(report = {}) {
   );
 }
 
-async function runAudioAnalysisPipeline({ analysisProfile = null, metadataPromptAttempted = false } = {}) {
+async function runAudioAnalysisPipeline({
+  analysisProfile = null,
+  metadataPromptAttempted = false,
+  disableInteractivePrompts = false
+} = {}) {
   const resolvedProvider = "librosa";
   const baseArgs = {
     audioPath: String(state.audioPathInput || "").trim(),
@@ -11939,7 +12069,8 @@ async function runAudioAnalysisPipeline({ analysisProfile = null, metadataPrompt
       const metadataPrompt = await maybePromptForMissingIdentityMetadata({
         audioPath: String(state.audioPathInput || "").trim(),
         artifact: fastArtifact,
-        promptAttempted: metadataPromptAttempted
+        promptAttempted: metadataPromptAttempted,
+        disableInteractivePrompts
       });
       if (metadataPrompt?.retagged) {
         setAudioAnalysisProgress(state.audioAnalysis, {
@@ -11949,7 +12080,8 @@ async function runAudioAnalysisPipeline({ analysisProfile = null, metadataPrompt
         render();
         return runAudioAnalysisPipeline({
           analysisProfile,
-          metadataPromptAttempted: true
+          metadataPromptAttempted: true,
+          disableInteractivePrompts
         });
       }
       setAudioAnalysisProgress(state.audioAnalysis, {
@@ -12012,7 +12144,12 @@ function buildAnalysisHandoffFromPipelineResult(result = {}) {
   return buildAnalysisHandoffFromArtifact(artifact, state.creative?.brief || null);
 }
 
-async function onAnalyzeAudio({ userPrompt = "", analysisProfile = null, forceFresh = false } = {}) {
+async function onAnalyzeAudio({
+  userPrompt = "",
+  analysisProfile = null,
+  forceFresh = false,
+  disableInteractivePrompts = false
+} = {}) {
   const audioPath = String(state.audioPathInput || "").trim();
   state.ui.lastAnalysisPrompt = String(userPrompt || "").trim();
   if (!audioPath) {
@@ -12108,7 +12245,10 @@ async function onAnalyzeAudio({ userPrompt = "", analysisProfile = null, forceFr
     });
     const flow = await executeAudioAnalystFlow({
       input: analysisRequest,
-      runPipeline: async ({ input }) => runAudioAnalysisPipeline({ analysisProfile: input?.analysisProfile || requestedAnalysisProfile }),
+      runPipeline: async ({ input }) => runAudioAnalysisPipeline({
+        analysisProfile: input?.analysisProfile || requestedAnalysisProfile,
+        disableInteractivePrompts
+      }),
       persistArtifact: async ({ artifact }) => {
         const artifactBridge = getDesktopAnalysisArtifactBridge();
         if (artifactBridge && state.projectFilePath && audioPath) {
