@@ -1,14 +1,11 @@
 # Specs Archive
 
-This folder stores historical spec artifacts that are no longer part of the active source-of-truth set.
+This directory is reserved for historical planning artifacts when they are worth keeping in-repo.
 
-Examples:
-- prior work-package specs/task breakdowns (`wp7`/`wp8`/`wp9`)
-- older wireframe iterations and implementation checklists
-- one-time regression/audit snapshots
-- superseded planning/backlog drafts
+Current state:
+- older archival planning files were pruned during the 2026-04-05 repo cleanup pass
+- use git history if earlier spec iterations need to be recovered
 
-Policy:
-- Do not delete archive files unless they are truly redundant and have no traceability value.
-- Do not treat archive files as current implementation contract.
-- Promote an archived file back to active only via explicit decision and README update.
+Archive policy:
+- only keep historical specs here when they still add concrete value beyond git history
+- do not use this directory as a dumping ground for stale planning files
