@@ -664,7 +664,7 @@ async function pruneInvalidPersistedProjects() {
   const bridge = getDesktopFileStatBridge();
   if (!bridge) return false;
   let changed = false;
-  const store = loadProjectsStore();
+  const store = projectSnapshotRuntime.loadProjectsStore();
   for (const [key, snapshot] of Object.entries(store)) {
     const projectFilePath = String(snapshot?.projectFilePath || "").trim();
     if (!projectFilePath) {
@@ -682,7 +682,7 @@ async function pruneInvalidPersistedProjects() {
       // Non-fatal. Keep the entry if the file system probe itself fails.
     }
   }
-  if (changed) persistProjectsStore(store);
+  if (changed) projectSnapshotRuntime.persistProjectsStore(store);
   return changed;
 }
 
@@ -908,22 +908,6 @@ let projectSnapshotRuntime = null;
 
 const agentRuntime = emptyAgentRuntimeState();
 
-
-function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
-  return projectSnapshotRuntime.getProjectKey(projectName, showFolder);
-}
-
-function parseProjectKey(key) {
-  return projectSnapshotRuntime.parseProjectKey(key);
-}
-
-function loadProjectsStore() {
-  return projectSnapshotRuntime.loadProjectsStore();
-}
-
-function persistProjectsStore(store) {
-  return projectSnapshotRuntime.persistProjectsStore(store);
-}
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -3633,7 +3617,7 @@ function buildDiagnosticsBundle() {
 
 function currentApplyContext() {
   return {
-    projectKey: getProjectKey(),
+    projectKey: projectSnapshotRuntime.getProjectKey(),
     sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
     endpoint: state.endpoint || ""
   };
@@ -7316,15 +7300,15 @@ projectLifecycleRuntime = createProjectLifecycleRuntime({
   onRefreshSequenceCatalog: (...args) => projectCatalogRuntime.refreshSequenceCatalog(...args),
   onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
   applyProjectSnapshot,
-  parseProjectKey,
-  loadProjectsStore,
-  persistProjectsStore,
+  parseProjectKey: (...args) => projectSnapshotRuntime.parseProjectKey(...args),
+  loadProjectsStore: (...args) => projectSnapshotRuntime.loadProjectsStore(...args),
+  persistProjectsStore: (...args) => projectSnapshotRuntime.persistProjectsStore(...args),
   extractProjectSnapshot,
   saveProjectToCurrentFile,
   resetSessionDraftState,
   resetCreativeState,
   buildTeamChatIdentities,
-  getProjectKey,
+  getProjectKey: (...args) => projectSnapshotRuntime.getProjectKey(...args),
   confirm: (message) => window.confirm(message),
   reload: () => window.location.reload()
 });
