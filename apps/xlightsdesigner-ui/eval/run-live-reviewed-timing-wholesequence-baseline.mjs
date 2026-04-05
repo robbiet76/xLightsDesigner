@@ -75,24 +75,38 @@ async function runAutomation(repoRoot, channel, resultPath, command, args = []) 
   return readJson(resultPath);
 }
 
-function extractPracticalValidation(resultRow = {}) {
-  const direct = resultRow?.practicalValidation;
-  if (direct && typeof direct === "object" && str(direct?.artifactType) === "practical_sequence_validation_v1") return direct;
-  const validation = resultRow?.validation;
-  if (validation && typeof validation === "object") {
-    if (str(validation?.artifactType) === "practical_sequence_validation_v1") return validation;
-    if (validation?.practicalValidation && typeof validation.practicalValidation === "object" && str(validation.practicalValidation?.artifactType) === "practical_sequence_validation_v1") {
-      return validation.practicalValidation;
-    }
+function writePayload(filePath, payload = {}) {
+  fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+function restoreValidationSequenceFromBaseline({ sequencePath = "", baselineSequencePath = "" } = {}) {
+  const targetPath = str(sequencePath);
+  const baselinePath = str(baselineSequencePath);
+  if (!targetPath || !baselinePath) return;
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.copyFileSync(baselinePath, targetPath);
+  const ext = path.extname(targetPath);
+  const name = path.basename(targetPath, ext || undefined);
+  const backupSibling = path.join(path.dirname(targetPath), `${name}.xbkp`);
+  try {
+    fs.rmSync(backupSibling, { force: true });
+  } catch {
+    // best effort
   }
-  return null;
+}
+
+function extractPracticalValidation(snapshot = {}, applyResponse = {}) {
+  return snapshot?.result?.latestPracticalValidation
+    || applyResponse?.result?.latestPracticalValidation
+    || applyResponse?.result?.applyOutcome?.applyResult?.practicalValidation
+    || null;
 }
 
 function summarizeTimingBaseline(results = []) {
   const rows = arr(results)
     .map((row) => ({
       name: str(row?.name),
-      practicalValidation: extractPracticalValidation(row)
+      practicalValidation: row?.practicalValidation && typeof row.practicalValidation === "object" ? row.practicalValidation : null
     }))
     .filter((row) => row.practicalValidation);
   const timingRows = rows.map((row) => ({
@@ -132,6 +146,7 @@ async function main() {
   const outDir = path.resolve(options.outDir);
   const baselinesDir = path.join(outDir, "baselines");
   fs.mkdirSync(baselinesDir, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true });
 
   const runtimeSuite = {
     ...suite,
@@ -147,22 +162,172 @@ async function main() {
       };
     })
   };
-
-  fs.mkdirSync(outDir, { recursive: true });
   const runtimeSuitePath = path.join(outDir, "live-reviewed-timing-wholesequence-runtime-suite.json");
   fs.writeFileSync(runtimeSuitePath, `${JSON.stringify(runtimeSuite, null, 2)}\n`, "utf8");
 
-  const automationResultPath = path.join(outDir, "live-reviewed-timing-wholesequence-automation-result.json");
-  const automationPayload = await runAutomation(
-    repoRoot,
-    options.channel,
-    automationResultPath,
-    "run-live-wholesequence-practical-validation-suite",
-    ["--payload-file", runtimeSuitePath]
-  );
-  const result = automationPayload?.result && typeof automationPayload.result === "object" ? automationPayload.result : {};
-  const timingSummary = summarizeTimingBaseline(arr(result?.results));
+  const results = [];
+  try {
+    for (let index = 0; index < runtimeSuite.scenarios.length; index += 1) {
+      const scenario = runtimeSuite.scenarios[index];
+      const prefix = `${String(index + 1).padStart(2, "0")}-${str(scenario?.name) || `scenario-${index + 1}`}`;
+      const scenarioStartedAt = Date.now();
+      const timings = {};
 
+      await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-reset.json`), "reset-automation-state");
+      restoreValidationSequenceFromBaseline({
+        sequencePath: str(scenario?.sequencePath),
+        baselineSequencePath: str(scenario?.baselineSequencePath)
+      });
+
+      if (str(scenario?.showFolder || runtimeSuite?.showFolder)) {
+        const setShowPayloadPath = path.join(outDir, `${prefix}-show-folder-payload.json`);
+        writePayload(setShowPayloadPath, {
+          showFolder: str(scenario?.showFolder || runtimeSuite?.showFolder)
+        });
+        const started = Date.now();
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-show-folder.json`), "set-show-folder", ["--payload-file", setShowPayloadPath]);
+        timings.setShowFolderMs = Date.now() - started;
+      }
+
+      {
+        const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
+        writePayload(openPayloadPath, {
+          sequencePath: str(scenario?.sequencePath),
+          skipPostOpenRefresh: true
+        });
+        const started = Date.now();
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
+        timings.openSequenceMs = Date.now() - started;
+      }
+
+      {
+        const started = Date.now();
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
+        timings.refreshMs = Date.now() - started;
+      }
+
+      if (str(scenario?.audioPathOverride)) {
+        const audioPayloadPath = path.join(outDir, `${prefix}-audio-payload.json`);
+        writePayload(audioPayloadPath, {
+          audioPath: str(scenario?.audioPathOverride)
+        });
+        const started = Date.now();
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-set-audio.json`), "set-audio-path", ["--payload-file", audioPayloadPath]);
+        timings.setAudioMs = Date.now() - started;
+      }
+
+      if (str(scenario?.analyzePrompt)) {
+        const analyzePayloadPath = path.join(outDir, `${prefix}-analyze-payload.json`);
+        const analyzePayload = {
+          prompt: str(scenario?.analyzePrompt)
+        };
+        if (scenario?.analysisProfile && typeof scenario.analysisProfile === "object") {
+          analyzePayload.analysisProfile = scenario.analysisProfile;
+        }
+        if (scenario?.forceFreshAnalysis === true) {
+          analyzePayload.forceFresh = true;
+        }
+        writePayload(analyzePayloadPath, analyzePayload);
+        const started = Date.now();
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", ["--payload-file", analyzePayloadPath]);
+        timings.analyzeMs = Date.now() - started;
+      }
+
+      if (scenario?.seedTimingTracksFromAnalysis === true) {
+        const started = Date.now();
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-seed-timing.json`), "seed-timing-tracks-from-analysis");
+        timings.seedTimingTracksMs = Date.now() - started;
+      }
+
+      let generateResponse = null;
+      {
+        const generatePayloadPath = path.join(outDir, `${prefix}-generate-payload.json`);
+        writePayload(generatePayloadPath, {
+          prompt: str(scenario?.prompt || scenario?.strongPrompt),
+          requestedRole: str(scenario?.requestedRole || runtimeSuite?.requestedRole || "sequence_agent"),
+          forceFresh: true,
+          clearRevisionTarget: true,
+          selectedSections: arr(scenario?.sections),
+          selectedTargetIds: arr(scenario?.targets),
+          selectedTagNames: arr(scenario?.tagNames)
+        });
+        const started = Date.now();
+        generateResponse = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-generate.json`), "generate-proposal", ["--payload-file", generatePayloadPath]);
+        timings.generateMs = Date.now() - started;
+      }
+
+      let applyResponse = null;
+      if (generateResponse?.result?.planHandoff || generateResponse?.result?.hasDraftProposal) {
+        const started = Date.now();
+        applyResponse = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-apply.json`), "apply-current-proposal");
+        timings.applyMs = Date.now() - started;
+      } else {
+        timings.applyMs = 0;
+      }
+
+      let wholeSequenceApplyValidation = null;
+      {
+        const validationPayloadPath = path.join(outDir, `${prefix}-whole-sequence-validate-payload.json`);
+        writePayload(validationPayloadPath, {
+          sequenceName: scenario?.sequenceName,
+          minConceptCount: Number(scenario?.minConceptCount || 8),
+          minPlacementCount: Number(scenario?.minPlacementCount || 200)
+        });
+        const started = Date.now();
+        wholeSequenceApplyValidation = await runAutomation(
+          repoRoot,
+          options.channel,
+          path.join(outDir, `${prefix}-whole-sequence-validate.json`),
+          "run-whole-sequence-apply-validation",
+          ["--payload-file", validationPayloadPath]
+        );
+        timings.validationMs = Date.now() - started;
+      }
+
+      const sequencerSnapshot = await runAutomation(
+        repoRoot,
+        options.channel,
+        path.join(outDir, `${prefix}-sequencer-snapshot.json`),
+        "get-sequencer-validation-snapshot"
+      );
+
+      const practicalValidation = extractPracticalValidation(sequencerSnapshot, applyResponse);
+      const wholeSequenceValidation = wholeSequenceApplyValidation?.result?.validation || null;
+      const ok = practicalValidation?.overallOk === true && wholeSequenceValidation?.ok === true;
+
+      results.push({
+        name: str(scenario?.name),
+        sequencePath: str(scenario?.sequencePath),
+        timings: {
+          totalMs: Date.now() - scenarioStartedAt,
+          setShowFolderMs: Number(timings.setShowFolderMs || 0),
+          openSequenceMs: Number(timings.openSequenceMs || 0),
+          refreshMs: Number(timings.refreshMs || 0),
+          setAudioMs: Number(timings.setAudioMs || 0),
+          analyzeMs: Number(timings.analyzeMs || 0),
+          seedTimingTracksMs: Number(timings.seedTimingTracksMs || 0),
+          generateMs: Number(timings.generateMs || 0),
+          applyMs: Number(timings.applyMs || 0),
+          validationMs: Number(timings.validationMs || 0)
+        },
+        ok,
+        practicalValidation,
+        wholeSequenceApplyValidation: wholeSequenceApplyValidation?.result || null,
+        generateResponse: generateResponse?.result || null,
+        applyResponse: applyResponse?.result || null,
+        sequencerSnapshot: sequencerSnapshot?.result || null
+      });
+    }
+  } finally {
+    for (const scenario of runtimeSuite.scenarios) {
+      restoreValidationSequenceFromBaseline({
+        sequencePath: str(scenario?.sequencePath),
+        baselineSequencePath: str(scenario?.baselineSequencePath)
+      });
+    }
+  }
+
+  const failed = results.filter((row) => row.ok !== true);
   const report = {
     contract: "live_reviewed_timing_wholesequence_baseline_run_v1",
     version: "1.0",
@@ -170,19 +335,21 @@ async function main() {
     suitePath,
     runtimeSuitePath,
     outDir,
-    ok: automationPayload?.ok === true && result?.ok === true,
-    scenarioCount: Number(result?.scenarioCount || scenarios.length),
-    failedScenarioCount: Number(result?.failedScenarioCount || 0),
-    failedScenarioNames: arr(result?.failedScenarioNames).map((row) => str(row)).filter(Boolean),
-    summary: str(result?.summary),
-    timingSummary,
-    result
+    ok: failed.length === 0,
+    scenarioCount: results.length,
+    failedScenarioCount: failed.length,
+    failedScenarioNames: failed.map((row) => row.name),
+    summary: failed.length === 0
+      ? `Live reviewed timing whole-sequence baseline passed ${results.length}/${results.length} scenarios.`
+      : `Live reviewed timing whole-sequence baseline passed ${results.length - failed.length}/${results.length} scenarios.`,
+    timingSummary: summarizeTimingBaseline(results),
+    results
   };
 
   const reportPath = path.join(outDir, "live-reviewed-timing-wholesequence-baseline-report.json");
   fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   process.stdout.write(`${JSON.stringify(report, null, options.pretty ? 2 : 0)}\n`);
-  if (report.ok !== true) process.exitCode = 1;
+  if (!report.ok) process.exitCode = 1;
 }
 
 await main();

@@ -117,14 +117,19 @@ if (command === "dispatch-prompt") {
   action = "refreshFromXLights";
 } else if (command === "analyze-audio") {
   action = "analyzeAudio";
-  const deep = rest.includes("--deep");
-  const forceFresh = rest.includes("--force-fresh");
-  const filtered = rest.filter((token) => token !== "--deep" && token !== "--force-fresh");
-  payload = {
-    prompt: filtered.join(" ").trim(),
-    ...(deep ? { analysisProfile: { mode: "deep", allowEscalation: false } } : {}),
-    ...(forceFresh ? { forceFresh: true } : {})
-  };
+  const first = String(rest[0] || "").trim();
+  if (first === "--payload-file" || first.startsWith("@") || first.startsWith("{")) {
+    payload = readJsonPayload(rest);
+  } else {
+    const deep = rest.includes("--deep");
+    const forceFresh = rest.includes("--force-fresh");
+    const filtered = rest.filter((token) => token !== "--deep" && token !== "--force-fresh");
+    payload = {
+      prompt: filtered.join(" ").trim(),
+      ...(deep ? { analysisProfile: { mode: "deep", allowEscalation: false } } : {}),
+      ...(forceFresh ? { forceFresh: true } : {})
+    };
+  }
 } else if (command === "seed-timing-tracks-from-analysis") {
   action = "seedTimingTracksFromAnalysis";
 } else if (command === "get-agent-runtime-snapshot") {
