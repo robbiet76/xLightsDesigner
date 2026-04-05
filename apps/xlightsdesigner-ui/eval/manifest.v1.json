@@ -74,7 +74,7 @@
       "invocation": "scripts/designer-training/run-overnight-training.sh"
     },
     {
-      "path": "live-multisection-practical-sequence-validation-suite-v1.json",
+      "path": "archive/historical/live-multisection-practical-sequence-validation-suite-v1.json",
       "status": "historical_baseline",
       "owner": "sequence_agent",
       "purpose": "Earlier multisection practical suite retained for historical comparison.",
@@ -88,14 +88,14 @@
       "invocation": "run-live-practical-benchmark.mjs"
     },
     {
-      "path": "live-practical-benchmark-baseline.v1.json",
+      "path": "archive/historical/live-practical-benchmark-baseline.v1.json",
       "status": "historical_baseline",
       "owner": "sequence_agent",
       "purpose": "Frozen Stage 1 practical benchmark baseline contract.",
       "invocation": "historical comparison"
     },
     {
-      "path": "live-practical-benchmark-baseline.v2.json",
+      "path": "archive/historical/live-practical-benchmark-baseline.v2.json",
       "status": "historical_baseline",
       "owner": "sequence_agent",
       "purpose": "Frozen revision-inclusive practical benchmark baseline contract.",
@@ -137,7 +137,7 @@
       "invocation": "run-live-practical-benchmark.mjs"
     },
     {
-      "path": "live-section-practical-sequence-validation-suite-v1.json",
+      "path": "archive/historical/live-section-practical-sequence-validation-suite-v1.json",
       "status": "historical_baseline",
       "owner": "sequence_agent",
       "purpose": "Earlier section live suite retained for historical comparison.",
@@ -151,7 +151,7 @@
       "invocation": "run-live-practical-benchmark.mjs"
     },
     {
-      "path": "live-wholesequence-practical-validation-suite-v1.json",
+      "path": "archive/historical/live-wholesequence-practical-validation-suite-v1.json",
       "status": "historical_baseline",
       "owner": "sequence_agent",
       "purpose": "Original promoted whole-sequence practical validation suite retained for comparison.",

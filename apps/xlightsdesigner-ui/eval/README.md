@@ -21,15 +21,14 @@ Policy:
 - archived ad hoc tools live under `eval/archive/` and are outside the promoted active surface
 - prefer updating promoted runners over creating new adjacent entry points
 - keep historical baselines only when they serve comparison or reproducibility
+- retained historical suites and baselines live under `eval/archive/historical/`
 
 Current contents:
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
 - `section-practical-sequence-validation-suite-v1.json`: deterministic section-scoped sequencer validation scenarios tied to the Stage 1 trained baseline
-- `live-section-practical-sequence-validation-suite-v1.json`: live apply section-scoped sequencer validation scenarios that reuse the practical validation artifact
 - `live-section-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live section benchmark
 - `live-section-practical-sequence-validation-canary-v1.json`: stable single-scenario live canary used to gate the combined benchmark runner
 - `live-multisection-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live multi-section benchmark
-- `live-wholesequence-practical-validation-suite-v1.json`: original promoted Phase 2 clean-baseline whole-sequence benchmark
 - `live-wholesequence-practical-validation-suite-v2.json`: promoted whole-sequence role-identity and progression benchmark
 - `live-revision-practical-sequence-validation-suite-v1.json`: first live revision-focused Phase 2 suite for bounded in-place concept edits
 - `live-design-canary-suite-v1.json`: fastest one-prompt live canary scenarios for frequent iteration loops
@@ -43,8 +42,6 @@ Current contents:
 - `run-live-reviewed-timing-control-suite.mjs`: live runner that opens each real sequence, refreshes/analyzes, and captures current timing-review state snapshots
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`: live runner that restores real control sequences from captured baselines, seeds reviewed timing tracks, runs whole-sequence sequencing validation, and records timing-fidelity baseline output
 - `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
-- `live-practical-benchmark-baseline.v1.json`: frozen Stage 1 practical benchmark baseline contract
-- `live-practical-benchmark-baseline.v2.json`: frozen revision-inclusive practical benchmark baseline contract
 - `live-practical-benchmark-baseline.v3.json`: frozen repeated-role whole-sequence practical benchmark baseline contract
 - `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
 - `synthetic-metadata-fixture-v1.json`: synthetic metadata fixture used by metadata-aware eval cases
