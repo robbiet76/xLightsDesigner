@@ -9728,6 +9728,8 @@ async function onRefreshMediaCatalog(options = {}) {
 
     const currentAudioPath = String(state.audioPathInput || "").trim();
     const sequenceMediaPath = String(state.sequenceMediaFile || "").trim();
+    const currentAudioExists = currentAudioPath ? mediaFiles.some((row) => String(row?.path || "").trim() === currentAudioPath) : false;
+    const sequenceMediaExists = sequenceMediaPath ? mediaFiles.some((row) => String(row?.path || "").trim() === sequenceMediaPath) : false;
     const preferred = resolvePreferredMediaCatalogEntry(mediaFiles, {
       currentAudioPath,
       sequenceMediaPath
@@ -9742,8 +9744,16 @@ async function onRefreshMediaCatalog(options = {}) {
             : `media catalog identity match (${preferred.basis})`
         );
       }
-    } else if (currentAudioPath) {
-      // Keep current external selection if it is outside the media library.
+    } else if (currentAudioPath && currentAudioExists) {
+      // Keep current external selection if it is valid and outside the media-library match set.
+    } else if ((currentAudioPath && !currentAudioExists) || (sequenceMediaPath && !sequenceMediaExists)) {
+      setAudioPathWithAgentPolicy("", "stale media path cleared because no exact identity match was available");
+      if (!silent) {
+        setStatus(
+          "warning",
+          "Sequence media path is stale and no verified media identity match was available. Select the actual media file to continue."
+        );
+      }
     } else if (mediaFiles.length === 1) {
       setAudioPathWithAgentPolicy(String(mediaFiles[0].path || "").trim(), "single media file selected");
     }
