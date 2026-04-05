@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "live_reviewed_timing_wholesequence_baseline_v1",
   "summary": "Whole-sequence reviewed-timing sequencing baseline across the 4 real control tracks.",
+  "showFolder": "/Users/robterry/Documents/Lights/Current/Christmas/Show",
   "scenarios": [
     {
       "name": "candy_cane_lane_reviewed_timing_baseline",

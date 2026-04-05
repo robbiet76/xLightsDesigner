@@ -1208,6 +1208,7 @@ export function createLiveValidationSuites({
     const suiteBaselineSequencePath = str(expected?.baselineSequencePath);
     const results = [];
     let activeSequencePath = "";
+    let activeShowFolder = "";
     const refreshedSequences = new Set();
     const analyzedContexts = new Set();
     const suiteRestorePairs = new Map();
@@ -1217,6 +1218,7 @@ export function createLiveValidationSuites({
       const scenarioStartedAtMs = nowMs();
       const name = str(scenario?.name || `scenario-${results.length + 1}`);
       const sequencePath = str(scenario?.sequencePath);
+      const showFolder = str(scenario?.showFolder || expected?.showFolder);
       const baselineSequencePath = str(scenario?.baselineSequencePath || suiteBaselineSequencePath);
       const timings = {};
       logStartup(`automation:live-wholesequence-suite:scenario:start name=${name} index=${results.length + 1}/${scenarios.length} sequence=${sequencePath || "__current__"}`);
@@ -1227,6 +1229,17 @@ export function createLiveValidationSuites({
         timings.restoreBaselineMs = nowMs() - restoreStartedAtMs;
         activeSequencePath = "";
         refreshedSequences.delete(sequencePath);
+      }
+      if (showFolder && showFolder !== activeShowFolder) {
+        const setShowFolderStartedAtMs = nowMs();
+        await invokeRendererAutomation("setShowFolder", {
+          showFolder
+        });
+        timings.setShowFolderMs = nowMs() - setShowFolderStartedAtMs;
+        activeShowFolder = showFolder;
+        if (sequencePath) {
+          refreshedSequences.delete(sequencePath);
+        }
       }
       if (sequencePath && sequencePath !== activeSequencePath) {
         const openStartedAtMs = nowMs();
@@ -1352,6 +1365,7 @@ export function createLiveValidationSuites({
         timings: {
           totalMs: nowMs() - scenarioStartedAtMs,
           restoreBaselineMs: Number(timings.restoreBaselineMs || 0),
+          setShowFolderMs: Number(timings.setShowFolderMs || 0),
           openSequenceMs: Number(timings.openSequenceMs || 0),
           refreshMs: Number(timings.refreshMs || 0),
           setAudioMs: Number(timings.setAudioMs || 0),

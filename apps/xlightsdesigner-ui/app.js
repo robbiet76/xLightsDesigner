@@ -12591,6 +12591,7 @@ const automationRuntime = createAutomationRuntime({
   onSeedTimingTracksFromAnalysis,
   onOpenExistingSequence,
   setAudioPath: setAudioPathWithAgentPolicy,
+  onRefreshSequenceCatalog,
   adoptMediaDirectoryFromPath,
   onRefreshMediaCatalog,
   clearDesignRevisionTarget,

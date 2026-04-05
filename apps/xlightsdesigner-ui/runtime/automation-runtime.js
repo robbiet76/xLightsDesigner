@@ -13,6 +13,7 @@ export function createAutomationRuntime(deps = {}) {
     onSeedTimingTracksFromAnalysis,
     onOpenExistingSequence,
     setAudioPath,
+    onRefreshSequenceCatalog,
     adoptMediaDirectoryFromPath,
     onRefreshMediaCatalog,
     clearDesignRevisionTarget,
@@ -642,6 +643,26 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  async function setAutomationShowFolder(payload = {}) {
+    const targetPath = String(payload?.showFolder || "").trim();
+    if (!targetPath) {
+      return { ok: false, error: "showFolder is required." };
+    }
+    state.showFolder = targetPath;
+    if (typeof onRefreshSequenceCatalog === "function") {
+      await onRefreshSequenceCatalog({ silent: true });
+    }
+    persist();
+    render();
+    return {
+      ok: true,
+      status: state.status || null,
+      activeSequence: state.activeSequence || "",
+      showFolder: state.showFolder || "",
+      sequencePathInput: state.sequencePathInput || ""
+    };
+  }
+
   async function seedAutomationTimingTracksFromAnalysis(payload = {}) {
     if (typeof onSeedTimingTracksFromAnalysis !== "function") {
       return { ok: false, error: "timing track seeding unavailable." };
@@ -846,6 +867,7 @@ export function createAutomationRuntime(deps = {}) {
       generateProposal: generateAutomationProposal,
       resetAutomationState,
       openSequence: openAutomationSequence,
+      setShowFolder: setAutomationShowFolder,
       setAudioPath: setAutomationAudioPath,
       refreshFromXLights: refreshAutomationFromXLights,
       analyzeAudio: analyzeAutomationAudio,
@@ -875,6 +897,7 @@ export function createAutomationRuntime(deps = {}) {
     seedAutomationTimingTracksFromAnalysis,
     defineAutomationVisualHint,
     openAutomationSequence,
+    setAutomationShowFolder,
     setAutomationAudioPath,
     getAutomationAgentRuntimeSnapshot,
     getAutomationPageStatesSnapshot,

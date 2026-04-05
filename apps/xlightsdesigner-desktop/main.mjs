@@ -856,6 +856,9 @@ async function processAutomationRequests() {
       if (action === "openSequence") {
         return invokeRendererAutomation("openSequence", request?.payload || {});
       }
+      if (action === "setShowFolder") {
+        return invokeRendererAutomation("setShowFolder", request?.payload || {});
+      }
       if (action === "setAudioPath") {
         return invokeRendererAutomation("setAudioPath", request?.payload || {});
       }
