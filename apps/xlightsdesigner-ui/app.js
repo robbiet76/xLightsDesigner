@@ -167,6 +167,7 @@ import { createSequenceMediaSessionRuntime } from "./runtime/sequence-media-sess
 import { createProjectLifecycleRuntime } from "./runtime/project-lifecycle-runtime.js";
 import { createAgentRuntimeState } from "./runtime/agent-runtime-state.js";
 import { createProposalGenerationRuntime } from "./runtime/proposal-generation-runtime.js";
+import { createApplyReviewRuntime } from "./runtime/apply-review-runtime.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
@@ -868,6 +869,7 @@ let trainingPackageAudioBundleCacheAt = 0;
 let trainingPackageAgentBundleCache = null;
 let trainingPackageAgentBundleCacheAt = 0;
 let agentRuntimeState = null;
+let applyReviewRuntime = null;
 
 function emptyAgentRuntimeState() {
   return {
@@ -2958,7 +2960,7 @@ function invalidateApplyApproval() {
 }
 
 function currentImpactCount() {
-  return estimateImpactCount(filteredProposed());
+  return estimateImpactCount(applyReviewRuntime.filteredProposed());
 }
 
 function parseVersionParts(versionText) {
@@ -3283,12 +3285,7 @@ function getSections() {
 }
 
 function filteredProposed() {
-  if (hasAllSectionsSelected()) return state.proposed;
-  const selected = new Set(getSelectedSections());
-  return state.proposed.filter((item) => {
-    const section = getSectionName(item);
-    return section === "General" || selected.has(section);
-  });
+  return applyReviewRuntime.filteredProposed();
 }
 
 function bumpVersion(summary = "Applied draft proposal", effects = 28) {
@@ -3319,7 +3316,7 @@ function ensureVersionSnapshots() {
 ensureVersionSnapshots();
 
 function buildDesignerPlanCommands(sourceLines = filteredProposed()) {
-  return buildDesignerPlanCommandsFromLines(sourceLines, { trackName: "XD:ProposedPlan" });
+  return applyReviewRuntime.buildDesignerPlanCommands(sourceLines);
 }
 
 async function verifyAppliedPlanReadback(plan = []) {
@@ -3332,245 +3329,24 @@ async function verifyAppliedPlanReadback(plan = []) {
 }
 
 async function preflightSequenceFileForApply() {
-  const sequencePath = currentSequencePathForSidecar();
-  if (!sequencePath) {
-    return { ok: false, message: "Open or create a sequence before apply." };
-  }
-  const bridge = getDesktopFileStatBridge();
-  if (!bridge) {
-    return { ok: true };
-  }
-  try {
-    const stat = await bridge.getFileStat({ filePath: sequencePath });
-    if (!stat?.ok || !stat?.exists) {
-      return { ok: false, message: "The open sequence file is missing on disk. Save or reopen the sequence in xLights first." };
-    }
-    const size = Number(stat.size || 0);
-    if (!Number.isFinite(size) || size <= 0) {
-      return { ok: false, message: "The open sequence file is empty on disk. Save the sequence in xLights first." };
-    }
-    return { ok: true };
-  } catch (err) {
-    return {
-      ok: false,
-      message: `Unable to verify the open sequence file before apply: ${String(err?.message || err || "unknown error")}`
-    };
-  }
+  return applyReviewRuntime.preflightSequenceFileForApply();
 }
 
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
-  if (!applyEnabled()) {
-    setStatusWithDiagnostics("warning", applyDisabledReason());
-    render();
-    return {
-      ok: false,
-      status: "blocked",
-      blocked: true,
-      reason: "apply_disabled",
-      message: applyDisabledReason()
-    };
-  }
-  const revisionState = await syncLatestSequenceRevision({
-    onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
-    onUnknownMessage: "Unable to confirm current xLights revision. Continuing with reduced safety for apply."
-  });
-  if (!revisionState.ok) {
-    pushDiagnostic("warning", "Proceeding with apply despite revision sync failure.", String(revisionState.error || "revision sync failed"));
-  } else if (revisionState.revision === "unknown") {
-    pushDiagnostic("warning", "Proceeding with apply despite unknown xLights revision.");
-  }
-  if (state.flags.proposalStale) {
-    const message = "Apply blocked: draft is stale against the latest xLights revision.";
-    setStatusWithDiagnostics("warning", message);
-    render();
-    return { ok: false, status: "blocked", blocked: true, reason: "stale_draft", message };
-  }
-  const handoffGate = evaluateApplyHandoffGate();
-  if (!handoffGate.ok) {
-    const message = `Apply blocked: ${handoffGate.message}`;
-    setStatusWithDiagnostics("warning", message);
-    render();
-    return { ok: false, status: "blocked", blocked: true, reason: "handoff_gate", message };
-  }
-  const intentHandoffRecord = getValidHandoffRecord("intent_handoff_v1");
-  const intentHandoff = intentHandoffRecord?.payload || null;
-  const planHandoff = getValidHandoff("plan_handoff_v1");
-  const scopedSource = Array.isArray(sourceLines) ? sourceLines.filter(Boolean) : [];
-  if (!scopedSource.length) {
-    const message = "No proposed changes available for this apply action.";
-    setStatusWithDiagnostics("warning", message);
-    render();
-    return { ok: false, status: "blocked", blocked: true, reason: "no_proposed_changes", message };
-  }
-  if (!state.ui.applyApprovalChecked) {
-    const message = "Review the plan and check approval before apply.";
-    setStatusWithDiagnostics("warning", message);
-    render();
-    return { ok: false, status: "blocked", blocked: true, reason: "approval_required", message };
-  }
-  const sequencePreflight = await preflightSequenceFileForApply();
-  if (!sequencePreflight.ok) {
-    setStatusWithDiagnostics("warning", sequencePreflight.message);
-    render();
-    return { ok: false, status: "blocked", blocked: true, reason: "sequence_preflight", message: sequencePreflight.message };
-  }
-  const scopedImpactCount = scopedSource.length * 11;
-
-  if (requiresApplyConfirmation()) {
-    const message = `Apply ${scopedImpactCount} estimated impacted effects?`;
-    if (!window.confirm(message)) {
-      const cancelMessage = "Apply canceled by user.";
-      setStatus("info", cancelMessage);
-      render();
-      return { ok: false, status: "canceled", blocked: true, reason: "user_canceled", message: cancelMessage };
-    }
-  }
-
-  state.flags.applyInProgress = true;
-  setAgentActiveRole("sequence_agent");
-  const orchestrationRun = beginOrchestrationRun({ trigger: "apply", role: "sequence_agent" });
-  state.ui.agentThinking = true;
-  addChatMessage("agent", `Applying approved ${applyLabel} to xLights...`);
-  setStatus("info", `Applying ${applyLabel} to xLights...`);
-  render();
-
-  let applyAuditEntry = null;
-  let applyResult = null;
-  let clearApprovalAfterApply = false;
-
-  try {
-    const result = await executeApplyCore({
-      state,
-      sourceLines: scopedSource,
-      applyLabel,
-      scopedImpactCount,
-      orchestrationRun,
-      intentHandoffRecord,
-      intentHandoff,
-      planHandoff,
-      deps: {
-        currentSequencePathForSidecar,
-        getDesktopBackupBridge,
-        getValidHandoff,
-        buildSequenceAgentInput,
-        currentLayoutMode,
-        getSelectedSections,
-        normalizeMetadataSelectionIds,
-        normalizeMetadataSelectedTags,
-        getSequenceTimingOwnershipRows,
-        getManualLockedXdTracks,
-        validateSequenceAgentContractGate,
-        filteredProposed,
-        arraysEqualOrdered,
-        validateCommandGraph,
-        buildSequenceAgentPlan,
-        emitSequenceAgentStageTelemetry,
-        evaluateSequencePlanCapabilities,
-        isXdTimingTrack,
-        timingMarksSignature,
-        buildGlobalXdTrackPolicyKey,
-        validateAndApplyPlan,
-        verifyAppliedPlanReadback,
-        buildSequenceAgentApplyResult,
-        classifyOrchestrationFailureReason,
-        getSequenceTimingTrackPoliciesState,
-        getSequenceTimingGeneratedSignaturesState,
-        setSequenceTimingTrackPoliciesState,
-        setSequenceTimingGeneratedSignaturesState,
-        applyAcceptedProposalToDirectorProfile,
-        buildApplyHistoryEntry,
-        buildChatArtifactCard,
-        getTeamChatSpeakerLabel,
-        buildEffectiveMetadataAssignments,
-        getRevision,
-        validateCommands,
-        beginTransaction,
-        commitTransaction,
-        rollbackTransaction,
-        stageTransactionCommand,
-        applySequencingBatchPlan: null,
-        getOwnedHealth: null,
-        getOwnedJob: null,
-        getOwnedSequenceRevision: null
-      },
-      callbacks: {
-        pushSequenceAgentContractDiagnostic,
-        markOrchestrationStage,
-        endOrchestrationRun,
-        pushDiagnostic,
-        upsertJob,
-        bumpVersion,
-        setStatusWithDiagnostics,
-        addStructuredChatMessage
-      }
-    });
-
-    applyAuditEntry = result.applyAuditEntry || null;
-    applyResult = result.applyResult || null;
-    clearApprovalAfterApply = Boolean(result.clearApprovalAfterApply);
-    if (result.blocked) {
-      setStatusWithDiagnostics("action-required", result.message || "Apply blocked.", result.details || "");
-      return {
-        ok: false,
-        status: "blocked",
-        blocked: true,
-        reason: result.applyResult?.failureReason || result.status || "blocked",
-        message: result.message || "Apply blocked.",
-        details: result.details || "",
-        applyAuditEntry,
-        applyResult
-      };
-    }
-  } finally {
-    if (clearApprovalAfterApply) {
-      state.ui.applyApprovalChecked = false;
-    }
-    if (applyAuditEntry) {
-      await persistCurrentArtifactsForHistory({ planHandoff, applyResult, historyEntry: applyAuditEntry });
-      pushApplyHistory(applyAuditEntry, { planHandoff, applyResult });
-      await appendDesktopApplyLog(applyAuditEntry);
-      await refreshApplyHistoryFromDesktop(40);
-    }
-    state.flags.applyInProgress = false;
-    state.ui.agentThinking = false;
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  }
-  return {
-    ok: Boolean(applyAuditEntry),
-    status: applyResult?.status || (applyAuditEntry ? String(applyAuditEntry.status || "unknown") : "unknown"),
-    blocked: false,
-    reason: applyResult?.failureReason || null,
-    message: applyAuditEntry?.summary || null,
-    applyAuditEntry,
-    applyResult
-  };
+  return applyReviewRuntime.applyProposal(sourceLines, applyLabel);
 }
 
 
 function selectedProposedLinesForApply() {
-  const selectedIndexes = Array.isArray(state.ui?.proposedSelection)
-    ? state.ui.proposedSelection.filter((idx) => Number.isInteger(idx))
-    : [];
-  if (!selectedIndexes.length) return [];
-  const rows = Array.isArray(state.proposed) ? state.proposed : [];
-  return selectedIndexes
-    .map((idx) => rows[idx])
-    .filter((line) => typeof line === "string" && line.trim());
+  return applyReviewRuntime.selectedProposedLinesForApply();
 }
 
 async function onApplySelected() {
-  const selectedLines = selectedProposedLinesForApply();
-  if (!selectedLines.length) {
-    setStatus("warning", "Select one or more proposed changes first.");
-    return render();
-  }
-  await onApply(selectedLines, "selected proposed changes");
+  return applyReviewRuntime.applySelectedProposal();
 }
 
 async function onApplyAll() {
-  return await onApply(filteredProposed(), "all proposed changes");
+  return await applyReviewRuntime.applyAllProposal();
 }
 
 async function onGenerate(intentOverride = "", options = {}) {
@@ -9299,6 +9075,82 @@ projectLifecycleRuntime = createProjectLifecycleRuntime({
   getProjectKey,
   confirm: (message) => window.confirm(message),
   reload: () => window.location.reload()
+});
+
+applyReviewRuntime = createApplyReviewRuntime({
+  state,
+  hasAllSectionsSelected,
+  getSelectedSections,
+  getSectionChoiceList,
+  getSectionName,
+  buildDesignerPlanCommandsFromLines,
+  estimateImpactCount,
+  currentSequencePathForSidecar,
+  getDesktopFileStatBridge,
+  applyEnabled,
+  applyDisabledReason,
+  syncLatestSequenceRevision,
+  pushDiagnostic,
+  evaluateApplyHandoffGate,
+  getValidHandoffRecord,
+  getValidHandoff,
+  setStatus,
+  setStatusWithDiagnostics,
+  render,
+  requiresApplyConfirmation,
+  confirm: (message) => window.confirm(message),
+  setAgentActiveRole,
+  beginOrchestrationRun,
+  addChatMessage,
+  executeApplyCore,
+  saveCurrentProjectSnapshot,
+  persist,
+  persistCurrentArtifactsForHistory,
+  pushApplyHistory,
+  appendDesktopApplyLog,
+  refreshApplyHistoryFromDesktop,
+  currentSequencePathForSidecar,
+  getDesktopBackupBridge,
+  buildSequenceAgentInput,
+  currentLayoutMode,
+  normalizeMetadataSelectionIds,
+  normalizeMetadataSelectedTags,
+  getSequenceTimingOwnershipRows,
+  getManualLockedXdTracks,
+  validateSequenceAgentContractGate,
+  arraysEqualOrdered,
+  validateCommandGraph,
+  buildSequenceAgentPlan,
+  emitSequenceAgentStageTelemetry,
+  evaluateSequencePlanCapabilities,
+  isXdTimingTrack,
+  timingMarksSignature,
+  buildGlobalXdTrackPolicyKey,
+  validateAndApplyPlan,
+  verifyAppliedPlanReadback,
+  buildSequenceAgentApplyResult,
+  classifyOrchestrationFailureReason,
+  getSequenceTimingTrackPoliciesState,
+  getSequenceTimingGeneratedSignaturesState,
+  setSequenceTimingTrackPoliciesState,
+  setSequenceTimingGeneratedSignaturesState,
+  applyAcceptedProposalToDirectorProfile,
+  buildApplyHistoryEntry,
+  buildChatArtifactCard,
+  getTeamChatSpeakerLabel,
+  buildEffectiveMetadataAssignments,
+  getRevision,
+  validateCommands,
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction,
+  stageTransactionCommand,
+  pushSequenceAgentContractDiagnostic,
+  markOrchestrationStage,
+  endOrchestrationRun,
+  upsertJob,
+  bumpVersion,
+  addStructuredChatMessage
 });
 
 proposalGenerationRuntime = createProposalGenerationRuntime({
