@@ -51,10 +51,10 @@ Largest tracked first-party code files observed in the repo:
 
 Tracked large JSON assets include:
 
-- `apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_overfetch.json`: `25,445` lines
-- `apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_top50_matched.json`: `4,941` lines
-- `apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_top50_unique_titles.json`: `4,731` lines
-- `apps/xlightsdesigner-analysis-service/eval/structure_corpus_top50_christmas.json`: `1,621` lines
+- `apps/xlightsdesigner-analysis-service/eval/corpus/structure_corpus_christmas_overfetch.json`: `25,445` lines
+- `apps/xlightsdesigner-analysis-service/eval/corpus/structure_corpus_christmas_top50_matched.json`: `4,941` lines
+- `apps/xlightsdesigner-analysis-service/eval/corpus/structure_corpus_christmas_top50_unique_titles.json`: `4,731` lines
+- `apps/xlightsdesigner-analysis-service/eval/corpus/structure_corpus_top50_christmas.json`: `1,621` lines
 - `training-packages/training-package-v1/modules/audio_track_analysis/datasets/structure_corpus_top50_holiday_keywords.json`: `4,748` lines
 
 ### Eval folder footprint

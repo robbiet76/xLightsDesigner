@@ -20,12 +20,12 @@ Mapped into:
 - `training-packages/training-package-v1/modules/audio_track_analysis/eval/index.json`
 
 Referenced local sources:
-- `apps/xlightsdesigner-analysis-service/eval/structure_eval.py`
-- `apps/xlightsdesigner-analysis-service/eval/export_xlights_track_case.py`
-- `apps/xlightsdesigner-analysis-service/eval/ingest_structure_corpus.py`
+- `apps/xlightsdesigner-analysis-service/eval/runners/structure_eval.py`
+- `apps/xlightsdesigner-analysis-service/eval/probes/export_xlights_track_case.py`
+- `apps/xlightsdesigner-analysis-service/eval/probes/ingest_structure_corpus.py`
 - `apps/xlightsdesigner-analysis-service/eval/structure_eval_cases.local.json`
 - `apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_top50_holiday_keywords.json`
-- `apps/xlightsdesigner-analysis-service/eval/structure_corpus_christmas_overfetch.json`
+- `apps/xlightsdesigner-analysis-service/eval/corpus/structure_corpus_christmas_overfetch.json`
 
 ### 2.2 Lighting Design Principles
 Mapped into:
