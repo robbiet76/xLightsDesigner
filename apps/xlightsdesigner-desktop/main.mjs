@@ -433,25 +433,25 @@ function buildEffectQueriesFromPlacements(placements = []) {
 
 async function readXLightsSequenceStateViaCurl(endpoint = "") {
   const [openResp, revisionResp, settingsResp, modelsResp, submodelsResp, displayResp, tracksResp] = await Promise.all([
-    postXLightsCommand(endpoint, "sequence.getOpen", {}),
-    postXLightsCommand(endpoint, "sequence.getRevision", {}),
-    postXLightsCommand(endpoint, "sequence.getSettings", {}),
-    postXLightsCommand(endpoint, "layout.getModels", {}),
-    postXLightsCommand(endpoint, "layout.getSubmodels", {}),
-    postXLightsCommand(endpoint, "layout.getDisplayElements", {}),
-    postXLightsCommand(endpoint, "timing.getTracks", {})
+    safePostXLightsCommand(endpoint, "sequence.getOpen", {}),
+    safePostXLightsCommand(endpoint, "sequence.getRevision", {}),
+    safePostXLightsCommand(endpoint, "sequence.getSettings", {}),
+    safePostXLightsCommand(endpoint, "layout.getModels", {}),
+    safePostXLightsCommand(endpoint, "layout.getSubmodels", {}),
+    safePostXLightsCommand(endpoint, "layout.getDisplayElements", {}),
+    safePostXLightsCommand(endpoint, "timing.getTracks", {})
   ]);
 
   return buildXLightsSequenceState({
     endpoint,
-    openSequence: openResp?.data?.isOpen ? openResp?.data?.sequence || null : null,
-    revision: str(revisionResp?.data?.revision || revisionResp?.data?.revisionToken || "unknown"),
-    sequenceSettings: settingsResp?.data || null,
-    models: arr(modelsResp?.data?.models),
-    submodels: arr(submodelsResp?.data?.submodels),
-    displayElements: arr(displayResp?.data?.elements),
+    openSequence: openResp?.ok !== false && openResp?.data?.isOpen ? openResp?.data?.sequence || null : null,
+    revision: str(revisionResp?.ok !== false ? (revisionResp?.data?.revision || revisionResp?.data?.revisionToken || "unknown") : "unknown"),
+    sequenceSettings: settingsResp?.ok !== false ? (settingsResp?.data || null) : null,
+    models: modelsResp?.ok !== false ? arr(modelsResp?.data?.models) : [],
+    submodels: submodelsResp?.ok !== false ? arr(submodelsResp?.data?.submodels) : [],
+    displayElements: displayResp?.ok !== false ? arr(displayResp?.data?.elements) : [],
     timingState: buildXLightsTimingState({
-      tracks: arr(tracksResp?.data?.tracks)
+      tracks: tracksResp?.ok !== false ? arr(tracksResp?.data?.tracks) : []
     })
   });
 }
@@ -475,6 +475,18 @@ async function readXLightsEffectOccupancyStateViaCurl(endpoint = "", queries = [
     effectsByQuery[key] = arr(resp?.data?.effects);
   }
   return buildXLightsEffectOccupancyState({ queries, effectsByQuery });
+}
+
+async function safePostXLightsCommand(endpoint = "", command = "", payload = {}) {
+  try {
+    return await postXLightsCommand(endpoint, command, payload);
+  } catch (error) {
+    return {
+      ok: false,
+      error: String(error?.message || error || ""),
+      command: str(command)
+    };
+  }
 }
 
 async function runDirectSequenceValidationFromDesktop(expected = {}) {

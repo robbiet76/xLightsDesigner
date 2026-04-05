@@ -1,0 +1,57 @@
+{
+  "contract": "live_wholesequence_practical_validation_suite_v2",
+  "version": "1.0",
+  "name": "live_reviewed_timing_wholesequence_baseline_v1",
+  "summary": "Whole-sequence reviewed-timing sequencing baseline across the 4 real control tracks.",
+  "scenarios": [
+    {
+      "name": "candy_cane_lane_reviewed_timing_baseline",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/CandyCaneLane/CandyCaneLane.xsq",
+      "sequenceName": "CandyCaneLane",
+      "requestedRole": "sequence_agent",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "seedTimingTracksFromAnalysis": true,
+      "strongPrompt": "Design the full song using the reviewed song structure to create clear section changes, readable rhythmic motion, and a strong chorus build. Keep the sequence musically aligned instead of treating the whole track as one uniform look.",
+      "minConceptCount": 4,
+      "minPlacementCount": 40
+    },
+    {
+      "name": "christmas_vacation_reviewed_timing_baseline",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasVacation/ChristmasVacation.xsq",
+      "sequenceName": "ChristmasVacation",
+      "requestedRole": "sequence_agent",
+      "audioPathOverride": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Audio/Mavis Staples - Christmas Vacation.mp3",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "analysisProfile": {
+        "mode": "deep",
+        "allowEscalation": false
+      },
+      "seedTimingTracksFromAnalysis": true,
+      "strongPrompt": "Design the full song around the reviewed structure and phrase cues so vocal phrases land cleanly and repeated refrains build with consistent visual language. Use phrase timing where available instead of ignoring it.",
+      "minConceptCount": 4,
+      "minPlacementCount": 40
+    },
+    {
+      "name": "grinch_reviewed_timing_baseline",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Grinch/Grinch.xsq",
+      "sequenceName": "Grinch",
+      "requestedRole": "sequence_agent",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "seedTimingTracksFromAnalysis": true,
+      "strongPrompt": "Design the full song using the reviewed song structure so repeating refrain sections feel related but still progress. Keep transitions readable and avoid flattening the whole track into one repeated effect pattern.",
+      "minConceptCount": 4,
+      "minPlacementCount": 40
+    },
+    {
+      "name": "christmas_sarajevo_reviewed_timing_baseline",
+      "sequencePath": "/Users/robterry/Documents/Lights/Current/Christmas/Show/ChristmasEveSarajevo/ChristmasEveSarajevo.xsq",
+      "sequenceName": "ChristmasEveSarajevo",
+      "requestedRole": "sequence_agent",
+      "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
+      "seedTimingTracksFromAnalysis": true,
+      "strongPrompt": "Design the full instrumental song from the reviewed structure, shaping the arrangement through the intro, theme, contrast, and climax without relying on lyrics. Keep the motion and intensity aligned to the musical build.",
+      "minConceptCount": 4,
+      "minPlacementCount": 40
+    }
+  ]
+}

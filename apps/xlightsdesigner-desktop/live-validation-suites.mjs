@@ -281,10 +281,30 @@ export function createLiveValidationSuites({
     if (!file) {
       throw new Error("sequencePath is required.");
     }
+    async function waitForOpenSync(targetPath) {
+      const deadline = nowMs() + 8000;
+      let lastRuntime = null;
+      while (nowMs() < deadline) {
+        try {
+          const runtime = await getRendererAgentRuntimeSnapshot();
+          lastRuntime = runtime;
+          const currentPath = str(runtime?.sequencePathInput);
+          const activeLoaded = Boolean(runtime?.activeSequenceLoaded || runtime?.sequenceOpen);
+          if (currentPath === targetPath && activeLoaded) {
+            return runtime;
+          }
+        } catch {
+          // best effort only
+        }
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+      return lastRuntime;
+    }
     try {
       const runtime = await getRendererAgentRuntimeSnapshot();
       const currentPath = str(runtime?.sequencePathInput);
-      if (currentPath && currentPath === file) {
+      const activeLoaded = Boolean(runtime?.activeSequenceLoaded || runtime?.sequenceOpen);
+      if (currentPath && currentPath === file && activeLoaded) {
         return {
           ok: true,
           skipped: true,
@@ -298,9 +318,10 @@ export function createLiveValidationSuites({
     const opened = await invokeRendererAutomation("openSequence", {
       sequencePath: file
     });
+    const synced = await waitForOpenSync(file);
     return {
       ok: true,
-      activeSequence: str(opened?.activeSequence),
+      activeSequence: str(synced?.activeSequence || opened?.activeSequence),
       sequencePath: file
     };
   }
@@ -1222,6 +1243,15 @@ export function createLiveValidationSuites({
         refreshedSequences.add(sequenceContextKey);
       }
 
+      const audioPathOverride = str(scenario?.audioPathOverride);
+      if (audioPathOverride) {
+        const setAudioStartedAtMs = nowMs();
+        await invokeRendererAutomation("setAudioPath", {
+          audioPath: audioPathOverride
+        });
+        timings.setAudioMs = nowMs() - setAudioStartedAtMs;
+      }
+
       const analyzePrompt = str(scenario?.analyzePrompt);
       const analysisContextKey = `${sequenceContextKey}::${analyzePrompt}`;
       if (analyzePrompt && !analyzedContexts.has(analysisContextKey)) {
@@ -1235,16 +1265,31 @@ export function createLiveValidationSuites({
           timings.analyzeMs = 0;
         } else {
           const analyzeStartedAtMs = nowMs();
-          await invokeRendererAutomation("analyzeAudio", { prompt: analyzePrompt });
+          const analyzePayload = {
+            prompt: analyzePrompt
+          };
+          if (scenario?.analysisProfile && typeof scenario.analysisProfile === "object") {
+            analyzePayload.analysisProfile = scenario.analysisProfile;
+          }
+          if (scenario?.forceFreshAnalysis === true) {
+            analyzePayload.forceFresh = true;
+          }
+          await invokeRendererAutomation("analyzeAudio", analyzePayload);
           timings.analyzeMs = nowMs() - analyzeStartedAtMs;
         }
         analyzedContexts.add(analysisContextKey);
       }
 
+      if (scenario?.seedTimingTracksFromAnalysis === true) {
+        const seedTimingStartedAtMs = nowMs();
+        await invokeRendererAutomation("seedTimingTracksFromAnalysis", {});
+        timings.seedTimingTracksMs = nowMs() - seedTimingStartedAtMs;
+      }
+
       const generateStartedAtMs = nowMs();
       const generateResponse = await invokeRendererAutomation("generateProposal", {
         prompt: str(scenario?.prompt || scenario?.strongPrompt),
-        requestedRole: "designer_dialog",
+        requestedRole: str(scenario?.requestedRole || expected?.requestedRole || "designer_dialog"),
         forceFresh: true,
         clearRevisionTarget: true,
         selectedSections: arr(scenario?.sections),
@@ -1309,7 +1354,9 @@ export function createLiveValidationSuites({
           restoreBaselineMs: Number(timings.restoreBaselineMs || 0),
           openSequenceMs: Number(timings.openSequenceMs || 0),
           refreshMs: Number(timings.refreshMs || 0),
+          setAudioMs: Number(timings.setAudioMs || 0),
           analyzeMs: Number(timings.analyzeMs || 0),
+          seedTimingTracksMs: Number(timings.seedTimingTracksMs || 0),
           generateMs: Number(timings.generateMs || 0),
           applyMs: Number(timings.applyMs || 0),
           validationMs: Number(timings.validationMs || 0)
