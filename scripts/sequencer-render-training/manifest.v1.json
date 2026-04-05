@@ -1,0 +1,1477 @@
+{
+  "generatedFrom": "/tmp/render_training_refs.json",
+  "files": [
+    {
+      "path": "README.md",
+      "purpose": "documentation",
+      "refCount": 0,
+      "lifecycle": "active_core",
+      "recommendation": "modify",
+      "notes": "needs rewrite around current directory policy and grouped layout"
+    },
+    {
+      "path": "analysis/analyze_decoded_window.py",
+      "purpose": "analysis_support",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under grouped analysis support subtree"
+    },
+    {
+      "path": "analysis/framework.py",
+      "purpose": "analysis_support",
+      "refCount": 0,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under grouped analysis support subtree"
+    },
+    {
+      "path": "build-animation-fixture.py",
+      "purpose": "build_helper",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "review",
+      "notes": "native/helper build step"
+    },
+    {
+      "path": "build-comparison.sh",
+      "purpose": "build_helper",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "native/helper build step"
+    },
+    {
+      "path": "build-fseq-window-decoder.sh",
+      "purpose": "build_helper",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "native/helper build step"
+    },
+    {
+      "path": "build-record-comparison.sh",
+      "purpose": "build_helper",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "native/helper build step"
+    },
+    {
+      "path": "cleanup-render-training-artifacts.py",
+      "purpose": "support_script",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "colorwash-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "controlled-designer-vocab-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "controlled-designer-vocab.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "effect-parameter-registry.json",
+      "purpose": "core_catalog",
+      "refCount": 8,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "core planning/training catalog"
+    },
+    {
+      "path": "evaluate-controlled-designer-vocabulary.py",
+      "purpose": "evaluation_runner",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/"
+    },
+    {
+      "path": "evaluate-priority-effect-selection.py",
+      "purpose": "evaluation_runner",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/"
+    },
+    {
+      "path": "evaluate-priority-intent-retrieval.py",
+      "purpose": "evaluation_runner",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/"
+    },
+    {
+      "path": "export-sequencer-stage1-bundle.py",
+      "purpose": "support_script",
+      "refCount": 3,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "extract-artifact-features.sh",
+      "purpose": "feature_extractor",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "offline extraction helper"
+    },
+    {
+      "path": "extract-gif-features.py",
+      "purpose": "feature_extractor",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "offline extraction helper"
+    },
+    {
+      "path": "extract-gif-sampled-frame-features.js",
+      "purpose": "feature_extractor",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "offline extraction helper"
+    },
+    {
+      "path": "extract-observations.sh",
+      "purpose": "feature_extractor",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "offline extraction helper"
+    },
+    {
+      "path": "fseq_window_decoder.cpp",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "specialized tooling helper"
+    },
+    {
+      "path": "generate-current-effect-equalization-board.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-effect-complexity-review.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-effect-geometry-gap-report.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-effect-intent-map.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-effect-maturity-report.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-effect-static-complexity-report.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-intent-gap-report.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-intent-vocab-summary.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-look-catalog.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-model-geometry-audit.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-parameter-region-summary.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-parameter-sweep-manifest.py",
+      "purpose": "generator",
+      "refCount": 3,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-priority-effect-summary.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-priority-intent-map.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-range-transition-report.py",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-record-intent-map.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-registry-plan-manifests.py",
+      "purpose": "generator",
+      "refCount": 2,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-sample-comparisons.sh",
+      "purpose": "generator",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-stage1-coverage-audit.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-stage1-coverage-backlog.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-stage1-coverage-plan.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-stage1-equalization-backlog.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generate-stage1-equalization-board.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under generators/ or reports/"
+    },
+    {
+      "path": "generic-layout-geometry-audit.json",
+      "purpose": "core_catalog",
+      "refCount": 3,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "core planning/training catalog"
+    },
+    {
+      "path": "generic-layout-model-catalog.json",
+      "purpose": "core_catalog",
+      "refCount": 4,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "core planning/training catalog"
+    },
+    {
+      "path": "get-model-fseq-metadata.py",
+      "purpose": "support_script",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "lib.sh",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "specialized tooling helper"
+    },
+    {
+      "path": "manifests/bars-archgroup-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-archsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-archtriplelayer-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-singlelinehorizontal-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-singlelinevertical-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-treeflat-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/bars-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/colorwash-matrix-cycles-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/colorwash-matrix-expanded-sweep-v2.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/colorwash-matrix-fade-combos-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/colorwash-matrix-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-archgroup-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-archsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-archtriplelayer-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-singlelinehorizontal-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-singlelinevertical-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-treeflat-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/marquee-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-archsingle-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-hiddentree-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-hiddentreestar-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-matrix-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-sample-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-singlelinehorizontal-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-spiraltree-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-starsingle-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-treeflat-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/on-treeround-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/pinwheel-spinner-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/pinwheel-starsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/pinwheel-startriplelayer-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/pinwheel-treeflat-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/pinwheel-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/pinwheel-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-archsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-hiddentree-cycles-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-hiddentree-dutyfactor-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-hiddentree-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-hiddentreestar-cycles-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-hiddentreestar-dutyfactor-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-hiddentreestar-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-outline-cycles-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-outline-dutyfactor-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-outline-expanded-sweep-v2.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-outline-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-singlelinehorizontal-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-starsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-treeflat-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shimmer-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-spinner-interactions-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 3,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-treeround-interactions-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/shockwave-treespiral-interactions-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-archsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-cane-expanded-sweep-v2.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-advances-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-bandsize-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-chasesize-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-chasetype-combos-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-cycles-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-expanded-sweep-v2.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-fadetype-combos-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-fx-intensity-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-numberchases-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-linear-skipsize-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-reduced-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 5,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-spiraltree-chasesize-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-spiraltree-cycles-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-spiraltree-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-spiraltree-numberchases-range-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/singlestrand-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/spirals-treeflat-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/spirals-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/spirals-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-singlelinehorizontal-interactions-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-spinner-interactions-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-starsingle-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-treeround-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-treeround-interactions-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "manifests/twinkle-treespiral-expanded-sweep-v1.json",
+      "purpose": "render_manifest",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "parameter sweep manifest"
+    },
+    {
+      "path": "merge-intent-maps.py",
+      "purpose": "support_script",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "normalize-manifest.py",
+      "purpose": "support_script",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "on-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-effect-selection-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-effect-selection-cases.v2.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-effect-selection-cases.v3.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-effect-selection-cases.v4.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-effect-selection-cases.v5.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-intent-eval-cases.v2.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "priority-intent-eval-cases.v3.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "query-priority-intent-map.py",
+      "purpose": "support_script",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "registry-planning-phase1.json",
+      "purpose": "registry_plan",
+      "refCount": 3,
+      "lifecycle": "active_data",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-phase2.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-priority-effects-v1.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-priority-effects-v2.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-priority-effects-v3.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-priority-effects-v4.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-priority-effects-v5.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-shockwave-v1.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-shockwave-v2.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "registry-planning-twinkle-v1.json",
+      "purpose": "registry_plan",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under registry/"
+    },
+    {
+      "path": "resolve-controlled-designer-term.py",
+      "purpose": "support_script",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "run-current-effect-equalization.sh",
+      "purpose": "runner",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-manifest.sh",
+      "purpose": "runner",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-model-batch.sh",
+      "purpose": "runner",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-overnight-approved-matrix.sh",
+      "purpose": "runner",
+      "refCount": 2,
+      "lifecycle": "active_manual",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-packed-model-batch.sh",
+      "purpose": "runner",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-registry-plan.sh",
+      "purpose": "runner",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-sample.sh",
+      "purpose": "runner",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-shockwave-interaction-set.sh",
+      "purpose": "runner",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-stage1-coverage-round.sh",
+      "purpose": "runner",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "run-twinkle-interaction-set.sh",
+      "purpose": "runner",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under runners/"
+    },
+    {
+      "path": "scan-fseq-active-ranges.py",
+      "purpose": "support_script",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "select-priority-effect.py",
+      "purpose": "support_script",
+      "refCount": 1,
+      "lifecycle": "active_support",
+      "recommendation": "move",
+      "notes": "support script in flat root"
+    },
+    {
+      "path": "shimmer-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "shockwave-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "singlestrand-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "slice-gif-by-time.swift",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "specialized tooling helper"
+    },
+    {
+      "path": "stage1-effect-model-scope.json",
+      "purpose": "core_catalog",
+      "refCount": 2,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "core planning/training catalog"
+    },
+    {
+      "path": "training-standards.json",
+      "purpose": "core_catalog",
+      "refCount": 1,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "core planning/training catalog"
+    },
+    {
+      "path": "twinkle-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    },
+    {
+      "path": "twinkle-intent-eval-cases.v2.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "move",
+      "notes": "belongs under evaluation/fixtures/"
+    }
+  ]
+}
