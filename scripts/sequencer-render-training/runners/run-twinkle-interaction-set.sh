@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 OUT_DIR=""
 
@@ -23,9 +24,9 @@ done
 mkdir -p "${OUT_DIR}"
 
 declare -a manifests=(
-  "${SCRIPT_DIR}/manifests/shockwave-treeround-interactions-v1.json"
-  "${SCRIPT_DIR}/manifests/shockwave-treespiral-interactions-v1.json"
-  "${SCRIPT_DIR}/manifests/shockwave-spinner-interactions-v1.json"
+  "${SCRIPT_DIR}/manifests/twinkle-singlelinehorizontal-interactions-v1.json"
+  "${SCRIPT_DIR}/manifests/twinkle-treeround-interactions-v1.json"
+  "${SCRIPT_DIR}/manifests/twinkle-spinner-interactions-v1.json"
 )
 
 results_json='[]'

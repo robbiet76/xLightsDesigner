@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 SELECTOR_MAP_OUT="${1:-/tmp/render-training-selector-intent-map.v1.json}"
 SELECTOR_EVAL_OUT="${2:-/tmp/priority-effect-selection-eval.v7.json}"
@@ -18,7 +19,7 @@ python3 "${SCRIPT_DIR}/evaluate-priority-effect-selection.py" \
   --cases "${SCRIPT_DIR}/priority-effect-selection-cases.v4.json" \
   --out-file "${SELECTOR_EVAL_OUT}"
 
-python3 "${SCRIPT_DIR}/generate-current-effect-equalization-board.py" \
+python3 "${ROOT_DIR}/generate-current-effect-equalization-board.py" \
   --priority-maturity /tmp/render-training-effect-maturity.v7.json \
   --selector-eval "${SELECTOR_EVAL_OUT}" \
   --twinkle-summary /tmp/render-training-twinkle-summary.v2.json \

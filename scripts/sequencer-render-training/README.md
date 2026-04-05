@@ -28,14 +28,23 @@ The current harness is intentionally small:
   - `batchRender`
   - `.fseq` capture
 
-## Files
+## Directory Layout
 
-- `run-sample.sh`: execute one sample from a sweep manifest
-- `run-manifest.sh`: execute all samples from a sweep manifest
-- `run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
-- `run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, saving and rendering once, then recording per-sample windows against one packed `.fseq`
-- `run-overnight-approved-matrix.sh`: execute the approved first-round overnight matrix sequentially against the debug xLights build and write a master summary
-- `run-registry-plan.sh`: generate registry-driven manifests from a plan file and execute them sequentially against the debug xLights build
+- `runners/`: operator-facing execution entrypoints such as `run-manifest.sh` and `run-registry-plan.sh`
+- `evaluation/`: evaluator scripts
+- `evaluation/fixtures/`: evaluation case files and controlled-vocabulary fixtures
+- `registry/`: registry planning inputs
+- `manifests/`: active render-sweep manifests
+- root-level scripts and catalogs: still active, with further grouping planned into `generators/`, `catalog/`, and `tooling/`
+
+## Core Files
+
+- `runners/run-sample.sh`: execute one sample from a sweep manifest
+- `runners/run-manifest.sh`: execute all samples from a sweep manifest
+- `runners/run-model-batch.sh`: execute a manifest against one already-open xLights session with per-sample sequence isolation
+- `runners/run-packed-model-batch.sh`: execute a manifest by packing multiple sample windows into one open sequence, saving and rendering once, then recording per-sample windows against one packed `.fseq`
+- `runners/run-overnight-approved-matrix.sh`: execute the approved first-round overnight matrix sequentially against the debug xLights build and write a master summary
+- `runners/run-registry-plan.sh`: generate registry-driven manifests from a plan file and execute them sequentially against the debug xLights build
 - `build-animation-fixture.py`: derive a short animation-only fixture sequence from an existing `.xsq`
 - `extract-artifact-features.sh`: capture basic artifact facts for the training record
 - `extract-observations.sh`: derive first-pass labels and baseline scores from sample context and artifact geometry
@@ -49,29 +58,29 @@ The current harness is intentionally small:
 - `generate-range-transition-report.py`: detect where a sampled slider range actually changes semantic behavior across ordered anchor values
 - `effect-parameter-registry.json`: formal effect-parameter registry for anchor values, importance, hypotheses, and stop rules
 - `generate-parameter-sweep-manifest.py`: generate registry-driven sweep manifests from a base effect manifest and a registered parameter
-- `registry-planning-phase1.json`: first planning set mapping geometry profiles and effects to registry-driven sweeps
+- `registry/registry-planning-phase1.json`: first planning set mapping geometry profiles and effects to registry-driven sweeps
 - `generate-registry-plan-manifests.py`: emit a batch of registry-driven manifests from a planning file
 - `generate-priority-effect-summary.py`: consolidate priority-effect region summaries from completed runs into one machine-readable summary
 - `generate-priority-intent-map.py`: build a first-pass intent map from the consolidated priority-effect summary
 - `query-priority-intent-map.py`: query the first-pass intent map for structurally matched regions
-- `evaluate-priority-intent-retrieval.py`: run a small structural retrieval evaluation set against the intent map
-- `priority-intent-eval-cases.v1.json`: first evaluator case set for Bars and Marquee structural requests
-- `priority-intent-eval-cases.v2.json`: expanded evaluator case set including Pinwheel structural requests
-- `priority-intent-eval-cases.v3.json`: expanded evaluator case set including Spirals structural requests
+- `evaluation/evaluate-priority-intent-retrieval.py`: run a small structural retrieval evaluation set against the intent map
+- `evaluation/fixtures/priority-intent-eval-cases.v1.json`: first evaluator case set for Bars and Marquee structural requests
+- `evaluation/fixtures/priority-intent-eval-cases.v2.json`: expanded evaluator case set including Pinwheel structural requests
+- `evaluation/fixtures/priority-intent-eval-cases.v3.json`: expanded evaluator case set including Spirals structural requests
 - `select-priority-effect.py`: choose the best-supported effect for a constrained structural request
-- `controlled-designer-vocab.v1.json`: narrow approved designer vocabulary mapped onto structural selector queries
+- `evaluation/fixtures/controlled-designer-vocab.v1.json`: narrow approved designer vocabulary mapped onto structural selector queries
 - `resolve-controlled-designer-term.py`: resolve one approved designer term into the current supported effect selection
-- `evaluate-controlled-designer-vocabulary.py`: evaluate the controlled designer vocabulary layer against expected effect selections
-- `controlled-designer-vocab-cases.v1.json`: first evaluator case set for the controlled designer vocabulary layer
+- `evaluation/evaluate-controlled-designer-vocabulary.py`: evaluate the controlled designer vocabulary layer against expected effect selections
+- `evaluation/fixtures/controlled-designer-vocab-cases.v1.json`: first evaluator case set for the controlled designer vocabulary layer
 - `generate-effect-maturity-report.py`: compute the current maturity stage for each effect from summaries and evaluator outputs
 - `generate-effect-geometry-gap-report.py`: compare current mature-effect geometry coverage against the canonical standard-model catalog
 - `generate-effect-static-complexity-report.py`: compute a registry-only static complexity score and inferred complexity class per effect
 - `generate-effect-complexity-review.py`: combine static complexity with current training evidence into a review artifact
 - `cleanup-render-training-artifacts.py`: dry-run or apply cleanup for stale raw artifacts in the canonical render-training workspace
 - `export-sequencer-stage1-bundle.py`: export the current equalized Stage 1 training outputs into a repo-managed sequencer bundle
-- `evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
-- `priority-effect-selection-cases.v1.json`: first selector-evaluation case set
-- `priority-effect-selection-cases.v2.json`: expanded selector-evaluation case set with tighter geometry-specific structural cases
+- `evaluation/evaluate-priority-effect-selection.py`: run cross-geometry selector evaluation against the supported effect set
+- `evaluation/fixtures/priority-effect-selection-cases.v1.json`: first selector-evaluation case set
+- `evaluation/fixtures/priority-effect-selection-cases.v2.json`: expanded selector-evaluation case set with tighter geometry-specific structural cases
 - `training-standards.json`: shared structural-test standard for palette, brightness policy, and analyzer registry
   - also defines packed decode frame emission policy
 - `normalize-manifest.py`: apply the shared training standard to a manifest before execution
@@ -93,19 +102,19 @@ The current harness is intentionally small:
 ## Usage
 
 ```bash
-bash scripts/sequencer-render-training/run-sample.sh \
+bash scripts/sequencer-render-training/runners/run-sample.sh \
   --manifest scripts/sequencer-render-training/manifests/on-sample-v1.json \
   --out-dir /tmp/sequencer-render-training
 ```
 
 ```bash
-bash scripts/sequencer-render-training/run-manifest.sh \
+bash scripts/sequencer-render-training/runners/run-manifest.sh \
   --manifest scripts/sequencer-render-training/manifests/singlestrand-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-batch
 ```
 
 ```bash
-bash scripts/sequencer-render-training/run-model-batch.sh \
+bash scripts/sequencer-render-training/runners/run-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-model-batch
 ```
@@ -118,7 +127,7 @@ python3 scripts/sequencer-render-training/build-animation-fixture.py \
 ```
 
 ```bash
-bash scripts/sequencer-render-training/run-packed-model-batch.sh \
+bash scripts/sequencer-render-training/runners/run-packed-model-batch.sh \
   --manifest scripts/sequencer-render-training/manifests/on-reduced-sweep-v1.json \
   --out-dir /tmp/sequencer-render-training-packed-batch
 ```
@@ -161,7 +170,7 @@ python3 scripts/sequencer-render-training/generate-parameter-sweep-manifest.py \
 ```bash
 python3 scripts/sequencer-render-training/generate-registry-plan-manifests.py \
   --registry scripts/sequencer-render-training/effect-parameter-registry.json \
-  --plan scripts/sequencer-render-training/registry-planning-phase1.json \
+  --plan scripts/sequencer-render-training/registry/registry-planning-phase1.json \
   --out-dir /tmp/registry-plan-manifests \
   --summary-out /tmp/registry-plan-manifests/summary.json
 ```
@@ -189,9 +198,9 @@ python3 scripts/sequencer-render-training/query-priority-intent-map.py \
 ```
 
 ```bash
-python3 scripts/sequencer-render-training/evaluate-priority-intent-retrieval.py \
+python3 scripts/sequencer-render-training/evaluation/evaluate-priority-intent-retrieval.py \
   --intent-map /tmp/render-training-priority-intent-map.v2.json \
-  --cases scripts/sequencer-render-training/priority-intent-eval-cases.v3.json \
+  --cases scripts/sequencer-render-training/evaluation/fixtures/priority-intent-eval-cases.v3.json \
   --out-file /tmp/priority-intent-eval.v1.json
 ```
 
@@ -206,15 +215,15 @@ python3 scripts/sequencer-render-training/select-priority-effect.py \
 ```bash
 python3 scripts/sequencer-render-training/resolve-controlled-designer-term.py \
   --intent-map /tmp/render-training-priority-intent-map.v2.json \
-  --vocab scripts/sequencer-render-training/controlled-designer-vocab.v1.json \
+  --vocab scripts/sequencer-render-training/evaluation/fixtures/controlled-designer-vocab.v1.json \
   --term clean_fill
 ```
 
 ```bash
-python3 scripts/sequencer-render-training/evaluate-controlled-designer-vocabulary.py \
+python3 scripts/sequencer-render-training/evaluation/evaluate-controlled-designer-vocabulary.py \
   --intent-map /tmp/render-training-priority-intent-map.v2.json \
-  --vocab scripts/sequencer-render-training/controlled-designer-vocab.v1.json \
-  --cases scripts/sequencer-render-training/controlled-designer-vocab-cases.v1.json \
+  --vocab scripts/sequencer-render-training/evaluation/fixtures/controlled-designer-vocab.v1.json \
+  --cases scripts/sequencer-render-training/evaluation/fixtures/controlled-designer-vocab-cases.v1.json \
   --out-file /tmp/controlled-designer-vocab-eval.v1.json
 ```
 
@@ -257,9 +266,9 @@ python3 scripts/sequencer-render-training/cleanup-render-training-artifacts.py \
 ```
 
 ```bash
-python3 scripts/sequencer-render-training/evaluate-priority-effect-selection.py \
+python3 scripts/sequencer-render-training/evaluation/evaluate-priority-effect-selection.py \
   --intent-map /tmp/render-training-priority-intent-map.v2.json \
-  --cases scripts/sequencer-render-training/priority-effect-selection-cases.v1.json \
+  --cases scripts/sequencer-render-training/evaluation/fixtures/priority-effect-selection-cases.v1.json \
   --out-file /tmp/priority-effect-selection-eval.v1.json
 ```
 
@@ -275,19 +284,19 @@ python3 scripts/sequencer-render-training/analysis/analyze_decoded_window.py \
 ```
 
 ```bash
-bash scripts/sequencer-render-training/run-overnight-approved-matrix.sh \
+bash scripts/sequencer-render-training/runners/run-overnight-approved-matrix.sh \
   --out-dir /tmp/render-training-overnight
 ```
 
 ```bash
-bash scripts/sequencer-render-training/run-registry-plan.sh \
-  --plan scripts/sequencer-render-training/registry-planning-phase1.json \
+bash scripts/sequencer-render-training/runners/run-registry-plan.sh \
+  --plan scripts/sequencer-render-training/registry/registry-planning-phase1.json \
   --registry scripts/sequencer-render-training/effect-parameter-registry.json \
   --out-dir /tmp/render-training-registry-run
 ```
 
 ```bash
-bash scripts/sequencer-render-training/run-overnight-approved-matrix.sh \
+bash scripts/sequencer-render-training/runners/run-overnight-approved-matrix.sh \
   --phase-set phase1 \
   --out-dir /tmp/render-training-phase1
 ```
@@ -341,7 +350,8 @@ Environment:
   - default: `0`
   - optional manual recovery mode for batch runs
 - `RENDER_TRAINING_ROOT`
-  - default: `/Users/robterry/Projects/xLightsDesigner/render-training`
+  - recommended: `/Users/robterry/Projects/xLightsDesigner/var/render-training`
+  - legacy examples may still reference `/Users/robterry/Projects/xLightsDesigner/render-training`
   - internal workspace for packed `.fseq`, working `.xsq`, copied manifests, and derived artifacts
 - `PHASE_SET`
   - used by `run-overnight-approved-matrix.sh`

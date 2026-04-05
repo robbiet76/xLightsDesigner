@@ -4,10 +4,10 @@
     {
       "path": "README.md",
       "purpose": "documentation",
-      "refCount": 0,
+      "refCount": 1,
       "lifecycle": "active_core",
       "recommendation": "modify",
-      "notes": "needs rewrite around current directory policy and grouped layout"
+      "notes": "documents grouped layout and usage"
     },
     {
       "path": "analysis/analyze_decoded_window.py",
@@ -15,7 +15,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under grouped analysis support subtree"
+      "notes": "belongs under grouped analysis/tooling subtree in later cleanup"
     },
     {
       "path": "analysis/framework.py",
@@ -23,7 +23,7 @@
       "refCount": 0,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under grouped analysis support subtree"
+      "notes": "belongs under grouped analysis/tooling subtree in later cleanup"
     },
     {
       "path": "build-animation-fixture.py",
@@ -63,31 +63,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
-    },
-    {
-      "path": "colorwash-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "controlled-designer-vocab-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 1,
-      "lifecycle": "active_data",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "controlled-designer-vocab.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 2,
-      "lifecycle": "active_data",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
+      "notes": "support script in root"
     },
     {
       "path": "effect-parameter-registry.json",
@@ -98,28 +74,164 @@
       "notes": "core planning/training catalog"
     },
     {
-      "path": "evaluate-controlled-designer-vocabulary.py",
+      "path": "evaluation/evaluate-controlled-designer-vocabulary.py",
       "purpose": "evaluation_runner",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/"
+      "recommendation": "keep",
+      "notes": "evaluation entrypoint"
     },
     {
-      "path": "evaluate-priority-effect-selection.py",
+      "path": "evaluation/evaluate-priority-effect-selection.py",
       "purpose": "evaluation_runner",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/"
+      "recommendation": "keep",
+      "notes": "evaluation entrypoint"
     },
     {
-      "path": "evaluate-priority-intent-retrieval.py",
+      "path": "evaluation/evaluate-priority-intent-retrieval.py",
       "purpose": "evaluation_runner",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/"
+      "recommendation": "keep",
+      "notes": "evaluation entrypoint"
+    },
+    {
+      "path": "evaluation/fixtures/colorwash-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/controlled-designer-vocab-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/controlled-designer-vocab.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 2,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/on-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-effect-selection-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-effect-selection-cases.v2.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-effect-selection-cases.v3.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-effect-selection-cases.v4.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-effect-selection-cases.v5.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-intent-eval-cases.v2.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/priority-intent-eval-cases.v3.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 1,
+      "lifecycle": "active_data",
+      "recommendation": "keep",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/shimmer-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/shockwave-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/singlestrand-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/twinkle-intent-eval-cases.v1.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
+    },
+    {
+      "path": "evaluation/fixtures/twinkle-intent-eval-cases.v2.json",
+      "purpose": "evaluation_fixture",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review_for_archive",
+      "notes": "evaluation fixture"
     },
     {
       "path": "export-sequencer-stage1-bundle.py",
@@ -127,7 +239,7 @@
       "refCount": 3,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
+      "notes": "support script in root"
     },
     {
       "path": "extract-artifact-features.sh",
@@ -175,7 +287,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-effect-complexity-review.py",
@@ -183,7 +295,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-effect-geometry-gap-report.py",
@@ -191,15 +303,15 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-effect-intent-map.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-effect-maturity-report.py",
@@ -207,7 +319,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-effect-static-complexity-report.py",
@@ -215,7 +327,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-intent-gap-report.py",
@@ -223,7 +335,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-intent-vocab-summary.py",
@@ -231,7 +343,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-look-catalog.py",
@@ -239,7 +351,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-model-geometry-audit.py",
@@ -247,15 +359,15 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-parameter-region-summary.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-parameter-sweep-manifest.py",
@@ -263,7 +375,7 @@
       "refCount": 3,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-priority-effect-summary.py",
@@ -271,7 +383,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-priority-intent-map.py",
@@ -279,7 +391,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-range-transition-report.py",
@@ -287,15 +399,15 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-record-intent-map.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-registry-plan-manifests.py",
@@ -303,7 +415,7 @@
       "refCount": 2,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-sample-comparisons.sh",
@@ -311,47 +423,47 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-stage1-coverage-audit.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-stage1-coverage-backlog.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-stage1-coverage-plan.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-stage1-equalization-backlog.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generate-stage1-equalization-board.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under generators/ or reports/"
+      "recommendation": "review",
+      "notes": "belongs under generators/"
     },
     {
       "path": "generic-layout-geometry-audit.json",
@@ -375,7 +487,7 @@
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "support script in flat root"
+      "notes": "support script in root"
     },
     {
       "path": "lib.sh",
@@ -384,6 +496,14 @@
       "lifecycle": "candidate_archive",
       "recommendation": "review",
       "notes": "specialized tooling helper"
+    },
+    {
+      "path": "manifest.v1.json",
+      "purpose": "lifecycle_manifest",
+      "refCount": 3,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "directory inventory and lifecycle map"
     },
     {
       "path": "manifests/bars-archgroup-expanded-sweep-v1.json",
@@ -1135,7 +1255,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
+      "notes": "support script in root"
     },
     {
       "path": "normalize-manifest.py",
@@ -1143,79 +1263,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
-    },
-    {
-      "path": "on-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-effect-selection-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 1,
-      "lifecycle": "active_data",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-effect-selection-cases.v2.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-effect-selection-cases.v3.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-effect-selection-cases.v4.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-effect-selection-cases.v5.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-intent-eval-cases.v2.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "priority-intent-eval-cases.v3.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 1,
-      "lifecycle": "active_data",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
+      "notes": "support script in root"
     },
     {
       "path": "query-priority-intent-map.py",
@@ -1223,87 +1271,87 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
+      "notes": "support script in root"
     },
     {
-      "path": "registry-planning-phase1.json",
+      "path": "registry/registry-planning-phase1.json",
       "purpose": "registry_plan",
       "refCount": 3,
       "lifecycle": "active_data",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "keep",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-phase2.json",
+      "path": "registry/registry-planning-phase2.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-priority-effects-v1.json",
+      "path": "registry/registry-planning-priority-effects-v1.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-priority-effects-v2.json",
+      "path": "registry/registry-planning-priority-effects-v2.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-priority-effects-v3.json",
+      "path": "registry/registry-planning-priority-effects-v3.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-priority-effects-v4.json",
+      "path": "registry/registry-planning-priority-effects-v4.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-priority-effects-v5.json",
+      "path": "registry/registry-planning-priority-effects-v5.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-shockwave-v1.json",
+      "path": "registry/registry-planning-shockwave-v1.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-shockwave-v2.json",
+      "path": "registry/registry-planning-shockwave-v2.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
-      "path": "registry-planning-twinkle-v1.json",
+      "path": "registry/registry-planning-twinkle-v1.json",
       "purpose": "registry_plan",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under registry/"
+      "recommendation": "review_for_archive",
+      "notes": "registry planning input"
     },
     {
       "path": "resolve-controlled-designer-term.py",
@@ -1311,87 +1359,87 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
+      "notes": "support script in root"
     },
     {
-      "path": "run-current-effect-equalization.sh",
+      "path": "runners/run-current-effect-equalization.sh",
       "purpose": "runner",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-manifest.sh",
+      "path": "runners/run-manifest.sh",
       "purpose": "runner",
       "refCount": 1,
       "lifecycle": "active_manual",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-model-batch.sh",
+      "path": "runners/run-model-batch.sh",
       "purpose": "runner",
       "refCount": 1,
       "lifecycle": "active_manual",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-overnight-approved-matrix.sh",
+      "path": "runners/run-overnight-approved-matrix.sh",
       "purpose": "runner",
       "refCount": 2,
       "lifecycle": "active_manual",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-packed-model-batch.sh",
+      "path": "runners/run-packed-model-batch.sh",
       "purpose": "runner",
       "refCount": 1,
       "lifecycle": "active_manual",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-registry-plan.sh",
+      "path": "runners/run-registry-plan.sh",
       "purpose": "runner",
       "refCount": 1,
       "lifecycle": "active_manual",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-sample.sh",
+      "path": "runners/run-sample.sh",
       "purpose": "runner",
       "refCount": 1,
       "lifecycle": "active_manual",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-shockwave-interaction-set.sh",
+      "path": "runners/run-shockwave-interaction-set.sh",
       "purpose": "runner",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-stage1-coverage-round.sh",
+      "path": "runners/run-stage1-coverage-round.sh",
       "purpose": "runner",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "run-twinkle-interaction-set.sh",
+      "path": "runners/run-twinkle-interaction-set.sh",
       "purpose": "runner",
       "refCount": 0,
       "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under runners/"
+      "recommendation": "keep",
+      "notes": "operator-facing execution entrypoint"
     },
     {
       "path": "scan-fseq-active-ranges.py",
@@ -1399,7 +1447,7 @@
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "support script in flat root"
+      "notes": "support script in root"
     },
     {
       "path": "select-priority-effect.py",
@@ -1407,31 +1455,7 @@
       "refCount": 1,
       "lifecycle": "active_support",
       "recommendation": "move",
-      "notes": "support script in flat root"
-    },
-    {
-      "path": "shimmer-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "shockwave-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "singlestrand-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
+      "notes": "support script in root"
     },
     {
       "path": "slice-gif-by-time.swift",
@@ -1456,22 +1480,6 @@
       "lifecycle": "active_core",
       "recommendation": "keep",
       "notes": "core planning/training catalog"
-    },
-    {
-      "path": "twinkle-intent-eval-cases.v1.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
-    },
-    {
-      "path": "twinkle-intent-eval-cases.v2.json",
-      "purpose": "evaluation_fixture",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "move",
-      "notes": "belongs under evaluation/fixtures/"
     }
   ]
 }
