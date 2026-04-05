@@ -161,7 +161,7 @@ import { buildNormalizedTargetMetadataRecords } from "./runtime/target-metadata-
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
 import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
-import { createAutomationRuntime } from "./runtime/automation-runtime.js";
+import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -12490,7 +12490,7 @@ function getCurrentDirectSequenceValidationSnapshot() {
   };
 }
 
-const automationRuntime = createAutomationRuntime({
+const automationRuntime = createAutomationBridgeRuntime({
   state,
   agentRuntime,
   onSendChat,
@@ -12553,252 +12553,6 @@ const {
   getAutomationPageStatesSnapshot,
   getAutomationSequencerValidationSnapshot
 } = automationRuntime;
-
-async function showAutomationTenEffectGridDemo() {
-  const start = 78230;
-  const end = 97120;
-  const span = end - start;
-  const slot = Math.floor(span / 10);
-  const effectNames = ["Color Wash", "Shimmer", "Bars", "Butterfly", "Meteors", "Pinwheel", "Spirals", "Wave", "Candle", "Morph"];
-
-  clearDesignerDraft(state);
-  state.agentPlan = null;
-  clearSequencingHandoffsForSequenceChange("automation demo reset");
-
-  state.draftBaseRevision = String(state.revision || "unknown");
-  state.draftSequencePath = String(state.sequencePathInput || "").trim();
-  state.proposed = ["Chorus 1 / Snowman / Color Wash, Shimmer +8 more"];
-  state.flags.hasDraftProposal = true;
-  state.flags.proposalStale = false;
-
-  const intentHandoff = {
-    artifactId: `intent_handoff_v1-demo-${Date.now()}`,
-    artifactType: "intent_handoff_v1",
-    createdAt: new Date().toISOString(),
-    goal: "Sequence grid demo with ten effects on one target in one section.",
-    mode: "revise",
-    scope: {
-      targetIds: ["Snowman"],
-      tagNames: [],
-      sections: ["Chorus 1"],
-      timeRangeMs: { startMs: start, endMs: end }
-    },
-    constraints: {
-      changeTolerance: "medium",
-      preserveTimingTracks: true,
-      allowGlobalRewrite: false
-    },
-    directorPreferences: {
-      styleDirection: "demo",
-      energyArc: "hold",
-      focusElements: ["Snowman"],
-      colorDirection: "mixed"
-    },
-    approvalPolicy: {
-      requiresExplicitApprove: true,
-      elevatedRiskConfirmed: false
-    }
-  };
-
-  const commands = [
-    { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-    {
-      id: "timing.marks.insert",
-      dependsOn: ["timing.track.create"],
-      cmd: "timing.insertMarks",
-      params: {
-        trackName: "XD: Song Structure",
-        marks: [{ label: "Chorus 1", startMs: start, endMs: end }]
-      }
-    },
-    ...effectNames.map((effectName, i) => ({
-      id: `demo-placement-${i + 1}`,
-      dependsOn: ["timing.marks.insert"],
-      anchor: {
-        kind: "timing_track",
-        trackName: "XD: Song Structure",
-        markLabel: "Chorus 1",
-        startMs: start + (i * slot),
-        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
-        basis: "within_section"
-      },
-      cmd: "effects.create",
-      params: {
-        modelName: "Snowman",
-        layerIndex: 0,
-        effectName,
-        startMs: start + (i * slot),
-        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
-        settings: {},
-        palette: {}
-      }
-    }))
-  ];
-
-  const planHandoff = {
-    artifactId: `plan_handoff_v1-demo-${Date.now()}`,
-    artifactType: "plan_handoff_v1",
-    createdAt: new Date().toISOString(),
-    goal: "Show ten-effect Sequence grid aggregation demo.",
-    summary: "Ten effects on Snowman in Chorus 1 for Sequence grid validation.",
-    estimatedImpact: 10,
-    warnings: [],
-    commands,
-    baseRevision: state.draftBaseRevision,
-    validationReady: true
-  };
-
-  state.creative = state.creative || {};
-  state.creative.intentHandoff = structuredClone(intentHandoff);
-  state.agentPlan = {
-    source: "automation_demo",
-    summary: planHandoff.summary,
-    warnings: [],
-    estimatedImpact: 10,
-    handoff: structuredClone(planHandoff)
-  };
-
-  setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
-  setAgentHandoff("plan_handoff_v1", planHandoff, "sequence_agent");
-  setStatus("info", "Loaded ten-effect grid demo (proposal only).");
-  persist();
-  render();
-
-  return {
-    ok: true,
-    status: state.status || null,
-    activeSequence: state.activeSequence || "",
-    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
-  };
-}
-
-async function showAutomationSplitEffectGridDemo() {
-  const start = 78230;
-  const end = 97120;
-  const span = end - start;
-  const slot = Math.floor(span / 10);
-  const effectNames = [
-    "Color Wash", "Color Wash", "Color Wash", "Color Wash", "Color Wash",
-    "Shimmer", "Shimmer", "Shimmer", "Shimmer", "Shimmer"
-  ];
-
-  clearDesignerDraft(state);
-  state.agentPlan = null;
-  clearSequencingHandoffsForSequenceChange("automation demo reset");
-
-  state.draftBaseRevision = String(state.revision || "unknown");
-  state.draftSequencePath = String(state.sequencePathInput || "").trim();
-  state.proposed = ["Chorus 1 / Snowman / Color Wash, Shimmer"];
-  state.flags.hasDraftProposal = true;
-  state.flags.proposalStale = false;
-
-  const intentHandoff = {
-    artifactId: `intent_handoff_v1-demo-${Date.now()}`,
-    artifactType: "intent_handoff_v1",
-    createdAt: new Date().toISOString(),
-    goal: "Sequence grid demo with five Color Wash and five Shimmer effects on one target in one section.",
-    mode: "revise",
-    scope: {
-      targetIds: ["Snowman"],
-      tagNames: [],
-      sections: ["Chorus 1"],
-      timeRangeMs: { startMs: start, endMs: end }
-    },
-    constraints: {
-      changeTolerance: "medium",
-      preserveTimingTracks: true,
-      allowGlobalRewrite: false
-    },
-    directorPreferences: {
-      styleDirection: "demo",
-      energyArc: "hold",
-      focusElements: ["Snowman"],
-      colorDirection: "mixed"
-    },
-    approvalPolicy: {
-      requiresExplicitApprove: true,
-      elevatedRiskConfirmed: false
-    }
-  };
-
-  const commands = [
-    { id: "timing.track.create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
-    {
-      id: "timing.marks.insert",
-      dependsOn: ["timing.track.create"],
-      cmd: "timing.insertMarks",
-      params: {
-        trackName: "XD: Song Structure",
-        marks: [{ label: "Chorus 1", startMs: start, endMs: end }]
-      }
-    },
-    ...effectNames.map((effectName, i) => ({
-      id: `demo-split-placement-${i + 1}`,
-      dependsOn: ["timing.marks.insert"],
-      anchor: {
-        kind: "timing_track",
-        trackName: "XD: Song Structure",
-        markLabel: "Chorus 1",
-        startMs: start + (i * slot),
-        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
-        basis: "within_section"
-      },
-      cmd: "effects.create",
-      params: {
-        modelName: "Snowman",
-        layerIndex: 0,
-        effectName,
-        startMs: start + (i * slot),
-        endMs: i === effectNames.length - 1 ? end : start + ((i + 1) * slot),
-        settings: {},
-        palette: {}
-      }
-    }))
-  ];
-
-  const planHandoff = {
-    artifactId: `plan_handoff_v1-demo-${Date.now()}`,
-    artifactType: "plan_handoff_v1",
-    createdAt: new Date().toISOString(),
-    goal: "Show split-effect Sequence grid aggregation demo.",
-    summary: "Five Color Wash and five Shimmer effects on Snowman in Chorus 1.",
-    estimatedImpact: 10,
-    warnings: [],
-    commands,
-    baseRevision: state.draftBaseRevision,
-    validationReady: true
-  };
-
-  state.creative = state.creative || {};
-  state.creative.intentHandoff = structuredClone(intentHandoff);
-  state.agentPlan = {
-    source: "automation_demo",
-    summary: planHandoff.summary,
-    warnings: [],
-    estimatedImpact: 10,
-    handoff: structuredClone(planHandoff)
-  };
-
-  setAgentHandoff("intent_handoff_v1", intentHandoff, "designer_dialog");
-  setAgentHandoff("plan_handoff_v1", planHandoff, "sequence_agent");
-  setStatus("info", "Loaded split-effect grid demo (proposal only).");
-  persist();
-  render();
-
-  return {
-    ok: true,
-    status: state.status || null,
-    activeSequence: state.activeSequence || "",
-    proposedCount: Array.isArray(state.proposed) ? state.proposed.length : 0
-  };
-}
-
-function exposeRuntimeValidationHooks() {
-  automationRuntime.exposeRuntimeValidationHooks();
-  window.xLightsDesignerRuntime.showTenEffectGridDemo = showAutomationTenEffectGridDemo;
-  window.xLightsDesignerRuntime.showSplitEffectGridDemo = showAutomationSplitEffectGridDemo;
-  window.xLightsDesignerRuntime.acceptTimingTrackReview = onAcceptTimingTrackReview;
-}
 
 function getPageStates() {
   return buildPageStates({
@@ -13348,7 +13102,7 @@ function render() {
   }
 }
 
-exposeRuntimeValidationHooks();
+automationRuntime.exposeRuntimeValidationHooks();
 
 async function bootstrapLiveData() {
   try {
