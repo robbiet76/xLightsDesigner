@@ -159,10 +159,11 @@ import {
 import { buildPageStates } from "./app-ui/page-state/index.js";
 import { buildNormalizedTargetMetadataRecords } from "./runtime/target-metadata-runtime.js";
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
-import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
+import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
 import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
 import { createAudioAnalysisSessionRuntime } from "./runtime/audio-analysis-session-runtime.js";
+import { createSequenceMediaSessionRuntime } from "./runtime/sequence-media-session-runtime.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
@@ -693,6 +694,7 @@ let timingTrackRuntime = null;
 let uiCompositionRuntime = null;
 let projectCatalogRuntime = null;
 let audioAnalysisSessionRuntime = null;
+let sequenceMediaSessionRuntime = null;
 if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
@@ -4793,75 +4795,7 @@ async function syncLatestSequenceRevision({
 }
 
 async function onRefresh() {
-  state.ui.firstRunMode = false;
-  const prevDraftSequencePath = String(state.draftSequencePath || "").trim();
-  try {
-    await hydrateAgentHealth();
-    await executeXLightsRefreshCycle({
-      state,
-      endpoint: state.endpoint,
-      deps: {
-        getOpen: getOpenSequence,
-        syncRevision: () => syncLatestSequenceRevision({
-          onStaleMessage: "Sequence changed since draft creation. Refresh proposal before apply.",
-          onUnknownMessage: ""
-        }),
-        refreshMetadata: refreshMetadataTargetsFromXLights,
-        refreshEffects: refreshEffectCatalogFromXLights,
-        refreshSections: fetchSectionSuggestions,
-        refreshHistory: () => refreshApplyHistoryFromDesktop(40)
-      },
-      callbacks: {
-        applyRolloutPolicy,
-        releaseConnectivityPlanOnly,
-        enforceConnectivityPlanOnly,
-        isSequenceAllowed: isSequenceAllowedInActiveShowFolder,
-        currentSequencePath: currentSequencePathForSidecar,
-        clearIgnoredExternalSequenceNote,
-        applyOpenSequenceState,
-        onSequenceChanged: ({ previousPath = "", nextPath = "" } = {}) => {
-          if (nextPath && nextPath !== previousPath) {
-            clearDesignerDraft(state);
-            state.agentPlan = null;
-            state.creative = state.creative || {};
-            state.creative.intentHandoff = null;
-            clearSequencingHandoffsForSequenceChange("sequence changed");
-            invalidateApplyApproval();
-          }
-        },
-        onSequenceCleared: () => {
-          clearDesignerDraft(state);
-          state.agentPlan = null;
-          state.creative = state.creative || {};
-          state.creative.intentHandoff = null;
-          clearSequencingHandoffsForSequenceChange("sequence cleared");
-          invalidateApplyApproval();
-        },
-        syncAudioPathFromMediaStatus,
-        hydrateSidecarForCurrentSequence,
-        updateSequenceFileMtime,
-        maybeFlushSidecarAfterExternalSave,
-        noteIgnoredExternalSequence,
-        onWarning: (text, details = "") => setStatusWithDiagnostics("warning", text, details),
-        onInfo: (text) => setStatus("info", text)
-      }
-    });
-    const nextSequencePath = currentSequencePathForSidecar();
-    if (prevDraftSequencePath && nextSequencePath && nextSequencePath !== prevDraftSequencePath) {
-      clearDesignerDraft(state);
-      state.agentPlan = null;
-      state.creative = state.creative || {};
-      state.creative.intentHandoff = null;
-      clearSequencingHandoffsForSequenceChange("sequence changed");
-      invalidateApplyApproval();
-    }
-  } catch (err) {
-    state.flags.xlightsConnected = false;
-    enforceConnectivityPlanOnly();
-    setStatusWithDiagnostics("warning", `Refresh failed: ${err.message}`, err.stack || "");
-  }
-  persist();
-  render();
+  return sequenceMediaSessionRuntime.refresh();
 }
 
 async function onRefreshAndRegenerate() {
@@ -6988,68 +6922,19 @@ function designerMediaFolderPath() {
 }
 
 function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated") {
-  const prev = String(state.audioPathInput || "").trim();
-  const next = String(nextPath || "").trim();
-  state.audioPathInput = next;
-  if (prev !== next) {
-    invalidateAnalysisHandoff(reason, { cascadePlan: true });
-    resetDerivedAudioAnalysisState();
-    if (next) {
-      void hydrateAnalysisArtifactForCurrentMedia({ silent: true }).then((res) => {
-        if (res?.ok) {
-          saveCurrentProjectSnapshot();
-          persist();
-          render();
-        }
-      });
-    }
-  }
+  return sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(nextPath, reason);
 }
 
 function adoptMediaDirectoryFromPath(mediaFilePath = "") {
-  const mediaPath = String(mediaFilePath || "").trim();
-  if (!mediaPath || !mediaPath.includes("/")) return false;
-  const nextMediaDir = mediaPath.slice(0, mediaPath.lastIndexOf("/")).trim();
-  if (!nextMediaDir) return false;
-  if (String(state.mediaPath || "").trim() === nextMediaDir) return false;
-  state.mediaPath = nextMediaDir;
-  return true;
+  return sequenceMediaSessionRuntime.adoptMediaDirectoryFromPath(mediaFilePath);
 }
 
 function applySequenceMediaToAudioPath(sequenceData) {
-  if (!sequenceData || typeof sequenceData !== "object") return;
-  const mediaFile = String(sequenceData.mediaFile || "").trim();
-  state.sequenceMediaFile = mediaFile || "";
-  if (mediaFile) adoptMediaDirectoryFromPath(mediaFile);
-  if (!String(state.audioPathInput || "").trim() && mediaFile) {
-    setAudioPathWithAgentPolicy(mediaFile, "sequence media adopted as initial analysis track");
-  }
+  return sequenceMediaSessionRuntime.applySequenceMediaToAudioPath(sequenceData);
 }
 
 async function syncAudioPathFromMediaStatus() {
-  try {
-    const mediaBody = await getMediaStatus(state.endpoint);
-    const mediaFile = String(mediaBody?.data?.mediaFile || "").trim();
-    state.sequenceMediaFile = mediaFile || "";
-    const mediaDirChanged = mediaFile ? adoptMediaDirectoryFromPath(mediaFile) : false;
-    if (mediaDirChanged) {
-      await onRefreshMediaCatalog({ silent: true });
-    }
-    if (!String(state.audioPathInput || "").trim() && mediaFile) {
-      setAudioPathWithAgentPolicy(mediaFile, "media status adopted as initial analysis track");
-    }
-  } catch {
-    // Fallback for builds without media.getStatus.
-    try {
-      const open = await getOpenSequence(state.endpoint);
-      const seq = open?.data?.sequence;
-      if (open?.data?.isOpen && seq) {
-        applySequenceMediaToAudioPath(seq);
-      }
-    } catch {
-      // Keep existing value if neither endpoint is available.
-    }
-  }
+  return sequenceMediaSessionRuntime.syncAudioPathFromMediaStatus();
 }
 
 function extractPickedPath(file) {
@@ -9780,186 +9665,15 @@ async function onBrowseAudioPath() {
 }
 
 function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
-  const previousSequencePath = String(state.sequencePathInput || "").trim();
-  const sequencePath = readSequencePathFromPayload(sequencePayload, fallbackPath);
-  const sequenceChanged = Boolean(sequencePath) && sequencePath !== previousSequencePath;
-  const sequenceName = String(
-    sequencePayload?.name ||
-      (sequencePath ? sequencePath.split("/").pop() : "") ||
-      state.activeSequence ||
-      ""
-  ).trim();
-  const mediaFile = sequencePayload?.mediaFile;
-  const mediaPath = mediaFile == null ? "" : String(mediaFile).trim();
-  state.sequenceSettings = {
-    sequenceType: String(sequencePayload?.sequenceType || state.sequenceSettings?.sequenceType || "Media").trim() || "Media",
-    supportsModelBlending: Boolean(sequencePayload?.supportsModelBlending)
-  };
-
-  if (sequenceName) state.activeSequence = sequenceName;
-  if (sequencePath) {
-    state.sequencePathInput = sequencePath;
-    state.savePathInput = sequencePath;
-    state.ui.sequenceMode = "existing";
-    addRecentSequence(sequencePath);
-  }
-  state.sequenceMediaFile = mediaPath;
-  if (mediaPath && (sequenceChanged || !String(state.audioPathInput || "").trim())) {
-    setAudioPathWithAgentPolicy(
-      mediaPath,
-      sequenceChanged
-        ? "open sequence media adopted for sequence switch"
-        : "open sequence media adopted as initial analysis track"
-    );
-  }
+  return sequenceMediaSessionRuntime.applyOpenSequenceState(sequencePayload, fallbackPath);
 }
 
 async function onOpenSequence() {
-  const previousPath = selectedSequencePath();
-  syncSequencePathInput();
-  const targetPath = selectedSequencePath();
-  if (!state.flags.xlightsConnected) {
-    setStatus("warning", "Connect to xLights before opening a sequence.");
-    return render();
-  }
-  if (!targetPath) {
-    setStatus("warning", state.ui.sequenceMode === "new" ? "Provide a new sequence path." : "Provide an existing sequence path.");
-    return render();
-  }
-
-  if (state.ui.sequenceMode === "new" && state.newSequenceType === "musical" && !state.audioPathInput) {
-    setStatus("warning", "Musical sequence requires an audio file path.");
-    return render();
-  }
-
-  setStatus("info", state.ui.sequenceMode === "new" ? "Creating sequence..." : "Opening sequence...");
-  render();
-  try {
-    await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
-
-    const isAnimation = state.newSequenceType === "animation";
-    const mediaFile = isAnimation ? null : (state.audioPathInput || null);
-    const durationMs = isAnimation || !mediaFile ? state.newSequenceDurationMs : undefined;
-    const body = state.ui.sequenceMode === "new"
-      ? await createSequence(state.endpoint, {
-          file: targetPath,
-          mediaFile,
-          durationMs,
-          frameMs: state.newSequenceFrameMs
-        })
-      : await traceSequenceFileLifecycle("sequence.open", targetPath, () => openSequence(state.endpoint, targetPath, false, false));
-    if (state.ui.sequenceMode === "new") {
-      await traceSequenceFileLifecycle("sequence.create+save", targetPath, async () => {
-        await saveSequence(state.endpoint, targetPath);
-        await assertSequenceFileSafeAfterSave(targetPath, "New sequence save");
-        return body;
-      });
-    }
-    const seq = body?.data?.sequence || body?.data || {};
-    applyOpenSequenceState(seq, targetPath);
-    if (targetPath !== previousPath) {
-      state.lastApplyBackupPath = "";
-    }
-    state.flags.activeSequenceLoaded = true;
-    if (targetPath !== previousPath) {
-      resetCreativeState();
-      state.ui.agentResponseId = "";
-    }
-    setStatus(
-      "info",
-      `${state.ui.sequenceMode === "new" ? "Sequence ready" : "Opened sequence"}: ${state.activeSequence || targetPath}`
-    );
-    state.route = "sequence";
-    render();
-
-    try {
-      await withTimeout(hydrateSidecarForCurrentSequence(), 3000, "Hydrate sidecar");
-    } catch (err) {
-      pushDiagnostic("warning", `Post-open sidecar hydrate timed out: ${err.message}`);
-    }
-    try {
-      await withTimeout(syncAudioPathFromMediaStatus(), 3000, "Sync media status");
-    } catch (err) {
-      pushDiagnostic("warning", `Post-open media sync timed out: ${err.message}`);
-    }
-    try {
-      await withTimeout(onRefresh(), 6000, "Post-open refresh");
-    } catch (err) {
-      pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
-      setStatus(
-        "warning",
-        "Sequence opened, but refresh is taking too long. You can continue and use Refresh if needed."
-      );
-    }
-  } catch (err) {
-    setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
-    render();
-  } finally {
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  }
+  return sequenceMediaSessionRuntime.openCurrentSequence();
 }
 
 async function onOpenExistingSequence(targetPathInput = "", options = {}) {
-  const previousPath = String(state.sequencePathInput || "").trim();
-  const targetPath = String(targetPathInput || state.sequencePathInput || "").trim();
-  const skipPostOpenRefresh = options?.skipPostOpenRefresh === true;
-  if (!state.flags.xlightsConnected) {
-    setStatus("warning", "Connect to xLights before opening a sequence.");
-    return render();
-  }
-  if (!targetPath) {
-    setStatus("warning", "Choose a sequence first.");
-    return render();
-  }
-
-  setStatus("info", "Opening sequence...");
-  render();
-  try {
-    await closeActiveSequenceForSwitch({ mode: "discard-unsaved" });
-    const body = await traceSequenceFileLifecycle("sequence.open", targetPath, () => openSequence(state.endpoint, targetPath, false, false));
-    const seq = body?.data?.sequence || body?.data || {};
-    applyOpenSequenceState(seq, targetPath);
-    if (targetPath !== previousPath) {
-      state.lastApplyBackupPath = "";
-      resetCreativeState();
-      state.ui.agentResponseId = "";
-    }
-    state.flags.activeSequenceLoaded = true;
-    setStatus("info", `Opened sequence: ${state.activeSequence || targetPath}`);
-    state.route = "sequence";
-    render();
-
-    try {
-      await withTimeout(hydrateSidecarForCurrentSequence(), 3000, "Hydrate sidecar");
-    } catch (err) {
-      pushDiagnostic("warning", `Post-open sidecar hydrate timed out: ${err.message}`);
-    }
-    try {
-      await withTimeout(syncAudioPathFromMediaStatus(), 3000, "Sync media status");
-    } catch (err) {
-      pushDiagnostic("warning", `Post-open media sync timed out: ${err.message}`);
-    }
-    if (!skipPostOpenRefresh) {
-      try {
-        await withTimeout(onRefresh(), 6000, "Post-open refresh");
-      } catch (err) {
-        pushDiagnostic("warning", `Post-open refresh timed out: ${err.message}`);
-        setStatus(
-          "warning",
-          "Sequence opened, but refresh is taking too long. You can continue and use Refresh if needed."
-        );
-      }
-    }
-  } catch (err) {
-    setStatusWithDiagnostics("action-required", `Open failed: ${err.message}`, err.stack || "");
-    render();
-  } finally {
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  }
+  return sequenceMediaSessionRuntime.openExistingSequence(targetPathInput, options);
 }
 
 async function onOpenSelectedSequence() {
@@ -10286,6 +10000,57 @@ audioAnalysisSessionRuntime = createAudioAnalysisSessionRuntime({
   pushDiagnostic,
   applyAudioAnalystFlowFailureToState,
   runAudioAnalysisPipeline
+});
+
+sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
+  state,
+  setStatus,
+  setStatusWithDiagnostics,
+  render,
+  persist,
+  saveCurrentProjectSnapshot,
+  invalidateAnalysisHandoff,
+  resetDerivedAudioAnalysisState,
+  hydrateAnalysisArtifactForCurrentMedia,
+  hydrateAgentHealth,
+  syncLatestSequenceRevision,
+  refreshMetadataTargetsFromXLights,
+  refreshEffectCatalogFromXLights,
+  fetchSectionSuggestions,
+  refreshApplyHistoryFromDesktop,
+  applyRolloutPolicy,
+  releaseConnectivityPlanOnly,
+  enforceConnectivityPlanOnly,
+  isSequenceAllowedInActiveShowFolder,
+  currentSequencePathForSidecar,
+  clearIgnoredExternalSequenceNote,
+  clearDesignerDraft,
+  clearSequencingHandoffsForSequenceChange,
+  invalidateApplyApproval,
+  hydrateSidecarForCurrentSequence,
+  updateSequenceFileMtime,
+  maybeFlushSidecarAfterExternalSave,
+  noteIgnoredExternalSequence,
+  pushDiagnostic,
+  withTimeout,
+  closeActiveSequenceForSwitch,
+  traceSequenceFileLifecycle,
+  openSequenceApi: openSequence,
+  createSequenceApi: createSequence,
+  saveSequenceApi: saveSequence,
+  closeSequenceApi: closeSequence,
+  getOpenSequence,
+  getMediaStatus,
+  selectedSequencePath,
+  syncSequencePathInput,
+  resetCreativeState,
+  readSequencePathFromPayload,
+  basenameOfPath,
+  onRefreshMediaCatalog,
+  onRefresh: () => onRefresh(),
+  addRecentSequence,
+  assertSequenceFileSafeAfterSave,
+  resetSessionDraftState
 });
 
 async function onOpenSelectedProject(selectedKeyArg = "") {
@@ -12080,32 +11845,9 @@ async function onAnalyzeAudio({
 }
 
 async function onCloseSequence() {
-  if (!state.flags.xlightsConnected) {
-    setStatusWithDiagnostics("warning", "Connect to xLights before closing sequence.");
-    return render();
-  }
-  if (!window.confirm("Close active sequence in xLights?")) {
-    setStatus("info", "Close sequence canceled.");
-    return render();
-  }
-
-  setStatus("info", "Closing sequence...");
-  render();
-  try {
-    await closeSequence(state.endpoint, true, false);
-    state.flags.activeSequenceLoaded = false;
-    state.revision = "unknown";
-    state.activeSequence = "(none)";
-    resetSessionDraftState();
-    resetCreativeState();
-    setStatus("info", "Sequence closed.");
-  } catch (err) {
-    setStatusWithDiagnostics("action-required", `Close failed: ${err.message}`, err.stack || "");
-  } finally {
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  }
+  return sequenceMediaSessionRuntime.closeSequenceWithPrompt({
+    confirm: (message) => window.confirm(message)
+  });
 }
 
 async function onRestoreLastBackup() {
