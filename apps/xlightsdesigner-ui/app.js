@@ -3875,7 +3875,7 @@ async function syncOpenSequenceOnFocusReturn() {
       applyOpenSequenceState(seq);
       state.flags.activeSequenceLoaded = true;
       state.health.sequenceOpen = true;
-      await syncAudioPathFromMediaStatus();
+      await sequenceMediaSessionRuntime.syncAudioPathFromMediaStatus();
 
       const nextPath = currentSequencePathForSidecar();
       if (nextPath && nextPath !== prevPath) {
@@ -5317,7 +5317,7 @@ async function onRunOrchestrationMatrix() {
       const beforeAudio = String(state.audioPathInput || "");
       setAgentHandoff("analysis_handoff_v1", buildOrchestrationTestAnalysisHandoff(), "audio_analyst");
       const changed = beforeAudio ? `${beforeAudio}.matrix` : "/tmp/matrix-audio.mp3";
-      setAudioPathWithAgentPolicy(changed, "matrix audio change");
+      sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(changed, "matrix audio change");
       const analysisCleared = !getValidHandoff("analysis_handoff_v1");
       const planCleared = !getValidHandoff("plan_handoff_v1");
       return {
@@ -5673,22 +5673,6 @@ function sequenceFolderPath() {
 function designerMediaFolderPath() {
   const base = sequenceFolderPath();
   return base ? `${base}/xlightsdesigner-media` : "xlightsdesigner-media";
-}
-
-function setAudioPathWithAgentPolicy(nextPath = "", reason = "audio path updated") {
-  return sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(nextPath, reason);
-}
-
-function adoptMediaDirectoryFromPath(mediaFilePath = "") {
-  return sequenceMediaSessionRuntime.adoptMediaDirectoryFromPath(mediaFilePath);
-}
-
-function applySequenceMediaToAudioPath(sequenceData) {
-  return sequenceMediaSessionRuntime.applySequenceMediaToAudioPath(sequenceData);
-}
-
-async function syncAudioPathFromMediaStatus() {
-  return sequenceMediaSessionRuntime.syncAudioPathFromMediaStatus();
 }
 
 function extractPickedPath(file) {
@@ -7992,7 +7976,7 @@ function syncSequencePathInput() {
   }
   const audioInput = app.querySelector("#audio-path-input");
   if (audioInput) {
-    setAudioPathWithAgentPolicy(audioInput.value.trim() || "", "audio path edited");
+    sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(audioInput.value.trim() || "", "audio path edited");
   }
   const typeInput = app.querySelector("#new-sequence-type-input");
   if (typeInput) {
@@ -8244,7 +8228,7 @@ async function onBrowseAudioPath() {
     ]
   });
   if (!selected) return;
-  setAudioPathWithAgentPolicy(selected, "audio path selected");
+  sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(selected, "audio path selected");
   saveCurrentProjectSnapshot();
   persist();
   render();
@@ -8856,18 +8840,6 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   clearDesignerDraft
 });
 
-async function onOpenSelectedProject(selectedKeyArg = "") {
-  return projectLifecycleRuntime.openSelectedProject(selectedKeyArg);
-}
-
-function onCreateNewProject() {
-  return projectLifecycleRuntime.createNewProject();
-}
-
-async function onSaveProjectAs() {
-  return projectLifecycleRuntime.saveProjectAs();
-}
-
 async function onRefreshModels() {
   if (!state.flags.xlightsConnected) {
     setStatusWithDiagnostics("warning", "Connect to xLights before refreshing models.");
@@ -8897,14 +8869,6 @@ async function onRefreshModels() {
     persist();
     render();
   }
-}
-
-function onResetProjectWorkspace() {
-  return projectLifecycleRuntime.resetProjectWorkspace();
-}
-
-async function onResetAppInstallState() {
-  return projectLifecycleRuntime.resetAppInstallState();
 }
 
 function resetSessionDraftState() {
@@ -10491,7 +10455,7 @@ async function runCurrentDirectSequenceValidation(expected = {}) {
 function getCurrentDirectSequenceValidationSnapshot() {
   return {
     endpoint: state.endpoint,
-    pageStates: getPageStates(),
+    pageStates: uiCompositionRuntime.getPageStates(),
     activeSequence: state.activeSequence || "",
     handoffs: {
       analysisHandoff: getValidHandoff("analysis_handoff_v1"),
@@ -10511,9 +10475,9 @@ const automationRuntime = createAutomationBridgeRuntime({
   onAnalyzeAudio,
   onSeedTimingTracksFromAnalysis,
   onOpenExistingSequence,
-  setAudioPath: setAudioPathWithAgentPolicy,
+  setAudioPath: (...args) => sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(...args),
   onRefreshSequenceCatalog,
-  adoptMediaDirectoryFromPath,
+  adoptMediaDirectoryFromPath: (...args) => sequenceMediaSessionRuntime.adoptMediaDirectoryFromPath(...args),
   onRefreshMediaCatalog,
   clearDesignRevisionTarget,
   normalizeDesignRevisionTarget,
@@ -10545,7 +10509,7 @@ const automationRuntime = createAutomationBridgeRuntime({
   setStatus,
   runCurrentDirectSequenceValidation,
   getCurrentDirectSequenceValidationSnapshot,
-  getPageStates
+  getPageStates: () => uiCompositionRuntime.getPageStates()
 });
 
 const {
@@ -10608,18 +10572,6 @@ uiCompositionRuntime = createUiCompositionRuntime({
     versionById
   }
 });
-
-function getPageStates() {
-  return uiCompositionRuntime.getPageStates();
-}
-
-function screenContent(pageStates = getPageStates()) {
-  return uiCompositionRuntime.screenContent(pageStates);
-}
-
-function diagnosticsPanel() {
-  return uiCompositionRuntime.diagnosticsPanel();
-}
 
 function bindEvents() {
   app.querySelectorAll("[data-route]").forEach((btn) => {
@@ -10689,7 +10641,11 @@ function bindEvents() {
   if (clearDiagnosticsBtn) clearDiagnosticsBtn.addEventListener("click", clearDiagnostics);
 
   const resetAppInstallStateBtn = app.querySelector("#reset-app-install-state");
-  if (resetAppInstallStateBtn) resetAppInstallStateBtn.addEventListener("click", onResetAppInstallState);
+  if (resetAppInstallStateBtn) {
+    resetAppInstallStateBtn.addEventListener("click", () => {
+      void projectLifecycleRuntime.resetAppInstallState();
+    });
+  }
 
   const exportDiagnosticsBtn = app.querySelector("#export-diagnostics");
   if (exportDiagnosticsBtn) exportDiagnosticsBtn.addEventListener("click", onExportDiagnostics);
@@ -10896,12 +10852,12 @@ function bindEvents() {
     render,
     setStatus,
     saveCurrentProjectSnapshot,
-    setAudioPathWithAgentPolicy,
+    setAudioPathWithAgentPolicy: (...args) => sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(...args),
     onSaveProjectSettings,
-    onOpenSelectedProject,
-    onCreateNewProject,
-    onSaveProjectAs,
-    onResetProjectWorkspace,
+    onOpenSelectedProject: (...args) => projectLifecycleRuntime.openSelectedProject(...args),
+    onCreateNewProject: (...args) => projectLifecycleRuntime.createNewProject(...args),
+    onSaveProjectAs: (...args) => projectLifecycleRuntime.saveProjectAs(...args),
+    onResetProjectWorkspace: (...args) => projectLifecycleRuntime.resetProjectWorkspace(...args),
     onBrowseProjectMetadataRoot,
     onOpenSelectedSequence,
     onNewSequence,
@@ -10985,11 +10941,11 @@ function render() {
   const focusSnapshot = captureRenderFocusState();
   const buildLabel = getBuildLabel();
   const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
-  const pageStates = getPageStates();
+  const pageStates = uiCompositionRuntime.getPageStates();
   try {
     app.innerHTML = buildAppShell({
       state,
-      screenContent: screenContent(pageStates),
+      screenContent: uiCompositionRuntime.screenContent(pageStates),
       helpers: {
         escapeHtml,
         renderInlineChipSentence,
