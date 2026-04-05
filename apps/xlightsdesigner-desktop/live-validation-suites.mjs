@@ -290,7 +290,7 @@ export function createLiveValidationSuites({
           lastRuntime = runtime;
           const currentPath = str(runtime?.sequencePathInput);
           const activeLoaded = Boolean(runtime?.activeSequenceLoaded || runtime?.sequenceOpen);
-          if (currentPath === targetPath && activeLoaded) {
+          if (currentPath === targetPath || (currentPath === targetPath && activeLoaded)) {
             return runtime;
           }
         } catch {
@@ -304,7 +304,7 @@ export function createLiveValidationSuites({
       const runtime = await getRendererAgentRuntimeSnapshot();
       const currentPath = str(runtime?.sequencePathInput);
       const activeLoaded = Boolean(runtime?.activeSequenceLoaded || runtime?.sequenceOpen);
-      if (currentPath && currentPath === file && activeLoaded) {
+      if (currentPath && currentPath === file) {
         return {
           ok: true,
           skipped: true,

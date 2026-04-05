@@ -3699,6 +3699,22 @@ async function onGenerate(intentOverride = "", options = {}) {
     });
   };
   const bridge = getDesktopBridge();
+  if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode && state.flags.xlightsConnected) {
+    try {
+      const open = await getOpenSequence(state.endpoint);
+      const seq = open?.data?.sequence;
+      if (open?.data?.isOpen && seq && isSequenceAllowedInActiveShowFolder(seq)) {
+        clearIgnoredExternalSequenceNote();
+        applyOpenSequenceState(seq);
+        state.flags.activeSequenceLoaded = true;
+        state.health.sequenceOpen = true;
+      } else if (open?.data?.isOpen && seq) {
+        noteIgnoredExternalSequence(seq, "xLights");
+      }
+    } catch {
+      // Best effort only; fall through to the existing guard if still unavailable.
+    }
+  }
   if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
     setStatus("action-required", "Open a sequence or enter plan-only mode.");
     return render();
