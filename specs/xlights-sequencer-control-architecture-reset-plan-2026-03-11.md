@@ -1,11 +1,11 @@
 # Architecture Reset Plan (2026-03-11)
 
-Status: Active execution plan
+Status: Foundational historical plan
 Date: 2026-03-11
 Owner: xLightsDesigner program
 Last Reviewed: 2026-03-11
 
-Purpose: Re-anchor implementation to one high-level plan with explicit gates, boundaries, and sequencing.
+Purpose: record the March 2026 architecture reset that re-anchored implementation around explicit gates, boundaries, and sequencing. This remains useful as historical context and foundational contract guidance, but it is no longer the current execution spine.
 
 ## 1) Why Reset
 
@@ -140,3 +140,7 @@ Exit gate:
 - `README.md`: mark this document as active execution spine.
 - `implementation-roadmap.md`: note it is governed by this reset plan.
 - `acceptance-test-matrix.md`: add sidecar consistency and manual-lock test cases.
+
+
+## 2026-04-05 Note
+Current execution is now driven by `current-app-plan-2026-04-05.md`, the timing-track workflow checklist, and the reviewed-timing sequencer quality checklist.

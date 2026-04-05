@@ -3,7 +3,7 @@
 Status: Completed
 Date: 2026-03-11
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-04-05
 
 Scope: `specs/` cleanup after flattening from project folders.
 
@@ -17,14 +17,10 @@ Create a clean, maintainable active spec set and move step-specific historical d
 
 ## Consolidation Decisions
 
-### Kept Active (authoritative)
-- `audio-timing-lyrics-project-spec.md`
-- `audio-timing-lyrics-api-contract.md`
-- `audio-timing-lyrics-decision-log.md`
-- `audio-timing-lyrics-implementation-checklist.md`
+### Kept Active (authoritative at the time)
+- `audio-timing-lyrics-*` audio docs (now removed and superseded by `specs/audio-analyst/*`)
 - `xlights-sequencer-control-project-spec.md`
 - `xlights-sequencer-control-api-surface-contract.md`
-- `xlights-sequencer-control-designer-interaction-contract.md`
 - `xlights-sequencer-control-decision-log.md`
 - `xlights-sequencer-control-implementation-roadmap.md`
 - `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`
@@ -69,3 +65,7 @@ Create a clean, maintainable active spec set and move step-specific historical d
 - `specs/spec-lifecycle-policy.md`
 - `specs/requirements-traceability-matrix.md`
 - `specs/agent-release-quality-gates.md`
+
+## 2026-04-05 Note
+This document records the March 2026 consolidation event. It is not the current execution spine.
+Use `current-app-plan-2026-04-05.md` plus domain READMEs for the current active plan.
