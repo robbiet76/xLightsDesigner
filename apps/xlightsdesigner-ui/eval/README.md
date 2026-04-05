@@ -18,6 +18,7 @@ Promoted entry points:
 
 Policy:
 - do not add new top-level eval runners until they are classified in the manifest
+- archived ad hoc tools live under `eval/archive/` and are outside the promoted active surface
 - prefer updating promoted runners over creating new adjacent entry points
 - keep historical baselines only when they serve comparison or reproducibility
 

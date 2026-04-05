@@ -165,21 +165,21 @@
       "invocation": "run-live-practical-benchmark.mjs"
     },
     {
-      "path": "report-audio-analysis-quality.mjs",
+      "path": "archive/report-audio-analysis-quality.mjs",
       "status": "candidate_archive",
       "owner": "audio_analyst",
       "purpose": "Ad hoc reporting utility for audio-analysis quality snapshots.",
       "invocation": "manual"
     },
     {
-      "path": "report-visual-hint-definitions.mjs",
+      "path": "archive/report-visual-hint-definitions.mjs",
       "status": "candidate_archive",
       "owner": "designer_dialog",
       "purpose": "Ad hoc reporting utility for visual hint definitions.",
       "invocation": "manual"
     },
     {
-      "path": "run-audio-analysis-corpus-benchmark.mjs",
+      "path": "archive/run-audio-analysis-corpus-benchmark.mjs",
       "status": "candidate_archive",
       "owner": "audio_analyst",
       "purpose": "Ad hoc corpus benchmark runner for audio analysis.",
