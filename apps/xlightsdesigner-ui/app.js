@@ -2708,10 +2708,6 @@ function invalidateApplyApproval() {
   state.ui.applyApprovalChecked = false;
 }
 
-function currentImpactCount() {
-  return applyReadinessRuntime.currentImpactCount();
-}
-
 function parseVersionParts(versionText) {
   const text = String(versionText || "").trim();
   const m = text.match(/^(\d{4})\.(\d{1,2})/);
@@ -3072,10 +3068,6 @@ async function verifyAppliedPlanReadback(plan = []) {
     getDisplayElementOrder,
     listEffects
   });
-}
-
-async function preflightSequenceFileForApply() {
-  return applyReviewRuntime.preflightSequenceFileForApply();
 }
 
 async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
