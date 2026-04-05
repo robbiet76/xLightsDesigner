@@ -737,8 +737,58 @@ let audioAnalysisSessionRuntime = null;
 let sequenceMediaSessionRuntime = null;
 let projectLifecycleRuntime = null;
 let proposalGenerationRuntime = null;
+function applyAnalysisServiceDefaults(targetState) {
+  if (!targetState || typeof targetState !== "object") return;
+  if (!targetState.ui || typeof targetState.ui !== "object") return;
+  if (!String(targetState.ui.analysisServiceUrlDraft || "").trim()) {
+    targetState.ui.analysisServiceUrlDraft = DEFAULT_ANALYSIS_SERVICE_URL;
+  }
+}
+
+function getSequenceTimingTrackPoliciesState() {
+  return timingTrackRuntime?.getPoliciesState() || {};
+}
+
+function setSequenceTimingTrackPoliciesState(policies = {}) {
+  timingTrackRuntime?.setPoliciesState(policies);
+}
+
+function getSequenceTimingGeneratedSignaturesState() {
+  return timingTrackRuntime?.getGeneratedSignaturesState() || {};
+}
+
+function setSequenceTimingGeneratedSignaturesState(signatures = {}) {
+  timingTrackRuntime?.setGeneratedSignaturesState(signatures);
+}
+
+function getSequenceTimingTrackProvenanceState() {
+  return timingTrackRuntime?.getProvenanceState() || {};
+}
+
+function setSequenceTimingTrackProvenanceState(records = {}) {
+  timingTrackRuntime?.setProvenanceState(records);
+}
+
+function getSequenceTimingOwnershipRows() {
+  return timingTrackRuntime?.getOwnershipRows() || [];
+}
+
+function getManualLockedXdTracks() {
+  return timingTrackRuntime?.getManualLockedXdTracks() || [];
+}
+
+function getBuildLabel() {
+  const buildVersion = String(state.health.desktopAppVersion || "").trim();
+  const buildTimeIso = String(state.health.desktopBuildTime || "").trim();
+  const buildTimeLabel = buildTimeIso
+    ? new Date(buildTimeIso).toLocaleString([], { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+    : "";
+  return buildVersion
+    ? `Build: v${buildVersion}${buildTimeLabel ? ` @ ${buildTimeLabel}` : ""}`
+    : "Build: unknown";
+}
 if (state.route === "inspiration") state.route = "design";
-ensureAnalysisServiceDefaults(state);
+applyAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
 if (!state.teamChat || typeof state.teamChat !== "object") {
   state.teamChat = { identities: buildTeamChatIdentities(DEFAULT_TEAM_CHAT_IDENTITIES), introducedRoleIds: [] };
@@ -1040,21 +1090,7 @@ function hydrateIntentHandoffExecutionStrategy(intentHandoff = null, proposalBun
 }
 
 
-function agentRuntimeState.refreshAgentRuntimeHealth() {
-  return agentRuntimeState.agentRuntimeState.refreshAgentRuntimeHealth();
-}
 
-function agentRuntimeState.beginOrchestrationRun({ trigger = "", role = "" } = {}) {
-  return agentRuntimeState.agentRuntimeState.beginOrchestrationRun({ trigger, role });
-}
-
-function agentRuntimeState.markOrchestrationStage(run, stage = "", status = "ok", detail = "") {
-  return agentRuntimeState.agentRuntimeState.markOrchestrationStage(run, stage, status, detail);
-}
-
-function agentRuntimeState.endOrchestrationRun(run, { status = "ok", summary = "" } = {}) {
-  return agentRuntimeState.agentRuntimeState.endOrchestrationRun(run, { status, summary });
-}
 
 function pushSequenceAgentContractDiagnostic(report = {}) {
   if (!isPlainObject(report)) return;
@@ -1114,44 +1150,6 @@ function arraysEqualOrdered(a = [], b = []) {
     if (String(left[i] || "") !== String(right[i] || "")) return false;
   }
   return true;
-}
-
-function agentRuntimeState.buildAgentPersistenceContext() {
-  return agentRuntimeState.agentRuntimeState.buildAgentPersistenceContext();
-}
-
-function agentRuntimeState.setAgentActiveRole(roleId = "") {
-  return agentRuntimeState.agentRuntimeState.setAgentActiveRole(roleId);
-}
-
-function agentRuntimeState.setAgentHandoff(contract = "", payload = {}, producer = "") {
-  return agentRuntimeState.agentRuntimeState.setAgentHandoff(contract, payload, producer);
-}
-
-function agentRuntimeState.getValidHandoff(contract = "") {
-  return agentRuntimeState.agentRuntimeState.getValidHandoff(contract);
-}
-
-function agentRuntimeState.getValidHandoffRecord(contract = "") {
-  return agentRuntimeState.agentRuntimeState.getValidHandoffRecord(contract);
-}
-
-function agentRuntimeState.clearAgentHandoff(contract = "", reason = "", { pushLog = true } = {}) {
-  return agentRuntimeState.agentRuntimeState.clearAgentHandoff(contract, reason, { pushLog });
-}
-
-function agentRuntimeState.invalidatePlanHandoff(reason = "context changed") {
-  return agentRuntimeState.agentRuntimeState.invalidatePlanHandoff(reason);
-}
-
-function agentRuntimeState.invalidateAnalysisHandoff(reason = "audio changed", { cascadePlan = true } = {}) {
-  return agentRuntimeState.agentRuntimeState.invalidateAnalysisHandoff(reason, { cascadePlan });
-}
-
-
-
-function agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason = "sequence changed") {
-  return agentRuntimeState.agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason);
 }
 
 
@@ -1251,7 +1249,7 @@ async function hydrateStateFromDesktop() {
       const hydrated = loadState();
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state, hydrated);
-      ensureAnalysisServiceDefaults(state);
+      applyAnalysisServiceDefaults(state);
       normalizeProjectIdentityFields(state);
       normalizeDraftState(state);
     }
@@ -7133,10 +7131,9 @@ projectCatalogRuntime = createProjectCatalogRuntime({
   persist,
   render,
   saveCurrentProjectSnapshot,
-  buildResolvedTrackIdentityForMediaMatching,
-  loadPersistedTrackIdentityForMediaPath,
-  resolvePreferredMediaCatalogEntry,
-  setAudioPathWithAgentPolicy
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
+  getDesktopAnalysisArtifactBridge,
+  setAudioPathWithAgentPolicy: (...args) => sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(...args)
 });
 
 agentSupportRuntime = createAgentSupportRuntime({
@@ -7147,7 +7144,7 @@ agentSupportRuntime = createAgentSupportRuntime({
   getDesktopAgentConfigBridge,
   validateTrainingAgentRegistry,
   isPlainObject,
-  refreshAgentRuntimeHealth,
+  refreshAgentRuntimeHealth: (...args) => agentRuntimeState.refreshAgentRuntimeHealth(...args),
   pushDiagnostic,
   setStatus,
   setStatusWithDiagnostics,
@@ -7184,9 +7181,6 @@ audioAnalysisPipelineRuntime = createAudioAnalysisPipelineRuntime({
   maybePromptForMissingIdentityMetadata,
   isPlainObject,
   buildSectionSuggestions,
-  areMetersCompatible,
-  extractNumericCandidates,
-  medianNumber,
   loadAudioTrainingPackageBundle: (...args) => analysisServiceRuntime.loadAudioTrainingPackageBundle(...args)
 });
 
@@ -7198,18 +7192,18 @@ audioAnalysisSessionRuntime = createAudioAnalysisSessionRuntime({
   render,
   persist,
   saveCurrentProjectSnapshot,
-  setAgentActiveRole,
-  beginOrchestrationRun,
-  refreshAgentRuntimeHealth,
-  markOrchestrationStage,
-  endOrchestrationRun,
+  setAgentActiveRole: (...args) => agentRuntimeState.setAgentActiveRole(...args),
+  beginOrchestrationRun: (...args) => agentRuntimeState.beginOrchestrationRun(...args),
+  refreshAgentRuntimeHealth: (...args) => agentRuntimeState.refreshAgentRuntimeHealth(...args),
+  markOrchestrationStage: (...args) => agentRuntimeState.markOrchestrationStage(...args),
+  endOrchestrationRun: (...args) => agentRuntimeState.endOrchestrationRun(...args),
   resetAudioAnalysisView,
   buildPendingAudioAnalysisPipeline,
   setAudioAnalysisProgress,
   startAudioAnalysisProgressTicker: (...args) => audioAnalysisPipelineRuntime.startAudioAnalysisProgressTicker(...args),
   loadReusableAnalysisArtifactForProfile,
   buildAnalysisHandoffFromArtifact,
-  setAgentHandoff,
+  setAgentHandoff: (...args) => agentRuntimeState.setAgentHandoff(...args),
   applyPersistedAnalysisArtifact,
   addStructuredChatMessage,
   buildAudioAnalystChatReply,
@@ -7236,10 +7230,10 @@ sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
   render,
   persist,
   saveCurrentProjectSnapshot,
-  invalidateAnalysisHandoff,
+  invalidateAnalysisHandoff: (...args) => agentRuntimeState.invalidateAnalysisHandoff(...args),
   resetDerivedAudioAnalysisState,
   hydrateAnalysisArtifactForCurrentMedia,
-  hydrateAgentHealth,
+  hydrateAgentHealth: (...args) => agentSupportRuntime.hydrateAgentHealth(...args),
   syncLatestSequenceRevision,
   refreshMetadataTargetsFromXLights,
   refreshEffectCatalogFromXLights,
@@ -7252,7 +7246,7 @@ sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
   currentSequencePathForSidecar,
   clearIgnoredExternalSequenceNote,
   clearDesignerDraft,
-  clearSequencingHandoffsForSequenceChange,
+  clearSequencingHandoffsForSequenceChange: (...args) => agentRuntimeState.clearSequencingHandoffsForSequenceChange(...args),
   invalidateApplyApproval,
   hydrateSidecarForCurrentSequence,
   updateSequenceFileMtime,
@@ -7353,7 +7347,7 @@ projectHistoryRuntime = createProjectHistoryRuntime({
   pushDiagnostic,
   buildCurrentDesignSceneContext,
   buildCurrentMusicDesignContext,
-  getValidHandoff,
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
   currentApplyContext,
   buildHistoryEntry,
   currentArtifactRefs,
@@ -7366,7 +7360,7 @@ projectHistoryRuntime = createProjectHistoryRuntime({
 
 applyReadinessRuntime = createApplyReadinessRuntime({
   state,
-  getValidHandoff,
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
   buildTimingTrackStatusRows,
   getSequenceTimingTrackProvenanceState,
   getSequenceTimingGeneratedSignaturesState,
@@ -7393,15 +7387,15 @@ applyReviewRuntime = createApplyReviewRuntime({
   syncLatestSequenceRevision,
   pushDiagnostic,
   evaluateApplyHandoffGate: () => applyReadinessRuntime.evaluateApplyHandoffGate(),
-  getValidHandoffRecord,
-  getValidHandoff,
+  getValidHandoffRecord: (...args) => agentRuntimeState.getValidHandoffRecord(...args),
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
   setStatus,
   setStatusWithDiagnostics,
   render,
   requiresApplyConfirmation: () => applyReadinessRuntime.requiresApplyConfirmation(),
   confirm: (message) => window.confirm(message),
-  setAgentActiveRole,
-  beginOrchestrationRun,
+  setAgentActiveRole: (...args) => agentRuntimeState.setAgentActiveRole(...args),
+  beginOrchestrationRun: (...args) => agentRuntimeState.beginOrchestrationRun(...args),
   addChatMessage,
   executeApplyCore,
   saveCurrentProjectSnapshot,
@@ -7447,8 +7441,8 @@ applyReviewRuntime = createApplyReviewRuntime({
   rollbackTransaction,
   stageTransactionCommand,
   pushSequenceAgentContractDiagnostic,
-  markOrchestrationStage,
-  endOrchestrationRun,
+  markOrchestrationStage: (...args) => agentRuntimeState.markOrchestrationStage(...args),
+  endOrchestrationRun: (...args) => agentRuntimeState.endOrchestrationRun(...args),
   upsertJob,
   bumpVersion,
   addStructuredChatMessage
@@ -7475,16 +7469,16 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   explainSequenceSessionBlockers,
   getBlockingTimingReviewRows: (...args) => applyReadinessRuntime.getBlockingTimingReviewRows(...args),
   syncLatestSequenceRevision,
-  setAgentActiveRole,
-  beginOrchestrationRun,
-  markOrchestrationStage,
-  endOrchestrationRun,
+  setAgentActiveRole: (...args) => agentRuntimeState.setAgentActiveRole(...args),
+  beginOrchestrationRun: (...args) => agentRuntimeState.beginOrchestrationRun(...args),
+  markOrchestrationStage: (...args) => agentRuntimeState.markOrchestrationStage(...args),
+  endOrchestrationRun: (...args) => agentRuntimeState.endOrchestrationRun(...args),
   invalidateApplyApproval,
   latestUserIntentText,
   normalizeDesignRevisionTarget,
   buildRevisionPromptText,
   ensureCurrentAnalysisHandoff,
-  getValidHandoff,
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
   buildCurrentDesignSceneContext,
   buildCurrentMusicDesignContext,
   inferPromptSectionSelection,
@@ -7497,7 +7491,7 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   isPlainObject,
   executeDirectSequenceRequestOrchestration,
   executeDesignerProposalOrchestration,
-  buildEffectiveMetadataAssignments,
+  buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),
   collectCurrentDesignIds,
   buildSupersededConceptRecordById,
   applyRevisionTargetToOrchestration,
@@ -7510,8 +7504,8 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   hydrateIntentHandoffExecutionStrategy,
   retagExecutionPlanForRevisionTarget,
   rebuildProposalBundleFromExecutionPlan,
-  setAgentHandoff,
-  clearAgentHandoff,
+  setAgentHandoff: (...args) => agentRuntimeState.setAgentHandoff(...args),
+  clearAgentHandoff: (...args) => agentRuntimeState.clearAgentHandoff(...args),
   buildDesignerExecutionSeedLines,
   shouldUseExecutionStrategySeedLines,
   buildSequenceAgentInput,
@@ -7720,18 +7714,18 @@ const automationRuntime = createAutomationBridgeRuntime({
   clearDesignRevisionTarget,
   normalizeDesignRevisionTarget,
   clearDesignerDraft,
-  clearSequencingHandoffsForSequenceChange,
+  clearSequencingHandoffsForSequenceChange: (...args) => agentRuntimeState.clearSequencingHandoffsForSequenceChange(...args),
   buildSupersededConceptRecordById,
   retagExecutionPlanForRevisionTarget,
   getExecutionPlanFromArtifacts,
   rebuildProposalBundleFromExecutionPlan,
-  setAgentHandoff,
+  setAgentHandoff: (...args) => agentRuntimeState.setAgentHandoff(...args),
   upsertSupersededConceptRecord,
   isPlainObject,
   buildCurrentDesignSceneContext,
   buildCurrentMusicDesignContext,
   executeDesignerProposalOrchestration,
-  getValidHandoff,
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
   filteredProposed: () => applyReviewRuntime.filteredProposed(),
   arraysEqualOrdered,
   buildSequenceAgentPlan,
@@ -7769,7 +7763,7 @@ const {
 
 uiCompositionRuntime = createUiCompositionRuntime({
   state,
-  getValidHandoff,
+  getValidHandoff: (...args) => agentRuntimeState.getValidHandoff(...args),
   buildNormalizedTargetMetadataRecords,
   buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),
   helpers: {
@@ -7792,7 +7786,7 @@ uiCompositionRuntime = createUiCompositionRuntime({
     getManualLockedXdTracks,
     getTeamChatIdentities,
     getDiagnosticsCounts,
-    getAnalysisServiceHeaderBadgeText,
+    getAnalysisServiceHeaderBadgeText: () => analysisServiceRuntime ? analysisServiceRuntime.getAnalysisServiceHeaderBadgeText() : "Analysis: Unavailable",
     escapeHtml,
     referenceFormatSummaryText,
     sequenceEligibilityFormatSummaryText,
@@ -8178,7 +8172,7 @@ function render() {
   normalizeUiRoute();
   const focusSnapshot = captureRenderFocusState();
   const buildLabel = getBuildLabel();
-  const analysisHeaderBadge = getAnalysisServiceHeaderBadgeText();
+  const analysisHeaderBadge = analysisServiceRuntime ? analysisServiceRuntime.getAnalysisServiceHeaderBadgeText() : "Analysis: Unavailable";
   const pageStates = uiCompositionRuntime.getPageStates();
   try {
     app.innerHTML = buildAppShell({
@@ -8319,7 +8313,7 @@ setInterval(pollRevision, 8000);
 setInterval(pollJobs, 3000);
 setInterval(pollCompatibilityStatus, CONNECTIVITY_POLL_MS);
 setInterval(() => {
-  void probeAnalysisServiceHealth({ quiet: true });
+  void analysisServiceRuntime.probeAnalysisServiceHealth({ quiet: true });
 }, CONNECTIVITY_POLL_MS);
 if (typeof window !== "undefined") {
   window.addEventListener("focus", () => {

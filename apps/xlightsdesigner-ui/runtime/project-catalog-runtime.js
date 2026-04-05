@@ -2,6 +2,51 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
+function normalizeTrackIdentityToken(value = "") {
+  return str(value).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function scoreMediaCatalogIdentityMatch(mediaRow = {}, targetIdentity = null) {
+  const target = targetIdentity && typeof targetIdentity === "object" ? targetIdentity : null;
+  if (!target) return null;
+  const identity = mediaRow?.identity && typeof mediaRow.identity === "object" ? mediaRow.identity : {};
+  const targetFingerprint = str(target?.contentFingerprint).toLowerCase();
+  const rowFingerprint = str(identity?.contentFingerprint).toLowerCase();
+  const targetIsrc = str(target?.isrc).toLowerCase();
+  const rowIsrc = str(identity?.isrc).toLowerCase();
+  const targetTitle = normalizeTrackIdentityToken(target?.title);
+  const rowTitle = normalizeTrackIdentityToken(identity?.title);
+  const targetArtist = normalizeTrackIdentityToken(target?.artist);
+  const rowArtist = normalizeTrackIdentityToken(identity?.artist);
+  const rowDurationMs = Number(identity?.durationMs || 0);
+  const targetDurationMs = Number(target?.durationMs || 0);
+
+  let score = 0;
+  let matchBasis = "";
+
+  if (targetFingerprint && rowFingerprint && targetFingerprint === rowFingerprint) {
+    score = 120;
+    matchBasis = "content_fingerprint";
+  } else if (targetIsrc && rowIsrc && targetIsrc === rowIsrc) {
+    score = 100;
+    matchBasis = "isrc";
+  } else if (targetTitle && rowTitle && targetTitle === rowTitle && targetArtist && rowArtist === targetArtist) {
+    score = 90;
+    matchBasis = "title_artist";
+  } else {
+    return null;
+  }
+
+  if (targetDurationMs > 0 && rowDurationMs > 0) {
+    const delta = Math.abs(targetDurationMs - rowDurationMs);
+    if (delta <= 2000) score += 10;
+    else if (delta <= 10000) score += 5;
+  }
+
+  return { matched: true, score, matchBasis };
+}
+
+
 export function createProjectCatalogRuntime({
   state,
   supportedSequenceMediaExtensions = [],
@@ -12,11 +57,101 @@ export function createProjectCatalogRuntime({
   persist = () => {},
   render = () => {},
   saveCurrentProjectSnapshot = () => {},
-  buildResolvedTrackIdentityForMediaMatching = () => null,
-  loadPersistedTrackIdentityForMediaPath = async () => null,
-  resolvePreferredMediaCatalogEntry = () => null,
+  getValidHandoff = () => null,
+  getDesktopAnalysisArtifactBridge = () => null,
   setAudioPathWithAgentPolicy = () => {}
 } = {}) {
+  function buildResolvedTrackIdentityForMediaMatching() {
+    const handoff = getValidHandoff("analysis_handoff_v1");
+    const artifactIdentity = state.audioAnalysis?.artifact?.identity && typeof state.audioAnalysis.artifact.identity === "object"
+      ? state.audioAnalysis.artifact.identity
+      : null;
+    const handoffIdentity = handoff?.trackIdentity && typeof handoff.trackIdentity === "object"
+      ? handoff.trackIdentity
+      : null;
+    const identity = artifactIdentity || handoffIdentity || null;
+    if (!identity) return null;
+    const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
+      ? identity.sourceMetadata
+      : {};
+    const title = str(identity?.title || sourceMetadata?.embeddedTitle || "");
+    const artist = str(identity?.artist || sourceMetadata?.embeddedArtist || "");
+    const isrc = str(identity?.isrc || "");
+    const contentFingerprint = str(identity?.contentFingerprint || "").toLowerCase();
+    const durationMs = Number(state.audioAnalysis?.artifact?.audio?.durationMs || handoff?.audio?.durationMs || 0) || 0;
+    if (!title && !artist && !isrc && !contentFingerprint) return null;
+    return {
+      title,
+      artist,
+      isrc,
+      contentFingerprint,
+      durationMs: durationMs > 0 ? durationMs : null
+    };
+  }
+
+  async function loadPersistedTrackIdentityForMediaPath(mediaFilePath = "", options = {}) {
+    const bridge = getDesktopAnalysisArtifactBridge();
+    const projectFilePath = str(state.projectFilePath);
+    const targetPath = str(mediaFilePath);
+    const preferredProfileMode = str(options?.preferredProfileMode || "deep").toLowerCase() || "deep";
+    if (!bridge || !projectFilePath || !targetPath) return null;
+    try {
+      const res = await bridge.readAnalysisArtifact({
+        projectFilePath,
+        mediaFilePath: targetPath,
+        preferredProfileMode
+      });
+      if (res?.ok !== true || !res.artifact || typeof res.artifact !== "object") return null;
+      const artifact = res.artifact;
+      const identity = artifact?.identity && typeof artifact.identity === "object" ? artifact.identity : {};
+      const sourceMetadata = identity?.sourceMetadata && typeof identity.sourceMetadata === "object"
+        ? identity.sourceMetadata
+        : {};
+      const title = str(identity?.title || sourceMetadata?.embeddedTitle || "");
+      const artist = str(identity?.artist || sourceMetadata?.embeddedArtist || "");
+      const isrc = str(identity?.isrc || "");
+      const contentFingerprint = str(identity?.contentFingerprint || artifact?.media?.contentFingerprint || "").toLowerCase();
+      const durationMs = Number(artifact?.audio?.durationMs || 0) || null;
+      if (!title && !artist && !isrc && !contentFingerprint) return null;
+      return { title, artist, isrc, contentFingerprint, durationMs };
+    } catch {
+      return null;
+    }
+  }
+
+  function resolvePreferredMediaCatalogEntry(mediaFiles = [], { currentAudioPath = "", sequenceMediaPath = "", targetIdentity = null } = {}) {
+    const rows = Array.isArray(mediaFiles) ? mediaFiles : [];
+    const currentPath = str(currentAudioPath);
+    const sequencePath = str(sequenceMediaPath);
+    const exact =
+      rows.find((row) => str(row?.path) === currentPath) ||
+      rows.find((row) => str(row?.path) === sequencePath) ||
+      null;
+    if (exact) return { row: exact, basis: "exact_path" };
+
+    const resolvedTargetIdentity = targetIdentity && typeof targetIdentity === "object"
+      ? targetIdentity
+      : buildResolvedTrackIdentityForMediaMatching();
+    if (!resolvedTargetIdentity) return { row: null, basis: "" };
+
+    const scored = rows
+      .map((row) => {
+        const match = scoreMediaCatalogIdentityMatch(row, resolvedTargetIdentity);
+        if (!match) return null;
+        return { row, ...match };
+      })
+      .filter(Boolean)
+      .sort((a, b) => Number(b.score || 0) - Number(a.score || 0));
+
+    if (!scored.length) return { row: null, basis: "" };
+    const best = scored[0];
+    const second = scored[1];
+    if (second && Number(second.score || 0) === Number(best.score || 0)) {
+      return { row: null, basis: "" };
+    }
+    return { row: best.row, basis: `identity:${best.matchBasis}` };
+  }
+
   async function refreshSequenceCatalog(options = {}) {
     const silent = options?.silent === true;
     const showFolder = str(state.showFolder);

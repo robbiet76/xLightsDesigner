@@ -14,9 +14,9 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
     maybePromptForMissingIdentityMetadata,
     isPlainObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value),
     buildSectionSuggestions,
-    areMetersCompatible,
-    extractNumericCandidates,
-    medianNumber,
+    areMetersCompatible = areMetersCompatibleDefault,
+    extractNumericCandidates = extractNumericCandidatesDefault,
+    medianNumber = medianNumberDefault,
     loadAudioTrainingPackageBundle
   } = deps;
 

@@ -98,6 +98,11 @@ function summarizeTimingTracks(sequencePageState = {}) {
   };
 }
 
+function expectedActiveSequenceName(sequencePath = "") {
+  const base = path.basename(str(sequencePath), path.extname(str(sequencePath)));
+  return str(base);
+}
+
 function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResult, pageStatesSnapshot, sequencerSnapshot }) {
   const pageStates = pageStatesSnapshot?.result && typeof pageStatesSnapshot.result === "object"
     ? {
@@ -107,6 +112,8 @@ function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResu
       }
     : {};
   const sequencePage = pageStates?.sequence && typeof pageStates.sequence === "object" ? pageStates.sequence : {};
+  const sequenceData = sequencePage?.data && typeof sequencePage.data === "object" ? sequencePage.data : {};
+  const sequenceSession = sequenceData?.sequenceSession && typeof sequenceData.sequenceSession === "object" ? sequenceData.sequenceSession : {};
   const timing = summarizeTimingTracks(sequencePage);
   const latestValidation = sequencerSnapshot?.result?.latestPracticalValidation && typeof sequencerSnapshot.result.latestPracticalValidation === "object"
     ? sequencerSnapshot.result.latestPracticalValidation
@@ -114,17 +121,31 @@ function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResu
   const timingTrackNames = timing.timingTrackStatus.map((row) => row.trackName).filter(Boolean);
   const expectedTimingTracks = arr(scenario?.expectedTimingTracks).map((row) => str(row)).filter(Boolean);
   const missingExpectedTimingTracks = expectedTimingTracks.filter((trackName) => !timingTrackNames.includes(trackName));
+  const activeSequence = str(pageStatesSnapshot?.result?.activeSequence || openResult?.result?.activeSequence || refreshResult?.result?.activeSequence || analyzeResult?.result?.activeSequence);
+  const expectedSequence = expectedActiveSequenceName(scenario?.sequencePath);
+  const xlightsConnected = sequenceSession?.xlightsConnected === true;
+  const activeSequenceMatches = !!expectedSequence && activeSequence === expectedSequence;
+  const analysisReady = Boolean(analyzeResult?.result?.analysisReady);
+  const failureReasons = [];
+  if (!xlightsConnected) failureReasons.push('xlights_disconnected');
+  if (!activeSequenceMatches) failureReasons.push('active_sequence_mismatch');
+  if (!analysisReady) failureReasons.push('analysis_not_ready');
+  if (missingExpectedTimingTracks.length) failureReasons.push('missing_expected_timing_tracks');
   return {
     name: str(scenario?.name),
     trackClass: str(scenario?.trackClass),
     trackTitle: str(scenario?.trackTitle),
     sequencePath: str(scenario?.sequencePath),
-    activeSequence: str(openResult?.result?.activeSequence || refreshResult?.result?.activeSequence || analyzeResult?.result?.activeSequence),
-    analysisReady: Boolean(analyzeResult?.result?.analysisReady),
+    expectedActiveSequence: expectedSequence,
+    activeSequence,
+    xlightsConnected,
+    activeSequenceMatches,
+    analysisReady,
     timingReview: timing.timingReview,
     timingTrackStatus: timing.timingTrackStatus,
     expectedTimingTracks,
     missingExpectedTimingTracks,
+    failureReasons,
     latestPracticalValidation: latestValidation
       ? {
           overallOk: latestValidation.overallOk === true,
@@ -134,7 +155,7 @@ function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResu
             : null
         }
       : null,
-    ok: Boolean(analyzeResult?.result?.analysisReady) && missingExpectedTimingTracks.length === 0
+    ok: xlightsConnected && activeSequenceMatches && analysisReady && missingExpectedTimingTracks.length === 0
   };
 }
 
