@@ -2582,10 +2582,10 @@ function setRoute(route) {
   persist();
   render();
   if (normalizedRoute === "audio") {
-    void onRefreshMediaCatalog({ silent: true });
+    void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
   }
   if (normalizedRoute === "sequence") {
-    void onRefreshSequenceCatalog({ silent: true });
+    void projectCatalogRuntime.refreshSequenceCatalog({ silent: true });
   }
 }
 
@@ -7620,9 +7620,6 @@ function onEditSelectedProposed() {
   render();
 }
 
-function syncProjectSummaryInputs() {
-  return projectLifecycleRuntime.syncProjectSummaryInputs();
-}
 
 function dirnameOfPath(filePath) {
   const p = String(filePath || "");
@@ -7689,22 +7686,11 @@ async function saveProjectToCurrentFile(options = {}) {
   return { ok: true, filePath: state.projectFilePath };
 }
 
-function openProjectNameDialog({ mode, title, initialName = "" }) {
-  return projectLifecycleRuntime.openProjectNameDialog({ mode, title, initialName });
-}
-
-function closeProjectNameDialog() {
-  return projectLifecycleRuntime.closeProjectNameDialog();
-}
-
-async function confirmProjectNameDialog() {
-  return projectLifecycleRuntime.confirmProjectNameDialog();
-}
 
 async function onSaveProjectSettings() {
   const previousProjectName = String(state.projectName || "").trim();
   const previousShowFolder = String(state.showFolder || "").trim();
-  syncProjectSummaryInputs();
+  projectLifecycleRuntime.syncProjectSummaryInputs();
   const endpointInput = app.querySelector("#endpoint-input");
   const confirmModeInput = app.querySelector("#confirm-mode-input");
   const thresholdInput = app.querySelector("#threshold-input");
@@ -7864,7 +7850,7 @@ async function onBrowseShowFolder() {
   saveCurrentProjectSnapshot();
   persist();
   render();
-  void onRefreshSequenceCatalog({ silent: true });
+  void projectCatalogRuntime.refreshSequenceCatalog({ silent: true });
 }
 
 async function onBrowseMediaFolder() {
@@ -7878,7 +7864,7 @@ async function onBrowseMediaFolder() {
   saveCurrentProjectSnapshot();
   persist();
   render();
-  void onRefreshMediaCatalog({ silent: true });
+  void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
 }
 
 async function onBrowseProjectMetadataRoot() {
@@ -7892,13 +7878,6 @@ async function onBrowseProjectMetadataRoot() {
   render();
 }
 
-async function onRefreshSequenceCatalog(options = {}) {
-  return projectCatalogRuntime.refreshSequenceCatalog(options);
-}
-
-async function onRefreshMediaCatalog(options = {}) {
-  return projectCatalogRuntime.refreshMediaCatalog(options);
-}
 
 function onSelectCatalogSequence() {
   const input = app.querySelector("#sequence-catalog-select");
@@ -7997,7 +7976,7 @@ async function onOpenSequenceFromDialog() {
   saveCurrentProjectSnapshot();
   persist();
   render();
-  await onOpenExistingSequence(selected);
+  await sequenceMediaSessionRuntime.openExistingSequence(selected);
 }
 
 async function onBrowseAudioPath() {
@@ -8015,17 +7994,6 @@ async function onBrowseAudioPath() {
   render();
 }
 
-function applyOpenSequenceState(sequencePayload, fallbackPath = "") {
-  return sequenceMediaSessionRuntime.applyOpenSequenceState(sequencePayload, fallbackPath);
-}
-
-async function onOpenSequence() {
-  return sequenceMediaSessionRuntime.openCurrentSequence();
-}
-
-async function onOpenExistingSequence(targetPathInput = "", options = {}) {
-  return sequenceMediaSessionRuntime.openExistingSequence(targetPathInput, options);
-}
 
 async function onOpenSelectedSequence() {
   const targetPath = String(state.sequencePathInput || "").trim();
@@ -8034,7 +8002,7 @@ async function onOpenSelectedSequence() {
     render();
     return;
   }
-  await onOpenExistingSequence(targetPath);
+  await sequenceMediaSessionRuntime.openExistingSequence(targetPath);
 }
 
 function defaultNewSequenceName() {
@@ -8089,7 +8057,7 @@ async function onNewSequence() {
     });
     const seq = body?.data?.sequence || body?.data || {};
     state.sequencePathInput = targetPath;
-    applyOpenSequenceState(seq, targetPath);
+    sequenceMediaSessionRuntime.applyOpenSequenceState(seq, targetPath);
     state.flags.activeSequenceLoaded = true;
     state.lastApplyBackupPath = "";
     resetCreativeState();
@@ -8097,7 +8065,7 @@ async function onNewSequence() {
     saveCurrentProjectSnapshot();
     persist();
     render();
-    await onRefreshSequenceCatalog({ silent: true });
+    await projectCatalogRuntime.refreshSequenceCatalog({ silent: true });
     await onRefresh();
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Create failed: ${err.message}`, err.stack || "");
@@ -8170,7 +8138,7 @@ async function onSaveSequenceAs() {
     saveCurrentProjectSnapshot();
     persist();
     render();
-    await onRefreshSequenceCatalog({ silent: true });
+    await projectCatalogRuntime.refreshSequenceCatalog({ silent: true });
   } catch (err) {
     setStatusWithDiagnostics("action-required", `Save As failed: ${err.message}`, err.stack || "");
     render();
@@ -8409,7 +8377,7 @@ sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
   resetCreativeState,
   readSequencePathFromPayload,
   basenameOfPath,
-  onRefreshMediaCatalog,
+  onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
   onRefresh: () => onRefresh(),
   addRecentSequence,
   assertSequenceFileSafeAfterSave,
@@ -8433,8 +8401,8 @@ projectLifecycleRuntime = createProjectLifecycleRuntime({
   getDesktopAppAdminBridge,
   getDesktopStateBridge,
   hydrateAnalysisArtifactForCurrentMedia,
-  onRefreshSequenceCatalog,
-  onRefreshMediaCatalog,
+  onRefreshSequenceCatalog: (...args) => projectCatalogRuntime.refreshSequenceCatalog(...args),
+  onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
   applyProjectSnapshot,
   parseProjectKey,
   loadProjectsStore,
@@ -8573,7 +8541,7 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   isSequenceAllowedInActiveShowFolder,
   clearIgnoredExternalSequenceNote,
   noteIgnoredExternalSequence,
-  applyOpenSequenceState,
+  applyOpenSequenceState: (...args) => sequenceMediaSessionRuntime.applyOpenSequenceState(...args),
   buildSequenceSession,
   explainSequenceSessionBlockers,
   getBlockingTimingReviewRows: (...args) => applyReadinessRuntime.getBlockingTimingReviewRows(...args),
@@ -10273,11 +10241,11 @@ const automationRuntime = createAutomationBridgeRuntime({
   onRefresh,
   onAnalyzeAudio,
   onSeedTimingTracksFromAnalysis,
-  onOpenExistingSequence,
+  onOpenExistingSequence: (...args) => sequenceMediaSessionRuntime.openExistingSequence(...args),
   setAudioPath: (...args) => sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(...args),
-  onRefreshSequenceCatalog,
+  onRefreshSequenceCatalog: (...args) => projectCatalogRuntime.refreshSequenceCatalog(...args),
   adoptMediaDirectoryFromPath: (...args) => sequenceMediaSessionRuntime.adoptMediaDirectoryFromPath(...args),
-  onRefreshMediaCatalog,
+  onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
   clearDesignRevisionTarget,
   normalizeDesignRevisionTarget,
   clearDesignerDraft,
@@ -10404,14 +10372,14 @@ function bindEvents() {
       } else if (state.ui.projectNameDialogMode === "saveAs") {
         setStatus("info", "Save As canceled.");
       }
-      closeProjectNameDialog();
+      projectLifecycleRuntime.closeProjectNameDialog();
     });
   }
 
   const projectNameDialogConfirmBtn = app.querySelector("#project-name-dialog-confirm");
   if (projectNameDialogConfirmBtn) {
     projectNameDialogConfirmBtn.addEventListener("click", () => {
-      void confirmProjectNameDialog();
+      void projectLifecycleRuntime.confirmProjectNameDialog();
     });
   }
 
@@ -10425,10 +10393,10 @@ function bindEvents() {
     projectNameDialogInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
-        void confirmProjectNameDialog();
+        void projectLifecycleRuntime.confirmProjectNameDialog();
       } else if (event.key === "Escape") {
         event.preventDefault();
-        closeProjectNameDialog();
+        projectLifecycleRuntime.closeProjectNameDialog();
       }
     });
   }
@@ -10665,7 +10633,7 @@ function bindEvents() {
     onSelectCatalogSequence,
     onBrowseShowFolder,
     onBrowseMediaFolder,
-    onRefreshMediaCatalog,
+    onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
     onNewSession,
     onReferenceMediaSelected,
     addPaletteSwatch,
@@ -10860,7 +10828,7 @@ render();
   applyRolloutPolicy();
   await projectHistoryRuntime.refreshApplyHistoryFromDesktop(40);
   if (String(state.mediaPath || "").trim()) {
-    await onRefreshMediaCatalog({ silent: true });
+    await projectCatalogRuntime.refreshMediaCatalog({ silent: true });
   }
   render();
   if (!state.ui.firstRunMode) {
@@ -10887,7 +10855,7 @@ if (typeof window !== "undefined") {
     void syncOpenSequenceOnFocusReturn();
     void probeAnalysisServiceHealth({ quiet: true });
     if (state.route === "audio" || state.route === "project") {
-      void onRefreshMediaCatalog({ silent: true });
+      void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
     }
   });
 }
@@ -10896,7 +10864,7 @@ if (typeof document !== "undefined") {
     if (document.visibilityState === "visible") {
       void syncOpenSequenceOnFocusReturn();
       if (state.route === "audio" || state.route === "project") {
-        void onRefreshMediaCatalog({ silent: true });
+        void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
       }
     }
   });
