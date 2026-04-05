@@ -3,7 +3,7 @@
 Status: Active
 Date: 2026-03-11
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-04-05
 
 Implementation-facing specifications that drive development work.
 
@@ -21,23 +21,21 @@ Implementation-facing specifications that drive development work.
 - legacy flat specs are archived under domain-specific or root archive paths
 
 ## Active Entry Points
+- `current-app-plan-2026-04-05.md`
 - `app-assistant/app-assistant-role-and-boundary.md`
 - `app-assistant/implementation-checklist.md`
-- `app-ui/end-to-end-audit-2026-03-12.md`
 - `app-ui/implementation-checklist.md`
+- `app-ui/page-roles-and-flow.md`
 - `audio-analyst/implementation-checklist.md`
 - `audio-analyst/provider-framework.md`
-- `audio-analyst/end-to-end-audit-2026-03-12.md`
+- `audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md`
+- `audio-analyst/timing-track-workflow-implementation-checklist-2026-04-02.md`
 - `designer-dialog/designer-interaction-contract.md`
 - `designer-dialog/implementation-checklist.md`
-- `designer-dialog/end-to-end-audit-2026-03-12.md`
+- `sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md`
+- `sequence-agent/sequence-session-and-live-validation-refactor-plan-2026-04-05.md`
 - `sequence-agent/xlights-sequencer-control-project-spec.md`
 - `sequence-agent/xlights-sequencer-control-api-surface-contract.md`
-- `sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md`
-- `sequence-agent/xlights-sequencer-control-implementation-roadmap.md`
-- `sequence-agent/xlights-sequencer-control-acceptance-test-matrix.md`
-- `sequence-agent/xlights-sequencer-control-training-package-architecture.md`
-- `sequence-agent/xlights-sequencer-control-integration-test-harness.md`
 - `repo-structure-governance.md`
 
 ## Consolidation Record

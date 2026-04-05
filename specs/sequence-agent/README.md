@@ -11,8 +11,14 @@ These docs cover:
 
 Current active roadmap:
 - [sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md)
-- [sequencer-training-phase2-roadmap-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-training-phase2-roadmap-2026-03-22.md)
 - [sequence-session-and-live-validation-refactor-plan-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-session-and-live-validation-refactor-plan-2026-04-05.md)
+- [sequence-agent-semantics-architecture-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-agent-semantics-architecture-2026-03-22.md)
+
+Foundational contract set retained for reference:
+- [xlights-sequencer-control-project-spec.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-project-spec.md)
+- [xlights-sequencer-control-api-surface-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md)
+- [xlights-sequencer-control-agent-orchestration-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md)
+- [xlights-sequencer-control-training-package-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-training-package-architecture.md)
 
 Upstream timing-track taxonomy:
 - [timing-track-taxonomy-and-sequencing-uses-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md)

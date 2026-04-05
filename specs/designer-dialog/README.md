@@ -23,3 +23,8 @@ Related domains:
 - `designer-eval-baseline-2026-03-17.md`: first offline baseline results against the canonical deep-training eval corpus.
 - `training-audit-and-next-checklist-2026-03-17.md`: current training audit plus the operational checklist for the next unattended training runs.
 - `designer-knowledge-input-audit-2026-03-17.md`: current metadata/music input readiness plus allowed lighting/composition vocabulary boundaries for training.
+
+Current role in the app plan:
+- keep designer intent and handoff quality stable
+- do not broaden training scope ahead of reviewed-timing sequencing quality
+- remain the creative contract upstream of `sequence_agent`

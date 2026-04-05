@@ -3,7 +3,7 @@
 Status: Active
 Date: 2026-03-12
 Owner: xLightsDesigner Team
-Last Reviewed: 2026-03-12
+Last Reviewed: 2026-04-05
 
 Active specifications for the unified conversational shell that spans project setup, audio analysis guidance, metadata setup, designer collaboration, and sequencing workflow routing.
 
@@ -17,3 +17,9 @@ The intended UX is a team chat:
 ## Active Entry Points
 - `app-assistant-role-and-boundary.md`
 - `implementation-checklist.md`
+
+
+Current role in the app plan:
+- coordinate the unified chat shell
+- route to specialists without absorbing specialist domain logic
+- preserve clean boundaries between audio, design, sequencing, and app coordination

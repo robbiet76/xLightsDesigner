@@ -1,6 +1,6 @@
 # xLights Sequencer Control + Agent Autonomy
 
-Status: Active
+Status: Foundational reference
 Date: 2026-03-11
 Owner: xLightsDesigner Team
 Last Reviewed: 2026-03-11
@@ -8,9 +8,10 @@ Last Reviewed: 2026-03-11
 ## Purpose
 Define the full target contract between xLightsDesigner and xLights before further API implementation, with explicit boundaries and autonomous-agent execution requirements.
 
-## Active Planning Note
-- Primary execution spine: `xlights-sequencer-control-architecture-reset-plan-2026-03-11.md`
-- Use this when prioritizing active implementation order and phase gates.
+## Planning Note
+- This set is retained as the foundational control/API contract.
+- It is no longer the day-to-day execution spine.
+- Current execution is driven by reviewed timing workflow and sequencer quality work.
 
 ## Active Spec Set
 - `xlights-sequencer-control-project-spec.md`: source-of-truth scope, requirements, and acceptance criteria.
