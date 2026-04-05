@@ -190,3 +190,19 @@ The biggest directory-organization problem is:
 
 ## Generated Inventory
 - `var/repo-audit/tracked-file-inventory-2026-04-05.json`
+
+## Follow-On Audits Completed
+The next two hotspot audits have now been completed and should be treated as the concrete follow-on workstreams for directory cleanup:
+- [`sequencer-render-training-directory-audit-2026-04-05.md`](/Users/robterry/Projects/xLightsDesigner/docs/architecture/sequencer-render-training-directory-audit-2026-04-05.md)
+- [`analysis-service-eval-directory-audit-2026-04-05.md`](/Users/robterry/Projects/xLightsDesigner/docs/architecture/analysis-service-eval-directory-audit-2026-04-05.md)
+
+Supporting lifecycle manifests:
+- [`scripts/sequencer-render-training/manifest.v1.json`](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifest.v1.json)
+- [`apps/xlightsdesigner-analysis-service/eval/manifest.v1.json`](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-analysis-service/eval/manifest.v1.json)
+
+## Updated Cleanup Order
+1. reorganize `scripts/sequencer-render-training` into grouped responsibility directories
+2. reorganize `apps/xlightsdesigner-analysis-service/eval` into `runners/`, `probes/`, and `corpus/`
+3. migrate remaining root-level working-output habits toward `var/`
+4. do one more pass on root-level orphan-risk directories after those two subtree cleanups land
+
