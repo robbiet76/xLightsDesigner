@@ -58,6 +58,13 @@ import {
 import { buildDesignSceneContext } from "./agent/designer-dialog/design-scene-context.js";
 import { buildMusicDesignContext } from "./agent/designer-dialog/music-design-context.js";
 import {
+  buildSequenceSession,
+  explainSequenceSessionBlockers,
+  isPathWithinShowFolder,
+  isSequenceAllowedInShowFolder,
+  readSequencePathFromPayload
+} from "./runtime/sequence-session.js";
+import {
   applyAcceptedProposalToDirectorProfile,
   buildDefaultDirectorProfile,
   normalizeDirectorProfile
@@ -3699,7 +3706,8 @@ async function onGenerate(intentOverride = "", options = {}) {
     });
   };
   const bridge = getDesktopBridge();
-  if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode && state.flags.xlightsConnected) {
+  let sequenceSession = buildSequenceSession({ state });
+  if (!sequenceSession.canGenerateSequence && !sequenceSession.planOnlyMode && sequenceSession.xlightsConnected) {
     try {
       const open = await getOpenSequence(state.endpoint);
       const seq = open?.data?.sequence;
@@ -3711,12 +3719,17 @@ async function onGenerate(intentOverride = "", options = {}) {
       } else if (open?.data?.isOpen && seq) {
         noteIgnoredExternalSequence(seq, "xLights");
       }
+      sequenceSession = buildSequenceSession({
+        state,
+        liveSequencePayload: open?.data?.isOpen ? seq : null
+      });
     } catch {
       // Best effort only; fall through to the existing guard if still unavailable.
     }
   }
-  if (!state.flags.activeSequenceLoaded && !state.flags.planOnlyMode) {
-    setStatus("action-required", "Open a sequence or enter plan-only mode.");
+  const sessionBlockers = explainSequenceSessionBlockers(sequenceSession);
+  if (!sequenceSession.canGenerateSequence) {
+    setStatus("action-required", sessionBlockers.message || "Open a sequence or enter plan-only mode.");
     return render();
   }
   if (proposalRole === "sequence_agent") {
@@ -9850,25 +9863,8 @@ async function closeActiveSequenceForSwitch(options = {}) {
   state.health.sequenceOpen = false;
 }
 
-function isPathWithinShowFolder(candidatePath, showFolderPath) {
-  const normalize = (value) =>
-    String(value || "")
-      .trim()
-      .replace(/\\/g, "/")
-      .replace(/\/+$/, "");
-  const candidate = normalize(candidatePath);
-  const root = normalize(showFolderPath);
-  if (!candidate || !root) return false;
-  if (candidate === root) return true;
-  return candidate.startsWith(`${root}/`);
-}
-
 function isSequenceAllowedInActiveShowFolder(sequencePayload) {
-  const showFolder = String(state.showFolder || "").trim();
-  if (!showFolder) return true;
-  const sequencePath = readSequencePathFromPayload(sequencePayload);
-  if (!sequencePath) return true;
-  return isPathWithinShowFolder(sequencePath, showFolder);
+  return isSequenceAllowedInShowFolder(sequencePayload, String(state.showFolder || "").trim());
 }
 
 function noteIgnoredExternalSequence(sequencePayload, sourceLabel = "xLights") {
@@ -9927,15 +9923,6 @@ async function onBrowseAudioPath() {
   saveCurrentProjectSnapshot();
   persist();
   render();
-}
-
-function readSequencePathFromPayload(sequencePayload, fallbackPath = "") {
-  return String(
-    sequencePayload?.path ||
-      sequencePayload?.file ||
-      fallbackPath ||
-      ""
-  ).trim();
 }
 
 function applyOpenSequenceState(sequencePayload, fallbackPath = "") {

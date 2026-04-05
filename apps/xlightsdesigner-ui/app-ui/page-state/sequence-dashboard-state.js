@@ -1,4 +1,5 @@
 import { buildTimingTrackStatusRows, summarizeTimingTrackStatuses } from "../../runtime/timing-track-status.js";
+import { buildSequenceSession, explainSequenceSessionBlockers } from "../../runtime/sequence-session.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -413,6 +414,13 @@ export function buildSequenceDashboardState({
     planCommands,
     timingTrackStatus
   });
+  const sequenceSession = buildSequenceSession({ state });
+  const sessionBlockers = explainSequenceSessionBlockers(sequenceSession);
+  const dashboardSequenceBlocked = Boolean(
+    sequenceSession.xlightsConnected &&
+    !sequenceSession.planOnlyMode &&
+    (!sequenceSession.effectiveSequenceLoaded || !sequenceSession.effectiveSequenceAllowed)
+  );
   const allRows = buildDashboardRows({
     state,
     proposalLines,
@@ -431,7 +439,7 @@ export function buildSequenceDashboardState({
   if (!proposalLines.length) {
     status = "idle";
     readinessLevel = "blocked";
-  } else if (!timingDependency.ready || !timingReviewGuardrail.ready) {
+  } else if (dashboardSequenceBlocked || !timingDependency.ready || !timingReviewGuardrail.ready) {
     status = "partial";
     readinessLevel = "partial";
   } else {
@@ -445,6 +453,13 @@ export function buildSequenceDashboardState({
       code: "no_sequence_draft",
       severity: "info",
       message: "No translated sequence changes are available yet."
+    });
+  }
+  if (dashboardSequenceBlocked) {
+    validationIssues.push({
+      code: sessionBlockers.primaryCode || "sequence_session_blocked",
+      severity: "warning",
+      message: sessionBlockers.message || "Sequence session is not ready for generation."
     });
   }
   if (!timingDependency.ready) {
@@ -470,7 +485,7 @@ export function buildSequenceDashboardState({
     summary: str(plan.summary || "Live technical translation of the current design conversation."),
     status,
     readiness: {
-      ok: proposalLines.length > 0 && timingDependency.ready && timingReviewGuardrail.ready,
+      ok: proposalLines.length > 0 && !dashboardSequenceBlocked && timingDependency.ready && timingReviewGuardrail.ready,
       level: readinessLevel,
       reasons: validationIssues.map((issue) => issue.code)
     },
@@ -499,6 +514,8 @@ export function buildSequenceDashboardState({
       timingTrackStatus,
       timingReview,
       timingReviewGuardrail,
+      sequenceSession,
+      dashboardSequenceBlocked,
       scope: {
         sections: sectionScope,
         targetIds: selectedTargets
