@@ -200,6 +200,7 @@ import {
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { createAnalysisServiceRuntime } from "./runtime/analysis-service-runtime.js";
+import { createAgentSupportRuntime, emptyAgentRuntimeState } from "./runtime/agent-support-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -728,6 +729,7 @@ let timingTrackRuntime = null;
 let uiCompositionRuntime = null;
 let projectCatalogRuntime = null;
 let analysisServiceRuntime = null;
+let agentSupportRuntime = null;
 let audioAnalysisPipelineRuntime = null;
 let audioAnalysisSessionRuntime = null;
 let sequenceMediaSessionRuntime = null;
@@ -891,42 +893,17 @@ let sidecarDirtySequencePath = "";
 let sidecarDirtyBaselineMtimeMs = 0;
 const sequenceFileMtimeByPath = new Map();
 let quickReconnectTimer = null;
-let analysisServiceProbeInFlight = false;
 let hydratedSidecarSequencePath = "";
 let focusSyncInFlight = false;
 let lastFocusSyncAt = 0;
 let lastIgnoredExternalSequencePath = "";
-let trainingPackageAudioBundleCache = null;
-let trainingPackageAudioBundleCacheAt = 0;
-let trainingPackageAgentBundleCache = null;
-let trainingPackageAgentBundleCacheAt = 0;
 let agentRuntimeState = null;
 let applyReviewRuntime = null;
 let applyReadinessRuntime = null;
 let projectHistoryRuntime = null;
 
-function emptyAgentRuntimeState() {
-  return {
-    loaded: false,
-    error: "",
-    packageId: "",
-    packageVersion: "",
-    registryVersion: "",
-    registryValid: false,
-    registryErrors: [],
-    lastLoadedAt: "",
-    activeRole: "",
-    roles: [],
-    profilesById: {},
-    handoffs: {
-      analysis_handoff_v1: null,
-      intent_handoff_v1: null,
-      plan_handoff_v1: null
-    }
-  };
-}
-
 const agentRuntime = emptyAgentRuntimeState();
+
 
 function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
   return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
@@ -1212,136 +1189,6 @@ function clearSequencingHandoffsForSequenceChange(reason = "sequence changed") {
   return agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason);
 }
 
-async function loadAgentRuntimeBundle({ force = false } = {}) {
-  const CACHE_TTL_MS = 60_000;
-  if (!force && trainingPackageAgentBundleCache && (Date.now() - trainingPackageAgentBundleCacheAt) < CACHE_TTL_MS) {
-    return trainingPackageAgentBundleCache;
-  }
-  const bridge = getDesktopTrainingPackageBridge();
-  if (!bridge) {
-    const out = { ok: false, error: "Desktop training package bridge unavailable." };
-    trainingPackageAgentBundleCache = out;
-    trainingPackageAgentBundleCacheAt = Date.now();
-    return out;
-  }
-  try {
-    const manifestRes = await bridge.readTrainingPackageAsset({ relativePath: "manifest.json", asJson: true });
-    if (!manifestRes?.ok || !isPlainObject(manifestRes.data)) {
-      const out = { ok: false, error: String(manifestRes?.error || "Training package manifest not found.") };
-      trainingPackageAgentBundleCache = out;
-      trainingPackageAgentBundleCacheAt = Date.now();
-      return out;
-    }
-    const manifest = manifestRes.data;
-    const registryRes = await bridge.readTrainingPackageAsset({ relativePath: "agents/registry.json", asJson: true });
-    if (!registryRes?.ok || !isPlainObject(registryRes.data)) {
-      const out = { ok: false, error: String(registryRes?.error || "Agent registry not found.") };
-      trainingPackageAgentBundleCache = out;
-      trainingPackageAgentBundleCacheAt = Date.now();
-      return out;
-    }
-    const registry = registryRes.data;
-    const refs = Array.isArray(registry?.agents) ? registry.agents : [];
-    const profiles = [];
-    for (const ref of refs) {
-      const id = String(ref?.id || "").trim();
-      const path = String(ref?.path || "").trim();
-      if (!id || !path) {
-        const out = { ok: false, error: "Agent registry contains an entry with missing id/path." };
-        trainingPackageAgentBundleCache = out;
-        trainingPackageAgentBundleCacheAt = Date.now();
-        return out;
-      }
-      const profileRes = await bridge.readTrainingPackageAsset({ relativePath: path, asJson: true });
-      if (!profileRes?.ok || !isPlainObject(profileRes.data)) {
-        const out = { ok: false, error: `Agent profile load failed for ${id} (${path}).` };
-        trainingPackageAgentBundleCache = out;
-        trainingPackageAgentBundleCacheAt = Date.now();
-        return out;
-      }
-      profiles.push({
-        id,
-        status: String(ref?.status || "").trim() || "unknown",
-        path,
-        profile: profileRes.data
-      });
-    }
-    const parity = validateTrainingAgentRegistry({ registry, profiles });
-    if (!parity.ok) {
-      const out = {
-        ok: false,
-        error: `Agent registry validation failed: ${parity.errors.join("; ")}`,
-        registryVersion: String(registry?.version || "").trim(),
-        registryErrors: parity.errors
-      };
-      trainingPackageAgentBundleCache = out;
-      trainingPackageAgentBundleCacheAt = Date.now();
-      return out;
-    }
-    const out = {
-      ok: true,
-      packageId: String(manifest?.packageId || "").trim(),
-      packageVersion: String(manifest?.version || "").trim(),
-      registryVersion: String(registry?.version || "").trim(),
-      registryValid: true,
-      registryErrors: [],
-      profiles
-    };
-    trainingPackageAgentBundleCache = out;
-    trainingPackageAgentBundleCacheAt = Date.now();
-    return out;
-  } catch (err) {
-    const out = { ok: false, error: String(err?.message || err) };
-    trainingPackageAgentBundleCache = out;
-    trainingPackageAgentBundleCacheAt = Date.now();
-    return out;
-  }
-}
-
-async function hydrateAgentRuntime({ force = false, quiet = true } = {}) {
-  const loaded = await loadAgentRuntimeBundle({ force });
-  if (!loaded?.ok) {
-    Object.assign(agentRuntime, emptyAgentRuntimeState(), {
-      error: String(loaded?.error || "Unknown agent runtime load error"),
-      registryVersion: String(loaded?.registryVersion || ""),
-      registryValid: false,
-      registryErrors: Array.isArray(loaded?.registryErrors) ? loaded.registryErrors : []
-    });
-    refreshAgentRuntimeHealth();
-    if (!quiet) pushDiagnostic("warning", `Agent runtime load failed: ${agentRuntime.error}`);
-    return false;
-  }
-  const profilesById = {};
-  for (const row of loaded.profiles || []) {
-    profilesById[row.id] = {
-      id: row.id,
-      status: row.status,
-      path: row.path,
-      profile: row.profile
-    };
-  }
-  const next = emptyAgentRuntimeState();
-  next.loaded = true;
-  next.packageId = loaded.packageId;
-  next.packageVersion = loaded.packageVersion;
-  next.registryVersion = loaded.registryVersion;
-  next.registryValid = Boolean(loaded.registryValid);
-  next.registryErrors = Array.isArray(loaded.registryErrors) ? loaded.registryErrors : [];
-  next.lastLoadedAt = new Date().toISOString();
-  next.roles = (loaded.profiles || []).map((r) => r.id);
-  next.profilesById = profilesById;
-  next.activeRole = next.roles.includes(agentRuntime.activeRole) ? agentRuntime.activeRole : "";
-  next.handoffs = agentRuntime.handoffs || next.handoffs;
-  Object.assign(agentRuntime, next);
-  refreshAgentRuntimeHealth();
-  if (!quiet) {
-    pushDiagnostic(
-      "info",
-      `Agent runtime loaded (${next.roles.length} role${next.roles.length === 1 ? "" : "s"}, registry ${next.registryVersion || "unknown"}).`
-    );
-  }
-  return true;
-}
 
 
 function queueDesktopStatePersist() {
@@ -3433,7 +3280,7 @@ async function onCheckHealth() {
   setStatus("info", "Running health check...");
   render();
   try {
-    await hydrateAgentHealth();
+    await agentSupportRuntime.hydrateAgentHealth();
     const [caps, open, rev] = await Promise.all([
       pingCapabilities(state.endpoint),
       getOpenSequence(state.endpoint),
@@ -4252,102 +4099,21 @@ function buildAgentConversationContext(userMessage = "") {
   };
 }
 
-async function hydrateAgentHealth() {
-  const bridge = getDesktopAgentConversationBridge();
-  if (!bridge) {
-    state.health.agentProvider = "";
-    state.health.agentModel = "";
-    state.health.agentConfigured = false;
-    state.health.agentHasStoredApiKey = false;
-    state.health.agentConfigSource = "none";
-    return;
-  }
-  try {
-    const res = await bridge.getAgentHealth();
-    if (res?.ok) {
-      state.health.agentProvider = String(res.provider || "openai");
-      state.health.agentModel = String(res.model || "");
-      state.health.agentConfigured = Boolean(res.configured);
-      state.health.agentHasStoredApiKey = Boolean(res.hasStoredApiKey);
-      state.health.agentConfigSource = String(res.source || "none");
-    }
-  } catch {
-    state.health.agentConfigured = false;
-  }
-}
-
-async function hydrateAgentConfigDraft() {
-  const bridge = getDesktopAgentConfigBridge();
-  if (!bridge) return;
-  try {
-    const res = await bridge.getAgentConfig();
-    if (!res?.ok) return;
-    state.ui.agentModelDraft = String(res.model || state.ui.agentModelDraft || "");
-    state.ui.agentBaseUrlDraft = String(res.baseUrl || state.ui.agentBaseUrlDraft || "");
-    state.health.agentHasStoredApiKey = Boolean(res.hasStoredApiKey);
-    state.health.agentConfigSource = String(res.source || state.health.agentConfigSource || "none");
-  } catch {
-    // Non-fatal config read failure.
-  }
-}
 
 async function onSaveAgentConfig() {
-  const bridge = getDesktopAgentConfigBridge();
-  if (!bridge) {
-    setStatusWithDiagnostics("warning", "Cloud agent config requires desktop runtime.");
-    return render();
-  }
   const apiKeyInput = app.querySelector("#agent-api-key-input");
   const modelInput = app.querySelector("#agent-model-input");
   const baseUrlInput = app.querySelector("#agent-base-url-input");
-  const apiKey = String(apiKeyInput?.value || "").trim();
-  const model = String(modelInput?.value || "").trim();
-  const baseUrl = String(baseUrlInput?.value || "").trim();
-  try {
-    const res = await bridge.setAgentConfig({
-      apiKey: apiKey || undefined,
-      model,
-      baseUrl
-    });
-    if (!res?.ok) {
-      setStatusWithDiagnostics("action-required", "Saving cloud agent config failed.", String(res?.error || "Unknown error"));
-      return render();
-    }
-    state.ui.agentApiKeyDraft = "";
-    if (apiKeyInput) apiKeyInput.value = "";
-    await hydrateAgentHealth();
-    await hydrateAgentConfigDraft();
-    setStatus("info", "Cloud agent config saved.");
-    persist();
-    render();
-  } catch (err) {
-    setStatusWithDiagnostics("action-required", "Saving cloud agent config failed.", String(err?.message || err));
-    render();
-  }
+  const ok = await agentSupportRuntime.saveAgentConfig({
+    apiKey: String(apiKeyInput?.value || "").trim(),
+    model: String(modelInput?.value || "").trim(),
+    baseUrl: String(baseUrlInput?.value || "").trim()
+  });
+  if (ok && apiKeyInput) apiKeyInput.value = "";
 }
 
 async function onClearStoredAgentApiKey() {
-  const bridge = getDesktopAgentConfigBridge();
-  if (!bridge) {
-    setStatusWithDiagnostics("warning", "Cloud agent config requires desktop runtime.");
-    return render();
-  }
-  if (!window.confirm("Clear stored cloud agent API key?")) return;
-  try {
-    const res = await bridge.setAgentConfig({ clearApiKey: true });
-    if (!res?.ok) {
-      setStatusWithDiagnostics("action-required", "Clearing API key failed.", String(res?.error || "Unknown error"));
-      return render();
-    }
-    await hydrateAgentHealth();
-    await hydrateAgentConfigDraft();
-    setStatus("info", "Stored cloud agent API key cleared.");
-    persist();
-    render();
-  } catch (err) {
-    setStatusWithDiagnostics("action-required", "Clearing API key failed.", String(err?.message || err));
-    render();
-  }
+  await agentSupportRuntime.clearStoredAgentApiKey();
 }
 
 function onClearXdTrackLocks() {
@@ -4512,7 +4278,7 @@ async function onTestCloudAgent() {
   pushDiagnostic("warning", "Cloud agent test started.");
   render();
   try {
-    await hydrateAgentHealth();
+    await agentSupportRuntime.hydrateAgentHealth();
     if (!state.health.agentConfigured) {
       state.ui.agentLastTestStatus = "Failed: cloud agent is not configured. Save API key first.";
       setStatusWithDiagnostics("warning", "Cloud agent is not configured. Save API key first.");
@@ -4614,7 +4380,7 @@ async function onTestAgentOrchestration() {
   pushDiagnostic("warning", "Agent orchestration test started.");
   render();
   try {
-    const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
+    const runtimeReady = await agentSupportRuntime.hydrateAgentRuntime({ force: true, quiet: true });
     if (!runtimeReady) {
       markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
       endOrchestrationRun(orchestrationRun, { status: "failed", summary: "agent runtime unavailable" });
@@ -4765,7 +4531,7 @@ async function onRunOrchestrationMatrix() {
   const previousTimingTrackPolicies = JSON.parse(JSON.stringify(getSequenceTimingTrackPoliciesState()));
   const results = [];
   try {
-    const runtimeReady = await hydrateAgentRuntime({ force: true, quiet: true });
+    const runtimeReady = await agentSupportRuntime.hydrateAgentRuntime({ force: true, quiet: true });
     if (!runtimeReady) {
       markOrchestrationStage(orchestrationRun, "runtime_load", "error", String(agentRuntime.error || "runtime unavailable"));
       endOrchestrationRun(orchestrationRun, { status: "failed", summary: "runtime unavailable" });
@@ -5109,7 +4875,7 @@ async function onSendChat() {
       });
       setAgentActiveRole(String(res?.routeDecision || "app_assistant"));
       setStatusWithDiagnostics("action-required", "Cloud agent conversation failed.", errText);
-      await hydrateAgentHealth();
+      await agentSupportRuntime.hydrateAgentHealth();
       saveCurrentProjectSnapshot();
       persist();
       render();
@@ -8078,6 +7844,23 @@ projectCatalogRuntime = createProjectCatalogRuntime({
   setAudioPathWithAgentPolicy
 });
 
+agentSupportRuntime = createAgentSupportRuntime({
+  state,
+  agentRuntime,
+  getDesktopTrainingPackageBridge,
+  getDesktopAgentConversationBridge,
+  getDesktopAgentConfigBridge,
+  validateTrainingAgentRegistry,
+  isPlainObject,
+  refreshAgentRuntimeHealth,
+  pushDiagnostic,
+  setStatus,
+  setStatusWithDiagnostics,
+  render,
+  persist,
+  confirm: (message) => window.confirm(message)
+});
+
 analysisServiceRuntime = createAnalysisServiceRuntime({
   state,
   defaultAnalysisServiceUrl: DEFAULT_ANALYSIS_SERVICE_URL,
@@ -9129,8 +8912,8 @@ automationRuntime.exposeRuntimeValidationHooks();
 
 async function bootstrapLiveData() {
   try {
-    await hydrateAgentHealth();
-    await hydrateAgentRuntime({ quiet: true });
+    await agentSupportRuntime.hydrateAgentHealth();
+    await agentSupportRuntime.hydrateAgentRuntime({ quiet: true });
     applyRolloutPolicy();
     const requestedEndpoint = state.endpoint;
     const { endpoint, caps } = await resolveReachableEndpoint(requestedEndpoint);
@@ -9181,9 +8964,9 @@ render();
   }
   await hydrateStateFromDesktop();
   await hydrateDesktopAppInfo();
-  await hydrateAgentHealth();
-  await hydrateAgentRuntime({ quiet: true });
-  await hydrateAgentConfigDraft();
+  await agentSupportRuntime.hydrateAgentHealth();
+  await agentSupportRuntime.hydrateAgentRuntime({ quiet: true });
+  await agentSupportRuntime.hydrateAgentConfigDraft();
   await analysisServiceRuntime.probeAnalysisServiceHealth({ quiet: true, force: true });
   applyRolloutPolicy();
   await projectHistoryRuntime.refreshApplyHistoryFromDesktop(40);
