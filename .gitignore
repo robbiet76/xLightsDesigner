@@ -20,7 +20,8 @@ __pycache__/
 
 # Logs / temp
 *.log
-logs/designer-training-runs/
+logs/
+var/
 *.tmp
 *.swp
 

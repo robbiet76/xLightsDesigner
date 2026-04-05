@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-log_root="$repo_root/logs/designer-training-runs"
+log_root="$repo_root/var/logs/designer-training-runs"
 latest_link="$log_root/latest"
 fallback_file="$log_root/pending-followups-next.md"
 

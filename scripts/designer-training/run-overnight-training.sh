@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-log_root="$repo_root/logs/designer-training-runs"
+log_root="$repo_root/var/logs/designer-training-runs"
 run_id="$(date '+%Y%m%d-%H%M%S')"
 run_dir="$log_root/$run_id"
 mkdir -p "$run_dir"

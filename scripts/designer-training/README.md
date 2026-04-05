@@ -6,7 +6,7 @@ Operational scripts for unattended designer training and validation loops.
 
 - `run-overnight-training.sh`
   - detached-friendly runner for repeated offline and live validation loops
-  - writes timestamped artifacts under `logs/designer-training-runs/<run-id>/`
+  - writes timestamped artifacts under `var/logs/designer-training-runs/<run-id>/`
   - supports clean stop via `STOP` file
 - `add-followup.sh`
   - appends a timestamped note to the active run's `pending-followups.md`
@@ -40,5 +40,5 @@ bash scripts/designer-training/add-followup.sh "Check alternate layout impact we
 Stop the current run cleanly:
 
 ```bash
-touch logs/designer-training-runs/latest/STOP
+touch var/logs/designer-training-runs/latest/STOP
 ```
