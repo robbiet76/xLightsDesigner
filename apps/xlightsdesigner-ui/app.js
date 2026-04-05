@@ -2602,7 +2602,7 @@ function onCloseArtifactDetail() {
 }
 
 async function onSelectHistoryEntry(entryId = "") {
-  await selectHistoryEntry(entryId, { forReview: true });
+  await projectHistoryRuntime.selectHistoryEntry(entryId, { forReview: true });
 }
 
 function setStatus(level, text) {
@@ -4053,42 +4053,6 @@ function currentArtifactRefs({ planHandoff = null, applyResult = null } = {}) {
     planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
     applyResult
   });
-}
-
-async function persistCurrentArtifactsForHistory({ planHandoff = null, applyResult = null, historyEntry = null } = {}) {
-  return projectHistoryRuntime.persistCurrentArtifactsForHistory({ planHandoff, applyResult, historyEntry });
-}
-
-async function readProjectArtifactById(artifactType = "", artifactId = "") {
-  return projectHistoryRuntime.readProjectArtifactById(artifactType, artifactId);
-}
-
-async function loadHistoryEntrySnapshot(entry = null) {
-  return projectHistoryRuntime.loadHistoryEntrySnapshot(entry);
-}
-
-async function selectHistoryEntry(entryId = "", options = {}) {
-  return projectHistoryRuntime.selectHistoryEntry(entryId, options);
-}
-
-function buildApplyHistoryEntry(options = {}) {
-  return projectHistoryRuntime.buildApplyHistoryEntry(options);
-}
-
-function buildCurrentReviewSnapshotSummary() {
-  return projectHistoryRuntime.buildCurrentReviewSnapshotSummary();
-}
-
-function pushApplyHistory(entry, options = {}) {
-  return projectHistoryRuntime.pushApplyHistory(entry, options);
-}
-
-async function appendDesktopApplyLog(entry) {
-  return projectHistoryRuntime.appendDesktopApplyLog(entry);
-}
-
-async function refreshApplyHistoryFromDesktop(limit = 40) {
-  return projectHistoryRuntime.refreshApplyHistoryFromDesktop(limit);
 }
 
 function downloadJson(filename, data) {
@@ -8416,7 +8380,7 @@ sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
   refreshMetadataTargetsFromXLights,
   refreshEffectCatalogFromXLights,
   fetchSectionSuggestions,
-  refreshApplyHistoryFromDesktop,
+  refreshApplyHistoryFromDesktop: (...args) => projectHistoryRuntime.refreshApplyHistoryFromDesktop(...args),
   applyRolloutPolicy,
   releaseConnectivityPlanOnly,
   enforceConnectivityPlanOnly,
@@ -8545,10 +8509,10 @@ applyReviewRuntime = createApplyReviewRuntime({
   executeApplyCore,
   saveCurrentProjectSnapshot,
   persist,
-  persistCurrentArtifactsForHistory,
-  pushApplyHistory,
-  appendDesktopApplyLog,
-  refreshApplyHistoryFromDesktop,
+  persistCurrentArtifactsForHistory: (...args) => projectHistoryRuntime.persistCurrentArtifactsForHistory(...args),
+  pushApplyHistory: (...args) => projectHistoryRuntime.pushApplyHistory(...args),
+  appendDesktopApplyLog: (...args) => projectHistoryRuntime.appendDesktopApplyLog(...args),
+  refreshApplyHistoryFromDesktop: (...args) => projectHistoryRuntime.refreshApplyHistoryFromDesktop(...args),
   currentSequencePathForSidecar,
   getDesktopBackupBridge,
   buildSequenceAgentInput,
@@ -8575,7 +8539,7 @@ applyReviewRuntime = createApplyReviewRuntime({
   setSequenceTimingTrackPoliciesState,
   setSequenceTimingGeneratedSignaturesState,
   applyAcceptedProposalToDirectorProfile,
-  buildApplyHistoryEntry,
+  buildApplyHistoryEntry: (...args) => projectHistoryRuntime.buildApplyHistoryEntry(...args),
   buildChatArtifactCard,
   getTeamChatSpeakerLabel,
   buildEffectiveMetadataAssignments,
@@ -10379,7 +10343,7 @@ uiCompositionRuntime = createUiCompositionRuntime({
     buildDesignerPlanCommands: (...args) => applyReviewRuntime.buildDesignerPlanCommands(...args),
     applyReadyForApprovalGate: () => applyReadinessRuntime.applyReadyForApprovalGate(),
     applyDisabledReason: () => applyReadinessRuntime.applyDisabledReason(),
-    buildCurrentReviewSnapshotSummary,
+    buildCurrentReviewSnapshotSummary: () => projectHistoryRuntime.buildCurrentReviewSnapshotSummary(),
     getMetadataTagRecords,
     buildMetadataTargets,
     matchesMetadataFilterValue,
@@ -10856,7 +10820,7 @@ async function bootstrapLiveData() {
       );
     }
     await onRefresh();
-    await refreshApplyHistoryFromDesktop(40);
+    await projectHistoryRuntime.refreshApplyHistoryFromDesktop(40);
     if (releasedForce) {
       setStatus("info", "xLights reachable again. Plan-only remains enabled until you turn it off.");
     }
@@ -10894,7 +10858,7 @@ render();
   await hydrateAgentConfigDraft();
   await probeAnalysisServiceHealth({ quiet: true, force: true });
   applyRolloutPolicy();
-  await refreshApplyHistoryFromDesktop(40);
+  await projectHistoryRuntime.refreshApplyHistoryFromDesktop(40);
   if (String(state.mediaPath || "").trim()) {
     await onRefreshMediaCatalog({ silent: true });
   }
