@@ -94,9 +94,12 @@ import {
   splitMarksAtBoundaries
 } from "./runtime/timing-track-provenance.js";
 import {
-  buildTimingTrackStatusRows,
-  reconcileTimingTrackReviewState
+  buildTimingTrackStatusRows
 } from "./runtime/timing-track-status.js";
+import {
+  buildGlobalXdTrackPolicyKey,
+  createTimingTrackRuntime
+} from "./runtime/timing-track-runtime.js";
 import {
   mergeVisualHintDefinitions,
   ensureVisualHintDefinitions,
@@ -683,6 +686,7 @@ function loadState() {
 }
 
 const state = loadState();
+let timingTrackRuntime = null;
 if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
@@ -6107,60 +6111,14 @@ async function onAcceptTimingTrackReview({
   note = "",
   refreshSections = true
 } = {}) {
-  const resolvedTrackName = String(trackName || "").trim() || (isXdTimingTrack(state.ui?.sectionTrackName) ? String(state.ui.sectionTrackName).trim() : "");
-  const resolvedPolicyKey = String(policyKey || "").trim() || (resolvedTrackName ? buildGlobalXdTrackPolicyKey(resolvedTrackName) : "");
-  if (!resolvedPolicyKey) {
-    setStatusWithDiagnostics("warning", "Timing review accept failed: no XD timing track was specified.");
-    render();
-    return { ok: false, error: "missing_timing_track" };
-  }
-
-  const result = reconcileTimingTrackReviewState({
-    policyKey: resolvedPolicyKey,
-    timingTrackProvenance: getSequenceTimingTrackProvenanceState(),
-    timingGeneratedSignatures: getSequenceTimingGeneratedSignaturesState(),
+  return timingTrackRuntime.acceptTimingTrackReview({
+    policyKey,
+    trackName,
     acceptedAt,
     reviewer,
-    note
+    note,
+    refreshSections
   });
-  if (!result.updated || !result.record) {
-    setStatusWithDiagnostics("warning", `Timing review accept failed: no tracked provenance record for ${resolvedTrackName || resolvedPolicyKey}.`);
-    render();
-    return { ok: false, error: "timing_track_not_tracked", policyKey: resolvedPolicyKey };
-  }
-
-  setSequenceTimingTrackProvenanceState(result.timingTrackProvenance);
-  setSequenceTimingGeneratedSignaturesState(result.timingGeneratedSignatures);
-
-  const acceptedTrackName = String(result.record?.trackName || resolvedTrackName || "").trim();
-  if (refreshSections && acceptedTrackName && acceptedTrackName === String(state.ui?.sectionTrackName || "").trim()) {
-    try {
-      await fetchSectionSuggestions({ selectedTrack: acceptedTrackName, refreshTracks: false });
-    } catch (err) {
-      setStatusWithDiagnostics("warning", `Timing review accepted, but section refresh failed: ${String(err?.message || err)}`);
-      saveCurrentProjectSnapshot();
-      persist();
-      render();
-      return {
-        ok: true,
-        policyKey: resolvedPolicyKey,
-        trackName: acceptedTrackName,
-        refreshed: false,
-        warning: String(err?.message || err)
-      };
-    }
-  }
-
-  setStatus("info", `Accepted current timing review for ${acceptedTrackName || resolvedPolicyKey}.`);
-  saveCurrentProjectSnapshot();
-  persist();
-  render();
-  return {
-    ok: true,
-    policyKey: resolvedPolicyKey,
-    trackName: acceptedTrackName,
-    refreshed: Boolean(refreshSections && acceptedTrackName && acceptedTrackName === String(state.ui?.sectionTrackName || "").trim())
-  };
 }
 
 function getCurrentAnalysisTimingSeed() {
@@ -10383,6 +10341,18 @@ async function fetchSectionSuggestions(options = {}) {
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
 }
 
+timingTrackRuntime = createTimingTrackRuntime({
+  state,
+  fallbackSequenceAgentRuntime: defaultState.sequenceAgentRuntime,
+  isXdTimingTrack,
+  refreshSectionsForTrack: async (trackName) => fetchSectionSuggestions({ selectedTrack: trackName, refreshTracks: false }),
+  setStatus,
+  setStatusWithDiagnostics,
+  saveCurrentProjectSnapshot,
+  persist,
+  render
+});
+
 async function onOpenSelectedProject(selectedKeyArg = "") {
   syncProjectSummaryInputs();
   if (selectedKeyArg && typeof selectedKeyArg === "object") {
@@ -11779,107 +11749,44 @@ function resolvePreferredMediaCatalogEntry(mediaFiles = [], { currentAudioPath =
   return { row: best.row, basis: `identity:${best.matchBasis}` };
 }
 
-function buildGlobalXdTrackPolicyKey(trackName = "") {
-  const name = String(trackName || "").trim().toLowerCase();
-  if (!name) return "";
-  return `__xd_global__::${name}`;
-}
-
-function deriveUserOwnedTrackNameFromXd(trackName = "") {
-  const raw = String(trackName || "").trim();
-  if (!raw) return "";
-  return raw.replace(/^xd:\s*/i, "").trim() || raw;
-}
-
 function getSequenceTimingTrackPoliciesState() {
-  return state.sequenceAgentRuntime?.timingTrackPolicies && typeof state.sequenceAgentRuntime.timingTrackPolicies === "object"
-    ? state.sequenceAgentRuntime.timingTrackPolicies
-    : {};
+  return timingTrackRuntime?.getPoliciesState() || {};
 }
 
 function setSequenceTimingTrackPoliciesState(policies = {}) {
-  state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
-    ? state.sequenceAgentRuntime
-    : structuredClone(defaultState.sequenceAgentRuntime);
-  state.sequenceAgentRuntime.timingTrackPolicies = policies && typeof policies === "object" ? policies : {};
+  timingTrackRuntime?.setPoliciesState(policies);
 }
 
 function getSequenceTimingGeneratedSignaturesState() {
-  return state.sequenceAgentRuntime?.timingGeneratedSignatures && typeof state.sequenceAgentRuntime.timingGeneratedSignatures === "object"
-    ? state.sequenceAgentRuntime.timingGeneratedSignatures
-    : {};
+  return timingTrackRuntime?.getGeneratedSignaturesState() || {};
 }
 
 function setSequenceTimingGeneratedSignaturesState(signatures = {}) {
-  state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
-    ? state.sequenceAgentRuntime
-    : structuredClone(defaultState.sequenceAgentRuntime);
-  state.sequenceAgentRuntime.timingGeneratedSignatures = signatures && typeof signatures === "object" ? signatures : {};
+  timingTrackRuntime?.setGeneratedSignaturesState(signatures);
 }
 
 function getSequenceTimingTrackProvenanceState() {
-  return state.sequenceAgentRuntime?.timingTrackProvenance && typeof state.sequenceAgentRuntime.timingTrackProvenance === "object"
-    ? state.sequenceAgentRuntime.timingTrackProvenance
-    : {};
+  return timingTrackRuntime?.getProvenanceState() || {};
 }
 
 function setSequenceTimingTrackProvenanceState(records = {}) {
-  state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
-    ? state.sequenceAgentRuntime
-    : structuredClone(defaultState.sequenceAgentRuntime);
-  state.sequenceAgentRuntime.timingTrackProvenance = records && typeof records === "object" ? records : {};
+  timingTrackRuntime?.setProvenanceState(records);
 }
 
 function getSequenceTimingOwnershipRows() {
-  return getGlobalXdTrackPolicies().map((row) => ({
-    sourceTrack: row.sourceTrack,
-    trackName: row.userTrack || row.sourceTrack,
-    manual: Boolean(row.manual),
-    lockedAt: row.lockedAt,
-    updatedAt: row.updatedAt
-  }));
+  return timingTrackRuntime?.getOwnershipRows() || [];
 }
 
 function getGlobalXdTrackPolicies() {
-  const policies = getSequenceTimingTrackPoliciesState();
-  const rows = [];
-  for (const [key, value] of Object.entries(policies)) {
-    if (!String(key || "").startsWith("__xd_global__::")) continue;
-    if (!value || typeof value !== "object") continue;
-    const sourceTrack = String(value.sourceTrack || key.replace(/^__xd_global__::/i, "")).trim();
-    const userTrack = String(value.trackName || deriveUserOwnedTrackNameFromXd(sourceTrack)).trim();
-    rows.push({
-      policyKey: key,
-      sourceTrack,
-      userTrack,
-      manual: Boolean(value.manual),
-      lockedAt: String(value.lockedAt || ""),
-      updatedAt: String(value.updatedAt || "")
-    });
-  }
-  return rows.sort((a, b) => a.sourceTrack.localeCompare(b.sourceTrack));
+  return timingTrackRuntime?.getGlobalXdTrackPolicies() || [];
 }
 
 function getManualLockedXdTracks() {
-  return getGlobalXdTrackPolicies().filter((row) => row.manual);
+  return timingTrackRuntime?.getManualLockedXdTracks() || [];
 }
 
 function removeGlobalXdManualLocks() {
-  const policies = getSequenceTimingTrackPoliciesState();
-  let changed = 0;
-  for (const key of Object.keys(policies)) {
-    if (!String(key || "").startsWith("__xd_global__::")) continue;
-    const row = policies[key];
-    if (!row || typeof row !== "object" || !row.manual) continue;
-    policies[key] = {
-      ...row,
-      manual: false,
-      updatedAt: new Date().toISOString()
-    };
-    changed += 1;
-  }
-  setSequenceTimingTrackPoliciesState(policies);
-  return changed;
+  return timingTrackRuntime?.removeGlobalXdManualLocks() || 0;
 }
 
 async function relabelSectionsWithLlm({
