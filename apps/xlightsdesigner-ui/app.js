@@ -2676,34 +2676,6 @@ function evaluateApplyHandoffGate() {
   return applyReadinessRuntime.evaluateApplyHandoffGate();
 }
 
-function applyEnabled() {
-  return applyReadinessRuntime.applyEnabled();
-}
-
-function getCurrentPlanCommandsForTimingReview() {
-  return applyReadinessRuntime.getCurrentPlanCommandsForTimingReview();
-}
-
-function getBlockingTimingReviewRows(planCommands = getCurrentPlanCommandsForTimingReview()) {
-  return applyReadinessRuntime.getBlockingTimingReviewRows(planCommands);
-}
-
-function buildCurrentSequenceSession(options = {}) {
-  return applyReadinessRuntime.buildCurrentSequenceSession(options);
-}
-
-function applyReadyForApprovalGate() {
-  return applyReadinessRuntime.applyReadyForApprovalGate();
-}
-
-function applyDisabledReason() {
-  return applyReadinessRuntime.applyDisabledReason();
-}
-
-function applyPlanReadinessReason() {
-  return applyReadinessRuntime.applyPlanReadinessReason();
-}
-
 function invalidateApplyApproval() {
   state.ui.applyApprovalChecked = false;
 }
@@ -2807,10 +2779,6 @@ function applyCapabilitiesHealth(caps, sequenceOpen = state.health.sequenceOpen)
     compatibilityStatus: compat === null ? "unknown" : compat ? "compatible" : "incompatible"
   };
   return { commands, xlightsVersion, compat };
-}
-
-function requiresApplyConfirmation() {
-  return applyReadinessRuntime.requiresApplyConfirmation();
 }
 
 function getSectionName(line) {
@@ -3026,10 +2994,6 @@ function getSections() {
   return getSectionChoiceList();
 }
 
-function filteredProposed() {
-  return applyReviewRuntime.filteredProposed();
-}
-
 function bumpVersion(summary = "Applied draft proposal", effects = 28) {
   const nextId = `v${Number(state.versions[0].id.slice(1)) + 1}`;
   const proposalSnapshot = [...state.proposed];
@@ -3057,10 +3021,6 @@ function ensureVersionSnapshots() {
 
 ensureVersionSnapshots();
 
-function buildDesignerPlanCommands(sourceLines = filteredProposed()) {
-  return applyReviewRuntime.buildDesignerPlanCommands(sourceLines);
-}
-
 async function verifyAppliedPlanReadback(plan = []) {
   return verifyAppliedPlanReadbackWithDeps(plan, {
     endpoint: state.endpoint,
@@ -3070,14 +3030,10 @@ async function verifyAppliedPlanReadback(plan = []) {
   });
 }
 
-async function onApply(sourceLines = filteredProposed(), applyLabel = "proposal") {
+async function onApply(sourceLines = applyReviewRuntime.filteredProposed(), applyLabel = "proposal") {
   return applyReviewRuntime.applyProposal(sourceLines, applyLabel);
 }
 
-
-function selectedProposedLinesForApply() {
-  return applyReviewRuntime.selectedProposedLinesForApply();
-}
 
 async function onApplySelected() {
   return applyReviewRuntime.applySelectedProposal();
@@ -4032,7 +3988,7 @@ function buildDiagnosticsBundle() {
   let previewCommands = [];
   let previewError = "";
   try {
-    previewCommands = buildDesignerPlanCommands(filteredProposed());
+    previewCommands = applyReviewRuntime.buildDesignerPlanCommands(applyReviewRuntime.filteredProposed());
   } catch (err) {
     previewError = String(err?.message || "");
   }
@@ -5162,7 +5118,7 @@ async function onTestAgentOrchestration() {
       : buildDemoProposedLines().slice(0, 3);
     let commands = [];
     try {
-      commands = buildDesignerPlanCommands(planSource);
+      commands = applyReviewRuntime.buildDesignerPlanCommands(planSource);
     } catch (err) {
       const msg = `Failed generating test commands: ${String(err?.message || err)}`;
       state.ui.agentLastOrchestrationTestStatus = msg;
@@ -5286,7 +5242,7 @@ async function onRunOrchestrationMatrix() {
         summary: "matrix happy path",
         estimatedImpact: 11,
         warnings: [],
-        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 2)),
+        commands: applyReviewRuntime.buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 2)),
         baseRevision: String(state.draftBaseRevision || "unknown"),
         validationReady: true
       }, "sequence_agent");
@@ -5301,7 +5257,7 @@ async function onRunOrchestrationMatrix() {
         summary: "missing intent case",
         estimatedImpact: 11,
         warnings: [],
-        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
+        commands: applyReviewRuntime.buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
         baseRevision: String(state.draftBaseRevision || "unknown"),
         validationReady: true
       }, "sequence_agent");
@@ -5323,7 +5279,7 @@ async function onRunOrchestrationMatrix() {
         summary: "revision mismatch",
         estimatedImpact: 11,
         warnings: [],
-        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
+        commands: applyReviewRuntime.buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
         baseRevision: "__old_revision__",
         validationReady: true
       }, "sequence_agent");
@@ -5345,7 +5301,7 @@ async function onRunOrchestrationMatrix() {
         summary: "section invalidation",
         estimatedImpact: 11,
         warnings: [],
-        commands: buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
+        commands: applyReviewRuntime.buildDesignerPlanCommands(buildDemoProposedLines().slice(0, 1)),
         baseRevision: String(state.draftBaseRevision || "unknown"),
         validationReady: true
       }, "sequence_agent");
@@ -5680,7 +5636,7 @@ async function onSendChat() {
       });
       return;
     }
-    const session = buildCurrentSequenceSession();
+    const session = applyReadinessRuntime.buildCurrentSequenceSession();
     if (!session.effectiveSequenceLoaded && !session.planOnlyMode) {
       setStatus("warning", "Open a sequence (or use plan-only mode) for proposal generation.");
     } else if (res.routeDecision === "audio_analyst") {
@@ -5866,7 +5822,7 @@ async function onReferenceMediaSelected() {
 }
 
 function creativeAnalysisDisabledReason() {
-  const session = buildCurrentSequenceSession();
+  const session = applyReadinessRuntime.buildCurrentSequenceSession();
   if (!session.effectiveSequenceLoaded) return "Open a sequence first.";
   if (!session.effectiveSequenceAllowed) return "Open a sequence inside the active Show Directory.";
   if (!String(session.effectiveSequencePath || "").trim()) return "Set a sequence path.";
@@ -8728,6 +8684,20 @@ projectLifecycleRuntime = createProjectLifecycleRuntime({
   reload: () => window.location.reload()
 });
 
+applyReadinessRuntime = createApplyReadinessRuntime({
+  state,
+  getValidHandoff,
+  buildTimingTrackStatusRows,
+  getSequenceTimingTrackProvenanceState,
+  getSequenceTimingGeneratedSignaturesState,
+  getSequenceTimingTrackPoliciesState,
+  isXdTimingTrack,
+  buildSequenceSession,
+  getAgentApplyRolloutMode,
+  estimateImpactCount,
+  filteredProposed: () => applyReviewRuntime?.filteredProposed?.() || []
+});
+
 applyReviewRuntime = createApplyReviewRuntime({
   state,
   hasAllSectionsSelected,
@@ -8738,17 +8708,17 @@ applyReviewRuntime = createApplyReviewRuntime({
   estimateImpactCount,
   currentSequencePathForSidecar,
   getDesktopFileStatBridge,
-  applyEnabled,
-  applyDisabledReason,
+  applyEnabled: () => applyReadinessRuntime.applyEnabled(),
+  applyDisabledReason: () => applyReadinessRuntime.applyDisabledReason(),
   syncLatestSequenceRevision,
   pushDiagnostic,
-  evaluateApplyHandoffGate,
+  evaluateApplyHandoffGate: () => applyReadinessRuntime.evaluateApplyHandoffGate(),
   getValidHandoffRecord,
   getValidHandoff,
   setStatus,
   setStatusWithDiagnostics,
   render,
-  requiresApplyConfirmation,
+  requiresApplyConfirmation: () => applyReadinessRuntime.requiresApplyConfirmation(),
   confirm: (message) => window.confirm(message),
   setAgentActiveRole,
   beginOrchestrationRun,
@@ -8804,20 +8774,6 @@ applyReviewRuntime = createApplyReviewRuntime({
   addStructuredChatMessage
 });
 
-applyReadinessRuntime = createApplyReadinessRuntime({
-  state,
-  getValidHandoff,
-  buildTimingTrackStatusRows,
-  getSequenceTimingTrackProvenanceState,
-  getSequenceTimingGeneratedSignaturesState,
-  getSequenceTimingTrackPoliciesState,
-  isXdTimingTrack,
-  buildSequenceSession,
-  getAgentApplyRolloutMode,
-  estimateImpactCount,
-  filteredProposed: () => applyReviewRuntime.filteredProposed()
-});
-
 proposalGenerationRuntime = createProposalGenerationRuntime({
   state,
   setStatus,
@@ -8837,7 +8793,7 @@ proposalGenerationRuntime = createProposalGenerationRuntime({
   applyOpenSequenceState,
   buildSequenceSession,
   explainSequenceSessionBlockers,
-  getBlockingTimingReviewRows,
+  getBlockingTimingReviewRows: (...args) => applyReadinessRuntime.getBlockingTimingReviewRows(...args),
   syncLatestSequenceRevision,
   setAgentActiveRole,
   beginOrchestrationRun,
@@ -10574,7 +10530,7 @@ const automationRuntime = createAutomationBridgeRuntime({
   buildCurrentMusicDesignContext,
   executeDesignerProposalOrchestration,
   getValidHandoff,
-  filteredProposed,
+  filteredProposed: () => applyReviewRuntime.filteredProposed(),
   arraysEqualOrdered,
   buildSequenceAgentPlan,
   validateCommandGraph,
@@ -10582,7 +10538,7 @@ const automationRuntime = createAutomationBridgeRuntime({
   getOwnedHealth,
   currentLayoutMode,
   getSequenceTimingOwnershipRows,
-  applyReadyForApprovalGate,
+  applyReadyForApprovalGate: () => applyReadinessRuntime.applyReadyForApprovalGate(),
   definePersistedVisualHint,
   persist,
   render,
@@ -10619,11 +10575,11 @@ uiCompositionRuntime = createUiCompositionRuntime({
     getSelectedSections,
     hasAllSectionsSelected,
     getSectionName,
-    selectedProposedLinesForApply,
+    selectedProposedLinesForApply: () => applyReviewRuntime.selectedProposedLinesForApply(),
     summarizeImpactForLines,
-    buildDesignerPlanCommands,
-    applyReadyForApprovalGate,
-    applyDisabledReason,
+    buildDesignerPlanCommands: (...args) => applyReviewRuntime.buildDesignerPlanCommands(...args),
+    applyReadyForApprovalGate: () => applyReadinessRuntime.applyReadyForApprovalGate(),
+    applyDisabledReason: () => applyReadinessRuntime.applyDisabledReason(),
     buildCurrentReviewSnapshotSummary,
     getMetadataTagRecords,
     buildMetadataTargets,
@@ -10645,8 +10601,8 @@ uiCompositionRuntime = createUiCompositionRuntime({
     sanitizeProposedSelection,
     getProposedPayloadPreviewText,
     renderProposedLineHtml,
-    applyPlanReadinessReason,
-    applyEnabled,
+    applyPlanReadinessReason: () => applyReadinessRuntime.applyPlanReadinessReason(),
+    applyEnabled: () => applyReadinessRuntime.applyEnabled(),
     getMetadataOrphans,
     ensureVersionSnapshots,
     versionById
@@ -11043,9 +10999,9 @@ function render() {
         getSelectedSections,
         hasAllSectionsSelected,
         getSectionName,
-        applyReadyForApprovalGate,
-        applyEnabled,
-        applyDisabledReason,
+        applyReadyForApprovalGate: () => applyReadinessRuntime.applyReadyForApprovalGate(),
+        applyEnabled: () => applyReadinessRuntime.applyEnabled(),
+        applyDisabledReason: () => applyReadinessRuntime.applyDisabledReason(),
         getDiagnosticsCounts,
         getAgentApplyRolloutMode,
         getManualLockedXdTracks,
