@@ -163,6 +163,7 @@ import { executeXLightsRefreshCycle, fetchXLightsRevisionState, syncXLightsRevis
 import { executeApplyCore } from "./runtime/review-runtime.js";
 import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
+import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -689,6 +690,7 @@ function loadState() {
 const state = loadState();
 let timingTrackRuntime = null;
 let uiCompositionRuntime = null;
+let projectCatalogRuntime = null;
 if (state.route === "inspiration") state.route = "design";
 ensureAnalysisServiceDefaults(state);
 normalizeDirectorProfileState(state);
@@ -9653,137 +9655,11 @@ async function onBrowseProjectMetadataRoot() {
 }
 
 async function onRefreshSequenceCatalog(options = {}) {
-  const silent = options?.silent === true;
-  const showFolder = String(state.showFolder || "").trim();
-  if (!showFolder) {
-    state.sequenceCatalog = [];
-    state.showDirectoryStats = { xsqCount: 0, xdmetaCount: 0 };
-    if (!silent) setStatus("warning", "Set Show Folder first.");
-    persist();
-    render();
-    return;
-  }
-  const bridge = getDesktopSequenceBridge();
-  if (!bridge) {
-    if (!silent) setStatus("warning", "Sequence discovery requires desktop runtime.");
-    render();
-    return;
-  }
-  try {
-    const res = await bridge.listSequencesInShowFolder({ showFolder });
-    if (!res?.ok) {
-      throw new Error(res?.error || "Unable to list sequences.");
-    }
-    const sequences = Array.isArray(res.sequences) ? res.sequences : [];
-    state.sequenceCatalog = sequences;
-    state.showDirectoryStats = {
-      xsqCount: Number.isFinite(Number(res?.stats?.xsqCount)) ? Math.max(0, Number(res.stats.xsqCount)) : sequences.length,
-      xdmetaCount: Number.isFinite(Number(res?.stats?.xdmetaCount)) ? Math.max(0, Number(res.stats.xdmetaCount)) : 0
-    };
-    if (state.ui.sequenceMode === "existing") {
-      const exists = sequences.some((s) => String(s?.path || "") === state.sequencePathInput);
-      if (!exists && sequences.length) {
-        state.sequencePathInput = String(sequences[0].path || "");
-      }
-    }
-    if (!silent) {
-      setStatus("info", `Loaded ${sequences.length} sequence${sequences.length === 1 ? "" : "s"} from show folder.`);
-    }
-    saveCurrentProjectSnapshot();
-    persist();
-    render();
-  } catch (err) {
-    if (!silent) {
-      setStatusWithDiagnostics(
-        "action-required",
-        `Sequence discovery failed: ${err.message}`,
-        err.stack || ""
-      );
-    }
-    render();
-  }
+  return projectCatalogRuntime.refreshSequenceCatalog(options);
 }
 
 async function onRefreshMediaCatalog(options = {}) {
-  const silent = options?.silent === true;
-  const mediaFolder = String(state.mediaPath || "").trim();
-  if (!mediaFolder) {
-    state.mediaCatalog = [];
-    if (!silent) setStatus("warning", "Set Media Directory first.");
-    persist();
-    render();
-    return;
-  }
-  const bridge = getDesktopMediaCatalogBridge();
-  if (!bridge) {
-    if (!silent) setStatus("warning", "Media catalog requires desktop runtime.");
-    render();
-    return;
-  }
-  try {
-    const res = await bridge.listMediaFilesInFolder({
-      mediaFolder,
-      extensions: Array.from(SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS),
-      includeIdentity: true,
-      includeFingerprint: true
-    });
-    if (!res?.ok) throw new Error(res?.error || "Unable to list media files.");
-    const mediaFiles = Array.isArray(res.mediaFiles) ? res.mediaFiles : [];
-    state.mediaCatalog = mediaFiles;
-
-    const currentAudioPath = String(state.audioPathInput || "").trim();
-    const sequenceMediaPath = String(state.sequenceMediaFile || "").trim();
-    const currentAudioExists = currentAudioPath ? mediaFiles.some((row) => String(row?.path || "").trim() === currentAudioPath) : false;
-    const sequenceMediaExists = sequenceMediaPath ? mediaFiles.some((row) => String(row?.path || "").trim() === sequenceMediaPath) : false;
-    let targetIdentity = buildResolvedTrackIdentityForMediaMatching();
-    if (!targetIdentity && ((currentAudioPath && !currentAudioExists) || (sequenceMediaPath && !sequenceMediaExists))) {
-      targetIdentity =
-        await loadPersistedTrackIdentityForMediaPath(currentAudioPath) ||
-        await loadPersistedTrackIdentityForMediaPath(sequenceMediaPath);
-    }
-
-    const preferred = resolvePreferredMediaCatalogEntry(mediaFiles, {
-      currentAudioPath,
-      sequenceMediaPath,
-      targetIdentity
-    });
-
-    if (preferred?.row) {
-      if (String(preferred.row.path || "").trim() !== currentAudioPath) {
-        setAudioPathWithAgentPolicy(
-          String(preferred.row.path || "").trim(),
-          preferred.basis === "exact_path"
-            ? "media catalog preferred track"
-            : `media catalog identity match (${preferred.basis})`
-        );
-      }
-    } else if (currentAudioPath && currentAudioExists) {
-      // Keep current external selection if it is valid and outside the media-library match set.
-    } else if ((currentAudioPath && !currentAudioExists) || (sequenceMediaPath && !sequenceMediaExists)) {
-      setAudioPathWithAgentPolicy("", "stale media path cleared because no exact identity match was available");
-      if (!silent) {
-        setStatus(
-          "warning",
-          "Sequence media path is stale and no verified media identity match was available. Select the actual media file to continue."
-        );
-      }
-    } else if (mediaFiles.length === 1) {
-      setAudioPathWithAgentPolicy(String(mediaFiles[0].path || "").trim(), "single media file selected");
-    }
-
-    if (!silent) {
-      setStatus("info", `Media catalog refreshed: ${mediaFiles.length} file${mediaFiles.length === 1 ? "" : "s"} found.`);
-    }
-    persist();
-    render();
-  } catch (err) {
-    state.mediaCatalog = [];
-    if (!silent) {
-      setStatusWithDiagnostics("warning", `Media catalog refresh failed: ${err?.message || err}`);
-    }
-    persist();
-    render();
-  }
+  return projectCatalogRuntime.refreshMediaCatalog(options);
 }
 
 function onSelectCatalogSequence() {
@@ -10353,6 +10229,22 @@ timingTrackRuntime = createTimingTrackRuntime({
   saveCurrentProjectSnapshot,
   persist,
   render
+});
+
+projectCatalogRuntime = createProjectCatalogRuntime({
+  state,
+  supportedSequenceMediaExtensions: SUPPORTED_SEQUENCE_MEDIA_EXTENSIONS,
+  getDesktopSequenceBridge,
+  getDesktopMediaCatalogBridge,
+  setStatus,
+  setStatusWithDiagnostics,
+  persist,
+  render,
+  saveCurrentProjectSnapshot,
+  buildResolvedTrackIdentityForMediaMatching,
+  loadPersistedTrackIdentityForMediaPath,
+  resolvePreferredMediaCatalogEntry,
+  setAudioPathWithAgentPolicy
 });
 
 async function onOpenSelectedProject(selectedKeyArg = "") {
