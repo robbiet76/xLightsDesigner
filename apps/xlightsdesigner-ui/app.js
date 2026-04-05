@@ -165,6 +165,7 @@ import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runti
 import { createAudioAnalysisSessionRuntime } from "./runtime/audio-analysis-session-runtime.js";
 import { createSequenceMediaSessionRuntime } from "./runtime/sequence-media-session-runtime.js";
 import { createProjectLifecycleRuntime } from "./runtime/project-lifecycle-runtime.js";
+import { createAgentRuntimeState } from "./runtime/agent-runtime-state.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
@@ -864,7 +865,7 @@ let trainingPackageAudioBundleCache = null;
 let trainingPackageAudioBundleCacheAt = 0;
 let trainingPackageAgentBundleCache = null;
 let trainingPackageAgentBundleCacheAt = 0;
-let currentOrchestrationRun = null;
+let agentRuntimeState = null;
 
 function emptyAgentRuntimeState() {
   return {
@@ -1214,74 +1215,23 @@ function hydrateIntentHandoffExecutionStrategy(intentHandoff = null, proposalBun
 }
 
 function getAgentHandoffReadyCount() {
-  let count = 0;
-  for (const contract of AGENT_HANDOFF_CONTRACTS) {
-    const row = agentRuntime.handoffs?.[contract];
-    if (row?.valid === true && isPlainObject(row.payload)) count += 1;
-  }
-  return count;
+  return agentRuntimeState.getAgentHandoffReadyCount();
 }
 
 function refreshAgentRuntimeHealth() {
-  const readyCount = getAgentHandoffReadyCount();
-  state.health.agentLayerReady = Boolean(agentRuntime.loaded && !agentRuntime.error);
-  state.health.agentActiveRole = String(agentRuntime.activeRole || "");
-  state.health.agentRegistryVersion = String(agentRuntime.registryVersion || "");
-  state.health.agentRegistryValid = Boolean(agentRuntime.registryValid);
-  state.health.agentRegistryErrors = Array.isArray(agentRuntime.registryErrors) ? agentRuntime.registryErrors.slice(0, 12) : [];
-  state.health.agentHandoffsReady = `${readyCount}/${AGENT_HANDOFF_CONTRACTS.length}`;
-}
-
-function nowMs() {
-  return Date.now();
+  return agentRuntimeState.refreshAgentRuntimeHealth();
 }
 
 function beginOrchestrationRun({ trigger = "", role = "" } = {}) {
-  const run = {
-    id: `orch-${nowMs()}`,
-    trigger: String(trigger || "").trim() || "unknown",
-    role: String(role || "").trim() || "",
-    startedAtMs: nowMs(),
-    startedAtIso: new Date().toISOString(),
-    stages: [],
-    status: "running",
-    summary: ""
-  };
-  currentOrchestrationRun = run;
-  pushDiagnostic("info", `Orchestration run started (${run.id}) trigger=${run.trigger}${run.role ? ` role=${run.role}` : ""}.`);
-  return run;
+  return agentRuntimeState.beginOrchestrationRun({ trigger, role });
 }
 
 function markOrchestrationStage(run, stage = "", status = "ok", detail = "") {
-  if (!run || run !== currentOrchestrationRun) return;
-  const row = {
-    stage: String(stage || "").trim() || "unknown",
-    status: String(status || "").trim() || "ok",
-    detail: String(detail || "").trim(),
-    atMs: nowMs(),
-    elapsedMs: Math.max(0, nowMs() - run.startedAtMs)
-  };
-  run.stages.push(row);
-  const suffix = row.detail ? `: ${row.detail}` : "";
-  const level = row.status === "ok" ? "info" : "warning";
-  pushDiagnostic(level, `Orchestration ${run.id} stage ${row.stage} [${row.status}]${suffix}`);
+  return agentRuntimeState.markOrchestrationStage(run, stage, status, detail);
 }
 
 function endOrchestrationRun(run, { status = "ok", summary = "" } = {}) {
-  if (!run || run !== currentOrchestrationRun) return;
-  run.status = String(status || "").trim() || "ok";
-  run.summary = String(summary || "").trim();
-  run.endedAtMs = nowMs();
-  run.durationMs = Math.max(0, run.endedAtMs - run.startedAtMs);
-  const sum = run.summary || `${run.trigger} completed`;
-  const st = run.status;
-  state.health.orchestrationLastRunId = run.id;
-  state.health.orchestrationLastStatus = st;
-  state.health.orchestrationLastSummary = `${sum} (${run.durationMs}ms)`;
-  state.health.orchestrationLastAt = new Date().toISOString();
-  const level = st === "ok" ? "info" : "warning";
-  pushDiagnostic(level, `Orchestration run ended (${run.id}) status=${st} duration=${run.durationMs}ms summary=${sum}`);
-  currentOrchestrationRun = null;
+  return agentRuntimeState.endOrchestrationRun(run, { status, summary });
 }
 
 function pushSequenceAgentContractDiagnostic(report = {}) {
@@ -1345,129 +1295,47 @@ function arraysEqualOrdered(a = [], b = []) {
 }
 
 function buildAgentPersistenceContext() {
-  return {
-    revision: String(state.revision || "unknown"),
-    draftBaseRevision: String(state.draftBaseRevision || "unknown"),
-    audioPath: String(state.audioPathInput || "").trim(),
-    selectedSections: normalizeStringArray(getSelectedSections()),
-    selectedTargets: normalizeStringArray(normalizeMetadataSelectionIds(state.ui.metadataSelectionIds || [])),
-    selectedTags: normalizeStringArray(normalizeMetadataSelectedTags(state.ui.metadataSelectedTags || []))
-  };
+  return agentRuntimeState.buildAgentPersistenceContext();
 }
 
 function setAgentActiveRole(roleId = "") {
-  agentRuntime.activeRole = String(roleId || "").trim();
-  refreshAgentRuntimeHealth();
+  return agentRuntimeState.setAgentActiveRole(roleId);
 }
 
 function setAgentHandoff(contract = "", payload = {}, producer = "") {
-  const key = String(contract || "").trim();
-  if (!key) return { ok: false, errors: ["contract is required"] };
-  const errors = validateAgentHandoff(key, payload);
-  const context = buildAgentPersistenceContext();
-  agentRuntime.handoffs[key] = {
-    contract: key,
-    producer: String(producer || "").trim(),
-    payload: isPlainObject(payload) ? payload : {},
-    context,
-    valid: errors.length === 0,
-    errors,
-    at: new Date().toISOString()
-  };
-  refreshAgentRuntimeHealth();
-  if (errors.length) {
-    pushDiagnostic("warning", `Agent handoff invalid (${key}): ${errors.join("; ")}`);
-  } else {
-    pushDiagnostic("info", `Agent handoff ready (${key}) from ${producer || "unknown"}.`);
-  }
-  return { ok: errors.length === 0, errors };
+  return agentRuntimeState.setAgentHandoff(contract, payload, producer);
 }
 
 function getValidHandoff(contract = "") {
-  const row = agentRuntime.handoffs?.[String(contract || "").trim()];
-  return row?.valid ? row.payload : null;
+  return agentRuntimeState.getValidHandoff(contract);
 }
 
 function getValidHandoffRecord(contract = "") {
-  const row = agentRuntime.handoffs?.[String(contract || "").trim()];
-  return row?.valid ? row : null;
+  return agentRuntimeState.getValidHandoffRecord(contract);
 }
 
 function clearAgentHandoff(contract = "", reason = "", { pushLog = true } = {}) {
-  const key = String(contract || "").trim();
-  if (!key || !AGENT_HANDOFF_CONTRACTS.includes(key)) return false;
-  const existing = agentRuntime.handoffs?.[key];
-  if (!existing) return false;
-  agentRuntime.handoffs[key] = null;
-  refreshAgentRuntimeHealth();
-  if (pushLog && reason) {
-    pushDiagnostic("info", `Agent handoff cleared (${key}): ${reason}`);
-  }
-  return true;
+  return agentRuntimeState.clearAgentHandoff(contract, reason, { pushLog });
 }
 
 function invalidatePlanHandoff(reason = "context changed") {
-  clearAgentHandoff("plan_handoff_v1", reason);
+  return agentRuntimeState.invalidatePlanHandoff(reason);
 }
 
 function invalidateAnalysisHandoff(reason = "audio changed", { cascadePlan = true } = {}) {
-  const cleared = clearAgentHandoff("analysis_handoff_v1", reason);
-  if (cleared && cascadePlan) {
-    clearAgentHandoff("plan_handoff_v1", `analysis invalidated (${reason})`);
-  }
+  return agentRuntimeState.invalidateAnalysisHandoff(reason, { cascadePlan });
 }
 
 function reconcileHandoffsAgainstCurrentContext({ reasonPrefix = "context drift" } = {}) {
-  const current = buildAgentPersistenceContext();
-  const plan = agentRuntime.handoffs?.plan_handoff_v1;
-  if (plan?.valid && isPlainObject(plan.context)) {
-    const contextRevision = String(plan.context.revision || "unknown");
-    const revisionChanged =
-      contextRevision !== "unknown" &&
-      current.revision !== "unknown" &&
-      contextRevision !== current.revision;
-    const sectionsChanged = !arraysEqualAsSets(plan.context.selectedSections, current.selectedSections);
-    const targetsChanged = !arraysEqualAsSets(plan.context.selectedTargets, current.selectedTargets);
-    const tagsChanged = !arraysEqualAsSets(plan.context.selectedTags, current.selectedTags);
-    if (revisionChanged || sectionsChanged || targetsChanged || tagsChanged) {
-      invalidatePlanHandoff(
-        `${reasonPrefix}: ${
-          revisionChanged
-            ? "revision changed"
-            : (sectionsChanged ? "section scope changed" : (targetsChanged ? "target scope changed" : "tag scope changed"))
-        }`
-      );
-    }
-  }
-
-  const analysis = agentRuntime.handoffs?.analysis_handoff_v1;
-  if (analysis?.valid && isPlainObject(analysis.context)) {
-    const persistedAudio = String(analysis.context.audioPath || "").trim();
-    const currentAudio = String(current.audioPath || "").trim();
-    if (persistedAudio && currentAudio && persistedAudio !== currentAudio) {
-      invalidateAnalysisHandoff(`${reasonPrefix}: audio/media changed`, { cascadePlan: true });
-    }
-  }
+  return agentRuntimeState.reconcileHandoffsAgainstCurrentContext({ reasonPrefix });
 }
 
 function clearAgentHandoffs() {
-  clearAgentHandoff("analysis_handoff_v1", "session reset", { pushLog: false });
-  clearAgentHandoff("intent_handoff_v1", "session reset", { pushLog: false });
-  clearAgentHandoff("plan_handoff_v1", "session reset", { pushLog: false });
-  agentRuntime.handoffs = {
-    analysis_handoff_v1: null,
-    intent_handoff_v1: null,
-    plan_handoff_v1: null
-  };
-  if (!["audio_analyst", "designer_dialog", "sequence_agent"].includes(agentRuntime.activeRole)) {
-    agentRuntime.activeRole = "";
-  }
-  refreshAgentRuntimeHealth();
+  return agentRuntimeState.clearAgentHandoffs();
 }
 
 function clearSequencingHandoffsForSequenceChange(reason = "sequence changed") {
-  clearAgentHandoff("intent_handoff_v1", reason, { pushLog: false });
-  clearAgentHandoff("plan_handoff_v1", reason, { pushLog: false });
+  return agentRuntimeState.clearSequencingHandoffsForSequenceChange(reason);
 }
 
 async function loadAgentRuntimeBundle({ force = false } = {}) {
@@ -9866,6 +9734,18 @@ timingTrackRuntime = createTimingTrackRuntime({
   saveCurrentProjectSnapshot,
   persist,
   render
+});
+
+agentRuntimeState = createAgentRuntimeState({
+  state,
+  agentRuntime,
+  handoffContracts: AGENT_HANDOFF_CONTRACTS,
+  isPlainObject,
+  validateAgentHandoff,
+  pushDiagnostic,
+  getSelectedSections,
+  normalizeMetadataSelectionIds,
+  normalizeMetadataSelectedTags
 });
 
 projectCatalogRuntime = createProjectCatalogRuntime({
