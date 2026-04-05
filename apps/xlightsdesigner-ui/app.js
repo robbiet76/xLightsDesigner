@@ -5675,12 +5675,6 @@ function designerMediaFolderPath() {
   return base ? `${base}/xlightsdesigner-media` : "xlightsdesigner-media";
 }
 
-function extractPickedPath(file) {
-  if (!file || typeof file !== "object") return "";
-  if (typeof file.path === "string" && file.path.trim()) return file.path.trim();
-  return "";
-}
-
 function hasXsqExtension(name) {
   return /\.xsq$/i.test(String(name || "").trim());
 }
