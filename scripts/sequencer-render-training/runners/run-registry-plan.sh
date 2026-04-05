@@ -3,13 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${ROOT_DIR}/lib.sh"
+source "${ROOT_DIR}/tooling/lib.sh"
 
 DEBUG_APP_DEFAULT="/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-ewiqueswvnjesbbydtiylmstqbkg/Build/Products/Debug/xLights.app"
 export XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-${DEBUG_APP_DEFAULT}}"
 
 PLAN_FILE="${ROOT_DIR}/registry/registry-planning-phase1.json"
-REGISTRY_FILE="${ROOT_DIR}/effect-parameter-registry.json"
+REGISTRY_FILE="${ROOT_DIR}/catalog/effect-parameter-registry.json"
 RUN_ROOT=""
 STAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 
@@ -54,7 +54,7 @@ log() {
 
 ensure_xlights_ready >>"${LOG_PATH}" 2>&1
 
-python3 "${ROOT_DIR}/generate-registry-plan-manifests.py" \
+python3 "${ROOT_DIR}/generators/generate-registry-plan-manifests.py" \
   --registry "${REGISTRY_FILE}" \
   --plan "${PLAN_FILE}" \
   --out-dir "${GENERATED_DIR}" \
@@ -88,11 +88,11 @@ while IFS= read -r row; do
   }
 
   post_process_pack() {
-    python3 "${ROOT_DIR}/generate-range-transition-report.py" \
+    python3 "${ROOT_DIR}/generators/generate-range-transition-report.py" \
       --run-dir "${run_dir}" \
       --param "${parameter}" \
       --out-file "${run_dir}/range-transition.json" >>"${LOG_PATH}" 2>&1 &&
-    python3 "${ROOT_DIR}/generate-parameter-region-summary.py" \
+    python3 "${ROOT_DIR}/generators/generate-parameter-region-summary.py" \
       --transition-report "${run_dir}/range-transition.json" \
       --out-file "${run_dir}/region-summary.json" >>"${LOG_PATH}" 2>&1
   }

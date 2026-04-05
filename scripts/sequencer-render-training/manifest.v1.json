@@ -14,64 +14,56 @@
       "purpose": "analysis_support",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under grouped analysis/tooling subtree in later cleanup"
+      "recommendation": "keep",
+      "notes": "decoded render analysis support"
     },
     {
       "path": "analysis/framework.py",
       "purpose": "analysis_support",
       "refCount": 0,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under grouped analysis/tooling subtree in later cleanup"
+      "recommendation": "keep",
+      "notes": "decoded render analysis support"
     },
     {
-      "path": "build-animation-fixture.py",
-      "purpose": "build_helper",
-      "refCount": 1,
-      "lifecycle": "active_manual",
-      "recommendation": "review",
-      "notes": "native/helper build step"
-    },
-    {
-      "path": "build-comparison.sh",
-      "purpose": "build_helper",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "native/helper build step"
-    },
-    {
-      "path": "build-fseq-window-decoder.sh",
-      "purpose": "build_helper",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "native/helper build step"
-    },
-    {
-      "path": "build-record-comparison.sh",
-      "purpose": "build_helper",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "native/helper build step"
-    },
-    {
-      "path": "cleanup-render-training-artifacts.py",
-      "purpose": "support_script",
-      "refCount": 1,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
-    },
-    {
-      "path": "effect-parameter-registry.json",
+      "path": "catalog/effect-parameter-registry.json",
       "purpose": "core_catalog",
       "refCount": 8,
       "lifecycle": "active_core",
       "recommendation": "keep",
-      "notes": "core planning/training catalog"
+      "notes": "stable planning or training catalog"
+    },
+    {
+      "path": "catalog/generic-layout-geometry-audit.json",
+      "purpose": "core_catalog",
+      "refCount": 3,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "stable planning or training catalog"
+    },
+    {
+      "path": "catalog/generic-layout-model-catalog.json",
+      "purpose": "core_catalog",
+      "refCount": 4,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "stable planning or training catalog"
+    },
+    {
+      "path": "catalog/stage1-effect-model-scope.json",
+      "purpose": "core_catalog",
+      "refCount": 2,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "stable planning or training catalog"
+    },
+    {
+      "path": "catalog/training-standards.json",
+      "purpose": "core_catalog",
+      "refCount": 1,
+      "lifecycle": "active_core",
+      "recommendation": "keep",
+      "notes": "stable planning or training catalog"
     },
     {
       "path": "evaluation/evaluate-controlled-designer-vocabulary.py",
@@ -234,268 +226,188 @@
       "notes": "evaluation fixture"
     },
     {
-      "path": "export-sequencer-stage1-bundle.py",
-      "purpose": "support_script",
-      "refCount": 3,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
-    },
-    {
-      "path": "extract-artifact-features.sh",
-      "purpose": "feature_extractor",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "offline extraction helper"
-    },
-    {
-      "path": "extract-gif-features.py",
-      "purpose": "feature_extractor",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "offline extraction helper"
-    },
-    {
-      "path": "extract-gif-sampled-frame-features.js",
-      "purpose": "feature_extractor",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "offline extraction helper"
-    },
-    {
-      "path": "extract-observations.sh",
-      "purpose": "feature_extractor",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "offline extraction helper"
-    },
-    {
-      "path": "fseq_window_decoder.cpp",
-      "purpose": "tooling_support",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "specialized tooling helper"
-    },
-    {
-      "path": "generate-current-effect-equalization-board.py",
+      "path": "generators/generate-current-effect-equalization-board.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-effect-complexity-review.py",
+      "path": "generators/generate-effect-complexity-review.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-effect-geometry-gap-report.py",
+      "path": "generators/generate-effect-geometry-gap-report.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-effect-intent-map.py",
+      "path": "generators/generate-effect-intent-map.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "belongs under generators/"
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-effect-maturity-report.py",
+      "path": "generators/generate-effect-maturity-report.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-effect-static-complexity-report.py",
+      "path": "generators/generate-effect-static-complexity-report.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-intent-gap-report.py",
+      "path": "generators/generate-intent-gap-report.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-intent-vocab-summary.py",
+      "path": "generators/generate-intent-vocab-summary.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-look-catalog.py",
+      "path": "generators/generate-look-catalog.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-model-geometry-audit.py",
+      "path": "generators/generate-model-geometry-audit.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-parameter-region-summary.py",
+      "path": "generators/generate-parameter-region-summary.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "belongs under generators/"
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-parameter-sweep-manifest.py",
+      "path": "generators/generate-parameter-sweep-manifest.py",
       "purpose": "generator",
       "refCount": 3,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-priority-effect-summary.py",
+      "path": "generators/generate-priority-effect-summary.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-priority-intent-map.py",
+      "path": "generators/generate-priority-intent-map.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-range-transition-report.py",
+      "path": "generators/generate-range-transition-report.py",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-record-intent-map.py",
+      "path": "generators/generate-record-intent-map.py",
       "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "belongs under generators/"
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-registry-plan-manifests.py",
+      "path": "generators/generate-registry-plan-manifests.py",
       "purpose": "generator",
       "refCount": 2,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
+      "recommendation": "keep",
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generate-sample-comparisons.sh",
+      "path": "generators/generate-sample-comparisons.sh",
       "purpose": "generator",
       "refCount": 1,
       "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "belongs under generators/"
-    },
-    {
-      "path": "generate-stage1-coverage-audit.py",
-      "purpose": "generator",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "belongs under generators/"
-    },
-    {
-      "path": "generate-stage1-coverage-backlog.py",
-      "purpose": "generator",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "belongs under generators/"
-    },
-    {
-      "path": "generate-stage1-coverage-plan.py",
-      "purpose": "generator",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "belongs under generators/"
-    },
-    {
-      "path": "generate-stage1-equalization-backlog.py",
-      "purpose": "generator",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "belongs under generators/"
-    },
-    {
-      "path": "generate-stage1-equalization-board.py",
-      "purpose": "generator",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "belongs under generators/"
-    },
-    {
-      "path": "generic-layout-geometry-audit.json",
-      "purpose": "core_catalog",
-      "refCount": 3,
-      "lifecycle": "active_core",
       "recommendation": "keep",
-      "notes": "core planning/training catalog"
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "generic-layout-model-catalog.json",
-      "purpose": "core_catalog",
-      "refCount": 4,
-      "lifecycle": "active_core",
-      "recommendation": "keep",
-      "notes": "core planning/training catalog"
-    },
-    {
-      "path": "get-model-fseq-metadata.py",
-      "purpose": "support_script",
+      "path": "generators/generate-stage1-coverage-audit.py",
+      "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "support script in root"
+      "notes": "report, planning, or manifest generator"
     },
     {
-      "path": "lib.sh",
-      "purpose": "tooling_support",
+      "path": "generators/generate-stage1-coverage-backlog.py",
+      "purpose": "generator",
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "specialized tooling helper"
+      "notes": "report, planning, or manifest generator"
+    },
+    {
+      "path": "generators/generate-stage1-coverage-plan.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "report, planning, or manifest generator"
+    },
+    {
+      "path": "generators/generate-stage1-equalization-backlog.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "report, planning, or manifest generator"
+    },
+    {
+      "path": "generators/generate-stage1-equalization-board.py",
+      "purpose": "generator",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "report, planning, or manifest generator"
     },
     {
       "path": "manifest.v1.json",
@@ -1250,30 +1162,6 @@
       "notes": "parameter sweep manifest"
     },
     {
-      "path": "merge-intent-maps.py",
-      "purpose": "support_script",
-      "refCount": 1,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
-    },
-    {
-      "path": "normalize-manifest.py",
-      "purpose": "support_script",
-      "refCount": 1,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
-    },
-    {
-      "path": "query-priority-intent-map.py",
-      "purpose": "support_script",
-      "refCount": 1,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
-    },
-    {
       "path": "registry/registry-planning-phase1.json",
       "purpose": "registry_plan",
       "refCount": 3,
@@ -1352,14 +1240,6 @@
       "lifecycle": "candidate_archive",
       "recommendation": "review_for_archive",
       "notes": "registry planning input"
-    },
-    {
-      "path": "resolve-controlled-designer-term.py",
-      "purpose": "support_script",
-      "refCount": 1,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
     },
     {
       "path": "runners/run-current-effect-equalization.sh",
@@ -1442,44 +1322,164 @@
       "notes": "operator-facing execution entrypoint"
     },
     {
-      "path": "scan-fseq-active-ranges.py",
-      "purpose": "support_script",
-      "refCount": 0,
-      "lifecycle": "candidate_archive",
-      "recommendation": "review",
-      "notes": "support script in root"
-    },
-    {
-      "path": "select-priority-effect.py",
-      "purpose": "support_script",
+      "path": "tooling/build-animation-fixture.py",
+      "purpose": "tooling_support",
       "refCount": 1,
-      "lifecycle": "active_support",
-      "recommendation": "move",
-      "notes": "support script in root"
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
     },
     {
-      "path": "slice-gif-by-time.swift",
+      "path": "tooling/build-comparison.sh",
       "purpose": "tooling_support",
       "refCount": 0,
       "lifecycle": "candidate_archive",
       "recommendation": "review",
-      "notes": "specialized tooling helper"
+      "notes": "shared helper, extractor, or export tool"
     },
     {
-      "path": "stage1-effect-model-scope.json",
-      "purpose": "core_catalog",
-      "refCount": 2,
-      "lifecycle": "active_core",
-      "recommendation": "keep",
-      "notes": "core planning/training catalog"
+      "path": "tooling/build-fseq-window-decoder.sh",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
     },
     {
-      "path": "training-standards.json",
-      "purpose": "core_catalog",
+      "path": "tooling/build-record-comparison.sh",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/cleanup-render-training-artifacts.py",
+      "purpose": "tooling_support",
       "refCount": 1,
-      "lifecycle": "active_core",
+      "lifecycle": "active_manual",
       "recommendation": "keep",
-      "notes": "core planning/training catalog"
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/export-sequencer-stage1-bundle.py",
+      "purpose": "tooling_support",
+      "refCount": 3,
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/extract-artifact-features.sh",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/extract-gif-features.py",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/extract-gif-sampled-frame-features.js",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/extract-observations.sh",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/fseq_window_decoder.cpp",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/get-model-fseq-metadata.py",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/lib.sh",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/merge-intent-maps.py",
+      "purpose": "tooling_support",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/normalize-manifest.py",
+      "purpose": "tooling_support",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/query-priority-intent-map.py",
+      "purpose": "tooling_support",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/resolve-controlled-designer-term.py",
+      "purpose": "tooling_support",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/scan-fseq-active-ranges.py",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/select-priority-effect.py",
+      "purpose": "tooling_support",
+      "refCount": 1,
+      "lifecycle": "active_manual",
+      "recommendation": "keep",
+      "notes": "shared helper, extractor, or export tool"
+    },
+    {
+      "path": "tooling/slice-gif-by-time.swift",
+      "purpose": "tooling_support",
+      "refCount": 0,
+      "lifecycle": "candidate_archive",
+      "recommendation": "review",
+      "notes": "shared helper, extractor, or export tool"
     }
   ]
 }

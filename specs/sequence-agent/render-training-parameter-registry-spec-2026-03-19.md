@@ -8,8 +8,8 @@ System roadmap reference:
 - [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
 
 Primary implementation artifacts:
-- [effect-parameter-registry.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/effect-parameter-registry.json)
-- [generate-parameter-sweep-manifest.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generate-parameter-sweep-manifest.py)
+- [effect-parameter-registry.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-parameter-registry.json)
+- [generate-parameter-sweep-manifest.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generators/generate-parameter-sweep-manifest.py)
 
 ## Purpose
 
@@ -120,8 +120,8 @@ It becomes the standard path for:
 ## Example
 
 ```bash
-python3 scripts/sequencer-render-training/generate-parameter-sweep-manifest.py \
-  --registry scripts/sequencer-render-training/effect-parameter-registry.json \
+python3 scripts/sequencer-render-training/generators/generate-parameter-sweep-manifest.py \
+  --registry scripts/sequencer-render-training/catalog/effect-parameter-registry.json \
   --base-manifest scripts/sequencer-render-training/manifests/singlestrand-singlelinehorizontal-expanded-sweep-v1.json \
   --parameter numberChases \
   --out-file /tmp/singlestrand-numberchases.generated.json

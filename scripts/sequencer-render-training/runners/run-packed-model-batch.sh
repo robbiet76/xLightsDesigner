@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${ROOT_DIR}/lib.sh"
+source "${ROOT_DIR}/tooling/lib.sh"
 
 MANIFEST_FILE=""
 OUT_DIR=""
@@ -46,7 +46,7 @@ log_batch() {
 
 standards_path="${SCRIPT_DIR}/training-standards.json"
 normalized_manifest_path="${OUT_DIR}/manifest.normalized.json"
-python3 "${SCRIPT_DIR}/normalize-manifest.py" \
+python3 "${ROOT_DIR}/tooling/normalize-manifest.py" \
   --manifest "${MANIFEST_FILE}" \
   --standards "${standards_path}" \
   --out-file "${normalized_manifest_path}"
@@ -60,7 +60,7 @@ model_name="$(jq -r '.modelName' <<<"${fixture_json}")"
 expected_model_type="$(jq -r '.modelType // empty' <<<"${fixture_json}")"
 fixture_start_ms="$(jq -r '.startMs' <<<"${fixture_json}")"
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
-model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
+model_metadata_json="$(python3 "${ROOT_DIR}/tooling/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
 resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
 resolved_geometry_profile="$(jq -r '.resolvedGeometryProfile' <<<"${model_metadata_json}")"
 expected_model_type_args=()
@@ -71,7 +71,7 @@ model_start_channel_zero="$(jq -r '.startChannelZero' <<<"${model_metadata_json}
 model_channel_count="$(jq -r '.channelCount' <<<"${model_metadata_json}")"
 model_node_count="$(jq -r '.nodeCount' <<<"${model_metadata_json}")"
 model_channels_per_node="$(jq -r '.channelsPerNode' <<<"${model_metadata_json}")"
-decoder_bin="$("${SCRIPT_DIR}/build-fseq-window-decoder.sh")"
+decoder_bin="$("${ROOT_DIR}/tooling/build-fseq-window-decoder.sh")"
 pack_id="$(jq -r '.packId // "packed-batch"' "${MANIFEST_FILE}")"
 training_working_dir="${RENDER_TRAINING_ROOT}/working"
 training_fseq_dir="${RENDER_TRAINING_ROOT}/fseq"
@@ -192,7 +192,7 @@ run_and_require_ok "$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"batchRe
 if [[ "${batch_artifact_staged}" != "${batch_artifact_path}" && -f "${batch_artifact_staged}" ]]; then
   rm -f "${batch_artifact_staged}"
 fi
-bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${batch_artifact_path}" > "${batch_features_path}"
+bash "${ROOT_DIR}/tooling/extract-artifact-features.sh" --artifact "${batch_artifact_path}" > "${batch_features_path}"
 
 results_json='[]'
 passed=0
@@ -228,7 +228,7 @@ while IFS= read -r planned_row; do
     --frame-mode "${decoder_frame_mode}" \
     --max-frame-cells "${decoder_max_frame_cells}" \
     > "${decoded_features_path}"
-  python3 "${SCRIPT_DIR}/analysis/analyze_decoded_window.py" \
+  python3 "${ROOT_DIR}/analysis/analyze_decoded_window.py" \
     --decoded-window "${decoded_features_path}" \
     --model-metadata <(printf '%s' "${model_metadata_json}") \
     "${expected_model_type_args[@]}" \
@@ -242,7 +242,7 @@ while IFS= read -r planned_row; do
     "${analysis_path}" > "${features_path}.tmp"
   mv "${features_path}.tmp" "${features_path}"
   observations_json="$(
-    bash "${SCRIPT_DIR}/extract-observations.sh" \
+    bash "${ROOT_DIR}/tooling/extract-observations.sh" \
       --sample-json "${sample_json}" \
       --model-type "${resolved_model_type}" \
       --features-file "${features_path}"

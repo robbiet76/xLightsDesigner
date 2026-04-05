@@ -24,9 +24,9 @@ done
 mkdir -p "${OUT_DIR}"
 
 declare -a manifests=(
-  "${SCRIPT_DIR}/manifests/twinkle-singlelinehorizontal-interactions-v1.json"
-  "${SCRIPT_DIR}/manifests/twinkle-treeround-interactions-v1.json"
-  "${SCRIPT_DIR}/manifests/twinkle-spinner-interactions-v1.json"
+  "${ROOT_DIR}/manifests/twinkle-singlelinehorizontal-interactions-v1.json"
+  "${ROOT_DIR}/manifests/twinkle-treeround-interactions-v1.json"
+  "${ROOT_DIR}/manifests/twinkle-spinner-interactions-v1.json"
 )
 
 results_json='[]'

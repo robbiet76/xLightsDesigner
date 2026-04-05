@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${ROOT_DIR}/lib.sh"
+source "${ROOT_DIR}/tooling/lib.sh"
 
 MANIFEST_FILE=""
 OUT_DIR=""
@@ -59,7 +59,7 @@ fixture_end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
 fixture_duration_class="$(jq -r '.durationClass // "short"' <<<"${fixture_json}")"
 sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
-model_metadata_json="$(python3 "${SCRIPT_DIR}/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
+model_metadata_json="$(python3 "${ROOT_DIR}/tooling/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
 resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
 resolved_geometry_profile="$(jq -r '.resolvedGeometryProfile' <<<"${model_metadata_json}")"
 source_sequence_path="${sequence_path}"
@@ -168,8 +168,8 @@ cp "${staged_artifact_path}" "${artifact_path}"
   exit 1
 }
 
-bash "${SCRIPT_DIR}/extract-artifact-features.sh" --artifact "${artifact_path}" > "${features_path}"
-bash "${SCRIPT_DIR}/extract-observations.sh" \
+bash "${ROOT_DIR}/tooling/extract-artifact-features.sh" --artifact "${artifact_path}" > "${features_path}"
+bash "${ROOT_DIR}/tooling/extract-observations.sh" \
   --sample-json "${sample_json}" \
   --model-type "${resolved_model_type}" \
   --features-json "$(cat "${features_path}")" > "${observations_path}"

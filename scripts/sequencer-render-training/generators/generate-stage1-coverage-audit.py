@@ -88,9 +88,9 @@ def priority_for(status, equalized):
 
 def main():
     parser = argparse.ArgumentParser(description='Audit Stage 1 effect x model coverage against the canonical scope contract.')
-    parser.add_argument('--scope', default='scripts/sequencer-render-training/stage1-effect-model-scope.json')
-    parser.add_argument('--catalog', default='scripts/sequencer-render-training/generic-layout-model-catalog.json')
-    parser.add_argument('--registry', default='scripts/sequencer-render-training/effect-parameter-registry.json')
+    parser.add_argument('--scope', default='scripts/sequencer-render-training/catalog/stage1-effect-model-scope.json')
+    parser.add_argument('--catalog', default='scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json')
+    parser.add_argument('--registry', default='scripts/sequencer-render-training/catalog/effect-parameter-registry.json')
     parser.add_argument('--manifest-dir', default='scripts/sequencer-render-training/manifests')
     parser.add_argument('--equalization', default='/tmp/render-training-current-effect-equalization.v5.json')
     parser.add_argument('--completed-ledger')

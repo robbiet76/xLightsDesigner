@@ -50,8 +50,8 @@ PROBE_PARAMETERS = {
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Generate a runnable Stage 1 coverage plan from the ordered backlog.')
     parser.add_argument('--backlog', required=True)
-    parser.add_argument('--catalog', default='scripts/sequencer-render-training/generic-layout-model-catalog.json')
-    parser.add_argument('--registry', default='scripts/sequencer-render-training/effect-parameter-registry.json')
+    parser.add_argument('--catalog', default='scripts/sequencer-render-training/catalog/generic-layout-model-catalog.json')
+    parser.add_argument('--registry', default='scripts/sequencer-render-training/catalog/effect-parameter-registry.json')
     parser.add_argument('--manifest-dir', default='scripts/sequencer-render-training/manifests')
     parser.add_argument('--out-plan', required=True)
     parser.add_argument('--out-manifest-dir', required=True)

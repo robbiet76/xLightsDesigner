@@ -5,7 +5,7 @@ Date: 2026-03-19
 
 Primary artifacts:
 - [registry-planning-phase1.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/registry/registry-planning-phase1.json)
-- [generate-registry-plan-manifests.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generate-registry-plan-manifests.py)
+- [generate-registry-plan-manifests.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generators/generate-registry-plan-manifests.py)
 
 ## Purpose
 

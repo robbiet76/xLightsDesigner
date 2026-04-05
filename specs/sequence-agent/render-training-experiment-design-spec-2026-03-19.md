@@ -53,7 +53,7 @@ Primary sources:
 - `xlights_rgbeffects.xml`
 - `xlights_networks.xml`
 - generated geometry audit:
-  - [generic-layout-geometry-audit.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generic-layout-geometry-audit.json)
+  - [generic-layout-geometry-audit.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/generic-layout-geometry-audit.json)
 
 Must not be used as semantic truth:
 - user model names

@@ -12,7 +12,7 @@ This roadmap tightens the Stage 1 definition:
 - Stage 1 completion now requires full primary coverage for every in-scope effect and required probe coverage or explicit waivers for lower-value geometries
 
 Machine-readable coverage contract:
-- [stage1-effect-model-scope.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/stage1-effect-model-scope.json)
+- [stage1-effect-model-scope.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/stage1-effect-model-scope.json)
 
 Current coverage audit:
 - [/tmp/render-training-stage1-coverage-audit.v1.json](/tmp/render-training-stage1-coverage-audit.v1.json)

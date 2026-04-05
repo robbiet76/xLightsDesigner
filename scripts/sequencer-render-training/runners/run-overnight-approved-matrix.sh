@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${ROOT_DIR}/lib.sh"
+source "${ROOT_DIR}/tooling/lib.sh"
 
 DEBUG_APP_DEFAULT="/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-ewiqueswvnjesbbydtiylmstqbkg/Build/Products/Debug/xLights.app"
 export XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-${DEBUG_APP_DEFAULT}}"
@@ -124,7 +124,7 @@ ensure_xlights_ready >>"${LOG_PATH}" 2>&1
 
 results='[]'
 for pack_id in "${PACKS[@]}"; do
-  manifest="${SCRIPT_DIR}/manifests/${pack_id}.json"
+  manifest="${ROOT_DIR}/manifests/${pack_id}.json"
   run_dir="${RUN_ROOT}/${pack_id}"
   started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
   mkdir -p "${run_dir}"
@@ -136,14 +136,14 @@ for pack_id in "${PACKS[@]}"; do
     if [[ "${pack_id}" == *"range"* ]]; then
       param="$(range_param_for_manifest "${manifest}")"
       if [[ -n "${param}" ]]; then
-        python3 "${ROOT_DIR}/generate-range-transition-report.py" --run-dir "${run_dir}" --param "${param}" --out-file "${run_dir}/range-transition.json" >>"${LOG_PATH}" 2>&1 || status="failed"
-        python3 "${ROOT_DIR}/generate-parameter-region-summary.py" --transition-report "${run_dir}/range-transition.json" --out-file "${run_dir}/region-summary.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+        python3 "${ROOT_DIR}/generators/generate-range-transition-report.py" --run-dir "${run_dir}" --param "${param}" --out-file "${run_dir}/range-transition.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+        python3 "${ROOT_DIR}/generators/generate-parameter-region-summary.py" --transition-report "${run_dir}/range-transition.json" --out-file "${run_dir}/region-summary.json" >>"${LOG_PATH}" 2>&1 || status="failed"
       fi
     else
-      python3 "${ROOT_DIR}/generate-look-catalog.py" --run-dir "${run_dir}" --out-file "${run_dir}/look-catalog.json" >>"${LOG_PATH}" 2>&1 || status="failed"
-      python3 "${ROOT_DIR}/generate-intent-vocab-summary.py" --catalog "${run_dir}/look-catalog.json" --out-file "${run_dir}/intent-summary.json" >>"${LOG_PATH}" 2>&1 || status="failed"
-      python3 "${ROOT_DIR}/generate-intent-gap-report.py" --summary "${run_dir}/intent-summary.json" --out-file "${run_dir}/intent-gap-report.json" >>"${LOG_PATH}" 2>&1 || status="failed"
-      bash "${ROOT_DIR}/generate-sample-comparisons.sh" --run-dir "${run_dir}" --criterion usefulness --out-file "${run_dir}/comparisons.usefulness.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+      python3 "${ROOT_DIR}/generators/generate-look-catalog.py" --run-dir "${run_dir}" --out-file "${run_dir}/look-catalog.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+      python3 "${ROOT_DIR}/generators/generate-intent-vocab-summary.py" --catalog "${run_dir}/look-catalog.json" --out-file "${run_dir}/intent-summary.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+      python3 "${ROOT_DIR}/generators/generate-intent-gap-report.py" --summary "${run_dir}/intent-summary.json" --out-file "${run_dir}/intent-gap-report.json" >>"${LOG_PATH}" 2>&1 || status="failed"
+      bash "${ROOT_DIR}/generators/generate-sample-comparisons.sh" --run-dir "${run_dir}" --criterion usefulness --out-file "${run_dir}/comparisons.usefulness.json" >>"${LOG_PATH}" 2>&1 || status="failed"
     fi
   else
     status="failed"

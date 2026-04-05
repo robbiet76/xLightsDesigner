@@ -11,7 +11,7 @@ Authoritative source:
 - `/Users/robterry/Projects/xLightsDesigner/render-training/xlights_rgbeffects.xml`
 
 Generated artifact:
-- [generic-layout-geometry-audit.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generic-layout-geometry-audit.json)
+- [generic-layout-geometry-audit.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/generic-layout-geometry-audit.json)
 
 ## Main Findings
 

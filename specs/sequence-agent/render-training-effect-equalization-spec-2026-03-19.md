@@ -84,9 +84,9 @@ Standard automation pipeline:
 
 Current automation pieces now in place:
 - merge selector maps:
-  - [merge-intent-maps.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/merge-intent-maps.py)
+  - [merge-intent-maps.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/merge-intent-maps.py)
 - equalization board:
-  - [generate-current-effect-equalization-board.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generate-current-effect-equalization-board.py)
+  - [generate-current-effect-equalization-board.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/generators/generate-current-effect-equalization-board.py)
 
 Recommended immediate next step:
 1. add `Shockwave` selector cases until it reaches the same selector evidence depth as the other equalized effects
