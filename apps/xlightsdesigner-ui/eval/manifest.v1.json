@@ -1,0 +1,252 @@
+{
+  "contract": "xlightsdesigner_eval_manifest_v1",
+  "version": "1.0",
+  "generatedAt": "2026-04-05",
+  "policy": {
+    "statuses": [
+      "active_core",
+      "active_manual",
+      "training_only",
+      "historical_baseline",
+      "candidate_archive"
+    ],
+    "promotedEntryPoints": {
+      "liveSequenceBenchmark": "run-live-practical-benchmark.mjs",
+      "timingContractValidation": "run-timing-track-control-validation.mjs",
+      "timingLiveReview": "run-live-reviewed-timing-control-suite.mjs"
+    }
+  },
+  "entries": [
+    {
+      "path": "README.md",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Human index for eval assets and promoted commands.",
+      "invocation": "documentation"
+    },
+    {
+      "path": "build-phase2-issue-ledger.mjs",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Convert combined benchmark output into a durable issue backlog.",
+      "invocation": "manual post-benchmark"
+    },
+    {
+      "path": "compare-live-practical-benchmark.mjs",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Compare fresh live benchmark output against frozen baselines.",
+      "invocation": "manual benchmark comparison"
+    },
+    {
+      "path": "designer-eval-cases-v1.json",
+      "status": "training_only",
+      "owner": "designer_dialog",
+      "purpose": "Offline designer eval corpus.",
+      "invocation": "run-designer-eval.mjs"
+    },
+    {
+      "path": "live-design-canary-suite-v1.json",
+      "status": "training_only",
+      "owner": "designer_dialog",
+      "purpose": "Fast live design canary suite used in training loops.",
+      "invocation": "scripts/designer-training/run-overnight-training.sh"
+    },
+    {
+      "path": "live-design-validation-suite-extended-v1.json",
+      "status": "training_only",
+      "owner": "designer_dialog",
+      "purpose": "Extended live design suite for slower training cadence checks.",
+      "invocation": "scripts/designer-training/run-overnight-training.sh"
+    },
+    {
+      "path": "live-design-validation-suite-smoke-v1.json",
+      "status": "active_manual",
+      "owner": "designer_dialog",
+      "purpose": "Fast smoke/checkpoint live comparative suite.",
+      "invocation": "manual"
+    },
+    {
+      "path": "live-design-validation-suite-v1.json",
+      "status": "training_only",
+      "owner": "designer_dialog",
+      "purpose": "Canonical live comparative design validation suite.",
+      "invocation": "scripts/designer-training/run-overnight-training.sh"
+    },
+    {
+      "path": "live-multisection-practical-sequence-validation-suite-v1.json",
+      "status": "historical_baseline",
+      "owner": "sequence_agent",
+      "purpose": "Earlier multisection practical suite retained for historical comparison.",
+      "invocation": "historical"
+    },
+    {
+      "path": "live-multisection-practical-sequence-validation-suite-v2.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Promoted Phase 2 clean-baseline live multi-section benchmark suite.",
+      "invocation": "run-live-practical-benchmark.mjs"
+    },
+    {
+      "path": "live-practical-benchmark-baseline.v1.json",
+      "status": "historical_baseline",
+      "owner": "sequence_agent",
+      "purpose": "Frozen Stage 1 practical benchmark baseline contract.",
+      "invocation": "historical comparison"
+    },
+    {
+      "path": "live-practical-benchmark-baseline.v2.json",
+      "status": "historical_baseline",
+      "owner": "sequence_agent",
+      "purpose": "Frozen revision-inclusive practical benchmark baseline contract.",
+      "invocation": "historical comparison"
+    },
+    {
+      "path": "live-practical-benchmark-baseline.v3.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Current promoted practical benchmark baseline contract.",
+      "invocation": "compare-live-practical-benchmark.mjs"
+    },
+    {
+      "path": "live-reviewed-timing-control-suite-v1.json",
+      "status": "active_manual",
+      "owner": "audio_analyst",
+      "purpose": "Four-track live reviewed-timing control suite.",
+      "invocation": "run-live-reviewed-timing-control-suite.mjs"
+    },
+    {
+      "path": "live-reviewed-timing-wholesequence-baseline-suite-v1.json",
+      "status": "active_manual",
+      "owner": "sequence_agent",
+      "purpose": "Whole-sequence baseline suite on reviewed timing controls.",
+      "invocation": "run-live-reviewed-timing-wholesequence-baseline.mjs"
+    },
+    {
+      "path": "live-revision-practical-sequence-validation-suite-v1.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Live revision-focused Phase 2 practical validation suite.",
+      "invocation": "run-live-practical-benchmark.mjs"
+    },
+    {
+      "path": "live-section-practical-sequence-validation-canary-v1.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Single-scenario section canary used to gate the combined benchmark.",
+      "invocation": "run-live-practical-benchmark.mjs"
+    },
+    {
+      "path": "live-section-practical-sequence-validation-suite-v1.json",
+      "status": "historical_baseline",
+      "owner": "sequence_agent",
+      "purpose": "Earlier section live suite retained for historical comparison.",
+      "invocation": "historical"
+    },
+    {
+      "path": "live-section-practical-sequence-validation-suite-v2.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Promoted Phase 2 clean-baseline live section benchmark suite.",
+      "invocation": "run-live-practical-benchmark.mjs"
+    },
+    {
+      "path": "live-wholesequence-practical-validation-suite-v1.json",
+      "status": "historical_baseline",
+      "owner": "sequence_agent",
+      "purpose": "Original promoted whole-sequence practical validation suite retained for comparison.",
+      "invocation": "historical"
+    },
+    {
+      "path": "live-wholesequence-practical-validation-suite-v2.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Current promoted whole-sequence practical validation suite.",
+      "invocation": "run-live-practical-benchmark.mjs"
+    },
+    {
+      "path": "report-audio-analysis-quality.mjs",
+      "status": "candidate_archive",
+      "owner": "audio_analyst",
+      "purpose": "Ad hoc reporting utility for audio-analysis quality snapshots.",
+      "invocation": "manual"
+    },
+    {
+      "path": "report-visual-hint-definitions.mjs",
+      "status": "candidate_archive",
+      "owner": "designer_dialog",
+      "purpose": "Ad hoc reporting utility for visual hint definitions.",
+      "invocation": "manual"
+    },
+    {
+      "path": "run-audio-analysis-corpus-benchmark.mjs",
+      "status": "candidate_archive",
+      "owner": "audio_analyst",
+      "purpose": "Ad hoc corpus benchmark runner for audio analysis.",
+      "invocation": "manual"
+    },
+    {
+      "path": "run-designer-eval.mjs",
+      "status": "training_only",
+      "owner": "designer_dialog",
+      "purpose": "Offline designer eval runner used in training loops.",
+      "invocation": "scripts/designer-training/run-overnight-training.sh"
+    },
+    {
+      "path": "run-live-practical-benchmark.mjs",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Promoted combined live practical benchmark entry point.",
+      "invocation": "manual benchmark gate"
+    },
+    {
+      "path": "run-live-reviewed-timing-control-suite.mjs",
+      "status": "active_manual",
+      "owner": "audio_analyst",
+      "purpose": "Live timing-track control snapshot runner.",
+      "invocation": "manual reviewed timing validation"
+    },
+    {
+      "path": "run-live-reviewed-timing-wholesequence-baseline.mjs",
+      "status": "active_manual",
+      "owner": "sequence_agent",
+      "purpose": "Live reviewed-timing whole-sequence baseline runner.",
+      "invocation": "manual sequencing baseline validation"
+    },
+    {
+      "path": "run-section-practical-sequence-validation.mjs",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Offline section practical validation runner.",
+      "invocation": "test/manual"
+    },
+    {
+      "path": "run-timing-track-control-validation.mjs",
+      "status": "active_core",
+      "owner": "audio_analyst",
+      "purpose": "Promoted timing-track contract validation runner.",
+      "invocation": "manual/test"
+    },
+    {
+      "path": "section-practical-sequence-validation-suite-v1.json",
+      "status": "active_core",
+      "owner": "sequence_agent",
+      "purpose": "Deterministic offline section practical validation scenarios.",
+      "invocation": "run-section-practical-sequence-validation.mjs"
+    },
+    {
+      "path": "synthetic-metadata-fixture-v1.json",
+      "status": "training_only",
+      "owner": "designer_dialog",
+      "purpose": "Synthetic metadata fixture used by metadata-aware designer eval cases.",
+      "invocation": "run-designer-eval.mjs"
+    },
+    {
+      "path": "timing-track-control-validation-suite-v1.json",
+      "status": "active_core",
+      "owner": "audio_analyst",
+      "purpose": "Contract-level timing-track control suite.",
+      "invocation": "run-timing-track-control-validation.mjs"
+    }
+  ]
+}

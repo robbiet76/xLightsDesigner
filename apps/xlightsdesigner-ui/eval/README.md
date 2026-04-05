@@ -1,6 +1,25 @@
 # Designer Eval Folder
 
-This folder contains the offline eval corpus and runner for the deep designer-training phase.
+This folder contains evaluation assets for designer, sequence, timing-track, and reviewed-timing validation.
+
+Lifecycle control:
+- manifest: [`manifest.v1.json`](/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-ui/eval/manifest.v1.json)
+- use the manifest to distinguish:
+  - `active_core`
+  - `active_manual`
+  - `training_only`
+  - `historical_baseline`
+  - `candidate_archive`
+
+Promoted entry points:
+- live sequence benchmark: `run-live-practical-benchmark.mjs`
+- timing contract validation: `run-timing-track-control-validation.mjs`
+- live timing review control: `run-live-reviewed-timing-control-suite.mjs`
+
+Policy:
+- do not add new top-level eval runners until they are classified in the manifest
+- prefer updating promoted runners over creating new adjacent entry points
+- keep historical baselines only when they serve comparison or reproducibility
 
 Current contents:
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
