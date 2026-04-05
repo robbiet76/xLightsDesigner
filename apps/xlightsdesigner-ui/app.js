@@ -169,6 +169,32 @@ import { createAgentRuntimeState } from "./runtime/agent-runtime-state.js";
 import { createProposalGenerationRuntime } from "./runtime/proposal-generation-runtime.js";
 import { createApplyReviewRuntime } from "./runtime/apply-review-runtime.js";
 import { createApplyReadinessRuntime } from "./runtime/apply-readiness-runtime.js";
+import {
+  getDesktopBridge,
+  getDesktopStateBridge,
+  getDesktopAppInfoBridge,
+  getDesktopAppAdminBridge,
+  getDesktopSidecarBridge,
+  getDesktopFileStatBridge,
+  getDesktopMediaBridge,
+  getDesktopMediaIdentityBridge,
+  getDesktopBackupBridge,
+  getDesktopDiagnosticsBridge,
+  getDesktopSequenceBridge,
+  getDesktopMediaCatalogBridge,
+  getDesktopAgentLogBridge,
+  getDesktopAgentConversationBridge,
+  getDesktopAgentConfigBridge,
+  getDesktopAudioAnalysisBridge,
+  getDesktopAnalysisArtifactBridge,
+  getDesktopProjectArtifactBridge,
+  getDesktopTrainingPackageBridge,
+  getDesktopSequenceDialogBridge,
+  getDesktopProjectBridge,
+  getDesktopBridgeHealth,
+  getDesktopFileDialogBridge,
+  normalizeDialogPathSelection
+} from "./runtime/desktop-bridge-runtime.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
@@ -932,163 +958,6 @@ function persist() {
   queueSidecarPersist();
 }
 
-function getDesktopBridge() {
-  const w = typeof window !== "undefined" ? window : null;
-  if (!w) return null;
-  return w.xlightsDesignerDesktop || w.__xlightsDesignerDesktop || w.electronAPI || null;
-}
-
-function getDesktopStateBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.readAppState !== "function" || typeof bridge.writeAppState !== "function") {
-    return null;
-  }
-  return bridge;
-}
-
-function getDesktopAppInfoBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.getAppInfo !== "function") return null;
-  return bridge;
-}
-
-function getDesktopAppAdminBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.resetAppInstallState !== "function") return null;
-  return bridge;
-}
-
-function getDesktopSidecarBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.readSequenceSidecar !== "function" ||
-    typeof bridge.writeSequenceSidecar !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
-}
-
-function getDesktopFileStatBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.getFileStat !== "function") return null;
-  return bridge;
-}
-
-function getDesktopMediaBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.saveReferenceMedia !== "function") return null;
-  return bridge;
-}
-
-function getDesktopMediaIdentityBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.applyMediaIdentityRecommendation !== "function") return null;
-  return bridge;
-}
-
-function getDesktopBackupBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.createSequenceBackup !== "function") return null;
-  return bridge;
-}
-
-function getDesktopDiagnosticsBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.exportDiagnosticsBundle !== "function") return null;
-  return bridge;
-}
-
-function getDesktopSequenceBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.listSequencesInShowFolder !== "function") return null;
-  return bridge;
-}
-
-function getDesktopMediaCatalogBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.listMediaFilesInFolder !== "function") return null;
-  return bridge;
-}
-
-function getDesktopAgentLogBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.appendAgentApplyLog !== "function" ||
-    typeof bridge.readAgentApplyLog !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
-}
-
-function getDesktopAgentConversationBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.runAgentConversation !== "function" ||
-    typeof bridge.getAgentHealth !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
-}
-
-function getDesktopAgentConfigBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.getAgentConfig !== "function" ||
-    typeof bridge.setAgentConfig !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
-}
-
-function getDesktopAudioAnalysisBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.runAudioAnalysisService !== "function") return null;
-  return bridge;
-}
-
-function getDesktopAnalysisArtifactBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.readAnalysisArtifact !== "function" ||
-    typeof bridge.writeAnalysisArtifact !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
-}
-
-function getDesktopProjectArtifactBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.writeProjectArtifacts !== "function" ||
-    typeof bridge.readProjectArtifact !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
-}
-
 function resetDerivedAudioAnalysisState() {
   resetAudioAnalysisView(state.audioAnalysis);
 }
@@ -1180,13 +1049,6 @@ async function ensureCurrentAnalysisHandoff(options = {}) {
     return getValidHandoff("analysis_handoff_v1");
   }
   return getValidHandoff("analysis_handoff_v1");
-}
-
-function getDesktopTrainingPackageBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.readTrainingPackageAsset !== "function") return null;
-  return bridge;
 }
 
 function dirnameRelPath(relPath = "") {
@@ -1694,26 +1556,6 @@ async function probeAnalysisServiceHealth({ quiet = true, force = false } = {}) 
       });
     }
   }
-}
-
-function getDesktopSequenceDialogBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (typeof bridge.saveSequenceDialog !== "function") return null;
-  return async (payload) => bridge.saveSequenceDialog(payload);
-}
-
-function getDesktopProjectBridge() {
-  const bridge = getDesktopBridge();
-  if (!bridge) return null;
-  if (
-    typeof bridge.openProjectDialog !== "function" ||
-    typeof bridge.openProjectFile !== "function" ||
-    typeof bridge.writeProjectFile !== "function"
-  ) {
-    return null;
-  }
-  return bridge;
 }
 
 function queueDesktopStatePersist() {
@@ -2780,19 +2622,6 @@ function setStatusWithDiagnostics(level, text, details = "") {
   if (level !== "info" || details) {
     pushDiagnostic(level, text, details);
   }
-}
-
-function getDesktopBridgeHealth() {
-  const bridge = getDesktopBridge();
-  const apiCount =
-    bridge && typeof bridge === "object"
-      ? Object.keys(bridge).filter((key) => typeof bridge[key] === "function").length
-      : 0;
-  return {
-    runtimeReady: Boolean(bridge),
-    desktopFileDialogReady: Boolean(bridge && typeof bridge.openFileDialog === "function"),
-    desktopBridgeApiCount: apiCount
-  };
 }
 
 function getAgentApplyRolloutMode() {
@@ -8238,93 +8067,6 @@ function selectedSequencePath() {
   return mode === "new"
     ? String(state.newSequencePathInput || "").trim()
     : String(state.sequencePathInput || "").trim();
-}
-
-function getDesktopFileDialogBridge() {
-  const w = typeof window !== "undefined" ? window : null;
-  if (!w) return null;
-
-  const xld = w.xlightsDesignerDesktop || w.__xlightsDesignerDesktop;
-  if (xld) {
-    if (typeof xld.openFileDialog === "function") {
-      return async (opts) => xld.openFileDialog(opts);
-    }
-    if (typeof xld.pickFile === "function") {
-      return async (opts) => xld.pickFile(opts);
-    }
-    if (typeof xld.selectFile === "function") {
-      return async (opts) => xld.selectFile(opts);
-    }
-  }
-
-  const electron = w.electronAPI;
-  if (electron) {
-    if (typeof electron.openFileDialog === "function") {
-      return async (opts) => electron.openFileDialog(opts);
-    }
-    if (typeof electron.pickFile === "function") {
-      return async (opts) => electron.pickFile(opts);
-    }
-    if (typeof electron.selectFile === "function") {
-      return async (opts) => electron.selectFile(opts);
-    }
-  }
-
-  // Tauri v2 plugin-style dialog API
-  if (w.__TAURI__ && w.__TAURI__.dialog && typeof w.__TAURI__.dialog.open === "function") {
-    return async (opts) => {
-      const accept = Array.isArray(opts?.filters)
-        ? opts.filters.flatMap((f) =>
-            Array.isArray(f?.extensions)
-              ? f.extensions.map((ext) => `.${String(ext).toLowerCase()}`)
-              : []
-          )
-        : [];
-      return w.__TAURI__.dialog.open({
-        title: opts?.title || "Select File",
-        multiple: false,
-        directory: Boolean(opts?.directory),
-        filters: Array.isArray(opts?.filters)
-          ? opts.filters.map((f) => ({
-              name: f?.name || "Files",
-              extensions: Array.isArray(f?.extensions) ? f.extensions.filter((e) => e !== "*") : []
-            }))
-          : undefined,
-        // Some hosts normalize via accept strings.
-        accept: accept.length ? accept : undefined
-      });
-    };
-  }
-
-  if (
-    w.__TAURI__ &&
-    w.__TAURI__.core &&
-    typeof w.__TAURI__.core.invoke === "function"
-  ) {
-    return async (opts) =>
-      w.__TAURI__.core.invoke("open_file_dialog", { options: opts });
-  }
-
-  return null;
-}
-
-function normalizeDialogPathSelection(result) {
-  if (!result) return "";
-  if (typeof result === "string") return result.trim();
-  if (Array.isArray(result)) {
-    const first = result.find((v) => typeof v === "string" && v.trim());
-    return first ? first.trim() : "";
-  }
-  if (typeof result === "object") {
-    if (typeof result.path === "string") return result.path.trim();
-    if (typeof result.filePath === "string") return result.filePath.trim();
-    if (typeof result.absolutePath === "string") return result.absolutePath.trim();
-    if (Array.isArray(result.paths)) {
-      const first = result.paths.find((v) => typeof v === "string" && v.trim());
-      return first ? first.trim() : "";
-    }
-  }
-  return "";
 }
 
 function hasExtension(path, extensions) {
