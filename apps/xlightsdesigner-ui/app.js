@@ -199,6 +199,7 @@ import {
 } from "./runtime/desktop-bridge-runtime.js";
 import { createUiCompositionRuntime } from "./runtime/ui-composition-runtime.js";
 import { createProjectCatalogRuntime } from "./runtime/project-catalog-runtime.js";
+import { createProjectSnapshotRuntime } from "./runtime/project-snapshot-runtime.js";
 import { createAnalysisServiceRuntime } from "./runtime/analysis-service-runtime.js";
 import { createAgentSupportRuntime, emptyAgentRuntimeState } from "./runtime/agent-support-runtime.js";
 import { createMetadataRuntime } from "./runtime/metadata-runtime.js";
@@ -903,38 +904,25 @@ let applyReviewRuntime = null;
 let applyReadinessRuntime = null;
 let projectHistoryRuntime = null;
 let metadataRuntime = null;
+let projectSnapshotRuntime = null;
 
 const agentRuntime = emptyAgentRuntimeState();
 
 
 function getProjectKey(projectName = state.projectName, showFolder = state.showFolder) {
-  return `${(projectName || "").trim()}::${(showFolder || "").trim()}`;
+  return projectSnapshotRuntime.getProjectKey(projectName, showFolder);
 }
 
 function parseProjectKey(key) {
-  const raw = String(key || "");
-  const idx = raw.indexOf("::");
-  if (idx < 0) return { projectName: raw.trim(), showFolder: "" };
-  return {
-    projectName: raw.slice(0, idx).trim(),
-    showFolder: raw.slice(idx + 2).trim()
-  };
+  return projectSnapshotRuntime.parseProjectKey(key);
 }
 
 function loadProjectsStore() {
-  try {
-    const raw = localStorage.getItem(PROJECTS_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
+  return projectSnapshotRuntime.loadProjectsStore();
 }
 
 function persistProjectsStore(store) {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(store));
-  queueDesktopStatePersist();
+  return projectSnapshotRuntime.persistProjectsStore(store);
 }
 
 function persist() {
@@ -2167,29 +2155,15 @@ function applyProjectSnapshot(snapshot) {
 }
 
 function saveCurrentProjectSnapshot() {
-  const key = getProjectKey();
-  if (!key || key === "::") return;
-  const store = loadProjectsStore();
-  store[key] = extractProjectSnapshot();
-  persistProjectsStore(store);
+  return projectSnapshotRuntime.saveCurrentProjectSnapshot();
 }
 
 function deleteProjectSnapshot(projectName, showFolder) {
-  const key = getProjectKey(projectName, showFolder);
-  if (!key || key === "::") return;
-  const store = loadProjectsStore();
-  if (!(key in store)) return;
-  delete store[key];
-  persistProjectsStore(store);
+  return projectSnapshotRuntime.deleteProjectSnapshot(projectName, showFolder);
 }
 
 function tryLoadProjectSnapshot(projectName, showFolder) {
-  const key = getProjectKey(projectName, showFolder);
-  const store = loadProjectsStore();
-  const snapshot = store[key];
-  if (!snapshot) return false;
-  applyProjectSnapshot(snapshot);
-  return true;
+  return projectSnapshotRuntime.tryLoadProjectSnapshot(projectName, showFolder);
 }
 
 const routes = ["settings", "project", "metadata", "audio", "design", "sequence", "review", "history"];
@@ -7353,6 +7327,15 @@ projectLifecycleRuntime = createProjectLifecycleRuntime({
   getProjectKey,
   confirm: (message) => window.confirm(message),
   reload: () => window.location.reload()
+});
+
+projectSnapshotRuntime = createProjectSnapshotRuntime({
+  state,
+  projectsKey: PROJECTS_KEY,
+  localStorageRef: localStorage,
+  queueDesktopStatePersist,
+  extractProjectSnapshot,
+  applyProjectSnapshot
 });
 
 metadataRuntime = createMetadataRuntime({
