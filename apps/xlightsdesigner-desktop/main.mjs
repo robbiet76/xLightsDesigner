@@ -110,6 +110,14 @@ function ensureAutomationDirs() {
   ensureDirSync(AUTOMATION_RESPONSES_DIR);
 }
 
+function countJsonFiles(dir = "") {
+  try {
+    return fs.readdirSync(dir).filter((name) => String(name || "").endsWith(".json")).length;
+  } catch {
+    return 0;
+  }
+}
+
 function automationResponsePath(id = "") {
   return path.join(AUTOMATION_RESPONSES_DIR, `${String(id || "").trim()}.json`);
 }
@@ -757,6 +765,47 @@ async function invokeRendererAutomation(action = "", payload = {}) {
   return mainWindow.webContents.executeJavaScript(script, true);
 }
 
+async function getAutomationHealthSnapshot() {
+  const mainHealth = {
+    channel: AUTOMATION_CHANNEL,
+    appReady: app.isReady(),
+    mainWindowExists: Boolean(mainWindow && !mainWindow.isDestroyed()),
+    mainWindowVisible: Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible?.()),
+    rendererLoadingMainFrame: Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents?.isLoadingMainFrame?.()),
+    automationPollTimerActive: Boolean(automationPollTimer),
+    automationHeartbeatTimerActive: Boolean(automationHeartbeatTimer),
+    automationRequestWatcherActive: Boolean(automationRequestWatcher),
+    automationRequestProcessorActive: Boolean(automationRequestProcessor),
+    automationPowerSaveBlockerActive: Boolean(
+      automationPowerSaveBlockerId != null && powerSaveBlocker.isStarted?.(automationPowerSaveBlockerId)
+    ),
+    rendererAutomationReadyPromiseActive: Boolean(rendererAutomationReadyPromise),
+    requestQueuePendingCount: countJsonFiles(AUTOMATION_REQUESTS_DIR),
+    responseQueuePendingCount: countJsonFiles(AUTOMATION_RESPONSES_DIR),
+    automationLastKickAtMs,
+    automationLastKickAgeMs: automationLastKickAtMs > 0 ? Math.max(0, Date.now() - automationLastKickAtMs) : null,
+    uptimeMs: Math.max(0, Date.now() - AUTOMATION_APP_LAUNCH_MS),
+    timestamp: new Date().toISOString()
+  };
+
+  let renderer = null;
+  try {
+    renderer = await invokeRendererAutomation("getAutomationHealthSnapshot", {});
+  } catch (err) {
+    renderer = {
+      ok: false,
+      ready: false,
+      error: String(err?.message || err)
+    };
+  }
+
+  return {
+    ok: true,
+    main: mainHealth,
+    renderer
+  };
+}
+
 async function waitForRendererAutomationReady({ timeoutMs = 120000 } = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     throw new Error("xLightsDesigner window is not available");
@@ -891,6 +940,9 @@ async function processAutomationRequests() {
       }
       if (action === "getSequencerValidationSnapshot") {
         return invokeRendererAutomation("getSequencerValidationSnapshot", request?.payload || {});
+      }
+      if (action === "getAutomationHealthSnapshot") {
+        return getAutomationHealthSnapshot();
       }
       if (action === "runDirectSequenceValidation") {
         return runDirectSequenceValidationFromDesktop(request?.payload || {});

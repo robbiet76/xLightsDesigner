@@ -79,6 +79,27 @@ function writePayload(filePath, payload = {}) {
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
+function classifyAutomationHealth(snapshot = {}) {
+  const main = snapshot?.main && typeof snapshot.main === "object" ? snapshot.main : {};
+  const renderer = snapshot?.renderer && typeof snapshot.renderer === "object" ? snapshot.renderer : {};
+  const issues = [];
+  if (snapshot?.ok !== true) {
+    issues.push("snapshot_unavailable");
+  }
+  if (!main.appReady) issues.push("app_not_ready");
+  if (!main.mainWindowExists) issues.push("main_window_missing");
+  if (!main.automationPollTimerActive) issues.push("poll_timer_inactive");
+  if (!main.automationRequestProcessorActive) issues.push("request_processor_inactive");
+  if (!renderer.ready) issues.push("renderer_not_ready");
+  if (renderer?.error) issues.push("renderer_error");
+  return {
+    ok: issues.length === 0,
+    issues,
+    main,
+    renderer
+  };
+}
+
 function restoreValidationSequenceFromBaseline({ sequencePath = "", baselineSequencePath = "" } = {}) {
   const targetPath = str(sequencePath);
   const baselinePath = str(baselineSequencePath);
@@ -166,134 +187,163 @@ async function main() {
   fs.writeFileSync(runtimeSuitePath, `${JSON.stringify(runtimeSuite, null, 2)}\n`, "utf8");
 
   const results = [];
+  const initialAutomationHealthResponse = await runAutomation(
+    repoRoot,
+    options.channel,
+    path.join(outDir, "00-initial-automation-health.json"),
+    "get-automation-health-snapshot"
+  );
+  const initialAutomationHealth = classifyAutomationHealth(initialAutomationHealthResponse?.result || {});
   try {
     for (let index = 0; index < runtimeSuite.scenarios.length; index += 1) {
       const scenario = runtimeSuite.scenarios[index];
       const prefix = `${String(index + 1).padStart(2, "0")}-${str(scenario?.name) || `scenario-${index + 1}`}`;
       const scenarioStartedAt = Date.now();
       const timings = {};
-
-      await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-reset.json`), "reset-automation-state");
-      restoreValidationSequenceFromBaseline({
-        sequencePath: str(scenario?.sequencePath),
-        baselineSequencePath: str(scenario?.baselineSequencePath)
-      });
-
-      if (str(scenario?.showFolder || runtimeSuite?.showFolder)) {
-        const setShowPayloadPath = path.join(outDir, `${prefix}-show-folder-payload.json`);
-        writePayload(setShowPayloadPath, {
-          showFolder: str(scenario?.showFolder || runtimeSuite?.showFolder)
-        });
-        const started = Date.now();
-        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-show-folder.json`), "set-show-folder", ["--payload-file", setShowPayloadPath]);
-        timings.setShowFolderMs = Date.now() - started;
-      }
-
-      {
-        const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
-        writePayload(openPayloadPath, {
-          sequencePath: str(scenario?.sequencePath),
-          skipPostOpenRefresh: true
-        });
-        const started = Date.now();
-        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
-        timings.openSequenceMs = Date.now() - started;
-      }
-
-      {
-        const started = Date.now();
-        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
-        timings.refreshMs = Date.now() - started;
-      }
-
-      if (str(scenario?.audioPathOverride)) {
-        const audioPayloadPath = path.join(outDir, `${prefix}-audio-payload.json`);
-        writePayload(audioPayloadPath, {
-          audioPath: str(scenario?.audioPathOverride)
-        });
-        const started = Date.now();
-        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-set-audio.json`), "set-audio-path", ["--payload-file", audioPayloadPath]);
-        timings.setAudioMs = Date.now() - started;
-      }
-
-      if (str(scenario?.analyzePrompt)) {
-        const analyzePayloadPath = path.join(outDir, `${prefix}-analyze-payload.json`);
-        const analyzePayload = {
-          prompt: str(scenario?.analyzePrompt)
-        };
-        if (scenario?.analysisProfile && typeof scenario.analysisProfile === "object") {
-          analyzePayload.analysisProfile = scenario.analysisProfile;
-        }
-        if (scenario?.forceFreshAnalysis === true) {
-          analyzePayload.forceFresh = true;
-        }
-        writePayload(analyzePayloadPath, analyzePayload);
-        const started = Date.now();
-        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", ["--payload-file", analyzePayloadPath]);
-        timings.analyzeMs = Date.now() - started;
-      }
-
-      if (scenario?.seedTimingTracksFromAnalysis === true) {
-        const started = Date.now();
-        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-seed-timing.json`), "seed-timing-tracks-from-analysis");
-        timings.seedTimingTracksMs = Date.now() - started;
-      }
-
       let generateResponse = null;
-      {
-        const generatePayloadPath = path.join(outDir, `${prefix}-generate-payload.json`);
-        writePayload(generatePayloadPath, {
-          prompt: str(scenario?.prompt || scenario?.strongPrompt),
-          requestedRole: str(scenario?.requestedRole || runtimeSuite?.requestedRole || "sequence_agent"),
-          forceFresh: true,
-          clearRevisionTarget: true,
-          selectedSections: arr(scenario?.sections),
-          selectedTargetIds: arr(scenario?.targets),
-          selectedTagNames: arr(scenario?.tagNames)
-        });
-        const started = Date.now();
-        generateResponse = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-generate.json`), "generate-proposal", ["--payload-file", generatePayloadPath]);
-        timings.generateMs = Date.now() - started;
-      }
-
       let applyResponse = null;
-      if (generateResponse?.result?.planHandoff || generateResponse?.result?.hasDraftProposal) {
-        const started = Date.now();
-        applyResponse = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-apply.json`), "apply-current-proposal");
-        timings.applyMs = Date.now() - started;
-      } else {
-        timings.applyMs = 0;
-      }
-
       let wholeSequenceApplyValidation = null;
-      {
-        const validationPayloadPath = path.join(outDir, `${prefix}-whole-sequence-validate-payload.json`);
-        writePayload(validationPayloadPath, {
-          sequenceName: scenario?.sequenceName,
-          minConceptCount: Number(scenario?.minConceptCount || 8),
-          minPlacementCount: Number(scenario?.minPlacementCount || 200)
-        });
-        const started = Date.now();
-        wholeSequenceApplyValidation = await runAutomation(
+      let sequencerSnapshot = null;
+      let scenarioHealthBefore = null;
+      let scenarioHealthAfter = null;
+      let failure = null;
+      try {
+        scenarioHealthBefore = classifyAutomationHealth((await runAutomation(
           repoRoot,
           options.channel,
-          path.join(outDir, `${prefix}-whole-sequence-validate.json`),
-          "run-whole-sequence-apply-validation",
-          ["--payload-file", validationPayloadPath]
+          path.join(outDir, `${prefix}-health-before.json`),
+          "get-automation-health-snapshot"
+        ))?.result || {});
+
+        await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-reset.json`), "reset-automation-state");
+        restoreValidationSequenceFromBaseline({
+          sequencePath: str(scenario?.sequencePath),
+          baselineSequencePath: str(scenario?.baselineSequencePath)
+        });
+
+        if (str(scenario?.showFolder || runtimeSuite?.showFolder)) {
+          const setShowPayloadPath = path.join(outDir, `${prefix}-show-folder-payload.json`);
+          writePayload(setShowPayloadPath, {
+            showFolder: str(scenario?.showFolder || runtimeSuite?.showFolder)
+          });
+          const started = Date.now();
+          await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-show-folder.json`), "set-show-folder", ["--payload-file", setShowPayloadPath]);
+          timings.setShowFolderMs = Date.now() - started;
+        }
+
+        {
+          const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
+          writePayload(openPayloadPath, {
+            sequencePath: str(scenario?.sequencePath),
+            skipPostOpenRefresh: true
+          });
+          const started = Date.now();
+          await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
+          timings.openSequenceMs = Date.now() - started;
+        }
+
+        {
+          const started = Date.now();
+          await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
+          timings.refreshMs = Date.now() - started;
+        }
+
+        if (str(scenario?.audioPathOverride)) {
+          const audioPayloadPath = path.join(outDir, `${prefix}-audio-payload.json`);
+          writePayload(audioPayloadPath, {
+            audioPath: str(scenario?.audioPathOverride)
+          });
+          const started = Date.now();
+          await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-set-audio.json`), "set-audio-path", ["--payload-file", audioPayloadPath]);
+          timings.setAudioMs = Date.now() - started;
+        }
+
+        if (str(scenario?.analyzePrompt)) {
+          const analyzePayloadPath = path.join(outDir, `${prefix}-analyze-payload.json`);
+          const analyzePayload = {
+            prompt: str(scenario?.analyzePrompt)
+          };
+          if (scenario?.analysisProfile && typeof scenario.analysisProfile === "object") {
+            analyzePayload.analysisProfile = scenario.analysisProfile;
+          }
+          if (scenario?.forceFreshAnalysis === true) {
+            analyzePayload.forceFresh = true;
+          }
+          writePayload(analyzePayloadPath, analyzePayload);
+          const started = Date.now();
+          await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-analyze.json`), "analyze-audio", ["--payload-file", analyzePayloadPath]);
+          timings.analyzeMs = Date.now() - started;
+        }
+
+        if (scenario?.seedTimingTracksFromAnalysis === true) {
+          const started = Date.now();
+          await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-seed-timing.json`), "seed-timing-tracks-from-analysis");
+          timings.seedTimingTracksMs = Date.now() - started;
+        }
+
+        {
+          const generatePayloadPath = path.join(outDir, `${prefix}-generate-payload.json`);
+          writePayload(generatePayloadPath, {
+            prompt: str(scenario?.prompt || scenario?.strongPrompt),
+            requestedRole: str(scenario?.requestedRole || runtimeSuite?.requestedRole || "sequence_agent"),
+            forceFresh: true,
+            clearRevisionTarget: true,
+            selectedSections: arr(scenario?.sections),
+            selectedTargetIds: arr(scenario?.targets),
+            selectedTagNames: arr(scenario?.tagNames)
+          });
+          const started = Date.now();
+          generateResponse = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-generate.json`), "generate-proposal", ["--payload-file", generatePayloadPath]);
+          timings.generateMs = Date.now() - started;
+        }
+
+        if (generateResponse?.result?.planHandoff || generateResponse?.result?.hasDraftProposal) {
+          const started = Date.now();
+          applyResponse = await runAutomation(repoRoot, options.channel, path.join(outDir, `${prefix}-apply.json`), "apply-current-proposal");
+          timings.applyMs = Date.now() - started;
+        } else {
+          timings.applyMs = 0;
+        }
+
+        {
+          const validationPayloadPath = path.join(outDir, `${prefix}-whole-sequence-validate-payload.json`);
+          writePayload(validationPayloadPath, {
+            sequenceName: scenario?.sequenceName,
+            minConceptCount: Number(scenario?.minConceptCount || 8),
+            minPlacementCount: Number(scenario?.minPlacementCount || 200)
+          });
+          const started = Date.now();
+          wholeSequenceApplyValidation = await runAutomation(
+            repoRoot,
+            options.channel,
+            path.join(outDir, `${prefix}-whole-sequence-validate.json`),
+            "run-whole-sequence-apply-validation",
+            ["--payload-file", validationPayloadPath]
+          );
+          timings.validationMs = Date.now() - started;
+        }
+
+        sequencerSnapshot = await runAutomation(
+          repoRoot,
+          options.channel,
+          path.join(outDir, `${prefix}-sequencer-snapshot.json`),
+          "get-sequencer-validation-snapshot"
         );
-        timings.validationMs = Date.now() - started;
+      } catch (err) {
+        failure = String(err?.message || err);
       }
 
-      const sequencerSnapshot = await runAutomation(
+      scenarioHealthAfter = classifyAutomationHealth((await runAutomation(
         repoRoot,
         options.channel,
-        path.join(outDir, `${prefix}-sequencer-snapshot.json`),
-        "get-sequencer-validation-snapshot"
-      );
+        path.join(outDir, `${prefix}-health-after.json`),
+        "get-automation-health-snapshot"
+      ))?.result || {});
 
       const practicalValidation = extractPracticalValidation(sequencerSnapshot, applyResponse);
       const wholeSequenceValidation = wholeSequenceApplyValidation?.result?.validation || null;
-      const ok = practicalValidation?.overallOk === true && wholeSequenceValidation?.ok === true;
+      const runtimeFailure = Boolean(failure) || !scenarioHealthAfter.ok;
+      const ok = !runtimeFailure && practicalValidation?.overallOk === true && wholeSequenceValidation?.ok === true;
 
       results.push({
         name: str(scenario?.name),
@@ -311,6 +361,10 @@ async function main() {
           validationMs: Number(timings.validationMs || 0)
         },
         ok,
+        failure,
+        failureClass: runtimeFailure ? "automation_runtime" : (ok ? "" : "sequence_product"),
+        automationHealthBefore: scenarioHealthBefore,
+        automationHealthAfter: scenarioHealthAfter,
         practicalValidation,
         wholeSequenceApplyValidation: wholeSequenceApplyValidation?.result || null,
         generateResponse: generateResponse?.result || null,
@@ -342,6 +396,7 @@ async function main() {
     summary: failed.length === 0
       ? `Live reviewed timing whole-sequence baseline passed ${results.length}/${results.length} scenarios.`
       : `Live reviewed timing whole-sequence baseline passed ${results.length - failed.length}/${results.length} scenarios.`,
+    initialAutomationHealth,
     timingSummary: summarizeTimingBaseline(results),
     results
   };

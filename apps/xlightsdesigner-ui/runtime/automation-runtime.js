@@ -855,8 +855,19 @@ export function createAutomationRuntime(deps = {}) {
     return {
       ok: true,
       ready: true,
+      timestamp: new Date().toISOString(),
       activeSequence: state.activeSequence || "",
-      status: state.status || null
+      sequencePathInput: state.sequencePathInput || "",
+      showFolder: state.showFolder || "",
+      audioPathInput: state.audioPathInput || "",
+      status: state.status || null,
+      flags: {
+        xlightsConnected: Boolean(state.flags?.xlightsConnected),
+        activeSequenceLoaded: Boolean(state.flags?.activeSequenceLoaded),
+        planOnlyMode: Boolean(state.flags?.planOnlyMode),
+        hasDraftProposal: Boolean(state.flags?.hasDraftProposal),
+        proposalStale: Boolean(state.flags?.proposalStale)
+      }
     };
   }
 
@@ -878,6 +889,7 @@ export function createAutomationRuntime(deps = {}) {
       getComparativeValidationSnapshot: getAutomationComparativeValidationSnapshot,
       getSequencerValidationSnapshot: getAutomationSequencerValidationSnapshot,
       getVisualHintDefinitionsSnapshot: getAutomationVisualHintDefinitionsSnapshot,
+      getAutomationHealthSnapshot: getAutomationReadyState,
       getAgentRuntimeSnapshot: getAutomationAgentRuntimeSnapshot,
       getPageStatesSnapshot: getAutomationPageStatesSnapshot,
       runDirectSequenceValidation: runCurrentDirectSequenceValidation,
