@@ -32,6 +32,7 @@ Active Entry Points:
 - `macos-native-interaction-model-2026-04-06.md`
 - `macos-native-read-models-and-page-state-contracts-2026-04-06.md`
 - `macos-native-shared-backend-and-service-boundaries-2026-04-06.md`
+- `macos-native-visual-system-2026-04-06.md`
 - `electron-legacy-removal-manifest-2026-04-06.md`
 - `implementation-checklist.md`
 - `page-roles-and-flow.md`

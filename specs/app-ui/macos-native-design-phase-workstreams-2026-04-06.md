@@ -243,6 +243,9 @@ Checklist:
 - define primary/secondary action styling rules
 - define panel density rules
 
+Primary source:
+- `macos-native-visual-system-2026-04-06.md`
+
 Exit criteria:
 - the native app has one visual system instead of per-screen improvisation
 
