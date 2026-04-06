@@ -98,16 +98,38 @@ Primary sources:
 ## Immediate Next Development Phase
 
 The next major development phase is:
-- improve sequencer quality on top of reviewed timing
+- native macOS product design and migration planning
 
-This means:
-1. complete live reviewed-timing validation in xLights
-2. validate sequence generation against reviewed timing
-3. evaluate timing fidelity separately from effect quality
-4. only then resume deeper effect-training work
+This changes the application-shell direction:
+- Electron is now reference-only and maintenance-only
+- the target product shell is a native macOS application
+- backend/domain contracts remain shared and should not be forked by shell
 
 Primary source:
-- `sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md`
+- `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
+
+The next implementation-heavy product phase after design is still expected to build on:
+- audio analysis
+- shared track metadata
+- reviewed timing
+- sequencing against stable backend contracts
+
+The sequencing-quality roadmap remains valid, but application-shell work should now follow the native migration plan rather than broadening the Electron shell.
+
+## Native Migration Rule
+
+Do not begin native screen implementation until the design phase is complete.
+
+Working rule:
+1. define native information architecture
+2. define screen-by-screen workflow contracts
+3. define shared backend/state boundaries
+4. only then implement the macOS shell
+
+This is now the active planning priority because the current Electron shell is imposing too much UX fragility and iteration cost.
+
+Primary source:
+- `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
 
 ## Planned Timing-Track Expansion
 
