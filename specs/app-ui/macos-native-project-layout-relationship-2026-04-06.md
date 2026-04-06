@@ -91,7 +91,7 @@ The transition should feel like:
 - `Layout` confirms whether the downstream target structure is usable
 
 ### Layout -> Project
-n
+
 Return from `Layout` to `Project` when:
 - the blocking issue is really a project-reference issue
 - the show-folder or project reference itself is wrong
