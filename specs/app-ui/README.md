@@ -17,6 +17,7 @@ Scope:
 Active Entry Points:
 - `implementation-checklist.md`
 - `page-roles-and-flow.md`
+- `audio-page-redesign-2026-04-06.md`
 - `history-and-live-dashboards-plan-2026-03-13.md`
 - `history-implementation-checklist.md`
 - `end-to-end-audit-2026-03-12.md`
