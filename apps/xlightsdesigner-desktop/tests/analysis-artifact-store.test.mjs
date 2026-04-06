@@ -7,7 +7,8 @@ import path from "node:path";
 import {
   ensureProjectStructure,
   writeAnalysisArtifactToProject,
-  readAnalysisArtifactFromProject
+  readAnalysisArtifactFromProject,
+  writeAnalysisArtifactToLibrary
 } from "../analysis-artifact-store.mjs";
 
 function makeTempProject() {
@@ -242,6 +243,51 @@ test("writeAnalysisArtifactToProject emits canonical track metadata timing track
     assert.equal(stored.timingTracks[2].tempoBpm, 128);
     assert.equal(stored.timingTracks[3].timeSignature, "4/4");
     assert.equal(stored.timingTracks[4].segments[0].label, "C");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("writeAnalysisArtifactToLibrary writes shared track records directly under app root", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-analysis-library-"));
+  try {
+    const appRootPath = path.join(root, "xLightsDesigner");
+    const mediaPath = path.join(root, "Christmas Vacation.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("library-direct-write-content"));
+
+    const artifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath),
+        durationMs: 201000
+      },
+      identity: {
+        title: "Christmas Vacation",
+        artist: "Mavis Staples",
+        contentFingerprint: ""
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "deep"
+        }
+      }
+    };
+
+    const written = writeAnalysisArtifactToLibrary({
+      appRootPath,
+      mediaFilePath: mediaPath,
+      artifact
+    });
+    assert.equal(written.ok, true);
+    assert.equal(written.libraryDir, path.join(appRootPath, "library", "tracks"));
+    assert.equal(fs.existsSync(written.recordPath), true);
+    assert.match(path.basename(written.recordPath), /^christmas-vacation-mavis-staples(?:-[a-f0-9]{8})?\.json$/);
+
+    const stored = JSON.parse(fs.readFileSync(written.recordPath, "utf8"));
+    assert.equal(stored.track.title, "Christmas Vacation");
+    assert.equal(stored.track.artist, "Mavis Staples");
+    assert.equal(stored.track.sourceMedia.path, mediaPath);
+    assert.equal(stored.analysis.canonicalProfile, "deep");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -118,6 +118,15 @@ function resolveAppRootFromProjectFile(projectFilePath = "") {
   return projectDir;
 }
 
+function resolveAppRoot(appRootPath = "") {
+  return normalizePathForCompare(appRootPath);
+}
+
+function getTrackLibraryDirFromAppRoot(appRootPath = "") {
+  const appRoot = resolveAppRoot(appRootPath);
+  return appRoot ? path.join(appRoot, ...TRACK_LIBRARY_DIR_PARTS) : "";
+}
+
 function getTrackLibraryDir(projectFilePath = "") {
   const appRoot = resolveAppRootFromProjectFile(projectFilePath);
   return appRoot ? path.join(appRoot, ...TRACK_LIBRARY_DIR_PARTS) : "";
@@ -274,6 +283,10 @@ function readTrackRecord(recordPath = "") {
 
 function findTrackRecordByContentFingerprint(projectFilePath = "", contentFingerprint = "") {
   const libraryDir = getTrackLibraryDir(projectFilePath);
+  return findTrackRecordByContentFingerprintInLibrary(libraryDir, contentFingerprint);
+}
+
+function findTrackRecordByContentFingerprintInLibrary(libraryDir = "", contentFingerprint = "") {
   const fingerprint = String(contentFingerprint || "").trim().toLowerCase();
   if (!libraryDir || !fingerprint || !fs.existsSync(libraryDir)) return null;
   let entries = [];
@@ -295,8 +308,26 @@ function findTrackRecordByContentFingerprint(projectFilePath = "", contentFinger
 }
 
 function findRecordPathForWrite(projectFilePath = "", mediaFilePath = "", artifact = null, contentFingerprint = "") {
-  const existing = findTrackRecordByContentFingerprint(projectFilePath, contentFingerprint);
+  const libraryDir = getTrackLibraryDir(projectFilePath);
+  return findRecordPathForWriteInLibrary({
+    libraryDir,
+    projectFilePath,
+    mediaFilePath,
+    artifact,
+    contentFingerprint
+  });
+}
+
+function findRecordPathForWriteInLibrary({ libraryDir = "", projectFilePath = "", mediaFilePath = "", artifact = null, contentFingerprint = "" } = {}) {
+  const existing = findTrackRecordByContentFingerprintInLibrary(libraryDir, contentFingerprint);
   const candidate = buildTrackRecordPathCandidate(projectFilePath, mediaFilePath, artifact, contentFingerprint);
+  if (libraryDir && candidate.libraryDir !== libraryDir) {
+    candidate.libraryDir = libraryDir;
+    candidate.defaultRecordPath = path.join(libraryDir, `${candidate.fileStem}.json`);
+    candidate.collisionRecordPath = candidate.collisionRecordPath
+      ? path.join(libraryDir, path.basename(candidate.collisionRecordPath))
+      : "";
+  }
   if (!candidate.defaultRecordPath) return { recordPath: "", previousRecordPath: "" };
   if (existing?.recordPath) {
     if (existing.recordPath === candidate.defaultRecordPath || existing.recordPath === candidate.collisionRecordPath) {
@@ -554,6 +585,99 @@ export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFile
   }
   return {
     ok: true,
+    mediaId,
+    contentFingerprint,
+    artifactPath: recordPath,
+    canonicalArtifactPath: recordPath,
+    profileArtifactPath: recordPath,
+    recordPath,
+    artifact: normalizedDoc,
+    trackRecord: record
+  };
+}
+
+export function writeAnalysisArtifactToLibrary({ appRootPath = "", mediaFilePath = "", artifact = null } = {}) {
+  const appRoot = String(appRootPath || "").trim();
+  const mediaPath = String(mediaFilePath || "").trim();
+  if (!appRoot) return { ok: false, error: "Missing appRootPath" };
+  if (!mediaPath) return { ok: false, error: "Missing mediaFilePath" };
+  if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) return { ok: false, error: "Missing artifact" };
+
+  const libraryDir = getTrackLibraryDirFromAppRoot(appRoot);
+  if (!libraryDir) return { ok: false, error: "Unable to resolve library directory" };
+  fs.mkdirSync(libraryDir, { recursive: true });
+
+  const mediaId = mediaIdFromPathAndStat(mediaPath);
+  const contentFingerprint = artifactContentFingerprint(artifact) || mediaContentFingerprint(mediaPath);
+  const profileMode = getArtifactProfileMode(artifact);
+  const normalizedDoc = normalizeArtifactModulesForProfile({
+    ...artifact,
+    media: {
+      ...(artifact.media && typeof artifact.media === "object" ? artifact.media : {}),
+      mediaId,
+      path: normalizePathForCompare(mediaPath),
+      contentFingerprint
+    },
+    identity: {
+      ...(artifact.identity && typeof artifact.identity === "object" ? artifact.identity : {}),
+      contentFingerprint
+    }
+  }, profileMode, mediaId);
+
+  const pseudoProjectPath = path.join(resolveAppRoot(appRoot), "projects", "__library__", "__library__.xdproj");
+  const { recordPath, previousRecordPath } = findRecordPathForWriteInLibrary({
+    libraryDir,
+    projectFilePath: pseudoProjectPath,
+    mediaFilePath: mediaPath,
+    artifact: normalizedDoc,
+    contentFingerprint
+  });
+
+  const existingRecord = readTrackRecord(recordPath) || {};
+  const existingProfiles = existingRecord?.analyses?.profiles && typeof existingRecord.analyses.profiles === "object" ? existingRecord.analyses.profiles : {};
+  const nextProfiles = { ...existingProfiles };
+  if (profileMode) nextProfiles[profileMode] = normalizedDoc;
+
+  let canonicalArtifact = normalizedDoc;
+  let canonicalProfile = profileMode || getArtifactProfileMode(normalizedDoc) || null;
+  const existingCanonicalProfile = normalizeAnalysisProfileMode(existingRecord?.analyses?.canonicalProfile);
+  if (existingCanonicalProfile === "deep" && profileMode === "fast" && existingProfiles.deep) {
+    canonicalArtifact = existingProfiles.deep;
+    canonicalProfile = "deep";
+  } else if (!canonicalProfile && existingCanonicalProfile && existingProfiles[existingCanonicalProfile]) {
+    canonicalArtifact = existingProfiles[existingCanonicalProfile];
+    canonicalProfile = existingCanonicalProfile;
+  }
+
+  const record = buildTrackRecordFromArtifact({
+    projectFilePath: pseudoProjectPath,
+    mediaFilePath: mediaPath,
+    artifact: normalizedDoc,
+    mediaId,
+    contentFingerprint,
+    canonicalArtifact,
+    profiledArtifact: profileMode ? normalizedDoc : null,
+    profileMode: canonicalProfile
+  });
+  record.analyses.profiles = nextProfiles;
+  if (canonicalProfile && nextProfiles[canonicalProfile]) {
+    record.analyses.canonicalProfile = canonicalProfile;
+  } else if (profileMode) {
+    record.analyses.canonicalProfile = profileMode;
+  }
+
+  fs.writeFileSync(recordPath, JSON.stringify(record, null, 2), "utf8");
+  if (previousRecordPath && previousRecordPath !== recordPath) {
+    try {
+      fs.rmSync(previousRecordPath, { force: true });
+    } catch {
+      // best effort; current record has already been written
+    }
+  }
+  return {
+    ok: true,
+    appRoot: resolveAppRoot(appRoot),
+    libraryDir,
     mediaId,
     contentFingerprint,
     artifactPath: recordPath,
