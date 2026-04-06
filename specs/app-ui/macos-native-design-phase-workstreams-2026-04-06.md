@@ -131,6 +131,9 @@ Current first screen source:
 - `macos-native-audio-screen-layout-2026-04-06.md`
 - `macos-native-project-screen-layout-2026-04-06.md`
 
+Current coupled-screen relationship source:
+- `macos-native-sequence-design-review-relationship-2026-04-06.md`
+
 Exit criteria:
 - every screen has a stable information hierarchy
 

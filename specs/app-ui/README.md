@@ -22,6 +22,7 @@ Active Entry Points:
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-audio-screen-layout-2026-04-06.md`
 - `macos-native-project-screen-layout-2026-04-06.md`
+- `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `electron-legacy-removal-manifest-2026-04-06.md`
 - `implementation-checklist.md`
 - `page-roles-and-flow.md`
