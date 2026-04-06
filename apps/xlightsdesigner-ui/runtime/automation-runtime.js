@@ -808,7 +808,9 @@ export function createAutomationRuntime(deps = {}) {
     return {
       ok: true,
       status: state.status || null,
+      route: state.route || "",
       activeSequence: state.activeSequence || "",
+      audio: pageStates?.audio || null,
       review: pageStates?.review || null,
       design: pageStates?.design || null,
       sequence: pageStates?.sequence || null

@@ -1324,6 +1324,99 @@ button.danger-action:hover {
   margin-top: 8px;
 }
 
+.audio-page-shell {
+  display: grid;
+  gap: 16px;
+}
+
+.audio-page-header h3,
+.audio-primary-actions h4,
+.audio-result-summary h4,
+.audio-library-grid-panel h4,
+.audio-detail-panel h4 {
+  margin: 0;
+}
+
+.audio-page-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.audio-primary-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.audio-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.audio-library-grid-panel,
+.audio-detail-panel,
+.audio-result-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.audio-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.audio-inline-check input {
+  margin: 0;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--panel-2);
+}
+
+.status-chip-ready {
+  border-color: rgba(95, 193, 137, 0.55);
+  background: rgba(28, 73, 45, 0.92);
+}
+
+.status-chip-warning {
+  border-color: rgba(225, 177, 87, 0.5);
+  background: rgba(77, 56, 20, 0.92);
+}
+
+.status-chip-danger {
+  border-color: rgba(214, 98, 98, 0.5);
+  background: rgba(82, 28, 28, 0.92);
+}
+
+.status-chip-pending,
+.status-chip-neutral {
+  border-color: rgba(120, 149, 181, 0.34);
+  background: rgba(19, 42, 61, 0.92);
+}
+
+@media (max-width: 980px) {
+  .audio-primary-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .metadata-workspace {
   grid-template-columns: 1fr;
   align-items: stretch;
@@ -1723,6 +1816,18 @@ button.danger-action:hover {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.audio-library-grid-panel .metadata-grid tbody tr {
+  cursor: pointer;
+}
+
+.audio-library-grid-panel .metadata-grid tbody tr.is-selected td {
+  background: rgba(120, 149, 181, 0.14);
+}
+
+.audio-library-grid-panel .metadata-grid tbody tr:hover td {
+  background: rgba(120, 149, 181, 0.08);
 }
 
 .metadata-filter-row th {

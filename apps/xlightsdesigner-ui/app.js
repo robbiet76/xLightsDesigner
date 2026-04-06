@@ -349,6 +349,31 @@ function buildDemoProposedLines() {
   ];
 }
 
+const DEFAULT_PROJECT_METADATA_ROOT = "/Users/robterry/Documents/Lights/xLightsDesigner";
+const LEGACY_PROJECT_METADATA_ROOTS = ["/Users/robterry/Desktop/Projects"];
+
+function normalizeProjectMetadataRootPath(value = "") {
+  return String(value || "").trim();
+}
+
+function normalizeStandaloneProjectMetadataRoot(targetState = null) {
+  if (!targetState || typeof targetState !== "object") return false;
+  const canonicalRoot = normalizeProjectMetadataRootPath(DEFAULT_PROJECT_METADATA_ROOT);
+  if (!canonicalRoot) return false;
+  const projectFilePath = String(targetState.projectFilePath || "").trim();
+  const currentRoot = normalizeProjectMetadataRootPath(targetState.projectMetadataRoot);
+  const legacyRoot = LEGACY_PROJECT_METADATA_ROOTS.includes(currentRoot);
+  const shouldCanonicalize = !currentRoot || legacyRoot || (!projectFilePath && currentRoot !== canonicalRoot);
+  if (!shouldCanonicalize) return false;
+  targetState.projectMetadataRoot = canonicalRoot;
+  return currentRoot !== canonicalRoot;
+}
+
+function getEffectiveProjectMetadataRoot() {
+  normalizeStandaloneProjectMetadataRoot(state);
+  return normalizeProjectMetadataRootPath(state.projectMetadataRoot) || normalizeProjectMetadataRootPath(DEFAULT_PROJECT_METADATA_ROOT);
+}
+
 const defaultState = {
   route: "settings",
   endpoint: PREFERRED_XLIGHTS_ENDPOINT,
@@ -356,7 +381,7 @@ const defaultState = {
   projectConcept: "",
   showFolder: "",
   mediaPath: "",
-  projectMetadataRoot: "/Users/robterry/Documents/Lights/xLightsDesigner",
+  projectMetadataRoot: DEFAULT_PROJECT_METADATA_ROOT,
   projectFilePath: "",
   safety: {
     applyConfirmMode: "large-only",
@@ -383,7 +408,11 @@ const defaultState = {
   },
   audioLibrary: {
     batchFolder: "",
-    lastReview: null
+    lastReview: null,
+    tracks: [],
+    lastLoadedAt: "",
+    loadError: "",
+    recursive: true
   },
   sequenceAgentRuntime: {
     timingTrackPolicies: {},
@@ -520,6 +549,7 @@ const defaultState = {
     projectNameDialogTitle: "",
     projectNameDialogValue: "",
     projectNameDialogError: "",
+    audioLibrarySelectedKey: "",
     firstRunMode: true
   },
   diagnostics: [],
@@ -733,6 +763,7 @@ function loadState() {
     };
     merged.endpoint = normalizeConfiguredEndpoint(merged.endpoint);
     normalizeProjectIdentityFields(merged);
+    normalizeStandaloneProjectMetadataRoot(merged);
     normalizeDirectorProfileState(merged);
     normalizeDraftState(merged);
     return merged;
@@ -1015,7 +1046,7 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
   const preferredProfileMode = String(options?.preferredProfileMode || "deep").trim().toLowerCase();
   const bridge = getDesktopAnalysisArtifactBridge();
   const projectFilePath = String(state.projectFilePath || "").trim();
-  const appRootPath = String(state.projectMetadataRoot || "").trim();
+  const appRootPath = getEffectiveProjectMetadataRoot();
   const mediaFilePath = String(state.audioPathInput || "").trim();
   const boundContentFingerprint = String(state.trackBinding?.contentFingerprint || "").trim().toLowerCase();
   if (!bridge || (!projectFilePath && !appRootPath) || (!mediaFilePath && !boundContentFingerprint)) {
@@ -1256,6 +1287,27 @@ function restoreRenderFocusState(snapshot) {
   }
 }
 
+function captureRenderViewportState() {
+  if (typeof window === "undefined") return null;
+  const content = app?.querySelector?.(".content");
+  return {
+    winX: Number(window.scrollX || 0),
+    winY: Number(window.scrollY || 0),
+    contentTop: Number(content?.scrollTop || 0)
+  };
+}
+
+function restoreRenderViewportState(snapshot) {
+  if (!snapshot || typeof window === "undefined") return;
+  window.requestAnimationFrame(() => {
+    window.scrollTo(Number(snapshot.winX || 0), Number(snapshot.winY || 0));
+    const content = app?.querySelector?.(".content");
+    if (content) {
+      content.scrollTop = Number(snapshot.contentTop || 0);
+    }
+  });
+}
+
 function isFirstRunMode() {
   return Boolean(state.ui?.firstRunMode);
 }
@@ -1299,6 +1351,7 @@ async function hydrateStateFromDesktop() {
       Object.assign(state, hydrated);
       applyAnalysisServiceDefaults(state);
       normalizeProjectIdentityFields(state);
+      normalizeStandaloneProjectMetadataRoot(state);
       normalizeDraftState(state);
     }
     await pruneInvalidPersistedProjects();
@@ -1307,6 +1360,7 @@ async function hydrateStateFromDesktop() {
     // Non-fatal. Continue with localStorage state.
   } finally {
     normalizeProjectIdentityFields(state);
+    normalizeStandaloneProjectMetadataRoot(state);
     normalizeDraftState(state);
     desktopStateHydrated = true;
     queueDesktopStatePersist();
@@ -1467,7 +1521,7 @@ async function hydrateSidecarForCurrentSequence() {
   try {
     const res = await bridge.readSequenceSidecar({
       sequencePath,
-      appRootPath: state.projectMetadataRoot
+      appRootPath: getEffectiveProjectMetadataRoot()
     });
     if (res?.ok !== true) return;
     hydratedSidecarSequencePath = sequencePath;
@@ -1508,7 +1562,7 @@ async function flushSidecarPersistIfDirty(sequencePath = "") {
   try {
     await bridge.writeSequenceSidecar({
       sequencePath: targetPath,
-      appRootPath: state.projectMetadataRoot,
+      appRootPath: getEffectiveProjectMetadataRoot(),
       data: buildSequenceSidecarDocument()
     });
     sidecarDirtySequencePath = "";
@@ -2101,6 +2155,7 @@ function applyProjectSnapshot(snapshot) {
     state.audioPathInput = snapshotAudioPath || state.audioPathInput;
   }
   state.trackBinding = normalizeSequenceTrackBinding(snapshot?.trackBinding) || state.trackBinding || null;
+  normalizeStandaloneProjectMetadataRoot(state);
   state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   state.sequenceAgentRuntime = snapshot?.sequenceAgentRuntime && typeof snapshot.sequenceAgentRuntime === "object"
       ? {
@@ -2239,6 +2294,7 @@ function setRoute(route) {
   render();
   if (normalizedRoute === "audio") {
     void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
+    void refreshAudioLibraryTracks({ silent: true });
   }
   if (normalizedRoute === "sequence") {
     void projectCatalogRuntime.refreshSequenceCatalog({ silent: true });
@@ -6817,6 +6873,145 @@ async function onBrowseAudioBatchFolder() {
   render();
 }
 
+async function refreshAudioLibraryTracks({ silent = false } = {}) {
+  const bridge = getDesktopAudioLibraryBridge();
+  const appRootPath = getEffectiveProjectMetadataRoot();
+  if (!bridge || typeof bridge.listAudioLibraryTracks !== "function" || !appRootPath) return { ok: false, error: "unavailable" };
+  try {
+    const res = await bridge.listAudioLibraryTracks({ appRootPath });
+    if (res?.ok !== true) {
+      throw new Error(String(res?.error || "Unable to load audio library."));
+    }
+    state.audioLibrary = {
+      ...(state.audioLibrary || {}),
+      tracks: Array.isArray(res.tracks) ? res.tracks : [],
+      lastLoadedAt: new Date().toISOString(),
+      loadError: ""
+    };
+    if (!silent) {
+      setStatus("info", `Loaded ${state.audioLibrary.tracks.length} track metadata records from the shared library.`);
+    }
+    persist();
+    render();
+    return { ok: true, tracks: state.audioLibrary.tracks };
+  } catch (err) {
+    state.audioLibrary = {
+      ...(state.audioLibrary || {}),
+      loadError: String(err?.message || err)
+    };
+    if (!silent) {
+      setStatusWithDiagnostics("warning", `Audio library load failed: ${err?.message || err}`);
+      render();
+    } else {
+      persist();
+      render();
+    }
+    return { ok: false, error: String(err?.message || err) };
+  }
+}
+
+function getSelectedAudioLibraryTrack() {
+  const selectedKey = String(state.ui?.audioLibrarySelectedKey || "").trim();
+  const tracks = Array.isArray(state.audioLibrary?.tracks) ? state.audioLibrary.tracks : [];
+  if (!selectedKey) return null;
+  return tracks.find((row) => String(row?.contentFingerprint || row?.recordPath || row?.fileName || "").trim() === selectedKey) || null;
+}
+
+async function onConfirmSelectedAudioLibraryTrackInfo() {
+  const row = getSelectedAudioLibraryTrack();
+  const appRootPath = getEffectiveProjectMetadataRoot();
+  const libraryBridge = getDesktopAudioLibraryBridge();
+  if (!row) {
+    setStatusWithDiagnostics("warning", "Select a library row first.");
+    render();
+    return { ok: false, error: "no_row_selected" };
+  }
+  if (!libraryBridge || typeof libraryBridge.updateAudioLibraryTrackIdentity !== "function") {
+    setStatusWithDiagnostics("warning", "Desktop audio library bridge is unavailable.");
+    render();
+    return { ok: false, error: "bridge_unavailable" };
+  }
+  if (!appRootPath) {
+    setStatusWithDiagnostics("warning", "Project metadata root is not configured.");
+    render();
+    return { ok: false, error: "missing_app_root" };
+  }
+
+  const suggestedTitle = String(row?.suggestedTitle || row?.embeddedTitle || row?.title || "").trim();
+  const suggestedArtist = String(row?.suggestedArtist || row?.embeddedArtist || row?.artist || "").trim();
+  const title = window.prompt(
+    `Confirm track title for ${basenameOfPath(String(row?.sourceMediaPath || row?.fileName || row?.displayName || "")) || "selected track"}:`,
+    suggestedTitle
+  );
+  if (title == null) return { ok: false, cancelled: true };
+  const artist = window.prompt(
+    "Confirm track artist:",
+    suggestedArtist
+  );
+  if (artist == null) return { ok: false, cancelled: true };
+
+  const nextTitle = String(title || "").trim();
+  const nextArtist = String(artist || "").trim();
+  if (!nextTitle || !nextArtist) {
+    setStatusWithDiagnostics("warning", "Title and artist are both required to confirm track info.");
+    render();
+    return { ok: false, error: "missing_title_or_artist" };
+  }
+
+  const confirmLines = [
+    "Confirm track info",
+    "",
+    `Title: ${nextTitle}`,
+    `Artist: ${nextArtist}`,
+    "",
+    "Update the shared track metadata now?"
+  ];
+  if (!window.confirm(confirmLines.join("\n"))) return { ok: false, cancelled: true };
+
+  try {
+    const mediaBridge = getDesktopMediaIdentityBridge();
+    const sourceMediaPath = String(row?.sourceMediaPath || "").trim();
+    if (mediaBridge && sourceMediaPath) {
+      await mediaBridge.applyMediaIdentityRecommendation({
+        filePath: sourceMediaPath,
+        rename: false,
+        retag: true,
+        recommendation: {},
+        metadataRecommendation: {
+          current: {
+            title: String(row?.embeddedTitle || "").trim(),
+            artist: String(row?.embeddedArtist || "").trim(),
+            album: ""
+          },
+          recommended: {
+            title: nextTitle,
+            artist: nextArtist,
+            album: ""
+          }
+        }
+      });
+    }
+
+    const res = await libraryBridge.updateAudioLibraryTrackIdentity({
+      appRootPath,
+      contentFingerprint: String(row?.contentFingerprint || "").trim(),
+      title: nextTitle,
+      artist: nextArtist
+    });
+    if (res?.ok !== true) {
+      throw new Error(String(res?.error || "Unable to update shared track metadata."));
+    }
+    await refreshAudioLibraryTracks({ silent: true });
+    setStatus("info", `Confirmed track info for ${nextTitle} - ${nextArtist}.`);
+    render();
+    return { ok: true };
+  } catch (err) {
+    setStatusWithDiagnostics("warning", `Track confirmation failed: ${err?.message || err}`);
+    render();
+    return { ok: false, error: String(err?.message || err) };
+  }
+}
+
 async function onBrowseProjectMetadataRoot() {
   const selected = await pickFilePathFromDesktop({
     title: "Choose Project Root Folder",
@@ -7333,7 +7528,7 @@ audioAnalysisSessionRuntime = createAudioAnalysisSessionRuntime({
   buildAudioAnalystInput,
   executeAudioAnalystFlow,
   getDesktopAnalysisArtifactBridge,
-  getProjectMetadataRoot: () => state.projectMetadataRoot,
+  getProjectMetadataRoot: () => getEffectiveProjectMetadataRoot(),
   buildAudioAnalysisStubSummary: (...args) => audioAnalysisPipelineRuntime.buildAudioAnalysisStubSummary(...args),
   applyAudioAnalystFlowSuccessToState,
   syncSectionSuggestionsFromAnalysisArtifact,
@@ -7711,23 +7906,28 @@ async function onAnalyzeAudio({
   forceFresh = false,
   disableInteractivePrompts = false
 } = {}) {
-  return audioAnalysisSessionRuntime.analyzeAudio({
+  const res = await audioAnalysisSessionRuntime.analyzeAudio({
     userPrompt,
     analysisProfile,
     forceFresh,
     disableInteractivePrompts
   });
+  if (res?.ok) {
+    await refreshAudioLibraryTracks({ silent: true });
+  }
+  return res;
 }
 
 async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
   const bridge = getDesktopAudioLibraryBridge();
-  const appRootPath = String(state.projectMetadataRoot || "").trim();
+  const appRootPath = getEffectiveProjectMetadataRoot();
   const folderPath = String(
     state.audioLibrary?.batchFolder ||
     dirnameOfPath(state.audioPathInput) ||
     state.mediaPath ||
     ""
   ).trim();
+  const recursive = state.audioLibrary?.recursive !== false;
   if (!bridge) {
     setStatusWithDiagnostics("warning", "Desktop audio library bridge is unavailable.");
     return { ok: false, error: "bridge_unavailable" };
@@ -7748,6 +7948,7 @@ async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
       status: "running",
       folder: folderPath,
       mode,
+      recursive,
       startedAt: new Date().toISOString()
     }
   };
@@ -7758,6 +7959,7 @@ async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
     const res = await bridge.analyzeAudioLibraryFolder({
       appRootPath,
       folderPath,
+      recursive,
       mode: String(mode || "deep").trim().toLowerCase() === "fast" ? "fast" : "deep"
     });
     if (res?.ok !== true) {
@@ -7770,6 +7972,7 @@ async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
         status: "ready",
         folder: folderPath,
         mode: String(mode || "deep").trim().toLowerCase() === "fast" ? "fast" : "deep",
+        recursive,
         completedAt: new Date().toISOString(),
         outDir: String(res.outDir || ""),
         jsonPath: String(res.jsonPath || ""),
@@ -7777,6 +7980,7 @@ async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
         review: res.review || null
       }
     };
+    await refreshAudioLibraryTracks({ silent: true });
     setStatus("info", `Audio library analysis complete: ${Number(res.review?.successfulTracks || 0)}/${Number(res.review?.totalTracks || 0)} tracks processed.`);
     return { ok: true, review: res.review || null };
   } catch (err) {
@@ -7787,6 +7991,7 @@ async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
         ...(state.audioLibrary?.lastReview || {}),
         status: "failed",
         folder: folderPath,
+        recursive,
         completedAt: new Date().toISOString(),
         error: String(err?.message || err)
       }
@@ -8369,13 +8574,15 @@ function bindEvents() {
     onSelectHistoryEntry,
     onInspectArtifact,
     onCloseArtifactDetail,
-    onAcceptTimingTrackReview
+    onAcceptTimingTrackReview,
+    onConfirmSelectedAudioLibraryTrackInfo
   });
 }
 
 function render() {
   normalizeUiRoute();
   const focusSnapshot = captureRenderFocusState();
+  const viewportSnapshot = captureRenderViewportState();
   const buildLabel = getBuildLabel();
   const analysisHeaderBadge = analysisServiceRuntime ? analysisServiceRuntime.getAnalysisServiceHeaderBadgeText() : "Analysis: Unavailable";
   const pageStates = uiCompositionRuntime.getPageStates();
@@ -8410,6 +8617,7 @@ function render() {
 
     bindEvents();
     restoreRenderFocusState(focusSnapshot);
+    restoreRenderViewportState(viewportSnapshot);
     const chatThread = app.querySelector(".chat-thread");
     if (chatThread) {
       chatThread.scrollTop = chatThread.scrollHeight;
@@ -8500,6 +8708,9 @@ render();
   if (String(state.mediaPath || "").trim()) {
     await projectCatalogRuntime.refreshMediaCatalog({ silent: true });
   }
+  if (state.route === "audio") {
+    await refreshAudioLibraryTracks({ silent: true });
+  }
   render();
   if (!state.ui.firstRunMode) {
     await bootstrapLiveData();
@@ -8526,6 +8737,7 @@ if (typeof window !== "undefined") {
     void analysisServiceRuntime.probeAnalysisServiceHealth({ quiet: true });
     if (state.route === "audio" || state.route === "project") {
       void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
+      if (state.route === "audio") void refreshAudioLibraryTracks({ silent: true });
     }
   });
 }
@@ -8535,6 +8747,7 @@ if (typeof document !== "undefined") {
       void syncOpenSequenceOnFocusReturn();
       if (state.route === "audio" || state.route === "project") {
         void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
+        if (state.route === "audio") void refreshAudioLibraryTracks({ silent: true });
       }
     }
   });

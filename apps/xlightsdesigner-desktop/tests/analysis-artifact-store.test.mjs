@@ -6,6 +6,8 @@ import path from "node:path";
 
 import {
   ensureProjectStructure,
+  listTrackLibrarySummaries,
+  updateTrackLibraryRecordIdentity,
   writeAnalysisArtifactToProject,
   readAnalysisArtifactFromProject,
   readAnalysisArtifactFromLibrary,
@@ -333,6 +335,113 @@ test("readAnalysisArtifactFromLibrary resolves by content fingerprint without a 
     assert.equal(readRes.ok, true);
     assert.equal(readRes.matchedBy, "contentFingerprint");
     assert.equal(readRes.artifact.identity.title, "Candy Cane Lane");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("listTrackLibrarySummaries returns readable shared track rows", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-analysis-library-list-"));
+  try {
+    const appRootPath = path.join(root, "xLightsDesigner");
+    const mediaPath = path.join(root, "Candy Cane Lane.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("shared-library-list-content"));
+
+    const artifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath),
+        durationMs: 120000
+      },
+      identity: {
+        title: "Candy Cane Lane",
+        artist: "Sia",
+        contentFingerprint: ""
+      },
+      timing: {
+        beats: [{ startMs: 0, endMs: 500, label: "1" }],
+        bars: [{ startMs: 0, endMs: 2000, label: "1" }]
+      },
+      lyrics: {
+        lines: [{ startMs: 1000, endMs: 2200, label: "Take a trip down Candy Cane Lane" }]
+      },
+      structure: {
+        sections: [{ startMs: 0, endMs: 120000, label: "Verse 1" }]
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "deep"
+        }
+      }
+    };
+
+    const writeRes = writeAnalysisArtifactToLibrary({
+      appRootPath,
+      mediaFilePath: mediaPath,
+      artifact
+    });
+    assert.equal(writeRes.ok, true);
+
+    const listRes = listTrackLibrarySummaries({ appRootPath });
+    assert.equal(listRes.ok, true);
+    assert.equal(listRes.tracks.length, 1);
+    assert.equal(listRes.tracks[0].displayName, "Candy Cane Lane - Sia");
+    assert.deepEqual(listRes.tracks[0].availableTimingNames, [
+      "XD: Song Structure",
+      "XD: Phrase Cues",
+      "XD: Beats",
+      "XD: Bars"
+    ]);
+    assert.equal(listRes.tracks[0].canonicalProfile, "deep");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("updateTrackLibraryRecordIdentity renames temp records to confirmed display identity", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-analysis-library-confirm-"));
+  try {
+    const appRootPath = path.join(root, "xLightsDesigner");
+    const mediaPath = path.join(root, "Unknown Track.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("shared-library-confirm-content"));
+
+    const artifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath)
+      },
+      identity: {
+        title: "",
+        artist: "",
+        contentFingerprint: ""
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "deep"
+        }
+      }
+    };
+
+    const writeRes = writeAnalysisArtifactToLibrary({
+      appRootPath,
+      mediaFilePath: mediaPath,
+      artifact
+    });
+    assert.equal(writeRes.ok, true);
+
+    const updateRes = updateTrackLibraryRecordIdentity({
+      appRootPath,
+      contentFingerprint: writeRes.contentFingerprint,
+      title: "Candy Cane Lane",
+      artist: "Sia"
+    });
+    assert.equal(updateRes.ok, true);
+    assert.match(path.basename(updateRes.recordPath), /^candy-cane-lane-sia(?:-[a-f0-9]{8})?\.json$/);
+
+    const listRes = listTrackLibrarySummaries({ appRootPath });
+    assert.equal(listRes.ok, true);
+    assert.equal(listRes.tracks[0].displayName, "Candy Cane Lane - Sia");
+    assert.equal(listRes.tracks[0].verificationStatus, "user_confirmed");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

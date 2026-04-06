@@ -25,21 +25,14 @@ function samplePipelineResult() {
       trackIdentity: {
         title: "Song",
         artist: "Artist"
-      },
-      summaryLines: [
-        "Song context: bright and uplifting",
-        "Tempo/time signature: 128 BPM / 4/4"
-      ]
+      }
     },
     raw: {
       bpm: 128,
       timeSignature: "4/4",
       beats: [{ startMs: 0, endMs: 500, label: "1" }],
       bars: [{ startMs: 0, endMs: 2000, label: "1" }],
-      sections: [
-        { startMs: 0, endMs: 10000, label: "Intro" },
-        { startMs: 10000, endMs: 30000, label: "Chorus 1" }
-      ],
+      sections: [{ startMs: 0, endMs: 10000, label: "Intro" }],
       meta: {
         sectionSource: "service+llm"
       }
@@ -53,6 +46,9 @@ function buildReadyFixture() {
     result: samplePipelineResult(),
     generatedAt: "2026-03-16T12:00:00.000Z"
   });
+  artifact.lyrics = {
+    lines: [{ startMs: 1000, endMs: 2200, label: "Line 1" }]
+  };
   const handoff = buildAnalysisHandoffFromArtifact(artifact, null);
   const state = {
     audioPathInput: "/tmp/media/Song.mp3",
@@ -68,125 +64,47 @@ function buildReadyFixture() {
       lastAnalyzedAt: artifact.provenance.generatedAt,
       artifact
     },
+    audioLibrary: {
+      batchFolder: "/tmp/library",
+      tracks: [
+        {
+          displayName: "Song - Artist",
+          title: "Song",
+          artist: "Artist",
+          contentFingerprint: "sha256:123",
+          verificationStatus: "present",
+          titlePresent: true,
+          artistPresent: true,
+          availableProfiles: ["deep"],
+          canonicalProfile: "deep",
+          availableTimingNames: [
+            "XD: Song Structure",
+            "XD: Phrase Cues",
+            "XD: Beats",
+            "XD: Bars"
+          ],
+          updatedAt: "2026-04-06T12:00:00.000Z",
+          recordPath: "/tmp/library/song-artist.json",
+          fileName: "song-artist.json"
+        }
+      ]
+    },
     ui: {
       agentThinking: false
     }
   };
-  return { state, artifact, handoff };
+  return { state, handoff };
 }
 
-test("audio dashboard state reports blocked when no track is selected", () => {
-  const dashboard = buildAudioDashboardState({
-    state: {
-      audioPathInput: "",
-      mediaCatalog: [],
-      audioAnalysis: {},
-      ui: { agentThinking: false }
-    },
-    analysisHandoff: null,
-    basenameOfPath
-  });
-
-  assert.equal(dashboard.page, "audio");
-  assert.equal(dashboard.status, "idle");
-  assert.equal(dashboard.readiness.ok, false);
-  assert.equal(dashboard.readiness.level, "blocked");
-  assert.match(dashboard.validationIssues[0].code, /no_audio_track_selected/);
-  assert.equal(dashboard.data.emptyState.title, "No Audio Track Selected");
-});
-
-test("audio dashboard state reports in-progress analysis deterministically", () => {
-  const dashboard = buildAudioDashboardState({
-    state: {
-      audioPathInput: "/tmp/media/Song.mp3",
-      mediaCatalog: [],
-      audioAnalysis: {
-        summary: "",
-        progress: {
-          stage: "timing",
-          message: "Analyzing timing with librosa.",
-          updatedAt: "2026-03-16T12:00:10.000Z"
-        }
-      },
-      ui: { agentThinking: true }
-    },
-    analysisHandoff: null,
-    basenameOfPath
-  });
-
-  assert.equal(dashboard.status, "in_progress");
-  assert.equal(dashboard.readiness.level, "pending");
-  assert.equal(dashboard.data.progress.active, true);
-  assert.equal(dashboard.data.progress.message, "Analyzing timing with librosa.");
-});
-
-test("audio dashboard state reports ready when persisted analysis and handoff are available", () => {
-  const { state, artifact, handoff } = buildReadyFixture();
-
-  const dashboard = buildAudioDashboardState({
-    state,
-    analysisHandoff: handoff,
-    basenameOfPath
-  });
-
-  assert.equal(dashboard.status, "ready");
-  assert.equal(dashboard.readiness.ok, true);
-  assert.equal(dashboard.refs.analysisArtifactId, artifact.artifactId);
-  assert.equal(dashboard.data.trackContext.title, "Song");
-  assert.equal(dashboard.data.structure.visibleSections.length, 2);
-  assert.equal(dashboard.data.cues.holdCue, "Intro");
-  assert.equal(dashboard.data.cues.firstLift, "Chorus 1");
-  assert.equal(dashboard.data.downstream.ready, true);
-});
-
-test("audio dashboard state keeps selected track visible when outside media directory", () => {
-  const dashboard = buildAudioDashboardState({
-    state: {
-      audioPathInput: "/tmp/external/LooseSong.mp3",
-      mediaCatalog: [
-        {
-          path: "/tmp/media/OtherSong.mp3",
-          relativePath: "OtherSong.mp3",
-          fileName: "OtherSong.mp3"
-        }
-      ],
-      audioAnalysis: {},
-      ui: { agentThinking: false }
-    },
-    analysisHandoff: null,
-    basenameOfPath
-  });
-
-  assert.equal(dashboard.data.options[0].path, "/tmp/external/LooseSong.mp3");
-  assert.match(dashboard.data.options[0].detail, /outside Media Directory/);
-  assert.equal(dashboard.data.options[0].selected, true);
-});
-
-test("audio dashboard state summarizes latest shared library review", () => {
+test("audio dashboard state exposes standalone workflow empty state", () => {
   const dashboard = buildAudioDashboardState({
     state: {
       audioPathInput: "",
       mediaCatalog: [],
       audioAnalysis: {},
       audioLibrary: {
-        batchFolder: "/tmp/audio",
-        lastReview: {
-          status: "ready",
-          folder: "/tmp/audio",
-          mode: "deep",
-          completedAt: "2026-04-06T12:00:00.000Z",
-          jsonPath: "/tmp/review.json",
-          htmlPath: "/tmp/review.html",
-          review: {
-            totalTracks: 40,
-            successfulTracks: 38,
-            failedTracks: 2,
-            topLevelIssueCounts: {
-              no_synced_lyrics: 12,
-              no_chords: 40
-            }
-          }
-        }
+        batchFolder: "",
+        tracks: []
       },
       ui: { agentThinking: false }
     },
@@ -194,8 +112,106 @@ test("audio dashboard state summarizes latest shared library review", () => {
     basenameOfPath
   });
 
-  assert.equal(dashboard.data.libraryReview.totalTracks, 40);
-  assert.equal(dashboard.data.libraryReview.successfulTracks, 38);
-  assert.equal(dashboard.data.libraryReview.issueRows[0].code, "no_chords");
-  assert.equal(dashboard.data.libraryReview.issueRows[0].count, 40);
+  assert.equal(dashboard.contract, "audio_dashboard_state_v2");
+  assert.equal(dashboard.page, "audio");
+  assert.equal(dashboard.actions.singleTrack.canAnalyze, false);
+  assert.equal(dashboard.library.rows.length, 0);
+  assert.equal(dashboard.emptyState.title, "No Audio Metadata Yet");
+});
+
+test("audio dashboard state exposes current result summary", () => {
+  const { state, handoff } = buildReadyFixture();
+  const dashboard = buildAudioDashboardState({
+    state,
+    analysisHandoff: handoff,
+    basenameOfPath
+  });
+
+  assert.equal(dashboard.currentResult.title, "Song");
+  assert.equal(dashboard.currentResult.subtitle, "Artist");
+  assert.equal(dashboard.currentResult.timingSummary.summaryText, "Song Structure, Phrase Cues, Beats, Bars");
+  assert.equal(dashboard.currentResult.bpmText, "128 BPM");
+});
+
+test("audio dashboard state uses selected library row as current result context", () => {
+  const { state, handoff } = buildReadyFixture();
+  state.ui.audioLibrarySelectedKey = "sha256:123";
+  const dashboard = buildAudioDashboardState({
+    state,
+    analysisHandoff: handoff,
+    basenameOfPath
+  });
+
+  assert.equal(dashboard.currentResult.title, "Song - Artist");
+  assert.equal(dashboard.currentResult.subtitle, "Artist");
+  assert.equal(dashboard.currentResult.summary, "Required timing layers are available.");
+  assert.equal(dashboard.currentResult.isRunning, false);
+});
+
+test("audio dashboard state does not mark terminal analysis progress as running", () => {
+  const { state, handoff } = buildReadyFixture();
+  state.audioAnalysis.progress = {
+    stage: "handoff_ready",
+    message: "Analysis finished."
+  };
+  state.ui.agentThinking = false;
+  const dashboard = buildAudioDashboardState({
+    state,
+    analysisHandoff: handoff,
+    basenameOfPath
+  });
+
+  assert.equal(dashboard.currentResult.isRunning, false);
+});
+
+test("audio dashboard state summarizes library rows for grid display", () => {
+  const { state, handoff } = buildReadyFixture();
+  const dashboard = buildAudioDashboardState({
+    state,
+    analysisHandoff: handoff,
+    basenameOfPath
+  });
+
+  assert.equal(dashboard.library.overview.total, 1);
+  assert.equal(dashboard.library.overview.complete, 1);
+  assert.equal(dashboard.library.rows[0].status, "Complete");
+  assert.equal(dashboard.library.rows[0].availableTimingsText, "Song Structure, Phrase Cues, Beats, Bars");
+  assert.equal(dashboard.library.rows[0].identityText, "Verified");
+});
+
+test("audio dashboard state flags temporary-name records for review", () => {
+  const dashboard = buildAudioDashboardState({
+    state: {
+      audioPathInput: "",
+      mediaCatalog: [],
+      audioAnalysis: {},
+      audioLibrary: {
+        batchFolder: "",
+        tracks: [
+          {
+            displayName: "track-a1b2c3d4",
+            title: "track-a1b2c3d4",
+            artist: "",
+            contentFingerprint: "abc",
+            verificationStatus: "unverified",
+            titlePresent: true,
+            artistPresent: false,
+            availableProfiles: ["deep"],
+            canonicalProfile: "deep",
+            availableTimingNames: ["XD: Song Structure", "XD: Beats", "XD: Bars"],
+            updatedAt: "2026-04-06T12:00:00.000Z",
+            recordPath: "/tmp/library/track-a1b2c3d4.json",
+            fileName: "track-a1b2c3d4.json"
+          }
+        ]
+      },
+      ui: { agentThinking: false }
+    },
+    analysisHandoff: null,
+    basenameOfPath
+  });
+
+  assert.equal(dashboard.library.rows[0].status, "Needs Review");
+  assert.equal(dashboard.library.rows[0].actionText, "Verify track info");
+  assert.equal(dashboard.library.rows[0].identityText, "Needs review");
 });

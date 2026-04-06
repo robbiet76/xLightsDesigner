@@ -2,10 +2,6 @@ function str(value = "") {
   return String(value || "").trim();
 }
 
-function escapeSectionLabel(section = {}) {
-  return str(section?.label || section?.name);
-}
-
 function toTimeText(value = "") {
   const raw = str(value);
   if (!raw) return "";
@@ -22,18 +18,6 @@ function toLastAnalyzedText(value = "") {
   return Number.isNaN(date.getTime())
     ? raw
     : date.toLocaleString([], { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-}
-
-function buildIssueCountRows(value = {}) {
-  const rows = value && typeof value === "object" ? Object.entries(value) : [];
-  return rows
-    .map(([code, count]) => ({
-      code: str(code),
-      count: Number(count) || 0
-    }))
-    .filter((row) => row.code && row.count > 0)
-    .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code))
-    .slice(0, 6);
 }
 
 function buildAudioOptions({ mediaCatalog = [], selectedAudioPath = "", basenameOfPath }) {
@@ -72,188 +56,264 @@ function buildAudioOptions({ mediaCatalog = [], selectedAudioPath = "", basename
   }));
 }
 
+function summarizeTimingAvailability(availableNames = []) {
+  const names = new Set((Array.isArray(availableNames) ? availableNames : []).map((row) => str(row)).filter(Boolean));
+  const required = [
+    "XD: Song Structure",
+    "XD: Phrase Cues",
+    "XD: Beats",
+    "XD: Bars"
+  ];
+  const optional = ["XD: Chords"];
+  const available = required.filter((name) => names.has(name));
+  const missing = required.filter((name) => !names.has(name));
+  const optionalAvailable = optional.filter((name) => names.has(name));
+  return {
+    available,
+    missing,
+    optionalAvailable,
+    summaryText: available.length ? available.map((name) => name.replace(/^XD:\s*/, "")).join(", ") : "None yet",
+    missingText: missing.length ? missing.map((name) => name.replace(/^XD:\s*/, "")).join(", ") : "None"
+  };
+}
+
+function isTempTrackName(title = "") {
+  return /^track-[a-f0-9]{8}$/i.test(str(title));
+}
+
+function classifyLibraryRow(row = {}) {
+  const timing = summarizeTimingAvailability(row.availableTimingNames);
+  const verificationStatus = str(row.verificationStatus || "unverified");
+  const tempName = isTempTrackName(row.title);
+  const needsIdentityReview = tempName || verificationStatus === "unverified" || !row.titlePresent || !row.artistPresent;
+  const hasProfiles = Array.isArray(row.availableProfiles) && row.availableProfiles.length > 0;
+
+  if (!hasProfiles) {
+    return {
+      status: "Failed",
+      reason: "Analysis record is missing a usable profile.",
+      action: "Re-run analysis",
+      timing
+    };
+  }
+  if (needsIdentityReview) {
+    return {
+      status: "Needs Review",
+      reason: "Track title and artist still need confirmation.",
+      actionKind: "verify_identity",
+      action: "Verify track info",
+      timing
+    };
+  }
+  if (timing.missing.length) {
+    const missingPhraseOnly = timing.missing.length === 1 && timing.missing[0] === "XD: Phrase Cues";
+    return {
+      status: "Partial",
+      reason: `Missing ${timing.missingText}.`,
+      actionKind: missingPhraseOnly ? "none" : "review_details",
+      action: missingPhraseOnly ? "No action needed" : "Review details",
+      timing
+    };
+  }
+  return {
+    status: "Complete",
+    reason: "Required timing layers are available.",
+    actionKind: "none",
+    action: "",
+    timing
+  };
+}
+
+function isActiveAnalysisProgress(state = {}) {
+  const stage = str(state.audioAnalysis?.progress?.stage);
+  if (!stage) return false;
+  if (["artifact_reused", "handoff_ready", "failed"].includes(stage)) return false;
+  return Boolean(state.ui?.agentThinking);
+}
+
+function buildCurrentResultFromLibraryRow(row = {}) {
+  const timingSummary = summarizeTimingAvailability(row.availableTimingNames);
+  return {
+    hasTrack: true,
+    title: str(row.displayName || row.title || "Selected track"),
+    subtitle: str(row.artist || row.fileName || ""),
+    summary: str(row.detail?.reason || "Shared track metadata is available."),
+    isRunning: false,
+    progressMessage: "",
+    lastAnalyzedLabel: toLastAnalyzedText(row.updatedAt),
+    timingSummary,
+    bpmText: str(row.bpmText),
+    meterText: str(row.meterText),
+    selectedAudioPath: ""
+  };
+}
+
+function buildCurrentResult({ state = {}, analysis = {}, basenameOfPath, selectedLibraryRow = null }) {
+  if (selectedLibraryRow) {
+    return buildCurrentResultFromLibraryRow(selectedLibraryRow);
+  }
+  const selectedAudioPath = str(state.audioPathInput);
+  const identity = analysis?.trackIdentity && typeof analysis.trackIdentity === "object" ? analysis.trackIdentity : {};
+  const artifact = state.audioAnalysis?.artifact && typeof state.audioAnalysis.artifact === "object" ? state.audioAnalysis.artifact : {};
+  const timing = artifact?.timing && typeof artifact.timing === "object" ? artifact.timing : (analysis?.timing && typeof analysis.timing === "object" ? analysis.timing : {});
+  const structure = artifact?.structure && typeof artifact.structure === "object" ? artifact.structure : (analysis?.structure && typeof analysis.structure === "object" ? analysis.structure : {});
+  const lyrics = artifact?.lyrics && typeof artifact.lyrics === "object" ? artifact.lyrics : (analysis?.lyrics && typeof analysis.lyrics === "object" ? analysis.lyrics : {});
+  const title = str(identity?.title || basenameOfPath(selectedAudioPath) || "No track selected");
+  const artist = str(identity?.artist);
+  const availableTimingNames = [];
+  if (Array.isArray(structure?.sections) && structure.sections.length) availableTimingNames.push("XD: Song Structure");
+  if (Array.isArray(lyrics?.lines) && lyrics.lines.length) availableTimingNames.push("XD: Phrase Cues");
+  if (Array.isArray(timing?.beats) && timing.beats.length) availableTimingNames.push("XD: Beats");
+  if (Array.isArray(timing?.bars) && timing.bars.length) availableTimingNames.push("XD: Bars");
+  const timingSummary = summarizeTimingAvailability(availableTimingNames);
+  const isRunning = isActiveAnalysisProgress(state) && Boolean(selectedAudioPath);
+  return {
+    hasTrack: Boolean(selectedAudioPath),
+    title,
+    subtitle: artist || selectedAudioPath || "Choose a track or folder to begin.",
+    summary: str(state.audioAnalysis?.summary || "No analysis has been run for the current track yet."),
+    isRunning,
+    progressMessage: str(
+      state.audioAnalysis?.progress?.message ||
+      (isRunning ? "Audio analysis is in progress." : "")
+    ),
+    lastAnalyzedLabel: toLastAnalyzedText(state.audioAnalysis?.lastAnalyzedAt),
+    timingSummary,
+    bpmText: timing?.bpm != null ? `${timing.bpm} BPM` : "",
+    meterText: str(timing?.timeSignature),
+    selectedAudioPath
+  };
+}
+
+function buildLibraryGridRows(tracks = [], selectedKey = "") {
+  return (Array.isArray(tracks) ? tracks : []).map((row) => {
+    const status = classifyLibraryRow(row);
+    const key = str(row.contentFingerprint || row.recordPath || row.fileName);
+    return {
+      key,
+      selected: selectedKey ? key === selectedKey : false,
+      title: str(row.title),
+      displayName: str(row.displayName || row.title || row.fileName),
+      artist: str(row.artist),
+      fileName: str(row.fileName),
+      updatedAt: str(row.updatedAt),
+      status: status.status,
+      actionKind: str(status.actionKind || "none"),
+      availableTimingsText: status.timing.summaryText,
+      missingIssuesText: status.reason,
+      identityText: status.status === "Needs Review" ? "Needs review" : "Verified",
+      lastAnalyzedLabel: toLastAnalyzedText(row.updatedAt),
+      actionText: str(status.action || "None"),
+      detail: {
+        key,
+        actionKind: str(status.actionKind || "none"),
+        actionText: str(status.action || "None"),
+        reason: status.reason,
+        availableProfiles: Array.isArray(row.availableProfiles) ? row.availableProfiles : [],
+        timing: status.timing,
+        fileName: str(row.fileName),
+        verificationStatus: str(row.verificationStatus),
+        recordPath: str(row.recordPath),
+        sourceMediaPath: str(row.sourceMediaPath),
+        suggestedTitle: str(row.suggestedTitle),
+        suggestedArtist: str(row.suggestedArtist),
+        embeddedTitle: str(row.embeddedTitle),
+        embeddedArtist: str(row.embeddedArtist),
+        recommendedFileName: str(row.recommendedFileName),
+        shouldRename: row.shouldRename === true,
+        shouldRetag: row.shouldRetag === true
+      }
+    };
+  });
+}
+
+function buildLibraryOverview(rows = []) {
+  const total = rows.length;
+  const counts = { Complete: 0, Partial: 0, "Needs Review": 0, Failed: 0 };
+  for (const row of rows) {
+    counts[row.status] = Number(counts[row.status] || 0) + 1;
+  }
+  return {
+    total,
+    complete: counts.Complete,
+    partial: counts.Partial,
+    needsReview: counts["Needs Review"],
+    failed: counts.Failed
+  };
+}
+
+function resolveSelectedDetail(rows = [], selectedKey = "") {
+  if (!rows.length) return null;
+  const explicit = selectedKey ? rows.find((row) => row.key === selectedKey) : null;
+  return (explicit || rows[0])?.detail || null;
+}
+
+function resolveSelectedLibraryRow(rows = [], selectedKey = "") {
+  if (!rows.length) return null;
+  return selectedKey ? rows.find((row) => row.key === selectedKey) || null : null;
+}
+
 export function buildAudioDashboardState({
   state = {},
   analysisHandoff = null,
   basenameOfPath = (value) => value
 } = {}) {
   const selectedAudioPath = str(state.audioPathInput);
-  const hasTrack = Boolean(selectedAudioPath);
   const mediaCatalog = Array.isArray(state.mediaCatalog) ? state.mediaCatalog : [];
   const analysis = analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : {};
-  const identity = analysis?.trackIdentity && typeof analysis.trackIdentity === "object" ? analysis.trackIdentity : {};
-  const timing = analysis?.timing && typeof analysis.timing === "object" ? analysis.timing : {};
-  const structure = analysis?.structure && typeof analysis.structure === "object" ? analysis.structure : {};
-  const chords = analysis?.chords && typeof analysis.chords === "object" ? analysis.chords : {};
-  const briefSeed = analysis?.briefSeed && typeof analysis.briefSeed === "object" ? analysis.briefSeed : {};
-  const evidence = analysis?.evidence && typeof analysis.evidence === "object" ? analysis.evidence : {};
-  const sections = Array.isArray(structure?.sections) ? structure.sections : [];
-  const sectionLabels = sections.map(escapeSectionLabel).filter(Boolean);
-  const visibleSections = sectionLabels.slice(0, 8);
-  const firstLift = sectionLabels.find((label) => /chorus|bridge|hook/i.test(label)) || "";
-  const holdCue = sectionLabels.find((label) => /intro|verse/i.test(label)) || "";
-  const structureReady = sections.length > 0;
-  const timingReady = timing?.bpm != null || Boolean(timing?.beatsArtifact) || Boolean(timing?.barsArtifact);
-  const downstreamReady = structureReady && timingReady;
-  const progress = state.audioAnalysis?.progress && typeof state.audioAnalysis.progress === "object"
-    ? state.audioAnalysis.progress
-    : null;
-  const isInProgress = Boolean(progress?.stage) || Boolean(state.ui?.agentThinking && hasTrack);
-  const progressMessage = str(
-    progress?.message ||
-    (isInProgress ? "Audio analysis is in progress." : "Idle. Select a track and run analysis.")
-  );
-  const summary = str(state.audioAnalysis?.summary || "Lyric's song understanding will appear here once analysis runs.");
-
-  const readinessReasons = [];
-  if (!hasTrack) readinessReasons.push("no_audio_track_selected");
-  if (hasTrack && !structureReady) readinessReasons.push("sections_unavailable");
-  if (hasTrack && !timingReady) readinessReasons.push("timing_unavailable");
-
-  const validationIssues = [];
-  if (!hasTrack) {
-    validationIssues.push({
-      code: "no_audio_track_selected",
-      severity: "info",
-      message: "No audio track is selected."
-    });
-  }
-  if (hasTrack && !structureReady && !isInProgress) {
-    validationIssues.push({
-      code: "sections_unavailable",
-      severity: "warning",
-      message: "Main song sections are not available yet."
-    });
-  }
-  if (hasTrack && !timingReady && !isInProgress) {
-    validationIssues.push({
-      code: "timing_unavailable",
-      severity: "warning",
-      message: "Timing context is not available yet."
-    });
-  }
-
-  let status = "idle";
-  let readinessLevel = "idle";
-  if (!hasTrack) {
-    status = "idle";
-    readinessLevel = "blocked";
-  } else if (isInProgress) {
-    status = "in_progress";
-    readinessLevel = "pending";
-  } else if (downstreamReady) {
-    status = "ready";
-    readinessLevel = "ready";
-  } else {
-    status = "partial";
-    readinessLevel = "partial";
-  }
-
-  const warnings = [];
-  if (hasTrack && !downstreamReady && !isInProgress) {
-    warnings.push("Analysis is still partial. Downstream work may rely on assumptions.");
-  }
-
-  const selectedCatalogItem = mediaCatalog.find((row) => str(row?.path) === selectedAudioPath) || null;
-  const artifact = state.audioAnalysis?.artifact && typeof state.audioAnalysis.artifact === "object"
-    ? state.audioAnalysis.artifact
-    : null;
+  const options = buildAudioOptions({ mediaCatalog, selectedAudioPath, basenameOfPath });
   const audioLibrary = state.audioLibrary && typeof state.audioLibrary === "object" ? state.audioLibrary : {};
-  const lastReview = audioLibrary.lastReview && typeof audioLibrary.lastReview === "object" ? audioLibrary.lastReview : null;
-  const review = lastReview?.review && typeof lastReview.review === "object" ? lastReview.review : null;
-  const batchFolder = str(audioLibrary.batchFolder || "");
-  const issueRows = buildIssueCountRows(review?.topLevelIssueCounts);
-  const reportStatus = str(lastReview?.status || "");
+  const selectedKey = str(state.ui?.audioLibrarySelectedKey);
+  const rows = buildLibraryGridRows(audioLibrary.tracks, selectedKey);
+  const selectedRow = resolveSelectedLibraryRow(rows, selectedKey);
+  const currentResult = buildCurrentResult({ state, analysis, basenameOfPath, selectedLibraryRow: selectedRow });
+  const libraryOverview = buildLibraryOverview(rows);
+  const detail = resolveSelectedDetail(rows, selectedKey);
 
   return {
-    contract: "audio_dashboard_state_v1",
-    version: "1.0",
+    contract: "audio_dashboard_state_v2",
+    version: "2.0",
     page: "audio",
     title: "Audio",
-    summary,
-    status,
-    readiness: {
-      ok: downstreamReady,
-      level: readinessLevel,
-      reasons: readinessReasons
+    header: {
+      title: "Audio Analysis",
+      summary: "Analyze tracks into the shared library, inspect current metadata quality, and confirm which timing layers are ready."
     },
-    warnings,
-    validationIssues,
+    actions: {
+      singleTrack: {
+        selectedAudioPath,
+        options,
+        canAnalyze: Boolean(selectedAudioPath)
+      },
+      batch: {
+        batchFolder: str(audioLibrary.batchFolder),
+        recursive: audioLibrary.recursive !== false,
+        isRunning: str(audioLibrary?.lastReview?.status) === "running"
+      }
+    },
+    currentResult,
+    library: {
+      loadError: str(audioLibrary.loadError),
+      lastLoadedLabel: toLastAnalyzedText(audioLibrary.lastLoadedAt),
+      overview: libraryOverview,
+      rows
+    },
+    detail,
+    emptyState: !selectedAudioPath && rows.length === 0
+      ? {
+          title: "No Audio Metadata Yet",
+          summary: "Analyze one track or a folder to start building the shared track library. This workflow is independent of xLights."
+        }
+      : null,
+    latestBatchReview: {
+      status: str(audioLibrary?.lastReview?.status),
+      completedLabel: toLastAnalyzedText(audioLibrary?.lastReview?.completedAt || audioLibrary?.lastReview?.startedAt),
+      totalTracks: Number(audioLibrary?.lastReview?.review?.totalTracks || 0),
+      successfulTracks: Number(audioLibrary?.lastReview?.review?.successfulTracks || 0),
+      failedTracks: Number(audioLibrary?.lastReview?.review?.failedTracks || 0)
+    },
     refs: {
-      analysisArtifactId: str(artifact?.artifactId || null),
-      mediaId: str(artifact?.media?.mediaId || null),
       selectedAudioPath: selectedAudioPath || null
-    },
-    data: {
-      hasTrack,
-      selectedAudioPath,
-      selectedTrack: {
-        title: str(identity?.title || basenameOfPath(selectedAudioPath) || "No media loaded"),
-        subtitle: str(identity?.artist || selectedCatalogItem?.relativePath || selectedAudioPath || "Choose an audio file to begin analysis."),
-        lastAnalyzedAt: str(state.audioAnalysis?.lastAnalyzedAt),
-        lastAnalyzedLabel: toLastAnalyzedText(state.audioAnalysis?.lastAnalyzedAt)
-      },
-      chips: {
-        bpm: timing?.bpm != null ? `${timing.bpm} BPM` : "BPM pending",
-        timeSignature: str(timing?.timeSignature || "meter pending"),
-        sectionsCount: sections.length,
-        chordsReady: Boolean(chords?.hasChords)
-      },
-      progress: {
-        active: isInProgress,
-        stage: str(progress?.stage),
-        message: progressMessage,
-        updatedAt: str(progress?.updatedAt),
-        updatedLabel: toTimeText(progress?.updatedAt)
-      },
-      options: buildAudioOptions({ mediaCatalog, selectedAudioPath, basenameOfPath }),
-      batchFolder,
-      trackContext: {
-        title: str(identity?.title || basenameOfPath(selectedAudioPath) || "No audio track attached"),
-        subtitle: str(identity?.artist || selectedCatalogItem?.relativePath || selectedAudioPath || "Choose an audio file to begin analysis."),
-        lastAnalyzedLabel: toLastAnalyzedText(state.audioAnalysis?.lastAnalyzedAt)
-      },
-      analysisSummary: {
-        summary,
-        tone: str(briefSeed?.tone || evidence?.serviceSummary || "No high-level music framing captured yet.")
-      },
-      structure: {
-        visibleSections,
-        source: str(structure?.source || "pending"),
-        confidence: str(structure?.confidence || "low"),
-        ready: structureReady
-      },
-      cues: {
-        holdCue: holdCue || "",
-        firstLift: firstLift || "",
-        validationSummary: str(evidence?.webValidationSummary || "No additional music cue validation yet.")
-      },
-      downstream: {
-        ready: downstreamReady,
-        summary: downstreamReady
-          ? "Analysis is ready for Mira and Patch to use."
-          : "Analysis is still partial. Downstream work may rely on assumptions.",
-        structureReady,
-        timingReady
-      },
-      libraryReview: {
-        status: reportStatus || "idle",
-        folder: str(lastReview?.folder || batchFolder),
-        mode: str(lastReview?.mode || ""),
-        completedLabel: toLastAnalyzedText(lastReview?.completedAt || lastReview?.startedAt),
-        totalTracks: Number(review?.totalTracks || 0),
-        successfulTracks: Number(review?.successfulTracks || 0),
-        failedTracks: Number(review?.failedTracks || 0),
-        jsonPath: str(lastReview?.jsonPath || ""),
-        htmlPath: str(lastReview?.htmlPath || ""),
-        issueRows
-      },
-      emptyState: hasTrack
-        ? null
-        : {
-            title: "No Audio Track Selected",
-            summary: "Choose a single audio file for analysis or run folder analysis into the shared track library. This workspace does not depend on xLights."
-          }
     }
   };
 }

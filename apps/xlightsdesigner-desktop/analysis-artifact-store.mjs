@@ -281,6 +281,158 @@ function readTrackRecord(recordPath = "") {
   }
 }
 
+function readTrackRecordStat(recordPath = "") {
+  try {
+    return fs.statSync(recordPath);
+  } catch {
+    return null;
+  }
+}
+
+function buildTrackLibrarySummary(recordPath = "", record = null) {
+  const track = record?.track && typeof record.track === "object" ? record.track : {};
+  const identity = track?.identity && typeof track.identity === "object" ? track.identity : {};
+  const verification = track?.verification && typeof track.verification === "object" ? track.verification : {};
+  const analysis = record?.analysis && typeof record.analysis === "object" ? record.analysis : {};
+  const timingTracks = Array.isArray(record?.timingTracks) ? record.timingTracks : [];
+  const sourceMetadata = track?.sourceMetadata && typeof track.sourceMetadata === "object" ? track.sourceMetadata : {};
+  const providerSuggestion = track?.providerSuggestion && typeof track.providerSuggestion === "object" ? track.providerSuggestion : {};
+  const naming = track?.naming && typeof track.naming === "object" ? track.naming : {};
+  const sourceMedia = track?.sourceMedia && typeof track.sourceMedia === "object" ? track.sourceMedia : {};
+  const timingNames = timingTracks
+    .map((row) => str(row?.name))
+    .filter(Boolean);
+  const stat = readTrackRecordStat(recordPath);
+  return {
+    recordPath,
+    fileName: path.basename(recordPath),
+    title: str(track?.title),
+    artist: str(track?.artist),
+    displayName: str(track?.displayName || [track?.title, track?.artist].filter(Boolean).join(" - ") || path.basename(recordPath, ".json")),
+    contentFingerprint: str(identity?.contentFingerprint),
+    verificationStatus: str(verification?.status || "unverified"),
+    titlePresent: Boolean(verification?.titlePresent || track?.title),
+    artistPresent: Boolean(verification?.artistPresent || track?.artist),
+    availableProfiles: Array.isArray(analysis?.availableProfiles) ? analysis.availableProfiles.map((row) => str(row)).filter(Boolean) : [],
+    canonicalProfile: str(analysis?.canonicalProfile),
+    availableTimingNames: timingNames,
+    sourceMediaPath: str(sourceMedia?.path),
+    suggestedTitle: str(providerSuggestion?.title || track?.title),
+    suggestedArtist: str(providerSuggestion?.artist || track?.artist),
+    embeddedTitle: str(sourceMetadata?.embeddedTitle),
+    embeddedArtist: str(sourceMetadata?.embeddedArtist),
+    recommendedFileName: str(naming?.recommendedFileName),
+    shouldRename: naming?.shouldRename === true,
+    shouldRetag: naming?.shouldRetag === true,
+    updatedAt: stat?.mtime ? new Date(stat.mtime).toISOString() : "",
+    sizeBytes: Number(stat?.size || 0)
+  };
+}
+
+export function listTrackLibrarySummaries({ appRootPath = "" } = {}) {
+  const libraryDir = getTrackLibraryDirFromAppRoot(appRootPath);
+  if (!libraryDir || !fs.existsSync(libraryDir)) {
+    return {
+      ok: true,
+      appRootPath: resolveAppRoot(appRootPath),
+      libraryDir,
+      tracks: []
+    };
+  }
+  let entries = [];
+  try {
+    entries = fs.readdirSync(libraryDir, { withFileTypes: true });
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+  const tracks = entries
+    .filter((entry) => entry.isFile() && String(entry.name || "").toLowerCase().endsWith(".json"))
+    .map((entry) => {
+      const recordPath = path.join(libraryDir, entry.name);
+      const record = readTrackRecord(recordPath);
+      if (!record) return null;
+      return buildTrackLibrarySummary(recordPath, record);
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      const nameCompare = String(a.displayName || "").localeCompare(String(b.displayName || ""));
+      if (nameCompare !== 0) return nameCompare;
+      return String(a.fileName || "").localeCompare(String(b.fileName || ""));
+    });
+  return {
+    ok: true,
+    appRootPath: resolveAppRoot(appRootPath),
+    libraryDir,
+    tracks
+  };
+}
+
+export function updateTrackLibraryRecordIdentity({
+  appRootPath = "",
+  contentFingerprint = "",
+  title = "",
+  artist = ""
+} = {}) {
+  const libraryDir = getTrackLibraryDirFromAppRoot(appRootPath);
+  const fingerprint = str(contentFingerprint).toLowerCase();
+  if (!libraryDir || !fingerprint) return { ok: false, error: "Missing library root or content fingerprint" };
+  const match = findTrackRecordByContentFingerprintInLibrary(libraryDir, fingerprint);
+  if (!match?.recordPath || !match?.record) return { ok: false, error: "Track record not found" };
+
+  const nextTitle = str(title);
+  const nextArtist = str(artist);
+  if (!nextTitle || !nextArtist) return { ok: false, error: "Missing title or artist" };
+
+  const record = match.record;
+  record.track = record.track && typeof record.track === "object" ? record.track : {};
+  record.track.title = nextTitle;
+  record.track.artist = nextArtist;
+  record.track.displayName = [nextTitle, nextArtist].filter(Boolean).join(" - ");
+  record.track.verification = {
+    ...(record.track.verification && typeof record.track.verification === "object" ? record.track.verification : {}),
+    status: "user_confirmed",
+    basis: Array.from(new Set([
+      ...((Array.isArray(record.track?.verification?.basis) ? record.track.verification.basis : []).map((row) => str(row)).filter(Boolean)),
+      "user-confirmed"
+    ])),
+    titlePresent: true,
+    artistPresent: true
+  };
+  record.track.naming = {
+    ...(record.track.naming && typeof record.track.naming === "object" ? record.track.naming : {}),
+    shouldRename: false,
+    shouldRetag: false
+  };
+  if (record.track.sourceMetadata && typeof record.track.sourceMetadata === "object") {
+    record.track.sourceMetadata.embeddedTitle = nextTitle;
+    record.track.sourceMetadata.embeddedArtist = nextArtist;
+  }
+
+  const { recordPath } = findRecordPathForWriteInLibrary({
+    libraryDir,
+    mediaFilePath: str(record.track?.sourceMedia?.path),
+    artifact: {
+      identity: {
+        title: nextTitle,
+        artist: nextArtist,
+        contentFingerprint: fingerprint
+      }
+    },
+    contentFingerprint: fingerprint
+  });
+  const nextRecordPath = recordPath || match.recordPath;
+  fs.writeFileSync(nextRecordPath, JSON.stringify(record, null, 2), "utf8");
+  if (nextRecordPath !== match.recordPath) {
+    fs.rmSync(match.recordPath, { force: true });
+  }
+  return {
+    ok: true,
+    recordPath: nextRecordPath,
+    previousRecordPath: match.recordPath,
+    trackRecord: record
+  };
+}
+
 function findTrackRecordByContentFingerprint(projectFilePath = "", contentFingerprint = "") {
   const libraryDir = getTrackLibraryDir(projectFilePath);
   return findTrackRecordByContentFingerprintInLibrary(libraryDir, contentFingerprint);

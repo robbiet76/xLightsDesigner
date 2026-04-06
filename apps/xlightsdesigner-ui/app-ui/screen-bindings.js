@@ -1,3 +1,18 @@
+function preserveViewport(app, render) {
+  const winY = typeof window !== "undefined" ? window.scrollY : 0;
+  const winX = typeof window !== "undefined" ? window.scrollX : 0;
+  const content = app.querySelector(".content");
+  const contentTop = content ? content.scrollTop : 0;
+  render();
+  if (typeof window !== "undefined") {
+    window.requestAnimationFrame(() => {
+      window.scrollTo(winX, winY);
+      const nextContent = app.querySelector(".content");
+      if (nextContent) nextContent.scrollTop = contentTop;
+    });
+  }
+}
+
 export function bindScreenEvents({
   app,
   state,
@@ -81,7 +96,8 @@ export function bindScreenEvents({
   onSelectHistoryEntry,
   onInspectArtifact,
   onCloseArtifactDetail,
-  onAcceptTimingTrackReview
+  onAcceptTimingTrackReview,
+  onConfirmSelectedAudioLibraryTrackInfo
 } = {}) {
   const saveProjectBtn = app.querySelector("#save-project");
   if (saveProjectBtn) saveProjectBtn.addEventListener("click", onSaveProjectSettings);
@@ -220,6 +236,45 @@ export function bindScreenEvents({
       };
       persist();
       render();
+    });
+  }
+
+  const audioBatchRecursiveInput = app.querySelector("#audio-batch-recursive");
+  if (audioBatchRecursiveInput) {
+    audioBatchRecursiveInput.addEventListener("change", () => {
+      state.audioLibrary = {
+        ...(state.audioLibrary || {}),
+        recursive: Boolean(audioBatchRecursiveInput.checked)
+      };
+      persist();
+      render();
+    });
+  }
+
+  app.querySelectorAll("[data-audio-library-row]").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.ui.audioLibrarySelectedKey = String(row.dataset.audioLibraryRow || "").trim();
+      persist();
+      preserveViewport(app, render);
+    });
+  });
+
+  app.querySelectorAll("[data-audio-library-action='verify_identity']").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const key = String(btn.dataset.audioLibraryRowActionKey || "").trim();
+      if (key) {
+        state.ui.audioLibrarySelectedKey = key;
+        persist();
+      }
+      void onConfirmSelectedAudioLibraryTrackInfo?.();
+    });
+  });
+
+  const confirmAudioLibraryTrackInfoBtn = app.querySelector("#confirm-audio-library-track-info");
+  if (confirmAudioLibraryTrackInfoBtn) {
+    confirmAudioLibraryTrackInfoBtn.addEventListener("click", () => {
+      void onConfirmSelectedAudioLibraryTrackInfo?.();
     });
   }
 

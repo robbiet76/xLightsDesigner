@@ -25,6 +25,7 @@ function parseArgs(argv = []) {
     appRoot: DEFAULT_APP_ROOT,
     outDir: path.join(ROOT, 'var', 'audio-analysis-review', `run-${new Date().toISOString().replace(/[:.]/g, '-')}`),
     mode: 'deep',
+    recursive: false,
     limit: 0,
     include: []
   };
@@ -40,6 +41,8 @@ function parseArgs(argv = []) {
       const mode = str(argv[++i] || out.mode).toLowerCase();
       if (!['fast', 'deep', 'smart'].includes(mode)) throw new Error(`Unsupported mode: ${mode}`);
       out.mode = mode;
+    } else if (token === '--recursive') {
+      out.recursive = true;
     } else if (token === '--limit') {
       out.limit = Math.max(0, Number(argv[++i] || 0) || 0);
     } else if (token === '--include') {
@@ -51,14 +54,24 @@ function parseArgs(argv = []) {
   return out;
 }
 
-function listAudioFiles(folder = '', includes = []) {
-  const entries = fs.readdirSync(folder, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && AUDIO_EXTS.has(path.extname(entry.name).toLowerCase()))
-    .map((entry) => path.join(folder, entry.name))
-    .sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
-  if (!includes.length) return entries;
+function listAudioFiles(folder = '', includes = [], recursive = false) {
+  const entries = fs.readdirSync(folder, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const fullPath = path.join(folder, entry.name);
+    if (entry.isFile() && AUDIO_EXTS.has(path.extname(entry.name).toLowerCase())) {
+      files.push(fullPath);
+      continue;
+    }
+    if (recursive && entry.isDirectory()) {
+      files.push(...listAudioFiles(fullPath, [], true));
+    }
+  }
+  files.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
+  const entriesFiltered = files;
+  if (!includes.length) return entriesFiltered;
   const needles = includes.map((row) => row.toLowerCase());
-  return entries.filter((filePath) => needles.some((needle) => path.basename(filePath).toLowerCase().includes(needle)));
+  return entriesFiltered.filter((filePath) => needles.some((needle) => path.basename(filePath).toLowerCase().includes(needle)));
 }
 
 function selectPython() {
@@ -302,7 +315,7 @@ function main() {
   const options = parseArgs(process.argv.slice(2));
   fs.mkdirSync(options.outDir, { recursive: true });
   fs.mkdirSync(path.join(options.appRoot, 'library', 'tracks'), { recursive: true });
-  let files = listAudioFiles(options.folder, options.include);
+  let files = listAudioFiles(options.folder, options.include, options.recursive);
   if (options.limit > 0) files = files.slice(0, options.limit);
   const results = [];
   let lastPaths = { jsonPath: '', htmlPath: '' };

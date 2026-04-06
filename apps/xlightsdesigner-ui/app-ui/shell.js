@@ -173,7 +173,7 @@ export function buildAppShell({ state, screenContent, helpers }) {
 
         <div class="main-shell">
           <header class="header">
-            <div class="header-sequence"><strong>${state.activeSequence || "No Sequence Open"}</strong></div>
+            <div class="header-sequence"><strong>${state.projectName || "xLightsDesigner"}</strong></div>
             <div class="header-badges">
               <div class="header-badge">xLights: ${state.flags.xlightsConnected ? "Connected" : "Disconnected"}</div>
               <div class="header-badge">${analysisHeaderBadge}</div>

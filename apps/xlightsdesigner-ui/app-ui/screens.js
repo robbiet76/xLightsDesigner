@@ -593,113 +593,204 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
 
   function renderAudioLiveDashboardCard() {
     const dashboard = pageStates?.audio || {};
-    const data = dashboard?.data || {};
-    const options = Array.isArray(data.options) ? data.options : [];
-    const chips = data.chips || {};
-    const progress = data.progress || {};
-    const trackContext = data.trackContext || {};
-    const analysisSummary = data.analysisSummary || {};
-    const structure = data.structure || {};
-    const cues = data.cues || {};
-    const downstream = data.downstream || {};
-    const libraryReview = data.libraryReview || {};
+    const header = dashboard?.header || {};
+    const actions = dashboard?.actions || {};
+    const singleTrack = actions?.singleTrack || {};
+    const batch = actions?.batch || {};
+    const options = Array.isArray(singleTrack.options) ? singleTrack.options : [];
+    const currentResult = dashboard?.currentResult || {};
+    const library = dashboard?.library || {};
+    const overview = library?.overview || {};
+    const rows = Array.isArray(library?.rows) ? library.rows : [];
+    const detail = dashboard?.detail || null;
+    const latestBatchReview = dashboard?.latestBatchReview || {};
+    const statusClass = String(currentResult?.isRunning ? "pending" : currentResult?.hasTrack ? "ready" : "idle").trim();
+
+    function renderStatusBadge(status) {
+      const label = String(status || "Unknown").trim() || "Unknown";
+      const tone = label === "Complete" || label === "Ready"
+        ? "ready"
+        : label === "Needs Review"
+          ? "warning"
+        : label === "Failed"
+            ? "danger"
+            : label === "Selected"
+              ? "neutral"
+              : "pending";
+      return `<span class="status-chip status-chip-${tone}">${escapeHtml(label)}</span>`;
+    }
+
     return `
-      <section class="card full-span designer-dashboard-card audio-dashboard-card">
-        <div class="artifact-kicker">Lyric Live Dashboard</div>
-        <h3>${escapeHtml(String(dashboard?.summary || "Lyric's song understanding will appear here once analysis runs."))}</h3>
-        <div class="artifact-chip-row">
-          <span class="artifact-chip artifact-chip-accent">${escapeHtml(String(trackContext.title || "No media loaded"))}</span>
-          <span class="artifact-chip">${escapeHtml(String(chips.bpm || "BPM pending"))}</span>
-          <span class="artifact-chip">${escapeHtml(String(chips.timeSignature || "meter pending"))}</span>
-          <span class="artifact-chip">${escapeHtml(String(chips.sectionsCount || 0))} sections</span>
-          <span class="artifact-chip">${chips.chordsReady ? "chords ready" : "chords pending"}</span>
-        </div>
-        <div class="banner">
-          ${escapeHtml(String(progress.message || "Idle. Select a track and run analysis."))}
-          ${progress.updatedLabel ? ` Updated ${escapeHtml(String(progress.updatedLabel))}.` : ""}
-        </div>
-        <div class="field">
-          <label>Audio File</label>
-          <div class="row">
-            <input id="audio-path-input" value="${escapeHtml(String(data.selectedAudioPath || ""))}" placeholder="Choose a single audio file for analysis" />
-            <button id="browse-audio-file">Browse...</button>
+      <section class="card full-span audio-page-shell">
+        <div class="audio-page-header">
+          <div>
+            <div class="artifact-kicker">Standalone Workflow</div>
+            <h3>${escapeHtml(String(header.title || "Audio Analysis"))}</h3>
+            <p class="artifact-body">${escapeHtml(String(header.summary || ""))}</p>
           </div>
         </div>
-        <div class="row">
-          <select id="audio-track-select">
-            ${
-              options.length
-                ? options.map((row) => {
-                    const path = String(row?.path || "").trim();
-                    const detail = String(row?.detail || "").trim();
-                    const label = String(row?.label || detail || path).trim();
-                    return `<option value="${escapeHtml(path)}" ${row?.selected ? "selected" : ""}>${escapeHtml(label)} - ${escapeHtml(detail || label)}</option>`;
-                  }).join("")
-                : `<option value="">No media files found in Media Directory</option>`
-            }
-          </select>
-          <button id="analyze-audio" ${data.hasTrack ? "" : "disabled"}>Analyze Audio</button>
-        </div>
-        <div class="field">
-          <label>Audio Folder</label>
-          <div class="row">
-            <input id="audio-batch-folder-input" value="${escapeHtml(String(data.batchFolder || ""))}" placeholder="Choose a folder to batch analyze into the shared track library" />
-            <button id="browse-audio-batch-folder">Browse...</button>
-            <button id="analyze-audio-folder" ${libraryReview.status === "running" ? "disabled" : ""}>Analyze Folder</button>
-          </div>
-        </div>
-        <div class="dashboard-grid">
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Track Context</div>
-            <p>${escapeHtml(String(trackContext.title || "No audio track attached"))}</p>
-            <p>${escapeHtml(String(trackContext.subtitle || "Choose an audio file to begin analysis."))}</p>
-            <p>Last analyzed: ${escapeHtml(String(trackContext.lastAnalyzedLabel || "never"))}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Analysis Summary</div>
-            <p>${escapeHtml(String(analysisSummary.summary || "No analysis summary yet."))}</p>
-            <p>${escapeHtml(String(analysisSummary.tone || "No high-level music framing captured yet."))}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Structure</div>
-            ${
-              Array.isArray(structure.visibleSections) && structure.visibleSections.length
-                ? `<ul>${structure.visibleSections.map((row) => `<li>${escapeHtml(String(row))}</li>`).join("")}</ul>`
-                : "<p>No main sections have been identified yet.</p>"
-            }
-            <p>Source: ${escapeHtml(String(structure.source || "pending"))} | confidence: ${escapeHtml(String(structure.confidence || "low"))}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Music Cues</div>
-            <p>${cues.holdCue ? `Hold back around ${escapeHtml(String(cues.holdCue))}.` : "No hold cue identified yet."}</p>
-            <p>${cues.firstLift ? `First real lift appears around ${escapeHtml(String(cues.firstLift))}.` : "No lift cue identified yet."}</p>
-            <p>${escapeHtml(String(cues.validationSummary || "No additional music cue validation yet."))}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Downstream Readiness</div>
-            <p>${escapeHtml(String(downstream.summary || "Analysis is still partial. Downstream work may rely on assumptions."))}</p>
-            <p>${downstream.structureReady ? "Sections are usable." : "Sections still need work."}</p>
-            <p>${downstream.timingReady ? "Timing context is usable." : "Timing context still needs work."}</p>
-          </div>
-          <div class="dashboard-panel">
-            <div class="artifact-kicker">Shared Library Review</div>
-            <p>
-              ${
-                libraryReview.status === "running"
-                  ? "Batch analysis is running."
-                  : libraryReview.totalTracks
-                    ? `${escapeHtml(String(libraryReview.successfulTracks || 0))}/${escapeHtml(String(libraryReview.totalTracks || 0))} tracks processed.`
-                    : "No folder review has been run yet."
-              }
-            </p>
-            <p>${escapeHtml(String(libraryReview.folder || "Choose a folder to build shared track metadata."))}</p>
-            <p>${libraryReview.completedLabel ? `Last run: ${escapeHtml(String(libraryReview.completedLabel))}` : "No batch run recorded."}</p>
-            ${
-              Array.isArray(libraryReview.issueRows) && libraryReview.issueRows.length
-                ? `<ul>${libraryReview.issueRows.map((row) => `<li>${escapeHtml(String(row.code))}: ${escapeHtml(String(row.count))}</li>`).join("")}</ul>`
-                : "<p>No review issues summarized yet.</p>"
-            }
-          </div>
+
+        <div class="audio-page-stack">
+          <section class="audio-primary-actions">
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Single Track</div>
+              <h4>Analyze one song</h4>
+              <p class="banner">Choose a single audio file directly or reuse a file from the current media directory.</p>
+              <div class="field">
+                <label>Selected Audio File</label>
+                <div class="row">
+                  <input id="audio-path-input" value="${escapeHtml(String(singleTrack.selectedAudioPath || ""))}" placeholder="Choose a single audio file for analysis" />
+                  <button id="browse-audio-file">Browse File</button>
+                  <button id="analyze-audio" ${singleTrack.canAnalyze ? "" : "disabled"}>Analyze Track</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Or Pick From Current Media Directory</label>
+                <div class="row">
+                  <select id="audio-track-select">
+                    ${
+                      options.length
+                        ? options.map((row) => {
+                            const path = String(row?.path || "").trim();
+                            const detailText = String(row?.detail || "").trim();
+                            const label = String(row?.label || detailText || path).trim();
+                            return `<option value="${escapeHtml(path)}" ${row?.selected ? "selected" : ""}>${escapeHtml(label)}${detailText ? ` - ${escapeHtml(detailText)}` : ""}</option>`;
+                          }).join("")
+                        : `<option value="">No media files found in Media Directory</option>`
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Batch Library</div>
+              <h4>Analyze a folder</h4>
+              <p class="banner">Build or refresh shared metadata records for a folder of audio files.</p>
+              <div class="field">
+                <label>Audio Folder</label>
+                <div class="row">
+                  <input id="audio-batch-folder-input" value="${escapeHtml(String(batch.batchFolder || ""))}" placeholder="Choose a folder to batch analyze into the shared track library" />
+                  <button id="browse-audio-batch-folder">Browse Folder</button>
+                  <button id="analyze-audio-folder" ${batch.isRunning ? "disabled" : ""}>Analyze Folder</button>
+                </div>
+              </div>
+              <label class="audio-inline-check">
+                <input id="audio-batch-recursive" type="checkbox" ${batch.recursive ? "checked" : ""} />
+                <span>Include subfolders recursively</span>
+              </label>
+              <p class="banner">
+                ${
+                  latestBatchReview.status === "running"
+                    ? "Batch analysis is running."
+                    : latestBatchReview.totalTracks
+                      ? `${escapeHtml(String(latestBatchReview.successfulTracks || 0))}/${escapeHtml(String(latestBatchReview.totalTracks || 0))} tracks processed in the latest batch run.`
+                      : "No batch run recorded yet."
+                }
+              </p>
+            </div>
+          </section>
+
+          <section class="audio-result-summary">
+            <div class="dashboard-panel">
+              <div class="artifact-kicker">Current Result</div>
+              <div class="audio-result-head">
+                <div>
+                  <h4>${escapeHtml(String(currentResult.title || "No track selected"))}</h4>
+                  <p>${escapeHtml(String(currentResult.subtitle || "Choose a track or folder to begin."))}</p>
+                </div>
+                ${currentResult.hasTrack ? `<div>${renderStatusBadge(statusClass === "ready" ? "Ready" : currentResult.isRunning ? "Running" : "Selected")}</div>` : ""}
+              </div>
+              <p class="artifact-body">${escapeHtml(String(currentResult.summary || "No analysis has been run for the current track yet."))}</p>
+              <div class="artifact-chip-row">
+                ${currentResult.bpmText ? `<span class="artifact-chip">${escapeHtml(String(currentResult.bpmText))}</span>` : ""}
+                ${currentResult.meterText ? `<span class="artifact-chip">${escapeHtml(String(currentResult.meterText))}</span>` : ""}
+                <span class="artifact-chip">${escapeHtml(String(currentResult.timingSummary?.summaryText || "No timings yet"))}</span>
+              </div>
+              ${currentResult.progressMessage ? `<p class="banner">${escapeHtml(String(currentResult.progressMessage))}</p>` : ""}
+              <p class="banner">Last analyzed: ${escapeHtml(String(currentResult.lastAnalyzedLabel || "never"))}</p>
+            </div>
+          </section>
+
+          <section class="audio-library-grid-panel">
+            <div class="metadata-panel-header">
+              <div>
+                <div class="artifact-kicker">Shared Track Library</div>
+                <h4>Track metadata status</h4>
+                <p class="artifact-body">Browse what is already analyzed, which timing layers are available, and whether anything still needs attention.</p>
+              </div>
+              <div class="artifact-chip-row">
+                <span class="artifact-chip">${escapeHtml(String(overview.total || 0))} tracks</span>
+                <span class="artifact-chip">${escapeHtml(String(overview.complete || 0))} complete</span>
+                <span class="artifact-chip">${escapeHtml(String(overview.partial || 0))} partial</span>
+                <span class="artifact-chip">${escapeHtml(String(overview.needsReview || 0))} need review</span>
+              </div>
+            </div>
+            ${library.loadError ? `<p class="banner warning">${escapeHtml(String(library.loadError))}</p>` : ""}
+            <div class="metadata-grid-wrap proposed-grid-wrap">
+              <table class="metadata-grid proposed-grid">
+                <thead>
+                  <tr>
+                    <th>Track</th>
+                    <th>Status</th>
+                    <th>Available Timings</th>
+                    <th>Missing / Issues</th>
+                    <th>Identity</th>
+                    <th>Last Analyzed</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    rows.length
+                      ? rows.map((row) => `
+                        <tr class="${row.selected ? "is-selected" : ""}" data-audio-library-row="${escapeHtml(String(row.key || ""))}">
+                          <td>
+                            <strong>${escapeHtml(String(row.displayName || ""))}</strong>
+                            ${row.artist ? `<div class="media-meta">${escapeHtml(String(row.artist))}</div>` : ""}
+                          </td>
+                          <td>${renderStatusBadge(row.status)}</td>
+                          <td>${escapeHtml(String(row.availableTimingsText || "None yet"))}</td>
+                          <td>${escapeHtml(String(row.missingIssuesText || ""))}</td>
+                          <td>${escapeHtml(String(row.identityText || ""))}</td>
+                          <td>${escapeHtml(String(row.lastAnalyzedLabel || "never"))}</td>
+                          <td>
+                            ${
+                              row.actionKind === "verify_identity"
+                                ? `<button data-audio-library-action="verify_identity" data-audio-library-row-action-key="${escapeHtml(String(row.key || ""))}">Confirm Track Info</button>`
+                                : escapeHtml(String(row.actionText || "None"))
+                            }
+                          </td>
+                        </tr>
+                      `).join("")
+                      : `<tr><td colspan="7">No shared track metadata has been created yet.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          ${
+            detail
+              ? `
+              <section class="audio-detail-panel">
+                <div class="dashboard-panel">
+                  <div class="artifact-kicker">Detail</div>
+                  <h4>${escapeHtml(String(detail.fileName || "Track detail"))}</h4>
+                  <p>${escapeHtml(String(detail.reason || ""))}</p>
+                  <p>Recommended action: ${escapeHtml(String(detail.actionText || "None"))}</p>
+                  ${
+                    detail.actionKind === "verify_identity"
+                      ? `<div class="artifact-actions"><button id="confirm-audio-library-track-info">Confirm Track Info</button></div>`
+                      : ""
+                  }
+                  <p>Available profiles: ${escapeHtml((Array.isArray(detail.availableProfiles) && detail.availableProfiles.length ? detail.availableProfiles.join(", ") : "none"))}</p>
+                  <p>Missing timings: ${escapeHtml(String(detail.timing?.missingText || "None"))}</p>
+                  <p>Verification: ${escapeHtml(String(detail.verificationStatus || "unknown"))}</p>
+                </div>
+              </section>
+              `
+              : ""
+          }
         </div>
       </section>
     `;
@@ -707,11 +798,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
 
   function audioScreen() {
     const dashboard = pageStates?.audio || {};
-    const emptyState = dashboard?.data?.emptyState || null;
+    const emptyState = dashboard?.emptyState || null;
     return renderWorkspaceFrame("audio", `
       <div class="screen-grid audio-screen">
         ${renderAudioLiveDashboardCard()}
-        ${renderArtifactDetailPanel()}
         ${
           emptyState
             ? `

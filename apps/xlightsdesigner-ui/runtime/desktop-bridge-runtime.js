@@ -77,7 +77,7 @@ export function getDesktopAudioAnalysisBridge() {
 }
 
 export function getDesktopAudioLibraryBridge() {
-  return requireFunctions(getDesktopBridge(), ["analyzeAudioLibraryFolder"]);
+  return requireFunctions(getDesktopBridge(), ["analyzeAudioLibraryFolder", "listAudioLibraryTracks", "updateAudioLibraryTrackIdentity"]);
 }
 
 export function getDesktopAnalysisArtifactBridge() {
