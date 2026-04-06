@@ -78,7 +78,7 @@ Required workflows:
 3. Sequence
 4. Design
 5. Review
-6. Metadata
+6. Layout
 7. History
 8. Settings
 
@@ -123,7 +123,7 @@ Checklist:
 - define `Sequence` screen layout
 - define `Design` screen layout
 - define `Review` screen layout
-- define `Metadata` screen layout
+- define `Layout` screen layout
 - define `History` screen layout
 - define `Settings` screen layout
 

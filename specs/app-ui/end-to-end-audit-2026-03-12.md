@@ -43,12 +43,12 @@ Current top-level screens:
 - `Inspiration`
 - `Design`
 - `History`
-- `Metadata`
+- `Layout`
 
 These screens expose real capability, but the grouping is inconsistent:
 - `Sequence` mixes sequence open/setup, audio analysis, and creative brief entry
 - `Design` mixes team chat, proposal review, and execution approval
-- `Metadata` is powerful but visually isolated from how the designer and sequencer actually consume those targets
+- `Layout` is powerful but visually isolated from how the designer and sequencer actually consume those targets
 - `Inspiration` is clearly concept-level, but it is disconnected from the current design conversation artifact flow
 
 The screens do not yet tell a clear story of:
@@ -197,7 +197,7 @@ Locked high-level screen model:
 - `Sequence`
 - `Design`
 - `Review`
-- `Metadata`
+- `Layout`
 - `History`
 
 Locked screen ownership model:
@@ -213,7 +213,7 @@ Locked screen ownership model:
   - `sequence_agent`
 - `History`
   - app shell / audit and recovery
-- `Metadata`
+- `Layout`
   - shared semantic context editing
 
 Locked consolidation decision:

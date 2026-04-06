@@ -42,7 +42,7 @@ Top-level sections:
 3. `Sequence`
 4. `Design`
 5. `Review`
-6. `Metadata`
+6. `Layout`
 7. `History`
 
 Secondary global destination:
@@ -138,10 +138,10 @@ Does not own:
 - long-term history browsing
 - standalone audio analysis
 
-### 6. Metadata
+### 6. Layout
 
 Purpose:
-- own semantic targeting and support metadata
+- own layout targets and support layout context
 
 Owns:
 - tags

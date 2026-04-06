@@ -39,7 +39,7 @@ The native app uses this primary workflow order:
 3. `Sequence`
 4. `Design`
 5. `Review`
-6. `Metadata`
+6. `Layout`
 7. `History`
 
 Global destination outside the workflow:
@@ -301,10 +301,10 @@ This ordering reflects the product journey, not just a nav list.
 - standalone sequence editing
 - audio analysis management
 
-## 6. Metadata
+## 6. Layout
 
 ### Purpose
-- own semantic targeting and support metadata used by downstream creative and sequencing workflows
+- own layout targets and support layout context used by downstream creative and sequencing workflows
 
 ### Primary user goals
 - inspect targets and tags

@@ -315,4 +315,4 @@ The wireframes must be detailed enough to answer:
 
 After this screen contract:
 1. write the combined native `Sequence / Design / Review` relationship layout spec
-2. then define `Metadata` and `History` screen contracts if needed before wireframing expands
+2. then define `Layout` and `History` screen contracts if needed before wireframing expands

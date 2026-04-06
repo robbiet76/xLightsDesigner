@@ -15,7 +15,7 @@ The left navigation represents one coherent workflow:
 3. `Sequence`
 4. `Design`
 5. `Review`
-6. `Metadata`
+6. `Layout`
 7. `History`
 
 This is not just a tab list. It is the intended user journey.
@@ -119,7 +119,7 @@ Key distinction:
 - `Review` is where approved design becomes implemented sequence changes
 - apply is not sequence-only; it is design-to-sequence implementation
 
-### 6. Metadata
+### 6. Layout
 Purpose:
 - manage semantic targeting context used by designer and sequencer
 

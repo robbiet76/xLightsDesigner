@@ -15,7 +15,7 @@ Purpose: turn the current functional shell into a coherent end-user experience t
   - `Sequence`
   - `Design`
   - `Review`
-  - `Metadata`
+  - `Layout`
   - `History`
 - [x] Use `Audio` as the user-facing label for audio-analysis workflow
 - [x] Move `Audio` ahead of `Sequence` in the primary nav/workflow

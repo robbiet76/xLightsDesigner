@@ -85,7 +85,7 @@ Required initially for high-risk workflows:
 
 Optional for lower-risk workflows until needed:
 - Project
-- Metadata
+- Layout
 - History
 - Settings
 
