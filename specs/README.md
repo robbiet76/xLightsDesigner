@@ -35,6 +35,7 @@ Primary policy source:
 ## Active Entry Points
 - `current-app-plan-2026-04-05.md`
 - `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
+- `app-ui/electron-legacy-removal-manifest-2026-04-06.md`
 - `app-assistant/app-assistant-role-and-boundary.md`
 - `app-assistant/implementation-checklist.md`
 - `app-ui/implementation-checklist.md`

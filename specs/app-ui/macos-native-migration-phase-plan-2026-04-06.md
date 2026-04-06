@@ -234,3 +234,14 @@ Before any native UI implementation:
 1. create the full design package
 2. define shared backend/state boundaries
 3. only then scaffold the native app
+
+## Retirement Preparation
+
+Electron retirement should not require a new audit.
+
+Primary manifest:
+- `electron-legacy-removal-manifest-2026-04-06.md`
+
+Working rule:
+- maintain an explicit list of Electron-only specs and implementation surfaces to delete later
+- keep native-active planning separate from Electron legacy-reference material
