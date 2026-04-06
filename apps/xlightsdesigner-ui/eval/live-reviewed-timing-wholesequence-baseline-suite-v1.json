@@ -23,10 +23,7 @@
       "requestedRole": "sequence_agent",
       "audioPathOverride": "/Users/robterry/Documents/Lights/Current/Christmas/Show/Audio/Mavis Staples - Christmas Vacation.mp3",
       "analyzePrompt": "Analyze the current song for sections, beat windows, phrase cues, and energy shifts.",
-      "analysisProfile": {
-        "mode": "deep",
-        "allowEscalation": false
-      },
+      "forceFreshAnalysis": true,
       "seedTimingTracksFromAnalysis": true,
       "strongPrompt": "Design the full song around the reviewed structure and phrase cues so vocal phrases land cleanly and repeated refrains build with consistent visual language. Use phrase timing where available instead of ignoring it.",
       "minConceptCount": 4,

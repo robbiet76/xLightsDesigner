@@ -266,6 +266,9 @@ export function createAutomationRuntime(deps = {}) {
             goal: String(state.creative.intentHandoff.goal || "")
           }
         : null,
+      recentDiagnostics: Array.isArray(state.diagnostics)
+        ? state.diagnostics.slice(-8)
+        : [],
       debugReplay,
       intentHandoff: getValidHandoff("intent_handoff_v1") || null,
       planHandoff: getValidHandoff("plan_handoff_v1") || null

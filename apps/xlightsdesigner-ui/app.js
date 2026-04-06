@@ -1076,6 +1076,21 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isModelInUnassignedPreview(model = null) {
+  if (!isPlainObject(model)) return false;
+  const candidates = [
+    model.previewGroup,
+    model.previewName,
+    model.previewWindow,
+    model.layoutGroup,
+    model.group,
+    model.groupName,
+    model.preview,
+    model.location
+  ];
+  return candidates.some((value) => String(value || "").trim().toLowerCase() === "unassigned preview");
+}
+
 function hydrateIntentHandoffExecutionStrategy(intentHandoff = null, proposalBundle = null) {
   if (!isPlainObject(intentHandoff)) return intentHandoff;
   if (isPlainObject(intentHandoff.executionStrategy)) return intentHandoff;

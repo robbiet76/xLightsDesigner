@@ -166,6 +166,93 @@ test("direct sequence orchestrator fails closed when prompt names a section with
   assert.ok(result.warnings.some((row) => /analyze the track first/i.test(row)));
 });
 
+test("direct sequence orchestrator does not misread descriptive chorus language as explicit section scope", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-descriptive-chorus",
+    sequenceRevision: "rev-1",
+    promptText: "Design the full song using the reviewed song structure to create clear section changes, readable rhythmic motion, and a strong chorus build.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Snowman", name: "Snowman", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Snowman", name: "Snowman", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", startMs: 0, endMs: 10000 },
+          { label: "Refrain 1", startMs: 44000, endMs: 62000 },
+          { label: "Refrain 2", startMs: 78000, endMs: 96000 }
+        ]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.ok(result.proposalBundle);
+  assert.ok(result.intentHandoff);
+});
+
+test("direct sequence orchestrator maps generic chorus scope onto refrain-labeled analysis sections", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-chorus-alias",
+    sequenceRevision: "rev-1",
+    promptText: "Add a Color Wash effect on Snowman during the chorus.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Snowman", name: "Snowman", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Snowman", name: "Snowman", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", sectionType: "intro", startMs: 0, endMs: 10000 },
+          { label: "Refrain 1", sectionType: "refrain", startMs: 44000, endMs: 62000 },
+          { label: "Refrain 2", sectionType: "refrain", startMs: 78000, endMs: 96000 }
+        ]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.intentHandoff.scope.sections, ["Refrain 1", "Refrain 2"]);
+});
+
+test("direct sequence orchestrator allows full-song arc prompts that mention multiple musical regions", () => {
+  const result = executeDirectSequenceRequestOrchestration({
+    requestId: "req-direct-full-song-arc",
+    sequenceRevision: "rev-1",
+    promptText: "Design the full instrumental song from the reviewed structure, shaping the arrangement through the intro, theme, contrast, and climax without relying on lyrics.",
+    selectedSections: [],
+    selectedTargetIds: [],
+    selectedTagNames: [],
+    models: [{ id: "Snowman", name: "Snowman", type: "Model" }],
+    submodels: [],
+    displayElements: [{ id: "Snowman", name: "Snowman", type: "model" }],
+    effectCatalog: sampleCatalog(),
+    metadataAssignments: [],
+    analysisHandoff: {
+      structure: {
+        sections: [
+          { label: "Intro", sectionType: "intro", startMs: 0, endMs: 10000 },
+          { label: "Theme 1", sectionType: "theme", startMs: 10000, endMs: 20000 },
+          { label: "Contrast", sectionType: "contrast", startMs: 20000, endMs: 30000 },
+          { label: "Outro", sectionType: "outro", startMs: 30000, endMs: 40000 }
+        ]
+      }
+    }
+  });
+
+  assert.equal(result.ok, true);
+  assert.ok(result.proposalBundle);
+  assert.ok(result.intentHandoff);
+});
+
 test("direct sequence orchestrator decomposes clear mixed effect and section clauses", () => {
   const result = executeDirectSequenceRequestOrchestration({
     requestId: "req-direct-6",

@@ -104,23 +104,67 @@ function extractSectionLabels(analysisHandoff = null) {
     .filter(Boolean);
 }
 
+function buildSectionAliasEntries(analysisHandoff = null) {
+  const sections = Array.isArray(analysisHandoff?.structure?.sections) ? analysisHandoff.structure.sections : [];
+  const entries = [];
+  for (const row of sections) {
+    const label = typeof row === "string" ? str(row) : str(row?.label || row?.name || "");
+    if (!label) continue;
+    const sectionType = typeof row === "string" ? "" : str(row?.sectionType || row?.type || "").toLowerCase();
+    entries.push({ alias: label.toLowerCase(), label, scopedOnly: false });
+    const normalizedLabel = label.toLowerCase().replace(/\s+\d+$/g, "");
+    if (normalizedLabel && normalizedLabel !== label.toLowerCase()) {
+      entries.push({ alias: normalizedLabel, label, scopedOnly: true });
+    }
+    if (sectionType && sectionType !== label.toLowerCase()) {
+      entries.push({ alias: sectionType, label, scopedOnly: true });
+    }
+    if (sectionType === "refrain") {
+      entries.push({ alias: "chorus", label, scopedOnly: true });
+    } else if (sectionType === "chorus") {
+      entries.push({ alias: "refrain", label, scopedOnly: true });
+    }
+  }
+  return entries;
+}
+
+function hasScopedSectionAlias(promptText = "", alias = "") {
+  const text = str(promptText);
+  const value = str(alias).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!text || !value) return false;
+  const pattern = new RegExp(`\\b(?:during|in|on|for|into|through|across|throughout)\\s+(?:the\\s+)?${value}\\b`, "i");
+  return pattern.test(text);
+}
+
 function hasPromptSectionLanguage(promptText = "") {
-  return /\b(intro|verse|pre-chorus|post-chorus|chorus|bridge|hook|outro|refrain)\b/i.test(str(promptText));
+  const text = str(promptText);
+  if (!text) return false;
+  return /\b(?:during|in|on|for|into|through|across|throughout)\s+(?:the\s+)?(intro|verse|pre-chorus|post-chorus|chorus|bridge|hook|outro|refrain)\b/i.test(text);
 }
 
 function inferPromptSections(promptText = "", analysisHandoff = null) {
   const prompt = str(promptText);
   if (!prompt) return [];
   const lower = prompt.toLowerCase();
-  const matches = [];
+  const exactMatches = new Set();
   for (const label of extractSectionLabels(analysisHandoff)) {
-    const normalized = label.toLowerCase();
-    if (!normalized) continue;
-    if (lower.includes(normalized)) {
-      matches.push(label);
+    const exact = label.toLowerCase();
+    if (exact && lower.includes(exact)) {
+      exactMatches.add(label);
     }
   }
-  return matches;
+  if (exactMatches.size) return [...exactMatches];
+  const matches = new Set();
+  const aliasEntries = buildSectionAliasEntries(analysisHandoff);
+  for (const entry of aliasEntries) {
+    const alias = str(entry?.alias).toLowerCase();
+    const label = str(entry?.label);
+    if (!alias || !label || !entry?.scopedOnly) continue;
+    if (hasScopedSectionAlias(prompt, alias)) {
+      matches.add(label);
+    }
+  }
+  return [...matches];
 }
 
 function splitExplicitSequencingClauses(promptText = "") {
@@ -180,7 +224,7 @@ function detectCompoundDirectRequest({
   const hasExplicitEffectPhrase = Boolean(str(requestedEffectPhrase));
 
   if (!hasJoiner) return { compound: false, reason: "" };
-  if (hasMultipleEffects || hasMultipleSections || (hasSecondActionVerb && hasExplicitEffectPhrase)) {
+  if (hasMultipleEffects || (hasSecondActionVerb && (hasExplicitEffectPhrase || hasMultipleSections))) {
     return {
       compound: true,
       reason: "This request contains multiple sequencing clauses. Split it into one effect/section instruction per request so Patch can preserve the intent exactly."
