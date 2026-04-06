@@ -40,6 +40,7 @@ Primary policy source:
 - `app-ui/macos-native-information-architecture-2026-04-06.md`
 - `app-ui/macos-native-workflow-contracts-2026-04-06.md`
 - `app-ui/macos-native-audio-screen-layout-2026-04-06.md`
+- `app-ui/macos-native-project-screen-layout-2026-04-06.md`
 - `app-ui/electron-legacy-removal-manifest-2026-04-06.md`
 - `app-assistant/app-assistant-role-and-boundary.md`
 - `app-assistant/implementation-checklist.md`
