@@ -446,7 +446,7 @@ This ordering reflects the product journey, not just a nav list.
 4. `Review` must own the current implementation gate, not history browsing.
 5. `History` must remain immutable and retrospective.
 6. `Settings` must stay outside the workflow journey.
-7. `Metadata` is a support workflow, not a primary creative or apply workflow.
+7. `Layout` is a support workflow, not a primary creative or apply workflow.
 
 ## Decisions Locked Here
 
