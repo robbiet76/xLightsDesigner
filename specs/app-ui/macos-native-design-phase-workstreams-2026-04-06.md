@@ -14,6 +14,9 @@ It is the checklist that must be completed before any SwiftUI screen implementat
 Required design artifact method:
 - `macos-native-wireframe-and-prototype-method-2026-04-06.md`
 
+Current workstream 1 source:
+- `macos-native-information-architecture-2026-04-06.md`
+
 Primary parent plan:
 - `macos-native-migration-phase-plan-2026-04-06.md`
 
@@ -44,6 +47,9 @@ Required deliverables:
 - top-level navigation definition
 - global-context rules
 - page ownership map
+
+Primary source:
+- `macos-native-information-architecture-2026-04-06.md`
 
 Checklist:
 - define the macOS app section list
