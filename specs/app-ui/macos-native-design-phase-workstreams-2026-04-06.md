@@ -17,6 +17,9 @@ Required design artifact method:
 Current workstream 1 source:
 - `macos-native-information-architecture-2026-04-06.md`
 
+Current workstream 2 source:
+- `macos-native-workflow-contracts-2026-04-06.md`
+
 Primary parent plan:
 - `macos-native-migration-phase-plan-2026-04-06.md`
 
@@ -82,6 +85,9 @@ Required deliverables:
 - exit conditions
 - primary user goals
 - out-of-scope behaviors
+
+Primary source:
+- `macos-native-workflow-contracts-2026-04-06.md`
 
 Checklist:
 - define purpose for each workflow
