@@ -249,6 +249,16 @@ test("analysis artifact store persists canonical artifact under shared track lib
 
   assert.equal(readRes.ok, true);
   assert.deepEqual(readRes.artifact, writeRes.artifact);
+
+  const stored = JSON.parse(fs.readFileSync(writeRes.recordPath, "utf8"));
+  assert.equal(stored.track.displayName, "Song - Artist");
+  assert.deepEqual(
+    stored.timingTracks.map((row) => row.name),
+    ["XD: Song Structure", "XD: Phrase Cues", "XD: Beats", "XD: Bars", "XD: Chords"]
+  );
+  assert.equal(stored.timingTracks[0].segments[0].kind, "section");
+  assert.equal(stored.timingTracks[1].segments[0].kind, "phrase");
+  assert.equal(stored.analysis.canonicalProfile, "deep");
 });
 
 test("analysis handoff rehydrates deterministically from persisted artifact", async (t) => {

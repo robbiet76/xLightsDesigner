@@ -104,6 +104,12 @@ Top-level meanings:
 - no awareness of live xLights state
 - no timing-track writes
 
+Shared track records are the canonical audio-analysis deliverable. They should expose:
+- `track`: corrected song identity and fingerprint-backed linkage
+- `analysis`: canonical profile selection and available profiles
+- `timingTracks`: normalized canonical timing-track objects with standard names such as `XD: Song Structure`
+- `analyses.profiles`: reusable raw/canonical analysis artifacts for downstream rehydration
+
 `sequence_agent` owns:
 - timing ownership and sequencing state under `sequencing/sequences/<sequence-id>/`
 - xLights mutations
@@ -153,7 +159,79 @@ Migration target:
 - Missing standard subdirectories (`sequencing/`, `diagnostics/`, `library/tracks/`) may be recreated by the app.
 - Unexpected manual modifications to the internal directory layout are unsupported.
 
-## 11) Immediate Implementation Guidance
+## 11) Shared Track Record Contract
+Shared reusable track records live at:
+- `<app-root>/library/tracks/<track-slug>.json`
+
+Filename rules:
+- use corrected song and artist naming when verified, e.g. `candy-cane-lane-sia.json`
+- if verified naming is not available yet, use a short temporary id such as `track-a1b2c3d4.json`
+- append a short stable fingerprint suffix only when a slug collision occurs
+
+Minimum structure:
+
+```json
+{
+  "version": 2,
+  "track": {
+    "title": "Candy Cane Lane",
+    "artist": "Sia",
+    "displayName": "Candy Cane Lane - Sia",
+    "identity": {
+      "contentFingerprint": "sha256-or-hex-fingerprint",
+      "isrc": null
+    },
+    "sourceMedia": {
+      "mediaId": "path-instance-id",
+      "path": "/absolute/path/to/media.mp3",
+      "fileName": "Sia - Candy Cane Lane.mp3"
+    }
+  },
+  "analysis": {
+    "canonicalProfile": "deep",
+    "availableProfiles": ["fast", "deep"]
+  },
+  "timingTracks": [
+    {
+      "type": "song_structure",
+      "name": "XD: Song Structure",
+      "coverageMode": "complete",
+      "segmentCount": 6,
+      "segments": [
+        {
+          "startMs": 0,
+          "endMs": 12400,
+          "label": "Intro",
+          "kind": "section"
+        }
+      ]
+    }
+  ],
+  "analyses": {
+    "canonicalProfile": "deep",
+    "profiles": {
+      "deep": {}
+    }
+  }
+}
+```
+
+Timing-track rules:
+- names are canonical and song-independent:
+  - `XD: Song Structure`
+  - `XD: Phrase Cues`
+  - `XD: Beats`
+  - `XD: Bars`
+  - `XD: Chords`
+- each track uses flat ordered `segments`
+- each segment uses consistent keys:
+  - `startMs`
+  - `endMs`
+  - `label`
+  - `kind`
+- xLightsDesigner consumes these records independently of xLights
+- sequence metadata should link to the shared track record by fingerprint, not duplicate the record
+## 12) Immediate Implementation Guidance
 Short-term:
 1. persist `showFolderPath` and `mediaPath` in `.xdproj`,
 2. introduce canonical app-root library layout in code/specs,

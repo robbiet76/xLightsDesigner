@@ -139,6 +139,102 @@ function basenameWithoutExt(filePath = "") {
   return base.replace(/\.[^.]+$/, "").trim();
 }
 
+function rows(value) {
+  return Array.isArray(value) ? value.filter((row) => row && typeof row === "object" && !Array.isArray(row)) : [];
+}
+
+function str(value = "") {
+  return String(value || "").trim();
+}
+
+function finiteOrNull(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function normalizeSegmentRows(rowsValue = [], { defaultKind = "", allowNullLabel = false } = {}) {
+  return rows(rowsValue)
+    .map((row) => {
+      const startMs = finiteOrNull(row.startMs);
+      const endMs = finiteOrNull(row.endMs);
+      if (startMs == null || endMs == null || endMs < startMs) return null;
+      const label = allowNullLabel ? (row.label == null ? null : str(row.label)) : str(row.label);
+      return {
+        startMs,
+        endMs,
+        label: allowNullLabel ? label : (label || null),
+        kind: str(row.kind || defaultKind) || defaultKind || "segment"
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildCanonicalTimingTracks(canonicalArtifact = null) {
+  if (!canonicalArtifact || typeof canonicalArtifact !== "object" || Array.isArray(canonicalArtifact)) return [];
+  const durationMs = finiteOrNull(canonicalArtifact?.media?.durationMs);
+  const structureSegments = normalizeSegmentRows(canonicalArtifact?.structure?.sections, { defaultKind: "section" });
+  const syncedPhraseSegments = normalizeSegmentRows(canonicalArtifact?.lyrics?.lines, { defaultKind: "phrase", allowNullLabel: true });
+  const fallbackPhraseSegments = normalizeSegmentRows(canonicalArtifact?.lyrics?.plainPhraseFallback?.phrases, { defaultKind: "phrase", allowNullLabel: true });
+  const phraseSegments = syncedPhraseSegments.length ? syncedPhraseSegments : fallbackPhraseSegments;
+  const beatSegments = normalizeSegmentRows(canonicalArtifact?.timing?.beats, { defaultKind: "beat" });
+  const barSegments = normalizeSegmentRows(canonicalArtifact?.timing?.bars, { defaultKind: "bar" });
+  const chordSegments = normalizeSegmentRows(canonicalArtifact?.harmonic?.chords, { defaultKind: "chord", allowNullLabel: true });
+  const bpm = finiteOrNull(canonicalArtifact?.timing?.bpm);
+  const timeSignature = str(canonicalArtifact?.timing?.timeSignature);
+  const tracks = [];
+
+  if (structureSegments.length) {
+    tracks.push({
+      type: "song_structure",
+      name: "XD: Song Structure",
+      coverageMode: durationMs != null ? "complete" : "partial",
+      segmentCount: structureSegments.length,
+      segments: structureSegments
+    });
+  }
+  if (phraseSegments.length) {
+    tracks.push({
+      type: "phrase_cues",
+      name: "XD: Phrase Cues",
+      coverageMode: durationMs != null ? "complete" : "partial",
+      segmentCount: phraseSegments.length,
+      segments: phraseSegments
+    });
+  }
+  if (beatSegments.length) {
+    tracks.push({
+      type: "beats",
+      name: "XD: Beats",
+      coverageMode: "event_series",
+      segmentCount: beatSegments.length,
+      tempoBpm: bpm,
+      timeSignature: timeSignature || null,
+      segments: beatSegments
+    });
+  }
+  if (barSegments.length) {
+    tracks.push({
+      type: "bars",
+      name: "XD: Bars",
+      coverageMode: "event_series",
+      segmentCount: barSegments.length,
+      tempoBpm: bpm,
+      timeSignature: timeSignature || null,
+      segments: barSegments
+    });
+  }
+  if (chordSegments.length) {
+    tracks.push({
+      type: "chords",
+      name: "XD: Chords",
+      coverageMode: "event_series",
+      segmentCount: chordSegments.length,
+      segments: chordSegments
+    });
+  }
+  return tracks;
+}
+
 function buildTrackDisplayParts(mediaFilePath = "", artifact = null, contentFingerprint = "") {
   const identity = artifact?.identity && typeof artifact.identity === "object" ? artifact.identity : {};
   const title = String(identity.title || "").trim();
@@ -241,8 +337,9 @@ function buildTrackRecordFromArtifact({ projectFilePath = "", mediaFilePath = ""
   if (profiledArtifact && selectedMode) profiles[selectedMode] = profiledArtifact;
   const canonicalMode = getArtifactProfileMode(canonicalArtifact) || selectedMode;
   if (canonicalArtifact && canonicalMode && !profiles[canonicalMode]) profiles[canonicalMode] = canonicalArtifact;
+  const timingTracks = buildCanonicalTimingTracks(canonicalArtifact || artifact);
   return {
-    version: 1,
+    version: 2,
     track: {
       title,
       artist,
@@ -257,6 +354,11 @@ function buildTrackRecordFromArtifact({ projectFilePath = "", mediaFilePath = ""
         fileName: path.basename(normalizePathForCompare(mediaFilePath))
       }
     },
+    analysis: {
+      canonicalProfile: canonicalMode || null,
+      availableProfiles: Object.keys(profiles).sort()
+    },
+    timingTracks,
     analyses: {
       canonicalProfile: canonicalMode || null,
       profiles
@@ -281,7 +383,7 @@ export function buildAnalysisArtifactPaths(projectFilePath, mediaFilePath, artif
   const mediaId = mediaIdFromPathAndStat(mediaPath);
   const contentFingerprint = mediaContentFingerprint(mediaPath);
   const libraryDir = getTrackLibraryDir(projectPath);
-  const recordPath = findRecordPathForWrite(projectPath, mediaPath, artifact, contentFingerprint);
+  const recordPathInfo = findRecordPathForWrite(projectPath, mediaPath, artifact, contentFingerprint);
   return {
     projectPath,
     mediaPath,
@@ -290,8 +392,8 @@ export function buildAnalysisArtifactPaths(projectFilePath, mediaFilePath, artif
     appRoot: resolveAppRootFromProjectFile(projectPath),
     libraryDir,
     artifactDir: libraryDir,
-    artifactPath: recordPath,
-    recordPath
+    artifactPath: recordPathInfo.recordPath,
+    recordPath: recordPathInfo.recordPath
   };
 }
 

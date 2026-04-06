@@ -172,3 +172,75 @@ test("writeAnalysisArtifactToProject renames shared record to corrected title an
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("writeAnalysisArtifactToProject emits canonical track metadata timing tracks", () => {
+  const { root, projectFilePath } = makeTempProject();
+  try {
+    const mediaPath = path.join(root, "Candy Cane Lane.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("canonical-track-metadata-content"));
+
+    const artifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath),
+        durationMs: 120000
+      },
+      identity: {
+        title: "Candy Cane Lane",
+        artist: "Sia",
+        isrc: "USRC17607839",
+        contentFingerprint: ""
+      },
+      timing: {
+        bpm: 128,
+        timeSignature: "4/4",
+        beats: [{ startMs: 0, endMs: 500, label: "1" }],
+        bars: [{ startMs: 0, endMs: 2000, label: "1" }]
+      },
+      harmonic: {
+        chords: [{ startMs: 0, endMs: 2000, label: "C" }]
+      },
+      lyrics: {
+        lines: [{ startMs: 400, endMs: 1500, label: "Take a trip down Candy Cane Lane" }]
+      },
+      structure: {
+        sections: [{ startMs: 0, endMs: 120000, label: "Verse 1" }]
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "deep"
+        }
+      }
+    };
+
+    const written = writeAnalysisArtifactToProject({
+      projectFilePath,
+      mediaFilePath: mediaPath,
+      artifact
+    });
+    assert.equal(written.ok, true);
+
+    const stored = JSON.parse(fs.readFileSync(written.recordPath, "utf8"));
+    assert.equal(stored.version, 2);
+    assert.equal(stored.track.title, "Candy Cane Lane");
+    assert.equal(stored.track.artist, "Sia");
+    assert.equal(stored.analysis.canonicalProfile, "deep");
+    assert.deepEqual(stored.analysis.availableProfiles, ["deep"]);
+
+    const names = stored.timingTracks.map((row) => row.name);
+    assert.deepEqual(names, [
+      "XD: Song Structure",
+      "XD: Phrase Cues",
+      "XD: Beats",
+      "XD: Bars",
+      "XD: Chords"
+    ]);
+    assert.equal(stored.timingTracks[0].segments[0].kind, "section");
+    assert.equal(stored.timingTracks[1].segments[0].kind, "phrase");
+    assert.equal(stored.timingTracks[2].tempoBpm, 128);
+    assert.equal(stored.timingTracks[3].timeSignature, "4/4");
+    assert.equal(stored.timingTracks[4].segments[0].label, "C");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
