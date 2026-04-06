@@ -259,18 +259,6 @@ export function bindScreenEvents({
     });
   });
 
-  app.querySelectorAll("[data-audio-library-action='verify_identity']").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const key = String(btn.dataset.audioLibraryRowActionKey || "").trim();
-      if (key) {
-        state.ui.audioLibrarySelectedKey = key;
-        persist();
-      }
-      void onConfirmSelectedAudioLibraryTrackInfo?.();
-    });
-  });
-
   const confirmAudioLibraryTrackInfoBtn = app.querySelector("#confirm-audio-library-track-info");
   if (confirmAudioLibraryTrackInfoBtn) {
     confirmAudioLibraryTrackInfoBtn.addEventListener("click", () => {

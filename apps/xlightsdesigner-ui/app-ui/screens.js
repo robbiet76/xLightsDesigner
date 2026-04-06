@@ -706,6 +706,33 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 ${currentResult.meterText ? `<span class="artifact-chip">${escapeHtml(String(currentResult.meterText))}</span>` : ""}
                 <span class="artifact-chip">${escapeHtml(String(currentResult.timingSummary?.summaryText || "No timings yet"))}</span>
               </div>
+              ${
+                currentResult.hasTrack
+                  ? `
+                  <div class="artifact-meta-block">
+                    <p>Recommended action: ${escapeHtml(String(currentResult.actionText || "None"))}</p>
+                    <p>Missing timings: ${escapeHtml(String(currentResult.missingTimingsText || "None"))}</p>
+                    ${currentResult.availableProfilesText ? `<p>Available profiles: ${escapeHtml(String(currentResult.availableProfilesText))}</p>` : ""}
+                    ${currentResult.verificationText ? `<p>Verification: ${escapeHtml(String(currentResult.verificationText))}</p>` : ""}
+                  </div>
+                  `
+                  : ""
+              }
+              ${
+                currentResult.actionKind === "verify_identity"
+                  ? `
+                  <div class="field">
+                    <label>Track Title</label>
+                    <input id="confirm-audio-track-title" value="${escapeHtml(String(currentResult.suggestedTitle || ""))}" placeholder="Confirmed track title" />
+                  </div>
+                  <div class="field">
+                    <label>Track Artist</label>
+                    <input id="confirm-audio-track-artist" value="${escapeHtml(String(currentResult.suggestedArtist || ""))}" placeholder="Confirmed track artist" />
+                  </div>
+                  <div class="artifact-actions"><button id="confirm-audio-library-track-info">Confirm Track Info</button></div>
+                  `
+                  : ""
+              }
               ${currentResult.progressMessage ? `<p class="banner">${escapeHtml(String(currentResult.progressMessage))}</p>` : ""}
               <p class="banner">Last analyzed: ${escapeHtml(String(currentResult.lastAnalyzedLabel || "never"))}</p>
             </div>
@@ -753,13 +780,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                           <td>${escapeHtml(String(row.missingIssuesText || ""))}</td>
                           <td>${escapeHtml(String(row.identityText || ""))}</td>
                           <td>${escapeHtml(String(row.lastAnalyzedLabel || "never"))}</td>
-                          <td>
-                            ${
-                              row.actionKind === "verify_identity"
-                                ? `<button data-audio-library-action="verify_identity" data-audio-library-row-action-key="${escapeHtml(String(row.key || ""))}">Confirm Track Info</button>`
-                                : escapeHtml(String(row.actionText || "None"))
-                            }
-                          </td>
+                          <td>${escapeHtml(String(row.actionText || "None"))}</td>
                         </tr>
                       `).join("")
                       : `<tr><td colspan="7">No shared track metadata has been created yet.</td></tr>`
@@ -768,29 +789,6 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
               </table>
             </div>
           </section>
-
-          ${
-            detail
-              ? `
-              <section class="audio-detail-panel">
-                <div class="dashboard-panel">
-                  <div class="artifact-kicker">Detail</div>
-                  <h4>${escapeHtml(String(detail.fileName || "Track detail"))}</h4>
-                  <p>${escapeHtml(String(detail.reason || ""))}</p>
-                  <p>Recommended action: ${escapeHtml(String(detail.actionText || "None"))}</p>
-                  ${
-                    detail.actionKind === "verify_identity"
-                      ? `<div class="artifact-actions"><button id="confirm-audio-library-track-info">Confirm Track Info</button></div>`
-                      : ""
-                  }
-                  <p>Available profiles: ${escapeHtml((Array.isArray(detail.availableProfiles) && detail.availableProfiles.length ? detail.availableProfiles.join(", ") : "none"))}</p>
-                  <p>Missing timings: ${escapeHtml(String(detail.timing?.missingText || "None"))}</p>
-                  <p>Verification: ${escapeHtml(String(detail.verificationStatus || "unknown"))}</p>
-                </div>
-              </section>
-              `
-              : ""
-          }
         </div>
       </section>
     `;

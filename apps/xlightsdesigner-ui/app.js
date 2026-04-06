@@ -6937,36 +6937,15 @@ async function onConfirmSelectedAudioLibraryTrackInfo() {
     return { ok: false, error: "missing_app_root" };
   }
 
-  const suggestedTitle = String(row?.suggestedTitle || row?.embeddedTitle || row?.title || "").trim();
-  const suggestedArtist = String(row?.suggestedArtist || row?.embeddedArtist || row?.artist || "").trim();
-  const title = window.prompt(
-    `Confirm track title for ${basenameOfPath(String(row?.sourceMediaPath || row?.fileName || row?.displayName || "")) || "selected track"}:`,
-    suggestedTitle
-  );
-  if (title == null) return { ok: false, cancelled: true };
-  const artist = window.prompt(
-    "Confirm track artist:",
-    suggestedArtist
-  );
-  if (artist == null) return { ok: false, cancelled: true };
-
-  const nextTitle = String(title || "").trim();
-  const nextArtist = String(artist || "").trim();
+  const titleInput = app.querySelector("#confirm-audio-track-title");
+  const artistInput = app.querySelector("#confirm-audio-track-artist");
+  const nextTitle = String(titleInput?.value || row?.suggestedTitle || row?.embeddedTitle || row?.title || "").trim();
+  const nextArtist = String(artistInput?.value || row?.suggestedArtist || row?.embeddedArtist || row?.artist || "").trim();
   if (!nextTitle || !nextArtist) {
     setStatusWithDiagnostics("warning", "Title and artist are both required to confirm track info.");
     render();
     return { ok: false, error: "missing_title_or_artist" };
   }
-
-  const confirmLines = [
-    "Confirm track info",
-    "",
-    `Title: ${nextTitle}`,
-    `Artist: ${nextArtist}`,
-    "",
-    "Update the shared track metadata now?"
-  ];
-  if (!window.confirm(confirmLines.join("\n"))) return { ok: false, cancelled: true };
 
   try {
     const mediaBridge = getDesktopMediaIdentityBridge();

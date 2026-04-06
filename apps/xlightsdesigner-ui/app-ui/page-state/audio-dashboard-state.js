@@ -133,11 +133,24 @@ function isActiveAnalysisProgress(state = {}) {
 
 function buildCurrentResultFromLibraryRow(row = {}) {
   const timingSummary = summarizeTimingAvailability(row.availableTimingNames);
+  const detail = row.detail && typeof row.detail === "object" ? row.detail : {};
   return {
     hasTrack: true,
     title: str(row.displayName || row.title || "Selected track"),
     subtitle: str(row.artist || row.fileName || ""),
     summary: str(row.detail?.reason || "Shared track metadata is available."),
+    actionKind: str(row.actionKind || "none"),
+    actionText: str(row.actionText || "None"),
+    detailReason: str(detail.reason),
+    availableProfilesText: Array.isArray(detail.availableProfiles) && detail.availableProfiles.length
+      ? detail.availableProfiles.join(", ")
+      : "none",
+    verificationText: str(detail.verificationStatus || "unknown"),
+    missingTimingsText: str(detail.timing?.missingText || "None"),
+    sourceMediaPath: str(detail.sourceMediaPath || ""),
+    fileName: str(detail.fileName || ""),
+    suggestedTitle: str(detail.suggestedTitle || row.title || ""),
+    suggestedArtist: str(detail.suggestedArtist || row.artist || ""),
     isRunning: false,
     progressMessage: "",
     lastAnalyzedLabel: toLastAnalyzedText(row.updatedAt),
@@ -172,6 +185,16 @@ function buildCurrentResult({ state = {}, analysis = {}, basenameOfPath, selecte
     title,
     subtitle: artist || selectedAudioPath || "Choose a track or folder to begin.",
     summary: str(state.audioAnalysis?.summary || "No analysis has been run for the current track yet."),
+    actionKind: "none",
+    actionText: "None",
+    detailReason: "",
+    availableProfilesText: "",
+    verificationText: "",
+    missingTimingsText: timingSummary.missingText,
+    sourceMediaPath: selectedAudioPath,
+    fileName: "",
+    suggestedTitle: str(identity?.title || ""),
+    suggestedArtist: str(identity?.artist || ""),
     isRunning,
     progressMessage: str(
       state.audioAnalysis?.progress?.message ||
