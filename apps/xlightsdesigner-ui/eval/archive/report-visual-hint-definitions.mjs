@@ -10,7 +10,7 @@ function str(value = "") {
 
 function parseArgs(argv = []) {
   const options = {
-    statePath: path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop-v2", "xlightsdesigner-state.json"),
+    statePath: path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop", "xlightsdesigner-state.json"),
     out: ""
   };
   for (let index = 0; index < argv.length; index += 1) {

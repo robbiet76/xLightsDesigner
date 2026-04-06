@@ -8,6 +8,8 @@ import os from "node:os";
 import {
   ensureProjectStructure,
   buildAnalysisArtifactPaths,
+  listTrackLibrarySummaries,
+  updateTrackLibraryRecordIdentity,
   readAnalysisArtifactFromProject,
   readAnalysisArtifactFromLibrary,
   writeAnalysisArtifactToProject,
@@ -50,8 +52,10 @@ app.commandLine.appendSwitch("disable-features", "NetworkService,NetworkServiceS
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
-// Use a fresh profile dir to avoid startup crash loops from corrupted Chromium caches.
-const XLD_USER_DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop-v2");
+const XLD_USER_DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop");
+const STALE_XLD_USER_DATA_DIRS = [
+  path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop-v2")
+];
 app.setPath("userData", XLD_USER_DATA_DIR);
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
@@ -87,6 +91,14 @@ const ANALYSIS_SERVICE_PORT = "5055";
 let analysisServiceProcess = null;
 let analysisServiceStarting = null;
 const MEDIA_IDENTITY_PROBE_CACHE = new Map();
+
+function failOnStaleUserDataRoots() {
+  const staleRoots = STALE_XLD_USER_DATA_DIRS.filter((dir) => dir && dir !== XLD_USER_DATA_DIR && fs.existsSync(dir));
+  if (!staleRoots.length) return;
+  const details = staleRoots.join(", ");
+  logStartup(`app:userData staleRoots=${details}`);
+  throw new Error(`Stale xLightsDesigner user-data root detected: ${details}. Remove stale roots and keep only ${XLD_USER_DATA_DIR}.`);
+}
 
 app.on("second-instance", () => {
   if (!mainWindow) return;
@@ -1039,41 +1051,6 @@ function startAutomationPolling() {
     } catch (err) {
       logStartup(`automation:watch error=${String(err?.message || err)}`);
     }
-  }
-}
-
-function tryCopyIfMissing(src, dest) {
-  try {
-    if (!fs.existsSync(src) || fs.existsSync(dest)) return false;
-    ensureDirSync(path.dirname(dest));
-    fs.copyFileSync(src, dest);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function migrateLegacyUserData() {
-  const userData = app.getPath("userData");
-  const legacyData = path.join(os.homedir(), "Library", "Application Support", "xlightsdesigner-desktop");
-  if (!legacyData || legacyData === userData || !fs.existsSync(legacyData)) return;
-  try {
-    ensureDirSync(userData);
-    const filesToCopy = [
-      STATE_FILENAME,
-      AGENT_CONFIG_FILENAME,
-      AGENT_APPLY_LOG_FILENAME,
-      path.join("projects", "index.json")
-    ];
-    let copied = 0;
-    for (const rel of filesToCopy) {
-      const src = path.join(legacyData, rel);
-      const dest = path.join(userData, rel);
-      if (tryCopyIfMissing(src, dest)) copied += 1;
-    }
-    logStartup(`app:userData migration legacy=${legacyData} copied=${copied}`);
-  } catch (err) {
-    logStartup(`app:userData migration error=${String(err?.message || err)}`);
   }
 }
 
@@ -2461,6 +2438,7 @@ ipcMain.handle("xld:audio-library:analyze-folder", async (_event, payload = {}) 
     const appRootPath = String(payload?.appRootPath || "").trim();
     const folderPath = String(payload?.folderPath || "").trim();
     const mode = String(payload?.mode || "deep").trim().toLowerCase();
+    const recursive = payload?.recursive !== false;
     const outDir = String(payload?.outDir || "").trim();
     if (!appRootPath) return { ok: false, error: "Missing appRootPath" };
     if (!folderPath) return { ok: false, error: "Missing folderPath" };
@@ -2481,6 +2459,7 @@ ipcMain.handle("xld:audio-library:analyze-folder", async (_event, payload = {}) 
       "--out-dir", targetOutDir,
       "--mode", mode === "fast" ? "fast" : "deep"
     ];
+    if (recursive) args.push("--recursive");
     const { stdout, stderr } = await runBinary(process.execPath, args);
     const jsonPath = path.join(targetOutDir, "track-library-review.json");
     const htmlPath = path.join(targetOutDir, "track-library-review.html");
@@ -2501,6 +2480,7 @@ ipcMain.handle("xld:audio-library:analyze-folder", async (_event, payload = {}) 
       ok: true,
       appRootPath,
       folderPath,
+      recursive,
       outDir: targetOutDir,
       jsonPath,
       htmlPath: fs.existsSync(htmlPath) ? htmlPath : "",
@@ -2511,6 +2491,31 @@ ipcMain.handle("xld:audio-library:analyze-folder", async (_event, payload = {}) 
       stdout,
       stderr
     };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:audio-library:list-tracks", async (_event, payload = {}) => {
+  try {
+    const appRootPath = String(payload?.appRootPath || "").trim();
+    if (!appRootPath) return { ok: false, error: "Missing appRootPath" };
+    return listTrackLibrarySummaries({ appRootPath });
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:audio-library:update-track-identity", async (_event, payload = {}) => {
+  try {
+    const appRootPath = String(payload?.appRootPath || "").trim();
+    const contentFingerprint = String(payload?.contentFingerprint || "").trim();
+    const title = String(payload?.title || "").trim();
+    const artist = String(payload?.artist || "").trim();
+    if (!appRootPath) return { ok: false, error: "Missing appRootPath" };
+    if (!contentFingerprint) return { ok: false, error: "Missing contentFingerprint" };
+    if (!title || !artist) return { ok: false, error: "Missing title or artist" };
+    return updateTrackLibraryRecordIdentity({ appRootPath, contentFingerprint, title, artist });
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -3057,7 +3062,7 @@ process.on("unhandledRejection", (err) => {
 
 app.on("will-finish-launching", () => logStartup("app:will-finish-launching"));
 app.on("ready", () => {
-  migrateLegacyUserData();
+  failOnStaleUserDataRoots();
   logStartup("app:ready");
   logStartup(`app:userData ${app.getPath("userData")}`);
 });

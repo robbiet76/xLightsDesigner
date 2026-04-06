@@ -139,7 +139,7 @@ function extractGapExamples(records = [], limit = 20) {
 }
 
 function main() {
-  const inputPath = process.argv[2] || path.join(process.env.HOME || "", "Library/Application Support/xlightsdesigner-desktop-v2/xlightsdesigner-state.json");
+  const inputPath = process.argv[2] || path.join(process.env.HOME || "", "Library/Application Support/xlightsdesigner-desktop/xlightsdesigner-state.json");
   const outputPath = process.argv[3] || "/tmp/metadata-completeness-report.v1.json";
   const state = readDesktopState(inputPath);
   const records = buildNormalizedTargetMetadataRecords({
