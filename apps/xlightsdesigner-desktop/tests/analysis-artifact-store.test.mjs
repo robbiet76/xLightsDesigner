@@ -117,3 +117,58 @@ test("readAnalysisArtifactFromProject resolves by explicit content fingerprint w
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("writeAnalysisArtifactToProject renames shared record to corrected title and artist slug", () => {
+  const { root, projectFilePath } = makeTempProject();
+  try {
+    const mediaPath = path.join(root, "02 Candy Cane Lane.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("corrected-track-identity-content"));
+
+    const initialArtifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath)
+      },
+      identity: {
+        title: "",
+        artist: "",
+        contentFingerprint: ""
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "fast"
+        }
+      }
+    };
+
+    const initialWrite = writeAnalysisArtifactToProject({
+      projectFilePath,
+      mediaFilePath: mediaPath,
+      artifact: initialArtifact
+    });
+    assert.equal(initialWrite.ok, true);
+    assert.match(path.basename(initialWrite.recordPath), /^track-[a-f0-9]{8}(?:-[a-f0-9]{8})?\.json$/);
+    assert.equal(fs.existsSync(initialWrite.recordPath), true);
+
+    const correctedArtifact = {
+      ...initialArtifact,
+      identity: {
+        title: "Candy Cane Lane",
+        artist: "Sia",
+        contentFingerprint: initialWrite.contentFingerprint
+      }
+    };
+
+    const correctedWrite = writeAnalysisArtifactToProject({
+      projectFilePath,
+      mediaFilePath: mediaPath,
+      artifact: correctedArtifact
+    });
+    assert.equal(correctedWrite.ok, true);
+    assert.match(path.basename(correctedWrite.recordPath), /^candy-cane-lane-sia(?:-[a-f0-9]{8})?\.json$/);
+    assert.equal(fs.existsSync(correctedWrite.recordPath), true);
+    assert.equal(fs.existsSync(initialWrite.recordPath), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

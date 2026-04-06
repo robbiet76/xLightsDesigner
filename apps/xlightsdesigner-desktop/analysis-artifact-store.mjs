@@ -139,14 +139,15 @@ function basenameWithoutExt(filePath = "") {
   return base.replace(/\.[^.]+$/, "").trim();
 }
 
-function buildTrackDisplayParts(mediaFilePath = "", artifact = null) {
+function buildTrackDisplayParts(mediaFilePath = "", artifact = null, contentFingerprint = "") {
   const identity = artifact?.identity && typeof artifact.identity === "object" ? artifact.identity : {};
   const title = String(identity.title || "").trim();
   const artist = String(identity.artist || "").trim();
-  const fallbackTitle = basenameWithoutExt(mediaFilePath);
-  const stem = slugifyTrackFileStem([title || fallbackTitle, artist].filter(Boolean).join("-")) || "track";
+  const shortFingerprint = String(contentFingerprint || "").trim().toLowerCase().slice(0, 8);
+  const fallbackTitle = title || (shortFingerprint ? `track-${shortFingerprint}` : "track-unidentified");
+  const stem = slugifyTrackFileStem([fallbackTitle, artist].filter(Boolean).join("-")) || "track";
   return {
-    title: title || fallbackTitle,
+    title: fallbackTitle,
     artist,
     stem
   };
@@ -154,7 +155,7 @@ function buildTrackDisplayParts(mediaFilePath = "", artifact = null) {
 
 function buildTrackRecordPathCandidate(projectFilePath = "", mediaFilePath = "", artifact = null, contentFingerprint = "") {
   const libraryDir = getTrackLibraryDir(projectFilePath);
-  const { stem } = buildTrackDisplayParts(mediaFilePath, artifact);
+  const { stem } = buildTrackDisplayParts(mediaFilePath, artifact, contentFingerprint);
   const normalizedFingerprint = String(contentFingerprint || "").trim().toLowerCase();
   const shortFingerprint = normalizedFingerprint ? normalizedFingerprint.slice(0, 8) : "";
   return {
@@ -199,16 +200,35 @@ function findTrackRecordByContentFingerprint(projectFilePath = "", contentFinger
 
 function findRecordPathForWrite(projectFilePath = "", mediaFilePath = "", artifact = null, contentFingerprint = "") {
   const existing = findTrackRecordByContentFingerprint(projectFilePath, contentFingerprint);
-  if (existing?.recordPath) return existing.recordPath;
   const candidate = buildTrackRecordPathCandidate(projectFilePath, mediaFilePath, artifact, contentFingerprint);
-  if (!candidate.defaultRecordPath) return "";
-  if (!fs.existsSync(candidate.defaultRecordPath)) return candidate.defaultRecordPath;
+  if (!candidate.defaultRecordPath) return { recordPath: "", previousRecordPath: "" };
+  if (existing?.recordPath) {
+    if (existing.recordPath === candidate.defaultRecordPath || existing.recordPath === candidate.collisionRecordPath) {
+      return { recordPath: existing.recordPath, previousRecordPath: "" };
+    }
+    const existingDefault = readTrackRecord(candidate.defaultRecordPath);
+    const existingDefaultFingerprint = String(existingDefault?.track?.identity?.contentFingerprint || "").trim().toLowerCase();
+    if (!existingDefault || !existingDefaultFingerprint || existingDefaultFingerprint === String(contentFingerprint || "").trim().toLowerCase()) {
+      return { recordPath: candidate.defaultRecordPath, previousRecordPath: existing.recordPath };
+    }
+    if (candidate.collisionRecordPath) {
+      const existingCollision = readTrackRecord(candidate.collisionRecordPath);
+      const existingCollisionFingerprint = String(existingCollision?.track?.identity?.contentFingerprint || "").trim().toLowerCase();
+      if (!existingCollision || !existingCollisionFingerprint || existingCollisionFingerprint === String(contentFingerprint || "").trim().toLowerCase()) {
+        return { recordPath: candidate.collisionRecordPath, previousRecordPath: existing.recordPath };
+      }
+    }
+    return { recordPath: existing.recordPath, previousRecordPath: "" };
+  }
+  if (!fs.existsSync(candidate.defaultRecordPath)) {
+    return { recordPath: candidate.defaultRecordPath, previousRecordPath: "" };
+  }
   const existingDefault = readTrackRecord(candidate.defaultRecordPath);
   const existingFingerprint = String(existingDefault?.track?.identity?.contentFingerprint || "").trim().toLowerCase();
   if (!existingFingerprint || existingFingerprint === String(contentFingerprint || "").trim().toLowerCase()) {
-    return candidate.defaultRecordPath;
+    return { recordPath: candidate.defaultRecordPath, previousRecordPath: "" };
   }
-  return candidate.collisionRecordPath || candidate.defaultRecordPath;
+  return { recordPath: candidate.collisionRecordPath || candidate.defaultRecordPath, previousRecordPath: "" };
 }
 
 function buildTrackRecordFromArtifact({ projectFilePath = "", mediaFilePath = "", artifact = null, mediaId = "", contentFingerprint = "", canonicalArtifact = null, profiledArtifact = null, profileMode = "" } = {}) {
@@ -347,7 +367,7 @@ export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFile
     }
   }, profileMode, mediaId);
 
-  const recordPath = findRecordPathForWrite(projectPath, mediaPath, normalizedDoc, contentFingerprint);
+  const { recordPath, previousRecordPath } = findRecordPathForWrite(projectPath, mediaPath, normalizedDoc, contentFingerprint);
   const libraryDir = getTrackLibraryDir(projectPath);
   ensureProjectStructure(path.dirname(projectPath));
   fs.mkdirSync(libraryDir, { recursive: true });
@@ -386,6 +406,13 @@ export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFile
   }
 
   fs.writeFileSync(recordPath, JSON.stringify(record, null, 2), "utf8");
+  if (previousRecordPath && previousRecordPath !== recordPath) {
+    try {
+      fs.rmSync(previousRecordPath, { force: true });
+    } catch {
+      // best effort; current record has already been written
+    }
+  }
   return {
     ok: true,
     mediaId,
