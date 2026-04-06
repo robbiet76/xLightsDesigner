@@ -83,6 +83,99 @@ test("applyOpenSequenceState updates sequence identity and adopts sequence media
   });
 });
 
+test("syncAudioPathFromMediaStatus replaces stale external audio path with active sequence media", async () => {
+  const state = buildState();
+  state.showFolder = "/show";
+  state.audioPathInput = "/other-show/media/stale.mp3";
+  const runtime = createSequenceMediaSessionRuntime({
+    state,
+    getMediaStatus: async () => ({
+      data: {
+        mediaFile: "/show/media/current.mp3"
+      }
+    }),
+    onRefreshMediaCatalog: async () => {}
+  });
+
+  await runtime.syncAudioPathFromMediaStatus();
+
+  assert.equal(state.sequenceMediaFile, "/show/media/current.mp3");
+  assert.equal(state.audioPathInput, "/show/media/current.mp3");
+});
+
+
+test("syncAudioPathFromMediaStatus clears stale external audio path when active sequence media is outside the show", async () => {
+  const state = buildState();
+  state.showFolder = "/show";
+  state.audioPathInput = "/other-show/media/stale.mp3";
+  const runtime = createSequenceMediaSessionRuntime({
+    state,
+    getMediaStatus: async () => ({
+      data: {
+        mediaFile: "/other-show/media/stale.mp3"
+      }
+    }),
+    onRefreshMediaCatalog: async () => {}
+  });
+
+  await runtime.syncAudioPathFromMediaStatus();
+
+  assert.equal(state.sequenceMediaFile, "");
+  assert.equal(state.audioPathInput, "");
+});
+
+test("syncAudioPathFromMediaStatus preserves explicit bound audio path outside the show", async () => {
+  const state = buildState();
+  state.showFolder = "/show";
+  state.audioPathInput = "/library/audio/candy-cane-lane.mp3";
+  state.trackBinding = {
+    preferredAudioPath: "/library/audio/candy-cane-lane.mp3",
+    contentFingerprint: "abc123",
+    title: "Candy Cane Lane",
+    artist: "Sia",
+    displayName: "Candy Cane Lane - Sia"
+  };
+  const runtime = createSequenceMediaSessionRuntime({
+    state,
+    getSequenceTrackBinding: () => state.trackBinding,
+    getMediaStatus: async () => ({
+      data: {
+        mediaFile: "/other-show/media/stale.mp3"
+      }
+    }),
+    onRefreshMediaCatalog: async () => {}
+  });
+
+  await runtime.syncAudioPathFromMediaStatus();
+
+  assert.equal(state.sequenceMediaFile, "");
+  assert.equal(state.audioPathInput, "/library/audio/candy-cane-lane.mp3");
+});
+
+test("applyOpenSequenceState clears previous track binding on sequence switch", () => {
+  const state = buildState();
+  state.sequencePathInput = "/show/Seq/Old.xsq";
+  state.trackBinding = {
+    preferredAudioPath: "/library/audio/old.mp3",
+    contentFingerprint: "oldfp",
+    title: "Old",
+    artist: "",
+    displayName: "Old"
+  };
+  const runtime = createSequenceMediaSessionRuntime({
+    state,
+    readSequencePathFromPayload: (payload, fallbackPath = "") => payload?.file || fallbackPath || ""
+  });
+
+  runtime.applyOpenSequenceState({
+    name: "Example.xsq",
+    file: "/show/Seq/Example.xsq",
+    mediaFile: "/show/media/track.mp3"
+  });
+
+  assert.equal(state.trackBinding, null);
+});
+
 test("closeSequenceWithPrompt resets sequence state after confirmed close", async () => {
   const state = buildState();
   state.activeSequence = "Example.xsq";

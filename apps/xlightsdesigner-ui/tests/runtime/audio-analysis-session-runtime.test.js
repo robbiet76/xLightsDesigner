@@ -108,3 +108,60 @@ test("analyzeAudio reuses persisted artifacts through the runtime dependencies",
   assert.ok(events.some((entry) => entry[0] === "snapshot"));
   assert.ok(events.some((entry) => entry[0] === "persist"));
 });
+
+test("analyzeAudio notifies when a reusable artifact is ready", async () => {
+  const state = createBaseState();
+  state.audioPathInput = "/tmp/example.mp3";
+  const calls = [];
+  const runtime = createAudioAnalysisSessionRuntime({
+    state,
+    agentRuntime: { handoffs: {} },
+    setStatus: () => {},
+    render: () => {},
+    persist: () => {},
+    saveCurrentProjectSnapshot: () => {},
+    setAgentActiveRole: () => {},
+    beginOrchestrationRun: () => ({ id: "run-2" }),
+    refreshAgentRuntimeHealth: () => {},
+    markOrchestrationStage: () => {},
+    endOrchestrationRun: () => {},
+    resetAudioAnalysisView: () => {},
+    buildPendingAudioAnalysisPipeline: () => ({}),
+    setAudioAnalysisProgress: () => {},
+    startAudioAnalysisProgressTicker: () => ({ stop: () => {} }),
+    loadReusableAnalysisArtifactForProfile: async () => ({
+      mode: "deep",
+      artifact: { identity: { title: "Track Title" } }
+    }),
+    buildAnalysisHandoffFromArtifact: () => ({ summary: "handoff" }),
+    setAgentHandoff: () => {},
+    applyPersistedAnalysisArtifact: () => true,
+    addStructuredChatMessage: () => {},
+    buildAudioAnalystChatReply: () => "reply",
+    getTeamChatSpeakerLabel: () => "Audio Analyst",
+    buildChatArtifactCard: () => ({}),
+    basenameOfPath: () => "example.mp3",
+    maybeOfferIdentityRecommendationAction: async () => null,
+    onAnalysisArtifactReady: async (payload) => { calls.push(payload); },
+    buildLyricsRecoveryGuidance: () => null,
+    buildAudioAnalystInput: () => {
+      throw new Error("should not build a fresh request when artifact is reused");
+    },
+    executeAudioAnalystFlow: async () => {
+      throw new Error("should not execute flow when artifact is reused");
+    },
+    buildAudioAnalysisStubSummary: () => "stub",
+    applyAudioAnalystFlowSuccessToState: () => ({ ok: true }),
+    syncSectionSuggestionsFromAnalysisArtifact: () => {},
+    pushDiagnostic: () => {},
+    applyAudioAnalystFlowFailureToState: () => {},
+    runAudioAnalysisPipeline: async () => ({})
+  });
+
+  const result = await runtime.analyzeAudio();
+
+  assert.deepEqual(result, { ok: true, reused: true, mode: "deep" });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].audioPath, "/tmp/example.mp3");
+  assert.equal(calls[0].source, "reused");
+});

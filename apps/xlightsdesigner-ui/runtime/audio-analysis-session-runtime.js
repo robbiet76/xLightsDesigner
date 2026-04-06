@@ -30,6 +30,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
     buildChatArtifactCard,
     basenameOfPath = () => "",
     maybeOfferIdentityRecommendationAction,
+    onAnalysisArtifactReady = async () => {},
     buildLyricsRecoveryGuidance,
     buildAudioAnalystInput,
     executeAudioAnalystFlow,
@@ -92,6 +93,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
         if (!applied) {
           throw new Error("Stored analysis artifact was fresh but could not be applied to UI state.");
         }
+        await onAnalysisArtifactReady({ artifact: reusable.artifact, audioPath, source: "reused" });
         setAudioAnalysisProgress(state.audioAnalysis, {
           stage: "artifact_reused",
           message: `Reused stored ${reusable.mode} audio analysis artifact.`
@@ -187,6 +189,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
       if (!applied.ok) {
         throw new Error("Audio analysis flow did not produce a valid UI projection.");
       }
+      await onAnalysisArtifactReady({ artifact: persistedArtifact, audioPath, source: "fresh" });
       syncSectionSuggestionsFromAnalysisArtifact(persistedArtifact);
       setAudioAnalysisProgress(state.audioAnalysis, {
         stage: "handoff_ready",

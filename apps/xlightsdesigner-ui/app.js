@@ -203,6 +203,10 @@ import { createProjectSnapshotRuntime } from "./runtime/project-snapshot-runtime
 import { createAnalysisServiceRuntime } from "./runtime/analysis-service-runtime.js";
 import { createAgentSupportRuntime, emptyAgentRuntimeState } from "./runtime/agent-support-runtime.js";
 import { createMetadataRuntime } from "./runtime/metadata-runtime.js";
+import {
+  buildSequenceTrackBindingFromArtifact,
+  normalizeSequenceTrackBinding
+} from "./runtime/sequence-track-binding-runtime.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -369,6 +373,7 @@ const defaultState = {
   newSequenceFrameMs: 50,
   audioPathInput: "",
   sequenceMediaFile: "",
+  trackBinding: null,
   audioAnalysis: {
     summary: "",
     lastAnalyzedAt: "",
@@ -989,6 +994,12 @@ function applyPersistedAnalysisArtifact(artifact = null) {
   return out.ok === true;
 }
 
+function updateSequenceTrackBindingFromArtifact(artifact = null, audioPath = state.audioPathInput) {
+  const binding = buildSequenceTrackBindingFromArtifact({ artifact, audioPath });
+  state.trackBinding = binding || null;
+  return state.trackBinding;
+}
+
 async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
   const silent = options?.silent !== false;
   const preferredProfileMode = String(options?.preferredProfileMode || "deep").trim().toLowerCase();
@@ -1006,6 +1017,7 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
       return { ok: false, reason: String(res?.code || "not_found") };
     }
     const applied = applyPersistedAnalysisArtifact(res.artifact);
+    if (applied) updateSequenceTrackBindingFromArtifact(res.artifact, mediaFilePath);
     if (applied && !silent) {
       setStatus("info", "Loaded existing audio analysis artifact for current media.");
     }
@@ -1311,9 +1323,10 @@ function buildSequenceSidecarDocument() {
     };
   }
   return {
-    version: 3,
+    version: 4,
     updatedAt: new Date().toISOString(),
     sequencePath: currentSequencePathForSidecar(),
+    trackBinding: normalizeSequenceTrackBinding(state.trackBinding),
     project: {
       name: state.projectName || "",
       showFolder: state.showFolder || ""
@@ -1355,6 +1368,10 @@ function buildSequenceSidecarDocument() {
 
 function applySequenceSidecarDocument(doc) {
   if (!doc || typeof doc !== "object") return;
+  state.trackBinding = normalizeSequenceTrackBinding(doc?.trackBinding) || null;
+  if (state.trackBinding?.preferredAudioPath) {
+    state.audioPathInput = state.trackBinding.preferredAudioPath;
+  }
   if (Array.isArray(doc?.draft?.proposed)) state.proposed = [...doc.draft.proposed];
   state.agentPlan = doc?.draft?.agentPlan && typeof doc.draft.agentPlan === "object"
     ? { ...doc.draft.agentPlan }
@@ -1996,6 +2013,7 @@ function extractProjectSnapshot() {
     newSequenceFrameMs: state.newSequenceFrameMs,
     audioPathInput: state.audioPathInput,
     sequenceMediaFile: state.sequenceMediaFile,
+    trackBinding: normalizeSequenceTrackBinding(state.trackBinding),
     savePathInput: state.savePathInput,
     lastApplyBackupPath: state.lastApplyBackupPath,
     recentSequences: state.recentSequences,
@@ -2061,6 +2079,7 @@ function applyProjectSnapshot(snapshot) {
   } else {
     state.audioPathInput = snapshotAudioPath || state.audioPathInput;
   }
+  state.trackBinding = normalizeSequenceTrackBinding(snapshot?.trackBinding) || state.trackBinding || null;
   state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   state.sequenceAgentRuntime = snapshot?.sequenceAgentRuntime && typeof snapshot.sequenceAgentRuntime === "object"
       ? {
@@ -7255,6 +7274,9 @@ audioAnalysisSessionRuntime = createAudioAnalysisSessionRuntime({
   buildChatArtifactCard,
   basenameOfPath,
   maybeOfferIdentityRecommendationAction,
+  onAnalysisArtifactReady: async ({ artifact, audioPath }) => {
+    updateSequenceTrackBindingFromArtifact(artifact, audioPath);
+  },
   buildLyricsRecoveryGuidance,
   buildAudioAnalystInput,
   executeAudioAnalystFlow,
@@ -7312,6 +7334,7 @@ sequenceMediaSessionRuntime = createSequenceMediaSessionRuntime({
   resetCreativeState,
   readSequencePathFromPayload,
   basenameOfPath,
+  getSequenceTrackBinding: () => state.trackBinding,
   onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
   onRefresh: () => onRefresh(),
   addRecentSequence,

@@ -51,7 +51,8 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
     readSequencePathFromPayload = () => "",
     onRefreshMediaCatalog = async () => {},
     onRefresh = async () => {},
-    basenameOfPath = () => ""
+    basenameOfPath = () => "",
+    getSequenceTrackBinding = () => null
   } = deps;
 
   async function resolveActiveEndpoint() {
@@ -95,12 +96,28 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
     return true;
   }
 
-  function applySequenceMediaToAudioPath(sequenceData) {
+  function shouldAdoptSequenceMediaPath(mediaFile = "", { force = false } = {}) {
+    const sequenceMedia = str(mediaFile);
+    if (!sequenceMedia) return false;
+    const binding = getSequenceTrackBinding();
+    const boundAudioPath = str(binding?.preferredAudioPath);
+    if (boundAudioPath && boundAudioPath !== sequenceMedia) return false;
+    const showFolder = str(state.showFolder);
+    if (showFolder && !sequenceMedia.startsWith(showFolder)) return false;
+    const currentAudio = str(state.audioPathInput);
+    if (force) return currentAudio !== sequenceMedia;
+    if (!currentAudio) return true;
+    if (currentAudio === sequenceMedia) return false;
+    if (showFolder && !currentAudio.startsWith(showFolder)) return true;
+    return false;
+  }
+
+  function applySequenceMediaToAudioPath(sequenceData, options = {}) {
     if (!sequenceData || typeof sequenceData !== "object") return;
     const mediaFile = str(sequenceData.mediaFile);
     state.sequenceMediaFile = mediaFile || "";
     if (mediaFile) adoptMediaDirectoryFromPath(mediaFile);
-    if (!str(state.audioPathInput) && mediaFile) {
+    if (shouldAdoptSequenceMediaPath(mediaFile, { force: options?.force === true })) {
       setAudioPathWithAgentPolicy(mediaFile, "sequence media adopted as initial analysis track");
     }
   }
@@ -110,13 +127,23 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
       const endpoint = await resolveActiveEndpoint();
       const mediaBody = await getMediaStatus(endpoint);
       const mediaFile = str(mediaBody?.data?.mediaFile);
-      state.sequenceMediaFile = mediaFile || "";
-      const mediaDirChanged = mediaFile ? adoptMediaDirectoryFromPath(mediaFile) : false;
+      const binding = getSequenceTrackBinding();
+      const boundAudioPath = str(binding?.preferredAudioPath);
+      const showFolder = str(state.showFolder);
+      const mediaInShow = !showFolder || !mediaFile || mediaFile.startsWith(showFolder);
+      state.sequenceMediaFile = mediaInShow ? (mediaFile || "") : "";
+      const mediaDirChanged = mediaInShow && mediaFile ? adoptMediaDirectoryFromPath(mediaFile) : false;
       if (mediaDirChanged) {
         await onRefreshMediaCatalog({ silent: true });
       }
-      if (!str(state.audioPathInput) && mediaFile) {
-        setAudioPathWithAgentPolicy(mediaFile, "media status adopted as initial analysis track");
+      if (shouldAdoptSequenceMediaPath(mediaFile)) {
+        setAudioPathWithAgentPolicy(mediaFile, "media status adopted for active sequence");
+      } else if (!mediaInShow) {
+        const currentAudio = str(state.audioPathInput);
+        const keepBoundAudio = Boolean(boundAudioPath && currentAudio === boundAudioPath);
+        if (!keepBoundAudio && showFolder && currentAudio && !currentAudio.startsWith(showFolder)) {
+          setAudioPathWithAgentPolicy("", "cleared stale external audio path for active sequence");
+        }
       }
     } catch {
       try {
@@ -149,6 +176,7 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
 
     if (sequenceName) state.activeSequence = sequenceName;
     if (sequencePath) {
+      if (sequenceChanged) state.trackBinding = null;
       state.sequencePathInput = sequencePath;
       state.savePathInput = sequencePath;
       state.ui.sequenceMode = "existing";
