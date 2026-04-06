@@ -134,3 +134,25 @@ test("automation runtime exposes visual hint definition snapshot", () => {
   assert.equal(out.counts.managedDefined, 1);
   assert.equal(Array.isArray(out.records), true);
 });
+
+test("automation reset clears stale audio path and sequence media state", async () => {
+  const state = {
+    status: { level: "info", text: "ready" },
+    activeSequence: "CandyCaneLane",
+    sequencePathInput: "/show/CandyCaneLane/CandyCaneLane.xsq",
+    audioPathInput: "/other-show/Audio/stale.mp3",
+    sequenceMediaFile: "/other-show/Audio/stale.mp3",
+    proposed: [],
+    chat: [],
+    flags: {},
+    ui: {},
+    creative: {}
+  };
+  const runtime = createAutomationRuntime(buildDeps({ state }));
+
+  const out = await runtime.resetAutomationState();
+
+  assert.equal(out.ok, true);
+  assert.equal(state.audioPathInput, "");
+  assert.equal(state.sequenceMediaFile, "");
+});

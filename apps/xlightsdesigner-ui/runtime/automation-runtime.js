@@ -567,6 +567,8 @@ export function createAutomationRuntime(deps = {}) {
     state.agentPlan = null;
     clearSequencingHandoffsForSequenceChange("automation reset state");
     clearDesignRevisionTarget();
+    state.audioPathInput = "";
+    state.sequenceMediaFile = "";
     state.creative = {
       goals: "",
       inspiration: "",

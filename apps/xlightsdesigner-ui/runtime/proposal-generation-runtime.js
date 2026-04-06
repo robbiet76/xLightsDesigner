@@ -294,7 +294,6 @@ export function createProposalGenerationRuntime(deps = {}) {
               : [],
             warnings: Array.isArray(proposalOrchestration.warnings) ? proposalOrchestration.warnings : []
           };
-          console.warn("xld:direct-sequence-debug", debugContext);
           pushDiagnostic("warning", "Direct sequence debug context", JSON.stringify(debugContext, null, 2));
         }
         markOrchestrationStage(orchestrationRun, directSequenceMode ? "direct_sequence_request" : "designer_dialog", "error", proposalOrchestration.summary || (directSequenceMode ? "direct sequence flow failed" : "designer flow failed"));
