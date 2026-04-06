@@ -14,6 +14,14 @@ Primary parent sources:
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
+- `macos-native-sequence-workflow-review-from-electron-2026-04-06.md`
+
+
+## Reference Rule
+
+The current Electron `Sequence` page is a workflow reference only.
+It may be used to evaluate active-sequence hierarchy, translation browse surfaces, and blocker visibility, but it is not the target shell.
+If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Sequence workflow review document.
 
 ## Screen Purpose
 
@@ -164,3 +172,29 @@ Do not add:
 2. active sequence identity is the first read surface
 3. translation readiness is the main summary surface
 4. final apply remains outside this screen
+
+## Screen Reading Order
+
+The native `Sequence` screen should read in this order:
+1. what sequence is active
+2. what track metadata and timing substrate are bound to it
+3. is technical translation ready
+4. what blocker or warning matters most right now
+
+## Default Behavior
+
+When no active sequence exists, the empty state must make the next valid sequence action obvious.
+
+When a sequence exists:
+- active sequence identity remains the first read surface
+- translation readiness remains the main summary payload
+- apply ownership remains outside this screen
+
+## Native Acceptance Criteria
+
+The `Sequence` screen is implementation-ready only when:
+1. active sequence identity is established immediately
+2. binding and timing-substrate state are clear
+3. readiness and blockers are concise and actionable
+4. translated technical rows remain dense and browseable
+5. the page does not drift into review/apply ownership

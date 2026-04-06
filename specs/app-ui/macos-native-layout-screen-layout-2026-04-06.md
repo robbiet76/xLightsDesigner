@@ -15,6 +15,7 @@ Primary parent sources:
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-design-phase-workstreams-2026-04-06.md`
+- `macos-native-layout-workflow-review-from-electron-2026-04-06.md`
 
 ## Screen Role
 
@@ -275,3 +276,29 @@ The `Layout` screen contract is ready for native wireframes when:
 2. the selected-target correction band is clearly defined
 3. readiness summaries are readable and concise
 4. the page boundary versus `Project`, `Design`, and `Sequence` is unambiguous
+
+## Screen Reading Order
+
+The native `Layout` screen should read in this order:
+1. is the layout support state usable
+2. what targets need attention
+3. what is selected right now
+4. what exactly should I correct next
+
+## Default Behavior
+
+When targets exist, the target grid should load immediately and remain the primary browse surface.
+
+Behavior rules:
+- row selection updates the selected-target band only
+- row selection must not reset scroll position
+- stale cross-workflow context must not take over this screen
+
+## Native Acceptance Criteria
+
+The `Layout` screen is implementation-ready only when:
+1. readiness is visible before the user reads the full target list
+2. the target grid is the primary browse surface
+3. correction happens in one selected-target region, not row cells
+4. orphan/remapping issues are obvious and actionable
+5. the screen does not read like a generic metadata admin page

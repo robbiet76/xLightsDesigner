@@ -14,6 +14,14 @@ Primary parent sources:
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
+- `macos-native-review-workflow-review-from-electron-2026-04-06.md`
+
+
+## Reference Rule
+
+The current Electron `Review` page is a workflow reference only.
+It may be used to evaluate decision-surface hierarchy and supporting summary placement, but it is not the target shell.
+If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Review workflow review document.
 
 ## Screen Purpose
 
@@ -161,3 +169,29 @@ Do not add:
 2. pending implementation summary is the first read surface
 3. design and sequence appear as supporting summaries only
 4. approval/apply is visually dominant on this screen
+
+## Screen Reading Order
+
+The native `Review` screen should read in this order:
+1. what is pending right now
+2. is it ready to apply
+3. what impact and blockers matter
+4. what should I do next
+
+## Default Behavior
+
+When nothing is pending, the empty state must make that clear without reading like an error.
+
+When pending work exists:
+- pending implementation summary remains the first read surface
+- design and sequence stay secondary summaries
+- approval/apply remains the dominant action region
+
+## Native Acceptance Criteria
+
+The `Review` screen is implementation-ready only when:
+1. pending implementation is immediately understandable
+2. readiness, impact, and backup state form one coherent decision surface
+3. design and sequence remain supporting inputs only
+4. apply ownership is visually dominant
+5. the page does not drift into history or live technical dashboard behavior

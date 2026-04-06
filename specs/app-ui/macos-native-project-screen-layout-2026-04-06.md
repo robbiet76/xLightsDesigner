@@ -16,6 +16,14 @@ Primary parent sources:
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-wireframe-and-prototype-method-2026-04-06.md`
 - `xlightsdesigner-project-storage-layout.md`
+- `macos-native-project-workflow-review-from-electron-2026-04-06.md`
+
+
+## Reference Rule
+
+The current Electron `Project` page is a workflow reference only.
+It may be used to evaluate hierarchy, flow, and action placement, but it is not the target shell.
+If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Project workflow review document.
 
 ## Screen Purpose
 
@@ -316,3 +324,29 @@ The wireframes must be detailed enough to answer:
 After this screen contract:
 1. write the combined native `Sequence / Design / Review` relationship layout spec
 2. then define `Layout` and `History` screen contracts if needed before wireframing expands
+
+## Screen Reading Order
+
+The native `Project` screen should read in this order:
+1. what project am I in
+2. what can I do next
+3. where does this project live and what does it reference
+4. is the project context valid for downstream work
+
+## Default Behavior
+
+On first run or when no project is active, `Create Project` and `Open Project` must dominate the screen.
+
+When a project is active:
+- the active project summary remains the first read surface
+- stale sequence-specific context must not take over this page
+- downstream workflow hints remain secondary
+
+## Native Acceptance Criteria
+
+The `Project` screen is implementation-ready only when:
+1. the active project identity is the first obvious read surface
+2. create/open actions are immediately discoverable
+3. referenced paths are clear without feeling like settings sprawl
+4. downstream readiness hints stay lightweight
+5. the page does not drift into sequence control or settings ownership

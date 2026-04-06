@@ -15,6 +15,7 @@ Primary parent sources:
 - `macos-native-information-architecture-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-design-phase-workstreams-2026-04-06.md`
+- `macos-native-history-workflow-review-from-electron-2026-04-06.md`
 
 ## Screen Role
 
@@ -248,3 +249,29 @@ The `History` screen contract is ready for native wireframes when:
 2. the selected-detail hierarchy is clear
 3. the difference between `Review` and `History` is unmistakable
 4. historical artifact references are defined at the right level of detail
+
+## Screen Reading Order
+
+The native `History` screen should read in this order:
+1. what historical activity exists
+2. which recent event matters most
+3. what happened in the selected event
+4. what evidence or artifacts support it
+
+## Default Behavior
+
+When history exists, the event list should remain the primary browse surface and default to newest first.
+
+Behavior rules:
+- row selection updates the selected-history detail only
+- row selection must not reset list scroll position
+- pending approval controls must never appear here
+
+## Native Acceptance Criteria
+
+The `History` screen is implementation-ready only when:
+1. it is unmistakably retrospective rather than pending-review oriented
+2. the list is the primary browse surface
+3. selected detail explains what happened without raw log dependence
+4. evidence visibility is clear
+5. the page does not drift into approval/apply ownership

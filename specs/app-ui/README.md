@@ -23,6 +23,12 @@ Active Entry Points:
 - `macos-native-audio-screen-layout-2026-04-06.md`
 - `macos-native-audio-workflow-review-from-electron-2026-04-06.md`
 - `macos-native-project-screen-layout-2026-04-06.md`
+- `macos-native-project-workflow-review-from-electron-2026-04-06.md`
+- `macos-native-layout-workflow-review-from-electron-2026-04-06.md`
+- `macos-native-design-workflow-review-from-electron-2026-04-06.md`
+- `macos-native-sequence-workflow-review-from-electron-2026-04-06.md`
+- `macos-native-review-workflow-review-from-electron-2026-04-06.md`
+- `macos-native-history-workflow-review-from-electron-2026-04-06.md`
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-sequence-screen-layout-2026-04-06.md`
 - `macos-native-design-screen-layout-2026-04-06.md`

@@ -14,6 +14,14 @@ Primary parent sources:
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-workflow-contracts-2026-04-06.md`
 - `macos-native-information-architecture-2026-04-06.md`
+- `macos-native-design-workflow-review-from-electron-2026-04-06.md`
+
+
+## Reference Rule
+
+The current Electron `Design` page is a workflow reference only.
+It may be used to evaluate proposal hierarchy and rationale placement, but it is not the target shell.
+If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the Design workflow review document.
 
 ## Screen Purpose
 
@@ -153,3 +161,29 @@ Do not add:
 2. proposal/brief summary is the primary read surface
 3. rationale and warnings are secondary explanatory surfaces
 4. technical translation remains outside this screen
+
+## Screen Reading Order
+
+The native `Design` screen should read in this order:
+1. what is the current creative direction
+2. is there a coherent proposal
+3. why does the proposal look this way
+4. what assumptions or open questions remain
+
+## Default Behavior
+
+When no meaningful design state exists, the empty state must explain what will appear here later without sounding broken.
+
+When design state exists:
+- proposal/brief summary remains the dominant read surface
+- rationale and warnings remain secondary
+- technical translation detail stays off this page
+
+## Native Acceptance Criteria
+
+The `Design` screen is implementation-ready only when:
+1. creative direction is the dominant read surface
+2. proposal state is understandable at a glance
+3. rationale and warnings support the proposal without overwhelming it
+4. sequence translation detail does not leak into the page
+5. the screen does not read like a live dashboard
