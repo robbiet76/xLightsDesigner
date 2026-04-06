@@ -90,6 +90,9 @@ Exit criteria:
 Goal:
 - complete the native application design package before UI implementation
 
+Primary breakdown source:
+- `macos-native-design-phase-workstreams-2026-04-06.md`
+
 Checklist:
 - define app-level information architecture
 - define global navigation and page ownership

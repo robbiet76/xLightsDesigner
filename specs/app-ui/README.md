@@ -16,6 +16,7 @@ Scope:
 
 Active Entry Points:
 - `macos-native-migration-phase-plan-2026-04-06.md`
+- `macos-native-design-phase-workstreams-2026-04-06.md`
 - `electron-legacy-removal-manifest-2026-04-06.md`
 - `implementation-checklist.md`
 - `page-roles-and-flow.md`
