@@ -270,6 +270,9 @@ Likely first components:
 - file/folder picker row
 - batch progress summary
 
+Primary source:
+- `macos-native-design-system-components-2026-04-06.md`
+
 Exit criteria:
 - implementation can build screens by composition instead of re-inventing widgets
 
