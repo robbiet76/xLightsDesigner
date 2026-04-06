@@ -80,6 +80,53 @@ The key rule is:
 - action and current-result sit above the library
 - the library is broad browse/inspect space, not the primary call to action
 
+## Screen Reading Order
+
+The native `Audio` screen should read in this order:
+1. what this page is for
+2. what I can do right now
+3. what track or batch result I am looking at
+4. whether it is usable
+5. whether I need to do anything next
+6. what else already exists in the library
+
+If a user must hunt below the grid to understand the selected track, the layout is wrong.
+
+## Default Behavior
+
+On first entry, the screen should default to `Single Track` mode.
+
+The screen should also preserve these behavioral rules:
+- the last selected library row may be restored if it is still valid
+- stale running-task UI must not be restored
+- stale sequence context must not influence this screen
+- returning to the screen should restore useful browse context, not hidden task state
+
+## Top-Band Contract
+
+The action-and-result band is the dominant screen region.
+
+It must behave as a strict two-column contract:
+- left column = `Do`
+- right column = `Understand / Fix`
+
+The left column owns:
+- mode selection
+- file or folder choice
+- launch analysis actions
+
+The right column owns:
+- selected track or latest batch identity
+- status
+- timing coverage
+- reason/explanation
+- recommended action
+- inline correction when allowed
+
+The top band should remain stable across state changes.
+Do not swap large layout structures when changing between single-track, needs-review, and batch states.
+Only the contents of each column should change.
+
 ## Region Definition
 
 ### Region A: Page Header
@@ -130,6 +177,12 @@ Required controls:
 - `Browse File` action
 - `Analyze Track` primary action
 
+Field rules:
+- the chosen file path is visible and copyable
+- the browse action remains adjacent to the file field
+- the primary action is disabled until the file input is valid
+- helper text, if present, must stay one line and non-technical
+
 Optional supporting controls:
 - `Use selected library track` style affordance only if it proves necessary later
 
@@ -140,6 +193,12 @@ Required controls:
 - `Browse Folder` action
 - recursive toggle: `Include subfolders`
 - `Analyze Folder` primary action
+
+Field rules:
+- the chosen folder path is visible and copyable
+- the recursive toggle is visible without extra expansion
+- the primary action is disabled until the folder input is valid
+- any supporting note must explain what the batch run produces, not how the backend works
 
 Rule:
 - only the active mode's full controls should be visually expanded
@@ -161,15 +220,18 @@ This panel is the primary read surface immediately after the user acts.
 
 ### When In Single Track Context
 
-Show:
-- display name
-- artist
-- last analyzed timestamp
-- overall status
-- available timing layers
-- missing timing layers
-- readable reason/explanation
-- recommended action if one exists
+Show in this order:
+1. display name
+2. artist
+3. last analyzed timestamp
+4. overall status
+5. identity state
+6. available timing layers
+7. missing timing layers or issues
+8. readable reason/explanation
+9. recommended action if one exists
+
+The panel should answer the selected-track question in one pass without requiring drill-down.
 
 Allowed timing labels:
 - `Song Structure`
@@ -191,14 +253,23 @@ Rule:
 
 ### When In Batch Context
 
-Show:
-- total files processed
-- complete count
-- partial count
-- needs-review count
-- failed count
-- top issue categories
-- path or action for later report inspection
+Show in this order:
+1. batch identity or folder label
+2. batch state
+3. total files processed
+4. complete count
+5. partial count
+6. needs-review count
+7. failed count
+8. top issue categories
+9. path or action for later report inspection
+
+Batch state should be concise and product-readable, for example:
+- `Running`
+- `Complete`
+- `Failed`
+
+Do not surface backend stage names as the primary batch label.
 
 Disallowed content in this panel:
 - raw JSON
@@ -427,3 +498,35 @@ After this screen contract:
 1. produce medium/high-fidelity `Audio` wireframes
 2. produce the `Audio` click-through prototype
 3. then write the native `Project` screen layout contract
+
+## Status And Action Language
+
+The native `Audio` screen should use one stable set of user-facing state labels.
+
+Allowed overall statuses:
+- `Complete`
+- `Partial`
+- `Needs Review`
+- `Failed`
+
+Each non-complete state must also supply:
+- one short reason sentence
+- one short action sentence
+
+Allowed action sentences:
+- `No action needed`
+- `Verify track info`
+- `Re-run analysis`
+- `Review batch results`
+
+The `Action` column in the library grid should use the same wording family as the current-result panel.
+
+## Native Acceptance Criteria
+
+The `Audio` screen design should be treated as implementation-ready only when these are all true:
+1. the first action is obvious without reading below the top band
+2. the current-result panel fully explains the selected track state
+3. the library grid remains browse-only and selection-first
+4. no required workflow logic depends on a secondary hidden detail panel
+5. the page is sequence-independent in language and structure
+6. the page does not read like a dashboard or diagnostics console
