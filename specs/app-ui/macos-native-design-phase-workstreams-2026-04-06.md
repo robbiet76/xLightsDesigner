@@ -20,6 +20,9 @@ Current workstream 1 source:
 Current workstream 2 source:
 - `macos-native-workflow-contracts-2026-04-06.md`
 
+Current workstream 3 source (Audio first):
+- `macos-native-audio-screen-layout-2026-04-06.md`
+
 Primary parent plan:
 - `macos-native-migration-phase-plan-2026-04-06.md`
 
@@ -123,6 +126,9 @@ Checklist:
 - define `Metadata` screen layout
 - define `History` screen layout
 - define `Settings` screen layout
+
+Current first screen source:
+- `macos-native-audio-screen-layout-2026-04-06.md`
 
 Exit criteria:
 - every screen has a stable information hierarchy
