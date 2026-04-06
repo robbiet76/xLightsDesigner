@@ -215,6 +215,9 @@ Checklist:
 - define sequence metadata binding boundary
 - define xLights owned API client boundary
 
+Primary source:
+- `macos-native-shared-backend-and-service-boundaries-2026-04-06.md`
+
 Exit criteria:
 - SwiftUI implementation does not require backend-contract invention
 
