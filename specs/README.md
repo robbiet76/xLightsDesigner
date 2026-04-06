@@ -45,6 +45,8 @@ Primary policy source:
 - `app-ui/macos-native-sequence-screen-layout-2026-04-06.md`
 - `app-ui/macos-native-design-screen-layout-2026-04-06.md`
 - `app-ui/macos-native-review-screen-layout-2026-04-06.md`
+- `app-ui/macos-native-layout-screen-layout-2026-04-06.md`
+- `app-ui/macos-native-history-screen-layout-2026-04-06.md`
 - `app-ui/electron-legacy-removal-manifest-2026-04-06.md`
 - `app-assistant/app-assistant-role-and-boundary.md`
 - `app-assistant/implementation-checklist.md`
