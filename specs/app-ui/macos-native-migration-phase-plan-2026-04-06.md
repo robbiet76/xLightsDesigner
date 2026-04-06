@@ -92,6 +92,7 @@ Goal:
 
 Primary breakdown source:
 - `macos-native-design-phase-workstreams-2026-04-06.md`
+- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
 
 Checklist:
 - define app-level information architecture

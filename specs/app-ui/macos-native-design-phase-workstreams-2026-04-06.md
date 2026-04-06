@@ -11,6 +11,9 @@ Break `Phase 1: Product Design` into concrete workstreams, deliverables, and rev
 This document exists to make the design phase executable.
 It is the checklist that must be completed before any SwiftUI screen implementation begins.
 
+Required design artifact method:
+- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
+
 Primary parent plan:
 - `macos-native-migration-phase-plan-2026-04-06.md`
 
@@ -20,6 +23,7 @@ Do not begin native UI implementation until:
 1. the required workstreams are complete
 2. the deliverables are written down
 3. the screen contracts are coherent enough to build with minimal iteration
+4. the required wireframes and prototypes exist for the workflows in scope
 
 ## Workstreams
 

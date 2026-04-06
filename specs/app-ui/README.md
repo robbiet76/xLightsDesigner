@@ -17,6 +17,7 @@ Scope:
 Active Entry Points:
 - `macos-native-migration-phase-plan-2026-04-06.md`
 - `macos-native-design-phase-workstreams-2026-04-06.md`
+- `macos-native-wireframe-and-prototype-method-2026-04-06.md`
 - `electron-legacy-removal-manifest-2026-04-06.md`
 - `implementation-checklist.md`
 - `page-roles-and-flow.md`
@@ -29,6 +30,7 @@ Current role in the app plan:
 - define the native product-shell direction before implementation
 - preserve workflow-first page contracts and backend/runtime ownership boundaries
 - stop broad Electron UX expansion and move toward a native macOS shell design package
+- require medium/high-fidelity wireframes and click-through prototypes for high-risk workflows before SwiftUI build
 
 Lifecycle note:
 - Electron-specific app-ui specs are now legacy-reference only unless explicitly marked otherwise
