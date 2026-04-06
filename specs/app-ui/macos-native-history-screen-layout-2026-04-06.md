@@ -17,6 +17,13 @@ Primary parent sources:
 - `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-history-workflow-review-from-electron-2026-04-06.md`
 
+
+## Reference Rule
+
+The current Electron `History` page is a workflow reference only.
+It may be used to evaluate list/detail history browsing and evidence visibility, but it is not the target shell.
+If Electron behavior and this screen contract diverge, this screen contract wins unless explicitly revised in the History workflow review document.
+
 ## Screen Role
 
 The native `History` screen answers:
