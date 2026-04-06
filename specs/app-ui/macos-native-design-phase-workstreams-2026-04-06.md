@@ -292,6 +292,9 @@ Checklist:
 - define when Electron screen work must stop
 - define what confirms native parity per workflow
 
+Primary source:
+- `macos-native-cutover-plan-2026-04-06.md`
+
 Exit criteria:
 - migration is staged without blending old/new product shell logic
 
