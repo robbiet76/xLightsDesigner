@@ -181,10 +181,24 @@ Minimum structure:
       "contentFingerprint": "sha256-or-hex-fingerprint",
       "isrc": null
     },
+    "verification": {
+      "status": "verified",
+      "basis": ["provider_metadata", "embedded_tags"],
+      "titlePresent": true,
+      "artistPresent": true
+    },
+    "naming": {
+      "recommendedFileName": "candy-cane-lane-sia.mp3",
+      "shouldRename": false,
+      "shouldRetag": false
+    },
     "sourceMedia": {
       "mediaId": "path-instance-id",
       "path": "/absolute/path/to/media.mp3",
-      "fileName": "Sia - Candy Cane Lane.mp3"
+      "fileName": "Sia - Candy Cane Lane.mp3",
+      "durationMs": 180000,
+      "sampleRate": 44100,
+      "channels": 2
     }
   },
   "analysis": {
@@ -231,6 +245,11 @@ Timing-track rules:
   - `kind`
 - xLightsDesigner consumes these records independently of xLights
 - sequence metadata should link to the shared track record by fingerprint, not duplicate the record
+
+Identity rules:
+- corrected `title` and `artist` should be promoted to the top-level `track` object
+- naming/retag guidance should be promoted to the top-level `track` object
+- raw provider evidence may remain in `analyses.profiles.*`, but consumers should not need that for normal library use
 ## 12) Immediate Implementation Guidance
 Short-term:
 1. persist `showFolderPath` and `mediaPath` in `.xdproj`,

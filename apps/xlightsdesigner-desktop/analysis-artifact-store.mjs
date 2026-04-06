@@ -329,6 +329,7 @@ function findRecordPathForWrite(projectFilePath = "", mediaFilePath = "", artifa
 
 function buildTrackRecordFromArtifact({ projectFilePath = "", mediaFilePath = "", artifact = null, mediaId = "", contentFingerprint = "", canonicalArtifact = null, profiledArtifact = null, profileMode = "" } = {}) {
   const identity = artifact?.identity && typeof artifact.identity === "object" ? artifact.identity : {};
+  const media = artifact?.media && typeof artifact.media === "object" ? artifact.media : {};
   const title = String(identity.title || "").trim() || basenameWithoutExt(mediaFilePath);
   const artist = String(identity.artist || "").trim();
   const displayName = [title, artist].filter(Boolean).join(" - ") || title;
@@ -348,10 +349,46 @@ function buildTrackRecordFromArtifact({ projectFilePath = "", mediaFilePath = ""
         contentFingerprint,
         isrc: String(identity.isrc || "").trim() || null
       },
+      sourceMetadata: identity?.sourceMetadata && typeof identity.sourceMetadata === "object" ? {
+        embeddedTitle: str(identity.sourceMetadata?.embeddedTitle) || null,
+        embeddedArtist: str(identity.sourceMetadata?.embeddedArtist) || null,
+        embeddedAlbum: str(identity.sourceMetadata?.embeddedAlbum) || null,
+        filenameTitleHint: str(identity.sourceMetadata?.filenameTitleHint) || null,
+        filenameArtistHint: str(identity.sourceMetadata?.filenameArtistHint) || null
+      } : null,
+      verification: identity?.verification && typeof identity.verification === "object" ? {
+        status: str(identity.verification?.status) || ((title || artist) ? "present" : "unverified"),
+        basis: Array.isArray(identity.verification?.basis)
+          ? identity.verification.basis.map((row) => str(row)).filter(Boolean)
+          : [],
+        titlePresent: Boolean(identity.verification?.titlePresent),
+        artistPresent: Boolean(identity.verification?.artistPresent)
+      } : {
+        status: title || artist ? "present" : "unverified",
+        basis: [],
+        titlePresent: Boolean(title),
+        artistPresent: Boolean(artist)
+      },
+      naming: {
+        recommendedFileName: str(identity?.recommendation?.recommendedFileName) || null,
+        shouldRename: Boolean(identity?.recommendation?.shouldRename),
+        shouldRetag: Boolean(identity?.metadataRecommendation?.shouldRetag)
+      },
+      providerSuggestion: identity?.providerMetadataSuggestion && typeof identity.providerMetadataSuggestion === "object" ? {
+        title: str(identity.providerMetadataSuggestion?.title) || null,
+        artist: str(identity.providerMetadataSuggestion?.artist) || null,
+        confidence: str(identity.providerMetadataSuggestion?.confidence) || null,
+        sources: Array.isArray(identity.providerMetadataSuggestion?.sources)
+          ? identity.providerMetadataSuggestion.sources.map((row) => str(row)).filter(Boolean)
+          : []
+      } : null,
       sourceMedia: {
         mediaId,
         path: normalizePathForCompare(mediaFilePath),
-        fileName: path.basename(normalizePathForCompare(mediaFilePath))
+        fileName: path.basename(normalizePathForCompare(mediaFilePath)),
+        durationMs: finiteOrNull(media?.durationMs),
+        sampleRate: finiteOrNull(media?.sampleRate),
+        channels: finiteOrNull(media?.channels)
       }
     },
     analysis: {

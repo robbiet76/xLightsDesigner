@@ -252,6 +252,8 @@ test("analysis artifact store persists canonical artifact under shared track lib
 
   const stored = JSON.parse(fs.readFileSync(writeRes.recordPath, "utf8"));
   assert.equal(stored.track.displayName, "Song - Artist");
+  assert.equal(stored.track.verification.status, "present");
+  assert.equal(stored.track.sourceMedia.durationMs, 123000);
   assert.deepEqual(
     stored.timingTracks.map((row) => row.name),
     ["XD: Song Structure", "XD: Phrase Cues", "XD: Beats", "XD: Bars", "XD: Chords"]

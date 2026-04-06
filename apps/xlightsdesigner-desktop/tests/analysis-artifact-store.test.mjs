@@ -224,6 +224,8 @@ test("writeAnalysisArtifactToProject emits canonical track metadata timing track
     assert.equal(stored.version, 2);
     assert.equal(stored.track.title, "Candy Cane Lane");
     assert.equal(stored.track.artist, "Sia");
+    assert.equal(stored.track.verification.status, "present");
+    assert.equal(stored.track.naming.shouldRename, false);
     assert.equal(stored.analysis.canonicalProfile, "deep");
     assert.deepEqual(stored.analysis.availableProfiles, ["deep"]);
 
