@@ -188,6 +188,7 @@ import {
   getDesktopAgentConversationBridge,
   getDesktopAgentConfigBridge,
   getDesktopAudioAnalysisBridge,
+  getDesktopAudioLibraryBridge,
   getDesktopAnalysisArtifactBridge,
   getDesktopProjectArtifactBridge,
   getDesktopTrainingPackageBridge,
@@ -379,6 +380,10 @@ const defaultState = {
     structurePolicies: {},
     structureGeneratedSignatures: {},
     structureManualExamples: {}
+  },
+  audioLibrary: {
+    batchFolder: "",
+    lastReview: null
   },
   sequenceAgentRuntime: {
     timingTrackPolicies: {},
@@ -1010,14 +1015,16 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
   const preferredProfileMode = String(options?.preferredProfileMode || "deep").trim().toLowerCase();
   const bridge = getDesktopAnalysisArtifactBridge();
   const projectFilePath = String(state.projectFilePath || "").trim();
+  const appRootPath = String(state.projectMetadataRoot || "").trim();
   const mediaFilePath = String(state.audioPathInput || "").trim();
   const boundContentFingerprint = String(state.trackBinding?.contentFingerprint || "").trim().toLowerCase();
-  if (!bridge || !projectFilePath || (!mediaFilePath && !boundContentFingerprint)) {
+  if (!bridge || (!projectFilePath && !appRootPath) || (!mediaFilePath && !boundContentFingerprint)) {
     return { ok: false, reason: "unavailable" };
   }
   try {
     const res = await bridge.readAnalysisArtifact({
       projectFilePath,
+      appRootPath,
       mediaFilePath,
       contentFingerprint: boundContentFingerprint,
       preferredProfileMode
@@ -6779,6 +6786,37 @@ async function onBrowseMediaFolder() {
   void projectCatalogRuntime.refreshMediaCatalog({ silent: true });
 }
 
+async function onBrowseAudioFile() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Select Audio File",
+    directory: false,
+    defaultPath: String(state.audioPathInput || state.mediaPath || state.showFolder || "").trim() || undefined,
+    filters: [
+      { name: "Audio Files", extensions: ["mp3", "wav", "m4a", "flac", "aac", "ogg"] }
+    ]
+  });
+  if (!selected) return;
+  sequenceMediaSessionRuntime.setAudioPathWithAgentPolicy(selected, "audio file selected");
+  if (!String(state.audioLibrary?.batchFolder || "").trim()) {
+    state.audioLibrary.batchFolder = dirnameOfPath(selected);
+  }
+  saveCurrentProjectSnapshot();
+  persist();
+  render();
+}
+
+async function onBrowseAudioBatchFolder() {
+  const selected = await pickFilePathFromDesktop({
+    title: "Select Audio Analysis Folder",
+    directory: true,
+    defaultPath: String(state.audioLibrary?.batchFolder || dirnameOfPath(state.audioPathInput) || state.mediaPath || state.showFolder || "").trim() || undefined
+  });
+  if (!selected) return;
+  state.audioLibrary.batchFolder = selected;
+  persist();
+  render();
+}
+
 async function onBrowseProjectMetadataRoot() {
   const selected = await pickFilePathFromDesktop({
     title: "Choose Project Root Folder",
@@ -7295,6 +7333,7 @@ audioAnalysisSessionRuntime = createAudioAnalysisSessionRuntime({
   buildAudioAnalystInput,
   executeAudioAnalystFlow,
   getDesktopAnalysisArtifactBridge,
+  getProjectMetadataRoot: () => state.projectMetadataRoot,
   buildAudioAnalysisStubSummary: (...args) => audioAnalysisPipelineRuntime.buildAudioAnalysisStubSummary(...args),
   applyAudioAnalystFlowSuccessToState,
   syncSectionSuggestionsFromAnalysisArtifact,
@@ -7678,6 +7717,87 @@ async function onAnalyzeAudio({
     forceFresh,
     disableInteractivePrompts
   });
+}
+
+async function onAnalyzeAudioFolder({ mode = "deep" } = {}) {
+  const bridge = getDesktopAudioLibraryBridge();
+  const appRootPath = String(state.projectMetadataRoot || "").trim();
+  const folderPath = String(
+    state.audioLibrary?.batchFolder ||
+    dirnameOfPath(state.audioPathInput) ||
+    state.mediaPath ||
+    ""
+  ).trim();
+  if (!bridge) {
+    setStatusWithDiagnostics("warning", "Desktop audio library bridge is unavailable.");
+    return { ok: false, error: "bridge_unavailable" };
+  }
+  if (!appRootPath) {
+    setStatusWithDiagnostics("warning", "Project metadata root is not configured.");
+    return { ok: false, error: "missing_app_root" };
+  }
+  if (!folderPath) {
+    setStatusWithDiagnostics("warning", "Choose an audio folder before running batch analysis.");
+    return { ok: false, error: "missing_folder" };
+  }
+  state.ui.agentThinking = true;
+  state.audioLibrary = {
+    ...(state.audioLibrary || {}),
+    batchFolder: folderPath,
+    lastReview: {
+      status: "running",
+      folder: folderPath,
+      mode,
+      startedAt: new Date().toISOString()
+    }
+  };
+  setStatus("info", `Running audio library analysis for ${basenameOfPath(folderPath) || folderPath}...`);
+  persist();
+  render();
+  try {
+    const res = await bridge.analyzeAudioLibraryFolder({
+      appRootPath,
+      folderPath,
+      mode: String(mode || "deep").trim().toLowerCase() === "fast" ? "fast" : "deep"
+    });
+    if (res?.ok !== true) {
+      throw new Error(String(res?.error || "Audio library analysis failed."));
+    }
+    state.audioLibrary = {
+      ...(state.audioLibrary || {}),
+      batchFolder: folderPath,
+      lastReview: {
+        status: "ready",
+        folder: folderPath,
+        mode: String(mode || "deep").trim().toLowerCase() === "fast" ? "fast" : "deep",
+        completedAt: new Date().toISOString(),
+        outDir: String(res.outDir || ""),
+        jsonPath: String(res.jsonPath || ""),
+        htmlPath: String(res.htmlPath || ""),
+        review: res.review || null
+      }
+    };
+    setStatus("info", `Audio library analysis complete: ${Number(res.review?.successfulTracks || 0)}/${Number(res.review?.totalTracks || 0)} tracks processed.`);
+    return { ok: true, review: res.review || null };
+  } catch (err) {
+    state.audioLibrary = {
+      ...(state.audioLibrary || {}),
+      batchFolder: folderPath,
+      lastReview: {
+        ...(state.audioLibrary?.lastReview || {}),
+        status: "failed",
+        folder: folderPath,
+        completedAt: new Date().toISOString(),
+        error: String(err?.message || err)
+      }
+    };
+    setStatusWithDiagnostics("warning", `Audio library analysis failed: ${err?.message || err}`);
+    return { ok: false, error: String(err?.message || err) };
+  } finally {
+    state.ui.agentThinking = false;
+    persist();
+    render();
+  }
 }
 
 async function onCloseSequence() {
@@ -8180,12 +8300,15 @@ function bindEvents() {
     onSelectCatalogSequence,
     onBrowseShowFolder,
     onBrowseMediaFolder,
+    onBrowseAudioFile,
+    onBrowseAudioBatchFolder,
     onRefreshMediaCatalog: (...args) => projectCatalogRuntime.refreshMediaCatalog(...args),
     onNewSession,
     onReferenceMediaSelected,
     addPaletteSwatch,
     onRunCreativeAnalysis,
     onAnalyzeAudio,
+    onAnalyzeAudioFolder,
     onRegenerateCreativeBrief,
     onAcceptCreativeBrief,
     onEditBriefDirection,

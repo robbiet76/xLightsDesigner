@@ -24,6 +24,18 @@ function toLastAnalyzedText(value = "") {
     : date.toLocaleString([], { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
+function buildIssueCountRows(value = {}) {
+  const rows = value && typeof value === "object" ? Object.entries(value) : [];
+  return rows
+    .map(([code, count]) => ({
+      code: str(code),
+      count: Number(count) || 0
+    }))
+    .filter((row) => row.code && row.count > 0)
+    .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code))
+    .slice(0, 6);
+}
+
 function buildAudioOptions({ mediaCatalog = [], selectedAudioPath = "", basenameOfPath }) {
   const rows = Array.isArray(mediaCatalog) ? mediaCatalog : [];
   const selected = str(selectedAudioPath);
@@ -146,6 +158,12 @@ export function buildAudioDashboardState({
   const artifact = state.audioAnalysis?.artifact && typeof state.audioAnalysis.artifact === "object"
     ? state.audioAnalysis.artifact
     : null;
+  const audioLibrary = state.audioLibrary && typeof state.audioLibrary === "object" ? state.audioLibrary : {};
+  const lastReview = audioLibrary.lastReview && typeof audioLibrary.lastReview === "object" ? audioLibrary.lastReview : null;
+  const review = lastReview?.review && typeof lastReview.review === "object" ? lastReview.review : null;
+  const batchFolder = str(audioLibrary.batchFolder || "");
+  const issueRows = buildIssueCountRows(review?.topLevelIssueCounts);
+  const reportStatus = str(lastReview?.status || "");
 
   return {
     contract: "audio_dashboard_state_v1",
@@ -171,7 +189,7 @@ export function buildAudioDashboardState({
       selectedAudioPath,
       selectedTrack: {
         title: str(identity?.title || basenameOfPath(selectedAudioPath) || "No media loaded"),
-        subtitle: str(identity?.artist || selectedCatalogItem?.relativePath || selectedAudioPath || "Attach or load sequence media to begin analysis."),
+        subtitle: str(identity?.artist || selectedCatalogItem?.relativePath || selectedAudioPath || "Choose an audio file to begin analysis."),
         lastAnalyzedAt: str(state.audioAnalysis?.lastAnalyzedAt),
         lastAnalyzedLabel: toLastAnalyzedText(state.audioAnalysis?.lastAnalyzedAt)
       },
@@ -189,9 +207,10 @@ export function buildAudioDashboardState({
         updatedLabel: toTimeText(progress?.updatedAt)
       },
       options: buildAudioOptions({ mediaCatalog, selectedAudioPath, basenameOfPath }),
+      batchFolder,
       trackContext: {
         title: str(identity?.title || basenameOfPath(selectedAudioPath) || "No audio track attached"),
-        subtitle: str(identity?.artist || selectedCatalogItem?.relativePath || selectedAudioPath || "Attach or load sequence media to begin analysis."),
+        subtitle: str(identity?.artist || selectedCatalogItem?.relativePath || selectedAudioPath || "Choose an audio file to begin analysis."),
         lastAnalyzedLabel: toLastAnalyzedText(state.audioAnalysis?.lastAnalyzedAt)
       },
       analysisSummary: {
@@ -217,11 +236,23 @@ export function buildAudioDashboardState({
         structureReady,
         timingReady
       },
+      libraryReview: {
+        status: reportStatus || "idle",
+        folder: str(lastReview?.folder || batchFolder),
+        mode: str(lastReview?.mode || ""),
+        completedLabel: toLastAnalyzedText(lastReview?.completedAt || lastReview?.startedAt),
+        totalTracks: Number(review?.totalTracks || 0),
+        successfulTracks: Number(review?.successfulTracks || 0),
+        failedTracks: Number(review?.failedTracks || 0),
+        jsonPath: str(lastReview?.jsonPath || ""),
+        htmlPath: str(lastReview?.htmlPath || ""),
+        issueRows
+      },
       emptyState: hasTrack
         ? null
         : {
-            title: "No Media Loaded",
-            summary: "Open a sequence with attached media before running Lyric's analysis. Once media is available, this page will show structure, music cues, and downstream readiness."
+            title: "No Audio Track Selected",
+            summary: "Choose a single audio file for analysis or run folder analysis into the shared track library. This workspace does not depend on xLights."
           }
     }
   };

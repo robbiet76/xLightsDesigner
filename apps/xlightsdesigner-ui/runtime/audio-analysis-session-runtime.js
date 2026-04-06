@@ -35,6 +35,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
     buildAudioAnalystInput,
     executeAudioAnalystFlow,
     getDesktopAnalysisArtifactBridge = () => null,
+    getProjectMetadataRoot = () => "",
     buildAudioAnalysisStubSummary,
     applyAudioAnalystFlowSuccessToState,
     syncSectionSuggestionsFromAnalysisArtifact,
@@ -52,7 +53,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
     const audioPath = str(state.audioPathInput);
     state.ui.lastAnalysisPrompt = str(userPrompt);
     if (!audioPath) {
-      setStatus("warning", "No audio track available for analysis on this sequence.");
+      setStatus("warning", "No audio track selected for analysis.");
       render();
       return { ok: false, error: "missing_audio_path" };
     }
@@ -153,17 +154,24 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
         }),
         persistArtifact: async ({ artifact }) => {
           const artifactBridge = getDesktopAnalysisArtifactBridge();
-          if (artifactBridge && state.projectFilePath && audioPath) {
+          const projectFilePath = str(state.projectFilePath);
+          const appRootPath = str(getProjectMetadataRoot());
+          if (artifactBridge && projectFilePath && audioPath) {
             return artifactBridge.writeAnalysisArtifact({
-              projectFilePath: state.projectFilePath,
+              projectFilePath,
               mediaFilePath: audioPath,
               artifact
             });
           }
-          if (!state.projectFilePath) {
-            return { ok: false, error: "Audio analysis artifact not persisted: project must be saved first." };
+          if (artifactBridge && appRootPath && audioPath) {
+            return artifactBridge.writeAnalysisArtifact({
+              appRootPath,
+              mediaFilePath: audioPath,
+              artifact
+            });
           }
-          return { ok: false, error: "Audio analysis artifact bridge unavailable in this runtime." };
+          if (!artifactBridge) return { ok: false, error: "Audio analysis artifact bridge unavailable in this runtime." };
+          return { ok: false, error: "Audio analysis artifact not persisted: app metadata root is unavailable." };
         },
         creativeBrief: state.creative?.brief || null
       });

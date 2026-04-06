@@ -8,6 +8,7 @@ import {
   ensureProjectStructure,
   writeAnalysisArtifactToProject,
   readAnalysisArtifactFromProject,
+  readAnalysisArtifactFromLibrary,
   writeAnalysisArtifactToLibrary
 } from "../analysis-artifact-store.mjs";
 
@@ -288,6 +289,50 @@ test("writeAnalysisArtifactToLibrary writes shared track records directly under 
     assert.equal(stored.track.artist, "Mavis Staples");
     assert.equal(stored.track.sourceMedia.path, mediaPath);
     assert.equal(stored.analysis.canonicalProfile, "deep");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("readAnalysisArtifactFromLibrary resolves by content fingerprint without a project", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-analysis-library-read-"));
+  try {
+    const appRootPath = path.join(root, "xLightsDesigner");
+    const mediaPath = path.join(root, "Candy Cane Lane.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("shared-library-read-content"));
+
+    const artifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath)
+      },
+      identity: {
+        title: "Candy Cane Lane",
+        artist: "Sia",
+        contentFingerprint: ""
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "deep"
+        }
+      }
+    };
+
+    const writeRes = writeAnalysisArtifactToLibrary({
+      appRootPath,
+      mediaFilePath: mediaPath,
+      artifact
+    });
+    assert.equal(writeRes.ok, true);
+
+    const readRes = readAnalysisArtifactFromLibrary({
+      appRootPath,
+      contentFingerprint: writeRes.contentFingerprint,
+      preferredProfileMode: "deep"
+    });
+    assert.equal(readRes.ok, true);
+    assert.equal(readRes.matchedBy, "contentFingerprint");
+    assert.equal(readRes.artifact.identity.title, "Candy Cane Lane");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

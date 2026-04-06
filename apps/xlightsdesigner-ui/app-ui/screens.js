@@ -602,6 +602,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const structure = data.structure || {};
     const cues = data.cues || {};
     const downstream = data.downstream || {};
+    const libraryReview = data.libraryReview || {};
     return `
       <section class="card full-span designer-dashboard-card audio-dashboard-card">
         <div class="artifact-kicker">Lyric Live Dashboard</div>
@@ -616,6 +617,13 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
         <div class="banner">
           ${escapeHtml(String(progress.message || "Idle. Select a track and run analysis."))}
           ${progress.updatedLabel ? ` Updated ${escapeHtml(String(progress.updatedLabel))}.` : ""}
+        </div>
+        <div class="field">
+          <label>Audio File</label>
+          <div class="row">
+            <input id="audio-path-input" value="${escapeHtml(String(data.selectedAudioPath || ""))}" placeholder="Choose a single audio file for analysis" />
+            <button id="browse-audio-file">Browse...</button>
+          </div>
         </div>
         <div class="row">
           <select id="audio-track-select">
@@ -632,11 +640,19 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
           </select>
           <button id="analyze-audio" ${data.hasTrack ? "" : "disabled"}>Analyze Audio</button>
         </div>
+        <div class="field">
+          <label>Audio Folder</label>
+          <div class="row">
+            <input id="audio-batch-folder-input" value="${escapeHtml(String(data.batchFolder || ""))}" placeholder="Choose a folder to batch analyze into the shared track library" />
+            <button id="browse-audio-batch-folder">Browse...</button>
+            <button id="analyze-audio-folder" ${libraryReview.status === "running" ? "disabled" : ""}>Analyze Folder</button>
+          </div>
+        </div>
         <div class="dashboard-grid">
           <div class="dashboard-panel">
             <div class="artifact-kicker">Track Context</div>
             <p>${escapeHtml(String(trackContext.title || "No audio track attached"))}</p>
-            <p>${escapeHtml(String(trackContext.subtitle || "Attach or load sequence media to begin analysis."))}</p>
+            <p>${escapeHtml(String(trackContext.subtitle || "Choose an audio file to begin analysis."))}</p>
             <p>Last analyzed: ${escapeHtml(String(trackContext.lastAnalyzedLabel || "never"))}</p>
           </div>
           <div class="dashboard-panel">
@@ -664,6 +680,25 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>${escapeHtml(String(downstream.summary || "Analysis is still partial. Downstream work may rely on assumptions."))}</p>
             <p>${downstream.structureReady ? "Sections are usable." : "Sections still need work."}</p>
             <p>${downstream.timingReady ? "Timing context is usable." : "Timing context still needs work."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Shared Library Review</div>
+            <p>
+              ${
+                libraryReview.status === "running"
+                  ? "Batch analysis is running."
+                  : libraryReview.totalTracks
+                    ? `${escapeHtml(String(libraryReview.successfulTracks || 0))}/${escapeHtml(String(libraryReview.totalTracks || 0))} tracks processed.`
+                    : "No folder review has been run yet."
+              }
+            </p>
+            <p>${escapeHtml(String(libraryReview.folder || "Choose a folder to build shared track metadata."))}</p>
+            <p>${libraryReview.completedLabel ? `Last run: ${escapeHtml(String(libraryReview.completedLabel))}` : "No batch run recorded."}</p>
+            ${
+              Array.isArray(libraryReview.issueRows) && libraryReview.issueRows.length
+                ? `<ul>${libraryReview.issueRows.map((row) => `<li>${escapeHtml(String(row.code))}: ${escapeHtml(String(row.count))}</li>`).join("")}</ul>`
+                : "<p>No review issues summarized yet.</p>"
+            }
           </div>
         </div>
       </section>

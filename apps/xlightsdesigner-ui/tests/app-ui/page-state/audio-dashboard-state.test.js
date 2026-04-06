@@ -92,7 +92,7 @@ test("audio dashboard state reports blocked when no track is selected", () => {
   assert.equal(dashboard.readiness.ok, false);
   assert.equal(dashboard.readiness.level, "blocked");
   assert.match(dashboard.validationIssues[0].code, /no_audio_track_selected/);
-  assert.equal(dashboard.data.emptyState.title, "No Media Loaded");
+  assert.equal(dashboard.data.emptyState.title, "No Audio Track Selected");
 });
 
 test("audio dashboard state reports in-progress analysis deterministically", () => {
@@ -160,4 +160,42 @@ test("audio dashboard state keeps selected track visible when outside media dire
   assert.equal(dashboard.data.options[0].path, "/tmp/external/LooseSong.mp3");
   assert.match(dashboard.data.options[0].detail, /outside Media Directory/);
   assert.equal(dashboard.data.options[0].selected, true);
+});
+
+test("audio dashboard state summarizes latest shared library review", () => {
+  const dashboard = buildAudioDashboardState({
+    state: {
+      audioPathInput: "",
+      mediaCatalog: [],
+      audioAnalysis: {},
+      audioLibrary: {
+        batchFolder: "/tmp/audio",
+        lastReview: {
+          status: "ready",
+          folder: "/tmp/audio",
+          mode: "deep",
+          completedAt: "2026-04-06T12:00:00.000Z",
+          jsonPath: "/tmp/review.json",
+          htmlPath: "/tmp/review.html",
+          review: {
+            totalTracks: 40,
+            successfulTracks: 38,
+            failedTracks: 2,
+            topLevelIssueCounts: {
+              no_synced_lyrics: 12,
+              no_chords: 40
+            }
+          }
+        }
+      },
+      ui: { agentThinking: false }
+    },
+    analysisHandoff: null,
+    basenameOfPath
+  });
+
+  assert.equal(dashboard.data.libraryReview.totalTracks, 40);
+  assert.equal(dashboard.data.libraryReview.successfulTracks, 38);
+  assert.equal(dashboard.data.libraryReview.issueRows[0].code, "no_chords");
+  assert.equal(dashboard.data.libraryReview.issueRows[0].count, 40);
 });

@@ -9,7 +9,9 @@ import {
   ensureProjectStructure,
   buildAnalysisArtifactPaths,
   readAnalysisArtifactFromProject,
-  writeAnalysisArtifactToProject
+  readAnalysisArtifactFromLibrary,
+  writeAnalysisArtifactToProject,
+  writeAnalysisArtifactToLibrary
 } from "./analysis-artifact-store.mjs";
 import {
   readProjectArtifact,
@@ -2434,6 +2436,9 @@ ipcMain.handle("xld:file:stat", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:analysis-artifact:read", async (_event, payload = {}) => {
   try {
+    if (String(payload?.appRootPath || "").trim()) {
+      return readAnalysisArtifactFromLibrary(payload);
+    }
     return readAnalysisArtifactFromProject(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
@@ -2442,7 +2447,70 @@ ipcMain.handle("xld:analysis-artifact:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:analysis-artifact:write", async (_event, payload = {}) => {
   try {
+    if (String(payload?.appRootPath || "").trim()) {
+      return writeAnalysisArtifactToLibrary(payload);
+    }
     return writeAnalysisArtifactToProject(payload);
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+});
+
+ipcMain.handle("xld:audio-library:analyze-folder", async (_event, payload = {}) => {
+  try {
+    const appRootPath = String(payload?.appRootPath || "").trim();
+    const folderPath = String(payload?.folderPath || "").trim();
+    const mode = String(payload?.mode || "deep").trim().toLowerCase();
+    const outDir = String(payload?.outDir || "").trim();
+    if (!appRootPath) return { ok: false, error: "Missing appRootPath" };
+    if (!folderPath) return { ok: false, error: "Missing folderPath" };
+    if (!fs.existsSync(folderPath)) return { ok: false, error: "Audio folder not found" };
+    const stat = fs.statSync(folderPath);
+    if (!stat.isDirectory()) return { ok: false, error: "Audio path is not a folder" };
+
+    const repoRoot = path.resolve(__dirname, "..", "..");
+    const runnerPath = path.join(repoRoot, "scripts", "audio-analysis", "build-track-library-and-review.mjs");
+    if (!fs.existsSync(runnerPath)) return { ok: false, error: "Audio library runner not found" };
+    const targetOutDir = outDir || path.join(repoRoot, "var", "audio-analysis-review", `ui-run-${new Date().toISOString().replace(/[:.]/g, "-")}`);
+    fs.mkdirSync(targetOutDir, { recursive: true });
+
+    const args = [
+      runnerPath,
+      "--app-root", appRootPath,
+      "--folder", folderPath,
+      "--out-dir", targetOutDir,
+      "--mode", mode === "fast" ? "fast" : "deep"
+    ];
+    const { stdout, stderr } = await runBinary(process.execPath, args);
+    const jsonPath = path.join(targetOutDir, "track-library-review.json");
+    const htmlPath = path.join(targetOutDir, "track-library-review.html");
+    if (!fs.existsSync(jsonPath)) {
+      return { ok: false, error: "Track library review JSON was not produced", stdout, stderr };
+    }
+    const review = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+    const results = Array.isArray(review?.results) ? review.results : [];
+    const issueCounts = {};
+    for (const row of results) {
+      for (const issue of Array.isArray(row?.quality?.topLevelIssues) ? row.quality.topLevelIssues : []) {
+        const key = String(issue || "").trim();
+        if (!key) continue;
+        issueCounts[key] = Number(issueCounts[key] || 0) + 1;
+      }
+    }
+    return {
+      ok: true,
+      appRootPath,
+      folderPath,
+      outDir: targetOutDir,
+      jsonPath,
+      htmlPath: fs.existsSync(htmlPath) ? htmlPath : "",
+      review: {
+        ...review,
+        topLevelIssueCounts: issueCounts
+      },
+      stdout,
+      stderr
+    };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }

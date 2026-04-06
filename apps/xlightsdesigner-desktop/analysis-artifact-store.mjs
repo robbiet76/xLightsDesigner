@@ -512,6 +512,46 @@ export function readAnalysisArtifactFromProject({ projectFilePath = "", mediaFil
   };
 }
 
+export function readAnalysisArtifactFromLibrary({ appRootPath = "", mediaFilePath = "", contentFingerprint = "", preferredProfileMode = "" } = {}) {
+  const appRoot = String(appRootPath || "").trim();
+  const mediaPath = String(mediaFilePath || "").trim();
+  const requestedContentFingerprint = String(contentFingerprint || "").trim().toLowerCase();
+  if (!appRoot) return { ok: false, error: "Missing appRootPath" };
+  if (!mediaPath && !requestedContentFingerprint) return { ok: false, error: "Missing mediaFilePath or contentFingerprint" };
+  const libraryDir = getTrackLibraryDirFromAppRoot(appRoot);
+  if (!libraryDir || !fs.existsSync(libraryDir)) {
+    return { ok: false, code: "NOT_FOUND", error: "Track library not found" };
+  }
+
+  const mediaId = mediaPath ? mediaIdFromPathAndStat(mediaPath) : "";
+  let resolvedContentFingerprint = requestedContentFingerprint;
+  if (!resolvedContentFingerprint && mediaPath) {
+    try {
+      resolvedContentFingerprint = mediaContentFingerprint(mediaPath);
+    } catch {
+      resolvedContentFingerprint = "";
+    }
+  }
+  const match = resolvedContentFingerprint ? findTrackRecordByContentFingerprintInLibrary(libraryDir, resolvedContentFingerprint) : null;
+  if (!match?.record) {
+    return { ok: false, code: "NOT_FOUND", mediaId, error: "Analysis artifact not found" };
+  }
+  const { artifact, selectedProfileMode } = getArtifactFromTrackRecord(match.record, preferredProfileMode);
+  if (!artifact) {
+    return { ok: false, code: "NOT_FOUND", mediaId, artifactPath: match.recordPath, error: "Analysis artifact profile not found" };
+  }
+  return {
+    ok: true,
+    mediaId,
+    artifactPath: match.recordPath,
+    recordPath: match.recordPath,
+    artifact,
+    matchedBy: "contentFingerprint",
+    selectedProfileMode,
+    trackRecord: match.record
+  };
+}
+
 export function writeAnalysisArtifactToProject({ projectFilePath = "", mediaFilePath = "", artifact = null } = {}) {
   const projectPath = String(projectFilePath || "").trim();
   const mediaPath = String(mediaFilePath || "").trim();

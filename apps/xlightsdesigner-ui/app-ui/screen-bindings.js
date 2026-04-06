@@ -19,12 +19,15 @@ export function bindScreenEvents({
   onSelectCatalogSequence,
   onBrowseShowFolder,
   onBrowseMediaFolder,
+  onBrowseAudioFile,
+  onBrowseAudioBatchFolder,
   onRefreshMediaCatalog,
   onNewSession,
   onReferenceMediaSelected,
   addPaletteSwatch,
   onRunCreativeAnalysis,
   onAnalyzeAudio,
+  onAnalyzeAudioFolder,
   onRegenerateCreativeBrief,
   onAcceptCreativeBrief,
   onEditBriefDirection,
@@ -189,11 +192,32 @@ export function bindScreenEvents({
   const analyzeAudioBtn = app.querySelector("#analyze-audio");
   if (analyzeAudioBtn) analyzeAudioBtn.addEventListener("click", onAnalyzeAudio);
 
+  const browseAudioFileBtn = app.querySelector("#browse-audio-file");
+  if (browseAudioFileBtn) browseAudioFileBtn.addEventListener("click", onBrowseAudioFile);
+
+  const browseAudioBatchFolderBtn = app.querySelector("#browse-audio-batch-folder");
+  if (browseAudioBatchFolderBtn) browseAudioBatchFolderBtn.addEventListener("click", onBrowseAudioBatchFolder);
+
+  const analyzeAudioFolderBtn = app.querySelector("#analyze-audio-folder");
+  if (analyzeAudioFolderBtn) analyzeAudioFolderBtn.addEventListener("click", () => onAnalyzeAudioFolder?.({ mode: "deep" }));
+
   const audioTrackSelect = app.querySelector("#audio-track-select");
   if (audioTrackSelect) {
     audioTrackSelect.addEventListener("change", () => {
       setAudioPathWithAgentPolicy(audioTrackSelect.value.trim() || "", "audio track selected");
       saveCurrentProjectSnapshot();
+      persist();
+      render();
+    });
+  }
+
+  const audioBatchFolderInput = app.querySelector("#audio-batch-folder-input");
+  if (audioBatchFolderInput) {
+    audioBatchFolderInput.addEventListener("change", () => {
+      state.audioLibrary = {
+        ...(state.audioLibrary || {}),
+        batchFolder: audioBatchFolderInput.value.trim() || ""
+      };
       persist();
       render();
     });
@@ -524,7 +548,9 @@ export function bindScreenEvents({
   if (audioPathInput) {
     audioPathInput.addEventListener("change", () => {
       setAudioPathWithAgentPolicy(audioPathInput.value.trim() || "", "audio path edited");
+      saveCurrentProjectSnapshot();
       persist();
+      render();
     });
   }
 

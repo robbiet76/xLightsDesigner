@@ -34,7 +34,7 @@ test("analyzeAudio warns and returns missing_audio_path when no audio path is av
   assert.deepEqual(result, { ok: false, error: "missing_audio_path" });
   assert.equal(state.ui.lastAnalysisPrompt, "");
   assert.deepEqual(calls.statuses, [
-    { level: "warning", message: "No audio track available for analysis on this sequence." }
+    { level: "warning", message: "No audio track selected for analysis." }
   ]);
   assert.equal(calls.renders, 1);
 });
