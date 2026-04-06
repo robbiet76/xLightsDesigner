@@ -123,11 +123,11 @@ The native design phase should define the big items first.
 Recommended order:
 1. app information architecture
 2. top-level navigation
-3. Audio workflow
-4. Project workflow
-5. Sequence / Design / Review relationship
-6. visual system and component system
-7. supporting workflows
+3. Project workflow
+4. Layout workflow
+5. Audio workflow
+6. Sequence / Design / Review relationship
+7. visual system and component system
 
 Reason:
 - these items shape the rest of the product and create the highest leverage reduction in implementation churn
@@ -197,6 +197,7 @@ The first workflow package that should follow this method is:
 
 The next workflow packages after Audio should be:
 1. Project
-2. Sequence / Design / Review
+2. Layout
+3. Sequence / Design / Review
 
 The output of this method should become the implementation contract for the future SwiftUI shell.

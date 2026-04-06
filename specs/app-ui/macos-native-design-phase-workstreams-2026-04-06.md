@@ -327,11 +327,11 @@ Must confirm:
 The next breakdown should happen in this order:
 1. information architecture
 2. workflow contracts
-3. Audio screen contract
-4. Project screen contract
-5. Sequence/Design/Review relationship
-6. visual system
-7. component inventory
+3. Project screen contract
+4. Layout screen contract
+5. Audio screen contract
+6. Sequence/Design/Review relationship
+7. visual system
 
 ## Working Rule For New Design Specs
 

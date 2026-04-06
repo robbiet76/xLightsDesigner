@@ -38,11 +38,11 @@ The native app uses a left sidebar as the primary navigation surface.
 
 Top-level sections:
 1. `Project`
-2. `Audio`
-3. `Sequence`
+2. `Layout`
+3. `Audio`
 4. `Design`
-5. `Review`
-6. `Layout`
+5. `Sequence`
+6. `Review`
 7. `History`
 
 Secondary global destination:
