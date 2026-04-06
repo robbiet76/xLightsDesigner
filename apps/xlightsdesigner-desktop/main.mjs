@@ -1503,6 +1503,48 @@ function stateFilePath() {
   return path.join(app.getPath("userData"), STATE_FILENAME);
 }
 
+function stateBackupDir() {
+  return path.join(app.getPath("userData"), "backups");
+}
+
+function timestampToken() {
+  return new Date().toISOString().replace(/[:.]/g, "-");
+}
+
+function backupDesktopFileIfExists(filePath, label = "state") {
+  const source = String(filePath || "").trim();
+  if (!source || !fs.existsSync(source)) return "";
+  const backupDir = stateBackupDir();
+  const ext = path.extname(source);
+  const stem = path.basename(source, ext || undefined);
+  const safeLabel = String(label || "state").trim().replace(/[^a-z0-9._-]+/gi, "-");
+  const backupName = `${safeLabel}-${stem}-${timestampToken()}${ext || ".json"}`;
+  const backupPath = path.join(backupDir, backupName);
+  fs.mkdirSync(backupDir, { recursive: true });
+  fs.copyFileSync(source, backupPath);
+  return backupPath;
+}
+
+function backupDesktopStateSnapshot(reason = "state-write") {
+  const backups = [];
+  const targets = [
+    ["desktop-state", stateFilePath()],
+    ["projects-index", desktopProjectsIndexPath()]
+  ];
+  for (const [label, filePath] of targets) {
+    try {
+      const backupPath = backupDesktopFileIfExists(filePath, `${reason}-${label}`);
+      if (backupPath) backups.push({ label, filePath, backupPath });
+    } catch (err) {
+      logStartup(`app:state-backup error label=${label} reason=${reason} error=${String(err?.message || err)}`);
+    }
+  }
+  if (backups.length) {
+    logStartup(`app:state-backup reason=${reason} count=${backups.length}`);
+  }
+  return backups;
+}
+
 function agentApplyLogPath() {
   return path.join(app.getPath("userData"), AGENT_APPLY_LOG_FILENAME);
 }
@@ -1896,9 +1938,10 @@ ipcMain.handle("xld:state:write", async (_event, payload = {}) => {
       localStateRaw: typeof payload?.localStateRaw === "string" ? payload.localStateRaw : "",
       projectsStoreRaw: typeof payload?.projectsStoreRaw === "string" ? payload.projectsStoreRaw : ""
     };
+    const backups = backupDesktopStateSnapshot("state-write");
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(next, null, 2), "utf8");
-    return { ok: true };
+    return { ok: true, backups };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -1921,6 +1964,7 @@ function removeFileIfExists(filePath) {
 
 ipcMain.handle("xld:app:factory-reset", async (_event, payload = {}) => {
   try {
+    const backups = backupDesktopStateSnapshot("factory-reset");
     const deleted = [];
     const candidates = [
       ["desktopState", stateFilePath()],
@@ -1932,6 +1976,7 @@ ipcMain.handle("xld:app:factory-reset", async (_event, payload = {}) => {
     }
     return {
       ok: true,
+      backups,
       deleted,
       preserved: {
         agentConfig: true,
@@ -2675,15 +2720,6 @@ ipcMain.handle("xld:project:write-file", async (_event, payload = {}) => {
   }
 });
 
-function sidecarPathForSequence(sequencePath) {
-  const seq = String(sequencePath || "").trim();
-  if (!seq) return "";
-  const dir = path.dirname(seq);
-  const ext = path.extname(seq);
-  const name = path.basename(seq, ext || undefined);
-  return path.join(dir, `${name}.xdmeta`);
-}
-
 function normalizeSequencePathToken(sequencePath = "") {
   return String(sequencePath || "").trim().replace(/\\/g, "/").toLowerCase();
 }
@@ -2897,26 +2933,20 @@ ipcMain.handle("xld:sidecar:read", async (_event, payload = {}) => {
     const sequencePath = String(payload?.sequencePath || "").trim();
     const appRootPath = String(payload?.appRootPath || payload?.metadataRootPath || "").trim();
     const managedSidecarPath = appManagedSidecarPathForSequence(sequencePath, appRootPath);
-    const legacySidecarPath = sidecarPathForSequence(sequencePath);
-    const sidecarPath =
-      (managedSidecarPath && fs.existsSync(managedSidecarPath) ? managedSidecarPath : "")
-      || (legacySidecarPath && fs.existsSync(legacySidecarPath) ? legacySidecarPath : "")
-      || managedSidecarPath
-      || legacySidecarPath;
-    if (!sidecarPath) return { ok: false, error: "Missing sequencePath" };
+    const sidecarPath = managedSidecarPath;
+    if (!sidecarPath) return { ok: false, error: "Missing sequencePath or appRootPath" };
     if (!fs.existsSync(sidecarPath)) {
       return {
         ok: true,
         exists: false,
         sidecarPath,
         managedSidecarPath,
-        legacySidecarPath,
         data: null
       };
     }
     const raw = fs.readFileSync(sidecarPath, "utf8");
     const data = JSON.parse(raw);
-    return { ok: true, exists: true, sidecarPath, managedSidecarPath, legacySidecarPath, data };
+    return { ok: true, exists: true, sidecarPath, managedSidecarPath, data };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
