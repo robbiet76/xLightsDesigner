@@ -2,7 +2,7 @@ const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_OWNED_ENDPOINT_BASE = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_LEGACY_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
 const DEFAULT_LEGACY_PORT = "49914";
-const OWNED_JOB_ATTEMPTS = 40;
+const OWNED_JOB_ATTEMPTS = 180;
 const OWNED_JOB_DELAY_MS = 500;
 
 function normalizeBody(raw) {
@@ -12,6 +12,18 @@ function normalizeBody(raw) {
 
 function sanitizeEndpoint(endpoint) {
   return String(endpoint || "").trim();
+}
+
+function detectDevOwnedProxyBase() {
+  try {
+    const origin = String(window?.location?.origin || "").trim();
+    if (/^https?:\/\/(127\.0\.0\.1|localhost):8080$/i.test(origin)) {
+      return `${origin}/xlightsdesigner/api`;
+    }
+  } catch {
+    // ignore browser/global access failures
+  }
+  return "";
 }
 
 function isOwnedEndpoint(endpoint) {
@@ -131,20 +143,35 @@ async function legacyGet(endpoint, command, params = {}) {
 }
 
 export function getDefaultEndpoint() {
-  return DEFAULT_ENDPOINT;
+  return detectDevOwnedProxyBase() || DEFAULT_ENDPOINT;
 }
 
 export function deriveOwnedEndpointBase(endpoint) {
   const raw = sanitizeEndpoint(endpoint);
-  if (!raw) return DEFAULT_OWNED_ENDPOINT_BASE;
+  const devProxyBase = detectDevOwnedProxyBase();
+  if (!raw) return devProxyBase || DEFAULT_OWNED_ENDPOINT_BASE;
   if (raw.includes("/xlightsdesigner/api")) {
+    if (
+      devProxyBase &&
+      (/^https?:\/\/127\.0\.0\.1:49915\/xlightsdesigner\/api/i.test(raw) ||
+        /^https?:\/\/localhost:49915\/xlightsdesigner\/api/i.test(raw))
+    ) {
+      return devProxyBase;
+    }
     return sanitizeOwnedBase(raw);
   }
   try {
     const url = new URL(raw);
+    if (
+      devProxyBase &&
+      (url.hostname === "127.0.0.1" || url.hostname === "localhost") &&
+      url.port === "49915"
+    ) {
+      return devProxyBase;
+    }
     return `${url.protocol}//${url.hostname}:49915/xlightsdesigner/api`;
   } catch {
-    return DEFAULT_OWNED_ENDPOINT_BASE;
+    return devProxyBase || DEFAULT_OWNED_ENDPOINT_BASE;
   }
 }
 

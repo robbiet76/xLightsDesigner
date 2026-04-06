@@ -861,6 +861,7 @@ export function createAutomationRuntime(deps = {}) {
       ok: true,
       ready: true,
       timestamp: new Date().toISOString(),
+      endpoint: state.endpoint || "",
       activeSequence: state.activeSequence || "",
       sequencePathInput: state.sequencePathInput || "",
       showFolder: state.showFolder || "",

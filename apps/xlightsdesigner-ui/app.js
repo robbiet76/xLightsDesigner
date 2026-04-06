@@ -237,10 +237,9 @@ function detectDevProxyXLightsEndpoint() {
 const DIRECT_PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEV_PROXY_XLIGHTS_ENDPOINT = detectDevProxyXLightsEndpoint();
 const PREFERRED_XLIGHTS_ENDPOINT = DEV_PROXY_XLIGHTS_ENDPOINT || DIRECT_PREFERRED_XLIGHTS_ENDPOINT;
-const FALLBACK_XLIGHTS_ENDPOINTS = [
-  DEV_PROXY_XLIGHTS_ENDPOINT,
-  "http://127.0.0.1:49915/xlightsdesigner/api"
-].filter(Boolean);
+const FALLBACK_XLIGHTS_ENDPOINTS = DEV_PROXY_XLIGHTS_ENDPOINT
+  ? [DEV_PROXY_XLIGHTS_ENDPOINT]
+  : ["http://127.0.0.1:49915/xlightsdesigner/api"];
 const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
 const CONNECTIVITY_POLL_MS = 10000;
 const FOCUS_SYNC_COOLDOWN_MS = 1200;
@@ -598,6 +597,13 @@ function normalizeConfiguredEndpoint(endpoint) {
   const raw = String(endpoint || "").trim();
   if (!raw) return PREFERRED_XLIGHTS_ENDPOINT;
   const lowered = raw.toLowerCase();
+  if (
+    DEV_PROXY_XLIGHTS_ENDPOINT &&
+    (lowered.includes("127.0.0.1:49915/xlightsdesigner/api") ||
+      lowered.includes("localhost:49915/xlightsdesigner/api"))
+  ) {
+    return DEV_PROXY_XLIGHTS_ENDPOINT;
+  }
   if (lowered.includes("127.0.0.1:8080") || lowered.includes("localhost:8080")) {
     return PREFERRED_XLIGHTS_ENDPOINT;
   }

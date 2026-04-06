@@ -267,11 +267,6 @@ export function createSequenceMediaSessionRuntime(deps = {}) {
   }
 
   async function openSequence({ previousPath, targetPath, isNewSequence = false, mediaFile = null, durationMs, frameMs, skipPostOpenRefresh = false } = {}) {
-    if (!state.flags.xlightsConnected) {
-      setStatus("warning", "Connect to xLights before opening a sequence.");
-      render();
-      return;
-    }
     if (!targetPath) {
       setStatus("warning", isNewSequence ? "Provide a new sequence path." : "Provide an existing sequence path.");
       render();
