@@ -49,6 +49,7 @@ Primary policy source:
 - `app-ui/macos-native-history-screen-layout-2026-04-06.md`
 - `app-ui/macos-native-settings-screen-layout-2026-04-06.md`
 - `app-ui/macos-native-interaction-model-2026-04-06.md`
+- `app-ui/macos-native-read-models-and-page-state-contracts-2026-04-06.md`
 - `app-ui/electron-legacy-removal-manifest-2026-04-06.md`
 - `app-assistant/app-assistant-role-and-boundary.md`
 - `app-assistant/implementation-checklist.md`

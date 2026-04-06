@@ -190,6 +190,9 @@ Checklist:
 - define selection state rules
 - define persistence scope for each state class
 
+Primary source:
+- `macos-native-read-models-and-page-state-contracts-2026-04-06.md`
+
 Exit criteria:
 - the native app can be implemented against explicit screen contracts rather than ad hoc mutable state
 
