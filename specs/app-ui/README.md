@@ -37,6 +37,7 @@ Active Entry Points:
 - `macos-native-cutover-plan-2026-04-06.md`
 - `macos-native-audio-wireframe-review-package-2026-04-06.md`
 - `macos-native-audio-wireframes-v1-2026-04-06.md`
+- `macos-native-audio-figma-mockup-package-2026-04-06.md`
 - `electron-legacy-removal-manifest-2026-04-06.md`
 - `implementation-checklist.md`
 - `page-roles-and-flow.md`
