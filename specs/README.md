@@ -20,6 +20,18 @@ Implementation-facing specifications that drive development work.
 - domain directories own current active specs
 - legacy flat specs are archived under domain-specific or root archive paths
 
+## Non-Negotiable Development Policy
+- maintain one canonical app source tree
+- maintain one canonical xLights source tree
+- maintain one canonical desktop state root
+- do not create parallel app versions, alternate worktrees, or shadow runtime installs
+- do not add legacy workflows, compatibility shims, migration readers, or dual-path runtime logic during initial development
+- delete stale roots instead of preserving them
+
+Primary policy source:
+- `current-app-plan-2026-04-05.md`
+- `repo-structure-governance.md`
+
 ## Active Entry Points
 - `current-app-plan-2026-04-05.md`
 - `app-assistant/app-assistant-role-and-boundary.md`

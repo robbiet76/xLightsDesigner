@@ -12,6 +12,34 @@ This document is the current cross-domain execution summary.
 It does not replace detailed domain specs.
 It tells the repo which work is current, which work is foundational, and what should happen next.
 
+## Top Priority Development Policy
+
+During initial development:
+- maintain exactly one canonical app source tree
+- maintain exactly one canonical xLights source tree
+- maintain exactly one canonical desktop app state root
+- modify the current implementation in place
+- do not create parallel versions, alternate trees, temporary forks, or shadow app installs
+- do not add legacy workflows, compatibility shims, migration readers, fallback schemas, or dual-path runtime behavior
+
+This is a hard policy, not a preference.
+
+Rationale:
+- parallel versions and legacy compatibility paths have repeatedly reintroduced stale code and stale state
+- duplicate roots have caused old app behavior to reload after current work was already completed
+- this project is still in initial development, so clarity and single-path execution are more important than backward compatibility
+
+Working rule:
+1. one source tree
+2. one runtime path
+3. one state root
+4. update the canonical implementation directly
+
+If a change would require a legacy path or compatibility layer, the correct response is:
+- stop
+- update the canonical implementation
+- migrate or delete the stale path
+
 ## Current Product Shape
 
 The current application is organized around this execution order:

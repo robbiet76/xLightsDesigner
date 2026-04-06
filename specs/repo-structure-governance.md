@@ -8,6 +8,19 @@ Last Reviewed: 2026-03-11
 ## Purpose
 Keep repository layout purpose-built and predictable so new work lands in the correct location.
 
+## Top Priority Policy
+- Maintain one canonical app source tree.
+- Maintain one canonical xLights source tree.
+- Maintain one canonical desktop app state root.
+- Modify the active implementation in place.
+- Do not create alternate app versions, duplicate worktrees, shadow installs, or parallel runtime roots.
+- Do not introduce legacy workflows, compatibility shims, migration readers, fallback schemas, or dual-path runtime behavior during initial development.
+
+If stale copies or obsolete roots exist, the required action is:
+1. back up if needed,
+2. remove the stale copy,
+3. keep only the canonical path.
+
 ## Canonical Top-Level Layout
 - `apps/`: runtime applications and services.
 - `training-packages/`: portable LLM training assets (provider-agnostic).
