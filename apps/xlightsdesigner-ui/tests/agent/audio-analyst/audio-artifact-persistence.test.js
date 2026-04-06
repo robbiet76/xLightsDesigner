@@ -204,7 +204,7 @@ function withProfile(artifact, mode) {
   };
 }
 
-test("analysis artifact store persists canonical artifact under project-root analysis path", async (t) => {
+test("analysis artifact store persists canonical artifact under shared track library path", async (t) => {
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "xld-audio-artifact-"));
   t.after(() => fs.rmSync(tmpRoot, { recursive: true, force: true }));
 
@@ -234,9 +234,11 @@ test("analysis artifact store persists canonical artifact under project-root ana
   assert.equal(writeRes.ok, true);
   assert.ok(fs.existsSync(writeRes.artifactPath));
 
-  const expectedPaths = buildAnalysisArtifactPaths(projectFilePath, mediaFilePath);
+  const expectedPaths = buildAnalysisArtifactPaths(projectFilePath, mediaFilePath, artifact);
   assert.equal(writeRes.mediaId, expectedPaths.mediaId);
   assert.equal(writeRes.artifactPath, expectedPaths.artifactPath);
+  assert.match(path.basename(writeRes.artifactPath), /^song-artist(?:-[a-f0-9]{8})?\.json$/);
+  assert.equal(path.dirname(writeRes.artifactPath), path.join(tmpRoot, "library", "tracks"));
   assert.equal(writeRes.artifact.media.mediaId, expectedPaths.mediaId);
   assert.equal(writeRes.artifact.media.path, path.resolve(mediaFilePath));
 
@@ -273,13 +275,13 @@ test("analysis handoff rehydrates deterministically from persisted artifact", as
     storyArc: "build to chorus",
     designHints: "Use strong chorus lift\nFavor lyrical moments"
   };
-  const expectedHandoff = buildAnalysisHandoffFromArtifact(artifact, creativeBrief);
 
   const writeRes = writeAnalysisArtifactToProject({
     projectFilePath,
     mediaFilePath,
     artifact
   });
+  const expectedHandoff = buildAnalysisHandoffFromArtifact(writeRes.artifact, creativeBrief);
   const readRes = readAnalysisArtifactFromProject({
     projectFilePath,
     mediaFilePath
@@ -333,7 +335,7 @@ test("persisted canonical artifact retains full capability payloads for downstre
   assert.equal(readRes.artifact.modules.rhythm.metadata.profileMode, "deep");
   assert.equal(readRes.artifact.modules.rhythm.data.providerResults.providers.beatnet.timeSignature, "4/4");
   assert.equal(readRes.artifact.modules.harmony.metadata.moduleVersion, "v2");
-  assert.equal(readRes.artifact.modules.lyrics.metadata.moduleVersion, "v3");
+  assert.equal(readRes.artifact.modules.lyrics.metadata.moduleVersion, "v4");
 });
 
 test("persisted partial artifact preserves degraded status and missing-capability truth", async (t) => {
@@ -401,8 +403,8 @@ test("analysis artifact store persists profile-specific fast and deep artifacts 
 
   const fastWrite = writeAnalysisArtifactToProject({ projectFilePath, mediaFilePath, artifact: fastArtifact });
   const deepWrite = writeAnalysisArtifactToProject({ projectFilePath, mediaFilePath, artifact: deepArtifact });
-  const fastPath = buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath, "fast");
-  const deepPath = buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath, "deep");
+  const fastPath = buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath, "fast", fastArtifact);
+  const deepPath = buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath, "deep", deepArtifact);
 
   assert.equal(fastWrite.ok, true);
   assert.equal(deepWrite.ok, true);

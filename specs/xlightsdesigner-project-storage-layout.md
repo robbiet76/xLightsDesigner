@@ -35,6 +35,8 @@ Recommended app-owned root layout:
 ```text
 <app-root>/
   projects/
+  library/
+    tracks/
   diagnostics/
   cache/
 ```
@@ -61,23 +63,13 @@ Minimum project file fields:
 `showFolderPath` and `mediaPath` are references only. xLightsDesigner does not own those directories.
 
 ## 5) Canonical Directory Layout
-Recommended layout under project root:
+Recommended layout under app root:
 
 ```text
 <app-root>/
   projects/
     <project-name>/
       <project-name>.xdproj
-      analysis/
-        media/
-          <media-id>/
-            analysis.json
-            beats.json
-            bars.json
-            sections.json
-            lyrics.json
-            chords.json
-            provenance.json
       sequencing/
         sequences/
           <sequence-id>/
@@ -87,6 +79,10 @@ Recommended layout under project root:
             apply-history.jsonl
             verification.json
       diagnostics/
+  library/
+    tracks/
+      candy-cane-lane-sia.json
+      grinch-song-a1b2c3d4.json
   diagnostics/
     orchestration/
     agent-runs/
@@ -95,7 +91,7 @@ Recommended layout under project root:
 
 Top-level meanings:
 - `<app-root>/projects/`: project-owned workspaces.
-- `<project>/analysis/`: audio-analysis artifacts owned by `audio_analyst`.
+- `<app-root>/library/tracks/`: shared reusable audio-analysis records owned by `audio_analyst`.
 - `<project>/sequencing/`: sequence-specific runtime/planning state owned by `sequence_agent`.
 - `<project>/diagnostics/`: project-scoped debugging and run artifacts.
 - `<app-root>/diagnostics/`: optional shared/global diagnostics.
@@ -103,7 +99,8 @@ Top-level meanings:
 
 ## 6) Ownership Rules
 `audio_analyst` owns:
-- analysis artifacts under `analysis/media/<media-id>/`
+- shared track analysis records under `library/tracks/*.json`
+- fingerprint-backed reusable identity across projects
 - no awareness of live xLights state
 - no timing-track writes
 
@@ -115,45 +112,55 @@ Top-level meanings:
 ## 7) Identity Rules
 Suggested stable ids:
 
+### `contentFingerprint`
+Derived from:
+- full media file content hash
+
+This is the canonical cross-project track identity.
+
 ### `media-id`
 Derived from:
 - normalized media path
 - file metadata such as mtime/size
 
+This is a locator for the current file instance, not the canonical track identity.
+
 ### `sequence-id`
 Derived from:
 - normalized sequence path
 
-These ids are project-local keys for organizing artifacts and runtime state.
+This remains a project-local key for sequencing runtime state.
 
 ## 8) Naming And Rename Rules
 - Project names are user-facing and must be unique within `<app-root>/projects/`.
 - xLightsDesigner sanitizes invalid filesystem characters in project names.
 - Project folder names are human-readable and derived from the project name.
 - Project rename is supported only through xLightsDesigner and must rename the project folder and `.xdproj` file together.
+- Shared track record filenames are human-readable lowercase slugs such as `candy-cane-lane-sia.json`.
+- If a slug collides with a different track identity, append a short stable suffix such as `-a1b2c3d4`.
 - Manual renaming or moving of files/folders inside the app root is unsupported.
 
 ## 9) Migration Direction
 Current sequence-adjacent `.xdmeta` sidecars should be treated as transitional.
 
 Migration target:
-- move analysis artifacts out of sequence-adjacent storage,
+- move analysis artifacts into shared library storage under `library/tracks/`,
 - move sequence-agent runtime state into `sequencing/sequences/<sequence-id>/`,
 - leave `showFolderPath` and `mediaPath` as references inside the project file.
 
 ## 10) Validation Rules
 - Project open should validate that the selected file lives at `<app-root>/projects/<project-name>/<project-name>.xdproj`.
-- Missing standard subdirectories (`analysis/`, `sequencing/`, `diagnostics/`) may be recreated by the app.
+- Missing standard subdirectories (`sequencing/`, `diagnostics/`, `library/tracks/`) may be recreated by the app.
 - Unexpected manual modifications to the internal directory layout are unsupported.
 
 ## 11) Immediate Implementation Guidance
 Short-term:
 1. persist `showFolderPath` and `mediaPath` in `.xdproj`,
-2. introduce canonical project-root layout in code/specs,
+2. introduce canonical app-root library layout in code/specs,
 3. enforce unique project names on create/save-as/rename,
-4. keep compatibility readers for old sidecar locations,
-5. migrate writes gradually to project-root storage.
+4. keep compatibility readers for old sidecar locations and older project-local analysis storage,
+5. migrate writes gradually to shared library storage.
 
 Long-term:
 1. remove sequence-adjacent sidecar writes,
-2. make project-root storage canonical for all xLightsDesigner support data.
+2. keep reusable track analysis in the shared app library and project-specific sequencing state in project roots.

@@ -29,7 +29,7 @@ export function buildSettingsContent({ state, helpers, pageState = null, include
             <input id="project-metadata-root-input" value="${state.projectMetadataRoot || ""}" placeholder="Default: app data folder" />
             <button id="browse-project-root">Browse...</button>
           </div>
-          <p class="banner">This is the app-owned root where xLightsDesigner stores projects and analysis artifacts.</p>
+          <p class="banner">This is the app-owned root where xLightsDesigner stores projects and the shared track library.</p>
         </section>
         <section class="field" style="margin-top:8px;">
           <label>xLights Endpoint</label>
@@ -106,7 +106,7 @@ export function buildSettingsContent({ state, helpers, pageState = null, include
           <button id="reset-app-install-state" class="danger-action">Reset App To First Run</button>
         </div>
         <p class="banner">Manual XD track locks: ${manualXdLockText}</p>
-        <p class="banner warning">Fresh-install reset clears app state, recent-project index, chat history, and local UI memory. It preserves stored API keys, project files, and analysis artifacts.</p>
+        <p class="banner warning">Fresh-install reset clears app state, recent-project index, chat history, and local UI memory. It preserves stored API keys, project files, and shared track analysis records.</p>
         <p class="banner">Operational health, warnings, and apply history now live in Diagnostics so this drawer stays focused on user configuration.</p>
       </section>
   `;

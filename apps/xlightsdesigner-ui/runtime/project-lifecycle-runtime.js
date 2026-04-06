@@ -353,7 +353,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
       render();
       return;
     }
-    if (!confirm("Reset app state to first-run defaults? This clears local app state, recent-project index, chat history, and UI memory, but preserves stored API keys, project folders, and analysis artifacts.")) {
+    if (!confirm("Reset app state to first-run defaults? This clears local app state, recent-project index, chat history, and UI memory, but preserves stored API keys, project folders, and shared track analysis records.")) {
       setStatus("info", "Fresh-install reset canceled.");
       render();
       return;

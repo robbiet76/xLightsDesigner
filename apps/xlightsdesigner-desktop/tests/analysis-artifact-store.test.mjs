@@ -52,16 +52,11 @@ test("readAnalysisArtifactFromProject falls back to matching content fingerprint
     });
     assert.equal(written.ok, true);
 
+    assert.match(path.basename(written.recordPath), /^track-a-artist(?:-[a-f0-9]{8})?\.json$/);
     const stored = JSON.parse(fs.readFileSync(written.profileArtifactPath, "utf8"));
-    const contentFingerprint = String(stored.media?.contentFingerprint || "").trim();
+    const contentFingerprint = String(stored.track?.identity?.contentFingerprint || "").trim();
     assert.ok(contentFingerprint);
 
-    stored.identity = {
-      ...(stored.identity || {}),
-      contentFingerprint
-    };
-    fs.writeFileSync(written.profileArtifactPath, JSON.stringify(stored, null, 2), "utf8");
-    fs.writeFileSync(written.canonicalArtifactPath, JSON.stringify(stored, null, 2), "utf8");
 
     const read = readAnalysisArtifactFromProject({
       projectFilePath,
