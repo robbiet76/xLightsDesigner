@@ -285,23 +285,26 @@ export function buildProfiledAnalysisArtifactPath(projectFilePath, mediaFilePath
   };
 }
 
-export function readAnalysisArtifactFromProject({ projectFilePath = "", mediaFilePath = "", preferredProfileMode = "" } = {}) {
+export function readAnalysisArtifactFromProject({ projectFilePath = "", mediaFilePath = "", contentFingerprint = "", preferredProfileMode = "" } = {}) {
   const projectPath = String(projectFilePath || "").trim();
   const mediaPath = String(mediaFilePath || "").trim();
+  const requestedContentFingerprint = String(contentFingerprint || "").trim().toLowerCase();
   if (!projectPath) return { ok: false, error: "Missing projectFilePath" };
-  if (!mediaPath) return { ok: false, error: "Missing mediaFilePath" };
+  if (!mediaPath && !requestedContentFingerprint) return { ok: false, error: "Missing mediaFilePath or contentFingerprint" };
   if (!fs.existsSync(projectPath)) return { ok: false, error: "Project file not found" };
-  const mediaId = mediaIdFromPathAndStat(mediaPath);
-  let contentFingerprint = "";
-  try {
-    contentFingerprint = mediaContentFingerprint(mediaPath);
-  } catch {
-    contentFingerprint = "";
+  const mediaId = mediaPath ? mediaIdFromPathAndStat(mediaPath) : "";
+  let resolvedContentFingerprint = requestedContentFingerprint;
+  if (!resolvedContentFingerprint && mediaPath) {
+    try {
+      resolvedContentFingerprint = mediaContentFingerprint(mediaPath);
+    } catch {
+      resolvedContentFingerprint = "";
+    }
   }
-  const match = contentFingerprint ? findTrackRecordByContentFingerprint(projectPath, contentFingerprint) : null;
+  const match = resolvedContentFingerprint ? findTrackRecordByContentFingerprint(projectPath, resolvedContentFingerprint) : null;
   if (!match?.record) {
-    const paths = buildAnalysisArtifactPaths(projectPath, mediaPath);
-    return { ok: false, code: "NOT_FOUND", mediaId, artifactPath: paths.artifactPath, error: "Analysis artifact not found" };
+    const artifactPath = mediaPath ? buildAnalysisArtifactPaths(projectPath, mediaPath).artifactPath : "";
+    return { ok: false, code: "NOT_FOUND", mediaId, artifactPath, error: "Analysis artifact not found" };
   }
   const { artifact, selectedProfileMode } = getArtifactFromTrackRecord(match.record, preferredProfileMode);
   if (!artifact) {

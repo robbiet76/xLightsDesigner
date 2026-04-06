@@ -1006,18 +1006,27 @@ async function hydrateAnalysisArtifactForCurrentMedia(options = {}) {
   const bridge = getDesktopAnalysisArtifactBridge();
   const projectFilePath = String(state.projectFilePath || "").trim();
   const mediaFilePath = String(state.audioPathInput || "").trim();
-  if (!bridge || !projectFilePath || !mediaFilePath) return { ok: false, reason: "unavailable" };
+  const boundContentFingerprint = String(state.trackBinding?.contentFingerprint || "").trim().toLowerCase();
+  if (!bridge || !projectFilePath || (!mediaFilePath && !boundContentFingerprint)) {
+    return { ok: false, reason: "unavailable" };
+  }
   try {
     const res = await bridge.readAnalysisArtifact({
       projectFilePath,
       mediaFilePath,
+      contentFingerprint: boundContentFingerprint,
       preferredProfileMode
     });
     if (res?.ok !== true || !res.artifact || typeof res.artifact !== "object") {
       return { ok: false, reason: String(res?.code || "not_found") };
     }
     const applied = applyPersistedAnalysisArtifact(res.artifact);
-    if (applied) updateSequenceTrackBindingFromArtifact(res.artifact, mediaFilePath);
+    if (applied) {
+      updateSequenceTrackBindingFromArtifact(
+        res.artifact,
+        mediaFilePath || state.trackBinding?.preferredAudioPath || ""
+      );
+    }
     if (applied && !silent) {
       setStatus("info", "Loaded existing audio analysis artifact for current media.");
     }

@@ -70,3 +70,50 @@ test("readAnalysisArtifactFromProject falls back to matching content fingerprint
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("readAnalysisArtifactFromProject resolves by explicit content fingerprint without media path", () => {
+  const { root, projectFilePath } = makeTempProject();
+  try {
+    const mediaPath = path.join(root, "Candy Cane Lane.mp3");
+    fs.writeFileSync(mediaPath, Buffer.from("bound-track-audio-content"));
+
+    const artifact = {
+      media: {
+        path: mediaPath,
+        fileName: path.basename(mediaPath)
+      },
+      identity: {
+        title: "Candy Cane Lane",
+        artist: "Sia",
+        contentFingerprint: ""
+      },
+      provenance: {
+        analysisProfile: {
+          mode: "deep"
+        }
+      }
+    };
+
+    const written = writeAnalysisArtifactToProject({
+      projectFilePath,
+      mediaFilePath: mediaPath,
+      artifact
+    });
+    assert.equal(written.ok, true);
+
+    const fingerprint = String(written.contentFingerprint || "").trim();
+    assert.ok(fingerprint);
+
+    const read = readAnalysisArtifactFromProject({
+      projectFilePath,
+      contentFingerprint: fingerprint,
+      preferredProfileMode: "deep"
+    });
+
+    assert.equal(read.ok, true);
+    assert.equal(read.matchedBy, "contentFingerprint");
+    assert.equal(read.artifact.identity.title, "Candy Cane Lane");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
