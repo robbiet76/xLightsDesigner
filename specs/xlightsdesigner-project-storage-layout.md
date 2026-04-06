@@ -141,11 +141,11 @@ This remains a project-local key for sequencing runtime state.
 - Manual renaming or moving of files/folders inside the app root is unsupported.
 
 ## 9) Migration Direction
-Current sequence-adjacent `.xdmeta` sidecars should be treated as transitional.
+Current sequence-adjacent `.xdmeta` sidecars are legacy compatibility inputs only.
 
 Migration target:
 - move analysis artifacts into shared library storage under `library/tracks/`,
-- move sequence-agent runtime state into `sequencing/sequences/<sequence-id>/`,
+- store sequence-agent runtime state under `sequencing/sequences/<sequence-id>/sequence.xdmeta`,
 - leave `showFolderPath` and `mediaPath` as references inside the project file.
 
 ## 10) Validation Rules
@@ -159,8 +159,9 @@ Short-term:
 2. introduce canonical app-root library layout in code/specs,
 3. enforce unique project names on create/save-as/rename,
 4. keep compatibility readers for old sidecar locations and older project-local analysis storage,
-5. migrate writes gradually to shared library storage.
+5. write new sequence metadata only under the app-root sequencing store,
+6. migrate reusable analysis writes to shared library storage.
 
 Long-term:
-1. remove sequence-adjacent sidecar writes,
-2. keep reusable track analysis in the shared app library and project-specific sequencing state in project roots.
+1. remove sequence-adjacent sidecar writes entirely after compatibility window,
+2. keep reusable track analysis in the shared app library and project-specific sequencing state in app-root project metadata.

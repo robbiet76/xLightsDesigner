@@ -1427,7 +1427,10 @@ async function hydrateSidecarForCurrentSequence() {
   const sequencePath = currentSequencePathForSidecar();
   if (!bridge || !sequencePath) return;
   try {
-    const res = await bridge.readSequenceSidecar({ sequencePath });
+    const res = await bridge.readSequenceSidecar({
+      sequencePath,
+      appRootPath: state.projectMetadataRoot
+    });
     if (res?.ok !== true) return;
     hydratedSidecarSequencePath = sequencePath;
     sidecarDirtySequencePath = "";
@@ -1467,6 +1470,7 @@ async function flushSidecarPersistIfDirty(sequencePath = "") {
   try {
     await bridge.writeSequenceSidecar({
       sequencePath: targetPath,
+      appRootPath: state.projectMetadataRoot,
       data: buildSequenceSidecarDocument()
     });
     sidecarDirtySequencePath = "";
@@ -1627,13 +1631,18 @@ async function resolveReachableEndpoint(preferredEndpoint) {
   throw lastError || new Error("No reachable xLights endpoint found.");
 }
 
-function sidecarPathForSequencePath(sequencePath) {
-  const path = String(sequencePath || "").trim();
-  if (!path) return "";
-  if (/\.xsq$/i.test(path)) {
-    return path.replace(/\.xsq$/i, ".xdmeta");
+function sidecarPathForSequencePath(sequencePath, metadataRootPath = state.projectMetadataRoot) {
+  const rawSequencePath = String(sequencePath || "").trim();
+  const metadataRoot = String(metadataRootPath || "").trim().replace(/\/+$/, "");
+  if (!rawSequencePath || !metadataRoot) return "";
+  const normalized = rawSequencePath.replace(/\\/g, "/").toLowerCase();
+  let hash = 2166136261;
+  for (let i = 0; i < normalized.length; i += 1) {
+    hash ^= normalized.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
   }
-  return `${path}.xdmeta`;
+  const sequenceId = (hash >>> 0).toString(16).padStart(8, "0");
+  return `${metadataRoot}/sequencing/sequences/${sequenceId}/sequence.xdmeta`;
 }
 
 function basenameOfPath(filePath) {
@@ -1986,6 +1995,7 @@ function extractProjectSnapshot() {
     newSequenceDurationMs: state.newSequenceDurationMs,
     newSequenceFrameMs: state.newSequenceFrameMs,
     audioPathInput: state.audioPathInput,
+    sequenceMediaFile: state.sequenceMediaFile,
     savePathInput: state.savePathInput,
     lastApplyBackupPath: state.lastApplyBackupPath,
     recentSequences: state.recentSequences,
@@ -2039,7 +2049,18 @@ function applyProjectSnapshot(snapshot) {
   state.newSequenceFrameMs = Number.isFinite(Number(snapshot.newSequenceFrameMs))
     ? Math.max(1, Number(snapshot.newSequenceFrameMs))
     : state.newSequenceFrameMs;
-  state.audioPathInput = snapshot.audioPathInput || state.audioPathInput;
+  const snapshotSequenceMediaFile = String(snapshot?.sequenceMediaFile || "").trim();
+  const snapshotSequencePath = String(snapshot?.sequencePathInput || "").trim();
+  const snapshotActiveSequence = String(snapshot?.activeSequence || "").trim();
+  const snapshotAudioPath = String(snapshot?.audioPathInput || "").trim();
+  state.sequenceMediaFile = snapshotSequenceMediaFile || state.sequenceMediaFile || "";
+  if (snapshotSequenceMediaFile) {
+    state.audioPathInput = snapshotSequenceMediaFile;
+  } else if (snapshotSequencePath || snapshotActiveSequence) {
+    state.audioPathInput = "";
+  } else {
+    state.audioPathInput = snapshotAudioPath || state.audioPathInput;
+  }
   state.audioAnalysis = structuredClone(defaultState.audioAnalysis);
   state.sequenceAgentRuntime = snapshot?.sequenceAgentRuntime && typeof snapshot.sequenceAgentRuntime === "object"
       ? {

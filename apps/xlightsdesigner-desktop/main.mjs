@@ -2611,6 +2611,30 @@ function sidecarPathForSequence(sequencePath) {
   return path.join(dir, `${name}.xdmeta`);
 }
 
+function normalizeSequencePathToken(sequencePath = "") {
+  return String(sequencePath || "").trim().replace(/\\/g, "/").toLowerCase();
+}
+
+function sequenceIdFromPath(sequencePath = "") {
+  const token = normalizeSequencePathToken(sequencePath);
+  if (!token) return "";
+  let hash = 2166136261;
+  for (let i = 0; i < token.length; i += 1) {
+    hash ^= token.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function appManagedSidecarPathForSequence(sequencePath, appRootPath = "") {
+  const seq = String(sequencePath || "").trim();
+  const root = String(appRootPath || "").trim();
+  if (!seq || !root) return "";
+  const sequenceId = sequenceIdFromPath(seq);
+  if (!sequenceId) return "";
+  return path.join(root, "sequencing", "sequences", sequenceId, "sequence.xdmeta");
+}
+
 function sequenceFolderForPath(sequencePath) {
   const seq = String(sequencePath || "").trim();
   if (!seq) return "";
@@ -2797,14 +2821,29 @@ function backupFolderForSequence(sequencePath) {
 
 ipcMain.handle("xld:sidecar:read", async (_event, payload = {}) => {
   try {
-    const sidecarPath = sidecarPathForSequence(payload?.sequencePath);
+    const sequencePath = String(payload?.sequencePath || "").trim();
+    const appRootPath = String(payload?.appRootPath || payload?.metadataRootPath || "").trim();
+    const managedSidecarPath = appManagedSidecarPathForSequence(sequencePath, appRootPath);
+    const legacySidecarPath = sidecarPathForSequence(sequencePath);
+    const sidecarPath =
+      (managedSidecarPath && fs.existsSync(managedSidecarPath) ? managedSidecarPath : "")
+      || (legacySidecarPath && fs.existsSync(legacySidecarPath) ? legacySidecarPath : "")
+      || managedSidecarPath
+      || legacySidecarPath;
     if (!sidecarPath) return { ok: false, error: "Missing sequencePath" };
     if (!fs.existsSync(sidecarPath)) {
-      return { ok: true, exists: false, sidecarPath, data: null };
+      return {
+        ok: true,
+        exists: false,
+        sidecarPath,
+        managedSidecarPath,
+        legacySidecarPath,
+        data: null
+      };
     }
     const raw = fs.readFileSync(sidecarPath, "utf8");
     const data = JSON.parse(raw);
-    return { ok: true, exists: true, sidecarPath, data };
+    return { ok: true, exists: true, sidecarPath, managedSidecarPath, legacySidecarPath, data };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2812,8 +2851,10 @@ ipcMain.handle("xld:sidecar:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:sidecar:write", async (_event, payload = {}) => {
   try {
-    const sidecarPath = sidecarPathForSequence(payload?.sequencePath);
-    if (!sidecarPath) return { ok: false, error: "Missing sequencePath" };
+    const sequencePath = String(payload?.sequencePath || "").trim();
+    const appRootPath = String(payload?.appRootPath || payload?.metadataRootPath || "").trim();
+    const sidecarPath = appManagedSidecarPathForSequence(sequencePath, appRootPath);
+    if (!sidecarPath) return { ok: false, error: "Missing sequencePath or appRootPath" };
     const data = payload?.data && typeof payload.data === "object" ? payload.data : {};
     fs.mkdirSync(path.dirname(sidecarPath), { recursive: true });
     fs.writeFileSync(sidecarPath, JSON.stringify(data, null, 2), "utf8");
