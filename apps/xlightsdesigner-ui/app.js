@@ -226,7 +226,7 @@ function detectDevProxyXLightsEndpoint() {
   try {
     const origin = String(window?.location?.origin || "").trim();
     if (/^https?:\/\/(127\.0\.0\.1|localhost):8080$/i.test(origin)) {
-      return `${origin}/xlDoAutomation`;
+      return `${origin}/xlightsdesigner/api`;
     }
   } catch {
     // ignore window/location access failures
@@ -234,13 +234,12 @@ function detectDevProxyXLightsEndpoint() {
   return "";
 }
 
-const DIRECT_PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const DIRECT_PREFERRED_XLIGHTS_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEV_PROXY_XLIGHTS_ENDPOINT = detectDevProxyXLightsEndpoint();
 const PREFERRED_XLIGHTS_ENDPOINT = DEV_PROXY_XLIGHTS_ENDPOINT || DIRECT_PREFERRED_XLIGHTS_ENDPOINT;
 const FALLBACK_XLIGHTS_ENDPOINTS = [
   DEV_PROXY_XLIGHTS_ENDPOINT,
-  "http://127.0.0.1:49913/xlDoAutomation",
-  "http://127.0.0.1:49914/xlDoAutomation"
+  "http://127.0.0.1:49915/xlightsdesigner/api"
 ].filter(Boolean);
 const DESKTOP_STATE_SYNC_DEBOUNCE_MS = 250;
 const CONNECTIVITY_POLL_MS = 10000;

@@ -1,5 +1,9 @@
-const DEFAULT_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const DEFAULT_ENDPOINT = "http://127.0.0.1:49915/xlightsdesigner/api";
 const DEFAULT_OWNED_ENDPOINT_BASE = "http://127.0.0.1:49915/xlightsdesigner/api";
+const DEFAULT_LEGACY_ENDPOINT = "http://127.0.0.1:49914/xlDoAutomation";
+const DEFAULT_LEGACY_PORT = "49914";
+const OWNED_JOB_ATTEMPTS = 40;
+const OWNED_JOB_DELAY_MS = 500;
 
 function normalizeBody(raw) {
   const idx = raw.indexOf("{");
@@ -8,6 +12,11 @@ function normalizeBody(raw) {
 
 function sanitizeEndpoint(endpoint) {
   return String(endpoint || "").trim();
+}
+
+function isOwnedEndpoint(endpoint) {
+  const raw = sanitizeEndpoint(endpoint);
+  return raw.includes("/xlightsdesigner/api") || /:49915(?:\/|$)/.test(raw);
 }
 
 function buildCommandEndpointCandidates(endpoint) {
@@ -36,12 +45,20 @@ function sanitizeOwnedBase(endpoint) {
 
 function deriveLegacyEndpointBase(endpoint) {
   const raw = sanitizeEndpoint(endpoint);
-  if (!raw) return "http://127.0.0.1:49914";
+  if (!raw) return `http://127.0.0.1:${DEFAULT_LEGACY_PORT}`;
+  if (isOwnedEndpoint(raw)) {
+    try {
+      const url = new URL(raw);
+      return `${url.protocol}//${url.hostname}:${DEFAULT_LEGACY_PORT}`;
+    } catch {
+      return `http://127.0.0.1:${DEFAULT_LEGACY_PORT}`;
+    }
+  }
   try {
     const url = new URL(raw);
-    return `${url.protocol}//${url.hostname}:${url.port || "49914"}`;
+    return `${url.protocol}//${url.hostname}:${url.port || DEFAULT_LEGACY_PORT}`;
   } catch {
-    return "http://127.0.0.1:49914";
+    return `http://127.0.0.1:${DEFAULT_LEGACY_PORT}`;
   }
 }
 
@@ -166,23 +183,162 @@ export async function postCommand(endpoint, cmd, params = {}, options = {}) {
   throw new Error(errors[errors.length - 1] || `${cmd} failed`);
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeOwnedAccepted(command, json = {}) {
+  return {
+    ok: true,
+    res: json?.statusCode || 202,
+    command,
+    data: {
+      ...(json?.data && typeof json.data === "object" ? json.data : {}),
+      queued: true
+    }
+  };
+}
+
+function normalizeOwnedCompleted(command, json = {}) {
+  return {
+    ok: true,
+    res: json?.statusCode || 200,
+    command,
+    data: json?.data && typeof json.data === "object" ? json.data : {}
+  };
+}
+
+function normalizeOwnedJobResult(command, settled = {}) {
+  const state = String(settled?.data?.state || "").trim().toLowerCase();
+  const result = settled?.data?.result && typeof settled.data.result === "object" ? settled.data.result : null;
+  if (!result) {
+    throw new Error(`Owned xLights job for ${command} returned no result payload`);
+  }
+  if (state === "failed" || result?.ok !== true) {
+    const code = result?.error?.code || "OWNED_JOB_FAILED";
+    const message = result?.error?.message || `${command} failed`;
+    throw new Error(`${command} failed (${code}): ${message}`);
+  }
+  return {
+    ok: true,
+    res: result?.statusCode || 200,
+    command,
+    data: result?.data && typeof result.data === "object" ? result.data : {}
+  };
+}
+
+async function waitForOwnedJobResult(endpoint, command, jobId, attempts = OWNED_JOB_ATTEMPTS, delayMs = OWNED_JOB_DELAY_MS) {
+  const normalizedJobId = String(jobId || "").trim();
+  if (!normalizedJobId) {
+    throw new Error(`Owned xLights ${command} returned no jobId`);
+  }
+  for (let index = 0; index < attempts; index += 1) {
+    const settled = await getOwnedJob(endpoint, normalizedJobId);
+    const state = String(settled?.data?.state || "").trim().toLowerCase();
+    if (state === "queued" || state === "running") {
+      await sleep(delayMs);
+      continue;
+    }
+    return normalizeOwnedJobResult(command, settled);
+  }
+  throw new Error(`Timed out waiting for owned xLights job ${normalizedJobId} (${command})`);
+}
+
+async function readOwnedGet(endpoint, path, params = {}) {
+  const base = deriveOwnedEndpointBase(endpoint);
+  const url = new URL(`${base}${path}`);
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value == null || value === "") continue;
+    url.searchParams.set(key, String(value));
+  }
+  return readOwnedJson(url.toString(), { method: "GET" });
+}
+
+async function readOwnedPost(endpoint, path, body = {}, { command = path, queued = false } = {}) {
+  const base = deriveOwnedEndpointBase(endpoint);
+  const json = await readOwnedJson(`${base}${path}`, { method: "POST", body });
+  if (!queued) {
+    return normalizeOwnedCompleted(command, json);
+  }
+  return waitForOwnedJobResult(endpoint, command, json?.data?.jobId);
+}
+
 export async function pingCapabilities(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    const health = await getOwnedHealth(endpoint);
+    return {
+      ok: true,
+      res: 200,
+      data: {
+        version: "xlightsdesigner-owned-api",
+        commands: [
+          "sequence.getOpen",
+          "sequence.getRevision",
+          "sequence.getSettings",
+          "sequence.open",
+          "sequence.create",
+          "sequence.save",
+          "timing.getTracks",
+          "timing.getMarks",
+          "timing.ensureTrack",
+          "timing.addMarks",
+          "media.getCurrent",
+          "layout.getModels",
+          "elements.getSummary",
+          "effects.getWindow",
+          "effects.applyBatch",
+          "sequencing.applyBatchPlan"
+        ],
+        runtimeState: health?.data?.state || ""
+      }
+    };
+  }
   return postCommand(endpoint, "system.getCapabilities", {});
 }
 
 export async function getSystemVersion(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    const health = await getOwnedHealth(endpoint);
+    return {
+      ok: true,
+      res: 200,
+      data: {
+        version: health?.data?.state ? `owned-api:${health.data.state}` : "owned-api"
+      }
+    };
+  }
   return postCommand(endpoint, "system.getVersion", {});
 }
 
 export async function getOpenSequence(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted("sequence.getOpen", await readOwnedGet(endpoint, "/sequence/open"));
+  }
   return postCommand(endpoint, "sequence.getOpen", {});
 }
 
 export async function getSequenceSettings(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted("sequence.getSettings", await readOwnedGet(endpoint, "/sequence/settings"));
+  }
   return postCommand(endpoint, "sequence.getSettings", {});
 }
 
 export async function getMediaStatus(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    const owned = await readOwnedGet(endpoint, "/media/current");
+    return {
+      ok: true,
+      res: 200,
+      command: "media.getStatus",
+      data: {
+        sequenceOpen: Boolean(owned?.data?.sequenceOpen),
+        sequencePath: owned?.data?.sequencePath || "",
+        mediaFile: owned?.data?.mediaFile || "",
+        showDirectory: owned?.data?.showDirectory || ""
+      }
+    };
+  }
   return postCommand(endpoint, "media.getStatus", {});
 }
 
@@ -191,7 +347,9 @@ export async function getMediaMetadata(endpoint) {
 }
 
 export async function getRevision(endpoint) {
-  const res = await postCommand(endpoint, "sequence.getRevision", {});
+  const res = isOwnedEndpoint(endpoint)
+    ? normalizeOwnedCompleted("sequence.getRevision", await readOwnedGet(endpoint, "/sequence/revision"))
+    : await postCommand(endpoint, "sequence.getRevision", {});
   if (res?.ok !== true || !res?.data || typeof res.data !== "object") return res;
   const revision = String(res.data.revision ?? res.data.revisionToken ?? "").trim();
   return {
@@ -204,6 +362,13 @@ export async function getRevision(endpoint) {
 }
 
 export async function openSequence(endpoint, file, force = true, promptIssues = false) {
+  if (isOwnedEndpoint(endpoint)) {
+    return readOwnedPost(endpoint, "/sequence/open", {
+      file,
+      force,
+      promptIssues
+    }, { command: "sequence.open", queued: true });
+  }
   return postCommand(endpoint, "sequence.open", {
     file,
     force,
@@ -212,6 +377,9 @@ export async function openSequence(endpoint, file, force = true, promptIssues = 
 }
 
 export async function createSequence(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    return readOwnedPost(endpoint, "/sequence/create", params, { command: "sequence.create", queued: true });
+  }
   return postCommand(endpoint, "sequence.create", params);
 }
 
@@ -220,6 +388,9 @@ export async function setSequenceSettings(endpoint, params = {}) {
 }
 
 export async function saveSequence(endpoint, file = null) {
+  if (isOwnedEndpoint(endpoint)) {
+    return readOwnedPost(endpoint, "/sequence/save", file ? { file } : {}, { command: "sequence.save", queued: true });
+  }
   const params = {};
   if (file) params.file = file;
   try {
@@ -247,6 +418,19 @@ export async function saveSequence(endpoint, file = null) {
 }
 
 export async function closeSequence(endpoint, force = true, quiet = false) {
+  if (isOwnedEndpoint(endpoint)) {
+    return {
+      ok: true,
+      res: 200,
+      command: "sequence.close",
+      data: {
+        closed: false,
+        unsupported: true,
+        force,
+        quiet
+      }
+    };
+  }
   return postCommand(endpoint, "sequence.close", {
     force,
     quiet
@@ -254,6 +438,9 @@ export async function closeSequence(endpoint, force = true, quiet = false) {
 }
 
 export async function getModels(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted("layout.getModels", await readOwnedGet(endpoint, "/layout/models"));
+  }
   return postCommand(endpoint, "layout.getModels", {});
 }
 
@@ -286,14 +473,38 @@ export async function getLayoutViews(endpoint) {
 }
 
 export async function getDisplayElements(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    const owned = await readOwnedGet(endpoint, "/elements/summary");
+    return normalizeOwnedCompleted("elements.getSummary", owned);
+  }
   return postCommand(endpoint, "layout.getDisplayElements", {});
 }
 
 export async function getDisplayElementOrder(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    const owned = await readOwnedGet(endpoint, "/elements/summary");
+    const elements = Array.isArray(owned?.data?.elements) ? owned.data.elements : [];
+    return {
+      ok: true,
+      res: 200,
+      command: "sequencer.getDisplayElementOrder",
+      data: {
+        elements: elements.map((row) => String(row?.name || "").trim()).filter(Boolean)
+      }
+    };
+  }
   return postCommand(endpoint, "sequencer.getDisplayElementOrder", {});
 }
 
 export async function getSubmodels(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return {
+      ok: true,
+      res: 200,
+      command: "layout.getSubmodels",
+      data: { submodels: [] }
+    };
+  }
   return postCommand(endpoint, "layout.getSubmodels", {});
 }
 
@@ -304,10 +515,19 @@ export async function getSubmodelDetail(endpoint, name, parentId = "") {
 }
 
 export async function getTimingTracks(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted("timing.getTracks", await readOwnedGet(endpoint, "/timing/tracks"));
+  }
   return postCommand(endpoint, "timing.getTracks", {});
 }
 
 export async function getTimingMarks(endpoint, trackName) {
+  if (isOwnedEndpoint(endpoint)) {
+    return normalizeOwnedCompleted(
+      "timing.getMarks",
+      await readOwnedGet(endpoint, "/timing/marks", { track: trackName })
+    );
+  }
   return postCommand(endpoint, "timing.getMarks", {
     trackName
   });
@@ -342,6 +562,14 @@ export async function detectSongStructure(endpoint, params = {}) {
 }
 
 export async function getEffectDefinitions(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return {
+      ok: true,
+      res: 200,
+      command: "effects.listDefinitions",
+      data: { effects: [] }
+    };
+  }
   return postCommand(endpoint, "effects.listDefinitions", {});
 }
 
@@ -350,6 +578,31 @@ export async function getEffectDefinition(endpoint, effectName) {
 }
 
 export async function listEffects(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    const element = String(params?.element || params?.modelName || "").trim();
+    const startMs = Number(params?.startMs);
+    const endMs = Number(params?.endMs);
+    const owned = await readOwnedGet(endpoint, "/effects/window", {
+      element,
+      startMs,
+      endMs
+    });
+    const effects = Array.isArray(owned?.data?.effects) ? owned.data.effects : [];
+    const layerIndex = Number(params?.layerIndex);
+    return {
+      ok: true,
+      res: 200,
+      command: "effects.list",
+      data: {
+        effects: effects
+          .map((row) => ({
+            ...row,
+            layerIndex: Number(row?.layerIndex ?? row?.layerNumber ?? 0)
+          }))
+          .filter((row) => !Number.isFinite(layerIndex) || row.layerIndex === layerIndex)
+      }
+    };
+  }
   return postCommand(endpoint, "effects.list", params);
 }
 
@@ -401,19 +654,15 @@ export async function cancelJob(endpoint, jobId) {
 }
 
 export async function getOwnedJob(endpoint, jobId) {
-  const base = deriveOwnedEndpointBase(endpoint);
-  const target = `${base}/jobs/get?jobId=${encodeURIComponent(String(jobId || "").trim())}`;
-  return readOwnedJson(target, { method: "GET" });
+  return readOwnedGet(endpoint, "/jobs/get", { jobId: String(jobId || "").trim() });
 }
 
 export async function getOwnedHealth(endpoint) {
-  const base = deriveOwnedEndpointBase(endpoint);
-  return readOwnedJson(`${base}/health`, { method: "GET" });
+  return readOwnedGet(endpoint, "/health");
 }
 
 export async function getOwnedSequenceRevision(endpoint) {
-  const base = deriveOwnedEndpointBase(endpoint);
-  return readOwnedJson(`${base}/sequence/revision`, { method: "GET" });
+  return readOwnedGet(endpoint, "/sequence/revision");
 }
 
 export async function applySequencingBatchPlan(endpoint, payload = {}) {
