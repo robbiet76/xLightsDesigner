@@ -24,10 +24,11 @@ struct ProjectLayoutMetadataStoreTests {
         let original = try store.load(for: project)
         let tagID = try #require(original.tags.first?.id)
 
-        try store.updateTagDefinition(project: project, tagID: tagID, name: "Primary Focus", description: "Updated")
+        try store.updateTagDefinition(project: project, tagID: tagID, name: "Primary Focus", description: "Updated", colorName: "blue")
         let updated = try store.load(for: project)
 
         #expect(updated.tags.first?.name == "Primary Focus")
+        #expect(updated.tags.first?.colorName == "blue")
         #expect(updated.targetTags["Tree"] == [tagID])
     }
 
@@ -47,7 +48,9 @@ struct ProjectLayoutMetadataStoreTests {
     }
 
     private func makeProject(name: String) throws -> ActiveProjectModel {
-        let service = LocalProjectService()
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-layout-tag-tests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let service = LocalProjectService(projectsRootPath: root.path)
         return try service.createProject(
             draft: ProjectDraftModel(
                 projectName: "\(name)-\(UUID().uuidString.prefix(6))",

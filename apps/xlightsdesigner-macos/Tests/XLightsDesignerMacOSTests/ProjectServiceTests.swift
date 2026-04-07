@@ -4,7 +4,7 @@ import Testing
 
 struct ProjectServiceTests {
     @Test func createProjectStoresExpectedFileName() throws {
-        let service = LocalProjectService()
+        let service = try makeService()
         let name = "Native Test Project \(UUID().uuidString.prefix(6))"
         let project = try service.createProject(
             draft: ProjectDraftModel(
@@ -20,7 +20,7 @@ struct ProjectServiceTests {
     }
 
     @Test func openProjectAcceptsProjectFolder() throws {
-        let service = LocalProjectService()
+        let service = try makeService()
         let name = "Native Test Project \(UUID().uuidString.prefix(6))"
         let project = try service.createProject(
             draft: ProjectDraftModel(
@@ -38,7 +38,7 @@ struct ProjectServiceTests {
     }
 
     @Test func createProjectCanMigrateMetadataFromExistingProject() throws {
-        let service = LocalProjectService()
+        let service = try makeService()
         let sourceName = "Native Test Project \(UUID().uuidString.prefix(6))"
         let source = try service.createProject(
             draft: ProjectDraftModel(
@@ -75,7 +75,7 @@ struct ProjectServiceTests {
     }
 
     @Test func migrationSourceMustLiveUnderProjectsRoot() throws {
-        let service = LocalProjectService()
+        let service = try makeService()
         let tempRoot = FileManager.default.temporaryDirectory.appendingPathComponent("xld-invalid-migration-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
         let invalidSource = tempRoot.appendingPathComponent("Outside Project", isDirectory: true)
@@ -94,5 +94,11 @@ struct ProjectServiceTests {
                 )
             )
         }
+    }
+
+    private func makeService() throws -> LocalProjectService {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-tests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        return LocalProjectService(projectsRootPath: root.path)
     }
 }

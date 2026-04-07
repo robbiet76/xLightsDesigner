@@ -23,11 +23,29 @@ struct LayoutReadinessSummaryModel: Sendable {
     let nextStepText: String
 }
 
+enum LayoutTagColor: String, CaseIterable, Codable, Sendable {
+    case none
+    case red
+    case orange
+    case yellow
+    case green
+    case teal
+    case blue
+    case purple
+    case pink
+    case gray
+
+    var displayName: String {
+        rawValue.capitalized
+    }
+}
+
 struct LayoutTagDefinitionModel: Identifiable, Hashable, Codable, Sendable {
     let id: String
     var name: String
     var description: String
     var usageCount: Int
+    var color: LayoutTagColor
 }
 
 struct LayoutRowModel: Identifiable, Hashable, Sendable {
@@ -46,6 +64,13 @@ struct LayoutRowModel: Identifiable, Hashable, Sendable {
             .map(\.name)
             .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
             .joined(separator: ", ")
+    }
+
+    var tagFilterSummary: String {
+        guard !tagDefinitions.isEmpty else { return "No tags" }
+        return tagDefinitions
+            .map { [$0.name, $0.description, $0.color == .none ? "" : $0.color.displayName].joined(separator: " ") }
+            .joined(separator: " ")
     }
 }
 

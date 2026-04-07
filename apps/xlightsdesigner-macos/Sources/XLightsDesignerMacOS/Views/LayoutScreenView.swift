@@ -110,29 +110,45 @@ struct LayoutScreenView: View {
         AdaptiveSplitView(breakpoint: 1180, spacing: 20) {
             GroupBox("Targets") {
                 VStack(alignment: .leading, spacing: 12) {
-                    TextField("Search", text: $model.searchQuery)
-                        .textFieldStyle(.roundedBorder)
-                    Table(model.filteredRows, selection: $model.selectedRowIDs) {
-                        TableColumn("Target") { row in
+                    filterRow
+                    Table(model.filteredRows, selection: $model.selectedRowIDs, sortOrder: $model.sortOrder) {
+                        TableColumn("Target", value: \.targetName) { row in
                             Text(row.targetName)
                         }
-                        TableColumn("Type") { row in
+                        TableColumn("Type", value: \.targetType) { row in
                             Text(row.targetType)
                         }
-                        TableColumn("Layout Group") { row in
+                        TableColumn("Tags", value: \.tagSummary) { row in
+                            TagRowChips(tags: row.tagDefinitions)
+                        }
+                        TableColumn("Status", value: \.supportStateSummary) { row in
+                            Text(row.supportStateSummary)
+                        }
+                        TableColumn("xLights Group", value: \.layoutGroup) { row in
                             Text(row.layoutGroup)
                                 .lineLimit(1)
-                        }
-                        TableColumn("Tags") { row in
-                            Text(row.tagSummary)
-                                .lineLimit(1)
-                        }
-                        TableColumn("Status") { row in
-                            Text(row.supportStateSummary)
                         }
                     }
                     .onChange(of: model.selectedRowIDs) { _, _ in
                         model.syncSelectedPane()
+                    }
+                    .onChange(of: model.sortOrder) { _, newValue in
+                        model.updateSortOrder(newValue)
+                    }
+                    .onChange(of: model.targetFilter) { _, _ in
+                        model.syncSelectionToVisibleRows()
+                    }
+                    .onChange(of: model.typeFilter) { _, _ in
+                        model.syncSelectionToVisibleRows()
+                    }
+                    .onChange(of: model.layoutGroupFilter) { _, _ in
+                        model.syncSelectionToVisibleRows()
+                    }
+                    .onChange(of: model.tagsFilter) { _, _ in
+                        model.syncSelectionToVisibleRows()
+                    }
+                    .onChange(of: model.statusFilter) { _, _ in
+                        model.syncSelectionToVisibleRows()
                     }
                     .frame(minHeight: 420)
                 }
@@ -156,7 +172,7 @@ struct LayoutScreenView: View {
                             .font(.title2)
                             .fontWeight(.semibold)
                         detailRow(label: "Type", value: target.type)
-                        detailRow(label: "Layout Group", value: target.layoutGroup)
+                        detailRow(label: "xLights Group", value: target.layoutGroup)
                         detailRow(label: "Status", value: target.readinessState.rawValue)
                         detailRow(label: "Issue", value: target.reason)
                         tagSection(title: "Assigned Tags", tags: target.assignedTags)
@@ -187,6 +203,32 @@ struct LayoutScreenView: View {
             }
         }
         .frame(minHeight: 420)
+    }
+
+    private var filterRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                TextField("Filter target", text: $model.targetFilter)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Filter type", text: $model.typeFilter)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Filter tags", text: $model.tagsFilter)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Filter status", text: $model.statusFilter)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Filter xLights group", text: $model.layoutGroupFilter)
+                    .textFieldStyle(.roundedBorder)
+            }
+            if model.hasActiveFilters {
+                HStack {
+                    Spacer()
+                    Button("Clear Filters") {
+                        model.clearFilters()
+                        model.syncSelectionToVisibleRows()
+                    }
+                }
+            }
+        }
     }
 
     private var addTagSheet: some View {
@@ -277,7 +319,7 @@ struct LayoutScreenView: View {
                 )
             ) { tag in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(tag.name)
+                    TagChip(tag: tag)
                     Text("Used by \(tag.usageCount) targets")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -296,6 +338,11 @@ struct LayoutScreenView: View {
                     .fontWeight(.semibold)
                 Form {
                     TextField("Tag Name", text: $model.manageTagName)
+                    Picker("Color", selection: $model.manageTagColor) {
+                        ForEach(LayoutTagColor.allCases, id: \.self) { color in
+                            Text(color.displayName).tag(color)
+                        }
+                    }
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Description")
                             .font(.headline)
@@ -307,10 +354,7 @@ struct LayoutScreenView: View {
                     Button("Save") {
                         model.saveManagedTag()
                     }
-                    .disabled(
-                        model.manageTagName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                        model.isSavingTagChanges
-                    )
+                    .disabled(!model.canSaveManagedTag)
                     Spacer()
                     if model.manageSelectedTagID != nil {
                         Button("Delete Tag", role: .destructive) {
@@ -318,7 +362,7 @@ struct LayoutScreenView: View {
                         }
                     }
                     Button("Done") {
-                        model.showManageTagsSheet = false
+                        model.finishManageTags()
                     }
                 }
             }
@@ -389,9 +433,7 @@ private struct FlowTagList: View {
         ) {
             ForEach(tags) { tag in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(tag.name)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                    TagChip(tag: tag)
                     if !tag.description.isEmpty {
                         Text(tag.description)
                             .font(.caption)
@@ -401,9 +443,79 @@ private struct FlowTagList: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
-                .background(Color(nsColor: .controlBackgroundColor))
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
+        }
+    }
+}
+
+private struct TagRowChips: View {
+    let tags: [LayoutTagDefinitionModel]
+
+    var body: some View {
+        if tags.isEmpty {
+            Text("No tags")
+                .foregroundStyle(.secondary)
+        } else {
+            HStack(spacing: 6) {
+                ForEach(Array(tags.prefix(3))) { tag in
+                    TagChip(tag: tag)
+                }
+                if tags.count > 3 {
+                    Text("+\(tags.count - 3)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+private struct TagChip: View {
+    let tag: LayoutTagDefinitionModel
+
+    var body: some View {
+        Text(tag.name)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(tagBackground)
+            .foregroundStyle(tagForeground)
+            .clipShape(Capsule())
+    }
+
+    private var tagBackground: Color {
+        switch tag.color {
+        case .none:
+            return Color(nsColor: .controlBackgroundColor)
+        case .red:
+            return Color(nsColor: .systemRed).opacity(0.16)
+        case .orange:
+            return Color(nsColor: .systemOrange).opacity(0.18)
+        case .yellow:
+            return Color(nsColor: .systemYellow).opacity(0.20)
+        case .green:
+            return Color(nsColor: .systemGreen).opacity(0.16)
+        case .teal:
+            return Color(nsColor: .systemTeal).opacity(0.18)
+        case .blue:
+            return Color(nsColor: .systemBlue).opacity(0.16)
+        case .purple:
+            return Color(nsColor: .systemPurple).opacity(0.16)
+        case .pink:
+            return Color(nsColor: .systemPink).opacity(0.16)
+        case .gray:
+            return Color(nsColor: .quaternaryLabelColor)
+        }
+    }
+
+    private var tagForeground: Color {
+        switch tag.color {
+        case .yellow:
+            return Color(nsColor: .labelColor)
+        default:
+            return .primary
         }
     }
 }

@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApplication.shared.setActivationPolicy(.regular)
         model.projectScreenModel.loadInitialProject()
 
         if window == nil {
@@ -19,13 +20,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
             window.title = "xLightsDesigner"
             window.minSize = NSSize(width: 1180, height: 780)
+            window.level = .normal
+            window.collectionBehavior = [.managed]
             window.center()
             window.contentView = NSHostingView(rootView: contentView)
             window.makeKeyAndOrderFront(nil)
             self.window = window
         }
-
-        NSApplication.shared.setActivationPolicy(.regular)
-        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 }

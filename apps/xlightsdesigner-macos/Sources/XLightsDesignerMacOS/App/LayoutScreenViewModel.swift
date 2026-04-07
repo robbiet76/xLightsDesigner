@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -14,7 +15,12 @@ final class LayoutScreenViewModel {
     private let workspace: ProjectWorkspace
     private let layoutService: LayoutService
 
-    var searchQuery = ""
+    var targetFilter = ""
+    var typeFilter = ""
+    var layoutGroupFilter = ""
+    var tagsFilter = ""
+    var statusFilter = ""
+    var sortOrder = [KeyPathComparator(\LayoutRowModel.targetName, order: .forward)]
     var selectedRowIDs = Set<LayoutRowModel.ID>()
     var screenModel = LayoutScreenModel(
         header: LayoutHeaderModel(
@@ -52,6 +58,10 @@ final class LayoutScreenViewModel {
     var manageSelectedTagID: String?
     var manageTagName = ""
     var manageTagDescription = ""
+    var manageTagColor: LayoutTagColor = .none
+    private var originalManageTagName = ""
+    private var originalManageTagDescription = ""
+    private var originalManageTagColor: LayoutTagColor = .none
     var isSavingTagChanges = false
 
     init(workspace: ProjectWorkspace, layoutService: LayoutService = XLightsLayoutService()) {
@@ -60,17 +70,46 @@ final class LayoutScreenViewModel {
     }
 
     var filteredRows: [LayoutRowModel] {
-        guard !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return screenModel.rows
+        let target = targetFilter.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let type = typeFilter.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let layoutGroup = layoutGroupFilter.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let tags = tagsFilter.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let status = statusFilter.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        var rows = screenModel.rows.filter {
+            (target.isEmpty || $0.targetName.lowercased().contains(target)) &&
+            (type.isEmpty || $0.targetType.lowercased().contains(type)) &&
+            (layoutGroup.isEmpty || $0.layoutGroup.lowercased().contains(layoutGroup)) &&
+            (tags.isEmpty || $0.tagFilterSummary.lowercased().contains(tags)) &&
+            (status.isEmpty || $0.supportStateSummary.lowercased().contains(status))
         }
-        let q = searchQuery.lowercased()
-        return screenModel.rows.filter {
-            $0.targetName.lowercased().contains(q) ||
-            $0.targetType.lowercased().contains(q) ||
-            $0.layoutGroup.lowercased().contains(q) ||
-            $0.tagSummary.lowercased().contains(q) ||
-            $0.supportStateSummary.lowercased().contains(q)
+        rows.sort(using: sortOrder)
+        return rows
+    }
+
+    var hasActiveFilters: Bool {
+        !targetFilter.isEmpty || !typeFilter.isEmpty || !layoutGroupFilter.isEmpty || !tagsFilter.isEmpty || !statusFilter.isEmpty
+    }
+
+    func clearFilters() {
+        targetFilter = ""
+        typeFilter = ""
+        layoutGroupFilter = ""
+        tagsFilter = ""
+        statusFilter = ""
+    }
+
+    func updateSortOrder(_ order: [KeyPathComparator<LayoutRowModel>]) {
+        sortOrder = order
+    }
+
+    func syncSelectionToVisibleRows() {
+        let visibleIDs = Set(filteredRows.map(\.id))
+        selectedRowIDs = selectedRowIDs.intersection(visibleIDs)
+        if selectedRowIDs.isEmpty, let first = filteredRows.first {
+            selectedRowIDs = [first.id]
         }
+        syncSelectedPane()
     }
 
     var selectedRows: [LayoutRowModel] {
@@ -86,6 +125,16 @@ final class LayoutScreenViewModel {
         return screenModel.tagDefinitions
             .filter { tagIDs.contains($0.id) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    var canSaveManagedTag: Bool {
+        !manageTagName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSavingTagChanges
+    }
+
+    var hasManagedTagChanges: Bool {
+        manageTagName != originalManageTagName ||
+        manageTagDescription != originalManageTagDescription ||
+        manageTagColor != originalManageTagColor
     }
 
     func loadLayout() {
@@ -275,19 +324,31 @@ final class LayoutScreenViewModel {
         guard let id, let tag = screenModel.tagDefinitions.first(where: { $0.id == id }) else {
             manageTagName = ""
             manageTagDescription = ""
+            manageTagColor = .none
+            originalManageTagName = ""
+            originalManageTagDescription = ""
+            originalManageTagColor = .none
             return
         }
         manageTagName = tag.name
         manageTagDescription = tag.description
+        manageTagColor = tag.color
+        originalManageTagName = tag.name
+        originalManageTagDescription = tag.description
+        originalManageTagColor = tag.color
     }
 
     func startNewManagedTag() {
         manageSelectedTagID = nil
         manageTagName = ""
         manageTagDescription = ""
+        manageTagColor = .none
+        originalManageTagName = ""
+        originalManageTagDescription = ""
+        originalManageTagColor = .none
     }
 
-    func saveManagedTag() {
+    func saveManagedTag(closeAfterSave: Bool = false) {
         Task {
             do {
                 isSavingTagChanges = true
@@ -295,13 +356,28 @@ final class LayoutScreenViewModel {
                     for: workspace.activeProject,
                     tagID: manageSelectedTagID,
                     name: manageTagName,
-                    description: manageTagDescription
+                    description: manageTagDescription,
+                    color: manageTagColor
                 )
+                originalManageTagName = manageTagName
+                originalManageTagDescription = manageTagDescription
+                originalManageTagColor = manageTagColor
+                if closeAfterSave {
+                    showManageTagsSheet = false
+                }
                 loadLayout()
             } catch {
                 errorMessage = error.localizedDescription
             }
             isSavingTagChanges = false
+        }
+    }
+
+    func finishManageTags() {
+        if hasManagedTagChanges && canSaveManagedTag {
+            saveManagedTag(closeAfterSave: true)
+        } else {
+            showManageTagsSheet = false
         }
     }
 
@@ -313,6 +389,7 @@ final class LayoutScreenViewModel {
                 self.manageSelectedTagID = nil
                 manageTagName = ""
                 manageTagDescription = ""
+                manageTagColor = .none
                 loadLayout()
             } catch {
                 errorMessage = error.localizedDescription

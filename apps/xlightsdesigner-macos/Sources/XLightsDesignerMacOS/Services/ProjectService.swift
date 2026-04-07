@@ -10,6 +10,12 @@ protocol ProjectService: Sendable {
 }
 
 struct LocalProjectService: ProjectService {
+    private let projectsRootPath: String
+
+    init(projectsRootPath: String = AppEnvironment.projectsRootPath) {
+        self.projectsRootPath = projectsRootPath
+    }
+
     func listProjects() throws -> [ProjectReferenceModel] {
         try allProjects().map { project in
             let folderPath = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent().path
@@ -26,10 +32,7 @@ struct LocalProjectService: ProjectService {
     }
 
     func loadMostRecentProject() throws -> ActiveProjectModel? {
-        let docs = try allProjects()
-        let realProjects = docs.filter { !$0.projectName.hasPrefix("Native Test Project ") }
-        let preferred = realProjects.isEmpty ? docs : realProjects
-        return preferred.max(by: { $0.updatedAt < $1.updatedAt })
+        try allProjects().max(by: { $0.updatedAt < $1.updatedAt })
     }
 
     func openProject(filePath: String) throws -> ActiveProjectModel {
@@ -39,7 +42,7 @@ struct LocalProjectService: ProjectService {
     func createProject(draft: ProjectDraftModel) throws -> ActiveProjectModel {
         let normalized = normalizeProjectName(draft.projectName)
         guard !normalized.isEmpty else { throw ProjectServiceError.invalidProjectName }
-        let dir = URL(fileURLWithPath: AppEnvironment.projectsRootPath).appendingPathComponent(normalized, isDirectory: true)
+        let dir = URL(fileURLWithPath: projectsRootPath).appendingPathComponent(normalized, isDirectory: true)
         let fileURL = dir.appendingPathComponent("\(normalized).xdproj")
         if FileManager.default.fileExists(atPath: fileURL.path) || FileManager.default.fileExists(atPath: dir.path) {
             throw ProjectServiceError.projectAlreadyExists(normalized)
@@ -47,7 +50,7 @@ struct LocalProjectService: ProjectService {
         if draft.migrateMetadata {
             let sourcePath = draft.migrationSourceProjectPath.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !sourcePath.isEmpty else { throw ProjectServiceError.migrationSourceRequired }
-            let projectsRoot = URL(fileURLWithPath: AppEnvironment.projectsRootPath).standardizedFileURL.path
+            let projectsRoot = URL(fileURLWithPath: projectsRootPath).standardizedFileURL.path
             let standardizedSource = URL(fileURLWithPath: sourcePath).standardizedFileURL.path
             guard standardizedSource == projectsRoot || standardizedSource.hasPrefix(projectsRoot + "/") else {
                 throw ProjectServiceError.invalidMigrationSource(sourcePath)
@@ -85,12 +88,14 @@ struct LocalProjectService: ProjectService {
     }
 
     private func allProjects() throws -> [ActiveProjectModel] {
-        let root = URL(fileURLWithPath: AppEnvironment.projectsRootPath)
+        let root = URL(fileURLWithPath: projectsRootPath)
         guard FileManager.default.fileExists(atPath: root.path) else { return [] }
         let files = try FileManager.default.subpathsOfDirectory(atPath: root.path)
             .filter { $0.hasSuffix(".xdproj") }
             .map { root.appendingPathComponent($0) }
-        return files.compactMap { try? readProject(from: $0.path) }
+        return files
+            .compactMap { try? readProject(from: $0.path) }
+            .filter { !isGeneratedTestProject($0) }
     }
 
     private func resolveProjectFilePath(from selectionPath: String) throws -> String {
@@ -226,6 +231,10 @@ struct LocalProjectService: ProjectService {
 
     private func isoNow() -> String {
         ISO8601DateFormatter().string(from: Date())
+    }
+
+    private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
+        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("LayoutTagStore")
     }
 }
 

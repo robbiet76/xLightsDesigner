@@ -62,13 +62,21 @@ final class ProjectScreenViewModel {
         do {
             if let rememberedPath = sessionStore.loadLastProjectPath(),
                FileManager.default.fileExists(atPath: rememberedPath) {
-                workspace.setProject(try projectService.openProject(filePath: rememberedPath))
+                let remembered = try projectService.openProject(filePath: rememberedPath)
+                if isGeneratedTestProject(remembered) {
+                    workspace.setProject(try projectService.loadMostRecentProject())
+                } else {
+                    workspace.setProject(remembered)
+                }
             } else {
                 workspace.setProject(try projectService.loadMostRecentProject())
             }
             workspace.projectBanner = nil
         } catch {
             workspace.projectBanner = ProjectBannerModel(id: "load-failed", level: .blocked, text: String(error.localizedDescription))
+            do {
+                workspace.setProject(try projectService.loadMostRecentProject())
+            } catch {}
         }
         syncSelectedProjectFromActive()
     }
@@ -215,5 +223,9 @@ final class ProjectScreenViewModel {
             ProjectDownstreamHint(id: "audio", text: "Audio remains available as a standalone workflow."),
             ProjectDownstreamHint(id: "sequence-media", text: "Sequence-specific media selection happens later when working on a specific sequence.")
         ]
+    }
+
+    private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
+        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("LayoutTagStore")
     }
 }

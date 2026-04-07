@@ -4,7 +4,7 @@ protocol LayoutMetadataStore: Sendable {
     func load(for project: ActiveProjectModel) throws -> PersistedLayoutMetadataDocument
     func createOrAssignTag(project: ActiveProjectModel, targetIDs: [String], tagName: String, description: String) throws
     func removeTag(project: ActiveProjectModel, targetIDs: [String], tagID: String) throws
-    func updateTagDefinition(project: ActiveProjectModel, tagID: String?, name: String, description: String) throws
+    func updateTagDefinition(project: ActiveProjectModel, tagID: String?, name: String, description: String, colorName: String?) throws
     func deleteTagDefinition(project: ActiveProjectModel, tagID: String) throws
 }
 
@@ -18,6 +18,7 @@ struct PersistedLayoutTagDefinition: Codable, Sendable {
     var id: String
     var name: String
     var description: String
+    var colorName: String?
 }
 
 enum LayoutMetadataStoreError: LocalizedError {
@@ -87,7 +88,7 @@ struct LocalLayoutMetadataStore: LayoutMetadataStore {
         try save(document, for: project)
     }
 
-    func updateTagDefinition(project: ActiveProjectModel, tagID: String?, name: String, description: String) throws {
+    func updateTagDefinition(project: ActiveProjectModel, tagID: String?, name: String, description: String, colorName: String?) throws {
         let normalizedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedName.isEmpty else { return }
@@ -100,11 +101,12 @@ struct LocalLayoutMetadataStore: LayoutMetadataStore {
             }
             document.tags[index].name = normalizedName
             document.tags[index].description = normalizedDescription
+            document.tags[index].colorName = colorName
         } else {
             if document.tags.contains(where: { $0.name.caseInsensitiveCompare(normalizedName) == .orderedSame }) {
                 throw LayoutMetadataStoreError.duplicateTagName
             }
-            document.tags.append(PersistedLayoutTagDefinition(id: UUID().uuidString, name: normalizedName, description: normalizedDescription))
+            document.tags.append(PersistedLayoutTagDefinition(id: UUID().uuidString, name: normalizedName, description: normalizedDescription, colorName: colorName))
         }
         try save(document, for: project)
     }
