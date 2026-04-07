@@ -10,7 +10,12 @@ struct XLightsDesignerMacOSApp: App {
                 AppSidebar(model: model)
                     .frame(minWidth: 220)
             } detail: {
-                WorkflowPlaceholderView(workflow: model.selectedWorkflow)
+                switch model.selectedWorkflow {
+                case .audio:
+                    AudioScreenView(model: model.audioScreenModel)
+                default:
+                    WorkflowPlaceholderView(workflow: model.selectedWorkflow)
+                }
             }
             .frame(minWidth: 1100, minHeight: 760)
         }

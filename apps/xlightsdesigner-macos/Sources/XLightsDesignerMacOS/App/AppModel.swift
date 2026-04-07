@@ -5,6 +5,7 @@ import Observation
 final class AppModel {
     var selectedWorkflow: WorkflowID = .audio
     var showSettings = false
+    let audioScreenModel = AudioScreenViewModel.sample()
 
     let projectName = "No Project"
     let contextSummary = "Native scaffold only. No backend services are wired yet."
