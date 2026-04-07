@@ -1,6 +1,7 @@
 import Testing
 @testable import XLightsDesignerMacOS
 
+@MainActor
 @Test func sampleAudioViewModelStartsWithNeedsReviewSelection() {
     let model = AudioScreenViewModel.sample()
 
@@ -14,6 +15,7 @@ import Testing
     #expect(track.canConfirmIdentity)
 }
 
+@MainActor
 @Test func confirmingIdentityUpdatesSelectedRowAndResult() {
     let model = AudioScreenViewModel.sample()
 

@@ -19,6 +19,13 @@ enum AudioIdentityState: String {
     case needsReview = "Needs Review"
 }
 
+enum AudioRowActionKind: String {
+    case none
+    case verifyIdentity
+    case rerunAnalysis
+    case reviewDetails
+}
+
 struct AudioHeaderModel {
     let title: String
     let subtitle: String
@@ -42,6 +49,15 @@ struct AudioLibraryRowModel: Identifiable, Hashable {
     var actionSummaryText: String
     var reason: String
     var canConfirmIdentity: Bool
+    var sourceMediaPath: String
+    var suggestedTitle: String
+    var suggestedArtist: String
+    var availableProfiles: [String]
+    var verificationStatus: String
+    var recommendedFileName: String
+    var shouldRename: Bool
+    var shouldRetag: Bool
+    var availableTimingNames: [String]
 }
 
 struct AudioBatchProgressModel {

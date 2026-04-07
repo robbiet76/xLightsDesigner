@@ -1,8 +1,12 @@
 import Foundation
 import Observation
 
+@MainActor
 @Observable
 final class AudioScreenViewModel {
+    private let trackLibraryService: TrackLibraryService
+    private let fileSelectionService: FileSelectionService
+
     var mode: AudioMode = .singleTrack
     var singleTrackPath = ""
     var folderPath = ""
@@ -13,7 +17,14 @@ final class AudioScreenViewModel {
 
     private(set) var allRows: [AudioLibraryRowModel]
 
-    init(rows: [AudioLibraryRowModel], selectedRowID: AudioLibraryRowModel.ID? = nil) {
+    init(
+        rows: [AudioLibraryRowModel],
+        selectedRowID: AudioLibraryRowModel.ID? = nil,
+        trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
+        fileSelectionService: FileSelectionService = NativeFileSelectionService()
+    ) {
+        self.trackLibraryService = trackLibraryService
+        self.fileSelectionService = fileSelectionService
         self.allRows = rows
         self.selectedRowID = selectedRowID
         if let selectedRowID {
@@ -48,6 +59,34 @@ final class AudioScreenViewModel {
             $0.status.rawValue.lowercased().contains(q) ||
             $0.identitySummary.lowercased().contains(q)
         }
+    }
+
+    func loadLibrary() {
+        do {
+            let rows = try trackLibraryService.loadLibraryRows()
+            allRows = rows
+            let preferredSelection = selectedRowID.flatMap { id in rows.contains(where: { $0.id == id }) ? id : nil }
+            let fallbackSelection = preferredSelection
+                ?? rows.first(where: { $0.status == .needsReview })?.id
+                ?? rows.first?.id
+            selectRow(id: fallbackSelection)
+        } catch {
+            currentResult = .error(AudioErrorModel(
+                title: "Unable to load track library",
+                explanation: String(error.localizedDescription),
+                canRetry: true
+            ))
+        }
+    }
+
+    func browseForTrack() {
+        guard let path = fileSelectionService.chooseAudioFile() else { return }
+        singleTrackPath = path
+    }
+
+    func browseForFolder() {
+        guard let path = fileSelectionService.chooseFolder() else { return }
+        folderPath = path
     }
 
     func selectRow(id: AudioLibraryRowModel.ID?) {
@@ -174,6 +213,8 @@ final class AudioScreenViewModel {
             allRows[index].reason = "Identity confirmed and core timing layers are available."
             allRows[index].canConfirmIdentity = false
             allRows[index].missingIssuesSummary = "None"
+            allRows[index].suggestedTitle = title
+            allRows[index].suggestedArtist = artist
             currentResult = .track(trackResult(from: allRows[index]))
         } else {
             currentResult = .track(AudioTrackResultModel(
@@ -228,7 +269,16 @@ extension AudioScreenViewModel {
                 lastAnalyzedSummary: "Today 10:42 AM",
                 actionSummaryText: "No action needed",
                 reason: "Required timing layers are present.",
-                canConfirmIdentity: false
+                canConfirmIdentity: false,
+                sourceMediaPath: "",
+                suggestedTitle: "Candy Cane Lane",
+                suggestedArtist: "Sia",
+                availableProfiles: ["deep"],
+                verificationStatus: "claimed_identity_only",
+                recommendedFileName: "",
+                shouldRename: false,
+                shouldRetag: false,
+                availableTimingNames: ["XD: Song Structure", "XD: Phrase Cues", "XD: Beats", "XD: Bars"]
             ),
             AudioLibraryRowModel(
                 id: "carol-bells",
@@ -242,7 +292,16 @@ extension AudioScreenViewModel {
                 lastAnalyzedSummary: "Today 11:03 AM",
                 actionSummaryText: "Verify track info",
                 reason: "Track identity is unresolved.",
-                canConfirmIdentity: true
+                canConfirmIdentity: true,
+                sourceMediaPath: "",
+                suggestedTitle: "Carol Of The Bells",
+                suggestedArtist: "",
+                availableProfiles: ["deep"],
+                verificationStatus: "unverified",
+                recommendedFileName: "",
+                shouldRename: false,
+                shouldRetag: false,
+                availableTimingNames: ["XD: Song Structure", "XD: Beats", "XD: Bars"]
             ),
             AudioLibraryRowModel(
                 id: "christmas-sarajevo",
@@ -256,7 +315,16 @@ extension AudioScreenViewModel {
                 lastAnalyzedSummary: "Yesterday",
                 actionSummaryText: "No action needed",
                 reason: "Phrase cues are unavailable for this instrumental track.",
-                canConfirmIdentity: false
+                canConfirmIdentity: false,
+                sourceMediaPath: "",
+                suggestedTitle: "Christmas Sarajevo 12/24",
+                suggestedArtist: "Trans-Siberian Orchestra",
+                availableProfiles: ["deep"],
+                verificationStatus: "claimed_identity_only",
+                recommendedFileName: "",
+                shouldRename: false,
+                shouldRetag: false,
+                availableTimingNames: ["XD: Song Structure", "XD: Beats", "XD: Bars"]
             ),
             AudioLibraryRowModel(
                 id: "grinch-failed",
@@ -270,7 +338,16 @@ extension AudioScreenViewModel {
                 lastAnalyzedSummary: "Today 9:14 AM",
                 actionSummaryText: "Re-run analysis",
                 reason: "The last analysis run failed before timing layers were produced.",
-                canConfirmIdentity: false
+                canConfirmIdentity: false,
+                sourceMediaPath: "",
+                suggestedTitle: "You’re A Mean One, Mr. Grinch",
+                suggestedArtist: "Thurl Ravenscroft",
+                availableProfiles: [],
+                verificationStatus: "claimed_identity_only",
+                recommendedFileName: "",
+                shouldRename: false,
+                shouldRetag: false,
+                availableTimingNames: []
             )
         ], selectedRowID: "carol-bells")
     }

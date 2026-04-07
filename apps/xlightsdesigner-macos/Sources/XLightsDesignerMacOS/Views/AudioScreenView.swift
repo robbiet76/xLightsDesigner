@@ -11,6 +11,9 @@ struct AudioScreenView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .task {
+            model.loadLibrary()
+        }
     }
 
     private var header: some View {
@@ -53,12 +56,14 @@ struct AudioScreenView: View {
                             .foregroundStyle(.secondary)
                         TextField("Audio file path", text: $model.singleTrackPath)
                         HStack {
-                            Button("Browse File…") {}
-                                .disabled(true)
+                            Button("Browse File…") {
+                                model.browseForTrack()
+                            }
                             Button("Analyze Track") {
                                 model.analyzeTrack()
                             }
                             .buttonStyle(.borderedProminent)
+                            .disabled(model.singleTrackPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     }
                 } else {
@@ -68,12 +73,14 @@ struct AudioScreenView: View {
                         TextField("Folder path", text: $model.folderPath)
                         Toggle("Include subfolders recursively", isOn: $model.recursiveEnabled)
                         HStack {
-                            Button("Browse Folder…") {}
-                                .disabled(true)
+                            Button("Browse Folder…") {
+                                model.browseForFolder()
+                            }
                             Button("Analyze Folder") {
                                 model.analyzeFolder()
                             }
                             .buttonStyle(.borderedProminent)
+                            .disabled(model.folderPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     }
                 }
