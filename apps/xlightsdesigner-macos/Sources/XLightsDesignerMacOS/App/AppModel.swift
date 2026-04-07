@@ -17,6 +17,7 @@ final class AppModel {
     let sequenceScreenModel: SequenceScreenViewModel
     let reviewScreenModel: ReviewScreenViewModel
     let historyScreenModel: HistoryScreenViewModel
+    let settingsScreenModel: SettingsScreenViewModel
 
     init() {
         let workspace = ProjectWorkspace()
@@ -29,5 +30,6 @@ final class AppModel {
         self.sequenceScreenModel = SequenceScreenViewModel(workspace: workspace)
         self.reviewScreenModel = ReviewScreenViewModel(workspace: workspace)
         self.historyScreenModel = HistoryScreenViewModel(workspace: workspace)
+        self.settingsScreenModel = SettingsScreenViewModel()
     }
 }

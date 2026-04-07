@@ -7,7 +7,7 @@ struct XLightsDesignerMacOSApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsPlaceholderView()
+            SettingsScreenView(model: appDelegate.model.settingsScreenModel)
         }
         .commands {
             CommandGroup(after: .appInfo) {

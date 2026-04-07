@@ -24,8 +24,6 @@ struct RootContentView: View {
                     ReviewScreenView(model: model.reviewScreenModel)
                 case .history:
                     HistoryScreenView(model: model.historyScreenModel)
-                default:
-                    WorkflowPlaceholderView(workflow: model.selectedWorkflow)
                 }
             }
             .frame(minWidth: 700, minHeight: 780)
@@ -46,9 +44,7 @@ struct RootContentView: View {
             }
         }
         .sheet(isPresented: $model.showSettings) {
-            SettingsPlaceholderView()
-                .padding(24)
-                .frame(width: 520, height: 320)
+            SettingsScreenView(model: model.settingsScreenModel)
         }
     }
 }
