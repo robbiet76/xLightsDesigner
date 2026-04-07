@@ -31,6 +31,7 @@ Active Entry Points:
 - `macos-native-review-workflow-review-from-electron-2026-04-06.md`
 - `macos-native-history-workflow-review-from-electron-2026-04-06.md`
 - `macos-native-project-layout-relationship-2026-04-06.md`
+- `macos-native-project-layout-build-package-2026-04-06.md`
 - `macos-native-early-workflow-relationship-2026-04-06.md`
 - `macos-native-design-sequence-review-coupled-review-2026-04-06.md`
 - `macos-native-history-relationship-2026-04-06.md`
