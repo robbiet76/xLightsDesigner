@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.build/master.swiftdeps"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.build/runner.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOSPackageTests.build/runner.dia"
+  }
+}

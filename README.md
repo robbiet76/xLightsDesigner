@@ -8,6 +8,7 @@ Repository for the **xLights Agent Sequencer** initiative.
 Runtime application code.
 - `apps/xlightsdesigner-ui/`: web UI used by desktop wrapper.
 - `apps/xlightsdesigner-desktop/`: Electron shell/build packaging.
+- `apps/xlightsdesigner-macos/`: native macOS SwiftUI shell scaffold.
 - `apps/xlightsdesigner-analysis-service/`: audio analysis backend.
 
 ### `training-packages/`
@@ -90,6 +91,10 @@ Live endpoint:
 
 ## Desktop Wrapper (Electron)
 `apps/xlightsdesigner-desktop/` contains an Electron wrapper that injects the desktop bridge used by `Browse...` controls in Sequence Setup.
+
+Lifecycle note:
+- Electron is now workflow reference and maintenance-only infrastructure.
+- New product-shell work belongs in `apps/xlightsdesigner-macos/`.
 
 Run desktop mode:
 1. `cd apps/xlightsdesigner-desktop`

@@ -68,6 +68,7 @@ Current role in the app plan:
 - preserve workflow-first page contracts and backend/runtime ownership boundaries
 - stop broad Electron UX expansion and move toward a native macOS shell design package
 - require medium/high-fidelity wireframes and click-through prototypes for high-risk workflows before SwiftUI build
+- feed the native scaffold under `apps/xlightsdesigner-macos/`
 
 Lifecycle note:
 - Electron-specific app-ui specs are now legacy-reference only unless explicitly marked otherwise

@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/master.swiftdeps"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/Sources/XLightsDesignerMacOS/App/AppModel.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppModel.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppModel.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppModel.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppModel.dia"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/Sources/XLightsDesignerMacOS/App/XLightsDesignerMacOSApp.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/XLightsDesignerMacOSApp.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/XLightsDesignerMacOSApp.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/XLightsDesignerMacOSApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/XLightsDesignerMacOSApp.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/XLightsDesignerMacOSApp.dia"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/Sources/XLightsDesignerMacOS/Models/WorkflowID.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowID.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowID.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowID~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowID.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowID.dia"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/Sources/XLightsDesignerMacOS/Views/AppSidebar.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppSidebar.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppSidebar.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppSidebar~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppSidebar.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/AppSidebar.dia"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/Sources/XLightsDesignerMacOS/Views/SettingsPlaceholderView.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/SettingsPlaceholderView.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/SettingsPlaceholderView.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/SettingsPlaceholderView~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/SettingsPlaceholderView.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/SettingsPlaceholderView.dia"
+  },
+  "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/Sources/XLightsDesignerMacOS/Views/WorkflowPlaceholderView.swift": {
+    "dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowPlaceholderView.d",
+    "object": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowPlaceholderView.swift.o",
+    "swiftmodule": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowPlaceholderView~partial.swiftmodule",
+    "swift-dependencies": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowPlaceholderView.swiftdeps",
+    "diagnostics": "/Users/robterry/Projects/xLightsDesigner/apps/xlightsdesigner-macos/.build/arm64-apple-macosx/debug/XLightsDesignerMacOS.build/WorkflowPlaceholderView.dia"
+  }
+}
