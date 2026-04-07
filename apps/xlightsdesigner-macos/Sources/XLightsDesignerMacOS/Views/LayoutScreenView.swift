@@ -14,6 +14,9 @@ struct LayoutScreenView: View {
         .task {
             model.loadLayout()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .projectWorkspaceDidChange)) { _ in
+            model.loadLayout()
+        }
     }
 
     private var header: some View {

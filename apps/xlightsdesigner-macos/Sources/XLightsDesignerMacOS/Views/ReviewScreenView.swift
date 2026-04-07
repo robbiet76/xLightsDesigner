@@ -17,6 +17,9 @@ struct ReviewScreenView: View {
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .task { model.refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: .projectWorkspaceDidChange)) { _ in
+            model.refresh()
+        }
     }
 
     private var header: some View { VStack(alignment: .leading, spacing: 8) { Text(model.screenModel.title).font(.largeTitle).fontWeight(.semibold); Text(model.screenModel.subtitle).foregroundStyle(.secondary) } }

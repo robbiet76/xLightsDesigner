@@ -7,6 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        model.projectScreenModel.loadInitialProject()
+
         if window == nil {
             let contentView = RootContentView(model: model)
             let window = NSWindow(
