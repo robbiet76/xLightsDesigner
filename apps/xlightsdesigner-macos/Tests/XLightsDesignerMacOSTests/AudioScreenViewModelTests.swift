@@ -16,7 +16,8 @@ private final class StubTrackLibraryService: TrackLibraryService, @unchecked Sen
 @MainActor
 private struct StubFileSelectionService: FileSelectionService {
     func chooseAudioFile() -> String? { nil }
-    func chooseFolder() -> String? { nil }
+    func chooseFolder(prompt: String) -> String? { nil }
+    func chooseProjectFile() -> String? { nil }
 }
 
 private struct StubAudioExecutionService: AudioExecutionService, Sendable {

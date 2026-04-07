@@ -88,7 +88,7 @@ final class AudioScreenViewModel {
     }
 
     func browseForFolder() {
-        guard let path = fileSelectionService.chooseFolder() else { return }
+        guard let path = fileSelectionService.chooseFolder(prompt: "Choose Folder") else { return }
         folderPath = path
     }
 
