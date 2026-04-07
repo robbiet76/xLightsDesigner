@@ -48,6 +48,9 @@ Top-level sections:
 Secondary global destination:
 - `Settings`
 
+Shared secondary utility surface:
+- `Assistant`
+
 Rationale:
 - this preserves the workflow-first product structure that already emerged from the better parts of the Electron design work
 - it keeps the user journey understandable from project setup through sequencing and review
@@ -216,6 +219,25 @@ Disallowed global context:
 
 Reason:
 - global sequence context created confusion in the Electron shell when users were working in `Audio` on a different track than the active sequence
+
+## Assistant Surface Rule
+
+The native assistant / team chat surface is not part of the primary workflow navigation.
+
+It should exist as a shared utility surface that can be opened from anywhere in the app without replacing the active workflow screen.
+
+The assistant owns:
+- unified app-wide conversation continuity
+- routing across specialist roles
+- workflow-aware guidance
+
+The assistant does not own:
+- the primary screen UI of any workflow
+- main workflow navigation
+- local summary/detail regions that belong to the active screen
+
+See:
+- `macos-native-assistant-surface-2026-04-06.md`
 
 ## Local Context Rules
 

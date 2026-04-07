@@ -54,6 +54,7 @@ Primary policy source:
 - `app-ui/macos-native-visual-system-2026-04-06.md`
 - `app-ui/macos-native-design-system-components-2026-04-06.md`
 - `app-ui/macos-native-cutover-plan-2026-04-06.md`
+- `app-ui/macos-native-assistant-surface-2026-04-06.md`
 - `app-ui/macos-native-audio-wireframe-review-package-2026-04-06.md`
 - `app-ui/macos-native-audio-wireframes-v1-2026-04-06.md`
 - `app-ui/macos-native-audio-figma-mockup-package-2026-04-06.md`

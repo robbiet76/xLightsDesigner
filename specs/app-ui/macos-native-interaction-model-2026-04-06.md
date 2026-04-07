@@ -247,6 +247,12 @@ Detailed shortcut design can be deferred, but the interaction model must not con
 
 ## 10. Screen-Specific Interaction Notes
 
+### Assistant
+- assistant is a shared utility surface, not a workflow screen
+- opening assistant must not navigate away from the current workflow
+- assistant may reference current workflow context, but must not replace local detail/action regions
+- conversation persistence must remain independent from volatile screen state
+
 ### Project
 - create/open/save actions are prominent and local
 - project identity is read-first, editable only where appropriate
