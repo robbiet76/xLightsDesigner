@@ -48,8 +48,7 @@ struct LayoutScreenView: View {
                 Text(model.screenModel.readinessSummary.nextStepText)
                     .foregroundStyle(.secondary)
                 ForEach(model.screenModel.banners) { banner in
-                    Text(banner.text)
-                        .foregroundStyle(.secondary)
+                    bannerView(banner)
                 }
                 HStack {
                     Spacer()
@@ -121,6 +120,25 @@ struct LayoutScreenView: View {
             .padding(.vertical, 4)
             .background(Color(nsColor: .controlBackgroundColor))
             .clipShape(Capsule())
+    }
+
+    private func bannerView(_ banner: LayoutBannerModel) -> some View {
+        Text(banner.text)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(bannerColor(for: banner.state))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func bannerColor(for state: LayoutReadinessState) -> Color {
+        switch state {
+        case .ready:
+            return Color(nsColor: .systemGreen).opacity(0.12)
+        case .needsReview:
+            return Color(nsColor: .systemOrange).opacity(0.12)
+        case .blocked:
+            return Color(nsColor: .systemRed).opacity(0.12)
+        }
     }
 
     private func detailRow(label: String, value: String) -> some View {

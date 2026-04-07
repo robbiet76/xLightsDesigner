@@ -9,9 +9,11 @@ final class ProjectScreenViewModel {
     private let fileSelectionService: FileSelectionService
     private let sessionStore: ProjectSessionStore
 
-    var projectSheetMode: ProjectSheetMode = .create
-    var projectDraft = ProjectDraftModel(projectName: "", showFolder: "", mediaPath: "")
+    var projectDraft = ProjectDraftModel(projectName: "", showFolder: "", mediaPath: "", migrateMetadata: false, migrationSourceProjectPath: "")
+    var availableProjects: [ProjectReferenceModel] = []
+    var selectedOpenProjectPath = ""
     var isShowingProjectSheet = false
+    var isShowingOpenProjectSheet = false
     var screenBanner: ProjectBannerModel?
 
     init(
@@ -40,16 +42,13 @@ final class ProjectScreenViewModel {
                     projectName: project.projectName,
                     projectFilePath: project.projectFilePath,
                     showFolderSummary: project.showFolderSummary,
-                    mediaPathSummary: project.mediaPathSummary,
                     readiness: readinessLevel(for: project),
                     readinessExplanation: readinessExplanation(for: project)
                 )
             },
             actions: ProjectActionState(
                 canCreate: true,
-                canOpen: true,
-                canSave: active != nil,
-                canSaveAs: active != nil
+                canOpen: true
             ),
             readinessItems: active.map(readinessItems(for:)) ?? [],
             hints: active.map(downstreamHints(for:)) ?? [ProjectDownstreamHint(id: "start", text: "Create or open a project before moving to Layout or Audio.")],
@@ -58,6 +57,7 @@ final class ProjectScreenViewModel {
     }
 
     func loadInitialProject() {
+        loadAvailableProjects()
         guard workspace.activeProject == nil else { return }
         do {
             if let rememberedPath = sessionStore.loadLastProjectPath(),
@@ -70,29 +70,39 @@ final class ProjectScreenViewModel {
         } catch {
             workspace.projectBanner = ProjectBannerModel(id: "load-failed", level: .blocked, text: String(error.localizedDescription))
         }
+        syncSelectedProjectFromActive()
     }
 
-    func openProject() {
-        guard let filePath = fileSelectionService.chooseProjectFile() else { return }
+    func startOpenProject() {
+        loadAvailableProjects()
+        syncSelectedProjectFromActive()
+        isShowingOpenProjectSheet = true
+    }
+
+    func openSelectedProject() {
+        let folderPath = selectedOpenProjectPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !folderPath.isEmpty else { return }
         do {
-            let project = try projectService.openProject(filePath: filePath)
+            let project = try projectService.openProject(filePath: folderPath)
             workspace.setProject(project)
             workspace.projectBanner = ProjectBannerModel(id: "opened", level: .ready, text: "Opened \(project.projectName).")
+            syncSelectedProjectFromActive()
+            isShowingOpenProjectSheet = false
         } catch {
             workspace.projectBanner = ProjectBannerModel(id: "open-failed", level: .blocked, text: String(error.localizedDescription))
         }
     }
 
     func startCreateProject() {
-        projectSheetMode = .create
-        projectDraft = ProjectDraftModel(projectName: "", showFolder: workspace.activeProject?.showFolder ?? "", mediaPath: workspace.activeProject?.mediaPath ?? "")
-        isShowingProjectSheet = true
-    }
-
-    func startSaveAsProject() {
-        guard let active = workspace.activeProject else { return }
-        projectSheetMode = .saveAs
-        projectDraft = ProjectDraftModel(projectName: active.projectName, showFolder: active.showFolder, mediaPath: active.mediaPath)
+        loadAvailableProjects()
+        let activeProjectFolder = workspace.activeProject.map { URL(fileURLWithPath: $0.projectFilePath).deletingLastPathComponent().path } ?? availableProjects.first?.projectFolderPath ?? ""
+        projectDraft = ProjectDraftModel(
+            projectName: "",
+            showFolder: workspace.activeProject?.showFolder ?? "",
+            mediaPath: "",
+            migrateMetadata: false,
+            migrationSourceProjectPath: activeProjectFolder
+        )
         isShowingProjectSheet = true
     }
 
@@ -102,41 +112,29 @@ final class ProjectScreenViewModel {
         }
     }
 
-    func chooseDraftMediaFolder() {
-        if let path = fileSelectionService.chooseFolder(prompt: "Choose Media Folder") {
-            projectDraft.mediaPath = path
+    var migrationSourceDisplayPath: String {
+        let path = projectDraft.migrationSourceProjectPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else { return "" }
+        let root = AppEnvironment.projectsRootPath
+        if path == root { return "." }
+        if path.hasPrefix(root + "/") {
+            return String(path.dropFirst(root.count + 1))
         }
+        return URL(fileURLWithPath: path).lastPathComponent
     }
 
     func confirmProjectSheet() {
         do {
-            let project: ActiveProjectModel
-            switch projectSheetMode {
-            case .create:
-                project = try projectService.createProject(draft: projectDraft)
-            case .saveAs:
-                guard let active = workspace.activeProject else { return }
-                var draftProject = active
-                draftProject.showFolder = projectDraft.showFolder
-                draftProject.mediaPath = projectDraft.mediaPath
-                project = try projectService.saveProjectAs(draftProject, projectName: projectDraft.projectName)
-            }
+            let project = try projectService.createProject(draft: projectDraft)
             workspace.setProject(project)
-            workspace.projectBanner = ProjectBannerModel(id: "saved", level: .ready, text: "Saved \(project.projectName).")
+            workspace.projectBanner = ProjectBannerModel(
+                id: "saved",
+                level: .ready,
+                text: projectDraft.migrateMetadata ? "Created \(project.projectName) from migrated project metadata." : "Created \(project.projectName)."
+            )
             isShowingProjectSheet = false
         } catch {
             screenBanner = ProjectBannerModel(id: "sheet-failed", level: .blocked, text: String(error.localizedDescription))
-        }
-    }
-
-    func saveProject() {
-        guard let active = workspace.activeProject else { return }
-        do {
-            let saved = try projectService.saveProject(active)
-            workspace.setProject(saved)
-            workspace.projectBanner = ProjectBannerModel(id: "save", level: .ready, text: "Saved \(saved.projectName).")
-        } catch {
-            workspace.projectBanner = ProjectBannerModel(id: "save-failed", level: .blocked, text: String(error.localizedDescription))
         }
     }
 
@@ -148,27 +146,42 @@ final class ProjectScreenViewModel {
             let saved = try projectService.saveProject(active)
             workspace.setProject(saved)
             workspace.projectBanner = ProjectBannerModel(id: "show-folder", level: .ready, text: "Updated show folder.")
+            loadAvailableProjects()
+            syncSelectedProjectFromActive()
         } catch {
             workspace.projectBanner = ProjectBannerModel(id: "show-folder-failed", level: .blocked, text: String(error.localizedDescription))
         }
     }
 
-    func chooseMediaFolderForActiveProject() {
-        guard var active = workspace.activeProject else { return }
-        guard let path = fileSelectionService.chooseFolder(prompt: "Choose Media Folder") else { return }
-        active.mediaPath = path
-        do {
-            let saved = try projectService.saveProject(active)
-            workspace.setProject(saved)
-            workspace.projectBanner = ProjectBannerModel(id: "media-folder", level: .ready, text: "Updated media folder.")
-        } catch {
-            workspace.projectBanner = ProjectBannerModel(id: "media-folder-failed", level: .blocked, text: String(error.localizedDescription))
-        }
-    }
 
     func dismissProjectSheet() {
         isShowingProjectSheet = false
         screenBanner = nil
+    }
+
+    func dismissOpenProjectSheet() {
+        isShowingOpenProjectSheet = false
+    }
+
+    private func loadAvailableProjects() {
+        do {
+            availableProjects = try projectService.listProjects()
+            if selectedOpenProjectPath.isEmpty {
+                syncSelectedProjectFromActive()
+            }
+        } catch {
+            availableProjects = []
+            screenBanner = ProjectBannerModel(id: "project-list-failed", level: .blocked, text: String(error.localizedDescription))
+        }
+    }
+
+    private func syncSelectedProjectFromActive() {
+        if let activePath = workspace.activeProject.map({ URL(fileURLWithPath: $0.projectFilePath).deletingLastPathComponent().path }),
+           availableProjects.contains(where: { $0.projectFolderPath == activePath }) {
+            selectedOpenProjectPath = activePath
+        } else if selectedOpenProjectPath.isEmpty {
+            selectedOpenProjectPath = availableProjects.first?.projectFolderPath ?? ""
+        }
     }
 
     private func readinessLevel(for project: ActiveProjectModel) -> WorkflowReadinessLevel {
@@ -191,8 +204,7 @@ final class ProjectScreenViewModel {
     private func readinessItems(for project: ActiveProjectModel) -> [ProjectReadinessItem] {
         [
             ProjectReadinessItem(id: "file", label: "Project File", value: project.projectFilePath, status: .ready),
-            ProjectReadinessItem(id: "show", label: "Show Folder", value: project.showFolderSummary, status: readinessLevel(for: project)),
-            ProjectReadinessItem(id: "media", label: "Media Path", value: project.mediaPathSummary, status: project.mediaPath.isEmpty ? .partial : .ready)
+            ProjectReadinessItem(id: "show", label: "xLights Show", value: project.showFolderSummary, status: readinessLevel(for: project))
         ]
     }
 
@@ -200,7 +212,8 @@ final class ProjectScreenViewModel {
         let layoutHint = readinessLevel(for: project) == .ready ? "Layout can be reviewed now." : "Layout is blocked by project context."
         return [
             ProjectDownstreamHint(id: "layout", text: layoutHint),
-            ProjectDownstreamHint(id: "audio", text: "Audio remains available as a standalone workflow.")
+            ProjectDownstreamHint(id: "audio", text: "Audio remains available as a standalone workflow."),
+            ProjectDownstreamHint(id: "sequence-media", text: "Sequence-specific media selection happens later when working on a specific sequence.")
         ]
     }
 }

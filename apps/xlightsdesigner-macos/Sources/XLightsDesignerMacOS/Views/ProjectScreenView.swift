@@ -6,12 +6,14 @@ struct ProjectScreenView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             header
-            if let banner = model.screenModel.banners.first {
-                bannerView(banner)
+            if !model.screenModel.banners.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(model.screenModel.banners) { banner in
+                        bannerView(banner)
+                    }
+                }
             }
-            summaryBand
-            actionBand
-            contextSection
+            topBand
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -20,6 +22,11 @@ struct ProjectScreenView: View {
         }
         .sheet(isPresented: $model.isShowingProjectSheet) {
             projectSheet
+                .padding(24)
+                .frame(width: 520)
+        }
+        .sheet(isPresented: $model.isShowingOpenProjectSheet) {
+            openProjectSheet
                 .padding(24)
                 .frame(width: 520)
         }
@@ -32,113 +39,151 @@ struct ProjectScreenView: View {
                 .fontWeight(.semibold)
             Text(model.screenModel.header.subtitle)
                 .foregroundStyle(.secondary)
-            Text(model.screenModel.header.statusBadge)
-                .font(.subheadline)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(Capsule())
         }
     }
 
+    private var topBand: some View {
+        AdaptiveSplitView(breakpoint: 1180, spacing: 20) {
+            VStack(alignment: .leading, spacing: 20) {
+                summaryBand
+                primaryActionsBand
+            }
+        } secondary: {
+            EmptyView()
+        }
+        .frame(minHeight: 420)
+    }
+
     private var summaryBand: some View {
-        GroupBox("Active Project") {
+        GroupBox(model.screenModel.summary == nil ? "Start Here" : "Active Project") {
             if let summary = model.screenModel.summary {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(summary.projectName)
                         .font(.title2)
                         .fontWeight(.semibold)
-                    detailRow(label: "Project File", value: summary.projectFilePath)
-                    detailRow(label: "Show Folder", value: summary.showFolderSummary)
-                    detailRow(label: "Media Path", value: summary.mediaPathSummary)
+                    detailRow(label: "Project Folder", value: projectFolderPath(from: summary.projectFilePath))
+                    detailRow(label: "xLights Show Folder", value: summary.showFolderSummary)
+                    HStack(spacing: 10) {
+                        Button("Change Show Folder…") { model.chooseShowFolderForActiveProject() }
+                        Spacer()
+                    }
                     detailRow(label: "Readiness", value: summary.readinessExplanation)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 4)
             } else {
-                Text("No active project. Create or open a project to establish working context.")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 4)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Create or open a project to establish the working context for Layout, Design, Sequence, and Review.")
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 10) {
+                        Button("Create Project…") { model.startCreateProject() }
+                            .buttonStyle(.borderedProminent)
+                        Button("Open Project…") { model.startOpenProject() }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 4)
             }
         }
     }
 
-    private var actionBand: some View {
+    private var primaryActionsBand: some View {
         GroupBox("Project Actions") {
-            HStack(spacing: 10) {
-                Button("Create Project…") { model.startCreateProject() }
-                Button("Open Project…") { model.openProject() }
-                Button("Save Project") { model.saveProject() }
-                    .disabled(!model.screenModel.actions.canSave)
-                Button("Save Project As…") { model.startSaveAsProject() }
-                    .disabled(!model.screenModel.actions.canSaveAs)
-                Spacer()
-                Button("Choose Show Folder…") { model.chooseShowFolderForActiveProject() }
-                    .disabled(model.screenModel.summary == nil)
-                Button("Choose Media Folder…") { model.chooseMediaFolderForActiveProject() }
-                    .disabled(model.screenModel.summary == nil)
-            }
-            .padding(.vertical, 4)
-        }
-    }
-
-    private var contextSection: some View {
-        GroupBox("Project Context") {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Readiness")
-                        .font(.headline)
-                    ForEach(model.screenModel.readinessItems) { item in
-                        HStack(alignment: .top) {
-                            Text(item.label)
-                                .fontWeight(.semibold)
-                                .frame(width: 110, alignment: .leading)
-                            Text(item.value)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(item.status.rawValue)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Next")
-                        .font(.headline)
-                    ForEach(model.screenModel.hints) { hint in
-                        Text(hint.text)
-                            .foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Use one of these actions to establish or update the active project file.")
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .bottom, spacing: 10) {
+                    Button("Create Project…") { model.startCreateProject() }
+                        .buttonStyle(.borderedProminent)
+                    Button("Open Project…") { model.startOpenProject() }
+                    Spacer()
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 4)
         }
     }
 
     private var projectSheet: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(model.projectSheetMode.rawValue)
+            Text("Create Project")
                 .font(.title2)
                 .fontWeight(.semibold)
-            TextField("Project name", text: $model.projectDraft.projectName)
-            HStack {
-                TextField("Show folder", text: $model.projectDraft.showFolder)
-                Button("Browse…") { model.chooseDraftShowFolder() }
+            Text("Create a new project, set the xLights show folder, and optionally migrate reusable metadata from an existing project.")
+                .foregroundStyle(.secondary)
+            GroupBox("Project Identity") {
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("Project name", text: $model.projectDraft.projectName)
+                }
+                .padding(.vertical, 4)
             }
-            HStack {
-                TextField("Media folder", text: $model.projectDraft.mediaPath)
-                Button("Browse…") { model.chooseDraftMediaFolder() }
+            GroupBox("xLights Show Folder") {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        TextField("Show folder", text: $model.projectDraft.showFolder)
+                        Button("Browse…") { model.chooseDraftShowFolder() }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            GroupBox("Metadata Migration") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Toggle("Migrate metadata from an existing project", isOn: $model.projectDraft.migrateMetadata)
+                    if model.projectDraft.migrateMetadata {
+                        Text("Use an existing project as the starting point, then reconcile the migrated metadata against the new xLights show in Layout.")
+                            .foregroundStyle(.secondary)
+                        Picker("Source Project", selection: $model.projectDraft.migrationSourceProjectPath) {
+                            ForEach(model.availableProjects) { project in
+                                Text(project.folderName)
+                                    .tag(project.projectFolderPath)
+                            }
+                        }
+                        .labelsHidden()
+                    }
+                }
+                .padding(.vertical, 4)
             }
             HStack {
                 Spacer()
                 Button("Cancel") { model.dismissProjectSheet() }
-                Button(model.projectSheetMode.rawValue) { model.confirmProjectSheet() }
+                Button("Create Project") { model.confirmProjectSheet() }
                     .buttonStyle(.borderedProminent)
-                    .disabled(model.projectDraft.projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(createProjectDisabled)
             }
         }
+    }
+
+    private var openProjectSheet: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Open Project")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("Choose a project from the canonical Projects folder.")
+                .foregroundStyle(.secondary)
+            GroupBox("Available Projects") {
+                Picker("Project", selection: $model.selectedOpenProjectPath) {
+                    ForEach(model.availableProjects) { project in
+                        Text(project.folderName)
+                            .tag(project.projectFolderPath)
+                    }
+                }
+                .labelsHidden()
+                .padding(.vertical, 4)
+            }
+            HStack {
+                Spacer()
+                Button("Cancel") { model.dismissOpenProjectSheet() }
+                Button("Open") { model.openSelectedProject() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.selectedOpenProjectPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+    }
+
+    private var createProjectDisabled: Bool {
+        let nameMissing = model.projectDraft.projectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let showMissing = model.projectDraft.showFolder.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let migrationMissing = model.projectDraft.migrateMetadata && model.projectDraft.migrationSourceProjectPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return nameMissing || showMissing || migrationMissing
     }
 
     private func detailRow(label: String, value: String) -> some View {
@@ -155,7 +200,22 @@ struct ProjectScreenView: View {
         Text(banner.text)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
-            .background(Color(nsColor: banner.level == .blocked ? .systemRed.withAlphaComponent(0.12) : .controlBackgroundColor))
+            .background(bannerColor(for: banner.level))
             .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func bannerColor(for level: WorkflowReadinessLevel) -> Color {
+        switch level {
+        case .ready:
+            return Color(nsColor: .systemGreen).opacity(0.12)
+        case .partial:
+            return Color(nsColor: .systemOrange).opacity(0.12)
+        case .blocked:
+            return Color(nsColor: .systemRed).opacity(0.12)
+        }
+    }
+
+    private func projectFolderPath(from projectFilePath: String) -> String {
+        URL(fileURLWithPath: projectFilePath).deletingLastPathComponent().path
     }
 }

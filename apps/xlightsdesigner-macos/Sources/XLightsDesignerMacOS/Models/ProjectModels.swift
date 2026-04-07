@@ -40,16 +40,24 @@ struct ProjectSummaryModel {
     let projectName: String
     let projectFilePath: String
     let showFolderSummary: String
-    let mediaPathSummary: String
     let readiness: WorkflowReadinessLevel
     let readinessExplanation: String
+}
+
+struct ProjectReferenceModel: Identifiable, Equatable, Sendable {
+    let id: String
+    let projectName: String
+    let projectFolderPath: String
+    let projectFilePath: String
+
+    var folderName: String {
+        URL(fileURLWithPath: projectFolderPath).lastPathComponent
+    }
 }
 
 struct ProjectActionState {
     let canCreate: Bool
     let canOpen: Bool
-    let canSave: Bool
-    let canSaveAs: Bool
 }
 
 struct ProjectReadinessItem: Identifiable {
@@ -83,9 +91,6 @@ struct ProjectDraftModel {
     var projectName: String
     var showFolder: String
     var mediaPath: String
-}
-
-enum ProjectSheetMode: String {
-    case create = "Create Project"
-    case saveAs = "Save Project As"
+    var migrateMetadata: Bool
+    var migrationSourceProjectPath: String
 }
