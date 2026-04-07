@@ -6,7 +6,7 @@ enum WorkflowReadinessLevel: String, Codable, Sendable {
     case blocked = "Blocked"
 }
 
-struct ActiveProjectModel: Identifiable, Equatable {
+struct ActiveProjectModel: Identifiable, Equatable, @unchecked Sendable {
     let id: String
     var projectName: String
     var projectFilePath: String

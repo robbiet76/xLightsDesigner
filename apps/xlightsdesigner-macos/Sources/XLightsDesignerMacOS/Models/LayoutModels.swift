@@ -23,33 +23,52 @@ struct LayoutReadinessSummaryModel: Sendable {
     let nextStepText: String
 }
 
+struct LayoutTagDefinitionModel: Identifiable, Hashable, Codable, Sendable {
+    let id: String
+    var name: String
+    var description: String
+    var usageCount: Int
+}
+
 struct LayoutRowModel: Identifiable, Hashable, Sendable {
     let id: String
     let targetName: String
     let targetType: String
-    let tagSummary: String
-    let assignmentSummary: String
+    let layoutGroup: String
+    let tagDefinitions: [LayoutTagDefinitionModel]
     let supportStateSummary: String
     let issuesSummary: String
-    let actionSummaryText: String
     let submodelCount: Int
+
+    var tagSummary: String {
+        guard !tagDefinitions.isEmpty else { return "No tags" }
+        return tagDefinitions
+            .map(\.name)
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+            .joined(separator: ", ")
+    }
 }
 
 struct LayoutSelectedTargetModel: Sendable {
     let identity: String
     let type: String
-    let sourcePathSummary: String
+    let layoutGroup: String
     let readinessState: LayoutReadinessState
     let reason: String
-    let recommendedAction: String
-    let currentTags: String
-    let assignmentSummary: String
+    let assignedTags: [LayoutTagDefinitionModel]
     let downstreamEffectSummary: String
+}
+
+struct LayoutMultiSelectionModel: Sendable {
+    let selectionCount: Int
+    let commonTags: [LayoutTagDefinitionModel]
+    let mixedTagCount: Int
 }
 
 enum LayoutSelectedPaneModel: Sendable {
     case none(String)
     case selected(LayoutSelectedTargetModel)
+    case multi(LayoutMultiSelectionModel)
     case error(String)
 }
 
@@ -65,4 +84,5 @@ struct LayoutScreenModel: Sendable {
     let rows: [LayoutRowModel]
     let selectedTarget: LayoutSelectedPaneModel
     let banners: [LayoutBannerModel]
+    let tagDefinitions: [LayoutTagDefinitionModel]
 }
