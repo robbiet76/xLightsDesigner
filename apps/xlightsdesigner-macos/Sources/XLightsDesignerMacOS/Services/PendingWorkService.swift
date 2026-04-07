@@ -5,16 +5,30 @@ struct PendingWorkReadModel: Sendable {
     let activeSequenceName: String
     let activeSequencePath: String
     let recentSequenceCount: Int
+    let audioPath: String
     let briefSummary: String
+    let briefGoalsSummary: String
+    let briefInspirationSummary: String
     let briefSections: [String]
+    let moodEnergyArc: String
+    let narrativeCues: String
+    let visualCues: String
     let proposalSummary: String
     let proposalLines: [String]
+    let guidedQuestions: [String]
+    let riskNotes: [String]
     let proposalLifecycleStatus: String
     let estimatedImpact: Int
+    let executionModeSummary: String
+    let constraintsSummary: String
     let intentGoal: String
     let intentTargetIDs: [String]
+    let intentSectionCount: Int
+    let directorPreferenceSummary: String
     let directorSummary: String
     let designSceneSummary: String
+    let layoutModelCount: Int
+    let layoutGroupCount: Int
     let musicSectionLabels: [String]
     let musicHoldMoments: [String]
     let artifactTimestampSummary: String
@@ -41,6 +55,7 @@ struct LocalPendingWorkService: PendingWorkService {
         let snapshot = project.snapshot.mapValues(\.value)
         let activeSequenceName = string(snapshot["activeSequence"])
         let recentSequences = arrayOfStrings(snapshot["recentSequences"])
+        let audioPath = string(snapshot["audioPathInput"])
         let projectSequences = snapshot["projectSequences"] as? [[String: Any]] ?? []
         let activeProjectSequence = projectSequences.first(where: { bool($0["isActive"]) })
         let preferredSequencePath = string(activeProjectSequence?["sequencePath"])
@@ -54,6 +69,11 @@ struct LocalPendingWorkService: PendingWorkService {
         let metadata = latestScene?["metadata"] as? [String: Any]
         let holdMoments = ((latestMusic?["designCues"] as? [String: Any]).flatMap { arrayOfStrings($0["holdMoments"]) }) ?? []
         let sectionArc = ((latestMusic?["sectionArc"] as? [[String: Any]]) ?? []).compactMap { string($0["label"]) }.filter { !$0.isEmpty }
+        let executionPlan = latestProposal?["executionPlan"] as? [String: Any]
+        let constraints = latestIntent?["constraints"] as? [String: Any] ?? latestProposal?["constraints"] as? [String: Any]
+        let directorPreferences = latestIntent?["directorPreferences"] as? [String: Any]
+        let layoutModelCount = int(metadata?["modelCount"])
+        let layoutGroupCount = int(metadata?["groupCount"])
 
         let timestamps = [
             string(latestBrief?["createdAt"]),
@@ -69,16 +89,30 @@ struct LocalPendingWorkService: PendingWorkService {
             activeSequenceName: activeSequenceName.isEmpty ? "No active sequence" : activeSequenceName,
             activeSequencePath: activeSequencePath.isEmpty ? "No active sequence path" : activeSequencePath,
             recentSequenceCount: recentSequences.count,
+            audioPath: audioPath.isEmpty ? "No audio path selected" : audioPath,
             briefSummary: string(latestBrief?["summary"], fallback: "No creative brief available."),
+            briefGoalsSummary: string(latestBrief?["goalsSummary"], fallback: "No explicit goals captured."),
+            briefInspirationSummary: string(latestBrief?["inspirationSummary"], fallback: "No explicit inspiration captured."),
             briefSections: briefSections,
+            moodEnergyArc: string(latestBrief?["moodEnergyArc"], fallback: "No mood/energy arc available."),
+            narrativeCues: string(latestBrief?["narrativeCues"], fallback: "No narrative cues available."),
+            visualCues: string(latestBrief?["visualCues"], fallback: "No visual cues available."),
             proposalSummary: string(latestProposal?["summary"], fallback: "No proposal bundle available."),
             proposalLines: proposalLines,
+            guidedQuestions: arrayOfStrings(latestProposal?["guidedQuestions"]),
+            riskNotes: arrayOfStrings(latestProposal?["riskNotes"]),
             proposalLifecycleStatus: string(lifecycle?["status"], fallback: "unknown"),
             estimatedImpact: int(impact?["estimatedImpact"]),
+            executionModeSummary: buildExecutionModeSummary(executionPlan: executionPlan),
+            constraintsSummary: buildConstraintsSummary(constraints: constraints),
             intentGoal: string(latestIntent?["goal"], fallback: "No intent handoff available."),
             intentTargetIDs: intentTargets,
+            intentSectionCount: (latestIntent?["scope"] as? [String: Any]).map { arrayOfStrings($0["sections"]).count } ?? 0,
+            directorPreferenceSummary: buildDirectorPreferenceSummary(intentPreferences: directorPreferences, learnedPreferences: latestDirector?["preferences"] as? [String: Any]),
             directorSummary: string(latestDirector?["summary"], fallback: "No director profile available."),
             designSceneSummary: buildSceneSummary(metadata: metadata),
+            layoutModelCount: layoutModelCount,
+            layoutGroupCount: layoutGroupCount,
             musicSectionLabels: sectionArc,
             musicHoldMoments: holdMoments,
             artifactTimestampSummary: timestamps.last ?? project.updatedAt
@@ -105,6 +139,36 @@ struct LocalPendingWorkService: PendingWorkService {
         let submodelCount = int(metadata["submodelCount"])
         let layoutMode = string(metadata["layoutMode"], fallback: "unknown")
         return "\(modelCount) models, \(groupCount) groups, \(submodelCount) submodels, \(layoutMode.uppercased()) scene"
+    }
+
+    private func buildExecutionModeSummary(executionPlan: [String: Any]?) -> String {
+        guard let executionPlan else { return "No execution plan available." }
+        let mode = string(executionPlan["implementationMode"], fallback: "unknown mode")
+        let passScope = string(executionPlan["passScope"], fallback: "unknown scope")
+        let targetCount = int(executionPlan["targetCount"])
+        let sectionCount = int(executionPlan["sectionCount"])
+        return "\(mode), \(passScope), \(targetCount) targets, \(sectionCount) sections"
+    }
+
+    private func buildConstraintsSummary(constraints: [String: Any]?) -> String {
+        guard let constraints else { return "No sequencing constraints recorded." }
+        let tolerance = string(constraints["changeTolerance"], fallback: "unspecified")
+        let preserveTiming = bool(constraints["preserveTimingTracks"]) ? "preserve timing tracks" : "timing tracks may change"
+        let globalRewrite = bool(constraints["allowGlobalRewrite"]) ? "global rewrite allowed" : "global rewrite constrained"
+        return "\(tolerance) change tolerance, \(preserveTiming), \(globalRewrite)"
+    }
+
+    private func buildDirectorPreferenceSummary(intentPreferences: [String: Any]?, learnedPreferences: [String: Any]?) -> String {
+        if let focus = intentPreferences?["focusElements"] {
+            let focusElements = arrayOfStrings(focus)
+            if !focusElements.isEmpty {
+                return "Focus bias toward \(focusElements.prefix(4).joined(separator: ", "))"
+            }
+        }
+        guard let learnedPreferences else { return "No director preference summary available." }
+        let ranked = learnedPreferences.keys.sorted()
+        if ranked.isEmpty { return "No director preference summary available." }
+        return "Prefers \(ranked.prefix(3).joined(separator: ", "))"
     }
 
     private func string(_ value: Any?, fallback: String = "") -> String {

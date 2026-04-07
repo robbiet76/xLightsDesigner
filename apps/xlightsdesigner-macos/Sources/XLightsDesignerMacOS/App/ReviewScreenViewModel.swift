@@ -34,12 +34,12 @@ final class ReviewScreenViewModel {
             ? "Pending work is visible and can be evaluated before native apply execution is added."
             : "Project context is required before review becomes actionable."
 
-        let designHighlights = pendingWork?.briefSections.prefix(3).map { String($0) } ?? []
+        let designHighlights = (pendingWork?.proposalLines.prefix(3).map { String($0) } ?? [])
         let sequenceHighlights: [String] = hasProject
             ? [
                 activeSequenceName,
                 "\(pendingWork?.intentTargetIDs.count ?? 0) targets in handoff",
-                "Apply does not live on Sequence"
+                "\(pendingWork?.musicSectionLabels.count ?? 0) music sections available"
             ]
             : ["Project required"]
 
@@ -61,7 +61,9 @@ final class ReviewScreenViewModel {
                 title: "Design Summary",
                 summary: hasProject ? (pendingWork?.briefSummary ?? "No design summary available.") : "No design summary available.",
                 highlights: hasProject
-                    ? (designHighlights.isEmpty ? ["Meaning-first direction", "Proposal remains reviewable", "Warnings stay concise"] : Array(designHighlights))
+                    ? (designHighlights.isEmpty
+                        ? [pendingWork?.moodEnergyArc ?? "Meaning-first direction", pendingWork?.narrativeCues ?? "Proposal remains reviewable", pendingWork?.visualCues ?? "Warnings stay concise"]
+                        : Array(designHighlights))
                     : ["Project required"]
             ),
             sequenceSummary: ReviewSupportSummaryModel(
@@ -73,13 +75,19 @@ final class ReviewScreenViewModel {
                 state: state,
                 blockers: hasProject ? (canApply ? [] : ["No active sequence loaded."]) : ["Project context missing."],
                 warnings: hasProject
-                    ? ["This initial slice establishes the review gate before apply execution is wired."]
+                    ? {
+                        var warnings = ["This initial slice establishes the review gate before apply execution is wired."]
+                        if let pendingWork, pendingWork.riskNotes.isEmpty == false {
+                            warnings.append(contentsOf: pendingWork.riskNotes.prefix(3))
+                        }
+                        return warnings
+                    }()
                     : ["Review cannot proceed without project context."],
                 impactSummary: hasProject
-                    ? "Estimated proposal impact: \(pendingWork?.estimatedImpact ?? 0). Lifecycle: \(pendingWork?.proposalLifecycleStatus ?? "unknown")."
+                    ? "Estimated proposal impact: \(pendingWork?.estimatedImpact ?? 0). Lifecycle: \(pendingWork?.proposalLifecycleStatus ?? "unknown"). Execution: \(pendingWork?.executionModeSummary ?? "No execution plan available.")."
                     : "No implementation impact available.",
                 backupSummary: hasProject
-                    ? "Backup and restore details will surface when native apply actions become active."
+                    ? "Backup and restore details will surface when native apply actions become active. Current constraints: \(pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.")."
                     : "No backup context available."
             ),
             actions: ReviewActionStateModel(

@@ -26,7 +26,7 @@ final class DesignScreenViewModel {
         let proposalSummary = pendingWork?.proposalSummary ?? "Proposal work remains unavailable until a project is active."
         let directorSummary = pendingWork?.directorSummary ?? "No director profile loaded."
         let sceneSummary = pendingWork?.designSceneSummary ?? "No design-scene context available."
-        let openQuestions = pendingWork?.briefSections.prefix(3).map { "How should \($0) evolve visually?" } ?? []
+        let openQuestions = pendingWork?.guidedQuestions ?? []
 
         let identity = PendingWorkIdentityModel(
             title: hasProject ? "Current design direction" : "No pending design context",
@@ -60,31 +60,32 @@ final class DesignScreenViewModel {
             ),
             proposal: DesignProposalPaneModel(
                 briefTitle: "Brief",
-                briefSummary: hasProject ? briefSummary : "No brief available.",
+                briefSummary: hasProject ? "\(briefSummary)\n\nGoals: \(pendingWork?.briefGoalsSummary ?? "No explicit goals captured.")" : "No brief available.",
                 proposalTitle: "Proposal",
                 proposalSummary: hasProject ? proposalSummary : "Proposal generation is not available without project context.",
-                referenceDirection: hasProject ? sceneSummary : "No reference direction.",
-                directorInfluence: hasProject ? directorSummary : "No director profile loaded."
+                referenceDirection: hasProject ? "\(pendingWork?.visualCues ?? "No visual cues available.")\n\nScene: \(sceneSummary)" : "No reference direction.",
+                directorInfluence: hasProject ? "\(directorSummary)\n\n\(pendingWork?.directorPreferenceSummary ?? "No director preference summary available.")" : "No director profile loaded."
             ),
             rationale: DesignRationalePaneModel(
                 rationaleNotes: hasProject ? [
-                    "Design remains meaning-first and does not duplicate sequence mechanics.",
-                    "Pending work identity stays shared across Design, Sequence, and Review."
+                    pendingWork?.moodEnergyArc ?? "No mood/energy arc available.",
+                    pendingWork?.narrativeCues ?? "No narrative cues available.",
+                    "Design remains meaning-first and does not duplicate sequence mechanics."
                 ] : ["Design cannot proceed until the app has an active project context."],
                 assumptions: hasProject ? [
-                    "Audio analysis and layout readiness inform design quality but do not own the creative direction.",
-                    "One primary proposal remains easier to review than fragmented alternatives."
+                    pendingWork?.briefInspirationSummary ?? "No explicit inspiration captured.",
+                    pendingWork?.constraintsSummary ?? "No sequencing constraints recorded.",
+                    pendingWork?.executionModeSummary ?? "No execution plan available."
                 ] : ["The user still needs to select an active project."],
                 openQuestions: hasProject
                     ? (openQuestions.isEmpty
-                        ? [
-                            "Which sections should become the primary visual peaks?",
-                            "Where should restraint matter more than motion or density?"
-                        ]
-                        : openQuestions)
+                        ? Array((pendingWork?.briefSections.prefix(3) ?? []).map { "How should \($0) evolve visually?" })
+                        : Array(openQuestions.prefix(4)))
                     : ["Which project should become the active working context?"],
                 warnings: hasProject
-                    ? ["Full native design authoring and artifact editing are not part of this initial slice."]
+                    ? (pendingWork?.riskNotes.isEmpty == false
+                        ? Array((pendingWork?.riskNotes.prefix(4) ?? []).map { String($0) })
+                        : ["Full native design authoring and artifact editing are not part of this initial slice."])
                     : ["No active project; downstream workflows will remain blocked."]
             ),
             banners: banners
