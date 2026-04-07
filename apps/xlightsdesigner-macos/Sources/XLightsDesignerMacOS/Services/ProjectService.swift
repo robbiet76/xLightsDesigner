@@ -17,7 +17,9 @@ struct LocalProjectService: ProjectService {
             .filter { $0.hasSuffix(".xdproj") }
             .map { root.appendingPathComponent($0) }
         let docs = files.compactMap { try? readProject(from: $0.path) }
-        return docs.max(by: { $0.updatedAt < $1.updatedAt })
+        let realProjects = docs.filter { !$0.projectName.hasPrefix("Native Test Project ") }
+        let preferred = realProjects.isEmpty ? docs : realProjects
+        return preferred.max(by: { $0.updatedAt < $1.updatedAt })
     }
 
     func openProject(filePath: String) throws -> ActiveProjectModel {

@@ -8,12 +8,18 @@ extension Notification.Name {
 @MainActor
 @Observable
 final class ProjectWorkspace {
+    private let sessionStore: ProjectSessionStore
     var activeProject: ActiveProjectModel? {
         didSet {
+            sessionStore.saveLastProjectPath(activeProject?.projectFilePath)
             NotificationCenter.default.post(name: .projectWorkspaceDidChange, object: nil)
         }
     }
     var projectBanner: ProjectBannerModel?
+
+    init(sessionStore: ProjectSessionStore = LocalProjectSessionStore()) {
+        self.sessionStore = sessionStore
+    }
 
     func setProject(_ project: ActiveProjectModel?) {
         activeProject = project

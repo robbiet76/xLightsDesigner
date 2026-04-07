@@ -7,6 +7,7 @@ final class ProjectScreenViewModel {
     private let workspace: ProjectWorkspace
     private let projectService: ProjectService
     private let fileSelectionService: FileSelectionService
+    private let sessionStore: ProjectSessionStore
 
     var projectSheetMode: ProjectSheetMode = .create
     var projectDraft = ProjectDraftModel(projectName: "", showFolder: "", mediaPath: "")
@@ -16,11 +17,13 @@ final class ProjectScreenViewModel {
     init(
         workspace: ProjectWorkspace,
         projectService: ProjectService = LocalProjectService(),
-        fileSelectionService: FileSelectionService = NativeFileSelectionService()
+        fileSelectionService: FileSelectionService = NativeFileSelectionService(),
+        sessionStore: ProjectSessionStore = LocalProjectSessionStore()
     ) {
         self.workspace = workspace
         self.projectService = projectService
         self.fileSelectionService = fileSelectionService
+        self.sessionStore = sessionStore
     }
 
     var screenModel: ProjectScreenModel {
@@ -57,7 +60,12 @@ final class ProjectScreenViewModel {
     func loadInitialProject() {
         guard workspace.activeProject == nil else { return }
         do {
-            workspace.setProject(try projectService.loadMostRecentProject())
+            if let rememberedPath = sessionStore.loadLastProjectPath(),
+               FileManager.default.fileExists(atPath: rememberedPath) {
+                workspace.setProject(try projectService.openProject(filePath: rememberedPath))
+            } else {
+                workspace.setProject(try projectService.loadMostRecentProject())
+            }
             workspace.projectBanner = nil
         } catch {
             workspace.projectBanner = ProjectBannerModel(id: "load-failed", level: .blocked, text: String(error.localizedDescription))
