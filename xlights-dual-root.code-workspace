@@ -19,5 +19,29 @@
     },
     "chat.autopilot.enabled": true,
     "chat.useCustomAgentHooks": true
+  },
+  "launch": {
+    "configurations": [
+      {
+        "type": "swift",
+        "request": "launch",
+        "args": [],
+        "cwd": "${workspaceFolder:xLightsDesigner}/apps/xlightsdesigner-macos",
+        "name": "Debug XLightsDesignerMacOS (xLightsDesigner/apps/xlightsdesigner-macos)",
+        "target": "XLightsDesignerMacOS",
+        "configuration": "debug",
+        "preLaunchTask": "swift: Build Debug XLightsDesignerMacOS (xLightsDesigner/apps/xlightsdesigner-macos)"
+      },
+      {
+        "type": "swift",
+        "request": "launch",
+        "args": [],
+        "cwd": "${workspaceFolder:xLightsDesigner}/apps/xlightsdesigner-macos",
+        "name": "Release XLightsDesignerMacOS (xLightsDesigner/apps/xlightsdesigner-macos)",
+        "target": "XLightsDesignerMacOS",
+        "configuration": "release",
+        "preLaunchTask": "swift: Build Release XLightsDesignerMacOS (xLightsDesigner/apps/xlightsdesigner-macos)"
+      }
+    ]
   }
 }

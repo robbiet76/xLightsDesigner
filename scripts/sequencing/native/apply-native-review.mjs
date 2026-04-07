@@ -1,0 +1,420 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import {
+  getOpenSequence,
+  getSequenceSettings,
+  getDisplayElements,
+  getRevision,
+  getOwnedHealth,
+  getOwnedJob,
+  getOwnedSequenceRevision,
+  applySequencingBatchPlan,
+  validateCommands,
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction,
+  stageTransactionCommand,
+  openSequence
+} from '../../../apps/xlightsdesigner-ui/api.js';
+import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
+import { buildSequenceAgentPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js';
+import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
+
+const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
+const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
+
+function str(value = '') {
+  return String(value || '').trim();
+}
+
+function parseArgs(argv = []) {
+  const out = {
+    projectFile: '',
+    appRoot: DEFAULT_APP_ROOT,
+    endpoint: DEFAULT_ENDPOINT
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = str(argv[i]);
+    if (token === '--project-file') out.projectFile = path.resolve(str(argv[++i] || out.projectFile));
+    else if (token === '--app-root') out.appRoot = path.resolve(str(argv[++i] || out.appRoot));
+    else if (token === '--endpoint') out.endpoint = str(argv[++i] || out.endpoint);
+    else throw new Error(`Unknown argument: ${token}`);
+  }
+  if (!out.projectFile) throw new Error('--project-file is required');
+  return out;
+}
+
+function readJson(filePath = '') {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function latestJsonFile(dirPath = '') {
+  if (!fs.existsSync(dirPath)) return '';
+  const files = fs.readdirSync(dirPath)
+    .filter((name) => name.endsWith('.json'))
+    .map((name) => path.join(dirPath, name))
+    .sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs);
+  return files.at(-1) || '';
+}
+
+function basenameLower(filePath = '') {
+  return path.basename(str(filePath)).toLowerCase();
+}
+
+function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
+  const libraryDir = path.join(appRoot, 'library', 'tracks');
+  if (!fs.existsSync(libraryDir)) throw new Error(`Track library not found: ${libraryDir}`);
+  const targetPath = str(audioPath);
+  const targetBase = basenameLower(targetPath);
+  const files = fs.readdirSync(libraryDir).filter((name) => name.endsWith('.json')).sort();
+  let basenameMatch = null;
+  for (const fileName of files) {
+    const filePath = path.join(libraryDir, fileName);
+    const record = readJson(filePath);
+    const sourcePath = str(record?.track?.sourceMedia?.path);
+    if (sourcePath && sourcePath === targetPath) {
+      return { record, recordPath: filePath };
+    }
+    if (!basenameMatch && sourcePath && basenameLower(sourcePath) === targetBase) {
+      basenameMatch = { record, recordPath: filePath };
+    }
+  }
+  if (basenameMatch) return basenameMatch;
+  throw new Error(`No shared track metadata found for audio file: ${targetPath}`);
+}
+
+function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
+  const projectDoc = readJson(projectFile);
+  const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
+  const projectDir = path.dirname(projectFile);
+  const artifactsDir = path.join(projectDir, 'artifacts');
+  const intentPath = latestJsonFile(path.join(artifactsDir, 'intent-handoffs'));
+  const proposalPath = latestJsonFile(path.join(artifactsDir, 'proposals'));
+  if (!intentPath) throw new Error(`No intent handoff found for project: ${projectDoc?.projectName || projectFile}`);
+  if (!proposalPath) throw new Error(`No proposal bundle found for project: ${projectDoc?.projectName || projectFile}`);
+
+  const intentHandoff = readJson(intentPath);
+  const proposalBundle = readJson(proposalPath);
+  const audioPath = str(snapshot.audioPathInput);
+  const sequencePath = str(snapshot.sequencePathInput || snapshot.savePathInput);
+  if (!audioPath) throw new Error('Project snapshot is missing audioPathInput.');
+  if (!sequencePath) throw new Error('Project snapshot is missing sequencePathInput.');
+
+  const { record: trackRecord, recordPath } = loadTrackRecordForAudio({ appRoot, audioPath });
+  const persistedArtifact = trackRecord?.analyses?.profiles?.deep || trackRecord?.analyses?.profiles?.fast || null;
+  if (!persistedArtifact || typeof persistedArtifact !== 'object') {
+    throw new Error(`Shared track record has no persisted analysis artifact: ${recordPath}`);
+  }
+
+  return {
+    projectDoc,
+    snapshot,
+    intentHandoff,
+    reviewIntentHandoff: buildReviewIntentHandoff(intentHandoff, proposalBundle),
+    proposalBundle,
+    trackRecord,
+    persistedArtifact,
+    audioPath,
+    sequencePath,
+    recordPath
+  };
+}
+
+function buildReviewIntentHandoff(latestIntent = {}, proposalBundle = {}) {
+  const proposalScope = proposalBundle?.scope && typeof proposalBundle.scope === 'object' ? proposalBundle.scope : {};
+  const proposalExecution = proposalBundle?.executionPlan && typeof proposalBundle.executionPlan === 'object' ? proposalBundle.executionPlan : {};
+  const latestConstraints = latestIntent?.constraints && typeof latestIntent.constraints === 'object' ? latestIntent.constraints : {};
+  const latestDirectorPreferences = latestIntent?.directorPreferences && typeof latestIntent.directorPreferences === 'object' ? latestIntent.directorPreferences : {};
+  return {
+    artifactType: 'intent_handoff_v1',
+    artifactVersion: '1.0',
+    createdAt: str(proposalBundle?.createdAt || latestIntent?.createdAt || new Date().toISOString()),
+    goal: str(proposalBundle?.summary || latestIntent?.goal),
+    mode: 'revise',
+    scope: {
+      targetIds: Array.isArray(proposalScope?.targetIds) ? proposalScope.targetIds : [],
+      tagNames: Array.isArray(proposalScope?.tagNames) ? proposalScope.tagNames : [],
+      sections: Array.isArray(proposalScope?.sections) ? proposalScope.sections : [],
+      timeRangeMs: null
+    },
+    constraints: Object.keys(proposalBundle?.constraints || {}).length ? proposalBundle.constraints : latestConstraints,
+    directorPreferences: {
+      styleDirection: str(latestDirectorPreferences?.styleDirection),
+      energyArc: str(latestDirectorPreferences?.energyArc),
+      focusElements: Array.isArray(latestDirectorPreferences?.focusElements)
+        ? latestDirectorPreferences.focusElements
+        : (Array.isArray(proposalScope?.targetIds) ? proposalScope.targetIds : []),
+      colorDirection: str(latestDirectorPreferences?.colorDirection)
+    },
+    executionStrategy: proposalExecution,
+    approvalPolicy: {
+      requiresExplicitApprove: true,
+      elevatedRiskConfirmed: false
+    }
+  };
+}
+
+async function ensureExpectedSequenceOpen(endpoint = '', sequencePath = '') {
+  const open = await getOpenSequence(endpoint).catch(() => null);
+  const currentPath = str(open?.data?.sequence?.path || open?.data?.sequencePath || '');
+  if (currentPath && path.resolve(currentPath) === path.resolve(sequencePath)) {
+    return { opened: false, currentPath };
+  }
+  const opened = await openSequence(endpoint, sequencePath, true, false);
+  const openedPath = str(opened?.data?.sequence?.path || currentPath || sequencePath);
+  return { opened: true, currentPath: openedPath };
+}
+
+function normalizeDisplayElements(res = {}) {
+  const elements = Array.isArray(res?.data?.elements) ? res.data.elements : [];
+  return elements.map((row) => {
+    if (typeof row === 'string') return { id: row, name: row };
+    const name = str(row?.name || row?.id);
+    return { ...row, id: str(row?.id || name), name };
+  }).filter((row) => row.id || row.name);
+}
+
+async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {}) {
+  const inputs = loadReviewInputs({ projectFile, appRoot });
+  validateProposalPlacementTiming({
+    proposalBundle: inputs.proposalBundle,
+    trackRecord: inputs.trackRecord,
+    placements: scopedProposalPlacements(inputs.proposalBundle)
+  });
+  const analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifactWithFallback(inputs.persistedArtifact), null);
+  await ensureExpectedSequenceOpen(endpoint, inputs.sequencePath);
+  const [sequenceSettingsRes, displayElementsRes, revisionRes] = await Promise.all([
+    getSequenceSettings(endpoint),
+    getDisplayElements(endpoint),
+    getRevision(endpoint)
+  ]);
+
+  const commandsPlan = buildSequenceAgentPlan({
+    analysisHandoff,
+    intentHandoff: inputs.reviewIntentHandoff,
+    sourceLines: Array.isArray(inputs.proposalBundle?.proposalLines) ? inputs.proposalBundle.proposalLines : [],
+    baseRevision: str(revisionRes?.data?.revision || 'unknown'),
+    capabilityCommands: [],
+    effectCatalog: null,
+    sequenceSettings: sequenceSettingsRes?.data || {},
+    layoutMode: '2d',
+    displayElements: normalizeDisplayElements(displayElementsRes),
+    groupIds: [],
+    groupsById: {},
+    submodelsById: {},
+    metadataAssignments: [],
+    timingOwnership: [],
+    allowTimingWrites: true
+  });
+
+  const commands = normalizeCommandsForNativeApply(commandsPlan?.commands || []);
+  if (!commands.length) {
+    throw new Error('Sequence agent generated no commands for apply.');
+  }
+
+  const applyRes = await validateAndApplyPlan({
+    endpoint,
+    commands,
+    expectedRevision: str(revisionRes?.data?.revision || 'unknown'),
+    getRevision,
+    validateCommands,
+    beginTransaction,
+    commitTransaction,
+    rollbackTransaction,
+    stageTransactionCommand,
+    applySequencingBatchPlan,
+    getOwnedJob,
+    getOwnedHealth,
+    getOwnedRevision: getOwnedSequenceRevision,
+    safetyOptions: { maxCommands: 200 }
+  });
+
+  if (!applyRes?.ok) {
+    const fallback = await applyExecutionStrategyFallback({
+      proposalBundle: inputs.proposalBundle,
+      trackRecord: inputs.trackRecord,
+      endpoint,
+      initialError: applyRes
+    });
+    return {
+      ok: true,
+      projectName: str(inputs.projectDoc?.projectName),
+      sequencePath: inputs.sequencePath,
+      audioPath: inputs.audioPath,
+      trackDisplayName: str(inputs.trackRecord?.track?.displayName),
+      contentFingerprint: str(inputs.trackRecord?.track?.identity?.contentFingerprint),
+      commandCount: fallback.commandCount,
+      nextRevision: fallback.nextRevision,
+      applyPath: fallback.applyPath,
+      summary: fallback.summary
+    };
+  }
+
+  return {
+    ok: true,
+    projectName: str(inputs.projectDoc?.projectName),
+    sequencePath: inputs.sequencePath,
+    audioPath: inputs.audioPath,
+    trackDisplayName: str(inputs.trackRecord?.track?.displayName),
+    contentFingerprint: str(inputs.trackRecord?.track?.identity?.contentFingerprint),
+    commandCount: commands.length,
+    nextRevision: str(applyRes?.nextRevision || ''),
+    applyPath: str(applyRes?.applyPath || ''),
+    summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.')
+  };
+}
+
+function normalizeCommandsForNativeApply(commands = []) {
+  const rows = Array.isArray(commands) ? commands : [];
+  const filtered = rows.filter((row) => str(row?.cmd) !== 'sequencer.setDisplayElementOrder');
+  const validIds = new Set(filtered.map((row) => str(row?.id)).filter(Boolean));
+  return filtered.map((row) => {
+    const dependsOn = Array.isArray(row?.dependsOn)
+      ? row.dependsOn.map((value) => str(value)).filter((value) => validIds.has(value))
+      : [];
+    return dependsOn.length ? { ...row, dependsOn } : { ...row, dependsOn: undefined };
+  });
+}
+
+async function applyExecutionStrategyFallback({ proposalBundle = {}, trackRecord = {}, endpoint = '', initialError = null } = {}) {
+  const commands = buildFallbackCommandsFromProposal({ proposalBundle, trackRecord });
+  const payload = buildOwnedSequencingBatchPlan(commands);
+  if (!payload) {
+    throw new Error(str(initialError?.error || 'Apply failed and fallback payload could not be built.'));
+  }
+  const accepted = await applySequencingBatchPlan(endpoint, payload);
+  const jobId = str(accepted?.data?.jobId);
+  if (!jobId) {
+    throw new Error('Owned batch-plan fallback returned no jobId.');
+  }
+  const settled = await waitForOwnedJob(endpoint, jobId);
+  const state = str(settled?.data?.state).toLowerCase();
+  if (state === 'failed' || settled?.data?.result?.ok !== true) {
+    const resultError = settled?.data?.result?.error?.message;
+    throw new Error(str(resultError || initialError?.error || 'Fallback batch apply failed.'));
+  }
+  const postRevision = await getOwnedSequenceRevision(endpoint).catch(() => ({ data: { revision: '' } }));
+  return {
+    commandCount: commands.length,
+    nextRevision: str(postRevision?.data?.revision || postRevision?.data?.revisionToken || ''),
+    applyPath: 'owned_batch_plan_fallback',
+    summary: str(proposalBundle?.summary || 'Applied pending work via proposal execution fallback.')
+  };
+}
+
+function buildFallbackCommandsFromProposal({ proposalBundle = {}, trackRecord = {} } = {}) {
+  const structureTrack = Array.isArray(trackRecord?.timingTracks)
+    ? trackRecord.timingTracks.find((row) => str(row?.name) === 'XD: Song Structure')
+    : null;
+  const marks = Array.isArray(structureTrack?.segments)
+    ? structureTrack.segments.map((row) => ({
+        startMs: Number(row?.startMs || 0),
+        endMs: Number(row?.endMs || 0),
+        label: str(row?.label || 'Section')
+      })).filter((row) => Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs >= row.startMs)
+    : [];
+  const placements = scopedProposalPlacements(proposalBundle);
+  const commands = [
+    {
+      id: 'timing.track.create:xd-song-structure',
+      cmd: 'timing.createTrack',
+      params: { trackName: 'XD: Song Structure', replaceIfExists: true }
+    },
+    {
+      id: 'timing.marks.insert:xd-song-structure',
+      dependsOn: ['timing.track.create:xd-song-structure'],
+      cmd: 'timing.insertMarks',
+      params: { trackName: 'XD: Song Structure', marks }
+    }
+  ];
+  let placementIndex = 0;
+  for (const row of placements) {
+    const targetId = str(row?.targetId);
+    const effectName = str(row?.effectName);
+    const startMs = Number(row?.startMs);
+    const endMs = Number(row?.endMs);
+    const layerIndex = Number(row?.layerIndex);
+    if (!targetId || !effectName) continue;
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) continue;
+    if (!Number.isFinite(layerIndex) || layerIndex < 0) continue;
+    placementIndex += 1;
+    commands.push({
+      id: `fallback-placement-${placementIndex}`,
+      dependsOn: ['timing.marks.insert:xd-song-structure'],
+      cmd: 'effects.create',
+      params: {
+        modelName: targetId,
+        layerIndex,
+        effectName,
+        startMs: Math.round(startMs),
+        endMs: Math.round(endMs),
+        settings: '',
+        palette: ''
+      }
+    });
+  }
+  return commands;
+}
+
+function validateProposalPlacementTiming({ proposalBundle = {}, trackRecord = {}, placements = [] } = {}) {
+  const durationMs = Number(
+    trackRecord?.analysis?.durationMs
+    || trackRecord?.analyses?.profiles?.deep?.media?.durationMs
+    || trackRecord?.analyses?.profiles?.fast?.media?.durationMs
+    || 0
+  );
+  if (!Number.isFinite(durationMs) || durationMs <= 0) return;
+  const maxEndMs = placements.reduce((max, row) => {
+    const endMs = Number(row?.endMs);
+    return Number.isFinite(endMs) ? Math.max(max, endMs) : max;
+  }, 0);
+  if (maxEndMs > durationMs + 1000) {
+    throw new Error(
+      `Pending proposal timing is stale for the current track. Latest placement ends at ${Math.round(maxEndMs)}ms but track duration is ${Math.round(durationMs)}ms. Rebuild the proposal before apply.`
+    );
+  }
+}
+
+function scopedProposalPlacements(proposalBundle = {}) {
+  const allPlacements = Array.isArray(proposalBundle?.executionPlan?.effectPlacements)
+    ? proposalBundle.executionPlan.effectPlacements
+    : [];
+  const scopeSections = new Set(
+    (Array.isArray(proposalBundle?.scope?.sections) ? proposalBundle.scope.sections : [])
+      .map((value) => str(value))
+      .filter(Boolean)
+  );
+  if (!scopeSections.size) return allPlacements;
+  const scoped = allPlacements.filter((row) => scopeSections.has(str(row?.sourceSectionLabel)));
+  return scoped.length ? scoped : allPlacements;
+}
+
+async function waitForOwnedJob(endpoint = '', jobId = '', attempts = 60, delayMs = 500) {
+  for (let index = 0; index < attempts; index += 1) {
+    const settled = await getOwnedJob(endpoint, jobId);
+    const state = str(settled?.data?.state).toLowerCase();
+    if (state === 'queued' || state === 'running') {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      continue;
+    }
+    return settled;
+  }
+  throw new Error(`Timed out waiting for owned xLights job ${jobId}.`);
+}
+
+function persistedArtifactWithFallback(artifact = null) {
+  if (artifact && typeof artifact === 'object') return artifact;
+  return {};
+}
+
+try {
+  const options = parseArgs(process.argv.slice(2));
+  const result = await applyReview(options);
+  process.stdout.write(JSON.stringify(result));
+} catch (error) {
+  process.stderr.write(String(error?.stack || error?.message || error));
+  process.exit(1);
+}

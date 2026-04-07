@@ -6,7 +6,9 @@ struct ReviewScreenView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             header
-            if let banner = model.screenModel.banners.first { bannerView(banner) }
+            ForEach(model.screenModel.banners, id: \.id) { banner in
+                bannerView(banner)
+            }
             pendingBand
             AdaptiveSplitView(breakpoint: 1100, spacing: 20) {
                 supportPane(title: model.screenModel.designSummary.title, summary: model.screenModel.designSummary)

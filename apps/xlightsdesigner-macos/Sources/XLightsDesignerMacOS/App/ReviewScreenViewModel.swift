@@ -6,23 +6,95 @@ import Observation
 final class ReviewScreenViewModel {
     private let workspace: ProjectWorkspace
     private let pendingWorkService: PendingWorkService
+    private let reviewExecutionService: ReviewExecutionService
     var screenModel: ReviewScreenModel
+    var transientBanner: WorkflowBannerModel?
+    var isApplying = false
 
-    init(workspace: ProjectWorkspace, pendingWorkService: PendingWorkService = LocalPendingWorkService()) {
+    init(
+        workspace: ProjectWorkspace,
+        pendingWorkService: PendingWorkService = LocalPendingWorkService(),
+        reviewExecutionService: ReviewExecutionService = LocalReviewExecutionService()
+    ) {
         self.workspace = workspace
         self.pendingWorkService = pendingWorkService
-        self.screenModel = Self.buildScreenModel(project: workspace.activeProject, pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject))
+        self.reviewExecutionService = reviewExecutionService
+        self.screenModel = Self.buildScreenModel(
+            project: workspace.activeProject,
+            pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
+            transientBanner: nil,
+            isApplying: false
+        )
     }
 
     func refresh() {
         let pendingWork = try? pendingWorkService.loadPendingWork(for: workspace.activeProject)
-        screenModel = Self.buildScreenModel(project: workspace.activeProject, pendingWork: pendingWork)
+        screenModel = Self.buildScreenModel(
+            project: workspace.activeProject,
+            pendingWork: pendingWork,
+            transientBanner: transientBanner,
+            isApplying: isApplying
+        )
     }
 
-    func applyPendingWork() {}
-    func deferPendingWork() {}
+    func applyPendingWork() {
+        guard !isApplying, let project = workspace.activeProject else { return }
+        isApplying = true
+        transientBanner = WorkflowBannerModel(
+            id: "review-apply-running",
+            text: "Applying pending work to xLights...",
+            state: .partial
+        )
+        refresh()
+        Task {
+            do {
+                let result = try await reviewExecutionService.applyPendingWork(
+                    projectFilePath: project.projectFilePath,
+                    appRootPath: AppEnvironment.canonicalAppRoot,
+                    endpoint: AppEnvironment.xlightsOwnedAPIBaseURL
+                )
+                isApplying = false
+                transientBanner = WorkflowBannerModel(
+                    id: "review-apply-success",
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision).",
+                    state: .ready
+                )
+                refresh()
+            } catch {
+                isApplying = false
+                transientBanner = WorkflowBannerModel(
+                    id: "review-apply-failed",
+                    text: friendlyFailureText(error),
+                    state: .blocked
+                )
+                refresh()
+            }
+        }
+    }
 
-    private static func buildScreenModel(project: ActiveProjectModel?, pendingWork: PendingWorkReadModel?) -> ReviewScreenModel {
+    func deferPendingWork() {
+        transientBanner = WorkflowBannerModel(
+            id: "review-deferred",
+            text: "Pending work deferred. No sequence changes were applied.",
+            state: .partial
+        )
+        refresh()
+    }
+
+    private func friendlyFailureText(_ error: Error) -> String {
+        let message = String(error.localizedDescription)
+        if message.localizedCaseInsensitiveContains("Requested element was not found in the current sequence") {
+            return "Pending review artifacts no longer match the active sequence/layout. Rebuild the proposal before apply."
+        }
+        return message
+    }
+
+    private static func buildScreenModel(
+        project: ActiveProjectModel?,
+        pendingWork: PendingWorkReadModel?,
+        transientBanner: WorkflowBannerModel?,
+        isApplying: Bool
+    ) -> ReviewScreenModel {
         let projectName = project?.projectName ?? "No active project"
         let hasProject = project != nil
         let state: PendingWorkState = hasProject ? .partial : .blocked
@@ -91,18 +163,22 @@ final class ReviewScreenViewModel {
                     : "No backup context available."
             ),
             actions: ReviewActionStateModel(
-                canApply: canApply,
-                canDefer: hasProject,
-                applyButtonTitle: "Apply",
+                canApply: canApply && !isApplying,
+                canDefer: hasProject && !isApplying,
+                applyButtonTitle: isApplying ? "Applying..." : "Apply",
                 deferButtonTitle: "Defer"
             ),
-            banners: [
-                WorkflowBannerModel(
+            banners: {
+                var banners: [WorkflowBannerModel] = [
+                    WorkflowBannerModel(
                     id: "review-slice",
-                    text: hasProject ? "Review currently establishes the apply gate and supporting summaries before native apply execution is added." : "Review is blocked until project context is active.",
+                    text: hasProject ? "Review applies pending work through the shared sequencing backend while keeping approval local to this screen." : "Review is blocked until project context is active.",
                     state: state
-                )
-            ]
+                    )
+                ]
+                if let transientBanner { banners.append(transientBanner) }
+                return banners
+            }()
         )
     }
 }
