@@ -6,6 +6,7 @@ import Observation
 final class AudioScreenViewModel {
     private let trackLibraryService: TrackLibraryService
     private let fileSelectionService: FileSelectionService
+    private let audioExecutionService: AudioExecutionService
 
     var mode: AudioMode = .singleTrack
     var singleTrackPath = ""
@@ -21,10 +22,12 @@ final class AudioScreenViewModel {
         rows: [AudioLibraryRowModel],
         selectedRowID: AudioLibraryRowModel.ID? = nil,
         trackLibraryService: TrackLibraryService = LocalTrackLibraryService(),
-        fileSelectionService: FileSelectionService = NativeFileSelectionService()
+        fileSelectionService: FileSelectionService = NativeFileSelectionService(),
+        audioExecutionService: AudioExecutionService = LocalAudioExecutionService()
     ) {
         self.trackLibraryService = trackLibraryService
         self.fileSelectionService = fileSelectionService
+        self.audioExecutionService = audioExecutionService
         self.allRows = rows
         self.selectedRowID = selectedRowID
         if let selectedRowID {
@@ -108,23 +111,33 @@ final class AudioScreenViewModel {
             ))
             return
         }
-
-        let name = URL(fileURLWithPath: trimmed).deletingPathExtension().lastPathComponent
-        currentResult = .track(AudioTrackResultModel(
-            rowID: "ad-hoc-track",
-            displayName: name,
-            artist: "Unverified",
-            lastAnalyzedSummary: "Just now",
-            status: .needsReview,
-            identityState: .needsReview,
-            availableTimingsSummary: "Song Structure, Beats, Bars",
-            missingIssuesSummary: "Phrase Cues missing",
-            reason: "Identity is unresolved and phrase cues are not yet available.",
-            recommendedActionText: "Verify track info",
-            editableTitleDraft: name,
-            editableArtistDraft: "",
-            canConfirmIdentity: true
+        currentResult = .batchRunning(AudioBatchProgressModel(
+            batchLabel: URL(fileURLWithPath: trimmed).lastPathComponent,
+            processedCount: 0,
+            totalCount: 1,
+            completeCount: 0,
+            partialCount: 0,
+            needsReviewCount: 0,
+            failedCount: 0,
+            progressNote: "Running single-track analysis."
         ))
+        Task {
+            do {
+                let result = try await audioExecutionService.analyzeTrack(
+                    filePath: trimmed,
+                    appRootPath: AppEnvironment.canonicalAppRoot,
+                    mode: "deep"
+                )
+                loadLibrary()
+                selectRow(id: result.contentFingerprint)
+            } catch {
+                currentResult = .error(AudioErrorModel(
+                    title: "Track analysis failed",
+                    explanation: String(error.localizedDescription),
+                    canRetry: true
+                ))
+            }
+        }
     }
 
     func analyzeFolder() {
@@ -137,17 +150,43 @@ final class AudioScreenViewModel {
             ))
             return
         }
-
-        currentResult = .batchComplete(AudioBatchCompleteModel(
+        currentResult = .batchRunning(AudioBatchProgressModel(
             batchLabel: URL(fileURLWithPath: trimmed).lastPathComponent,
-            processedCount: 12,
-            completeCount: 7,
-            partialCount: 3,
-            needsReviewCount: 1,
-            failedCount: 1,
-            topIssueCategories: recursiveEnabled ? "Missing phrase cues, unresolved identity" : "Unresolved identity",
-            followUpActionText: "Review batch results"
+            processedCount: 0,
+            totalCount: 0,
+            completeCount: 0,
+            partialCount: 0,
+            needsReviewCount: 0,
+            failedCount: 0,
+            progressNote: recursiveEnabled ? "Running recursive folder analysis." : "Running folder analysis."
         ))
+        Task {
+            do {
+                let result = try await audioExecutionService.analyzeFolder(
+                    folderPath: trimmed,
+                    appRootPath: AppEnvironment.canonicalAppRoot,
+                    recursive: recursiveEnabled,
+                    mode: "deep"
+                )
+                loadLibrary()
+                currentResult = .batchComplete(AudioBatchCompleteModel(
+                    batchLabel: result.batchLabel,
+                    processedCount: result.processedCount,
+                    completeCount: result.completeCount,
+                    partialCount: result.partialCount,
+                    needsReviewCount: result.needsReviewCount,
+                    failedCount: result.failedCount,
+                    topIssueCategories: result.topIssueCategories,
+                    followUpActionText: result.followUpActionText
+                ))
+            } catch {
+                currentResult = .error(AudioErrorModel(
+                    title: "Folder analysis failed",
+                    explanation: String(error.localizedDescription),
+                    canRetry: true
+                ))
+            }
+        }
     }
 
     func retryCurrentResult() {
@@ -202,36 +241,23 @@ final class AudioScreenViewModel {
         let title = track.editableTitleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         let artist = track.editableArtistDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty, !artist.isEmpty else { return }
-
-        if let index = allRows.firstIndex(where: { $0.id == track.rowID }) {
-            allRows[index].displayName = title
-            allRows[index].artist = artist
-            allRows[index].status = .complete
-            allRows[index].identitySummary = AudioIdentityState.verified.rawValue
-            allRows[index].identityState = .verified
-            allRows[index].actionSummaryText = "No action needed"
-            allRows[index].reason = "Identity confirmed and core timing layers are available."
-            allRows[index].canConfirmIdentity = false
-            allRows[index].missingIssuesSummary = "None"
-            allRows[index].suggestedTitle = title
-            allRows[index].suggestedArtist = artist
-            currentResult = .track(trackResult(from: allRows[index]))
-        } else {
-            currentResult = .track(AudioTrackResultModel(
-                rowID: track.rowID,
-                displayName: title,
-                artist: artist,
-                lastAnalyzedSummary: track.lastAnalyzedSummary,
-                status: .complete,
-                identityState: .verified,
-                availableTimingsSummary: track.availableTimingsSummary,
-                missingIssuesSummary: "None",
-                reason: "Identity confirmed locally in the scaffold.",
-                recommendedActionText: "No action needed",
-                editableTitleDraft: title,
-                editableArtistDraft: artist,
-                canConfirmIdentity: false
-            ))
+        Task {
+            do {
+                try await audioExecutionService.confirmTrackIdentity(
+                    contentFingerprint: track.rowID,
+                    title: title,
+                    artist: artist,
+                    appRootPath: AppEnvironment.canonicalAppRoot
+                )
+                loadLibrary()
+                selectRow(id: track.rowID)
+            } catch {
+                currentResult = .error(AudioErrorModel(
+                    title: "Track confirmation failed",
+                    explanation: String(error.localizedDescription),
+                    canRetry: true
+                ))
+            }
         }
     }
 
