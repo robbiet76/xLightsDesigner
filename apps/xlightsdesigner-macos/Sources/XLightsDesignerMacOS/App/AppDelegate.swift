@@ -12,12 +12,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if window == nil {
             let contentView = RootContentView(model: model)
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 1280, height: 820),
+                contentRect: NSRect(x: 0, y: 0, width: 1440, height: 860),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered,
                 defer: false
             )
             window.title = "xLightsDesigner"
+            window.minSize = NSSize(width: 1180, height: 780)
             window.center()
             window.contentView = NSHostingView(rootView: contentView)
             window.makeKeyAndOrderFront(nil)

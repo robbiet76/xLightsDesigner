@@ -11,7 +11,7 @@ struct AssistantWindowView: View {
             composer
         }
         .padding(20)
-        .frame(minWidth: 520, minHeight: 640)
+        .frame(minWidth: 320, minHeight: 640)
         .task {
             model.loadConversationIfNeeded()
         }

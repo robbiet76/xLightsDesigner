@@ -62,7 +62,7 @@ struct LayoutScreenView: View {
     }
 
     private var mainSplit: some View {
-        HStack(alignment: .top, spacing: 20) {
+        AdaptiveSplitView(breakpoint: 1180, spacing: 20) {
             GroupBox("Targets") {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField("Search", text: $model.searchQuery)
@@ -83,8 +83,8 @@ struct LayoutScreenView: View {
                 }
                 .padding(.vertical, 4)
             }
-            .frame(minWidth: 640)
-
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        } secondary: {
             GroupBox("Selected Target") {
                 VStack(alignment: .leading, spacing: 10) {
                     switch model.screenModel.selectedTarget {
@@ -111,8 +111,8 @@ struct LayoutScreenView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 4)
             }
-            .frame(minWidth: 320, maxWidth: 380)
         }
+        .frame(minHeight: 420)
     }
 
     private func chip(_ text: String) -> some View {

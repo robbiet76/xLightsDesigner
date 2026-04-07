@@ -34,10 +34,12 @@ struct AudioScreenView: View {
     }
 
     private var topBand: some View {
-        HStack(alignment: .top, spacing: 20) {
+        AdaptiveSplitView(breakpoint: 1050, spacing: 20) {
             actionColumn
+        } secondary: {
             currentResultColumn
         }
+        .frame(minHeight: 260)
     }
 
     private var actionColumn: some View {
@@ -88,7 +90,7 @@ struct AudioScreenView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 4)
         }
-        .frame(maxWidth: 420)
+        .frame(maxWidth: 420, alignment: .topLeading)
     }
 
     private var currentResultColumn: some View {
@@ -189,7 +191,7 @@ struct AudioScreenView: View {
                     Spacer()
                     TextField("Search", text: $model.searchQuery)
                         .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 260)
+                        .frame(maxWidth: 320)
                 }
 
                 Table(model.filteredRows, selection: Binding(

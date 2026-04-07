@@ -8,8 +8,9 @@ struct SequenceScreenView: View {
             header
             if let banner = model.screenModel.banners.first { bannerView(banner) }
             contextBand
-            HSplitView {
+            AdaptiveSplitView(breakpoint: 1100, spacing: 20) {
                 translationPane
+            } secondary: {
                 detailPane
             }
         }
@@ -65,7 +66,7 @@ struct SequenceScreenView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.vertical, 4)
         }
-        .frame(minWidth: 320)
+        .frame(maxWidth: 420, alignment: .topLeading)
     }
 
     private func chip(_ text: String) -> some View { Text(text).padding(.horizontal, 10).padding(.vertical, 4).background(Color(nsColor: .controlBackgroundColor)).clipShape(Capsule()) }

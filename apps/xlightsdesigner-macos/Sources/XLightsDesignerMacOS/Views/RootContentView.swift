@@ -7,7 +7,7 @@ struct RootContentView: View {
         HSplitView {
             NavigationSplitView {
                 AppSidebar(model: model)
-                    .frame(minWidth: 220)
+                    .frame(minWidth: 230, idealWidth: 240, maxWidth: 280)
             } detail: {
                 switch model.selectedWorkflow {
                 case .project:
@@ -22,18 +22,20 @@ struct RootContentView: View {
                     SequenceScreenView(model: model.sequenceScreenModel)
                 case .review:
                     ReviewScreenView(model: model.reviewScreenModel)
+                case .history:
+                    HistoryScreenView(model: model.historyScreenModel)
                 default:
                     WorkflowPlaceholderView(workflow: model.selectedWorkflow)
                 }
             }
-            .frame(minWidth: 900, minHeight: 780)
+            .frame(minWidth: 700, minHeight: 780)
 
             if model.showAssistantPanel {
                 AssistantWindowView(appModel: model, model: model.assistantModel)
-                    .frame(minWidth: 420, idealWidth: 460, maxWidth: 520)
+                    .frame(minWidth: 320, idealWidth: 360, maxWidth: 440)
             }
         }
-        .frame(minWidth: 1280, minHeight: 780)
+        .frame(minWidth: 1180, minHeight: 780)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {

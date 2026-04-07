@@ -8,8 +8,9 @@ struct ReviewScreenView: View {
             header
             if let banner = model.screenModel.banners.first { bannerView(banner) }
             pendingBand
-            HSplitView {
+            AdaptiveSplitView(breakpoint: 1100, spacing: 20) {
                 supportPane(title: model.screenModel.designSummary.title, summary: model.screenModel.designSummary)
+            } secondary: {
                 supportPane(title: model.screenModel.sequenceSummary.title, summary: model.screenModel.sequenceSummary)
             }
             actionPane
