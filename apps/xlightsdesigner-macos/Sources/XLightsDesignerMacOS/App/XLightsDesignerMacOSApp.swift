@@ -1,8 +1,14 @@
+import AppKit
 import SwiftUI
 
 @main
 struct XLightsDesignerMacOSApp: App {
     @State private var model = AppModel()
+
+    init() {
+        NSApplication.shared.setActivationPolicy(.regular)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
 
     var body: some Scene {
         WindowGroup {
