@@ -16,6 +16,12 @@ struct RootContentView: View {
                     LayoutScreenView(model: model.layoutScreenModel)
                 case .audio:
                     AudioScreenView(model: model.audioScreenModel)
+                case .design:
+                    DesignScreenView(model: model.designScreenModel)
+                case .sequence:
+                    SequenceScreenView(model: model.sequenceScreenModel)
+                case .review:
+                    ReviewScreenView(model: model.reviewScreenModel)
                 default:
                     WorkflowPlaceholderView(workflow: model.selectedWorkflow)
                 }
