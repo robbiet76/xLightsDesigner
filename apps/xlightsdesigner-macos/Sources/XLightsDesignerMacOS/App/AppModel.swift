@@ -8,6 +8,7 @@ final class AppModel {
     var showSettings = false
 
     let workspace: ProjectWorkspace
+    let assistantModel: AssistantWindowViewModel
     let audioScreenModel: AudioScreenViewModel
     let projectScreenModel: ProjectScreenViewModel
     let layoutScreenModel: LayoutScreenViewModel
@@ -15,6 +16,7 @@ final class AppModel {
     init() {
         let workspace = ProjectWorkspace()
         self.workspace = workspace
+        self.assistantModel = AssistantWindowViewModel()
         self.audioScreenModel = AudioScreenViewModel.sample()
         self.projectScreenModel = ProjectScreenViewModel(workspace: workspace)
         self.layoutScreenModel = LayoutScreenViewModel(workspace: workspace)

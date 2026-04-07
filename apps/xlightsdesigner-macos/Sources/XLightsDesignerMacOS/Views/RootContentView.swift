@@ -20,6 +20,15 @@ struct RootContentView: View {
             }
         }
         .frame(minWidth: 1180, minHeight: 780)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    NotificationCenter.default.post(name: .xldOpenAssistantWindow, object: nil)
+                } label: {
+                    Label("Assistant", systemImage: "bubble.left.and.bubble.right")
+                }
+            }
+        }
         .sheet(isPresented: $model.showSettings) {
             SettingsPlaceholderView()
                 .padding(24)
