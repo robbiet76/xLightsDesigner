@@ -36,6 +36,7 @@ Active Entry Points:
 - `macos-native-design-sequence-review-coupled-review-2026-04-06.md`
 - `macos-native-design-sequence-review-build-package-2026-04-06.md`
 - `macos-native-history-relationship-2026-04-06.md`
+- `macos-native-history-build-package-2026-04-06.md`
 - `macos-native-sequence-design-review-relationship-2026-04-06.md`
 - `macos-native-sequence-screen-layout-2026-04-06.md`
 - `macos-native-design-screen-layout-2026-04-06.md`
