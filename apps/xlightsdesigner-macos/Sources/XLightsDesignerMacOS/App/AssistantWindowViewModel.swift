@@ -5,12 +5,19 @@ import Observation
 @Observable
 final class AssistantWindowViewModel {
     private let conversationService: AssistantConversationService
+    private let executionService: AssistantExecutionService
 
     var messages: [AssistantMessageModel] = []
     var draft = ""
+    var isSending = false
+    var previousResponseID = ""
 
-    init(conversationService: AssistantConversationService = LocalAssistantConversationService()) {
+    init(
+        conversationService: AssistantConversationService = LocalAssistantConversationService(),
+        executionService: AssistantExecutionService = LocalAssistantExecutionService()
+    ) {
         self.conversationService = conversationService
+        self.executionService = executionService
     }
 
     func loadConversationIfNeeded() {
@@ -33,30 +40,53 @@ final class AssistantWindowViewModel {
         }
     }
 
-    func sendDraft(context: AssistantContextModel) {
+    func sendDraft(context: AssistantContextModel) async {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, !isSending else { return }
+
         let userMessage = AssistantMessageModel(
             id: UUID().uuidString,
             role: .user,
             text: trimmed,
             timestamp: isoNow()
         )
-        let assistantMessage = AssistantMessageModel(
-            id: UUID().uuidString,
-            role: .assistant,
-            text: stubResponse(for: trimmed, context: context),
-            timestamp: isoNow()
-        )
         messages.append(userMessage)
-        messages.append(assistantMessage)
         draft = ""
+        isSending = true
+        try? conversationService.saveMessages(messages)
+
+        do {
+            let result = try await executionService.sendConversation(
+                userMessage: trimmed,
+                messages: messages,
+                previousResponseID: previousResponseID,
+                context: context
+            )
+            previousResponseID = result.responseID
+            messages.append(AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: result.assistantMessage,
+                timestamp: isoNow()
+            ))
+        } catch {
+            messages.append(AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: "Assistant unavailable: \(String(error.localizedDescription))",
+                timestamp: isoNow()
+            ))
+        }
+
+        isSending = false
         try? conversationService.saveMessages(messages)
     }
 
     func clearConversation() {
         messages = [seedAssistantMessage()]
         draft = ""
+        previousResponseID = ""
+        isSending = false
         try? conversationService.saveMessages(messages)
     }
 
@@ -67,19 +97,6 @@ final class AssistantWindowViewModel {
             text: "App Assistant here. I coordinate guidance across Project, Layout, Audio, Design, Sequence, Review, and History.",
             timestamp: isoNow()
         )
-    }
-
-    private func stubResponse(for prompt: String, context: AssistantContextModel) -> String {
-        let project = context.activeProjectName.isEmpty ? "No active project" : context.activeProjectName
-        let focused = context.focusedSummary.isEmpty ? "No focused item" : context.focusedSummary
-        return """
-        Context:
-        Project: \(project)
-        Workflow: \(context.workflowName)
-        Focus: \(focused)
-
-        Assistant runtime is not connected yet in the native shell. This window is the persistent native utility surface. The next step is to wire it to the shared app-assistant backend instead of the current local stub.
-        """
     }
 
     private func isoNow() -> String {

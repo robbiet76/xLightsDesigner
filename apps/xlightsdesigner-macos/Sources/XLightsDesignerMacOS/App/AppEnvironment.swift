@@ -12,4 +12,5 @@ enum AppEnvironment {
     static let batchAnalyzeFolderScriptPath = repoRootPath + "/scripts/audio-analysis/build-track-library-and-review.mjs"
     static let nativeAnalyzeTrackScriptPath = repoRootPath + "/scripts/audio-analysis/native/analyze-track-to-library.mjs"
     static let nativeUpdateTrackIdentityScriptPath = repoRootPath + "/scripts/audio-analysis/native/update-track-identity.mjs"
+    static let nativeAssistantConversationScriptPath = repoRootPath + "/scripts/assistant/native/run-app-assistant-conversation.mjs"
 }

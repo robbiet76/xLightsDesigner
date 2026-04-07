@@ -60,13 +60,20 @@ struct AssistantWindowView: View {
             TextField("Ask for guidance or route work from the current workflow…", text: $model.draft, axis: .vertical)
                 .lineLimit(3...6)
                 .textFieldStyle(.roundedBorder)
+                .disabled(model.isSending)
             HStack {
+                if model.isSending {
+                    ProgressView()
+                        .controlSize(.small)
+                }
                 Spacer()
                 Button("Send") {
-                    model.sendDraft(context: currentContext())
+                    Task {
+                        await model.sendDraft(context: currentContext())
+                    }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(model.isSending || model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
     }
@@ -75,8 +82,30 @@ struct AssistantWindowView: View {
         AssistantContextModel(
             activeProjectName: appModel.workspace.activeProject?.projectName ?? "No Project",
             workflowName: appModel.selectedWorkflow.rawValue,
-            focusedSummary: focusedSummary()
+            route: workflowRoute(),
+            focusedSummary: focusedSummary(),
+            activeSequenceLoaded: false,
+            planOnlyMode: false
         )
+    }
+
+    private func workflowRoute() -> String {
+        switch appModel.selectedWorkflow {
+        case .project:
+            return "project"
+        case .layout:
+            return "layout"
+        case .audio:
+            return "audio"
+        case .design:
+            return "design"
+        case .sequence:
+            return "sequence"
+        case .review:
+            return "review"
+        case .history:
+            return "history"
+        }
     }
 
     private func focusedSummary() -> String {

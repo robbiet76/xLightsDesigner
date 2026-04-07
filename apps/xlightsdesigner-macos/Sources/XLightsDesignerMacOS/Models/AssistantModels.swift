@@ -15,5 +15,19 @@ struct AssistantMessageModel: Identifiable, Codable, Equatable {
 struct AssistantContextModel {
     let activeProjectName: String
     let workflowName: String
+    let route: String
     let focusedSummary: String
+    let activeSequenceLoaded: Bool
+    let planOnlyMode: Bool
+
+    func asPayload() -> [String: Any] {
+        [
+            "activeProjectName": activeProjectName,
+            "workflowName": workflowName,
+            "route": route,
+            "focusedSummary": focusedSummary,
+            "activeSequenceLoaded": activeSequenceLoaded,
+            "planOnlyMode": planOnlyMode
+        ]
+    }
 }
