@@ -44,6 +44,7 @@ Active Entry Points:
 - `macos-native-layout-screen-layout-2026-04-06.md`
 - `macos-native-history-screen-layout-2026-04-06.md`
 - `macos-native-settings-screen-layout-2026-04-06.md`
+- `macos-native-settings-build-package-2026-04-06.md`
 - `macos-native-interaction-model-2026-04-06.md`
 - `macos-native-read-models-and-page-state-contracts-2026-04-06.md`
 - `macos-native-shared-backend-and-service-boundaries-2026-04-06.md`
