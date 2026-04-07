@@ -14,13 +14,6 @@ struct AppSidebar: View {
 
             Section("App") {
                 Button {
-                    model.showAssistantPanel = true
-                } label: {
-                    Label("Assistant", systemImage: "bubble.left.and.bubble.right")
-                }
-                .buttonStyle(.plain)
-
-                Button {
                     model.showSettings = true
                 } label: {
                     Label("Settings", systemImage: "gearshape")
