@@ -4,28 +4,36 @@ struct RootContentView: View {
     @Bindable var model: AppModel
 
     var body: some View {
-        NavigationSplitView {
-            AppSidebar(model: model)
-                .frame(minWidth: 220)
-        } detail: {
-            switch model.selectedWorkflow {
-            case .project:
-                ProjectScreenView(model: model.projectScreenModel)
-            case .layout:
-                LayoutScreenView(model: model.layoutScreenModel)
-            case .audio:
-                AudioScreenView(model: model.audioScreenModel)
-            default:
-                WorkflowPlaceholderView(workflow: model.selectedWorkflow)
+        HSplitView {
+            NavigationSplitView {
+                AppSidebar(model: model)
+                    .frame(minWidth: 220)
+            } detail: {
+                switch model.selectedWorkflow {
+                case .project:
+                    ProjectScreenView(model: model.projectScreenModel)
+                case .layout:
+                    LayoutScreenView(model: model.layoutScreenModel)
+                case .audio:
+                    AudioScreenView(model: model.audioScreenModel)
+                default:
+                    WorkflowPlaceholderView(workflow: model.selectedWorkflow)
+                }
+            }
+            .frame(minWidth: 900, minHeight: 780)
+
+            if model.showAssistantPanel {
+                AssistantWindowView(appModel: model, model: model.assistantModel)
+                    .frame(minWidth: 420, idealWidth: 460, maxWidth: 520)
             }
         }
-        .frame(minWidth: 1180, minHeight: 780)
+        .frame(minWidth: 1280, minHeight: 780)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {
-                    NotificationCenter.default.post(name: .xldOpenAssistantWindow, object: nil)
+                    model.showAssistantPanel.toggle()
                 } label: {
-                    Label("Assistant", systemImage: "bubble.left.and.bubble.right")
+                    Label(model.showAssistantPanel ? "Hide Assistant" : "Show Assistant", systemImage: "bubble.left.and.bubble.right")
                 }
             }
         }

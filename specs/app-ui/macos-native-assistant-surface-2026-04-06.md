@@ -31,8 +31,8 @@ Working rules:
 The assistant should be implemented as a secondary utility surface.
 
 Preferred order:
-1. detachable utility window
-2. dockable right-side assistant panel
+1. dockable right-side assistant panel
+2. detachable utility window
 3. sheet-based assistant only for limited focused tasks
 
 Disallowed default:
@@ -84,7 +84,7 @@ The assistant must not replace:
 ## First Native Implementation Recommendation
 
 First native implementation should be:
-1. a utility window opened from the app menu and toolbar
+1. a docked right-side assistant panel, open by default
 2. one persistent shared conversation thread
 3. one compact context header:
    - active project
@@ -97,8 +97,8 @@ Do not build multi-pane specialist consoles in the first native slice.
 
 ## Interaction Rules
 
-- opening the assistant must not navigate away from the current workflow
-- closing the assistant must not discard the active conversation
+- showing or hiding the assistant must not navigate away from the current workflow
+- closing or hiding the assistant must not discard the active conversation
 - workflow changes may update assistant context hints, but must not reset the conversation
 - messages may reference workflow state, but workflow screens remain authoritative for operational detail
 

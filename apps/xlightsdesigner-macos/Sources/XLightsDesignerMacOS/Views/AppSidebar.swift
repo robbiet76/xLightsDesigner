@@ -14,7 +14,7 @@ struct AppSidebar: View {
 
             Section("App") {
                 Button {
-                    NotificationCenter.default.post(name: .xldOpenAssistantWindow, object: nil)
+                    model.showAssistantPanel = true
                 } label: {
                     Label("Assistant", systemImage: "bubble.left.and.bubble.right")
                 }

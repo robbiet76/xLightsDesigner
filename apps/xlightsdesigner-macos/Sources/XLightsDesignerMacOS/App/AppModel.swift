@@ -6,6 +6,7 @@ import Observation
 final class AppModel {
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
+    var showAssistantPanel = true
 
     let workspace: ProjectWorkspace
     let assistantModel: AssistantWindowViewModel

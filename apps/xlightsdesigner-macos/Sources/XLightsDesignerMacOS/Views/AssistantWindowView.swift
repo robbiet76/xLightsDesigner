@@ -7,7 +7,6 @@ struct AssistantWindowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
-            contextBand
             messageThread
             composer
         }
@@ -28,22 +27,12 @@ struct AssistantWindowView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            Button("Hide") {
+                appModel.showAssistantPanel = false
+            }
             Button("Clear") {
                 model.clearConversation()
             }
-        }
-    }
-
-    private var contextBand: some View {
-        let context = currentContext()
-        return GroupBox("Context") {
-            VStack(alignment: .leading, spacing: 8) {
-                detailRow(label: "Project", value: context.activeProjectName)
-                detailRow(label: "Workflow", value: context.workflowName)
-                detailRow(label: "Focus", value: context.focusedSummary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 4)
         }
     }
 
@@ -114,15 +103,6 @@ struct AssistantWindowView: View {
             }
         default:
             return "No focused item"
-        }
-    }
-
-    private func detailRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.headline)
-            Text(value)
-                .foregroundStyle(.secondary)
         }
     }
 }
