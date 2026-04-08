@@ -62,23 +62,37 @@ struct LocalPendingWorkService: PendingWorkService {
         guard let project else { return nil }
         let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
         let artifactsDir = projectDir.appendingPathComponent("artifacts", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: artifactsDir.path) else { return nil }
-
-        let latestBrief = try readLatestArtifact(in: artifactsDir.appendingPathComponent("briefs", isDirectory: true))
-        let latestProposal = try readLatestArtifact(in: artifactsDir.appendingPathComponent("proposals", isDirectory: true))
-        let latestIntent = try readLatestArtifact(in: artifactsDir.appendingPathComponent("intent-handoffs", isDirectory: true))
-        let latestDirector = try readLatestArtifact(in: artifactsDir.appendingPathComponent("director-profiles", isDirectory: true))
-        let latestScene = try readLatestArtifact(in: artifactsDir.appendingPathComponent("design-scene", isDirectory: true))
-        let latestMusic = try readLatestArtifact(in: artifactsDir.appendingPathComponent("music-context", isDirectory: true))
-
         let snapshot = project.snapshot.mapValues(\.value)
-        let activeSequenceName = string(snapshot["activeSequence"])
-        let recentSequences = arrayOfStrings(snapshot["recentSequences"])
-        let audioPath = string(snapshot["audioPathInput"])
-        let projectSequences = snapshot["projectSequences"] as? [[String: Any]] ?? []
+        let desktopState = readDesktopStateIfCompatible(with: project)
+
+        guard FileManager.default.fileExists(atPath: artifactsDir.path) || desktopState != nil else { return nil }
+
+        let artifactBrief = try readLatestArtifact(in: artifactsDir.appendingPathComponent("briefs", isDirectory: true))
+        let artifactProposal = try readLatestArtifact(in: artifactsDir.appendingPathComponent("proposals", isDirectory: true))
+        let artifactIntent = try readLatestArtifact(in: artifactsDir.appendingPathComponent("intent-handoffs", isDirectory: true))
+        let artifactDirector = try readLatestArtifact(in: artifactsDir.appendingPathComponent("director-profiles", isDirectory: true))
+        let artifactScene = try readLatestArtifact(in: artifactsDir.appendingPathComponent("design-scene", isDirectory: true))
+        let artifactMusic = try readLatestArtifact(in: artifactsDir.appendingPathComponent("music-context", isDirectory: true))
+
+        let creative = desktopState?["creative"] as? [String: Any]
+        let latestBrief = mergeArtifact(primary: creative?["brief"] as? [String: Any], fallback: artifactBrief)
+        let latestProposal = mergeArtifact(primary: creative?["proposalBundle"] as? [String: Any], fallback: artifactProposal)
+        let latestIntent = mergeArtifact(primary: creative?["intentHandoff"] as? [String: Any], fallback: artifactIntent)
+        let latestDirector = mergeArtifact(primary: desktopState?["directorProfile"] as? [String: Any], fallback: artifactDirector)
+        let latestScene = mergeArtifact(primary: desktopState?["metadata"] as? [String: Any], fallback: artifactScene)
+        let latestMusic = mergeArtifact(primary: nil, fallback: artifactMusic)
+        let runtime = creative?["runtime"] as? [String: Any]
+
+        let activeSequenceName = string(desktopState?["activeSequence"], fallback: string(snapshot["activeSequence"]))
+        let recentSequences = arrayOfStrings(desktopState?["recentSequences"]).ifEmpty(arrayOfStrings(snapshot["recentSequences"]))
+        let audioPath = string(desktopState?["audioPathInput"], fallback: string(snapshot["audioPathInput"]))
+        let projectSequences = (desktopState?["projectSequences"] as? [[String: Any]]) ?? (snapshot["projectSequences"] as? [[String: Any]]) ?? []
         let activeProjectSequence = projectSequences.first(where: { bool($0["isActive"]) })
         let preferredSequencePath = string(activeProjectSequence?["sequencePath"])
-        let activeSequencePath = preferredSequencePath.isEmpty ? (recentSequences.first ?? "") : preferredSequencePath
+        let liveSequencePath = string(desktopState?["sequencePathInput"])
+        let activeSequencePath = !liveSequencePath.isEmpty
+            ? liveSequencePath
+            : (preferredSequencePath.isEmpty ? (recentSequences.first ?? "") : preferredSequencePath)
 
         let briefSections = arrayOfStrings(latestBrief?["sections"])
         let proposalLines = arrayOfStrings(latestProposal?["proposalLines"])
@@ -97,6 +111,14 @@ struct LocalPendingWorkService: PendingWorkService {
         let proposalScope = latestProposal?["scope"] as? [String: Any]
         let proposalScopeSections = arrayOfStrings(proposalScope?["sections"])
         let proposalScopeTargets = arrayOfStrings(proposalScope?["targetIds"])
+        let runtimeDiagnostics = runtime?["diagnostics"] as? [String: Any]
+        let runtimeExecutionPlan = runtimeDiagnostics?["proposalExecutionPlan"] as? [String: Any]
+        let effectiveExecutionPlan = executionPlan ?? runtimeExecutionPlan
+        let effectiveEffectPlacements = effectPlacements.isEmpty ? buildEffectPlacements(effectiveExecutionPlan?["effectPlacements"]) : effectPlacements
+        let effectiveSectionCount = proposalScopeSections.isEmpty ? int(effectiveExecutionPlan?["sectionCount"]) : proposalScopeSections.count
+        let effectiveTargetCount = proposalScopeTargets.isEmpty ? int(effectiveExecutionPlan?["targetCount"]) : proposalScopeTargets.count
+        let proposedRows = desktopState?["proposed"] as? [Any]
+        let effectiveCommandCount = !effectiveEffectPlacements.isEmpty ? effectiveEffectPlacements.count : (proposedRows?.count ?? 0)
 
         let timestamps = [
             string(latestBrief?["createdAt"]),
@@ -104,7 +126,8 @@ struct LocalPendingWorkService: PendingWorkService {
             string(latestIntent?["createdAt"]),
             string(latestDirector?["createdAt"]),
             string(latestScene?["createdAt"]),
-            string(latestMusic?["createdAt"])
+            string(latestMusic?["createdAt"]),
+            string(runtime?["updatedAt"])
         ].filter { !$0.isEmpty }.sorted()
 
         return PendingWorkReadModel(
@@ -126,7 +149,7 @@ struct LocalPendingWorkService: PendingWorkService {
             riskNotes: arrayOfStrings(latestProposal?["riskNotes"]),
             proposalLifecycleStatus: string(lifecycle?["status"], fallback: "unknown"),
             estimatedImpact: int(impact?["estimatedImpact"]),
-            executionModeSummary: buildExecutionModeSummary(executionPlan: executionPlan),
+            executionModeSummary: buildExecutionModeSummary(executionPlan: effectiveExecutionPlan),
             constraintsSummary: buildConstraintsSummary(constraints: constraints),
             intentGoal: string(latestIntent?["goal"], fallback: "No intent handoff available."),
             intentTargetIDs: intentTargets,
@@ -140,11 +163,11 @@ struct LocalPendingWorkService: PendingWorkService {
             musicHoldMoments: holdMoments,
             artifactTimestampSummary: timestamps.last ?? project.updatedAt,
             translationSource: latestProposal == nil ? "Pending" : "Canonical Plan",
-            proposalSectionCount: proposalScopeSections.count,
-            proposalTargetCount: proposalScopeTargets.count,
-            proposalCommandCount: effectPlacements.count,
-            proposalShouldUseFullSongStructureTrack: bool(executionPlan?["shouldUseFullSongStructureTrack"]),
-            proposalEffectPlacements: effectPlacements
+            proposalSectionCount: effectiveSectionCount,
+            proposalTargetCount: effectiveTargetCount,
+            proposalCommandCount: effectiveCommandCount,
+            proposalShouldUseFullSongStructureTrack: bool(effectiveExecutionPlan?["shouldUseFullSongStructureTrack"]),
+            proposalEffectPlacements: effectiveEffectPlacements
         )
     }
 
@@ -159,6 +182,30 @@ struct LocalPendingWorkService: PendingWorkService {
         }) else { return nil }
         let data = try Data(contentsOf: latest)
         return try JSONSerialization.jsonObject(with: data) as? [String: Any]
+    }
+
+    private func readDesktopStateIfCompatible(with project: ActiveProjectModel) -> [String: Any]? {
+        let path = URL(fileURLWithPath: AppEnvironment.desktopStateRoot, isDirectory: true)
+            .appendingPathComponent("xlightsdesigner-state.json")
+        guard let data = try? Data(contentsOf: path),
+              let wrapper = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let rawState = wrapper["localStateRaw"] as? String,
+              let rawData = rawState.data(using: .utf8),
+              let state = try? JSONSerialization.jsonObject(with: rawData) as? [String: Any] else {
+            return nil
+        }
+
+        let desktopShowFolder = normalizePath(string(state["showFolder"]))
+        let projectShowFolder = normalizePath(project.showFolder)
+        guard !desktopShowFolder.isEmpty, desktopShowFolder == projectShowFolder else {
+            return nil
+        }
+        return state
+    }
+
+    private func mergeArtifact(primary: [String: Any]?, fallback: [String: Any]?) -> [String: Any]? {
+        if let primary, primary.isEmpty == false { return primary }
+        return fallback
     }
 
     private func buildSceneSummary(metadata: [String: Any]?) -> String {
@@ -240,5 +287,17 @@ struct LocalPendingWorkService: PendingWorkService {
                 endMs: int(row["endMs"])
             )
         }
+    }
+
+    private func normalizePath(_ path: String) -> String {
+        let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return URL(fileURLWithPath: trimmed).standardizedFileURL.path
+    }
+}
+
+private extension [String] {
+    func ifEmpty(_ fallback: [String]) -> [String] {
+        isEmpty ? fallback : self
     }
 }

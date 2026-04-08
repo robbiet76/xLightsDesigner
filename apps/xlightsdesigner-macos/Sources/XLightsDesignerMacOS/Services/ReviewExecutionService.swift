@@ -53,7 +53,7 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
     }
 
     private func runNode(arguments: [String]) async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
+        try await Task.detached(priority: .userInitiated) {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.arguments = ["node"] + arguments
@@ -64,23 +64,17 @@ struct LocalReviewExecutionService: ReviewExecutionService, Sendable {
             process.standardOutput = stdout
             process.standardError = stderr
 
-            process.terminationHandler = { proc in
-                let outData = stdout.fileHandleForReading.readDataToEndOfFile()
-                let errData = stderr.fileHandleForReading.readDataToEndOfFile()
-                if proc.terminationStatus == 0 {
-                    continuation.resume(returning: outData)
-                    return
-                }
-                let message = String(data: errData.isEmpty ? outData : errData, encoding: .utf8) ?? "Process failed"
-                continuation.resume(throwing: ReviewExecutionError.processFailed(message.trimmingCharacters(in: .whitespacesAndNewlines)))
-            }
+            try process.run()
+            process.waitUntilExit()
 
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
+            let outData = stdout.fileHandleForReading.readDataToEndOfFile()
+            let errData = stderr.fileHandleForReading.readDataToEndOfFile()
+            if process.terminationStatus == 0 {
+                return outData
             }
-        }
+            let message = String(data: errData.isEmpty ? outData : errData, encoding: .utf8) ?? "Process failed"
+            throw ReviewExecutionError.processFailed(message.trimmingCharacters(in: .whitespacesAndNewlines))
+        }.value
     }
 
     private func string(_ value: Any?) -> String {

@@ -25,6 +25,8 @@ import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../ap
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
+const APPLY_TIMEOUT_MS = 30000;
+let currentStage = 'startup';
 
 function str(value = '') {
   return String(value || '').trim();
@@ -60,8 +62,30 @@ function latestJsonFile(dirPath = '') {
   return files.at(-1) || '';
 }
 
+function normalizePath(value = '') {
+  const text = str(value);
+  if (!text) return '';
+  return path.resolve(text);
+}
+
 function basenameLower(filePath = '') {
   return path.basename(str(filePath)).toLowerCase();
+}
+
+function readDesktopState() {
+  const statePath = path.join(os.homedir(), 'Library', 'Application Support', 'xlightsdesigner-desktop', 'xlightsdesigner-state.json');
+  if (!fs.existsSync(statePath)) return null;
+  const wrapper = readJson(statePath);
+  const raw = str(wrapper?.localStateRaw);
+  if (!raw) return null;
+  return JSON.parse(raw);
+}
+
+function desktopStateMatchesProjectShow(desktopState = null, projectDoc = {}) {
+  if (!desktopState || typeof desktopState !== 'object') return false;
+  const desktopShow = normalizePath(desktopState?.showFolder);
+  const projectShow = normalizePath(projectDoc?.showFolder);
+  return Boolean(desktopShow && projectShow && desktopShow === projectShow);
 }
 
 function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
@@ -89,6 +113,8 @@ function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
 function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
   const projectDoc = readJson(projectFile);
   const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
+  const desktopState = readDesktopState();
+  const useDesktopState = desktopStateMatchesProjectShow(desktopState, projectDoc);
   const projectDir = path.dirname(projectFile);
   const artifactsDir = path.join(projectDir, 'artifacts');
   const intentPath = latestJsonFile(path.join(artifactsDir, 'intent-handoffs'));
@@ -98,8 +124,8 @@ function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
 
   const intentHandoff = readJson(intentPath);
   const proposalBundle = readJson(proposalPath);
-  const audioPath = str(snapshot.audioPathInput);
-  const sequencePath = str(snapshot.sequencePathInput || snapshot.savePathInput);
+  const audioPath = str((useDesktopState ? desktopState?.audioPathInput : '') || snapshot.audioPathInput);
+  const sequencePath = str((useDesktopState ? desktopState?.sequencePathInput : '') || snapshot.sequencePathInput || snapshot.savePathInput);
   if (!audioPath) throw new Error('Project snapshot is missing audioPathInput.');
   if (!sequencePath) throw new Error('Project snapshot is missing sequencePathInput.');
 
@@ -112,6 +138,8 @@ function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
   return {
     projectDoc,
     snapshot,
+    desktopState,
+    useDesktopState,
     intentHandoff,
     reviewIntentHandoff: buildReviewIntentHandoff(intentHandoff, proposalBundle),
     proposalBundle,
@@ -178,20 +206,26 @@ function normalizeDisplayElements(res = {}) {
 }
 
 async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {}) {
+  currentStage = 'load_inputs';
   const inputs = loadReviewInputs({ projectFile, appRoot });
+  currentStage = 'validate_timing';
   validateProposalPlacementTiming({
     proposalBundle: inputs.proposalBundle,
     trackRecord: inputs.trackRecord,
     placements: scopedProposalPlacements(inputs.proposalBundle)
   });
+  currentStage = 'build_analysis_handoff';
   const analysisHandoff = buildAnalysisHandoffFromArtifact(persistedArtifactWithFallback(inputs.persistedArtifact), null);
+  currentStage = 'ensure_open_sequence';
   await ensureExpectedSequenceOpen(endpoint, inputs.sequencePath);
+  currentStage = 'load_sequence_context';
   const [sequenceSettingsRes, displayElementsRes, revisionRes] = await Promise.all([
     getSequenceSettings(endpoint),
     getDisplayElements(endpoint),
     getRevision(endpoint)
   ]);
 
+  currentStage = 'build_sequence_plan';
   const commandsPlan = buildSequenceAgentPlan({
     analysisHandoff,
     intentHandoff: inputs.reviewIntentHandoff,
@@ -215,6 +249,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     throw new Error('Sequence agent generated no commands for apply.');
   }
 
+  currentStage = 'validate_and_apply_plan';
   const applyRes = await validateAndApplyPlan({
     endpoint,
     commands,
@@ -233,6 +268,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
   });
 
   if (!applyRes?.ok) {
+    currentStage = 'fallback_apply_path';
     const fallback = await applyExecutionStrategyFallback({
       proposalBundle: inputs.proposalBundle,
       trackRecord: inputs.trackRecord,
@@ -410,9 +446,18 @@ function persistedArtifactWithFallback(artifact = null) {
   return {};
 }
 
+function withTimeout(promise, timeoutMs = APPLY_TIMEOUT_MS) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Native review apply timed out after ${timeoutMs}ms during stage: ${currentStage}`)), timeoutMs);
+    })
+  ]);
+}
+
 try {
   const options = parseArgs(process.argv.slice(2));
-  const result = await applyReview(options);
+  const result = await withTimeout(applyReview(options));
   process.stdout.write(JSON.stringify(result));
 } catch (error) {
   process.stderr.write(String(error?.stack || error?.message || error));
