@@ -4,6 +4,9 @@ import Observation
 @MainActor
 @Observable
 final class AppModel {
+    private let displayDiscoveryStore: DisplayDiscoveryStateStore
+    private let userProfileStore: AssistantUserProfileStore
+
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
     var showAssistantPanel = true
@@ -20,7 +23,12 @@ final class AppModel {
     let settingsScreenModel: SettingsScreenViewModel
     let xlightsSessionModel: XLightsSessionViewModel
 
-    init() {
+    init(
+        displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
+        userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore()
+    ) {
+        self.displayDiscoveryStore = displayDiscoveryStore
+        self.userProfileStore = userProfileStore
         let workspace = ProjectWorkspace()
         self.workspace = workspace
         self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
@@ -97,7 +105,9 @@ final class AppModel {
         let layoutRows = layoutScreenModel.screenModel.rows
         let taggedTargetCount = layoutRows.filter { !$0.tagDefinitions.isEmpty }.count
         let allTagNames = Set(layoutScreenModel.screenModel.tagDefinitions.map(\.name))
-        let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows)
+        let discoverySummary = displayDiscoveryStore.summary(for: workspace.activeProject)
+        let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows, discoverySummary: discoverySummary)
+        let userPreferenceNotes = (try? userProfileStore.load().preferenceNotes.map(\.text)) ?? []
         let selectedLayoutTarget: String
         let selectedLayoutTags: [String]
         switch layoutScreenModel.screenModel.selectedTarget {
@@ -127,6 +137,9 @@ final class AppModel {
             selectedLayoutTarget: selectedLayoutTarget,
             selectedLayoutTags: selectedLayoutTags.sorted(),
             displayDiscoveryCandidates: discoveryCandidates,
+            displayDiscoveryStatus: discoverySummary.status.rawValue,
+            displayDiscoveryTranscriptCount: discoverySummary.transcriptCount,
+            userPreferenceNotes: userPreferenceNotes,
             xlightsSequenceOpen: xlights.isSequenceOpen,
             xlightsSequencePath: xlights.sequencePath,
             xlightsMediaFile: xlights.mediaFile,
@@ -139,7 +152,19 @@ final class AppModel {
         )
     }
 
-    private func buildDisplayDiscoveryCandidates(from rows: [LayoutRowModel]) -> [[String: String]] {
+    private func buildDisplayDiscoveryCandidates(
+        from rows: [LayoutRowModel],
+        discoverySummary: DisplayDiscoverySummaryModel
+    ) -> [[String: String]] {
+        if !discoverySummary.candidateProps.isEmpty {
+            return discoverySummary.candidateProps.map {
+                [
+                    "name": $0.name,
+                    "type": $0.type,
+                    "reason": $0.reason
+                ]
+            }
+        }
         let candidates = rows
             .map { row in
                 (
@@ -166,6 +191,9 @@ final class AppModel {
     private func displayDiscoveryScore(for row: LayoutRowModel) -> Int {
         let name = row.targetName.lowercased()
         let type = row.targetType.lowercased()
+        if type.contains("submodel") {
+            return 0
+        }
         var score = 0
         let keywords = [
             "snowman", "santa", "tree", "mega", "star", "matrix",
@@ -175,8 +203,12 @@ final class AppModel {
         for keyword in keywords where name.contains(keyword) {
             score += 4
         }
-        if type.contains("modelgroup") { score += 2 }
-        if type.contains("submodel") { score += 1 }
+        if type.contains("modelgroup") { score += 3 }
+        if row.nodeCount >= 500 { score += 3 }
+        else if row.nodeCount >= 150 { score += 2 }
+        else if row.nodeCount >= 50 { score += 1 }
+        if row.positionX != 0, abs(row.positionX) < 2.0 { score += 1 }
+        if row.width >= 4.0 || row.height >= 4.0 { score += 1 }
         if row.submodelCount > 0 { score += 1 }
         if row.targetName.count > 2 { score += 1 }
         return score
@@ -189,6 +221,12 @@ final class AppModel {
         }
         if name.contains("tree") || name.contains("mega") || name.contains("star") || name.contains("matrix") {
             return "large or likely focal display structure"
+        }
+        if row.nodeCount >= 500 {
+            return "large visual footprint or node count suggests it may drive major scenes"
+        }
+        if row.positionX != 0, abs(row.positionX) < 2.0 {
+            return "central position suggests it may need explicit role guidance"
         }
         if name.contains("arch") || name.contains("roof") || name.contains("window") {
             return "architectural or repeating structure that may need grouping guidance"

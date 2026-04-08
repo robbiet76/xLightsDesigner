@@ -115,7 +115,9 @@ export function buildAppAssistantResult({
   shouldGenerateProposal = false,
   proposalIntent = "",
   diagnostics = null,
-  warnings = []
+  warnings = [],
+  displayDiscovery = null,
+  userPreferenceNotes = []
 } = {}) {
   return {
     agentRole: APP_ASSISTANT_ROLE,
@@ -130,6 +132,8 @@ export function buildAppAssistantResult({
     identities: buildTeamChatIdentities(identities),
     shouldGenerateProposal: Boolean(shouldGenerateProposal),
     proposalIntent: str(proposalIntent),
+    displayDiscovery: isPlainObject(displayDiscovery) ? displayDiscovery : undefined,
+    userPreferenceNotes: arr(userPreferenceNotes).map((row) => str(row)).filter(Boolean),
     diagnostics: isPlainObject(diagnostics) ? diagnostics : undefined,
     warnings: arr(warnings).map((row) => str(row)).filter(Boolean)
   };

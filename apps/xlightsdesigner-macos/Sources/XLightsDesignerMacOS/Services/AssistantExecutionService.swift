@@ -19,6 +19,8 @@ struct AssistantExecutionResult: Sendable {
     let handledBy: String
     let routeDecision: String
     let responseID: String
+    let displayDiscovery: AssistantDisplayDiscoveryResult?
+    let userPreferenceNotes: [String]
 }
 
 protocol AssistantExecutionService: Sendable {
@@ -70,7 +72,9 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 assistantMessage: assistantMessage,
                 handledBy: string(result["handledBy"]),
                 routeDecision: string(result["routeDecision"]),
-                responseID: string(result["responseId"])
+                responseID: string(result["responseId"]),
+                displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
+                userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
 
@@ -80,7 +84,9 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 assistantMessage: assistantMessage,
                 handledBy: string(result["handledBy"]),
                 routeDecision: string(result["routeDecision"]),
-                responseID: string(result["responseId"])
+                responseID: string(result["responseId"]),
+                displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
+                userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
         throw AssistantExecutionError.invalidResponse(fallbackError.isEmpty ? "Assistant request failed." : fallbackError)
@@ -119,5 +125,33 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
 
     private func string(_ value: Any?) -> String {
         String(describing: value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func stringArray(_ value: Any?) -> [String] {
+        guard let values = value as? [Any] else { return [] }
+        return values.map { string($0) }.filter { !$0.isEmpty }
+    }
+
+    private func parseDisplayDiscovery(from value: Any?) -> AssistantDisplayDiscoveryResult? {
+        guard let object = value as? [String: Any] else { return nil }
+        let status = DisplayDiscoveryStatus(rawValue: string(object["status"])) ?? .inProgress
+        let scope = string(object["scope"]).isEmpty ? "groups_models_v1" : string(object["scope"])
+        let shouldCaptureTurn = (object["shouldCaptureTurn"] as? Bool) ?? false
+        let rows: [[String: Any]] = object["candidateProps"] as? [[String: Any]] ?? []
+        let candidateProps: [DisplayDiscoveryCandidateModel] = rows.compactMap { row in
+            let name = string(row["name"])
+            guard !name.isEmpty else { return nil }
+            return DisplayDiscoveryCandidateModel(
+                name: name,
+                type: string(row["type"]),
+                reason: string(row["reason"])
+            )
+        }
+        return AssistantDisplayDiscoveryResult(
+            status: status,
+            scope: scope,
+            shouldCaptureTurn: shouldCaptureTurn,
+            candidateProps: candidateProps
+        )
     }
 }

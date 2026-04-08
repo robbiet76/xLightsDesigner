@@ -6,6 +6,8 @@ import Observation
 final class AssistantWindowViewModel {
     private let conversationService: AssistantConversationService
     private let executionService: AssistantExecutionService
+    private let displayDiscoveryStore: DisplayDiscoveryStateStore
+    private let userProfileStore: AssistantUserProfileStore
 
     var messages: [AssistantMessageModel] = []
     var draft = ""
@@ -14,10 +16,14 @@ final class AssistantWindowViewModel {
 
     init(
         conversationService: AssistantConversationService = LocalAssistantConversationService(),
-        executionService: AssistantExecutionService = LocalAssistantExecutionService()
+        executionService: AssistantExecutionService = LocalAssistantExecutionService(),
+        displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
+        userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore()
     ) {
         self.conversationService = conversationService
         self.executionService = executionService
+        self.displayDiscoveryStore = displayDiscoveryStore
+        self.userProfileStore = userProfileStore
     }
 
     func loadConversationIfNeeded() {
@@ -54,7 +60,7 @@ final class AssistantWindowViewModel {
         }
     }
 
-    func sendDraft(context: AssistantContextModel) async {
+    func sendDraft(context: AssistantContextModel, project: ActiveProjectModel?) async {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isSending else { return }
 
@@ -89,6 +95,24 @@ final class AssistantWindowViewModel {
                 routeDecision: result.routeDecision,
                 displayName: displayName(for: result.handledBy)
             ))
+            if !result.userPreferenceNotes.isEmpty {
+                try? userProfileStore.addPreferenceNotes(result.userPreferenceNotes, recordedAt: isoNow())
+            }
+            if
+                let project,
+                let discovery = result.displayDiscovery,
+                discovery.shouldCaptureTurn,
+                let assistantMessage = messages.last
+            {
+                try? displayDiscoveryStore.recordConversationTurn(
+                    project: project,
+                    status: discovery.status,
+                    scope: discovery.scope,
+                    candidateProps: discovery.candidateProps,
+                    userMessage: userMessage,
+                    assistantMessage: assistantMessage
+                )
+            }
         } catch {
             messages.append(AssistantMessageModel(
                 id: UUID().uuidString,
@@ -117,7 +141,7 @@ final class AssistantWindowViewModel {
         AssistantMessageModel(
             id: UUID().uuidString,
             role: .assistant,
-            text: "App Assistant here. I coordinate guidance across Project, Layout, Audio, Design, Sequence, Review, and History.",
+            text: "Welcome. I guide the overall workflow and bring in the right specialist as needed: Designer for display and creative direction, Audio Analyst for track structure, and Sequencer for technical sequence work. Start anywhere. I will help you move through the process and adapt to your working style as we go.",
             timestamp: isoNow(),
             handledBy: "app_assistant",
             routeDecision: "app_assistant",

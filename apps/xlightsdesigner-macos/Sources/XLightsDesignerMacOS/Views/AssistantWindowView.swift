@@ -23,7 +23,7 @@ struct AssistantWindowView: View {
                 Text("Assistant")
                     .font(.title)
                     .fontWeight(.semibold)
-                Text("Unified app guidance and specialist routing across workflows.")
+                Text("Guided workflow with App Assistant, Designer, Audio Analyst, and Sequencer.")
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -69,7 +69,10 @@ struct AssistantWindowView: View {
                 Spacer()
                 Button("Send") {
                     Task {
-                        await model.sendDraft(context: currentContext())
+                        await model.sendDraft(
+                            context: currentContext(),
+                            project: appModel.workspace.activeProject
+                        )
                     }
                 }
                 .buttonStyle(.borderedProminent)

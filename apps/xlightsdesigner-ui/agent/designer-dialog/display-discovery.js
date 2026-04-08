@@ -37,6 +37,50 @@ export function shouldStartDisplayDiscovery({ context = {}, userMessage = "" } =
   );
 }
 
+export function shouldContinueDisplayDiscovery({ context = {} } = {}) {
+  const status = str(context?.displayDiscovery?.status).toLowerCase();
+  return status === "in_progress" && !hasMeaningfulLayoutMetadata(context);
+}
+
+export function inferUserPreferenceNotes(userMessage = "") {
+  const text = str(userMessage);
+  const lower = text.toLowerCase();
+  const notes = [];
+  const maybeAdd = (prefix, value) => {
+    const normalized = str(value).replace(/[.?!]+$/, "");
+    if (!normalized) return;
+    if (normalized.length < 12) return;
+    if (normalized.length > 160) return;
+    notes.push(`${prefix}${normalized}`);
+  };
+
+  let match = text.match(/\bI prefer\b[:\s]+(.+)$/i);
+  if (match) maybeAdd("User prefers ", match[1]);
+
+  match = text.match(/\bI want\b[:\s]+(.+)$/i);
+  if (match) maybeAdd("User wants ", match[1]);
+
+  match = text.match(/\bwe should\b[:\s]+(.+)$/i);
+  if (match) maybeAdd("Preferred workflow: ", match[1]);
+
+  match = text.match(/\blet'?s\b[:\s]+(.+)$/i);
+  if (match && /(keep|use|avoid|start|focus|guide|review|capture)/.test(lower)) {
+    maybeAdd("Preferred workflow: ", match[1]);
+  }
+
+  if (/\bpages are really there to support the dialog\b/i.test(text)) {
+    notes.push("Pages support the conversation and act as visual confirmation, not the primary control surface");
+  }
+
+  const sorted = Array.from(new Set(notes));
+  const broadIndex = sorted.findIndex((note) => /broad metadata first/i.test(note));
+  const guideIndex = sorted.findIndex((note) => /chat to guide/i.test(note));
+  if (broadIndex >= 0 && guideIndex >= 0 && broadIndex != guideIndex) {
+    return sorted.filter((_, index) => index !== guideIndex);
+  }
+  return sorted;
+}
+
 export function buildDisplayDiscoveryGuidance(context = {}) {
   const candidates = arr(context?.layout?.displayDiscoveryCandidates)
     .map((row) => ({

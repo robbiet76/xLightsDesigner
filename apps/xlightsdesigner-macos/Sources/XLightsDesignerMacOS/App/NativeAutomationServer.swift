@@ -171,7 +171,10 @@ final class NativeAutomationServer: @unchecked Sendable {
             }
             model.assistantModel.loadConversationIfNeeded()
             model.assistantModel.draft = prompt
-            await model.assistantModel.sendDraft(context: model.assistantContext())
+            await model.assistantModel.sendDraft(
+                context: model.assistantContext(),
+                project: model.workspace.activeProject
+            )
             return .json(200, body: [
                 "ok": true,
                 "messageCount": model.assistantModel.messages.count,
@@ -288,6 +291,8 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func assistantSnapshot() -> [String: Any] {
+        let discovery = LocalDisplayDiscoveryStateStore().summary(for: model.workspace.activeProject)
+        let profile = (try? LocalAssistantUserProfileStore().load()) ?? AssistantUserProfile()
         let messages = model.assistantModel.messages.map { message in
             [
                 "id": message.id,
@@ -305,7 +310,22 @@ final class NativeAutomationServer: @unchecked Sendable {
             "isSending": model.assistantModel.isSending,
             "messageCount": messages.count,
             "messages": messages,
-            "lastMessage": messages.last ?? [:]
+            "lastMessage": messages.last ?? [:],
+            "displayDiscovery": [
+                "status": discovery.status.rawValue,
+                "scope": discovery.scope,
+                "transcriptCount": discovery.transcriptCount,
+                "candidateProps": discovery.candidateProps.map {
+                    [
+                        "name": $0.name,
+                        "type": $0.type,
+                        "reason": $0.reason
+                    ]
+                }
+            ],
+            "userProfile": [
+                "preferenceNotes": profile.preferenceNotes.map(\.text)
+            ]
         ]
     }
 

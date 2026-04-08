@@ -207,6 +207,13 @@ struct XLightsLayoutService: LayoutService {
             targetName: model.name,
             targetType: model.displayAs,
             layoutGroup: model.layoutGroup,
+            nodeCount: model.nodeCount ?? 0,
+            positionX: model.positionX ?? 0,
+            positionY: model.positionY ?? 0,
+            positionZ: model.positionZ ?? 0,
+            width: model.width ?? 0,
+            height: model.height ?? 0,
+            depth: model.depth ?? 0,
             tagDefinitions: assignedTags,
             supportStateSummary: assignedTags.isEmpty ? "Needs Tags" : "Tagged",
             issuesSummary: assignedTags.isEmpty ? "No project tags assigned" : "No issues detected",
@@ -256,4 +263,11 @@ private struct XLightsLayoutModel: Decodable {
     let layoutGroup: String
     let name: String
     let submodelCount: Int
+    let nodeCount: Int?
+    let positionX: Double?
+    let positionY: Double?
+    let positionZ: Double?
+    let width: Double?
+    let height: Double?
+    let depth: Double?
 }

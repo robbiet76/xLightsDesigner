@@ -5,6 +5,11 @@ import {
   buildAppAssistantResult,
   validateAppAssistantInput
 } from "./app-assistant-contracts.js";
+import {
+  hasMeaningfulLayoutMetadata,
+  shouldContinueDisplayDiscovery,
+  shouldStartDisplayDiscovery
+} from "../designer-dialog/display-discovery.js";
 
 function str(value = "") {
   return String(value || "").trim();
@@ -217,6 +222,12 @@ export async function executeAppAssistantConversation({
   }
 
   const routeDecision = inferRouteDecision({ userMessage, context, response });
+  const discoveryShouldStart = shouldStartDisplayDiscovery({ context, userMessage });
+  const discoveryShouldContinue = shouldContinueDisplayDiscovery({ context });
+  const discoveryActive =
+    routeDecision === "designer_dialog" &&
+    !hasMeaningfulLayoutMetadata(context) &&
+    (discoveryShouldStart || discoveryShouldContinue);
   const allowProposalGeneration =
     (routeDecision === "designer_dialog" || routeDecision === "sequence_agent") &&
     (Boolean(context?.sequenceOpen) || Boolean(context?.planOnlyMode));
@@ -233,6 +244,17 @@ export async function executeAppAssistantConversation({
       identities: input.context?.teamChat?.identities || input.context?.teamIdentities || DEFAULT_TEAM_CHAT_IDENTITIES,
       shouldGenerateProposal: allowProposalGeneration && Boolean(response.shouldGenerateProposal),
       proposalIntent: str(response.proposalIntent || userMessage),
+      displayDiscovery: discoveryActive
+        ? {
+            status: "in_progress",
+            scope: "groups_models_v1",
+            shouldCaptureTurn: true,
+            candidateProps: Array.isArray(context?.layout?.displayDiscoveryCandidates)
+              ? context.layout.displayDiscoveryCandidates
+              : []
+          }
+        : undefined,
+      userPreferenceNotes: Array.isArray(response.userPreferenceNotes) ? response.userPreferenceNotes : [],
       diagnostics: buildDiagnostics({
         routeDecision,
         bridgeOk: true,

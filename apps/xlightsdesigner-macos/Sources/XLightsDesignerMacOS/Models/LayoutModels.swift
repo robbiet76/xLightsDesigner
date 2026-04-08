@@ -53,6 +53,13 @@ struct LayoutRowModel: Identifiable, Hashable, Sendable {
     let targetName: String
     let targetType: String
     let layoutGroup: String
+    let nodeCount: Int
+    let positionX: Double
+    let positionY: Double
+    let positionZ: Double
+    let width: Double
+    let height: Double
+    let depth: Double
     let tagDefinitions: [LayoutTagDefinitionModel]
     let supportStateSummary: String
     let issuesSummary: String

@@ -6,6 +6,8 @@ import {
 } from '../../../apps/xlightsdesigner-ui/agent/app-assistant/app-assistant-orchestrator.js';
 import {
   buildDisplayDiscoveryGuidance,
+  inferUserPreferenceNotes,
+  shouldContinueDisplayDiscovery,
   shouldStartDisplayDiscovery
 } from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/display-discovery.js';
 
@@ -132,6 +134,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const discoveryGuidance = shouldStartDisplayDiscovery({ context: c, userMessage })
     ? buildDisplayDiscoveryGuidance(c)
     : "";
+  const ongoingDiscovery = shouldContinueDisplayDiscovery({ context: c })
+    ? "Display discovery is already in progress for this project. Continue that conversation naturally instead of restarting it."
+    : "";
   return [
     'You are the xLightsDesigner App Assistant.',
     'You are the unified conversational shell for the whole app, not just the design specialist.',
@@ -153,7 +158,10 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When relevant, mention concrete next actions you can perform in the app.',
     'Keep specialist boundaries intact: audio analysis is media-only, design proposals are review-first, and sequence execution must remain explicit.',
     'For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.',
+    'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
+    'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Do not output JSON unless explicitly asked by the user.',
+    ongoingDiscovery,
     discoveryGuidance,
     `Context: ${JSON.stringify(c)}`
   ].filter(Boolean).join('\n');
@@ -234,7 +242,8 @@ async function runAgentConversation(payload = {}) {
     assistantMessage,
     shouldGenerateProposal,
     proposalIntent,
-    responseId
+    responseId,
+    userPreferenceNotes: inferUserPreferenceNotes(userMessage)
   };
 }
 

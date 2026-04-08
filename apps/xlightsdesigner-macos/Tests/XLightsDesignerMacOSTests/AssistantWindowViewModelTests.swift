@@ -10,20 +10,25 @@ struct AssistantWindowViewModelTests {
             assistantMessage: "Real assistant reply",
             handledBy: "app_assistant",
             routeDecision: "general",
-            responseID: "resp-1"
+            responseID: "resp-1",
+            displayDiscovery: nil,
+            userPreferenceNotes: []
         )))
         let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)
         model.loadConversationIfNeeded()
         model.draft = "Help me"
 
-        await model.sendDraft(context: AssistantContextModel(
-            activeProjectName: "Christmas 2026",
-            workflowName: "Audio",
-            route: "audio",
-            focusedSummary: "Candy Cane Lane",
-            activeSequenceLoaded: false,
-            planOnlyMode: false
-        ))
+        await model.sendDraft(
+            context: AssistantContextModel(
+                activeProjectName: "Christmas 2026",
+                workflowName: "Audio",
+                route: "audio",
+                focusedSummary: "Candy Cane Lane",
+                activeSequenceLoaded: false,
+                planOnlyMode: false
+            ),
+            project: nil
+        )
 
         #expect(model.messages.count == 3)
         #expect(model.messages.last?.text == "Real assistant reply")

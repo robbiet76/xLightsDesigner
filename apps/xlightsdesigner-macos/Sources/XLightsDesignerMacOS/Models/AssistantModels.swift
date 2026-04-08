@@ -15,6 +15,13 @@ struct AssistantMessageModel: Identifiable, Codable, Equatable {
     let displayName: String?
 }
 
+struct AssistantDisplayDiscoveryResult: Sendable {
+    let status: DisplayDiscoveryStatus
+    let scope: String
+    let shouldCaptureTurn: Bool
+    let candidateProps: [DisplayDiscoveryCandidateModel]
+}
+
 struct AssistantContextModel {
     let activeProjectName: String
     let workflowName: String
@@ -29,6 +36,9 @@ struct AssistantContextModel {
     let selectedLayoutTarget: String
     let selectedLayoutTags: [String]
     let displayDiscoveryCandidates: [[String: String]]
+    let displayDiscoveryStatus: String
+    let displayDiscoveryTranscriptCount: Int
+    let userPreferenceNotes: [String]
     let xlightsSequenceOpen: Bool
     let xlightsSequencePath: String
     let xlightsMediaFile: String
@@ -53,6 +63,9 @@ struct AssistantContextModel {
         selectedLayoutTarget: String = "",
         selectedLayoutTags: [String] = [],
         displayDiscoveryCandidates: [[String: String]] = [],
+        displayDiscoveryStatus: String = "not_started",
+        displayDiscoveryTranscriptCount: Int = 0,
+        userPreferenceNotes: [String] = [],
         xlightsSequenceOpen: Bool = false,
         xlightsSequencePath: String = "",
         xlightsMediaFile: String = "",
@@ -76,6 +89,9 @@ struct AssistantContextModel {
         self.selectedLayoutTarget = selectedLayoutTarget
         self.selectedLayoutTags = selectedLayoutTags
         self.displayDiscoveryCandidates = displayDiscoveryCandidates
+        self.displayDiscoveryStatus = displayDiscoveryStatus
+        self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
+        self.userPreferenceNotes = userPreferenceNotes
         self.xlightsSequenceOpen = xlightsSequenceOpen
         self.xlightsSequencePath = xlightsSequencePath
         self.xlightsMediaFile = xlightsMediaFile
@@ -103,6 +119,13 @@ struct AssistantContextModel {
                 "selectedTarget": selectedLayoutTarget,
                 "selectedTargetTags": selectedLayoutTags,
                 "displayDiscoveryCandidates": displayDiscoveryCandidates
+            ],
+            "displayDiscovery": [
+                "status": displayDiscoveryStatus,
+                "transcriptCount": displayDiscoveryTranscriptCount
+            ],
+            "userProfile": [
+                "preferenceNotes": userPreferenceNotes
             ],
             "xlights": [
                 "sequenceOpen": xlightsSequenceOpen,
