@@ -14,6 +14,8 @@ enum XLightsSessionServiceError: LocalizedError {
 protocol XLightsSessionService: Sendable {
     func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel
     func saveCurrentSequence() async throws -> String
+    func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String
+    func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String
 }
 
 struct LocalXLightsSessionService: XLightsSessionService {
@@ -64,7 +66,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
     }
 
     func saveCurrentSequence() async throws -> String {
-        let json = try await postJSON(to: "/sequence/save", body: [:])
+        let json = try await postQueuedJSON(to: "/sequence/save", body: [:], command: "sequence.save")
         let data = dictionary(json["data"])
         let saved = bool(data["saved"]) || !data.isEmpty
         let file = string(data["file"])
@@ -72,6 +74,41 @@ struct LocalXLightsSessionService: XLightsSessionService {
             throw XLightsSessionServiceError.invalidResponse("xLights did not confirm save.")
         }
         return file.isEmpty ? "Saved current xLights sequence." : "Saved xLights sequence: \(file)"
+    }
+
+    func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String {
+        let normalizedPath = normalizePath(filePath)
+        guard !normalizedPath.isEmpty else {
+            throw XLightsSessionServiceError.invalidResponse("Sequence path is required.")
+        }
+        if saveBeforeSwitch {
+            _ = try? await saveCurrentSequence()
+        }
+        _ = try await postQueuedJSON(to: "/sequence/open", body: [
+            "file": normalizedPath,
+            "force": true,
+            "promptIssues": false
+        ], command: "sequence.open")
+        return "Opened xLights sequence: \(normalizedPath)"
+    }
+
+    func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String {
+        let normalizedPath = normalizePath(filePath)
+        guard !normalizedPath.isEmpty else {
+            throw XLightsSessionServiceError.invalidResponse("Sequence path is required.")
+        }
+        let fileURL = URL(fileURLWithPath: normalizedPath)
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if saveBeforeSwitch {
+            _ = try? await saveCurrentSequence()
+        }
+        var body: [String: Any] = ["file": normalizedPath]
+        let media = string(mediaFile)
+        if !media.isEmpty { body["mediaFile"] = media }
+        if let durationMs { body["durationMs"] = durationMs }
+        if let frameMs { body["frameMs"] = frameMs }
+        _ = try await postQueuedJSON(to: "/sequence/create", body: body, command: "sequence.create")
+        return "Created xLights sequence: \(normalizedPath)"
     }
 
     private func readJSON(from path: String) async throws -> [String: Any] {
@@ -98,6 +135,39 @@ struct LocalXLightsSessionService: XLightsSessionService {
             throw XLightsSessionServiceError.invalidResponse("xLights returned invalid JSON.")
         }
         return json
+    }
+
+    private func postQueuedJSON(to path: String, body: [String: Any], command: String) async throws -> [String: Any] {
+        let json = try await postJSON(to: path, body: body)
+        let jobID = string(dictionary(json["data"])["jobId"])
+        guard !jobID.isEmpty else {
+            throw XLightsSessionServiceError.invalidResponse("xLights \(command) returned no jobId.")
+        }
+        return try await waitForOwnedJobResult(jobID: jobID, command: command)
+    }
+
+    private func waitForOwnedJobResult(jobID: String, command: String, attempts: Int = 180, delayMs: UInt64 = 500) async throws -> [String: Any] {
+        for _ in 0..<attempts {
+            let settled = try await readJSON(from: "/jobs/get?jobId=\(jobID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? jobID)")
+            let data = dictionary(settled["data"])
+            let state = string(data["state"]).lowercased()
+            if state == "queued" || state == "running" {
+                try await Task.sleep(nanoseconds: delayMs * 1_000_000)
+                continue
+            }
+            let result = dictionary(data["result"])
+            guard !result.isEmpty else {
+                throw XLightsSessionServiceError.invalidResponse("Owned xLights job for \(command) returned no result payload.")
+            }
+            if state == "failed" || bool(result["ok"]) == false {
+                let error = dictionary(result["error"])
+                let code = string(error["code"], fallback: "OWNED_JOB_FAILED")
+                let message = string(error["message"], fallback: "\(command) failed")
+                throw XLightsSessionServiceError.invalidResponse("\(command) failed (\(code)): \(message)")
+            }
+            return result
+        }
+        throw XLightsSessionServiceError.invalidResponse("Timed out waiting for owned xLights job \(jobID) (\(command)).")
     }
 
     private func dictionary(_ value: Any?) -> [String: Any] {

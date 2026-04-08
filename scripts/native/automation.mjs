@@ -3,7 +3,7 @@
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function usage() {
-  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
+  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
   process.exit(2);
 }
 
@@ -56,6 +56,18 @@ switch (command) {
   case 'save-xlights-sequence':
     await request('POST', '/action', { action: 'saveXLightsSequence' });
     break;
+  case 'open-xlights-sequence':
+    await request('POST', '/action', { action: 'openXLightsSequence', filePath: String(rest[0] || '').trim() });
+    break;
+  case 'create-xlights-sequence': {
+    const [filePath = '', mediaFile = '', durationMs = '', frameMs = ''] = rest;
+    const body = { action: 'createXLightsSequence', filePath: String(filePath).trim() };
+    if (String(mediaFile).trim()) body.mediaFile = String(mediaFile).trim();
+    if (String(durationMs).trim()) body.durationMs = Number(durationMs);
+    if (String(frameMs).trim()) body.frameMs = Number(frameMs);
+    await request('POST', '/action', body);
+    break;
+  }
   case 'send-assistant-prompt':
     await request('POST', '/action', { action: 'sendAssistantPrompt', prompt: rest.join(' ').trim() });
     break;

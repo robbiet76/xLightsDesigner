@@ -54,6 +54,31 @@ final class XLightsSessionViewModel {
 
     func saveCurrentSequence() async throws {
         let summary = try await service.saveCurrentSequence()
+        setLastSaveSummary(summary)
+        refresh()
+    }
+
+    func openSequence(filePath: String, saveBeforeSwitch: Bool = true) async throws -> String {
+        let summary = try await service.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
+        setLastSaveSummary(summary)
+        refresh()
+        return summary
+    }
+
+    func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool = true) async throws -> String {
+        let summary = try await service.createSequence(
+            filePath: filePath,
+            mediaFile: mediaFile,
+            durationMs: durationMs,
+            frameMs: frameMs,
+            saveBeforeSwitch: saveBeforeSwitch
+        )
+        setLastSaveSummary(summary)
+        refresh()
+        return summary
+    }
+
+    private func setLastSaveSummary(_ summary: String) {
         snapshot = XLightsSessionSnapshotModel(
             runtimeState: snapshot.runtimeState,
             supportedCommands: snapshot.supportedCommands,
@@ -70,6 +95,5 @@ final class XLightsSessionViewModel {
             closeSupported: snapshot.closeSupported,
             lastSaveSummary: summary
         )
-        refresh()
     }
 }

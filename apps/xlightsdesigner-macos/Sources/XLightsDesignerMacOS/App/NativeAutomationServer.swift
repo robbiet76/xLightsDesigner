@@ -122,6 +122,37 @@ final class NativeAutomationServer: @unchecked Sendable {
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
             }
+        case "openXLightsSequence":
+            let filePath = String(payload["filePath"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !filePath.isEmpty else {
+                return .error(statusCode: 400, message: "Missing filePath.")
+            }
+            do {
+                let summary = try await model.xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: true)
+                return .json(200, body: ["ok": true, "summary": summary])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
+        case "createXLightsSequence":
+            let filePath = String(payload["filePath"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !filePath.isEmpty else {
+                return .error(statusCode: 400, message: "Missing filePath.")
+            }
+            let mediaFile = (payload["mediaFile"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let durationMs = payload["durationMs"] as? Int
+            let frameMs = payload["frameMs"] as? Int
+            do {
+                let summary = try await model.xlightsSessionModel.createSequence(
+                    filePath: filePath,
+                    mediaFile: mediaFile,
+                    durationMs: durationMs,
+                    frameMs: frameMs,
+                    saveBeforeSwitch: true
+                )
+                return .json(200, body: ["ok": true, "summary": summary])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "sendAssistantPrompt":
             let prompt = String(payload["prompt"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !prompt.isEmpty else {
