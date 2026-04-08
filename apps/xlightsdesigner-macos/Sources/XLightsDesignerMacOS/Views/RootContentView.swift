@@ -55,5 +55,8 @@ struct RootContentView: View {
         .sheet(isPresented: $model.showSettings) {
             SettingsScreenView(model: model.settingsScreenModel)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .projectWorkspaceDidChange)) { _ in
+            model.xlightsSessionModel.refresh()
+        }
     }
 }

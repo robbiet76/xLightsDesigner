@@ -98,9 +98,11 @@ struct SequenceScreenView: View {
                 detailRow(label: "Ready To Proceed", value: readyToProceedText)
                 Divider()
                 detailRow(label: "Live Sequence Path", value: xlightsSessionModel.snapshot.sequencePath.isEmpty ? "No live sequence open." : xlightsSessionModel.snapshot.sequencePath)
+                detailRow(label: "Project Sequence Path", value: preferredSequencePathText)
                 detailRow(label: "Media File", value: xlightsSessionModel.snapshot.mediaFile.isEmpty ? "(not set)" : xlightsSessionModel.snapshot.mediaFile)
                 detailRow(label: "Sequence Settings", value: sequenceSettingsText)
                 detailRow(label: "Unsaved State", value: xlightsSessionModel.snapshot.dirtyStateReason)
+                detailRow(label: "Sequence Switching", value: sequenceSwitchPolicyText)
                 HStack(spacing: 10) {
                     Button("Refresh xLights") {
                         xlightsSessionModel.refresh()
@@ -116,33 +118,10 @@ struct SequenceScreenView: View {
                     }
                     .disabled(xlightsSessionModel.snapshot.isSequenceOpen == false || xlightsSessionModel.snapshot.saveSupported == false)
 
-                    Button("Open Current") {
-                        let filePath = model.preferredSequencePath()
-                        guard !filePath.isEmpty else { return }
-                        Task {
-                            let saveBeforeSwitch = xlightsSessionModel.shouldSaveBeforeSwitch(policy: sequenceSwitchUnsavedPolicy)
-                            _ = try? await xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
-                            model.refresh()
-                        }
+                    Button(projectSequenceActionLabel) {
+                        Task { await performProjectSequenceAction() }
                     }
-                    .disabled(model.preferredSequencePath().isEmpty || xlightsSessionModel.snapshot.openSupported == false)
-
-                    Button("Create / Open Current") {
-                        let filePath = model.preferredSequencePath()
-                        guard !filePath.isEmpty else { return }
-                        Task {
-                            let saveBeforeSwitch = xlightsSessionModel.shouldSaveBeforeSwitch(policy: sequenceSwitchUnsavedPolicy)
-                            _ = try? await xlightsSessionModel.createSequence(
-                                filePath: filePath,
-                                mediaFile: model.preferredMediaFile(),
-                                durationMs: nil,
-                                frameMs: nil,
-                                saveBeforeSwitch: saveBeforeSwitch
-                            )
-                            model.refresh()
-                        }
-                    }
-                    .disabled(model.preferredSequencePath().isEmpty || xlightsSessionModel.snapshot.createSupported == false)
+                    .disabled(projectSequenceActionDisabled)
                 }
                 if !xlightsSessionModel.snapshot.lastSaveSummary.isEmpty {
                     Text(xlightsSessionModel.snapshot.lastSaveSummary)
@@ -164,6 +143,84 @@ struct SequenceScreenView: View {
             .padding(.vertical, 4)
         }
         .layoutPriority(1)
+    }
+
+    private var preferredSequencePath: String {
+        model.preferredSequencePath()
+    }
+
+    private var preferredSequencePathText: String {
+        preferredSequencePath.isEmpty ? "No project sequence target is available yet." : preferredSequencePath
+    }
+
+    private var preferredSequenceExists: Bool {
+        let path = preferredSequencePath
+        return !path.isEmpty && FileManager.default.fileExists(atPath: path)
+    }
+
+    private var isPreferredSequenceOpen: Bool {
+        let current = normalizedPath(xlightsSessionModel.snapshot.sequencePath)
+        let preferred = normalizedPath(preferredSequencePath)
+        return !preferred.isEmpty && current == preferred
+    }
+
+    private var projectSequenceActionLabel: String {
+        if preferredSequencePath.isEmpty {
+            return "Project Sequence Unavailable"
+        }
+        if isPreferredSequenceOpen {
+            return "Project Sequence Open"
+        }
+        if preferredSequenceExists {
+            return "Open Project Sequence"
+        }
+        return "Create Project Sequence"
+    }
+
+    private var projectSequenceActionDisabled: Bool {
+        if preferredSequencePath.isEmpty || isPreferredSequenceOpen {
+            return true
+        }
+        return preferredSequenceExists ? !xlightsSessionModel.snapshot.openSupported : !xlightsSessionModel.snapshot.createSupported
+    }
+
+    private var sequenceSwitchPolicyText: String {
+        let policy = sequenceSwitchUnsavedPolicy.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch policy {
+        case "discard-unsaved":
+            return "When switching project sequences, native will discard unsaved xLights changes instead of saving first."
+        case "save-if-needed":
+            return xlightsSessionModel.snapshot.hasUnsavedChanges == true
+                ? "When switching project sequences, native will save the current xLights sequence first because it has unsaved changes."
+                : "When switching project sequences, native will save first only if the current xLights sequence is dirty."
+        default:
+            return "When switching project sequences, native will follow the configured unsaved-sequence policy."
+        }
+    }
+
+    private func performProjectSequenceAction() async {
+        let filePath = preferredSequencePath
+        guard !filePath.isEmpty, !isPreferredSequenceOpen else { return }
+
+        let saveBeforeSwitch = xlightsSessionModel.shouldSaveBeforeSwitch(policy: sequenceSwitchUnsavedPolicy)
+        if preferredSequenceExists {
+            _ = try? await xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
+        } else {
+            _ = try? await xlightsSessionModel.createSequence(
+                filePath: filePath,
+                mediaFile: model.preferredMediaFile(),
+                durationMs: nil,
+                frameMs: nil,
+                saveBeforeSwitch: saveBeforeSwitch
+            )
+        }
+        model.refresh()
+    }
+
+    private func normalizedPath(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return URL(fileURLWithPath: trimmed).standardizedFileURL.path
     }
 
     private func currentSelectionSection(minHeight: CGFloat, maxHeight: CGFloat) -> some View {

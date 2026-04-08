@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.reviewScreenModel.refresh()
         model.historyScreenModel.loadHistory()
         model.settingsScreenModel.load()
+        model.xlightsSessionModel.refresh()
         let automationServer = NativeAutomationServer(model: model)
         automationServer.start()
         self.automationServer = automationServer
