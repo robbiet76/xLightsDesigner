@@ -17,8 +17,10 @@ struct XLightsSessionSnapshotModel: Sendable {
     let dirtyStateReason: String
     let hasUnsavedChanges: Bool?
     let saveSupported: Bool
+    let renderSupported: Bool
     let openSupported: Bool
     let createSupported: Bool
     let closeSupported: Bool
     let lastSaveSummary: String
+    let lastRenderSummary: String
 }

@@ -24,10 +24,12 @@ final class XLightsSessionViewModel {
         dirtyStateReason: "Owned xLights API does not currently expose unsaved sequence state.",
         hasUnsavedChanges: nil,
         saveSupported: false,
+        renderSupported: false,
         openSupported: false,
         createSupported: false,
         closeSupported: false,
-        lastSaveSummary: ""
+        lastSaveSummary: "",
+        lastRenderSummary: ""
     )
 
     init(workspace: ProjectWorkspace, service: XLightsSessionService = LocalXLightsSessionService()) {
@@ -56,10 +58,12 @@ final class XLightsSessionViewModel {
                 dirtyStateReason: session.dirtyStateReason,
                 hasUnsavedChanges: session.hasUnsavedChanges,
                 saveSupported: session.saveSupported,
+                renderSupported: session.renderSupported,
                 openSupported: session.openSupported,
                 createSupported: session.createSupported,
                 closeSupported: session.closeSupported,
-                lastSaveSummary: snapshot.lastSaveSummary
+                lastSaveSummary: snapshot.lastSaveSummary,
+                lastRenderSummary: snapshot.lastRenderSummary
             )
         }
     }
@@ -67,6 +71,12 @@ final class XLightsSessionViewModel {
     func saveCurrentSequence() async throws {
         let summary = try await service.saveCurrentSequence()
         setLastSaveSummary(summary)
+        refresh()
+    }
+
+    func renderCurrentSequence() async throws {
+        let summary = try await service.renderCurrentSequence()
+        setLastRenderSummary(summary)
         refresh()
     }
 
@@ -121,10 +131,39 @@ final class XLightsSessionViewModel {
             dirtyStateReason: snapshot.dirtyStateReason,
             hasUnsavedChanges: snapshot.hasUnsavedChanges,
             saveSupported: snapshot.saveSupported,
+            renderSupported: snapshot.renderSupported,
             openSupported: snapshot.openSupported,
             createSupported: snapshot.createSupported,
             closeSupported: snapshot.closeSupported,
-            lastSaveSummary: summary
+            lastSaveSummary: summary,
+            lastRenderSummary: snapshot.lastRenderSummary
+        )
+    }
+
+    private func setLastRenderSummary(_ summary: String) {
+        snapshot = XLightsSessionSnapshotModel(
+            runtimeState: snapshot.runtimeState,
+            supportedCommands: snapshot.supportedCommands,
+            isReachable: snapshot.isReachable,
+            isSequenceOpen: snapshot.isSequenceOpen,
+            sequencePath: snapshot.sequencePath,
+            revision: snapshot.revision,
+            mediaFile: snapshot.mediaFile,
+            showDirectory: snapshot.showDirectory,
+            projectShowMatches: snapshot.projectShowMatches,
+            sequenceType: snapshot.sequenceType,
+            durationMs: snapshot.durationMs,
+            frameMs: snapshot.frameMs,
+            dirtyState: snapshot.dirtyState,
+            dirtyStateReason: snapshot.dirtyStateReason,
+            hasUnsavedChanges: snapshot.hasUnsavedChanges,
+            saveSupported: snapshot.saveSupported,
+            renderSupported: snapshot.renderSupported,
+            openSupported: snapshot.openSupported,
+            createSupported: snapshot.createSupported,
+            closeSupported: snapshot.closeSupported,
+            lastSaveSummary: snapshot.lastSaveSummary,
+            lastRenderSummary: summary
         )
     }
 }

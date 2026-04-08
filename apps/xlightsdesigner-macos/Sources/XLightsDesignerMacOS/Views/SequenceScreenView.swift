@@ -118,6 +118,14 @@ struct SequenceScreenView: View {
                     }
                     .disabled(xlightsSessionModel.snapshot.isSequenceOpen == false || xlightsSessionModel.snapshot.saveSupported == false)
 
+                    Button("Render Sequence") {
+                        Task {
+                            try? await xlightsSessionModel.renderCurrentSequence()
+                            model.refresh()
+                        }
+                    }
+                    .disabled(xlightsSessionModel.snapshot.isSequenceOpen == false || xlightsSessionModel.snapshot.renderSupported == false)
+
                     Button(projectSequenceActionLabel) {
                         Task { await performProjectSequenceAction() }
                     }
@@ -125,6 +133,11 @@ struct SequenceScreenView: View {
                 }
                 if !xlightsSessionModel.snapshot.lastSaveSummary.isEmpty {
                     Text(xlightsSessionModel.snapshot.lastSaveSummary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                if !xlightsSessionModel.snapshot.lastRenderSummary.isEmpty {
+                    Text(xlightsSessionModel.snapshot.lastRenderSummary)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

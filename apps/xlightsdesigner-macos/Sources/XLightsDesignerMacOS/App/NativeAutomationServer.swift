@@ -122,6 +122,13 @@ final class NativeAutomationServer: @unchecked Sendable {
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
             }
+        case "renderXLightsSequence":
+            do {
+                try await model.xlightsSessionModel.renderCurrentSequence()
+                return .json(200, body: ["ok": true, "summary": model.xlightsSessionModel.snapshot.lastRenderSummary])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "openXLightsSequence":
             let filePath = String(payload["filePath"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !filePath.isEmpty else {
@@ -322,10 +329,12 @@ final class NativeAutomationServer: @unchecked Sendable {
             "dirtyStateReason": snapshot.dirtyStateReason,
             "hasUnsavedChanges": snapshot.hasUnsavedChanges ?? NSNull(),
             "saveSupported": snapshot.saveSupported,
+            "renderSupported": snapshot.renderSupported,
             "openSupported": snapshot.openSupported,
             "createSupported": snapshot.createSupported,
             "closeSupported": snapshot.closeSupported,
-            "lastSaveSummary": snapshot.lastSaveSummary
+            "lastSaveSummary": snapshot.lastSaveSummary,
+            "lastRenderSummary": snapshot.lastRenderSummary
         ]
     }
 

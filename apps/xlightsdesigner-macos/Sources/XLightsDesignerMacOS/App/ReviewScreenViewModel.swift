@@ -56,11 +56,12 @@ final class ReviewScreenViewModel {
                     appRootPath: AppEnvironment.canonicalAppRoot,
                     endpoint: AppEnvironment.xlightsOwnedAPIBaseURL
                 )
+                let renderSummary = try? await xlightsSessionService.renderCurrentSequence()
                 let saveSummary = try? await xlightsSessionService.saveCurrentSequence()
                 isApplying = false
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (saveSummary.map { " \($0)" } ?? ""),
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (renderSummary.map { " \($0)" } ?? "") + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 refresh()

@@ -14,6 +14,7 @@ enum XLightsSessionServiceError: LocalizedError {
 protocol XLightsSessionService: Sendable {
     func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel
     func saveCurrentSequence() async throws -> String
+    func renderCurrentSequence() async throws -> String
     func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String
     func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String
 }
@@ -46,6 +47,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
             "sequence.getSettings",
             "sequence.open",
             "sequence.create",
+            "sequence.renderCurrent",
             "sequence.save",
             "media.getCurrent"
         ]
@@ -73,10 +75,12 @@ struct LocalXLightsSessionService: XLightsSessionService {
             dirtyStateReason: dirtyReason,
             hasUnsavedChanges: hasUnsavedChanges,
             saveSupported: true,
+            renderSupported: true,
             openSupported: true,
             createSupported: true,
             closeSupported: false,
-            lastSaveSummary: ""
+            lastSaveSummary: "",
+            lastRenderSummary: ""
         )
     }
 
@@ -89,6 +93,18 @@ struct LocalXLightsSessionService: XLightsSessionService {
             throw XLightsSessionServiceError.invalidResponse("xLights did not confirm save.")
         }
         return file.isEmpty ? "Saved current xLights sequence." : "Saved xLights sequence: \(file)"
+    }
+
+    func renderCurrentSequence() async throws -> String {
+        let json = try await postQueuedJSON(to: "/sequence/render-current", body: [:], command: "sequence.renderCurrent")
+        let data = dictionary(json["data"])
+        let rendered = bool(data["rendered"]) || !data.isEmpty
+        let sequence = dictionary(data["sequence"])
+        let file = string(sequence["path"])
+        guard rendered else {
+            throw XLightsSessionServiceError.invalidResponse("xLights did not confirm render.")
+        }
+        return file.isEmpty ? "Rendered current xLights sequence." : "Rendered xLights sequence: \(file)"
     }
 
     func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String {
