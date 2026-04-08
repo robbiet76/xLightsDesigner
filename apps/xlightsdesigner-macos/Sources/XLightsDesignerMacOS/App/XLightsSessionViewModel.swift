@@ -22,6 +22,7 @@ final class XLightsSessionViewModel {
         frameMs: 0,
         dirtyState: "unknown",
         dirtyStateReason: "Owned xLights API does not currently expose unsaved sequence state.",
+        hasUnsavedChanges: nil,
         saveSupported: false,
         openSupported: false,
         createSupported: false,
@@ -53,6 +54,7 @@ final class XLightsSessionViewModel {
                 frameMs: session.frameMs,
                 dirtyState: session.dirtyState,
                 dirtyStateReason: session.dirtyStateReason,
+                hasUnsavedChanges: session.hasUnsavedChanges,
                 saveSupported: session.saveSupported,
                 openSupported: session.openSupported,
                 createSupported: session.createSupported,
@@ -68,14 +70,14 @@ final class XLightsSessionViewModel {
         refresh()
     }
 
-    func openSequence(filePath: String, saveBeforeSwitch: Bool = true) async throws -> String {
+    func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String {
         let summary = try await service.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
         setLastSaveSummary(summary)
         refresh()
         return summary
     }
 
-    func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool = true) async throws -> String {
+    func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String {
         let summary = try await service.createSequence(
             filePath: filePath,
             mediaFile: mediaFile,
@@ -86,6 +88,19 @@ final class XLightsSessionViewModel {
         setLastSaveSummary(summary)
         refresh()
         return summary
+    }
+
+    func shouldSaveBeforeSwitch(policy: String) -> Bool {
+        guard snapshot.isSequenceOpen else { return false }
+        let normalized = policy.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch normalized {
+        case "discard-unsaved":
+            return false
+        case "save-if-needed":
+            return snapshot.hasUnsavedChanges == true
+        default:
+            return snapshot.hasUnsavedChanges == true
+        }
     }
 
     private func setLastSaveSummary(_ summary: String) {
@@ -104,6 +119,7 @@ final class XLightsSessionViewModel {
             frameMs: snapshot.frameMs,
             dirtyState: snapshot.dirtyState,
             dirtyStateReason: snapshot.dirtyStateReason,
+            hasUnsavedChanges: snapshot.hasUnsavedChanges,
             saveSupported: snapshot.saveSupported,
             openSupported: snapshot.openSupported,
             createSupported: snapshot.createSupported,

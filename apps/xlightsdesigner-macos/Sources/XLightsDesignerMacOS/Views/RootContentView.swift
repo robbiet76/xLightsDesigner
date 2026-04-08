@@ -20,7 +20,11 @@ struct RootContentView: View {
                     case .design:
                         DesignScreenView(model: model.designScreenModel)
                     case .sequence:
-                        SequenceScreenView(model: model.sequenceScreenModel, xlightsSessionModel: model.xlightsSessionModel)
+                        SequenceScreenView(
+                            model: model.sequenceScreenModel,
+                            xlightsSessionModel: model.xlightsSessionModel,
+                            sequenceSwitchUnsavedPolicy: model.settingsScreenModel.screenModel.safetyConfig.sequenceSwitchUnsavedPolicy
+                        )
                     case .review:
                         ReviewScreenView(model: model.reviewScreenModel)
                     case .history:

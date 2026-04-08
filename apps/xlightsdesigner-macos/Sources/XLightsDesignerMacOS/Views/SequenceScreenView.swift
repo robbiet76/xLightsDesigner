@@ -4,6 +4,7 @@ import AppKit
 struct SequenceScreenView: View {
     @Bindable var model: SequenceScreenViewModel
     @Bindable var xlightsSessionModel: XLightsSessionViewModel
+    let sequenceSwitchUnsavedPolicy: String
 
     var body: some View {
         GeometryReader { proxy in
@@ -119,7 +120,8 @@ struct SequenceScreenView: View {
                         let filePath = model.preferredSequencePath()
                         guard !filePath.isEmpty else { return }
                         Task {
-                            _ = try? await xlightsSessionModel.openSequence(filePath: filePath)
+                            let saveBeforeSwitch = xlightsSessionModel.shouldSaveBeforeSwitch(policy: sequenceSwitchUnsavedPolicy)
+                            _ = try? await xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
                             model.refresh()
                         }
                     }
@@ -129,11 +131,13 @@ struct SequenceScreenView: View {
                         let filePath = model.preferredSequencePath()
                         guard !filePath.isEmpty else { return }
                         Task {
+                            let saveBeforeSwitch = xlightsSessionModel.shouldSaveBeforeSwitch(policy: sequenceSwitchUnsavedPolicy)
                             _ = try? await xlightsSessionModel.createSequence(
                                 filePath: filePath,
                                 mediaFile: model.preferredMediaFile(),
                                 durationMs: nil,
-                                frameMs: nil
+                                frameMs: nil,
+                                saveBeforeSwitch: saveBeforeSwitch
                             )
                             model.refresh()
                         }

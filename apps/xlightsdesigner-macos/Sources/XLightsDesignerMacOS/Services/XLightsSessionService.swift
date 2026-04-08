@@ -50,6 +50,12 @@ struct LocalXLightsSessionService: XLightsSessionService {
             "media.getCurrent"
         ]
 
+        let hasUnsavedChanges = optionalBool(settingsData["hasUnsavedChanges"])
+        let dirtyState = hasUnsavedChanges == nil ? "unknown" : (hasUnsavedChanges == true ? "dirty" : "clean")
+        let dirtyReason = hasUnsavedChanges == nil
+            ? "Owned xLights API does not currently expose unsaved sequence state."
+            : (hasUnsavedChanges == true ? "Current xLights sequence has unsaved changes." : "Current xLights sequence is saved.")
+
         return XLightsSessionSnapshotModel(
             runtimeState: runtimeState,
             supportedCommands: supportedCommands,
@@ -63,8 +69,9 @@ struct LocalXLightsSessionService: XLightsSessionService {
             sequenceType: string(settingsData["sequenceType"], fallback: "unknown"),
             durationMs: int(settingsData["durationMs"]),
             frameMs: int(settingsData["frameMs"]),
-            dirtyState: "unknown",
-            dirtyStateReason: "Owned xLights API does not currently expose unsaved sequence state.",
+            dirtyState: dirtyState,
+            dirtyStateReason: dirtyReason,
+            hasUnsavedChanges: hasUnsavedChanges,
             saveSupported: true,
             openSupported: true,
             createSupported: true,
@@ -147,11 +154,24 @@ struct LocalXLightsSessionService: XLightsSessionService {
 
     private func postQueuedJSON(to path: String, body: [String: Any], command: String) async throws -> [String: Any] {
         let json = try await postJSON(to: path, body: body)
-        let jobID = string(dictionary(json["data"])["jobId"])
-        guard !jobID.isEmpty else {
-            throw XLightsSessionServiceError.invalidResponse("xLights \(command) returned no jobId.")
+        if bool(json["ok"]) == false {
+            let error = dictionary(json["error"])
+            let code = string(error["code"], fallback: "XLIGHTS_REQUEST_FAILED")
+            let message = string(error["message"], fallback: "\(command) failed")
+            throw XLightsSessionServiceError.invalidResponse("\(command) failed (\(code)): \(message)")
         }
-        return try await waitForOwnedJobResult(jobID: jobID, command: command)
+
+        let data = dictionary(json["data"])
+        let jobID = string(data["jobId"])
+        if !jobID.isEmpty {
+            return try await waitForOwnedJobResult(jobID: jobID, command: command)
+        }
+
+        if !data.isEmpty {
+            return json
+        }
+
+        throw XLightsSessionServiceError.invalidResponse("xLights \(command) returned no data.")
     }
 
     private func waitForOwnedJobResult(jobID: String, command: String, attempts: Int = 180, delayMs: UInt64 = 500) async throws -> [String: Any] {
@@ -190,6 +210,15 @@ struct LocalXLightsSessionService: XLightsSessionService {
     private func bool(_ value: Any?) -> Bool {
         if let b = value as? Bool { return b }
         return String(describing: value ?? "").lowercased() == "true"
+    }
+
+    private func optionalBool(_ value: Any?) -> Bool? {
+        if value == nil { return nil }
+        if let b = value as? Bool { return b }
+        let text = String(describing: value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if text == "true" { return true }
+        if text == "false" { return false }
+        return nil
     }
 
     private func int(_ value: Any?) -> Int {

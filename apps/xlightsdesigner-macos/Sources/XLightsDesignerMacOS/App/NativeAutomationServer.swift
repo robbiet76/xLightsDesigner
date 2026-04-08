@@ -128,7 +128,9 @@ final class NativeAutomationServer: @unchecked Sendable {
                 return .error(statusCode: 400, message: "Missing filePath.")
             }
             do {
-                let summary = try await model.xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: true)
+                let policy = model.settingsScreenModel.screenModel.safetyConfig.sequenceSwitchUnsavedPolicy
+                let saveBeforeSwitch = model.xlightsSessionModel.shouldSaveBeforeSwitch(policy: policy)
+                let summary = try await model.xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
                 return .json(200, body: ["ok": true, "summary": summary])
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
@@ -142,12 +144,14 @@ final class NativeAutomationServer: @unchecked Sendable {
             let durationMs = payload["durationMs"] as? Int
             let frameMs = payload["frameMs"] as? Int
             do {
+                let policy = model.settingsScreenModel.screenModel.safetyConfig.sequenceSwitchUnsavedPolicy
+                let saveBeforeSwitch = model.xlightsSessionModel.shouldSaveBeforeSwitch(policy: policy)
                 let summary = try await model.xlightsSessionModel.createSequence(
                     filePath: filePath,
                     mediaFile: mediaFile,
                     durationMs: durationMs,
                     frameMs: frameMs,
-                    saveBeforeSwitch: true
+                    saveBeforeSwitch: saveBeforeSwitch
                 )
                 return .json(200, body: ["ok": true, "summary": summary])
             } catch {
@@ -316,6 +320,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "frameMs": snapshot.frameMs,
             "dirtyState": snapshot.dirtyState,
             "dirtyStateReason": snapshot.dirtyStateReason,
+            "hasUnsavedChanges": snapshot.hasUnsavedChanges ?? NSNull(),
             "saveSupported": snapshot.saveSupported,
             "openSupported": snapshot.openSupported,
             "createSupported": snapshot.createSupported,

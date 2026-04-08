@@ -47,7 +47,7 @@ function listXLightsProcesses() {
         command: line.slice(firstSpace + 1).trim()
       };
     })
-    .filter((entry) => entry.command.includes('xLights.app/Contents/MacOS/xLights'));
+    .filter((entry) => entry.command === binary);
 }
 
 async function waitForNoXLightsProcesses(timeoutMs = 15000) {
@@ -68,9 +68,8 @@ async function waitForSingleOwnedProcess(timeoutMs = 15000) {
   const started = Date.now();
   for (;;) {
     const processes = listXLightsProcesses();
-    const owned = processes.filter((entry) => entry.command === binary);
-    if (owned.length === 1 && processes.length === 1) {
-      return owned[0];
+    if (processes.length === 1) {
+      return processes[0];
     }
     if (Date.now() - started > timeoutMs) {
       throw new Error(`Timed out waiting for a single owned xLights process: ${JSON.stringify(processes)}`);
