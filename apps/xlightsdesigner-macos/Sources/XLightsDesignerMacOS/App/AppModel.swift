@@ -94,13 +94,108 @@ final class AppModel {
     }
 
     func assistantContext() -> AssistantContextModel {
-        AssistantContextModel(
+        let layoutRows = layoutScreenModel.screenModel.rows
+        let taggedTargetCount = layoutRows.filter { !$0.tagDefinitions.isEmpty }.count
+        let allTagNames = Set(layoutScreenModel.screenModel.tagDefinitions.map(\.name))
+        let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows)
+        let selectedLayoutTarget: String
+        let selectedLayoutTags: [String]
+        switch layoutScreenModel.screenModel.selectedTarget {
+        case let .selected(target):
+            selectedLayoutTarget = target.identity
+            selectedLayoutTags = target.assignedTags.map(\.name)
+        case let .multi(selection):
+            selectedLayoutTarget = "\(selection.selectionCount) targets selected"
+            selectedLayoutTags = selection.commonTags.map(\.name)
+        default:
+            selectedLayoutTarget = ""
+            selectedLayoutTags = []
+        }
+        let xlights = xlightsSessionModel.snapshot
+        let sequence = sequenceScreenModel.screenModel
+        return AssistantContextModel(
             activeProjectName: workspace.activeProject?.projectName ?? "No Project",
             workflowName: selectedWorkflow.rawValue,
             route: workflowRoute(),
             focusedSummary: focusedSummary(),
             activeSequenceLoaded: sequenceScreenModel.screenModel.hasLiveSequence,
-            planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode
+            planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode,
+            showFolder: workspace.activeProject?.showFolder ?? "",
+            layoutTargetCount: layoutRows.count,
+            layoutTaggedTargetCount: taggedTargetCount,
+            layoutTagNames: allTagNames.sorted(),
+            selectedLayoutTarget: selectedLayoutTarget,
+            selectedLayoutTags: selectedLayoutTags.sorted(),
+            displayDiscoveryCandidates: discoveryCandidates,
+            xlightsSequenceOpen: xlights.isSequenceOpen,
+            xlightsSequencePath: xlights.sequencePath,
+            xlightsMediaFile: xlights.mediaFile,
+            xlightsDirtyState: xlights.dirtyState,
+            projectShowMatches: xlights.projectShowMatches,
+            sequenceItemCount: sequence.overview.itemCount,
+            sequenceWarningCount: sequence.overview.warningCount,
+            sequenceValidationIssueCount: sequence.overview.validationIssueCount,
+            timingReviewNeeded: sequence.timingReview.needsReview
         )
+    }
+
+    private func buildDisplayDiscoveryCandidates(from rows: [LayoutRowModel]) -> [[String: String]] {
+        let candidates = rows
+            .map { row in
+                (
+                    row: row,
+                    score: displayDiscoveryScore(for: row)
+                )
+            }
+            .filter { $0.score > 0 }
+            .sorted { lhs, rhs in
+                if lhs.score != rhs.score { return lhs.score > rhs.score }
+                return lhs.row.targetName.localizedCaseInsensitiveCompare(rhs.row.targetName) == .orderedAscending
+            }
+            .prefix(8)
+
+        return candidates.map { candidate in
+            [
+                "name": candidate.row.targetName,
+                "type": candidate.row.targetType,
+                "reason": displayDiscoveryReason(for: candidate.row)
+            ]
+        }
+    }
+
+    private func displayDiscoveryScore(for row: LayoutRowModel) -> Int {
+        let name = row.targetName.lowercased()
+        let type = row.targetType.lowercased()
+        var score = 0
+        let keywords = [
+            "snowman", "santa", "tree", "mega", "star", "matrix",
+            "arch", "window", "roof", "house", "flake", "snow",
+            "cane", "candy", "gift", "present", "spinner", "wreath"
+        ]
+        for keyword in keywords where name.contains(keyword) {
+            score += 4
+        }
+        if type.contains("modelgroup") { score += 2 }
+        if type.contains("submodel") { score += 1 }
+        if row.submodelCount > 0 { score += 1 }
+        if row.targetName.count > 2 { score += 1 }
+        return score
+    }
+
+    private func displayDiscoveryReason(for row: LayoutRowModel) -> String {
+        let name = row.targetName.lowercased()
+        if name.contains("snowman") || name.contains("santa") {
+            return "named prop that may have character significance"
+        }
+        if name.contains("tree") || name.contains("mega") || name.contains("star") || name.contains("matrix") {
+            return "large or likely focal display structure"
+        }
+        if name.contains("arch") || name.contains("roof") || name.contains("window") {
+            return "architectural or repeating structure that may need grouping guidance"
+        }
+        if name.contains("cane") || name.contains("candy") || name.contains("gift") || name.contains("present") {
+            return "named themed prop that may deserve explicit role guidance"
+        }
+        return "name or structure suggests it may be worth clarifying early"
     }
 }

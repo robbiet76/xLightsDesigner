@@ -22,6 +22,70 @@ struct AssistantContextModel {
     let focusedSummary: String
     let activeSequenceLoaded: Bool
     let planOnlyMode: Bool
+    let showFolder: String
+    let layoutTargetCount: Int
+    let layoutTaggedTargetCount: Int
+    let layoutTagNames: [String]
+    let selectedLayoutTarget: String
+    let selectedLayoutTags: [String]
+    let displayDiscoveryCandidates: [[String: String]]
+    let xlightsSequenceOpen: Bool
+    let xlightsSequencePath: String
+    let xlightsMediaFile: String
+    let xlightsDirtyState: String
+    let projectShowMatches: Bool
+    let sequenceItemCount: Int
+    let sequenceWarningCount: Int
+    let sequenceValidationIssueCount: Int
+    let timingReviewNeeded: Bool
+
+    init(
+        activeProjectName: String,
+        workflowName: String,
+        route: String,
+        focusedSummary: String,
+        activeSequenceLoaded: Bool,
+        planOnlyMode: Bool,
+        showFolder: String = "",
+        layoutTargetCount: Int = 0,
+        layoutTaggedTargetCount: Int = 0,
+        layoutTagNames: [String] = [],
+        selectedLayoutTarget: String = "",
+        selectedLayoutTags: [String] = [],
+        displayDiscoveryCandidates: [[String: String]] = [],
+        xlightsSequenceOpen: Bool = false,
+        xlightsSequencePath: String = "",
+        xlightsMediaFile: String = "",
+        xlightsDirtyState: String = "unknown",
+        projectShowMatches: Bool = false,
+        sequenceItemCount: Int = 0,
+        sequenceWarningCount: Int = 0,
+        sequenceValidationIssueCount: Int = 0,
+        timingReviewNeeded: Bool = false
+    ) {
+        self.activeProjectName = activeProjectName
+        self.workflowName = workflowName
+        self.route = route
+        self.focusedSummary = focusedSummary
+        self.activeSequenceLoaded = activeSequenceLoaded
+        self.planOnlyMode = planOnlyMode
+        self.showFolder = showFolder
+        self.layoutTargetCount = layoutTargetCount
+        self.layoutTaggedTargetCount = layoutTaggedTargetCount
+        self.layoutTagNames = layoutTagNames
+        self.selectedLayoutTarget = selectedLayoutTarget
+        self.selectedLayoutTags = selectedLayoutTags
+        self.displayDiscoveryCandidates = displayDiscoveryCandidates
+        self.xlightsSequenceOpen = xlightsSequenceOpen
+        self.xlightsSequencePath = xlightsSequencePath
+        self.xlightsMediaFile = xlightsMediaFile
+        self.xlightsDirtyState = xlightsDirtyState
+        self.projectShowMatches = projectShowMatches
+        self.sequenceItemCount = sequenceItemCount
+        self.sequenceWarningCount = sequenceWarningCount
+        self.sequenceValidationIssueCount = sequenceValidationIssueCount
+        self.timingReviewNeeded = timingReviewNeeded
+    }
 
     func asPayload() -> [String: Any] {
         [
@@ -30,7 +94,29 @@ struct AssistantContextModel {
             "route": route,
             "focusedSummary": focusedSummary,
             "activeSequenceLoaded": activeSequenceLoaded,
-            "planOnlyMode": planOnlyMode
+            "planOnlyMode": planOnlyMode,
+            "showFolder": showFolder,
+            "layout": [
+                "targetCount": layoutTargetCount,
+                "taggedTargetCount": layoutTaggedTargetCount,
+                "tagNames": layoutTagNames,
+                "selectedTarget": selectedLayoutTarget,
+                "selectedTargetTags": selectedLayoutTags,
+                "displayDiscoveryCandidates": displayDiscoveryCandidates
+            ],
+            "xlights": [
+                "sequenceOpen": xlightsSequenceOpen,
+                "sequencePath": xlightsSequencePath,
+                "mediaFile": xlightsMediaFile,
+                "dirtyState": xlightsDirtyState,
+                "projectShowMatches": projectShowMatches
+            ],
+            "sequence": [
+                "itemCount": sequenceItemCount,
+                "warningCount": sequenceWarningCount,
+                "validationIssueCount": sequenceValidationIssueCount,
+                "timingReviewNeeded": timingReviewNeeded
+            ]
         ]
     }
 }

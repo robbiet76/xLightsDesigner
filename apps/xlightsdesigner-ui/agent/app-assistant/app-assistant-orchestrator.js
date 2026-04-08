@@ -63,7 +63,10 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
       /(main sections|section|first real lift|first lift|beats|bars|tempo|lyrics|chords|analysis|analyz)/.test(userText) ||
       (/\b(where does|tell me where|what parts)\b/.test(userText) && /\b(chorus|verse|bridge|intro|outro|lift|hold back|open up)\b/.test(userText))
     );
-  if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(userText)) {
+  if (/(display|layout|tag|tags|models|props)/.test(userText)) {
+    return "designer_dialog";
+  }
+  if (/(show folder|project root|media path|open project|save project|project setup)/.test(userText)) {
     return "setup_help";
   }
   if (addressedAudioQuestion) {
@@ -90,7 +93,10 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   if (/(sequence|sequenc|timing track|xlights apply|apply)/.test(userText)) {
     return "sequence_agent";
   }
-  if (/(show folder|project root|media path|open project|save project|project setup|metadata)/.test(assistantText)) {
+  if (/(display|layout|tag|tags|models|props)/.test(assistantText)) {
+    return "designer_dialog";
+  }
+  if (/(show folder|project root|media path|open project|save project|project setup)/.test(assistantText)) {
     return "setup_help";
   }
   if (/(analyz|analysis|tempo|beats|bars|lyrics|chords|re-analy|reanaly)/.test(assistantText)) {

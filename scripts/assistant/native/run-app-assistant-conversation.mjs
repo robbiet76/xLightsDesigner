@@ -4,6 +4,10 @@ import path from 'node:path';
 import {
   executeAppAssistantConversation
 } from '../../../apps/xlightsdesigner-ui/agent/app-assistant/app-assistant-orchestrator.js';
+import {
+  buildDisplayDiscoveryGuidance,
+  shouldStartDisplayDiscovery
+} from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/display-discovery.js';
 
 const OPENAI_MODEL = 'gpt-5.4';
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
@@ -123,8 +127,11 @@ function inferProposalIntent({ userMessage = '', assistantMessage = '', context 
   return true;
 }
 
-function buildAgentSystemPrompt(context = {}) {
+function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const c = context && typeof context === 'object' ? context : {};
+  const discoveryGuidance = shouldStartDisplayDiscovery({ context: c, userMessage })
+    ? buildDisplayDiscoveryGuidance(c)
+    : "";
   return [
     'You are the xLightsDesigner App Assistant.',
     'You are the unified conversational shell for the whole app, not just the design specialist.',
@@ -136,12 +143,20 @@ function buildAgentSystemPrompt(context = {}) {
     'Default to making bounded assumptions and moving the workflow forward when the request is broad but still usable.',
     'Do not require the user to specify low-level xLights effects unless they are expressing a concrete constraint.',
     'Do not invent specific effect names that are not supplied by the user or present in the local context.',
+    'Do not invent specific models, tags, layout groups, or current sequence contents that are not explicitly present in Context.',
+    'If Context does not provide enough grounded detail about tags, models, or live effects, say so plainly and work from the confirmed facts only.',
+    'Treat xLights session facts in Context as authoritative for what is open, saved, or available right now.',
+    'Do not claim that models are tagged, effects are already applied, or timing is aligned unless Context explicitly supports that claim.',
+    'Tag names alone do not prove what models they are assigned to, how many models they cover, or what they should be used for. Do not treat tag names as meaningful model groups unless Context explicitly says so.',
+    'Do not infer sequence quality, musical alignment, or effect coverage from low warning counts, low item counts, or the absence of validation issues. State those limits explicitly.',
+    'When Context only confirms counts and status, summarize counts and status. Do not upgrade them into claims about artistic quality or existing effect structure.',
     'When relevant, mention concrete next actions you can perform in the app.',
     'Keep specialist boundaries intact: audio analysis is media-only, design proposals are review-first, and sequence execution must remain explicit.',
     'For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.',
     'Do not output JSON unless explicitly asked by the user.',
+    discoveryGuidance,
     `Context: ${JSON.stringify(c)}`
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 async function callOpenAIResponses({ cfg, systemPrompt = '', userMessage = '', messages = [], previousResponseId = '', maxOutputTokens = 900 } = {}) {
@@ -194,7 +209,7 @@ async function runAgentConversation(payload = {}) {
   const previousResponseId = String(payload?.previousResponseId || '').trim();
   const response = await callOpenAIResponses({
     cfg,
-    systemPrompt: buildAgentSystemPrompt(context),
+    systemPrompt: buildAgentSystemPrompt(context, userMessage),
     userMessage,
     messages: payload?.messages || [],
     previousResponseId,

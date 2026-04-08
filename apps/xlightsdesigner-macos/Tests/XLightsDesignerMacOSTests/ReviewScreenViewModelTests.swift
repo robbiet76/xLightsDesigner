@@ -9,6 +9,51 @@ private struct StubReviewExecutionService: ReviewExecutionService, Sendable {
     }
 }
 
+private struct StubXLightsSessionService: XLightsSessionService, Sendable {
+    func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel {
+        XLightsSessionSnapshotModel(
+            runtimeState: "ready",
+            supportedCommands: [],
+            isReachable: true,
+            isSequenceOpen: true,
+            sequencePath: "/tmp/HolidayRoad.xsq",
+            revision: "rev-1",
+            mediaFile: "",
+            showDirectory: projectShowFolder,
+            projectShowMatches: true,
+            sequenceType: "Media",
+            durationMs: 0,
+            frameMs: 25,
+            dirtyState: "clean",
+            dirtyStateReason: "",
+            hasUnsavedChanges: false,
+            saveSupported: true,
+            renderSupported: true,
+            openSupported: true,
+            createSupported: true,
+            closeSupported: false,
+            lastSaveSummary: "",
+            lastRenderSummary: ""
+        )
+    }
+
+    func saveCurrentSequence() async throws -> String {
+        "Saved xLights sequence: /tmp/HolidayRoad.xsq"
+    }
+
+    func renderCurrentSequence() async throws -> String {
+        "Rendered xLights sequence: /tmp/HolidayRoad.xsq"
+    }
+
+    func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String {
+        "Opened xLights sequence: \(filePath)"
+    }
+
+    func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String {
+        "Created xLights sequence: \(filePath)"
+    }
+}
+
 @MainActor
 @Test func reviewApplyPublishesSuccessBanner() async throws {
     let workspace = ProjectWorkspace()
@@ -39,15 +84,18 @@ private struct StubReviewExecutionService: ReviewExecutionService, Sendable {
                 applyPath: "owned_batch_plan",
                 sequencePath: "/tmp/HolidayRoad.xsq"
             )
-        }
+        },
+        xlightsSessionService: StubXLightsSessionService()
     )
 
     model.applyPendingWork()
-    try await Task.sleep(for: .milliseconds(80))
+    try await Task.sleep(for: .milliseconds(120))
 
     #expect(model.isApplying == false)
     #expect(model.transientBanner?.state == .ready)
     #expect(model.transientBanner?.text.contains("Applied 12 commands") == true)
+    #expect(model.transientBanner?.text.contains("Rendered xLights sequence") == true)
+    #expect(model.transientBanner?.text.contains("Saved xLights sequence") == true)
 }
 
 @MainActor
