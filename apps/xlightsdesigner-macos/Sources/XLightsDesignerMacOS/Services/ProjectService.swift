@@ -124,21 +124,7 @@ struct LocalProjectService: ProjectService {
     private func readProject(from filePath: String) throws -> ActiveProjectModel {
         let data = try Data(contentsOf: URL(fileURLWithPath: filePath))
         let doc = try JSONDecoder().decode(ProjectDocument.self, from: data)
-        let snapshot = doc.snapshot ?? ProjectSnapshot(
-            projectMetadataRoot: AppEnvironment.canonicalAppRoot,
-            projectFilePath: filePath,
-            route: "project",
-            mediaPath: doc.mediaPath,
-            projectConcept: "",
-            sequencePathInput: "",
-            audioPathInput: "",
-            recentSequences: [],
-            projectCreatedAt: doc.createdAt,
-            projectUpdatedAt: doc.updatedAt,
-            ui: nil,
-            flags: nil,
-            safety: nil
-        )
+        let snapshot = doc.snapshot ?? defaultSnapshot(projectFilePath: filePath, mediaPath: doc.mediaPath, createdAt: doc.createdAt, updatedAt: doc.updatedAt)
         return ActiveProjectModel(
             id: doc.id,
             projectName: doc.projectName,
@@ -148,7 +134,7 @@ struct LocalProjectService: ProjectService {
             appRootPath: AppEnvironment.canonicalAppRoot,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
-            snapshot: snapshot.asDictionary()
+            snapshot: snapshot
         )
     }
 
@@ -186,33 +172,53 @@ struct LocalProjectService: ProjectService {
         existing: [String: AnyCodable] = [:],
         createdAt: String? = nil,
         updatedAt: String? = nil
-    ) -> ProjectSnapshot {
-        let route = (existing["route"]?.value as? String) ?? "project"
-        let projectConcept = (existing["projectConcept"]?.value as? String) ?? ""
-        let sequencePathInput = (existing["sequencePathInput"]?.value as? String) ?? ""
-        let audioPathInput = (existing["audioPathInput"]?.value as? String) ?? ""
-        let recentSequences = (existing["recentSequences"]?.value as? [Any])?.compactMap { $0 as? String } ?? []
+    ) -> [String: AnyCodable] {
         let resolvedCreatedAt = createdAt ?? isoNow()
         let resolvedUpdatedAt = updatedAt ?? isoNow()
-        return ProjectSnapshot(
-            projectMetadataRoot: AppEnvironment.canonicalAppRoot,
+        var snapshot = existing
+        snapshot["projectMetadataRoot"] = AnyCodable(AppEnvironment.canonicalAppRoot)
+        snapshot["projectFilePath"] = AnyCodable(projectFilePath)
+        snapshot["route"] = AnyCodable((existing["route"]?.value as? String) ?? "project")
+        snapshot["mediaPath"] = AnyCodable(mediaPath)
+        snapshot["projectConcept"] = AnyCodable((existing["projectConcept"]?.value as? String) ?? "")
+        snapshot["sequencePathInput"] = AnyCodable((existing["sequencePathInput"]?.value as? String) ?? "")
+        snapshot["audioPathInput"] = AnyCodable((existing["audioPathInput"]?.value as? String) ?? "")
+        snapshot["recentSequences"] = AnyCodable((existing["recentSequences"]?.value as? [Any]) ?? [])
+        snapshot["projectCreatedAt"] = AnyCodable(resolvedCreatedAt)
+        snapshot["projectUpdatedAt"] = AnyCodable(resolvedUpdatedAt)
+
+        let existingUI = (existing["ui"]?.value as? [String: Any]) ?? [:]
+        var ui = existingUI
+        if ui["sequenceMode"] == nil {
+            ui["sequenceMode"] = "existing"
+        }
+        snapshot["ui"] = AnyCodable(ui)
+
+        let existingFlags = (existing["flags"]?.value as? [String: Any]) ?? [:]
+        var flags = existingFlags
+        if flags["planOnlyMode"] == nil {
+            flags["planOnlyMode"] = false
+        }
+        snapshot["flags"] = AnyCodable(flags)
+
+        let existingSafety = (existing["safety"]?.value as? [String: Any]) ?? [:]
+        var safety = existingSafety
+        if safety["applyConfirmMode"] == nil { safety["applyConfirmMode"] = "large-only" }
+        if safety["largeChangeThreshold"] == nil { safety["largeChangeThreshold"] = 60 }
+        if safety["sequenceSwitchUnsavedPolicy"] == nil { safety["sequenceSwitchUnsavedPolicy"] = "discard-unsaved" }
+        if safety["agentApplyRollout"] == nil { safety["agentApplyRollout"] = "full" }
+        snapshot["safety"] = AnyCodable(safety)
+        return snapshot
+    }
+
+    private func defaultSnapshot(projectFilePath: String, mediaPath: String, createdAt: String, updatedAt: String) -> [String: AnyCodable] {
+        buildSnapshot(
+            projectName: "",
             projectFilePath: projectFilePath,
-            route: route,
             mediaPath: mediaPath,
-            projectConcept: projectConcept,
-            sequencePathInput: sequencePathInput,
-            audioPathInput: audioPathInput,
-            recentSequences: recentSequences,
-            projectCreatedAt: resolvedCreatedAt,
-            projectUpdatedAt: resolvedUpdatedAt,
-            ui: ["sequenceMode": AnyCodable("existing")],
-            flags: ["planOnlyMode": AnyCodable(false)],
-            safety: [
-                "applyConfirmMode": AnyCodable("large-only"),
-                "largeChangeThreshold": AnyCodable(60),
-                "sequenceSwitchUnsavedPolicy": AnyCodable("discard-unsaved"),
-                "agentApplyRollout": AnyCodable("full")
-            ]
+            existing: [:],
+            createdAt: createdAt,
+            updatedAt: updatedAt
         )
     }
 
@@ -273,39 +279,5 @@ private struct ProjectDocument: Codable {
     let id: String
     let createdAt: String
     let updatedAt: String
-    let snapshot: ProjectSnapshot?
-}
-
-private struct ProjectSnapshot: Codable {
-    let projectMetadataRoot: String
-    let projectFilePath: String
-    let route: String
-    let mediaPath: String
-    let projectConcept: String?
-    let sequencePathInput: String?
-    let audioPathInput: String?
-    let recentSequences: [String]?
-    let projectCreatedAt: String
-    let projectUpdatedAt: String
-    let ui: [String: AnyCodable]?
-    let flags: [String: AnyCodable]?
-    let safety: [String: AnyCodable]?
-
-    func asDictionary() -> [String: AnyCodable] {
-        [
-            "projectMetadataRoot": AnyCodable(projectMetadataRoot),
-            "projectFilePath": AnyCodable(projectFilePath),
-            "route": AnyCodable(route),
-            "mediaPath": AnyCodable(mediaPath),
-            "projectConcept": AnyCodable(projectConcept ?? ""),
-            "sequencePathInput": AnyCodable(sequencePathInput ?? ""),
-            "audioPathInput": AnyCodable(audioPathInput ?? ""),
-            "recentSequences": AnyCodable(recentSequences ?? []),
-            "projectCreatedAt": AnyCodable(projectCreatedAt),
-            "projectUpdatedAt": AnyCodable(projectUpdatedAt),
-            "ui": AnyCodable((ui ?? [:]).mapValues(\.value)),
-            "flags": AnyCodable((flags ?? [:]).mapValues(\.value)),
-            "safety": AnyCodable((safety ?? [:]).mapValues(\.value))
-        ]
-    }
+    let snapshot: [String: AnyCodable]?
 }

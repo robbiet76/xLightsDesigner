@@ -41,7 +41,7 @@ struct AssistantWindowView: View {
             LazyVStack(alignment: .leading, spacing: 12) {
                 ForEach(model.messages) { message in
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(message.role == .assistant ? "Assistant" : "You")
+                        headerText(for: message)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Text(message.text)
@@ -79,59 +79,19 @@ struct AssistantWindowView: View {
     }
 
     private func currentContext() -> AssistantContextModel {
-        AssistantContextModel(
-            activeProjectName: appModel.workspace.activeProject?.projectName ?? "No Project",
-            workflowName: appModel.selectedWorkflow.rawValue,
-            route: workflowRoute(),
-            focusedSummary: focusedSummary(),
-            activeSequenceLoaded: false,
-            planOnlyMode: false
-        )
+        appModel.assistantContext()
     }
 
-    private func workflowRoute() -> String {
-        switch appModel.selectedWorkflow {
-        case .project:
-            return "project"
-        case .layout:
-            return "layout"
-        case .audio:
-            return "audio"
-        case .design:
-            return "design"
-        case .sequence:
-            return "sequence"
-        case .review:
-            return "review"
-        case .history:
-            return "history"
+    private func headerText(for message: AssistantMessageModel) -> Text {
+        if message.role == .user {
+            return Text("You")
         }
-    }
-
-    private func focusedSummary() -> String {
-        switch appModel.selectedWorkflow {
-        case .project:
-            return appModel.workspace.activeProject?.projectFilePath ?? "Project summary"
-        case .layout:
-            switch appModel.layoutScreenModel.screenModel.selectedTarget {
-            case let .selected(target):
-                return target.identity
-            default:
-                return "No target selected"
-            }
-        case .audio:
-            switch appModel.audioScreenModel.currentResult {
-            case let .track(track):
-                return track.displayName
-            case let .batchComplete(batch):
-                return batch.batchLabel
-            case let .batchRunning(batch):
-                return batch.batchLabel
-            default:
-                return "No track selected"
-            }
-        default:
-            return "No focused item"
+        let name = (message.displayName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
+            ? message.displayName!
+            : "Assistant"
+        if let route = message.routeDecision, route.isEmpty == false, route != message.handledBy {
+            return Text("\(name) • \(route)")
         }
+        return Text(name)
     }
 }

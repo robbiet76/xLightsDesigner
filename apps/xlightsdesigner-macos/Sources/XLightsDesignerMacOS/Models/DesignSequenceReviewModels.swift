@@ -76,12 +76,68 @@ struct SequenceDetailPaneModel: Sendable {
     let technicalWarnings: [String]
 }
 
+struct SequenceOverviewModel: Sendable {
+    let state: PendingWorkState
+    let activeSequenceSummary: String
+    let translationSource: String
+    let itemCount: Int
+    let commandCount: Int
+    let targetCount: Int
+    let sectionCount: Int
+    let warningCount: Int
+    let validationIssueCount: Int
+    let explanationText: String
+}
+
+struct SequenceInventoryRowModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let designLabel: String
+    let kind: String
+    let timing: String
+    let section: String
+    let target: String
+    let level: String
+    let summary: String
+    let effects: Int
+}
+
+struct SequenceValidationIssueModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let severity: PendingWorkState
+    let code: String
+    let message: String
+}
+
+struct SequenceTimingReviewRowModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let trackName: String
+    let status: String
+    let coverage: String
+    let capturedAt: String
+    let diffSummary: String
+    let canAcceptReview: Bool
+}
+
+struct SequenceTimingReviewSummaryModel: Sendable {
+    let status: String
+    let summaryText: String
+    let trackCount: Int
+    let needsReview: Bool
+    let rows: [SequenceTimingReviewRowModel]
+}
+
 struct SequenceScreenModel: Sendable {
     let title: String
     let subtitle: String
+    let hasLiveSequence: Bool
+    let planOnlyMode: Bool
+    let overview: SequenceOverviewModel
     let activeSequence: SequenceContextBandModel
     let translationSummary: SequenceTranslationSummaryModel
     let detail: SequenceDetailPaneModel
+    let validationIssues: [SequenceValidationIssueModel]
+    let timingReview: SequenceTimingReviewSummaryModel
+    let inventoryRows: [SequenceInventoryRowModel]
     let banners: [WorkflowBannerModel]
 }
 

@@ -1,5 +1,18 @@
 import Foundation
 
+struct PendingEffectPlacement: Sendable {
+    let designId: String
+    let designRevision: Int
+    let designAuthor: String
+    let targetId: String
+    let layerIndex: Int
+    let effectName: String
+    let trackName: String
+    let sectionLabel: String
+    let startMs: Int
+    let endMs: Int
+}
+
 struct PendingWorkReadModel: Sendable {
     let projectName: String
     let activeSequenceName: String
@@ -32,6 +45,12 @@ struct PendingWorkReadModel: Sendable {
     let musicSectionLabels: [String]
     let musicHoldMoments: [String]
     let artifactTimestampSummary: String
+    let translationSource: String
+    let proposalSectionCount: Int
+    let proposalTargetCount: Int
+    let proposalCommandCount: Int
+    let proposalShouldUseFullSongStructureTrack: Bool
+    let proposalEffectPlacements: [PendingEffectPlacement]
 }
 
 protocol PendingWorkService: Sendable {
@@ -74,6 +93,10 @@ struct LocalPendingWorkService: PendingWorkService {
         let directorPreferences = latestIntent?["directorPreferences"] as? [String: Any]
         let layoutModelCount = int(metadata?["modelCount"])
         let layoutGroupCount = int(metadata?["groupCount"])
+        let effectPlacements = buildEffectPlacements(executionPlan?["effectPlacements"])
+        let proposalScope = latestProposal?["scope"] as? [String: Any]
+        let proposalScopeSections = arrayOfStrings(proposalScope?["sections"])
+        let proposalScopeTargets = arrayOfStrings(proposalScope?["targetIds"])
 
         let timestamps = [
             string(latestBrief?["createdAt"]),
@@ -115,7 +138,13 @@ struct LocalPendingWorkService: PendingWorkService {
             layoutGroupCount: layoutGroupCount,
             musicSectionLabels: sectionArc,
             musicHoldMoments: holdMoments,
-            artifactTimestampSummary: timestamps.last ?? project.updatedAt
+            artifactTimestampSummary: timestamps.last ?? project.updatedAt,
+            translationSource: latestProposal == nil ? "Pending" : "Canonical Plan",
+            proposalSectionCount: proposalScopeSections.count,
+            proposalTargetCount: proposalScopeTargets.count,
+            proposalCommandCount: effectPlacements.count,
+            proposalShouldUseFullSongStructureTrack: bool(executionPlan?["shouldUseFullSongStructureTrack"]),
+            proposalEffectPlacements: effectPlacements
         )
     }
 
@@ -192,5 +221,24 @@ struct LocalPendingWorkService: PendingWorkService {
             return rows.map { String(describing: $0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         }
         return []
+    }
+
+    private func buildEffectPlacements(_ value: Any?) -> [PendingEffectPlacement] {
+        guard let rows = value as? [[String: Any]] else { return [] }
+        return rows.map { row in
+            let timingContext = row["timingContext"] as? [String: Any]
+            return PendingEffectPlacement(
+                designId: string(row["designId"]),
+                designRevision: int(row["designRevision"]),
+                designAuthor: string(row["designAuthor"]),
+                targetId: string(row["targetId"], fallback: "Unresolved"),
+                layerIndex: int(row["layerIndex"]),
+                effectName: string(row["effectName"], fallback: "Unknown Effect"),
+                trackName: string(timingContext?["trackName"], fallback: "XD: Sequencer Plan"),
+                sectionLabel: string(timingContext?["anchorLabel"], fallback: "General"),
+                startMs: int(row["startMs"]),
+                endMs: int(row["endMs"])
+            )
+        }
     }
 }

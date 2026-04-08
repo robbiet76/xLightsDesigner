@@ -10,6 +10,9 @@ struct AssistantMessageModel: Identifiable, Codable, Equatable {
     let role: AssistantMessageRole
     let text: String
     let timestamp: String
+    let handledBy: String?
+    let routeDecision: String?
+    let displayName: String?
 }
 
 struct AssistantContextModel {

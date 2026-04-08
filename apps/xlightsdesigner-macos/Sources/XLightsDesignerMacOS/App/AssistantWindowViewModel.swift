@@ -28,14 +28,28 @@ final class AssistantWindowViewModel {
                 messages = [seedAssistantMessage()]
                 try? conversationService.saveMessages(messages)
             } else {
-                messages = loaded
+                messages = loaded.map { message in
+                    guard message.role == .assistant else { return message }
+                    return AssistantMessageModel(
+                        id: message.id,
+                        role: message.role,
+                        text: message.text,
+                        timestamp: message.timestamp,
+                        handledBy: message.handledBy,
+                        routeDecision: message.routeDecision,
+                        displayName: message.displayName ?? displayName(for: message.handledBy ?? "app_assistant")
+                    )
+                }
             }
         } catch {
             messages = [AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,
                 text: "Assistant history could not be loaded. A new conversation has started.",
-                timestamp: isoNow()
+                timestamp: isoNow(),
+                handledBy: "app_assistant",
+                routeDecision: "app_assistant",
+                displayName: "App Assistant"
             )]
         }
     }
@@ -48,7 +62,10 @@ final class AssistantWindowViewModel {
             id: UUID().uuidString,
             role: .user,
             text: trimmed,
-            timestamp: isoNow()
+            timestamp: isoNow(),
+            handledBy: nil,
+            routeDecision: nil,
+            displayName: nil
         )
         messages.append(userMessage)
         draft = ""
@@ -67,14 +84,20 @@ final class AssistantWindowViewModel {
                 id: UUID().uuidString,
                 role: .assistant,
                 text: result.assistantMessage,
-                timestamp: isoNow()
+                timestamp: isoNow(),
+                handledBy: result.handledBy,
+                routeDecision: result.routeDecision,
+                displayName: displayName(for: result.handledBy)
             ))
         } catch {
             messages.append(AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,
                 text: "Assistant unavailable: \(String(error.localizedDescription))",
-                timestamp: isoNow()
+                timestamp: isoNow(),
+                handledBy: "app_assistant",
+                routeDecision: "app_assistant",
+                displayName: "App Assistant"
             ))
         }
 
@@ -95,8 +118,26 @@ final class AssistantWindowViewModel {
             id: UUID().uuidString,
             role: .assistant,
             text: "App Assistant here. I coordinate guidance across Project, Layout, Audio, Design, Sequence, Review, and History.",
-            timestamp: isoNow()
+            timestamp: isoNow(),
+            handledBy: "app_assistant",
+            routeDecision: "app_assistant",
+            displayName: "App Assistant"
         )
+    }
+
+    private func displayName(for handledBy: String) -> String {
+        switch handledBy {
+        case "designer_dialog":
+            return "Designer"
+        case "sequence_agent":
+            return "Sequencer"
+        case "audio_analyst":
+            return "Audio Analyst"
+        case "app_assistant":
+            return "App Assistant"
+        default:
+            return "Assistant"
+        }
     }
 
     private func isoNow() -> String {
