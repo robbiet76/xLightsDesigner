@@ -9,21 +9,7 @@ struct RootContentView: View {
                 AppSidebar(model: model)
                     .frame(minWidth: 230, idealWidth: 240, maxWidth: 280)
             } detail: {
-                VStack(spacing: 0) {
-                    if !model.showAssistantPanel {
-                        HStack {
-                            Spacer()
-                            Button {
-                                model.showAssistantPanel = true
-                            } label: {
-                                Label("Show Assistant", systemImage: "bubble.left.and.bubble.right")
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.top, 12)
-                        .padding(.bottom, 8)
-                    }
-
+                ZStack(alignment: .topTrailing) {
                     switch model.selectedWorkflow {
                     case .project:
                         ProjectScreenView(model: model.projectScreenModel)
@@ -40,6 +26,16 @@ struct RootContentView: View {
                     case .history:
                         HistoryScreenView(model: model.historyScreenModel)
                     }
+
+                    if !model.showAssistantPanel {
+                        Button {
+                            model.showAssistantPanel = true
+                        } label: {
+                            Label("Show Assistant", systemImage: "bubble.left.and.bubble.right")
+                        }
+                        .padding(.top, 24)
+                        .padding(.trailing, 24)
+                    }
                 }
             }
             .frame(minWidth: 700, minHeight: 780)
@@ -49,6 +45,8 @@ struct RootContentView: View {
                     .frame(minWidth: 320, idealWidth: 360, maxWidth: 440)
             }
         }
+        .safeAreaPadding(.top, 8)
+        .safeAreaPadding(.bottom, 12)
         .frame(minWidth: 1180, minHeight: 780)
         .sheet(isPresented: $model.showSettings) {
             SettingsScreenView(model: model.settingsScreenModel)

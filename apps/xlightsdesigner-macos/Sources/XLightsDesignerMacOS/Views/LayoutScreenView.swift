@@ -4,13 +4,21 @@ struct LayoutScreenView: View {
     @Bindable var model: LayoutScreenViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            header
-            summaryBand
-            mainSplit
+        GeometryReader { proxy in
+            let currentSelectionMinHeight = max(120, min(150, proxy.size.height * 0.14))
+            let currentSelectionMaxHeight = max(150, min(220, proxy.size.height * 0.24))
+            let gridMinHeight = max(260, proxy.size.height * 0.36)
+
+            VStack(alignment: .leading, spacing: 20) {
+                header
+                summarySection
+                controlsSection
+                currentSelectionSection(minHeight: currentSelectionMinHeight, maxHeight: currentSelectionMaxHeight)
+                targetsSection(minHeight: gridMinHeight)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .task {
             model.loadLayout()
         }
@@ -56,47 +64,27 @@ struct LayoutScreenView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .layoutPriority(1)
     }
 
-    private var summaryBand: some View {
-        GroupBox("Layout Summary") {
+    private var summarySection: some View {
+        GroupBox("Summary") {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 12) {
-                            chip(model.screenModel.readinessSummary.state.rawValue)
-                            chip("Targets \(model.screenModel.readinessSummary.totalTargets)")
-                            if model.screenModel.readinessSummary.unresolvedCount > 0 {
-                                chip("Needs Tags \(model.screenModel.readinessSummary.unresolvedCount)")
-                            }
-                            if !model.screenModel.tagDefinitions.isEmpty {
-                                chip("Tags \(model.screenModel.tagDefinitions.count)")
-                            }
-                        }
-                        Text(model.screenModel.readinessSummary.explanationText)
-                        if !model.screenModel.readinessSummary.nextStepText.isEmpty {
-                            Text(model.screenModel.readinessSummary.nextStepText)
-                                .foregroundStyle(.secondary)
-                        }
+                HStack(spacing: 12) {
+                    chip(model.screenModel.readinessSummary.state.rawValue)
+                    chip("Targets \(model.screenModel.readinessSummary.totalTargets)")
+                    if model.screenModel.readinessSummary.unresolvedCount > 0 {
+                        chip("Needs Tags \(model.screenModel.readinessSummary.unresolvedCount)")
                     }
-                    Spacer(minLength: 20)
-                    HStack(spacing: 10) {
-                        Button("Add Tag…") {
-                            model.presentAddTagSheet()
-                        }
-                        .disabled(!model.canAddTag)
-
-                        Button("Remove Tag…") {
-                            model.presentRemoveTagSheet()
-                        }
-                        .disabled(model.removableTags.isEmpty)
-
-                        Button("Manage Tags…") {
-                            model.presentManageTagsSheet()
-                        }
+                    if !model.screenModel.tagDefinitions.isEmpty {
+                        chip("Tags \(model.screenModel.tagDefinitions.count)")
                     }
                 }
-
+                Text(model.screenModel.readinessSummary.explanationText)
+                if !model.screenModel.readinessSummary.nextStepText.isEmpty {
+                    Text(model.screenModel.readinessSummary.nextStepText)
+                        .foregroundStyle(.secondary)
+                }
                 ForEach(model.screenModel.banners) { banner in
                     bannerView(banner)
                 }
@@ -104,59 +92,39 @@ struct LayoutScreenView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 4)
         }
+        .layoutPriority(1)
     }
 
-    private var mainSplit: some View {
-        AdaptiveSplitView(breakpoint: 1180, spacing: 20) {
-            GroupBox("Targets") {
-                VStack(alignment: .leading, spacing: 12) {
-                    filterRow
-                    Table(model.filteredRows, selection: $model.selectedRowIDs, sortOrder: $model.sortOrder) {
-                        TableColumn("Target", value: \.targetName) { row in
-                            Text(row.targetName)
-                        }
-                        TableColumn("Type", value: \.targetType) { row in
-                            Text(row.targetType)
-                        }
-                        TableColumn("Tags", value: \.tagSummary) { row in
-                            TagRowChips(tags: row.tagDefinitions)
-                        }
-                        TableColumn("Status", value: \.supportStateSummary) { row in
-                            Text(row.supportStateSummary)
-                        }
-                        TableColumn("xLights Group", value: \.layoutGroup) { row in
-                            Text(row.layoutGroup)
-                                .lineLimit(1)
-                        }
+    private var controlsSection: some View {
+        GroupBox("Controls") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Apply and maintain project tags over the active xLights target list.")
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    Button("Add Tag…") {
+                        model.presentAddTagSheet()
                     }
-                    .onChange(of: model.selectedRowIDs) { _, _ in
-                        model.syncSelectedPane()
+                    .disabled(!model.canAddTag)
+
+                    Button("Remove Tag…") {
+                        model.presentRemoveTagSheet()
                     }
-                    .onChange(of: model.sortOrder) { _, newValue in
-                        model.updateSortOrder(newValue)
+                    .disabled(model.removableTags.isEmpty)
+
+                    Button("Manage Tags…") {
+                        model.presentManageTagsSheet()
                     }
-                    .onChange(of: model.targetFilter) { _, _ in
-                        model.syncSelectionToVisibleRows()
-                    }
-                    .onChange(of: model.typeFilter) { _, _ in
-                        model.syncSelectionToVisibleRows()
-                    }
-                    .onChange(of: model.layoutGroupFilter) { _, _ in
-                        model.syncSelectionToVisibleRows()
-                    }
-                    .onChange(of: model.tagsFilter) { _, _ in
-                        model.syncSelectionToVisibleRows()
-                    }
-                    .onChange(of: model.statusFilter) { _, _ in
-                        model.syncSelectionToVisibleRows()
-                    }
-                    .frame(minHeight: 420)
                 }
-                .padding(.vertical, 4)
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-        } secondary: {
-            GroupBox("Inspector") {
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
+        }
+        .layoutPriority(1)
+    }
+
+    private func currentSelectionSection(minHeight: CGFloat, maxHeight: CGFloat) -> some View {
+        GroupBox("Current Selection") {
+            ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
                     switch model.screenModel.selectedTarget {
                     case let .none(message):
@@ -169,18 +137,28 @@ struct LayoutScreenView: View {
 
                     case let .selected(target):
                         Text(target.identity)
-                            .font(.title2)
+                            .font(.title3)
                             .fontWeight(.semibold)
-                        detailRow(label: "Type", value: target.type)
-                        detailRow(label: "xLights Group", value: target.layoutGroup)
-                        detailRow(label: "Status", value: target.readinessState.rawValue)
-                        detailRow(label: "Issue", value: target.reason)
+                        HStack(spacing: 10) {
+                            compactInfoChip(label: "Type", value: target.type)
+                            compactInfoChip(label: "xLights Group", value: target.layoutGroup)
+                            compactInfoChip(label: "Status", value: target.readinessState.rawValue)
+                        }
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 240), spacing: 12, alignment: .top)],
+                            alignment: .leading,
+                            spacing: 12
+                        ) {
+                            if target.reason != "No issues detected" {
+                                detailCard(label: "Issue", value: target.reason)
+                            }
+                            detailCard(label: "Downstream Effect", value: target.downstreamEffectSummary)
+                        }
                         tagSection(title: "Assigned Tags", tags: target.assignedTags)
-                        detailRow(label: "Downstream Effect", value: target.downstreamEffectSummary)
 
                     case let .multi(selection):
                         Text("\(selection.selectionCount) Targets Selected")
-                            .font(.title2)
+                            .font(.title3)
                             .fontWeight(.semibold)
                         if selection.commonTags.isEmpty {
                             Text("No tags are shared across the current selection.")
@@ -188,21 +166,78 @@ struct LayoutScreenView: View {
                         } else {
                             tagSection(title: "Common Tags", tags: selection.commonTags)
                         }
-                        if selection.mixedTagCount > 0 {
-                            detailRow(
-                                label: "Mixed Tag State",
-                                value: "\(selection.mixedTagCount) additional tags appear only on part of this selection."
-                            )
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 240), spacing: 12, alignment: .top)],
+                            alignment: .leading,
+                            spacing: 12
+                        ) {
+                            if selection.mixedTagCount > 0 {
+                                detailCard(
+                                    label: "Mixed Tag State",
+                                    value: "\(selection.mixedTagCount) additional tags appear only on part of this selection."
+                                )
+                            }
+                            detailCard(label: "Bulk Edit", value: "Use Add Tag or Remove Tag to update the current selection in bulk.")
                         }
-                        Text("Use Add Tag or Remove Tag to update the current selection in bulk.")
-                            .foregroundStyle(.secondary)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 4)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: minHeight)
+            .frame(maxHeight: maxHeight)
+            .padding(.vertical, 4)
         }
-        .frame(minHeight: 420)
+        .layoutPriority(1)
+    }
+
+    private func targetsSection(minHeight: CGFloat) -> some View {
+        GroupBox("Targets") {
+            VStack(alignment: .leading, spacing: 12) {
+                filterRow
+                Table(model.filteredRows, selection: $model.selectedRowIDs, sortOrder: $model.sortOrder) {
+                    TableColumn("Target", value: \.targetName) { row in
+                        Text(row.targetName)
+                    }
+                    TableColumn("Type", value: \.targetType) { row in
+                        Text(row.targetType)
+                    }
+                    TableColumn("Tags", value: \.tagSummary) { row in
+                        TagRowChips(tags: row.tagDefinitions)
+                    }
+                    TableColumn("Status", value: \.supportStateSummary) { row in
+                        Text(row.supportStateSummary)
+                    }
+                    TableColumn("xLights Group", value: \.layoutGroup) { row in
+                        Text(row.layoutGroup)
+                            .lineLimit(1)
+                    }
+                }
+                .onChange(of: model.selectedRowIDs) { _, _ in
+                    model.syncSelectedPane()
+                }
+                .onChange(of: model.sortOrder) { _, newValue in
+                    model.updateSortOrder(newValue)
+                }
+                .onChange(of: model.targetFilter) { _, _ in
+                    model.syncSelectionToVisibleRows()
+                }
+                .onChange(of: model.typeFilter) { _, _ in
+                    model.syncSelectionToVisibleRows()
+                }
+                .onChange(of: model.layoutGroupFilter) { _, _ in
+                    model.syncSelectionToVisibleRows()
+                }
+                .onChange(of: model.tagsFilter) { _, _ in
+                    model.syncSelectionToVisibleRows()
+                }
+                .onChange(of: model.statusFilter) { _, _ in
+                    model.syncSelectionToVisibleRows()
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .frame(minHeight: minHeight, maxHeight: .infinity)
+        .layoutPriority(2)
     }
 
     private var filterRow: some View {
@@ -401,11 +436,37 @@ struct LayoutScreenView: View {
     private func detailRow(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.semibold)
             Text(value)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
         }
+    }
+
+    private func detailCard(label: String, value: String) -> some View {
+        detailRow(label: label, value: value)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.55))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func compactInfoChip(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value.isEmpty ? "None" : value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.7))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func tagSection(title: String, tags: [LayoutTagDefinitionModel]) -> some View {
