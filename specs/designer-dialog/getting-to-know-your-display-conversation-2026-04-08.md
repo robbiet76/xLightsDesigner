@@ -20,6 +20,8 @@ That means:
 - model types
 - xLights groups
 - submodel structure
+- x/y/z coordinates
+- node count / inferred visual weight
 
 may be used to identify likely interesting props or questions,
 but they must not be treated as confirmed semantic meaning until the user confirms them.
@@ -61,6 +63,8 @@ The discovery conversation should use:
 - model names
 - model types
 - xLights grouping signals when available
+- xLights coordinate metadata when available
+- node count / inferred visual-weight signals when available
 - existing project-level tags and descriptions
 - currently selected layout target if any
 
@@ -76,6 +80,10 @@ The agent should:
 - if there are no meaningful tags yet, say so
 
 2. identify likely candidate props or structures from layout names/types
+and from broad structural signals such as:
+- central vs edge position
+- larger vs lighter-weight props
+- likely architectural vs feature props
 - examples:
   - `Snowman`
   - `MegaTree`
@@ -97,6 +105,13 @@ The agent should:
 - groups that should behave together
 - props with special narrative or character significance
 - props that should be treated cautiously or separately
+
+Initial scope should be limited to:
+- model groups
+- models
+
+Submodels are explicitly out of scope for the initial pass.
+They belong to later refinement only when detailed sequencing work requires them.
 
 ## Good Questions
 
@@ -135,6 +150,8 @@ The first implementation may stop at:
 - detecting thin metadata
 - surfacing candidate props
 - asking better discovery questions
+
+The first implementation should not introduce submodel-level questioning.
 
 It does not need to apply tags automatically yet.
 

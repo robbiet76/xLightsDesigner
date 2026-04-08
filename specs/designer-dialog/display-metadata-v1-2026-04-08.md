@@ -27,6 +27,7 @@ It is not the sole decision source.
 
 The designer and sequencer may use it to guide choices, but they must still consider:
 - live layout structure
+- derived xLights layout signals such as position and scale
 - current musical context
 - sequence state
 - user direction
@@ -44,6 +45,27 @@ Broad metadata is preferred because it is:
 - less likely to become stale
 
 The system should avoid creating a hyper-detailed taxonomy unless a clear use case justifies it.
+
+## Derived xLights Signals
+
+Broad metadata may also be informed by raw xLights model metadata and derived structural signals.
+
+Important examples:
+- x/y/z position
+- relative left/center/right placement
+- foreground/background depth when available
+- node count
+- relative visual weight inferred from node count or overall size
+
+These signals are useful because they can help the agent ask better questions such as:
+- whether a prop is likely central or peripheral
+- whether a prop is visually substantial or lightweight
+- whether several props are likely part of one spatial zone
+
+Rules:
+- these are inputs to questioning and proposal quality
+- they do not override user-confirmed meaning
+- they should support broad metadata, not replace it
 
 ## v1 Metadata Domains
 
@@ -150,6 +172,13 @@ The display-discovery conversation should primarily try to learn:
 4. which props deserve special handling
 5. any major themed or character props
 
+Initial scope should focus on:
+- groups
+- models
+
+It should not begin with submodel-level discussion.
+Submodels should be introduced later only when detailed sequencing refinement actually needs them.
+
 It should not begin by asking for:
 - exact effect choices
 - low-level sequencing tactics
@@ -162,6 +191,8 @@ The agent may infer candidate questions from:
 - model types
 - group names
 - submodel structure
+- x/y/z coordinates
+- node count / inferred visual weight
 
 It may not infer semantic truth from those alone.
 
