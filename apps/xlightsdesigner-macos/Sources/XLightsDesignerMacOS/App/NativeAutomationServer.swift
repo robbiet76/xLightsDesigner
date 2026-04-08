@@ -73,6 +73,8 @@ final class NativeAutomationServer: @unchecked Sendable {
             return .json(200, body: appSnapshot())
         case ("GET", "/assistant-snapshot"):
             return .json(200, body: assistantSnapshot())
+        case ("GET", "/xlights-session"):
+            return .json(200, body: xlightsSessionSnapshot())
         case ("POST", "/action"):
             guard
                 let object = try? JSONSerialization.jsonObject(with: request.body) as? [String: Any],
@@ -110,6 +112,16 @@ final class NativeAutomationServer: @unchecked Sendable {
         case "refreshAll":
             refreshAll()
             return .json(200, body: ["ok": true])
+        case "refreshXLightsSession":
+            model.xlightsSessionModel.refresh()
+            return .json(200, body: ["ok": true])
+        case "saveXLightsSequence":
+            do {
+                try await model.xlightsSessionModel.saveCurrentSequence()
+                return .json(200, body: ["ok": true, "summary": model.xlightsSessionModel.snapshot.lastSaveSummary])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "sendAssistantPrompt":
             let prompt = String(payload["prompt"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !prompt.isEmpty else {
@@ -148,18 +160,25 @@ final class NativeAutomationServer: @unchecked Sendable {
         switch model.selectedWorkflow {
         case .project:
             model.projectScreenModel.loadInitialProject()
+            model.xlightsSessionModel.refresh()
         case .layout:
             model.layoutScreenModel.loadLayout()
+            model.xlightsSessionModel.refresh()
         case .audio:
             model.audioScreenModel.loadLibrary()
+            model.xlightsSessionModel.refresh()
         case .design:
             model.designScreenModel.refresh()
+            model.xlightsSessionModel.refresh()
         case .sequence:
             model.sequenceScreenModel.refresh()
+            model.xlightsSessionModel.refresh()
         case .review:
             model.reviewScreenModel.refresh()
+            model.xlightsSessionModel.refresh()
         case .history:
             model.historyScreenModel.loadHistory()
+            model.xlightsSessionModel.refresh()
         }
     }
 
@@ -173,6 +192,7 @@ final class NativeAutomationServer: @unchecked Sendable {
         model.reviewScreenModel.refresh()
         model.historyScreenModel.loadHistory()
         model.settingsScreenModel.load()
+        model.xlightsSessionModel.refresh()
     }
 
     @MainActor
@@ -180,10 +200,12 @@ final class NativeAutomationServer: @unchecked Sendable {
         [
             "ok": true,
             "automationBaseURL": AppEnvironment.nativeAutomationBaseURL,
+            "xlightsOwnedAPIBaseURL": AppEnvironment.xlightsOwnedAPIBaseURL,
             "selectedWorkflow": model.selectedWorkflow.rawValue,
             "assistantVisible": model.showAssistantPanel,
             "activeProjectName": model.workspace.activeProject?.projectName ?? "",
             "activeProjectFilePath": model.workspace.activeProject?.projectFilePath ?? "",
+            "xlights": xlightsSessionSnapshot(),
             "sequence": [
                 "hasLiveSequence": model.sequenceScreenModel.screenModel.hasLiveSequence,
                 "planOnlyMode": model.sequenceScreenModel.screenModel.planOnlyMode
@@ -198,6 +220,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "selectedWorkflow": model.selectedWorkflow.rawValue,
             "assistantVisible": model.showAssistantPanel,
             "workspace": workspaceSnapshot(),
+            "xlights": xlightsSessionSnapshot(),
             "assistant": assistantSnapshot(),
             "pages": [
                 "project": projectSnapshot(),
@@ -241,6 +264,27 @@ final class NativeAutomationServer: @unchecked Sendable {
             "messageCount": messages.count,
             "messages": messages,
             "lastMessage": messages.last ?? [:]
+        ]
+    }
+
+    @MainActor
+    private func xlightsSessionSnapshot() -> [String: Any] {
+        let snapshot = model.xlightsSessionModel.snapshot
+        return [
+            "runtimeState": snapshot.runtimeState,
+            "supportedCommands": snapshot.supportedCommands,
+            "isReachable": snapshot.isReachable,
+            "isSequenceOpen": snapshot.isSequenceOpen,
+            "sequencePath": snapshot.sequencePath,
+            "revision": snapshot.revision,
+            "mediaFile": snapshot.mediaFile,
+            "showDirectory": snapshot.showDirectory,
+            "projectShowMatches": snapshot.projectShowMatches,
+            "saveSupported": snapshot.saveSupported,
+            "openSupported": snapshot.openSupported,
+            "createSupported": snapshot.createSupported,
+            "closeSupported": snapshot.closeSupported,
+            "lastSaveSummary": snapshot.lastSaveSummary
         ]
     }
 

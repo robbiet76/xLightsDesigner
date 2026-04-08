@@ -7,6 +7,7 @@ final class ReviewScreenViewModel {
     private let workspace: ProjectWorkspace
     private let pendingWorkService: PendingWorkService
     private let reviewExecutionService: ReviewExecutionService
+    private let xlightsSessionService: XLightsSessionService
     var screenModel: ReviewScreenModel
     var transientBanner: WorkflowBannerModel?
     var isApplying = false
@@ -14,11 +15,13 @@ final class ReviewScreenViewModel {
     init(
         workspace: ProjectWorkspace,
         pendingWorkService: PendingWorkService = LocalPendingWorkService(),
-        reviewExecutionService: ReviewExecutionService = LocalReviewExecutionService()
+        reviewExecutionService: ReviewExecutionService = LocalReviewExecutionService(),
+        xlightsSessionService: XLightsSessionService = LocalXLightsSessionService()
     ) {
         self.workspace = workspace
         self.pendingWorkService = pendingWorkService
         self.reviewExecutionService = reviewExecutionService
+        self.xlightsSessionService = xlightsSessionService
         self.screenModel = Self.buildScreenModel(
             project: workspace.activeProject,
             pendingWork: try? pendingWorkService.loadPendingWork(for: workspace.activeProject),
@@ -53,10 +56,11 @@ final class ReviewScreenViewModel {
                     appRootPath: AppEnvironment.canonicalAppRoot,
                     endpoint: AppEnvironment.xlightsOwnedAPIBaseURL
                 )
+                let saveSummary = try? await xlightsSessionService.saveCurrentSequence()
                 isApplying = false
                 transientBanner = WorkflowBannerModel(
                     id: "review-apply-success",
-                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision).",
+                    text: "Applied \(result.commandCount) commands via \(result.applyPath.isEmpty ? "sequence apply" : result.applyPath). Revision: \(result.nextRevision.isEmpty ? "updated" : result.nextRevision)." + (saveSummary.map { " \($0)" } ?? ""),
                     state: .ready
                 )
                 refresh()

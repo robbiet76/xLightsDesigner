@@ -18,10 +18,12 @@ final class AppModel {
     let reviewScreenModel: ReviewScreenViewModel
     let historyScreenModel: HistoryScreenViewModel
     let settingsScreenModel: SettingsScreenViewModel
+    let xlightsSessionModel: XLightsSessionViewModel
 
     init() {
         let workspace = ProjectWorkspace()
         self.workspace = workspace
+        self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
         self.assistantModel = AssistantWindowViewModel()
         self.audioScreenModel = AudioScreenViewModel.sample()
         self.projectScreenModel = ProjectScreenViewModel(workspace: workspace)
@@ -31,6 +33,7 @@ final class AppModel {
         self.reviewScreenModel = ReviewScreenViewModel(workspace: workspace)
         self.historyScreenModel = HistoryScreenViewModel(workspace: workspace)
         self.settingsScreenModel = SettingsScreenViewModel()
+        self.xlightsSessionModel.refresh()
     }
 
     func workflowRoute() -> String {
