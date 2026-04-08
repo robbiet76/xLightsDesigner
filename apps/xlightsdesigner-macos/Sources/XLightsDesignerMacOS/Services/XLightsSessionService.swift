@@ -24,16 +24,19 @@ struct LocalXLightsSessionService: XLightsSessionService {
         async let open = readJSON(from: "/sequence/open")
         async let media = readJSON(from: "/media/current")
         async let revision = readJSON(from: "/sequence/revision")
+        async let settings = readJSON(from: "/sequence/settings")
 
         let healthJSON = try await health
         let openJSON = try await open
         let mediaJSON = try await media
         let revisionJSON = try await revision
+        let settingsJSON = try await settings
 
         let healthData = dictionary(healthJSON["data"])
         let openData = dictionary(openJSON["data"])
         let mediaData = dictionary(mediaJSON["data"])
         let revisionData = dictionary(revisionJSON["data"])
+        let settingsData = dictionary(settingsJSON["data"])
         let sequence = dictionary(openData["sequence"])
         let showDirectory = string(mediaData["showDirectory"])
         let runtimeState = string(healthData["state"], fallback: "unknown")
@@ -57,6 +60,11 @@ struct LocalXLightsSessionService: XLightsSessionService {
             mediaFile: string(mediaData["mediaFile"]),
             showDirectory: showDirectory,
             projectShowMatches: pathsMatch(showDirectory, projectShowFolder),
+            sequenceType: string(settingsData["sequenceType"], fallback: "unknown"),
+            durationMs: int(settingsData["durationMs"]),
+            frameMs: int(settingsData["frameMs"]),
+            dirtyState: "unknown",
+            dirtyStateReason: "Owned xLights API does not currently expose unsaved sequence state.",
             saveSupported: true,
             openSupported: true,
             createSupported: true,
@@ -182,6 +190,12 @@ struct LocalXLightsSessionService: XLightsSessionService {
     private func bool(_ value: Any?) -> Bool {
         if let b = value as? Bool { return b }
         return String(describing: value ?? "").lowercased() == "true"
+    }
+
+    private func int(_ value: Any?) -> Int {
+        if let number = value as? Int { return number }
+        if let number = value as? NSNumber { return number.intValue }
+        return Int(String(describing: value ?? "")) ?? 0
     }
 
     private func pathsMatch(_ lhs: String, _ rhs: String) -> Bool {

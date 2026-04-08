@@ -3,6 +3,7 @@ import AppKit
 
 struct SequenceScreenView: View {
     @Bindable var model: SequenceScreenViewModel
+    @Bindable var xlightsSessionModel: XLightsSessionViewModel
 
     var body: some View {
         GeometryReader { proxy in
@@ -91,8 +92,59 @@ struct SequenceScreenView: View {
                     .foregroundStyle(.secondary)
                 detailRow(label: "Active Sequence In xLights", value: model.screenModel.activeSequence.activeSequenceName)
                 detailRow(label: "Project Sequence Summary", value: model.screenModel.activeSequence.boundTrackSummary)
+                detailRow(label: "Project Show Folder", value: model.projectShowFolder.isEmpty ? "(not set)" : model.projectShowFolder)
                 detailRow(label: "Timing Dependency", value: timingDependencyText)
                 detailRow(label: "Ready To Proceed", value: readyToProceedText)
+                Divider()
+                detailRow(label: "Live Sequence Path", value: xlightsSessionModel.snapshot.sequencePath.isEmpty ? "No live sequence open." : xlightsSessionModel.snapshot.sequencePath)
+                detailRow(label: "Media File", value: xlightsSessionModel.snapshot.mediaFile.isEmpty ? "(not set)" : xlightsSessionModel.snapshot.mediaFile)
+                detailRow(label: "Sequence Settings", value: sequenceSettingsText)
+                detailRow(label: "Unsaved State", value: xlightsSessionModel.snapshot.dirtyStateReason)
+                HStack(spacing: 10) {
+                    Button("Refresh xLights") {
+                        xlightsSessionModel.refresh()
+                        model.refresh()
+                    }
+                    .disabled(xlightsSessionModel.snapshot.isReachable == false)
+
+                    Button("Save Sequence") {
+                        Task {
+                            try? await xlightsSessionModel.saveCurrentSequence()
+                            model.refresh()
+                        }
+                    }
+                    .disabled(xlightsSessionModel.snapshot.isSequenceOpen == false || xlightsSessionModel.snapshot.saveSupported == false)
+
+                    Button("Open Current") {
+                        let filePath = model.preferredSequencePath()
+                        guard !filePath.isEmpty else { return }
+                        Task {
+                            _ = try? await xlightsSessionModel.openSequence(filePath: filePath)
+                            model.refresh()
+                        }
+                    }
+                    .disabled(model.preferredSequencePath().isEmpty || xlightsSessionModel.snapshot.openSupported == false)
+
+                    Button("Create / Open Current") {
+                        let filePath = model.preferredSequencePath()
+                        guard !filePath.isEmpty else { return }
+                        Task {
+                            _ = try? await xlightsSessionModel.createSequence(
+                                filePath: filePath,
+                                mediaFile: model.preferredMediaFile(),
+                                durationMs: nil,
+                                frameMs: nil
+                            )
+                            model.refresh()
+                        }
+                    }
+                    .disabled(model.preferredSequencePath().isEmpty || xlightsSessionModel.snapshot.createSupported == false)
+                }
+                if !xlightsSessionModel.snapshot.lastSaveSummary.isEmpty {
+                    Text(xlightsSessionModel.snapshot.lastSaveSummary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
                 if !needsAttentionItems.isEmpty {
                     bulletSection(title: "Needs Attention", items: needsAttentionItems)
                 }
@@ -258,6 +310,19 @@ struct SequenceScreenView: View {
             return first.replacingOccurrences(of: "Timing dependency: ", with: "")
         }
         return raw
+    }
+
+    private var sequenceSettingsText: String {
+        let type = xlightsSessionModel.snapshot.sequenceType
+        let frame = xlightsSessionModel.snapshot.frameMs > 0 ? "\(xlightsSessionModel.snapshot.frameMs) ms" : "unknown frame"
+        let duration: String
+        if xlightsSessionModel.snapshot.durationMs > 0 {
+            let seconds = Double(xlightsSessionModel.snapshot.durationMs) / 1000.0
+            duration = String(format: "%.1f s", seconds)
+        } else {
+            duration = "unknown duration"
+        }
+        return "\(type), \(frame), \(duration)"
     }
 
     private var readyToProceedText: String {

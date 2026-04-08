@@ -20,7 +20,7 @@ struct RootContentView: View {
                     case .design:
                         DesignScreenView(model: model.designScreenModel)
                     case .sequence:
-                        SequenceScreenView(model: model.sequenceScreenModel)
+                        SequenceScreenView(model: model.sequenceScreenModel, xlightsSessionModel: model.xlightsSessionModel)
                     case .review:
                         ReviewScreenView(model: model.reviewScreenModel)
                     case .history:

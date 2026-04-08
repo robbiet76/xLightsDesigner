@@ -8,6 +8,7 @@ final class SequenceScreenViewModel {
     private let pendingWorkService: PendingWorkService
     private let projectService: ProjectService
     private var liveRefreshTask: Task<Void, Never>?
+    private var latestPendingWork: PendingWorkReadModel?
 
     var screenModel: SequenceScreenModel
     var selectedRowID: SequenceInventoryRowModel.ID?
@@ -33,6 +34,7 @@ final class SequenceScreenViewModel {
         let project = workspace.activeProject
         Task {
             let pendingWork = try? pendingWorkService.loadPendingWork(for: project)
+            latestPendingWork = pendingWork
             let session = await Self.loadSequenceSession(project: project, pendingWork: pendingWork)
             let model = Self.buildScreenModel(project: project, pendingWork: pendingWork, session: session)
             screenModel = model
@@ -73,6 +75,66 @@ final class SequenceScreenViewModel {
     var selectedTimingReviewRow: SequenceTimingReviewRowModel? {
         guard let selectedTimingReviewRowID else { return screenModel.timingReview.rows.first }
         return screenModel.timingReview.rows.first(where: { $0.id == selectedTimingReviewRowID }) ?? screenModel.timingReview.rows.first
+    }
+
+    var projectShowFolder: String {
+        workspace.activeProject?.showFolder.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    func preferredSequencePath() -> String {
+        let showFolder = projectShowFolder
+        guard !showFolder.isEmpty else { return "" }
+        if let pendingPath = latestPendingWork?.activeSequencePath,
+           pendingPath.isEmpty == false,
+           pendingPath != "No active sequence path",
+           Self.isPathWithinShowFolder(pendingPath, showFolder) {
+            return pendingPath
+        }
+        let baseName = preferredSequenceBaseName()
+        guard !baseName.isEmpty else { return "" }
+        return URL(fileURLWithPath: showFolder)
+            .appendingPathComponent(baseName, isDirectory: true)
+            .appendingPathComponent(baseName)
+            .appendingPathExtension("xsq")
+            .path
+    }
+
+    func preferredMediaFile() -> String? {
+        if let pendingAudio = latestPendingWork?.audioPath,
+           pendingAudio.isEmpty == false,
+           pendingAudio != "No audio path selected" {
+            return pendingAudio
+        }
+        return nil
+    }
+
+    func preferredSequenceBaseName() -> String {
+        if let pendingPath = latestPendingWork?.activeSequencePath,
+           pendingPath.isEmpty == false,
+           pendingPath != "No active sequence path" {
+            let last = URL(fileURLWithPath: pendingPath).deletingPathExtension().lastPathComponent
+            if !last.isEmpty { return sanitizeSequenceBaseName(last) }
+        }
+        if let activeName = latestPendingWork?.activeSequenceName,
+           activeName.isEmpty == false,
+           activeName != "No active sequence" {
+            return sanitizeSequenceBaseName(activeName)
+        }
+        if let audio = preferredMediaFile() {
+            let last = URL(fileURLWithPath: audio).deletingPathExtension().lastPathComponent
+            if !last.isEmpty { return sanitizeSequenceBaseName(last) }
+        }
+        return ""
+    }
+
+    private func sanitizeSequenceBaseName(_ raw: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(.whitespaces)
+        let filtered = String(raw.unicodeScalars.map { allowed.contains($0) ? String($0) : " " }.joined())
+        let words = filtered
+            .split(whereSeparator: { $0.isWhitespace })
+            .map(String.init)
+            .filter { !$0.isEmpty }
+        return words.joined()
     }
 
     func acceptTimingReview() {

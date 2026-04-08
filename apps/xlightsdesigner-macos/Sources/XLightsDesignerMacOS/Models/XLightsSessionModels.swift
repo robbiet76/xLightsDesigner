@@ -10,6 +10,11 @@ struct XLightsSessionSnapshotModel: Sendable {
     let mediaFile: String
     let showDirectory: String
     let projectShowMatches: Bool
+    let sequenceType: String
+    let durationMs: Int
+    let frameMs: Int
+    let dirtyState: String
+    let dirtyStateReason: String
     let saveSupported: Bool
     let openSupported: Bool
     let createSupported: Bool
