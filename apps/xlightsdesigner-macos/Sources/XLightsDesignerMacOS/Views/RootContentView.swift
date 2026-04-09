@@ -35,7 +35,7 @@ struct RootContentView: View {
                         Button {
                             model.showAssistantPanel = true
                         } label: {
-                            Label("Show Assistant", systemImage: "bubble.left.and.bubble.right")
+                            Label("Show Team Chat", systemImage: "bubble.left.and.bubble.right")
                         }
                         .padding(.top, 24)
                         .padding(.trailing, 24)
