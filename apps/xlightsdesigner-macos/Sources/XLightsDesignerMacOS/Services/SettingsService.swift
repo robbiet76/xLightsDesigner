@@ -34,6 +34,10 @@ struct LocalSettingsService: SettingsService {
             apiKey: config.apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             model: config.model.trimmingCharacters(in: .whitespacesAndNewlines),
             baseURL: config.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
+            user: AgentConfigIdentity(
+                nickname: config.userIdentity.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                bubbleColor: config.userIdentity.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
+            ),
             identities: AgentConfigTeamChatIdentities(
                 appAssistant: AgentConfigIdentity(
                     nickname: config.identities.appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -149,6 +153,7 @@ struct LocalSettingsService: SettingsService {
                 baseURL: "https://api.openai.com/v1",
                 apiKey: "",
                 hasStoredAPIKey: false,
+                userIdentity: SettingsChatIdentityModel(roleID: "user", displayName: "You", nickname: "", bubbleColorHex: ""),
                 identities: .default
             )
         }
@@ -157,6 +162,12 @@ struct LocalSettingsService: SettingsService {
             baseURL: config.baseURL,
             apiKey: "",
             hasStoredAPIKey: !config.apiKey.isEmpty,
+            userIdentity: SettingsChatIdentityModel(
+                roleID: "user",
+                displayName: "You",
+                nickname: config.user?.nickname ?? "",
+                bubbleColorHex: config.user?.bubbleColor ?? ""
+            ),
             identities: SettingsTeamChatIdentitiesModel(
                 appAssistant: SettingsAgentIdentityModel(
                     roleID: "app_assistant",
@@ -233,12 +244,14 @@ private struct AgentConfigFile: Codable {
     var apiKey: String
     var model: String
     var baseURL: String
+    var user: AgentConfigIdentity?
     var identities: AgentConfigTeamChatIdentities?
 
     enum CodingKeys: String, CodingKey {
         case apiKey
         case model
         case baseURL = "baseUrl"
+        case user
         case identities
     }
 }

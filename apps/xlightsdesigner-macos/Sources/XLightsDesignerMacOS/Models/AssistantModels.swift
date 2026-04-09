@@ -68,6 +68,7 @@ struct AssistantContextModel {
     let displayDiscoveryUnresolvedBranches: [String]
     let displayDiscoveryResolvedBranches: [String]
     let teamChatIdentities: [String: [String: String]]
+    let userPreferredName: String
     let userPreferenceNotes: [String]
     let xlightsSequenceOpen: Bool
     let xlightsSequencePath: String
@@ -110,6 +111,7 @@ struct AssistantContextModel {
         displayDiscoveryUnresolvedBranches: [String] = [],
         displayDiscoveryResolvedBranches: [String] = [],
         teamChatIdentities: [String: [String: String]] = [:],
+        userPreferredName: String = "",
         userPreferenceNotes: [String] = [],
         xlightsSequenceOpen: Bool = false,
         xlightsSequencePath: String = "",
@@ -151,6 +153,7 @@ struct AssistantContextModel {
         self.displayDiscoveryUnresolvedBranches = displayDiscoveryUnresolvedBranches
         self.displayDiscoveryResolvedBranches = displayDiscoveryResolvedBranches
         self.teamChatIdentities = teamChatIdentities
+        self.userPreferredName = userPreferredName
         self.userPreferenceNotes = userPreferenceNotes
         self.xlightsSequenceOpen = xlightsSequenceOpen
         self.xlightsSequencePath = xlightsSequencePath
@@ -204,6 +207,7 @@ struct AssistantContextModel {
                 "identities": teamChatIdentities
             ],
             "userProfile": [
+                "preferredName": userPreferredName,
                 "preferenceNotes": userPreferenceNotes
             ],
             "xlights": [

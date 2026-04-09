@@ -177,6 +177,7 @@ final class AppModel {
             displayDiscoveryUnresolvedBranches: discoverySummary.unresolvedBranches,
             displayDiscoveryResolvedBranches: discoverySummary.resolvedBranches,
             teamChatIdentities: settingsScreenModel.screenModel.agentConfig.identities.asPayload(),
+            userPreferredName: settingsScreenModel.screenModel.agentConfig.userIdentity.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
             userPreferenceNotes: userPreferenceNotes,
             xlightsSequenceOpen: xlights.isSequenceOpen,
             xlightsSequencePath: xlights.sequencePath,

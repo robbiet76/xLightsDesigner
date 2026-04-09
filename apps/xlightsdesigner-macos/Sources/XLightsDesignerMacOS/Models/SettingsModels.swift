@@ -4,6 +4,7 @@ import SwiftUI
 enum SettingsCategoryID: String, CaseIterable, Identifiable {
     case general
     case providers
+    case teamChat
     case xlights
     case operators
     case pathsStorage
@@ -15,6 +16,7 @@ enum SettingsCategoryID: String, CaseIterable, Identifiable {
         switch self {
         case .general: return "General"
         case .providers: return "Providers"
+        case .teamChat: return "Team Chat"
         case .xlights: return "xLights"
         case .operators: return "Operators"
         case .pathsStorage: return "Paths & Storage"
@@ -25,7 +27,8 @@ enum SettingsCategoryID: String, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .general: return "App-wide environment and canonical roots."
-        case .providers: return "Cloud provider credentials and defaults."
+        case .providers: return "Cloud provider credentials and model defaults."
+        case .teamChat: return "Nicknames and bubble colors for you and the agent team."
         case .xlights: return "Owned xLights API connection."
         case .operators: return "Apply and sequence switching safety defaults."
         case .pathsStorage: return "Canonical data and support folders."
@@ -52,10 +55,11 @@ struct SettingsAgentConfigModel: Equatable {
     var baseURL: String
     var apiKey: String
     var hasStoredAPIKey: Bool
+    var userIdentity: SettingsChatIdentityModel
     var identities: SettingsTeamChatIdentitiesModel
 }
 
-struct SettingsAgentIdentityModel: Equatable {
+struct SettingsChatIdentityModel: Equatable {
     let roleID: String
     let displayName: String
     var nickname: String
@@ -65,6 +69,8 @@ struct SettingsAgentIdentityModel: Equatable {
         !bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
+
+typealias SettingsAgentIdentityModel = SettingsChatIdentityModel
 
 struct SettingsTeamChatIdentitiesModel: Equatable {
     var appAssistant: SettingsAgentIdentityModel
@@ -124,7 +130,7 @@ struct SettingsTeamChatIdentitiesModel: Equatable {
     }
 }
 
-extension SettingsAgentIdentityModel {
+extension SettingsChatIdentityModel {
     var bubbleColor: Color? {
         Color(hex: bubbleColorHex)
     }

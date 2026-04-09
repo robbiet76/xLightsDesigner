@@ -246,10 +246,17 @@ final class AssistantWindowViewModel {
         let identity = contextIdentity(for: roleID, context: context)
         let nickname = identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
         let roleSummary = roleSummaryText(for: roleID)
+        let userPreferredName = context.userPreferredName.trimmingCharacters(in: .whitespacesAndNewlines)
         if nickname.isEmpty {
-            return "I'm \(identity.displayName). \(roleSummary) What would you like me to call you?"
+            if userPreferredName.isEmpty {
+                return "I'm \(identity.displayName). \(roleSummary) What would you like me to call you?"
+            }
+            return "I'm \(identity.displayName). \(roleSummary) I’ll call you \(userPreferredName) unless you want something else."
         }
-        return "I'm \(displayName(for: roleID, context: context)). \(roleSummary) You can call me \(nickname) if you'd like. What would you like me to call you?"
+        if userPreferredName.isEmpty {
+            return "I'm \(displayName(for: roleID, context: context)). \(roleSummary) You can call me \(nickname) if you'd like. What would you like me to call you?"
+        }
+        return "I'm \(displayName(for: roleID, context: context)). \(roleSummary) You can call me \(nickname) if you'd like. I’ll call you \(userPreferredName) unless you want something else."
     }
 
     private func followUpIntroduction(for roleID: String, context: AssistantContextModel) -> String {

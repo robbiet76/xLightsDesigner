@@ -136,7 +136,8 @@ struct AssistantWindowView: View {
 
     private func headerText(for message: AssistantMessageModel) -> Text {
         if message.role == .user {
-            return Text("You")
+            let nickname = appModel.settingsScreenModel.screenModel.agentConfig.userIdentity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            return Text(nickname.isEmpty ? "You" : "\(nickname) (You)")
         }
         let name = (message.displayName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
             ? message.displayName!
@@ -153,6 +154,9 @@ struct AssistantWindowView: View {
 
     private func bubbleColor(for message: AssistantMessageModel) -> Color {
         guard message.role == .assistant else {
+            if let custom = appModel.settingsScreenModel.screenModel.agentConfig.userIdentity.bubbleColor {
+                return custom.opacity(0.20)
+            }
             return Color.accentColor.opacity(0.12)
         }
         let identity = appModel.settingsScreenModel.screenModel.agentConfig.identities.identity(for: message.handledBy ?? "")

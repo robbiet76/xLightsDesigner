@@ -9,7 +9,7 @@ final class SettingsScreenViewModel {
     var screenModel = SettingsScreenModel(
         selectedCategory: .general,
         banner: nil,
-        agentConfig: SettingsAgentConfigModel(model: "", baseURL: "https://api.openai.com/v1", apiKey: "", hasStoredAPIKey: false, identities: .default),
+        agentConfig: SettingsAgentConfigModel(model: "", baseURL: "https://api.openai.com/v1", apiKey: "", hasStoredAPIKey: false, userIdentity: SettingsChatIdentityModel(roleID: "user", displayName: "You", nickname: "", bubbleColorHex: ""), identities: .default),
         safetyConfig: SettingsSafetyConfigModel(applyConfirmMode: "large-only", largeChangeThreshold: 60, sequenceSwitchUnsavedPolicy: "save-if-needed"),
         xlightsStatus: SettingsXLightsStatusModel(baseURL: AppEnvironment.xlightsOwnedAPIBaseURL, connected: false, summary: "Not checked"),
         pathRows: []
@@ -39,6 +39,14 @@ final class SettingsScreenViewModel {
             screenModel.banner = SettingsBannerModel(id: "provider-save", level: .success, text: "Provider settings saved.")
         } catch {
             screenModel.banner = SettingsBannerModel(id: "provider-save-failed", level: .blocked, text: String(error.localizedDescription))
+        }
+    }
+
+    func saveTeamChatSettingsSilently() {
+        do {
+            screenModel.agentConfig = try service.saveAgentConfig(screenModel.agentConfig)
+        } catch {
+            screenModel.banner = SettingsBannerModel(id: "team-chat-save-failed", level: .blocked, text: String(error.localizedDescription))
         }
     }
 

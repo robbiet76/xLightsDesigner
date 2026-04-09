@@ -208,6 +208,7 @@ function compactContext(context = {}) {
       resolvedBranches: limitStrings(displayDiscovery.resolvedBranches, 6)
     },
     userProfile: {
+      preferredName: String(userProfile.preferredName || '').trim(),
       preferenceNotes: limitStrings(userProfile.preferenceNotes, 6)
     },
     xlights: {
@@ -487,6 +488,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'Good example after a clear answer: "`HiddenTree` is the main structural focal point, with `Snowman` and `Train` as the key character props. What are the main supporting elements around them?"',
     'Bad example after a clear answer: "Should I capture these as supporting role elements?"',
     'Good example after a clear answer: "`CandyCane-01` through `CandyCane-04` and the wreath family are supporting framing elements. What serves more as background or architectural support?"',
+    'When userProfile.preferredName is present in Context, you may address the user by that name naturally, but do not overuse it in every reply.',
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',

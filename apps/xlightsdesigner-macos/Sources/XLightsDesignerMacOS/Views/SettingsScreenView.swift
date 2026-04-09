@@ -5,32 +5,44 @@ struct SettingsScreenView: View {
     @Bindable var model: SettingsScreenViewModel
 
     var body: some View {
-        HSplitView {
-            List(SettingsCategoryID.allCases, selection: categorySelection) { category in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(category.title)
-                    Text(category.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 4)
-                .tag(category)
-            }
-            .frame(minWidth: 220, idealWidth: 240, maxWidth: 260)
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    header
-                    if let banner = model.screenModel.banner {
-                        bannerView(banner)
+        VStack(spacing: 0) {
+            HSplitView {
+                List(SettingsCategoryID.allCases, selection: categorySelection) { category in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(category.title)
+                        Text(category.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    content
-                    maintenanceSection
-                    Spacer(minLength: 0)
+                    .padding(.vertical, 4)
+                    .tag(category)
                 }
-                .padding(24)
+                .frame(minWidth: 220, idealWidth: 240, maxWidth: 260)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        header
+                        if let banner = model.screenModel.banner {
+                            bannerView(banner)
+                        }
+                        content
+                        maintenanceSection
+                        Spacer(minLength: 0)
+                    }
+                    .padding(24)
+                }
+                .frame(minWidth: 560, idealWidth: 760)
             }
-            .frame(minWidth: 560, idealWidth: 760)
+            Divider()
+            HStack {
+                Spacer()
+                Button("Close") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
         }
         .frame(minWidth: 900, minHeight: 620)
         .onAppear {
@@ -56,10 +68,6 @@ struct SettingsScreenView: View {
                     Text(model.screenModel.selectedCategory.subtitle)
                         .foregroundStyle(.secondary)
                 }
-                Spacer()
-                Button("Close") {
-                    dismiss()
-                }
             }
         }
     }
@@ -74,6 +82,8 @@ struct SettingsScreenView: View {
             ])
         case .providers:
             providerSection
+        case .teamChat:
+            teamChatSection
         case .xlights:
             xlightsSection
         case .operators:
@@ -106,44 +116,56 @@ struct SettingsScreenView: View {
             Text(model.screenModel.agentConfig.hasStoredAPIKey ? "A stored key already exists. Enter a new one only to replace it." : "No stored API key found.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Divider()
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Agent Nicknames")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text("Optional nicknames and bubble colors used in team chat.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                nicknameRow(
-                    "App Assistant",
-                    nickname: $model.screenModel.agentConfig.identities.appAssistant.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.appAssistant.bubbleColorHex,
-                    onColorChangeCommitted: model.saveProviderSettings
-                )
-                nicknameRow(
-                    "Audio Analyst",
-                    nickname: $model.screenModel.agentConfig.identities.audioAnalyst.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.audioAnalyst.bubbleColorHex,
-                    onColorChangeCommitted: model.saveProviderSettings
-                )
-                nicknameRow(
-                    "Designer",
-                    nickname: $model.screenModel.agentConfig.identities.designer.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.designer.bubbleColorHex,
-                    onColorChangeCommitted: model.saveProviderSettings
-                )
-                nicknameRow(
-                    "Sequencer",
-                    nickname: $model.screenModel.agentConfig.identities.sequencer.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.sequencer.bubbleColorHex,
-                    onColorChangeCommitted: model.saveProviderSettings
-                )
-            }
             HStack {
                 Button("Save Provider Settings") {
                     model.saveProviderSettings()
                 }
                 .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var teamChatSection: some View {
+        section("Team Chat", subtitle: "Nicknames and bubble colors used in the shared chat thread.") {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("People")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text("Nicknames are optional. Bubble colors update existing chat messages immediately.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                nicknameRow(
+                    "You",
+                    nickname: $model.screenModel.agentConfig.userIdentity.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.userIdentity.bubbleColorHex,
+                    onChangeCommitted: model.saveTeamChatSettingsSilently
+                )
+                Divider()
+                nicknameRow(
+                    "App Assistant",
+                    nickname: $model.screenModel.agentConfig.identities.appAssistant.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.appAssistant.bubbleColorHex,
+                    onChangeCommitted: model.saveTeamChatSettingsSilently
+                )
+                nicknameRow(
+                    "Audio Analyst",
+                    nickname: $model.screenModel.agentConfig.identities.audioAnalyst.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.audioAnalyst.bubbleColorHex,
+                    onChangeCommitted: model.saveTeamChatSettingsSilently
+                )
+                nicknameRow(
+                    "Designer",
+                    nickname: $model.screenModel.agentConfig.identities.designer.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.designer.bubbleColorHex,
+                    onChangeCommitted: model.saveTeamChatSettingsSilently
+                )
+                nicknameRow(
+                    "Sequencer",
+                    nickname: $model.screenModel.agentConfig.identities.sequencer.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.sequencer.bubbleColorHex,
+                    onChangeCommitted: model.saveTeamChatSettingsSilently
+                )
             }
         }
     }
@@ -268,7 +290,7 @@ struct SettingsScreenView: View {
         _ label: String,
         nickname: Binding<String>,
         bubbleColorHex: Binding<String>,
-        onColorChangeCommitted: @escaping () -> Void
+        onChangeCommitted: @escaping () -> Void
     ) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Text(label)
@@ -276,7 +298,10 @@ struct SettingsScreenView: View {
             TextField("Optional nickname", text: nickname)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 220)
-            AgentBubbleColorPicker(hex: bubbleColorHex, onCommit: onColorChangeCommitted)
+                .onChange(of: nickname.wrappedValue) { _, _ in
+                    onChangeCommitted()
+                }
+            AgentBubbleColorPicker(hex: bubbleColorHex, onCommit: onChangeCommitted)
         }
     }
 
