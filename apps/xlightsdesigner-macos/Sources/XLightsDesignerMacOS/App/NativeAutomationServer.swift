@@ -169,7 +169,10 @@ final class NativeAutomationServer: @unchecked Sendable {
             guard !prompt.isEmpty else {
                 return .error(statusCode: 400, message: "Missing prompt.")
             }
-            model.assistantModel.loadConversationIfNeeded()
+            model.assistantModel.loadConversationIfNeeded(
+                context: model.assistantContext(),
+                project: model.workspace.activeProject
+            )
             model.assistantModel.draft = prompt
             await model.assistantModel.sendDraft(
                 context: model.assistantContext(),
@@ -195,6 +198,16 @@ final class NativeAutomationServer: @unchecked Sendable {
         case "hideAssistant":
             model.showAssistantPanel = false
             return .json(200, body: ["ok": true])
+        case "resetAssistantMemory":
+            refreshAll()
+            model.assistantModel.resetMemory(project: model.workspace.activeProject) {
+                self.model.assistantContext()
+            }
+            return .json(200, body: [
+                "ok": true,
+                "messageCount": model.assistantModel.messages.count,
+                "lastMessage": assistantSnapshot()["lastMessage"] ?? NSNull()
+            ])
         default:
             return .error(statusCode: 400, message: "Unsupported action \(name).")
         }

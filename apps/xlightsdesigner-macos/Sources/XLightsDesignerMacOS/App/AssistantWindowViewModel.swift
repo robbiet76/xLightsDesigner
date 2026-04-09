@@ -27,14 +27,14 @@ final class AssistantWindowViewModel {
         self.userProfileStore = userProfileStore
     }
 
-    func loadConversationIfNeeded() {
+    func loadConversationIfNeeded(context: AssistantContextModel, project: ActiveProjectModel?) {
         guard messages.isEmpty else { return }
         do {
             let state = try conversationService.loadConversationState()
             rollingConversationSummary = state.rollingSummary
             let loaded = state.messages
             if loaded.isEmpty {
-                messages = [seedAssistantMessage()]
+                messages = [seedAssistantMessage(context: context)]
                 try? persistConversation()
             } else {
                 messages = loaded.map { message in
@@ -133,13 +133,20 @@ final class AssistantWindowViewModel {
         try? persistConversation()
     }
 
-    func clearConversation() {
-        messages = [seedAssistantMessage()]
+    func clearConversation(context: AssistantContextModel) {
+        messages = [seedAssistantMessage(context: context)]
         draft = ""
         previousResponseID = ""
         isSending = false
         rollingConversationSummary = ""
         try? persistConversation()
+    }
+
+    func resetMemory(project: ActiveProjectModel?, contextProvider: () -> AssistantContextModel) {
+        try? conversationService.clearConversationState()
+        try? userProfileStore.clear()
+        try? displayDiscoveryStore.clear(for: project)
+        clearConversation(context: contextProvider())
     }
 
     private func persistConversation() throws {
@@ -153,8 +160,29 @@ final class AssistantWindowViewModel {
         messages = normalized.messages
     }
 
-    private func seedAssistantMessage() -> AssistantMessageModel {
-        AssistantMessageModel(
+    private func seedAssistantMessage(context: AssistantContextModel) -> AssistantMessageModel {
+        if shouldKickOffDisplayDiscovery(context: context) {
+            let candidateNames = context.displayDiscoveryCandidates
+                .compactMap { row in
+                    let name = row["name"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    return name.isEmpty ? nil : name
+                }
+            let candidateSummary = Array(candidateNames.prefix(3)).joined(separator: ", ")
+            let observation = candidateSummary.isEmpty
+                ? "I can already see your layout and I want to understand the important models before we push into design."
+                : "I can already see your layout, and a few models stand out for early clarification: \(candidateSummary)."
+            return AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: "Welcome. I'm the Designer, and I’d like to start by getting to know your display so we can create useful metadata for design and sequencing. \(observation) Tell me which models feel most focal, which are mostly supporting or repeating elements, and whether any named props have a special role in the show.",
+                timestamp: isoNow(),
+                handledBy: "designer_dialog",
+                routeDecision: "designer_dialog",
+                displayName: "Designer"
+            )
+        }
+
+        return AssistantMessageModel(
             id: UUID().uuidString,
             role: .assistant,
             text: "Welcome. I guide the overall workflow and bring in the right specialist as needed: Designer for display and creative direction, Audio Analyst for track structure, and Sequencer for technical sequence work. Start anywhere. I will help you move through the process and adapt to your working style as we go.",
@@ -163,6 +191,13 @@ final class AssistantWindowViewModel {
             routeDecision: "app_assistant",
             displayName: "App Assistant"
         )
+    }
+
+    private func shouldKickOffDisplayDiscovery(context: AssistantContextModel) -> Bool {
+        context.layoutTargetCount > 0 &&
+        context.layoutTaggedTargetCount == 0 &&
+        context.displayDiscoveryTranscriptCount == 0 &&
+        context.displayDiscoveryStatus.caseInsensitiveCompare("not_started") == .orderedSame
     }
 
     private func displayName(for handledBy: String) -> String {

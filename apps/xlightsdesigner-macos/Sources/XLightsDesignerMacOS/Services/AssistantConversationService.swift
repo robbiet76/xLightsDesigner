@@ -3,6 +3,7 @@ import Foundation
 protocol AssistantConversationService {
     func loadConversationState() throws -> AssistantConversationState
     func saveConversationState(_ state: AssistantConversationState) throws
+    func clearConversationState() throws
 }
 
 struct LocalAssistantConversationService: AssistantConversationService {
@@ -35,6 +36,12 @@ struct LocalAssistantConversationService: AssistantConversationService {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(normalized)
         try data.write(to: url, options: .atomic)
+    }
+
+    func clearConversationState() throws {
+        let url = storageURL()
+        guard fileManager.fileExists(atPath: url.path) else { return }
+        try fileManager.removeItem(at: url)
     }
 
     private func compact(state: AssistantConversationState) -> AssistantConversationState {

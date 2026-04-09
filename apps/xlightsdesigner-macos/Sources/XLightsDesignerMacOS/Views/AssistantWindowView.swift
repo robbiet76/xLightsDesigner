@@ -13,7 +13,10 @@ struct AssistantWindowView: View {
         .padding(20)
         .frame(minWidth: 320, minHeight: 640)
         .task {
-            model.loadConversationIfNeeded()
+            model.loadConversationIfNeeded(
+                context: currentContext(),
+                project: appModel.workspace.activeProject
+            )
         }
     }
 
@@ -31,7 +34,7 @@ struct AssistantWindowView: View {
                 appModel.showAssistantPanel = false
             }
             Button("Clear") {
-                model.clearConversation()
+                model.clearConversation(context: currentContext())
             }
         }
     }

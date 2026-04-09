@@ -3,7 +3,7 @@
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || 'http://127.0.0.1:49916';
 
 function usage() {
-  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
+  console.error('usage: automation.mjs ping | get-health-snapshot | get-app-snapshot | get-assistant-snapshot | get-xlights-session | select-workflow <project|layout|audio|design|sequence|review|history> | refresh-current-workflow | refresh-all | refresh-xlights-session | save-xlights-sequence | render-xlights-sequence | open-xlights-sequence <filePath> | create-xlights-sequence <filePath> [mediaFile] [durationMs] [frameMs] | reset-assistant-memory | send-assistant-prompt <prompt> | apply-review | defer-review | accept-timing-review | show-assistant | hide-assistant');
   process.exit(2);
 }
 
@@ -71,6 +71,9 @@ switch (command) {
     await request('POST', '/action', body);
     break;
   }
+  case 'reset-assistant-memory':
+    await request('POST', '/action', { action: 'resetAssistantMemory' });
+    break;
   case 'send-assistant-prompt':
     await request('POST', '/action', { action: 'sendAssistantPrompt', prompt: rest.join(' ').trim() });
     break;

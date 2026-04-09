@@ -15,18 +15,19 @@ struct AssistantWindowViewModelTests {
             userPreferenceNotes: []
         )))
         let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)
-        model.loadConversationIfNeeded()
+        let context = AssistantContextModel(
+            activeProjectName: "Christmas 2026",
+            workflowName: "Audio",
+            route: "audio",
+            focusedSummary: "Candy Cane Lane",
+            activeSequenceLoaded: false,
+            planOnlyMode: false
+        )
+        model.loadConversationIfNeeded(context: context, project: nil)
         model.draft = "Help me"
 
         await model.sendDraft(
-            context: AssistantContextModel(
-                activeProjectName: "Christmas 2026",
-                workflowName: "Audio",
-                route: "audio",
-                focusedSummary: "Candy Cane Lane",
-                activeSequenceLoaded: false,
-                planOnlyMode: false
-            ),
+            context: context,
             project: nil
         )
 
@@ -43,6 +44,7 @@ private final class InMemoryAssistantConversationService: AssistantConversationS
 
     func loadConversationState() throws -> AssistantConversationState { state }
     func saveConversationState(_ state: AssistantConversationState) throws { self.state = state }
+    func clearConversationState() throws { state = AssistantConversationState() }
 }
 
 private final class StubAssistantExecutionService: AssistantExecutionService, @unchecked Sendable {

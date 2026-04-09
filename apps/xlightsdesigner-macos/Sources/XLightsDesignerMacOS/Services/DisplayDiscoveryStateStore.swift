@@ -3,6 +3,7 @@ import Foundation
 protocol DisplayDiscoveryStateStore: Sendable {
     func load(for project: ActiveProjectModel) throws -> DisplayDiscoveryDocument
     func summary(for project: ActiveProjectModel?) -> DisplayDiscoverySummaryModel
+    func clear(for project: ActiveProjectModel?) throws
     func recordConversationTurn(
         project: ActiveProjectModel,
         status: DisplayDiscoveryStatus,
@@ -35,6 +36,13 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
             transcriptCount: document.transcript.count,
             candidateProps: document.candidateProps
         )
+    }
+
+    func clear(for project: ActiveProjectModel?) throws {
+        guard let project else { return }
+        let fileURL = storageURL(for: project)
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        try FileManager.default.removeItem(at: fileURL)
     }
 
     func recordConversationTurn(

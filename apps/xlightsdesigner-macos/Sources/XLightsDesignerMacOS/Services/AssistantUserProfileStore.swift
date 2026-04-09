@@ -13,6 +13,7 @@ struct AssistantUserProfile: Codable, Sendable {
 protocol AssistantUserProfileStore: Sendable {
     func load() throws -> AssistantUserProfile
     func addPreferenceNotes(_ notes: [String], recordedAt: String) throws
+    func clear() throws
 }
 
 struct LocalAssistantUserProfileStore: AssistantUserProfileStore {
@@ -40,6 +41,12 @@ struct LocalAssistantUserProfileStore: AssistantUserProfileStore {
             profile.preferenceNotes = Array(profile.preferenceNotes.suffix(12))
         }
         try save(profile)
+    }
+
+    func clear() throws {
+        let fileURL = storageURL()
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        try FileManager.default.removeItem(at: fileURL)
     }
 
     private func addOrMerge(note: String, recordedAt: String, profile: inout AssistantUserProfile) {
