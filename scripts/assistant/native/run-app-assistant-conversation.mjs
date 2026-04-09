@@ -65,7 +65,7 @@ function getAgentConfig() {
 function normalizeConversationMessages(messages = []) {
   const rows = Array.isArray(messages) ? messages : [];
   const out = [];
-  for (const row of rows.slice(-12)) {
+  for (const row of rows.slice(-8)) {
     const roleRaw = String(row?.role || row?.who || '').trim().toLowerCase();
     const content = String(row?.content || row?.text || '').trim();
     if (!content) continue;
@@ -78,6 +78,12 @@ function normalizeConversationMessages(messages = []) {
     out.push({ role, content: [{ type: contentType, text: content }] });
   }
   return out;
+}
+
+function truncateText(value = '', max = 0) {
+  const text = String(value || '').trim();
+  if (!text || max <= 0 || text.length <= max) return text;
+  return `${text.slice(0, max - 3)}...`;
 }
 
 function extractResponseText(body) {
@@ -179,30 +185,30 @@ function compactContext(context = {}) {
     display: {
       targetCount: Number(display.targetCount || 0),
       labeledTargetCount: Number(display.labeledTargetCount || 0),
-      labelNames: limitStrings(display.labelNames, 12),
+      labelNames: limitStrings(display.labelNames, 8),
       selectedSubject: String(display.selectedSubject || '').trim(),
-      selectedLabels: limitStrings(display.selectedLabels, 8)
+      selectedLabels: limitStrings(display.selectedLabels, 6)
     },
     xlightsLayout: {
-      families: limitObjects(xlightsLayout.families, 10, ['name', 'type', 'count', 'reason', 'confidence', 'examples']),
-      typeBreakdown: limitObjects(xlightsLayout.typeBreakdown, 12, ['type', 'count']),
-      modelSamples: limitObjects(xlightsLayout.modelSamples, 16, [
+      families: limitObjects(xlightsLayout.families, 8, ['name', 'type', 'count', 'confidence', 'examples']),
+      typeBreakdown: limitObjects(xlightsLayout.typeBreakdown, 8, ['type', 'count']),
+      modelSamples: limitObjects(xlightsLayout.modelSamples, 10, [
         'name', 'type', 'nodeCount', 'horizontalZone', 'depthZone', 'visualWeight', 'uniqueness', 'symmetryPeers'
       ]),
-      allTargetNames: limitStrings(xlightsLayout.allTargetNames, 80),
-      groupMemberships: limitObjects(xlightsLayout.groupMemberships, 20, [
-        'groupName', 'directMembers', 'flattenedMembers', 'flattenedAllMembers', 'structureKind', 'relatedFamilies', 'supersetOfGroups', 'overlapsWithGroups'
+      allTargetNames: limitStrings(xlightsLayout.allTargetNames, 40),
+      groupMemberships: limitObjects(xlightsLayout.groupMemberships, 12, [
+        'groupName', 'directMembers', 'flattenedAllMembers', 'structureKind', 'relatedFamilies', 'supersetOfGroups', 'overlapsWithGroups'
       ])
     },
     displayDiscovery: {
       status: String(displayDiscovery.status || '').trim(),
       transcriptCount: Number(displayDiscovery.transcriptCount || 0),
-      insights: limitObjects(displayDiscovery.insights, 24, ['subject', 'subjectType', 'category', 'value', 'rationale']),
-      unresolvedBranches: limitStrings(displayDiscovery.unresolvedBranches, 8),
-      resolvedBranches: limitStrings(displayDiscovery.resolvedBranches, 8)
+      insights: limitObjects(displayDiscovery.insights, 12, ['subject', 'subjectType', 'category', 'value']),
+      unresolvedBranches: limitStrings(displayDiscovery.unresolvedBranches, 6),
+      resolvedBranches: limitStrings(displayDiscovery.resolvedBranches, 6)
     },
     userProfile: {
-      preferenceNotes: limitStrings(userProfile.preferenceNotes, 8)
+      preferenceNotes: limitStrings(userProfile.preferenceNotes, 6)
     },
     xlights: {
       sequenceOpen: Boolean(xlights.sequenceOpen),
@@ -425,10 +431,20 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When relevant, mention concrete next actions you can perform in the app.',
     'Keep specialist boundaries intact: audio analysis is media-only, design proposals are review-first, and sequence execution must remain explicit.',
     'For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.',
+    'When acting as the Designer, let some real designer personality come through: thoughtful, visually aware, and quietly opinionated without becoming theatrical or chatty.',
+    'The Designer should contribute useful perspective, not just record facts. Bring lightweight design judgment to the conversation by noticing hierarchy, rhythm, framing, balance, contrast, scene-setting, and where attention will naturally go.',
+    'Do not overdo that personality. Keep it grounded, brief, and helpful.',
     'During display discovery, do not imply that metadata has already been applied. Prefer understanding language such as "I understand this as..." or "So far I have..." rather than "I will mark" or "I updated".',
+    'Use direct, non-formulaic phrasing. Avoid repetitive openings like "I understand that..." when a shorter acknowledgment works.',
     'When the user answer is clear enough, do not summarize it back just to request confirmation. Instead, briefly acknowledge the understanding and ask the next useful question.',
     'When the user gives a clear semantic answer with unambiguous exact model or family scope, treat that as sufficient confirmation for discovery. Do not ask whether to classify, tag, or mark it during the same turn.',
     'If the scope and meaning are both clear, advance to the next discovery branch rather than asking for permission to record the understanding.',
+    'Avoid confirmation questions such as "Is that correct?" unless the user answer was ambiguous, mixed, or structurally risky.',
+    'Avoid permission questions such as "Should I capture this?" when the user has already given a clear answer.',
+    'Bad example after a clear answer: "I understand that `HiddenTree` is your primary focal structure... Is that correct?"',
+    'Good example after a clear answer: "`HiddenTree` is the main structural focal point, with `Snowman` and `Train` as the key character props. What are the main supporting elements around them?"',
+    'Bad example after a clear answer: "Should I capture these as supporting role elements?"',
+    'Good example after a clear answer: "`CandyCane-01` through `CandyCane-04` and the wreath family are supporting framing elements. What serves more as background or architectural support?"',
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
@@ -441,7 +457,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'If the user gives a short confirmation to a grounded assistant summary, treat the grounded facts in that summary as confirmed and capture them as insights.',
     'Do not reflexively restate the user\'s clear answer and ask "Is that correct?". Move forward unless clarification is actually needed.',
     'Do not convert a clear discovery answer into a permission question like "Would you like to classify these?" or "Confirm?". Discovery should continue unless the user asked to stop and review.',
-    'Choose the next question based on information gain. Ask the smallest useful next question that helps reach a sequencing-ready understanding of the display with as few questions as possible.',
+    'Choose the next question based on information gain. Ask the smallest useful next question that helps reach a strong shared understanding of the display with as few questions as possible.',
+    'Let the user\'s answers shape the next design question. If they identify a strong centerpiece, it is natural to ask about framing or supporting layers next. If they describe character props, it is natural to ask how those should relate to the centerpiece. If they describe strong background architecture, it is natural to ask how active or quiet that layer should feel.',
+    'Use what the user reveals to begin sensing the eventual design language of the display, but do not drift into effect choices, sequencing tactics, or animation planning during discovery unless the user explicitly asks.',
     'For the first substantive display-discovery reply, ask exactly one primary question and do not use bullet lists.',
     'For the first substantive display-discovery reply, avoid listing many candidate props or families. Keep it short and high level.',
     'Track larger areas of uncertainty in unresolvedBranches rather than saving literal question text.',
@@ -449,8 +467,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'This is a conversation, not an interrogation. Let the user steer the branch order.',
     'Avoid multi-part prefacing. Get to the next useful question quickly.',
     'If nothing new was confirmed, return an empty insights array.',
-    knownNames.length ? `Known xLights names currently in context:\n${knownNames.map((row) => `- \`${row}\``).join('\n')}` : "",
-    c.rollingConversationSummary ? `Rolling conversation summary:\n${String(c.rollingConversationSummary).trim()}` : "",
+    c.rollingConversationSummary ? `Rolling conversation summary:\n${truncateText(String(c.rollingConversationSummary).trim(), 1200)}` : "",
     ongoingDiscovery,
     existingDisplayUnderstanding,
     unresolvedDisplayBranches,
