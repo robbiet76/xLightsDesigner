@@ -6,7 +6,7 @@ import {
   validateAppAssistantInput
 } from "./app-assistant-contracts.js";
 import {
-  hasMeaningfulLayoutMetadata,
+  hasMeaningfulDisplayMetadata,
   shouldContinueDisplayDiscovery,
   shouldStartDisplayDiscovery
 } from "../designer-dialog/display-discovery.js";
@@ -226,7 +226,7 @@ export async function executeAppAssistantConversation({
   const discoveryShouldContinue = shouldContinueDisplayDiscovery({ context });
   const discoveryActive =
     routeDecision === "designer_dialog" &&
-    !hasMeaningfulLayoutMetadata(context) &&
+    !hasMeaningfulDisplayMetadata(context) &&
     (discoveryShouldStart || discoveryShouldContinue);
   const allowProposalGeneration =
     (routeDecision === "designer_dialog" || routeDecision === "sequence_agent") &&
@@ -258,8 +258,8 @@ export async function executeAppAssistantConversation({
             tagProposals: Array.isArray(response?.displayDiscoveryCapture?.tagProposals)
               ? response.displayDiscoveryCapture.tagProposals
               : [],
-            candidateProps: Array.isArray(context?.layout?.displayDiscoveryCandidates)
-              ? context.layout.displayDiscoveryCandidates
+            candidateProps: Array.isArray(context?.display?.displayDiscoveryCandidates)
+              ? context.display.displayDiscoveryCandidates
               : []
           }
         : undefined,

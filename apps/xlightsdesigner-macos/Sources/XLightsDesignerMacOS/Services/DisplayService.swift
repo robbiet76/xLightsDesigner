@@ -4,7 +4,7 @@ protocol DisplayService: Sendable {
     func loadDisplay(for project: ActiveProjectModel?) async throws -> DisplayServiceResult
     func addTag(for project: ActiveProjectModel?, targetIDs: [String], tagName: String, description: String) async throws
     func removeTag(for project: ActiveProjectModel?, targetIDs: [String], tagID: String) async throws
-    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayTagColor) async throws
+    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayLabelColor) async throws
     func deleteTagDefinition(for project: ActiveProjectModel?, tagID: String) async throws
 }
 
@@ -13,7 +13,7 @@ struct DisplayServiceResult: Sendable {
     let rows: [DisplayLayoutRowModel]
     let sourceSummary: String
     let banners: [DisplayBannerModel]
-    let tagDefinitions: [DisplayTagDefinitionModel]
+    let labelDefinitions: [DisplayLabelDefinitionModel]
 }
 
 enum DisplayServiceError: LocalizedError {
@@ -51,16 +51,16 @@ struct XLightsDisplayService: DisplayService {
                 result[id, default: 0] += 1
             }
         }
-        let tagDefinitions = metadataDocument.tags.map {
-            DisplayTagDefinitionModel(
+        let labelDefinitions = metadataDocument.tags.map {
+            DisplayLabelDefinitionModel(
                 id: $0.id,
                 name: $0.name,
                 description: $0.description,
                 usageCount: usageByTagID[$0.id, default: 0],
-                color: DisplayTagColor(rawValue: $0.colorName ?? "") ?? .none
+                color: DisplayLabelColor(rawValue: $0.colorName ?? "") ?? .none
             )
         }
-        let tagDefinitionsByID = Dictionary(uniqueKeysWithValues: tagDefinitions.map { ($0.id, $0) })
+        let labelDefinitionsByID = Dictionary(uniqueKeysWithValues: labelDefinitions.map { ($0.id, $0) })
         let explanation: String
         let nextStep: String
         let state: DisplayReadinessState
@@ -97,9 +97,9 @@ struct XLightsDisplayService: DisplayService {
             } else {
                 let models = try await fetchModels()
                 rows = models
-                    .map { makeRow(from: $0, document: metadataDocument, tagDefinitionsByID: tagDefinitionsByID) }
+                    .map { makeRow(from: $0, document: metadataDocument, labelDefinitionsByID: labelDefinitionsByID) }
                     .sorted { $0.targetName.localizedCaseInsensitiveCompare($1.targetName) == .orderedAscending }
-                taggedCount = rows.filter { !$0.tagDefinitions.isEmpty }.count
+                taggedCount = rows.filter { !$0.labelDefinitions.isEmpty }.count
                 unresolvedCount = rows.count - taggedCount
 
                 if unresolvedCount > 0 {
@@ -141,7 +141,7 @@ struct XLightsDisplayService: DisplayService {
             rows: rows,
             sourceSummary: health?.listenerReachable == true ? "xLights owned API" : "No live xLights source",
             banners: banners,
-            tagDefinitions: tagDefinitions.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            labelDefinitions: labelDefinitions.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         )
     }
 
@@ -168,7 +168,7 @@ struct XLightsDisplayService: DisplayService {
         try metadataStore.removeTag(project: project, targetIDs: targetIDs, tagID: tagID)
     }
 
-    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayTagColor) async throws {
+    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayLabelColor) async throws {
         guard let project else { throw DisplayServiceError.noActiveProject }
         try metadataStore.updateTagDefinition(
             project: project,
@@ -195,18 +195,17 @@ struct XLightsDisplayService: DisplayService {
     private func makeRow(
         from model: XLightsLayoutModel,
         document: PersistedDisplayMetadataDocument,
-        tagDefinitionsByID: [String: DisplayTagDefinitionModel]
+        labelDefinitionsByID: [String: DisplayLabelDefinitionModel]
     ) -> DisplayLayoutRowModel {
         let assignedTagIDs = document.targetTags[model.name] ?? []
-        let assignedTags = assignedTagIDs
-            .compactMap { tagDefinitionsByID[$0] }
+        let assignedLabels = assignedTagIDs
+            .compactMap { labelDefinitionsByID[$0] }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
         return DisplayLayoutRowModel(
             id: model.name,
             targetName: model.name,
             targetType: model.displayAs,
-            layoutGroup: model.layoutGroup,
             nodeCount: model.nodeCount ?? 0,
             positionX: model.positionX ?? 0,
             positionY: model.positionY ?? 0,
@@ -214,9 +213,7 @@ struct XLightsDisplayService: DisplayService {
             width: model.width ?? 0,
             height: model.height ?? 0,
             depth: model.depth ?? 0,
-            tagDefinitions: assignedTags,
-            supportStateSummary: assignedTags.isEmpty ? "Needs Mapping" : "Mapped",
-            issuesSummary: assignedTags.isEmpty ? "No applied metadata labels" : "No issues detected",
+            labelDefinitions: assignedLabels,
             submodelCount: model.submodelCount
         )
     }

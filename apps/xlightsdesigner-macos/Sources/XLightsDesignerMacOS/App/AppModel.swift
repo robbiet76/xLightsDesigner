@@ -103,8 +103,8 @@ final class AppModel {
 
     func assistantContext() -> AssistantContextModel {
         let layoutRows = displayScreenModel.screenModel.rows
-        let taggedTargetCount = layoutRows.filter { !$0.tagDefinitions.isEmpty }.count
-        let allTagNames = Set(displayScreenModel.screenModel.tagDefinitions.map(\.name))
+        let labeledTargetCount = layoutRows.filter { !$0.labelDefinitions.isEmpty }.count
+        let allLabelNames = Set(displayScreenModel.screenModel.labelDefinitions.map(\.name))
         let discoverySummary = displayDiscoveryStore.summary(for: workspace.activeProject)
         let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows, discoverySummary: discoverySummary)
         let discoveryFamilies = buildDisplayDiscoveryFamilies(from: layoutRows)
@@ -116,7 +116,7 @@ final class AppModel {
         switch displayScreenModel.screenModel.selectedMetadata {
         case let .selected(entry):
             selectedDisplaySubject = entry.subject
-            selectedDisplayLabels = entry.relatedTags.map(\.name)
+            selectedDisplayLabels = entry.relatedLabels.map(\.name)
         default:
             selectedDisplaySubject = ""
             selectedDisplayLabels = []
@@ -133,8 +133,8 @@ final class AppModel {
             planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode,
             showFolder: workspace.activeProject?.showFolder ?? "",
             displayTargetCount: layoutRows.count,
-            displayTaggedTargetCount: taggedTargetCount,
-            displayLabelNames: allTagNames.sorted(),
+            displayLabeledTargetCount: labeledTargetCount,
+            displayLabelNames: allLabelNames.sorted(),
             selectedDisplaySubject: selectedDisplaySubject,
             selectedDisplayLabels: selectedDisplayLabels.sorted(),
             displayDiscoveryCandidates: discoveryCandidates,
@@ -283,8 +283,8 @@ final class AppModel {
                 return !type.contains("modelgroup") && !type.contains("submodel")
             }
             .sorted { lhs, rhs in
-                let leftScore = layoutSamplePriority(for: lhs)
-                let rightScore = layoutSamplePriority(for: rhs)
+                let leftScore = displaySamplePriority(for: lhs)
+                let rightScore = displaySamplePriority(for: rhs)
                 if leftScore != rightScore { return leftScore > rightScore }
                 return lhs.targetName.localizedCaseInsensitiveCompare(rhs.targetName) == .orderedAscending
             }
@@ -305,7 +305,7 @@ final class AppModel {
             }
     }
 
-    private func layoutSamplePriority(for row: DisplayLayoutRowModel) -> Int {
+    private func displaySamplePriority(for row: DisplayLayoutRowModel) -> Int {
         var score = displayDiscoveryScore(for: row)
         if row.nodeCount >= 300 { score += 3 }
         else if row.nodeCount >= 100 { score += 2 }

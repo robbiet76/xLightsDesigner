@@ -46,7 +46,7 @@ struct AssistantContextModel {
     let planOnlyMode: Bool
     let showFolder: String
     let displayTargetCount: Int
-    let displayTaggedTargetCount: Int
+    let displayLabeledTargetCount: Int
     let displayLabelNames: [String]
     let selectedDisplaySubject: String
     let selectedDisplayLabels: [String]
@@ -77,7 +77,7 @@ struct AssistantContextModel {
         planOnlyMode: Bool,
         showFolder: String = "",
         displayTargetCount: Int = 0,
-        displayTaggedTargetCount: Int = 0,
+        displayLabeledTargetCount: Int = 0,
         displayLabelNames: [String] = [],
         selectedDisplaySubject: String = "",
         selectedDisplayLabels: [String] = [],
@@ -107,7 +107,7 @@ struct AssistantContextModel {
         self.planOnlyMode = planOnlyMode
         self.showFolder = showFolder
         self.displayTargetCount = displayTargetCount
-        self.displayTaggedTargetCount = displayTaggedTargetCount
+        self.displayLabeledTargetCount = displayLabeledTargetCount
         self.displayLabelNames = displayLabelNames
         self.selectedDisplaySubject = selectedDisplaySubject
         self.selectedDisplayLabels = selectedDisplayLabels
@@ -141,10 +141,10 @@ struct AssistantContextModel {
             "showFolder": showFolder,
             "display": [
                 "targetCount": displayTargetCount,
-                "taggedTargetCount": displayTaggedTargetCount,
-                "tagNames": displayLabelNames,
-                "selectedTarget": selectedDisplaySubject,
-                "selectedTargetTags": selectedDisplayLabels,
+                "labeledTargetCount": displayLabeledTargetCount,
+                "labelNames": displayLabelNames,
+                "selectedSubject": selectedDisplaySubject,
+                "selectedLabels": selectedDisplayLabels,
                 "displayDiscoveryCandidates": displayDiscoveryCandidates,
                 "displayDiscoveryFamilies": displayDiscoveryFamilies,
                 "typeBreakdown": displayTypeBreakdown,

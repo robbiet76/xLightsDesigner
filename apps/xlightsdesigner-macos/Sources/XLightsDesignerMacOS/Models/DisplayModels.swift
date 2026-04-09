@@ -33,7 +33,7 @@ enum DisplayMetadataSource: String, Sendable {
     case agent = "Agent"
 }
 
-enum DisplayTagColor: String, CaseIterable, Codable, Sendable {
+enum DisplayLabelColor: String, CaseIterable, Codable, Sendable {
     case none
     case red
     case orange
@@ -50,19 +50,18 @@ enum DisplayTagColor: String, CaseIterable, Codable, Sendable {
     }
 }
 
-struct DisplayTagDefinitionModel: Identifiable, Hashable, Codable, Sendable {
+struct DisplayLabelDefinitionModel: Identifiable, Hashable, Codable, Sendable {
     let id: String
     var name: String
     var description: String
     var usageCount: Int
-    var color: DisplayTagColor
+    var color: DisplayLabelColor
 }
 
 struct DisplayLayoutRowModel: Identifiable, Hashable, Sendable {
     let id: String
     let targetName: String
     let targetType: String
-    let layoutGroup: String
     let nodeCount: Int
     let positionX: Double
     let positionY: Double
@@ -70,25 +69,8 @@ struct DisplayLayoutRowModel: Identifiable, Hashable, Sendable {
     let width: Double
     let height: Double
     let depth: Double
-    let tagDefinitions: [DisplayTagDefinitionModel]
-    let supportStateSummary: String
-    let issuesSummary: String
+    let labelDefinitions: [DisplayLabelDefinitionModel]
     let submodelCount: Int
-
-    var tagSummary: String {
-        guard !tagDefinitions.isEmpty else { return "No tags" }
-        return tagDefinitions
-            .map(\.name)
-            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-            .joined(separator: ", ")
-    }
-
-    var tagFilterSummary: String {
-        guard !tagDefinitions.isEmpty else { return "No tags" }
-        return tagDefinitions
-            .map { [$0.name, $0.description, $0.color == .none ? "" : $0.color.displayName].joined(separator: " ") }
-            .joined(separator: " ")
-    }
 }
 
 struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {
@@ -120,7 +102,7 @@ struct DisplayMetadataSelectionModel: Sendable {
     let source: DisplayMetadataSource
     let rationale: String
     let linkedTargets: [String]
-    let relatedTags: [DisplayTagDefinitionModel]
+    let relatedLabels: [DisplayLabelDefinitionModel]
 }
 
 enum DisplayMetadataSelectedPaneModel: Sendable {
@@ -141,7 +123,7 @@ struct DisplayScreenModel: Sendable {
     let metadataRows: [DisplayMetadataRowModel]
     let selectedMetadata: DisplayMetadataSelectedPaneModel
     let banners: [DisplayBannerModel]
-    let tagDefinitions: [DisplayTagDefinitionModel]
+    let labelDefinitions: [DisplayLabelDefinitionModel]
     let discoveryProposals: [DisplayDiscoveryTagProposalModel]
     let openQuestions: [String]
 }

@@ -426,7 +426,7 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "source": entry.source.rawValue,
                 "rationale": entry.rationale,
                 "linkedTargets": entry.linkedTargets,
-                "relatedTags": entry.relatedTags.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] }
+                "relatedLabels": entry.relatedLabels.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] }
             ]
         }
         return [

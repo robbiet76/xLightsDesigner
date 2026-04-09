@@ -118,7 +118,7 @@ struct DisplayScreenView: View {
                         model.reviewDiscoveryProposals()
                     }
                     .disabled(model.discoveryProposals.isEmpty)
-                    Button("Apply Proposed Tags") {
+                    Button("Apply Proposed Metadata") {
                         model.applyDiscoveryProposals()
                     }
                     .disabled(model.discoveryProposals.isEmpty)
@@ -156,8 +156,8 @@ struct DisplayScreenView: View {
                         if !entry.linkedTargets.isEmpty {
                             detailCard(label: "Linked Models", value: entry.linkedTargets.joined(separator: ", "))
                         }
-                        if !entry.relatedTags.isEmpty {
-                            tagSection(title: "Applied Labels", tags: entry.relatedTags)
+                        if !entry.relatedLabels.isEmpty {
+                            labelSection(title: "Applied Labels", labels: entry.relatedLabels)
                         }
                     }
                 }
@@ -354,22 +354,22 @@ struct DisplayScreenView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    private func tagSection(title: String, tags: [DisplayTagDefinitionModel]) -> some View {
+    private func labelSection(title: String, labels: [DisplayLabelDefinitionModel]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
-            if tags.isEmpty {
-                Text("No related tags yet.")
+            if labels.isEmpty {
+                Text("No related labels yet.")
                     .foregroundStyle(.secondary)
             } else {
-                FlowTagList(tags: tags)
+                FlowLabelList(labels: labels)
             }
         }
     }
 }
 
-private struct FlowTagList: View {
-    let tags: [DisplayTagDefinitionModel]
+private struct FlowLabelList: View {
+    let labels: [DisplayLabelDefinitionModel]
 
     var body: some View {
         LazyVGrid(
@@ -377,11 +377,11 @@ private struct FlowTagList: View {
             alignment: .leading,
             spacing: 8
         ) {
-            ForEach(tags) { tag in
+            ForEach(labels) { label in
                 VStack(alignment: .leading, spacing: 4) {
-                    TagChip(tag: tag)
-                    if !tag.description.isEmpty {
-                        Text(tag.description)
+                    LabelChip(label: label)
+                    if !label.description.isEmpty {
+                        Text(label.description)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
@@ -396,21 +396,21 @@ private struct FlowTagList: View {
     }
 }
 
-private struct TagChip: View {
-    let tag: DisplayTagDefinitionModel
+private struct LabelChip: View {
+    let label: DisplayLabelDefinitionModel
 
     var body: some View {
-        Text(tag.name)
+        Text(label.name)
             .font(.caption)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .foregroundStyle(tagForegroundColor)
-            .background(tagBackgroundColor)
+            .foregroundStyle(labelForegroundColor)
+            .background(labelBackgroundColor)
             .clipShape(Capsule())
     }
 
-    private var tagBackgroundColor: Color {
-        switch tag.color {
+    private var labelBackgroundColor: Color {
+        switch label.color {
         case .none:
             return Color(nsColor: .controlBackgroundColor)
         case .red:
@@ -434,8 +434,8 @@ private struct TagChip: View {
         }
     }
 
-    private var tagForegroundColor: Color {
-        switch tag.color {
+    private var labelForegroundColor: Color {
+        switch label.color {
         case .yellow:
             return Color.black.opacity(0.75)
         default:

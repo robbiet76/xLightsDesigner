@@ -6,7 +6,7 @@ import SwiftUI
 @Observable
 final class DisplayScreenViewModel {
     private let workspace: ProjectWorkspace
-    private let layoutService: DisplayService
+    private let displayService: DisplayService
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
 
     var targetFilter = ""
@@ -36,7 +36,7 @@ final class DisplayScreenViewModel {
         metadataRows: [],
         selectedMetadata: .none("Select one metadata entry to inspect."),
         banners: [],
-        tagDefinitions: [],
+        labelDefinitions: [],
         discoveryProposals: [],
         openQuestions: []
     )
@@ -46,11 +46,11 @@ final class DisplayScreenViewModel {
 
     init(
         workspace: ProjectWorkspace,
-        layoutService: DisplayService = XLightsDisplayService(),
+        displayService: DisplayService = XLightsDisplayService(),
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore()
     ) {
         self.workspace = workspace
-        self.layoutService = layoutService
+        self.displayService = displayService
         self.displayDiscoveryStore = displayDiscoveryStore
     }
 
@@ -131,9 +131,9 @@ final class DisplayScreenViewModel {
         let activeProject = workspace.activeProject
         Task {
             do {
-                let result = try await layoutService.loadDisplay(for: activeProject)
+                let result = try await displayService.loadDisplay(for: activeProject)
                 let discoverySummary = displayDiscoveryStore.summary(for: activeProject)
-                let metadataRows = buildMetadataRows(layoutRows: result.rows, discoverySummary: discoverySummary)
+                let metadataRows = buildMetadataRows(displayRows: result.rows, discoverySummary: discoverySummary)
                 let validSelection = selectedRowIDs.intersection(Set(metadataRows.map(\.id)))
                 if validSelection.isEmpty, let first = metadataRows.first {
                     selectedRowIDs = [first.id]
@@ -153,7 +153,7 @@ final class DisplayScreenViewModel {
                     metadataRows: metadataRows,
                     selectedMetadata: .none("Select one metadata entry to inspect."),
                     banners: result.banners,
-                    tagDefinitions: result.tagDefinitions,
+                    labelDefinitions: result.labelDefinitions,
                     discoveryProposals: discoverySummary.proposedTags,
                     openQuestions: discoverySummary.openQuestions
                 )
@@ -172,14 +172,14 @@ final class DisplayScreenViewModel {
                         readyCount: 0,
                         unresolvedCount: 0,
                         orphanCount: 0,
-                        explanationText: "Layout could not be loaded.",
+                        explanationText: "Display could not be loaded.",
                         nextStepText: "Check that xLights is running and reachable."
                     ),
                     rows: [],
                     metadataRows: [],
                     selectedMetadata: .none(error.localizedDescription),
                     banners: [DisplayBannerModel(id: "load-failed", state: .blocked, text: error.localizedDescription)],
-                    tagDefinitions: [],
+                    labelDefinitions: [],
                     discoveryProposals: [],
                     openQuestions: []
                 )
@@ -197,14 +197,14 @@ final class DisplayScreenViewModel {
                 metadataRows: screenModel.metadataRows,
                 selectedMetadata: .none("Select one metadata entry to inspect."),
                 banners: screenModel.banners,
-                tagDefinitions: screenModel.tagDefinitions,
+                labelDefinitions: screenModel.labelDefinitions,
                 discoveryProposals: screenModel.discoveryProposals,
                 openQuestions: screenModel.openQuestions
             )
             return
         }
         let row = selected[0]
-        let relatedTags = relatedTags(for: row)
+        let relatedLabels = relatedLabels(for: row)
         screenModel = DisplayScreenModel(
             header: screenModel.header,
             readinessSummary: screenModel.readinessSummary,
@@ -219,10 +219,10 @@ final class DisplayScreenViewModel {
                 source: row.source,
                 rationale: row.rationale,
                 linkedTargets: row.linkedTargets,
-                relatedTags: relatedTags
+                relatedLabels: relatedLabels
             )),
             banners: screenModel.banners,
-            tagDefinitions: screenModel.tagDefinitions,
+            labelDefinitions: screenModel.labelDefinitions,
             discoveryProposals: screenModel.discoveryProposals,
             openQuestions: screenModel.openQuestions
         )
@@ -239,14 +239,14 @@ final class DisplayScreenViewModel {
         Task {
             do {
                 for proposal in proposals {
-                    try await layoutService.saveTagDefinition(
+                    try await displayService.saveTagDefinition(
                         for: workspace.activeProject,
                         tagID: nil,
                         name: proposal.tagName,
                         description: proposal.tagDescription,
                         color: .none
                     )
-                    try await layoutService.addTag(
+                    try await displayService.addTag(
                         for: workspace.activeProject,
                         targetIDs: proposal.targetNames,
                         tagName: proposal.tagName,
@@ -263,7 +263,7 @@ final class DisplayScreenViewModel {
     }
 
     private func buildMetadataRows(
-        layoutRows: [DisplayLayoutRowModel],
+        displayRows: [DisplayLayoutRowModel],
         discoverySummary: DisplayDiscoverySummaryModel
     ) -> [DisplayMetadataRowModel] {
         let insightRows = discoverySummary.insights.map { insight in
@@ -276,7 +276,7 @@ final class DisplayScreenViewModel {
                 status: .confirmed,
                 source: .userAndAgent,
                 rationale: insight.rationale,
-                linkedTargets: inferLinkedTargets(for: insight.subject, explicitTargets: [], from: layoutRows)
+                linkedTargets: inferLinkedTargets(for: insight.subject, explicitTargets: [], from: displayRows)
             )
         }
 
@@ -290,7 +290,7 @@ final class DisplayScreenViewModel {
                 status: .proposed,
                 source: .agent,
                 rationale: proposal.rationale,
-                linkedTargets: inferLinkedTargets(for: proposal.tagName, explicitTargets: proposal.targetNames, from: layoutRows)
+                linkedTargets: inferLinkedTargets(for: proposal.tagName, explicitTargets: proposal.targetNames, from: displayRows)
             )
         }
 
@@ -329,9 +329,9 @@ final class DisplayScreenViewModel {
             .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
-    private func relatedTags(for row: DisplayMetadataRowModel) -> [DisplayTagDefinitionModel] {
-        let tagNames = Set(selectedLinkedTargets.flatMap(\.tagDefinitions).map(\.name))
-        let related = screenModel.tagDefinitions.filter { tagNames.contains($0.name) }
+    private func relatedLabels(for row: DisplayMetadataRowModel) -> [DisplayLabelDefinitionModel] {
+        let labelNames = Set(selectedLinkedTargets.flatMap(\.labelDefinitions).map(\.name))
+        let related = screenModel.labelDefinitions.filter { labelNames.contains($0.name) }
         return related.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 

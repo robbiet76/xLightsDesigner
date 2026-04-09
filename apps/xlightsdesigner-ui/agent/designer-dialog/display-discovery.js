@@ -7,13 +7,13 @@ function arr(value) {
 }
 
 function normalizedTagNames(context = {}) {
-  return arr(context?.layout?.tagNames)
+  return arr(context?.display?.labelNames)
     .map((row) => str(row))
     .filter(Boolean);
 }
 
 function normalizedFamilies(context = {}) {
-  return arr(context?.layout?.displayDiscoveryFamilies)
+  return arr(context?.display?.displayDiscoveryFamilies)
     .map((row) => ({
       name: str(row?.name),
       type: str(row?.type),
@@ -25,7 +25,7 @@ function normalizedFamilies(context = {}) {
 }
 
 function normalizedTypeBreakdown(context = {}) {
-  return arr(context?.layout?.typeBreakdown)
+  return arr(context?.display?.typeBreakdown)
     .map((row) => ({
       type: str(row?.type),
       count: str(row?.count)
@@ -34,7 +34,7 @@ function normalizedTypeBreakdown(context = {}) {
 }
 
 function normalizedModelSamples(context = {}) {
-  return arr(context?.layout?.modelSamples)
+  return arr(context?.display?.modelSamples)
     .map((row) => ({
       name: str(row?.name),
       type: str(row?.type),
@@ -64,16 +64,16 @@ function isMeaningfulTagName(name = "") {
   return true;
 }
 
-export function hasMeaningfulLayoutMetadata(context = {}) {
+export function hasMeaningfulDisplayMetadata(context = {}) {
   const tagNames = normalizedTagNames(context).filter(isMeaningfulTagName);
-  const taggedTargetCount = Number(context?.layout?.taggedTargetCount || 0);
-  return tagNames.length > 0 && taggedTargetCount > 0;
+  const labeledTargetCount = Number(context?.display?.labeledTargetCount || 0);
+  return tagNames.length > 0 && labeledTargetCount > 0;
 }
 
 export function shouldStartDisplayDiscovery({ context = {}, userMessage = "" } = {}) {
   const text = str(userMessage).toLowerCase();
-  if (hasMeaningfulLayoutMetadata(context)) return false;
-  if (!Number(context?.layout?.targetCount || 0)) return false;
+  if (hasMeaningfulDisplayMetadata(context)) return false;
+  if (!Number(context?.display?.targetCount || 0)) return false;
   return (
     /\b(display|layout|tag|metadata|models|props)\b/.test(text) ||
     /\b(start|begin|understand|learn|get to know|guide|help)\b/.test(text) ||
@@ -83,7 +83,7 @@ export function shouldStartDisplayDiscovery({ context = {}, userMessage = "" } =
 
 export function shouldContinueDisplayDiscovery({ context = {} } = {}) {
   const status = str(context?.displayDiscovery?.status).toLowerCase();
-  return status === "in_progress" && !hasMeaningfulLayoutMetadata(context);
+  return status === "in_progress" && !hasMeaningfulDisplayMetadata(context);
 }
 
 export function inferUserPreferenceNotes(userMessage = "") {
@@ -130,7 +130,7 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
   const families = normalizedFamilies(context);
   const typeBreakdown = normalizedTypeBreakdown(context);
   const modelSamples = normalizedModelSamples(context);
-  const candidates = arr(context?.layout?.displayDiscoveryCandidates)
+  const candidates = arr(context?.display?.displayDiscoveryCandidates)
     .map((row) => ({
       name: str(row?.name),
       type: str(row?.type),
