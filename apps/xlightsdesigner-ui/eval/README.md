@@ -24,6 +24,7 @@ Policy:
 - retained historical suites and baselines live under `eval/archive/historical/`
 
 Current contents:
+- `display-discovery-simulator-current-layout-v1.json`: private-truth scenario fixture for the display-discovery simulated user harness
 - `designer-eval-cases-v1.json`: canonical tracked eval corpus
 - `section-practical-sequence-validation-suite-v1.json`: deterministic section-scoped sequencer validation scenarios tied to the Stage 1 trained baseline
 - `live-section-practical-sequence-validation-suite-v2.json`: promoted Phase 2 clean-baseline live section benchmark
@@ -41,6 +42,7 @@ Current contents:
 - `live-reviewed-timing-control-suite-v1.json`: real-show four-track reviewed-timing control suite using Candy Cane Lane, Christmas Vacation, Grinch, and Christmas Sarajevo
 - `run-live-reviewed-timing-control-suite.mjs`: live runner that opens each real sequence, refreshes/analyzes, and captures current timing-review state snapshots
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`: live runner that restores real control sequences from captured baselines, seeds reviewed timing tracks, runs whole-sequence sequencing validation, and records timing-fidelity baseline output
+- `scripts/assistant/native/run-display-discovery-simulation.mjs`: simulated-user harness that drives the real native designer discovery conversation through automation while a separate user model answers from private scenario truth
 - `build-phase2-issue-ledger.mjs`: converts a combined benchmark report into a durable `phase2_issue_ledger_v1` backlog artifact
 - `live-practical-benchmark-baseline.v3.json`: frozen repeated-role whole-sequence practical benchmark baseline contract
 - `compare-live-practical-benchmark.mjs`: compares a fresh combined live benchmark report against the frozen baseline contract
