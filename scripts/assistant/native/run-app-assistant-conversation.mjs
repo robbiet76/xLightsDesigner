@@ -173,6 +173,18 @@ function validateDiscoveryCapture(capture = {}, context = {}) {
   };
 }
 
+function mergeDiscoveryCaptures(primary = {}, secondary = {}) {
+  const pickArray = (a, b) => (Array.isArray(a) && a.length ? a : Array.isArray(b) ? b : []);
+  const status = String(primary?.status || '').trim() || String(secondary?.status || '').trim();
+  return {
+    status,
+    insights: pickArray(primary?.insights, secondary?.insights),
+    unresolvedBranches: pickArray(primary?.unresolvedBranches, secondary?.unresolvedBranches),
+    resolvedBranches: pickArray(primary?.resolvedBranches, secondary?.resolvedBranches),
+    tagProposals: pickArray(primary?.tagProposals, secondary?.tagProposals)
+  };
+}
+
 function inferProposalIntent({ userMessage = '', assistantMessage = '', context = {} } = {}) {
   const user = String(userMessage || '').toLowerCase();
   const assistant = String(assistantMessage || '').toLowerCase();
@@ -232,6 +244,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     'You extract structured display-discovery learnings from a designer conversation turn.',
     'Return JSON only.',
     'Only capture information that the user explicitly confirmed or clearly stated.',
+    'If the user gives a brief confirmation such as "yes", "correct", or "that\'s right", treat the assistant reply as the candidate set of confirmed facts for this turn, but only if the assistant reply itself is grounded in exact xLights names or clearly scoped families from Context.',
     'Do not invent new facts.',
     'When an insight refers to a specific xLights model, group, or repeated family, use the exact name or exact family expression that is present in Context.',
     'Users may use shorthand or conversational aliases for props. If one exact xLights name in Context is the clear intended match, capture the exact xLights name rather than the user shorthand.',
@@ -241,10 +254,16 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     'Output shape:',
     '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."],"tagProposals":[{"tagName":"","tagDescription":"","rationale":"","targetNames":["..."]}]}',
     'Use short categorical values when possible, but keep them natural.',
+    'Capture direct semantic statements as insights. Examples:',
+    '- If the user says `HiddenTree` is the main structural focal point, capture an insight like {"subject":"HiddenTree","subjectType":"model","category":"visual_role","value":"main structural focal point","rationale":"User identified HiddenTree as the main structural focal point."}',
+    '- If the user says `Snowman` and `Train` are the main character focal props, capture one insight per subject using exact names.',
+    '- If the user says candy canes or wreaths are repeated supporting accents, capture that as family or group insights only when the intended exact family or group is clear from Context.',
+    '- If the user says large snowflakes are feature props but not centerpieces, capture that as a feature-role insight for the clear family expression from Context.',
     'When enough has been confirmed, include one or more reviewable tag proposals using broad durable metadata, not narrow one-off labels.',
     'Use explicit targetNames from the known model list whenever possible.',
     'Track uncertainty as unresolvedBranches, not scripted question text. Branches should describe the larger area that still needs clarification, such as focal hierarchy, repeated support families, or character props.',
     'When the user narrows or settles one of those areas, include the branch in resolvedBranches and remove it from unresolvedBranches.',
+    'When the user confirms a summary that resolves one branch and naturally reveals a next important branch, resolve the first branch and include the next branch as unresolvedBranches only if that next branch was actually opened by the conversation.',
     'If nothing was confirmed, return {"status":"in_progress","insights":[],"unresolvedBranches":[],"resolvedBranches":[],"tagProposals":[]}.'
   ].join('\n');
   const userText = [
@@ -292,6 +311,8 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When the user is clearly asking about analysis, sequencing, or setup, respond in that workflow context instead of forcing a design conversation.',
     'Hold a natural multi-turn conversation and preserve continuity with prior turns.',
     'Be concise, practical, and collaborative. Ask targeted follow-up questions only when missing information materially affects the next useful step.',
+    'Avoid filler and repeated assistant tics such as "Great!", "Thanks for sharing that.", or "Thanks for confirming." unless there is a specific conversational reason.',
+    'Prefer plain transitions over praise or enthusiasm. Example: "That helps." or no transition at all.',
     'Default to making bounded assumptions and moving the workflow forward when the request is broad but still usable.',
     'Do not require the user to specify low-level xLights effects unless they are expressing a concrete constraint.',
     'Do not invent specific effect names that are not supplied by the user or present in the local context.',
@@ -323,6 +344,10 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When relevant, mention concrete next actions you can perform in the app.',
     'Keep specialist boundaries intact: audio analysis is media-only, design proposals are review-first, and sequence execution must remain explicit.',
     'For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.',
+    'During display discovery, do not imply that metadata has already been applied. Prefer understanding language such as "I understand this as..." or "So far I have..." rather than "I will mark" or "I updated".',
+    'When the user answer is clear enough, do not summarize it back just to request confirmation. Instead, briefly acknowledge the understanding and ask the next useful question.',
+    'When the user gives a clear semantic answer with unambiguous exact model or family scope, treat that as sufficient confirmation for discovery. Do not ask whether to classify, tag, or mark it during the same turn.',
+    'If the scope and meaning are both clear, advance to the next discovery branch rather than asking for permission to record the understanding.',
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
@@ -330,10 +355,18 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'assistantMessage must remain natural language, concise, and user-facing.',
     'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
+    'Treat a direct user statement as confirmed meaning. If the user clearly states that a prop or family is focal, supporting, background, repeating, feature-only, or otherwise semantically defined, capture it without asking the user to reconfirm the same point.',
+    'Use confirmation turns only when the user response is vague, ambiguous, internally mixed, or when target scope is structurally risky, such as group-versus-model ambiguity.',
+    'If the user gives a short confirmation to a grounded assistant summary, treat the grounded facts in that summary as confirmed and capture them as insights.',
+    'Do not reflexively restate the user\'s clear answer and ask "Is that correct?". Move forward unless clarification is actually needed.',
+    'Do not convert a clear discovery answer into a permission question like "Would you like to classify these?" or "Confirm?". Discovery should continue unless the user asked to stop and review.',
     'Choose the next question based on information gain. Ask the smallest useful next question that helps reach a sequencing-ready understanding of the display with as few questions as possible.',
+    'For the first substantive display-discovery reply, ask exactly one primary question and do not use bullet lists.',
+    'For the first substantive display-discovery reply, avoid listing many candidate props or families. Keep it short and high level.',
     'Track larger areas of uncertainty in unresolvedBranches rather than saving literal question text.',
     'When the user settles one of those areas, include the branch in resolvedBranches and avoid reopening it unless the user changes direction.',
     'This is a conversation, not an interrogation. Let the user steer the branch order.',
+    'Avoid multi-part prefacing. Get to the next useful question quickly.',
     'If nothing new was confirmed, return an empty insights array.',
     knownNames.length ? `Known xLights names currently in context:\n${knownNames.map((row) => `- \`${row}\``).join('\n')}` : "",
     c.rollingConversationSummary ? `Rolling conversation summary:\n${String(c.rollingConversationSummary).trim()}` : "",
@@ -430,17 +463,27 @@ async function runAgentConversation(payload = {}) {
   if (!assistantMessage) {
     return { ok: false, code: 'AGENT_EMPTY_RESPONSE', error: 'Agent returned an empty response.' };
   }
-  const finalDiscoveryCapture =
-    (displayDiscoveryCapture.insights.length || displayDiscoveryCapture.unresolvedBranches.length || displayDiscoveryCapture.resolvedBranches.length || displayDiscoveryCapture.status)
-      ? displayDiscoveryCapture
-      : (shouldStartDisplayDiscovery({ context, userMessage }) || shouldContinueDisplayDiscovery({ context }))
-        ? await extractDisplayDiscoveryCapture({
-            cfg,
-            context,
-            userMessage,
-            assistantMessage
-          })
-        : { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
+  const discoveryActive = shouldStartDisplayDiscovery({ context, userMessage }) || shouldContinueDisplayDiscovery({ context });
+  let extractedDiscoveryCapture = { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
+  if (discoveryActive) {
+    const needsFallbackExtraction =
+      !displayDiscoveryCapture.insights.length ||
+      (!displayDiscoveryCapture.resolvedBranches.length && /^(yes|yeah|yep|correct|that's correct|that is correct|right)\b/i.test(userMessage));
+    if (needsFallbackExtraction || (!displayDiscoveryCapture.unresolvedBranches.length && !displayDiscoveryCapture.status)) {
+      extractedDiscoveryCapture = await extractDisplayDiscoveryCapture({
+        cfg,
+        context,
+        userMessage,
+        assistantMessage
+      });
+    }
+  }
+  const finalDiscoveryCapture = discoveryActive
+    ? validateDiscoveryCapture(
+        mergeDiscoveryCaptures(displayDiscoveryCapture, extractedDiscoveryCapture),
+        context
+      )
+    : { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
 
   return {
     ok: true,

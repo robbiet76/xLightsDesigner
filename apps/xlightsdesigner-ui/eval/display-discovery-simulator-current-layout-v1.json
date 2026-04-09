@@ -8,7 +8,8 @@
     "tone": "practical",
     "verbosity": "concise",
     "allowShorthand": true,
-    "volunteerExtraContext": "low"
+    "volunteerExtraContext": "medium",
+    "mayRedirectTowardImportantDistinctions": true
   },
   "displayTruth": {
     "focalHierarchy": [

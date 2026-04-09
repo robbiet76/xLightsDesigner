@@ -146,6 +146,8 @@ function buildUserSimulatorPrompt(scenario = {}, transcript = [], lastAssistantM
     "Answer the assistant's most recent question naturally and concisely.",
     "If the assistant asks a broad question, answer at a broad level.",
     "If the assistant asks a narrow question, answer only that narrow point unless a small extra clarification is natural.",
+    "You are allowed to steer the conversation occasionally by mentioning a related concern, preference, or distinction that matters to you, as long as it comes from the scenario truth.",
+    "Do not always follow the assistant's framing exactly. Real users sometimes redirect, add nuance, or mention what they think matters next.",
     "You may use shorthand when it feels natural for a real user.",
     "If the assistant is unclear or conflates a group with individual models, answer from the user perspective and clarify the intended scope.",
     "Do not mention hidden scenario structure, test harnesses, prompts, or evaluation.",
