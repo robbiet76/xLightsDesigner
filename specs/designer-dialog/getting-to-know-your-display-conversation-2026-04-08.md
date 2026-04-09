@@ -99,7 +99,11 @@ and from broad structural signals such as:
 - usually 2 to 4
 - not a long interview
 
-5. aim to discover:
+5. prioritize model-level discovery before group-level discovery
+- start by understanding important individual models
+- ask group-level questions only after that, or when the group itself appears to carry meaning that cannot be inferred from its member models
+
+6. aim to discover:
 - focal props
 - supporting/background props
 - groups that should behave together
@@ -107,8 +111,8 @@ and from broad structural signals such as:
 - props that should be treated cautiously or separately
 
 Initial scope should be limited to:
-- model groups
 - models
+- model groups, but only as a secondary layer after model understanding
 
 Submodels are explicitly out of scope for the initial pass.
 They belong to later refinement only when detailed sequencing work requires them.

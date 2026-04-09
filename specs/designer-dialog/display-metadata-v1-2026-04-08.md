@@ -173,8 +173,8 @@ The display-discovery conversation should primarily try to learn:
 5. any major themed or character props
 
 Initial scope should focus on:
-- groups
 - models
+- groups, but only after model-level understanding when the group adds meaning that cannot be inferred from its models
 
 It should not begin with submodel-level discussion.
 Submodels should be introduced later only when detailed sequencing refinement actually needs them.

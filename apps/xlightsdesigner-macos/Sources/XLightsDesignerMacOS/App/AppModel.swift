@@ -166,7 +166,7 @@ final class AppModel {
                 ]
             }
         }
-        let candidates = rows
+        let scoredRows = rows
             .map { row in
                 (
                     row: row,
@@ -174,11 +174,22 @@ final class AppModel {
                 )
             }
             .filter { $0.score > 0 }
+
+        let models = scoredRows
+            .filter { !$0.row.targetType.lowercased().contains("modelgroup") }
             .sorted { lhs, rhs in
                 if lhs.score != rhs.score { return lhs.score > rhs.score }
                 return lhs.row.targetName.localizedCaseInsensitiveCompare(rhs.row.targetName) == .orderedAscending
             }
-            .prefix(8)
+
+        let groups = scoredRows
+            .filter { $0.row.targetType.lowercased().contains("modelgroup") }
+            .sorted { lhs, rhs in
+                if lhs.score != rhs.score { return lhs.score > rhs.score }
+                return lhs.row.targetName.localizedCaseInsensitiveCompare(rhs.row.targetName) == .orderedAscending
+            }
+
+        let candidates = Array((models + groups).prefix(8))
 
         return candidates.map { candidate in
             [
@@ -204,7 +215,11 @@ final class AppModel {
         for keyword in keywords where name.contains(keyword) {
             score += 4
         }
-        if type.contains("modelgroup") { score += 3 }
+        if type.contains("modelgroup") {
+            score -= 2
+        } else {
+            score += 2
+        }
         if row.nodeCount >= 500 { score += 3 }
         else if row.nodeCount >= 150 { score += 2 }
         else if row.nodeCount >= 50 { score += 1 }

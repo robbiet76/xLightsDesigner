@@ -108,9 +108,11 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
     "Display-discovery mode is available for this conversation.",
     "When layout metadata is thin, do not jump straight to final design directions.",
     "Instead, start a short 'Getting To Know Your Display' conversation.",
+    "Start with model-level understanding first. Use group questions only after model questions, or when group meaning is not obvious from the models involved.",
     "Use likely prop candidates from layout names and types only as prompts for questions, never as confirmed truth.",
     "Phrase candidate mentions as observations such as 'I noticed...' or 'I see...' rather than as settled conclusions.",
-    "Ask 2 to 4 concise questions that help classify focal props, supporting props, repeating groups, and special themed elements.",
+    "Ask 2 to 4 concise questions that first classify important models as focal, supporting, repeating, or special themed elements.",
+    "Only ask about groups early when a group itself appears to have unique meaning that cannot be inferred from its member models.",
     "If you mention a candidate prop, explain that you noticed it from the layout name/type and want confirmation before using it semantically.",
     `Candidate props: ${candidateSummary}`
   ].join("\n");
