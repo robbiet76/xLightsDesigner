@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 const REPO_ROOT = "/Users/robterry/Projects/xLightsDesigner";
 const BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || "http://127.0.0.1:49916";
-const OPENAI_BASE_URL = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
-const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || "").trim();
-const USER_SIM_MODEL = String(process.env.XLD_USER_SIM_MODEL || process.env.OPENAI_MODEL || "gpt-5.4").trim();
+const DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
+const DEFAULT_OPENAI_MODEL = "gpt-5.4";
+const AGENT_CONFIG_FILENAME = "xlightsdesigner-agent-config.json";
 
 function usage() {
   process.stderr.write(
@@ -35,6 +37,37 @@ function parseArgs(argv = []) {
   return args;
 }
 
+function agentConfigPath() {
+  return path.join(os.homedir(), "Library/Application Support/xlightsdesigner-desktop", AGENT_CONFIG_FILENAME);
+}
+
+function readStoredAgentConfig() {
+  const file = agentConfigPath();
+  if (!fsSync.existsSync(file)) return { apiKey: "", model: "", baseUrl: "" };
+  try {
+    const raw = fsSync.readFileSync(file, "utf8");
+    const parsed = JSON.parse(raw);
+    return {
+      apiKey: String(parsed?.apiKey || "").trim(),
+      model: String(parsed?.model || "").trim(),
+      baseUrl: String(parsed?.baseUrl || "").trim().replace(/\/+$/, "")
+    };
+  } catch {
+    return { apiKey: "", model: "", baseUrl: "" };
+  }
+}
+
+function getAgentConfig() {
+  const stored = readStoredAgentConfig();
+  const envKey = String(process.env.OPENAI_API_KEY || "").trim();
+  const envModel = String(process.env.OPENAI_MODEL || "").trim();
+  const envBaseUrl = String(process.env.OPENAI_BASE_URL || "").trim().replace(/\/+$/, "");
+  const apiKey = stored.apiKey || envKey;
+  const model = String(process.env.XLD_USER_SIM_MODEL || "").trim() || stored.model || envModel || DEFAULT_OPENAI_MODEL;
+  const baseUrl = stored.baseUrl || envBaseUrl || DEFAULT_OPENAI_BASE_URL;
+  return { apiKey, model, baseUrl, configured: Boolean(apiKey) };
+}
+
 async function request(method, route, body = null) {
   const init = { method, headers: {} };
   if (body) {
@@ -58,21 +91,22 @@ async function getAssistantSnapshot() {
 }
 
 async function callOpenAIResponses({ systemPrompt = "", userMessage = "", maxOutputTokens = 500 } = {}) {
-  if (!OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not set.");
+  const cfg = getAgentConfig();
+  if (!cfg.configured) {
+    throw new Error("OpenAI key is not configured in the desktop app environment.");
   }
   const body = {
-    model: USER_SIM_MODEL,
+    model: cfg.model,
     input: [
       { role: "system", content: [{ type: "input_text", text: String(systemPrompt || "") }] },
       { role: "user", content: [{ type: "input_text", text: String(userMessage || "") }] }
     ],
     max_output_tokens: maxOutputTokens
   };
-  const response = await fetch(`${OPENAI_BASE_URL}/responses`, {
+  const response = await fetch(`${cfg.baseUrl}/responses`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${cfg.apiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify(body)
@@ -179,7 +213,7 @@ async function main() {
       summary: str(scenario?.summary),
       path: scenarioPath
     },
-    userSimModel: USER_SIM_MODEL,
+    userSimModel: getAgentConfig().model,
     turnLimit,
     messageCount: Number(finalSnapshot?.messageCount || 0),
     assistantQuestionCount,
