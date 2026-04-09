@@ -52,7 +52,7 @@ struct AssistantWindowView: View {
                             messageBody(for: message)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(12)
-                                .background(message.role == .assistant ? Color(nsColor: .controlBackgroundColor) : Color.accentColor.opacity(0.12))
+                                .background(bubbleColor(for: message))
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
                                 .textSelection(.enabled)
                         }
@@ -149,6 +149,24 @@ struct AssistantWindowView: View {
 
     private func messageBody(for message: AssistantMessageModel) -> Text {
         Text(styledMessageText(message.text))
+    }
+
+    private func bubbleColor(for message: AssistantMessageModel) -> Color {
+        guard message.role == .assistant else {
+            return Color.accentColor.opacity(0.12)
+        }
+        switch message.handledBy {
+        case "designer_dialog":
+            return Color.orange.opacity(0.12)
+        case "sequence_agent":
+            return Color.green.opacity(0.12)
+        case "audio_analyst":
+            return Color.blue.opacity(0.12)
+        case "app_assistant":
+            return Color.gray.opacity(0.14)
+        default:
+            return Color(nsColor: .controlBackgroundColor)
+        }
     }
 
     private func styledMessageText(_ raw: String) -> AttributedString {

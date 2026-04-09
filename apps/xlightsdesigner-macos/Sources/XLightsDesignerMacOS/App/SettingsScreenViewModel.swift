@@ -9,7 +9,7 @@ final class SettingsScreenViewModel {
     var screenModel = SettingsScreenModel(
         selectedCategory: .general,
         banner: nil,
-        agentConfig: SettingsAgentConfigModel(model: "", baseURL: "https://api.openai.com/v1", apiKey: "", hasStoredAPIKey: false),
+        agentConfig: SettingsAgentConfigModel(model: "", baseURL: "https://api.openai.com/v1", apiKey: "", hasStoredAPIKey: false, identities: .default),
         safetyConfig: SettingsSafetyConfigModel(applyConfirmMode: "large-only", largeChangeThreshold: 60, sequenceSwitchUnsavedPolicy: "save-if-needed"),
         xlightsStatus: SettingsXLightsStatusModel(baseURL: AppEnvironment.xlightsOwnedAPIBaseURL, connected: false, summary: "Not checked"),
         pathRows: []

@@ -51,6 +51,67 @@ struct SettingsAgentConfigModel: Equatable {
     var baseURL: String
     var apiKey: String
     var hasStoredAPIKey: Bool
+    var identities: SettingsTeamChatIdentitiesModel
+}
+
+struct SettingsAgentIdentityModel: Equatable {
+    let roleID: String
+    let displayName: String
+    var nickname: String
+}
+
+struct SettingsTeamChatIdentitiesModel: Equatable {
+    var appAssistant: SettingsAgentIdentityModel
+    var audioAnalyst: SettingsAgentIdentityModel
+    var designer: SettingsAgentIdentityModel
+    var sequencer: SettingsAgentIdentityModel
+
+    static let `default` = SettingsTeamChatIdentitiesModel(
+        appAssistant: SettingsAgentIdentityModel(roleID: "app_assistant", displayName: "App Assistant", nickname: "Clover"),
+        audioAnalyst: SettingsAgentIdentityModel(roleID: "audio_analyst", displayName: "Audio Analyst", nickname: "Lyric"),
+        designer: SettingsAgentIdentityModel(roleID: "designer_dialog", displayName: "Designer", nickname: "Mira"),
+        sequencer: SettingsAgentIdentityModel(roleID: "sequence_agent", displayName: "Sequencer", nickname: "Patch")
+    )
+
+    func asPayload() -> [String: [String: String]] {
+        [
+            appAssistant.roleID: [
+                "roleId": appAssistant.roleID,
+                "displayName": appAssistant.displayName,
+                "nickname": appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            ],
+            audioAnalyst.roleID: [
+                "roleId": audioAnalyst.roleID,
+                "displayName": audioAnalyst.displayName,
+                "nickname": audioAnalyst.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            ],
+            designer.roleID: [
+                "roleId": designer.roleID,
+                "displayName": designer.displayName,
+                "nickname": designer.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            ],
+            sequencer.roleID: [
+                "roleId": sequencer.roleID,
+                "displayName": sequencer.displayName,
+                "nickname": sequencer.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+            ]
+        ]
+    }
+
+    func identity(for handledBy: String) -> SettingsAgentIdentityModel {
+        switch handledBy {
+        case appAssistant.roleID:
+            return appAssistant
+        case audioAnalyst.roleID:
+            return audioAnalyst
+        case designer.roleID:
+            return designer
+        case sequencer.roleID:
+            return sequencer
+        default:
+            return appAssistant
+        }
+    }
 }
 
 struct SettingsSafetyConfigModel: Equatable {

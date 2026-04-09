@@ -46,7 +46,7 @@ final class AssistantWindowViewModel {
                         timestamp: message.timestamp,
                         handledBy: message.handledBy,
                         routeDecision: message.routeDecision,
-                        displayName: message.displayName ?? displayName(for: message.handledBy ?? "app_assistant")
+                        displayName: message.displayName ?? displayName(for: message.handledBy ?? "app_assistant", context: context)
                     )
                 }
                 try? persistConversation()
@@ -59,7 +59,7 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "app_assistant",
                 routeDecision: "app_assistant",
-                displayName: "App Assistant"
+                displayName: displayName(for: "app_assistant", context: context)
             )]
         }
     }
@@ -90,6 +90,10 @@ final class AssistantWindowViewModel {
                 context: context
             )
             previousResponseID = result.responseID
+            let introRole = result.handledBy
+            if shouldIntroduce(roleID: introRole) {
+                messages.append(roleIntroductionMessage(for: introRole, context: context))
+            }
             messages.append(AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,
@@ -97,7 +101,7 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: result.handledBy,
                 routeDecision: result.routeDecision,
-                displayName: displayName(for: result.handledBy)
+                displayName: displayName(for: result.handledBy, context: context)
             ))
             if !result.userPreferenceNotes.isEmpty {
                 try? userProfileStore.addPreferenceNotes(result.userPreferenceNotes, recordedAt: isoNow())
@@ -130,7 +134,7 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "app_assistant",
                 routeDecision: "app_assistant",
-                displayName: "App Assistant"
+                displayName: displayName(for: "app_assistant", context: context)
             ))
         }
 
@@ -171,22 +175,22 @@ final class AssistantWindowViewModel {
             return AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,
-                text: "Welcome. I'm the Designer, and I’d like to start by getting to know your display so we can create useful metadata for design and sequencing. \(observation) We can begin at a high level and narrow down naturally from there.",
+                text: "Welcome. \(introductionPrompt(for: "designer_dialog", context: context)) \(observation) We can begin at a high level and narrow down naturally from there.",
                 timestamp: isoNow(),
                 handledBy: "designer_dialog",
                 routeDecision: "designer_dialog",
-                displayName: "Designer"
+                displayName: displayName(for: "designer_dialog", context: context)
             )
         }
 
         return AssistantMessageModel(
             id: UUID().uuidString,
             role: .assistant,
-            text: "Welcome. I guide the overall workflow and bring in the right specialist as needed: Designer for display and creative direction, Audio Analyst for track structure, and Sequencer for technical sequence work. Start anywhere. I will help you move through the process and adapt to your working style as we go.",
+            text: "Welcome. \(introductionPrompt(for: "app_assistant", context: context)) I guide the overall workflow and bring in the right specialist as needed: Designer for display and creative direction, Audio Analyst for track structure, and Sequencer for technical sequence work. Start anywhere.",
             timestamp: isoNow(),
             handledBy: "app_assistant",
             routeDecision: "app_assistant",
-            displayName: "App Assistant"
+            displayName: displayName(for: "app_assistant", context: context)
         )
     }
 
@@ -197,19 +201,61 @@ final class AssistantWindowViewModel {
         context.displayDiscoveryStatus.caseInsensitiveCompare("not_started") == .orderedSame
     }
 
-    private func displayName(for handledBy: String) -> String {
-        switch handledBy {
-        case "designer_dialog":
-            return "Designer"
-        case "sequence_agent":
-            return "Sequencer"
-        case "audio_analyst":
-            return "Audio Analyst"
-        case "app_assistant":
-            return "App Assistant"
-        default:
-            return "Assistant"
+    private func displayName(for handledBy: String, context: AssistantContextModel) -> String {
+        let identity = contextIdentity(for: handledBy, context: context)
+        let nickname = identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        if nickname.isEmpty {
+            return identity.displayName
         }
+        return "\(nickname) (\(identity.displayName))"
+    }
+
+    private func contextIdentity(for handledBy: String, context: AssistantContextModel) -> SettingsAgentIdentityModel {
+        let base = SettingsTeamChatIdentitiesModel.default.identity(for: handledBy)
+        guard let row = context.teamChatIdentities[handledBy] else {
+            return base
+        }
+        let nickname = String(row["nickname"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let displayName = String(row["displayName"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return SettingsAgentIdentityModel(
+            roleID: handledBy,
+            displayName: displayName.isEmpty ? base.displayName : displayName,
+            nickname: nickname
+        )
+    }
+
+    private func shouldIntroduce(roleID: String) -> Bool {
+        !messages.contains { $0.role == .assistant && $0.handledBy == roleID }
+    }
+
+    private func roleIntroductionMessage(for roleID: String, context: AssistantContextModel) -> AssistantMessageModel {
+        return AssistantMessageModel(
+            id: UUID().uuidString,
+            role: .assistant,
+            text: followUpIntroduction(for: roleID, context: context),
+            timestamp: isoNow(),
+            handledBy: roleID,
+            routeDecision: roleID,
+            displayName: displayName(for: roleID, context: context)
+        )
+    }
+
+    private func introductionPrompt(for roleID: String, context: AssistantContextModel) -> String {
+        let identity = contextIdentity(for: roleID, context: context)
+        let nickname = identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        if nickname.isEmpty {
+            return "I'm \(identity.displayName). What would you like me to call you?"
+        }
+        return "I'm \(displayName(for: roleID, context: context)). You can call me \(nickname) if you'd like. What would you like me to call you?"
+    }
+
+    private func followUpIntroduction(for roleID: String, context: AssistantContextModel) -> String {
+        let identity = contextIdentity(for: roleID, context: context)
+        let nickname = identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        if nickname.isEmpty {
+            return "I'm \(identity.displayName)."
+        }
+        return "I'm \(displayName(for: roleID, context: context)). You can call me \(nickname) if you'd like."
     }
 
     private func isoNow() -> String {

@@ -97,6 +97,19 @@ struct SettingsScreenView: View {
             Text(model.screenModel.agentConfig.hasStoredAPIKey ? "A stored key already exists. Enter a new one only to replace it." : "No stored API key found.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            Divider()
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Agent Nicknames")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text("Optional nicknames used in chat labels and direct addressing.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                nicknameRow("App Assistant", text: $model.screenModel.agentConfig.identities.appAssistant.nickname)
+                nicknameRow("Audio Analyst", text: $model.screenModel.agentConfig.identities.audioAnalyst.nickname)
+                nicknameRow("Designer", text: $model.screenModel.agentConfig.identities.designer.nickname)
+                nicknameRow("Sequencer", text: $model.screenModel.agentConfig.identities.sequencer.nickname)
+            }
             HStack {
                 Button("Save Provider Settings") {
                     model.saveProviderSettings()
@@ -220,6 +233,14 @@ struct SettingsScreenView: View {
                 .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func nicknameRow(_ label: String, text: Binding<String>) -> some View {
+        LabeledContent(label) {
+            TextField("Optional nickname", text: text)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 220)
+        }
     }
 
     private func bannerView(_ banner: SettingsBannerModel) -> some View {

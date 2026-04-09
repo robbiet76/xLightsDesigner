@@ -33,7 +33,13 @@ struct LocalSettingsService: SettingsService {
         let payload = AgentConfigFile(
             apiKey: config.apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             model: config.model.trimmingCharacters(in: .whitespacesAndNewlines),
-            baseURL: config.baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            baseURL: config.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
+            identities: AgentConfigTeamChatIdentities(
+                appAssistant: AgentConfigIdentity(nickname: config.identities.appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines)),
+                audioAnalyst: AgentConfigIdentity(nickname: config.identities.audioAnalyst.nickname.trimmingCharacters(in: .whitespacesAndNewlines)),
+                designer: AgentConfigIdentity(nickname: config.identities.designer.nickname.trimmingCharacters(in: .whitespacesAndNewlines)),
+                sequencer: AgentConfigIdentity(nickname: config.identities.sequencer.nickname.trimmingCharacters(in: .whitespacesAndNewlines))
+            )
         )
         let data = try JSONEncoder.pretty.encode(payload)
         try data.write(to: fileURL, options: .atomic)
@@ -126,13 +132,41 @@ struct LocalSettingsService: SettingsService {
             let data = try? Data(contentsOf: URL(fileURLWithPath: agentConfigPath)),
             let config = try? JSONDecoder().decode(AgentConfigFile.self, from: data)
         else {
-            return SettingsAgentConfigModel(model: "", baseURL: "https://api.openai.com/v1", apiKey: "", hasStoredAPIKey: false)
+            return SettingsAgentConfigModel(
+                model: "",
+                baseURL: "https://api.openai.com/v1",
+                apiKey: "",
+                hasStoredAPIKey: false,
+                identities: .default
+            )
         }
         return SettingsAgentConfigModel(
             model: config.model,
             baseURL: config.baseURL,
             apiKey: "",
-            hasStoredAPIKey: !config.apiKey.isEmpty
+            hasStoredAPIKey: !config.apiKey.isEmpty,
+            identities: SettingsTeamChatIdentitiesModel(
+                appAssistant: SettingsAgentIdentityModel(
+                    roleID: "app_assistant",
+                    displayName: "App Assistant",
+                    nickname: config.identities?.appAssistant?.nickname ?? SettingsTeamChatIdentitiesModel.default.appAssistant.nickname
+                ),
+                audioAnalyst: SettingsAgentIdentityModel(
+                    roleID: "audio_analyst",
+                    displayName: "Audio Analyst",
+                    nickname: config.identities?.audioAnalyst?.nickname ?? SettingsTeamChatIdentitiesModel.default.audioAnalyst.nickname
+                ),
+                designer: SettingsAgentIdentityModel(
+                    roleID: "designer_dialog",
+                    displayName: "Designer",
+                    nickname: config.identities?.designer?.nickname ?? SettingsTeamChatIdentitiesModel.default.designer.nickname
+                ),
+                sequencer: SettingsAgentIdentityModel(
+                    roleID: "sequence_agent",
+                    displayName: "Sequencer",
+                    nickname: config.identities?.sequencer?.nickname ?? SettingsTeamChatIdentitiesModel.default.sequencer.nickname
+                )
+            )
         )
     }
 
@@ -183,12 +217,32 @@ private struct AgentConfigFile: Codable {
     var apiKey: String
     var model: String
     var baseURL: String
+    var identities: AgentConfigTeamChatIdentities?
 
     enum CodingKeys: String, CodingKey {
         case apiKey
         case model
         case baseURL = "baseUrl"
+        case identities
     }
+}
+
+private struct AgentConfigTeamChatIdentities: Codable {
+    var appAssistant: AgentConfigIdentity?
+    var audioAnalyst: AgentConfigIdentity?
+    var designer: AgentConfigIdentity?
+    var sequencer: AgentConfigIdentity?
+
+    enum CodingKeys: String, CodingKey {
+        case appAssistant = "app_assistant"
+        case audioAnalyst = "audio_analyst"
+        case designer = "designer_dialog"
+        case sequencer = "sequence_agent"
+    }
+}
+
+private struct AgentConfigIdentity: Codable {
+    var nickname: String
 }
 
 private struct DesktopStateFile: Codable {

@@ -37,6 +37,40 @@ struct AssistantWindowViewModelTests {
         #expect(execution.lastUserMessage == "Help me")
         #expect(execution.lastContext?.route == "audio")
     }
+
+    @Test func introducesNewRoleUsingNicknameLabel() async {
+        let conversation = InMemoryAssistantConversationService()
+        let execution = StubAssistantExecutionService(result: .success(.init(
+            assistantMessage: "I can handle that.",
+            handledBy: "sequence_agent",
+            routeDecision: "sequence_agent",
+            responseID: "resp-2",
+            displayDiscovery: nil,
+            userPreferenceNotes: []
+        )))
+        let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)
+        let context = AssistantContextModel(
+            activeProjectName: "Christmas 2026",
+            workflowName: "Sequence",
+            route: "sequence",
+            focusedSummary: "Current sequence",
+            activeSequenceLoaded: true,
+            planOnlyMode: false,
+            teamChatIdentities: SettingsTeamChatIdentitiesModel.default.asPayload()
+        )
+        model.loadConversationIfNeeded(context: context, project: nil)
+        model.draft = "Hey Patch, bring the spinners down."
+
+        await model.sendDraft(
+            context: context,
+            project: nil
+        )
+
+        #expect(model.messages.count == 4)
+        #expect(model.messages[2].text.contains("You can call me Patch"))
+        #expect(model.messages[2].displayName == "Patch (Sequencer)")
+        #expect(model.messages.last?.displayName == "Patch (Sequencer)")
+    }
 }
 
 private final class InMemoryAssistantConversationService: AssistantConversationService {

@@ -67,6 +67,7 @@ struct AssistantContextModel {
     let displayDiscoveryInsights: [[String: String]]
     let displayDiscoveryUnresolvedBranches: [String]
     let displayDiscoveryResolvedBranches: [String]
+    let teamChatIdentities: [String: [String: String]]
     let userPreferenceNotes: [String]
     let xlightsSequenceOpen: Bool
     let xlightsSequencePath: String
@@ -108,6 +109,7 @@ struct AssistantContextModel {
         displayDiscoveryInsights: [[String: String]] = [],
         displayDiscoveryUnresolvedBranches: [String] = [],
         displayDiscoveryResolvedBranches: [String] = [],
+        teamChatIdentities: [String: [String: String]] = [:],
         userPreferenceNotes: [String] = [],
         xlightsSequenceOpen: Bool = false,
         xlightsSequencePath: String = "",
@@ -148,6 +150,7 @@ struct AssistantContextModel {
         self.displayDiscoveryInsights = displayDiscoveryInsights
         self.displayDiscoveryUnresolvedBranches = displayDiscoveryUnresolvedBranches
         self.displayDiscoveryResolvedBranches = displayDiscoveryResolvedBranches
+        self.teamChatIdentities = teamChatIdentities
         self.userPreferenceNotes = userPreferenceNotes
         self.xlightsSequenceOpen = xlightsSequenceOpen
         self.xlightsSequencePath = xlightsSequencePath
@@ -196,6 +199,9 @@ struct AssistantContextModel {
                 "insights": displayDiscoveryInsights,
                 "unresolvedBranches": displayDiscoveryUnresolvedBranches,
                 "resolvedBranches": displayDiscoveryResolvedBranches
+            ],
+            "teamChat": [
+                "identities": teamChatIdentities
             ],
             "userProfile": [
                 "preferenceNotes": userPreferenceNotes

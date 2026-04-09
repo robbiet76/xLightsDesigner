@@ -44,6 +44,7 @@ final class AppModel {
         self.reviewScreenModel = ReviewScreenViewModel(workspace: workspace)
         self.historyScreenModel = HistoryScreenViewModel(workspace: workspace)
         self.settingsScreenModel = SettingsScreenViewModel()
+        self.settingsScreenModel.load()
         self.xlightsSessionModel.onSignificantChange = { [weak self] _, _ in
             Task { @MainActor in
                 self?.displayScreenModel.loadDisplay()
@@ -175,6 +176,7 @@ final class AppModel {
             displayDiscoveryInsights: displayDiscoveryInsights,
             displayDiscoveryUnresolvedBranches: discoverySummary.unresolvedBranches,
             displayDiscoveryResolvedBranches: discoverySummary.resolvedBranches,
+            teamChatIdentities: settingsScreenModel.screenModel.agentConfig.identities.asPayload(),
             userPreferenceNotes: userPreferenceNotes,
             xlightsSequenceOpen: xlights.isSequenceOpen,
             xlightsSequencePath: xlights.sequencePath,
