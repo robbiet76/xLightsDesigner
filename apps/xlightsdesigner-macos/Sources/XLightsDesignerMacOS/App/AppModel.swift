@@ -110,6 +110,7 @@ final class AppModel {
         let discoveryFamilies = buildDisplayDiscoveryFamilies(from: layoutRows)
         let displayTypeBreakdown = buildDisplayTypeBreakdown(from: layoutRows)
         let displayModelSamples = buildDisplayModelSamples(from: layoutRows)
+        let displayAllTargetNames = layoutRows.map(\.targetName).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
         let displayDiscoveryInsights = discoverySummary.insights.map {
             [
                 "subject": $0.subject,
@@ -150,6 +151,7 @@ final class AppModel {
             displayDiscoveryFamilies: discoveryFamilies,
             displayTypeBreakdown: displayTypeBreakdown,
             displayModelSamples: displayModelSamples,
+            displayAllTargetNames: displayAllTargetNames,
             displayDiscoveryStatus: discoverySummary.status.rawValue,
             displayDiscoveryTranscriptCount: discoverySummary.transcriptCount,
             displayDiscoveryInsights: displayDiscoveryInsights,

@@ -55,6 +55,7 @@ struct AssistantContextModel {
     let displayDiscoveryFamilies: [[String: String]]
     let displayTypeBreakdown: [[String: String]]
     let displayModelSamples: [[String: String]]
+    let displayAllTargetNames: [String]
     let displayDiscoveryStatus: String
     let displayDiscoveryTranscriptCount: Int
     let displayDiscoveryInsights: [[String: String]]
@@ -88,6 +89,7 @@ struct AssistantContextModel {
         displayDiscoveryFamilies: [[String: String]] = [],
         displayTypeBreakdown: [[String: String]] = [],
         displayModelSamples: [[String: String]] = [],
+        displayAllTargetNames: [String] = [],
         displayDiscoveryStatus: String = "not_started",
         displayDiscoveryTranscriptCount: Int = 0,
         displayDiscoveryInsights: [[String: String]] = [],
@@ -120,6 +122,7 @@ struct AssistantContextModel {
         self.displayDiscoveryFamilies = displayDiscoveryFamilies
         self.displayTypeBreakdown = displayTypeBreakdown
         self.displayModelSamples = displayModelSamples
+        self.displayAllTargetNames = displayAllTargetNames
         self.displayDiscoveryStatus = displayDiscoveryStatus
         self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
         self.displayDiscoveryInsights = displayDiscoveryInsights
@@ -155,7 +158,8 @@ struct AssistantContextModel {
                 "displayDiscoveryCandidates": displayDiscoveryCandidates,
                 "displayDiscoveryFamilies": displayDiscoveryFamilies,
                 "typeBreakdown": displayTypeBreakdown,
-                "modelSamples": displayModelSamples
+                "modelSamples": displayModelSamples,
+                "allTargetNames": displayAllTargetNames
             ],
             "displayDiscovery": [
                 "status": displayDiscoveryStatus,

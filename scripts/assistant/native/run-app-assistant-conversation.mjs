@@ -129,14 +129,44 @@ function uniqueStrings(values = []) {
 
 function knownDisplayNames(context = {}) {
   const display = context && typeof context.display === 'object' ? context.display : {};
-  const discovery = context && typeof context.displayDiscovery === 'object' ? context.displayDiscovery : {};
   return uniqueStrings([
+    ...(Array.isArray(display.allTargetNames) ? display.allTargetNames : []),
     ...(Array.isArray(display.modelSamples) ? display.modelSamples.map((row) => row?.name) : []),
     ...(Array.isArray(display.displayDiscoveryCandidates) ? display.displayDiscoveryCandidates.map((row) => row?.name) : []),
-    ...(Array.isArray(display.displayDiscoveryFamilies) ? display.displayDiscoveryFamilies.map((row) => row?.name) : []),
-    ...(Array.isArray(discovery.insights) ? discovery.insights.map((row) => row?.subject) : []),
-    display.selectedSubject
+    ...(Array.isArray(display.displayDiscoveryFamilies) ? display.displayDiscoveryFamilies.map((row) => row?.name) : [])
   ]);
+}
+
+function sanitizeAssistantModelTokens(text = '', context = {}) {
+  const knownNames = new Set(knownDisplayNames(context).map((row) => row.toLowerCase()));
+  if (!knownNames.size) return String(text || '');
+  return String(text || '').replace(/`([^`]+)`/g, (_, token) => {
+    const normalized = String(token || '').trim();
+    if (!normalized) return _;
+    return knownNames.has(normalized.toLowerCase()) ? `\`${normalized}\`` : normalized;
+  });
+}
+
+function validateDiscoveryCapture(capture = {}, context = {}) {
+  const knownNames = new Set(knownDisplayNames(context).map((row) => row.toLowerCase()));
+  if (!knownNames.size) return capture;
+
+  const insights = Array.isArray(capture.insights)
+    ? capture.insights.filter((row) => {
+        const subject = String(row?.subject || '').trim();
+        const subjectType = String(row?.subjectType || '').trim().toLowerCase();
+        if (!subject) return false;
+        if (subjectType === 'model' || subjectType === 'group' || subjectType === 'models') {
+          return knownNames.has(subject.toLowerCase());
+        }
+        return true;
+      })
+    : [];
+
+  return {
+    ...capture,
+    insights
+  };
 }
 
 function inferProposalIntent({ userMessage = '', assistantMessage = '', context = {} } = {}) {
@@ -200,6 +230,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     'Only capture information that the user explicitly confirmed or clearly stated.',
     'Do not invent new facts.',
     'When an insight refers to a specific xLights model, group, or repeated family, use the exact name or exact family expression that is present in Context.',
+    'Users may use shorthand or conversational aliases for props. If one exact xLights name in Context is the clear intended match, capture the exact xLights name rather than the user shorthand.',
     'If the user used a conversational alias that does not clearly match a known xLights name in Context, do not record it as a confirmed model insight.',
     'Instead, leave that point out of insights so the assistant can ask a clarification question using exact xLights names.',
     knownNames.length ? `Known xLights names in Context: ${knownNames.map((row) => `\`${row}\``).join(', ')}` : 'Known xLights names in Context: none',
@@ -227,7 +258,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
   if (!response.ok) {
     return { status: '', insights: [], openQuestions: [] };
   }
-  return normalizeDiscoveryCapture(parseAgentJson(response.modelText));
+  return validateDiscoveryCapture(normalizeDiscoveryCapture(parseAgentJson(response.modelText)), context);
 }
 
 function buildAgentSystemPrompt(context = {}, userMessage = '') {
@@ -259,7 +290,10 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'Do not invent specific models, tags, layout groups, or current sequence contents that are not explicitly present in Context.',
     'When referring to a specific xLights model, group, or repeated family from Context, use the exact xLights name and wrap it in backticks.',
     'Do not prettify, paraphrase, or conversationally rename xLights models. If the exact xLights name is unknown, say that and ask which model they mean.',
-    'If the user names a prop that does not exactly match a known xLights name in Context, treat it as an ambiguous alias and ask for clarification instead of echoing it back as confirmed metadata.',
+    'Users may speak in shorthand. Resolve conversational shorthand to exact xLights names whenever one clear match exists in Context, then confirm the exact name back to the user.',
+    'If the user says something like "tree", "candy canes", or "Santa Train", do not mirror that shorthand as confirmed metadata. Instead, map it to the exact xLights model or family name if one clear match exists, such as `HiddenTree`, `CandyCane-01` through `CandyCane-04`, or `Train`.',
+    'When you resolve shorthand, make the mapping explicit in the reply using the exact xLights names. Example: "I updated `Train` as a focal prop."',
+    'If multiple exact xLights names are plausible matches, ask a clarification question instead of pretending one was confirmed.',
     'If Context does not provide enough grounded detail about tags, models, or live effects, say so plainly and work from the confirmed facts only.',
     'Treat xLights session facts in Context as authoritative for what is open, saved, or available right now.',
     'Do not claim that models are tagged, effects are already applied, or timing is aligned unless Context explicitly supports that claim.',
@@ -359,8 +393,11 @@ async function runAgentConversation(payload = {}) {
   if (!response.ok) return { ok: false, code: response.code, error: response.error };
   const modelText = response.modelText;
   const json = parseAgentJson(modelText) || {};
-  const assistantMessage = String(json?.assistantMessage || modelText || 'I can continue from here. Tell me what you want to design next.').trim();
-  const displayDiscoveryCapture = normalizeDiscoveryCapture(json?.displayDiscoveryCapture);
+  const assistantMessage = sanitizeAssistantModelTokens(
+    String(json?.assistantMessage || modelText || 'I can continue from here. Tell me what you want to design next.').trim(),
+    context
+  );
+  const displayDiscoveryCapture = validateDiscoveryCapture(normalizeDiscoveryCapture(json?.displayDiscoveryCapture), context);
   const shouldGenerateProposal = typeof json?.shouldGenerateProposal === 'boolean'
     ? Boolean(json.shouldGenerateProposal)
     : inferProposalIntent({ userMessage, assistantMessage, context });
