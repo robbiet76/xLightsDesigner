@@ -48,6 +48,9 @@ struct SettingsScreenView: View {
         .onAppear {
             model.load()
         }
+        .onDisappear {
+            NSColorPanel.shared.close()
+        }
     }
 
     private var categorySelection: Binding<SettingsCategoryID?> {
@@ -329,7 +332,7 @@ private struct AgentBubbleColorPicker: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            ColorPicker("", selection: colorBinding, supportsOpacity: true)
+            ColorPicker("", selection: colorBinding, supportsOpacity: false)
                 .labelsHidden()
                 .frame(width: 28)
             Button("Default") {
@@ -357,7 +360,6 @@ private struct AgentBubbleColorPicker: View {
         let red = Int(round(converted.redComponent * 255))
         let green = Int(round(converted.greenComponent * 255))
         let blue = Int(round(converted.blueComponent * 255))
-        let alpha = Int(round(converted.alphaComponent * 255))
-        return String(format: "#%02X%02X%02X%02X", red, green, blue, alpha)
+        return String(format: "#%02X%02X%02XFF", red, green, blue)
     }
 }

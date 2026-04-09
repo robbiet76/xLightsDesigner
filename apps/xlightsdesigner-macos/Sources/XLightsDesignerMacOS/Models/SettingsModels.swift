@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -134,6 +135,10 @@ extension SettingsChatIdentityModel {
     var bubbleColor: Color? {
         Color(hex: bubbleColorHex)
     }
+
+    var bubbleTintColor: Color? {
+        bubbleColor?.withOpacity(0.20)
+    }
 }
 
 extension Color {
@@ -147,6 +152,18 @@ extension Color {
         let blue = Double((value >> 8) & 0xFF) / 255.0
         let alpha = Double(value & 0xFF) / 255.0
         self = Color(.sRGB, red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    func withOpacity(_ opacity: Double) -> Color {
+        guard let nsColor = NSColor(self).usingColorSpace(.sRGB) else {
+            return self.opacity(opacity)
+        }
+        return Color(.sRGB,
+            red: Double(nsColor.redComponent),
+            green: Double(nsColor.greenComponent),
+            blue: Double(nsColor.blueComponent),
+            opacity: opacity
+        )
     }
 }
 

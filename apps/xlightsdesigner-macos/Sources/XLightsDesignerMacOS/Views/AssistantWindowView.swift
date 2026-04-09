@@ -154,14 +154,14 @@ struct AssistantWindowView: View {
 
     private func bubbleColor(for message: AssistantMessageModel) -> Color {
         guard message.role == .assistant else {
-            if let custom = appModel.settingsScreenModel.screenModel.agentConfig.userIdentity.bubbleColor {
-                return custom.opacity(0.20)
+            if let custom = appModel.settingsScreenModel.screenModel.agentConfig.userIdentity.bubbleTintColor {
+                return custom
             }
             return Color.accentColor.opacity(0.12)
         }
         let identity = appModel.settingsScreenModel.screenModel.agentConfig.identities.identity(for: message.handledBy ?? "")
-        if let custom = identity.bubbleColor {
-            return custom.opacity(0.20)
+        if let custom = identity.bubbleTintColor {
+            return custom
         }
         return Color(nsColor: .controlBackgroundColor)
     }
