@@ -41,21 +41,31 @@ struct AssistantWindowView: View {
     }
 
     private var messageThread: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 12) {
-                ForEach(model.messages) { message in
-                    VStack(alignment: .leading, spacing: 6) {
-                        headerText(for: message)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        messageBody(for: message)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(12)
-                            .background(message.role == .assistant ? Color(nsColor: .controlBackgroundColor) : Color.accentColor.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .textSelection(.enabled)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    ForEach(model.messages) { message in
+                        VStack(alignment: .leading, spacing: 6) {
+                            headerText(for: message)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            messageBody(for: message)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(12)
+                                .background(message.role == .assistant ? Color(nsColor: .controlBackgroundColor) : Color.accentColor.opacity(0.12))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .textSelection(.enabled)
+                        }
+                        .id(message.id)
                     }
                 }
+            }
+            .defaultScrollAnchor(.bottom)
+            .onAppear {
+                scrollToLatest(using: proxy)
+            }
+            .onChange(of: model.messages.count) { _, _ in
+                scrollToLatest(using: proxy)
             }
         }
     }
@@ -113,6 +123,15 @@ struct AssistantWindowView: View {
 
     private func currentContext() -> AssistantContextModel {
         appModel.assistantContext()
+    }
+
+    private func scrollToLatest(using proxy: ScrollViewProxy) {
+        guard let lastID = model.messages.last?.id else { return }
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(lastID, anchor: .bottom)
+            }
+        }
     }
 
     private func headerText(for message: AssistantMessageModel) -> Text {

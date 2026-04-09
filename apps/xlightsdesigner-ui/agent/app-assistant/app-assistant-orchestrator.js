@@ -72,6 +72,15 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
         /\beffect\b/.test(userText)
       )
     );
+  const explicitWorkflowSwitch =
+    /\b(sequence|sequencing|sequence planning|move to sequencing|sequencer|patch)\b/.test(userText) ||
+    /\b(audio analysis|analyze audio|audio analyst)\b/.test(userText) ||
+    /\b(project setup|show folder|open project|save project)\b/.test(userText);
+
+  if (displayDiscoveryActive && !explicitWorkflowSwitch) {
+    return "designer_dialog";
+  }
+
   const addressedAudioQuestion =
     addressedRole === "audio_analyst" &&
     (
