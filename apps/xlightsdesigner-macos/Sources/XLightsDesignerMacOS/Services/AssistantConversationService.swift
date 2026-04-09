@@ -8,7 +8,7 @@ protocol AssistantConversationService {
 
 struct LocalAssistantConversationService: AssistantConversationService {
     private let fileManager = FileManager.default
-    private let maxRecentMessages = 16
+    private let maxRecentMessages = 200
     private let storageRootURL: URL
 
     init(storageRootURL: URL = URL(fileURLWithPath: AppEnvironment.desktopStateRoot, isDirectory: true)) {

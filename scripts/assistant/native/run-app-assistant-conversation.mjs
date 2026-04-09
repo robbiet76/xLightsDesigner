@@ -141,6 +141,85 @@ function knownDisplayNames(context = {}) {
   ]);
 }
 
+function limitStrings(values = [], max = 0) {
+  if (!Array.isArray(values) || max <= 0) return [];
+  return values.map((value) => String(value || '').trim()).filter(Boolean).slice(0, max);
+}
+
+function limitObjects(values = [], max = 0, fields = []) {
+  if (!Array.isArray(values) || max <= 0) return [];
+  return values.slice(0, max).map((row) => {
+    const source = row && typeof row === 'object' ? row : {};
+    const out = {};
+    for (const field of fields) {
+      const value = source[field];
+      if (value === undefined || value === null) continue;
+      const normalized = typeof value === 'string' ? value.trim() : value;
+      if (normalized === '') continue;
+      out[field] = normalized;
+    }
+    return out;
+  }).filter((row) => Object.keys(row).length);
+}
+
+function compactContext(context = {}) {
+  const c = context && typeof context === 'object' ? context : {};
+  const display = c.display && typeof c.display === 'object' ? c.display : {};
+  const xlightsLayout = c.xlightsLayout && typeof c.xlightsLayout === 'object' ? c.xlightsLayout : {};
+  const displayDiscovery = c.displayDiscovery && typeof c.displayDiscovery === 'object' ? c.displayDiscovery : {};
+  const userProfile = c.userProfile && typeof c.userProfile === 'object' ? c.userProfile : {};
+  const xlights = c.xlights && typeof c.xlights === 'object' ? c.xlights : {};
+  const sequence = c.sequence && typeof c.sequence === 'object' ? c.sequence : {};
+
+  return {
+    activeProjectName: String(c.activeProjectName || '').trim(),
+    workflowName: String(c.workflowName || '').trim(),
+    route: String(c.route || '').trim(),
+    focusedSummary: String(c.focusedSummary || '').trim(),
+    display: {
+      targetCount: Number(display.targetCount || 0),
+      labeledTargetCount: Number(display.labeledTargetCount || 0),
+      labelNames: limitStrings(display.labelNames, 12),
+      selectedSubject: String(display.selectedSubject || '').trim(),
+      selectedLabels: limitStrings(display.selectedLabels, 8)
+    },
+    xlightsLayout: {
+      families: limitObjects(xlightsLayout.families, 10, ['name', 'type', 'count', 'reason', 'confidence', 'examples']),
+      typeBreakdown: limitObjects(xlightsLayout.typeBreakdown, 12, ['type', 'count']),
+      modelSamples: limitObjects(xlightsLayout.modelSamples, 16, [
+        'name', 'type', 'nodeCount', 'horizontalZone', 'depthZone', 'visualWeight', 'uniqueness', 'symmetryPeers'
+      ]),
+      allTargetNames: limitStrings(xlightsLayout.allTargetNames, 80),
+      groupMemberships: limitObjects(xlightsLayout.groupMemberships, 20, [
+        'groupName', 'directMembers', 'flattenedMembers', 'flattenedAllMembers', 'structureKind', 'relatedFamilies', 'supersetOfGroups', 'overlapsWithGroups'
+      ])
+    },
+    displayDiscovery: {
+      status: String(displayDiscovery.status || '').trim(),
+      transcriptCount: Number(displayDiscovery.transcriptCount || 0),
+      insights: limitObjects(displayDiscovery.insights, 24, ['subject', 'subjectType', 'category', 'value', 'rationale']),
+      unresolvedBranches: limitStrings(displayDiscovery.unresolvedBranches, 8),
+      resolvedBranches: limitStrings(displayDiscovery.resolvedBranches, 8)
+    },
+    userProfile: {
+      preferenceNotes: limitStrings(userProfile.preferenceNotes, 8)
+    },
+    xlights: {
+      sequenceOpen: Boolean(xlights.sequenceOpen),
+      sequencePath: String(xlights.sequencePath || '').trim(),
+      mediaFile: String(xlights.mediaFile || '').trim(),
+      dirtyState: String(xlights.dirtyState || '').trim(),
+      projectShowMatches: Boolean(xlights.projectShowMatches)
+    },
+    sequence: {
+      itemCount: Number(sequence.itemCount || 0),
+      warningCount: Number(sequence.warningCount || 0),
+      validationIssueCount: Number(sequence.validationIssueCount || 0),
+      timingReviewNeeded: Boolean(sequence.timingReviewNeeded)
+    }
+  };
+}
+
 function sanitizeAssistantModelTokens(text = '', context = {}) {
   const knownNames = new Set(knownDisplayNames(context).map((row) => row.toLowerCase()));
   if (!knownNames.size) return String(text || '');
@@ -240,6 +319,7 @@ function normalizeDiscoveryCapture(value) {
 
 async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage = '', assistantMessage = '' } = {}) {
   const knownNames = knownDisplayNames(context);
+  const promptContext = compactContext(context);
   const systemPrompt = [
     'You extract structured display-discovery learnings from a designer conversation turn.',
     'Return JSON only.',
@@ -267,7 +347,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     'If nothing was confirmed, return {"status":"in_progress","insights":[],"unresolvedBranches":[],"resolvedBranches":[],"tagProposals":[]}.'
   ].join('\n');
   const userText = [
-    `Context: ${JSON.stringify(context)}`,
+    `Context: ${JSON.stringify(promptContext)}`,
     `User message: ${String(userMessage || '')}`,
     `Assistant reply: ${String(assistantMessage || '')}`
   ].join('\n');
@@ -287,6 +367,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
 
 function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const c = context && typeof context === 'object' ? context : {};
+  const promptContext = compactContext(c);
   const knownNames = knownDisplayNames(c);
   const discoveryGuidance = shouldStartDisplayDiscovery({ context: c, userMessage })
     ? buildDisplayDiscoveryGuidance(c)
@@ -375,7 +456,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     unresolvedDisplayBranches,
     resolvedDisplayBranches,
     discoveryGuidance,
-    `Context: ${JSON.stringify(c)}`
+    `Context: ${JSON.stringify(promptContext)}`
   ].filter(Boolean).join('\n');
 }
 

@@ -33,12 +33,12 @@ struct AssistantConversationServiceTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let service = LocalAssistantConversationService(storageRootURL: root)
-        let messages = (0..<20).map { index in
+        let messages = (0..<220).map { index in
             AssistantMessageModel(
                 id: "\(index)",
                 role: index.isMultiple(of: 2) ? .user : .assistant,
                 text: "Message \(index) with enough content to be summarized clearly for future continuity.",
-                timestamp: "2026-04-08T00:00:\(String(format: "%02d", index))Z",
+                timestamp: "2026-04-08T00:\(String(format: "%02d", (index / 60) % 60)):\(String(format: "%02d", index % 60))Z",
                 handledBy: index.isMultiple(of: 2) ? nil : "app_assistant",
                 routeDecision: index.isMultiple(of: 2) ? nil : "general",
                 displayName: index.isMultiple(of: 2) ? nil : "App Assistant"
@@ -46,7 +46,7 @@ struct AssistantConversationServiceTests {
         }
         try service.saveConversationState(AssistantConversationState(messages: messages))
         let state = try service.loadConversationState()
-        #expect(state.messages.count == 16)
+        #expect(state.messages.count == 200)
         #expect(!state.rollingSummary.isEmpty)
         #expect(state.rollingSummary.contains("Conversation summary:"))
     }

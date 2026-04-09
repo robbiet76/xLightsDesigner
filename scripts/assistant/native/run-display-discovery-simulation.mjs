@@ -90,6 +90,22 @@ async function getAssistantSnapshot() {
   return request("GET", "/assistant-snapshot");
 }
 
+async function waitForAssistantRoundTrip({ previousMessageCount, timeoutMs = 90000 } = {}) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    const snapshot = await getAssistantSnapshot();
+    const messageCount = Number(snapshot?.messageCount || 0);
+    const messages = arr(snapshot?.messages);
+    const lastMessage = messages[messages.length - 1] || {};
+    const sending = Boolean(snapshot?.isSending);
+    if (!sending && messageCount > previousMessageCount && str(lastMessage?.role) === "assistant") {
+      return snapshot;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 750));
+  }
+  throw new Error("Timed out waiting for assistant response.");
+}
+
 async function callOpenAIResponses({ systemPrompt = "", userMessage = "", maxOutputTokens = 500 } = {}) {
   const cfg = getAgentConfig();
   if (!cfg.configured) {
@@ -178,13 +194,15 @@ async function main() {
   const turnLimit = Number(args.turnLimit || scenario?.maxTurns || 8);
 
   await automationAction("resetAssistantMemory");
+  let previousMessageCount = Number((await getAssistantSnapshot())?.messageCount || 0);
   await automationAction("sendAssistantPrompt", { prompt: str(scenario?.kickoffPrompt || "Let's start by understanding the display before we design anything.") });
+  let currentSnapshot = await waitForAssistantRoundTrip({ previousMessageCount });
 
   const transcript = [];
   let assistantQuestionCount = 0;
 
   for (let turn = 0; turn < turnLimit; turn += 1) {
-    const snapshot = await getAssistantSnapshot();
+    const snapshot = currentSnapshot;
     const messages = arr(snapshot?.messages);
     const normalizedTranscript = messages.map((row) => ({
       role: str(row?.role),
@@ -204,7 +222,9 @@ async function main() {
       maxOutputTokens: 220
     }));
     if (!userReply) break;
+    previousMessageCount = Number(snapshot?.messageCount || 0);
     await automationAction("sendAssistantPrompt", { prompt: userReply });
+    currentSnapshot = await waitForAssistantRoundTrip({ previousMessageCount });
   }
 
   const finalSnapshot = await getAssistantSnapshot();

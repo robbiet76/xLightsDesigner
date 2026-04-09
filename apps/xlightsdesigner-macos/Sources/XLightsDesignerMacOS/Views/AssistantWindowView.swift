@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct AssistantWindowView: View {
@@ -52,6 +53,7 @@ struct AssistantWindowView: View {
                             .padding(12)
                             .background(message.role == .assistant ? Color(nsColor: .controlBackgroundColor) : Color.accentColor.opacity(0.12))
                             .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .textSelection(.enabled)
                     }
                 }
             }
@@ -60,10 +62,35 @@ struct AssistantWindowView: View {
 
     private var composer: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("Ask for guidance or route work from the current workflow…", text: $model.draft, axis: .vertical)
-                .lineLimit(3...6)
-                .textFieldStyle(.roundedBorder)
-                .disabled(model.isSending)
+            ZStack(alignment: .topLeading) {
+                if model.draft.isEmpty {
+                    Text("Ask for guidance or route work from the current workflow…")
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 10)
+                        .allowsHitTesting(false)
+                }
+
+                AssistantComposerTextView(
+                    text: $model.draft,
+                    isEnabled: !model.isSending,
+                    onSubmit: {
+                        Task {
+                            await model.sendDraft(
+                                context: currentContext(),
+                                project: appModel.workspace.activeProject
+                            )
+                        }
+                    }
+                )
+            }
+            .frame(minHeight: 58, idealHeight: 72, maxHeight: 86)
+            .padding(4)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(nsColor: .separatorColor))
+            )
+
             HStack {
                 if model.isSending {
                     ProgressView()
@@ -122,5 +149,88 @@ struct AssistantWindowView: View {
         }
 
         return output
+    }
+}
+
+private struct AssistantComposerTextView: NSViewRepresentable {
+    @Binding var text: String
+    let isEnabled: Bool
+    let onSubmit: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text, onSubmit: onSubmit)
+    }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.borderType = .noBorder
+        scrollView.drawsBackground = false
+        scrollView.autohidesScrollers = true
+
+        let textView = AssistantComposerNSTextView()
+        textView.delegate = context.coordinator
+        textView.onSubmit = onSubmit
+        textView.isRichText = false
+        textView.importsGraphics = false
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isContinuousSpellCheckingEnabled = true
+        textView.font = .preferredFont(forTextStyle: .body)
+        textView.drawsBackground = false
+        textView.textContainerInset = NSSize(width: 4, height: 7)
+        textView.textContainer?.widthTracksTextView = true
+        textView.isHorizontallyResizable = false
+        textView.isVerticallyResizable = true
+        textView.autoresizingMask = [.width]
+        textView.string = text
+
+        scrollView.documentView = textView
+        return scrollView
+    }
+
+    func updateNSView(_ nsView: NSScrollView, context: Context) {
+        guard let textView = nsView.documentView as? AssistantComposerNSTextView else { return }
+        textView.isEditable = isEnabled
+        textView.isSelectable = isEnabled
+        textView.onSubmit = onSubmit
+
+        if textView.string != text {
+            context.coordinator.isUpdating = true
+            textView.string = text
+            context.coordinator.isUpdating = false
+        }
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        @Binding var text: String
+        let onSubmit: () -> Void
+        var isUpdating = false
+
+        init(text: Binding<String>, onSubmit: @escaping () -> Void) {
+            _text = text
+            self.onSubmit = onSubmit
+        }
+
+        func textDidChange(_ notification: Notification) {
+            guard !isUpdating,
+                  let textView = notification.object as? NSTextView else { return }
+            text = textView.string
+        }
+    }
+}
+
+private final class AssistantComposerNSTextView: NSTextView {
+    var onSubmit: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        let isReturn = event.keyCode == 36 || event.keyCode == 76
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if isReturn && modifiers.isDisjoint(with: [.shift, .option, .control, .command]) {
+            onSubmit?()
+            return
+        }
+        super.keyDown(with: event)
     }
 }
