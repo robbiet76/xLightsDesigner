@@ -107,6 +107,9 @@ final class AppModel {
         let allTagNames = Set(layoutScreenModel.screenModel.tagDefinitions.map(\.name))
         let discoverySummary = displayDiscoveryStore.summary(for: workspace.activeProject)
         let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows, discoverySummary: discoverySummary)
+        let discoveryFamilies = buildDisplayDiscoveryFamilies(from: layoutRows)
+        let layoutTypeBreakdown = buildLayoutTypeBreakdown(from: layoutRows)
+        let layoutModelSamples = buildLayoutModelSamples(from: layoutRows)
         let userPreferenceNotes = (try? userProfileStore.load().preferenceNotes.map(\.text)) ?? []
         let selectedLayoutTarget: String
         let selectedLayoutTags: [String]
@@ -138,6 +141,9 @@ final class AppModel {
             selectedLayoutTarget: selectedLayoutTarget,
             selectedLayoutTags: selectedLayoutTags.sorted(),
             displayDiscoveryCandidates: discoveryCandidates,
+            displayDiscoveryFamilies: discoveryFamilies,
+            layoutTypeBreakdown: layoutTypeBreakdown,
+            layoutModelSamples: layoutModelSamples,
             displayDiscoveryStatus: discoverySummary.status.rawValue,
             displayDiscoveryTranscriptCount: discoverySummary.transcriptCount,
             userPreferenceNotes: userPreferenceNotes,
@@ -198,6 +204,123 @@ final class AppModel {
                 "reason": displayDiscoveryReason(for: candidate.row)
             ]
         }
+    }
+
+    private func buildDisplayDiscoveryFamilies(from rows: [LayoutRowModel]) -> [[String: String]] {
+        struct FamilyBucket {
+            let key: String
+            let baseName: String
+            let type: String
+            var rows: [LayoutRowModel]
+        }
+
+        let eligible = rows.filter { row in
+            let type = row.targetType.lowercased()
+            return !type.contains("modelgroup") && !type.contains("submodel")
+        }
+
+        var buckets: [String: FamilyBucket] = [:]
+        for row in eligible {
+            let baseName = normalizedFamilyBaseName(for: row.targetName)
+            let key = "\(row.targetType.lowercased())|\(baseName.lowercased())"
+            if var existing = buckets[key] {
+                existing.rows.append(row)
+                buckets[key] = existing
+            } else {
+                buckets[key] = FamilyBucket(key: key, baseName: baseName, type: row.targetType, rows: [row])
+            }
+        }
+
+        return buckets.values
+            .filter { bucket in
+                guard bucket.rows.count >= 2 else { return false }
+                let nodeCounts = bucket.rows.map(\.nodeCount)
+                let minNodes = nodeCounts.min() ?? 0
+                let maxNodes = nodeCounts.max() ?? 0
+                return maxNodes - minNodes <= max(10, Int(Double(maxNodes) * 0.12))
+            }
+            .sorted { lhs, rhs in
+                if lhs.rows.count != rhs.rows.count { return lhs.rows.count > rhs.rows.count }
+                return lhs.baseName.localizedCaseInsensitiveCompare(rhs.baseName) == .orderedAscending
+            }
+            .prefix(6)
+            .map { bucket in
+                let examples = bucket.rows
+                    .map(\.targetName)
+                    .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+                let nodeCount = bucket.rows.first?.nodeCount ?? 0
+                return [
+                    "name": bucket.baseName,
+                    "type": bucket.type,
+                    "count": String(bucket.rows.count),
+                    "examples": Array(examples.prefix(4)).joined(separator: ", "),
+                    "reason": nodeCount > 0
+                        ? "\(bucket.rows.count) similarly named \(bucket.type) models with comparable node counts"
+                        : "\(bucket.rows.count) similarly named \(bucket.type) models"
+                ]
+            }
+    }
+
+    private func buildLayoutTypeBreakdown(from rows: [LayoutRowModel]) -> [[String: String]] {
+        Dictionary(grouping: rows) { $0.targetType }
+            .map { type, typeRows in
+                [
+                    "type": type,
+                    "count": String(typeRows.count)
+                ]
+            }
+            .sorted { lhs, rhs in
+                let left = Int(lhs["count"] ?? "") ?? 0
+                let right = Int(rhs["count"] ?? "") ?? 0
+                if left != right { return left > right }
+                return (lhs["type"] ?? "").localizedCaseInsensitiveCompare(rhs["type"] ?? "") == .orderedAscending
+            }
+            .prefix(10)
+            .map { $0 }
+    }
+
+    private func buildLayoutModelSamples(from rows: [LayoutRowModel]) -> [[String: String]] {
+        rows
+            .filter { row in
+                let type = row.targetType.lowercased()
+                return !type.contains("modelgroup") && !type.contains("submodel")
+            }
+            .sorted { lhs, rhs in
+                let leftScore = layoutSamplePriority(for: lhs)
+                let rightScore = layoutSamplePriority(for: rhs)
+                if leftScore != rightScore { return leftScore > rightScore }
+                return lhs.targetName.localizedCaseInsensitiveCompare(rhs.targetName) == .orderedAscending
+            }
+            .prefix(24)
+            .map { row in
+                [
+                    "name": row.targetName,
+                    "type": row.targetType,
+                    "nodeCount": String(row.nodeCount),
+                    "positionX": String(format: "%.2f", row.positionX),
+                    "positionY": String(format: "%.2f", row.positionY),
+                    "positionZ": String(format: "%.2f", row.positionZ),
+                    "width": String(format: "%.2f", row.width),
+                    "height": String(format: "%.2f", row.height),
+                    "depth": String(format: "%.2f", row.depth),
+                    "submodelCount": String(row.submodelCount)
+                ]
+            }
+    }
+
+    private func layoutSamplePriority(for row: LayoutRowModel) -> Int {
+        var score = displayDiscoveryScore(for: row)
+        if row.nodeCount >= 300 { score += 3 }
+        else if row.nodeCount >= 100 { score += 2 }
+        if abs(row.positionX) < 2.5 { score += 1 }
+        return score
+    }
+
+    private func normalizedFamilyBaseName(for name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pattern = #"([_\-\s]?\d+)$"#
+        let stripped = trimmed.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+        return stripped.isEmpty ? trimmed : stripped
     }
 
     private func displayDiscoveryScore(for row: LayoutRowModel) -> Int {

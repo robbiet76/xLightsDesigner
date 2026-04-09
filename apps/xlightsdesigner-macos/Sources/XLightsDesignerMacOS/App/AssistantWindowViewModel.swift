@@ -162,15 +162,7 @@ final class AssistantWindowViewModel {
 
     private func seedAssistantMessage(context: AssistantContextModel) -> AssistantMessageModel {
         if shouldKickOffDisplayDiscovery(context: context) {
-            let candidateNames = context.displayDiscoveryCandidates
-                .compactMap { row in
-                    let name = row["name"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                    return name.isEmpty ? nil : name
-                }
-            let candidateSummary = Array(candidateNames.prefix(3)).joined(separator: ", ")
-            let observation = candidateSummary.isEmpty
-                ? "I can already see your layout and I want to understand the important models before we push into design."
-                : "I can already see your layout, and a few models stand out for early clarification: \(candidateSummary)."
+            let observation = "I can already see your layout, and I’ve started reviewing the model list for likely focal props, repeated families, and larger structural patterns before we push into design."
             return AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,

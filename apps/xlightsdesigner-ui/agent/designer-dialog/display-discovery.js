@@ -12,6 +12,41 @@ function normalizedTagNames(context = {}) {
     .filter(Boolean);
 }
 
+function normalizedFamilies(context = {}) {
+  return arr(context?.layout?.displayDiscoveryFamilies)
+    .map((row) => ({
+      name: str(row?.name),
+      type: str(row?.type),
+      count: str(row?.count),
+      examples: str(row?.examples),
+      reason: str(row?.reason)
+    }))
+    .filter((row) => row.name);
+}
+
+function normalizedTypeBreakdown(context = {}) {
+  return arr(context?.layout?.typeBreakdown)
+    .map((row) => ({
+      type: str(row?.type),
+      count: str(row?.count)
+    }))
+    .filter((row) => row.type);
+}
+
+function normalizedModelSamples(context = {}) {
+  return arr(context?.layout?.modelSamples)
+    .map((row) => ({
+      name: str(row?.name),
+      type: str(row?.type),
+      nodeCount: str(row?.nodeCount),
+      positionX: str(row?.positionX),
+      positionY: str(row?.positionY),
+      width: str(row?.width),
+      height: str(row?.height)
+    }))
+    .filter((row) => row.name);
+}
+
 function looksLikeWorkflowPreference(text = "") {
   const lower = str(text).toLowerCase();
   if (!lower) return false;
@@ -92,6 +127,9 @@ export function inferUserPreferenceNotes(userMessage = "") {
 }
 
 export function buildDisplayDiscoveryGuidance(context = {}) {
+  const families = normalizedFamilies(context);
+  const typeBreakdown = normalizedTypeBreakdown(context);
+  const modelSamples = normalizedModelSamples(context);
   const candidates = arr(context?.layout?.displayDiscoveryCandidates)
     .map((row) => ({
       name: str(row?.name),
@@ -103,17 +141,36 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
   const candidateSummary = candidates.length
     ? candidates.map((row) => `${row.name} (${row.type || "unknown type"}: ${row.reason || "candidate prop"})`).join("; ")
     : "No specific candidate props were identified from current layout names.";
+  const familySummary = families.length
+    ? families.map((row) => `${row.name} (${row.count || "?"} ${row.type || "model"} models${row.examples ? `; examples: ${row.examples}` : ""})`).join("; ")
+    : "No repeated model families were identified.";
+  const typeSummary = typeBreakdown.length
+    ? typeBreakdown.map((row) => `${row.type}: ${row.count}`).join("; ")
+    : "No type breakdown available.";
+  const sampleSummary = modelSamples.length
+    ? modelSamples
+        .slice(0, 12)
+        .map((row) => `${row.name} (${row.type || "unknown"}, nodes ${row.nodeCount || "?"}, x ${row.positionX || "?"}, size ${row.width || "?"}x${row.height || "?"})`)
+        .join("; ")
+    : "No raw model samples available.";
 
   return [
     "Display-discovery mode is available for this conversation.",
     "When layout metadata is thin, do not jump straight to final design directions.",
     "Instead, start a short 'Getting To Know Your Display' conversation.",
+    "Before asking questions, analyze the raw model list for likely focal props, repeated families, type patterns, comparable node counts, and broad spatial patterns so your questions sound informed rather than random.",
+    "Use the raw model samples as primary evidence. Use the repeated-family and candidate summaries only as supporting hints, not as hard truth.",
+    "You are expected to notice loose naming patterns, approximate siblings, and visually similar repeated props even when the naming convention is imperfect.",
+    "When several models appear to be the same prop family, ask about the family as one topic before drilling into individual exceptions.",
     "Start with model-level understanding first. Use group questions only after model questions, or when group meaning is not obvious from the models involved.",
     "Use likely prop candidates from layout names and types only as prompts for questions, never as confirmed truth.",
     "Phrase candidate mentions as observations such as 'I noticed...' or 'I see...' rather than as settled conclusions.",
-    "Ask 2 to 4 concise questions that first classify important models as focal, supporting, repeating, or special themed elements.",
+    "Ask 2 to 4 concise questions that first classify one likely focal topic, one likely repeated family, and one broad display-structure topic as focal, supporting, repeating, or special themed elements.",
     "Only ask about groups early when a group itself appears to have unique meaning that cannot be inferred from its member models.",
     "If you mention a candidate prop, explain that you noticed it from the layout name/type and want confirmation before using it semantically.",
+    `Model type breakdown: ${typeSummary}`,
+    `Raw model samples: ${sampleSummary}`,
+    `Repeated model families: ${familySummary}`,
     `Candidate props: ${candidateSummary}`
   ].join("\n");
 }

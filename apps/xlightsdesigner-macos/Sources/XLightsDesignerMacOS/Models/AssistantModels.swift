@@ -48,6 +48,9 @@ struct AssistantContextModel {
     let selectedLayoutTarget: String
     let selectedLayoutTags: [String]
     let displayDiscoveryCandidates: [[String: String]]
+    let displayDiscoveryFamilies: [[String: String]]
+    let layoutTypeBreakdown: [[String: String]]
+    let layoutModelSamples: [[String: String]]
     let displayDiscoveryStatus: String
     let displayDiscoveryTranscriptCount: Int
     let userPreferenceNotes: [String]
@@ -76,6 +79,9 @@ struct AssistantContextModel {
         selectedLayoutTarget: String = "",
         selectedLayoutTags: [String] = [],
         displayDiscoveryCandidates: [[String: String]] = [],
+        displayDiscoveryFamilies: [[String: String]] = [],
+        layoutTypeBreakdown: [[String: String]] = [],
+        layoutModelSamples: [[String: String]] = [],
         displayDiscoveryStatus: String = "not_started",
         displayDiscoveryTranscriptCount: Int = 0,
         userPreferenceNotes: [String] = [],
@@ -103,6 +109,9 @@ struct AssistantContextModel {
         self.selectedLayoutTarget = selectedLayoutTarget
         self.selectedLayoutTags = selectedLayoutTags
         self.displayDiscoveryCandidates = displayDiscoveryCandidates
+        self.displayDiscoveryFamilies = displayDiscoveryFamilies
+        self.layoutTypeBreakdown = layoutTypeBreakdown
+        self.layoutModelSamples = layoutModelSamples
         self.displayDiscoveryStatus = displayDiscoveryStatus
         self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
         self.userPreferenceNotes = userPreferenceNotes
@@ -133,7 +142,10 @@ struct AssistantContextModel {
                 "tagNames": layoutTagNames,
                 "selectedTarget": selectedLayoutTarget,
                 "selectedTargetTags": selectedLayoutTags,
-                "displayDiscoveryCandidates": displayDiscoveryCandidates
+                "displayDiscoveryCandidates": displayDiscoveryCandidates,
+                "displayDiscoveryFamilies": displayDiscoveryFamilies,
+                "typeBreakdown": layoutTypeBreakdown,
+                "modelSamples": layoutModelSamples
             ],
             "displayDiscovery": [
                 "status": displayDiscoveryStatus,
