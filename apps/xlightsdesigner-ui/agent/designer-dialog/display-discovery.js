@@ -12,6 +12,15 @@ function normalizedTagNames(context = {}) {
     .filter(Boolean);
 }
 
+function looksLikeWorkflowPreference(text = "") {
+  const lower = str(text).toLowerCase();
+  if (!lower) return false;
+  return (
+    /\b(chat|conversation|dialog|guide|guided|workflow|process|step[- ]by[- ]step|questions?|confirm|confirmation|pages?|review|broad metadata|details? first|concise|brief|fewer questions|one question at a time)\b/.test(lower) &&
+    !/\b(christmas|halloween|scary|cheerful|nostalgic|warm|cool|cinematic|palette|color|red|white|spooky|aggressive|gentle|dense|layered|style|look|mood|tone)\b/.test(lower)
+  );
+}
+
 function isMeaningfulTagName(name = "") {
   const value = str(name).toLowerCase();
   if (!value) return false;
@@ -51,6 +60,7 @@ export function inferUserPreferenceNotes(userMessage = "") {
     if (!normalized) return;
     if (normalized.length < 12) return;
     if (normalized.length > 160) return;
+    if (!looksLikeWorkflowPreference(normalized)) return;
     notes.push(`${prefix}${normalized}`);
   };
 
