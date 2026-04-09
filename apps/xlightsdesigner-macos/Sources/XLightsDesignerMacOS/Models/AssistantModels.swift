@@ -20,6 +20,8 @@ struct AssistantDisplayDiscoveryResult: Sendable {
     let scope: String
     let shouldCaptureTurn: Bool
     let candidateProps: [DisplayDiscoveryCandidateModel]
+    let insights: [DisplayDiscoveryInsightModel]
+    let openQuestions: [String]
 }
 
 struct AssistantConversationState: Codable, Sendable {

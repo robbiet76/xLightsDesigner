@@ -147,11 +147,28 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 reason: string(row["reason"])
             )
         }
+        let insightRows: [[String: Any]] = object["insights"] as? [[String: Any]] ?? []
+        let insights: [DisplayDiscoveryInsightModel] = insightRows.compactMap { row in
+            let subject = string(row["subject"])
+            let category = string(row["category"])
+            let value = string(row["value"])
+            guard !subject.isEmpty, !category.isEmpty, !value.isEmpty else { return nil }
+            return DisplayDiscoveryInsightModel(
+                subject: subject,
+                subjectType: string(row["subjectType"]),
+                category: category,
+                value: value,
+                rationale: string(row["rationale"])
+            )
+        }
         return AssistantDisplayDiscoveryResult(
             status: status,
             scope: scope,
             shouldCaptureTurn: shouldCaptureTurn,
             candidateProps: candidateProps
+            ,
+            insights: insights,
+            openQuestions: stringArray(object["openQuestions"])
         )
     }
 }

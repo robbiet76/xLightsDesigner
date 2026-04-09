@@ -30,6 +30,18 @@ struct DisplayDiscoveryStateStoreTests {
             candidateProps: [
                 DisplayDiscoveryCandidateModel(name: "Snowman", type: "Prop", reason: "named prop that may have character significance")
             ],
+            insights: [
+                DisplayDiscoveryInsightModel(
+                    subject: "Snowman",
+                    subjectType: "model",
+                    category: "visual_role",
+                    value: "featured character prop",
+                    rationale: "User confirmed Snowman is intended as a featured character."
+                )
+            ],
+            openQuestions: [
+                "Should the snowflakes behave as one family or as separate features?"
+            ],
             userMessage: AssistantMessageModel(
                 id: "u1",
                 role: .user,
@@ -54,5 +66,8 @@ struct DisplayDiscoveryStateStoreTests {
         #expect(summary.status == .inProgress)
         #expect(summary.transcriptCount == 2)
         #expect(summary.candidateProps.map(\.name) == ["Snowman"])
+        #expect(summary.insights.count == 1)
+        #expect(summary.insights.first?.subject == "Snowman")
+        #expect(summary.openQuestions.count == 1)
     }
 }

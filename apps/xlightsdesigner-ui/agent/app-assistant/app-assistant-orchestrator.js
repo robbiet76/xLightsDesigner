@@ -246,9 +246,15 @@ export async function executeAppAssistantConversation({
       proposalIntent: str(response.proposalIntent || userMessage),
       displayDiscovery: discoveryActive
         ? {
-            status: "in_progress",
+            status: str(response?.displayDiscoveryCapture?.status || "in_progress"),
             scope: "groups_models_v1",
             shouldCaptureTurn: true,
+            insights: Array.isArray(response?.displayDiscoveryCapture?.insights)
+              ? response.displayDiscoveryCapture.insights
+              : [],
+            openQuestions: Array.isArray(response?.displayDiscoveryCapture?.openQuestions)
+              ? response.displayDiscoveryCapture.openQuestions
+              : [],
             candidateProps: Array.isArray(context?.layout?.displayDiscoveryCandidates)
               ? context.layout.displayDiscoveryCandidates
               : []

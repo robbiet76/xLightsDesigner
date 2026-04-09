@@ -329,6 +329,16 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "status": discovery.status.rawValue,
                 "scope": discovery.scope,
                 "transcriptCount": discovery.transcriptCount,
+                "insights": discovery.insights.map {
+                    [
+                        "subject": $0.subject,
+                        "subjectType": $0.subjectType,
+                        "category": $0.category,
+                        "value": $0.value,
+                        "rationale": $0.rationale
+                    ]
+                },
+                "openQuestions": discovery.openQuestions,
                 "candidateProps": discovery.candidateProps.map {
                     [
                         "name": $0.name,

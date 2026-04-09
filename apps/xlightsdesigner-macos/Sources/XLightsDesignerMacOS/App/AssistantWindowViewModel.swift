@@ -113,6 +113,8 @@ final class AssistantWindowViewModel {
                     status: discovery.status,
                     scope: discovery.scope,
                     candidateProps: discovery.candidateProps,
+                    insights: discovery.insights,
+                    openQuestions: discovery.openQuestions,
                     userMessage: userMessage,
                     assistantMessage: assistantMessage
                 )

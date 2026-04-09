@@ -129,6 +129,58 @@ function inferProposalIntent({ userMessage = '', assistantMessage = '', context 
   return true;
 }
 
+function normalizeDiscoveryCapture(value) {
+  const object = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const insights = Array.isArray(object.insights)
+    ? object.insights.map((row) => ({
+        subject: String(row?.subject || '').trim(),
+        subjectType: String(row?.subjectType || '').trim(),
+        category: String(row?.category || '').trim(),
+        value: String(row?.value || '').trim(),
+        rationale: String(row?.rationale || '').trim()
+      })).filter((row) => row.subject && row.category && row.value)
+    : [];
+  const openQuestions = Array.isArray(object.openQuestions)
+    ? object.openQuestions.map((row) => String(row || '').trim()).filter(Boolean)
+    : [];
+  const status = String(object.status || '').trim();
+  return {
+    status: status || '',
+    insights,
+    openQuestions
+  };
+}
+
+async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage = '', assistantMessage = '' } = {}) {
+  const systemPrompt = [
+    'You extract structured display-discovery learnings from a designer conversation turn.',
+    'Return JSON only.',
+    'Only capture information that the user explicitly confirmed or clearly stated.',
+    'Do not invent new facts.',
+    'Output shape:',
+    '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."]}',
+    'Use short categorical values when possible, but keep them natural.',
+    'If nothing was confirmed, return {"status":"in_progress","insights":[],"openQuestions":[]}.'
+  ].join('\n');
+  const userText = [
+    `Context: ${JSON.stringify(context)}`,
+    `User message: ${String(userMessage || '')}`,
+    `Assistant reply: ${String(assistantMessage || '')}`
+  ].join('\n');
+  const response = await callOpenAIResponses({
+    cfg,
+    systemPrompt,
+    userMessage: userText,
+    messages: [],
+    previousResponseId: '',
+    maxOutputTokens: 500
+  });
+  if (!response.ok) {
+    return { status: '', insights: [], openQuestions: [] };
+  }
+  return normalizeDiscoveryCapture(parseAgentJson(response.modelText));
+}
+
 function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const c = context && typeof context === 'object' ? context : {};
   const discoveryGuidance = shouldStartDisplayDiscovery({ context: c, userMessage })
@@ -160,7 +212,11 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.',
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
-    'Do not output JSON unless explicitly asked by the user.',
+    'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
+    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."]}}.',
+    'assistantMessage must remain natural language, concise, and user-facing.',
+    'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
+    'If nothing new was confirmed, return an empty insights array.',
     c.rollingConversationSummary ? `Rolling conversation summary:\n${String(c.rollingConversationSummary).trim()}` : "",
     ongoingDiscovery,
     discoveryGuidance,
@@ -228,6 +284,7 @@ async function runAgentConversation(payload = {}) {
   const modelText = response.modelText;
   const json = parseAgentJson(modelText) || {};
   const assistantMessage = String(json?.assistantMessage || modelText || 'I can continue from here. Tell me what you want to design next.').trim();
+  const displayDiscoveryCapture = normalizeDiscoveryCapture(json?.displayDiscoveryCapture);
   const shouldGenerateProposal = typeof json?.shouldGenerateProposal === 'boolean'
     ? Boolean(json.shouldGenerateProposal)
     : inferProposalIntent({ userMessage, assistantMessage, context });
@@ -236,6 +293,18 @@ async function runAgentConversation(payload = {}) {
   if (!assistantMessage) {
     return { ok: false, code: 'AGENT_EMPTY_RESPONSE', error: 'Agent returned an empty response.' };
   }
+  const finalDiscoveryCapture =
+    (displayDiscoveryCapture.insights.length || displayDiscoveryCapture.openQuestions.length || displayDiscoveryCapture.status)
+      ? displayDiscoveryCapture
+      : (shouldStartDisplayDiscovery({ context, userMessage }) || shouldContinueDisplayDiscovery({ context }))
+        ? await extractDisplayDiscoveryCapture({
+            cfg,
+            context,
+            userMessage,
+            assistantMessage
+          })
+        : { status: '', insights: [], openQuestions: [] };
+
   return {
     ok: true,
     provider: 'openai',
@@ -244,7 +313,8 @@ async function runAgentConversation(payload = {}) {
     shouldGenerateProposal,
     proposalIntent,
     responseId,
-    userPreferenceNotes: inferUserPreferenceNotes(userMessage)
+    userPreferenceNotes: inferUserPreferenceNotes(userMessage),
+    displayDiscoveryCapture: finalDiscoveryCapture
   };
 }
 

@@ -9,6 +9,8 @@ protocol DisplayDiscoveryStateStore: Sendable {
         status: DisplayDiscoveryStatus,
         scope: String,
         candidateProps: [DisplayDiscoveryCandidateModel],
+        insights: [DisplayDiscoveryInsightModel],
+        openQuestions: [String],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
     ) throws
@@ -34,7 +36,9 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
             startedAt: document.startedAt ?? "",
             updatedAt: document.updatedAt ?? "",
             transcriptCount: document.transcript.count,
-            candidateProps: document.candidateProps
+            candidateProps: document.candidateProps,
+            insights: document.insights,
+            openQuestions: document.openQuestions
         )
     }
 
@@ -50,6 +54,8 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         status: DisplayDiscoveryStatus,
         scope: String,
         candidateProps: [DisplayDiscoveryCandidateModel],
+        insights: [DisplayDiscoveryInsightModel],
+        openQuestions: [String],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
     ) throws {
@@ -64,9 +70,37 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         if !candidateProps.isEmpty {
             document.candidateProps = candidateProps
         }
+        if !insights.isEmpty {
+            document.insights = mergeInsights(existing: document.insights, incoming: insights)
+        }
+        if !openQuestions.isEmpty {
+            var mergedQuestions = document.openQuestions
+            for question in openQuestions where !mergedQuestions.contains(question) {
+                mergedQuestions.append(question)
+            }
+            document.openQuestions = mergedQuestions
+        }
         appendIfNeeded(entry: userMessage, into: &document.transcript)
         appendIfNeeded(entry: assistantMessage, into: &document.transcript)
         try save(document, for: project)
+    }
+
+    private func mergeInsights(
+        existing: [DisplayDiscoveryInsightModel],
+        incoming: [DisplayDiscoveryInsightModel]
+    ) -> [DisplayDiscoveryInsightModel] {
+        var merged = existing
+        for insight in incoming {
+            if let index = merged.firstIndex(where: {
+                $0.subject.caseInsensitiveCompare(insight.subject) == .orderedSame &&
+                $0.category.caseInsensitiveCompare(insight.category) == .orderedSame
+            }) {
+                merged[index] = insight
+            } else {
+                merged.append(insight)
+            }
+        }
+        return merged
     }
 
     private func appendIfNeeded(entry: AssistantMessageModel, into transcript: inout [DisplayDiscoveryTranscriptEntry]) {
