@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsScreenView: View {
+    @Environment(\.dismiss) private var dismiss
     @Bindable var model: SettingsScreenViewModel
 
     var body: some View {
@@ -47,11 +48,19 @@ struct SettingsScreenView: View {
     @ViewBuilder
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Settings")
-                .font(.title)
-                .fontWeight(.semibold)
-            Text(model.screenModel.selectedCategory.subtitle)
-                .foregroundStyle(.secondary)
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Settings")
+                        .font(.title)
+                        .fontWeight(.semibold)
+                    Text(model.screenModel.selectedCategory.subtitle)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Close") {
+                    dismiss()
+                }
+            }
         }
     }
 
@@ -108,22 +117,26 @@ struct SettingsScreenView: View {
                 nicknameRow(
                     "App Assistant",
                     nickname: $model.screenModel.agentConfig.identities.appAssistant.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.appAssistant.bubbleColorHex
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.appAssistant.bubbleColorHex,
+                    onColorChangeCommitted: model.saveProviderSettings
                 )
                 nicknameRow(
                     "Audio Analyst",
                     nickname: $model.screenModel.agentConfig.identities.audioAnalyst.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.audioAnalyst.bubbleColorHex
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.audioAnalyst.bubbleColorHex,
+                    onColorChangeCommitted: model.saveProviderSettings
                 )
                 nicknameRow(
                     "Designer",
                     nickname: $model.screenModel.agentConfig.identities.designer.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.designer.bubbleColorHex
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.designer.bubbleColorHex,
+                    onColorChangeCommitted: model.saveProviderSettings
                 )
                 nicknameRow(
                     "Sequencer",
                     nickname: $model.screenModel.agentConfig.identities.sequencer.nickname,
-                    bubbleColorHex: $model.screenModel.agentConfig.identities.sequencer.bubbleColorHex
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.sequencer.bubbleColorHex,
+                    onColorChangeCommitted: model.saveProviderSettings
                 )
             }
             HStack {
@@ -251,14 +264,19 @@ struct SettingsScreenView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    private func nicknameRow(_ label: String, nickname: Binding<String>, bubbleColorHex: Binding<String>) -> some View {
+    private func nicknameRow(
+        _ label: String,
+        nickname: Binding<String>,
+        bubbleColorHex: Binding<String>,
+        onColorChangeCommitted: @escaping () -> Void
+    ) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Text(label)
                 .frame(width: 110, alignment: .leading)
             TextField("Optional nickname", text: nickname)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 220)
-            AgentBubbleColorPicker(hex: bubbleColorHex)
+            AgentBubbleColorPicker(hex: bubbleColorHex, onCommit: onColorChangeCommitted)
         }
     }
 
@@ -282,6 +300,7 @@ struct SettingsScreenView: View {
 
 private struct AgentBubbleColorPicker: View {
     @Binding var hex: String
+    let onCommit: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -290,6 +309,7 @@ private struct AgentBubbleColorPicker: View {
                 .frame(width: 28)
             Button("Default") {
                 hex = ""
+                onCommit()
             }
             .buttonStyle(.borderless)
             .font(.caption)
@@ -300,7 +320,10 @@ private struct AgentBubbleColorPicker: View {
     private var colorBinding: Binding<Color> {
         Binding(
             get: { Color(hex: hex) ?? Color(nsColor: .controlAccentColor).opacity(0.2) },
-            set: { hex = nsColorHexString(NSColor($0)) }
+            set: {
+                hex = nsColorHexString(NSColor($0))
+                onCommit()
+            }
         )
     }
 
