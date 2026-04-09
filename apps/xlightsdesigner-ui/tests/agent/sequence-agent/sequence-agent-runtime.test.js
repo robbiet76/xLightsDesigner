@@ -167,3 +167,47 @@ test("sequence agent input gate requires context.sequenceSettings", () => {
   assert.equal(gate.ok, false);
   assert.ok(gate.report.errors.some((e) => String(e).includes("context.sequenceSettings is required")));
 });
+
+test("sequence agent input derives xlightsLayout group memberships from scene graph", () => {
+  const input = buildSequenceAgentInput({
+    requestId: "req-layout",
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    sequenceRevision: "rev-1",
+    sequenceSettings: {},
+    layoutMode: "2d",
+    displayElements: [
+      { id: "Wreath-01", name: "Wreath-01" },
+      { id: "Wreathes", name: "Wreathes" }
+    ],
+    groupIds: ["Wreathes"],
+    groupsById: {
+      Wreathes: {
+        id: "Wreathes",
+        members: {
+          direct: [{ id: "Wreath-01" }],
+          active: [{ id: "Wreath-01" }],
+          flattened: [{ id: "Wreath-01" }],
+          flattenedAll: [{ id: "Wreath-01" }]
+        }
+      }
+    },
+    submodelsById: {},
+    intentHandoff: { role: "designer_dialog" },
+    safety: {
+      timingOwnership: [],
+      manualXdLocks: [],
+      allowTimingWrites: true
+    }
+  });
+  assert.deepEqual(input.context.xlightsLayout.groupMemberships, [
+    {
+      groupName: "Wreathes",
+      directMembers: ["Wreath-01"],
+      activeMembers: ["Wreath-01"],
+      flattenedMembers: ["Wreath-01"],
+      flattenedAllMembers: ["Wreath-01"]
+    }
+  ]);
+  assert.ok(input.context.xlightsLayout.allTargetNames.includes("Wreath-01"));
+  assert.ok(input.context.xlightsLayout.allTargetNames.includes("Wreathes"));
+});

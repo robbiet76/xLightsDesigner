@@ -6,6 +6,8 @@ import Observation
 final class XLightsSessionViewModel {
     private let workspace: ProjectWorkspace
     private let service: XLightsSessionService
+    private var refreshTask: Task<Void, Never>?
+    var onSignificantChange: ((XLightsSessionSnapshotModel, XLightsSessionSnapshotModel) -> Void)?
 
     var snapshot = XLightsSessionSnapshotModel(
         runtimeState: "unknown",
@@ -17,6 +19,15 @@ final class XLightsSessionViewModel {
         mediaFile: "",
         showDirectory: "",
         projectShowMatches: false,
+        layoutSignature: "",
+        hasUnsavedLayoutChanges: nil,
+        hasUnsavedRgbEffectsChanges: nil,
+        hasUnsavedNetworkChanges: nil,
+        rgbEffectsFile: "",
+        rgbEffectsModifiedAt: "",
+        networksFile: "",
+        networksModifiedAt: "",
+        layoutDirtyStateReason: "Owned xLights API does not currently expose layout save state.",
         sequenceType: "unknown",
         durationMs: 0,
         frameMs: 0,
@@ -41,6 +52,7 @@ final class XLightsSessionViewModel {
         let projectShowFolder = workspace.activeProject?.showFolder ?? ""
         Task {
             guard let session = try? await service.loadSession(projectShowFolder: projectShowFolder) else { return }
+            let previous = snapshot
             snapshot = XLightsSessionSnapshotModel(
                 runtimeState: session.runtimeState,
                 supportedCommands: session.supportedCommands,
@@ -51,6 +63,15 @@ final class XLightsSessionViewModel {
                 mediaFile: session.mediaFile,
                 showDirectory: session.showDirectory,
                 projectShowMatches: session.projectShowMatches,
+                layoutSignature: session.layoutSignature,
+                hasUnsavedLayoutChanges: session.hasUnsavedLayoutChanges,
+                hasUnsavedRgbEffectsChanges: session.hasUnsavedRgbEffectsChanges,
+                hasUnsavedNetworkChanges: session.hasUnsavedNetworkChanges,
+                rgbEffectsFile: session.rgbEffectsFile,
+                rgbEffectsModifiedAt: session.rgbEffectsModifiedAt,
+                networksFile: session.networksFile,
+                networksModifiedAt: session.networksModifiedAt,
+                layoutDirtyStateReason: session.layoutDirtyStateReason,
                 sequenceType: session.sequenceType,
                 durationMs: session.durationMs,
                 frameMs: session.frameMs,
@@ -65,7 +86,26 @@ final class XLightsSessionViewModel {
                 lastSaveSummary: snapshot.lastSaveSummary,
                 lastRenderSummary: snapshot.lastRenderSummary
             )
+            if didChangeSignificantly(from: previous, to: snapshot) {
+                onSignificantChange?(previous, snapshot)
+            }
         }
+    }
+
+    func startMonitoring(intervalSeconds: TimeInterval = 3.0) {
+        guard refreshTask == nil else { return }
+        refreshTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                self.refresh()
+                let delay = UInt64(max(intervalSeconds, 1.0) * 1_000_000_000)
+                try? await Task.sleep(nanoseconds: delay)
+            }
+        }
+    }
+
+    func stopMonitoring() {
+        refreshTask?.cancel()
+        refreshTask = nil
     }
 
     func saveCurrentSequence() async throws {
@@ -124,6 +164,15 @@ final class XLightsSessionViewModel {
             mediaFile: snapshot.mediaFile,
             showDirectory: snapshot.showDirectory,
             projectShowMatches: snapshot.projectShowMatches,
+            layoutSignature: snapshot.layoutSignature,
+            hasUnsavedLayoutChanges: snapshot.hasUnsavedLayoutChanges,
+            hasUnsavedRgbEffectsChanges: snapshot.hasUnsavedRgbEffectsChanges,
+            hasUnsavedNetworkChanges: snapshot.hasUnsavedNetworkChanges,
+            rgbEffectsFile: snapshot.rgbEffectsFile,
+            rgbEffectsModifiedAt: snapshot.rgbEffectsModifiedAt,
+            networksFile: snapshot.networksFile,
+            networksModifiedAt: snapshot.networksModifiedAt,
+            layoutDirtyStateReason: snapshot.layoutDirtyStateReason,
             sequenceType: snapshot.sequenceType,
             durationMs: snapshot.durationMs,
             frameMs: snapshot.frameMs,
@@ -151,6 +200,15 @@ final class XLightsSessionViewModel {
             mediaFile: snapshot.mediaFile,
             showDirectory: snapshot.showDirectory,
             projectShowMatches: snapshot.projectShowMatches,
+            layoutSignature: snapshot.layoutSignature,
+            hasUnsavedLayoutChanges: snapshot.hasUnsavedLayoutChanges,
+            hasUnsavedRgbEffectsChanges: snapshot.hasUnsavedRgbEffectsChanges,
+            hasUnsavedNetworkChanges: snapshot.hasUnsavedNetworkChanges,
+            rgbEffectsFile: snapshot.rgbEffectsFile,
+            rgbEffectsModifiedAt: snapshot.rgbEffectsModifiedAt,
+            networksFile: snapshot.networksFile,
+            networksModifiedAt: snapshot.networksModifiedAt,
+            layoutDirtyStateReason: snapshot.layoutDirtyStateReason,
             sequenceType: snapshot.sequenceType,
             durationMs: snapshot.durationMs,
             frameMs: snapshot.frameMs,
@@ -165,5 +223,29 @@ final class XLightsSessionViewModel {
             lastSaveSummary: snapshot.lastSaveSummary,
             lastRenderSummary: summary
         )
+    }
+
+    private func didChangeSignificantly(from previous: XLightsSessionSnapshotModel, to current: XLightsSessionSnapshotModel) -> Bool {
+        if previous.showDirectory != current.showDirectory ||
+            previous.projectShowMatches != current.projectShowMatches ||
+            previous.sequencePath != current.sequencePath ||
+            previous.isReachable != current.isReachable {
+            return true
+        }
+
+        let committedLayoutSaveDetected =
+            (previous.hasUnsavedLayoutChanges == true && current.hasUnsavedLayoutChanges == false) ||
+            (!current.rgbEffectsModifiedAt.isEmpty && previous.rgbEffectsModifiedAt != current.rgbEffectsModifiedAt) ||
+            (!current.networksModifiedAt.isEmpty && previous.networksModifiedAt != current.networksModifiedAt)
+        if committedLayoutSaveDetected {
+            return true
+        }
+
+        let fallbackStructuralChange = previous.layoutSignature != current.layoutSignature && current.hasUnsavedLayoutChanges != true
+        if fallbackStructuralChange {
+            return true
+        }
+
+        return false
     }
 }

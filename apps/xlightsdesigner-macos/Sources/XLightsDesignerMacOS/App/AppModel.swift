@@ -6,6 +6,7 @@ import Observation
 final class AppModel {
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
     private let userProfileStore: AssistantUserProfileStore
+    private let xlightsDerivedMetadataService: XLightsDerivedMetadataService
 
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
@@ -25,10 +26,12 @@ final class AppModel {
 
     init(
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
-        userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore()
+        userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore(),
+        xlightsDerivedMetadataService: XLightsDerivedMetadataService = DefaultXLightsDerivedMetadataService()
     ) {
         self.displayDiscoveryStore = displayDiscoveryStore
         self.userProfileStore = userProfileStore
+        self.xlightsDerivedMetadataService = xlightsDerivedMetadataService
         let workspace = ProjectWorkspace()
         self.workspace = workspace
         self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
@@ -41,6 +44,13 @@ final class AppModel {
         self.reviewScreenModel = ReviewScreenViewModel(workspace: workspace)
         self.historyScreenModel = HistoryScreenViewModel(workspace: workspace)
         self.settingsScreenModel = SettingsScreenViewModel()
+        self.xlightsSessionModel.onSignificantChange = { [weak self] _, _ in
+            Task { @MainActor in
+                self?.displayScreenModel.loadDisplay()
+                self?.sequenceScreenModel.refresh()
+                self?.reviewScreenModel.refresh()
+            }
+        }
         self.xlightsSessionModel.refresh()
     }
 
@@ -103,14 +113,16 @@ final class AppModel {
 
     func assistantContext() -> AssistantContextModel {
         let layoutRows = displayScreenModel.screenModel.rows
+        let xlightsDerivedMetadata = xlightsDerivedMetadataService.derive(from: layoutRows)
         let labeledTargetCount = layoutRows.filter { !$0.labelDefinitions.isEmpty }.count
         let allLabelNames = Set(displayScreenModel.screenModel.labelDefinitions.map(\.name))
         let discoverySummary = displayDiscoveryStore.summary(for: workspace.activeProject)
         let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows, discoverySummary: discoverySummary)
-        let discoveryFamilies = buildDisplayDiscoveryFamilies(from: layoutRows)
-        let displayTypeBreakdown = buildDisplayTypeBreakdown(from: layoutRows)
-        let displayModelSamples = buildDisplayModelSamples(from: layoutRows)
-        let displayAllTargetNames = layoutRows.map(\.targetName).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        let discoveryFamilies = xlightsDerivedMetadata.families.map(\.payload)
+        let displayTypeBreakdown = xlightsDerivedMetadata.typeBreakdown.map(\.payload)
+        let displayModelSamples = xlightsDerivedMetadata.modelSamples.map(\.payload)
+        let displayAllTargetNames = xlightsDerivedMetadata.allTargetNames
+        let displayGroupMemberships = xlightsDerivedMetadata.groupMemberships.map(\.payload)
         let displayDiscoveryInsights = discoverySummary.insights.map {
             [
                 "subject": $0.subject,
@@ -152,6 +164,12 @@ final class AppModel {
             displayTypeBreakdown: displayTypeBreakdown,
             displayModelSamples: displayModelSamples,
             displayAllTargetNames: displayAllTargetNames,
+            displayGroupMemberships: displayGroupMemberships,
+            xlightsLayoutFamilies: discoveryFamilies,
+            xlightsLayoutTypeBreakdown: displayTypeBreakdown,
+            xlightsLayoutModelSamples: displayModelSamples,
+            xlightsLayoutAllTargetNames: displayAllTargetNames,
+            xlightsLayoutGroupMemberships: displayGroupMemberships,
             displayDiscoveryStatus: discoverySummary.status.rawValue,
             displayDiscoveryTranscriptCount: discoverySummary.transcriptCount,
             displayDiscoveryInsights: displayDiscoveryInsights,
@@ -214,123 +232,6 @@ final class AppModel {
                 "reason": displayDiscoveryReason(for: candidate.row)
             ]
         }
-    }
-
-    private func buildDisplayDiscoveryFamilies(from rows: [DisplayLayoutRowModel]) -> [[String: String]] {
-        struct FamilyBucket {
-            let key: String
-            let baseName: String
-            let type: String
-            var rows: [DisplayLayoutRowModel]
-        }
-
-        let eligible = rows.filter { row in
-            let type = row.targetType.lowercased()
-            return !type.contains("modelgroup") && !type.contains("submodel")
-        }
-
-        var buckets: [String: FamilyBucket] = [:]
-        for row in eligible {
-            let baseName = normalizedFamilyBaseName(for: row.targetName)
-            let key = "\(row.targetType.lowercased())|\(baseName.lowercased())"
-            if var existing = buckets[key] {
-                existing.rows.append(row)
-                buckets[key] = existing
-            } else {
-                buckets[key] = FamilyBucket(key: key, baseName: baseName, type: row.targetType, rows: [row])
-            }
-        }
-
-        return buckets.values
-            .filter { bucket in
-                guard bucket.rows.count >= 2 else { return false }
-                let nodeCounts = bucket.rows.map(\.nodeCount)
-                let minNodes = nodeCounts.min() ?? 0
-                let maxNodes = nodeCounts.max() ?? 0
-                return maxNodes - minNodes <= max(10, Int(Double(maxNodes) * 0.12))
-            }
-            .sorted { lhs, rhs in
-                if lhs.rows.count != rhs.rows.count { return lhs.rows.count > rhs.rows.count }
-                return lhs.baseName.localizedCaseInsensitiveCompare(rhs.baseName) == .orderedAscending
-            }
-            .prefix(6)
-            .map { bucket in
-                let examples = bucket.rows
-                    .map(\.targetName)
-                    .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-                let nodeCount = bucket.rows.first?.nodeCount ?? 0
-                return [
-                    "name": bucket.baseName,
-                    "type": bucket.type,
-                    "count": String(bucket.rows.count),
-                    "examples": Array(examples.prefix(4)).joined(separator: ", "),
-                    "reason": nodeCount > 0
-                        ? "\(bucket.rows.count) similarly named \(bucket.type) models with comparable node counts"
-                        : "\(bucket.rows.count) similarly named \(bucket.type) models"
-                ]
-            }
-    }
-
-    private func buildDisplayTypeBreakdown(from rows: [DisplayLayoutRowModel]) -> [[String: String]] {
-        Dictionary(grouping: rows) { $0.targetType }
-            .map { type, typeRows in
-                [
-                    "type": type,
-                    "count": String(typeRows.count)
-                ]
-            }
-            .sorted { lhs, rhs in
-                let left = Int(lhs["count"] ?? "") ?? 0
-                let right = Int(rhs["count"] ?? "") ?? 0
-                if left != right { return left > right }
-                return (lhs["type"] ?? "").localizedCaseInsensitiveCompare(rhs["type"] ?? "") == .orderedAscending
-            }
-            .prefix(10)
-            .map { $0 }
-    }
-
-    private func buildDisplayModelSamples(from rows: [DisplayLayoutRowModel]) -> [[String: String]] {
-        rows
-            .filter { row in
-                let type = row.targetType.lowercased()
-                return !type.contains("modelgroup") && !type.contains("submodel")
-            }
-            .sorted { lhs, rhs in
-                let leftScore = displaySamplePriority(for: lhs)
-                let rightScore = displaySamplePriority(for: rhs)
-                if leftScore != rightScore { return leftScore > rightScore }
-                return lhs.targetName.localizedCaseInsensitiveCompare(rhs.targetName) == .orderedAscending
-            }
-            .prefix(24)
-            .map { row in
-                [
-                    "name": row.targetName,
-                    "type": row.targetType,
-                    "nodeCount": String(row.nodeCount),
-                    "positionX": String(format: "%.2f", row.positionX),
-                    "positionY": String(format: "%.2f", row.positionY),
-                    "positionZ": String(format: "%.2f", row.positionZ),
-                    "width": String(format: "%.2f", row.width),
-                    "height": String(format: "%.2f", row.height),
-                    "depth": String(format: "%.2f", row.depth),
-                    "submodelCount": String(row.submodelCount)
-                ]
-            }
-    }
-
-    private func displaySamplePriority(for row: DisplayLayoutRowModel) -> Int {
-        var score = displayDiscoveryScore(for: row)
-        if row.nodeCount >= 300 { score += 3 }
-        else if row.nodeCount >= 100 { score += 2 }
-        if abs(row.positionX) < 2.5 { score += 1 }
-        return score
-    }
-
-    private func normalizedFamilyBaseName(for name: String) -> String {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let pattern = #"([_\-\s]?\d+)$"#
-        let stripped = trimmed.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
-        return stripped.isEmpty ? trimmed : stripped
     }
 
     private func displayDiscoveryScore(for row: DisplayLayoutRowModel) -> Int {

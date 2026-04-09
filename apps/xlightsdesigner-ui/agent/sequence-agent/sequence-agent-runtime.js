@@ -19,6 +19,7 @@ export function buildSequenceAgentInput({
   groupIds = [],
   groupsById = {},
   submodelsById = {},
+  xlightsLayout = null,
   intentHandoff = null,
   sequencingDesignHandoff = null,
   analysisHandoff = null,
@@ -41,7 +42,12 @@ export function buildSequenceAgentInput({
       displayElements: Array.isArray(displayElements) ? displayElements : [],
       groupIds: Array.isArray(groupIds) ? groupIds : [],
       groupsById: groupsById && typeof groupsById === "object" && !Array.isArray(groupsById) ? groupsById : {},
-      submodelsById: submodelsById && typeof submodelsById === "object" && !Array.isArray(submodelsById) ? submodelsById : {}
+      submodelsById: submodelsById && typeof submodelsById === "object" && !Array.isArray(submodelsById) ? submodelsById : {},
+      xlightsLayout: normalizeXLightsLayoutContext({
+        displayElements,
+        groupsById,
+        xlightsLayout
+      })
     },
     intentHandoff: intentHandoff && typeof intentHandoff === "object" ? intentHandoff : null,
     sequencingDesignHandoff: sequencingDesignHandoff && typeof sequencingDesignHandoff === "object" ? sequencingDesignHandoff : null,
@@ -52,6 +58,44 @@ export function buildSequenceAgentInput({
       manualXdLocks: Array.isArray(manualXdLocks) ? manualXdLocks : [],
       allowTimingWrites: Boolean(allowTimingWrites)
     }
+  };
+}
+
+function normalizeXLightsLayoutContext({ displayElements = [], groupsById = {}, xlightsLayout = null } = {}) {
+  if (xlightsLayout && typeof xlightsLayout === "object" && !Array.isArray(xlightsLayout)) {
+    return xlightsLayout;
+  }
+
+  const elements = Array.isArray(displayElements) ? displayElements : [];
+  const groupMap = groupsById && typeof groupsById === "object" && !Array.isArray(groupsById) ? groupsById : {};
+  const allTargetNames = Array.from(new Set(
+    elements
+      .map((row) => String(row?.id || row?.name || "").trim())
+      .filter(Boolean)
+  )).sort((a, b) => a.localeCompare(b));
+
+  const groups = Object.values(groupMap)
+    .map((row) => {
+      const groupName = String(row?.id || row?.name || "").trim();
+      if (!groupName) return null;
+      const members = row?.members && typeof row.members === "object" ? row.members : {};
+      const normalizeMembers = (items) => (Array.isArray(items) ? items : [])
+        .map((item) => String(item?.id || item?.name || "").trim())
+        .filter(Boolean);
+      return {
+        groupName,
+        directMembers: normalizeMembers(members.direct),
+        activeMembers: normalizeMembers(members.active),
+        flattenedMembers: normalizeMembers(members.flattened),
+        flattenedAllMembers: normalizeMembers(members.flattenedAll)
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.groupName.localeCompare(b.groupName));
+
+  return {
+    allTargetNames,
+    groupMemberships: groups
   };
 }
 

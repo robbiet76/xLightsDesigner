@@ -71,6 +71,10 @@ struct DisplayLayoutRowModel: Identifiable, Hashable, Sendable {
     let depth: Double
     let labelDefinitions: [DisplayLabelDefinitionModel]
     let submodelCount: Int
+    let directGroupMembers: [String]
+    let activeGroupMembers: [String]
+    let flattenedGroupMembers: [String]
+    let flattenedAllGroupMembers: [String]
 }
 
 struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {

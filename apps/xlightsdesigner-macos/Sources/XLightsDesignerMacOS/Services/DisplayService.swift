@@ -95,9 +95,12 @@ struct XLightsDisplayService: DisplayService {
                     text: "xLights show folder: \(currentMedia.showDirectory.isEmpty ? "(not set)" : currentMedia.showDirectory)\nProject show folder: \(project?.showFolder.isEmpty == false ? project!.showFolder : "(not set)")"
                 ))
             } else {
-                let models = try await fetchModels()
+                async let modelsTask = fetchModels()
+                async let groupMembershipsTask = fetchGroupMemberships()
+                let models = try await modelsTask
+                let groupMemberships = try await groupMembershipsTask
                 rows = models
-                    .map { makeRow(from: $0, document: metadataDocument, labelDefinitionsByID: labelDefinitionsByID) }
+                    .map { makeRow(from: $0, groupMemberships: groupMemberships, document: metadataDocument, labelDefinitionsByID: labelDefinitionsByID) }
                     .sorted { $0.targetName.localizedCaseInsensitiveCompare($1.targetName) == .orderedAscending }
                 taggedCount = rows.filter { !$0.labelDefinitions.isEmpty }.count
                 unresolvedCount = rows.count - taggedCount
@@ -194,6 +197,7 @@ struct XLightsDisplayService: DisplayService {
 
     private func makeRow(
         from model: XLightsLayoutModel,
+        groupMemberships: [String: XLightsGroupMembership],
         document: PersistedDisplayMetadataDocument,
         labelDefinitionsByID: [String: DisplayLabelDefinitionModel]
     ) -> DisplayLayoutRowModel {
@@ -201,6 +205,7 @@ struct XLightsDisplayService: DisplayService {
         let assignedLabels = assignedTagIDs
             .compactMap { labelDefinitionsByID[$0] }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        let membership = groupMemberships[model.name]
 
         return DisplayLayoutRowModel(
             id: model.name,
@@ -214,7 +219,11 @@ struct XLightsDisplayService: DisplayService {
             height: model.height ?? 0,
             depth: model.depth ?? 0,
             labelDefinitions: assignedLabels,
-            submodelCount: model.submodelCount
+            submodelCount: model.submodelCount,
+            directGroupMembers: membership?.directMembers.map(\.name) ?? [],
+            activeGroupMembers: membership?.activeMembers.map(\.name) ?? [],
+            flattenedGroupMembers: membership?.flattenedMembers.map(\.name) ?? [],
+            flattenedAllGroupMembers: membership?.flattenedAllMembers.map(\.name) ?? []
         )
     }
 
@@ -228,6 +237,16 @@ struct XLightsDisplayService: DisplayService {
         let url = URL(string: AppEnvironment.xlightsOwnedAPIBaseURL + "/layout/models")!
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(XLightsLayoutResponse.self, from: data).data.models
+    }
+
+    private func fetchGroupMemberships() async throws -> [String: XLightsGroupMembership] {
+        let url = URL(string: AppEnvironment.xlightsOwnedAPIBaseURL + "/layout/group-members")!
+        let (data, urlResponse) = try await URLSession.shared.data(from: url)
+        if let http = urlResponse as? HTTPURLResponse, http.statusCode == 404 {
+            return [:]
+        }
+        let decoded = try JSONDecoder().decode(XLightsGroupMembershipResponse.self, from: data)
+        return Dictionary(uniqueKeysWithValues: decoded.data.groups.map { ($0.groupName, $0) })
     }
 }
 
@@ -253,6 +272,26 @@ private struct XLightsCurrentMedia: Decodable {
 
 private struct XLightsLayoutData: Decodable {
     let models: [XLightsLayoutModel]
+}
+
+private struct XLightsGroupMembershipResponse: Decodable {
+    let data: XLightsGroupMembershipData
+}
+
+private struct XLightsGroupMembershipData: Decodable {
+    let groups: [XLightsGroupMembership]
+}
+
+private struct XLightsGroupMembership: Decodable {
+    let groupName: String
+    let directMembers: [XLightsGroupMember]
+    let activeMembers: [XLightsGroupMember]
+    let flattenedMembers: [XLightsGroupMember]
+    let flattenedAllMembers: [XLightsGroupMember]
+}
+
+private struct XLightsGroupMember: Decodable {
+    let name: String
 }
 
 private struct XLightsLayoutModel: Decodable {

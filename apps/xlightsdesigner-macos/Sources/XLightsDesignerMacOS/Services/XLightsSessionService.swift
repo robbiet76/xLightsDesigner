@@ -26,21 +26,49 @@ struct LocalXLightsSessionService: XLightsSessionService {
         async let media = readJSON(from: "/media/current")
         async let revision = readJSON(from: "/sequence/revision")
         async let settings = readJSON(from: "/sequence/settings")
+        async let layoutSettings = readJSONAllowing404(from: "/layout/settings")
+        async let layoutModels = readJSONAllowing404(from: "/layout/models")
+        async let groupMemberships = readJSONAllowing404(from: "/layout/group-members")
 
         let healthJSON = try await health
         let openJSON = try await open
         let mediaJSON = try await media
         let revisionJSON = try await revision
         let settingsJSON = try await settings
+        let layoutSettingsJSON = try await layoutSettings
+        let layoutModelsJSON = try await layoutModels
+        let groupMembershipsJSON = try await groupMemberships
 
         let healthData = dictionary(healthJSON["data"])
         let openData = dictionary(openJSON["data"])
         let mediaData = dictionary(mediaJSON["data"])
         let revisionData = dictionary(revisionJSON["data"])
         let settingsData = dictionary(settingsJSON["data"])
+        let layoutSettingsData = dictionary(layoutSettingsJSON["data"])
         let sequence = dictionary(openData["sequence"])
         let showDirectory = string(mediaData["showDirectory"])
         let runtimeState = string(healthData["state"], fallback: "unknown")
+        let layoutSignature = buildLayoutSignature(modelsJSON: layoutModelsJSON, groupMembershipsJSON: groupMembershipsJSON)
+        let hasUnsavedLayoutChanges = optionalBool(layoutSettingsData["hasUnsavedLayoutChanges"])
+        let hasUnsavedRgbEffectsChanges = optionalBool(layoutSettingsData["hasUnsavedRgbEffectsChanges"])
+        let hasUnsavedNetworkChanges = optionalBool(layoutSettingsData["hasUnsavedNetworkChanges"])
+        let rgbEffectsFile = string(layoutSettingsData["rgbEffectsFile"])
+        let rgbEffectsModifiedAt = string(layoutSettingsData["rgbEffectsModifiedAt"])
+        let networksFile = string(layoutSettingsData["networksFile"])
+        let networksModifiedAt = string(layoutSettingsData["networksModifiedAt"])
+        let layoutDirtyReason: String
+        if hasUnsavedLayoutChanges == nil {
+            layoutDirtyReason = "Owned xLights API does not currently expose layout save state."
+        } else if hasUnsavedLayoutChanges == true {
+            var parts: [String] = []
+            if hasUnsavedRgbEffectsChanges == true { parts.append("layout/models/views") }
+            if hasUnsavedNetworkChanges == true { parts.append("network setup") }
+            layoutDirtyReason = parts.isEmpty
+                ? "Current xLights layout has unsaved changes."
+                : "Unsaved xLights layout changes: \(parts.joined(separator: ", "))."
+        } else {
+            layoutDirtyReason = "Current xLights layout is saved."
+        }
         let supportedCommands = [
             "sequence.getOpen",
             "sequence.getRevision",
@@ -68,6 +96,15 @@ struct LocalXLightsSessionService: XLightsSessionService {
             mediaFile: string(mediaData["mediaFile"]),
             showDirectory: showDirectory,
             projectShowMatches: pathsMatch(showDirectory, projectShowFolder),
+            layoutSignature: layoutSignature,
+            hasUnsavedLayoutChanges: hasUnsavedLayoutChanges,
+            hasUnsavedRgbEffectsChanges: hasUnsavedRgbEffectsChanges,
+            hasUnsavedNetworkChanges: hasUnsavedNetworkChanges,
+            rgbEffectsFile: rgbEffectsFile,
+            rgbEffectsModifiedAt: rgbEffectsModifiedAt,
+            networksFile: networksFile,
+            networksModifiedAt: networksModifiedAt,
+            layoutDirtyStateReason: layoutDirtyReason,
             sequenceType: string(settingsData["sequenceType"], fallback: "unknown"),
             durationMs: int(settingsData["durationMs"]),
             frameMs: int(settingsData["frameMs"]),
@@ -147,6 +184,20 @@ struct LocalXLightsSessionService: XLightsSessionService {
             throw XLightsSessionServiceError.invalidResponse("Invalid xLights endpoint.")
         }
         let (data, _) = try await URLSession.shared.data(from: url)
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw XLightsSessionServiceError.invalidResponse("xLights returned invalid JSON.")
+        }
+        return json
+    }
+
+    private func readJSONAllowing404(from path: String) async throws -> [String: Any] {
+        guard let url = URL(string: AppEnvironment.xlightsOwnedAPIBaseURL + path) else {
+            throw XLightsSessionServiceError.invalidResponse("Invalid xLights endpoint.")
+        }
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let http = response as? HTTPURLResponse, http.statusCode == 404 {
+            return [:]
+        }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw XLightsSessionServiceError.invalidResponse("xLights returned invalid JSON.")
         }
@@ -253,5 +304,31 @@ struct LocalXLightsSessionService: XLightsSessionService {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "" }
         return URL(fileURLWithPath: trimmed).standardizedFileURL.path
+    }
+
+    private func buildLayoutSignature(modelsJSON: [String: Any], groupMembershipsJSON: [String: Any]) -> String {
+        let modelRows = (dictionary(modelsJSON["data"])["models"] as? [[String: Any]] ?? [])
+            .map { row in
+                [
+                    string(row["name"]),
+                    string(row["displayAs"]),
+                    String(describing: row["nodeCount"] ?? ""),
+                    String(describing: row["positionX"] ?? ""),
+                    String(describing: row["positionY"] ?? ""),
+                    String(describing: row["positionZ"] ?? "")
+                ].joined(separator: "|")
+            }
+            .sorted()
+        let groupRows = (dictionary(groupMembershipsJSON["data"])["groups"] as? [[String: Any]] ?? [])
+            .map { row in
+                let groupName = string(row["groupName"])
+                let flattenedAll = (row["flattenedAllMembers"] as? [[String: Any]] ?? [])
+                    .map { string($0["name"]) }
+                    .sorted()
+                    .joined(separator: ",")
+                return "\(groupName)|\(flattenedAll)"
+            }
+            .sorted()
+        return (modelRows + groupRows).joined(separator: "\n")
     }
 }

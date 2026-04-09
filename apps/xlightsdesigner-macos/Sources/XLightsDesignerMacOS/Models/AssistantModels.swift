@@ -56,6 +56,12 @@ struct AssistantContextModel {
     let displayTypeBreakdown: [[String: String]]
     let displayModelSamples: [[String: String]]
     let displayAllTargetNames: [String]
+    let displayGroupMemberships: [[String: String]]
+    let xlightsLayoutFamilies: [[String: String]]
+    let xlightsLayoutTypeBreakdown: [[String: String]]
+    let xlightsLayoutModelSamples: [[String: String]]
+    let xlightsLayoutAllTargetNames: [String]
+    let xlightsLayoutGroupMemberships: [[String: String]]
     let displayDiscoveryStatus: String
     let displayDiscoveryTranscriptCount: Int
     let displayDiscoveryInsights: [[String: String]]
@@ -90,6 +96,12 @@ struct AssistantContextModel {
         displayTypeBreakdown: [[String: String]] = [],
         displayModelSamples: [[String: String]] = [],
         displayAllTargetNames: [String] = [],
+        displayGroupMemberships: [[String: String]] = [],
+        xlightsLayoutFamilies: [[String: String]] = [],
+        xlightsLayoutTypeBreakdown: [[String: String]] = [],
+        xlightsLayoutModelSamples: [[String: String]] = [],
+        xlightsLayoutAllTargetNames: [String] = [],
+        xlightsLayoutGroupMemberships: [[String: String]] = [],
         displayDiscoveryStatus: String = "not_started",
         displayDiscoveryTranscriptCount: Int = 0,
         displayDiscoveryInsights: [[String: String]] = [],
@@ -123,6 +135,12 @@ struct AssistantContextModel {
         self.displayTypeBreakdown = displayTypeBreakdown
         self.displayModelSamples = displayModelSamples
         self.displayAllTargetNames = displayAllTargetNames
+        self.displayGroupMemberships = displayGroupMemberships
+        self.xlightsLayoutFamilies = xlightsLayoutFamilies
+        self.xlightsLayoutTypeBreakdown = xlightsLayoutTypeBreakdown
+        self.xlightsLayoutModelSamples = xlightsLayoutModelSamples
+        self.xlightsLayoutAllTargetNames = xlightsLayoutAllTargetNames
+        self.xlightsLayoutGroupMemberships = xlightsLayoutGroupMemberships
         self.displayDiscoveryStatus = displayDiscoveryStatus
         self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
         self.displayDiscoveryInsights = displayDiscoveryInsights
@@ -159,7 +177,15 @@ struct AssistantContextModel {
                 "displayDiscoveryFamilies": displayDiscoveryFamilies,
                 "typeBreakdown": displayTypeBreakdown,
                 "modelSamples": displayModelSamples,
-                "allTargetNames": displayAllTargetNames
+                "allTargetNames": displayAllTargetNames,
+                "groupMemberships": displayGroupMemberships
+            ],
+            "xlightsLayout": [
+                "families": xlightsLayoutFamilies,
+                "typeBreakdown": xlightsLayoutTypeBreakdown,
+                "modelSamples": xlightsLayoutModelSamples,
+                "allTargetNames": xlightsLayoutAllTargetNames,
+                "groupMemberships": xlightsLayoutGroupMemberships
             ],
             "displayDiscovery": [
                 "status": displayDiscoveryStatus,

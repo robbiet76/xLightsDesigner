@@ -129,7 +129,11 @@ function uniqueStrings(values = []) {
 
 function knownDisplayNames(context = {}) {
   const display = context && typeof context.display === 'object' ? context.display : {};
+  const xlightsLayout = context && typeof context.xlightsLayout === 'object' ? context.xlightsLayout : {};
   return uniqueStrings([
+    ...(Array.isArray(xlightsLayout.allTargetNames) ? xlightsLayout.allTargetNames : []),
+    ...(Array.isArray(xlightsLayout.modelSamples) ? xlightsLayout.modelSamples.map((row) => row?.name) : []),
+    ...(Array.isArray(xlightsLayout.families) ? xlightsLayout.families.map((row) => row?.name) : []),
     ...(Array.isArray(display.allTargetNames) ? display.allTargetNames : []),
     ...(Array.isArray(display.modelSamples) ? display.modelSamples.map((row) => row?.name) : []),
     ...(Array.isArray(display.displayDiscoveryCandidates) ? display.displayDiscoveryCandidates.map((row) => row?.name) : []),
@@ -295,6 +299,8 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When you resolve shorthand, make the mapping explicit in the reply using the exact xLights names. Example: "I updated `Train` as a focal prop."',
     'If multiple exact xLights names are plausible matches, ask a clarification question instead of pretending one was confirmed.',
     'Be especially careful with collective references that could mean either an xLights group or a set of individual models.',
+    'When Context includes xlightsLayout.groupMemberships, use that structure as the primary source for what each xLights group actually contains before asking a clarification question.',
+    'If xlightsLayout.groupMemberships is unavailable, fall back to display.groupMemberships.',
     'If the user says something like "the candy canes" and Context contains both the xLights group `CandyCanes` and individual models like `CandyCane-01` through `CandyCane-04`, treat that as ambiguous unless the user clearly specified group scope.',
     'In those cases, ask a short clarification question rather than silently choosing the xLights group or the individual models.',
     'Do not say you "applied", "updated", or "set" metadata until the target scope is unambiguous.',

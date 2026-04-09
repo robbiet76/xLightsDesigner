@@ -76,6 +76,10 @@ export function validateSequenceAgentInput(payload = {}) {
   if (!isPlainObject(submodelsById)) {
     errors.push("context.submodelsById is required");
   }
+  const xlightsLayout = getByPath(obj, "context.xlightsLayout");
+  if (xlightsLayout != null && !isPlainObject(xlightsLayout)) {
+    errors.push("context.xlightsLayout must be an object when provided");
+  }
   pushRequiredObject(errors, obj, "intentHandoff");
   pushRequiredObject(errors, obj, "safety");
 

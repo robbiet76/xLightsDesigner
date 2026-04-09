@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.historyScreenModel.loadHistory()
         model.settingsScreenModel.load()
         model.xlightsSessionModel.refresh()
+        model.xlightsSessionModel.startMonitoring()
         let automationServer = NativeAutomationServer(model: model)
         automationServer.start()
         self.automationServer = automationServer
@@ -42,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        model.xlightsSessionModel.stopMonitoring()
         automationServer?.stop()
         automationServer = nil
     }
