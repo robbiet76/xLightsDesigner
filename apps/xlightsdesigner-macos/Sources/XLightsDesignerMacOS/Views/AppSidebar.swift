@@ -29,7 +29,7 @@ struct AppSidebar: View {
         switch workflow {
         case .project:
             return "folder"
-        case .layout:
+        case .display:
             return "square.grid.3x3"
         case .audio:
             return "waveform"

@@ -1,27 +1,27 @@
 import Foundation
 
-protocol LayoutMetadataStore: Sendable {
-    func load(for project: ActiveProjectModel) throws -> PersistedLayoutMetadataDocument
+protocol DisplayMetadataStore: Sendable {
+    func load(for project: ActiveProjectModel) throws -> PersistedDisplayMetadataDocument
     func createOrAssignTag(project: ActiveProjectModel, targetIDs: [String], tagName: String, description: String) throws
     func removeTag(project: ActiveProjectModel, targetIDs: [String], tagID: String) throws
     func updateTagDefinition(project: ActiveProjectModel, tagID: String?, name: String, description: String, colorName: String?) throws
     func deleteTagDefinition(project: ActiveProjectModel, tagID: String) throws
 }
 
-struct PersistedLayoutMetadataDocument: Codable, Sendable {
+struct PersistedDisplayMetadataDocument: Codable, Sendable {
     var version: Int = 1
-    var tags: [PersistedLayoutTagDefinition] = []
+    var tags: [PersistedDisplayTagDefinition] = []
     var targetTags: [String: [String]] = [:]
 }
 
-struct PersistedLayoutTagDefinition: Codable, Sendable {
+struct PersistedDisplayTagDefinition: Codable, Sendable {
     var id: String
     var name: String
     var description: String
     var colorName: String?
 }
 
-enum LayoutMetadataStoreError: LocalizedError {
+enum DisplayMetadataStoreError: LocalizedError {
     case duplicateTagName
 
     var errorDescription: String? {
@@ -32,14 +32,14 @@ enum LayoutMetadataStoreError: LocalizedError {
     }
 }
 
-struct LocalLayoutMetadataStore: LayoutMetadataStore {
-    func load(for project: ActiveProjectModel) throws -> PersistedLayoutMetadataDocument {
+struct LocalDisplayMetadataStore: DisplayMetadataStore {
+    func load(for project: ActiveProjectModel) throws -> PersistedDisplayMetadataDocument {
         let fileURL = metadataFileURL(for: project)
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return PersistedLayoutMetadataDocument()
+            return PersistedDisplayMetadataDocument()
         }
         let data = try Data(contentsOf: fileURL)
-        var document = try JSONDecoder().decode(PersistedLayoutMetadataDocument.self, from: data)
+        var document = try JSONDecoder().decode(PersistedDisplayMetadataDocument.self, from: data)
         document.tags.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         return document
     }
@@ -57,7 +57,7 @@ struct LocalLayoutMetadataStore: LayoutMetadataStore {
                 document.tags[existingIndex].description = normalizedDescription
             }
         } else {
-            let definition = PersistedLayoutTagDefinition(id: UUID().uuidString, name: normalizedName, description: normalizedDescription)
+            let definition = PersistedDisplayTagDefinition(id: UUID().uuidString, name: normalizedName, description: normalizedDescription)
             document.tags.append(definition)
             tagID = definition.id
         }
@@ -97,16 +97,16 @@ struct LocalLayoutMetadataStore: LayoutMetadataStore {
         if let tagID {
             guard let index = document.tags.firstIndex(where: { $0.id == tagID }) else { return }
             if document.tags.enumerated().contains(where: { $0.offset != index && $0.element.name.caseInsensitiveCompare(normalizedName) == .orderedSame }) {
-                throw LayoutMetadataStoreError.duplicateTagName
+                throw DisplayMetadataStoreError.duplicateTagName
             }
             document.tags[index].name = normalizedName
             document.tags[index].description = normalizedDescription
             document.tags[index].colorName = colorName
         } else {
             if document.tags.contains(where: { $0.name.caseInsensitiveCompare(normalizedName) == .orderedSame }) {
-                throw LayoutMetadataStoreError.duplicateTagName
+                throw DisplayMetadataStoreError.duplicateTagName
             }
-            document.tags.append(PersistedLayoutTagDefinition(id: UUID().uuidString, name: normalizedName, description: normalizedDescription, colorName: colorName))
+            document.tags.append(PersistedDisplayTagDefinition(id: UUID().uuidString, name: normalizedName, description: normalizedDescription, colorName: colorName))
         }
         try save(document, for: project)
     }
@@ -131,7 +131,7 @@ struct LocalLayoutMetadataStore: LayoutMetadataStore {
         return projectDir.appendingPathComponent("layout/layout-metadata.json", isDirectory: false)
     }
 
-    private func save(_ document: PersistedLayoutMetadataDocument, for project: ActiveProjectModel) throws {
+    private func save(_ document: PersistedDisplayMetadataDocument, for project: ActiveProjectModel) throws {
         let fileURL = metadataFileURL(for: project)
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         var normalized = document

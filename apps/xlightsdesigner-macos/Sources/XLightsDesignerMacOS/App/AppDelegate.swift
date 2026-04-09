@@ -10,7 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.regular)
         model.projectScreenModel.loadInitialProject()
-        model.layoutScreenModel.loadLayout()
+        model.displayScreenModel.loadDisplay()
         model.audioScreenModel.loadLibrary()
         model.designScreenModel.refresh()
         model.sequenceScreenModel.refresh()

@@ -1,20 +1,20 @@
 import Foundation
 
-enum LayoutReadinessState: String, Sendable {
+enum DisplayReadinessState: String, Sendable {
     case ready = "Ready"
     case needsReview = "Needs Review"
     case blocked = "Blocked"
 }
 
-struct LayoutHeaderModel: Sendable {
+struct DisplayHeaderModel: Sendable {
     let title: String
     let subtitle: String
     let activeProjectName: String
     let sourceSummary: String
 }
 
-struct LayoutReadinessSummaryModel: Sendable {
-    let state: LayoutReadinessState
+struct DisplayReadinessSummaryModel: Sendable {
+    let state: DisplayReadinessState
     let totalTargets: Int
     let readyCount: Int
     let unresolvedCount: Int
@@ -33,7 +33,7 @@ enum DisplayMetadataSource: String, Sendable {
     case agent = "Agent"
 }
 
-enum LayoutTagColor: String, CaseIterable, Codable, Sendable {
+enum DisplayTagColor: String, CaseIterable, Codable, Sendable {
     case none
     case red
     case orange
@@ -50,15 +50,15 @@ enum LayoutTagColor: String, CaseIterable, Codable, Sendable {
     }
 }
 
-struct LayoutTagDefinitionModel: Identifiable, Hashable, Codable, Sendable {
+struct DisplayTagDefinitionModel: Identifiable, Hashable, Codable, Sendable {
     let id: String
     var name: String
     var description: String
     var usageCount: Int
-    var color: LayoutTagColor
+    var color: DisplayTagColor
 }
 
-struct LayoutRowModel: Identifiable, Hashable, Sendable {
+struct DisplayLayoutRowModel: Identifiable, Hashable, Sendable {
     let id: String
     let targetName: String
     let targetType: String
@@ -70,7 +70,7 @@ struct LayoutRowModel: Identifiable, Hashable, Sendable {
     let width: Double
     let height: Double
     let depth: Double
-    let tagDefinitions: [LayoutTagDefinitionModel]
+    let tagDefinitions: [DisplayTagDefinitionModel]
     let supportStateSummary: String
     let issuesSummary: String
     let submodelCount: Int
@@ -89,22 +89,6 @@ struct LayoutRowModel: Identifiable, Hashable, Sendable {
             .map { [$0.name, $0.description, $0.color == .none ? "" : $0.color.displayName].joined(separator: " ") }
             .joined(separator: " ")
     }
-}
-
-struct LayoutSelectedTargetModel: Sendable {
-    let identity: String
-    let type: String
-    let layoutGroup: String
-    let readinessState: LayoutReadinessState
-    let reason: String
-    let assignedTags: [LayoutTagDefinitionModel]
-    let downstreamEffectSummary: String
-}
-
-struct LayoutMultiSelectionModel: Sendable {
-    let selectionCount: Int
-    let commonTags: [LayoutTagDefinitionModel]
-    let mixedTagCount: Int
 }
 
 struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {
@@ -136,7 +120,7 @@ struct DisplayMetadataSelectionModel: Sendable {
     let source: DisplayMetadataSource
     let rationale: String
     let linkedTargets: [String]
-    let relatedTags: [LayoutTagDefinitionModel]
+    let relatedTags: [DisplayTagDefinitionModel]
 }
 
 enum DisplayMetadataSelectedPaneModel: Sendable {
@@ -144,27 +128,20 @@ enum DisplayMetadataSelectedPaneModel: Sendable {
     case selected(DisplayMetadataSelectionModel)
 }
 
-enum LayoutSelectedPaneModel: Sendable {
-    case none(String)
-    case selected(LayoutSelectedTargetModel)
-    case multi(LayoutMultiSelectionModel)
-    case error(String)
-}
-
-struct LayoutBannerModel: Identifiable, Sendable {
+struct DisplayBannerModel: Identifiable, Sendable {
     let id: String
-    let state: LayoutReadinessState
+    let state: DisplayReadinessState
     let text: String
 }
 
-struct LayoutScreenModel: Sendable {
-    let header: LayoutHeaderModel
-    let readinessSummary: LayoutReadinessSummaryModel
-    let rows: [LayoutRowModel]
+struct DisplayScreenModel: Sendable {
+    let header: DisplayHeaderModel
+    let readinessSummary: DisplayReadinessSummaryModel
+    let rows: [DisplayLayoutRowModel]
     let metadataRows: [DisplayMetadataRowModel]
     let selectedMetadata: DisplayMetadataSelectedPaneModel
-    let banners: [LayoutBannerModel]
-    let tagDefinitions: [LayoutTagDefinitionModel]
+    let banners: [DisplayBannerModel]
+    let tagDefinitions: [DisplayTagDefinitionModel]
     let discoveryProposals: [DisplayDiscoveryTagProposalModel]
     let openQuestions: [String]
 }

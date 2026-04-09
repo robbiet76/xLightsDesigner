@@ -4,7 +4,7 @@ import Testing
 @Test func workflowOrderMatchesLockedNavigation() {
     #expect(WorkflowID.allCases == [
         .project,
-        .layout,
+        .display,
         .audio,
         .design,
         .sequence,

@@ -1,7 +1,7 @@
 import SwiftUI
 
-struct LayoutScreenView: View {
-    @Bindable var model: LayoutScreenViewModel
+struct DisplayScreenView: View {
+    @Bindable var model: DisplayScreenViewModel
 
     var body: some View {
         GeometryReader { proxy in
@@ -20,22 +20,13 @@ struct LayoutScreenView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .task {
-            model.loadLayout()
+            model.loadDisplay()
         }
         .onReceive(NotificationCenter.default.publisher(for: .projectWorkspaceDidChange)) { _ in
-            model.loadLayout()
+            model.loadDisplay()
         }
         .onReceive(NotificationCenter.default.publisher(for: .displayDiscoveryDidChange)) { _ in
-            model.loadLayout()
-        }
-        .sheet(isPresented: $model.showAddTagSheet) {
-            addTagSheet
-        }
-        .sheet(isPresented: $model.showRemoveTagSheet) {
-            removeTagSheet
-        }
-        .sheet(isPresented: $model.showManageTagsSheet) {
-            manageTagsSheet
+            model.loadDisplay()
         }
         .sheet(isPresented: $model.showDiscoveryProposalSheet) {
             discoveryProposalSheet
@@ -121,7 +112,7 @@ struct LayoutScreenView: View {
                     .foregroundStyle(.secondary)
                 HStack(spacing: 10) {
                     Button("Refresh Display") {
-                        model.loadLayout()
+                        model.loadDisplay()
                     }
                     Button("Review Proposals…") {
                         model.reviewDiscoveryProposals()
@@ -131,20 +122,6 @@ struct LayoutScreenView: View {
                         model.applyDiscoveryProposals()
                     }
                     .disabled(model.discoveryProposals.isEmpty)
-                    Button("Manage Tags…") {
-                        model.presentManageTagsSheet()
-                    }
-                }
-                if model.canAddTag {
-                    HStack(spacing: 10) {
-                        Button("Add Tag to Linked Targets…") {
-                            model.presentAddTagSheet()
-                        }
-                        Button("Remove Tag…") {
-                            model.presentRemoveTagSheet()
-                        }
-                        .disabled(model.removableTags.isEmpty)
-                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -179,7 +156,9 @@ struct LayoutScreenView: View {
                         if !entry.linkedTargets.isEmpty {
                             detailCard(label: "Linked Models", value: entry.linkedTargets.joined(separator: ", "))
                         }
-                        tagSection(title: "Related Tags", tags: entry.relatedTags)
+                        if !entry.relatedTags.isEmpty {
+                            tagSection(title: "Applied Labels", tags: entry.relatedTags)
+                        }
                     }
                 }
             }
@@ -278,7 +257,7 @@ struct LayoutScreenView: View {
             Text("Review Proposed Metadata")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("These proposals came from the display-discovery conversation. Applying them creates tag definitions and assigns them to the linked xLights models.")
+            Text("These proposals came from the display-discovery conversation. Applying them promotes the learned metadata into the active display label store and maps it to the linked xLights models.")
                 .foregroundStyle(.secondary)
             List(model.discoveryProposals) { proposal in
                 VStack(alignment: .leading, spacing: 6) {
@@ -312,146 +291,6 @@ struct LayoutScreenView: View {
         .frame(minWidth: 720, minHeight: 420)
     }
 
-    private var addTagSheet: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Add Tag")
-                .font(.title2)
-                .fontWeight(.semibold)
-            Text("Apply one tag across the linked models for the current metadata selection.")
-                .foregroundStyle(.secondary)
-            Form {
-                Picker("Mode", selection: $model.addTagMode) {
-                    Text("Existing Tag").tag(LayoutScreenViewModel.AddTagMode.existing)
-                    Text("New Tag").tag(LayoutScreenViewModel.AddTagMode.new)
-                }
-                .pickerStyle(.segmented)
-
-                if model.addTagMode == .existing {
-                    Picker("Tag", selection: $model.selectedExistingTagID) {
-                        ForEach(model.screenModel.tagDefinitions) { tag in
-                            Text(tag.name).tag(tag.id)
-                        }
-                    }
-                } else {
-                    TextField("Tag Name", text: $model.newTagName)
-                    TextField("Description (Optional)", text: $model.newTagDescription)
-                }
-
-                Text("Linked Models: \(model.selectedLinkedTargets.count)")
-                    .foregroundStyle(.secondary)
-            }
-            HStack {
-                Spacer()
-                Button("Cancel") {
-                    model.showAddTagSheet = false
-                }
-                Button("Apply") {
-                    model.applyAddTag()
-                }
-                .disabled(
-                    model.addTagMode == .existing
-                        ? model.selectedExistingTagID.isEmpty
-                        : model.newTagName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                )
-            }
-        }
-        .padding(24)
-        .frame(minWidth: 460)
-    }
-
-    private var removeTagSheet: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Remove Tag")
-                .font(.title2)
-                .fontWeight(.semibold)
-            Text("Remove one tag from the linked models for the current metadata selection.")
-                .foregroundStyle(.secondary)
-            Form {
-                Picker("Tag", selection: $model.selectedRemovalTagID) {
-                    ForEach(model.removableTags) { tag in
-                        Text(tag.name).tag(tag.id)
-                    }
-                }
-                Text("Linked Models: \(model.selectedLinkedTargets.count)")
-                    .foregroundStyle(.secondary)
-            }
-            HStack {
-                Spacer()
-                Button("Cancel") {
-                    model.showRemoveTagSheet = false
-                }
-                Button("Remove") {
-                    model.applyRemoveTag()
-                }
-                .disabled(model.selectedRemovalTagID.isEmpty)
-            }
-        }
-        .padding(24)
-        .frame(minWidth: 420)
-    }
-
-    private var manageTagsSheet: some View {
-        NavigationSplitView {
-            List(
-                model.screenModel.tagDefinitions,
-                selection: Binding(
-                    get: { model.manageSelectedTagID },
-                    set: { model.selectManagedTag(id: $0) }
-                )
-            ) { tag in
-                VStack(alignment: .leading, spacing: 4) {
-                    TagChip(tag: tag)
-                    Text("Used by \(tag.usageCount) targets")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .tag(tag.id)
-            }
-            .toolbar {
-                Button("New Tag") {
-                    model.startNewManagedTag()
-                }
-            }
-        } detail: {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(model.manageSelectedTagID == nil ? "New Tag" : "Edit Tag")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                Form {
-                    TextField("Tag Name", text: $model.manageTagName)
-                    Picker("Color", selection: $model.manageTagColor) {
-                        ForEach(LayoutTagColor.allCases, id: \.self) { color in
-                            Text(color.displayName).tag(color)
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Description")
-                            .font(.headline)
-                        TextEditor(text: $model.manageTagDescription)
-                            .frame(minHeight: 120)
-                    }
-                }
-                HStack {
-                    Button("Save") {
-                        model.saveManagedTag()
-                    }
-                    .disabled(!model.canSaveManagedTag)
-                    Spacer()
-                    if model.manageSelectedTagID != nil {
-                        Button("Delete Tag", role: .destructive) {
-                            model.deleteManagedTag()
-                        }
-                    }
-                    Button("Done") {
-                        model.finishManageTags()
-                    }
-                }
-            }
-            .padding(24)
-        }
-        .frame(minWidth: 760, minHeight: 440)
-    }
-
     private func chip(_ text: String) -> some View {
         Text(text)
             .padding(.horizontal, 10)
@@ -460,7 +299,7 @@ struct LayoutScreenView: View {
             .clipShape(Capsule())
     }
 
-    private func bannerView(_ banner: LayoutBannerModel) -> some View {
+    private func bannerView(_ banner: DisplayBannerModel) -> some View {
         Text(banner.text)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(10)
@@ -468,7 +307,7 @@ struct LayoutScreenView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    private func bannerColor(for state: LayoutReadinessState) -> Color {
+    private func bannerColor(for state: DisplayReadinessState) -> Color {
         switch state {
         case .ready:
             return Color(nsColor: .systemGreen).opacity(0.12)
@@ -515,7 +354,7 @@ struct LayoutScreenView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    private func tagSection(title: String, tags: [LayoutTagDefinitionModel]) -> some View {
+    private func tagSection(title: String, tags: [DisplayTagDefinitionModel]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
@@ -530,7 +369,7 @@ struct LayoutScreenView: View {
 }
 
 private struct FlowTagList: View {
-    let tags: [LayoutTagDefinitionModel]
+    let tags: [DisplayTagDefinitionModel]
 
     var body: some View {
         LazyVGrid(
@@ -557,21 +396,8 @@ private struct FlowTagList: View {
     }
 }
 
-private struct TagRowChips: View {
-    let tags: [LayoutTagDefinitionModel]
-
-    var body: some View {
-        if tags.isEmpty {
-            Text("No tags")
-                .foregroundStyle(.secondary)
-        } else {
-            FlowTagList(tags: Array(tags.prefix(3)))
-        }
-    }
-}
-
 private struct TagChip: View {
-    let tag: LayoutTagDefinitionModel
+    let tag: DisplayTagDefinitionModel
 
     var body: some View {
         Text(tag.name)

@@ -4,16 +4,9 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class LayoutScreenViewModel {
-    enum AddTagMode: String, CaseIterable, Identifiable {
-        case existing
-        case new
-
-        var id: String { rawValue }
-    }
-
+final class DisplayScreenViewModel {
     private let workspace: ProjectWorkspace
-    private let layoutService: LayoutService
+    private let layoutService: DisplayService
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
 
     var targetFilter = ""
@@ -23,14 +16,14 @@ final class LayoutScreenViewModel {
     var statusFilter = ""
     var sortOrder = [KeyPathComparator(\DisplayMetadataRowModel.subject, order: .forward)]
     var selectedRowIDs = Set<DisplayMetadataRowModel.ID>()
-    var screenModel = LayoutScreenModel(
-        header: LayoutHeaderModel(
+    var screenModel = DisplayScreenModel(
+        header: DisplayHeaderModel(
             title: "Display",
             subtitle: "Create and maintain project display metadata grounded in the active xLights layout.",
             activeProjectName: "No Project",
             sourceSummary: ""
         ),
-        readinessSummary: LayoutReadinessSummaryModel(
+        readinessSummary: DisplayReadinessSummaryModel(
             state: .blocked,
             totalTargets: 0,
             readyCount: 0,
@@ -49,29 +42,11 @@ final class LayoutScreenViewModel {
     )
 
     var errorMessage: String?
-    var showAddTagSheet = false
-    var showRemoveTagSheet = false
-    var showManageTagsSheet = false
     var showDiscoveryProposalSheet = false
-
-    var addTagMode: AddTagMode = .existing
-    var selectedExistingTagID = ""
-    var newTagName = ""
-    var newTagDescription = ""
-    var selectedRemovalTagID = ""
-
-    var manageSelectedTagID: String?
-    var manageTagName = ""
-    var manageTagDescription = ""
-    var manageTagColor: LayoutTagColor = .none
-    private var originalManageTagName = ""
-    private var originalManageTagDescription = ""
-    private var originalManageTagColor: LayoutTagColor = .none
-    var isSavingTagChanges = false
 
     init(
         workspace: ProjectWorkspace,
-        layoutService: LayoutService = XLightsLayoutService(),
+        layoutService: DisplayService = XLightsDisplayService(),
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore()
     ) {
         self.workspace = workspace
@@ -130,17 +105,6 @@ final class LayoutScreenViewModel {
         screenModel.metadataRows.filter { selectedRowIDs.contains($0.id) }
     }
 
-    var canAddTag: Bool {
-        !selectedLinkedTargetNames.isEmpty
-    }
-
-    var removableTags: [LayoutTagDefinitionModel] {
-        let tagIDs = Set(selectedLinkedTargets.flatMap { $0.tagDefinitions.map(\.id) })
-        return screenModel.tagDefinitions
-            .filter { tagIDs.contains($0.id) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-
     var confirmedMetadataCount: Int {
         screenModel.metadataRows.filter { $0.status == .confirmed }.count
     }
@@ -154,7 +118,7 @@ final class LayoutScreenViewModel {
         return screenModel.rows.filter { names.contains($0.targetName) }.count
     }
 
-    var selectedLinkedTargets: [LayoutRowModel] {
+    var selectedLinkedTargets: [DisplayLayoutRowModel] {
         let names = Set(selectedLinkedTargetNames)
         return screenModel.rows.filter { names.contains($0.targetName) }
     }
@@ -163,21 +127,11 @@ final class LayoutScreenViewModel {
         selectedMetadataRows.flatMap(\.linkedTargets)
     }
 
-    var canSaveManagedTag: Bool {
-        !manageTagName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSavingTagChanges
-    }
-
-    var hasManagedTagChanges: Bool {
-        manageTagName != originalManageTagName ||
-        manageTagDescription != originalManageTagDescription ||
-        manageTagColor != originalManageTagColor
-    }
-
-    func loadLayout() {
+    func loadDisplay() {
         let activeProject = workspace.activeProject
         Task {
             do {
-                let result = try await layoutService.loadLayout(for: activeProject)
+                let result = try await layoutService.loadDisplay(for: activeProject)
                 let discoverySummary = displayDiscoveryStore.summary(for: activeProject)
                 let metadataRows = buildMetadataRows(layoutRows: result.rows, discoverySummary: discoverySummary)
                 let validSelection = selectedRowIDs.intersection(Set(metadataRows.map(\.id)))
@@ -187,8 +141,8 @@ final class LayoutScreenViewModel {
                     selectedRowIDs = validSelection
                 }
 
-                screenModel = LayoutScreenModel(
-                    header: LayoutHeaderModel(
+                screenModel = DisplayScreenModel(
+                    header: DisplayHeaderModel(
                         title: "Display",
                         subtitle: "Review and manage the display metadata the agents are learning from your layout.",
                         activeProjectName: workspace.activeProject?.projectName ?? "No Project",
@@ -205,14 +159,14 @@ final class LayoutScreenViewModel {
                 )
                 syncSelectedMetadata()
             } catch {
-                screenModel = LayoutScreenModel(
-                    header: LayoutHeaderModel(
+                screenModel = DisplayScreenModel(
+                    header: DisplayHeaderModel(
                         title: "Display",
                         subtitle: "Review and manage the display metadata the agents are learning from your layout.",
                         activeProjectName: workspace.activeProject?.projectName ?? "No Project",
                         sourceSummary: "xLights owned API"
                     ),
-                    readinessSummary: LayoutReadinessSummaryModel(
+                    readinessSummary: DisplayReadinessSummaryModel(
                         state: .blocked,
                         totalTargets: 0,
                         readyCount: 0,
@@ -224,7 +178,7 @@ final class LayoutScreenViewModel {
                     rows: [],
                     metadataRows: [],
                     selectedMetadata: .none(error.localizedDescription),
-                    banners: [LayoutBannerModel(id: "load-failed", state: .blocked, text: error.localizedDescription)],
+                    banners: [DisplayBannerModel(id: "load-failed", state: .blocked, text: error.localizedDescription)],
                     tagDefinitions: [],
                     discoveryProposals: [],
                     openQuestions: []
@@ -236,7 +190,7 @@ final class LayoutScreenViewModel {
     func syncSelectedMetadata() {
         let selected = selectedMetadataRows
         if selected.isEmpty {
-            screenModel = LayoutScreenModel(
+            screenModel = DisplayScreenModel(
                 header: screenModel.header,
                 readinessSummary: screenModel.readinessSummary,
                 rows: screenModel.rows,
@@ -251,7 +205,7 @@ final class LayoutScreenViewModel {
         }
         let row = selected[0]
         let relatedTags = relatedTags(for: row)
-        screenModel = LayoutScreenModel(
+        screenModel = DisplayScreenModel(
             header: screenModel.header,
             readinessSummary: screenModel.readinessSummary,
             rows: screenModel.rows,
@@ -272,155 +226,6 @@ final class LayoutScreenViewModel {
             discoveryProposals: screenModel.discoveryProposals,
             openQuestions: screenModel.openQuestions
         )
-    }
-
-    func presentAddTagSheet() {
-        selectedExistingTagID = screenModel.tagDefinitions.first?.id ?? ""
-        newTagName = ""
-        newTagDescription = ""
-        addTagMode = screenModel.tagDefinitions.isEmpty ? .new : .existing
-        showAddTagSheet = true
-    }
-
-    func applyAddTag() {
-        let selectedIDs = selectedLinkedTargets.map(\.id)
-        guard !selectedIDs.isEmpty else { return }
-
-        let tagName: String
-        let description: String
-        switch addTagMode {
-        case .existing:
-            guard let tag = screenModel.tagDefinitions.first(where: { $0.id == selectedExistingTagID }) else { return }
-            tagName = tag.name
-            description = tag.description
-        case .new:
-            tagName = newTagName
-            description = newTagDescription
-        }
-
-        Task {
-            do {
-                try await layoutService.addTag(
-                    for: workspace.activeProject,
-                    targetIDs: selectedIDs,
-                    tagName: tagName,
-                    description: description
-                )
-                showAddTagSheet = false
-                loadLayout()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    func presentRemoveTagSheet() {
-        selectedRemovalTagID = removableTags.first?.id ?? ""
-        showRemoveTagSheet = true
-    }
-
-    func applyRemoveTag() {
-        let selectedIDs = selectedLinkedTargets.map(\.id)
-        guard !selectedIDs.isEmpty, !selectedRemovalTagID.isEmpty else { return }
-
-        Task {
-            do {
-                try await layoutService.removeTag(
-                    for: workspace.activeProject,
-                    targetIDs: selectedIDs,
-                    tagID: selectedRemovalTagID
-                )
-                showRemoveTagSheet = false
-                loadLayout()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    func presentManageTagsSheet() {
-        showManageTagsSheet = true
-        if manageSelectedTagID == nil {
-            selectManagedTag(id: screenModel.tagDefinitions.first?.id)
-        }
-    }
-
-    func selectManagedTag(id: String?) {
-        manageSelectedTagID = id
-        guard let id, let tag = screenModel.tagDefinitions.first(where: { $0.id == id }) else {
-            manageTagName = ""
-            manageTagDescription = ""
-            manageTagColor = .none
-            originalManageTagName = ""
-            originalManageTagDescription = ""
-            originalManageTagColor = .none
-            return
-        }
-        manageTagName = tag.name
-        manageTagDescription = tag.description
-        manageTagColor = tag.color
-        originalManageTagName = tag.name
-        originalManageTagDescription = tag.description
-        originalManageTagColor = tag.color
-    }
-
-    func startNewManagedTag() {
-        manageSelectedTagID = nil
-        manageTagName = ""
-        manageTagDescription = ""
-        manageTagColor = .none
-        originalManageTagName = ""
-        originalManageTagDescription = ""
-        originalManageTagColor = .none
-    }
-
-    func saveManagedTag(closeAfterSave: Bool = false) {
-        Task {
-            do {
-                isSavingTagChanges = true
-                try await layoutService.saveTagDefinition(
-                    for: workspace.activeProject,
-                    tagID: manageSelectedTagID,
-                    name: manageTagName,
-                    description: manageTagDescription,
-                    color: manageTagColor
-                )
-                originalManageTagName = manageTagName
-                originalManageTagDescription = manageTagDescription
-                originalManageTagColor = manageTagColor
-                if closeAfterSave {
-                    showManageTagsSheet = false
-                }
-                loadLayout()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-            isSavingTagChanges = false
-        }
-    }
-
-    func finishManageTags() {
-        if hasManagedTagChanges && canSaveManagedTag {
-            saveManagedTag(closeAfterSave: true)
-        } else {
-            showManageTagsSheet = false
-        }
-    }
-
-    func deleteManagedTag() {
-        guard let manageSelectedTagID else { return }
-        Task {
-            do {
-                try await layoutService.deleteTagDefinition(for: workspace.activeProject, tagID: manageSelectedTagID)
-                self.manageSelectedTagID = nil
-                manageTagName = ""
-                manageTagDescription = ""
-                manageTagColor = .none
-                loadLayout()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
     }
 
     func reviewDiscoveryProposals() {
@@ -450,7 +255,7 @@ final class LayoutScreenViewModel {
                 }
                 try displayDiscoveryStore.clearTagProposals(for: workspace.activeProject)
                 showDiscoveryProposalSheet = false
-                loadLayout()
+                loadDisplay()
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -458,7 +263,7 @@ final class LayoutScreenViewModel {
     }
 
     private func buildMetadataRows(
-        layoutRows: [LayoutRowModel],
+        layoutRows: [DisplayLayoutRowModel],
         discoverySummary: DisplayDiscoverySummaryModel
     ) -> [DisplayMetadataRowModel] {
         let insightRows = discoverySummary.insights.map { insight in
@@ -500,7 +305,7 @@ final class LayoutScreenViewModel {
         }
     }
 
-    private func inferLinkedTargets(for subject: String, explicitTargets: [String], from rows: [LayoutRowModel]) -> [String] {
+    private func inferLinkedTargets(for subject: String, explicitTargets: [String], from rows: [DisplayLayoutRowModel]) -> [String] {
         if !explicitTargets.isEmpty {
             return explicitTargets.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
         }
@@ -524,7 +329,7 @@ final class LayoutScreenViewModel {
             .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
-    private func relatedTags(for row: DisplayMetadataRowModel) -> [LayoutTagDefinitionModel] {
+    private func relatedTags(for row: DisplayMetadataRowModel) -> [DisplayTagDefinitionModel] {
         let tagNames = Set(selectedLinkedTargets.flatMap(\.tagDefinitions).map(\.name))
         let related = screenModel.tagDefinitions.filter { tagNames.contains($0.name) }
         return related.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

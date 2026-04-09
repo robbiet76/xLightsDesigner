@@ -240,7 +240,7 @@ struct LocalProjectService: ProjectService {
     }
 
     private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
-        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("LayoutTagStore")
+        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("DisplayMetadataStore")
     }
 }
 

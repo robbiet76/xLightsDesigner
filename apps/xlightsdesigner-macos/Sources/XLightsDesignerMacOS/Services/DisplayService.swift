@@ -1,49 +1,49 @@
 import Foundation
 
-protocol LayoutService: Sendable {
-    func loadLayout(for project: ActiveProjectModel?) async throws -> LayoutServiceResult
+protocol DisplayService: Sendable {
+    func loadDisplay(for project: ActiveProjectModel?) async throws -> DisplayServiceResult
     func addTag(for project: ActiveProjectModel?, targetIDs: [String], tagName: String, description: String) async throws
     func removeTag(for project: ActiveProjectModel?, targetIDs: [String], tagID: String) async throws
-    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: LayoutTagColor) async throws
+    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayTagColor) async throws
     func deleteTagDefinition(for project: ActiveProjectModel?, tagID: String) async throws
 }
 
-struct LayoutServiceResult: Sendable {
-    let readiness: LayoutReadinessSummaryModel
-    let rows: [LayoutRowModel]
+struct DisplayServiceResult: Sendable {
+    let readiness: DisplayReadinessSummaryModel
+    let rows: [DisplayLayoutRowModel]
     let sourceSummary: String
-    let banners: [LayoutBannerModel]
-    let tagDefinitions: [LayoutTagDefinitionModel]
+    let banners: [DisplayBannerModel]
+    let tagDefinitions: [DisplayTagDefinitionModel]
 }
 
-enum LayoutServiceError: LocalizedError {
+enum DisplayServiceError: LocalizedError {
     case noActiveProject
 
     var errorDescription: String? {
         switch self {
         case .noActiveProject:
-            return "Open a project before editing layout tags."
+            return "Open a project before working with display metadata."
         }
     }
 }
 
-struct XLightsLayoutService: LayoutService {
-    private let metadataStore: LayoutMetadataStore
+struct XLightsDisplayService: DisplayService {
+    private let metadataStore: DisplayMetadataStore
 
-    init(metadataStore: LayoutMetadataStore = LocalLayoutMetadataStore()) {
+    init(metadataStore: DisplayMetadataStore = LocalDisplayMetadataStore()) {
         self.metadataStore = metadataStore
     }
 
-    func loadLayout(for project: ActiveProjectModel?) async throws -> LayoutServiceResult {
+    func loadDisplay(for project: ActiveProjectModel?) async throws -> DisplayServiceResult {
         let health = try? await fetchHealth()
         let validProject = project.flatMap(validateProjectContext)
         let currentMedia = try? await fetchCurrentMedia()
 
-        let metadataDocument: PersistedLayoutMetadataDocument
+        let metadataDocument: PersistedDisplayMetadataDocument
         if let project {
-            metadataDocument = (try? metadataStore.load(for: project)) ?? PersistedLayoutMetadataDocument()
+            metadataDocument = (try? metadataStore.load(for: project)) ?? PersistedDisplayMetadataDocument()
         } else {
-            metadataDocument = PersistedLayoutMetadataDocument()
+            metadataDocument = PersistedDisplayMetadataDocument()
         }
 
         let usageByTagID = metadataDocument.targetTags.values.reduce(into: [String: Int]()) { result, ids in
@@ -52,20 +52,20 @@ struct XLightsLayoutService: LayoutService {
             }
         }
         let tagDefinitions = metadataDocument.tags.map {
-            LayoutTagDefinitionModel(
+            DisplayTagDefinitionModel(
                 id: $0.id,
                 name: $0.name,
                 description: $0.description,
                 usageCount: usageByTagID[$0.id, default: 0],
-                color: LayoutTagColor(rawValue: $0.colorName ?? "") ?? .none
+                color: DisplayTagColor(rawValue: $0.colorName ?? "") ?? .none
             )
         }
         let tagDefinitionsByID = Dictionary(uniqueKeysWithValues: tagDefinitions.map { ($0.id, $0) })
         let explanation: String
         let nextStep: String
-        let state: LayoutReadinessState
-        var banners: [LayoutBannerModel] = []
-        let rows: [LayoutRowModel]
+        let state: DisplayReadinessState
+        var banners: [DisplayBannerModel] = []
+        let rows: [DisplayLayoutRowModel]
         let taggedCount: Int
         let unresolvedCount: Int
 
@@ -74,12 +74,12 @@ struct XLightsLayoutService: LayoutService {
             taggedCount = 0
             unresolvedCount = 0
             state = .blocked
-            explanation = "Layout needs a live xLights session to load the current models."
-            nextStep = "Open xLights to this project's show folder, then return to Layout."
-            banners.append(LayoutBannerModel(
+            explanation = "Display needs a live xLights session to load the current model list."
+            nextStep = "Open xLights to this project's show folder, then return to Display."
+            banners.append(DisplayBannerModel(
                 id: "xlights-required",
                 state: .blocked,
-                text: "xLights is closed or its owned API is unavailable. Layout reads the live model list from xLights."
+                text: "xLights is closed or its owned API is unavailable. Display reads the live model list from xLights."
             ))
         } else if let validProject {
             if let currentMedia, !showDirectoryMatchesProject(currentMedia.showDirectory, projectShowFolder: project?.showFolder ?? "") {
@@ -89,7 +89,7 @@ struct XLightsLayoutService: LayoutService {
                 state = .blocked
                 explanation = "xLights is currently open to a different show folder than the active project."
                 nextStep = "Switch xLights to the project's show folder or change the project show folder."
-                banners.append(LayoutBannerModel(
+                banners.append(DisplayBannerModel(
                     id: "show-mismatch",
                     state: .blocked,
                     text: "xLights show folder: \(currentMedia.showDirectory.isEmpty ? "(not set)" : currentMedia.showDirectory)\nProject show folder: \(project?.showFolder.isEmpty == false ? project!.showFolder : "(not set)")"
@@ -105,13 +105,13 @@ struct XLightsLayoutService: LayoutService {
                 if unresolvedCount > 0 {
                     state = .needsReview
                     explanation = unresolvedCount == rows.count
-                        ? "No project tags have been applied yet."
-                        : "\(unresolvedCount) targets still need semantic tags."
+                        ? "No display metadata has been confirmed yet."
+                        : "\(unresolvedCount) xLights models are still unmapped by the current display metadata."
                     nextStep = validProject
                 } else {
                     state = .ready
-                    explanation = "Project layout tags are in place for the current target set."
-                    nextStep = "Refine tags where needed or continue into design and sequencing."
+                    explanation = "Display metadata is in place for the current xLights model set."
+                    nextStep = "Refine the metadata where needed or continue into design and sequencing."
                 }
             }
         } else {
@@ -120,16 +120,16 @@ struct XLightsLayoutService: LayoutService {
             unresolvedCount = 0
             state = .blocked
             explanation = "Project context is incomplete or invalid."
-            nextStep = "Correct the xLights show folder in Project, then return to Layout."
-            banners.append(LayoutBannerModel(id: "project-context", state: .blocked, text: "xLights show folder must be corrected in Project."))
+            nextStep = "Correct the xLights show folder in Project, then return to Display."
+            banners.append(DisplayBannerModel(id: "project-context", state: .blocked, text: "xLights show folder must be corrected in Project."))
         }
 
         if health?.listenerReachable == false {
-            banners.append(LayoutBannerModel(id: "xlights-unreachable", state: .blocked, text: "xLights owned API is not reachable."))
+            banners.append(DisplayBannerModel(id: "xlights-unreachable", state: .blocked, text: "xLights owned API is not reachable."))
         }
 
-        return LayoutServiceResult(
-            readiness: LayoutReadinessSummaryModel(
+        return DisplayServiceResult(
+            readiness: DisplayReadinessSummaryModel(
                 state: state,
                 totalTargets: rows.count,
                 readyCount: taggedCount,
@@ -159,17 +159,17 @@ struct XLightsLayoutService: LayoutService {
     }
 
     func addTag(for project: ActiveProjectModel?, targetIDs: [String], tagName: String, description: String) async throws {
-        guard let project else { throw LayoutServiceError.noActiveProject }
+        guard let project else { throw DisplayServiceError.noActiveProject }
         try metadataStore.createOrAssignTag(project: project, targetIDs: targetIDs, tagName: tagName, description: description)
     }
 
     func removeTag(for project: ActiveProjectModel?, targetIDs: [String], tagID: String) async throws {
-        guard let project else { throw LayoutServiceError.noActiveProject }
+        guard let project else { throw DisplayServiceError.noActiveProject }
         try metadataStore.removeTag(project: project, targetIDs: targetIDs, tagID: tagID)
     }
 
-    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: LayoutTagColor) async throws {
-        guard let project else { throw LayoutServiceError.noActiveProject }
+    func saveTagDefinition(for project: ActiveProjectModel?, tagID: String?, name: String, description: String, color: DisplayTagColor) async throws {
+        guard let project else { throw DisplayServiceError.noActiveProject }
         try metadataStore.updateTagDefinition(
             project: project,
             tagID: tagID,
@@ -180,7 +180,7 @@ struct XLightsLayoutService: LayoutService {
     }
 
     func deleteTagDefinition(for project: ActiveProjectModel?, tagID: String) async throws {
-        guard let project else { throw LayoutServiceError.noActiveProject }
+        guard let project else { throw DisplayServiceError.noActiveProject }
         try metadataStore.deleteTagDefinition(project: project, tagID: tagID)
     }
 
@@ -189,20 +189,20 @@ struct XLightsLayoutService: LayoutService {
         guard !showFolder.isEmpty else { return nil }
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: showFolder, isDirectory: &isDirectory), isDirectory.boolValue else { return nil }
-        return "Use tags to describe how the current xLights targets should be used downstream."
+        return "Use the display metadata workspace to confirm how the current xLights models should be understood downstream."
     }
 
     private func makeRow(
         from model: XLightsLayoutModel,
-        document: PersistedLayoutMetadataDocument,
-        tagDefinitionsByID: [String: LayoutTagDefinitionModel]
-    ) -> LayoutRowModel {
+        document: PersistedDisplayMetadataDocument,
+        tagDefinitionsByID: [String: DisplayTagDefinitionModel]
+    ) -> DisplayLayoutRowModel {
         let assignedTagIDs = document.targetTags[model.name] ?? []
         let assignedTags = assignedTagIDs
             .compactMap { tagDefinitionsByID[$0] }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-        return LayoutRowModel(
+        return DisplayLayoutRowModel(
             id: model.name,
             targetName: model.name,
             targetType: model.displayAs,
@@ -215,8 +215,8 @@ struct XLightsLayoutService: LayoutService {
             height: model.height ?? 0,
             depth: model.depth ?? 0,
             tagDefinitions: assignedTags,
-            supportStateSummary: assignedTags.isEmpty ? "Needs Tags" : "Tagged",
-            issuesSummary: assignedTags.isEmpty ? "No project tags assigned" : "No issues detected",
+            supportStateSummary: assignedTags.isEmpty ? "Needs Mapping" : "Mapped",
+            issuesSummary: assignedTags.isEmpty ? "No applied metadata labels" : "No issues detected",
             submodelCount: model.submodelCount
         )
     }

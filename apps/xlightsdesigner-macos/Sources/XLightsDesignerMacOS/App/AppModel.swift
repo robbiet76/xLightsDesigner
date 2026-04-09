@@ -15,7 +15,7 @@ final class AppModel {
     let assistantModel: AssistantWindowViewModel
     let audioScreenModel: AudioScreenViewModel
     let projectScreenModel: ProjectScreenViewModel
-    let layoutScreenModel: LayoutScreenViewModel
+    let displayScreenModel: DisplayScreenViewModel
     let designScreenModel: DesignScreenViewModel
     let sequenceScreenModel: SequenceScreenViewModel
     let reviewScreenModel: ReviewScreenViewModel
@@ -35,7 +35,7 @@ final class AppModel {
         self.assistantModel = AssistantWindowViewModel()
         self.audioScreenModel = AudioScreenViewModel.sample()
         self.projectScreenModel = ProjectScreenViewModel(workspace: workspace)
-        self.layoutScreenModel = LayoutScreenViewModel(workspace: workspace)
+        self.displayScreenModel = DisplayScreenViewModel(workspace: workspace)
         self.designScreenModel = DesignScreenViewModel(workspace: workspace)
         self.sequenceScreenModel = SequenceScreenViewModel(workspace: workspace)
         self.reviewScreenModel = ReviewScreenViewModel(workspace: workspace)
@@ -48,7 +48,7 @@ final class AppModel {
         switch selectedWorkflow {
         case .project:
             return "project"
-        case .layout:
+        case .display:
             return "display"
         case .audio:
             return "audio"
@@ -67,8 +67,8 @@ final class AppModel {
         switch selectedWorkflow {
         case .project:
             return workspace.activeProject?.projectFilePath ?? "Project summary"
-        case .layout:
-            switch layoutScreenModel.screenModel.selectedMetadata {
+        case .display:
+            switch displayScreenModel.screenModel.selectedMetadata {
             case let .selected(entry):
                 return "\(entry.subject): \(entry.value)"
             default:
@@ -102,24 +102,24 @@ final class AppModel {
     }
 
     func assistantContext() -> AssistantContextModel {
-        let layoutRows = layoutScreenModel.screenModel.rows
+        let layoutRows = displayScreenModel.screenModel.rows
         let taggedTargetCount = layoutRows.filter { !$0.tagDefinitions.isEmpty }.count
-        let allTagNames = Set(layoutScreenModel.screenModel.tagDefinitions.map(\.name))
+        let allTagNames = Set(displayScreenModel.screenModel.tagDefinitions.map(\.name))
         let discoverySummary = displayDiscoveryStore.summary(for: workspace.activeProject)
         let discoveryCandidates = buildDisplayDiscoveryCandidates(from: layoutRows, discoverySummary: discoverySummary)
         let discoveryFamilies = buildDisplayDiscoveryFamilies(from: layoutRows)
-        let layoutTypeBreakdown = buildLayoutTypeBreakdown(from: layoutRows)
-        let layoutModelSamples = buildLayoutModelSamples(from: layoutRows)
+        let displayTypeBreakdown = buildDisplayTypeBreakdown(from: layoutRows)
+        let displayModelSamples = buildDisplayModelSamples(from: layoutRows)
         let userPreferenceNotes = (try? userProfileStore.load().preferenceNotes.map(\.text)) ?? []
-        let selectedLayoutTarget: String
-        let selectedLayoutTags: [String]
-        switch layoutScreenModel.screenModel.selectedMetadata {
+        let selectedDisplaySubject: String
+        let selectedDisplayLabels: [String]
+        switch displayScreenModel.screenModel.selectedMetadata {
         case let .selected(entry):
-            selectedLayoutTarget = entry.subject
-            selectedLayoutTags = entry.relatedTags.map(\.name)
+            selectedDisplaySubject = entry.subject
+            selectedDisplayLabels = entry.relatedTags.map(\.name)
         default:
-            selectedLayoutTarget = ""
-            selectedLayoutTags = []
+            selectedDisplaySubject = ""
+            selectedDisplayLabels = []
         }
         let xlights = xlightsSessionModel.snapshot
         let sequence = sequenceScreenModel.screenModel
@@ -132,15 +132,15 @@ final class AppModel {
             activeSequenceLoaded: sequenceScreenModel.screenModel.hasLiveSequence,
             planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode,
             showFolder: workspace.activeProject?.showFolder ?? "",
-            layoutTargetCount: layoutRows.count,
-            layoutTaggedTargetCount: taggedTargetCount,
-            layoutTagNames: allTagNames.sorted(),
-            selectedLayoutTarget: selectedLayoutTarget,
-            selectedLayoutTags: selectedLayoutTags.sorted(),
+            displayTargetCount: layoutRows.count,
+            displayTaggedTargetCount: taggedTargetCount,
+            displayLabelNames: allTagNames.sorted(),
+            selectedDisplaySubject: selectedDisplaySubject,
+            selectedDisplayLabels: selectedDisplayLabels.sorted(),
             displayDiscoveryCandidates: discoveryCandidates,
             displayDiscoveryFamilies: discoveryFamilies,
-            layoutTypeBreakdown: layoutTypeBreakdown,
-            layoutModelSamples: layoutModelSamples,
+            displayTypeBreakdown: displayTypeBreakdown,
+            displayModelSamples: displayModelSamples,
             displayDiscoveryStatus: discoverySummary.status.rawValue,
             displayDiscoveryTranscriptCount: discoverySummary.transcriptCount,
             userPreferenceNotes: userPreferenceNotes,
@@ -157,7 +157,7 @@ final class AppModel {
     }
 
     private func buildDisplayDiscoveryCandidates(
-        from rows: [LayoutRowModel],
+        from rows: [DisplayLayoutRowModel],
         discoverySummary: DisplayDiscoverySummaryModel
     ) -> [[String: String]] {
         if !discoverySummary.candidateProps.isEmpty {
@@ -203,12 +203,12 @@ final class AppModel {
         }
     }
 
-    private func buildDisplayDiscoveryFamilies(from rows: [LayoutRowModel]) -> [[String: String]] {
+    private func buildDisplayDiscoveryFamilies(from rows: [DisplayLayoutRowModel]) -> [[String: String]] {
         struct FamilyBucket {
             let key: String
             let baseName: String
             let type: String
-            var rows: [LayoutRowModel]
+            var rows: [DisplayLayoutRowModel]
         }
 
         let eligible = rows.filter { row in
@@ -258,7 +258,7 @@ final class AppModel {
             }
     }
 
-    private func buildLayoutTypeBreakdown(from rows: [LayoutRowModel]) -> [[String: String]] {
+    private func buildDisplayTypeBreakdown(from rows: [DisplayLayoutRowModel]) -> [[String: String]] {
         Dictionary(grouping: rows) { $0.targetType }
             .map { type, typeRows in
                 [
@@ -276,7 +276,7 @@ final class AppModel {
             .map { $0 }
     }
 
-    private func buildLayoutModelSamples(from rows: [LayoutRowModel]) -> [[String: String]] {
+    private func buildDisplayModelSamples(from rows: [DisplayLayoutRowModel]) -> [[String: String]] {
         rows
             .filter { row in
                 let type = row.targetType.lowercased()
@@ -305,7 +305,7 @@ final class AppModel {
             }
     }
 
-    private func layoutSamplePriority(for row: LayoutRowModel) -> Int {
+    private func layoutSamplePriority(for row: DisplayLayoutRowModel) -> Int {
         var score = displayDiscoveryScore(for: row)
         if row.nodeCount >= 300 { score += 3 }
         else if row.nodeCount >= 100 { score += 2 }
@@ -320,7 +320,7 @@ final class AppModel {
         return stripped.isEmpty ? trimmed : stripped
     }
 
-    private func displayDiscoveryScore(for row: LayoutRowModel) -> Int {
+    private func displayDiscoveryScore(for row: DisplayLayoutRowModel) -> Int {
         let name = row.targetName.lowercased()
         let type = row.targetType.lowercased()
         if type.contains("submodel") {
@@ -350,7 +350,7 @@ final class AppModel {
         return score
     }
 
-    private func displayDiscoveryReason(for row: LayoutRowModel) -> String {
+    private func displayDiscoveryReason(for row: DisplayLayoutRowModel) -> String {
         let name = row.targetName.lowercased()
         if name.contains("snowman") || name.contains("santa") {
             return "named prop that may have character significance"

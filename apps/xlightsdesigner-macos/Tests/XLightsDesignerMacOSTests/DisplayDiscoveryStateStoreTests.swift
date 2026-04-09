@@ -3,7 +3,7 @@ import Testing
 @testable import XLightsDesignerMacOS
 
 struct DisplayDiscoveryStateStoreTests {
-    @Test func recordsDiscoveryConversationIntoProjectLayoutFolder() throws {
+    @Test func recordsDiscoveryConversationIntoProjectDisplayFolder() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let projectDir = root.appendingPathComponent("Test Project", isDirectory: true)

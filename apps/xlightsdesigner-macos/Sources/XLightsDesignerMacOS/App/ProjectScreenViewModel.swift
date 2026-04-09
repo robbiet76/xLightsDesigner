@@ -51,7 +51,7 @@ final class ProjectScreenViewModel {
                 canOpen: true
             ),
             readinessItems: active.map(readinessItems(for:)) ?? [],
-            hints: active.map(downstreamHints(for:)) ?? [ProjectDownstreamHint(id: "start", text: "Create or open a project before moving to Layout or Audio.")],
+            hints: active.map(downstreamHints(for:)) ?? [ProjectDownstreamHint(id: "start", text: "Create or open a project before moving to Display or Audio.")],
             banners: [workspace.projectBanner, screenBanner].compactMap { $0 }
         )
     }
@@ -200,13 +200,13 @@ final class ProjectScreenViewModel {
 
     private func readinessExplanation(for project: ActiveProjectModel) -> String {
         if project.showFolder.isEmpty {
-            return "Show folder is missing. Layout depends on a valid show folder reference."
+            return "Show folder is missing. Display depends on a valid show folder reference."
         }
         var isDir: ObjCBool = false
         if !FileManager.default.fileExists(atPath: project.showFolder, isDirectory: &isDir) || !isDir.boolValue {
-            return "Show folder does not exist at the saved path. Correct it before using Layout."
+            return "Show folder does not exist at the saved path. Correct it before using Display."
         }
-        return "Project context is ready. Layout and Audio can use this project now."
+        return "Project context is ready. Display and Audio can use this project now."
     }
 
     private func readinessItems(for project: ActiveProjectModel) -> [ProjectReadinessItem] {
@@ -217,15 +217,15 @@ final class ProjectScreenViewModel {
     }
 
     private func downstreamHints(for project: ActiveProjectModel) -> [ProjectDownstreamHint] {
-        let layoutHint = readinessLevel(for: project) == .ready ? "Layout can be reviewed now." : "Layout is blocked by project context."
+        let displayHint = readinessLevel(for: project) == .ready ? "Display can be reviewed now." : "Display is blocked by project context."
         return [
-            ProjectDownstreamHint(id: "layout", text: layoutHint),
+            ProjectDownstreamHint(id: "display", text: displayHint),
             ProjectDownstreamHint(id: "audio", text: "Audio remains available as a standalone workflow."),
             ProjectDownstreamHint(id: "sequence-media", text: "Sequence-specific media selection happens later when working on a specific sequence.")
         ]
     }
 
     private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
-        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("LayoutTagStore")
+        project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("DisplayMetadataStore")
     }
 }

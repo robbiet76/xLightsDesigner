@@ -73,7 +73,7 @@ struct ProjectScreenView: View {
                 .padding(.vertical, 4)
             } else {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Create or open a project to establish the working context for Layout, Design, Sequence, and Review.")
+                    Text("Create or open a project to establish the working context for Display, Design, Sequence, and Review.")
                         .foregroundStyle(.secondary)
                     HStack(spacing: 10) {
                         Button("Create Project…") { model.startCreateProject() }
@@ -129,7 +129,7 @@ struct ProjectScreenView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Toggle("Migrate metadata from an existing project", isOn: $model.projectDraft.migrateMetadata)
                     if model.projectDraft.migrateMetadata {
-                        Text("Use an existing project as the starting point, then reconcile the migrated metadata against the new xLights show in Layout.")
+                        Text("Use an existing project as the starting point, then reconcile the migrated metadata against the new xLights show in Display.")
                             .foregroundStyle(.secondary)
                         Picker("Source Project", selection: $model.projectDraft.migrationSourceProjectPath) {
                             ForEach(model.availableProjects) { project in

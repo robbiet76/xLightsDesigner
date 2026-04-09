@@ -2,10 +2,10 @@ import Foundation
 import Testing
 @testable import XLightsDesignerMacOS
 
-struct ProjectLayoutMetadataStoreTests {
+struct ProjectDisplayMetadataStoreTests {
     @Test func storeCreatesAndAssignsTagsToProjectTargets() throws {
-        let project = try makeProject(name: "LayoutTagStoreA")
-        let store = LocalLayoutMetadataStore()
+        let project = try makeProject(name: "DisplayMetadataStoreA")
+        let store = LocalDisplayMetadataStore()
 
         try store.createOrAssignTag(project: project, targetIDs: ["Tree", "Star"], tagName: "Focal", description: "Primary visual anchor")
         let document = try store.load(for: project)
@@ -17,8 +17,8 @@ struct ProjectLayoutMetadataStoreTests {
     }
 
     @Test func storeRenamesTagWithoutBreakingAssignments() throws {
-        let project = try makeProject(name: "LayoutTagStoreB")
-        let store = LocalLayoutMetadataStore()
+        let project = try makeProject(name: "DisplayMetadataStoreB")
+        let store = LocalDisplayMetadataStore()
 
         try store.createOrAssignTag(project: project, targetIDs: ["Tree"], tagName: "Focal", description: "")
         let original = try store.load(for: project)
@@ -33,8 +33,8 @@ struct ProjectLayoutMetadataStoreTests {
     }
 
     @Test func storeDeletesTagAndRemovesAssignments() throws {
-        let project = try makeProject(name: "LayoutTagStoreC")
-        let store = LocalLayoutMetadataStore()
+        let project = try makeProject(name: "DisplayMetadataStoreC")
+        let store = LocalDisplayMetadataStore()
 
         try store.createOrAssignTag(project: project, targetIDs: ["Tree"], tagName: "Focal", description: "")
         let original = try store.load(for: project)

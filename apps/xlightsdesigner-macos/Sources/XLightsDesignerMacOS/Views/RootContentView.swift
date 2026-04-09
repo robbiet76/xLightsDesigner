@@ -13,8 +13,8 @@ struct RootContentView: View {
                     switch model.selectedWorkflow {
                     case .project:
                         ProjectScreenView(model: model.projectScreenModel)
-                    case .layout:
-                        LayoutScreenView(model: model.layoutScreenModel)
+                    case .display:
+                        DisplayScreenView(model: model.displayScreenModel)
                     case .audio:
                         AudioScreenView(model: model.audioScreenModel)
                     case .design:

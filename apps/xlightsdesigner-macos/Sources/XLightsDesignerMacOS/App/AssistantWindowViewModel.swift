@@ -190,8 +190,8 @@ final class AssistantWindowViewModel {
     }
 
     private func shouldKickOffDisplayDiscovery(context: AssistantContextModel) -> Bool {
-        context.layoutTargetCount > 0 &&
-        context.layoutTaggedTargetCount == 0 &&
+        context.displayTargetCount > 0 &&
+        context.displayTaggedTargetCount == 0 &&
         context.displayDiscoveryTranscriptCount == 0 &&
         context.displayDiscoveryStatus.caseInsensitiveCompare("not_started") == .orderedSame
     }

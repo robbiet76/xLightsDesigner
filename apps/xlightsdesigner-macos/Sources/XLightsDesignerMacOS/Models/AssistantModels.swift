@@ -45,15 +45,15 @@ struct AssistantContextModel {
     let activeSequenceLoaded: Bool
     let planOnlyMode: Bool
     let showFolder: String
-    let layoutTargetCount: Int
-    let layoutTaggedTargetCount: Int
-    let layoutTagNames: [String]
-    let selectedLayoutTarget: String
-    let selectedLayoutTags: [String]
+    let displayTargetCount: Int
+    let displayTaggedTargetCount: Int
+    let displayLabelNames: [String]
+    let selectedDisplaySubject: String
+    let selectedDisplayLabels: [String]
     let displayDiscoveryCandidates: [[String: String]]
     let displayDiscoveryFamilies: [[String: String]]
-    let layoutTypeBreakdown: [[String: String]]
-    let layoutModelSamples: [[String: String]]
+    let displayTypeBreakdown: [[String: String]]
+    let displayModelSamples: [[String: String]]
     let displayDiscoveryStatus: String
     let displayDiscoveryTranscriptCount: Int
     let userPreferenceNotes: [String]
@@ -76,15 +76,15 @@ struct AssistantContextModel {
         activeSequenceLoaded: Bool,
         planOnlyMode: Bool,
         showFolder: String = "",
-        layoutTargetCount: Int = 0,
-        layoutTaggedTargetCount: Int = 0,
-        layoutTagNames: [String] = [],
-        selectedLayoutTarget: String = "",
-        selectedLayoutTags: [String] = [],
+        displayTargetCount: Int = 0,
+        displayTaggedTargetCount: Int = 0,
+        displayLabelNames: [String] = [],
+        selectedDisplaySubject: String = "",
+        selectedDisplayLabels: [String] = [],
         displayDiscoveryCandidates: [[String: String]] = [],
         displayDiscoveryFamilies: [[String: String]] = [],
-        layoutTypeBreakdown: [[String: String]] = [],
-        layoutModelSamples: [[String: String]] = [],
+        displayTypeBreakdown: [[String: String]] = [],
+        displayModelSamples: [[String: String]] = [],
         displayDiscoveryStatus: String = "not_started",
         displayDiscoveryTranscriptCount: Int = 0,
         userPreferenceNotes: [String] = [],
@@ -106,15 +106,15 @@ struct AssistantContextModel {
         self.activeSequenceLoaded = activeSequenceLoaded
         self.planOnlyMode = planOnlyMode
         self.showFolder = showFolder
-        self.layoutTargetCount = layoutTargetCount
-        self.layoutTaggedTargetCount = layoutTaggedTargetCount
-        self.layoutTagNames = layoutTagNames
-        self.selectedLayoutTarget = selectedLayoutTarget
-        self.selectedLayoutTags = selectedLayoutTags
+        self.displayTargetCount = displayTargetCount
+        self.displayTaggedTargetCount = displayTaggedTargetCount
+        self.displayLabelNames = displayLabelNames
+        self.selectedDisplaySubject = selectedDisplaySubject
+        self.selectedDisplayLabels = selectedDisplayLabels
         self.displayDiscoveryCandidates = displayDiscoveryCandidates
         self.displayDiscoveryFamilies = displayDiscoveryFamilies
-        self.layoutTypeBreakdown = layoutTypeBreakdown
-        self.layoutModelSamples = layoutModelSamples
+        self.displayTypeBreakdown = displayTypeBreakdown
+        self.displayModelSamples = displayModelSamples
         self.displayDiscoveryStatus = displayDiscoveryStatus
         self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
         self.userPreferenceNotes = userPreferenceNotes
@@ -139,16 +139,16 @@ struct AssistantContextModel {
             "activeSequenceLoaded": activeSequenceLoaded,
             "planOnlyMode": planOnlyMode,
             "showFolder": showFolder,
-            "layout": [
-                "targetCount": layoutTargetCount,
-                "taggedTargetCount": layoutTaggedTargetCount,
-                "tagNames": layoutTagNames,
-                "selectedTarget": selectedLayoutTarget,
-                "selectedTargetTags": selectedLayoutTags,
+            "display": [
+                "targetCount": displayTargetCount,
+                "taggedTargetCount": displayTaggedTargetCount,
+                "tagNames": displayLabelNames,
+                "selectedTarget": selectedDisplaySubject,
+                "selectedTargetTags": selectedDisplayLabels,
                 "displayDiscoveryCandidates": displayDiscoveryCandidates,
                 "displayDiscoveryFamilies": displayDiscoveryFamilies,
-                "typeBreakdown": layoutTypeBreakdown,
-                "modelSamples": layoutModelSamples
+                "typeBreakdown": displayTypeBreakdown,
+                "modelSamples": displayModelSamples
             ],
             "displayDiscovery": [
                 "status": displayDiscoveryStatus,

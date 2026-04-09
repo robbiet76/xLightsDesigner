@@ -219,8 +219,8 @@ final class NativeAutomationServer: @unchecked Sendable {
         case .project:
             model.projectScreenModel.loadInitialProject()
             model.xlightsSessionModel.refresh()
-        case .layout:
-            model.layoutScreenModel.loadLayout()
+        case .display:
+            model.displayScreenModel.loadDisplay()
             model.xlightsSessionModel.refresh()
         case .audio:
             model.audioScreenModel.loadLibrary()
@@ -243,7 +243,7 @@ final class NativeAutomationServer: @unchecked Sendable {
     @MainActor
     private func refreshAll() {
         model.projectScreenModel.loadInitialProject()
-        model.layoutScreenModel.loadLayout()
+        model.displayScreenModel.loadDisplay()
         model.audioScreenModel.loadLibrary()
         model.designScreenModel.refresh()
         model.sequenceScreenModel.refresh()
@@ -282,7 +282,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "assistant": assistantSnapshot(),
             "pages": [
                 "project": projectSnapshot(),
-                "layout": layoutSnapshot(),
+                "display": displaySnapshot(),
                 "audio": audioSnapshot(),
                 "design": designSnapshot(),
                 "sequence": sequenceSnapshot(),
@@ -411,8 +411,8 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
-    private func layoutSnapshot() -> [String: Any] {
-        let screen = model.layoutScreenModel.screenModel
+    private func displaySnapshot() -> [String: Any] {
+        let screen = model.displayScreenModel.screenModel
         let selected = switch screen.selectedMetadata {
         case .none:
             [:]
