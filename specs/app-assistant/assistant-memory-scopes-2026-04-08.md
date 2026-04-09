@@ -146,6 +146,15 @@ Until scoped creative memory exists as a separate layer:
 - migrate the relevant project memory
 - do not migrate ephemeral session chatter
 
+For the current native implementation, project memory is expected to live inside the project folder and therefore migrate with the project copy flow.
+
+Examples:
+
+- `layout/display-discovery.json`
+- `layout/layout-metadata.json`
+
+This is intentional behavior, not an accident.
+
 ## Future Scoped Memory
 
 Later versions may add a fourth scope:
