@@ -128,6 +128,7 @@ final class AppModel {
             workflowName: selectedWorkflow.rawValue,
             route: workflowRoute(),
             focusedSummary: focusedSummary(),
+            rollingConversationSummary: assistantModel.rollingConversationSummary,
             activeSequenceLoaded: sequenceScreenModel.screenModel.hasLiveSequence,
             planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode,
             showFolder: workspace.activeProject?.showFolder ?? "",

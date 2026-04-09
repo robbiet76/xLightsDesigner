@@ -65,7 +65,7 @@ function getAgentConfig() {
 function normalizeConversationMessages(messages = []) {
   const rows = Array.isArray(messages) ? messages : [];
   const out = [];
-  for (const row of rows.slice(-24)) {
+  for (const row of rows.slice(-12)) {
     const roleRaw = String(row?.role || row?.who || '').trim().toLowerCase();
     const content = String(row?.content || row?.text || '').trim();
     if (!content) continue;
@@ -161,6 +161,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Do not output JSON unless explicitly asked by the user.',
+    c.rollingConversationSummary ? `Rolling conversation summary:\n${String(c.rollingConversationSummary).trim()}` : "",
     ongoingDiscovery,
     discoveryGuidance,
     `Context: ${JSON.stringify(c)}`

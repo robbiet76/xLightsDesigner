@@ -13,6 +13,7 @@ final class AssistantWindowViewModel {
     var draft = ""
     var isSending = false
     var previousResponseID = ""
+    var rollingConversationSummary = ""
 
     init(
         conversationService: AssistantConversationService = LocalAssistantConversationService(),
@@ -29,10 +30,12 @@ final class AssistantWindowViewModel {
     func loadConversationIfNeeded() {
         guard messages.isEmpty else { return }
         do {
-            let loaded = try conversationService.loadMessages()
+            let state = try conversationService.loadConversationState()
+            rollingConversationSummary = state.rollingSummary
+            let loaded = state.messages
             if loaded.isEmpty {
                 messages = [seedAssistantMessage()]
-                try? conversationService.saveMessages(messages)
+                try? persistConversation()
             } else {
                 messages = loaded.map { message in
                     guard message.role == .assistant else { return message }
@@ -46,6 +49,7 @@ final class AssistantWindowViewModel {
                         displayName: message.displayName ?? displayName(for: message.handledBy ?? "app_assistant")
                     )
                 }
+                try? persistConversation()
             }
         } catch {
             messages = [AssistantMessageModel(
@@ -76,7 +80,7 @@ final class AssistantWindowViewModel {
         messages.append(userMessage)
         draft = ""
         isSending = true
-        try? conversationService.saveMessages(messages)
+        try? persistConversation()
 
         do {
             let result = try await executionService.sendConversation(
@@ -126,7 +130,7 @@ final class AssistantWindowViewModel {
         }
 
         isSending = false
-        try? conversationService.saveMessages(messages)
+        try? persistConversation()
     }
 
     func clearConversation() {
@@ -134,7 +138,19 @@ final class AssistantWindowViewModel {
         draft = ""
         previousResponseID = ""
         isSending = false
-        try? conversationService.saveMessages(messages)
+        rollingConversationSummary = ""
+        try? persistConversation()
+    }
+
+    private func persistConversation() throws {
+        let state = AssistantConversationState(
+            rollingSummary: rollingConversationSummary,
+            messages: messages
+        )
+        try conversationService.saveConversationState(state)
+        let normalized = try conversationService.loadConversationState()
+        rollingConversationSummary = normalized.rollingSummary
+        messages = normalized.messages
     }
 
     private func seedAssistantMessage() -> AssistantMessageModel {

@@ -39,10 +39,10 @@ struct AssistantWindowViewModelTests {
 }
 
 private final class InMemoryAssistantConversationService: AssistantConversationService {
-    var messages: [AssistantMessageModel] = []
+    var state = AssistantConversationState()
 
-    func loadMessages() throws -> [AssistantMessageModel] { messages }
-    func saveMessages(_ messages: [AssistantMessageModel]) throws { self.messages = messages }
+    func loadConversationState() throws -> AssistantConversationState { state }
+    func saveConversationState(_ state: AssistantConversationState) throws { self.state = state }
 }
 
 private final class StubAssistantExecutionService: AssistantExecutionService, @unchecked Sendable {

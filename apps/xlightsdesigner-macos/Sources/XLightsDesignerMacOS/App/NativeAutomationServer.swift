@@ -308,6 +308,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "visible": model.showAssistantPanel,
             "draft": model.assistantModel.draft,
             "isSending": model.assistantModel.isSending,
+            "rollingSummary": model.assistantModel.rollingConversationSummary,
             "messageCount": messages.count,
             "messages": messages,
             "lastMessage": messages.last ?? [:],

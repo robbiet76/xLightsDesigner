@@ -22,11 +22,23 @@ struct AssistantDisplayDiscoveryResult: Sendable {
     let candidateProps: [DisplayDiscoveryCandidateModel]
 }
 
+struct AssistantConversationState: Codable, Sendable {
+    var version: Int = 1
+    var rollingSummary: String
+    var messages: [AssistantMessageModel]
+
+    init(rollingSummary: String = "", messages: [AssistantMessageModel] = []) {
+        self.rollingSummary = rollingSummary
+        self.messages = messages
+    }
+}
+
 struct AssistantContextModel {
     let activeProjectName: String
     let workflowName: String
     let route: String
     let focusedSummary: String
+    let rollingConversationSummary: String
     let activeSequenceLoaded: Bool
     let planOnlyMode: Bool
     let showFolder: String
@@ -54,6 +66,7 @@ struct AssistantContextModel {
         workflowName: String,
         route: String,
         focusedSummary: String,
+        rollingConversationSummary: String = "",
         activeSequenceLoaded: Bool,
         planOnlyMode: Bool,
         showFolder: String = "",
@@ -80,6 +93,7 @@ struct AssistantContextModel {
         self.workflowName = workflowName
         self.route = route
         self.focusedSummary = focusedSummary
+        self.rollingConversationSummary = rollingConversationSummary
         self.activeSequenceLoaded = activeSequenceLoaded
         self.planOnlyMode = planOnlyMode
         self.showFolder = showFolder
@@ -109,6 +123,7 @@ struct AssistantContextModel {
             "workflowName": workflowName,
             "route": route,
             "focusedSummary": focusedSummary,
+            "rollingConversationSummary": rollingConversationSummary,
             "activeSequenceLoaded": activeSequenceLoaded,
             "planOnlyMode": planOnlyMode,
             "showFolder": showFolder,
