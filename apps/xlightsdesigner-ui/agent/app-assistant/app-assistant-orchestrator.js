@@ -43,6 +43,16 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   const assistantText = str(response.assistantMessage).toLowerCase();
   const addressedRole = inferAddressedRole({ userMessage, context });
   const currentRoute = str(context?.route);
+  const displayDiscoveryActive =
+    shouldStartDisplayDiscovery({ context, userMessage }) ||
+    shouldContinueDisplayDiscovery({ context }) ||
+    currentRoute === "display";
+  const displayMetadataIntent =
+    /(display|layout|metadata|tag|tags|models|props)/.test(userText) ||
+    (
+      displayDiscoveryActive &&
+      /\b(apply|update|set|make|mark|treat|label|classify|use)\b/.test(userText)
+    );
   const directSequencingRequest =
     (
       /\b(add|put|place|apply|set|make|use)\b/.test(userText) &&
@@ -68,7 +78,7 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
       /(main sections|section|first real lift|first lift|beats|bars|tempo|lyrics|chords|analysis|analyz)/.test(userText) ||
       (/\b(where does|tell me where|what parts)\b/.test(userText) && /\b(chorus|verse|bridge|intro|outro|lift|hold back|open up)\b/.test(userText))
     );
-  if (/(display|layout|tag|tags|models|props)/.test(userText)) {
+  if (displayMetadataIntent) {
     return "designer_dialog";
   }
   if (/(show folder|project root|media path|open project|save project|project setup)/.test(userText)) {
@@ -98,7 +108,10 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   if (/(sequence|sequenc|timing track|xlights apply|apply)/.test(userText)) {
     return "sequence_agent";
   }
-  if (/(display|layout|tag|tags|models|props)/.test(assistantText)) {
+  if (
+    /(display|layout|metadata|tag|tags|models|props)/.test(assistantText) ||
+    (displayDiscoveryActive && /(focal|support|repeating|family|group|model)/.test(assistantText))
+  ) {
     return "designer_dialog";
   }
   if (/(show folder|project root|media path|open project|save project|project setup)/.test(assistantText)) {
