@@ -132,7 +132,7 @@ test("app assistant biases generic review-page conversation toward sequence_agen
   assert.equal(result.result.handledBy, "sequence_agent");
 });
 
-test("direct specialist address acts as a routing hint, not a hard dispatch", async () => {
+test("direct specialist address routes directly to the addressed role", async () => {
   const bridge = {
     async runAgentConversation() {
       return {
@@ -161,8 +161,43 @@ test("direct specialist address acts as a routing hint, not a hard dispatch", as
 
   assert.equal(result.ok, true);
   assert.equal(result.result.addressedTo, "sequence_agent");
-  assert.equal(result.result.routeDecision, "audio_analyst");
-  assert.equal(result.result.handledBy, "audio_analyst");
+  assert.equal(result.result.routeDecision, "sequence_agent");
+  assert.equal(result.result.handledBy, "sequence_agent");
+});
+
+test("direct app assistant address overrides active display discovery routing", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "Clover here. I can help with routing or setup from here.",
+        shouldGenerateProposal: false,
+        responseId: "resp-direct-app-assistant"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "What about you Clover?",
+    messages: [],
+    context: {
+      route: "display",
+      displayDiscovery: { status: "in_progress" },
+      display: { targetCount: 120, labeledTargetCount: 0 },
+      teamChat: {
+        identities: {
+          app_assistant: { roleId: "app_assistant", displayName: "App Assistant", nickname: "Clover" },
+          designer_dialog: { roleId: "designer_dialog", displayName: "Designer", nickname: "Mira" }
+        }
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.addressedTo, "app_assistant");
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
 });
 
 test("direct sequencer address can bias ambiguous revise requests toward sequence agent", async () => {

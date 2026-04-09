@@ -58,7 +58,7 @@ final class AssistantWindowViewModel {
                 text: "Assistant history could not be loaded. A new conversation has started.",
                 timestamp: isoNow(),
                 handledBy: "app_assistant",
-                routeDecision: "app_assistant",
+                routeDecision: "general",
                 displayName: displayName(for: "app_assistant", context: context)
             )]
         }
@@ -186,11 +186,11 @@ final class AssistantWindowViewModel {
         return AssistantMessageModel(
             id: UUID().uuidString,
             role: .assistant,
-            text: "Welcome. \(introductionPrompt(for: "app_assistant", context: context)) I guide the overall workflow and bring in the right specialist as needed: Designer for display and creative direction, Audio Analyst for track structure, and Sequencer for technical sequence work. Start anywhere.",
-            timestamp: isoNow(),
-            handledBy: "app_assistant",
-            routeDecision: "app_assistant",
-            displayName: displayName(for: "app_assistant", context: context)
+                text: "Welcome. \(introductionPrompt(for: "app_assistant", context: context)) I guide the overall workflow and bring in the right specialist as needed: Designer for display and creative direction, Audio Analyst for track structure, and Sequencer for technical sequence work. Start anywhere.",
+                timestamp: isoNow(),
+                handledBy: "app_assistant",
+                routeDecision: "general",
+                displayName: displayName(for: "app_assistant", context: context)
         )
     }
 
@@ -235,7 +235,7 @@ final class AssistantWindowViewModel {
             text: followUpIntroduction(for: roleID, context: context),
             timestamp: isoNow(),
             handledBy: roleID,
-            routeDecision: roleID,
+            routeDecision: roleID == "app_assistant" ? "general" : roleID,
             displayName: displayName(for: roleID, context: context)
         )
     }

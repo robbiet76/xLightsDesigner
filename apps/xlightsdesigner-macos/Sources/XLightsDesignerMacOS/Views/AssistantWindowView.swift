@@ -24,7 +24,7 @@ struct AssistantWindowView: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Assistant")
+                Text("Design Team Chat")
                     .font(.title)
                     .fontWeight(.semibold)
                 Text("Guided workflow with App Assistant, Designer, Audio Analyst, and Sequencer.")
@@ -161,7 +161,7 @@ struct AssistantWindowView: View {
         case "sequence_agent":
             return Color.green.opacity(0.12)
         case "audio_analyst":
-            return Color.blue.opacity(0.12)
+            return Color.mint.opacity(0.16)
         case "app_assistant":
             return Color.gray.opacity(0.14)
         default:

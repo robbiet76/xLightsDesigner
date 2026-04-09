@@ -77,6 +77,10 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
     /\b(audio analysis|analyze audio|audio analyst)\b/.test(userText) ||
     /\b(project setup|show folder|open project|save project)\b/.test(userText);
 
+  if (addressedRole) {
+    return addressedRole === APP_ASSISTANT_ROLE ? "general" : addressedRole;
+  }
+
   if (displayDiscoveryActive && !explicitWorkflowSwitch) {
     return "designer_dialog";
   }
