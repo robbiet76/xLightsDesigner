@@ -13,19 +13,27 @@ function normalizedTagNames(context = {}) {
 }
 
 function normalizedFamilies(context = {}) {
-  return arr(context?.display?.displayDiscoveryFamilies)
+  const source = arr(context?.xlightsLayout?.families).length
+    ? arr(context?.xlightsLayout?.families)
+    : arr(context?.display?.displayDiscoveryFamilies);
+  return source
     .map((row) => ({
       name: str(row?.name),
       type: str(row?.type),
       count: str(row?.count),
       examples: str(row?.examples),
-      reason: str(row?.reason)
+      reason: str(row?.reason),
+      confidence: str(row?.confidence),
+      totalNodeCount: str(row?.totalNodeCount)
     }))
     .filter((row) => row.name);
 }
 
 function normalizedTypeBreakdown(context = {}) {
-  return arr(context?.display?.typeBreakdown)
+  const source = arr(context?.xlightsLayout?.typeBreakdown).length
+    ? arr(context?.xlightsLayout?.typeBreakdown)
+    : arr(context?.display?.typeBreakdown);
+  return source
     .map((row) => ({
       type: str(row?.type),
       count: str(row?.count)
@@ -34,17 +42,44 @@ function normalizedTypeBreakdown(context = {}) {
 }
 
 function normalizedModelSamples(context = {}) {
-  return arr(context?.display?.modelSamples)
+  const source = arr(context?.xlightsLayout?.modelSamples).length
+    ? arr(context?.xlightsLayout?.modelSamples)
+    : arr(context?.display?.modelSamples);
+  return source
     .map((row) => ({
       name: str(row?.name),
       type: str(row?.type),
       nodeCount: str(row?.nodeCount),
       positionX: str(row?.positionX),
       positionY: str(row?.positionY),
+      positionZ: str(row?.positionZ),
       width: str(row?.width),
-      height: str(row?.height)
+      height: str(row?.height),
+      depth: str(row?.depth),
+      horizontalZone: str(row?.horizontalZone),
+      depthZone: str(row?.depthZone),
+      visualWeight: str(row?.visualWeight),
+      uniqueness: str(row?.uniqueness),
+      symmetryPeers: arr(row?.symmetryPeers).map((value) => str(value)).filter(Boolean)
     }))
     .filter((row) => row.name);
+}
+
+function normalizedGroupMemberships(context = {}) {
+  const source = arr(context?.xlightsLayout?.groupMemberships).length
+    ? arr(context?.xlightsLayout?.groupMemberships)
+    : arr(context?.display?.groupMemberships);
+  return source
+    .map((row) => ({
+      groupName: str(row?.groupName),
+      structureKind: str(row?.structureKind),
+      relatedFamilies: arr(row?.relatedFamilies).map((value) => str(value)).filter(Boolean),
+      supersetOfGroups: arr(row?.supersetOfGroups).map((value) => str(value)).filter(Boolean),
+      overlapsWithGroups: arr(row?.overlapsWithGroups).map((value) => str(value)).filter(Boolean),
+      directMembers: arr(row?.directMembers).map((member) => str(member?.name || member)).filter(Boolean),
+      flattenedAllMembers: arr(row?.flattenedAllMembers).map((member) => str(member?.name || member)).filter(Boolean)
+    }))
+    .filter((row) => row.groupName);
 }
 
 function looksLikeWorkflowPreference(text = "") {
@@ -130,6 +165,7 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
   const families = normalizedFamilies(context);
   const typeBreakdown = normalizedTypeBreakdown(context);
   const modelSamples = normalizedModelSamples(context);
+  const groupMemberships = normalizedGroupMemberships(context);
   const candidates = arr(context?.display?.displayDiscoveryCandidates)
     .map((row) => ({
       name: str(row?.name),
@@ -142,7 +178,7 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
     ? candidates.map((row) => `${row.name} (${row.type || "unknown type"}: ${row.reason || "candidate prop"})`).join("; ")
     : "No specific candidate props were identified from current layout names.";
   const familySummary = families.length
-    ? families.map((row) => `${row.name} (${row.count || "?"} ${row.type || "model"} models${row.examples ? `; examples: ${row.examples}` : ""})`).join("; ")
+    ? families.map((row) => `${row.name} (${row.count || "?"} ${row.type || "model"} models${row.examples ? `; examples: ${row.examples}` : ""}${row.confidence ? `; confidence ${row.confidence}` : ""}${row.totalNodeCount ? `; total nodes ${row.totalNodeCount}` : ""})`).join("; ")
     : "No repeated model families were identified.";
   const typeSummary = typeBreakdown.length
     ? typeBreakdown.map((row) => `${row.type}: ${row.count}`).join("; ")
@@ -150,15 +186,23 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
   const sampleSummary = modelSamples.length
     ? modelSamples
         .slice(0, 12)
-        .map((row) => `${row.name} (${row.type || "unknown"}, nodes ${row.nodeCount || "?"}, x ${row.positionX || "?"}, size ${row.width || "?"}x${row.height || "?"})`)
+        .map((row) => `${row.name} (${row.type || "unknown"}, nodes ${row.nodeCount || "?"}, zone ${row.horizontalZone || "?"}/${row.depthZone || "?"}, weight ${row.visualWeight || "?"}, uniqueness ${row.uniqueness || "?"}${row.symmetryPeers.length ? `, mirrored with ${row.symmetryPeers.join(", ")}` : ""})`)
         .join("; ")
     : "No raw model samples available.";
+  const groupSummary = groupMemberships.length
+    ? groupMemberships
+        .slice(0, 12)
+        .map((row) => `${row.groupName} (${row.structureKind || "group"}${row.relatedFamilies.length ? `; families: ${row.relatedFamilies.join(", ")}` : ""}${row.supersetOfGroups.length ? `; supersets: ${row.supersetOfGroups.join(", ")}` : ""}${row.overlapsWithGroups.length ? `; overlaps: ${row.overlapsWithGroups.join(", ")}` : ""})`)
+        .join("; ")
+    : "No group membership summary available.";
 
   return [
     "Display-discovery mode is available for this conversation.",
     "When layout metadata is thin, do not jump straight to final design directions.",
     "Instead, start a short 'Getting To Know Your Display' conversation.",
     "Before asking questions, analyze the raw model list for likely focal props, repeated families, type patterns, comparable node counts, and broad spatial patterns so your questions sound informed rather than random.",
+    "Use the structural xlightsLayout context to form hypotheses about likely foreground, background, left/right balance, visually dominant props, repeated support families, and mirrored sets.",
+    "Those structural signals are not user-facing truth by themselves. They are only evidence to help you ask better questions and propose broader semantic metadata when appropriate.",
     "Use the raw model samples as primary evidence. Use the repeated-family and candidate summaries only as supporting hints, not as hard truth.",
     "You are expected to notice loose naming patterns, approximate siblings, and visually similar repeated props even when the naming convention is imperfect.",
     "When several models appear to be the same prop family, ask about the family as one topic before drilling into individual exceptions.",
@@ -173,6 +217,7 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
     `Model type breakdown: ${typeSummary}`,
     `Raw model samples: ${sampleSummary}`,
     `Repeated model families: ${familySummary}`,
+    `Group membership summary: ${groupSummary}`,
     `Candidate props: ${candidateSummary}`
   ].join("\n");
 }
