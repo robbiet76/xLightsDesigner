@@ -2,7 +2,7 @@ import Foundation
 
 enum WorkflowID: String, CaseIterable, Identifiable {
     case project = "Project"
-    case layout = "Layout"
+    case layout = "Display"
     case audio = "Audio"
     case design = "Design"
     case sequence = "Sequence"
@@ -16,7 +16,7 @@ enum WorkflowID: String, CaseIterable, Identifiable {
         case .project:
             return "specs/app-ui/macos-native-project-layout-build-package-2026-04-06.md"
         case .layout:
-            return "specs/app-ui/macos-native-project-layout-build-package-2026-04-06.md"
+            return "specs/app-ui/macos-native-display-page-2026-04-08.md"
         case .audio:
             return "specs/app-ui/macos-native-audio-build-package-2026-04-06.md"
         case .design:
@@ -35,7 +35,7 @@ enum WorkflowID: String, CaseIterable, Identifiable {
         case .project:
             return "Establish active project context and confirm referenced paths."
         case .layout:
-            return "Validate target readiness, assignments, and remapping issues."
+            return "Manage learned display metadata grounded in the xLights layout."
         case .audio:
             return "Run standalone audio analysis and browse the shared track library."
         case .design:

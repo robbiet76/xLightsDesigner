@@ -49,7 +49,7 @@ final class AppModel {
         case .project:
             return "project"
         case .layout:
-            return "layout"
+            return "display"
         case .audio:
             return "audio"
         case .design:
@@ -68,11 +68,11 @@ final class AppModel {
         case .project:
             return workspace.activeProject?.projectFilePath ?? "Project summary"
         case .layout:
-            switch layoutScreenModel.screenModel.selectedTarget {
-            case let .selected(target):
-                return target.identity
+            switch layoutScreenModel.screenModel.selectedMetadata {
+            case let .selected(entry):
+                return "\(entry.subject): \(entry.value)"
             default:
-                return "No target selected"
+                return "No metadata entry selected"
             }
         case .audio:
             switch audioScreenModel.currentResult {
@@ -113,13 +113,10 @@ final class AppModel {
         let userPreferenceNotes = (try? userProfileStore.load().preferenceNotes.map(\.text)) ?? []
         let selectedLayoutTarget: String
         let selectedLayoutTags: [String]
-        switch layoutScreenModel.screenModel.selectedTarget {
-        case let .selected(target):
-            selectedLayoutTarget = target.identity
-            selectedLayoutTags = target.assignedTags.map(\.name)
-        case let .multi(selection):
-            selectedLayoutTarget = "\(selection.selectionCount) targets selected"
-            selectedLayoutTags = selection.commonTags.map(\.name)
+        switch layoutScreenModel.screenModel.selectedMetadata {
+        case let .selected(entry):
+            selectedLayoutTarget = entry.subject
+            selectedLayoutTags = entry.relatedTags.map(\.name)
         default:
             selectedLayoutTarget = ""
             selectedLayoutTags = []

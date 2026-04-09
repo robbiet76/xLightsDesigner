@@ -11,9 +11,11 @@ protocol DisplayDiscoveryStateStore: Sendable {
         candidateProps: [DisplayDiscoveryCandidateModel],
         insights: [DisplayDiscoveryInsightModel],
         openQuestions: [String],
+        tagProposals: [DisplayDiscoveryTagProposalModel],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
     ) throws
+    func clearTagProposals(for project: ActiveProjectModel?) throws
 }
 
 struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
@@ -39,6 +41,8 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
             candidateProps: document.candidateProps,
             insights: document.insights,
             openQuestions: document.openQuestions
+            ,
+            proposedTags: document.proposedTags
         )
     }
 
@@ -56,6 +60,7 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         candidateProps: [DisplayDiscoveryCandidateModel],
         insights: [DisplayDiscoveryInsightModel],
         openQuestions: [String],
+        tagProposals: [DisplayDiscoveryTagProposalModel],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
     ) throws {
@@ -80,8 +85,18 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
             }
             document.openQuestions = mergedQuestions
         }
+        if !tagProposals.isEmpty {
+            document.proposedTags = mergeTagProposals(existing: document.proposedTags, incoming: tagProposals)
+        }
         appendIfNeeded(entry: userMessage, into: &document.transcript)
         appendIfNeeded(entry: assistantMessage, into: &document.transcript)
+        try save(document, for: project)
+    }
+
+    func clearTagProposals(for project: ActiveProjectModel?) throws {
+        guard let project else { return }
+        var document = try load(for: project)
+        document.proposedTags = []
         try save(document, for: project)
     }
 
@@ -98,6 +113,21 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
                 merged[index] = insight
             } else {
                 merged.append(insight)
+            }
+        }
+        return merged
+    }
+
+    private func mergeTagProposals(
+        existing: [DisplayDiscoveryTagProposalModel],
+        incoming: [DisplayDiscoveryTagProposalModel]
+    ) -> [DisplayDiscoveryTagProposalModel] {
+        var merged = existing
+        for proposal in incoming {
+            if let index = merged.firstIndex(where: { $0.tagName.caseInsensitiveCompare(proposal.tagName) == .orderedSame }) {
+                merged[index] = proposal
+            } else {
+                merged.append(proposal)
             }
         }
         return merged

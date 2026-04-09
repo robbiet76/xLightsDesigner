@@ -23,6 +23,16 @@ struct LayoutReadinessSummaryModel: Sendable {
     let nextStepText: String
 }
 
+enum DisplayMetadataStatus: String, Sendable {
+    case confirmed = "Confirmed"
+    case proposed = "Proposed"
+}
+
+enum DisplayMetadataSource: String, Sendable {
+    case userAndAgent = "User + Agent"
+    case agent = "Agent"
+}
+
 enum LayoutTagColor: String, CaseIterable, Codable, Sendable {
     case none
     case red
@@ -97,6 +107,43 @@ struct LayoutMultiSelectionModel: Sendable {
     let mixedTagCount: Int
 }
 
+struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let subject: String
+    let subjectType: String
+    let category: String
+    let value: String
+    let status: DisplayMetadataStatus
+    let source: DisplayMetadataSource
+    let rationale: String
+    let linkedTargets: [String]
+
+    var linkedTargetCount: Int { linkedTargets.count }
+    var statusSummary: String { status.rawValue }
+    var sourceSummary: String { source.rawValue }
+    var linkedTargetSummary: String {
+        guard !linkedTargets.isEmpty else { return "Needs mapping review" }
+        return "\(linkedTargets.count)"
+    }
+}
+
+struct DisplayMetadataSelectionModel: Sendable {
+    let subject: String
+    let subjectType: String
+    let category: String
+    let value: String
+    let status: DisplayMetadataStatus
+    let source: DisplayMetadataSource
+    let rationale: String
+    let linkedTargets: [String]
+    let relatedTags: [LayoutTagDefinitionModel]
+}
+
+enum DisplayMetadataSelectedPaneModel: Sendable {
+    case none(String)
+    case selected(DisplayMetadataSelectionModel)
+}
+
 enum LayoutSelectedPaneModel: Sendable {
     case none(String)
     case selected(LayoutSelectedTargetModel)
@@ -114,7 +161,10 @@ struct LayoutScreenModel: Sendable {
     let header: LayoutHeaderModel
     let readinessSummary: LayoutReadinessSummaryModel
     let rows: [LayoutRowModel]
-    let selectedTarget: LayoutSelectedPaneModel
+    let metadataRows: [DisplayMetadataRowModel]
+    let selectedMetadata: DisplayMetadataSelectedPaneModel
     let banners: [LayoutBannerModel]
     let tagDefinitions: [LayoutTagDefinitionModel]
+    let discoveryProposals: [DisplayDiscoveryTagProposalModel]
+    let openQuestions: [String]
 }

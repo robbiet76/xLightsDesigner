@@ -143,11 +143,22 @@ function normalizeDiscoveryCapture(value) {
   const openQuestions = Array.isArray(object.openQuestions)
     ? object.openQuestions.map((row) => String(row || '').trim()).filter(Boolean)
     : [];
+  const tagProposals = Array.isArray(object.tagProposals)
+    ? object.tagProposals.map((row) => ({
+        tagName: String(row?.tagName || '').trim(),
+        tagDescription: String(row?.tagDescription || '').trim(),
+        rationale: String(row?.rationale || '').trim(),
+        targetNames: Array.isArray(row?.targetNames)
+          ? row.targetNames.map((value) => String(value || '').trim()).filter(Boolean)
+          : []
+      })).filter((row) => row.tagName && row.targetNames.length)
+    : [];
   const status = String(object.status || '').trim();
   return {
     status: status || '',
     insights,
-    openQuestions
+    openQuestions,
+    tagProposals
   };
 }
 
@@ -158,9 +169,11 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     'Only capture information that the user explicitly confirmed or clearly stated.',
     'Do not invent new facts.',
     'Output shape:',
-    '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."]}',
+    '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."],"tagProposals":[{"tagName":"","tagDescription":"","rationale":"","targetNames":["..."]}]}',
     'Use short categorical values when possible, but keep them natural.',
-    'If nothing was confirmed, return {"status":"in_progress","insights":[],"openQuestions":[]}.'
+    'When enough has been confirmed, include one or more reviewable tag proposals using broad durable metadata, not narrow one-off labels.',
+    'Use explicit targetNames from the known model list whenever possible.',
+    'If nothing was confirmed, return {"status":"in_progress","insights":[],"openQuestions":[],"tagProposals":[]}.'
   ].join('\n');
   const userText = [
     `Context: ${JSON.stringify(context)}`,
@@ -303,7 +316,7 @@ async function runAgentConversation(payload = {}) {
             userMessage,
             assistantMessage
           })
-        : { status: '', insights: [], openQuestions: [] };
+        : { status: '', insights: [], openQuestions: [], tagProposals: [] };
 
   return {
     ok: true,

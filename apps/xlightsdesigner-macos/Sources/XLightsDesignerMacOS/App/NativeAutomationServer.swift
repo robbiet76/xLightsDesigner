@@ -339,6 +339,14 @@ final class NativeAutomationServer: @unchecked Sendable {
                     ]
                 },
                 "openQuestions": discovery.openQuestions,
+                "proposedTags": discovery.proposedTags.map {
+                    [
+                        "tagName": $0.tagName,
+                        "tagDescription": $0.tagDescription,
+                        "rationale": $0.rationale,
+                        "targetNames": $0.targetNames
+                    ]
+                },
                 "candidateProps": discovery.candidateProps.map {
                     [
                         "name": $0.name,
@@ -405,27 +413,21 @@ final class NativeAutomationServer: @unchecked Sendable {
     @MainActor
     private func layoutSnapshot() -> [String: Any] {
         let screen = model.layoutScreenModel.screenModel
-        let selected = switch screen.selectedTarget {
+        let selected = switch screen.selectedMetadata {
         case .none:
             [:]
-        case let .selected(target):
+        case let .selected(entry):
             [
-                "identity": target.identity,
-                "type": target.type,
-                "layoutGroup": target.layoutGroup,
-                "readinessState": target.readinessState.rawValue,
-                "reason": target.reason,
-                "assignedTags": target.assignedTags.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] },
-                "downstreamEffectSummary": target.downstreamEffectSummary
+                "subject": entry.subject,
+                "subjectType": entry.subjectType,
+                "category": entry.category,
+                "value": entry.value,
+                "status": entry.status.rawValue,
+                "source": entry.source.rawValue,
+                "rationale": entry.rationale,
+                "linkedTargets": entry.linkedTargets,
+                "relatedTags": entry.relatedTags.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] }
             ]
-        case let .multi(selection):
-            [
-                "selectionCount": selection.selectionCount,
-                "commonTags": selection.commonTags.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] },
-                "mixedTagCount": selection.mixedTagCount
-            ]
-        case let .error(message):
-            ["error": message]
         }
         return [
             "title": screen.header.title,
@@ -433,11 +435,14 @@ final class NativeAutomationServer: @unchecked Sendable {
             "activeProjectName": screen.header.activeProjectName,
             "sourceSummary": screen.header.sourceSummary,
             "targetCount": screen.rows.count,
+            "metadataCount": screen.metadataRows.count,
+            "proposedMetadataCount": screen.discoveryProposals.count,
+            "openQuestionCount": screen.openQuestions.count,
             "readinessState": screen.readinessSummary.state.rawValue,
             "readyCount": screen.readinessSummary.readyCount,
             "unresolvedCount": screen.readinessSummary.unresolvedCount,
             "orphanCount": screen.readinessSummary.orphanCount,
-            "selectedTarget": selected
+            "selectedMetadata": selected
         ]
     }
 

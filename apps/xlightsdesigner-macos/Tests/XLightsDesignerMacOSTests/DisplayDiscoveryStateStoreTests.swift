@@ -42,6 +42,14 @@ struct DisplayDiscoveryStateStoreTests {
             openQuestions: [
                 "Should the snowflakes behave as one family or as separate features?"
             ],
+            tagProposals: [
+                DisplayDiscoveryTagProposalModel(
+                    tagName: "featured character",
+                    tagDescription: "Use for named props that should carry character attention.",
+                    rationale: "Snowman was confirmed as a featured character prop.",
+                    targetNames: ["Snowman"]
+                )
+            ],
             userMessage: AssistantMessageModel(
                 id: "u1",
                 role: .user,
@@ -69,5 +77,6 @@ struct DisplayDiscoveryStateStoreTests {
         #expect(summary.insights.count == 1)
         #expect(summary.insights.first?.subject == "Snowman")
         #expect(summary.openQuestions.count == 1)
+        #expect(summary.proposedTags.count == 1)
     }
 }

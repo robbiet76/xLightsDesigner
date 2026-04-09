@@ -5,8 +5,8 @@ struct LayoutScreenView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let currentSelectionMinHeight = max(120, min(150, proxy.size.height * 0.14))
-            let currentSelectionMaxHeight = max(150, min(220, proxy.size.height * 0.24))
+            let currentSelectionMinHeight = max(150, min(220, proxy.size.height * 0.2))
+            let currentSelectionMaxHeight = max(220, min(320, proxy.size.height * 0.32))
             let gridMinHeight = max(260, proxy.size.height * 0.36)
 
             VStack(alignment: .leading, spacing: 20) {
@@ -14,7 +14,7 @@ struct LayoutScreenView: View {
                 summarySection
                 controlsSection
                 currentSelectionSection(minHeight: currentSelectionMinHeight, maxHeight: currentSelectionMaxHeight)
-                targetsSection(minHeight: gridMinHeight)
+                metadataSection(minHeight: gridMinHeight)
             }
             .padding(24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -23,6 +23,9 @@ struct LayoutScreenView: View {
             model.loadLayout()
         }
         .onReceive(NotificationCenter.default.publisher(for: .projectWorkspaceDidChange)) { _ in
+            model.loadLayout()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .displayDiscoveryDidChange)) { _ in
             model.loadLayout()
         }
         .sheet(isPresented: $model.showAddTagSheet) {
@@ -34,8 +37,11 @@ struct LayoutScreenView: View {
         .sheet(isPresented: $model.showManageTagsSheet) {
             manageTagsSheet
         }
+        .sheet(isPresented: $model.showDiscoveryProposalSheet) {
+            discoveryProposalSheet
+        }
         .alert(
-            "Layout",
+            "Display",
             isPresented: Binding(
                 get: { model.errorMessage != nil },
                 set: { newValue in
@@ -72,18 +78,31 @@ struct LayoutScreenView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
                     chip(model.screenModel.readinessSummary.state.rawValue)
-                    chip("Targets \(model.screenModel.readinessSummary.totalTargets)")
-                    if model.screenModel.readinessSummary.unresolvedCount > 0 {
-                        chip("Needs Tags \(model.screenModel.readinessSummary.unresolvedCount)")
+                    chip("Confirmed \(model.confirmedMetadataCount)")
+                    if model.proposedMetadataCount > 0 {
+                        chip("Proposed \(model.proposedMetadataCount)")
                     }
-                    if !model.screenModel.tagDefinitions.isEmpty {
-                        chip("Tags \(model.screenModel.tagDefinitions.count)")
+                    if !model.screenModel.openQuestions.isEmpty {
+                        chip("Open Questions \(model.screenModel.openQuestions.count)")
+                    }
+                    if model.linkedTargetCoverageCount > 0 {
+                        chip("Linked Targets \(model.linkedTargetCoverageCount)")
                     }
                 }
                 Text(model.screenModel.readinessSummary.explanationText)
                 if !model.screenModel.readinessSummary.nextStepText.isEmpty {
                     Text(model.screenModel.readinessSummary.nextStepText)
                         .foregroundStyle(.secondary)
+                }
+                if !model.screenModel.openQuestions.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Open Questions")
+                            .font(.headline)
+                        ForEach(model.screenModel.openQuestions.prefix(3), id: \.self) { question in
+                            Text(question)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 ForEach(model.screenModel.banners) { banner in
                     bannerView(banner)
@@ -98,21 +117,33 @@ struct LayoutScreenView: View {
     private var controlsSection: some View {
         GroupBox("Controls") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Apply and maintain project tags over the active xLights target list.")
+                Text("Use chat to create understanding, then review and apply the resulting display metadata here.")
                     .foregroundStyle(.secondary)
                 HStack(spacing: 10) {
-                    Button("Add Tag…") {
-                        model.presentAddTagSheet()
+                    Button("Refresh Display") {
+                        model.loadLayout()
                     }
-                    .disabled(!model.canAddTag)
-
-                    Button("Remove Tag…") {
-                        model.presentRemoveTagSheet()
+                    Button("Review Proposals…") {
+                        model.reviewDiscoveryProposals()
                     }
-                    .disabled(model.removableTags.isEmpty)
-
+                    .disabled(model.discoveryProposals.isEmpty)
+                    Button("Apply Proposed Tags") {
+                        model.applyDiscoveryProposals()
+                    }
+                    .disabled(model.discoveryProposals.isEmpty)
                     Button("Manage Tags…") {
                         model.presentManageTagsSheet()
+                    }
+                }
+                if model.canAddTag {
+                    HStack(spacing: 10) {
+                        Button("Add Tag to Linked Targets…") {
+                            model.presentAddTagSheet()
+                        }
+                        Button("Remove Tag…") {
+                            model.presentRemoveTagSheet()
+                        }
+                        .disabled(model.removableTags.isEmpty)
                     }
                 }
             }
@@ -126,59 +157,29 @@ struct LayoutScreenView: View {
         GroupBox("Current Selection") {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    switch model.screenModel.selectedTarget {
+                    switch model.screenModel.selectedMetadata {
                     case let .none(message):
                         Text(message)
                             .foregroundStyle(.secondary)
 
-                    case let .error(message):
-                        Text(message)
-                            .foregroundStyle(.secondary)
-
-                    case let .selected(target):
-                        Text(target.identity)
+                    case let .selected(entry):
+                        Text(entry.subject)
                             .font(.title3)
                             .fontWeight(.semibold)
                         HStack(spacing: 10) {
-                            compactInfoChip(label: "Type", value: target.type)
-                            compactInfoChip(label: "xLights Group", value: target.layoutGroup)
-                            compactInfoChip(label: "Status", value: target.readinessState.rawValue)
+                            compactInfoChip(label: "Type", value: entry.subjectType)
+                            compactInfoChip(label: "Category", value: entry.category)
+                            compactInfoChip(label: "Status", value: entry.status.rawValue)
+                            compactInfoChip(label: "Source", value: entry.source.rawValue)
                         }
-                        LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 240), spacing: 12, alignment: .top)],
-                            alignment: .leading,
-                            spacing: 12
-                        ) {
-                            if target.reason != "No issues detected" {
-                                detailCard(label: "Issue", value: target.reason)
-                            }
-                            detailCard(label: "Downstream Effect", value: target.downstreamEffectSummary)
+                        detailCard(label: "Meaning", value: entry.value)
+                        if !entry.rationale.isEmpty {
+                            detailCard(label: "Rationale", value: entry.rationale)
                         }
-                        tagSection(title: "Assigned Tags", tags: target.assignedTags)
-
-                    case let .multi(selection):
-                        Text("\(selection.selectionCount) Targets Selected")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                        if selection.commonTags.isEmpty {
-                            Text("No tags are shared across the current selection.")
-                                .foregroundStyle(.secondary)
-                        } else {
-                            tagSection(title: "Common Tags", tags: selection.commonTags)
+                        if !entry.linkedTargets.isEmpty {
+                            detailCard(label: "Linked Models", value: entry.linkedTargets.joined(separator: ", "))
                         }
-                        LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 240), spacing: 12, alignment: .top)],
-                            alignment: .leading,
-                            spacing: 12
-                        ) {
-                            if selection.mixedTagCount > 0 {
-                                detailCard(
-                                    label: "Mixed Tag State",
-                                    value: "\(selection.mixedTagCount) additional tags appear only on part of this selection."
-                                )
-                            }
-                            detailCard(label: "Bulk Edit", value: "Use Add Tag or Remove Tag to update the current selection in bulk.")
-                        }
+                        tagSection(title: "Related Tags", tags: entry.relatedTags)
                     }
                 }
             }
@@ -190,30 +191,36 @@ struct LayoutScreenView: View {
         .layoutPriority(1)
     }
 
-    private func targetsSection(minHeight: CGFloat) -> some View {
-        GroupBox("Targets") {
+    private func metadataSection(minHeight: CGFloat) -> some View {
+        GroupBox("Display Metadata") {
             VStack(alignment: .leading, spacing: 12) {
                 filterRow
                 Table(model.filteredRows, selection: $model.selectedRowIDs, sortOrder: $model.sortOrder) {
-                    TableColumn("Target", value: \.targetName) { row in
-                        Text(row.targetName)
+                    TableColumn("Subject", value: \.subject) { row in
+                        Text(row.subject)
                     }
-                    TableColumn("Type", value: \.targetType) { row in
-                        Text(row.targetType)
+                    TableColumn("Type", value: \.subjectType) { row in
+                        Text(row.subjectType)
                     }
-                    TableColumn("Tags", value: \.tagSummary) { row in
-                        TagRowChips(tags: row.tagDefinitions)
+                    TableColumn("Category", value: \.category) { row in
+                        Text(row.category)
                     }
-                    TableColumn("Status", value: \.supportStateSummary) { row in
-                        Text(row.supportStateSummary)
+                    TableColumn("Value", value: \.value) { row in
+                        Text(row.value)
+                            .lineLimit(2)
                     }
-                    TableColumn("xLights Group", value: \.layoutGroup) { row in
-                        Text(row.layoutGroup)
-                            .lineLimit(1)
+                    TableColumn("Status", value: \.statusSummary) { row in
+                        Text(row.status.rawValue)
+                    }
+                    TableColumn("Source", value: \.sourceSummary) { row in
+                        Text(row.source.rawValue)
+                    }
+                    TableColumn("Linked Targets", value: \.linkedTargetSummary) { row in
+                        Text(row.linkedTargetSummary)
                     }
                 }
                 .onChange(of: model.selectedRowIDs) { _, _ in
-                    model.syncSelectedPane()
+                    model.syncSelectedMetadata()
                 }
                 .onChange(of: model.sortOrder) { _, newValue in
                     model.updateSortOrder(newValue)
@@ -224,10 +231,10 @@ struct LayoutScreenView: View {
                 .onChange(of: model.typeFilter) { _, _ in
                     model.syncSelectionToVisibleRows()
                 }
-                .onChange(of: model.layoutGroupFilter) { _, _ in
+                .onChange(of: model.categoryFilter) { _, _ in
                     model.syncSelectionToVisibleRows()
                 }
-                .onChange(of: model.tagsFilter) { _, _ in
+                .onChange(of: model.valueFilter) { _, _ in
                     model.syncSelectionToVisibleRows()
                 }
                 .onChange(of: model.statusFilter) { _, _ in
@@ -243,15 +250,15 @@ struct LayoutScreenView: View {
     private var filterRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                TextField("Filter target", text: $model.targetFilter)
+                TextField("Filter subject", text: $model.targetFilter)
                     .textFieldStyle(.roundedBorder)
                 TextField("Filter type", text: $model.typeFilter)
                     .textFieldStyle(.roundedBorder)
-                TextField("Filter tags", text: $model.tagsFilter)
+                TextField("Filter category", text: $model.categoryFilter)
                     .textFieldStyle(.roundedBorder)
-                TextField("Filter status", text: $model.statusFilter)
+                TextField("Filter value or rationale", text: $model.valueFilter)
                     .textFieldStyle(.roundedBorder)
-                TextField("Filter xLights group", text: $model.layoutGroupFilter)
+                TextField("Filter status or source", text: $model.statusFilter)
                     .textFieldStyle(.roundedBorder)
             }
             if model.hasActiveFilters {
@@ -266,12 +273,51 @@ struct LayoutScreenView: View {
         }
     }
 
+    private var discoveryProposalSheet: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Review Proposed Metadata")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("These proposals came from the display-discovery conversation. Applying them creates tag definitions and assigns them to the linked xLights models.")
+                .foregroundStyle(.secondary)
+            List(model.discoveryProposals) { proposal in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(proposal.tagName)
+                        .font(.headline)
+                    if !proposal.tagDescription.isEmpty {
+                        Text(proposal.tagDescription)
+                    }
+                    Text("Targets: \(proposal.targetNames.joined(separator: ", "))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if !proposal.rationale.isEmpty {
+                        Text(proposal.rationale)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            HStack {
+                Spacer()
+                Button("Close") {
+                    model.showDiscoveryProposalSheet = false
+                }
+                Button("Apply") {
+                    model.applyDiscoveryProposals()
+                }
+            }
+        }
+        .padding(24)
+        .frame(minWidth: 720, minHeight: 420)
+    }
+
     private var addTagSheet: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Add Tag")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("Apply one tag across the current target selection.")
+            Text("Apply one tag across the linked models for the current metadata selection.")
                 .foregroundStyle(.secondary)
             Form {
                 Picker("Mode", selection: $model.addTagMode) {
@@ -291,7 +337,7 @@ struct LayoutScreenView: View {
                     TextField("Description (Optional)", text: $model.newTagDescription)
                 }
 
-                Text("Selected Targets: \(model.selectedRows.count)")
+                Text("Linked Models: \(model.selectedLinkedTargets.count)")
                     .foregroundStyle(.secondary)
             }
             HStack {
@@ -318,7 +364,7 @@ struct LayoutScreenView: View {
             Text("Remove Tag")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("Remove one tag from the current target selection.")
+            Text("Remove one tag from the linked models for the current metadata selection.")
                 .foregroundStyle(.secondary)
             Form {
                 Picker("Tag", selection: $model.selectedRemovalTagID) {
@@ -326,7 +372,7 @@ struct LayoutScreenView: View {
                         Text(tag.name).tag(tag.id)
                     }
                 }
-                Text("Selected Targets: \(model.selectedRows.count)")
+                Text("Linked Models: \(model.selectedLinkedTargets.count)")
                     .foregroundStyle(.secondary)
             }
             HStack {
@@ -474,7 +520,7 @@ struct LayoutScreenView: View {
             Text(title)
                 .font(.headline)
             if tags.isEmpty {
-                Text("No tags assigned.")
+                Text("No related tags yet.")
                     .foregroundStyle(.secondary)
             } else {
                 FlowTagList(tags: tags)
@@ -519,16 +565,7 @@ private struct TagRowChips: View {
             Text("No tags")
                 .foregroundStyle(.secondary)
         } else {
-            HStack(spacing: 6) {
-                ForEach(Array(tags.prefix(3))) { tag in
-                    TagChip(tag: tag)
-                }
-                if tags.count > 3 {
-                    Text("+\(tags.count - 3)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            FlowTagList(tags: Array(tags.prefix(3)))
         }
     }
 }
@@ -539,42 +576,42 @@ private struct TagChip: View {
     var body: some View {
         Text(tag.name)
             .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(tagBackground)
-            .foregroundStyle(tagForeground)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .foregroundStyle(tagForegroundColor)
+            .background(tagBackgroundColor)
             .clipShape(Capsule())
     }
 
-    private var tagBackground: Color {
+    private var tagBackgroundColor: Color {
         switch tag.color {
         case .none:
             return Color(nsColor: .controlBackgroundColor)
         case .red:
-            return Color(nsColor: .systemRed).opacity(0.16)
+            return Color.red.opacity(0.18)
         case .orange:
-            return Color(nsColor: .systemOrange).opacity(0.18)
+            return Color.orange.opacity(0.18)
         case .yellow:
-            return Color(nsColor: .systemYellow).opacity(0.20)
+            return Color.yellow.opacity(0.2)
         case .green:
-            return Color(nsColor: .systemGreen).opacity(0.16)
+            return Color.green.opacity(0.18)
         case .teal:
-            return Color(nsColor: .systemTeal).opacity(0.18)
+            return Color.teal.opacity(0.18)
         case .blue:
-            return Color(nsColor: .systemBlue).opacity(0.16)
+            return Color.blue.opacity(0.18)
         case .purple:
-            return Color(nsColor: .systemPurple).opacity(0.16)
+            return Color.purple.opacity(0.18)
         case .pink:
-            return Color(nsColor: .systemPink).opacity(0.16)
+            return Color.pink.opacity(0.18)
         case .gray:
-            return Color(nsColor: .quaternaryLabelColor)
+            return Color.gray.opacity(0.18)
         }
     }
 
-    private var tagForeground: Color {
+    private var tagForegroundColor: Color {
         switch tag.color {
         case .yellow:
-            return Color(nsColor: .labelColor)
+            return Color.black.opacity(0.75)
         default:
             return .primary
         }

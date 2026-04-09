@@ -161,14 +161,27 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 rationale: string(row["rationale"])
             )
         }
+        let proposalRows: [[String: Any]] = object["tagProposals"] as? [[String: Any]] ?? []
+        let tagProposals: [DisplayDiscoveryTagProposalModel] = proposalRows.compactMap { row in
+            let tagName = string(row["tagName"])
+            guard !tagName.isEmpty else { return nil }
+            let targetNames = stringArray(row["targetNames"])
+            guard !targetNames.isEmpty else { return nil }
+            return DisplayDiscoveryTagProposalModel(
+                tagName: tagName,
+                tagDescription: string(row["tagDescription"]),
+                rationale: string(row["rationale"]),
+                targetNames: targetNames
+            )
+        }
         return AssistantDisplayDiscoveryResult(
             status: status,
             scope: scope,
             shouldCaptureTurn: shouldCaptureTurn,
-            candidateProps: candidateProps
-            ,
+            candidateProps: candidateProps,
             insights: insights,
-            openQuestions: stringArray(object["openQuestions"])
+            openQuestions: stringArray(object["openQuestions"]),
+            tagProposals: tagProposals
         )
     }
 }

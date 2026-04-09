@@ -115,9 +115,11 @@ final class AssistantWindowViewModel {
                     candidateProps: discovery.candidateProps,
                     insights: discovery.insights,
                     openQuestions: discovery.openQuestions,
+                    tagProposals: discovery.tagProposals,
                     userMessage: userMessage,
                     assistantMessage: assistantMessage
                 )
+                NotificationCenter.default.post(name: .displayDiscoveryDidChange, object: nil)
             }
         } catch {
             messages.append(AssistantMessageModel(

@@ -255,6 +255,9 @@ export async function executeAppAssistantConversation({
             openQuestions: Array.isArray(response?.displayDiscoveryCapture?.openQuestions)
               ? response.displayDiscoveryCapture.openQuestions
               : [],
+            tagProposals: Array.isArray(response?.displayDiscoveryCapture?.tagProposals)
+              ? response.displayDiscoveryCapture.tagProposals
+              : [],
             candidateProps: Array.isArray(context?.layout?.displayDiscoveryCandidates)
               ? context.layout.displayDiscoveryCandidates
               : []

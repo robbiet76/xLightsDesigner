@@ -22,6 +22,7 @@ struct AssistantDisplayDiscoveryResult: Sendable {
     let candidateProps: [DisplayDiscoveryCandidateModel]
     let insights: [DisplayDiscoveryInsightModel]
     let openQuestions: [String]
+    let tagProposals: [DisplayDiscoveryTagProposalModel]
 }
 
 struct AssistantConversationState: Codable, Sendable {

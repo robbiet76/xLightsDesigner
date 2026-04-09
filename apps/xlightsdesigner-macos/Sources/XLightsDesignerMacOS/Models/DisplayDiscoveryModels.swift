@@ -14,6 +14,14 @@ struct DisplayDiscoveryInsightModel: Codable, Hashable, Sendable {
     let rationale: String
 }
 
+struct DisplayDiscoveryTagProposalModel: Codable, Hashable, Sendable, Identifiable {
+    var id: String { "\(tagName.lowercased())::\(targetNames.sorted().joined(separator: "|"))" }
+    let tagName: String
+    let tagDescription: String
+    let rationale: String
+    let targetNames: [String]
+}
+
 enum DisplayDiscoveryStatus: String, Codable, Sendable {
     case notStarted = "not_started"
     case inProgress = "in_progress"
@@ -29,7 +37,7 @@ struct DisplayDiscoveryTranscriptEntry: Codable, Hashable, Sendable {
 }
 
 struct DisplayDiscoveryDocument: Codable, Sendable {
-    var version: Int = 2
+    var version: Int = 3
     var status: DisplayDiscoveryStatus = .notStarted
     var scope: String = "groups_models_v1"
     var startedAt: String?
@@ -37,6 +45,7 @@ struct DisplayDiscoveryDocument: Codable, Sendable {
     var candidateProps: [DisplayDiscoveryCandidateModel] = []
     var insights: [DisplayDiscoveryInsightModel] = []
     var openQuestions: [String] = []
+    var proposedTags: [DisplayDiscoveryTagProposalModel] = []
     var transcript: [DisplayDiscoveryTranscriptEntry] = []
 }
 
@@ -49,6 +58,7 @@ struct DisplayDiscoverySummaryModel: Sendable {
     let candidateProps: [DisplayDiscoveryCandidateModel]
     let insights: [DisplayDiscoveryInsightModel]
     let openQuestions: [String]
+    let proposedTags: [DisplayDiscoveryTagProposalModel]
 
     static let empty = DisplayDiscoverySummaryModel(
         status: .notStarted,
@@ -58,6 +68,7 @@ struct DisplayDiscoverySummaryModel: Sendable {
         transcriptCount: 0,
         candidateProps: [],
         insights: [],
-        openQuestions: []
+        openQuestions: [],
+        proposedTags: []
     )
 }
