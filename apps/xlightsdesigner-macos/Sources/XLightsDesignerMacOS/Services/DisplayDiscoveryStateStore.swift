@@ -11,6 +11,7 @@ protocol DisplayDiscoveryStateStore: Sendable {
         candidateProps: [DisplayDiscoveryCandidateModel],
         insights: [DisplayDiscoveryInsightModel],
         openQuestions: [String],
+        resolvedQuestions: [String],
         tagProposals: [DisplayDiscoveryTagProposalModel],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
@@ -60,6 +61,7 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         candidateProps: [DisplayDiscoveryCandidateModel],
         insights: [DisplayDiscoveryInsightModel],
         openQuestions: [String],
+        resolvedQuestions: [String],
         tagProposals: [DisplayDiscoveryTagProposalModel],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
@@ -84,6 +86,12 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
                 mergedQuestions.append(question)
             }
             document.openQuestions = mergedQuestions
+        }
+        if !resolvedQuestions.isEmpty {
+            let resolved = Set(resolvedQuestions.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty })
+            if !resolved.isEmpty {
+                document.openQuestions.removeAll { resolved.contains($0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) }
+            }
         }
         if !tagProposals.isEmpty {
             document.proposedTags = mergeTagProposals(existing: document.proposedTags, incoming: tagProposals)

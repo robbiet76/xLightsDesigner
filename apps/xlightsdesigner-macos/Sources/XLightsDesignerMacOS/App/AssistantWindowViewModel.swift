@@ -115,6 +115,7 @@ final class AssistantWindowViewModel {
                     candidateProps: discovery.candidateProps,
                     insights: discovery.insights,
                     openQuestions: discovery.openQuestions,
+                    resolvedQuestions: discovery.resolvedQuestions,
                     tagProposals: discovery.tagProposals,
                     userMessage: userMessage,
                     assistantMessage: assistantMessage

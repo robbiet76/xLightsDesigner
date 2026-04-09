@@ -181,6 +181,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
             candidateProps: candidateProps,
             insights: insights,
             openQuestions: stringArray(object["openQuestions"]),
+            resolvedQuestions: stringArray(object["resolvedQuestions"]),
             tagProposals: tagProposals
         )
     }

@@ -437,7 +437,6 @@ final class NativeAutomationServer: @unchecked Sendable {
             "targetCount": screen.rows.count,
             "metadataCount": screen.metadataRows.count,
             "proposedMetadataCount": screen.discoveryProposals.count,
-            "openQuestionCount": screen.openQuestions.count,
             "readinessState": screen.readinessSummary.state.rawValue,
             "readyCount": screen.readinessSummary.readyCount,
             "unresolvedCount": screen.readinessSummary.unresolvedCount,

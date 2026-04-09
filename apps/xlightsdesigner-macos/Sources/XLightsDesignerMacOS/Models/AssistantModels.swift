@@ -22,6 +22,7 @@ struct AssistantDisplayDiscoveryResult: Sendable {
     let candidateProps: [DisplayDiscoveryCandidateModel]
     let insights: [DisplayDiscoveryInsightModel]
     let openQuestions: [String]
+    let resolvedQuestions: [String]
     let tagProposals: [DisplayDiscoveryTagProposalModel]
 }
 
@@ -56,6 +57,8 @@ struct AssistantContextModel {
     let displayModelSamples: [[String: String]]
     let displayDiscoveryStatus: String
     let displayDiscoveryTranscriptCount: Int
+    let displayDiscoveryInsights: [[String: String]]
+    let displayDiscoveryOpenQuestions: [String]
     let userPreferenceNotes: [String]
     let xlightsSequenceOpen: Bool
     let xlightsSequencePath: String
@@ -87,6 +90,8 @@ struct AssistantContextModel {
         displayModelSamples: [[String: String]] = [],
         displayDiscoveryStatus: String = "not_started",
         displayDiscoveryTranscriptCount: Int = 0,
+        displayDiscoveryInsights: [[String: String]] = [],
+        displayDiscoveryOpenQuestions: [String] = [],
         userPreferenceNotes: [String] = [],
         xlightsSequenceOpen: Bool = false,
         xlightsSequencePath: String = "",
@@ -117,6 +122,8 @@ struct AssistantContextModel {
         self.displayModelSamples = displayModelSamples
         self.displayDiscoveryStatus = displayDiscoveryStatus
         self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
+        self.displayDiscoveryInsights = displayDiscoveryInsights
+        self.displayDiscoveryOpenQuestions = displayDiscoveryOpenQuestions
         self.userPreferenceNotes = userPreferenceNotes
         self.xlightsSequenceOpen = xlightsSequenceOpen
         self.xlightsSequencePath = xlightsSequencePath
@@ -152,7 +159,9 @@ struct AssistantContextModel {
             ],
             "displayDiscovery": [
                 "status": displayDiscoveryStatus,
-                "transcriptCount": displayDiscoveryTranscriptCount
+                "transcriptCount": displayDiscoveryTranscriptCount,
+                "insights": displayDiscoveryInsights,
+                "openQuestions": displayDiscoveryOpenQuestions
             ],
             "userProfile": [
                 "preferenceNotes": userPreferenceNotes

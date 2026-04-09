@@ -42,6 +42,7 @@ struct DisplayDiscoveryStateStoreTests {
             openQuestions: [
                 "Should the snowflakes behave as one family or as separate features?"
             ],
+            resolvedQuestions: [],
             tagProposals: [
                 DisplayDiscoveryTagProposalModel(
                     tagName: "featured character",

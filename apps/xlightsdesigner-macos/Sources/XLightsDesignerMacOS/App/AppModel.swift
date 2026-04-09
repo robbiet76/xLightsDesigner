@@ -110,6 +110,15 @@ final class AppModel {
         let discoveryFamilies = buildDisplayDiscoveryFamilies(from: layoutRows)
         let displayTypeBreakdown = buildDisplayTypeBreakdown(from: layoutRows)
         let displayModelSamples = buildDisplayModelSamples(from: layoutRows)
+        let displayDiscoveryInsights = discoverySummary.insights.map {
+            [
+                "subject": $0.subject,
+                "subjectType": $0.subjectType,
+                "category": $0.category,
+                "value": $0.value,
+                "rationale": $0.rationale
+            ]
+        }
         let userPreferenceNotes = (try? userProfileStore.load().preferenceNotes.map(\.text)) ?? []
         let selectedDisplaySubject: String
         let selectedDisplayLabels: [String]
@@ -143,6 +152,8 @@ final class AppModel {
             displayModelSamples: displayModelSamples,
             displayDiscoveryStatus: discoverySummary.status.rawValue,
             displayDiscoveryTranscriptCount: discoverySummary.transcriptCount,
+            displayDiscoveryInsights: displayDiscoveryInsights,
+            displayDiscoveryOpenQuestions: discoverySummary.openQuestions,
             userPreferenceNotes: userPreferenceNotes,
             xlightsSequenceOpen: xlights.isSequenceOpen,
             xlightsSequencePath: xlights.sequencePath,

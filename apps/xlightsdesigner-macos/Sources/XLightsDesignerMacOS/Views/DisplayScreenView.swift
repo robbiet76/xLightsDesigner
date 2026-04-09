@@ -73,9 +73,6 @@ struct DisplayScreenView: View {
                     if model.proposedMetadataCount > 0 {
                         chip("Proposed \(model.proposedMetadataCount)")
                     }
-                    if !model.screenModel.openQuestions.isEmpty {
-                        chip("Open Questions \(model.screenModel.openQuestions.count)")
-                    }
                     if model.linkedTargetCoverageCount > 0 {
                         chip("Linked Targets \(model.linkedTargetCoverageCount)")
                     }
@@ -84,16 +81,6 @@ struct DisplayScreenView: View {
                 if !model.screenModel.readinessSummary.nextStepText.isEmpty {
                     Text(model.screenModel.readinessSummary.nextStepText)
                         .foregroundStyle(.secondary)
-                }
-                if !model.screenModel.openQuestions.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Open Questions")
-                            .font(.headline)
-                        ForEach(model.screenModel.openQuestions.prefix(3), id: \.self) { question in
-                            Text(question)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
                 }
                 ForEach(model.screenModel.banners) { banner in
                     bannerView(banner)
