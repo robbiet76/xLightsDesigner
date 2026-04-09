@@ -10,6 +10,8 @@ Define the first-run display-discovery conversation that helps the designer agen
 
 This is a guided conversation, not an automatic tagging pass.
 
+The goal is to reach a strong starting understanding for sequencing and design with as few questions as possible.
+
 ## Product Rule
 
 The system may infer candidates.
@@ -96,14 +98,25 @@ and from broad structural signals such as:
 - not as confirmed semantics
 
 4. ask a short set of high-value questions
-- usually 2 to 4
-- not a long interview
+- choose the next question for information gain
+- prefer one or two natural questions at a time
+- not a long interview or prop checklist
 
-5. prioritize model-level discovery before group-level discovery
+5. let the user steer the branch order
+- begin with high-level structure
+- narrow gradually based on the user response
+- do not force a rigid topic order
+
+6. optimize for sequencing-ready understanding
+- ask only what is needed to support early sequencing/design decisions
+- do not chase exhaustive metadata coverage
+- stop asking once the starting semantic model is good enough
+
+7. prioritize model-level discovery before group-level discovery
 - start by understanding important individual models
 - ask group-level questions only after that, or when the group itself appears to carry meaning that cannot be inferred from its member models
 
-6. aim to discover:
+8. aim to discover:
 - focal props
 - supporting/background props
 - groups that should behave together
@@ -131,6 +144,8 @@ The agent must not:
 - silently create a large taxonomy without user confirmation
 - assume tag meaning from placeholder names
 - claim current sequence content proves display intent
+- persist a scripted list of literal open questions as the project understanding
+- sound like a checklist, intake form, or interrogation
 
 ## Output of This Conversation
 
@@ -145,6 +160,14 @@ The first pass should produce:
 - not silently committed
 
 3. clear rationale for the initial metadata structure
+
+Internally, unresolved discovery should be tracked as larger uncertainty branches, not as a saved list of exact question strings.
+
+Examples:
+- focal hierarchy still unclear
+- repeating support families need clarification
+- character or scene props not fully identified
+- architectural/background layers still ambiguous
 
 ## Native App Implications
 
@@ -177,3 +200,4 @@ This feature is on the right path when:
 3. the agent asks short, concrete clarification questions
 4. the agent treats names as hypotheses, not truth
 5. the user is guided toward an initial metadata set instead of writing tags from scratch
+6. the agent asks fewer questions over time by choosing the highest-value next branch to clarify

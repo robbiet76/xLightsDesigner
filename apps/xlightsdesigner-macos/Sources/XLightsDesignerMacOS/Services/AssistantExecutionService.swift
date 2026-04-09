@@ -180,8 +180,8 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
             shouldCaptureTurn: shouldCaptureTurn,
             candidateProps: candidateProps,
             insights: insights,
-            openQuestions: stringArray(object["openQuestions"]),
-            resolvedQuestions: stringArray(object["resolvedQuestions"]),
+            unresolvedBranches: stringArray(object["unresolvedBranches"]),
+            resolvedBranches: stringArray(object["resolvedBranches"]),
             tagProposals: tagProposals
         )
     }

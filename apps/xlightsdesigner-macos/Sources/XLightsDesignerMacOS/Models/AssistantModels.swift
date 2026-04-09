@@ -21,8 +21,8 @@ struct AssistantDisplayDiscoveryResult: Sendable {
     let shouldCaptureTurn: Bool
     let candidateProps: [DisplayDiscoveryCandidateModel]
     let insights: [DisplayDiscoveryInsightModel]
-    let openQuestions: [String]
-    let resolvedQuestions: [String]
+    let unresolvedBranches: [String]
+    let resolvedBranches: [String]
     let tagProposals: [DisplayDiscoveryTagProposalModel]
 }
 
@@ -65,7 +65,8 @@ struct AssistantContextModel {
     let displayDiscoveryStatus: String
     let displayDiscoveryTranscriptCount: Int
     let displayDiscoveryInsights: [[String: String]]
-    let displayDiscoveryOpenQuestions: [String]
+    let displayDiscoveryUnresolvedBranches: [String]
+    let displayDiscoveryResolvedBranches: [String]
     let userPreferenceNotes: [String]
     let xlightsSequenceOpen: Bool
     let xlightsSequencePath: String
@@ -105,7 +106,8 @@ struct AssistantContextModel {
         displayDiscoveryStatus: String = "not_started",
         displayDiscoveryTranscriptCount: Int = 0,
         displayDiscoveryInsights: [[String: String]] = [],
-        displayDiscoveryOpenQuestions: [String] = [],
+        displayDiscoveryUnresolvedBranches: [String] = [],
+        displayDiscoveryResolvedBranches: [String] = [],
         userPreferenceNotes: [String] = [],
         xlightsSequenceOpen: Bool = false,
         xlightsSequencePath: String = "",
@@ -144,7 +146,8 @@ struct AssistantContextModel {
         self.displayDiscoveryStatus = displayDiscoveryStatus
         self.displayDiscoveryTranscriptCount = displayDiscoveryTranscriptCount
         self.displayDiscoveryInsights = displayDiscoveryInsights
-        self.displayDiscoveryOpenQuestions = displayDiscoveryOpenQuestions
+        self.displayDiscoveryUnresolvedBranches = displayDiscoveryUnresolvedBranches
+        self.displayDiscoveryResolvedBranches = displayDiscoveryResolvedBranches
         self.userPreferenceNotes = userPreferenceNotes
         self.xlightsSequenceOpen = xlightsSequenceOpen
         self.xlightsSequencePath = xlightsSequencePath
@@ -191,7 +194,8 @@ struct AssistantContextModel {
                 "status": displayDiscoveryStatus,
                 "transcriptCount": displayDiscoveryTranscriptCount,
                 "insights": displayDiscoveryInsights,
-                "openQuestions": displayDiscoveryOpenQuestions
+                "unresolvedBranches": displayDiscoveryUnresolvedBranches,
+                "resolvedBranches": displayDiscoveryResolvedBranches
             ],
             "userProfile": [
                 "preferenceNotes": userPreferenceNotes

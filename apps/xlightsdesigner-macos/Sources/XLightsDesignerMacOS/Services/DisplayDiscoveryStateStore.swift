@@ -10,8 +10,8 @@ protocol DisplayDiscoveryStateStore: Sendable {
         scope: String,
         candidateProps: [DisplayDiscoveryCandidateModel],
         insights: [DisplayDiscoveryInsightModel],
-        openQuestions: [String],
-        resolvedQuestions: [String],
+        unresolvedBranches: [String],
+        resolvedBranches: [String],
         tagProposals: [DisplayDiscoveryTagProposalModel],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
@@ -41,8 +41,8 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
             transcriptCount: document.transcript.count,
             candidateProps: document.candidateProps,
             insights: document.insights,
-            openQuestions: document.openQuestions
-            ,
+            unresolvedBranches: document.unresolvedBranches,
+            resolvedBranches: document.resolvedBranches,
             proposedTags: document.proposedTags
         )
     }
@@ -60,8 +60,8 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         scope: String,
         candidateProps: [DisplayDiscoveryCandidateModel],
         insights: [DisplayDiscoveryInsightModel],
-        openQuestions: [String],
-        resolvedQuestions: [String],
+        unresolvedBranches: [String],
+        resolvedBranches: [String],
         tagProposals: [DisplayDiscoveryTagProposalModel],
         userMessage: AssistantMessageModel,
         assistantMessage: AssistantMessageModel
@@ -80,17 +80,22 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         if !insights.isEmpty {
             document.insights = mergeInsights(existing: document.insights, incoming: insights)
         }
-        if !openQuestions.isEmpty {
-            var mergedQuestions = document.openQuestions
-            for question in openQuestions where !mergedQuestions.contains(question) {
-                mergedQuestions.append(question)
+        if !unresolvedBranches.isEmpty {
+            var mergedBranches = document.unresolvedBranches
+            for branch in unresolvedBranches where !mergedBranches.contains(branch) {
+                mergedBranches.append(branch)
             }
-            document.openQuestions = mergedQuestions
+            document.unresolvedBranches = mergedBranches
         }
-        if !resolvedQuestions.isEmpty {
-            let resolved = Set(resolvedQuestions.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty })
+        if !resolvedBranches.isEmpty {
+            let resolved = Set(resolvedBranches.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty })
             if !resolved.isEmpty {
-                document.openQuestions.removeAll { resolved.contains($0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) }
+                document.unresolvedBranches.removeAll { resolved.contains($0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) }
+                var mergedResolved = document.resolvedBranches
+                for branch in resolvedBranches where !mergedResolved.contains(branch) {
+                    mergedResolved.append(branch)
+                }
+                document.resolvedBranches = mergedResolved
             }
         }
         if !tagProposals.isEmpty {

@@ -129,5 +129,4 @@ struct DisplayScreenModel: Sendable {
     let banners: [DisplayBannerModel]
     let labelDefinitions: [DisplayLabelDefinitionModel]
     let discoveryProposals: [DisplayDiscoveryTagProposalModel]
-    let openQuestions: [String]
 }

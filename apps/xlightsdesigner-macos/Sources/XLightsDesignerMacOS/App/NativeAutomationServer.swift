@@ -338,7 +338,8 @@ final class NativeAutomationServer: @unchecked Sendable {
                         "rationale": $0.rationale
                     ]
                 },
-                "openQuestions": discovery.openQuestions,
+                "unresolvedBranches": discovery.unresolvedBranches,
+                "resolvedBranches": discovery.resolvedBranches,
                 "proposedTags": discovery.proposedTags.map {
                     [
                         "tagName": $0.tagName,

@@ -39,10 +39,10 @@ struct DisplayDiscoveryStateStoreTests {
                     rationale: "User confirmed Snowman is intended as a featured character."
                 )
             ],
-            openQuestions: [
-                "Should the snowflakes behave as one family or as separate features?"
+            unresolvedBranches: [
+                "Need to understand whether the snowflake families should be treated uniformly or as separate feature branches."
             ],
-            resolvedQuestions: [],
+            resolvedBranches: [],
             tagProposals: [
                 DisplayDiscoveryTagProposalModel(
                     tagName: "featured character",
@@ -77,7 +77,8 @@ struct DisplayDiscoveryStateStoreTests {
         #expect(summary.candidateProps.map(\.name) == ["Snowman"])
         #expect(summary.insights.count == 1)
         #expect(summary.insights.first?.subject == "Snowman")
-        #expect(summary.openQuestions.count == 1)
+        #expect(summary.unresolvedBranches.count == 1)
+        #expect(summary.resolvedBranches.isEmpty)
         #expect(summary.proposedTags.count == 1)
     }
 }

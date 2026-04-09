@@ -37,8 +37,7 @@ final class DisplayScreenViewModel {
         selectedMetadata: .none("Select one metadata entry to inspect."),
         banners: [],
         labelDefinitions: [],
-        discoveryProposals: [],
-        openQuestions: []
+        discoveryProposals: []
     )
 
     var errorMessage: String?
@@ -154,8 +153,7 @@ final class DisplayScreenViewModel {
                     selectedMetadata: .none("Select one metadata entry to inspect."),
                     banners: result.banners,
                     labelDefinitions: result.labelDefinitions,
-                    discoveryProposals: discoverySummary.proposedTags,
-                    openQuestions: discoverySummary.openQuestions
+                    discoveryProposals: discoverySummary.proposedTags
                 )
                 syncSelectedMetadata()
             } catch {
@@ -180,8 +178,7 @@ final class DisplayScreenViewModel {
                     selectedMetadata: .none(error.localizedDescription),
                     banners: [DisplayBannerModel(id: "load-failed", state: .blocked, text: error.localizedDescription)],
                     labelDefinitions: [],
-                    discoveryProposals: [],
-                    openQuestions: []
+                    discoveryProposals: []
                 )
             }
         }
@@ -198,8 +195,7 @@ final class DisplayScreenViewModel {
                 selectedMetadata: .none("Select one metadata entry to inspect."),
                 banners: screenModel.banners,
                 labelDefinitions: screenModel.labelDefinitions,
-                discoveryProposals: screenModel.discoveryProposals,
-                openQuestions: screenModel.openQuestions
+                discoveryProposals: screenModel.discoveryProposals
             )
             return
         }
@@ -223,8 +219,7 @@ final class DisplayScreenViewModel {
             )),
             banners: screenModel.banners,
             labelDefinitions: screenModel.labelDefinitions,
-            discoveryProposals: screenModel.discoveryProposals,
-            openQuestions: screenModel.openQuestions
+            discoveryProposals: screenModel.discoveryProposals
         )
     }
 

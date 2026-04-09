@@ -265,11 +265,11 @@ export async function executeAppAssistantConversation({
             insights: Array.isArray(response?.displayDiscoveryCapture?.insights)
               ? response.displayDiscoveryCapture.insights
               : [],
-            openQuestions: Array.isArray(response?.displayDiscoveryCapture?.openQuestions)
-              ? response.displayDiscoveryCapture.openQuestions
+            unresolvedBranches: Array.isArray(response?.displayDiscoveryCapture?.unresolvedBranches)
+              ? response.displayDiscoveryCapture.unresolvedBranches
               : [],
-            resolvedQuestions: Array.isArray(response?.displayDiscoveryCapture?.resolvedQuestions)
-              ? response.displayDiscoveryCapture.resolvedQuestions
+            resolvedBranches: Array.isArray(response?.displayDiscoveryCapture?.resolvedBranches)
+              ? response.displayDiscoveryCapture.resolvedBranches
               : [],
             tagProposals: Array.isArray(response?.displayDiscoveryCapture?.tagProposals)
               ? response.displayDiscoveryCapture.tagProposals

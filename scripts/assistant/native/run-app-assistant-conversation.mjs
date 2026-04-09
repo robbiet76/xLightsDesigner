@@ -200,11 +200,11 @@ function normalizeDiscoveryCapture(value) {
         rationale: String(row?.rationale || '').trim()
       })).filter((row) => row.subject && row.category && row.value)
     : [];
-  const openQuestions = Array.isArray(object.openQuestions)
-    ? object.openQuestions.map((row) => String(row || '').trim()).filter(Boolean)
+  const unresolvedBranches = Array.isArray(object.unresolvedBranches)
+    ? object.unresolvedBranches.map((row) => String(row || '').trim()).filter(Boolean)
     : [];
-  const resolvedQuestions = Array.isArray(object.resolvedQuestions)
-    ? object.resolvedQuestions.map((row) => String(row || '').trim()).filter(Boolean)
+  const resolvedBranches = Array.isArray(object.resolvedBranches)
+    ? object.resolvedBranches.map((row) => String(row || '').trim()).filter(Boolean)
     : [];
   const tagProposals = Array.isArray(object.tagProposals)
     ? object.tagProposals.map((row) => ({
@@ -220,8 +220,8 @@ function normalizeDiscoveryCapture(value) {
   return {
     status: status || '',
     insights,
-    openQuestions,
-    resolvedQuestions,
+    unresolvedBranches,
+    resolvedBranches,
     tagProposals
   };
 }
@@ -239,12 +239,13 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     'Instead, leave that point out of insights so the assistant can ask a clarification question using exact xLights names.',
     knownNames.length ? `Known xLights names in Context: ${knownNames.map((row) => `\`${row}\``).join(', ')}` : 'Known xLights names in Context: none',
     'Output shape:',
-    '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."],"resolvedQuestions":["..."],"tagProposals":[{"tagName":"","tagDescription":"","rationale":"","targetNames":["..."]}]}',
+    '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."],"tagProposals":[{"tagName":"","tagDescription":"","rationale":"","targetNames":["..."]}]}',
     'Use short categorical values when possible, but keep them natural.',
     'When enough has been confirmed, include one or more reviewable tag proposals using broad durable metadata, not narrow one-off labels.',
     'Use explicit targetNames from the known model list whenever possible.',
-    'If the user answered or corrected an existing open question, include that exact question text in resolvedQuestions.',
-    'If nothing was confirmed, return {"status":"in_progress","insights":[],"openQuestions":[],"tagProposals":[]}.'
+    'Track uncertainty as unresolvedBranches, not scripted question text. Branches should describe the larger area that still needs clarification, such as focal hierarchy, repeated support families, or character props.',
+    'When the user narrows or settles one of those areas, include the branch in resolvedBranches and remove it from unresolvedBranches.',
+    'If nothing was confirmed, return {"status":"in_progress","insights":[],"unresolvedBranches":[],"resolvedBranches":[],"tagProposals":[]}.'
   ].join('\n');
   const userText = [
     `Context: ${JSON.stringify(context)}`,
@@ -260,7 +261,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
     maxOutputTokens: 500
   });
   if (!response.ok) {
-    return { status: '', insights: [], openQuestions: [] };
+    return { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
   }
   return validateDiscoveryCapture(normalizeDiscoveryCapture(parseAgentJson(response.modelText)), context);
 }
@@ -277,8 +278,11 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const existingDisplayUnderstanding = Array.isArray(c?.displayDiscovery?.insights) && c.displayDiscovery.insights.length
     ? `Current display understanding:\n${c.displayDiscovery.insights.map((row) => `- ${String(row.subject || "").trim()} [${String(row.category || "").trim()}]: ${String(row.value || "").trim()}`).join('\n')}`
     : "";
-  const openDisplayQuestions = Array.isArray(c?.displayDiscovery?.openQuestions) && c.displayDiscovery.openQuestions.length
-    ? `Current open display questions:\n${c.displayDiscovery.openQuestions.map((row) => `- ${String(row || "").trim()}`).join('\n')}`
+  const unresolvedDisplayBranches = Array.isArray(c?.displayDiscovery?.unresolvedBranches) && c.displayDiscovery.unresolvedBranches.length
+    ? `Current unresolved display branches:\n${c.displayDiscovery.unresolvedBranches.map((row) => `- ${String(row || "").trim()}`).join('\n')}`
+    : "";
+  const resolvedDisplayBranches = Array.isArray(c?.displayDiscovery?.resolvedBranches) && c.displayDiscovery.resolvedBranches.length
+    ? `Recently resolved display branches:\n${c.displayDiscovery.resolvedBranches.map((row) => `- ${String(row || "").trim()}`).join('\n')}`
     : "";
   return [
     'You are the xLightsDesigner App Assistant.',
@@ -322,17 +326,21 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
-    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."],"resolvedQuestions":["..."]}}.',
+    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]}}.',
     'assistantMessage must remain natural language, concise, and user-facing.',
     'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
-    'When the user answered one of the existing open questions, include that exact question in resolvedQuestions and avoid asking it again.',
+    'Choose the next question based on information gain. Ask the smallest useful next question that helps reach a sequencing-ready understanding of the display with as few questions as possible.',
+    'Track larger areas of uncertainty in unresolvedBranches rather than saving literal question text.',
+    'When the user settles one of those areas, include the branch in resolvedBranches and avoid reopening it unless the user changes direction.',
+    'This is a conversation, not an interrogation. Let the user steer the branch order.',
     'If nothing new was confirmed, return an empty insights array.',
     knownNames.length ? `Known xLights names currently in context:\n${knownNames.map((row) => `- \`${row}\``).join('\n')}` : "",
     c.rollingConversationSummary ? `Rolling conversation summary:\n${String(c.rollingConversationSummary).trim()}` : "",
     ongoingDiscovery,
     existingDisplayUnderstanding,
-    openDisplayQuestions,
+    unresolvedDisplayBranches,
+    resolvedDisplayBranches,
     discoveryGuidance,
     `Context: ${JSON.stringify(c)}`
   ].filter(Boolean).join('\n');
@@ -423,7 +431,7 @@ async function runAgentConversation(payload = {}) {
     return { ok: false, code: 'AGENT_EMPTY_RESPONSE', error: 'Agent returned an empty response.' };
   }
   const finalDiscoveryCapture =
-    (displayDiscoveryCapture.insights.length || displayDiscoveryCapture.openQuestions.length || displayDiscoveryCapture.resolvedQuestions.length || displayDiscoveryCapture.status)
+    (displayDiscoveryCapture.insights.length || displayDiscoveryCapture.unresolvedBranches.length || displayDiscoveryCapture.resolvedBranches.length || displayDiscoveryCapture.status)
       ? displayDiscoveryCapture
       : (shouldStartDisplayDiscovery({ context, userMessage }) || shouldContinueDisplayDiscovery({ context }))
         ? await extractDisplayDiscoveryCapture({
@@ -432,7 +440,7 @@ async function runAgentConversation(payload = {}) {
             userMessage,
             assistantMessage
           })
-        : { status: '', insights: [], openQuestions: [], resolvedQuestions: [], tagProposals: [] };
+        : { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
 
   return {
     ok: true,
