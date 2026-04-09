@@ -267,23 +267,23 @@ final class AppModel {
     private func displayDiscoveryReason(for row: DisplayLayoutRowModel) -> String {
         let name = row.targetName.lowercased()
         if name.contains("snowman") || name.contains("santa") {
-            return "named prop that may have character significance"
+            return "named prop that may deserve early confirmation if character or storyline meaning matters"
         }
         if name.contains("tree") || name.contains("mega") || name.contains("star") || name.contains("matrix") {
-            return "large or likely focal display structure"
+            return "major structure that may be important, but needs semantic confirmation before treating it as focal"
         }
         if row.nodeCount >= 500 {
-            return "large visual footprint or node count suggests it may drive major scenes"
+            return "large structural footprint suggests it may belong in an early high-level branch of the conversation"
         }
         if row.positionX != 0, abs(row.positionX) < 2.0 {
-            return "central position suggests it may need explicit role guidance"
+            return "central placement suggests it may be worth discussing once the user identifies what parts of the display matter most"
         }
         if name.contains("arch") || name.contains("roof") || name.contains("window") {
-            return "architectural or repeating structure that may need grouping guidance"
+            return "architectural or repeating structure that may define a broader support/background branch"
         }
         if name.contains("cane") || name.contains("candy") || name.contains("gift") || name.contains("present") {
-            return "named themed prop that may deserve explicit role guidance"
+            return "repeating themed prop that may belong to a broader support or accent branch"
         }
-        return "name or structure suggests it may be worth clarifying early"
+        return "name or structure suggests it may belong to an early high-level branch that should be confirmed with the user"
     }
 }

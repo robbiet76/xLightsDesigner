@@ -167,11 +167,11 @@ final class AssistantWindowViewModel {
 
     private func seedAssistantMessage(context: AssistantContextModel) -> AssistantMessageModel {
         if shouldKickOffDisplayDiscovery(context: context) {
-            let observation = "I can already see your layout, and I’ve started reviewing the model list for likely focal props, repeated families, and larger structural patterns before we push into design."
+            let observation = "I can already see your layout, and I’m starting with a broad review of the display structure so we can build useful metadata through conversation."
             return AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,
-                text: "Welcome. I'm the Designer, and I’d like to start by getting to know your display so we can create useful metadata for design and sequencing. \(observation) Tell me which models feel most focal, which are mostly supporting or repeating elements, and whether any named props have a special role in the show.",
+                text: "Welcome. I'm the Designer, and I’d like to start by getting to know your display so we can create useful metadata for design and sequencing. \(observation) We can begin at a high level and narrow down naturally from there.",
                 timestamp: isoNow(),
                 handledBy: "designer_dialog",
                 routeDecision: "designer_dialog",
