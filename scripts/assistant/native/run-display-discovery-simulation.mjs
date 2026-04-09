@@ -214,6 +214,7 @@ async function main() {
     const lastMessage = messages[messages.length - 1] || {};
     if (str(lastMessage?.role) !== "assistant") break;
     const lastAssistantMessage = str(lastMessage?.text);
+    if (/^Agent unavailable:/i.test(lastAssistantMessage)) break;
     assistantQuestionCount += countQuestions(lastAssistantMessage);
 
     const userReply = str(await callOpenAIResponses({

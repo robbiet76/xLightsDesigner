@@ -237,8 +237,39 @@ function sanitizeAssistantModelTokens(text = '', context = {}) {
 }
 
 function validateDiscoveryCapture(capture = {}, context = {}) {
+  return validateDiscoveryCaptureForTurn(capture, { context });
+}
+
+function tokenizeSubject(subject = '') {
+  const raw = String(subject || '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_\-]/g, ' ')
+    .toLowerCase();
+  return Array.from(new Set(raw.split(/\s+/).map((token) => token.trim()).filter(Boolean)));
+}
+
+function isBriefAffirmation(text = '') {
+  const normalized = String(text || '').trim().toLowerCase();
+  return /^(yes|yeah|yep|correct|that'?s correct|that is correct|right|sounds good|exactly|mostly|yes\.)$/.test(normalized);
+}
+
+function subjectLooksUserGrounded({ subject = '', userMessage = '' } = {}) {
+  const user = String(userMessage || '').toLowerCase();
+  const normalizedSubject = String(subject || '').trim().toLowerCase();
+  if (!normalizedSubject) return false;
+  if (user.includes(normalizedSubject)) return true;
+
+  const tokens = tokenizeSubject(subject)
+    .filter((token) => token.length >= 4 && !['model', 'group', 'props', 'prop', 'main', 'mini'].includes(token));
+  if (!tokens.length) return false;
+  const matched = tokens.filter((token) => user.includes(token));
+  return matched.length >= 1;
+}
+
+function validateDiscoveryCaptureForTurn(capture = {}, { context = {}, userMessage = '' } = {}) {
   const knownNames = new Set(knownDisplayNames(context).map((row) => row.toLowerCase()));
   if (!knownNames.size) return capture;
+  const affirmation = isBriefAffirmation(userMessage);
 
   const insights = Array.isArray(capture.insights)
     ? capture.insights.filter((row) => {
@@ -246,9 +277,12 @@ function validateDiscoveryCapture(capture = {}, context = {}) {
         const subjectType = String(row?.subjectType || '').trim().toLowerCase();
         if (!subject) return false;
         if (subjectType === 'model' || subjectType === 'group' || subjectType === 'models') {
-          return knownNames.has(subject.toLowerCase());
+          if (!knownNames.has(subject.toLowerCase())) return false;
+          if (affirmation) return true;
+          return subjectLooksUserGrounded({ subject, userMessage });
         }
-        return true;
+        if (affirmation) return true;
+        return subjectLooksUserGrounded({ subject, userMessage });
       })
     : [];
 
@@ -292,10 +326,10 @@ function normalizeDiscoveryCapture(value) {
     ? object.insights.map((row) => ({
         subject: String(row?.subject || '').trim(),
         subjectType: String(row?.subjectType || '').trim(),
-        category: String(row?.category || '').trim(),
-        value: String(row?.value || '').trim(),
+        category: String(row?.category || '').trim().replace(/[_\-]+/g, ' '),
+        value: String(row?.value || '').trim().replace(/[_\-]+/g, ' '),
         rationale: String(row?.rationale || '').trim()
-      })).filter((row) => row.subject && row.category && row.value)
+      })).filter((row) => row.subject && row.category && row.value && !/^(true|yes)$/i.test(row.value))
     : [];
   const unresolvedBranches = Array.isArray(object.unresolvedBranches)
     ? object.unresolvedBranches.map((row) => String(row || '').trim()).filter(Boolean)
@@ -368,7 +402,10 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
   if (!response.ok) {
     return { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
   }
-  return validateDiscoveryCapture(normalizeDiscoveryCapture(parseAgentJson(response.modelText)), context);
+  return validateDiscoveryCaptureForTurn(
+    normalizeDiscoveryCapture(parseAgentJson(response.modelText)),
+    { context, userMessage }
+  );
 }
 
 function buildAgentSystemPrompt(context = {}, userMessage = '') {
@@ -457,11 +494,12 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'If the user gives a short confirmation to a grounded assistant summary, treat the grounded facts in that summary as confirmed and capture them as insights.',
     'Do not reflexively restate the user\'s clear answer and ask "Is that correct?". Move forward unless clarification is actually needed.',
     'Do not convert a clear discovery answer into a permission question like "Would you like to classify these?" or "Confirm?". Discovery should continue unless the user asked to stop and review.',
-    'Choose the next question based on information gain. Ask the smallest useful next question that helps reach a strong shared understanding of the display with as few questions as possible.',
+    'Choose the next question based on information gain. Ask the next useful question that helps reach a strong shared understanding of the display without wasting turns.',
     'Let the user\'s answers shape the next design question. If they identify a strong centerpiece, it is natural to ask about framing or supporting layers next. If they describe character props, it is natural to ask how those should relate to the centerpiece. If they describe strong background architecture, it is natural to ask how active or quiet that layer should feel.',
     'Use what the user reveals to begin sensing the eventual design language of the display, but do not drift into effect choices, sequencing tactics, or animation planning during discovery unless the user explicitly asks.',
-    'For the first substantive display-discovery reply, ask exactly one primary question and do not use bullet lists.',
+    'For the first substantive display-discovery reply, ask one primary question and do not use bullet lists.',
     'For the first substantive display-discovery reply, avoid listing many candidate props or families. Keep it short and high level.',
+    'Avoid calling out specific model names early unless doing so clearly helps the user orient the conversation.',
     'Track larger areas of uncertainty in unresolvedBranches rather than saving literal question text.',
     'When the user settles one of those areas, include the branch in resolvedBranches and avoid reopening it unless the user changes direction.',
     'This is a conversation, not an interrogation. Let the user steer the branch order.',
@@ -552,7 +590,10 @@ async function runAgentConversation(payload = {}) {
     String(json?.assistantMessage || modelText || 'I can continue from here. Tell me what you want to design next.').trim(),
     context
   );
-  const displayDiscoveryCapture = validateDiscoveryCapture(normalizeDiscoveryCapture(json?.displayDiscoveryCapture), context);
+  const displayDiscoveryCapture = validateDiscoveryCaptureForTurn(
+    normalizeDiscoveryCapture(json?.displayDiscoveryCapture),
+    { context, userMessage }
+  );
   const shouldGenerateProposal = typeof json?.shouldGenerateProposal === 'boolean'
     ? Boolean(json.shouldGenerateProposal)
     : inferProposalIntent({ userMessage, assistantMessage, context });
@@ -577,11 +618,15 @@ async function runAgentConversation(payload = {}) {
     }
   }
   const finalDiscoveryCapture = discoveryActive
-    ? validateDiscoveryCapture(
+    ? validateDiscoveryCaptureForTurn(
         mergeDiscoveryCaptures(displayDiscoveryCapture, extractedDiscoveryCapture),
-        context
+        { context, userMessage }
       )
     : { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
+  const userAskedToFinalize = /\b(finalize|review|ready|proposal|propose|wrap up|finish for now)\b/i.test(userMessage);
+  if (!userAskedToFinalize && String(finalDiscoveryCapture.status || '').trim().toLowerCase() !== 'ready_for_proposal') {
+    finalDiscoveryCapture.tagProposals = [];
+  }
 
   return {
     ok: true,
