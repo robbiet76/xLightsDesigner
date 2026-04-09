@@ -243,19 +243,36 @@ final class AssistantWindowViewModel {
     private func introductionPrompt(for roleID: String, context: AssistantContextModel) -> String {
         let identity = contextIdentity(for: roleID, context: context)
         let nickname = identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        let roleSummary = roleSummaryText(for: roleID)
         if nickname.isEmpty {
-            return "I'm \(identity.displayName). What would you like me to call you?"
+            return "I'm \(identity.displayName). \(roleSummary) What would you like me to call you?"
         }
-        return "I'm \(displayName(for: roleID, context: context)). You can call me \(nickname) if you'd like. What would you like me to call you?"
+        return "I'm \(displayName(for: roleID, context: context)). \(roleSummary) You can call me \(nickname) if you'd like. What would you like me to call you?"
     }
 
     private func followUpIntroduction(for roleID: String, context: AssistantContextModel) -> String {
         let identity = contextIdentity(for: roleID, context: context)
         let nickname = identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        let roleSummary = roleSummaryText(for: roleID)
         if nickname.isEmpty {
-            return "I'm \(identity.displayName)."
+            return "I'm \(identity.displayName). \(roleSummary)"
         }
-        return "I'm \(displayName(for: roleID, context: context)). You can call me \(nickname) if you'd like."
+        return "I'm \(displayName(for: roleID, context: context)). \(roleSummary) You can call me \(nickname) if you'd like."
+    }
+
+    private func roleSummaryText(for roleID: String) -> String {
+        switch roleID {
+        case "app_assistant":
+            return "I handle workflow coordination, routing, and setup questions."
+        case "designer_dialog":
+            return "I focus on display understanding, creative direction, and design intent."
+        case "audio_analyst":
+            return "I focus on music structure, timing, and analysis details."
+        case "sequence_agent":
+            return "I focus on turning intent into concrete sequence changes."
+        default:
+            return "I am part of the design team."
+        }
     }
 
     private func isoNow() -> String {
