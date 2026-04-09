@@ -47,7 +47,7 @@ struct AssistantWindowView: View {
                         headerText(for: message)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text(message.text)
+                        messageBody(for: message)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(12)
                             .background(message.role == .assistant ? Color(nsColor: .controlBackgroundColor) : Color.accentColor.opacity(0.12))
@@ -99,5 +99,28 @@ struct AssistantWindowView: View {
             return Text("\(name) • \(route)")
         }
         return Text(name)
+    }
+
+    private func messageBody(for message: AssistantMessageModel) -> Text {
+        Text(styledMessageText(message.text))
+    }
+
+    private func styledMessageText(_ raw: String) -> AttributedString {
+        var output = AttributedString()
+        let parts = raw.split(separator: "`", omittingEmptySubsequences: false)
+
+        for (index, part) in parts.enumerated() {
+            var segment = AttributedString(String(part))
+            if index.isMultiple(of: 2) {
+                segment.foregroundColor = .primary
+            } else {
+                segment.font = .body.monospaced()
+                segment.foregroundColor = .primary
+                segment.backgroundColor = Color(nsColor: .controlAccentColor).opacity(0.12)
+            }
+            output += segment
+        }
+
+        return output
     }
 }
