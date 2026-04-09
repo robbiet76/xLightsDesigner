@@ -164,6 +164,8 @@ export function buildDisplayDiscoveryGuidance(context = {}) {
     "When several models appear to be the same prop family, ask about the family as one topic before drilling into individual exceptions.",
     "Start with model-level understanding first. Use group questions only after model questions, or when group meaning is not obvious from the models involved.",
     "Use likely prop candidates from layout names and types only as prompts for questions, never as confirmed truth.",
+    "When you refer to a specific xLights model or family, use the exact xLights name and wrap it in backticks so it is visually distinct from normal conversation.",
+    "Do not replace xLights names with conversational aliases or prettier names unless the exact xLights name is also shown.",
     "Phrase candidate mentions as observations such as 'I noticed...' or 'I see...' rather than as settled conclusions.",
     "Ask 2 to 4 concise questions that first classify one likely focal topic, one likely repeated family, and one broad display-structure topic as focal, supporting, repeating, or special themed elements.",
     "Only ask about groups early when a group itself appears to have unique meaning that cannot be inferred from its member models.",

@@ -113,6 +113,32 @@ function parseAgentJson(text) {
   }
 }
 
+function uniqueStrings(values = []) {
+  const out = [];
+  const seen = new Set();
+  for (const value of values) {
+    const normalized = String(value || '').trim();
+    if (!normalized) continue;
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
+function knownDisplayNames(context = {}) {
+  const display = context && typeof context.display === 'object' ? context.display : {};
+  const discovery = context && typeof context.displayDiscovery === 'object' ? context.displayDiscovery : {};
+  return uniqueStrings([
+    ...(Array.isArray(display.modelSamples) ? display.modelSamples.map((row) => row?.name) : []),
+    ...(Array.isArray(display.displayDiscoveryCandidates) ? display.displayDiscoveryCandidates.map((row) => row?.name) : []),
+    ...(Array.isArray(display.displayDiscoveryFamilies) ? display.displayDiscoveryFamilies.map((row) => row?.name) : []),
+    ...(Array.isArray(discovery.insights) ? discovery.insights.map((row) => row?.subject) : []),
+    display.selectedSubject
+  ]);
+}
+
 function inferProposalIntent({ userMessage = '', assistantMessage = '', context = {} } = {}) {
   const user = String(userMessage || '').toLowerCase();
   const assistant = String(assistantMessage || '').toLowerCase();
@@ -167,11 +193,16 @@ function normalizeDiscoveryCapture(value) {
 }
 
 async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage = '', assistantMessage = '' } = {}) {
+  const knownNames = knownDisplayNames(context);
   const systemPrompt = [
     'You extract structured display-discovery learnings from a designer conversation turn.',
     'Return JSON only.',
     'Only capture information that the user explicitly confirmed or clearly stated.',
     'Do not invent new facts.',
+    'When an insight refers to a specific xLights model, group, or repeated family, use the exact name or exact family expression that is present in Context.',
+    'If the user used a conversational alias that does not clearly match a known xLights name in Context, do not record it as a confirmed model insight.',
+    'Instead, leave that point out of insights so the assistant can ask a clarification question using exact xLights names.',
+    knownNames.length ? `Known xLights names in Context: ${knownNames.map((row) => `\`${row}\``).join(', ')}` : 'Known xLights names in Context: none',
     'Output shape:',
     '{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"openQuestions":["..."],"resolvedQuestions":["..."],"tagProposals":[{"tagName":"","tagDescription":"","rationale":"","targetNames":["..."]}]}',
     'Use short categorical values when possible, but keep them natural.',
@@ -201,6 +232,7 @@ async function extractDisplayDiscoveryCapture({ cfg, context = {}, userMessage =
 
 function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const c = context && typeof context === 'object' ? context : {};
+  const knownNames = knownDisplayNames(c);
   const discoveryGuidance = shouldStartDisplayDiscovery({ context: c, userMessage })
     ? buildDisplayDiscoveryGuidance(c)
     : "";
@@ -225,6 +257,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'Do not require the user to specify low-level xLights effects unless they are expressing a concrete constraint.',
     'Do not invent specific effect names that are not supplied by the user or present in the local context.',
     'Do not invent specific models, tags, layout groups, or current sequence contents that are not explicitly present in Context.',
+    'When referring to a specific xLights model, group, or repeated family from Context, use the exact xLights name and wrap it in backticks.',
+    'Do not prettify, paraphrase, or conversationally rename xLights models. If the exact xLights name is unknown, say that and ask which model they mean.',
+    'If the user names a prop that does not exactly match a known xLights name in Context, treat it as an ambiguous alias and ask for clarification instead of echoing it back as confirmed metadata.',
     'If Context does not provide enough grounded detail about tags, models, or live effects, say so plainly and work from the confirmed facts only.',
     'Treat xLights session facts in Context as authoritative for what is open, saved, or available right now.',
     'Do not claim that models are tagged, effects are already applied, or timing is aligned unless Context explicitly supports that claim.',
@@ -243,6 +278,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
     'When the user answered one of the existing open questions, include that exact question in resolvedQuestions and avoid asking it again.',
     'If nothing new was confirmed, return an empty insights array.',
+    knownNames.length ? `Known xLights names currently in context:\n${knownNames.map((row) => `- \`${row}\``).join('\n')}` : "",
     c.rollingConversationSummary ? `Rolling conversation summary:\n${String(c.rollingConversationSummary).trim()}` : "",
     ongoingDiscovery,
     existingDisplayUnderstanding,
@@ -260,35 +296,47 @@ async function callOpenAIResponses({ cfg, systemPrompt = '', userMessage = '', m
   ];
   const body = { model: cfg.model, input, max_output_tokens: maxOutputTokens };
   if (previousResponseId) body.previous_response_id = previousResponseId;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
-  let response = null;
-  try {
-    response = await fetch(`${cfg.baseUrl}/responses`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    });
-  } finally {
-    clearTimeout(timeout);
+  let lastError = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    let response = null;
+    try {
+      response = await fetch(`${cfg.baseUrl}/responses`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+    } catch (error) {
+      lastError = error;
+      clearTimeout(timeout);
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        continue;
+      }
+      return { ok: false, code: 'AGENT_UPSTREAM_ERROR', error: String(error?.stack || error?.message || error) };
+    } finally {
+      clearTimeout(timeout);
+    }
+    const raw = await response.text();
+    let parsed = null;
+    try { parsed = JSON.parse(raw); } catch { parsed = null; }
+    if (!response.ok) {
+      const errMsg = parsed?.error?.message || raw || `HTTP ${response.status}`;
+      return { ok: false, code: 'AGENT_UPSTREAM_ERROR', error: String(errMsg) };
+    }
+    return {
+      ok: true,
+      parsed: parsed || {},
+      modelText: extractResponseText(parsed || {}),
+      responseId: String(parsed?.id || '').trim()
+    };
   }
-  const raw = await response.text();
-  let parsed = null;
-  try { parsed = JSON.parse(raw); } catch { parsed = null; }
-  if (!response.ok) {
-    const errMsg = parsed?.error?.message || raw || `HTTP ${response.status}`;
-    return { ok: false, code: 'AGENT_UPSTREAM_ERROR', error: String(errMsg) };
-  }
-  return {
-    ok: true,
-    parsed: parsed || {},
-    modelText: extractResponseText(parsed || {}),
-    responseId: String(parsed?.id || '').trim()
-  };
+  return { ok: false, code: 'AGENT_UPSTREAM_ERROR', error: String(lastError?.stack || lastError?.message || lastError || 'Unknown fetch failure') };
 }
 
 async function runAgentConversation(payload = {}) {
