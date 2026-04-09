@@ -217,10 +217,12 @@ final class AssistantWindowViewModel {
         }
         let nickname = String(row["nickname"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let displayName = String(row["displayName"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let bubbleColorHex = String(row["bubbleColor"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return SettingsAgentIdentityModel(
             roleID: handledBy,
             displayName: displayName.isEmpty ? base.displayName : displayName,
-            nickname: nickname
+            nickname: nickname,
+            bubbleColorHex: bubbleColorHex
         )
     }
 

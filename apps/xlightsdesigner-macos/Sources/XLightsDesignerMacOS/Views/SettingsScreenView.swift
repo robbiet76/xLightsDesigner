@@ -102,13 +102,29 @@ struct SettingsScreenView: View {
                 Text("Agent Nicknames")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                Text("Optional nicknames used in chat labels and direct addressing.")
+                Text("Optional nicknames and bubble colors used in team chat.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                nicknameRow("App Assistant", text: $model.screenModel.agentConfig.identities.appAssistant.nickname)
-                nicknameRow("Audio Analyst", text: $model.screenModel.agentConfig.identities.audioAnalyst.nickname)
-                nicknameRow("Designer", text: $model.screenModel.agentConfig.identities.designer.nickname)
-                nicknameRow("Sequencer", text: $model.screenModel.agentConfig.identities.sequencer.nickname)
+                nicknameRow(
+                    "App Assistant",
+                    nickname: $model.screenModel.agentConfig.identities.appAssistant.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.appAssistant.bubbleColorHex
+                )
+                nicknameRow(
+                    "Audio Analyst",
+                    nickname: $model.screenModel.agentConfig.identities.audioAnalyst.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.audioAnalyst.bubbleColorHex
+                )
+                nicknameRow(
+                    "Designer",
+                    nickname: $model.screenModel.agentConfig.identities.designer.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.designer.bubbleColorHex
+                )
+                nicknameRow(
+                    "Sequencer",
+                    nickname: $model.screenModel.agentConfig.identities.sequencer.nickname,
+                    bubbleColorHex: $model.screenModel.agentConfig.identities.sequencer.bubbleColorHex
+                )
             }
             HStack {
                 Button("Save Provider Settings") {
@@ -235,11 +251,14 @@ struct SettingsScreenView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    private func nicknameRow(_ label: String, text: Binding<String>) -> some View {
-        LabeledContent(label) {
-            TextField("Optional nickname", text: text)
+    private func nicknameRow(_ label: String, nickname: Binding<String>, bubbleColorHex: Binding<String>) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Text(label)
+                .frame(width: 110, alignment: .leading)
+            TextField("Optional nickname", text: nickname)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 220)
+            AgentBubbleColorPicker(hex: bubbleColorHex)
         }
     }
 
@@ -258,5 +277,39 @@ struct SettingsScreenView: View {
         .padding(12)
         .background(color.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+private struct AgentBubbleColorPicker: View {
+    @Binding var hex: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ColorPicker("", selection: colorBinding, supportsOpacity: true)
+                .labelsHidden()
+                .frame(width: 28)
+            Button("Default") {
+                hex = ""
+            }
+            .buttonStyle(.borderless)
+            .font(.caption)
+            .foregroundStyle(hex.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .secondary : .primary)
+        }
+    }
+
+    private var colorBinding: Binding<Color> {
+        Binding(
+            get: { Color(hex: hex) ?? Color(nsColor: .controlAccentColor).opacity(0.2) },
+            set: { hex = nsColorHexString(NSColor($0)) }
+        )
+    }
+
+    private func nsColorHexString(_ color: NSColor) -> String {
+        let converted = color.usingColorSpace(.sRGB) ?? .controlAccentColor
+        let red = Int(round(converted.redComponent * 255))
+        let green = Int(round(converted.greenComponent * 255))
+        let blue = Int(round(converted.blueComponent * 255))
+        let alpha = Int(round(converted.alphaComponent * 255))
+        return String(format: "#%02X%02X%02X%02X", red, green, blue, alpha)
     }
 }

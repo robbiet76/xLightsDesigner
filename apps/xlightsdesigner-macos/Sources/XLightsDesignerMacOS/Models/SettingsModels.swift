@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum SettingsCategoryID: String, CaseIterable, Identifiable {
     case general
@@ -58,6 +59,11 @@ struct SettingsAgentIdentityModel: Equatable {
     let roleID: String
     let displayName: String
     var nickname: String
+    var bubbleColorHex: String
+
+    var hasCustomBubbleColor: Bool {
+        !bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 }
 
 struct SettingsTeamChatIdentitiesModel: Equatable {
@@ -67,10 +73,10 @@ struct SettingsTeamChatIdentitiesModel: Equatable {
     var sequencer: SettingsAgentIdentityModel
 
     static let `default` = SettingsTeamChatIdentitiesModel(
-        appAssistant: SettingsAgentIdentityModel(roleID: "app_assistant", displayName: "App Assistant", nickname: "Clover"),
-        audioAnalyst: SettingsAgentIdentityModel(roleID: "audio_analyst", displayName: "Audio Analyst", nickname: "Lyric"),
-        designer: SettingsAgentIdentityModel(roleID: "designer_dialog", displayName: "Designer", nickname: "Mira"),
-        sequencer: SettingsAgentIdentityModel(roleID: "sequence_agent", displayName: "Sequencer", nickname: "Patch")
+        appAssistant: SettingsAgentIdentityModel(roleID: "app_assistant", displayName: "App Assistant", nickname: "Clover", bubbleColorHex: ""),
+        audioAnalyst: SettingsAgentIdentityModel(roleID: "audio_analyst", displayName: "Audio Analyst", nickname: "Lyric", bubbleColorHex: ""),
+        designer: SettingsAgentIdentityModel(roleID: "designer_dialog", displayName: "Designer", nickname: "Mira", bubbleColorHex: ""),
+        sequencer: SettingsAgentIdentityModel(roleID: "sequence_agent", displayName: "Sequencer", nickname: "Patch", bubbleColorHex: "")
     )
 
     func asPayload() -> [String: [String: String]] {
@@ -78,22 +84,26 @@ struct SettingsTeamChatIdentitiesModel: Equatable {
             appAssistant.roleID: [
                 "roleId": appAssistant.roleID,
                 "displayName": appAssistant.displayName,
-                "nickname": appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+                "nickname": appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                "bubbleColor": appAssistant.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
             ],
             audioAnalyst.roleID: [
                 "roleId": audioAnalyst.roleID,
                 "displayName": audioAnalyst.displayName,
-                "nickname": audioAnalyst.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+                "nickname": audioAnalyst.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                "bubbleColor": audioAnalyst.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
             ],
             designer.roleID: [
                 "roleId": designer.roleID,
                 "displayName": designer.displayName,
-                "nickname": designer.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+                "nickname": designer.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                "bubbleColor": designer.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
             ],
             sequencer.roleID: [
                 "roleId": sequencer.roleID,
                 "displayName": sequencer.displayName,
-                "nickname": sequencer.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+                "nickname": sequencer.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                "bubbleColor": sequencer.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
             ]
         ]
     }
@@ -111,6 +121,26 @@ struct SettingsTeamChatIdentitiesModel: Equatable {
         default:
             return appAssistant
         }
+    }
+}
+
+extension SettingsAgentIdentityModel {
+    var bubbleColor: Color? {
+        Color(hex: bubbleColorHex)
+    }
+}
+
+extension Color {
+    init?(hex: String) {
+        let trimmed = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let normalized = trimmed.hasPrefix("#") ? String(trimmed.dropFirst()) : trimmed
+        guard normalized.count == 8, let value = UInt64(normalized, radix: 16) else { return nil }
+        let red = Double((value >> 24) & 0xFF) / 255.0
+        let green = Double((value >> 16) & 0xFF) / 255.0
+        let blue = Double((value >> 8) & 0xFF) / 255.0
+        let alpha = Double(value & 0xFF) / 255.0
+        self = Color(.sRGB, red: red, green: green, blue: blue, opacity: alpha)
     }
 }
 

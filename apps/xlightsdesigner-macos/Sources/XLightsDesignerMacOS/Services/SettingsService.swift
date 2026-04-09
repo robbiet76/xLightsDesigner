@@ -35,10 +35,22 @@ struct LocalSettingsService: SettingsService {
             model: config.model.trimmingCharacters(in: .whitespacesAndNewlines),
             baseURL: config.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
             identities: AgentConfigTeamChatIdentities(
-                appAssistant: AgentConfigIdentity(nickname: config.identities.appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines)),
-                audioAnalyst: AgentConfigIdentity(nickname: config.identities.audioAnalyst.nickname.trimmingCharacters(in: .whitespacesAndNewlines)),
-                designer: AgentConfigIdentity(nickname: config.identities.designer.nickname.trimmingCharacters(in: .whitespacesAndNewlines)),
-                sequencer: AgentConfigIdentity(nickname: config.identities.sequencer.nickname.trimmingCharacters(in: .whitespacesAndNewlines))
+                appAssistant: AgentConfigIdentity(
+                    nickname: config.identities.appAssistant.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                    bubbleColor: config.identities.appAssistant.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
+                ),
+                audioAnalyst: AgentConfigIdentity(
+                    nickname: config.identities.audioAnalyst.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                    bubbleColor: config.identities.audioAnalyst.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
+                ),
+                designer: AgentConfigIdentity(
+                    nickname: config.identities.designer.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                    bubbleColor: config.identities.designer.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
+                ),
+                sequencer: AgentConfigIdentity(
+                    nickname: config.identities.sequencer.nickname.trimmingCharacters(in: .whitespacesAndNewlines),
+                    bubbleColor: config.identities.sequencer.bubbleColorHex.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
             )
         )
         let data = try JSONEncoder.pretty.encode(payload)
@@ -149,22 +161,26 @@ struct LocalSettingsService: SettingsService {
                 appAssistant: SettingsAgentIdentityModel(
                     roleID: "app_assistant",
                     displayName: "App Assistant",
-                    nickname: config.identities?.appAssistant?.nickname ?? SettingsTeamChatIdentitiesModel.default.appAssistant.nickname
+                    nickname: config.identities?.appAssistant?.nickname ?? SettingsTeamChatIdentitiesModel.default.appAssistant.nickname,
+                    bubbleColorHex: config.identities?.appAssistant?.bubbleColor ?? ""
                 ),
                 audioAnalyst: SettingsAgentIdentityModel(
                     roleID: "audio_analyst",
                     displayName: "Audio Analyst",
-                    nickname: config.identities?.audioAnalyst?.nickname ?? SettingsTeamChatIdentitiesModel.default.audioAnalyst.nickname
+                    nickname: config.identities?.audioAnalyst?.nickname ?? SettingsTeamChatIdentitiesModel.default.audioAnalyst.nickname,
+                    bubbleColorHex: config.identities?.audioAnalyst?.bubbleColor ?? ""
                 ),
                 designer: SettingsAgentIdentityModel(
                     roleID: "designer_dialog",
                     displayName: "Designer",
-                    nickname: config.identities?.designer?.nickname ?? SettingsTeamChatIdentitiesModel.default.designer.nickname
+                    nickname: config.identities?.designer?.nickname ?? SettingsTeamChatIdentitiesModel.default.designer.nickname,
+                    bubbleColorHex: config.identities?.designer?.bubbleColor ?? ""
                 ),
                 sequencer: SettingsAgentIdentityModel(
                     roleID: "sequence_agent",
                     displayName: "Sequencer",
-                    nickname: config.identities?.sequencer?.nickname ?? SettingsTeamChatIdentitiesModel.default.sequencer.nickname
+                    nickname: config.identities?.sequencer?.nickname ?? SettingsTeamChatIdentitiesModel.default.sequencer.nickname,
+                    bubbleColorHex: config.identities?.sequencer?.bubbleColor ?? ""
                 )
             )
         )
@@ -243,6 +259,7 @@ private struct AgentConfigTeamChatIdentities: Codable {
 
 private struct AgentConfigIdentity: Codable {
     var nickname: String
+    var bubbleColor: String?
 }
 
 private struct DesktopStateFile: Codable {

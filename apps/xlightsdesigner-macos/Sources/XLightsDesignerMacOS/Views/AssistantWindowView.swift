@@ -155,18 +155,11 @@ struct AssistantWindowView: View {
         guard message.role == .assistant else {
             return Color.accentColor.opacity(0.12)
         }
-        switch message.handledBy {
-        case "designer_dialog":
-            return Color.orange.opacity(0.12)
-        case "sequence_agent":
-            return Color.green.opacity(0.12)
-        case "audio_analyst":
-            return Color.mint.opacity(0.16)
-        case "app_assistant":
-            return Color.gray.opacity(0.14)
-        default:
-            return Color(nsColor: .controlBackgroundColor)
+        let identity = appModel.settingsScreenModel.screenModel.agentConfig.identities.identity(for: message.handledBy ?? "")
+        if let custom = identity.bubbleColor {
+            return custom.opacity(0.20)
         }
+        return Color(nsColor: .controlBackgroundColor)
     }
 
     private func styledMessageText(_ raw: String) -> AttributedString {
