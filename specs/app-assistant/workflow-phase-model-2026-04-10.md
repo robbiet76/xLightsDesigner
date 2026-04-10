@@ -27,6 +27,23 @@ The intended model is:
 - one specialist owns the current phase of work
 - the current phase is explicit in both runtime state and UI
 
+## Adaptive Guidance Rule
+The phase model is required. Conversational ceremony is not.
+
+The system should adapt to the user's pace and experience level:
+- new or uncertain users should receive more orientation, closure, and next-step guidance
+- experienced or highly directive users should be able to move quickly with minimal ceremony
+
+Required rule:
+- workflow correctness stays enforced
+- hand-holding should compress when the user is already moving with intent
+
+This means:
+- explicit user requests should transition quickly
+- handoff messages should become shorter when the user is operating directly
+- specialists should not force extra explanation, ritual, or coaching when the user has already made the next step clear
+- the app assistant should still intervene for setup, recovery, and formal phase transitions, but should not over-narrate for experienced users
+
 ## Canonical Phases
 The system has seven top-level workflow phases.
 
