@@ -317,3 +317,136 @@ test("explicit effect request routes to sequence agent", async () => {
   assert.equal(result.result.handledBy, "sequence_agent");
   assert.equal(result.result.shouldGenerateProposal, true);
 });
+
+test("active project mission phase stays with designer by default", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "Tell me more about what should make the show memorable.",
+        shouldGenerateProposal: false,
+        responseId: "resp-phase-project"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "I want it to feel nostalgic and warm.",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "project_mission",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "designer_dialog");
+  assert.equal(result.result.handledBy, "designer_dialog");
+});
+
+test("direct non-owner specialist address during active phase goes to app assistant for handoff", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "I can help route that transition cleanly.",
+        shouldGenerateProposal: false,
+        responseId: "resp-phase-handoff"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Hey Lyric, can we switch to audio analysis?",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "project_mission",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      },
+      teamChat: {
+        identities: {
+          app_assistant: { roleId: "app_assistant", displayName: "App Assistant", nickname: "Clover" },
+          audio_analyst: { roleId: "audio_analyst", displayName: "Audio Analyst", nickname: "Lyric" },
+          designer_dialog: { roleId: "designer_dialog", displayName: "Designer", nickname: "Mira" }
+        }
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
+});
+
+test("explicit phase-switch request goes to app assistant for handoff", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "We can switch phases from here.",
+        shouldGenerateProposal: false,
+        responseId: "resp-phase-switch"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Let's move to display discovery next.",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "project_mission",
+        ownerRole: "designer_dialog",
+        status: "ready_to_close"
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
+});
+
+test("direct technical sequencing request still routes to sequence agent during design phase", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "I can implement that on the spinners.",
+        shouldGenerateProposal: true,
+        proposalIntent: "Turn the brightness down on the spinners during the chorus.",
+        responseId: "resp-phase-tech-seq"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Turn the brightness down on the spinners during the chorus.",
+    messages: [],
+    context: {
+      route: "design",
+      sequenceOpen: true,
+      workflowPhase: {
+        phaseId: "design",
+        ownerRole: "designer_dialog",
+        status: "in_progress"
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "sequence_agent");
+  assert.equal(result.result.handledBy, "sequence_agent");
+});

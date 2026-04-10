@@ -19,6 +19,64 @@ function arr(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function currentWorkflowPhase(context = {}) {
+  const phase = context?.workflowPhase;
+  if (!phase || typeof phase !== "object") {
+    return {
+      phaseId: "",
+      ownerRole: "",
+      status: "",
+      entryReason: "",
+      nextRecommendedPhases: []
+    };
+  }
+  return {
+    phaseId: str(phase.phaseId).toLowerCase(),
+    ownerRole: str(phase.ownerRole),
+    status: str(phase.status).toLowerCase(),
+    entryReason: str(phase.entryReason),
+    nextRecommendedPhases: arr(phase.nextRecommendedPhases).map((value) => str(value).toLowerCase()).filter(Boolean)
+  };
+}
+
+function isExplicitPhaseSwitchIntent(text = "") {
+  const lower = str(text).toLowerCase();
+  if (!lower) return false;
+  const verbs = /\b(switch|move|go|jump|continue|start|begin|head|transition)\b/;
+  const phases = /\b(setup|project mission|mission|audio|audio analysis|display|display discovery|design|sequencing|sequence|review)\b/;
+  return verbs.test(lower) && phases.test(lower);
+}
+
+function isDirectSequencingRequest(text = "") {
+  const userText = str(text).toLowerCase();
+  return (
+    (
+      /\b(add|put|place|apply|set|make|use|turn|bring|drop|reduce|increase|raise|lower|dim|brighten|adjust)\b/.test(userText) &&
+      /\b(on|to|during|from|for)\b/.test(userText) &&
+      (
+        /\beffect\b/.test(userText) ||
+        /\bcolor wash\b/.test(userText) ||
+        /\bshimmer\b/.test(userText) ||
+        /\bon\b/.test(userText) ||
+        /\bbrightness\b/.test(userText) ||
+        /\bintensity\b/.test(userText) ||
+        /\blevel\b/.test(userText)
+      )
+    ) ||
+    (
+      /\b(during|from|for)\b/.test(userText) &&
+      /\b(chorus|verse|intro|bridge|outro|section)\b/.test(userText) &&
+      (
+        /\bcolor wash\b/.test(userText) ||
+        /\beffect\b/.test(userText) ||
+        /\bbrightness\b/.test(userText) ||
+        /\bintensity\b/.test(userText) ||
+        /\blevel\b/.test(userText)
+      )
+    )
+  );
+}
+
 function inferAddressedRole({ userMessage = "", context = {} } = {}) {
   const text = str(userMessage).toLowerCase();
   const identities = context?.teamChat?.identities || context?.teamIdentities || DEFAULT_TEAM_CHAT_IDENTITIES;
@@ -38,7 +96,7 @@ function inferAddressedRole({ userMessage = "", context = {} } = {}) {
   return "";
 }
 
-function inferRouteDecision({ userMessage = "", context = {}, response = {} } = {}) {
+function inferRouteDecisionWithoutPhase({ userMessage = "", context = {}, response = {} } = {}) {
   const userText = str(userMessage).toLowerCase();
   const assistantText = str(response.assistantMessage).toLowerCase();
   const addressedRole = inferAddressedRole({ userMessage, context });
@@ -53,25 +111,7 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
       displayDiscoveryActive &&
       /\b(apply|update|set|make|mark|treat|label|classify|use)\b/.test(userText)
     );
-  const directSequencingRequest =
-    (
-      /\b(add|put|place|apply|set|make|use)\b/.test(userText) &&
-      /\b(on|to|during|from|for)\b/.test(userText) &&
-      (
-        /\beffect\b/.test(userText) ||
-        /\bcolor wash\b/.test(userText) ||
-        /\bshimmer\b/.test(userText) ||
-        /\bon\b/.test(userText)
-      )
-    ) ||
-    (
-      /\b(during|from|for)\b/.test(userText) &&
-      /\b(chorus|verse|intro|bridge|outro|section)\b/.test(userText) &&
-      (
-        /\bcolor wash\b/.test(userText) ||
-        /\beffect\b/.test(userText)
-      )
-    );
+  const directSequencingRequest = isDirectSequencingRequest(userText);
   const explicitWorkflowSwitch =
     /\b(sequence|sequencing|sequence planning|move to sequencing|sequencer|patch)\b/.test(userText) ||
     /\b(audio analysis|analyze audio|audio analyst)\b/.test(userText) ||
@@ -162,6 +202,44 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
     return addressedRole;
   }
   return "general";
+}
+
+function inferRouteDecision({ userMessage = "", context = {}, response = {} } = {}) {
+  const addressedRole = inferAddressedRole({ userMessage, context });
+  const phase = currentWorkflowPhase(context);
+  const userText = str(userMessage).toLowerCase();
+
+  if (addressedRole === APP_ASSISTANT_ROLE) {
+    return "general";
+  }
+
+  if (phase.phaseId) {
+    if (isExplicitPhaseSwitchIntent(userText)) {
+      return "general";
+    }
+
+    if (isDirectSequencingRequest(userText)) {
+      return "sequence_agent";
+    }
+
+    if (phase.phaseId === "setup") {
+      return "setup_help";
+    }
+
+    if (addressedRole && addressedRole === phase.ownerRole) {
+      return addressedRole;
+    }
+
+    if (addressedRole && addressedRole !== phase.ownerRole) {
+      return "general";
+    }
+
+    if (phase.ownerRole === "designer_dialog" || phase.ownerRole === "audio_analyst" || phase.ownerRole === "sequence_agent") {
+      return phase.ownerRole;
+    }
+  }
+
+  return inferRouteDecisionWithoutPhase({ userMessage, context, response });
 }
 
 function buildDiagnostics({ routeDecision = "general", bridgeOk = false, responseCode = "", context = {}, addressedTo = "" } = {}) {
