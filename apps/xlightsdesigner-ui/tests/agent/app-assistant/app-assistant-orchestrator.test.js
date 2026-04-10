@@ -310,6 +310,43 @@ test("explicit phase switch uses app assistant transition message instead of spe
   assert.doesNotMatch(result.result.assistantMessage, /main focal elements/i);
 });
 
+test("handoff pending uses phase closure summary and next phases", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "What would you like to do next?",
+        shouldGenerateProposal: false,
+        responseId: "resp-handoff-closure"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "What next?",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "project_mission",
+        ownerRole: "app_assistant",
+        status: "handoff_pending",
+        entryReason: "This phase is complete enough to hand off.",
+        nextRecommendedPhases: ["display_discovery", "audio_analysis"],
+        outputSummary: "Mission document saved (412 chars)."
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
+  assert.match(result.result.assistantMessage, /Mission document saved/i);
+  assert.match(result.result.assistantMessage, /Display Discovery or Audio Analysis/i);
+  assert.doesNotMatch(result.result.assistantMessage, /^What would you like to do next\?$/i);
+});
+
 test("broad design kickoff stays with designer even if assistant text mentions sequencing", async () => {
   const bridge = {
     async runAgentConversation() {

@@ -293,6 +293,14 @@ function phaseTitle(phaseId = "") {
   }
 }
 
+function formatPhaseList(phases = []) {
+  const titles = arr(phases).map((value) => phaseTitle(value)).filter(Boolean);
+  if (!titles.length) return "";
+  if (titles.length === 1) return titles[0];
+  if (titles.length === 2) return `${titles[0]} or ${titles[1]}`;
+  return `${titles.slice(0, -1).join(", ")}, or ${titles[titles.length - 1]}`;
+}
+
 function roleLabel(roleId = "") {
   switch (str(roleId)) {
   case "app_assistant":
@@ -338,6 +346,17 @@ function buildPhaseTransitionMessage(phaseTransition = {}, context = {}) {
     return `${opener}We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
   }
   return `${opener}We can move into ${title} next. ${owner} will take the lead there.`;
+}
+
+function buildPhaseClosureMessage(context = {}) {
+  const phase = currentWorkflowPhase(context);
+  const outputSummary = currentPhaseOutputSummary(context);
+  const nextPhases = formatPhaseList(phase.nextRecommendedPhases);
+  const summary = outputSummary || `${phaseTitle(phase.phaseId)} is in a good place to hand off.`;
+  if (nextPhases) {
+    return `${summary} Next sensible options are ${nextPhases}.`;
+  }
+  return summary;
 }
 
 export async function executeAppAssistantConversation({
@@ -437,13 +456,20 @@ export async function executeAppAssistantConversation({
     explicitSwitch &&
     normalizedPhaseTransition?.phaseId &&
     routeDecision === "general";
+  const phase = currentWorkflowPhase(context);
+  const shouldUsePhaseClosureMessage =
+    routeDecision === "general" &&
+    !normalizedPhaseTransition?.phaseId &&
+    (phase.status === "handoff_pending" || phase.status === "ready_to_close");
 
   return {
     ok: true,
     result: buildAppAssistantResult({
       assistantMessage: shouldUseAppAssistantTransitionMessage
         ? buildPhaseTransitionMessage(normalizedPhaseTransition, context)
-        : str(response.assistantMessage || ""),
+        : shouldUsePhaseClosureMessage
+          ? buildPhaseClosureMessage(context)
+          : str(response.assistantMessage || ""),
       routeDecision,
       responseId: str(response.responseId || ""),
       provider: str(response.provider || ""),
