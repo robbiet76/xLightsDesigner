@@ -127,7 +127,10 @@ struct AssistantWindowView: View {
                         Task {
                             await model.sendDraft(
                                 context: currentContext(),
-                                project: appModel.workspace.activeProject
+                                project: appModel.workspace.activeProject,
+                                onPhaseTransition: { transition in
+                                    appModel.transitionToPhase(transition.phaseID, reason: transition.reason)
+                                }
                             )
                         }
                     }
@@ -150,7 +153,10 @@ struct AssistantWindowView: View {
                     Task {
                         await model.sendDraft(
                             context: currentContext(),
-                            project: appModel.workspace.activeProject
+                            project: appModel.workspace.activeProject,
+                            onPhaseTransition: { transition in
+                                appModel.transitionToPhase(transition.phaseID, reason: transition.reason)
+                            }
                         )
                     }
                 }

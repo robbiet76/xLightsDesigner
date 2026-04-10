@@ -81,6 +81,7 @@ export function validateAppAssistantResult(payload = {}) {
   if (obj.addressedTo != null && !isValidRoleId(obj.addressedTo)) errors.push("addressedTo must be app_assistant|audio_analyst|designer_dialog|sequence_agent");
   if (obj.diagnostics != null && !isPlainObject(obj.diagnostics)) errors.push("diagnostics must be an object when provided");
   if (obj.identities != null && !isPlainObject(obj.identities)) errors.push("identities must be an object when provided");
+  if (obj.phaseTransition != null && !isPlainObject(obj.phaseTransition)) errors.push("phaseTransition must be an object when provided");
   return errors;
 }
 
@@ -118,6 +119,7 @@ export function buildAppAssistantResult({
   warnings = [],
   displayDiscovery = null,
   projectMission = null,
+  phaseTransition = null,
   userPreferenceNotes = []
 } = {}) {
   return {
@@ -135,6 +137,7 @@ export function buildAppAssistantResult({
     proposalIntent: str(proposalIntent),
     displayDiscovery: isPlainObject(displayDiscovery) ? displayDiscovery : undefined,
     projectMission: isPlainObject(projectMission) ? projectMission : undefined,
+    phaseTransition: isPlainObject(phaseTransition) ? phaseTransition : undefined,
     userPreferenceNotes: arr(userPreferenceNotes).map((row) => str(row)).filter(Boolean),
     diagnostics: isPlainObject(diagnostics) ? diagnostics : undefined,
     warnings: arr(warnings).map((row) => str(row)).filter(Boolean)

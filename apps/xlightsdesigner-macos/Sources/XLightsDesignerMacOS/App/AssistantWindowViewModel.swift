@@ -70,7 +70,11 @@ final class AssistantWindowViewModel {
         }
     }
 
-    func sendDraft(context: AssistantContextModel, project: ActiveProjectModel?) async {
+    func sendDraft(
+        context: AssistantContextModel,
+        project: ActiveProjectModel?,
+        onPhaseTransition: ((AssistantPhaseTransitionResult) -> Void)? = nil
+    ) async {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isSending else { return }
 
@@ -114,6 +118,9 @@ final class AssistantWindowViewModel {
             }
             if let mission = result.projectMission {
                 try? saveProjectMission(mission, project: project)
+            }
+            if let transition = result.phaseTransition {
+                onPhaseTransition?(transition)
             }
             if
                 let project,

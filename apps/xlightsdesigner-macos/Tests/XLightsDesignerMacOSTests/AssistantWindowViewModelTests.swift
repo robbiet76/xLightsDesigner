@@ -13,6 +13,7 @@ struct AssistantWindowViewModelTests {
             responseID: "resp-1",
             displayDiscovery: nil,
             projectMission: nil,
+            phaseTransition: nil,
             userPreferenceNotes: []
         )))
         let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)
@@ -48,6 +49,7 @@ struct AssistantWindowViewModelTests {
             responseID: "resp-2",
             displayDiscovery: nil,
             projectMission: nil,
+            phaseTransition: nil,
             userPreferenceNotes: []
         )))
         let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)

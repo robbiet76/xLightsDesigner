@@ -176,7 +176,10 @@ final class NativeAutomationServer: @unchecked Sendable {
             model.assistantModel.draft = prompt
             await model.assistantModel.sendDraft(
                 context: model.assistantContext(),
-                project: model.workspace.activeProject
+                project: model.workspace.activeProject,
+                onPhaseTransition: { transition in
+                    self.model.transitionToPhase(transition.phaseID, reason: transition.reason)
+                }
             )
             return .json(200, body: [
                 "ok": true,

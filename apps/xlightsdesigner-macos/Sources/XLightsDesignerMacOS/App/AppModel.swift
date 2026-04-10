@@ -11,6 +11,7 @@ final class AppModel {
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
     var showAssistantPanel = true
+    var activeWorkflowPhaseOverride: WorkflowPhaseStateModel?
 
     let workspace: ProjectWorkspace
     let assistantModel: AssistantWindowViewModel
@@ -200,18 +201,26 @@ final class AppModel {
     }
 
     func currentWorkflowPhase() -> WorkflowPhaseStateModel {
-        let base: WorkflowPhaseStateModel
         if isSetupIncomplete() {
-            base = WorkflowPhaseStateModel(
+            let setupPhase = WorkflowPhaseStateModel(
                 phaseID: .setup,
                 ownerRole: "app_assistant",
                 status: .inProgress,
                 entryReason: "App setup is still incomplete.",
                 nextRecommendedPhases: [.projectMission, .audioAnalysis, .displayDiscovery]
             )
-            return applyPhaseOverlay(base)
+            return applyPhaseOverlay(setupPhase)
         }
 
+        if let activeWorkflowPhaseOverride {
+            return applyPhaseOverlay(activeWorkflowPhaseOverride)
+        }
+
+        return inferredWorkflowPhase()
+    }
+
+    private func inferredWorkflowPhase() -> WorkflowPhaseStateModel {
+        let base: WorkflowPhaseStateModel
         switch selectedWorkflow {
         case .project:
             let hasMission = !(projectScreenModel.screenModel.brief?.isEmpty ?? true)
@@ -291,6 +300,20 @@ final class AppModel {
         }
     }
 
+    func transitionToPhase(_ phaseID: WorkflowPhaseID, reason: String = "") {
+        activeWorkflowPhaseOverride = WorkflowPhaseStateModel(
+            phaseID: phaseID,
+            ownerRole: ownerRole(for: phaseID),
+            status: .inProgress,
+            entryReason: reason.isEmpty ? defaultEntryReason(for: phaseID) : reason,
+            nextRecommendedPhases: recommendedNextPhases(for: phaseID)
+        )
+    }
+
+    func clearWorkflowPhaseOverride() {
+        activeWorkflowPhaseOverride = nil
+    }
+
     private func isSetupIncomplete() -> Bool {
         let agentConfig = settingsScreenModel.screenModel.agentConfig
         let hasProvider = !agentConfig.model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -316,6 +339,57 @@ final class AppModel {
             entryReason: "This phase is complete enough to hand off. Choose the next step.",
             nextRecommendedPhases: base.nextRecommendedPhases
         )
+    }
+
+    private func ownerRole(for phaseID: WorkflowPhaseID) -> String {
+        switch phaseID {
+        case .setup:
+            return "app_assistant"
+        case .projectMission, .displayDiscovery, .design:
+            return "designer_dialog"
+        case .audioAnalysis:
+            return "audio_analyst"
+        case .sequencing, .review:
+            return "sequence_agent"
+        }
+    }
+
+    private func recommendedNextPhases(for phaseID: WorkflowPhaseID) -> [WorkflowPhaseID] {
+        switch phaseID {
+        case .setup:
+            return [.projectMission, .audioAnalysis, .displayDiscovery]
+        case .projectMission:
+            return [.displayDiscovery, .audioAnalysis, .design]
+        case .audioAnalysis:
+            return [.design, .sequencing]
+        case .displayDiscovery:
+            return [.design, .sequencing]
+        case .design:
+            return [.sequencing, .review]
+        case .sequencing:
+            return [.review, .design]
+        case .review:
+            return [.sequencing, .design]
+        }
+    }
+
+    private func defaultEntryReason(for phaseID: WorkflowPhaseID) -> String {
+        switch phaseID {
+        case .setup:
+            return "App setup is still incomplete."
+        case .projectMission:
+            return "Project mission is being shaped."
+        case .audioAnalysis:
+            return "Audio analysis work is active."
+        case .displayDiscovery:
+            return "Display understanding work is active."
+        case .design:
+            return "Sequence design work is active."
+        case .sequencing:
+            return "Sequencing implementation work is active."
+        case .review:
+            return "Review and validation work is active."
+        }
     }
 
     private func buildDisplayDiscoveryCandidates(

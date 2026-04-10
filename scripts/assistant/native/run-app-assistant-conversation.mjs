@@ -245,6 +245,32 @@ function normalizeProjectMissionCapture(value) {
   };
 }
 
+function normalizePhaseTransition(value) {
+  const object = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  return {
+    phaseId: String(object.phaseId || '').trim(),
+    reason: String(object.reason || '').trim()
+  };
+}
+
+function detectRequestedPhaseFromText(text = '') {
+  const lower = String(text || '').toLowerCase();
+  if (!lower) return '';
+  if (/\bdisplay discovery\b/.test(lower) || (/\bdisplay\b/.test(lower) && /\bmetadata|layout|models|props\b/.test(lower))) return 'display_discovery';
+  if (/\bproject mission\b/.test(lower) || (/\bmission\b/.test(lower) && /\bproject|show\b/.test(lower))) return 'project_mission';
+  if (/\baudio analysis\b/.test(lower) || /\banaly(z|s)e audio\b/.test(lower) || /\baudio\b/.test(lower)) return 'audio_analysis';
+  if (/\bsequencing\b/.test(lower) || /\bsequence\b/.test(lower)) return 'sequencing';
+  if (/\bdesign\b/.test(lower)) return 'design';
+  if (/\breview\b/.test(lower)) return 'review';
+  if (/\bsetup\b/.test(lower) || /\bsettings\b/.test(lower)) return 'setup';
+  return '';
+}
+
+function isExplicitPhaseSwitchText(text = '') {
+  const lower = String(text || '').toLowerCase();
+  return /\b(switch|move|go|jump|continue|start|begin|head|transition)\b/.test(lower) && Boolean(detectRequestedPhaseFromText(lower));
+}
+
 function sanitizeAssistantModelTokens(text = '', context = {}) {
   const knownNames = new Set(knownDisplayNames(context).map((row) => row.toLowerCase()));
   if (!knownNames.size) return String(text || '');
@@ -545,6 +571,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When userProfile.preferredName is present in Context, you may address the user by that name naturally, but do not overuse it in every reply.',
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
+    'When the user is explicitly switching phases or asking what to do next across phases, answer in the app assistant voice rather than a specialist voice.',
     workflowPhaseID ? `Current workflow phase: ${workflowPhaseID}` : '',
     workflowPhaseOwner ? `Current phase owner: ${workflowPhaseOwner}` : '',
     workflowPhaseStatus ? `Current phase status: ${workflowPhaseStatus}` : '',
@@ -553,11 +580,12 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'If the current phase is `ready_to_close`, prefer a short wrap-up and next-step guidance over opening a new specialist subtopic in the same turn.',
     'Specialists should recommend next phases when useful, but they should not silently start the next phase without a clear transition.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
-    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]},"projectMissionCapture":{"document":""}}.',
+    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]},"projectMissionCapture":{"document":""},"phaseTransition":{"phaseId":"setup|project_mission|audio_analysis|display_discovery|design|sequencing|review","reason":""}}.',
     'assistantMessage must remain natural language, concise, and user-facing.',
     'When the conversation materially clarifies the overall project mission, include a projectMissionCapture.document. It must read as one coherent, well-written paragraph, not a form, outline, bullets, fragments, or terse summary notes.',
     'A strong project mission document should sound like a creative north star for the show. Prefer emotional direction, atmosphere, inspiration, and cohesion over operational detail.',
     'Only include projectMissionCapture when the turn genuinely improves or changes the project-level mission.',
+    'Only include phaseTransition when the user is clearly moving into a different phase of work.',
     'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
     'Treat a direct user statement as confirmed meaning. If the user clearly states that a prop or family is focal, supporting, background, repeating, feature-only, or otherwise semantically defined, capture it without asking the user to reconfirm the same point.',
@@ -667,6 +695,7 @@ async function runAgentConversation(payload = {}) {
     { context, userMessage }
   );
   const projectMissionCapture = normalizeProjectMissionCapture(json?.projectMissionCapture);
+  let phaseTransition = normalizePhaseTransition(json?.phaseTransition);
   const shouldGenerateProposal = typeof json?.shouldGenerateProposal === 'boolean'
     ? Boolean(json.shouldGenerateProposal)
     : inferProposalIntent({ userMessage, assistantMessage, context });
@@ -700,6 +729,13 @@ async function runAgentConversation(payload = {}) {
   const projectConversationActive = String(context?.route || '').trim().toLowerCase() === 'project';
   const totalUserTurns = countUserTurns(payload?.messages) + 1;
   const canCaptureProjectMission = !projectConversationActive || userAskedToFinalize || totalUserTurns >= 2;
+  const requestedPhase = detectRequestedPhaseFromText(userMessage);
+  if (!phaseTransition.phaseId && isExplicitPhaseSwitchText(userMessage) && requestedPhase) {
+    phaseTransition = {
+      phaseId: requestedPhase,
+      reason: `User explicitly requested a transition to ${requestedPhase}.`
+    };
+  }
   if (!userAskedToFinalize && String(finalDiscoveryCapture.status || '').trim().toLowerCase() !== 'ready_for_proposal') {
     finalDiscoveryCapture.tagProposals = [];
   }
@@ -714,7 +750,8 @@ async function runAgentConversation(payload = {}) {
     responseId,
     userPreferenceNotes: inferUserPreferenceNotes(userMessage),
     displayDiscoveryCapture: finalDiscoveryCapture,
-    projectMission: (canCaptureProjectMission && projectMissionCapture.document) ? projectMissionCapture : null
+    projectMission: (canCaptureProjectMission && projectMissionCapture.document) ? projectMissionCapture : null,
+    phaseTransition: phaseTransition.phaseId ? phaseTransition : null
   };
 }
 

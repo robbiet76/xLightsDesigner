@@ -73,6 +73,11 @@ struct AssistantProjectMissionResult: Sendable {
     }
 }
 
+struct AssistantPhaseTransitionResult: Sendable {
+    let phaseID: WorkflowPhaseID
+    let reason: String
+}
+
 struct AssistantConversationState: Codable, Sendable {
     var version: Int = 1
     var rollingSummary: String

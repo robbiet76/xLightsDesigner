@@ -392,6 +392,12 @@ export async function executeAppAssistantConversation({
             document: str(response.projectMission.document || "")
           }
         : undefined,
+      phaseTransition: response?.phaseTransition && typeof response.phaseTransition === "object"
+        ? {
+            phaseId: str(response.phaseTransition.phaseId || ""),
+            reason: str(response.phaseTransition.reason || "")
+          }
+        : undefined,
       userPreferenceNotes: Array.isArray(response.userPreferenceNotes) ? response.userPreferenceNotes : [],
       diagnostics: buildDiagnostics({
         routeDecision,

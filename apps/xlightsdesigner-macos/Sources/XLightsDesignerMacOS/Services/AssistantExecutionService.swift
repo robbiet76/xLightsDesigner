@@ -21,6 +21,7 @@ struct AssistantExecutionResult: Sendable {
     let responseID: String
     let displayDiscovery: AssistantDisplayDiscoveryResult?
     let projectMission: AssistantProjectMissionResult?
+    let phaseTransition: AssistantPhaseTransitionResult?
     let userPreferenceNotes: [String]
 }
 
@@ -76,6 +77,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 responseID: string(result["responseId"]),
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
+                phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
@@ -89,6 +91,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 responseID: string(result["responseId"]),
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
+                phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
@@ -196,5 +199,27 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
             document: string(object["document"])
         )
         return result.hasContent ? result : nil
+    }
+
+    private func parsePhaseTransition(from value: Any?) -> AssistantPhaseTransitionResult? {
+        guard let object = value as? [String: Any] else { return nil }
+        let phaseID = WorkflowPhaseID(rawValue: string(object["phaseId"])) ?? {
+            switch string(object["phaseId"]).lowercased() {
+            case "setup": return .setup
+            case "project_mission": return .projectMission
+            case "audio_analysis": return .audioAnalysis
+            case "display_discovery": return .displayDiscovery
+            case "design": return .design
+            case "sequencing": return .sequencing
+            case "review": return .review
+            default: return .projectMission
+            }
+        }()
+        let rawPhase = string(object["phaseId"])
+        guard !rawPhase.isEmpty else { return nil }
+        return AssistantPhaseTransitionResult(
+            phaseID: phaseID,
+            reason: string(object["reason"])
+        )
     }
 }
