@@ -381,6 +381,23 @@ final class AppModel {
         )
     }
 
+    func applyAssistantActionRequest(_ request: AssistantActionRequestResult) {
+        switch request.actionType {
+        case "open_settings":
+            showSettings = true
+        case "refresh_current_workflow":
+            refreshCurrentWorkflow()
+        case "refresh_xlights_session":
+            xlightsSessionModel.refresh()
+        case "refresh_all":
+            refreshAll()
+        case "select_workflow":
+            break
+        default:
+            break
+        }
+    }
+
     func clearWorkflowPhaseOverride() {
         activeWorkflowPhaseOverride = nil
     }
@@ -461,6 +478,44 @@ final class AppModel {
         case .review:
             return "Review and validation work is active."
         }
+    }
+
+    func refreshCurrentWorkflow() {
+        switch selectedWorkflow {
+        case .project:
+            projectScreenModel.loadInitialProject()
+            xlightsSessionModel.refresh()
+        case .display:
+            displayScreenModel.loadDisplay()
+            xlightsSessionModel.refresh()
+        case .audio:
+            audioScreenModel.loadLibrary()
+            xlightsSessionModel.refresh()
+        case .design:
+            designScreenModel.refresh()
+            xlightsSessionModel.refresh()
+        case .sequence:
+            sequenceScreenModel.refresh()
+            xlightsSessionModel.refresh()
+        case .review:
+            reviewScreenModel.refresh()
+            xlightsSessionModel.refresh()
+        case .history:
+            historyScreenModel.loadHistory()
+            xlightsSessionModel.refresh()
+        }
+    }
+
+    func refreshAll() {
+        projectScreenModel.loadInitialProject()
+        displayScreenModel.loadDisplay()
+        audioScreenModel.loadLibrary()
+        designScreenModel.refresh()
+        sequenceScreenModel.refresh()
+        reviewScreenModel.refresh()
+        historyScreenModel.loadHistory()
+        settingsScreenModel.load()
+        xlightsSessionModel.refresh()
     }
 
     private func buildDisplayDiscoveryCandidates(

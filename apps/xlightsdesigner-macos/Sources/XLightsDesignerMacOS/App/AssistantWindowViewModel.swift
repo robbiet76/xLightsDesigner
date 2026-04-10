@@ -76,6 +76,7 @@ final class AssistantWindowViewModel {
         context: AssistantContextModel,
         project: ActiveProjectModel?,
         onPhaseTransition: ((AssistantPhaseTransitionResult) -> Void)? = nil,
+        onActionRequest: ((AssistantActionRequestResult) -> Void)? = nil,
         onPhaseStarted: (() -> Void)? = nil
     ) async {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -130,6 +131,9 @@ final class AssistantWindowViewModel {
             }
             if let transition = result.phaseTransition {
                 onPhaseTransition?(transition)
+            }
+            if let actionRequest = result.actionRequest {
+                onActionRequest?(actionRequest)
             }
             if
                 let project,

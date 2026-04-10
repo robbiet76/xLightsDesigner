@@ -90,6 +90,9 @@ struct AssistantWindowView: View {
                                 onPhaseTransition: { transition in
                                     appModel.transitionToPhase(transition.phaseID, reason: transition.reason)
                                 },
+                                onActionRequest: { actionRequest in
+                                    appModel.applyAssistantActionRequest(actionRequest)
+                                },
                                 onPhaseStarted: {
                                     appModel.markActivePhaseStarted()
                                 }
@@ -118,6 +121,9 @@ struct AssistantWindowView: View {
                             project: appModel.workspace.activeProject,
                             onPhaseTransition: { transition in
                                 appModel.transitionToPhase(transition.phaseID, reason: transition.reason)
+                            },
+                            onActionRequest: { actionRequest in
+                                appModel.applyAssistantActionRequest(actionRequest)
                             },
                             onPhaseStarted: {
                                 appModel.markActivePhaseStarted()

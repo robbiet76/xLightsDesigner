@@ -180,6 +180,9 @@ final class NativeAutomationServer: @unchecked Sendable {
                 onPhaseTransition: { transition in
                     self.model.transitionToPhase(transition.phaseID, reason: transition.reason)
                 },
+                onActionRequest: { actionRequest in
+                    self.model.applyAssistantActionRequest(actionRequest)
+                },
                 onPhaseStarted: {
                     self.model.markActivePhaseStarted()
                 }
@@ -221,42 +224,12 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func refreshCurrentWorkflow() {
-        switch model.selectedWorkflow {
-        case .project:
-            model.projectScreenModel.loadInitialProject()
-            model.xlightsSessionModel.refresh()
-        case .display:
-            model.displayScreenModel.loadDisplay()
-            model.xlightsSessionModel.refresh()
-        case .audio:
-            model.audioScreenModel.loadLibrary()
-            model.xlightsSessionModel.refresh()
-        case .design:
-            model.designScreenModel.refresh()
-            model.xlightsSessionModel.refresh()
-        case .sequence:
-            model.sequenceScreenModel.refresh()
-            model.xlightsSessionModel.refresh()
-        case .review:
-            model.reviewScreenModel.refresh()
-            model.xlightsSessionModel.refresh()
-        case .history:
-            model.historyScreenModel.loadHistory()
-            model.xlightsSessionModel.refresh()
-        }
+        model.refreshCurrentWorkflow()
     }
 
     @MainActor
     private func refreshAll() {
-        model.projectScreenModel.loadInitialProject()
-        model.displayScreenModel.loadDisplay()
-        model.audioScreenModel.loadLibrary()
-        model.designScreenModel.refresh()
-        model.sequenceScreenModel.refresh()
-        model.reviewScreenModel.refresh()
-        model.historyScreenModel.loadHistory()
-        model.settingsScreenModel.load()
-        model.xlightsSessionModel.refresh()
+        model.refreshAll()
     }
 
     @MainActor
