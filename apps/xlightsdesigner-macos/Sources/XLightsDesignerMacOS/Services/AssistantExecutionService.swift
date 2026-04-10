@@ -19,12 +19,39 @@ struct AssistantExecutionResult: Sendable {
     let handledBy: String
     let routeDecision: String
     let responseID: String
+    let artifactCard: AssistantArtifactCardModel?
     let displayDiscovery: AssistantDisplayDiscoveryResult?
     let projectMission: AssistantProjectMissionResult?
     let phaseTransition: AssistantPhaseTransitionResult?
     let actionRequest: AssistantActionRequestResult?
     let diagnostics: AssistantDiagnosticsResult?
     let userPreferenceNotes: [String]
+
+    init(
+        assistantMessage: String,
+        handledBy: String,
+        routeDecision: String,
+        responseID: String,
+        artifactCard: AssistantArtifactCardModel? = nil,
+        displayDiscovery: AssistantDisplayDiscoveryResult?,
+        projectMission: AssistantProjectMissionResult?,
+        phaseTransition: AssistantPhaseTransitionResult?,
+        actionRequest: AssistantActionRequestResult?,
+        diagnostics: AssistantDiagnosticsResult?,
+        userPreferenceNotes: [String]
+    ) {
+        self.assistantMessage = assistantMessage
+        self.handledBy = handledBy
+        self.routeDecision = routeDecision
+        self.responseID = responseID
+        self.artifactCard = artifactCard
+        self.displayDiscovery = displayDiscovery
+        self.projectMission = projectMission
+        self.phaseTransition = phaseTransition
+        self.actionRequest = actionRequest
+        self.diagnostics = diagnostics
+        self.userPreferenceNotes = userPreferenceNotes
+    }
 }
 
 protocol AssistantExecutionService: Sendable {
@@ -77,6 +104,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 handledBy: string(result["handledBy"]),
                 routeDecision: string(result["routeDecision"]),
                 responseID: string(result["responseId"]),
+                artifactCard: parseArtifactCard(from: result["artifactCard"]),
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
                 phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
@@ -93,6 +121,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 handledBy: string(result["handledBy"]),
                 routeDecision: string(result["routeDecision"]),
                 responseID: string(result["responseId"]),
+                artifactCard: parseArtifactCard(from: result["artifactCard"]),
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
                 phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
@@ -205,6 +234,20 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
             document: string(object["document"])
         )
         return result.hasContent ? result : nil
+    }
+
+    private func parseArtifactCard(from value: Any?) -> AssistantArtifactCardModel? {
+        guard let object = value as? [String: Any] else { return nil }
+        let artifactType = string(object["artifactType"])
+        let title = string(object["title"])
+        let summary = string(object["summary"])
+        guard !artifactType.isEmpty, !title.isEmpty, !summary.isEmpty else { return nil }
+        return AssistantArtifactCardModel(
+            artifactType: artifactType,
+            title: title,
+            summary: summary,
+            chips: stringArray(object["chips"])
+        )
     }
 
     private func parsePhaseTransition(from value: Any?) -> AssistantPhaseTransitionResult? {

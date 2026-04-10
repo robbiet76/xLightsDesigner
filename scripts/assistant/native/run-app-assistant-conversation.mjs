@@ -265,6 +265,80 @@ function normalizeActionRequest(value) {
   return { actionType, payload, reason };
 }
 
+function normalizeArtifactCard(value) {
+  const object = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  return {
+    artifactType: String(object.artifactType || '').trim(),
+    title: String(object.title || '').trim(),
+    summary: String(object.summary || '').trim(),
+    chips: Array.isArray(object.chips)
+      ? object.chips.map((row) => String(row || '').trim()).filter(Boolean).slice(0, 6)
+      : []
+  };
+}
+
+function phaseTitle(phaseId = '') {
+  switch (String(phaseId || '').trim().toLowerCase()) {
+    case 'setup': return 'Setup';
+    case 'project_mission': return 'Project Mission';
+    case 'audio_analysis': return 'Audio Analysis';
+    case 'display_discovery': return 'Display Discovery';
+    case 'design': return 'Design';
+    case 'sequencing': return 'Sequencing';
+    case 'review': return 'Review';
+    default: return 'Phase';
+  }
+}
+
+function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMissionCapture = null, discoveryCapture = null } = {}) {
+  const currentMissionDocument = String(context?.projectMission?.document || '').trim();
+  if (projectMissionCapture?.document && projectMissionCapture.document !== currentMissionDocument) {
+    return {
+      artifactType: 'project_mission_v1',
+      title: 'Project Mission Updated',
+      summary: truncateText(projectMissionCapture.document, 280),
+      chips: ['Project Mission', 'Creative North Star']
+    };
+  }
+
+  if (discoveryCapture && (
+    Array.isArray(discoveryCapture.insights) && discoveryCapture.insights.length ||
+    Array.isArray(discoveryCapture.resolvedBranches) && discoveryCapture.resolvedBranches.length ||
+    Array.isArray(discoveryCapture.unresolvedBranches) && discoveryCapture.unresolvedBranches.length
+  )) {
+    const insightCount = Array.isArray(discoveryCapture.insights) ? discoveryCapture.insights.length : 0;
+    const resolvedCount = Array.isArray(discoveryCapture.resolvedBranches) ? discoveryCapture.resolvedBranches.length : 0;
+    const unresolvedCount = Array.isArray(discoveryCapture.unresolvedBranches) ? discoveryCapture.unresolvedBranches.length : 0;
+    const summaryParts = [];
+    if (insightCount > 0) summaryParts.push(`${insightCount} insight${insightCount === 1 ? '' : 's'} captured`);
+    if (resolvedCount > 0) summaryParts.push(`${resolvedCount} branch${resolvedCount === 1 ? '' : 'es'} resolved`);
+    if (unresolvedCount > 0) summaryParts.push(`${unresolvedCount} area${unresolvedCount === 1 ? '' : 's'} still open`);
+    const firstInsight = Array.isArray(discoveryCapture.insights) ? discoveryCapture.insights[0] : null;
+    const firstInsightText = firstInsight?.subject && firstInsight?.value
+      ? `${firstInsight.subject}: ${firstInsight.value}`
+      : '';
+    return {
+      artifactType: 'display_understanding_v1',
+      title: 'Display Discovery Updated',
+      summary: truncateText([summaryParts.join('. '), firstInsightText].filter(Boolean).join('. '), 280),
+      chips: ['Display Discovery', `${insightCount} Insight${insightCount === 1 ? '' : 's'}`]
+    };
+  }
+
+  const outputSummary = String(context?.workflowPhase?.outputSummary || '').trim();
+  const currentPhaseId = String(context?.workflowPhase?.phaseId || '').trim();
+  if (outputSummary && phaseTransition?.phaseId && currentPhaseId) {
+    return {
+      artifactType: 'phase_output_summary_v1',
+      title: `${phaseTitle(currentPhaseId)} Wrap-Up`,
+      summary: truncateText(outputSummary, 280),
+      chips: [phaseTitle(currentPhaseId), `Next: ${phaseTitle(phaseTransition.phaseId)}`]
+    };
+  }
+
+  return null;
+}
+
 function detectRequestedPhaseFromText(text = '') {
   const lower = String(text || '').toLowerCase();
   if (!lower) return '';
@@ -766,6 +840,14 @@ async function runAgentConversation(payload = {}) {
   if (!userAskedToFinalize && String(finalDiscoveryCapture.status || '').trim().toLowerCase() !== 'ready_for_proposal') {
     finalDiscoveryCapture.tagProposals = [];
   }
+  const artifactCard = normalizeArtifactCard(
+    buildPhaseArtifactCard({
+      context,
+      phaseTransition,
+      projectMissionCapture: (canCaptureProjectMission && projectMissionCapture.document) ? projectMissionCapture : null,
+      discoveryCapture: finalDiscoveryCapture
+    })
+  );
 
   return {
     ok: true,
@@ -776,6 +858,7 @@ async function runAgentConversation(payload = {}) {
     proposalIntent,
     responseId,
     userPreferenceNotes: inferUserPreferenceNotes(userMessage),
+    artifactCard: artifactCard.artifactType ? artifactCard : null,
     displayDiscoveryCapture: finalDiscoveryCapture,
     projectMission: (canCaptureProjectMission && projectMissionCapture.document) ? projectMissionCapture : null,
     phaseTransition: phaseTransition.phaseId ? phaseTransition : null,

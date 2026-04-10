@@ -52,6 +52,34 @@ struct AssistantMessageModel: Identifiable, Codable, Equatable {
     let handledBy: String?
     let routeDecision: String?
     let displayName: String?
+    let artifactCard: AssistantArtifactCardModel?
+
+    init(
+        id: String,
+        role: AssistantMessageRole,
+        text: String,
+        timestamp: String,
+        handledBy: String?,
+        routeDecision: String?,
+        displayName: String?,
+        artifactCard: AssistantArtifactCardModel? = nil
+    ) {
+        self.id = id
+        self.role = role
+        self.text = text
+        self.timestamp = timestamp
+        self.handledBy = handledBy
+        self.routeDecision = routeDecision
+        self.displayName = displayName
+        self.artifactCard = artifactCard
+    }
+}
+
+struct AssistantArtifactCardModel: Codable, Equatable, Sendable {
+    let artifactType: String
+    let title: String
+    let summary: String
+    let chips: [String]
 }
 
 struct AssistantDisplayDiscoveryResult: Sendable {

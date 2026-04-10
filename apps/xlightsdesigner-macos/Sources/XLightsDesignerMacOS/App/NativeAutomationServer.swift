@@ -303,7 +303,13 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "timestamp": message.timestamp,
                 "handledBy": message.handledBy ?? "",
                 "routeDecision": message.routeDecision ?? "",
-                "displayName": message.displayName ?? ""
+                "displayName": message.displayName ?? "",
+                "artifactCard": [
+                    "artifactType": message.artifactCard?.artifactType ?? "",
+                    "title": message.artifactCard?.title ?? "",
+                    "summary": message.artifactCard?.summary ?? "",
+                    "chips": message.artifactCard?.chips ?? []
+                ]
             ]
         }
         return [

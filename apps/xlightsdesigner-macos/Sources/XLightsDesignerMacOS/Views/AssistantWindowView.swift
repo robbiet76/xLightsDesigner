@@ -53,6 +53,9 @@ struct AssistantWindowView: View {
                                 .background(bubbleColor(for: message))
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
                                 .textSelection(.enabled)
+                            if let artifactCard = message.artifactCard {
+                                artifactCardView(artifactCard)
+                            }
                         }
                         .id(message.id)
                     }
@@ -166,6 +169,40 @@ struct AssistantWindowView: View {
 
     private func messageBody(for message: AssistantMessageModel) -> Text {
         Text(styledMessageText(message.text))
+    }
+
+    private func artifactCardView(_ card: AssistantArtifactCardModel) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(card.title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+            Text(card.summary)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if !card.chips.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(card.chips, id: \.self) { chip in
+                            Text(chip)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color(nsColor: .windowBackgroundColor))
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func bubbleColor(for message: AssistantMessageModel) -> Color {

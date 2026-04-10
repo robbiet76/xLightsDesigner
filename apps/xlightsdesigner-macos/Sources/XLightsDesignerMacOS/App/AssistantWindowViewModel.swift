@@ -54,7 +54,8 @@ final class AssistantWindowViewModel {
                         timestamp: message.timestamp,
                         handledBy: message.handledBy,
                         routeDecision: message.routeDecision,
-                        displayName: message.displayName ?? displayName(for: message.handledBy ?? "app_assistant", context: context)
+                        displayName: message.displayName ?? displayName(for: message.handledBy ?? "app_assistant", context: context),
+                        artifactCard: message.artifactCard
                     )
                 }
                 try? persistConversation()
@@ -67,7 +68,8 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "app_assistant",
                 routeDecision: "general",
-                displayName: displayName(for: "app_assistant", context: context)
+                displayName: displayName(for: "app_assistant", context: context),
+                artifactCard: nil
             )]
         }
     }
@@ -89,7 +91,8 @@ final class AssistantWindowViewModel {
             timestamp: isoNow(),
             handledBy: nil,
             routeDecision: nil,
-            displayName: nil
+            displayName: nil,
+            artifactCard: nil
         )
         messages.append(userMessage)
         draft = ""
@@ -117,7 +120,8 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: result.handledBy,
                 routeDecision: result.routeDecision,
-                displayName: displayName(for: result.handledBy, context: context)
+                displayName: displayName(for: result.handledBy, context: context),
+                artifactCard: result.artifactCard
             ))
             if context.workflowPhaseStatus == WorkflowPhaseStatus.notStarted.rawValue &&
                 result.handledBy == context.workflowPhaseOwnerRole {
@@ -164,7 +168,8 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "app_assistant",
                 routeDecision: "app_assistant",
-                displayName: displayName(for: "app_assistant", context: context)
+                displayName: displayName(for: "app_assistant", context: context),
+                artifactCard: nil
             ))
         }
 
@@ -211,7 +216,8 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "designer_dialog",
                 routeDecision: "designer_dialog",
-                displayName: displayName(for: "designer_dialog", context: context)
+                displayName: displayName(for: "designer_dialog", context: context),
+                artifactCard: nil
             )
         }
         if shouldKickOffDisplayDiscovery(context: context) {
@@ -223,7 +229,8 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "designer_dialog",
                 routeDecision: "designer_dialog",
-                displayName: displayName(for: "designer_dialog", context: context)
+                displayName: displayName(for: "designer_dialog", context: context),
+                artifactCard: nil
             )
         }
 
@@ -234,7 +241,8 @@ final class AssistantWindowViewModel {
                 timestamp: isoNow(),
                 handledBy: "app_assistant",
                 routeDecision: "general",
-                displayName: displayName(for: "app_assistant", context: context)
+                displayName: displayName(for: "app_assistant", context: context),
+                artifactCard: nil
         )
     }
 
@@ -336,7 +344,8 @@ final class AssistantWindowViewModel {
             timestamp: isoNow(),
             handledBy: roleID,
             routeDecision: roleID == "app_assistant" ? "general" : roleID,
-            displayName: displayName(for: roleID, context: context)
+            displayName: displayName(for: roleID, context: context),
+            artifactCard: nil
         )
     }
 

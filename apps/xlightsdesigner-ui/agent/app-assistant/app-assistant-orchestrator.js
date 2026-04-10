@@ -534,6 +534,9 @@ export async function executeAppAssistantConversation({
         : undefined,
       phaseTransition: normalizedPhaseTransition?.phaseId ? normalizedPhaseTransition : undefined,
       actionRequest: normalizedActionRequest?.actionType ? normalizedActionRequest : undefined,
+      artifactCard: response?.artifactCard && typeof response.artifactCard === "object"
+        ? response.artifactCard
+        : undefined,
       userPreferenceNotes: Array.isArray(response.userPreferenceNotes) ? response.userPreferenceNotes : [],
       diagnostics: buildDiagnostics({
         routeDecision,
