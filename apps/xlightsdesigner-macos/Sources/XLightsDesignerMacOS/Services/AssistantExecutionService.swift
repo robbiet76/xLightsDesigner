@@ -158,7 +158,8 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 subjectType: string(row["subjectType"]),
                 category: category,
                 value: value,
-                rationale: string(row["rationale"])
+                rationale: string(row["rationale"]),
+                targetNames: stringArray(row["targetNames"])
             )
         }
         let proposalRows: [[String: Any]] = object["tagProposals"] as? [[String: Any]] ?? []

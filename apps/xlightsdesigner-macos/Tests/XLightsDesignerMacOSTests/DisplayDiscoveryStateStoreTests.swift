@@ -36,7 +36,8 @@ struct DisplayDiscoveryStateStoreTests {
                     subjectType: "model",
                     category: "visual_role",
                     value: "featured character prop",
-                    rationale: "User confirmed Snowman is intended as a featured character."
+                    rationale: "User confirmed Snowman is intended as a featured character.",
+                    targetNames: ["Snowman"]
                 )
             ],
             unresolvedBranches: [

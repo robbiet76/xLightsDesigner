@@ -98,15 +98,23 @@ struct DisplayMetadataRowModel: Identifiable, Hashable, Sendable {
 }
 
 struct DisplayMetadataSelectionModel: Sendable {
+    let id: String
     let subject: String
     let subjectType: String
     let category: String
     let value: String
     let status: DisplayMetadataStatus
-    let source: DisplayMetadataSource
     let rationale: String
     let linkedTargets: [String]
     let relatedLabels: [DisplayLabelDefinitionModel]
+}
+
+struct DisplayMetadataOverviewCardModel: Identifiable, Hashable, Sendable {
+    let id: String
+    let title: String
+    let valueText: String
+    let detailText: String
+    let accent: DisplayReadinessState
 }
 
 enum DisplayMetadataSelectedPaneModel: Sendable {
@@ -125,6 +133,7 @@ struct DisplayScreenModel: Sendable {
     let readinessSummary: DisplayReadinessSummaryModel
     let rows: [DisplayLayoutRowModel]
     let metadataRows: [DisplayMetadataRowModel]
+    let overviewCards: [DisplayMetadataOverviewCardModel]
     let selectedMetadata: DisplayMetadataSelectedPaneModel
     let banners: [DisplayBannerModel]
     let labelDefinitions: [DisplayLabelDefinitionModel]

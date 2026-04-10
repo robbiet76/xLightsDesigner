@@ -4,6 +4,8 @@ protocol DisplayDiscoveryStateStore: Sendable {
     func load(for project: ActiveProjectModel) throws -> DisplayDiscoveryDocument
     func summary(for project: ActiveProjectModel?) -> DisplayDiscoverySummaryModel
     func clear(for project: ActiveProjectModel?) throws
+    func upsertInsight(_ insight: DisplayDiscoveryInsightModel, for project: ActiveProjectModel?) throws
+    func deleteInsight(subject: String, category: String, for project: ActiveProjectModel?) throws
     func recordConversationTurn(
         project: ActiveProjectModel,
         status: DisplayDiscoveryStatus,
@@ -52,6 +54,29 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
         let fileURL = storageURL(for: project)
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         try FileManager.default.removeItem(at: fileURL)
+    }
+
+    func upsertInsight(_ insight: DisplayDiscoveryInsightModel, for project: ActiveProjectModel?) throws {
+        guard let project else { return }
+        var document = (try? load(for: project)) ?? DisplayDiscoveryDocument()
+        document.insights = mergeInsights(existing: document.insights, incoming: [insight])
+        document.updatedAt = ISO8601DateFormatter().string(from: Date())
+        if document.status == .notStarted {
+            document.status = .inProgress
+        }
+        try save(document, for: project)
+    }
+
+    func deleteInsight(subject: String, category: String, for project: ActiveProjectModel?) throws {
+        guard let project else { return }
+        var document = try load(for: project)
+        let normalizedCategory = normalizedCategoryKey(category)
+        document.insights.removeAll {
+            $0.subject.caseInsensitiveCompare(subject) == .orderedSame &&
+            normalizedCategoryKey($0.category) == normalizedCategory
+        }
+        document.updatedAt = ISO8601DateFormatter().string(from: Date())
+        try save(document, for: project)
     }
 
     func recordConversationTurn(
@@ -119,9 +144,10 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
     ) -> [DisplayDiscoveryInsightModel] {
         var merged = existing
         for insight in incoming {
+            let normalizedIncomingCategory = normalizedCategoryKey(insight.category)
             if let index = merged.firstIndex(where: {
                 $0.subject.caseInsensitiveCompare(insight.subject) == .orderedSame &&
-                $0.category.caseInsensitiveCompare(insight.category) == .orderedSame
+                normalizedCategoryKey($0.category) == normalizedIncomingCategory
             }) {
                 merged[index] = insight
             } else {
@@ -156,6 +182,16 @@ struct LocalDisplayDiscoveryStateStore: DisplayDiscoveryStateStore {
             timestamp: entry.timestamp,
             handledBy: entry.handledBy
         ))
+    }
+
+    private func normalizedCategoryKey(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let replaced = trimmed.replacingOccurrences(
+            of: "[^a-z0-9]+",
+            with: "_",
+            options: .regularExpression
+        )
+        return replaced.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
     }
 
     private func storageURL(for project: ActiveProjectModel) -> URL {

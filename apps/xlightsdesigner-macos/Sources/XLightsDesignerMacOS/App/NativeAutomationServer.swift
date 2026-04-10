@@ -433,7 +433,6 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "category": entry.category,
                 "value": entry.value,
                 "status": entry.status.rawValue,
-                "source": entry.source.rawValue,
                 "rationale": entry.rationale,
                 "linkedTargets": entry.linkedTargets,
                 "relatedLabels": entry.relatedLabels.map { ["name": $0.name, "description": $0.description, "color": $0.color.displayName] }

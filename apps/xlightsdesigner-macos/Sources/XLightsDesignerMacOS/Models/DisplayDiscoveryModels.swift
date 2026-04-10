@@ -12,6 +12,42 @@ struct DisplayDiscoveryInsightModel: Codable, Hashable, Sendable {
     let category: String
     let value: String
     let rationale: String
+    let targetNames: [String]
+
+    init(
+        subject: String,
+        subjectType: String,
+        category: String,
+        value: String,
+        rationale: String,
+        targetNames: [String] = []
+    ) {
+        self.subject = subject
+        self.subjectType = subjectType
+        self.category = category
+        self.value = value
+        self.rationale = rationale
+        self.targetNames = targetNames
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case subject
+        case subjectType
+        case category
+        case value
+        case rationale
+        case targetNames
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        subject = try container.decode(String.self, forKey: .subject)
+        subjectType = try container.decode(String.self, forKey: .subjectType)
+        category = try container.decode(String.self, forKey: .category)
+        value = try container.decode(String.self, forKey: .value)
+        rationale = try container.decode(String.self, forKey: .rationale)
+        targetNames = try container.decodeIfPresent([String].self, forKey: .targetNames) ?? []
+    }
 }
 
 struct DisplayDiscoveryTagProposalModel: Codable, Hashable, Sendable, Identifiable {
