@@ -301,13 +301,7 @@ export async function executeAppAssistantConversation({
         : undefined,
       projectMission: response?.projectMission && typeof response.projectMission === "object"
         ? {
-            vision: str(response.projectMission.vision || ""),
-            goals: str(response.projectMission.goals || ""),
-            inspiration: str(response.projectMission.inspiration || ""),
-            cohesionNotes: str(response.projectMission.cohesionNotes || ""),
-            openQuestions: Array.isArray(response.projectMission.openQuestions)
-              ? response.projectMission.openQuestions.map((row) => str(row)).filter(Boolean)
-              : []
+            document: str(response.projectMission.document || "")
           }
         : undefined,
       userPreferenceNotes: Array.isArray(response.userPreferenceNotes) ? response.userPreferenceNotes : [],

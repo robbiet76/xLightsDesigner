@@ -5,11 +5,7 @@ import Observation
 @Observable
 final class ProjectScreenViewModel {
     struct ProjectBriefEditorModel {
-        var vision: String = ""
-        var goals: String = ""
-        var inspiration: String = ""
-        var cohesionNotes: String = ""
-        var openQuestionsText: String = ""
+        var document: String = ""
     }
 
     private let workspace: ProjectWorkspace
@@ -75,12 +71,16 @@ final class ProjectScreenViewModel {
                FileManager.default.fileExists(atPath: rememberedPath) {
                 let remembered = try projectService.openProject(filePath: rememberedPath)
                 if isGeneratedTestProject(remembered) {
-                    workspace.setProject(try projectService.loadMostRecentProject())
+                    if let recent = try projectService.loadMostRecentProject() {
+                        workspace.setProject(try migrateLegacyProjectBriefIfNeeded(recent))
+                    }
                 } else {
-                    workspace.setProject(remembered)
+                    workspace.setProject(try migrateLegacyProjectBriefIfNeeded(remembered))
                 }
             } else {
-                workspace.setProject(try projectService.loadMostRecentProject())
+                if let recent = try projectService.loadMostRecentProject() {
+                    workspace.setProject(try migrateLegacyProjectBriefIfNeeded(recent))
+                }
             }
             workspace.projectBanner = nil
         } catch {
@@ -103,7 +103,7 @@ final class ProjectScreenViewModel {
         guard !folderPath.isEmpty else { return }
         do {
             let project = try projectService.openProject(filePath: folderPath)
-            workspace.setProject(project)
+            workspace.setProject(try migrateLegacyProjectBriefIfNeeded(project))
             workspace.projectBanner = ProjectBannerModel(id: "opened", level: .ready, text: "Opened \(project.projectName).")
             syncSelectedProjectFromActive()
             isShowingOpenProjectSheet = false
@@ -175,27 +175,15 @@ final class ProjectScreenViewModel {
     func startEditProjectBrief() {
         let brief = workspace.activeProject.map(projectBrief(for:))
         projectBriefEditor = ProjectBriefEditorModel(
-            vision: brief?.vision ?? "",
-            goals: brief?.goals ?? "",
-            inspiration: brief?.inspiration ?? "",
-            cohesionNotes: brief?.cohesionNotes ?? "",
-            openQuestionsText: (brief?.openQuestions ?? []).joined(separator: "\n")
+            document: brief?.document ?? ""
         )
         isEditingProjectBrief = true
     }
 
     func saveProjectBrief() {
         guard var active = workspace.activeProject else { return }
-        let questions = projectBriefEditor.openQuestionsText
-            .split(whereSeparator: \.isNewline)
-            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
         let payload: [String: Any] = [
-            "vision": projectBriefEditor.vision.trimmingCharacters(in: .whitespacesAndNewlines),
-            "goals": projectBriefEditor.goals.trimmingCharacters(in: .whitespacesAndNewlines),
-            "inspiration": projectBriefEditor.inspiration.trimmingCharacters(in: .whitespacesAndNewlines),
-            "cohesionNotes": projectBriefEditor.cohesionNotes.trimmingCharacters(in: .whitespacesAndNewlines),
-            "openQuestions": questions,
+            "document": projectBriefEditor.document.trimmingCharacters(in: .whitespacesAndNewlines),
             "updatedAt": ISO8601DateFormatter().string(from: Date())
         ]
         active.snapshot["projectBrief"] = AnyCodable(payload)
@@ -247,12 +235,9 @@ final class ProjectScreenViewModel {
     private func projectBrief(for project: ActiveProjectModel) -> ProjectBriefModel {
         let snapshot = project.snapshot.mapValues(\.value)
         let brief = snapshot["projectBrief"] as? [String: Any] ?? [:]
+        let document = string(brief["document"])
         return ProjectBriefModel(
-            vision: string(brief["vision"]),
-            goals: string(brief["goals"]),
-            inspiration: string(brief["inspiration"]),
-            cohesionNotes: string(brief["cohesionNotes"]),
-            openQuestions: arrayOfStrings(brief["openQuestions"]),
+            document: document.isEmpty ? synthesizeLegacyBriefDocument(from: brief) : document,
             updatedAt: string(brief["updatedAt"])
         )
     }
@@ -308,5 +293,38 @@ final class ProjectScreenViewModel {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? nil : trimmed
         }
+    }
+
+    private func synthesizeLegacyBriefDocument(from brief: [String: Any]) -> String {
+        let vision = string(brief["vision"])
+        let goals = string(brief["goals"])
+        let inspiration = string(brief["inspiration"])
+        let cohesionNotes = string(brief["cohesionNotes"])
+        let openQuestions = arrayOfStrings(brief["openQuestions"])
+
+        var parts: [String] = []
+        if !vision.isEmpty { parts.append(vision) }
+        if !goals.isEmpty { parts.append(goals) }
+        if !inspiration.isEmpty { parts.append("Inspiration: \(inspiration)") }
+        if !cohesionNotes.isEmpty { parts.append("Cohesion: \(cohesionNotes)") }
+        if !openQuestions.isEmpty {
+            parts.append("Open questions: \(openQuestions.joined(separator: " "))")
+        }
+        return parts.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func migrateLegacyProjectBriefIfNeeded(_ project: ActiveProjectModel) throws -> ActiveProjectModel {
+        let snapshot = project.snapshot.mapValues(\.value)
+        guard let brief = snapshot["projectBrief"] as? [String: Any] else { return project }
+        let existingDocument = string(brief["document"])
+        guard existingDocument.isEmpty else { return project }
+        let synthesized = synthesizeLegacyBriefDocument(from: brief)
+        guard !synthesized.isEmpty else { return project }
+        var migrated = project
+        migrated.snapshot["projectBrief"] = AnyCodable([
+            "document": synthesized,
+            "updatedAt": string(brief["updatedAt"])
+        ])
+        return try projectService.saveProject(migrated)
     }
 }

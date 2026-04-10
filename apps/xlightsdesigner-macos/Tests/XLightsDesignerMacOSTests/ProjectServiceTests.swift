@@ -110,11 +110,7 @@ struct ProjectServiceTests {
         )
 
         project.snapshot["projectBrief"] = AnyCodable([
-            "vision": "Warm neighborhood show with a strong central focal area.",
-            "goals": "Feel welcoming and cohesive across songs.",
-            "inspiration": "Classic Christmas main street energy.",
-            "cohesionNotes": "Keep the tree and character zone visually connected.",
-            "openQuestions": ["How bold should the upper roofline layer become?"],
+            "document": "Warm neighborhood show with a strong central focal area that feels welcoming and cohesive across songs, with the tree and character zone staying visually connected.",
             "updatedAt": "2026-04-09T00:00:00Z"
         ])
 
@@ -122,8 +118,7 @@ struct ProjectServiceTests {
         let reopened = try service.openProject(filePath: saved.projectFilePath)
         let brief = reopened.snapshot["projectBrief"]?.value as? [String: Any]
 
-        #expect(brief?["vision"] as? String == "Warm neighborhood show with a strong central focal area.")
-        #expect((brief?["openQuestions"] as? [String])?.count == 1)
+        #expect(brief?["document"] as? String == "Warm neighborhood show with a strong central focal area that feels welcoming and cohesive across songs, with the tree and character zone staying visually connected.")
     }
 
     private func makeService() throws -> LocalProjectService {

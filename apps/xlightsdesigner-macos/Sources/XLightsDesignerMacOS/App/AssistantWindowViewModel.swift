@@ -225,10 +225,7 @@ final class AssistantWindowViewModel {
     private func shouldKickOffProjectMission(context: AssistantContextModel) -> Bool {
         context.route.caseInsensitiveCompare("project") == .orderedSame &&
         !context.activeProjectName.isEmpty &&
-        context.projectMissionVision.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        context.projectMissionGoals.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        context.projectMissionInspiration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        context.projectMissionCohesionNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        context.projectMissionDocument.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func displayName(for handledBy: String, context: AssistantContextModel) -> String {
@@ -321,11 +318,7 @@ final class AssistantWindowViewModel {
     private func saveProjectMission(_ mission: AssistantProjectMissionResult, project: ActiveProjectModel?) throws {
         guard var project else { return }
         let payload: [String: Any] = [
-            "vision": mission.vision,
-            "goals": mission.goals,
-            "inspiration": mission.inspiration,
-            "cohesionNotes": mission.cohesionNotes,
-            "openQuestions": mission.openQuestions,
+            "document": mission.document,
             "updatedAt": isoNow()
         ]
         project.snapshot["projectBrief"] = AnyCodable(payload)

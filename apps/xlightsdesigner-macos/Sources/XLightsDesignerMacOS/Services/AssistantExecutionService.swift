@@ -193,11 +193,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
     private func parseProjectMission(from value: Any?) -> AssistantProjectMissionResult? {
         guard let object = value as? [String: Any] else { return nil }
         let result = AssistantProjectMissionResult(
-            vision: string(object["vision"]),
-            goals: string(object["goals"]),
-            inspiration: string(object["inspiration"]),
-            cohesionNotes: string(object["cohesionNotes"]),
-            openQuestions: stringArray(object["openQuestions"])
+            document: string(object["document"])
         )
         return result.hasContent ? result : nil
     }

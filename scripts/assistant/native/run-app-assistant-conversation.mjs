@@ -184,11 +184,7 @@ function compactContext(context = {}) {
     route: String(c.route || '').trim(),
     focusedSummary: String(c.focusedSummary || '').trim(),
     projectMission: {
-      vision: String(projectMission.vision || '').trim(),
-      goals: String(projectMission.goals || '').trim(),
-      inspiration: String(projectMission.inspiration || '').trim(),
-      cohesionNotes: String(projectMission.cohesionNotes || '').trim(),
-      openQuestions: limitStrings(projectMission.openQuestions, 8)
+      document: String(projectMission.document || '').trim()
     },
     display: {
       targetCount: Number(display.targetCount || 0),
@@ -238,13 +234,7 @@ function compactContext(context = {}) {
 function normalizeProjectMissionCapture(value) {
   const object = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   return {
-    vision: String(object.vision || '').trim(),
-    goals: String(object.goals || '').trim(),
-    inspiration: String(object.inspiration || '').trim(),
-    cohesionNotes: String(object.cohesionNotes || '').trim(),
-    openQuestions: Array.isArray(object.openQuestions)
-      ? object.openQuestions.map((row) => String(row || '').trim()).filter(Boolean)
-      : []
+    document: String(object.document || '').trim()
   };
 }
 
@@ -452,15 +442,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const currentProjectMission = c?.projectMission && typeof c.projectMission === 'object'
     ? c.projectMission
     : {};
-  const projectMissionSummary = [
-    String(currentProjectMission.vision || '').trim() && `Mission: ${String(currentProjectMission.vision || '').trim()}`,
-    String(currentProjectMission.goals || '').trim() && `Goals: ${String(currentProjectMission.goals || '').trim()}`,
-    String(currentProjectMission.inspiration || '').trim() && `Inspiration: ${String(currentProjectMission.inspiration || '').trim()}`,
-    String(currentProjectMission.cohesionNotes || '').trim() && `Cohesion Rules: ${String(currentProjectMission.cohesionNotes || '').trim()}`,
-    Array.isArray(currentProjectMission.openQuestions) && currentProjectMission.openQuestions.length
-      ? `Open Questions:\n${currentProjectMission.openQuestions.map((row) => `- ${String(row || '').trim()}`).join('\n')}`
-      : ''
-  ].filter(Boolean).join('\n');
+  const projectMissionSummary = String(currentProjectMission.document || '').trim();
   return [
     'You are the xLightsDesigner App Assistant.',
     'You are the unified conversational shell for the whole app, not just the design specialist.',
@@ -509,9 +491,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'For broad creative kickoff prompts, keep the conversation with the designer. Do not jump straight into sequencing or imply that edits are already being made.',
     'When acting as the Designer, let some real designer personality come through: thoughtful, visually aware, and quietly opinionated without becoming theatrical or chatty.',
     'The Designer should contribute useful perspective, not just record facts. Bring lightweight design judgment to the conversation by noticing hierarchy, rhythm, framing, balance, contrast, scene-setting, and where attention will naturally go.',
-    'On the Project workflow, the Designer should help shape the project mission: what kind of show this is, what it should feel like overall, what themes or inspirations matter, and what should stay cohesive across the project.',
-    'Treat the project mission as a living guiding document. Update it when the user meaningfully clarifies or changes the overall show intent.',
-    'Do not run a scripted intake. Use natural conversation to understand the user intent and synthesize a cleaner mission from it.',
+    'On the Project workflow, the Designer should help shape the project mission as one well-written guiding statement for the show.',
+    'Treat the project mission as a living document. Update it when the user meaningfully clarifies or changes the overall show intent.',
+    'Do not run a scripted intake. Use natural conversation to understand the user intent and synthesize a cleaner mission statement from it.',
     'When the user is talking at the show level rather than the display or sequence level, keep the conversation at that project-mission level.',
     'Do not overdo that personality. Keep it grounded, brief, and helpful.',
     'During display discovery, do not imply that metadata has already been applied. Prefer understanding language such as "I understand this as..." or "So far I have..." rather than "I will mark" or "I updated".',
@@ -529,9 +511,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
-    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]},"projectMissionCapture":{"vision":"","goals":"","inspiration":"","cohesionNotes":"","openQuestions":["..."]}}.',
+    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]},"projectMissionCapture":{"document":""}}.',
     'assistantMessage must remain natural language, concise, and user-facing.',
-    'When the conversation materially clarifies the overall project mission, include a projectMissionCapture. Use concise synthesized wording, not verbatim transcript fragments.',
+    'When the conversation materially clarifies the overall project mission, include a projectMissionCapture.document. It should read as one coherent mission statement, not a form, outline, or set of bullets.',
     'Only include projectMissionCapture when the turn genuinely improves or changes the project-level mission.',
     'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
@@ -686,13 +668,7 @@ async function runAgentConversation(payload = {}) {
     responseId,
     userPreferenceNotes: inferUserPreferenceNotes(userMessage),
     displayDiscoveryCapture: finalDiscoveryCapture,
-    projectMission: (
-      projectMissionCapture.vision ||
-      projectMissionCapture.goals ||
-      projectMissionCapture.inspiration ||
-      projectMissionCapture.cohesionNotes ||
-      projectMissionCapture.openQuestions.length
-    ) ? projectMissionCapture : null
+    projectMission: projectMissionCapture.document ? projectMissionCapture : null
   };
 }
 
