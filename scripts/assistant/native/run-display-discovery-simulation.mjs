@@ -196,14 +196,14 @@ async function main() {
   const scenario = JSON.parse(await fs.readFile(scenarioPath, "utf8"));
   const turnLimit = Number(args.turnLimit || scenario?.maxTurns || 8);
 
-  await automationAction("resetAssistantMemory");
-  if (scenario?.resetProjectMission === true) {
-    await automationAction("clearProjectMission");
-  }
   const initialWorkflow = str(scenario?.initialWorkflow || "");
   if (initialWorkflow) {
     await automationAction("selectWorkflow", { workflow: initialWorkflow });
   }
+  if (scenario?.resetProjectMission === true) {
+    await automationAction("clearProjectMission");
+  }
+  await automationAction("resetAssistantMemory");
   let previousMessageCount = Number((await getAssistantSnapshot())?.messageCount || 0);
   await automationAction("sendAssistantPrompt", { prompt: str(scenario?.kickoffPrompt || "Let's start by understanding the display before we design anything.") });
   let currentSnapshot = await waitForAssistantRoundTrip({ previousMessageCount });

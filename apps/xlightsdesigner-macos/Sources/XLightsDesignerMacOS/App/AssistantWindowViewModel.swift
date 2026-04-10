@@ -221,6 +221,45 @@ final class AssistantWindowViewModel {
                 artifactCard: nil
             )
         }
+        if shouldKickOffAudioAnalysis(context: context) {
+            let observation = "We can focus on track structure, phrasing, and analysis results before any design or sequencing decisions."
+            return AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: "Welcome. \(introductionPrompt(for: "audio_analyst", context: context)) \(observation)",
+                timestamp: isoNow(),
+                handledBy: "audio_analyst",
+                routeDecision: "audio_analyst",
+                displayName: displayName(for: "audio_analyst", context: context),
+                artifactCard: nil
+            )
+        }
+        if shouldKickOffDesign(context: context) {
+            let observation = "We can shape the creative direction for the current song or section before handing anything to sequencing."
+            return AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: "Welcome. \(introductionPrompt(for: "designer_dialog", context: context)) \(observation)",
+                timestamp: isoNow(),
+                handledBy: "designer_dialog",
+                routeDecision: "designer_dialog",
+                displayName: displayName(for: "designer_dialog", context: context),
+                artifactCard: nil
+            )
+        }
+        if shouldKickOffSequencing(context: context) {
+            let observation = "We can translate the approved direction into concrete sequence changes and keep the iteration focused on implementation."
+            return AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: "Welcome. \(introductionPrompt(for: "sequence_agent", context: context)) \(observation)",
+                timestamp: isoNow(),
+                handledBy: "sequence_agent",
+                routeDecision: "sequence_agent",
+                displayName: displayName(for: "sequence_agent", context: context),
+                artifactCard: nil
+            )
+        }
         if shouldKickOffDisplayDiscovery(context: context) {
             let observation = "I can already see your layout, and I’m starting with a broad review of the display structure so we can build useful metadata through conversation."
             return AssistantMessageModel(
@@ -249,9 +288,25 @@ final class AssistantWindowViewModel {
 
     private func shouldKickOffDisplayDiscovery(context: AssistantContextModel) -> Bool {
         context.displayTargetCount > 0 &&
+        context.route.caseInsensitiveCompare("display") == .orderedSame &&
         context.displayLabeledTargetCount == 0 &&
         context.displayDiscoveryTranscriptCount == 0 &&
         context.displayDiscoveryStatus.caseInsensitiveCompare("not_started") == .orderedSame
+    }
+
+    private func shouldKickOffAudioAnalysis(context: AssistantContextModel) -> Bool {
+        context.route.caseInsensitiveCompare("audio") == .orderedSame &&
+        context.workflowPhaseID.caseInsensitiveCompare(WorkflowPhaseID.audioAnalysis.rawValue) == .orderedSame
+    }
+
+    private func shouldKickOffDesign(context: AssistantContextModel) -> Bool {
+        context.route.caseInsensitiveCompare("design") == .orderedSame &&
+        context.workflowPhaseID.caseInsensitiveCompare(WorkflowPhaseID.design.rawValue) == .orderedSame
+    }
+
+    private func shouldKickOffSequencing(context: AssistantContextModel) -> Bool {
+        context.route.caseInsensitiveCompare("sequence") == .orderedSame &&
+        context.workflowPhaseID.caseInsensitiveCompare(WorkflowPhaseID.sequencing.rawValue) == .orderedSame
     }
 
     private func shouldKickOffProjectMission(context: AssistantContextModel) -> Bool {
