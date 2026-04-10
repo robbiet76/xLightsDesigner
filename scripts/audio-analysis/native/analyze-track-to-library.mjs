@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 import { buildAnalysisArtifactFromPipelineResult } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildAudioAnalysisQualityReport } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analysis-quality.js';
-import { writeAnalysisArtifactToLibrary } from '../../../apps/xlightsdesigner-desktop/analysis-artifact-store.mjs';
+import { writeAnalysisArtifactToLibrary } from '../../../apps/xlightsdesigner-ui/storage/analysis-artifact-store.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..', '..');
 const SERVICE_DIR = path.join(ROOT, 'apps', 'xlightsdesigner-analysis-service');

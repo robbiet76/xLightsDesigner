@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 import { buildAnalysisArtifactFromPipelineResult } from '../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildAudioAnalysisQualityReport } from '../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analysis-quality.js';
-import { writeAnalysisArtifactToLibrary } from '../../apps/xlightsdesigner-desktop/analysis-artifact-store.mjs';
+import { writeAnalysisArtifactToLibrary } from '../../apps/xlightsdesigner-ui/storage/analysis-artifact-store.mjs';
 
 const AUDIO_EXTS = new Set(['.mp3', '.wav', '.m4a', '.flac']);
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');

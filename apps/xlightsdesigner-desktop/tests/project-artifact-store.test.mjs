@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { writeProjectArtifacts, readProjectArtifact } from "../project-artifact-store.mjs";
+import { writeProjectArtifacts, readProjectArtifact } from "../../xlightsdesigner-ui/storage/project-artifact-store.mjs";
 
 test("project artifact store writes and reads immutable artifacts by id", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-project-artifacts-"));

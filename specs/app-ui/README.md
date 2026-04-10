@@ -17,6 +17,7 @@ Scope:
 Active Entry Points:
 - `native-cutover-audit-2026-04-10.md`
 - `electron-bridge-inventory-2026-04-10.md`
+- `native-app-architecture-diagram-2026-04-10.md`
 - `macos-native-migration-phase-plan-2026-04-06.md`
 - `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-wireframe-and-prototype-method-2026-04-06.md`

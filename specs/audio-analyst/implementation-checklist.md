@@ -215,7 +215,7 @@ Progress note (2026-03-12):
 - training assets for `audio_track_analysis` now reflect the artifact/handoff boundary, degraded-mode handling, and media-only role of `audio_analyst` rather than the earlier timing-track-oriented scaffold.
 - audio orchestration no longer accepts current sequence timing tracks as input; timing-track creation remains solely downstream in `sequence_agent`.
 - `analysis_artifact_v1` now carries explicit per-capability availability/confidence/source fields plus structured web-validation evidence, reducing dependence on summary-line parsing downstream.
-- desktop artifact-store read/write logic is now isolated in `apps/xlightsdesigner-desktop/analysis-artifact-store.mjs` and covered by golden persistence/rehydration tests.
+- shared artifact-store read/write logic is now isolated in `apps/xlightsdesigner-ui/storage/analysis-artifact-store.mjs` and covered by golden persistence/rehydration tests.
 - provider replaceability and future in-house analyzer extension policy are now formalized in `specs/audio-analyst/provider-framework.md`.
 - sequence-side `audioAnalysis` persistence and snapshot fallback paths were removed; the canonical supported source of truth is the per-media project-root artifact.
 - audio-analysis UI state projection and artifact rehydration helpers now live in `apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-ui-state.js`, reducing direct audio-state mutation inside `app.js`.

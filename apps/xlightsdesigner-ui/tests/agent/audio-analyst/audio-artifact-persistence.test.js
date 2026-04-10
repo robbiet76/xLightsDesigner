@@ -13,7 +13,7 @@ import {
   buildProfiledAnalysisArtifactPath,
   writeAnalysisArtifactToProject,
   readAnalysisArtifactFromProject
-} from "../../../../xlightsdesigner-desktop/analysis-artifact-store.mjs";
+} from "../../../storage/analysis-artifact-store.mjs";
 
 function samplePipelineResult() {
   return {

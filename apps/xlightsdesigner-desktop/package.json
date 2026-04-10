@@ -32,8 +32,6 @@
       "preload.mjs",
       "xlights-validation.mjs",
       "designer-chat-sanitizer.mjs",
-      "analysis-artifact-store.mjs",
-      "project-artifact-store.mjs",
       "renderer/**/*",
       "package.json"
     ],

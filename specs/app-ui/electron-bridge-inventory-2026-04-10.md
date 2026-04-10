@@ -95,8 +95,8 @@ Working rule:
 ## First Real Extraction Target
 
 The first safe code extraction target is:
-- `apps/xlightsdesigner-desktop/analysis-artifact-store.mjs`
-- `apps/xlightsdesigner-desktop/project-artifact-store.mjs`
+- `apps/xlightsdesigner-ui/storage/analysis-artifact-store.mjs`
+- `apps/xlightsdesigner-ui/storage/project-artifact-store.mjs`
 
 Reason:
 - these modules are already used outside the Electron shell by:

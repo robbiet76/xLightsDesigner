@@ -14,12 +14,12 @@ import {
   readAnalysisArtifactFromLibrary,
   writeAnalysisArtifactToProject,
   writeAnalysisArtifactToLibrary
-} from "./analysis-artifact-store.mjs";
+} from "./renderer/storage/analysis-artifact-store.mjs";
 import {
   readProjectArtifact,
   writeProjectArtifact,
   writeProjectArtifacts
-} from "./project-artifact-store.mjs";
+} from "./renderer/storage/project-artifact-store.mjs";
 import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs";
 import {
   validateDirectSequencePromptState,

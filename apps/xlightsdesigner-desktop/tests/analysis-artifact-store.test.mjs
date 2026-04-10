@@ -12,7 +12,7 @@ import {
   readAnalysisArtifactFromProject,
   readAnalysisArtifactFromLibrary,
   writeAnalysisArtifactToLibrary
-} from "../analysis-artifact-store.mjs";
+} from "../../xlightsdesigner-ui/storage/analysis-artifact-store.mjs";
 
 function makeTempProject() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "xld-analysis-artifact-store-"));

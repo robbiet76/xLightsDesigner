@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import os from 'node:os';
 import path from 'node:path';
-import { updateTrackLibraryRecordIdentity } from '../../../apps/xlightsdesigner-desktop/analysis-artifact-store.mjs';
+import { updateTrackLibraryRecordIdentity } from '../../../apps/xlightsdesigner-ui/storage/analysis-artifact-store.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
 
