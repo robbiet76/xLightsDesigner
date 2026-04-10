@@ -248,6 +248,16 @@ function sanitizeAssistantModelTokens(text = '', context = {}) {
   });
 }
 
+function countUserTurns(messages = []) {
+  const rows = Array.isArray(messages) ? messages : [];
+  let count = 0;
+  for (const row of rows) {
+    const role = String(row?.role || '').trim().toLowerCase();
+    if (role === 'user') count += 1;
+  }
+  return count;
+}
+
 function validateDiscoveryCapture(capture = {}, context = {}) {
   return validateDiscoveryCaptureForTurn(capture, { context });
 }
@@ -498,6 +508,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'The project mission should not drift into prop inventory, target lists, xLights structure, effect choices, sequencing tactics, or technical implementation details.',
     'Write the mission as a polished paragraph in natural prose, not bullets, labels, fragments, or a project-manager summary.',
     'Aim for something that would actually inspire downstream design work. It should provide direction and motivation, not just documentation.',
+    'Do not draft the full project mission after only one substantive user answer unless the user explicitly asks you to write or finalize it.',
+    'Early in the Project conversation, ask thoughtful follow-up questions that help the user articulate tone, deeper intent, inspiration, audience, and what should make the show feel memorable.',
+    'Treat project mission shaping as an important creative step. It is fine to spend a few turns helping the user think before you write the final paragraph.',
     'When the user is talking at the show level rather than the display or sequence level, keep the conversation at that project-mission level.',
     'Do not overdo that personality. Keep it grounded, brief, and helpful.',
     'During display discovery, do not imply that metadata has already been applied. Prefer understanding language such as "I understand this as..." or "So far I have..." rather than "I will mark" or "I updated".',
@@ -659,6 +672,9 @@ async function runAgentConversation(payload = {}) {
       )
     : { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
   const userAskedToFinalize = /\b(finalize|review|ready|proposal|propose|wrap up|finish for now)\b/i.test(userMessage);
+  const projectConversationActive = String(context?.route || '').trim().toLowerCase() === 'project';
+  const totalUserTurns = countUserTurns(payload?.messages) + 1;
+  const canCaptureProjectMission = !projectConversationActive || userAskedToFinalize || totalUserTurns >= 2;
   if (!userAskedToFinalize && String(finalDiscoveryCapture.status || '').trim().toLowerCase() !== 'ready_for_proposal') {
     finalDiscoveryCapture.tagProposals = [];
   }
@@ -673,7 +689,7 @@ async function runAgentConversation(payload = {}) {
     responseId,
     userPreferenceNotes: inferUserPreferenceNotes(userMessage),
     displayDiscoveryCapture: finalDiscoveryCapture,
-    projectMission: projectMissionCapture.document ? projectMissionCapture : null
+    projectMission: (canCaptureProjectMission && projectMissionCapture.document) ? projectMissionCapture : null
   };
 }
 
