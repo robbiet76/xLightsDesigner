@@ -106,6 +106,8 @@ export function hasMeaningfulDisplayMetadata(context = {}) {
 }
 
 export function shouldStartDisplayDiscovery({ context = {}, userMessage = "" } = {}) {
+  const route = str(context?.route).toLowerCase();
+  if (route === "project") return false;
   const text = str(userMessage).toLowerCase();
   if (hasMeaningfulDisplayMetadata(context)) return false;
   if (!Number(context?.display?.targetCount || 0)) return false;
@@ -117,6 +119,8 @@ export function shouldStartDisplayDiscovery({ context = {}, userMessage = "" } =
 }
 
 export function shouldContinueDisplayDiscovery({ context = {} } = {}) {
+  const route = str(context?.route).toLowerCase();
+  if (route === "project") return false;
   const status = str(context?.displayDiscovery?.status).toLowerCase();
   return status === "in_progress" && !hasMeaningfulDisplayMetadata(context);
 }
