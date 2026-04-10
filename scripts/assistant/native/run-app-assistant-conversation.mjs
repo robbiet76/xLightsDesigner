@@ -327,12 +327,46 @@ function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMis
 
   const outputSummary = String(context?.workflowPhase?.outputSummary || '').trim();
   const currentPhaseId = String(context?.workflowPhase?.phaseId || '').trim();
-  if (outputSummary && phaseTransition?.phaseId && currentPhaseId) {
+  const currentPhaseStatus = String(context?.workflowPhase?.status || '').trim().toLowerCase();
+  const shouldSurfacePhaseSummary = Boolean(
+    outputSummary &&
+    currentPhaseId &&
+    (
+      phaseTransition?.phaseId ||
+      currentPhaseStatus === 'ready_to_close' ||
+      currentPhaseStatus === 'handoff_pending'
+    )
+  );
+  if (shouldSurfacePhaseSummary) {
+    if (currentPhaseId === 'audio_analysis') {
+      return {
+        artifactType: 'audio_analysis_summary_v1',
+        title: 'Audio Analysis Updated',
+        summary: truncateText(outputSummary, 280),
+        chips: ['Audio Analysis', phaseTransition?.phaseId ? `Next: ${phaseTitle(phaseTransition.phaseId)}` : 'Ready for Handoff'].filter(Boolean)
+      };
+    }
+    if (currentPhaseId === 'design') {
+      return {
+        artifactType: 'design_handoff_summary_v1',
+        title: 'Design Handoff Updated',
+        summary: truncateText(outputSummary, 280),
+        chips: ['Design', phaseTransition?.phaseId ? `Next: ${phaseTitle(phaseTransition.phaseId)}` : 'Ready for Handoff'].filter(Boolean)
+      };
+    }
+    if (currentPhaseId === 'sequencing') {
+      return {
+        artifactType: 'sequencing_execution_summary_v1',
+        title: 'Sequencing Progress Updated',
+        summary: truncateText(outputSummary, 280),
+        chips: ['Sequencing', phaseTransition?.phaseId ? `Next: ${phaseTitle(phaseTransition.phaseId)}` : 'Ready for Review'].filter(Boolean)
+      };
+    }
     return {
       artifactType: 'phase_output_summary_v1',
       title: `${phaseTitle(currentPhaseId)} Wrap-Up`,
       summary: truncateText(outputSummary, 280),
-      chips: [phaseTitle(currentPhaseId), `Next: ${phaseTitle(phaseTransition.phaseId)}`]
+      chips: [phaseTitle(currentPhaseId), phaseTransition?.phaseId ? `Next: ${phaseTitle(phaseTransition.phaseId)}` : 'Ready to Continue'].filter(Boolean)
     };
   }
 
