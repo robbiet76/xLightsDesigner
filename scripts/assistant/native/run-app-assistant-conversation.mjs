@@ -301,11 +301,7 @@ function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMis
     };
   }
 
-  if (discoveryCapture && (
-    Array.isArray(discoveryCapture.insights) && discoveryCapture.insights.length ||
-    Array.isArray(discoveryCapture.resolvedBranches) && discoveryCapture.resolvedBranches.length ||
-    Array.isArray(discoveryCapture.unresolvedBranches) && discoveryCapture.unresolvedBranches.length
-  )) {
+  if (discoveryCapture && Array.isArray(discoveryCapture.insights) && discoveryCapture.insights.length) {
     const insightCount = Array.isArray(discoveryCapture.insights) ? discoveryCapture.insights.length : 0;
     const resolvedCount = Array.isArray(discoveryCapture.resolvedBranches) ? discoveryCapture.resolvedBranches.length : 0;
     const unresolvedCount = Array.isArray(discoveryCapture.unresolvedBranches) ? discoveryCapture.unresolvedBranches.length : 0;
@@ -328,8 +324,15 @@ function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMis
   const outputSummary = String(context?.workflowPhase?.outputSummary || '').trim();
   const currentPhaseId = String(context?.workflowPhase?.phaseId || '').trim();
   const currentPhaseStatus = String(context?.workflowPhase?.status || '').trim().toLowerCase();
-  const shouldSurfacePhaseSummary = Boolean(
+  const normalizedOutputSummary = outputSummary.toLowerCase();
+  const hasSubstantiveOutputSummary = Boolean(
     outputSummary &&
+    normalizedOutputSummary !== 'no project mission captured yet.' &&
+    normalizedOutputSummary !== '0 insights, 0 unresolved branches.' &&
+    normalizedOutputSummary !== '0 insights, 0 unresolved branches'
+  );
+  const shouldSurfacePhaseSummary = Boolean(
+    hasSubstantiveOutputSummary &&
     currentPhaseId &&
     (
       phaseTransition?.phaseId ||

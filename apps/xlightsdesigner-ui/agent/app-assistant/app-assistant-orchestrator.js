@@ -45,6 +45,16 @@ function currentPhaseOutputSummary(context = {}) {
   return str(phase.outputSummary);
 }
 
+function hasSubstantivePhaseOutputSummary(summary = "") {
+  const normalized = str(summary).toLowerCase();
+  if (!normalized) return false;
+  return (
+    normalized !== "no project mission captured yet." &&
+    normalized !== "0 insights, 0 unresolved branches." &&
+    normalized !== "0 insights, 0 unresolved branches"
+  );
+}
+
 function interactionStyle(context = {}) {
   const style = str(context?.interactionStyle).toLowerCase();
   return style === "direct" ? "direct" : "guided";
@@ -346,7 +356,7 @@ function buildPhaseTransitionMessage(phaseTransition = {}, context = {}) {
   const reason = str(phaseTransition?.reason);
   const outputSummary = currentPhaseOutputSummary(context);
   const direct = interactionStyle(context) === "direct";
-  const opener = outputSummary ? `${outputSummary} ` : "";
+  const opener = hasSubstantivePhaseOutputSummary(outputSummary) ? `${outputSummary} ` : "";
   if (reason) {
     return direct
       ? `${opener}Next: ${title}.`
@@ -362,7 +372,9 @@ function buildPhaseClosureMessage(context = {}) {
   const outputSummary = currentPhaseOutputSummary(context);
   const nextPhases = formatPhaseList(phase.nextRecommendedPhases);
   const direct = interactionStyle(context) === "direct";
-  const summary = outputSummary || `${phaseTitle(phase.phaseId)} is in a good place to hand off.`;
+  const summary = hasSubstantivePhaseOutputSummary(outputSummary)
+    ? outputSummary
+    : `${phaseTitle(phase.phaseId)} is in a good place to hand off.`;
   if (nextPhases) {
     return direct
       ? `${summary} Next: ${nextPhases}.`

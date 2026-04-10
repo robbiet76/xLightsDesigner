@@ -110,7 +110,8 @@ final class AssistantWindowViewModel {
             lastActionRequest = result.actionRequest
             previousResponseID = result.responseID
             let introRole = result.handledBy
-            if shouldIntroduce(roleID: introRole, context: context, userMessage: trimmed) {
+            if introRole != "app_assistant" &&
+                shouldIntroduce(roleID: introRole, context: context, userMessage: trimmed) {
                 messages.append(roleIntroductionMessage(for: introRole, context: context))
             }
             messages.append(AssistantMessageModel(
