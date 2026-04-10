@@ -267,6 +267,47 @@ test("addressed Lyric structure follow-up stays with audio analyst", async () =>
   assert.equal(result.result.handledBy, "audio_analyst");
 });
 
+test("explicit phase switch uses app assistant transition message instead of specialist kickoff", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "To continue display discovery, tell me about the main focal elements in the show.",
+        shouldGenerateProposal: false,
+        responseId: "resp-phase-switch",
+        phaseTransition: {
+          phaseId: "display_discovery",
+          reason: "User explicitly requested a transition to display discovery."
+        }
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Let's move to display discovery next.",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "project_mission",
+        ownerRole: "designer_dialog",
+        status: "ready_to_close",
+        entryReason: "Project mission is ready to close.",
+        nextRecommendedPhases: ["display_discovery", "audio_analysis"]
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
+  assert.equal(result.result.phaseTransition.phaseId, "display_discovery");
+  assert.match(result.result.assistantMessage, /move into Display Discovery next/i);
+  assert.match(result.result.assistantMessage, /Designer will take the lead/i);
+  assert.doesNotMatch(result.result.assistantMessage, /main focal elements/i);
+});
+
 test("broad design kickoff stays with designer even if assistant text mentions sequencing", async () => {
   const bridge = {
     async runAgentConversation() {

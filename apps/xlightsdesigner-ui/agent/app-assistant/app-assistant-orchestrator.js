@@ -266,6 +266,72 @@ function buildDiagnostics({ routeDecision = "general", bridgeOk = false, respons
   };
 }
 
+function phaseTitle(phaseId = "") {
+  switch (str(phaseId).toLowerCase()) {
+  case "setup":
+    return "Setup";
+  case "project_mission":
+    return "Project Mission";
+  case "audio_analysis":
+    return "Audio Analysis";
+  case "display_discovery":
+    return "Display Discovery";
+  case "design":
+    return "Design";
+  case "sequencing":
+    return "Sequencing";
+  case "review":
+    return "Review";
+  default:
+    return "the next phase";
+  }
+}
+
+function roleLabel(roleId = "") {
+  switch (str(roleId)) {
+  case "app_assistant":
+    return "App Assistant";
+  case "designer_dialog":
+    return "Designer";
+  case "audio_analyst":
+    return "Audio Analyst";
+  case "sequence_agent":
+    return "Sequencer";
+  default:
+    return "Team";
+  }
+}
+
+function transitionOwnerRole(phaseId = "") {
+  switch (str(phaseId).toLowerCase()) {
+  case "setup":
+    return "app_assistant";
+  case "project_mission":
+  case "display_discovery":
+  case "design":
+    return "designer_dialog";
+  case "audio_analysis":
+    return "audio_analyst";
+  case "sequencing":
+  case "review":
+    return "sequence_agent";
+  default:
+    return "app_assistant";
+  }
+}
+
+function buildPhaseTransitionMessage(phaseTransition = {}) {
+  const phaseId = str(phaseTransition?.phaseId);
+  if (!phaseId) return "";
+  const title = phaseTitle(phaseId);
+  const owner = roleLabel(transitionOwnerRole(phaseId));
+  const reason = str(phaseTransition?.reason);
+  if (reason) {
+    return `We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
+  }
+  return `We can move into ${title} next. ${owner} will take the lead there.`;
+}
+
 export async function executeAppAssistantConversation({
   userMessage = "",
   messages = [],
@@ -343,6 +409,12 @@ export async function executeAppAssistantConversation({
   }
 
   const routeDecision = inferRouteDecision({ userMessage, context, response });
+  const normalizedPhaseTransition = response?.phaseTransition && typeof response.phaseTransition === "object"
+    ? {
+        phaseId: str(response.phaseTransition.phaseId || ""),
+        reason: str(response.phaseTransition.reason || "")
+      }
+    : null;
   const discoveryShouldStart = shouldStartDisplayDiscovery({ context, userMessage });
   const discoveryShouldContinue = shouldContinueDisplayDiscovery({ context });
   const discoveryActive =
@@ -352,10 +424,18 @@ export async function executeAppAssistantConversation({
   const allowProposalGeneration =
     (routeDecision === "designer_dialog" || routeDecision === "sequence_agent") &&
     (Boolean(context?.sequenceOpen) || Boolean(context?.planOnlyMode));
+  const explicitSwitch = isExplicitPhaseSwitchIntent(userMessage);
+  const shouldUseAppAssistantTransitionMessage =
+    explicitSwitch &&
+    normalizedPhaseTransition?.phaseId &&
+    routeDecision === "general";
+
   return {
     ok: true,
     result: buildAppAssistantResult({
-      assistantMessage: str(response.assistantMessage || ""),
+      assistantMessage: shouldUseAppAssistantTransitionMessage
+        ? buildPhaseTransitionMessage(normalizedPhaseTransition)
+        : str(response.assistantMessage || ""),
       routeDecision,
       responseId: str(response.responseId || ""),
       provider: str(response.provider || ""),
@@ -392,12 +472,7 @@ export async function executeAppAssistantConversation({
             document: str(response.projectMission.document || "")
           }
         : undefined,
-      phaseTransition: response?.phaseTransition && typeof response.phaseTransition === "object"
-        ? {
-            phaseId: str(response.phaseTransition.phaseId || ""),
-            reason: str(response.phaseTransition.reason || "")
-          }
-        : undefined,
+      phaseTransition: normalizedPhaseTransition?.phaseId ? normalizedPhaseTransition : undefined,
       userPreferenceNotes: Array.isArray(response.userPreferenceNotes) ? response.userPreferenceNotes : [],
       diagnostics: buildDiagnostics({
         routeDecision,
