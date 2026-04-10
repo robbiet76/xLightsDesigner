@@ -315,6 +315,12 @@ Recommended implementation rule:
 - treat navigation as passive
 - treat domain-specific creation/edit/apply actions as potential phase-owning actions
 
+Page guidance rule:
+- when a phase becomes active, the app should usually highlight the page that best supports that phase
+- this highlight should guide the user without forcing navigation by default
+- the current page and the recommended page may differ temporarily
+- forced automatic page switching should be avoided unless a later workflow proves it is clearly better for a specific case
+
 This distinction is required so the user always knows:
 - where they are looking
 - what kind of work is active
