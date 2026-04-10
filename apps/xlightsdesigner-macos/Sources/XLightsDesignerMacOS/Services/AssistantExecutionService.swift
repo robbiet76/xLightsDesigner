@@ -20,6 +20,7 @@ struct AssistantExecutionResult: Sendable {
     let routeDecision: String
     let responseID: String
     let displayDiscovery: AssistantDisplayDiscoveryResult?
+    let projectMission: AssistantProjectMissionResult?
     let userPreferenceNotes: [String]
 }
 
@@ -74,6 +75,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 routeDecision: string(result["routeDecision"]),
                 responseID: string(result["responseId"]),
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
+                projectMission: parseProjectMission(from: result["projectMission"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
@@ -86,6 +88,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 routeDecision: string(result["routeDecision"]),
                 responseID: string(result["responseId"]),
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
+                projectMission: parseProjectMission(from: result["projectMission"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
@@ -185,5 +188,17 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
             resolvedBranches: stringArray(object["resolvedBranches"]),
             tagProposals: tagProposals
         )
+    }
+
+    private func parseProjectMission(from value: Any?) -> AssistantProjectMissionResult? {
+        guard let object = value as? [String: Any] else { return nil }
+        let result = AssistantProjectMissionResult(
+            vision: string(object["vision"]),
+            goals: string(object["goals"]),
+            inspiration: string(object["inspiration"]),
+            cohesionNotes: string(object["cohesionNotes"]),
+            openQuestions: stringArray(object["openQuestions"])
+        )
+        return result.hasContent ? result : nil
     }
 }

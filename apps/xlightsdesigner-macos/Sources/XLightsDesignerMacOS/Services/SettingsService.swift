@@ -30,8 +30,10 @@ struct LocalSettingsService: SettingsService {
     func saveAgentConfig(_ config: SettingsAgentConfigModel) throws -> SettingsAgentConfigModel {
         let fileURL = URL(fileURLWithPath: agentConfigPath)
         try fileManager.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let existingConfig = loadRawAgentConfig()
+        let trimmedAPIKey = config.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let payload = AgentConfigFile(
-            apiKey: config.apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
+            apiKey: trimmedAPIKey.isEmpty ? existingConfig?.apiKey ?? "" : trimmedAPIKey,
             model: config.model.trimmingCharacters(in: .whitespacesAndNewlines),
             baseURL: config.baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
             user: AgentConfigIdentity(
@@ -144,10 +146,7 @@ struct LocalSettingsService: SettingsService {
     }
 
     private func loadAgentConfig() -> SettingsAgentConfigModel {
-        guard
-            let data = try? Data(contentsOf: URL(fileURLWithPath: agentConfigPath)),
-            let config = try? JSONDecoder().decode(AgentConfigFile.self, from: data)
-        else {
+        guard let config = loadRawAgentConfig() else {
             return SettingsAgentConfigModel(
                 model: "",
                 baseURL: "https://api.openai.com/v1",
@@ -195,6 +194,16 @@ struct LocalSettingsService: SettingsService {
                 )
             )
         )
+    }
+
+    private func loadRawAgentConfig() -> AgentConfigFile? {
+        guard
+            let data = try? Data(contentsOf: URL(fileURLWithPath: agentConfigPath)),
+            let config = try? JSONDecoder().decode(AgentConfigFile.self, from: data)
+        else {
+            return nil
+        }
+        return config
     }
 
     private func loadSafetyConfig() -> SettingsSafetyConfigModel {

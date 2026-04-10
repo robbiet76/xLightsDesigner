@@ -4,6 +4,14 @@ import Observation
 @MainActor
 @Observable
 final class ProjectScreenViewModel {
+    struct ProjectBriefEditorModel {
+        var vision: String = ""
+        var goals: String = ""
+        var inspiration: String = ""
+        var cohesionNotes: String = ""
+        var openQuestionsText: String = ""
+    }
+
     private let workspace: ProjectWorkspace
     private let projectService: ProjectService
     private let fileSelectionService: FileSelectionService
@@ -14,6 +22,8 @@ final class ProjectScreenViewModel {
     var selectedOpenProjectPath = ""
     var isShowingProjectSheet = false
     var isShowingOpenProjectSheet = false
+    var isEditingProjectBrief = false
+    var projectBriefEditor = ProjectBriefEditorModel()
     var screenBanner: ProjectBannerModel?
 
     init(
@@ -46,6 +56,7 @@ final class ProjectScreenViewModel {
                     readinessExplanation: readinessExplanation(for: project)
                 )
             },
+            brief: active.map(projectBrief(for:)),
             actions: ProjectActionState(
                 canCreate: true,
                 canOpen: true
@@ -161,6 +172,47 @@ final class ProjectScreenViewModel {
         }
     }
 
+    func startEditProjectBrief() {
+        let brief = workspace.activeProject.map(projectBrief(for:))
+        projectBriefEditor = ProjectBriefEditorModel(
+            vision: brief?.vision ?? "",
+            goals: brief?.goals ?? "",
+            inspiration: brief?.inspiration ?? "",
+            cohesionNotes: brief?.cohesionNotes ?? "",
+            openQuestionsText: (brief?.openQuestions ?? []).joined(separator: "\n")
+        )
+        isEditingProjectBrief = true
+    }
+
+    func saveProjectBrief() {
+        guard var active = workspace.activeProject else { return }
+        let questions = projectBriefEditor.openQuestionsText
+            .split(whereSeparator: \.isNewline)
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let payload: [String: Any] = [
+            "vision": projectBriefEditor.vision.trimmingCharacters(in: .whitespacesAndNewlines),
+            "goals": projectBriefEditor.goals.trimmingCharacters(in: .whitespacesAndNewlines),
+            "inspiration": projectBriefEditor.inspiration.trimmingCharacters(in: .whitespacesAndNewlines),
+            "cohesionNotes": projectBriefEditor.cohesionNotes.trimmingCharacters(in: .whitespacesAndNewlines),
+            "openQuestions": questions,
+            "updatedAt": ISO8601DateFormatter().string(from: Date())
+        ]
+        active.snapshot["projectBrief"] = AnyCodable(payload)
+        do {
+            let saved = try projectService.saveProject(active)
+            workspace.setProject(saved)
+            workspace.projectBanner = ProjectBannerModel(id: "project-brief-saved", level: .ready, text: "Project brief updated.")
+            isEditingProjectBrief = false
+        } catch {
+            screenBanner = ProjectBannerModel(id: "project-brief-failed", level: .blocked, text: String(error.localizedDescription))
+        }
+    }
+
+    func cancelProjectBriefEditing() {
+        isEditingProjectBrief = false
+    }
+
 
     func dismissProjectSheet() {
         isShowingProjectSheet = false
@@ -190,6 +242,19 @@ final class ProjectScreenViewModel {
         } else if selectedOpenProjectPath.isEmpty {
             selectedOpenProjectPath = availableProjects.first?.projectFolderPath ?? ""
         }
+    }
+
+    private func projectBrief(for project: ActiveProjectModel) -> ProjectBriefModel {
+        let snapshot = project.snapshot.mapValues(\.value)
+        let brief = snapshot["projectBrief"] as? [String: Any] ?? [:]
+        return ProjectBriefModel(
+            vision: string(brief["vision"]),
+            goals: string(brief["goals"]),
+            inspiration: string(brief["inspiration"]),
+            cohesionNotes: string(brief["cohesionNotes"]),
+            openQuestions: arrayOfStrings(brief["openQuestions"]),
+            updatedAt: string(brief["updatedAt"])
+        )
     }
 
     private func readinessLevel(for project: ActiveProjectModel) -> WorkflowReadinessLevel {
@@ -227,5 +292,21 @@ final class ProjectScreenViewModel {
 
     private func isGeneratedTestProject(_ project: ActiveProjectModel) -> Bool {
         project.projectName.hasPrefix("Native Test Project ") || project.projectName.hasPrefix("DisplayMetadataStore")
+    }
+
+    private func string(_ value: Any?) -> String {
+        if let string = value as? String {
+            return string.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return ""
+    }
+
+    private func arrayOfStrings(_ value: Any?) -> [String] {
+        guard let values = value as? [Any] else { return [] }
+        return values.compactMap { item in
+            guard let string = item as? String else { return nil }
+            let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
     }
 }

@@ -77,11 +77,18 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
     /\b(audio analysis|analyze audio|audio analyst)\b/.test(userText) ||
     /\b(project setup|show folder|open project|save project)\b/.test(userText);
 
+  const projectMissionIntent =
+    /\b(mission|vision|goals|goal|inspiration|theme|themes|cohesive|cohesion|overall feel|overall direction|what kind of show|what should it feel like)\b/.test(userText);
+
   if (addressedRole) {
     return addressedRole === APP_ASSISTANT_ROLE ? "general" : addressedRole;
   }
 
   if (displayDiscoveryActive && !explicitWorkflowSwitch) {
+    return "designer_dialog";
+  }
+
+  if (currentRoute === "project" && projectMissionIntent) {
     return "designer_dialog";
   }
 
@@ -289,6 +296,17 @@ export async function executeAppAssistantConversation({
               : [],
             candidateProps: Array.isArray(context?.display?.displayDiscoveryCandidates)
               ? context.display.displayDiscoveryCandidates
+              : []
+          }
+        : undefined,
+      projectMission: response?.projectMission && typeof response.projectMission === "object"
+        ? {
+            vision: str(response.projectMission.vision || ""),
+            goals: str(response.projectMission.goals || ""),
+            inspiration: str(response.projectMission.inspiration || ""),
+            cohesionNotes: str(response.projectMission.cohesionNotes || ""),
+            openQuestions: Array.isArray(response.projectMission.openQuestions)
+              ? response.projectMission.openQuestions.map((row) => str(row)).filter(Boolean)
               : []
           }
         : undefined,

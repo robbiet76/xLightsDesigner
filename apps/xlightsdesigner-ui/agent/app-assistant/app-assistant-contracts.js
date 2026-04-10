@@ -117,6 +117,7 @@ export function buildAppAssistantResult({
   diagnostics = null,
   warnings = [],
   displayDiscovery = null,
+  projectMission = null,
   userPreferenceNotes = []
 } = {}) {
   return {
@@ -133,6 +134,7 @@ export function buildAppAssistantResult({
     shouldGenerateProposal: Boolean(shouldGenerateProposal),
     proposalIntent: str(proposalIntent),
     displayDiscovery: isPlainObject(displayDiscovery) ? displayDiscovery : undefined,
+    projectMission: isPlainObject(projectMission) ? projectMission : undefined,
     userPreferenceNotes: arr(userPreferenceNotes).map((row) => str(row)).filter(Boolean),
     diagnostics: isPlainObject(diagnostics) ? diagnostics : undefined,
     warnings: arr(warnings).map((row) => str(row)).filter(Boolean)

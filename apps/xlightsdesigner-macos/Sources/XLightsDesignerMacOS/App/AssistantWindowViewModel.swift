@@ -4,10 +4,12 @@ import Observation
 @MainActor
 @Observable
 final class AssistantWindowViewModel {
+    private weak var workspace: ProjectWorkspace?
     private let conversationService: AssistantConversationService
     private let executionService: AssistantExecutionService
     private let displayDiscoveryStore: DisplayDiscoveryStateStore
     private let userProfileStore: AssistantUserProfileStore
+    private let projectService: ProjectService
 
     var messages: [AssistantMessageModel] = []
     var draft = ""
@@ -19,12 +21,16 @@ final class AssistantWindowViewModel {
         conversationService: AssistantConversationService = LocalAssistantConversationService(),
         executionService: AssistantExecutionService = LocalAssistantExecutionService(),
         displayDiscoveryStore: DisplayDiscoveryStateStore = LocalDisplayDiscoveryStateStore(),
-        userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore()
+        userProfileStore: AssistantUserProfileStore = LocalAssistantUserProfileStore(),
+        projectService: ProjectService = LocalProjectService(),
+        workspace: ProjectWorkspace? = nil
     ) {
+        self.workspace = workspace
         self.conversationService = conversationService
         self.executionService = executionService
         self.displayDiscoveryStore = displayDiscoveryStore
         self.userProfileStore = userProfileStore
+        self.projectService = projectService
     }
 
     func loadConversationIfNeeded(context: AssistantContextModel, project: ActiveProjectModel?) {
@@ -106,6 +112,9 @@ final class AssistantWindowViewModel {
             if !result.userPreferenceNotes.isEmpty {
                 try? userProfileStore.addPreferenceNotes(result.userPreferenceNotes, recordedAt: isoNow())
             }
+            if let mission = result.projectMission {
+                try? saveProjectMission(mission, project: project)
+            }
             if
                 let project,
                 let discovery = result.displayDiscovery,
@@ -170,6 +179,18 @@ final class AssistantWindowViewModel {
     }
 
     private func seedAssistantMessage(context: AssistantContextModel) -> AssistantMessageModel {
+        if shouldKickOffProjectMission(context: context) {
+            let observation = "We can start at the show level and shape what this project is meant to feel like before we get into display details or sequencing."
+            return AssistantMessageModel(
+                id: UUID().uuidString,
+                role: .assistant,
+                text: "Welcome. \(introductionPrompt(for: "designer_dialog", context: context)) \(observation)",
+                timestamp: isoNow(),
+                handledBy: "designer_dialog",
+                routeDecision: "designer_dialog",
+                displayName: displayName(for: "designer_dialog", context: context)
+            )
+        }
         if shouldKickOffDisplayDiscovery(context: context) {
             let observation = "I can already see your layout, and I’m starting with a broad review of the display structure so we can build useful metadata through conversation."
             return AssistantMessageModel(
@@ -199,6 +220,15 @@ final class AssistantWindowViewModel {
         context.displayLabeledTargetCount == 0 &&
         context.displayDiscoveryTranscriptCount == 0 &&
         context.displayDiscoveryStatus.caseInsensitiveCompare("not_started") == .orderedSame
+    }
+
+    private func shouldKickOffProjectMission(context: AssistantContextModel) -> Bool {
+        context.route.caseInsensitiveCompare("project") == .orderedSame &&
+        !context.activeProjectName.isEmpty &&
+        context.projectMissionVision.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        context.projectMissionGoals.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        context.projectMissionInspiration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        context.projectMissionCohesionNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func displayName(for handledBy: String, context: AssistantContextModel) -> String {
@@ -274,7 +304,7 @@ final class AssistantWindowViewModel {
         case "app_assistant":
             return "I handle workflow coordination, routing, and setup questions."
         case "designer_dialog":
-            return "I focus on display understanding, creative direction, and design intent."
+            return "I focus on project mission, display understanding, creative direction, and design intent."
         case "audio_analyst":
             return "I focus on music structure, timing, and analysis details."
         case "sequence_agent":
@@ -286,5 +316,20 @@ final class AssistantWindowViewModel {
 
     private func isoNow() -> String {
         ISO8601DateFormatter().string(from: Date())
+    }
+
+    private func saveProjectMission(_ mission: AssistantProjectMissionResult, project: ActiveProjectModel?) throws {
+        guard var project else { return }
+        let payload: [String: Any] = [
+            "vision": mission.vision,
+            "goals": mission.goals,
+            "inspiration": mission.inspiration,
+            "cohesionNotes": mission.cohesionNotes,
+            "openQuestions": mission.openQuestions,
+            "updatedAt": isoNow()
+        ]
+        project.snapshot["projectBrief"] = AnyCodable(payload)
+        let saved = try projectService.saveProject(project)
+        workspace?.setProject(saved)
     }
 }

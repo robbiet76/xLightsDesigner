@@ -35,7 +35,7 @@ final class AppModel {
         let workspace = ProjectWorkspace()
         self.workspace = workspace
         self.xlightsSessionModel = XLightsSessionViewModel(workspace: workspace)
-        self.assistantModel = AssistantWindowViewModel()
+        self.assistantModel = AssistantWindowViewModel(workspace: workspace)
         self.audioScreenModel = AudioScreenViewModel.sample()
         self.projectScreenModel = ProjectScreenViewModel(workspace: workspace)
         self.displayScreenModel = DisplayScreenViewModel(workspace: workspace)
@@ -113,6 +113,7 @@ final class AppModel {
     }
 
     func assistantContext() -> AssistantContextModel {
+        let projectBrief = projectScreenModel.screenModel.brief
         let layoutRows = displayScreenModel.screenModel.rows
         let xlightsDerivedMetadata = xlightsDerivedMetadataService.derive(from: layoutRows)
         let labeledTargetCount = layoutRows.filter { !$0.labelDefinitions.isEmpty }.count
@@ -151,6 +152,11 @@ final class AppModel {
             workflowName: selectedWorkflow.rawValue,
             route: workflowRoute(),
             focusedSummary: focusedSummary(),
+            projectMissionVision: projectBrief?.vision ?? "",
+            projectMissionGoals: projectBrief?.goals ?? "",
+            projectMissionInspiration: projectBrief?.inspiration ?? "",
+            projectMissionCohesionNotes: projectBrief?.cohesionNotes ?? "",
+            projectMissionOpenQuestions: projectBrief?.openQuestions ?? [],
             rollingConversationSummary: assistantModel.rollingConversationSummary,
             activeSequenceLoaded: sequenceScreenModel.screenModel.hasLiveSequence,
             planOnlyMode: sequenceScreenModel.screenModel.planOnlyMode,

@@ -12,6 +12,7 @@ struct AssistantWindowViewModelTests {
             routeDecision: "general",
             responseID: "resp-1",
             displayDiscovery: nil,
+            projectMission: nil,
             userPreferenceNotes: []
         )))
         let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)
@@ -23,12 +24,12 @@ struct AssistantWindowViewModelTests {
             activeSequenceLoaded: false,
             planOnlyMode: false
         )
-        model.loadConversationIfNeeded(context: context, project: nil)
+        model.loadConversationIfNeeded(context: context, project: nil as ActiveProjectModel?)
         model.draft = "Help me"
 
         await model.sendDraft(
             context: context,
-            project: nil
+            project: nil as ActiveProjectModel?
         )
 
         #expect(model.messages.count == 3)
@@ -46,6 +47,7 @@ struct AssistantWindowViewModelTests {
             routeDecision: "sequence_agent",
             responseID: "resp-2",
             displayDiscovery: nil,
+            projectMission: nil,
             userPreferenceNotes: []
         )))
         let model = AssistantWindowViewModel(conversationService: conversation, executionService: execution)
@@ -58,12 +60,12 @@ struct AssistantWindowViewModelTests {
             planOnlyMode: false,
             teamChatIdentities: SettingsTeamChatIdentitiesModel.default.asPayload()
         )
-        model.loadConversationIfNeeded(context: context, project: nil)
+        model.loadConversationIfNeeded(context: context, project: nil as ActiveProjectModel?)
         model.draft = "Hey Patch, bring the spinners down."
 
         await model.sendDraft(
             context: context,
-            project: nil
+            project: nil as ActiveProjectModel?
         )
 
         #expect(model.messages.count == 4)

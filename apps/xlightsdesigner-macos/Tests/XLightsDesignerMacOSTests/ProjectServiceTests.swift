@@ -96,6 +96,36 @@ struct ProjectServiceTests {
         }
     }
 
+    @Test func saveProjectPersistsProjectBriefInSnapshot() throws {
+        let service = try makeService()
+        let name = "Native Test Project \(UUID().uuidString.prefix(6))"
+        var project = try service.createProject(
+            draft: ProjectDraftModel(
+                projectName: name,
+                showFolder: "/tmp/show",
+                mediaPath: "",
+                migrateMetadata: false,
+                migrationSourceProjectPath: ""
+            )
+        )
+
+        project.snapshot["projectBrief"] = AnyCodable([
+            "vision": "Warm neighborhood show with a strong central focal area.",
+            "goals": "Feel welcoming and cohesive across songs.",
+            "inspiration": "Classic Christmas main street energy.",
+            "cohesionNotes": "Keep the tree and character zone visually connected.",
+            "openQuestions": ["How bold should the upper roofline layer become?"],
+            "updatedAt": "2026-04-09T00:00:00Z"
+        ])
+
+        let saved = try service.saveProject(project)
+        let reopened = try service.openProject(filePath: saved.projectFilePath)
+        let brief = reopened.snapshot["projectBrief"]?.value as? [String: Any]
+
+        #expect(brief?["vision"] as? String == "Warm neighborhood show with a strong central focal area.")
+        #expect((brief?["openQuestions"] as? [String])?.count == 1)
+    }
+
     private func makeService() throws -> LocalProjectService {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("xld-project-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

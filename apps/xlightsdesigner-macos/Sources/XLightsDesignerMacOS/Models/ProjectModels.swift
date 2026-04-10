@@ -44,6 +44,23 @@ struct ProjectSummaryModel {
     let readinessExplanation: String
 }
 
+struct ProjectBriefModel {
+    let vision: String
+    let goals: String
+    let inspiration: String
+    let cohesionNotes: String
+    let openQuestions: [String]
+    let updatedAt: String
+
+    var isEmpty: Bool {
+        vision.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        goals.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        inspiration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        cohesionNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        openQuestions.isEmpty
+    }
+}
+
 struct ProjectReferenceModel: Identifiable, Equatable, Sendable {
     let id: String
     let projectName: String
@@ -81,6 +98,7 @@ struct ProjectBannerModel: Identifiable {
 struct ProjectScreenModel {
     let header: ProjectHeaderModel
     let summary: ProjectSummaryModel?
+    let brief: ProjectBriefModel?
     let actions: ProjectActionState
     let readinessItems: [ProjectReadinessItem]
     let hints: [ProjectDownstreamHint]

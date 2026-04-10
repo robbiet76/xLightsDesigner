@@ -4,19 +4,25 @@ struct ProjectScreenView: View {
     @Bindable var model: ProjectScreenViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            header
-            if !model.screenModel.banners.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(model.screenModel.banners) { banner in
-                        bannerView(banner)
+        GeometryReader { proxy in
+            let topHeight = max(240, min(300, proxy.size.height * 0.38))
+            VStack(alignment: .leading, spacing: 20) {
+                header
+                if !model.screenModel.banners.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(model.screenModel.banners) { banner in
+                            bannerView(banner)
+                        }
                     }
                 }
+                topBand
+                    .frame(height: topHeight)
+                projectBriefSection
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
             }
-            topBand
+            .padding(24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .task {
             model.loadInitialProject()
         }
@@ -51,7 +57,6 @@ struct ProjectScreenView: View {
         } secondary: {
             EmptyView()
         }
-        .frame(minHeight: 420)
     }
 
     private var summaryBand: some View {
@@ -97,6 +102,85 @@ struct ProjectScreenView: View {
                         .buttonStyle(.borderedProminent)
                     Button("Open Project…") { model.startOpenProject() }
                     Spacer()
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    private var projectBriefSection: some View {
+        GroupBox("Project Mission") {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Top-level mission and creative direction for the whole project.")
+                            .foregroundStyle(.secondary)
+                        Text("This should anchor what kind of show you want to create and what should stay cohesive before display-specific or sequence-specific work begins.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if model.isEditingProjectBrief {
+                        HStack(spacing: 10) {
+                            Button("Cancel") {
+                                model.cancelProjectBriefEditing()
+                            }
+                            Button("Save Mission") {
+                                model.saveProjectBrief()
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    } else {
+                        Button(model.screenModel.brief?.isEmpty == false ? "Edit Mission" : "Create Mission") {
+                            model.startEditProjectBrief()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+
+                if model.isEditingProjectBrief {
+                    projectBriefEditorSection
+                } else if let brief = model.screenModel.brief, !brief.isEmpty {
+                    AdaptiveSplitView(breakpoint: 1180, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            briefBlock(title: "Mission", value: brief.vision, placeholder: "No project mission captured yet.")
+                            briefBlock(title: "Goals", value: brief.goals, placeholder: "No project goals captured yet.")
+                            briefBlock(title: "Inspiration", value: brief.inspiration, placeholder: "No inspiration notes captured yet.")
+                        }
+                    } secondary: {
+                        VStack(alignment: .leading, spacing: 14) {
+                            briefBlock(title: "Cohesion Rules", value: brief.cohesionNotes, placeholder: "No cohesion rules captured yet.")
+                            GroupBox("Open Questions") {
+                                if brief.openQuestions.isEmpty {
+                                    Text("No major open questions captured.")
+                                        .foregroundStyle(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.vertical, 4)
+                                } else {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        ForEach(brief.openQuestions, id: \.self) { question in
+                                            Text("• \(question)")
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                            }
+                            if !brief.updatedAt.isEmpty {
+                                Text("Last updated: \(brief.updatedAt)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("No project mission is captured yet.")
+                            .font(.headline)
+                        Text("The Designer should help establish the top-level show mission here first: what the show should feel like, what themes matter, what should stay cohesive across sequences, and what still needs clarification.")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
             }
             .padding(.vertical, 4)
@@ -193,6 +277,39 @@ struct ProjectScreenView: View {
             Text(value)
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
+        }
+    }
+
+    private func briefBlock(title: String, value: String, placeholder: String) -> some View {
+        GroupBox(title) {
+            Text(value.isEmpty ? placeholder : value)
+                .foregroundStyle(value.isEmpty ? .secondary : .primary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(.vertical, 4)
+        }
+    }
+
+    private var projectBriefEditorSection: some View {
+        AdaptiveSplitView(breakpoint: 1180, spacing: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                editableBriefBlock(title: "Mission", text: $model.projectBriefEditor.vision)
+                editableBriefBlock(title: "Goals", text: $model.projectBriefEditor.goals)
+                editableBriefBlock(title: "Inspiration", text: $model.projectBriefEditor.inspiration)
+            }
+        } secondary: {
+            VStack(alignment: .leading, spacing: 14) {
+                editableBriefBlock(title: "Cohesion Rules", text: $model.projectBriefEditor.cohesionNotes)
+                editableBriefBlock(title: "Open Questions", text: $model.projectBriefEditor.openQuestionsText)
+            }
+        }
+    }
+
+    private func editableBriefBlock(title: String, text: Binding<String>) -> some View {
+        GroupBox(title) {
+            TextEditor(text: text)
+                .frame(minHeight: 120)
+                .padding(.vertical, 4)
         }
     }
 

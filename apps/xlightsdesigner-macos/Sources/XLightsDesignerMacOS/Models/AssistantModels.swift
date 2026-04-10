@@ -26,6 +26,18 @@ struct AssistantDisplayDiscoveryResult: Sendable {
     let tagProposals: [DisplayDiscoveryTagProposalModel]
 }
 
+struct AssistantProjectMissionResult: Sendable {
+    let vision: String
+    let goals: String
+    let inspiration: String
+    let cohesionNotes: String
+    let openQuestions: [String]
+
+    var hasContent: Bool {
+        !vision.isEmpty || !goals.isEmpty || !inspiration.isEmpty || !cohesionNotes.isEmpty || !openQuestions.isEmpty
+    }
+}
+
 struct AssistantConversationState: Codable, Sendable {
     var version: Int = 1
     var rollingSummary: String
@@ -42,6 +54,11 @@ struct AssistantContextModel {
     let workflowName: String
     let route: String
     let focusedSummary: String
+    let projectMissionVision: String
+    let projectMissionGoals: String
+    let projectMissionInspiration: String
+    let projectMissionCohesionNotes: String
+    let projectMissionOpenQuestions: [String]
     let rollingConversationSummary: String
     let activeSequenceLoaded: Bool
     let planOnlyMode: Bool
@@ -85,6 +102,11 @@ struct AssistantContextModel {
         workflowName: String,
         route: String,
         focusedSummary: String,
+        projectMissionVision: String = "",
+        projectMissionGoals: String = "",
+        projectMissionInspiration: String = "",
+        projectMissionCohesionNotes: String = "",
+        projectMissionOpenQuestions: [String] = [],
         rollingConversationSummary: String = "",
         activeSequenceLoaded: Bool,
         planOnlyMode: Bool,
@@ -127,6 +149,11 @@ struct AssistantContextModel {
         self.workflowName = workflowName
         self.route = route
         self.focusedSummary = focusedSummary
+        self.projectMissionVision = projectMissionVision
+        self.projectMissionGoals = projectMissionGoals
+        self.projectMissionInspiration = projectMissionInspiration
+        self.projectMissionCohesionNotes = projectMissionCohesionNotes
+        self.projectMissionOpenQuestions = projectMissionOpenQuestions
         self.rollingConversationSummary = rollingConversationSummary
         self.activeSequenceLoaded = activeSequenceLoaded
         self.planOnlyMode = planOnlyMode
@@ -172,6 +199,13 @@ struct AssistantContextModel {
             "workflowName": workflowName,
             "route": route,
             "focusedSummary": focusedSummary,
+            "projectMission": [
+                "vision": projectMissionVision,
+                "goals": projectMissionGoals,
+                "inspiration": projectMissionInspiration,
+                "cohesionNotes": projectMissionCohesionNotes,
+                "openQuestions": projectMissionOpenQuestions
+            ],
             "rollingConversationSummary": rollingConversationSummary,
             "activeSequenceLoaded": activeSequenceLoaded,
             "planOnlyMode": planOnlyMode,
