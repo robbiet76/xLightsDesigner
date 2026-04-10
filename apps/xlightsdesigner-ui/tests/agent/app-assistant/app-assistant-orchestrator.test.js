@@ -304,7 +304,6 @@ test("explicit phase switch uses app assistant transition message instead of spe
   assert.equal(result.result.routeDecision, "general");
   assert.equal(result.result.handledBy, "app_assistant");
   assert.equal(result.result.phaseTransition.phaseId, "display_discovery");
-  assert.match(result.result.assistantMessage, /Mission document saved/i);
   assert.match(result.result.assistantMessage, /Next: Display Discovery\./i);
   assert.doesNotMatch(result.result.assistantMessage, /main focal elements/i);
 });
@@ -383,7 +382,7 @@ test("direct interaction style compresses handoff wording", async () => {
   assert.equal(result.ok, true);
   assert.equal(result.result.routeDecision, "general");
   assert.equal(result.result.handledBy, "app_assistant");
-  assert.match(result.result.assistantMessage, /^Design handoff prepared\. Next: Sequencing\./i);
+  assert.match(result.result.assistantMessage, /^Next: Sequencing\./i);
   assert.doesNotMatch(result.result.assistantMessage, /We can move into Sequencing next/i);
 });
 

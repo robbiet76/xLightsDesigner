@@ -1,0 +1,17 @@
+{
+  "name": "audio_analysis_phase_check",
+  "summary": "Simulated user moves into audio analysis and discusses track-analysis closure and next-step readiness.",
+  "simulationType": "audio_analysis",
+  "initialWorkflow": "Audio",
+  "kickoffPrompt": "Let's move into audio analysis.",
+  "maxTurns": 3,
+  "userProfile": {
+    "pace": "direct",
+    "experienceLevel": "experienced"
+  },
+  "displayTruth": {
+    "goal": "Understand what is analyzed, what still needs review, and whether the tracks are ready for design work.",
+    "preferredConversationStyle": "Keep it direct and task-focused.",
+    "analysisStatus": "Most tracks are analyzed, but I want a clear summary of what is complete and what still needs review before moving on."
+  }
+}

@@ -354,17 +354,15 @@ function buildPhaseTransitionMessage(phaseTransition = {}, context = {}) {
   if (!phaseId) return "";
   const title = phaseTitle(phaseId);
   const reason = str(phaseTransition?.reason);
-  const outputSummary = currentPhaseOutputSummary(context);
   const direct = interactionStyle(context) === "direct";
-  const opener = hasSubstantivePhaseOutputSummary(outputSummary) ? `${outputSummary} ` : "";
   if (reason) {
     return direct
-      ? `${opener}Next: ${title}.`
-      : `${opener}Next: ${title}. ${reason}`;
+      ? `Next: ${title}.`
+      : `Next: ${title}. ${reason}`;
   }
   return direct
-    ? `${opener}Next: ${title}.`
-    : `${opener}Next: ${title}.`;
+    ? `Next: ${title}.`
+    : `Next: ${title}.`;
 }
 
 function buildPhaseClosureMessage(context = {}) {

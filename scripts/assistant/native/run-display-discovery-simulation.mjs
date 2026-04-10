@@ -150,13 +150,50 @@ function extractResponseText(payload = {}) {
 function buildUserSimulatorPrompt(scenario = {}, transcript = [], lastAssistantMessage = "") {
   const userProfile = scenario?.userProfile && typeof scenario.userProfile === "object" ? scenario.userProfile : {};
   const displayTruth = scenario?.displayTruth && typeof scenario.displayTruth === "object" ? scenario.displayTruth : {};
+  const simulationType = str(scenario?.simulationType || scenario?.phase || "").toLowerCase();
   const pace = str(userProfile?.pace || userProfile?.interactionStyle || "");
   const transcriptText = arr(transcript)
     .map((row) => `${str(row.role).toUpperCase()}: ${str(row.text)}`)
     .join("\n");
 
+  const phaseInstructions = (() => {
+    switch (simulationType) {
+      case "project_mission":
+        return [
+          "You are simulating the human user in a project-mission shaping conversation.",
+          "Answer from a show-level creative perspective, not display metadata or sequencing detail.",
+          "Emphasize intent, tone, inspiration, audience, cohesion, and emotional purpose.",
+          "Only move toward finalizing the mission when the designer has earned enough understanding."
+        ];
+      case "audio_analysis":
+        return [
+          "You are simulating the human user in an audio-analysis workflow.",
+          "Answer from the perspective of someone trying to understand tracks, sections, analysis status, or what needs review.",
+          "Do not drift into display metadata or sequence implementation unless the scenario truth supports it."
+        ];
+      case "design":
+        return [
+          "You are simulating the human user in a design-phase conversation.",
+          "Answer about creative direction, visual intent, phrasing, emphasis, contrast, pacing, and artistic goals.",
+          "Do not drift into low-level xLights implementation unless the scenario truth makes that explicit."
+        ];
+      case "sequencing":
+        return [
+          "You are simulating the human user in a sequencing-phase conversation.",
+          "Answer from the perspective of validating or requesting concrete sequence changes, revisions, or implementation follow-up.",
+          "Keep the focus on execution and review, not on reopening broad mission or display-discovery topics unless the scenario truth explicitly redirects there."
+        ];
+      case "display_discovery":
+      default:
+        return [
+          "You are simulating the human user in a display-discovery conversation.",
+          "Answer from the perspective of explaining what the display means, how props are used, and how visual hierarchy is organized."
+        ];
+    }
+  })();
+
   return [
-    "You are simulating the human user in a display-discovery conversation.",
+    ...phaseInstructions,
     "You must answer only from the private scenario truth below.",
     "Do not help the designer more than a real user would.",
     "Do not reveal everything at once.",
@@ -175,7 +212,7 @@ function buildUserSimulatorPrompt(scenario = {}, transcript = [], lastAssistantM
     `Scenario name: ${str(scenario?.name)}`,
     `Scenario summary: ${str(scenario?.summary)}`,
     `User profile: ${JSON.stringify(userProfile)}`,
-    `Private display truth: ${JSON.stringify(displayTruth)}`,
+    `Private scenario truth: ${JSON.stringify(displayTruth)}`,
     transcriptText ? `Transcript so far:\n${transcriptText}` : "Transcript so far: none",
     `Latest assistant message:\n${str(lastAssistantMessage)}`
   ].join("\n");

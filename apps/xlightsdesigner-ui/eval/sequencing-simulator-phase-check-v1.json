@@ -1,0 +1,17 @@
+{
+  "name": "sequencing_phase_check",
+  "summary": "Simulated user moves into sequencing and asks for concrete implementation-oriented progress.",
+  "simulationType": "sequencing",
+  "initialWorkflow": "Sequence",
+  "kickoffPrompt": "Let's move into sequencing.",
+  "maxTurns": 3,
+  "userProfile": {
+    "pace": "direct",
+    "experienceLevel": "experienced"
+  },
+  "displayTruth": {
+    "goal": "Translate approved direction into concrete sequence work and keep the discussion implementation-oriented.",
+    "preferredConversationStyle": "Short, concrete, and execution-focused.",
+    "boundary": "Do not reopen broad mission or display-discovery conversation unless implementation is blocked by missing direction."
+  }
+}

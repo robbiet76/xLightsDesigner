@@ -335,7 +335,6 @@ function buildPhaseArtifactCard({ context = {}, phaseTransition = {}, projectMis
     hasSubstantiveOutputSummary &&
     currentPhaseId &&
     (
-      phaseTransition?.phaseId ||
       currentPhaseStatus === 'ready_to_close' ||
       currentPhaseStatus === 'handoff_pending'
     )

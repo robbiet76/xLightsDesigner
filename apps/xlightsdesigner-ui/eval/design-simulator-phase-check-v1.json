@@ -1,0 +1,22 @@
+{
+  "name": "design_phase_check",
+  "summary": "Simulated user moves into design and shapes creative direction before sequencing.",
+  "simulationType": "design",
+  "initialWorkflow": "Design",
+  "kickoffPrompt": "Let's move into design.",
+  "maxTurns": 4,
+  "userProfile": {
+    "pace": "guided",
+    "experienceLevel": "intermediate"
+  },
+  "displayTruth": {
+    "goal": "Shape the creative direction for the current song before any sequence implementation begins.",
+    "creativeIntent": "Warm, nostalgic, and emotionally grounded, with a gentle build and selective moments of lift rather than constant energy.",
+    "designPriorities": [
+      "clarity around focal moments",
+      "contrast between intimate and lifted sections",
+      "keep the overall show cohesive with the project mission"
+    ],
+    "boundary": "Do not jump into xLights implementation until the design direction feels solid."
+  }
+}
