@@ -15,6 +15,7 @@ Scope:
 - shared app-shell behavior above specialist agents
 
 Active Entry Points:
+- `native-cutover-audit-2026-04-10.md`
 - `macos-native-migration-phase-plan-2026-04-06.md`
 - `macos-native-design-phase-workstreams-2026-04-06.md`
 - `macos-native-wireframe-and-prototype-method-2026-04-06.md`
@@ -75,3 +76,4 @@ Current role in the app plan:
 
 Lifecycle note:
 - Electron-specific app-ui specs are now legacy-reference only unless explicitly marked otherwise
+- the active product shell is the native macOS app under `apps/xlightsdesigner-macos/`

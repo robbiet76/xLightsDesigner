@@ -34,6 +34,7 @@ Primary policy source:
 
 ## Active Entry Points
 - `current-app-plan-2026-04-05.md`
+- `app-ui/native-cutover-audit-2026-04-10.md`
 - `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
 - `app-ui/macos-native-design-phase-workstreams-2026-04-06.md`
 - `app-ui/macos-native-wireframe-and-prototype-method-2026-04-06.md`

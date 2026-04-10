@@ -6,6 +6,10 @@ This is the native macOS app surface for xLightsDesigner.
 
 This app is the clean SwiftUI-native shell described in the design and cutover specs. It is intentionally separate from the Electron shell.
 
+Current status:
+- this is the active product shell
+- major workflows are now native-primary in practice
+
 ## Rules
 
 - This directory is the only place new native product-shell work should occur.
@@ -22,14 +26,8 @@ cd apps/xlightsdesigner-macos
 swift run
 ```
 
-## First implementation target
+## Primary references
 
-The first workflow cutover target is `Audio`.
-
-Primary build package:
-- `../../specs/app-ui/macos-native-audio-build-package-2026-04-06.md`
-
-Related design sources:
 - `../../specs/app-ui/macos-native-information-architecture-2026-04-06.md`
 - `../../specs/app-ui/macos-native-workflow-contracts-2026-04-06.md`
 - `../../specs/app-ui/macos-native-read-models-and-page-state-contracts-2026-04-06.md`
@@ -37,11 +35,12 @@ Related design sources:
 - `../../specs/app-ui/macos-native-visual-system-2026-04-06.md`
 - `../../specs/app-ui/macos-native-design-system-components-2026-04-06.md`
 - `../../specs/app-ui/macos-native-cutover-plan-2026-04-06.md`
+- `../../specs/app-ui/native-cutover-audit-2026-04-10.md`
 
-## Workflow order
+## Current workflow surface
 
 1. Project
-2. Layout
+2. Display
 3. Audio
 4. Design
 5. Sequence
