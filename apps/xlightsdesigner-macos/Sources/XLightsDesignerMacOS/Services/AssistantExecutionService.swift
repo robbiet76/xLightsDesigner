@@ -22,6 +22,7 @@ struct AssistantExecutionResult: Sendable {
     let displayDiscovery: AssistantDisplayDiscoveryResult?
     let projectMission: AssistantProjectMissionResult?
     let phaseTransition: AssistantPhaseTransitionResult?
+    let diagnostics: AssistantDiagnosticsResult?
     let userPreferenceNotes: [String]
 }
 
@@ -78,6 +79,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
                 phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
+                diagnostics: parseDiagnostics(from: result["diagnostics"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
@@ -92,6 +94,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
                 phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
+                diagnostics: parseDiagnostics(from: result["diagnostics"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
         }
@@ -220,6 +223,22 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
         return AssistantPhaseTransitionResult(
             phaseID: phaseID,
             reason: string(object["reason"])
+        )
+    }
+
+    private func parseDiagnostics(from value: Any?) -> AssistantDiagnosticsResult? {
+        guard let object = value as? [String: Any] else { return nil }
+        let artifactType = string(object["artifactType"])
+        guard !artifactType.isEmpty else { return nil }
+        return AssistantDiagnosticsResult(
+            artifactType: artifactType,
+            routeDecision: string(object["routeDecision"]),
+            addressedTo: string(object["addressedTo"]),
+            bridgeOk: (object["bridgeOk"] as? Bool) ?? false,
+            responseCode: string(object["responseCode"]),
+            sequenceOpen: (object["sequenceOpen"] as? Bool) ?? false,
+            planOnlyMode: (object["planOnlyMode"] as? Bool) ?? false,
+            generatedAt: string(object["generatedAt"])
         )
     }
 }

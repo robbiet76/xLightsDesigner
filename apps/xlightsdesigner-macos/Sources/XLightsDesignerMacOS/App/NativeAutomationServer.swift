@@ -349,6 +349,16 @@ final class NativeAutomationServer: @unchecked Sendable {
             "messageCount": messages.count,
             "messages": messages,
             "lastMessage": messages.last ?? [:],
+            "lastDiagnostics": [
+                "artifactType": model.assistantModel.lastDiagnostics?.artifactType ?? "",
+                "routeDecision": model.assistantModel.lastDiagnostics?.routeDecision ?? "",
+                "addressedTo": model.assistantModel.lastDiagnostics?.addressedTo ?? "",
+                "bridgeOk": model.assistantModel.lastDiagnostics?.bridgeOk ?? false,
+                "responseCode": model.assistantModel.lastDiagnostics?.responseCode ?? "",
+                "sequenceOpen": model.assistantModel.lastDiagnostics?.sequenceOpen ?? false,
+                "planOnlyMode": model.assistantModel.lastDiagnostics?.planOnlyMode ?? false,
+                "generatedAt": model.assistantModel.lastDiagnostics?.generatedAt ?? ""
+            ],
             "displayDiscovery": [
                 "status": discovery.status.rawValue,
                 "scope": discovery.scope,

@@ -78,6 +78,17 @@ struct AssistantPhaseTransitionResult: Sendable {
     let reason: String
 }
 
+struct AssistantDiagnosticsResult: Sendable {
+    let artifactType: String
+    let routeDecision: String
+    let addressedTo: String
+    let bridgeOk: Bool
+    let responseCode: String
+    let sequenceOpen: Bool
+    let planOnlyMode: Bool
+    let generatedAt: String
+}
+
 struct AssistantConversationState: Codable, Sendable {
     var version: Int = 1
     var rollingSummary: String
