@@ -281,6 +281,45 @@ Rules:
 - they must still be normalized into the canonical sequencing contract
 - they do not justify collapsing the broader phase model
 
+## Page And Phase Relationship
+Pages and phases are related, but they are not the same concept.
+
+Definitions:
+- pages are UI workspaces the user can navigate to
+- phases are the current type of work the conversation is actively performing
+
+Examples:
+- `Project` page supports `setup` and `project_mission`
+- `Display` page supports `display_discovery`
+- `Audio` page supports `audio_analysis`
+- `Design` page supports `design`
+- `Sequence` page supports `sequencing`
+- `Review` page supports `review`
+
+This support relationship is directional, not absolute.
+
+Rules:
+- opening a page does not automatically change the active phase
+- passive inspection of a page does not change the active phase
+- explicit user intent may change the active phase
+- specialist handoff may change the active phase
+- beginning meaningful work characteristic of another phase may change the active phase
+
+Examples:
+- viewing the `Display` page while still sequencing does not by itself leave `sequencing`
+- editing display metadata or actively discussing display meaning should transition into `display_discovery`
+- viewing the `Sequence` page while discussing design revisions does not force a return to `sequencing`
+- applying concrete sequence changes should transition into `sequencing`
+
+Recommended implementation rule:
+- treat navigation as passive
+- treat domain-specific creation/edit/apply actions as potential phase-owning actions
+
+This distinction is required so the user always knows:
+- where they are looking
+- what kind of work is active
+- whether the system is only showing information or actually changing workflow state
+
 ## UI Contract: Current Phase Visibility
 The current phase should be visible in the application shell.
 
