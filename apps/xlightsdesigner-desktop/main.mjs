@@ -20,6 +20,17 @@ import {
   writeProjectArtifact,
   writeProjectArtifacts
 } from "./renderer/storage/project-artifact-store.mjs";
+import {
+  readProjectFileRecord,
+  writeProjectFileRecord,
+  readSequenceSidecarFile,
+  writeSequenceSidecarFile,
+  saveReferenceMediaFile,
+  createSequenceBackupFile,
+  restoreSequenceBackupFile,
+  listSequenceFilesInShowFolder,
+  listMediaFilesInFolder
+} from "./renderer/storage/project-workspace-store.mjs";
 import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs";
 import {
   validateDirectSequencePromptState,
@@ -1877,52 +1888,6 @@ function projectIdFromKey(key) {
   return crypto.createHash("sha1").update(String(key || "")).digest("hex");
 }
 
-function buildProjectPaths(rootPath, projectName) {
-  const normalizedName = sanitizeProjectName(projectName);
-  const projectsRoot = resolveProjectsRootPath(rootPath);
-  const projectDir = path.join(projectsRoot, normalizedName);
-  const filePath = path.join(projectDir, `${normalizedName}.xdproj`);
-  return { projectsRoot, normalizedName, projectDir, filePath };
-}
-
-function normalizePathForCompare(filePath) {
-  return path.resolve(String(filePath || "").trim());
-}
-
-function inferAppRootFromProjectFile(filePath) {
-  const absoluteFile = normalizePathForCompare(filePath);
-  const projectDir = path.dirname(absoluteFile);
-  const projectsRoot = path.dirname(projectDir);
-  if (path.basename(projectsRoot) !== PROJECTS_DIRNAME) return "";
-  return path.dirname(projectsRoot);
-}
-
-function validateProjectFileLocation(filePath, projectName) {
-  const absoluteFile = normalizePathForCompare(filePath);
-  const normalizedName = sanitizeProjectName(projectName);
-  if (!normalizedName) {
-    return { ok: false, code: "INVALID_PROJECT_NAME", error: "Project name is required." };
-  }
-  const projectDir = path.dirname(absoluteFile);
-  const fileName = path.basename(absoluteFile);
-  const dirName = path.basename(projectDir);
-  if (dirName !== normalizedName) {
-    return {
-      ok: false,
-      code: "INVALID_PROJECT_LAYOUT",
-      error: `Project folder must match project name: expected ${normalizedName}`
-    };
-  }
-  if (fileName !== `${normalizedName}.xdproj`) {
-    return {
-      ok: false,
-      code: "INVALID_PROJECT_LAYOUT",
-      error: `Project file must be named ${normalizedName}.xdproj`
-    };
-  }
-  return { ok: true };
-}
-
 ipcMain.handle("xld:state:read", async () => {
   try {
     return { ok: true, ...readDesktopStatePayload() };
@@ -2402,36 +2367,7 @@ ipcMain.handle("xld:agent-log:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:project:open-file", async (_event, payload = {}) => {
   try {
-    const filePath = String(payload?.filePath || "").trim();
-    if (!filePath) return { ok: false, error: "Missing filePath" };
-    if (!fs.existsSync(filePath)) return { ok: false, code: "NOT_FOUND", error: "Project file not found" };
-    const raw = fs.readFileSync(filePath, "utf8");
-    const parsed = JSON.parse(raw);
-    const projectName = String(parsed?.projectName || "").trim();
-    const showFolder = String(parsed?.showFolder || "").trim();
-    const mediaPath = String(parsed?.mediaPath || "").trim();
-    const layout = validateProjectFileLocation(filePath, projectName);
-    if (!layout.ok) {
-      return { ok: false, code: layout.code, error: layout.error };
-    }
-    ensureProjectStructure(path.dirname(filePath));
-    const key = String(parsed?.key || projectKey(projectName, showFolder)).trim();
-    const appRootPath = inferAppRootFromProjectFile(filePath);
-    return {
-      ok: true,
-      filePath,
-      project: {
-        id: String(parsed?.id || projectIdFromKey(key)),
-        key,
-        projectName,
-        showFolder,
-        mediaPath,
-        appRootPath,
-        createdAt: String(parsed?.createdAt || parsed?.updatedAt || ""),
-        updatedAt: String(parsed?.updatedAt || "")
-      },
-      snapshot: parsed?.snapshot && typeof parsed.snapshot === "object" ? parsed.snapshot : null
-    };
+    return readProjectFileRecord(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2621,332 +2557,15 @@ ipcMain.handle("xld:training-package:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:project:write-file", async (_event, payload = {}) => {
   try {
-    const rootPath = String(payload?.rootPath || "").trim();
-    const currentFilePath = String(payload?.currentFilePath || "").trim();
-    const projectName = String(payload?.projectName || "").trim();
-    const showFolder = String(payload?.showFolder || "").trim();
-    const mediaPath = String(payload?.mediaPath || "").trim();
-    const modeRaw = String(payload?.mode || "save").trim().toLowerCase();
-    const mode = modeRaw === "rename" || modeRaw === "save-as" ? modeRaw : "save";
-    const snapshot = payload?.snapshot && typeof payload.snapshot === "object" ? payload.snapshot : null;
-    if (!projectName) return { ok: false, error: "Missing projectName" };
-    if (!snapshot) return { ok: false, error: "Missing snapshot" };
-    const { normalizedName, projectDir, filePath } = buildProjectPaths(rootPath, projectName);
-    if (!normalizedName) return { ok: false, code: "INVALID_PROJECT_NAME", error: "Project name is required." };
-
-    const currentResolved = currentFilePath ? normalizePathForCompare(currentFilePath) : "";
-    const targetResolved = normalizePathForCompare(filePath);
-    const currentDir = currentResolved ? path.dirname(currentResolved) : "";
-    const targetDir = path.dirname(targetResolved);
-
-    if (mode === "save" && currentResolved && currentResolved !== targetResolved) {
-      return {
-        ok: false,
-        code: "PROJECT_RENAME_REQUIRED",
-        error: "Project name changed. Use Rename Project to move the project folder."
-      };
-    }
-
-    if (currentResolved && currentResolved !== targetResolved && fs.existsSync(targetResolved)) {
-      return {
-        ok: false,
-        code: "PROJECT_NAME_CONFLICT",
-        error: `A project named "${normalizedName}" already exists.`
-      };
-    }
-
-    if (!currentResolved && fs.existsSync(targetResolved)) {
-      return {
-        ok: false,
-        code: "PROJECT_NAME_CONFLICT",
-        error: `A project named "${normalizedName}" already exists.`
-      };
-    }
-
-    if (mode === "rename" && currentResolved && currentResolved !== targetResolved && fs.existsSync(currentDir)) {
-      if (fs.existsSync(targetDir)) {
-        return {
-          ok: false,
-          code: "PROJECT_NAME_CONFLICT",
-          error: `A project named "${normalizedName}" already exists.`
-        };
-      }
-      fs.mkdirSync(path.dirname(targetDir), { recursive: true });
-      fs.renameSync(currentDir, targetDir);
-    }
-
-    const key = projectKey(projectName, showFolder);
-    const id = projectIdFromKey(key);
-    let createdAt = "";
-    if (fs.existsSync(targetResolved)) {
-      try {
-        const previousRaw = fs.readFileSync(targetResolved, "utf8");
-        const previous = JSON.parse(previousRaw);
-        createdAt = String(previous?.createdAt || previous?.updatedAt || "");
-      } catch {
-        createdAt = "";
-      }
-    }
-    if (!createdAt) createdAt = new Date().toISOString();
-    const doc = {
-      version: 1,
-      projectName,
-      showFolder,
-      mediaPath,
-      key,
-      id,
-      createdAt,
-      updatedAt: new Date().toISOString(),
-      snapshot
-    };
-    ensureProjectStructure(projectDir);
-    fs.writeFileSync(targetResolved, JSON.stringify(doc, null, 2), "utf8");
-    return {
-      ok: true,
-      filePath: targetResolved,
-      project: {
-        id,
-        key,
-        projectName,
-        showFolder,
-        mediaPath,
-        appRootPath: inferAppRootFromProjectFile(targetResolved),
-        createdAt: doc.createdAt,
-        updatedAt: doc.updatedAt
-      }
-    };
+    return writeProjectFileRecord(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
 });
 
-function normalizeSequencePathToken(sequencePath = "") {
-  return String(sequencePath || "").trim().replace(/\\/g, "/").toLowerCase();
-}
-
-function sequenceIdFromPath(sequencePath = "") {
-  const token = normalizeSequencePathToken(sequencePath);
-  if (!token) return "";
-  let hash = 2166136261;
-  for (let i = 0; i < token.length; i += 1) {
-    hash ^= token.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
-}
-
-function appManagedSidecarPathForSequence(sequencePath, appRootPath = "") {
-  const seq = String(sequencePath || "").trim();
-  const root = String(appRootPath || "").trim();
-  if (!seq || !root) return "";
-  const sequenceId = sequenceIdFromPath(seq);
-  if (!sequenceId) return "";
-  return path.join(root, "sequencing", "sequences", sequenceId, "sequence.xdmeta");
-}
-
-function sequenceFolderForPath(sequencePath) {
-  const seq = String(sequencePath || "").trim();
-  if (!seq) return "";
-  return path.dirname(seq);
-}
-
-function designerMediaFolderForSequence(sequencePath) {
-  const folder = sequenceFolderForPath(sequencePath);
-  if (!folder) return "";
-  return path.join(folder, "xlightsdesigner-media");
-}
-
-function sanitizeFilename(name) {
-  const cleaned = String(name || "")
-    .replace(/[^\w.\- ]+/g, "_")
-    .trim();
-  return cleaned || "reference.bin";
-}
-
-function listSequenceFilesRecursive(rootFolder) {
-  const root = String(rootFolder || "").trim();
-  if (!root) return [];
-  if (!fs.existsSync(root)) return [];
-
-  const results = [];
-  const stack = [root];
-
-  while (stack.length) {
-    const current = stack.pop();
-    let entries = [];
-    try {
-      entries = fs.readdirSync(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-
-    for (const entry of entries) {
-      const abs = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        const dirName = String(entry.name || "").toLowerCase();
-        if (dirName === "backup" || dirName === ".xlightsdesigner-backups") {
-          continue;
-        }
-        stack.push(abs);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      if (!entry.name.toLowerCase().endsWith(".xsq")) continue;
-      const relativePath = path.relative(root, abs) || entry.name;
-      results.push({
-        path: abs,
-        relativePath,
-        name: path.basename(abs, path.extname(abs))
-      });
-    }
-  }
-
-  return results.sort((a, b) =>
-    String(a.relativePath || "").localeCompare(String(b.relativePath || ""), undefined, {
-      sensitivity: "base"
-    })
-  );
-}
-
-function listMediaFilesRecursive(rootFolder, extensions = [], options = {}) {
-  const root = String(rootFolder || "").trim();
-  if (!root) return [];
-  if (!fs.existsSync(root)) return [];
-  const includeIdentity = options?.includeIdentity === true;
-  const includeFingerprint = options?.includeFingerprint === true;
-
-  const allowed = new Set(
-    (Array.isArray(extensions) ? extensions : [])
-      .map((ext) => String(ext || "").trim().toLowerCase().replace(/^\./, ""))
-      .filter(Boolean)
-  );
-
-  const results = [];
-  const stack = [root];
-
-  while (stack.length) {
-    const current = stack.pop();
-    let entries = [];
-    try {
-      entries = fs.readdirSync(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-
-    for (const entry of entries) {
-      const abs = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        const dirName = String(entry.name || "").toLowerCase();
-        if (dirName === "backup" || dirName === ".xlightsdesigner-backups") continue;
-        stack.push(abs);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const ext = path.extname(entry.name).toLowerCase().replace(/^\./, "");
-      if (allowed.size && !allowed.has(ext)) continue;
-      const relativePath = path.relative(root, abs) || entry.name;
-      const nextRow = {
-        path: abs,
-        relativePath,
-        fileName: path.basename(abs),
-        extension: ext
-      };
-      if (includeIdentity) {
-        const identity = readMediaIdentityFromFile(abs, { includeFingerprint });
-        nextRow.identity = identity ? {
-          title: str(identity?.title),
-          artist: str(identity?.artist),
-          album: str(identity?.album),
-          date: str(identity?.date),
-          isrc: str(identity?.isrc),
-          durationMs: Number.isFinite(Number(identity?.durationMs)) ? Number(identity.durationMs) : null,
-          identityKey: str(identity?.identityKey),
-          contentFingerprint: str(identity?.contentFingerprint)
-        } : {
-          title: "",
-          artist: "",
-          album: "",
-          date: "",
-          isrc: "",
-          durationMs: null,
-          identityKey: "",
-          contentFingerprint: ""
-        };
-      }
-      results.push(nextRow);
-    }
-  }
-
-  return results.sort((a, b) =>
-    String(a.relativePath || "").localeCompare(String(b.relativePath || ""), undefined, {
-      sensitivity: "base"
-    })
-  );
-}
-
-function countShowArtifactsRecursive(rootFolder) {
-  const root = String(rootFolder || "").trim();
-  if (!root) return { xsqCount: 0, xdmetaCount: 0 };
-  if (!fs.existsSync(root)) return { xsqCount: 0, xdmetaCount: 0 };
-
-  let xsqCount = 0;
-  let xdmetaCount = 0;
-  const stack = [root];
-
-  while (stack.length) {
-    const current = stack.pop();
-    let entries = [];
-    try {
-      entries = fs.readdirSync(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-
-    for (const entry of entries) {
-      const abs = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        const dirName = String(entry.name || "").toLowerCase();
-        if (dirName === "backup" || dirName === ".xlightsdesigner-backups") {
-          continue;
-        }
-        stack.push(abs);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const lower = String(entry.name || "").toLowerCase();
-      if (lower.endsWith(".xsq")) xsqCount += 1;
-      if (lower.endsWith(".xdmeta")) xdmetaCount += 1;
-    }
-  }
-
-  return { xsqCount, xdmetaCount };
-}
-
-function backupFolderForSequence(sequencePath) {
-  const folder = sequenceFolderForPath(sequencePath);
-  if (!folder) return "";
-  return path.join(folder, ".xlightsdesigner-backups");
-}
-
 ipcMain.handle("xld:sidecar:read", async (_event, payload = {}) => {
   try {
-    const sequencePath = String(payload?.sequencePath || "").trim();
-    const appRootPath = String(payload?.appRootPath || payload?.metadataRootPath || "").trim();
-    const managedSidecarPath = appManagedSidecarPathForSequence(sequencePath, appRootPath);
-    const sidecarPath = managedSidecarPath;
-    if (!sidecarPath) return { ok: false, error: "Missing sequencePath or appRootPath" };
-    if (!fs.existsSync(sidecarPath)) {
-      return {
-        ok: true,
-        exists: false,
-        sidecarPath,
-        managedSidecarPath,
-        data: null
-      };
-    }
-    const raw = fs.readFileSync(sidecarPath, "utf8");
-    const data = JSON.parse(raw);
-    return { ok: true, exists: true, sidecarPath, managedSidecarPath, data };
+    return readSequenceSidecarFile(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2954,14 +2573,7 @@ ipcMain.handle("xld:sidecar:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:sidecar:write", async (_event, payload = {}) => {
   try {
-    const sequencePath = String(payload?.sequencePath || "").trim();
-    const appRootPath = String(payload?.appRootPath || payload?.metadataRootPath || "").trim();
-    const sidecarPath = appManagedSidecarPathForSequence(sequencePath, appRootPath);
-    if (!sidecarPath) return { ok: false, error: "Missing sequencePath or appRootPath" };
-    const data = payload?.data && typeof payload.data === "object" ? payload.data : {};
-    fs.mkdirSync(path.dirname(sidecarPath), { recursive: true });
-    fs.writeFileSync(sidecarPath, JSON.stringify(data, null, 2), "utf8");
-    return { ok: true, sidecarPath };
+    return writeSequenceSidecarFile(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2969,20 +2581,7 @@ ipcMain.handle("xld:sidecar:write", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:media:save-reference", async (_event, payload = {}) => {
   try {
-    const sequencePath = String(payload?.sequencePath || "").trim();
-    const folder = designerMediaFolderForSequence(sequencePath);
-    if (!folder) return { ok: false, error: "Missing sequencePath" };
-
-    const fileName = sanitizeFilename(payload?.fileName);
-    const bytes = payload?.bytes;
-    if (!(bytes instanceof ArrayBuffer)) {
-      return { ok: false, error: "Missing media bytes" };
-    }
-
-    fs.mkdirSync(folder, { recursive: true });
-    const absolutePath = path.join(folder, fileName);
-    fs.writeFileSync(absolutePath, Buffer.from(bytes));
-    return { ok: true, absolutePath };
+    return saveReferenceMediaFile(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2998,21 +2597,7 @@ ipcMain.handle("xld:media:apply-identity-recommendation", async (_event, payload
 
 ipcMain.handle("xld:backup:create", async (_event, payload = {}) => {
   try {
-    const sequencePath = String(payload?.sequencePath || "").trim();
-    if (!sequencePath) return { ok: false, error: "Missing sequencePath" };
-    if (!fs.existsSync(sequencePath)) return { ok: false, error: "Sequence file does not exist" };
-    const backupDir = backupFolderForSequence(sequencePath);
-    if (!backupDir) return { ok: false, error: "Unable to determine backup folder" };
-
-    const ext = path.extname(sequencePath);
-    const base = path.basename(sequencePath, ext || undefined);
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const backupName = `${base}.${stamp}.bak${ext || ".xsq"}`;
-    const backupPath = path.join(backupDir, backupName);
-
-    fs.mkdirSync(backupDir, { recursive: true });
-    fs.copyFileSync(sequencePath, backupPath);
-    return { ok: true, backupPath };
+    return createSequenceBackupFile(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -3020,15 +2605,7 @@ ipcMain.handle("xld:backup:create", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:backup:restore", async (_event, payload = {}) => {
   try {
-    const sequencePath = String(payload?.sequencePath || "").trim();
-    const backupPath = String(payload?.backupPath || "").trim();
-    if (!sequencePath) return { ok: false, error: "Missing sequencePath" };
-    if (!backupPath) return { ok: false, error: "Missing backupPath" };
-    if (!fs.existsSync(backupPath)) return { ok: false, error: "Backup file does not exist" };
-
-    fs.mkdirSync(path.dirname(sequencePath), { recursive: true });
-    fs.copyFileSync(backupPath, sequencePath);
-    return { ok: true, sequencePath };
+    return restoreSequenceBackupFile(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -3036,11 +2613,7 @@ ipcMain.handle("xld:backup:restore", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:sequence:list", async (_event, payload = {}) => {
   try {
-    const showFolder = String(payload?.showFolder || "").trim();
-    if (!showFolder) return { ok: false, error: "Missing showFolder" };
-    const sequences = listSequenceFilesRecursive(showFolder);
-    const stats = countShowArtifactsRecursive(showFolder);
-    return { ok: true, showFolder, sequences, stats };
+    return listSequenceFilesInShowFolder(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -3048,14 +2621,10 @@ ipcMain.handle("xld:sequence:list", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:media:list", async (_event, payload = {}) => {
   try {
-    const mediaFolder = String(payload?.mediaFolder || "").trim();
-    if (!mediaFolder) return { ok: false, error: "Missing mediaFolder" };
-    const extensions = Array.isArray(payload?.extensions) ? payload.extensions : [];
-    const mediaFiles = listMediaFilesRecursive(mediaFolder, extensions, {
-      includeIdentity: payload?.includeIdentity === true,
-      includeFingerprint: payload?.includeFingerprint === true
+    return listMediaFilesInFolder({
+      ...payload,
+      readMediaIdentity: readMediaIdentityFromFile
     });
-    return { ok: true, mediaFolder, mediaFiles };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
