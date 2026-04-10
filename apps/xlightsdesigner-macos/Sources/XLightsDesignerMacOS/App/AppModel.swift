@@ -159,6 +159,7 @@ final class AppModel {
             workflowPhaseStatus: phase.status.rawValue,
             workflowPhaseEntryReason: phase.entryReason,
             workflowPhaseNextRecommended: phase.nextRecommendedPhases.map(\.rawValue),
+            workflowPhaseOutputSummary: currentPhaseOutputSummary(for: phase),
             focusedSummary: focusedSummary(),
             projectMissionDocument: projectBrief?.document ?? "",
             rollingConversationSummary: assistantModel.rollingConversationSummary,
@@ -199,6 +200,40 @@ final class AppModel {
             sequenceValidationIssueCount: sequence.overview.validationIssueCount,
             timingReviewNeeded: sequence.timingReview.needsReview
         )
+    }
+
+    private func currentPhaseOutputSummary(for phase: WorkflowPhaseStateModel) -> String {
+        switch phase.phaseID {
+        case .setup:
+            let agentConfig = settingsScreenModel.screenModel.agentConfig
+            let providerReady = !agentConfig.model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                !agentConfig.baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                agentConfig.hasStoredAPIKey
+            let projectReady = workspace.activeProject != nil
+            if providerReady && projectReady { return "Setup prerequisites are satisfied." }
+            var missing: [String] = []
+            if !providerReady { missing.append("provider configuration") }
+            if !projectReady { missing.append("active project") }
+            return missing.isEmpty ? "Setup is incomplete." : "Still missing: \(missing.joined(separator: ", "))."
+        case .projectMission:
+            let document = projectScreenModel.screenModel.brief?.document.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if document.isEmpty { return "No project mission captured yet." }
+            return "Mission document saved (\(document.count) chars)."
+        case .audioAnalysis:
+            let header = audioScreenModel.header
+            return "\(header.completeCount) complete, \(header.needsReviewCount) need review, \(header.failedCount) failed."
+        case .displayDiscovery:
+            let summary = displayDiscoveryStore.summary(for: workspace.activeProject)
+            return "\(summary.insights.count) insights, \(summary.unresolvedBranches.count) unresolved branches."
+        case .design:
+            let summary = designScreenModel.screenModel.proposal.proposalSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+            return summary.isEmpty ? "No design handoff summary yet." : summary
+        case .sequencing:
+            let overview = sequenceScreenModel.screenModel.overview
+            return "\(overview.itemCount) items, \(overview.warningCount) warnings, \(overview.validationIssueCount) validation issues."
+        case .review:
+            return reviewScreenModel.screenModel.pendingSummary.pendingSummary
+        }
     }
 
     func currentWorkflowPhase() -> WorkflowPhaseStateModel {

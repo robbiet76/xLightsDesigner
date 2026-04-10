@@ -187,7 +187,8 @@ function compactContext(context = {}) {
       ownerRole: String(c?.workflowPhase?.ownerRole || '').trim(),
       status: String(c?.workflowPhase?.status || '').trim(),
       entryReason: String(c?.workflowPhase?.entryReason || '').trim(),
-      nextRecommendedPhases: limitStrings(c?.workflowPhase?.nextRecommendedPhases, 6)
+      nextRecommendedPhases: limitStrings(c?.workflowPhase?.nextRecommendedPhases, 6),
+      outputSummary: String(c?.workflowPhase?.outputSummary || '').trim()
     },
     focusedSummary: String(c.focusedSummary || '').trim(),
     projectMission: {
@@ -491,6 +492,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
   const workflowPhaseStatus = String(workflowPhase.status || '').trim();
   const workflowPhaseOwner = String(workflowPhase.ownerRole || '').trim();
   const workflowPhaseNext = Array.isArray(workflowPhase.nextRecommendedPhases) ? workflowPhase.nextRecommendedPhases.map((row) => String(row || '').trim()).filter(Boolean) : [];
+  const workflowPhaseOutputSummary = String(workflowPhase.outputSummary || '').trim();
   return [
     'You are the xLightsDesigner App Assistant.',
     'You are the unified conversational shell for the whole app, not just the design specialist.',
@@ -576,6 +578,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     workflowPhaseOwner ? `Current phase owner: ${workflowPhaseOwner}` : '',
     workflowPhaseStatus ? `Current phase status: ${workflowPhaseStatus}` : '',
     workflowPhaseNext.length ? `Recommended next phases: ${workflowPhaseNext.join(', ')}` : '',
+    workflowPhaseOutputSummary ? `Current phase output summary: ${workflowPhaseOutputSummary}` : '',
     'If the current phase status is `handoff_pending`, act as the app assistant and keep the conversation focused on transition, closure, and the next step. Do not pull the user back into specialist detail until the next phase is chosen.',
     'If the current phase is `ready_to_close`, prefer a short wrap-up and next-step guidance over opening a new specialist subtopic in the same turn.',
     'If the current phase status is `not_started` and the current phase owner is a specialist, this is the opening turn of a newly entered phase.',

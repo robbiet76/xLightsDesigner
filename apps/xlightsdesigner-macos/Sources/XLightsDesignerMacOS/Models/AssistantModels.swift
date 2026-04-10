@@ -98,6 +98,7 @@ struct AssistantContextModel {
     let workflowPhaseStatus: String
     let workflowPhaseEntryReason: String
     let workflowPhaseNextRecommended: [String]
+    let workflowPhaseOutputSummary: String
     let focusedSummary: String
     let projectMissionDocument: String
     let rollingConversationSummary: String
@@ -147,6 +148,7 @@ struct AssistantContextModel {
         workflowPhaseStatus: String = WorkflowPhaseStatus.notStarted.rawValue,
         workflowPhaseEntryReason: String = "",
         workflowPhaseNextRecommended: [String] = [],
+        workflowPhaseOutputSummary: String = "",
         focusedSummary: String,
         projectMissionDocument: String = "",
         rollingConversationSummary: String = "",
@@ -195,6 +197,7 @@ struct AssistantContextModel {
         self.workflowPhaseStatus = workflowPhaseStatus
         self.workflowPhaseEntryReason = workflowPhaseEntryReason
         self.workflowPhaseNextRecommended = workflowPhaseNextRecommended
+        self.workflowPhaseOutputSummary = workflowPhaseOutputSummary
         self.focusedSummary = focusedSummary
         self.projectMissionDocument = projectMissionDocument
         self.rollingConversationSummary = rollingConversationSummary
@@ -246,7 +249,8 @@ struct AssistantContextModel {
                 "ownerRole": workflowPhaseOwnerRole,
                 "status": workflowPhaseStatus,
                 "entryReason": workflowPhaseEntryReason,
-                "nextRecommendedPhases": workflowPhaseNextRecommended
+                "nextRecommendedPhases": workflowPhaseNextRecommended,
+                "outputSummary": workflowPhaseOutputSummary
             ],
             "focusedSummary": focusedSummary,
             "projectMission": [
