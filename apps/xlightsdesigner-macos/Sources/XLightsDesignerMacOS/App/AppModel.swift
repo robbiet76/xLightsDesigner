@@ -147,10 +147,16 @@ final class AppModel {
         }
         let xlights = xlightsSessionModel.snapshot
         let sequence = sequenceScreenModel.screenModel
+        let phase = currentWorkflowPhase()
         return AssistantContextModel(
             activeProjectName: workspace.activeProject?.projectName ?? "No Project",
             workflowName: selectedWorkflow.rawValue,
             route: workflowRoute(),
+            workflowPhaseID: phase.phaseID.rawValue,
+            workflowPhaseOwnerRole: phase.ownerRole,
+            workflowPhaseStatus: phase.status.rawValue,
+            workflowPhaseEntryReason: phase.entryReason,
+            workflowPhaseNextRecommended: phase.nextRecommendedPhases.map(\.rawValue),
             focusedSummary: focusedSummary(),
             projectMissionDocument: projectBrief?.document ?? "",
             rollingConversationSummary: assistantModel.rollingConversationSummary,
@@ -191,6 +197,98 @@ final class AppModel {
             sequenceValidationIssueCount: sequence.overview.validationIssueCount,
             timingReviewNeeded: sequence.timingReview.needsReview
         )
+    }
+
+    func currentWorkflowPhase() -> WorkflowPhaseStateModel {
+        if isSetupIncomplete() {
+            return WorkflowPhaseStateModel(
+                phaseID: .setup,
+                ownerRole: "app_assistant",
+                status: .inProgress,
+                entryReason: "App setup is still incomplete.",
+                nextRecommendedPhases: [.projectMission, .audioAnalysis, .displayDiscovery]
+            )
+        }
+
+        switch selectedWorkflow {
+        case .project:
+            let hasMission = !(projectScreenModel.screenModel.brief?.isEmpty ?? true)
+            return WorkflowPhaseStateModel(
+                phaseID: .projectMission,
+                ownerRole: "designer_dialog",
+                status: hasMission ? .readyToClose : .inProgress,
+                entryReason: hasMission ? "Project mission exists and can be refined or closed." : "Project mission still needs creative direction.",
+                nextRecommendedPhases: [.displayDiscovery, .audioAnalysis, .design]
+            )
+        case .display:
+            let status: WorkflowPhaseStatus = displayScreenModel.readinessProgress >= 0.75 ? .readyToClose : .inProgress
+            return WorkflowPhaseStateModel(
+                phaseID: .displayDiscovery,
+                ownerRole: "designer_dialog",
+                status: status,
+                entryReason: "Display understanding is being shaped into usable metadata.",
+                nextRecommendedPhases: [.design, .sequencing]
+            )
+        case .audio:
+            let header = audioScreenModel.header
+            let status: WorkflowPhaseStatus
+            if header.totalCount == 0 {
+                status = .notStarted
+            } else if header.needsReviewCount == 0 && header.failedCount == 0 && header.completeCount > 0 {
+                status = .readyToClose
+            } else {
+                status = .inProgress
+            }
+            return WorkflowPhaseStateModel(
+                phaseID: .audioAnalysis,
+                ownerRole: "audio_analyst",
+                status: status,
+                entryReason: "Tracks are being analyzed and prepared for downstream work.",
+                nextRecommendedPhases: [.design, .sequencing]
+            )
+        case .design:
+            return WorkflowPhaseStateModel(
+                phaseID: .design,
+                ownerRole: "designer_dialog",
+                status: .inProgress,
+                entryReason: "Creative direction is being prepared before implementation.",
+                nextRecommendedPhases: [.sequencing, .review]
+            )
+        case .sequence:
+            let sequence = sequenceScreenModel.screenModel
+            return WorkflowPhaseStateModel(
+                phaseID: .sequencing,
+                ownerRole: "sequence_agent",
+                status: sequence.overview.itemCount > 0 ? .inProgress : .notStarted,
+                entryReason: "Design intent is being translated into xLights changes.",
+                nextRecommendedPhases: [.review, .design]
+            )
+        case .review:
+            return WorkflowPhaseStateModel(
+                phaseID: .review,
+                ownerRole: "sequence_agent",
+                status: .inProgress,
+                entryReason: "Recent work is being checked and validated.",
+                nextRecommendedPhases: [.sequencing, .design]
+            )
+        case .history:
+            return WorkflowPhaseStateModel(
+                phaseID: .review,
+                ownerRole: "app_assistant",
+                status: .completed,
+                entryReason: "History browsing is outside the active production workflow.",
+                nextRecommendedPhases: [.design, .sequencing]
+            )
+        }
+    }
+
+    private func isSetupIncomplete() -> Bool {
+        let agentConfig = settingsScreenModel.screenModel.agentConfig
+        let hasProvider = !agentConfig.model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !agentConfig.baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            agentConfig.hasStoredAPIKey
+        let hasProject = workspace.activeProject != nil
+        return !hasProvider || !hasProject
     }
 
     private func buildDisplayDiscoveryCandidates(

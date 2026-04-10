@@ -273,9 +273,18 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func appSnapshot() -> [String: Any] {
-        [
+        let phase = model.currentWorkflowPhase()
+        return [
             "ok": true,
             "selectedWorkflow": model.selectedWorkflow.rawValue,
+            "workflowPhase": [
+                "phaseId": phase.phaseID.rawValue,
+                "title": phase.phaseID.title,
+                "ownerRole": phase.ownerRole,
+                "status": phase.status.rawValue,
+                "entryReason": phase.entryReason,
+                "nextRecommendedPhases": phase.nextRecommendedPhases.map(\.rawValue)
+            ],
             "assistantVisible": model.showAssistantPanel,
             "workspace": workspaceSnapshot(),
             "xlights": xlightsSessionSnapshot(),
@@ -304,6 +313,7 @@ final class NativeAutomationServer: @unchecked Sendable {
 
     @MainActor
     private func assistantSnapshot() -> [String: Any] {
+        let phase = model.currentWorkflowPhase()
         let discovery = LocalDisplayDiscoveryStateStore().summary(for: model.workspace.activeProject)
         let profile = (try? LocalAssistantUserProfileStore().load()) ?? AssistantUserProfile()
         let messages = model.assistantModel.messages.map { message in
@@ -322,6 +332,14 @@ final class NativeAutomationServer: @unchecked Sendable {
             "draft": model.assistantModel.draft,
             "isSending": model.assistantModel.isSending,
             "rollingSummary": model.assistantModel.rollingConversationSummary,
+            "workflowPhase": [
+                "phaseId": phase.phaseID.rawValue,
+                "title": phase.phaseID.title,
+                "ownerRole": phase.ownerRole,
+                "status": phase.status.rawValue,
+                "entryReason": phase.entryReason,
+                "nextRecommendedPhases": phase.nextRecommendedPhases.map(\.rawValue)
+            ],
             "messageCount": messages.count,
             "messages": messages,
             "lastMessage": messages.last ?? [:],

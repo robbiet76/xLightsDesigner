@@ -182,6 +182,13 @@ function compactContext(context = {}) {
     activeProjectName: String(c.activeProjectName || '').trim(),
     workflowName: String(c.workflowName || '').trim(),
     route: String(c.route || '').trim(),
+    workflowPhase: {
+      phaseId: String(c?.workflowPhase?.phaseId || '').trim(),
+      ownerRole: String(c?.workflowPhase?.ownerRole || '').trim(),
+      status: String(c?.workflowPhase?.status || '').trim(),
+      entryReason: String(c?.workflowPhase?.entryReason || '').trim(),
+      nextRecommendedPhases: limitStrings(c?.workflowPhase?.nextRecommendedPhases, 6)
+    },
     focusedSummary: String(c.focusedSummary || '').trim(),
     projectMission: {
       document: String(projectMission.document || '').trim()

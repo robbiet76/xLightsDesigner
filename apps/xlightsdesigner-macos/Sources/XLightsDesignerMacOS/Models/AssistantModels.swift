@@ -5,6 +5,45 @@ enum AssistantMessageRole: String, Codable {
     case assistant
 }
 
+enum WorkflowPhaseID: String, Codable, Sendable, CaseIterable {
+    case setup
+    case projectMission = "project_mission"
+    case audioAnalysis = "audio_analysis"
+    case displayDiscovery = "display_discovery"
+    case design
+    case sequencing
+    case review
+
+    var title: String {
+        switch self {
+        case .setup: return "Setup"
+        case .projectMission: return "Project Mission"
+        case .audioAnalysis: return "Audio Analysis"
+        case .displayDiscovery: return "Display Discovery"
+        case .design: return "Design"
+        case .sequencing: return "Sequencing"
+        case .review: return "Review"
+        }
+    }
+}
+
+enum WorkflowPhaseStatus: String, Codable, Sendable {
+    case notStarted = "not_started"
+    case inProgress = "in_progress"
+    case readyToClose = "ready_to_close"
+    case handoffPending = "handoff_pending"
+    case completed
+    case blocked
+}
+
+struct WorkflowPhaseStateModel: Sendable, Equatable {
+    let phaseID: WorkflowPhaseID
+    let ownerRole: String
+    let status: WorkflowPhaseStatus
+    let entryReason: String
+    let nextRecommendedPhases: [WorkflowPhaseID]
+}
+
 struct AssistantMessageModel: Identifiable, Codable, Equatable {
     let id: String
     let role: AssistantMessageRole
@@ -49,6 +88,11 @@ struct AssistantContextModel {
     let activeProjectName: String
     let workflowName: String
     let route: String
+    let workflowPhaseID: String
+    let workflowPhaseOwnerRole: String
+    let workflowPhaseStatus: String
+    let workflowPhaseEntryReason: String
+    let workflowPhaseNextRecommended: [String]
     let focusedSummary: String
     let projectMissionDocument: String
     let rollingConversationSummary: String
@@ -93,6 +137,11 @@ struct AssistantContextModel {
         activeProjectName: String,
         workflowName: String,
         route: String,
+        workflowPhaseID: String = WorkflowPhaseID.setup.rawValue,
+        workflowPhaseOwnerRole: String = "app_assistant",
+        workflowPhaseStatus: String = WorkflowPhaseStatus.notStarted.rawValue,
+        workflowPhaseEntryReason: String = "",
+        workflowPhaseNextRecommended: [String] = [],
         focusedSummary: String,
         projectMissionDocument: String = "",
         rollingConversationSummary: String = "",
@@ -136,6 +185,11 @@ struct AssistantContextModel {
         self.activeProjectName = activeProjectName
         self.workflowName = workflowName
         self.route = route
+        self.workflowPhaseID = workflowPhaseID
+        self.workflowPhaseOwnerRole = workflowPhaseOwnerRole
+        self.workflowPhaseStatus = workflowPhaseStatus
+        self.workflowPhaseEntryReason = workflowPhaseEntryReason
+        self.workflowPhaseNextRecommended = workflowPhaseNextRecommended
         self.focusedSummary = focusedSummary
         self.projectMissionDocument = projectMissionDocument
         self.rollingConversationSummary = rollingConversationSummary
@@ -182,6 +236,13 @@ struct AssistantContextModel {
             "activeProjectName": activeProjectName,
             "workflowName": workflowName,
             "route": route,
+            "workflowPhase": [
+                "phaseId": workflowPhaseID,
+                "ownerRole": workflowPhaseOwnerRole,
+                "status": workflowPhaseStatus,
+                "entryReason": workflowPhaseEntryReason,
+                "nextRecommendedPhases": workflowPhaseNextRecommended
+            ],
             "focusedSummary": focusedSummary,
             "projectMission": [
                 "document": projectMissionDocument
