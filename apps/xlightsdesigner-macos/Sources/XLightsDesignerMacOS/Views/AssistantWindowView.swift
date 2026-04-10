@@ -23,16 +23,10 @@ struct AssistantWindowView: View {
 
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("Design Team Chat")
                     .font(.title)
                     .fontWeight(.semibold)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Guided workflow with App Assistant, Designer, Audio Analyst, and Sequencer.")
-                        .foregroundStyle(.secondary)
-                    currentPhaseSummary
-                    phaseStrip
-                }
             }
             Spacer()
             Button("Hide") {
@@ -40,41 +34,6 @@ struct AssistantWindowView: View {
             }
             Button("Clear") {
                 model.clearConversation(context: currentContext())
-            }
-        }
-    }
-
-    private var currentPhaseSummary: some View {
-        let phase = appModel.currentWorkflowPhase()
-        return HStack(spacing: 8) {
-            Text("Current Phase")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(phase.phaseID.title)
-                .font(.caption)
-                .fontWeight(.semibold)
-            Text("•")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-            Text(phaseOwnerTitle(for: phase.ownerRole))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var phaseStrip: some View {
-        let current = appModel.currentWorkflowPhase().phaseID
-        let currentIndex = WorkflowPhaseID.allCases.firstIndex(of: current) ?? 0
-        return HStack(spacing: 8) {
-            ForEach(Array(WorkflowPhaseID.allCases.enumerated()), id: \.element.rawValue) { index, phase in
-                Text(phase.title)
-                    .font(.caption)
-                    .fontWeight(index == currentIndex ? .semibold : .regular)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(phaseBackground(for: phase, current: current, currentIndex: currentIndex, index: index))
-                    .foregroundStyle(phaseForeground(for: phase, current: current, currentIndex: currentIndex, index: index))
-                    .clipShape(Capsule())
             }
         }
     }
@@ -230,40 +189,6 @@ struct AssistantWindowView: View {
         return output
     }
 
-    private func phaseOwnerTitle(for roleID: String) -> String {
-        switch roleID {
-        case "app_assistant":
-            return "App Assistant"
-        case "designer_dialog":
-            return "Designer"
-        case "audio_analyst":
-            return "Audio Analyst"
-        case "sequence_agent":
-            return "Sequencer"
-        default:
-            return "Team"
-        }
-    }
-
-    private func phaseBackground(for phase: WorkflowPhaseID, current: WorkflowPhaseID, currentIndex: Int, index: Int) -> Color {
-        if phase == current {
-            return Color.accentColor.opacity(0.22)
-        }
-        if index < currentIndex {
-            return Color.green.opacity(0.16)
-        }
-        return Color(nsColor: .controlBackgroundColor)
-    }
-
-    private func phaseForeground(for phase: WorkflowPhaseID, current: WorkflowPhaseID, currentIndex: Int, index: Int) -> Color {
-        if phase == current {
-            return .primary
-        }
-        if index < currentIndex {
-            return .green
-        }
-        return .secondary
-    }
 }
 
 private struct AssistantComposerTextView: NSViewRepresentable {
