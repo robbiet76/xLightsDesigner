@@ -200,35 +200,39 @@ final class AppModel {
     }
 
     func currentWorkflowPhase() -> WorkflowPhaseStateModel {
+        let base: WorkflowPhaseStateModel
         if isSetupIncomplete() {
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .setup,
                 ownerRole: "app_assistant",
                 status: .inProgress,
                 entryReason: "App setup is still incomplete.",
                 nextRecommendedPhases: [.projectMission, .audioAnalysis, .displayDiscovery]
             )
+            return applyPhaseOverlay(base)
         }
 
         switch selectedWorkflow {
         case .project:
             let hasMission = !(projectScreenModel.screenModel.brief?.isEmpty ?? true)
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .projectMission,
                 ownerRole: "designer_dialog",
                 status: hasMission ? .readyToClose : .inProgress,
                 entryReason: hasMission ? "Project mission exists and can be refined or closed." : "Project mission still needs creative direction.",
                 nextRecommendedPhases: [.displayDiscovery, .audioAnalysis, .design]
             )
+            return applyPhaseOverlay(base)
         case .display:
             let status: WorkflowPhaseStatus = displayScreenModel.readinessProgress >= 0.75 ? .readyToClose : .inProgress
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .displayDiscovery,
                 ownerRole: "designer_dialog",
                 status: status,
                 entryReason: "Display understanding is being shaped into usable metadata.",
                 nextRecommendedPhases: [.design, .sequencing]
             )
+            return applyPhaseOverlay(base)
         case .audio:
             let header = audioScreenModel.header
             let status: WorkflowPhaseStatus
@@ -239,46 +243,51 @@ final class AppModel {
             } else {
                 status = .inProgress
             }
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .audioAnalysis,
                 ownerRole: "audio_analyst",
                 status: status,
                 entryReason: "Tracks are being analyzed and prepared for downstream work.",
                 nextRecommendedPhases: [.design, .sequencing]
             )
+            return applyPhaseOverlay(base)
         case .design:
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .design,
                 ownerRole: "designer_dialog",
                 status: .inProgress,
                 entryReason: "Creative direction is being prepared before implementation.",
                 nextRecommendedPhases: [.sequencing, .review]
             )
+            return applyPhaseOverlay(base)
         case .sequence:
             let sequence = sequenceScreenModel.screenModel
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .sequencing,
                 ownerRole: "sequence_agent",
                 status: sequence.overview.itemCount > 0 ? .inProgress : .notStarted,
                 entryReason: "Design intent is being translated into xLights changes.",
                 nextRecommendedPhases: [.review, .design]
             )
+            return applyPhaseOverlay(base)
         case .review:
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .review,
                 ownerRole: "sequence_agent",
                 status: .inProgress,
                 entryReason: "Recent work is being checked and validated.",
                 nextRecommendedPhases: [.sequencing, .design]
             )
+            return applyPhaseOverlay(base)
         case .history:
-            return WorkflowPhaseStateModel(
+            base = WorkflowPhaseStateModel(
                 phaseID: .review,
                 ownerRole: "app_assistant",
                 status: .completed,
                 entryReason: "History browsing is outside the active production workflow.",
                 nextRecommendedPhases: [.design, .sequencing]
             )
+            return applyPhaseOverlay(base)
         }
     }
 
@@ -289,6 +298,24 @@ final class AppModel {
             agentConfig.hasStoredAPIKey
         let hasProject = workspace.activeProject != nil
         return !hasProvider || !hasProject
+    }
+
+    private func applyPhaseOverlay(_ base: WorkflowPhaseStateModel) -> WorkflowPhaseStateModel {
+        guard
+            base.status == .readyToClose,
+            let lastAssistant = assistantModel.messages.last(where: { $0.role == .assistant }),
+            (lastAssistant.handledBy ?? "") == "app_assistant"
+        else {
+            return base
+        }
+
+        return WorkflowPhaseStateModel(
+            phaseID: base.phaseID,
+            ownerRole: "app_assistant",
+            status: .handoffPending,
+            entryReason: "This phase is complete enough to hand off. Choose the next step.",
+            nextRecommendedPhases: base.nextRecommendedPhases
+        )
     }
 
     private func buildDisplayDiscoveryCandidates(

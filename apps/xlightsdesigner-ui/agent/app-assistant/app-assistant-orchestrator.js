@@ -214,6 +214,16 @@ function inferRouteDecision({ userMessage = "", context = {}, response = {} } = 
   }
 
   if (phase.phaseId) {
+    if (phase.status === "handoff_pending") {
+      if (isDirectSequencingRequest(userText)) {
+        return "sequence_agent";
+      }
+      if (addressedRole === APP_ASSISTANT_ROLE || !addressedRole || isExplicitPhaseSwitchIntent(userText)) {
+        return "general";
+      }
+      return "general";
+    }
+
     if (isExplicitPhaseSwitchIntent(userText)) {
       return "general";
     }

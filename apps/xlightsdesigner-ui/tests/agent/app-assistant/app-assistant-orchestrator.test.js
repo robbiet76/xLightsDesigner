@@ -450,3 +450,35 @@ test("direct technical sequencing request still routes to sequence agent during 
   assert.equal(result.result.routeDecision, "sequence_agent");
   assert.equal(result.result.handledBy, "sequence_agent");
 });
+
+test("handoff pending phase stays with app assistant until next phase is chosen", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "Project mission is in a good place. We can move into display discovery or audio analysis next.",
+        shouldGenerateProposal: false,
+        responseId: "resp-handoff-pending"
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "What should we do next?",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "project_mission",
+        ownerRole: "app_assistant",
+        status: "handoff_pending",
+        nextRecommendedPhases: ["display_discovery", "audio_analysis"]
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
+});
