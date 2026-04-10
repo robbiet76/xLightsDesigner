@@ -7,6 +7,9 @@ Last Reviewed: 2026-03-12
 
 Purpose: implement the unified conversational shell above specialist agents without collapsing their boundaries.
 
+Reference:
+- [workflow-phase-model-2026-04-10.md](/Users/robterry/Projects/xLightsDesigner/specs/app-assistant/workflow-phase-model-2026-04-10.md)
+
 ## Phase A: Role And Contracts
 - [x] Define `app_assistant` role and delegation boundary
 - [x] Define app-assistant session/context contract
@@ -20,7 +23,7 @@ Purpose: implement the unified conversational shell above specialist agents with
 
 ## Phase B: Session And Routing
 - [x] Add app-assistant runtime/orchestrator
-- [ ] Add conversation state model spanning setup, analysis, design, and sequencing
+- [ ] Add explicit workflow phase state model spanning setup, mission, analysis, display, design, sequencing, and review
 - [x] Add specialist-routing rules for:
   - setup/help
   - `audio_analyst`
