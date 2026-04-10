@@ -1,0 +1,24 @@
+{
+  "name": "project_mission_warm_neighborhood",
+  "summary": "Simulated user shapes and finalizes a project mission for a warm, nostalgic family Christmas show.",
+  "initialWorkflow": "Project",
+  "resetProjectMission": true,
+  "kickoffPrompt": "Let's start with the project mission.",
+  "maxTurns": 4,
+  "userProfile": {
+    "pace": "guided",
+    "experienceLevel": "intermediate"
+  },
+  "displayTruth": {
+    "projectIntent": "Create a warm, nostalgic neighborhood Christmas show that feels welcoming and emotionally grounded for families.",
+    "inspirations": [
+      "classic neighborhood Christmas memories",
+      "soft glowing lights",
+      "gentle wonder instead of spectacle"
+    ],
+    "audience": "families and neighbors of all ages",
+    "cohesion": "Keep the whole project emotionally consistent, comforting, and timeless rather than treating songs as disconnected set pieces.",
+    "memorableQuality": "People should feel like they stepped into a familiar Christmas memory they want to linger in.",
+    "finalizationTrigger": "If the designer asks to finalize or clearly says enough is understood, confirm and ask for the mission to be written."
+  }
+}

@@ -398,6 +398,10 @@ final class AppModel {
         }
     }
 
+    func clearProjectMission() {
+        projectScreenModel.clearProjectBrief()
+    }
+
     func clearWorkflowPhaseOverride() {
         activeWorkflowPhaseOverride = nil
     }

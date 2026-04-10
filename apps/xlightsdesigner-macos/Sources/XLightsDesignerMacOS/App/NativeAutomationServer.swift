@@ -104,7 +104,9 @@ final class NativeAutomationServer: @unchecked Sendable {
             guard let workflow else {
                 return .error(statusCode: 400, message: "Unknown workflow.")
             }
+            model.clearWorkflowPhaseOverride()
             model.selectedWorkflow = workflow
+            refreshCurrentWorkflow()
             return .json(200, body: ["ok": true, "selectedWorkflow": model.selectedWorkflow.rawValue])
         case "refreshCurrentWorkflow":
             refreshCurrentWorkflow()
@@ -209,6 +211,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             return .json(200, body: ["ok": true])
         case "resetAssistantMemory":
             refreshAll()
+            model.clearWorkflowPhaseOverride()
             model.assistantModel.resetMemory(project: model.workspace.activeProject) {
                 self.model.assistantContext()
             }
@@ -216,6 +219,13 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "ok": true,
                 "messageCount": model.assistantModel.messages.count,
                 "lastMessage": assistantSnapshot()["lastMessage"] ?? NSNull()
+            ])
+        case "clearProjectMission":
+            model.clearProjectMission()
+            refreshCurrentWorkflow()
+            return .json(200, body: [
+                "ok": true,
+                "projectMission": model.projectScreenModel.screenModel.brief?.document ?? ""
             ])
         default:
             return .error(statusCode: 400, message: "Unsupported action \(name).")

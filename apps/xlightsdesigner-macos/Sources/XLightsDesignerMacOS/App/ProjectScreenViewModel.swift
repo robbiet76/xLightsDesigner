@@ -201,6 +201,19 @@ final class ProjectScreenViewModel {
         isEditingProjectBrief = false
     }
 
+    func clearProjectBrief() {
+        guard var active = workspace.activeProject else { return }
+        active.snapshot.removeValue(forKey: "projectBrief")
+        do {
+            let saved = try projectService.saveProject(active)
+            workspace.setProject(saved)
+            projectBriefEditor = ProjectBriefEditorModel()
+            isEditingProjectBrief = false
+        } catch {
+            screenBanner = ProjectBannerModel(id: "project-brief-clear-failed", level: .blocked, text: String(error.localizedDescription))
+        }
+    }
+
 
     func dismissProjectSheet() {
         isShowingProjectSheet = false

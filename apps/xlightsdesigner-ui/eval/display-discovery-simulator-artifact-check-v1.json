@@ -1,0 +1,18 @@
+{
+  "name": "display_discovery_artifact_check",
+  "summary": "Simulated user confirms core focal and support roles so display discovery produces a visible understanding update card.",
+  "initialWorkflow": "Display",
+  "kickoffPrompt": "Let's move into display discovery.",
+  "maxTurns": 4,
+  "userProfile": {
+    "pace": "direct",
+    "experienceLevel": "experienced"
+  },
+  "displayTruth": {
+    "mainFocal": "HiddenTree is the main focal point and emotional anchor.",
+    "supportingAccents": "CandyCanes support the scene as foreground rhythm and accent.",
+    "characterProps": "Snowman and Train are themed supporting character props around the tree.",
+    "backgroundLayers": "Floods and upper snowflakes are more background and atmosphere than focal story elements.",
+    "preferredConversationStyle": "Answer directly and move the designer forward once they understand the broad roles."
+  }
+}

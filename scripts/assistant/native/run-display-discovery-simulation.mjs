@@ -197,6 +197,9 @@ async function main() {
   const turnLimit = Number(args.turnLimit || scenario?.maxTurns || 8);
 
   await automationAction("resetAssistantMemory");
+  if (scenario?.resetProjectMission === true) {
+    await automationAction("clearProjectMission");
+  }
   const initialWorkflow = str(scenario?.initialWorkflow || "");
   if (initialWorkflow) {
     await automationAction("selectWorkflow", { workflow: initialWorkflow });
@@ -254,11 +257,27 @@ async function main() {
       counts[key] = Number(counts[key] || 0) + 1;
       return counts;
     }, {}),
+    artifactCards: arr(finalSnapshot?.messages)
+      .map((row) => ({
+        displayName: str(row?.displayName),
+        handledBy: str(row?.handledBy),
+        artifactType: str(row?.artifactCard?.artifactType),
+        title: str(row?.artifactCard?.title),
+        summary: str(row?.artifactCard?.summary),
+        chips: arr(row?.artifactCard?.chips).map((value) => str(value)).filter(Boolean)
+      }))
+      .filter((row) => row.artifactType),
     transcript: arr(finalSnapshot?.messages).map((row) => ({
       role: str(row?.role),
       displayName: str(row?.displayName),
       handledBy: str(row?.handledBy),
-      text: str(row?.text)
+      text: str(row?.text),
+      artifactCard: {
+        artifactType: str(row?.artifactCard?.artifactType),
+        title: str(row?.artifactCard?.title),
+        summary: str(row?.artifactCard?.summary),
+        chips: arr(row?.artifactCard?.chips).map((value) => str(value)).filter(Boolean)
+      }
     }))
   };
 
