@@ -39,6 +39,12 @@ function currentWorkflowPhase(context = {}) {
   };
 }
 
+function currentPhaseOutputSummary(context = {}) {
+  const phase = context?.workflowPhase;
+  if (!phase || typeof phase !== "object") return "";
+  return str(phase.outputSummary);
+}
+
 function isExplicitPhaseSwitchIntent(text = "") {
   const lower = str(text).toLowerCase();
   if (!lower) return false;
@@ -320,16 +326,18 @@ function transitionOwnerRole(phaseId = "") {
   }
 }
 
-function buildPhaseTransitionMessage(phaseTransition = {}) {
+function buildPhaseTransitionMessage(phaseTransition = {}, context = {}) {
   const phaseId = str(phaseTransition?.phaseId);
   if (!phaseId) return "";
   const title = phaseTitle(phaseId);
   const owner = roleLabel(transitionOwnerRole(phaseId));
   const reason = str(phaseTransition?.reason);
+  const outputSummary = currentPhaseOutputSummary(context);
+  const opener = outputSummary ? `${outputSummary} ` : "";
   if (reason) {
-    return `We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
+    return `${opener}We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
   }
-  return `We can move into ${title} next. ${owner} will take the lead there.`;
+  return `${opener}We can move into ${title} next. ${owner} will take the lead there.`;
 }
 
 export async function executeAppAssistantConversation({
@@ -434,7 +442,7 @@ export async function executeAppAssistantConversation({
     ok: true,
     result: buildAppAssistantResult({
       assistantMessage: shouldUseAppAssistantTransitionMessage
-        ? buildPhaseTransitionMessage(normalizedPhaseTransition)
+        ? buildPhaseTransitionMessage(normalizedPhaseTransition, context)
         : str(response.assistantMessage || ""),
       routeDecision,
       responseId: str(response.responseId || ""),

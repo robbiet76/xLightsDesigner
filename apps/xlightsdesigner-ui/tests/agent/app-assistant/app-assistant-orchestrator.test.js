@@ -293,7 +293,8 @@ test("explicit phase switch uses app assistant transition message instead of spe
         ownerRole: "designer_dialog",
         status: "ready_to_close",
         entryReason: "Project mission is ready to close.",
-        nextRecommendedPhases: ["display_discovery", "audio_analysis"]
+        nextRecommendedPhases: ["display_discovery", "audio_analysis"],
+        outputSummary: "Mission document saved (412 chars)."
       }
     },
     bridge
@@ -303,6 +304,7 @@ test("explicit phase switch uses app assistant transition message instead of spe
   assert.equal(result.result.routeDecision, "general");
   assert.equal(result.result.handledBy, "app_assistant");
   assert.equal(result.result.phaseTransition.phaseId, "display_discovery");
+  assert.match(result.result.assistantMessage, /Mission document saved/i);
   assert.match(result.result.assistantMessage, /move into Display Discovery next/i);
   assert.match(result.result.assistantMessage, /Designer will take the lead/i);
   assert.doesNotMatch(result.result.assistantMessage, /main focal elements/i);
