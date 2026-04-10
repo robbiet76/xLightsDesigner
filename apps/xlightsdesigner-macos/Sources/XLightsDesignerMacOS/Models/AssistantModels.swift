@@ -93,6 +93,7 @@ struct AssistantContextModel {
     let activeProjectName: String
     let workflowName: String
     let route: String
+    let interactionStyle: String
     let workflowPhaseID: String
     let workflowPhaseOwnerRole: String
     let workflowPhaseStatus: String
@@ -143,6 +144,7 @@ struct AssistantContextModel {
         activeProjectName: String,
         workflowName: String,
         route: String,
+        interactionStyle: String = "guided",
         workflowPhaseID: String = WorkflowPhaseID.setup.rawValue,
         workflowPhaseOwnerRole: String = "app_assistant",
         workflowPhaseStatus: String = WorkflowPhaseStatus.notStarted.rawValue,
@@ -192,6 +194,7 @@ struct AssistantContextModel {
         self.activeProjectName = activeProjectName
         self.workflowName = workflowName
         self.route = route
+        self.interactionStyle = interactionStyle
         self.workflowPhaseID = workflowPhaseID
         self.workflowPhaseOwnerRole = workflowPhaseOwnerRole
         self.workflowPhaseStatus = workflowPhaseStatus
@@ -244,6 +247,7 @@ struct AssistantContextModel {
             "activeProjectName": activeProjectName,
             "workflowName": workflowName,
             "route": route,
+            "interactionStyle": interactionStyle,
             "workflowPhase": [
                 "phaseId": workflowPhaseID,
                 "ownerRole": workflowPhaseOwnerRole,

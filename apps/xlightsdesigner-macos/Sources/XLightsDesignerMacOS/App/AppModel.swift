@@ -154,6 +154,7 @@ final class AppModel {
             activeProjectName: workspace.activeProject?.projectName ?? "No Project",
             workflowName: selectedWorkflow.rawValue,
             route: workflowRoute(),
+            interactionStyle: inferredInteractionStyle(),
             workflowPhaseID: phase.phaseID.rawValue,
             workflowPhaseOwnerRole: phase.ownerRole,
             workflowPhaseStatus: phase.status.rawValue,
@@ -234,6 +235,29 @@ final class AppModel {
         case .review:
             return reviewScreenModel.screenModel.pendingSummary.pendingSummary
         }
+    }
+
+    private func inferredInteractionStyle() -> String {
+        let recentUserMessages = assistantModel.messages
+            .filter { $0.role == .user }
+            .suffix(6)
+            .map(\.text)
+
+        guard !recentUserMessages.isEmpty else { return "guided" }
+
+        let directCount = recentUserMessages.reduce(into: 0) { total, raw in
+            let text = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if text.isEmpty { return }
+            let explicitSwitch = text.range(of: #"\b(switch|move|go|start|begin|continue|jump|transition)\b.*\b(project mission|mission|audio|audio analysis|display|display discovery|design|sequence|sequencing|review)\b"#, options: .regularExpression) != nil
+            let imperative = text.range(of: #"\b(analyze|review|sequence|design|open|show|hide|set|apply|update|fix|move|switch|start|begin|continue|create|edit|delete)\b"#, options: .regularExpression) != nil
+            let concise = text.count <= 80
+            let questionCount = text.filter { $0 == "?" }.count
+            if explicitSwitch || (imperative && concise && questionCount <= 1) {
+                total += 1
+            }
+        }
+
+        return directCount >= max(2, recentUserMessages.count / 2) ? "direct" : "guided"
     }
 
     func currentWorkflowPhase() -> WorkflowPhaseStateModel {

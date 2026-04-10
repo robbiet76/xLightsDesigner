@@ -45,6 +45,11 @@ function currentPhaseOutputSummary(context = {}) {
   return str(phase.outputSummary);
 }
 
+function interactionStyle(context = {}) {
+  const style = str(context?.interactionStyle).toLowerCase();
+  return style === "direct" ? "direct" : "guided";
+}
+
 function isExplicitPhaseSwitchIntent(text = "") {
   const lower = str(text).toLowerCase();
   if (!lower) return false;
@@ -341,20 +346,28 @@ function buildPhaseTransitionMessage(phaseTransition = {}, context = {}) {
   const owner = roleLabel(transitionOwnerRole(phaseId));
   const reason = str(phaseTransition?.reason);
   const outputSummary = currentPhaseOutputSummary(context);
+  const direct = interactionStyle(context) === "direct";
   const opener = outputSummary ? `${outputSummary} ` : "";
   if (reason) {
-    return `${opener}We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
+    return direct
+      ? `${opener}Next: ${title}. ${owner} takes it from here.`
+      : `${opener}We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
   }
-  return `${opener}We can move into ${title} next. ${owner} will take the lead there.`;
+  return direct
+    ? `${opener}Next: ${title}. ${owner} takes it from here.`
+    : `${opener}We can move into ${title} next. ${owner} will take the lead there.`;
 }
 
 function buildPhaseClosureMessage(context = {}) {
   const phase = currentWorkflowPhase(context);
   const outputSummary = currentPhaseOutputSummary(context);
   const nextPhases = formatPhaseList(phase.nextRecommendedPhases);
+  const direct = interactionStyle(context) === "direct";
   const summary = outputSummary || `${phaseTitle(phase.phaseId)} is in a good place to hand off.`;
   if (nextPhases) {
-    return `${summary} Next sensible options are ${nextPhases}.`;
+    return direct
+      ? `${summary} Next: ${nextPhases}.`
+      : `${summary} Next sensible options are ${nextPhases}.`;
   }
   return summary;
 }

@@ -347,6 +347,48 @@ test("handoff pending uses phase closure summary and next phases", async () => {
   assert.doesNotMatch(result.result.assistantMessage, /^What would you like to do next\?$/i);
 });
 
+test("direct interaction style compresses handoff wording", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "We can move into sequencing next. Sequencer will take the lead there.",
+        shouldGenerateProposal: false,
+        responseId: "resp-direct-style",
+        phaseTransition: {
+          phaseId: "sequencing",
+          reason: "User explicitly requested a transition to sequencing."
+        }
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Move to sequencing.",
+    messages: [],
+    context: {
+      route: "design",
+      interactionStyle: "direct",
+      workflowPhase: {
+        phaseId: "design",
+        ownerRole: "designer_dialog",
+        status: "ready_to_close",
+        entryReason: "Design is ready to hand off.",
+        nextRecommendedPhases: ["sequencing", "review"],
+        outputSummary: "Design handoff prepared."
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "general");
+  assert.equal(result.result.handledBy, "app_assistant");
+  assert.match(result.result.assistantMessage, /^Design handoff prepared\. Next: Sequencing\./i);
+  assert.match(result.result.assistantMessage, /Sequencer takes it from here\./i);
+  assert.doesNotMatch(result.result.assistantMessage, /We can move into Sequencing next/i);
+});
+
 test("broad design kickoff stays with designer even if assistant text mentions sequencing", async () => {
   const bridge = {
     async runAgentConversation() {

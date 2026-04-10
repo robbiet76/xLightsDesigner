@@ -182,6 +182,7 @@ function compactContext(context = {}) {
     activeProjectName: String(c.activeProjectName || '').trim(),
     workflowName: String(c.workflowName || '').trim(),
     route: String(c.route || '').trim(),
+    interactionStyle: String(c.interactionStyle || '').trim(),
     workflowPhase: {
       phaseId: String(c?.workflowPhase?.phaseId || '').trim(),
       ownerRole: String(c?.workflowPhase?.ownerRole || '').trim(),
@@ -488,6 +489,7 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     : {};
   const projectMissionSummary = String(currentProjectMission.document || '').trim();
   const workflowPhase = c?.workflowPhase && typeof c.workflowPhase === 'object' ? c.workflowPhase : {};
+  const interactionStyle = String(c?.interactionStyle || '').trim().toLowerCase();
   const workflowPhaseID = String(workflowPhase.phaseId || '').trim();
   const workflowPhaseStatus = String(workflowPhase.status || '').trim();
   const workflowPhaseOwner = String(workflowPhase.ownerRole || '').trim();
@@ -573,6 +575,9 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'When userProfile.preferredName is present in Context, you may address the user by that name naturally, but do not overuse it in every reply.',
     'When userProfile preference notes are present in Context, honor them as durable workflow preferences unless the user explicitly changes direction.',
     'Treat the chat as the main workflow guide. Pages support the conversation and provide visual confirmation; they are not the primary control surface.',
+    interactionStyle ? `Current interaction style: ${interactionStyle}` : '',
+    'If the interaction style is `direct`, keep handoffs, closure, and orientation compressed. Preserve workflow boundaries, but skip unnecessary ceremony.',
+    'If the interaction style is `guided`, it is fine to provide a little more orientation and next-step framing.',
     'When the user is explicitly switching phases or asking what to do next across phases, answer in the app assistant voice rather than a specialist voice.',
     workflowPhaseID ? `Current workflow phase: ${workflowPhaseID}` : '',
     workflowPhaseOwner ? `Current phase owner: ${workflowPhaseOwner}` : '',
