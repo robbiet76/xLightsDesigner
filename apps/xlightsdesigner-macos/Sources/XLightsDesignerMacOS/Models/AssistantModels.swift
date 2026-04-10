@@ -89,6 +89,12 @@ struct AssistantDiagnosticsResult: Sendable {
     let generatedAt: String
 }
 
+struct AssistantActionRequestResult: Sendable {
+    let actionType: String
+    let payload: [String: String]
+    let reason: String
+}
+
 struct AssistantConversationState: Codable, Sendable {
     var version: Int = 1
     var rollingSummary: String

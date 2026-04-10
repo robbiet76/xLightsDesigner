@@ -372,6 +372,18 @@ function buildPhaseClosureMessage(context = {}) {
   return summary;
 }
 
+function normalizeActionRequest(value = null) {
+  const object = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  if (!object) return null;
+  const actionType = str(object.actionType);
+  if (!actionType) return null;
+  const payload = object.payload && typeof object.payload === "object" && !Array.isArray(object.payload)
+    ? object.payload
+    : {};
+  const reason = str(object.reason);
+  return { actionType, payload, reason };
+}
+
 export async function executeAppAssistantConversation({
   userMessage = "",
   messages = [],
@@ -455,6 +467,7 @@ export async function executeAppAssistantConversation({
         reason: str(response.phaseTransition.reason || "")
       }
     : null;
+  const normalizedActionRequest = normalizeActionRequest(response?.actionRequest);
   const discoveryShouldStart = shouldStartDisplayDiscovery({ context, userMessage });
   const discoveryShouldContinue = shouldContinueDisplayDiscovery({ context });
   const discoveryActive =
@@ -520,6 +533,7 @@ export async function executeAppAssistantConversation({
           }
         : undefined,
       phaseTransition: normalizedPhaseTransition?.phaseId ? normalizedPhaseTransition : undefined,
+      actionRequest: normalizedActionRequest?.actionType ? normalizedActionRequest : undefined,
       userPreferenceNotes: Array.isArray(response.userPreferenceNotes) ? response.userPreferenceNotes : [],
       diagnostics: buildDiagnostics({
         routeDecision,

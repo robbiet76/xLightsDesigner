@@ -255,6 +255,16 @@ function normalizePhaseTransition(value) {
   };
 }
 
+function normalizeActionRequest(value) {
+  const object = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const actionType = String(object.actionType || '').trim();
+  const payload = object.payload && typeof object.payload === 'object' && !Array.isArray(object.payload)
+    ? object.payload
+    : {};
+  const reason = String(object.reason || '').trim();
+  return { actionType, payload, reason };
+}
+
 function detectRequestedPhaseFromText(text = '') {
   const lower = String(text || '').toLowerCase();
   if (!lower) return '';
@@ -595,12 +605,13 @@ function buildAgentSystemPrompt(context = {}, userMessage = '') {
     'The first specialist turn after phase entry should feel like a deliberate kickoff, not a generic continuation.',
     'Specialists should recommend next phases when useful, but they should not silently start the next phase without a clear transition.',
     'Return your result as a JSON object. The user will only see assistantMessage, not the raw JSON.',
-    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]},"projectMissionCapture":{"document":""},"phaseTransition":{"phaseId":"setup|project_mission|audio_analysis|display_discovery|design|sequencing|review","reason":""}}.',
+    'The JSON shape should be: {"assistantMessage":"...","shouldGenerateProposal":false,"proposalIntent":"","displayDiscoveryCapture":{"status":"in_progress|ready_for_proposal","insights":[{"subject":"","subjectType":"model|family|group","category":"","value":"","rationale":""}],"unresolvedBranches":["..."],"resolvedBranches":["..."]},"projectMissionCapture":{"document":""},"phaseTransition":{"phaseId":"setup|project_mission|audio_analysis|display_discovery|design|sequencing|review","reason":""},"actionRequest":{"actionType":"select_workflow|refresh_current_workflow|refresh_all|refresh_xlights_session|open_settings","payload":{},"reason":""}}.',
     'assistantMessage must remain natural language, concise, and user-facing.',
     'When the conversation materially clarifies the overall project mission, include a projectMissionCapture.document. It must read as one coherent, well-written paragraph, not a form, outline, bullets, fragments, or terse summary notes.',
     'A strong project mission document should sound like a creative north star for the show. Prefer emotional direction, atmosphere, inspiration, and cohesion over operational detail.',
     'Only include projectMissionCapture when the turn genuinely improves or changes the project-level mission.',
     'Only include phaseTransition when the user is clearly moving into a different phase of work.',
+    'Only include actionRequest for bounded app-level actions that the app assistant should surface explicitly. Do not use actionRequest for specialist work, sequencing edits, or silent navigation.',
     'When display discovery is active, determine confirmed learnings from the user response and include them in displayDiscoveryCapture. Use only confirmed or clearly stated information for insights.',
     'If the user is refining or correcting existing display metadata, update the relevant insights instead of treating the turn as a brand new discovery topic.',
     'Treat a direct user statement as confirmed meaning. If the user clearly states that a prop or family is focal, supporting, background, repeating, feature-only, or otherwise semantically defined, capture it without asking the user to reconfirm the same point.',
@@ -711,6 +722,7 @@ async function runAgentConversation(payload = {}) {
   );
   const projectMissionCapture = normalizeProjectMissionCapture(json?.projectMissionCapture);
   let phaseTransition = normalizePhaseTransition(json?.phaseTransition);
+  const actionRequest = normalizeActionRequest(json?.actionRequest);
   const shouldGenerateProposal = typeof json?.shouldGenerateProposal === 'boolean'
     ? Boolean(json.shouldGenerateProposal)
     : inferProposalIntent({ userMessage, assistantMessage, context });
@@ -766,7 +778,8 @@ async function runAgentConversation(payload = {}) {
     userPreferenceNotes: inferUserPreferenceNotes(userMessage),
     displayDiscoveryCapture: finalDiscoveryCapture,
     projectMission: (canCaptureProjectMission && projectMissionCapture.document) ? projectMissionCapture : null,
-    phaseTransition: phaseTransition.phaseId ? phaseTransition : null
+    phaseTransition: phaseTransition.phaseId ? phaseTransition : null,
+    actionRequest: actionRequest.actionType ? actionRequest : null
   };
 }
 

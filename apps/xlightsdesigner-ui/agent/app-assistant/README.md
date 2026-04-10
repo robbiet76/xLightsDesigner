@@ -16,7 +16,15 @@ The initial runtime slice now exists:
 - main chat ownership in the UI
 
 Still open:
-- bounded action contracts
 - explicit shell session state
 - training/eval assets
 - richer artifact surfacing across delegated specialist work
+
+Bounded action contracts now exist for explicit app-level requests such as:
+- `select_workflow`
+- `refresh_current_workflow`
+- `refresh_all`
+- `refresh_xlights_session`
+- `open_settings`
+
+These are carried as explicit runtime objects rather than being hidden inside conversational text. Auto-application policy is intentionally separate from the contract itself.

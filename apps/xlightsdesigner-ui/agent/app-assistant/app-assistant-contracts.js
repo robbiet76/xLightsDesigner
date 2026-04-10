@@ -22,6 +22,14 @@ const ROUTES = new Set([
   "general"
 ]);
 
+const ACTION_REQUEST_TYPES = new Set([
+  "select_workflow",
+  "refresh_current_workflow",
+  "refresh_all",
+  "refresh_xlights_session",
+  "open_settings"
+]);
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -82,6 +90,12 @@ export function validateAppAssistantResult(payload = {}) {
   if (obj.diagnostics != null && !isPlainObject(obj.diagnostics)) errors.push("diagnostics must be an object when provided");
   if (obj.identities != null && !isPlainObject(obj.identities)) errors.push("identities must be an object when provided");
   if (obj.phaseTransition != null && !isPlainObject(obj.phaseTransition)) errors.push("phaseTransition must be an object when provided");
+  if (obj.actionRequest != null && !isPlainObject(obj.actionRequest)) errors.push("actionRequest must be an object when provided");
+  if (isPlainObject(obj.actionRequest)) {
+    const actionType = str(obj.actionRequest.actionType);
+    if (!ACTION_REQUEST_TYPES.has(actionType)) errors.push("actionRequest.actionType must be select_workflow|refresh_current_workflow|refresh_all|refresh_xlights_session|open_settings");
+    if (obj.actionRequest.payload != null && !isPlainObject(obj.actionRequest.payload)) errors.push("actionRequest.payload must be an object when provided");
+  }
   return errors;
 }
 
@@ -120,6 +134,7 @@ export function buildAppAssistantResult({
   displayDiscovery = null,
   projectMission = null,
   phaseTransition = null,
+  actionRequest = null,
   userPreferenceNotes = []
 } = {}) {
   return {
@@ -138,6 +153,7 @@ export function buildAppAssistantResult({
     displayDiscovery: isPlainObject(displayDiscovery) ? displayDiscovery : undefined,
     projectMission: isPlainObject(projectMission) ? projectMission : undefined,
     phaseTransition: isPlainObject(phaseTransition) ? phaseTransition : undefined,
+    actionRequest: isPlainObject(actionRequest) ? actionRequest : undefined,
     userPreferenceNotes: arr(userPreferenceNotes).map((row) => str(row)).filter(Boolean),
     diagnostics: isPlainObject(diagnostics) ? diagnostics : undefined,
     warnings: arr(warnings).map((row) => str(row)).filter(Boolean)

@@ -14,7 +14,7 @@ Reference:
 - [x] Define `app_assistant` role and delegation boundary
 - [x] Define app-assistant session/context contract
 - [x] Define specialist routing result contract
-- [ ] Define action-request contract for bounded app-level actions
+- [x] Define action-request contract for bounded app-level actions
 - [x] Define team-chat identity contract:
   - canonical role id
   - display name

@@ -359,6 +359,11 @@ final class NativeAutomationServer: @unchecked Sendable {
                 "planOnlyMode": model.assistantModel.lastDiagnostics?.planOnlyMode ?? false,
                 "generatedAt": model.assistantModel.lastDiagnostics?.generatedAt ?? ""
             ],
+            "lastActionRequest": [
+                "actionType": model.assistantModel.lastActionRequest?.actionType ?? "",
+                "payload": model.assistantModel.lastActionRequest?.payload ?? [:],
+                "reason": model.assistantModel.lastActionRequest?.reason ?? ""
+            ],
             "displayDiscovery": [
                 "status": discovery.status.rawValue,
                 "scope": discovery.scope,

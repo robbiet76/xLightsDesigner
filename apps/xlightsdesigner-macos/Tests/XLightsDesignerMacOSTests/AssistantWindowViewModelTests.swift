@@ -14,6 +14,7 @@ struct AssistantWindowViewModelTests {
             displayDiscovery: nil,
             projectMission: nil,
             phaseTransition: nil,
+            actionRequest: nil,
             diagnostics: nil,
             userPreferenceNotes: []
         )))
@@ -51,6 +52,7 @@ struct AssistantWindowViewModelTests {
             displayDiscovery: nil,
             projectMission: nil,
             phaseTransition: nil,
+            actionRequest: nil,
             diagnostics: nil,
             userPreferenceNotes: []
         )))

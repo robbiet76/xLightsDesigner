@@ -17,6 +17,7 @@ final class AssistantWindowViewModel {
     var previousResponseID = ""
     var rollingConversationSummary = ""
     var lastDiagnostics: AssistantDiagnosticsResult?
+    var lastActionRequest: AssistantActionRequestResult?
 
     init(
         conversationService: AssistantConversationService = LocalAssistantConversationService(),
@@ -102,6 +103,7 @@ final class AssistantWindowViewModel {
                 context: context
             )
             lastDiagnostics = result.diagnostics
+            lastActionRequest = result.actionRequest
             previousResponseID = result.responseID
             let introRole = result.handledBy
             if shouldIntroduce(roleID: introRole, context: context, userMessage: trimmed) {
@@ -150,6 +152,7 @@ final class AssistantWindowViewModel {
             }
         } catch {
             lastDiagnostics = nil
+            lastActionRequest = nil
             messages.append(AssistantMessageModel(
                 id: UUID().uuidString,
                 role: .assistant,
@@ -172,6 +175,7 @@ final class AssistantWindowViewModel {
         isSending = false
         rollingConversationSummary = ""
         lastDiagnostics = nil
+        lastActionRequest = nil
         try? persistConversation()
     }
 

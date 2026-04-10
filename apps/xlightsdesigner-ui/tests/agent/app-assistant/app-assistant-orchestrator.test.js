@@ -604,3 +604,41 @@ test("handoff pending phase stays with app assistant until next phase is chosen"
   assert.equal(result.result.routeDecision, "general");
   assert.equal(result.result.handledBy, "app_assistant");
 });
+
+test("bounded action requests pass through the app assistant contract", async () => {
+  const bridge = {
+    async runAgentConversation() {
+      return {
+        ok: true,
+        assistantMessage: "Open Settings to finish provider setup.",
+        shouldGenerateProposal: false,
+        responseId: "resp-action-request",
+        actionRequest: {
+          actionType: "open_settings",
+          payload: {},
+          reason: "Provider configuration is still incomplete."
+        }
+      };
+    }
+  };
+
+  const result = await executeAppAssistantConversation({
+    userMessage: "Help me finish setup.",
+    messages: [],
+    context: {
+      route: "project",
+      workflowPhase: {
+        phaseId: "setup",
+        ownerRole: "app_assistant",
+        status: "in_progress"
+      }
+    },
+    bridge
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.result.routeDecision, "setup_help");
+  assert.equal(result.result.handledBy, "app_assistant");
+  assert.equal(result.result.actionRequest.actionType, "open_settings");
+  assert.equal(result.result.actionRequest.reason, "Provider configuration is still incomplete.");
+});

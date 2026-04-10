@@ -22,6 +22,7 @@ struct AssistantExecutionResult: Sendable {
     let displayDiscovery: AssistantDisplayDiscoveryResult?
     let projectMission: AssistantProjectMissionResult?
     let phaseTransition: AssistantPhaseTransitionResult?
+    let actionRequest: AssistantActionRequestResult?
     let diagnostics: AssistantDiagnosticsResult?
     let userPreferenceNotes: [String]
 }
@@ -79,6 +80,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
                 phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
+                actionRequest: parseActionRequest(from: result["actionRequest"]),
                 diagnostics: parseDiagnostics(from: result["diagnostics"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
@@ -94,6 +96,7 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
                 displayDiscovery: parseDisplayDiscovery(from: result["displayDiscovery"]),
                 projectMission: parseProjectMission(from: result["projectMission"]),
                 phaseTransition: parsePhaseTransition(from: result["phaseTransition"]),
+                actionRequest: parseActionRequest(from: result["actionRequest"]),
                 diagnostics: parseDiagnostics(from: result["diagnostics"]),
                 userPreferenceNotes: stringArray(result["userPreferenceNotes"])
             )
@@ -239,6 +242,25 @@ struct LocalAssistantExecutionService: AssistantExecutionService, Sendable {
             sequenceOpen: (object["sequenceOpen"] as? Bool) ?? false,
             planOnlyMode: (object["planOnlyMode"] as? Bool) ?? false,
             generatedAt: string(object["generatedAt"])
+        )
+    }
+
+    private func parseActionRequest(from value: Any?) -> AssistantActionRequestResult? {
+        guard let object = value as? [String: Any] else { return nil }
+        let actionType = string(object["actionType"])
+        guard !actionType.isEmpty else { return nil }
+        let payloadObject = object["payload"] as? [String: Any] ?? [:]
+        var payload: [String: String] = [:]
+        for (key, value) in payloadObject {
+            let normalized = string(value)
+            if !normalized.isEmpty {
+                payload[key] = normalized
+            }
+        }
+        return AssistantActionRequestResult(
+            actionType: actionType,
+            payload: payload,
+            reason: string(object["reason"])
         )
     }
 }
