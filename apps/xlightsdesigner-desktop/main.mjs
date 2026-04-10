@@ -31,6 +31,12 @@ import {
   listSequenceFilesInShowFolder,
   listMediaFilesInFolder
 } from "./renderer/storage/project-workspace-store.mjs";
+import {
+  statFileRecord,
+  readTrainingPackageAsset,
+  appendAgentLogEntry,
+  readAgentLogEntries
+} from "./renderer/storage/support-file-store.mjs";
 import { sanitizeDesignerAssistantMessage } from "./designer-chat-sanitizer.mjs";
 import {
   validateDirectSequencePromptState,
@@ -2317,16 +2323,7 @@ ipcMain.handle("xld:designer:chat", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:agent-log:append", async (_event, payload = {}) => {
   try {
-    const entry = payload?.entry && typeof payload.entry === "object" ? payload.entry : null;
-    if (!entry) return { ok: false, error: "Missing entry" };
-    const file = agentApplyLogPath();
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    const row = {
-      ...entry,
-      ts: String(entry?.ts || new Date().toISOString())
-    };
-    fs.appendFileSync(file, `${JSON.stringify(row)}\n`, "utf8");
-    return { ok: true };
+    return appendAgentLogEntry(payload, { filePath: agentApplyLogPath() });
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2334,32 +2331,7 @@ ipcMain.handle("xld:agent-log:append", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:agent-log:read", async (_event, payload = {}) => {
   try {
-    const file = agentApplyLogPath();
-    const limitRaw = Number.parseInt(String(payload?.limit || "40"), 10);
-    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, limitRaw)) : 40;
-    const filterProjectKey = String(payload?.projectKey || "").trim();
-    const filterSequencePath = String(payload?.sequencePath || "").trim();
-    if (!fs.existsSync(file)) return { ok: true, rows: [] };
-    const lines = fs.readFileSync(file, "utf8")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const rows = [];
-    for (const line of lines) {
-      try {
-        const parsed = JSON.parse(line);
-        rows.push(parsed);
-      } catch {
-        // Skip malformed lines.
-      }
-    }
-    const filtered = rows.filter((row) => {
-      if (filterProjectKey && String(row?.projectKey || "").trim() !== filterProjectKey) return false;
-      if (filterSequencePath && String(row?.sequencePath || "").trim() !== filterSequencePath) return false;
-      return true;
-    });
-    const sliced = filtered.slice(-limit).reverse();
-    return { ok: true, rows: sliced };
+    return readAgentLogEntries(payload, { filePath: agentApplyLogPath() });
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2375,18 +2347,7 @@ ipcMain.handle("xld:project:open-file", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:file:stat", async (_event, payload = {}) => {
   try {
-    const filePath = String(payload?.filePath || "").trim();
-    if (!filePath) return { ok: false, error: "Missing filePath" };
-    if (!fs.existsSync(filePath)) return { ok: false, exists: false, error: "File not found" };
-    const stat = fs.statSync(filePath);
-    return {
-      ok: true,
-      exists: true,
-      filePath,
-      size: Number(stat?.size || 0),
-      mtimeMs: Number(stat?.mtimeMs || 0),
-      mtimeIso: stat?.mtime ? new Date(stat.mtime).toISOString() : ""
-    };
+    return statFileRecord(payload);
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
@@ -2528,28 +2489,7 @@ ipcMain.handle("xld:project-artifact:read", async (_event, payload = {}) => {
 
 ipcMain.handle("xld:training-package:read", async (_event, payload = {}) => {
   try {
-    const relativePath = String(payload?.relativePath || "").trim().replace(/^\/+/, "");
-    const asJson = Boolean(payload?.asJson);
-    if (!relativePath) return { ok: false, error: "Missing relativePath" };
-    if (relativePath.includes("..")) return { ok: false, error: "Invalid relativePath" };
-    const rootDir = resolveTrainingPackageDir();
-    if (!rootDir) return { ok: false, error: "Training package not found" };
-    const filePath = path.resolve(rootDir, relativePath);
-    if (!filePath.startsWith(path.resolve(rootDir))) {
-      return { ok: false, error: "Resolved path outside training package root" };
-    }
-    if (!fs.existsSync(filePath)) return { ok: false, error: "Training package asset not found" };
-    const text = fs.readFileSync(filePath, "utf8");
-    if (!asJson) {
-      return { ok: true, rootDir, filePath, text };
-    }
-    let data = null;
-    try {
-      data = JSON.parse(text);
-    } catch (err) {
-      return { ok: false, error: `Invalid JSON in training package asset: ${String(err?.message || err)}` };
-    }
-    return { ok: true, rootDir, filePath, data };
+    return readTrainingPackageAsset(payload, { rootDir: resolveTrainingPackageDir() });
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
   }
