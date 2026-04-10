@@ -343,19 +343,18 @@ function buildPhaseTransitionMessage(phaseTransition = {}, context = {}) {
   const phaseId = str(phaseTransition?.phaseId);
   if (!phaseId) return "";
   const title = phaseTitle(phaseId);
-  const owner = roleLabel(transitionOwnerRole(phaseId));
   const reason = str(phaseTransition?.reason);
   const outputSummary = currentPhaseOutputSummary(context);
   const direct = interactionStyle(context) === "direct";
   const opener = outputSummary ? `${outputSummary} ` : "";
   if (reason) {
     return direct
-      ? `${opener}Next: ${title}. ${owner} takes it from here.`
-      : `${opener}We can move into ${title} next. ${owner} will take the lead there. ${reason}`;
+      ? `${opener}Next: ${title}.`
+      : `${opener}Next: ${title}. ${reason}`;
   }
   return direct
-    ? `${opener}Next: ${title}. ${owner} takes it from here.`
-    : `${opener}We can move into ${title} next. ${owner} will take the lead there.`;
+    ? `${opener}Next: ${title}.`
+    : `${opener}Next: ${title}.`;
 }
 
 function buildPhaseClosureMessage(context = {}) {
@@ -367,7 +366,7 @@ function buildPhaseClosureMessage(context = {}) {
   if (nextPhases) {
     return direct
       ? `${summary} Next: ${nextPhases}.`
-      : `${summary} Next sensible options are ${nextPhases}.`;
+      : `${summary} Next: ${nextPhases}.`;
   }
   return summary;
 }

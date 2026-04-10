@@ -288,6 +288,10 @@ final class AssistantWindowViewModel {
         guard !roleID.isEmpty else { return false }
         guard !messages.contains(where: { $0.role == .assistant && $0.handledBy == roleID }) else { return false }
 
+        if roleID == "app_assistant" {
+            return false
+        }
+
         let interactionStyle = context.interactionStyle.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if interactionStyle == "direct", roleID != "app_assistant" {
             return false
