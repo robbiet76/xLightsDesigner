@@ -258,7 +258,10 @@ function normalizePhaseTransition(value) {
 function detectRequestedPhaseFromText(text = '') {
   const lower = String(text || '').toLowerCase();
   if (!lower) return '';
-  if (/\bdisplay discovery\b/.test(lower) || (/\bdisplay\b/.test(lower) && /\bmetadata|layout|models|props\b/.test(lower))) return 'display_discovery';
+  if (
+    /\bdisplay discovery\b/.test(lower) ||
+    (/\bdisplay\b/.test(lower) && /\b(metadata|layout|models|props|understand|understanding|discovery|discover)\b/.test(lower))
+  ) return 'display_discovery';
   if (/\bproject mission\b/.test(lower) || (/\bmission\b/.test(lower) && /\bproject|show\b/.test(lower))) return 'project_mission';
   if (/\baudio analysis\b/.test(lower) || /\banaly(z|s)e audio\b/.test(lower) || /\baudio\b/.test(lower)) return 'audio_analysis';
   if (/\bsequencing\b/.test(lower) || /\bsequence\b/.test(lower)) return 'sequencing';
@@ -742,7 +745,7 @@ async function runAgentConversation(payload = {}) {
   const totalUserTurns = countUserTurns(payload?.messages) + 1;
   const canCaptureProjectMission = !projectConversationActive || userAskedToFinalize || totalUserTurns >= 2;
   const requestedPhase = detectRequestedPhaseFromText(userMessage);
-  if (!phaseTransition.phaseId && isExplicitPhaseSwitchText(userMessage) && requestedPhase) {
+  if (isExplicitPhaseSwitchText(userMessage) && requestedPhase) {
     phaseTransition = {
       phaseId: requestedPhase,
       reason: `User explicitly requested a transition to ${requestedPhase}.`

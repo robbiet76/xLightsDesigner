@@ -1,36 +1,37 @@
 {
   "version": 1,
-  "name": "current-layout-initial-discovery-v1",
-  "summary": "Simulated user for the current Christmas 2026 display. Used to test high-level narrowing during display discovery without requiring a human to answer each turn.",
+  "name": "current-layout-initial-discovery-direct-v1",
+  "summary": "Simulated experienced user for the current Christmas 2026 display. Used to test whether the phase-aware assistant compresses ceremony and still narrows correctly.",
   "initialWorkflow": "Display",
-  "kickoffPrompt": "Let's start by understanding the display before we design anything.",
-  "maxTurns": 8,
+  "kickoffPrompt": "Let's move into display discovery.",
+  "maxTurns": 6,
   "userProfile": {
     "tone": "practical",
     "verbosity": "concise",
     "allowShorthand": true,
-    "volunteerExtraContext": "medium",
-    "mayRedirectTowardImportantDistinctions": true
+    "volunteerExtraContext": "low",
+    "mayRedirectTowardImportantDistinctions": true,
+    "pace": "direct"
   },
   "displayTruth": {
     "focalHierarchy": [
-      "`HiddenTree` is a primary structural focal piece.",
-      "`Snowman` and `Train` are important character props.",
+      "`HiddenTree` is the main structural focal piece.",
+      "`Snowman` and `Train` are the main character props.",
       "`HiddenTreeStar` supports the tree and is not the sole centerpiece."
     ],
     "themedAreas": [
       "The display has a character-driven area around `Snowman` and `Train`.",
-      "The yard accents and architectural layers support the overall scene rather than acting as the main focus."
+      "The yard accents and architectural layers support the scene rather than acting as the main focus."
     ],
     "repeatingSupportFamilies": [
-      "`CandyCane-01`, `CandyCane-02`, `CandyCane-03`, and `CandyCane-04` are repeating pathway accents.",
+      "`CandyCane-01`, `CandyCane-02`, `CandyCane-03`, and `CandyCane-04` are pathway accents.",
       "`MiniCane-01`, `MiniCane-02`, `MiniCane-03`, and `MiniCane-04` are also support accents.",
       "`Wreath-01`, `Wreath-02`, `Wreath-03`, and `Wreath-04` are architectural support accents.",
       "`MiniWreath-01` and `MiniWreath-02` are part of the broader wreath support layer."
     ],
     "featureProps": [
-      "`Snowflake_Large-01`, `Snowflake_Large-02`, `Snowflake_Large-03`, `Snowflake_Large-04`, and `Snowflake_Large-05` are feature props but not the primary centerpiece.",
-      "The smaller snowflakes are support sparkle rather than the main focus."
+      "`Snowflake_Large-01`, `Snowflake_Large-02`, `Snowflake_Large-03`, `Snowflake_Large-04`, and `Snowflake_Large-05` are feature props but not the centerpiece.",
+      "The smaller snowflakes are support sparkle."
     ],
     "groupAmbiguities": [
       "`Wreathes` refers to the main wreath group.",
@@ -38,7 +39,7 @@
       "`CandyCanes` is an xLights group, but plain talk about candy canes may refer to the individual models instead."
     ],
     "specialHandling": [
-      "The user may speak in shorthand like 'the tree', 'the candy canes', or 'the wreaths'.",
+      "The user may say 'tree', 'candy canes', or 'wreaths' in shorthand.",
       "The user expects the agent to confirm exact xLights names back when scope is clear."
     ],
     "goodEnoughStartingPoint": [

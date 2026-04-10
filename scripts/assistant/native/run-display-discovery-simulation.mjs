@@ -150,6 +150,7 @@ function extractResponseText(payload = {}) {
 function buildUserSimulatorPrompt(scenario = {}, transcript = [], lastAssistantMessage = "") {
   const userProfile = scenario?.userProfile && typeof scenario.userProfile === "object" ? scenario.userProfile : {};
   const displayTruth = scenario?.displayTruth && typeof scenario.displayTruth === "object" ? scenario.displayTruth : {};
+  const pace = str(userProfile?.pace || userProfile?.interactionStyle || "");
   const transcriptText = arr(transcript)
     .map((row) => `${str(row.role).toUpperCase()}: ${str(row.text)}`)
     .join("\n");
@@ -164,6 +165,8 @@ function buildUserSimulatorPrompt(scenario = {}, transcript = [], lastAssistantM
     "If the assistant asks a narrow question, answer only that narrow point unless a small extra clarification is natural.",
     "You are allowed to steer the conversation occasionally by mentioning a related concern, preference, or distinction that matters to you, as long as it comes from the scenario truth.",
     "Do not always follow the assistant's framing exactly. Real users sometimes redirect, add nuance, or mention what they think matters next.",
+    pace === "direct" ? "This user is experienced and direct. Prefer short, decisive replies and move quickly when the assistant is already on the right track." : "",
+    pace === "guided" ? "This user is open to a little more guidance. It is fine to answer with a bit more explanation when that feels natural." : "",
     "You may use shorthand when it feels natural for a real user.",
     "If the assistant is unclear or conflates a group with individual models, answer from the user perspective and clarify the intended scope.",
     "Do not mention hidden scenario structure, test harnesses, prompts, or evaluation.",
@@ -194,6 +197,10 @@ async function main() {
   const turnLimit = Number(args.turnLimit || scenario?.maxTurns || 8);
 
   await automationAction("resetAssistantMemory");
+  const initialWorkflow = str(scenario?.initialWorkflow || "");
+  if (initialWorkflow) {
+    await automationAction("selectWorkflow", { workflow: initialWorkflow });
+  }
   let previousMessageCount = Number((await getAssistantSnapshot())?.messageCount || 0);
   await automationAction("sendAssistantPrompt", { prompt: str(scenario?.kickoffPrompt || "Let's start by understanding the display before we design anything.") });
   let currentSnapshot = await waitForAssistantRoundTrip({ previousMessageCount });
@@ -240,10 +247,17 @@ async function main() {
     turnLimit,
     messageCount: Number(finalSnapshot?.messageCount || 0),
     assistantQuestionCount,
+    workflowPhase: finalSnapshot?.workflowPhase || {},
     displayDiscovery: finalSnapshot?.displayDiscovery || {},
+    handledByCounts: arr(finalSnapshot?.messages).reduce((counts, row) => {
+      const key = str(row?.handledBy || "user");
+      counts[key] = Number(counts[key] || 0) + 1;
+      return counts;
+    }, {}),
     transcript: arr(finalSnapshot?.messages).map((row) => ({
       role: str(row?.role),
       displayName: str(row?.displayName),
+      handledBy: str(row?.handledBy),
       text: str(row?.text)
     }))
   };
