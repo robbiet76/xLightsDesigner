@@ -7,7 +7,7 @@ struct AppSidebar: View {
         List(selection: $model.selectedWorkflow) {
             Section("Workflows") {
                 ForEach(WorkflowID.allCases) { workflow in
-                    Label(workflow.rawValue, systemImage: iconName(for: workflow))
+                    workflowRow(for: workflow)
                         .tag(workflow)
                 }
             }
@@ -23,6 +23,27 @@ struct AppSidebar: View {
         }
         .listStyle(.sidebar)
         .navigationTitle("xLightsDesigner")
+    }
+
+    @ViewBuilder
+    private func workflowRow(for workflow: WorkflowID) -> some View {
+        let recommended = WorkflowID.preferredWorkflow(for: model.currentWorkflowPhase().phaseID)
+        let isRecommended = workflow == recommended
+        let isSelected = workflow == model.selectedWorkflow
+
+        HStack(spacing: 10) {
+            Label(workflow.rawValue, systemImage: iconName(for: workflow))
+            Spacer(minLength: 8)
+            if isRecommended && !isSelected {
+                Text("Current Phase")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor.opacity(0.18))
+                    .clipShape(Capsule())
+            }
+        }
     }
 
     private func iconName(for workflow: WorkflowID) -> String {

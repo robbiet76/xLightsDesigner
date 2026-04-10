@@ -48,4 +48,23 @@ enum WorkflowID: String, CaseIterable, Identifiable {
             return "Browse retrospective revisions and previously applied changes."
         }
     }
+
+    static func preferredWorkflow(for phaseID: WorkflowPhaseID) -> WorkflowID {
+        switch phaseID {
+        case .setup:
+            return .project
+        case .projectMission:
+            return .project
+        case .audioAnalysis:
+            return .audio
+        case .displayDiscovery:
+            return .display
+        case .design:
+            return .design
+        case .sequencing:
+            return .sequence
+        case .review:
+            return .review
+        }
+    }
 }
