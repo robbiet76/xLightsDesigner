@@ -40,7 +40,7 @@ struct AssistantWindowViewModelTests {
         #expect(execution.lastContext?.route == "audio")
     }
 
-    @Test func introducesNewRoleUsingNicknameLabel() async {
+    @Test func skipsFollowUpIntroWhenUserDirectlyAddressesSpecialist() async {
         let conversation = InMemoryAssistantConversationService()
         let execution = StubAssistantExecutionService(result: .success(.init(
             assistantMessage: "I can handle that.",
@@ -70,9 +70,7 @@ struct AssistantWindowViewModelTests {
             project: nil as ActiveProjectModel?
         )
 
-        #expect(model.messages.count == 4)
-        #expect(model.messages[2].text.contains("You can call me Patch"))
-        #expect(model.messages[2].displayName == "Patch (Sequencer)")
+        #expect(model.messages.count == 3)
         #expect(model.messages.last?.displayName == "Patch (Sequencer)")
     }
 }

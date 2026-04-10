@@ -102,7 +102,7 @@ final class AssistantWindowViewModel {
             )
             previousResponseID = result.responseID
             let introRole = result.handledBy
-            if shouldIntroduce(roleID: introRole) {
+            if shouldIntroduce(roleID: introRole, context: context, userMessage: trimmed) {
                 messages.append(roleIntroductionMessage(for: introRole, context: context))
             }
             messages.append(AssistantMessageModel(
@@ -129,19 +129,18 @@ final class AssistantWindowViewModel {
             }
             if
                 let project,
-                let discovery = result.displayDiscovery,
-                discovery.shouldCaptureTurn,
-                let assistantMessage = messages.last
+                let assistantMessage = messages.last,
+                let capture = displayDiscoveryCapturePayload(result: result, context: context)
             {
                 try? displayDiscoveryStore.recordConversationTurn(
                     project: project,
-                    status: discovery.status,
-                    scope: discovery.scope,
-                    candidateProps: discovery.candidateProps,
-                    insights: discovery.insights,
-                    unresolvedBranches: discovery.unresolvedBranches,
-                    resolvedBranches: discovery.resolvedBranches,
-                    tagProposals: discovery.tagProposals,
+                    status: capture.status,
+                    scope: capture.scope,
+                    candidateProps: capture.candidateProps,
+                    insights: capture.insights,
+                    unresolvedBranches: capture.unresolvedBranches,
+                    resolvedBranches: capture.resolvedBranches,
+                    tagProposals: capture.tagProposals,
                     userMessage: userMessage,
                     assistantMessage: assistantMessage
                 )
@@ -265,8 +264,56 @@ final class AssistantWindowViewModel {
         )
     }
 
-    private func shouldIntroduce(roleID: String) -> Bool {
-        !messages.contains { $0.role == .assistant && $0.handledBy == roleID }
+    private func shouldIntroduce(roleID: String, context: AssistantContextModel, userMessage: String) -> Bool {
+        guard !roleID.isEmpty else { return false }
+        guard !messages.contains(where: { $0.role == .assistant && $0.handledBy == roleID }) else { return false }
+
+        let interactionStyle = context.interactionStyle.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if interactionStyle == "direct", roleID != "app_assistant" {
+            return false
+        }
+
+        let lowered = userMessage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let identity = contextIdentity(for: roleID, context: context)
+        let tokens = [
+            identity.displayName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+            identity.nickname.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        ].filter { !$0.isEmpty }
+        if tokens.contains(where: { token in
+            lowered.range(of: "(^|\\b)(hey\\s+)?\(NSRegularExpression.escapedPattern(for: token))(\\b|[,:])", options: .regularExpression) != nil
+        }) {
+            return false
+        }
+
+        return true
+    }
+
+    private func displayDiscoveryCapturePayload(
+        result: AssistantExecutionResult,
+        context: AssistantContextModel
+    ) -> AssistantDisplayDiscoveryResult? {
+        if let discovery = result.displayDiscovery, discovery.shouldCaptureTurn {
+            return discovery
+        }
+
+        let currentPhase = context.workflowPhaseID.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let transitionedIntoDisplay = result.phaseTransition?.phaseID == .displayDiscovery
+        let activeDisplayPhase = currentPhase == WorkflowPhaseID.displayDiscovery.rawValue
+
+        guard result.handledBy == "designer_dialog", activeDisplayPhase || transitionedIntoDisplay else {
+            return nil
+        }
+
+        return AssistantDisplayDiscoveryResult(
+            status: .inProgress,
+            scope: "groups_models_v1",
+            shouldCaptureTurn: true,
+            candidateProps: [],
+            insights: [],
+            unresolvedBranches: [],
+            resolvedBranches: [],
+            tagProposals: []
+        )
     }
 
     private func roleIntroductionMessage(for roleID: String, context: AssistantContextModel) -> AssistantMessageModel {
