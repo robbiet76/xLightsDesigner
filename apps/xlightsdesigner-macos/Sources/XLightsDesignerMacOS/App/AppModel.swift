@@ -11,6 +11,7 @@ final class AppModel {
     var selectedWorkflow: WorkflowID = .project
     var showSettings = false
     var showAssistantPanel = true
+    var sidebarCollapsed = false
     var activeWorkflowPhaseOverride: WorkflowPhaseStateModel?
 
     let workspace: ProjectWorkspace

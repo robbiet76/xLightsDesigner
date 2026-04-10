@@ -4,14 +4,14 @@ struct RootContentView: View {
     @Bindable var model: AppModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            workflowPhaseHeader
+        HSplitView {
+            AppSidebar(model: model)
+                .frame(width: model.sidebarCollapsed ? 72 : 250)
 
-            HSplitView {
-                NavigationSplitView {
-                    AppSidebar(model: model)
-                        .frame(minWidth: 230, idealWidth: 240, maxWidth: 280)
-                } detail: {
+            VStack(spacing: 0) {
+                workflowPhaseHeader
+
+                HSplitView {
                     ZStack(alignment: .topTrailing) {
                         switch model.selectedWorkflow {
                         case .project:
@@ -44,12 +44,12 @@ struct RootContentView: View {
                             .padding(.trailing, 24)
                         }
                     }
-                }
-                .frame(minWidth: 700, minHeight: 780)
+                    .frame(minWidth: 700, minHeight: 780)
 
-                if model.showAssistantPanel {
-                    AssistantWindowView(appModel: model, model: model.assistantModel)
-                        .frame(minWidth: 320, idealWidth: 360, maxWidth: 440)
+                    if model.showAssistantPanel {
+                        AssistantWindowView(appModel: model, model: model.assistantModel)
+                            .frame(minWidth: 320, idealWidth: 360, maxWidth: 440)
+                    }
                 }
             }
         }
