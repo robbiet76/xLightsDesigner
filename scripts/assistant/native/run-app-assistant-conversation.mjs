@@ -868,9 +868,11 @@ async function runAgentConversation(payload = {}) {
       )
     : { status: '', insights: [], unresolvedBranches: [], resolvedBranches: [], tagProposals: [] };
   const userAskedToFinalize = /\b(finalize|review|ready|proposal|propose|wrap up|finish for now)\b/i.test(userMessage);
-  const projectConversationActive = String(context?.route || '').trim().toLowerCase() === 'project';
-  const totalUserTurns = countUserTurns(payload?.messages) + 1;
-  const canCaptureProjectMission = !projectConversationActive || userAskedToFinalize || totalUserTurns >= 2;
+  const currentPhaseId = String(context?.workflowPhase?.phaseId || '').trim().toLowerCase();
+  const routeId = String(context?.route || '').trim().toLowerCase();
+  const missionIntent = /\b(project mission|mission statement|creative north star|show vision|overall vision|overall mission|revise the mission|rewrite the mission)\b/i.test(userMessage);
+  const missionPhaseActive = currentPhaseId === 'project_mission' || routeId === 'project';
+  const canCaptureProjectMission = missionPhaseActive || missionIntent;
   const requestedPhase = detectRequestedPhaseFromText(userMessage);
   if (isExplicitPhaseSwitchText(userMessage) && requestedPhase) {
     phaseTransition = {
