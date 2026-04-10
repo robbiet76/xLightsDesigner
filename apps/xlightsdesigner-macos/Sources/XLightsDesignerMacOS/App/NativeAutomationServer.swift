@@ -179,6 +179,9 @@ final class NativeAutomationServer: @unchecked Sendable {
                 project: model.workspace.activeProject,
                 onPhaseTransition: { transition in
                     self.model.transitionToPhase(transition.phaseID, reason: transition.reason)
+                },
+                onPhaseStarted: {
+                    self.model.markActivePhaseStarted()
                 }
             )
             return .json(200, body: [

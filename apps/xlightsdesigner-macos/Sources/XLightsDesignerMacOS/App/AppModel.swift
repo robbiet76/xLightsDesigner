@@ -305,9 +305,20 @@ final class AppModel {
         activeWorkflowPhaseOverride = WorkflowPhaseStateModel(
             phaseID: phaseID,
             ownerRole: ownerRole(for: phaseID),
-            status: .inProgress,
+            status: .notStarted,
             entryReason: reason.isEmpty ? defaultEntryReason(for: phaseID) : reason,
             nextRecommendedPhases: recommendedNextPhases(for: phaseID)
+        )
+    }
+
+    func markActivePhaseStarted() {
+        guard let current = activeWorkflowPhaseOverride, current.status == .notStarted else { return }
+        activeWorkflowPhaseOverride = WorkflowPhaseStateModel(
+            phaseID: current.phaseID,
+            ownerRole: current.ownerRole,
+            status: .inProgress,
+            entryReason: current.entryReason,
+            nextRecommendedPhases: current.nextRecommendedPhases
         )
     }
 

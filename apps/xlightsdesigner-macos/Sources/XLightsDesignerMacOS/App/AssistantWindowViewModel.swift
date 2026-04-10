@@ -73,7 +73,8 @@ final class AssistantWindowViewModel {
     func sendDraft(
         context: AssistantContextModel,
         project: ActiveProjectModel?,
-        onPhaseTransition: ((AssistantPhaseTransitionResult) -> Void)? = nil
+        onPhaseTransition: ((AssistantPhaseTransitionResult) -> Void)? = nil,
+        onPhaseStarted: (() -> Void)? = nil
     ) async {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isSending else { return }
@@ -113,6 +114,10 @@ final class AssistantWindowViewModel {
                 routeDecision: result.routeDecision,
                 displayName: displayName(for: result.handledBy, context: context)
             ))
+            if context.workflowPhaseStatus == WorkflowPhaseStatus.notStarted.rawValue &&
+                result.handledBy == context.workflowPhaseOwnerRole {
+                onPhaseStarted?()
+            }
             if !result.userPreferenceNotes.isEmpty {
                 try? userProfileStore.addPreferenceNotes(result.userPreferenceNotes, recordedAt: isoNow())
             }
