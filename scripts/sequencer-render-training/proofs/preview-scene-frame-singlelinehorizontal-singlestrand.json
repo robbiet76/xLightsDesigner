@@ -1,0 +1,896 @@
+{
+  "artifactType": "preview_scene_frame_v1",
+  "artifactVersion": 1,
+  "source": {
+    "showDir": "/Users/robterry/Projects/xLightsDesigner/render-training",
+    "modelName": "SingleLineHorizontal",
+    "fseqPath": "/Users/robterry/Projects/xLightsDesigner/render-training/fseq/singlestrand-singlelinehorizontal-expanded-sweep-v1-chaseSize-registry-v1.20260319T143651Z.fseq",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "frameOffset": 10,
+    "frameIndex": 50,
+    "frameTimeMs": 1250,
+    "geometryMode": "xml_single_line_proof",
+    "decoderMode": "full"
+  },
+  "model": {
+    "name": "SingleLineHorizontal",
+    "displayAs": "Single Line",
+    "nodeCount": 50,
+    "channelsPerNode": 3
+  },
+  "frameSummary": {
+    "activeNodeCount": 4,
+    "activeNodeRatio": 0.08,
+    "bounds": {
+      "min": {
+        "x": 175.0435573877551,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "max": {
+        "x": 189.62199346938775,
+        "y": 946.6302,
+        "z": 0.0
+      }
+    },
+    "centroid": {
+      "x": 182.33277542857144,
+      "y": 946.6302,
+      "z": 0.0
+    },
+    "averageBrightness": 20.4
+  },
+  "nodes": [
+    {
+      "nodeId": 0,
+      "channelStart": 29128,
+      "channelCount": 3,
+      "screen": {
+        "x": 165.3246,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 1,
+      "channelStart": 29131,
+      "channelCount": 3,
+      "screen": {
+        "x": 170.18407869387755,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 2,
+      "channelStart": 29134,
+      "channelCount": 3,
+      "screen": {
+        "x": 175.0435573877551,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "brightness": 255,
+      "active": true
+    },
+    {
+      "nodeId": 3,
+      "channelStart": 29137,
+      "channelCount": 3,
+      "screen": {
+        "x": 179.90303608163265,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "brightness": 255,
+      "active": true
+    },
+    {
+      "nodeId": 4,
+      "channelStart": 29140,
+      "channelCount": 3,
+      "screen": {
+        "x": 184.7625147755102,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "brightness": 255,
+      "active": true
+    },
+    {
+      "nodeId": 5,
+      "channelStart": 29143,
+      "channelCount": 3,
+      "screen": {
+        "x": 189.62199346938775,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "brightness": 255,
+      "active": true
+    },
+    {
+      "nodeId": 6,
+      "channelStart": 29146,
+      "channelCount": 3,
+      "screen": {
+        "x": 194.48147216326532,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 7,
+      "channelStart": 29149,
+      "channelCount": 3,
+      "screen": {
+        "x": 199.34095085714284,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 8,
+      "channelStart": 29152,
+      "channelCount": 3,
+      "screen": {
+        "x": 204.20042955102042,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 9,
+      "channelStart": 29155,
+      "channelCount": 3,
+      "screen": {
+        "x": 209.05990824489797,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 10,
+      "channelStart": 29158,
+      "channelCount": 3,
+      "screen": {
+        "x": 213.91938693877552,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 11,
+      "channelStart": 29161,
+      "channelCount": 3,
+      "screen": {
+        "x": 218.77886563265307,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 12,
+      "channelStart": 29164,
+      "channelCount": 3,
+      "screen": {
+        "x": 223.6383443265306,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 13,
+      "channelStart": 29167,
+      "channelCount": 3,
+      "screen": {
+        "x": 228.49782302040816,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 14,
+      "channelStart": 29170,
+      "channelCount": 3,
+      "screen": {
+        "x": 233.3573017142857,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 15,
+      "channelStart": 29173,
+      "channelCount": 3,
+      "screen": {
+        "x": 238.2167804081633,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 16,
+      "channelStart": 29176,
+      "channelCount": 3,
+      "screen": {
+        "x": 243.0762591020408,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 17,
+      "channelStart": 29179,
+      "channelCount": 3,
+      "screen": {
+        "x": 247.93573779591839,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 18,
+      "channelStart": 29182,
+      "channelCount": 3,
+      "screen": {
+        "x": 252.7952164897959,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 19,
+      "channelStart": 29185,
+      "channelCount": 3,
+      "screen": {
+        "x": 257.6546951836735,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 20,
+      "channelStart": 29188,
+      "channelCount": 3,
+      "screen": {
+        "x": 262.514173877551,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 21,
+      "channelStart": 29191,
+      "channelCount": 3,
+      "screen": {
+        "x": 267.3736525714286,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 22,
+      "channelStart": 29194,
+      "channelCount": 3,
+      "screen": {
+        "x": 272.23313126530616,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 23,
+      "channelStart": 29197,
+      "channelCount": 3,
+      "screen": {
+        "x": 277.0926099591837,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 24,
+      "channelStart": 29200,
+      "channelCount": 3,
+      "screen": {
+        "x": 281.9520886530612,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 25,
+      "channelStart": 29203,
+      "channelCount": 3,
+      "screen": {
+        "x": 286.8115673469388,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 26,
+      "channelStart": 29206,
+      "channelCount": 3,
+      "screen": {
+        "x": 291.67104604081635,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 27,
+      "channelStart": 29209,
+      "channelCount": 3,
+      "screen": {
+        "x": 296.53052473469387,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 28,
+      "channelStart": 29212,
+      "channelCount": 3,
+      "screen": {
+        "x": 301.3900034285714,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 29,
+      "channelStart": 29215,
+      "channelCount": 3,
+      "screen": {
+        "x": 306.24948212244897,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 30,
+      "channelStart": 29218,
+      "channelCount": 3,
+      "screen": {
+        "x": 311.10896081632654,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 31,
+      "channelStart": 29221,
+      "channelCount": 3,
+      "screen": {
+        "x": 315.9684395102041,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 32,
+      "channelStart": 29224,
+      "channelCount": 3,
+      "screen": {
+        "x": 320.8279182040816,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 33,
+      "channelStart": 29227,
+      "channelCount": 3,
+      "screen": {
+        "x": 325.68739689795916,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 34,
+      "channelStart": 29230,
+      "channelCount": 3,
+      "screen": {
+        "x": 330.54687559183674,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 35,
+      "channelStart": 29233,
+      "channelCount": 3,
+      "screen": {
+        "x": 335.4063542857143,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 36,
+      "channelStart": 29236,
+      "channelCount": 3,
+      "screen": {
+        "x": 340.26583297959183,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 37,
+      "channelStart": 29239,
+      "channelCount": 3,
+      "screen": {
+        "x": 345.12531167346935,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 38,
+      "channelStart": 29242,
+      "channelCount": 3,
+      "screen": {
+        "x": 349.98479036734693,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 39,
+      "channelStart": 29245,
+      "channelCount": 3,
+      "screen": {
+        "x": 354.8442690612245,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 40,
+      "channelStart": 29248,
+      "channelCount": 3,
+      "screen": {
+        "x": 359.70374775510203,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 41,
+      "channelStart": 29251,
+      "channelCount": 3,
+      "screen": {
+        "x": 364.5632264489796,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 42,
+      "channelStart": 29254,
+      "channelCount": 3,
+      "screen": {
+        "x": 369.4227051428571,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 43,
+      "channelStart": 29257,
+      "channelCount": 3,
+      "screen": {
+        "x": 374.2821838367347,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 44,
+      "channelStart": 29260,
+      "channelCount": 3,
+      "screen": {
+        "x": 379.1416625306123,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 45,
+      "channelStart": 29263,
+      "channelCount": 3,
+      "screen": {
+        "x": 384.0011412244898,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 46,
+      "channelStart": 29266,
+      "channelCount": 3,
+      "screen": {
+        "x": 388.8606199183673,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 47,
+      "channelStart": 29269,
+      "channelCount": 3,
+      "screen": {
+        "x": 393.7200986122449,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 48,
+      "channelStart": 29272,
+      "channelCount": 3,
+      "screen": {
+        "x": 398.5795773061225,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    },
+    {
+      "nodeId": 49,
+      "channelStart": 29275,
+      "channelCount": 3,
+      "screen": {
+        "x": 403.439056,
+        "y": 946.6302,
+        "z": 0.0
+      },
+      "rgb": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "brightness": 0,
+      "active": false
+    }
+  ]
+}
