@@ -446,6 +446,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const missingFocusTargets = Array.isArray(renderCritiqueContext?.comparison?.missingPrimaryFocusTargets)
       ? renderCritiqueContext.comparison.missingPrimaryFocusTargets.filter(Boolean).slice(0, 3)
       : [];
+    const renderWindows = Array.isArray(renderObservation?.windows)
+      ? renderObservation.windows.filter((row) => row && typeof row === "object").slice(0, 3)
+      : [];
+    const adjacentWindowComparisons = Array.isArray(renderCritiqueContext?.comparison?.adjacentWindowComparisons)
+      ? renderCritiqueContext.comparison.adjacentWindowComparisons.filter((row) => row && typeof row === "object").slice(0, 2)
+      : [];
     const hasContent =
       brief ||
       safeProposalLines.length ||
@@ -506,10 +512,12 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>${escapeHtml(String(renderObservation?.macro?.leadModel || "No rendered lead model."))}</p>
             <p>${activeModels.length ? `Active: ${escapeHtml(activeModels.join(", "))}` : "No active rendered models captured."}</p>
             <p>${activeFamilies.length ? `Families: ${escapeHtml(activeFamilies.join(", "))}` : "No active family summary captured."}</p>
-            <p>${renderObservation ? `Sampling: ${escapeHtml(String(renderObservation?.source?.samplingMode || "unknown"))} / ${escapeHtml(String(renderObservation?.source?.sampledModelCount || 0))} models` : "No render observation snapshot loaded."}</p>
+            <p>${renderObservation ? `Sampling: ${escapeHtml(String(renderObservation?.source?.samplingMode || "unknown"))} / ${escapeHtml(String(renderObservation?.source?.sampledModelCount || 0))} models / ${escapeHtml(String(renderObservation?.source?.windowCount || 0))} windows` : "No render observation snapshot loaded."}</p>
             <p>${renderCritiqueContext ? `Breadth: ${escapeHtml(String(renderCritiqueContext?.observed?.breadthRead || "unknown"))} / temporal: ${escapeHtml(String(renderCritiqueContext?.observed?.temporalRead || "unknown"))} / lead focus match: ${renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus ? "yes" : "no"}` : "No render critique context loaded."}</p>
             <p>${renderFocusTargets.length ? `Expected focus: ${escapeHtml(renderFocusTargets.join(", "))}` : "No expected render focus targets."}</p>
             ${missingFocusTargets.length ? `<p>Missing focus: ${escapeHtml(missingFocusTargets.join(", "))}</p>` : ""}
+            ${renderWindows.length ? `<ul>${renderWindows.map((row) => `<li>${escapeHtml(String(row?.label || "window"))}: lead ${escapeHtml(String(row?.leadModel || "none"))} / spread ${escapeHtml(String(row?.meanSceneSpreadRatio || 0))} / temporal ${escapeHtml(String(row?.temporalRead || "unknown"))}</li>`).join("")}</ul>` : ""}
+            ${adjacentWindowComparisons.length ? `<ul>${adjacentWindowComparisons.map((row) => `<li>${escapeHtml(String(row?.fromLabel || "window"))} -> ${escapeHtml(String(row?.toLabel || "window"))}: ${row?.windowsReadSimilarly ? "too similar" : "contrast present"}${Number.isFinite(Number(row?.overlapRatio)) ? ` / overlap ${escapeHtml(String(Number(row.overlapRatio).toFixed(2)))}` : ""}</li>`).join("")}</ul>` : ""}
           </div>
         </div>
         ${
