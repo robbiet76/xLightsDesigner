@@ -1,0 +1,41 @@
+[
+  {
+    "scenarioId": "treeflat_sparse_macro",
+    "modelName": "TreeFlat",
+    "fseqPath": "render-training/fseq/singlestrand-treeflat-stage1-coverage-v1-chaseSize-registry-v1.20260319T201838Z.fseq",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "frameOffsets": "8,10,12",
+    "designHandoffRef": "design_handoff_v2:proof_treeflat",
+    "revisionGoal": "Validate sparse tree-led section behavior and identify the next broadening move.",
+    "sectionScope": "proof_window_treeflat_sparse",
+    "targetScope": "TreeFlat",
+    "effectFamilies": "SingleStrand"
+  },
+  {
+    "scenarioId": "matrixlowdensity_sparse_macro",
+    "modelName": "MatrixLowDensity",
+    "fseqPath": "render-training/fseq/singlestrand-matrixlowdensity-stage1-coverage-v1-chaseSize-registry-v1.20260319T201401Z.fseq",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "frameOffsets": "8,10,12",
+    "designHandoffRef": "design_handoff_v2:proof_matrixlowdensity",
+    "revisionGoal": "Validate sparse matrix-led section behavior and identify the next broadening move.",
+    "sectionScope": "proof_window_matrix_sparse",
+    "targetScope": "MatrixLowDensity",
+    "effectFamilies": "SingleStrand"
+  },
+  {
+    "scenarioId": "archsingle_sparse_macro",
+    "modelName": "ArchSingle",
+    "fseqPath": "render-training/fseq/colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "frameOffsets": "8,10,12",
+    "designHandoffRef": "design_handoff_v2:proof_archsingle",
+    "revisionGoal": "Validate single-arch section behavior and identify the next broadening move.",
+    "sectionScope": "proof_window_archsingle_sparse",
+    "targetScope": "ArchSingle",
+    "effectFamilies": "ColorWash"
+  }
+]

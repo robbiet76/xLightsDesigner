@@ -9,6 +9,14 @@ def parse_args():
     parser.add_argument("--observation", required=True)
     parser.add_argument("--critique", required=True)
     parser.add_argument("--window", required=True)
+    parser.add_argument("--record-id", required=True)
+    parser.add_argument("--checkpoint-id", required=True)
+    parser.add_argument("--source-run-id", required=True)
+    parser.add_argument("--project-id", default="render_training")
+    parser.add_argument("--project-name", default="Render Training Fixture")
+    parser.add_argument("--section-scope", default="proof_window")
+    parser.add_argument("--target-scope", default="")
+    parser.add_argument("--effect-families", default="")
     parser.add_argument("--design-handoff-ref", default="design_handoff_v2:proof_treeflat")
     parser.add_argument("--revision-goal", default="Validate sparse tree-led section behavior and identify the next broadening move.")
     parser.add_argument("--out", required=True)
@@ -24,25 +32,29 @@ def main():
     with open(args.window, "r", encoding="utf-8") as handle:
         window = json.load(handle)
 
+    section_scope = [value for value in args.section_scope.split(",") if value]
+    target_scope = [value for value in args.target_scope.split(",") if value]
+    effect_families = [value for value in args.effect_families.split(",") if value]
+
     record = {
         "artifactType": "sequence_learning_record_v1",
         "artifactVersion": 1,
-        "recordId": "slr_render_training_treeflat_macro_001",
+        "recordId": args.record_id,
         "createdAt": None,
         "updatedAt": None,
         "scope": {
-            "projectId": "render_training",
-            "projectName": "Render Training Fixture",
+            "projectId": args.project_id,
+            "projectName": args.project_name,
             "sequenceId": os.path.basename(window["source"]["fseqPath"]),
             "sequenceName": os.path.basename(window["source"]["fseqPath"]),
-            "checkpointId": "chk_treeflat_sparse_macro_001",
+            "checkpointId": args.checkpoint_id,
             "recordScope": "evaluation_run",
         },
         "context": {
             "designHandoffRef": args.design_handoff_ref,
             "revisionGoal": args.revision_goal,
-            "sectionScope": ["proof_window_treeflat_sparse"],
-            "targetScope": ["TreeFlat"],
+            "sectionScope": section_scope,
+            "targetScope": target_scope,
         },
         "preferences": {
             "directorProfileRef": None,
@@ -55,9 +67,9 @@ def main():
             "appliedRevisionBatchRef": None,
             "summary": "Sparse tree-led validation checkpoint.",
             "changeCategory": "proof_validation",
-            "sectionTargets": ["TreeFlat"],
-            "targetIds": ["TreeFlat"],
-            "effectFamilies": ["SingleStrand"],
+            "sectionTargets": target_scope,
+            "targetIds": target_scope,
+            "effectFamilies": effect_families,
             "appliedCommandStats": None,
             "baseRevision": None,
             "resultingRevision": None,
@@ -109,7 +121,7 @@ def main():
             "xlightsApiVersion": 2,
             "xlightsIntegrationBranch": "api-cleanup",
             "createdBy": "render_training_proof",
-            "sourceRunId": "render_training_treeflat_macro_001",
+            "sourceRunId": args.source_run_id,
         },
     }
 

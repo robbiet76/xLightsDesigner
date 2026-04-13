@@ -1,0 +1,119 @@
+{
+  "artifactType": "sequence_learning_record_v1",
+  "artifactVersion": 1,
+  "recordId": "slr_treeflat_sparse_macro_001",
+  "createdAt": null,
+  "updatedAt": null,
+  "scope": {
+    "projectId": "render_training",
+    "projectName": "Render Training Fixture",
+    "sequenceId": "singlestrand-treeflat-stage1-coverage-v1-chaseSize-registry-v1.20260319T201838Z.fseq",
+    "sequenceName": "singlestrand-treeflat-stage1-coverage-v1-chaseSize-registry-v1.20260319T201838Z.fseq",
+    "checkpointId": "chk_treeflat_sparse_macro_001",
+    "recordScope": "evaluation_run"
+  },
+  "context": {
+    "designHandoffRef": "design_handoff_v2:proof_treeflat",
+    "revisionGoal": "Validate sparse tree-led section behavior and identify the next broadening move.",
+    "sectionScope": [
+      "proof_window_treeflat_sparse"
+    ],
+    "targetScope": [
+      "TreeFlat"
+    ]
+  },
+  "preferences": {
+    "directorProfileRef": null,
+    "projectPreferenceRef": null,
+    "preferenceSignalsUsed": [],
+    "preferenceScope": "none"
+  },
+  "revisionBatch": {
+    "revisionBatchPlanRef": null,
+    "appliedRevisionBatchRef": null,
+    "summary": "Sparse tree-led validation checkpoint.",
+    "changeCategory": "proof_validation",
+    "sectionTargets": [
+      "TreeFlat"
+    ],
+    "targetIds": [
+      "TreeFlat"
+    ],
+    "effectFamilies": [
+      "SingleStrand"
+    ],
+    "appliedCommandStats": null,
+    "baseRevision": null,
+    "resultingRevision": null
+  },
+  "prediction": {
+    "mode": "reconstruction",
+    "previewSceneGeometryRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
+    "previewSceneTensorRef": null,
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-treeflat_sparse_macro.json",
+    "predictedStrengths": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "predictedRisks": [
+      "Scene spread is too tight; add restrained support targets before polishing detail.",
+      "Family balance is narrow; current output relies entirely on Tree."
+    ],
+    "predictionSummary": "Sparse tree-only checkpoint reconstructed from authoritative render data."
+  },
+  "truth": {
+    "renderTruthCheckpointRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-treeflat_sparse_macro.json",
+    "xlightsRevision": null,
+    "renderWindow": {
+      "windowStartMs": 1000,
+      "windowEndMs": 5000,
+      "frameOffsets": [
+        8,
+        10,
+        12
+      ]
+    },
+    "truthSummary": "Authoritative xLights frames joined onto cached whole-layout geometry.",
+    "previewParityRef": null
+  },
+  "critique": {
+    "critiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_sparse_macro.json",
+    "strengths": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "weaknesses": [
+      "Scene spread is too tight; add restrained support targets before polishing detail.",
+      "Family balance is narrow; current output relies entirely on Tree."
+    ],
+    "intentAlignment": "single-idea section read",
+    "musicAlignment": "moving",
+    "displayUseAssessment": "single_family",
+    "focusAssessment": "narrow",
+    "densityAssessment": "sparse",
+    "coherenceAssessment": "concentrated",
+    "recommendedNextMoves": [
+      "Broaden the active footprint with one secondary support family while preserving the lead target.",
+      "Decide whether this section should remain Tree-only or intentionally add a support family."
+    ]
+  },
+  "outcome": {
+    "cycleOutcome": "usable_with_revision",
+    "shouldContinueFromHere": true,
+    "nextRevisionPriority": "Broaden the active footprint with one secondary support family while preserving the lead target.",
+    "humanAccepted": null,
+    "checkpointWorthKeeping": true
+  },
+  "provenance": {
+    "appVersion": null,
+    "assistantModel": null,
+    "designerAgentVersion": "proof_v1",
+    "sequenceAgentVersion": "proof_v1",
+    "xlightsApiVersion": 2,
+    "xlightsIntegrationBranch": "api-cleanup",
+    "createdBy": "render_training_proof",
+    "sourceRunId": "render_training_treeflat_sparse_macro_001"
+  }
+}

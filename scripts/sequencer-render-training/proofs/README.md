@@ -65,6 +65,14 @@ Harness runner:
     - observation
     - critique
     - learning record
+- [run-feedback-suite.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/run-feedback-suite.py)
+  - rebuilds a small multi-scenario macro suite across:
+    - `TreeFlat`
+    - `MatrixLowDensity`
+    - `ArchSingle`
+  - emits:
+    - per-scenario window / observation / critique / learning record artifacts
+    - [sequence-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-feedback-suite-summary.json)
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -111,4 +119,8 @@ Harness status:
   - `render_observation_v1`
   - `sequence_critique_v1`
   - `sequence_learning_record_v1`
+- The current macro suite covers:
+  - `Tree`
+  - `Matrix`
+  - `Arches`
 - The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.
