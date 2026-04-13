@@ -366,6 +366,8 @@ export function buildReviewDashboardState({
             analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
             sceneContext: lastAppliedSnapshot.designSceneContext || null,
             musicContext: lastAppliedSnapshot.musicDesignContext || null,
+            renderObservation: lastAppliedSnapshot.renderObservation || null,
+            renderCritiqueContext: lastAppliedSnapshot.renderCritiqueContext || null,
             artifactRefs: lastApply?.artifactRefs || null
           }
         : null,

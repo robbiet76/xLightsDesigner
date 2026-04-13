@@ -144,7 +144,9 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
         applyResult: { status: "completed" },
         analysisArtifact: { trackIdentity: { title: "Song" } },
         designSceneContext: { layoutMode: "2d" },
-        musicDesignContext: { sectionArc: ["Intro", "Chorus 1"] }
+        musicDesignContext: { sectionArc: ["Intro", "Chorus 1"] },
+        renderObservation: { artifactType: "render_observation_v1", macro: { leadModel: "MegaTree" } },
+        renderCritiqueContext: { artifactType: "sequence_render_critique_context_v1", comparison: { leadMatchesPrimaryFocus: true } }
       }
     },
     applyHistory: [
@@ -164,6 +166,8 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.ok(dashboard.data.lastAppliedSnapshot);
   assert.equal(dashboard.data.lastAppliedSnapshot.brief.summary, "Applied design");
   assert.equal(dashboard.data.lastAppliedSnapshot.proposalLines[0], "Applied line");
+  assert.equal(dashboard.data.lastAppliedSnapshot.renderObservation.macro.leadModel, "MegaTree");
+  assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
 });
 
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {

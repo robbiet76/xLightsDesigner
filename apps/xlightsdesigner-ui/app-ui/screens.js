@@ -417,6 +417,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     analysisArtifact = null,
     sceneContext = null,
     musicContext = null,
+    renderObservation = null,
+    renderCritiqueContext = null,
     artifactRefs = null,
     emptyText = "No snapshot loaded."
   } = {}) {
@@ -432,6 +434,18 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const sectionArc = Array.isArray(musicContext?.sectionArc)
       ? musicContext.sectionArc.filter(Boolean).slice(0, 6)
       : [];
+    const activeModels = Array.isArray(renderObservation?.macro?.activeModelNames)
+      ? renderObservation.macro.activeModelNames.filter(Boolean).slice(0, 4)
+      : [];
+    const activeFamilies = renderObservation?.macro?.activeFamilyTotals && typeof renderObservation.macro.activeFamilyTotals === "object"
+      ? Object.keys(renderObservation.macro.activeFamilyTotals).filter(Boolean).slice(0, 4)
+      : [];
+    const renderFocusTargets = Array.isArray(renderCritiqueContext?.expected?.primaryFocusTargetIds)
+      ? renderCritiqueContext.expected.primaryFocusTargetIds.filter(Boolean).slice(0, 3)
+      : [];
+    const missingFocusTargets = Array.isArray(renderCritiqueContext?.comparison?.missingPrimaryFocusTargets)
+      ? renderCritiqueContext.comparison.missingPrimaryFocusTargets.filter(Boolean).slice(0, 3)
+      : [];
     const hasContent =
       brief ||
       safeProposalLines.length ||
@@ -439,6 +453,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       analysisArtifact ||
       sceneContext ||
       musicContext ||
+      renderObservation ||
+      renderCritiqueContext ||
       safeArtifactRefs.length;
     if (!hasContent) {
       return `
@@ -484,6 +500,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>${escapeHtml(String(sceneContext?.layoutMode || "unknown"))} layout context</p>
             <p>${focalCandidates.length ? `Focal: ${escapeHtml(focalCandidates.join(", "))}` : "No focal candidates loaded."}</p>
             <p>${sectionArc.length ? `Arc: ${escapeHtml(sectionArc.join(" -> "))}` : "No section arc loaded."}</p>
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Render Feedback</div>
+            <p>${escapeHtml(String(renderObservation?.macro?.leadModel || "No rendered lead model."))}</p>
+            <p>${activeModels.length ? `Active: ${escapeHtml(activeModels.join(", "))}` : "No active rendered models captured."}</p>
+            <p>${activeFamilies.length ? `Families: ${escapeHtml(activeFamilies.join(", "))}` : "No active family summary captured."}</p>
+            <p>${renderObservation ? `Sampling: ${escapeHtml(String(renderObservation?.source?.samplingMode || "unknown"))} / ${escapeHtml(String(renderObservation?.source?.sampledModelCount || 0))} models` : "No render observation snapshot loaded."}</p>
+            <p>${renderCritiqueContext ? `Breadth: ${escapeHtml(String(renderCritiqueContext?.observed?.breadthRead || "unknown"))} / lead focus match: ${renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus ? "yes" : "no"}` : "No render critique context loaded."}</p>
+            <p>${renderFocusTargets.length ? `Expected focus: ${escapeHtml(renderFocusTargets.join(", "))}` : "No expected render focus targets."}</p>
+            ${missingFocusTargets.length ? `<p>Missing focus: ${escapeHtml(missingFocusTargets.join(", "))}</p>` : ""}
           </div>
         </div>
         ${
@@ -1518,6 +1544,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
                 analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
                 sceneContext: lastAppliedSnapshot.designSceneContext || null,
                 musicContext: lastAppliedSnapshot.musicDesignContext || null,
+                renderObservation: lastAppliedSnapshot.renderObservation || null,
+                renderCritiqueContext: lastAppliedSnapshot.renderCritiqueContext || null,
                 artifactRefs: lastApply?.artifactRefs || null,
                 emptyText: "No applied snapshot is available yet."
               })
