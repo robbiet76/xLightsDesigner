@@ -47,6 +47,24 @@ Current proof:
     - `ladderLevel = macro`
     - separate `designerSummary` and `sequencerSummary`
     - ordered `nextMoves` for both agents
+- `sequence-learning-record-render-training-treeflat.json`
+  - Source chain:
+    - `preview_scene_window_v1`
+    - `render_observation_v1`
+    - `sequence_critique_v1`
+  - Status: first `sequence_learning_record_v1` proof
+  - Notes:
+    - `cycleOutcome = usable_with_revision`
+    - preserves reconstruction vs truth vs critique boundaries
+
+Harness runner:
+
+- [run-feedback-proof.sh](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/run-feedback-proof.sh)
+  - rebuilds the current proof chain end to end:
+    - window
+    - observation
+    - critique
+    - learning record
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -72,6 +90,7 @@ What this proves:
 - We can derive first-pass macro observation signals from reconstructed whole-layout windows.
 - We can compare active scene bounds against full-layout bounds and track region occupancy over time.
 - We can translate render observations into separate designer-facing and sequencer-facing critique summaries.
+- We can package the resulting checkpoint into a first complete `sequence_learning_record_v1`.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.
@@ -84,3 +103,12 @@ What this does not prove yet:
 - Full-layout reconstruction over time from rendered windows
 - Group/submodel handling
 - Preview parity against House Preview output
+
+Harness status:
+
+- The sequencer render-training harness is now tied into:
+  - `preview_scene_window_v1`
+  - `render_observation_v1`
+  - `sequence_critique_v1`
+  - `sequence_learning_record_v1`
+- The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.
