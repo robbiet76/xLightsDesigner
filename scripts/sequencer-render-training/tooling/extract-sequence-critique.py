@@ -21,6 +21,8 @@ def main():
     spread = macro.get("meanSceneSpreadRatio", 0.0)
     density_series = macro.get("densityBucketSeries", [])
     motion = macro.get("centroidMotionMean", 0.0)
+    lead_model = macro.get("leadModel")
+    lead_model_share = macro.get("leadModelShare", 0.0)
 
     designer_strengths = []
     designer_weaknesses = []
@@ -28,9 +30,19 @@ def main():
     sequencer_weaknesses = []
     next_moves = []
 
+    coherent_support_case = (
+        len(active_models) == 2
+        and len(active_families) >= 2
+        and lead_model_share >= 0.7
+        and spread >= 0.01
+    )
+
     if len(active_models) == 1:
         designer_strengths.append("The section reads as a single focused idea.")
         sequencer_strengths.append("Active content is concentrated enough to make the lead target legible.")
+    elif coherent_support_case:
+        designer_strengths.append(f"The section still reads as one idea with {lead_model} carrying the lead and restrained support around it.")
+        sequencer_strengths.append("Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.")
     else:
         designer_weaknesses.append("The scene is split across too many active models to read as one idea.")
         sequencer_weaknesses.append("Too many models are active at once for this checkpoint.")
@@ -62,6 +74,9 @@ def main():
             "level": "section",
             "instruction": f"Decide whether this section should remain {family_name}-only or intentionally add a support family."
         })
+    elif coherent_support_case:
+        designer_strengths.append("Multiple families are present, but the support family does not overpower the lead.")
+        sequencer_strengths.append("Family spread is broad enough without losing the lead-target hierarchy.")
 
     if motion > 0:
         sequencer_strengths.append("Centroid motion indicates the active content is evolving, not frozen.")
@@ -77,10 +92,10 @@ def main():
         },
         "ladderLevel": "macro",
         "designerSummary": {
-            "intentRead": "single-idea section read" if len(active_models) == 1 else "multi-idea section read",
+            "intentRead": "single-idea section read" if (len(active_models) == 1 or coherent_support_case) else "multi-idea section read",
             "focusRead": "narrow" if spread < 0.01 else "broad_enough",
             "contrastRead": density_series[0] if density_series else "unknown",
-            "compositionRead": "concentrated",
+            "compositionRead": "concentrated" if (len(active_models) == 1 or coherent_support_case) else "split",
             "strengths": designer_strengths,
             "weaknesses": designer_weaknesses,
             "designAdjustmentSuggestions": [m["instruction"] for m in next_moves if m["owner"] == "designer"],

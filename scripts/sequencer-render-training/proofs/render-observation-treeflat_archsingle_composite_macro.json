@@ -15,6 +15,16 @@
       "Tree": 3,
       "Arches": 3
     },
+    "activeModelTotals": {
+      "TreeFlat": 192,
+      "ArchSingle": 150
+    },
+    "modelContributionShares": {
+      "TreeFlat": 0.5614035087719298,
+      "ArchSingle": 0.43859649122807015
+    },
+    "leadModel": "TreeFlat",
+    "leadModelShare": 0.5614035087719298,
     "maxActiveModelCount": 2,
     "maxActiveModelRatio": 0.10526315789473684,
     "maxActiveNodeCount": 114,

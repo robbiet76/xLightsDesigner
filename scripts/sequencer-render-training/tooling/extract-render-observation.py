@@ -89,12 +89,14 @@ def main():
     active_centroids = []
     family_counter = Counter()
     active_model_names = set()
+    model_counter = Counter()
     region_counter = Counter()
 
     for frame in window["frames"]:
         families = Counter(model["displayAs"] for model in frame["models"])
         family_counter.update(families)
         active_model_names.update(model["modelName"] for model in frame["models"])
+        model_counter.update({model["modelName"]: model["activeNodeCount"] for model in frame["models"]})
         bounds = bounds_union([model.get("activeBounds") for model in frame["models"]])
         weighted_centroid = None
         total_brightness = sum(
@@ -148,6 +150,16 @@ def main():
         if delta:
             centroid_motions.append(delta)
 
+    total_model_nodes = sum(model_counter.values())
+    model_contribution_shares = {
+        name: (count / float(total_model_nodes)) if total_model_nodes > 0 else 0.0
+        for name, count in model_counter.items()
+    }
+    lead_model = None
+    lead_model_share = 0.0
+    if model_contribution_shares:
+        lead_model, lead_model_share = max(model_contribution_shares.items(), key=lambda item: item[1])
+
     observation = {
         "artifactType": "render_observation_v1",
         "artifactVersion": 1,
@@ -159,6 +171,10 @@ def main():
             "frameCount": len(frame_observations),
             "activeModelNames": sorted(active_model_names),
             "activeFamilyTotals": dict(family_counter),
+            "activeModelTotals": dict(model_counter),
+            "modelContributionShares": model_contribution_shares,
+            "leadModel": lead_model,
+            "leadModelShare": lead_model_share,
             "maxActiveModelCount": max((f["activeModelCount"] for f in frame_observations), default=0),
             "maxActiveModelRatio": max((f["activeModelRatio"] for f in frame_observations), default=0.0),
             "maxActiveNodeCount": max((f["activeNodeCount"] for f in frame_observations), default=0),

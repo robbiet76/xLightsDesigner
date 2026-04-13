@@ -51,5 +51,19 @@
     "sectionScope": "proof_window_tree_arch_composite",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
+  },
+  {
+    "scenarioId": "archsingle_matrixlowdensity_balanced_macro",
+    "mode": "composite",
+    "modelName": "ArchSingle+MatrixLowDensity",
+    "sourceScenarioIds": [
+      "archsingle_sparse_macro",
+      "matrixlowdensity_sparse_macro"
+    ],
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_support",
+    "revisionGoal": "Validate a broader lead-plus-support macro composition and confirm the critique recognizes coherent support instead of over-splitting.",
+    "sectionScope": "proof_window_arch_matrix_balanced",
+    "targetScope": "ArchSingle,MatrixLowDensity",
+    "effectFamilies": "ColorWash,SingleStrand"
   }
 ]

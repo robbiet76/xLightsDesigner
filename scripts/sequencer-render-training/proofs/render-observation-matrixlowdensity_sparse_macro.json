@@ -13,6 +13,14 @@
     "activeFamilyTotals": {
       "Matrix": 3
     },
+    "activeModelTotals": {
+      "MatrixLowDensity": 30
+    },
+    "modelContributionShares": {
+      "MatrixLowDensity": 1.0
+    },
+    "leadModel": "MatrixLowDensity",
+    "leadModelShare": 1.0,
     "maxActiveModelCount": 1,
     "maxActiveModelRatio": 0.05263157894736842,
     "maxActiveNodeCount": 10,

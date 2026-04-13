@@ -3,21 +3,21 @@
   "artifactVersion": 1,
   "createdAt": null,
   "source": {
-    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-treeflat_archsingle_composite_macro.json"
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_matrixlowdensity_balanced_macro.json"
   },
   "ladderLevel": "macro",
   "designerSummary": {
-    "intentRead": "multi-idea section read",
+    "intentRead": "single-idea section read",
     "focusRead": "broad_enough",
     "contrastRead": "moderate",
-    "compositionRead": "split",
+    "compositionRead": "concentrated",
     "strengths": [
+      "The section still reads as one idea with ArchSingle carrying the lead and restrained support around it.",
       "The active footprint is broad enough to register at scene scale.",
-      "Density is consistent across the sampled window (moderate)."
+      "Density is consistent across the sampled window (moderate).",
+      "Multiple families are present, but the support family does not overpower the lead."
     ],
-    "weaknesses": [
-      "The scene is split across too many active models to read as one idea."
-    ],
+    "weaknesses": [],
     "designAdjustmentSuggestions": []
   },
   "sequencerSummary": {
@@ -27,13 +27,13 @@
     "familyBalanceRead": "multi_family",
     "motionRead": "moving",
     "strengths": [
+      "Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.",
       "Scene spread is large enough to support broader composition.",
       "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Family spread is broad enough without losing the lead-target hierarchy.",
       "Centroid motion indicates the active content is evolving, not frozen."
     ],
-    "weaknesses": [
-      "Too many models are active at once for this checkpoint."
-    ],
+    "weaknesses": [],
     "revisionSuggestions": []
   },
   "nextMoves": []

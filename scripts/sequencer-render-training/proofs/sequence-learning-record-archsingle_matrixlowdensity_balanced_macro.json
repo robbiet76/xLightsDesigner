@@ -1,26 +1,26 @@
 {
   "artifactType": "sequence_learning_record_v1",
   "artifactVersion": 1,
-  "recordId": "slr_treeflat_archsingle_composite_macro_001",
+  "recordId": "slr_archsingle_matrixlowdensity_balanced_macro_001",
   "createdAt": null,
   "updatedAt": null,
   "scope": {
     "projectId": "render_training",
     "projectName": "Render Training Fixture",
-    "sequenceId": "composite:preview-scene-window-treeflat_sparse_macro.json+preview-scene-window-archsingle_sparse_macro.json",
-    "sequenceName": "composite:preview-scene-window-treeflat_sparse_macro.json+preview-scene-window-archsingle_sparse_macro.json",
-    "checkpointId": "chk_treeflat_archsingle_composite_macro_001",
+    "sequenceId": "composite:preview-scene-window-archsingle_sparse_macro.json+preview-scene-window-matrixlowdensity_sparse_macro.json",
+    "sequenceName": "composite:preview-scene-window-archsingle_sparse_macro.json+preview-scene-window-matrixlowdensity_sparse_macro.json",
+    "checkpointId": "chk_archsingle_matrixlowdensity_balanced_macro_001",
     "recordScope": "evaluation_run"
   },
   "context": {
-    "designHandoffRef": "design_handoff_v2:proof_tree_arch_support",
-    "revisionGoal": "Validate a broader tree-led section with arch support and confirm the macro critique distinguishes it from narrow single-family passes.",
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_support",
+    "revisionGoal": "Validate a broader lead-plus-support macro composition and confirm the critique recognizes coherent support instead of over-splitting.",
     "sectionScope": [
-      "proof_window_tree_arch_composite"
+      "proof_window_arch_matrix_balanced"
     ],
     "targetScope": [
-      "TreeFlat",
-      "ArchSingle"
+      "ArchSingle",
+      "MatrixLowDensity"
     ]
   },
   "preferences": {
@@ -35,16 +35,16 @@
     "summary": "Sparse tree-led validation checkpoint.",
     "changeCategory": "proof_validation",
     "sectionTargets": [
-      "TreeFlat",
-      "ArchSingle"
+      "ArchSingle",
+      "MatrixLowDensity"
     ],
     "targetIds": [
-      "TreeFlat",
-      "ArchSingle"
+      "ArchSingle",
+      "MatrixLowDensity"
     ],
     "effectFamilies": [
-      "SingleStrand",
-      "ColorWash"
+      "ColorWash",
+      "SingleStrand"
     ],
     "appliedCommandStats": null,
     "baseRevision": null,
@@ -54,19 +54,19 @@
     "mode": "reconstruction",
     "previewSceneGeometryRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
     "previewSceneTensorRef": null,
-    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-treeflat_archsingle_composite_macro.json",
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_matrixlowdensity_balanced_macro.json",
     "predictedStrengths": [
+      "Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.",
       "Scene spread is large enough to support broader composition.",
       "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Family spread is broad enough without losing the lead-target hierarchy.",
       "Centroid motion indicates the active content is evolving, not frozen."
     ],
-    "predictedRisks": [
-      "Too many models are active at once for this checkpoint."
-    ],
+    "predictedRisks": [],
     "predictionSummary": "Sparse tree-only checkpoint reconstructed from authoritative render data."
   },
   "truth": {
-    "renderTruthCheckpointRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-treeflat_archsingle_composite_macro.json",
+    "renderTruthCheckpointRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_matrixlowdensity_balanced_macro.json",
     "xlightsRevision": null,
     "renderWindow": {
       "windowStartMs": 1200,
@@ -81,21 +81,21 @@
     "previewParityRef": null
   },
   "critique": {
-    "critiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_archsingle_composite_macro.json",
+    "critiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_balanced_macro.json",
     "strengths": [
+      "Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.",
       "Scene spread is large enough to support broader composition.",
       "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Family spread is broad enough without losing the lead-target hierarchy.",
       "Centroid motion indicates the active content is evolving, not frozen."
     ],
-    "weaknesses": [
-      "Too many models are active at once for this checkpoint."
-    ],
-    "intentAlignment": "multi-idea section read",
+    "weaknesses": [],
+    "intentAlignment": "single-idea section read",
     "musicAlignment": "moving",
     "displayUseAssessment": "multi_family",
     "focusAssessment": "broad_enough",
     "densityAssessment": "moderate",
-    "coherenceAssessment": "split",
+    "coherenceAssessment": "concentrated",
     "recommendedNextMoves": []
   },
   "outcome": {
@@ -113,6 +113,6 @@
     "xlightsApiVersion": 2,
     "xlightsIntegrationBranch": "api-cleanup",
     "createdBy": "render_training_proof",
-    "sourceRunId": "render_training_treeflat_archsingle_composite_macro_001"
+    "sourceRunId": "render_training_archsingle_matrixlowdensity_balanced_macro_001"
   }
 }

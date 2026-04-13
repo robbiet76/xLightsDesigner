@@ -2,38 +2,42 @@
   "artifactType": "render_observation_v1",
   "artifactVersion": 1,
   "source": {
-    "windowArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_sparse_macro.json",
+    "windowArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_matrixlowdensity_balanced_macro.json",
     "geometryModelCount": 19
   },
   "macro": {
     "frameCount": 3,
     "activeModelNames": [
-      "ArchSingle"
+      "ArchSingle",
+      "MatrixLowDensity"
     ],
     "activeFamilyTotals": {
-      "Arches": 3
+      "Arches": 3,
+      "Matrix": 3
     },
     "activeModelTotals": {
-      "ArchSingle": 150
+      "ArchSingle": 150,
+      "MatrixLowDensity": 30
     },
     "modelContributionShares": {
-      "ArchSingle": 1.0
+      "ArchSingle": 0.8333333333333334,
+      "MatrixLowDensity": 0.16666666666666666
     },
     "leadModel": "ArchSingle",
-    "leadModelShare": 1.0,
-    "maxActiveModelCount": 1,
-    "maxActiveModelRatio": 0.05263157894736842,
-    "maxActiveNodeCount": 50,
-    "maxSceneSpreadRatio": 0.009994574440938618,
-    "meanSceneSpreadRatio": 0.009994574440938618,
+    "leadModelShare": 0.8333333333333334,
+    "maxActiveModelCount": 2,
+    "maxActiveModelRatio": 0.10526315789473684,
+    "maxActiveNodeCount": 60,
+    "maxSceneSpreadRatio": 0.010810458068770342,
+    "meanSceneSpreadRatio": 0.010572492010652757,
     "densityBucketSeries": [
-      "sparse",
-      "sparse",
-      "sparse"
+      "moderate",
+      "moderate",
+      "moderate"
     ],
     "sceneBoundsUnion": {
       "min": {
-        "x": 1,
+        "x": -7,
         "y": 3.0616168932349032e-15,
         "z": 0
       },
@@ -56,38 +60,39 @@
       }
     },
     "regionTotals": {
-      "middle_center": 150
+      "middle_center": 180
     },
     "centroidMotions": [
       {
-        "dx": 0.0,
+        "dx": 0.03076923076923066,
         "dy": 0.0,
         "dz": 0.0,
-        "magnitude": 0.0
+        "magnitude": 0.03076923076923066
       },
       {
-        "dx": 0.0,
+        "dx": 0.04615384615384244,
         "dy": 0.0,
         "dz": 0.0,
-        "magnitude": 0.0
+        "magnitude": 0.04615384615384244
       }
     ],
-    "centroidMotionMax": 0.0,
-    "centroidMotionMean": 0.0
+    "centroidMotionMax": 0.04615384615384244,
+    "centroidMotionMean": 0.03846153846153655
   },
   "frames": [
     {
       "frameOffset": 8,
       "frameTimeMs": 1200,
-      "activeModelCount": 1,
-      "activeModelRatio": 0.05263157894736842,
-      "activeNodeCount": 50,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
       "familyDistribution": {
-        "Arches": 1
+        "Arches": 1,
+        "Matrix": 1
       },
       "sceneActiveBounds": {
         "min": {
-          "x": 1,
+          "x": -7,
           "y": 3.0616168932349032e-15,
           "z": 0
         },
@@ -98,28 +103,29 @@
         }
       },
       "sceneActiveCentroid": {
-        "x": 49.99999989748001,
-        "y": 31.18368224143982,
+        "x": 49.19230759136494,
+        "y": 30.75008713003305,
         "z": 0.0
       },
-      "sceneSpreadRatio": 0.009994574440938618,
-      "densityBucket": "sparse",
+      "sceneSpreadRatio": 0.010810458068770342,
+      "densityBucket": "moderate",
       "regionDistribution": {
-        "middle_center": 50
+        "middle_center": 60
       }
     },
     {
       "frameOffset": 10,
       "frameTimeMs": 1250,
-      "activeModelCount": 1,
-      "activeModelRatio": 0.05263157894736842,
-      "activeNodeCount": 50,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
       "familyDistribution": {
-        "Arches": 1
+        "Arches": 1,
+        "Matrix": 1
       },
       "sceneActiveBounds": {
         "min": {
-          "x": 1,
+          "x": -5,
           "y": 3.0616168932349032e-15,
           "z": 0
         },
@@ -130,28 +136,29 @@
         }
       },
       "sceneActiveCentroid": {
-        "x": 49.99999989748001,
-        "y": 31.18368224143982,
+        "x": 49.22307682213417,
+        "y": 30.75008713003305,
         "z": 0.0
       },
-      "sceneSpreadRatio": 0.009994574440938618,
-      "densityBucket": "sparse",
+      "sceneSpreadRatio": 0.010606487161812412,
+      "densityBucket": "moderate",
       "regionDistribution": {
-        "middle_center": 50
+        "middle_center": 60
       }
     },
     {
       "frameOffset": 12,
       "frameTimeMs": 1300,
-      "activeModelCount": 1,
-      "activeModelRatio": 0.05263157894736842,
-      "activeNodeCount": 50,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
       "familyDistribution": {
-        "Arches": 1
+        "Arches": 1,
+        "Matrix": 1
       },
       "sceneActiveBounds": {
         "min": {
-          "x": 1,
+          "x": -2,
           "y": 3.0616168932349032e-15,
           "z": 0
         },
@@ -162,14 +169,14 @@
         }
       },
       "sceneActiveCentroid": {
-        "x": 49.99999989748001,
-        "y": 31.18368224143982,
+        "x": 49.26923066828801,
+        "y": 30.75008713003305,
         "z": 0.0
       },
-      "sceneSpreadRatio": 0.009994574440938618,
-      "densityBucket": "sparse",
+      "sceneSpreadRatio": 0.010300530801375515,
+      "densityBucket": "moderate",
       "regionDistribution": {
-        "middle_center": 50
+        "middle_center": 60
       }
     }
   ]

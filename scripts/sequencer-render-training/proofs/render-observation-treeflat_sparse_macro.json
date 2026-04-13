@@ -13,6 +13,14 @@
     "activeFamilyTotals": {
       "Tree": 3
     },
+    "activeModelTotals": {
+      "TreeFlat": 192
+    },
+    "modelContributionShares": {
+      "TreeFlat": 1.0
+    },
+    "leadModel": "TreeFlat",
+    "leadModelShare": 1.0,
     "maxActiveModelCount": 1,
     "maxActiveModelRatio": 0.05263157894736842,
     "maxActiveNodeCount": 64,
