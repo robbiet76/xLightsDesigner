@@ -468,6 +468,25 @@ function collectDefinedVisualHintBehaviorTextForTargets(targetIds = [], metadata
   return out;
 }
 
+function inferRevisionBriefPreferredEffects(brief = {}) {
+  const summary = `${normText(brief?.artisticGoalSummary)} ${normText(brief?.executionObjective)}`.toLowerCase();
+  const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
+  const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
+
+  if (/contrast|hierarchy|differentiat|lift|shift/.test(summary)) {
+    return ["Bars", "Shimmer", "Color Wash"];
+  }
+  if (/flat|evolv|develop/.test(summary)) {
+    return motionCharacter.includes("restrained")
+      ? ["Shimmer", "Bars", "Color Wash"]
+      : ["Bars", "Wave", "Shimmer"];
+  }
+  if (motionCharacter.includes("restrained")) return ["Shimmer", "Color Wash", "On"];
+  if (motionCharacter.includes("expand")) return ["Bars", "Shimmer", "Color Wash"];
+  if (densityCharacter === "sparse") return ["On", "Color Wash", "Shimmer"];
+  return [];
+}
+
 function inferEffectNameFromSectionPlan({
   section = "",
   energy = "",
@@ -479,8 +498,14 @@ function inferEffectNameFromSectionPlan({
   sectionDirective = null,
   availableEffects = null,
   effectAvoidances = [],
-  visualHintBehaviorText = []
+  visualHintBehaviorText = [],
+  sequencerRevisionBrief = null
 } = {}) {
+  const briefPreferred = selectPreferredEffect(
+    inferRevisionBriefPreferredEffects(sequencerRevisionBrief),
+    { availableEffects, effectAvoidances }
+  );
+  if (briefPreferred) return briefPreferred;
   const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
   if (hinted) return hinted;
   const familyDriven = recommendEffectsForVisualFamilies({
@@ -552,8 +577,13 @@ function buildStructuredExecutionLine({
 }
 
 function inferRevisionBriefEffectName(brief = {}) {
+  const summary = `${normText(brief?.artisticGoalSummary)} ${normText(brief?.executionObjective)}`.toLowerCase();
   const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
   const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
+  if (/contrast|hierarchy|differentiat|lift|shift/.test(summary)) return "Bars";
+  if (/flat|evolv|develop/.test(summary)) {
+    return motionCharacter.includes("restrained") ? "Shimmer" : "Bars";
+  }
   if (motionCharacter.includes("still")) return "On";
   if (motionCharacter.includes("restrained")) return "Shimmer";
   if (motionCharacter.includes("expand")) return "Bars";
@@ -630,7 +660,8 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
           sectionDirective,
           availableEffects,
           effectAvoidances,
-          visualHintBehaviorText
+          visualHintBehaviorText,
+          sequencerRevisionBrief
         });
         return buildStructuredExecutionLine({
           section: row?.section,

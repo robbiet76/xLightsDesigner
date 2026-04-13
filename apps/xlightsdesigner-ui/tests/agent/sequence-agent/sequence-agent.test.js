@@ -355,16 +355,17 @@ test("sequence_agent uses render-driven revision targets to bias effect-strategy
         artisticCorrection: "Shift support contrast without losing the tree lead."
       },
       sequencerDirection: {
-        executionObjective: "Rework the next pass around the flagged rendered targets.",
+        executionObjective: "Strengthen contrast and hierarchy between the flagged rendered targets.",
         focusTargets: ["ArchSingle"]
       }
     },
-    sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
+    sourceLines: [],
     baseRevision: "rev-57",
     effectCatalog: sampleCatalog()
   });
 
   assert.match(out.executionLines[0], /ArchSingle \+ WindowLeft \+ MegaTree \+ Roofline/i);
+  assert.match(out.executionLines[0], /apply Bars effect/i);
 });
 
 test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {
