@@ -19,7 +19,11 @@ test("buildRenderCritiqueContext merges render observation with design and hando
         leadModel: "MegaTree",
         leadModelShare: 0.76,
         meanSceneSpreadRatio: 0.024,
-        maxActiveModelRatio: 0.12
+        maxActiveModelRatio: 0.12,
+        temporalRead: "modulated",
+        energyVariation: 0.11,
+        activeModelVariation: 1,
+        distinctLeadModelCount: 1
       }
     },
     designSceneContext: {
@@ -59,6 +63,7 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.comparison.leadIsKnownFocalCandidate, true);
   assert.deepEqual(out.comparison.observedFocusTargets, ["MegaTree"]);
   assert.equal(out.observed.breadthRead, "moderate");
+  assert.equal(out.observed.temporalRead, "modulated");
 });
 
 test("buildRenderCritiqueContext falls back to scene focal candidates when handoff focus is missing", () => {

@@ -175,6 +175,9 @@ function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   if (str(observed.breadthRead) === "tight" && arr(expected.supportTargetIds).length) {
     findings.push("Support targets are not contributing enough to the rendered scene.");
   }
+  if (str(observed.temporalRead) === "flat") {
+    findings.push("Rendered section development is too flat across the sampled window.");
+  }
 
   return uniqueStrings(findings);
 }
@@ -289,7 +292,8 @@ export function refreshSequenceArtisticGoalFromRenderCritique({
     ...(isPlainObject(base.traceability) ? base.traceability : {}),
     renderCritiqueArtifactId: str(renderCritiqueContext?.source?.renderObservationArtifactId),
     renderCritiqueLeadModel: str(renderCritiqueContext?.observed?.leadModel),
-    renderCritiqueBreadthRead: str(renderCritiqueContext?.observed?.breadthRead)
+    renderCritiqueBreadthRead: str(renderCritiqueContext?.observed?.breadthRead),
+    renderCritiqueTemporalRead: str(renderCritiqueContext?.observed?.temporalRead)
   };
   return base;
 }

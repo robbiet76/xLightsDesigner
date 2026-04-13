@@ -2,7 +2,7 @@
   "artifactType": "sequence_render_critique_context_v1",
   "artifactVersion": 1,
   "source": {
-    "renderObservationArtifactId": "render_observation_v1-f7ae1ecb",
+    "renderObservationArtifactId": "render_observation_v1-9a0ac9cb",
     "designSceneContextArtifactId": "design_scene_context_v1-0d018c85",
     "sequencingDesignHandoffArtifactId": ""
   },
@@ -40,7 +40,11 @@
     "sampledModelCount": 4,
     "meanSceneSpreadRatio": 1,
     "breadthRead": "broad",
-    "maxActiveModelRatio": 1
+    "maxActiveModelRatio": 1,
+    "temporalRead": "evolving",
+    "energyVariation": 0.6159,
+    "activeModelVariation": 1,
+    "distinctLeadModelCount": 1
   },
   "comparison": {
     "observedFocusTargets": [

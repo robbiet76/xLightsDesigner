@@ -93,7 +93,11 @@ export function buildRenderCritiqueContext({
       sampledModelCount: Number(source.sampledModelCount || 0),
       meanSceneSpreadRatio: spreadRatio,
       breadthRead: inferBreadthRead(spreadRatio),
-      maxActiveModelRatio: Number(macro.maxActiveModelRatio || 0)
+      maxActiveModelRatio: Number(macro.maxActiveModelRatio || 0),
+      temporalRead: str(macro.temporalRead || "unknown") || "unknown",
+      energyVariation: Number(macro.energyVariation || 0),
+      activeModelVariation: Number(macro.activeModelVariation || 0),
+      distinctLeadModelCount: Number(macro.distinctLeadModelCount || 0)
     },
     comparison: {
       observedFocusTargets,

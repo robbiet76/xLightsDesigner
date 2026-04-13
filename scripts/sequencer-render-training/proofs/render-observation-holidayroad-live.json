@@ -1,7 +1,7 @@
 {
   "artifactType": "render_observation_v1",
   "artifactVersion": "1.0",
-  "createdAt": "2026-04-13T21:11:46.741Z",
+  "createdAt": "2026-04-13T21:17:31.539Z",
   "source": {
     "sequencePath": "/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq",
     "revisionToken": "/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq#2632",
@@ -32,7 +32,11 @@
     "meanSceneSpreadRatio": 1,
     "maxSceneSpreadRatio": 1,
     "maxActiveModelCount": 4,
-    "maxActiveModelRatio": 1
+    "maxActiveModelRatio": 1,
+    "temporalRead": "evolving",
+    "energyVariation": 0.6159,
+    "activeModelVariation": 1,
+    "distinctLeadModelCount": 1
   },
-  "artifactId": "render_observation_v1-f7ae1ecb"
+  "artifactId": "render_observation_v1-9a0ac9cb"
 }

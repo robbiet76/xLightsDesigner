@@ -79,6 +79,37 @@ function summarizeRangeActivity(bytes, offset, count) {
   };
 }
 
+function classifyTemporalRead({ frameEnergyTotals = [], activeModelCounts = [], leadModels = [] } = {}) {
+  const energies = (Array.isArray(frameEnergyTotals) ? frameEnergyTotals : [])
+    .map((row) => Number(row))
+    .filter((row) => Number.isFinite(row) && row >= 0);
+  const counts = (Array.isArray(activeModelCounts) ? activeModelCounts : [])
+    .map((row) => Number(row))
+    .filter((row) => Number.isFinite(row) && row >= 0);
+  const leads = uniqueStrings(leadModels);
+  const maxEnergy = energies.length ? Math.max(...energies) : 0;
+  const minEnergy = energies.length ? Math.min(...energies) : 0;
+  const energyVariation = maxEnergy > 0 ? (maxEnergy - minEnergy) / maxEnergy : 0;
+  const maxCount = counts.length ? Math.max(...counts) : 0;
+  const minCount = counts.length ? Math.min(...counts) : 0;
+  const activeModelVariation = Math.max(0, maxCount - minCount);
+  const distinctLeadModelCount = leads.length;
+
+  let temporalRead = "flat";
+  if (energyVariation >= 0.2 || activeModelVariation >= 2 || distinctLeadModelCount >= 2) {
+    temporalRead = "evolving";
+  } else if (energyVariation >= 0.08 || activeModelVariation >= 1) {
+    temporalRead = "modulated";
+  }
+
+  return {
+    temporalRead,
+    energyVariation: Number(energyVariation.toFixed(4)),
+    activeModelVariation,
+    distinctLeadModelCount
+  };
+}
+
 export function buildRenderSamplingPlan(sceneGraph = {}, { targetIds = [] } = {}) {
   const modelsById = isPlainObject(sceneGraph?.modelsById) ? sceneGraph.modelsById : {};
   const targetKeySet = new Set(uniqueStrings(targetIds).flatMap((row) => normalizeLookupKeys(row)));
@@ -145,12 +176,17 @@ export function buildRenderObservationFromSamples({
   const familyTotals = new Map();
   const activeModelNames = new Set();
   const spreadRatios = [];
+  const frameEnergyTotals = [];
+  const frameLeadModels = [];
+  const activeModelCounts = [];
   let maxActiveModelCount = 0;
 
   for (const sample of samples) {
     const bytes = decodeBase64Bytes(sample?.dataBase64);
     let offset = 0;
     const activeModels = [];
+    const frameModelEnergies = [];
+    let frameEnergyTotal = 0;
     for (const model of models) {
       const count = Number(model.channelCount || 0);
       if (offset + count > bytes.length) break;
@@ -159,10 +195,16 @@ export function buildRenderObservationFromSamples({
       if (!activity.active) continue;
       activeModels.push(model);
       activeModelNames.add(model.id);
+      frameModelEnergies.push({ id: model.id, energy: activity.normalized });
+      frameEnergyTotal += activity.normalized;
       modelEnergyTotals.set(model.id, Number(modelEnergyTotals.get(model.id) || 0) + activity.normalized);
       familyTotals.set(model.typeCategory, Number(familyTotals.get(model.typeCategory) || 0) + 1);
     }
+    frameModelEnergies.sort((a, b) => b.energy - a.energy);
     maxActiveModelCount = Math.max(maxActiveModelCount, activeModels.length);
+    activeModelCounts.push(activeModels.length);
+    frameEnergyTotals.push(Number(frameEnergyTotal.toFixed(6)));
+    frameLeadModels.push(str(frameModelEnergies[0]?.id));
     spreadRatios.push(computeSpreadRatio(activeModels, plan.sceneBounds));
   }
 
@@ -175,6 +217,11 @@ export function buildRenderObservationFromSamples({
   const meanSceneSpreadRatio = spreadRatios.length
     ? Number((spreadRatios.reduce((sum, row) => sum + row, 0) / spreadRatios.length).toFixed(6))
     : 0;
+  const temporal = classifyTemporalRead({
+    frameEnergyTotals,
+    activeModelCounts,
+    leadModels: frameLeadModels
+  });
 
   return finalizeArtifact({
     artifactType: "render_observation_v1",
@@ -200,7 +247,11 @@ export function buildRenderObservationFromSamples({
       meanSceneSpreadRatio,
       maxSceneSpreadRatio: spreadRatios.length ? Number(Math.max(...spreadRatios).toFixed(6)) : 0,
       maxActiveModelCount,
-      maxActiveModelRatio: models.length ? Number((maxActiveModelCount / models.length).toFixed(4)) : 0
+      maxActiveModelRatio: models.length ? Number((maxActiveModelCount / models.length).toFixed(4)) : 0,
+      temporalRead: temporal.temporalRead,
+      energyVariation: temporal.energyVariation,
+      activeModelVariation: temporal.activeModelVariation,
+      distinctLeadModelCount: temporal.distinctLeadModelCount
     }
   });
 }

@@ -163,7 +163,8 @@ test("refreshSequenceArtisticGoalFromRenderCritique updates artistic question fr
       },
       observed: {
         leadModel: "Roofline",
-        breadthRead: "tight"
+        breadthRead: "tight",
+        temporalRead: "flat"
       },
       comparison: {
         leadMatchesPrimaryFocus: false,
@@ -179,7 +180,9 @@ test("refreshSequenceArtisticGoalFromRenderCritique updates artistic question fr
 
   assert.match(out.evaluationLens.comparisonQuestions[0], /Rendered lead does not match the intended primary focus/i);
   assert.ok(out.evaluationLens.mustImprove.some((row) => /Bring intended focus targets into the rendered pass/i.test(String(row))));
+  assert.ok(out.evaluationLens.mustImprove.some((row) => /too flat across the sampled window/i.test(String(row))));
   assert.equal(out.traceability.renderCritiqueArtifactId, "obs-1");
+  assert.equal(out.traceability.renderCritiqueTemporalRead, "flat");
 });
 
 test("refreshSequenceRevisionObjectiveFromRenderCritique updates sequencer objective from rendered outcome", () => {

@@ -77,4 +77,38 @@ test("buildRenderObservationFromSamples produces model-level macro observation f
   assert.equal(observation.macro.activeFamilyTotals.Line, 1);
   assert.equal(observation.macro.maxActiveModelCount, 2);
   assert.equal(observation.macro.maxActiveModelRatio, 1);
+  assert.equal(observation.macro.temporalRead, "evolving");
+  assert.equal(observation.macro.distinctLeadModelCount, 1);
+});
+
+test("buildRenderObservationFromSamples marks stable sampled windows as flat", () => {
+  const plan = buildRenderSamplingPlan({
+    modelsById: {
+      MegaTree: { id: "MegaTree", name: "MegaTree", typeCategory: "Tree", startChannel: 1, endChannel: 3, transform: { position: { x: 0, y: 0 } } }
+    }
+  });
+  const frame = Buffer.from([255, 128, 0]).toString("base64");
+  const observation = buildRenderObservationFromSamples({
+    samplingPlan: plan,
+    sampleResponse: {
+      data: {
+        sequencePath: "/show/Test.xsq",
+        revisionToken: "rev-2",
+        fseqPath: "/show/Test.fseq",
+        sampleEncoding: "base64_packed_channel_ranges_v1",
+        startMs: 0,
+        endMs: 100,
+        samples: [
+          { frameIndex: 0, frameTimeMs: 0, dataBase64: frame },
+          { frameIndex: 1, frameTimeMs: 50, dataBase64: frame },
+          { frameIndex: 2, frameTimeMs: 100, dataBase64: frame }
+        ]
+      }
+    }
+  });
+
+  assert.equal(observation.macro.temporalRead, "flat");
+  assert.equal(observation.macro.energyVariation, 0);
+  assert.equal(observation.macro.activeModelVariation, 0);
+  assert.equal(observation.macro.distinctLeadModelCount, 1);
 });
