@@ -87,12 +87,35 @@ test("sequence_agent input contract accepts degraded mode", () => {
   assert.deepEqual(errors, []);
 });
 
+test("sequence_agent input contract accepts artistic goal and revision objective objects", () => {
+  const errors = validateSequenceAgentInput(sampleInput({
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      ladderLevel: "section"
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section"
+    }
+  }));
+  assert.deepEqual(errors, []);
+});
+
 test("sequence_agent input contract rejects missing required fields", () => {
   const errors = validateSequenceAgentInput(sampleInput({ requestId: "", safety: {} }));
   assert.ok(errors.some((e) => /requestId is required/i.test(e)));
   assert.ok(errors.some((e) => /safety.manualXdLocks is required/i.test(e)));
   assert.ok(errors.some((e) => /safety.timingOwnership is required/i.test(e)));
   assert.ok(errors.some((e) => /safety.allowTimingWrites is required/i.test(e)));
+});
+
+test("sequence_agent input contract rejects non-object artistic goal and revision objective", () => {
+  const errors = validateSequenceAgentInput(sampleInput({
+    sequenceArtisticGoal: "bad",
+    sequenceRevisionObjective: 42
+  }));
+  assert.ok(errors.some((e) => /sequenceArtisticGoal must be an object/i.test(e)));
+  assert.ok(errors.some((e) => /sequenceRevisionObjective must be an object/i.test(e)));
 });
 
 test("sequence_agent plan output contract requires metadata.degradedMode", () => {

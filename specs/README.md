@@ -36,6 +36,7 @@ Primary policy source:
 - `current-app-plan-2026-04-05.md`
 - `repo-structure-governance.md`
 - `spec-organization-audit-2026-04-13.md`
+- `spec-organization-policy-2026-04-13.md`
 
 ## Domain Indexes
 - `app-assistant/README.md`
@@ -62,6 +63,7 @@ Primary policy source:
 ## Consolidation Record
 - `spec-consolidation-audit-2026-03-11.md`
 - `spec-organization-audit-2026-04-13.md`
+- `spec-organization-policy-2026-04-13.md`
 - `spec-lifecycle-policy.md`
 - `requirements-traceability-matrix.md`
 - `agent-release-quality-gates.md`

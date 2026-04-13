@@ -400,6 +400,9 @@ export function createProposalGenerationRuntime(deps = {}) {
         groupsById: state.sceneGraph?.groupsById || {},
         submodelsById: state.sceneGraph?.submodelsById || {},
         intentHandoff,
+        sequencingDesignHandoff: state.creative?.sequencingDesignHandoff || intentHandoff?.sequencingDesignHandoff || null,
+        sequenceArtisticGoal: state.creative?.sequenceArtisticGoal || null,
+        sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
         analysisHandoff,
         planningScope: {
           sections: selected,
@@ -427,6 +430,9 @@ export function createProposalGenerationRuntime(deps = {}) {
         sequencerPlan = buildSequenceAgentPlan({
           analysisHandoff,
           intentHandoff,
+          sequencingDesignHandoff: sequenceAgentInput.sequencingDesignHandoff,
+          sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
+          sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
           sourceLines: proposalSeedLines,
           baseRevision: str(state.draftBaseRevision || state.revision || "unknown"),
           capabilityCommands: state.health.capabilityCommands || [],

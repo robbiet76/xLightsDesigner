@@ -224,6 +224,55 @@ test("sequence_agent builds validated command plan from handoffs", () => {
   assert.equal(out.commands.some((row) => row.cmd === "effects.alignToTiming"), true);
 });
 
+test("sequence_agent plan metadata carries artistic goal, revision objective, and sequencer brief", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Increase chorus energy on focal props",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        sections: ["Chorus 1"],
+        tagNames: ["focal"]
+      },
+      designSummary: "MegaTree leads while roofline supports the chorus lift."
+    },
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      scope: { goalLevel: "section" },
+      artisticIntent: {
+        leadTarget: "MegaTree",
+        supportTargets: ["Roofline"],
+        sectionArc: "lift",
+        motionCharacter: "expanding_motion",
+        densityCharacter: "moderate"
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: {
+        artisticCorrection: "Clarify the chorus lift while keeping the tree dominant."
+      },
+      sequencerDirection: {
+        executionObjective: "Increase support motion on the roofline without creating a second lead."
+      },
+      successChecks: ["tree remains dominant"]
+    },
+    sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
+    baseRevision: "rev-56",
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(out.metadata.sequenceArtisticGoal.artifactType, "sequence_artistic_goal_v1");
+  assert.equal(out.metadata.sequenceRevisionObjective.artifactType, "sequence_revision_objective_v1");
+  assert.equal(out.metadata.sequencerRevisionBrief.artifactType, "sequencer_revision_brief_v1");
+  assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
+  assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
+});
+
 test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

@@ -86,6 +86,9 @@ export async function executeApplyCore({
     }
 
     const analysisHandoff = getValidHandoff("analysis_handoff_v1");
+    const sequenceArtisticGoal = state.creative?.sequenceArtisticGoal || planHandoff?.metadata?.sequenceArtisticGoal || null;
+    const sequenceRevisionObjective = state.creative?.sequenceRevisionObjective || planHandoff?.metadata?.sequenceRevisionObjective || null;
+    const sequencingDesignHandoff = state.creative?.sequencingDesignHandoff || planHandoff?.metadata?.sequencingDesignHandoff || intentHandoff?.sequencingDesignHandoff || null;
     const sequenceAgentInput = buildSequenceAgentInput({
       requestId: `${orchestrationRun.id}-apply`,
       endpoint: state.endpoint,
@@ -97,6 +100,9 @@ export async function executeApplyCore({
       groupsById: state.sceneGraph?.groupsById || {},
       submodelsById: state.sceneGraph?.submodelsById || {},
       intentHandoff,
+      sequencingDesignHandoff,
+      sequenceArtisticGoal,
+      sequenceRevisionObjective,
       analysisHandoff,
       planningScope: {
         sections: getSelectedSections(),
@@ -140,6 +146,9 @@ export async function executeApplyCore({
     sequencerPlan = buildSequenceAgentPlan({
       analysisHandoff,
       intentHandoff,
+      sequencingDesignHandoff: sequenceAgentInput.sequencingDesignHandoff,
+      sequenceArtisticGoal: sequenceAgentInput.sequenceArtisticGoal,
+      sequenceRevisionObjective: sequenceAgentInput.sequenceRevisionObjective,
       sourceLines,
       baseRevision: state.draftBaseRevision,
       capabilityCommands: state.health.capabilityCommands || [],

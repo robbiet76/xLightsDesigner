@@ -99,6 +99,12 @@ export function validateSequenceAgentInput(payload = {}) {
   if (obj.analysisHandoff != null && !isPlainObject(obj.analysisHandoff)) {
     errors.push("analysisHandoff must be an object when provided");
   }
+  if (obj.sequenceArtisticGoal != null && !isPlainObject(obj.sequenceArtisticGoal)) {
+    errors.push("sequenceArtisticGoal must be an object when provided");
+  }
+  if (obj.sequenceRevisionObjective != null && !isPlainObject(obj.sequenceRevisionObjective)) {
+    errors.push("sequenceRevisionObjective must be an object when provided");
+  }
   if (obj.sequencingDesignHandoff != null) {
     if (!isPlainObject(obj.sequencingDesignHandoff)) {
       errors.push("sequencingDesignHandoff must be an object when provided");

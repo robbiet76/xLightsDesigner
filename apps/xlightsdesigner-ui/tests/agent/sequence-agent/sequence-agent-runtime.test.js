@@ -211,3 +211,33 @@ test("sequence agent input derives xlightsLayout group memberships from scene gr
   assert.ok(input.context.xlightsLayout.allTargetNames.includes("Wreath-01"));
   assert.ok(input.context.xlightsLayout.allTargetNames.includes("Wreathes"));
 });
+
+test("sequence agent input preserves artistic goal and revision objective artifacts", () => {
+  const input = buildSequenceAgentInput({
+    requestId: "req-artistic",
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    sequenceRevision: "rev-1",
+    sequenceSettings: {},
+    displayElements: [],
+    groupIds: [],
+    groupsById: {},
+    submodelsById: {},
+    intentHandoff: { role: "designer_dialog" },
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      ladderLevel: "section"
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section"
+    },
+    safety: {
+      timingOwnership: [],
+      manualXdLocks: [],
+      allowTimingWrites: true
+    }
+  });
+
+  assert.equal(input.sequenceArtisticGoal.artifactType, "sequence_artistic_goal_v1");
+  assert.equal(input.sequenceRevisionObjective.artifactType, "sequence_revision_objective_v1");
+});

@@ -22,6 +22,8 @@ export function buildSequenceAgentInput({
   xlightsLayout = null,
   intentHandoff = null,
   sequencingDesignHandoff = null,
+  sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null,
   analysisHandoff = null,
   planningScope = null,
   timingOwnership = [],
@@ -51,6 +53,8 @@ export function buildSequenceAgentInput({
     },
     intentHandoff: intentHandoff && typeof intentHandoff === "object" ? intentHandoff : null,
     sequencingDesignHandoff: sequencingDesignHandoff && typeof sequencingDesignHandoff === "object" ? sequencingDesignHandoff : null,
+    sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
+    sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
     analysisHandoff: analysisHandoff && typeof analysisHandoff === "object" ? analysisHandoff : null,
     planningScope: planningScope && typeof planningScope === "object" ? planningScope : null,
     safety: {
