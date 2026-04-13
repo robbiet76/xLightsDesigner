@@ -583,6 +583,14 @@ function buildRevisionBriefExecutionLine({ brief = {}, scope = {}, toneText = ""
   });
 }
 
+function mergePriorityTargets({ primary = [], secondary = [], fallback = [] } = {}) {
+  return [...new Set([
+    ...normArray(primary).map((row) => normText(row)),
+    ...normArray(secondary).map((row) => normText(row)),
+    ...normArray(fallback).map((row) => normText(row))
+  ].filter(Boolean))];
+}
+
 function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null, metadataAssignments = [], sequencerRevisionBrief = null } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
@@ -596,18 +604,28 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
     scope,
     toneText
   });
+  const briefPriorityTargets = mergePriorityTargets({
+    primary: normArray(sequencerRevisionBrief?.focusTargets),
+    secondary: normArray(sequencerRevisionBrief?.revisionTargets),
+    fallback: normArray(sequencerRevisionBrief?.targetScope)
+  });
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
+        const prioritizedTargetIds = mergePriorityTargets({
+          primary: briefPriorityTargets,
+          secondary: normArray(row?.targetIds),
+          fallback: normArray(scope?.targetIds)
+        });
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
-        const effectAvoidances = collectEffectAvoidancesForTargets(row?.targetIds || scope.targetIds, metadataAssignmentIndex);
-        const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(row?.targetIds || scope.targetIds, metadataAssignmentIndex);
+        const effectAvoidances = collectEffectAvoidancesForTargets(prioritizedTargetIds, metadataAssignmentIndex);
+        const visualHintBehaviorText = collectDefinedVisualHintBehaviorTextForTargets(prioritizedTargetIds, metadataAssignmentIndex);
         const effectName = inferEffectNameFromSectionPlan({
           section: row?.section,
           energy: sectionDirective?.energyTarget || row?.energy,
           density: sectionDirective?.densityTarget || row?.density,
           intentSummary: row?.intentSummary || scope.goal,
           effectHints: row?.effectHints,
-          targetIds: row?.targetIds || scope.targetIds,
+          targetIds: prioritizedTargetIds,
           displayElements,
           sectionDirective,
           availableEffects,
@@ -616,7 +634,7 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         });
         return buildStructuredExecutionLine({
           section: row?.section,
-          targetIds: row?.targetIds,
+          targetIds: prioritizedTargetIds,
           fallbackTargetIds: scope.targetIds,
           intentSummary: `${normText(row?.intentSummary || scope.goal)}${toneText}`,
           effectName

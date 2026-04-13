@@ -271,6 +271,7 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sequencerRevisionBrief.artifactType, "sequencer_revision_brief_v1");
   assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
+  assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
 });
 
 test("sequence_agent uses sequencer revision brief to seed execution lines when explicit lines are absent", () => {
@@ -319,6 +320,51 @@ test("sequence_agent uses sequencer revision brief to seed execution lines when 
   assert.match(out.executionLines[0], /Chorus 1/i);
   assert.match(out.executionLines[0], /MegaTree \+ Roofline/i);
   assert.match(out.executionLines[0], /apply Bars effect/i);
+});
+
+test("sequence_agent uses render-driven revision targets to bias effect-strategy seed lines", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Increase chorus energy on focal props",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        sections: ["Chorus 1"],
+        tagNames: ["focal"]
+      },
+      designSummary: "MegaTree leads while roofline supports the chorus lift."
+    },
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      scope: { goalLevel: "section" },
+      artisticIntent: {
+        leadTarget: "MegaTree",
+        supportTargets: ["Roofline"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: {
+        nextOwner: "shared",
+        revisionTargets: ["WindowLeft", "MegaTree"]
+      },
+      designerDirection: {
+        artisticCorrection: "Shift support contrast without losing the tree lead."
+      },
+      sequencerDirection: {
+        executionObjective: "Rework the next pass around the flagged rendered targets.",
+        focusTargets: ["ArchSingle"]
+      }
+    },
+    sourceLines: ["Chorus 1 / MegaTree / increase pulse contrast and faster motion"],
+    baseRevision: "rev-57",
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.match(out.executionLines[0], /ArchSingle \+ WindowLeft \+ MegaTree \+ Roofline/i);
 });
 
 test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {

@@ -27,9 +27,9 @@ export function buildSequencerRevisionBrief({
   const scope = isPlainObject(objective?.scope) ? objective.scope : {};
 
   const targetScope = [...new Set([
-    ...arr(designHandoff?.scope?.targetIds),
+    ...arr(sequencerDirection?.focusTargets),
     ...arr(scope?.revisionTargets),
-    ...arr(sequencerDirection?.focusTargets)
+    ...arr(designHandoff?.scope?.targetIds)
   ].map((row) => str(row)).filter(Boolean))];
   const sectionScope = arr(designHandoff?.scope?.sections);
 

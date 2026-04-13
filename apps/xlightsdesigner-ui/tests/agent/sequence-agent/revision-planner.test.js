@@ -51,7 +51,7 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.equal(out.nextOwner, "shared");
   assert.equal(out.leadTarget, "ArchSingle");
   assert.deepEqual(out.supportTargets, ["MatrixLowDensity"]);
-  assert.deepEqual(out.targetScope, ["ArchSingle", "MatrixLowDensity", "MegaTree", "Roofline"]);
+  assert.deepEqual(out.targetScope, ["MatrixLowDensity", "MegaTree", "Roofline", "ArchSingle"]);
   assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline"]);
   assert.deepEqual(out.focusTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.sectionScope, ["Chorus 1"]);
