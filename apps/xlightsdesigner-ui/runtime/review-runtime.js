@@ -58,6 +58,7 @@ export async function executeApplyCore({
     buildChatArtifactCard,
     getTeamChatSpeakerLabel,
     buildCurrentDesignSceneContext,
+    buildCurrentMusicDesignContext,
     buildCurrentRenderObservation,
     collectPostApplyRenderObservation = async () => null
   } = deps;
@@ -298,6 +299,9 @@ export async function executeApplyCore({
     const designSceneContext = typeof buildCurrentDesignSceneContext === "function"
       ? buildCurrentDesignSceneContext()
       : null;
+    const musicDesignContext = typeof buildCurrentMusicDesignContext === "function"
+      ? buildCurrentMusicDesignContext()
+      : null;
     state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
       ? state.sequenceAgentRuntime
       : {};
@@ -331,7 +335,8 @@ export async function executeApplyCore({
     const renderCritiqueContext = buildRenderCritiqueContext({
       renderObservation,
       designSceneContext,
-      sequencingDesignHandoff
+      sequencingDesignHandoff,
+      musicDesignContext
     });
     state.sequenceAgentRuntime.renderCritiqueContext = renderCritiqueContext;
     state.creative = state.creative && typeof state.creative === "object" ? state.creative : {};

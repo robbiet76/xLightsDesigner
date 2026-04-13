@@ -44,6 +44,9 @@ test("buildRenderCritiqueContext merges render observation with design and hando
     sequencingDesignHandoff: {
       artifactId: "handoff-1",
       designSummary: "MegaTree leads while roofline supports the chorus lift.",
+      scope: {
+        sections: ["Chorus"]
+      },
       focusPlan: {
         primaryTargets: ["MegaTree"],
         secondaryTargets: ["Roofline"]
@@ -52,6 +55,12 @@ test("buildRenderCritiqueContext merges render observation with design and hando
         {
           preferredVisualFamilies: ["spiral_flow", "soft_texture"]
         }
+      ]
+    },
+    musicDesignContext: {
+      artifactId: "music-1",
+      sectionArc: [
+        { label: "Chorus", energy: "high", density: "dense" }
       ]
     }
   });
@@ -71,6 +80,9 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.observed.coverageRead, "partial");
   assert.equal(out.observed.leftRightBalanceRead, "imbalanced");
   assert.equal(out.observed.topBottomBalanceRead, "balanced");
+  assert.equal(out.source.musicDesignContextArtifactId, "music-1");
+  assert.equal(out.expected.musicEnergyRead, "high");
+  assert.equal(out.expected.musicDensityRead, "dense");
   assert.equal(out.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(out.comparison.leadIsKnownFocalCandidate, true);
   assert.deepEqual(out.comparison.observedFocusTargets, ["MegaTree"]);
@@ -80,6 +92,47 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.comparison.renderHasDisplayGaps, true);
   assert.equal(out.comparison.renderIsLeftRightImbalanced, true);
   assert.deepEqual(out.comparison.adjacentWindowComparisons, []);
+});
+
+test("buildRenderCritiqueContext uses music section energy to infer broad coverage expectation", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      source: {
+        windowCount: 1
+      },
+      windows: [
+        { label: "Chorus" }
+      ],
+      macro: {
+        activeModelNames: ["MegaTree"],
+        activeFamilyTotals: { Tree: 1 },
+        leadModel: "MegaTree",
+        leadModelShare: 1,
+        meanSceneSpreadRatio: 0.018,
+        activeCoverageRatio: 0.12
+      }
+    },
+    designSceneContext: {
+      focalCandidates: ["MegaTree"],
+      coverageDomains: { broad: [], detail: [] }
+    },
+    sequencingDesignHandoff: {
+      designSummary: "Build to the chorus."
+    },
+    musicDesignContext: {
+      artifactId: "music-chorus",
+      sectionArc: [
+        { label: "Verse", energy: "medium", density: "moderate" },
+        { label: "Chorus", energy: "high", density: "dense" }
+      ]
+    }
+  });
+
+  assert.equal(out.expected.musicSections.length, 1);
+  assert.equal(out.expected.musicSections[0].label, "Chorus");
+  assert.equal(out.comparison.musicalLiftExpected, true);
+  assert.equal(out.comparison.broadCoverageExpected, true);
+  assert.equal(out.comparison.renderCoverageTooSparse, true);
 });
 
 test("buildRenderCritiqueContext falls back to scene focal candidates when handoff focus is missing", () => {

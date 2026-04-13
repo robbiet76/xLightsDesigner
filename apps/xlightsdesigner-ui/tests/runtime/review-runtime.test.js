@@ -611,6 +611,12 @@ test("executeApplyCore prefers render critique refresh when render observation i
           broad: ["AllModels"],
           detail: ["MegaTree/Star"]
         }
+      }),
+      buildCurrentMusicDesignContext: () => ({
+        artifactId: "music-1",
+        sectionArc: [
+          { label: "Chorus 1", energy: "high", density: "dense" }
+        ]
       })
     },
     callbacks: {
@@ -627,6 +633,7 @@ test("executeApplyCore prefers render critique refresh when render observation i
 
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.artifactType, "sequence_render_critique_context_v1");
   assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, false);
+  assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.comparison.musicalLiftExpected, true);
   assert.match(state.creative.sequenceArtisticGoal.evaluationLens.comparisonQuestions[0], /Rendered lead does not match the intended primary focus/i);
   assert.match(state.creative.sequenceRevisionObjective.sequencerDirection.executionObjective, /rendered composition problem/i);
 });

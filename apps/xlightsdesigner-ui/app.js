@@ -8029,6 +8029,8 @@ applyReviewRuntime = createApplyReviewRuntime({
   buildApplyHistoryEntry: (...args) => projectHistoryRuntime.buildApplyHistoryEntry(...args),
   buildChatArtifactCard,
   getTeamChatSpeakerLabel,
+  buildCurrentDesignSceneContext,
+  buildCurrentMusicDesignContext,
   buildCurrentRenderObservation,
   collectPostApplyRenderObservation,
   buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),

@@ -14,6 +14,22 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
+function normalizeEnergyLabel(value = "") {
+  const lower = str(value).toLowerCase();
+  if (!lower) return "unknown";
+  if (/(low|quiet|soft|gentle|restrained)/.test(lower)) return "low";
+  if (/(high|big|dense|intense|peak|lift)/.test(lower)) return "high";
+  return "medium";
+}
+
+function normalizeDensityLabel(value = "") {
+  const lower = str(value).toLowerCase();
+  if (!lower) return "unknown";
+  if (/(sparse|open|light|restrained)/.test(lower)) return "sparse";
+  if (/(dense|busy|thick|full|broad)/.test(lower)) return "dense";
+  return "moderate";
+}
+
 function pickPrimaryFocusTargets(handoff = null, designSceneContext = null) {
   const focusPlan = isPlainObject(handoff?.focusPlan) ? handoff.focusPlan : {};
   const fromHandoff = uniqueStrings(focusPlan.primaryTargets || focusPlan.primaryTargetIds);
@@ -80,10 +96,58 @@ function buildWindowComparisons(windows = []) {
   return comparisons;
 }
 
+function buildMusicSectionIndex(musicDesignContext = null) {
+  const sectionArc = arr(musicDesignContext?.sectionArc);
+  const index = new Map();
+  for (const row of sectionArc) {
+    const label = str(row?.label);
+    if (!label) continue;
+    index.set(label.toLowerCase(), {
+      label,
+      energy: normalizeEnergyLabel(row?.energy),
+      density: normalizeDensityLabel(row?.density)
+    });
+  }
+  return index;
+}
+
+function collectObservedWindowLabels(observation = null) {
+  const labels = uniqueStrings(arr(observation?.windows).map((row) => row?.label));
+  if (labels.length) return labels;
+  return uniqueStrings(arr(observation?.source?.windows).map((row) => row?.label));
+}
+
+function summarizeMusicExpectation({ musicDesignContext = null, renderObservation = null, sequencingDesignHandoff = null } = {}) {
+  const musicIndex = buildMusicSectionIndex(musicDesignContext);
+  const candidateLabels = uniqueStrings([
+    ...collectObservedWindowLabels(renderObservation),
+    ...arr(sequencingDesignHandoff?.scope?.sections)
+  ]);
+  const matchedSections = candidateLabels
+    .map((label) => musicIndex.get(str(label).toLowerCase()))
+    .filter(Boolean);
+  const energies = uniqueStrings(matchedSections.map((row) => row.energy));
+  const densities = uniqueStrings(matchedSections.map((row) => row.density));
+  return {
+    matchedSections,
+    highestEnergy: energies.includes("high") ? "high" : (energies.includes("medium") ? "medium" : (energies[0] || "unknown")),
+    densityBias: densities.includes("dense") ? "dense" : (densities.includes("moderate") ? "moderate" : (densities[0] || "unknown"))
+  };
+}
+
+function toExpectedMusicSections(rows = []) {
+  return arr(rows).map((row) => ({
+    label: str(row?.label),
+    energy: normalizeEnergyLabel(row?.energy),
+    density: normalizeDensityLabel(row?.density)
+  })).filter((row) => row.label);
+}
+
 export function buildRenderCritiqueContext({
   renderObservation = null,
   designSceneContext = null,
-  sequencingDesignHandoff = null
+  sequencingDesignHandoff = null,
+  musicDesignContext = null
 } = {}) {
   const observation = isPlainObject(renderObservation) ? renderObservation : null;
   if (!observation) return null;
@@ -115,8 +179,20 @@ export function buildRenderCritiqueContext({
   const densityTargets = uniqueStrings(
     arr(handoff?.sectionDirectives).map((row) => str(row?.densityTarget))
   ).map((row) => row.toLowerCase());
-  const broadCoverageExpected = broadCoverageDomains.length > 0 || densityTargets.some((row) => ["high", "dense", "full", "broad"].includes(row));
-  const restrainedCoverageExpected = densityTargets.some((row) => ["low", "sparse", "restrained"].includes(row));
+  const musicExpectation = summarizeMusicExpectation({
+    musicDesignContext,
+    renderObservation: observation,
+    sequencingDesignHandoff: handoff
+  });
+  const broadCoverageExpected =
+    broadCoverageDomains.length > 0 ||
+    densityTargets.some((row) => ["high", "dense", "full", "broad"].includes(row)) ||
+    musicExpectation.highestEnergy === "high" ||
+    musicExpectation.densityBias === "dense";
+  const restrainedCoverageExpected =
+    densityTargets.some((row) => ["low", "sparse", "restrained"].includes(row)) ||
+    musicExpectation.highestEnergy === "low" ||
+    musicExpectation.densityBias === "sparse";
 
   return {
     artifactType: "sequence_render_critique_context_v1",
@@ -124,7 +200,8 @@ export function buildRenderCritiqueContext({
     source: {
       renderObservationArtifactId: str(observation?.artifactId),
       designSceneContextArtifactId: str(scene?.artifactId),
-      sequencingDesignHandoffArtifactId: str(handoff?.artifactId)
+      sequencingDesignHandoffArtifactId: str(handoff?.artifactId),
+      musicDesignContextArtifactId: str(musicDesignContext?.artifactId)
     },
     expected: {
       primaryFocusTargetIds,
@@ -132,7 +209,10 @@ export function buildRenderCritiqueContext({
       preferredVisualFamilies,
       broadCoverageDomains,
       detailCoverageDomains,
-      designSummary: str(handoff?.designSummary)
+      designSummary: str(handoff?.designSummary),
+      musicSections: toExpectedMusicSections(musicExpectation.matchedSections),
+      musicEnergyRead: musicExpectation.highestEnergy,
+      musicDensityRead: musicExpectation.densityBias
     },
     observed: {
       activeModelNames: observedActiveModels,
@@ -167,6 +247,8 @@ export function buildRenderCritiqueContext({
       leadIsKnownFocalCandidate,
       broadCoverageExpected,
       restrainedCoverageExpected,
+      musicalLiftExpected: musicExpectation.highestEnergy === "high" || musicExpectation.densityBias === "dense",
+      restrainedMomentExpected: musicExpectation.highestEnergy === "low" || musicExpectation.densityBias === "sparse",
       renderUsesBroadScene: spreadRatio >= 0.03,
       renderUsesTightFocus: spreadRatio < 0.01,
       renderCoverageTooSparse: broadCoverageExpected && Number(macro.activeCoverageRatio || 0) < 0.2,
