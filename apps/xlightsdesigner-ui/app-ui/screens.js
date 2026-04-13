@@ -507,7 +507,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>${activeModels.length ? `Active: ${escapeHtml(activeModels.join(", "))}` : "No active rendered models captured."}</p>
             <p>${activeFamilies.length ? `Families: ${escapeHtml(activeFamilies.join(", "))}` : "No active family summary captured."}</p>
             <p>${renderObservation ? `Sampling: ${escapeHtml(String(renderObservation?.source?.samplingMode || "unknown"))} / ${escapeHtml(String(renderObservation?.source?.sampledModelCount || 0))} models` : "No render observation snapshot loaded."}</p>
-            <p>${renderCritiqueContext ? `Breadth: ${escapeHtml(String(renderCritiqueContext?.observed?.breadthRead || "unknown"))} / lead focus match: ${renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus ? "yes" : "no"}` : "No render critique context loaded."}</p>
+            <p>${renderCritiqueContext ? `Breadth: ${escapeHtml(String(renderCritiqueContext?.observed?.breadthRead || "unknown"))} / temporal: ${escapeHtml(String(renderCritiqueContext?.observed?.temporalRead || "unknown"))} / lead focus match: ${renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus ? "yes" : "no"}` : "No render critique context loaded."}</p>
             <p>${renderFocusTargets.length ? `Expected focus: ${escapeHtml(renderFocusTargets.join(", "))}` : "No expected render focus targets."}</p>
             ${missingFocusTargets.length ? `<p>Missing focus: ${escapeHtml(missingFocusTargets.join(", "))}</p>` : ""}
           </div>

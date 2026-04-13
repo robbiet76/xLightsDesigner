@@ -184,6 +184,7 @@ async function main() {
     leadModel: renderObservation?.macro?.leadModel ?? '',
     activeModelCount: Array.isArray(renderObservation?.macro?.activeModelNames) ? renderObservation.macro.activeModelNames.length : 0,
     breadthRead: renderCritiqueContext?.observed?.breadthRead ?? '',
+    temporalRead: renderCritiqueContext?.observed?.temporalRead ?? '',
     leadMatchesPrimaryFocus: renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus ?? null
   }, null, 2) + '\n');
 

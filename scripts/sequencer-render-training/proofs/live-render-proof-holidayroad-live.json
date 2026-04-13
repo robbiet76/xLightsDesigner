@@ -13,5 +13,6 @@
   "leadModel": "HiddenTree",
   "activeModelCount": 4,
   "breadthRead": "broad",
+  "temporalRead": "evolving",
   "leadMatchesPrimaryFocus": false
 }
