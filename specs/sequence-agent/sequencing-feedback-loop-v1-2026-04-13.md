@@ -203,6 +203,16 @@ Must be able to answer:
 
 Critique must proceed from broad structure to fine detail.
 
+Interpretation rule:
+- macro and section metrics such as spread, balance, coverage, density, and gaps are descriptive observations first
+- they must not be treated as universal targets or optimized toward fixed ideal percentages
+- they only become critique signals when they conflict with:
+  - the current artistic goal
+  - section role
+  - display-use intent
+  - music context
+- intentional asymmetry, restraint, or localized focus must remain valid outcomes when the design calls for them
+
 Required review order:
 1. `macro`
 - whole sequence or whole-scene balance

@@ -151,3 +151,32 @@ For the current proof phase:
 - split the output into `designerSummary` and `sequencerSummary`
 
 That is enough to start feeding both agents from the same render checkpoint without overcommitting to a deeper critique system too early.
+
+## Metric Interpretation Guardrail
+
+Observation metrics such as:
+- left/right balance
+- top/bottom balance
+- coverage ratio
+- coverage gaps
+- breadth
+- density
+
+must be treated as descriptive inputs, not universal optimization targets.
+
+Rules:
+- do not define fixed ideal percentages for these metrics at the critique level
+- do not assume symmetric coverage is always better
+- do not assume fuller coverage is always better
+- do not assume fewer gaps are always better
+
+These metrics only become weaknesses when they contradict:
+- the current artistic goal
+- the intended section role
+- the intended display-use pattern
+- the current musical moment
+
+Examples:
+- a right-side-focused phrase may intentionally fail left/right balance
+- a restrained verse may intentionally leave broad parts of the display unused
+- a focal solo moment may intentionally avoid broad family participation
