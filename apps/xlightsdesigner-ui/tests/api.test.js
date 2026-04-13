@@ -5,6 +5,7 @@ import {
   getDefaultEndpoint,
   getOpenSequence,
   getMediaStatus,
+  getRenderedSequenceSamples,
   openSequence,
   getTimingMarks,
   listEffects
@@ -172,6 +173,50 @@ test("listEffects maps owned effects window rows to legacy effect list shape", a
     assert.deepEqual(body.data.effects, [
       { layerNumber: 2, effectName: "Bars", startMs: 0, endMs: 1000, layerIndex: 2 }
     ]);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("getRenderedSequenceSamples uses owned route and preserves sparse sample payload", async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: String(options?.method || "GET"), body: String(options?.body || "") });
+    return jsonResponse({
+      ok: true,
+      statusCode: 200,
+      data: {
+        sequencePath: "/show/Test.xsq",
+        revisionToken: "rev-2",
+        fseqPath: "/show/Test.fseq",
+        frameMs: 50,
+        totalFrames: 100,
+        totalChannels: 1200,
+        sampledFrameCount: 2,
+        sampledChannelCount: 6,
+        sampleEncoding: "base64_packed_channel_ranges_v1",
+        channelRanges: [{ startChannel: 10, channelCount: 3 }, { startChannel: 100, channelCount: 3 }],
+        samples: [
+          { frameIndex: 0, frameTimeMs: 0, dataBase64: "AAAA" },
+          { frameIndex: 5, frameTimeMs: 250, dataBase64: "BBBB" }
+        ]
+      }
+    });
+  };
+  try {
+    const body = await getRenderedSequenceSamples("http://127.0.0.1:49915/xlightsdesigner/api", {
+      startMs: 0,
+      endMs: 250,
+      maxFrames: 2,
+      channelRanges: [{ startChannel: 10, channelCount: 3 }, { startChannel: 100, channelCount: 3 }]
+    });
+    assert.equal(calls[0].url, "http://127.0.0.1:49915/xlightsdesigner/api/sequence/render-samples");
+    assert.equal(calls[0].method, "POST");
+    assert.match(calls[0].body, /\"channelRanges\":\[/);
+    assert.equal(body.data.sampleEncoding, "base64_packed_channel_ranges_v1");
+    assert.equal(body.data.samples.length, 2);
+    assert.equal(body.data.channelRanges[1].startChannel, 100);
   } finally {
     global.fetch = originalFetch;
   }

@@ -302,6 +302,7 @@ export async function pingCapabilities(endpoint) {
           "sequence.getOpen",
           "sequence.getRevision",
           "sequence.getSettings",
+          "sequence.getRenderSamples",
           "sequence.open",
           "sequence.create",
           "sequence.save",
@@ -442,6 +443,16 @@ export async function saveSequence(endpoint, file = null) {
       }
     };
   }
+}
+
+export async function getRenderedSequenceSamples(endpoint, params = {}) {
+  if (isOwnedEndpoint(endpoint)) {
+    return readOwnedPost(endpoint, "/sequence/render-samples", params, {
+      command: "sequence.getRenderSamples",
+      queued: false
+    });
+  }
+  return postCommand(endpoint, "sequence.getRenderSamples", params);
 }
 
 export async function closeSequence(endpoint, force = true, quiet = false) {
