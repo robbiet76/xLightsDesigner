@@ -5,7 +5,9 @@ import {
   buildSequenceArtisticGoalFromDesignHandoff,
   buildSequenceRevisionObjectiveFromArtifacts,
   refreshSequenceArtisticGoalFromPracticalValidation,
-  refreshSequenceRevisionObjectiveFromPracticalValidation
+  refreshSequenceRevisionObjectiveFromPracticalValidation,
+  refreshSequenceArtisticGoalFromRenderCritique,
+  refreshSequenceRevisionObjectiveFromRenderCritique
 } from "../../../agent/designer-dialog/sequence-artifacts.js";
 
 function sampleHandoff() {
@@ -145,4 +147,91 @@ test("refreshSequenceRevisionObjectiveFromPracticalValidation updates sequencer 
   assert.equal(out.scope.nextOwner, "shared");
   assert.match(out.sequencerDirection.executionObjective, /section placement density too low/i);
   assert.ok(out.sequencerDirection.blockedMoves.includes("section_density_scale"));
+});
+
+test("refreshSequenceArtisticGoalFromRenderCritique updates artistic question from rendered outcome", () => {
+  const prior = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const out = refreshSequenceArtisticGoalFromRenderCritique({
+    priorArtisticGoal: prior,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      source: {
+        renderObservationArtifactId: "obs-1"
+      },
+      observed: {
+        leadModel: "Roofline",
+        breadthRead: "tight"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: false,
+        missingPrimaryFocusTargets: ["MegaTree"],
+        broadCoverageExpected: true,
+        renderUsesBroadScene: false
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.match(out.evaluationLens.comparisonQuestions[0], /Rendered lead does not match the intended primary focus/i);
+  assert.ok(out.evaluationLens.mustImprove.some((row) => /Bring intended focus targets into the rendered pass/i.test(String(row))));
+  assert.equal(out.traceability.renderCritiqueArtifactId, "obs-1");
+});
+
+test("refreshSequenceRevisionObjectiveFromRenderCritique updates sequencer objective from rendered outcome", () => {
+  const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const priorObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+  const refreshedGoal = refreshSequenceArtisticGoalFromRenderCritique({
+    priorArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "Roofline",
+        breadthRead: "tight"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: false,
+        missingPrimaryFocusTargets: ["MegaTree"],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: true
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+  const out = refreshSequenceRevisionObjectiveFromRenderCritique({
+    priorRevisionObjective: priorObjective,
+    sequenceArtisticGoal: refreshedGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "Roofline",
+        breadthRead: "broad"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: false,
+        missingPrimaryFocusTargets: ["MegaTree"],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: true
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.equal(out.scope.nextOwner, "shared");
+  assert.match(out.sequencerDirection.executionObjective, /rendered composition problem/i);
+  assert.ok(out.sequencerDirection.blockedMoves.some((row) => /Rendered lead does not match the intended primary focus/i.test(String(row))));
 });

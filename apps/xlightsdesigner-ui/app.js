@@ -417,7 +417,9 @@ const defaultState = {
   sequenceAgentRuntime: {
     timingTrackPolicies: {},
     timingGeneratedSignatures: {},
-    timingTrackProvenance: {}
+    timingTrackProvenance: {},
+    renderObservation: null,
+    renderCritiqueContext: null
   },
   savePathInput: "",
   lastApplyBackupPath: "",
@@ -1438,7 +1440,15 @@ function buildSequenceSidecarDocument() {
           timingTrackProvenance:
             state.sequenceAgentRuntime?.timingTrackProvenance && typeof state.sequenceAgentRuntime.timingTrackProvenance === "object"
               ? state.sequenceAgentRuntime.timingTrackProvenance
-              : {}
+              : {},
+          renderObservation:
+            state.sequenceAgentRuntime?.renderObservation && typeof state.sequenceAgentRuntime.renderObservation === "object"
+              ? state.sequenceAgentRuntime.renderObservation
+              : null,
+          renderCritiqueContext:
+            state.sequenceAgentRuntime?.renderCritiqueContext && typeof state.sequenceAgentRuntime.renderCritiqueContext === "object"
+              ? state.sequenceAgentRuntime.renderCritiqueContext
+              : null
         }
       : structuredClone(defaultState.sequenceAgentRuntime),
     creative: state.creative || {},
@@ -1494,7 +1504,13 @@ function applySequenceSidecarDocument(doc) {
       : {},
     timingTrackProvenance: runtimeDoc.timingTrackProvenance && typeof runtimeDoc.timingTrackProvenance === "object"
       ? { ...runtimeDoc.timingTrackProvenance }
-      : {}
+      : {},
+    renderObservation: runtimeDoc.renderObservation && typeof runtimeDoc.renderObservation === "object"
+      ? runtimeDoc.renderObservation
+      : null,
+    renderCritiqueContext: runtimeDoc.renderCritiqueContext && typeof runtimeDoc.renderCritiqueContext === "object"
+      ? runtimeDoc.renderCritiqueContext
+      : null
   };
   if (doc?.metadata && typeof doc.metadata === "object") state.metadata = { ...state.metadata, ...doc.metadata };
   if (Array.isArray(doc?.versions) && doc.versions.length) state.versions = doc.versions;
@@ -2185,7 +2201,15 @@ function applyProjectSnapshot(snapshot) {
         timingTrackProvenance:
           snapshot.sequenceAgentRuntime.timingTrackProvenance && typeof snapshot.sequenceAgentRuntime.timingTrackProvenance === "object"
             ? { ...snapshot.sequenceAgentRuntime.timingTrackProvenance }
-            : {}
+            : {},
+        renderObservation:
+          snapshot.sequenceAgentRuntime.renderObservation && typeof snapshot.sequenceAgentRuntime.renderObservation === "object"
+            ? snapshot.sequenceAgentRuntime.renderObservation
+            : null,
+        renderCritiqueContext:
+          snapshot.sequenceAgentRuntime.renderCritiqueContext && typeof snapshot.sequenceAgentRuntime.renderCritiqueContext === "object"
+            ? snapshot.sequenceAgentRuntime.renderCritiqueContext
+            : null
       }
     : structuredClone(defaultState.sequenceAgentRuntime);
   state.savePathInput = snapshot.savePathInput || state.savePathInput;

@@ -2,8 +2,11 @@ import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practi
 import { buildTimingTrackProvenanceRecord } from "./timing-track-provenance.js";
 import {
   refreshSequenceArtisticGoalFromPracticalValidation,
-  refreshSequenceRevisionObjectiveFromPracticalValidation
+  refreshSequenceRevisionObjectiveFromPracticalValidation,
+  refreshSequenceArtisticGoalFromRenderCritique,
+  refreshSequenceRevisionObjectiveFromRenderCritique
 } from "../agent/designer-dialog/sequence-artifacts.js";
+import { buildRenderCritiqueContext } from "../agent/sequence-agent/render-critique-context.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -53,7 +56,8 @@ export async function executeApplyCore({
     applyAcceptedProposalToDirectorProfile,
     buildApplyHistoryEntry,
     buildChatArtifactCard,
-    getTeamChatSpeakerLabel
+    getTeamChatSpeakerLabel,
+    buildCurrentDesignSceneContext
   } = deps;
   const {
     pushSequenceAgentContractDiagnostic = () => {},
@@ -289,18 +293,47 @@ export async function executeApplyCore({
       planHandoff,
       verification
     });
+    const designSceneContext = typeof buildCurrentDesignSceneContext === "function"
+      ? buildCurrentDesignSceneContext()
+      : null;
+    state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+      ? state.sequenceAgentRuntime
+      : {};
+    const renderObservation = state.sequenceAgentRuntime?.renderObservation
+      && typeof state.sequenceAgentRuntime.renderObservation === "object"
+      ? state.sequenceAgentRuntime.renderObservation
+      : null;
+    const renderCritiqueContext = buildRenderCritiqueContext({
+      renderObservation,
+      designSceneContext,
+      sequencingDesignHandoff
+    });
+    state.sequenceAgentRuntime.renderCritiqueContext = renderCritiqueContext;
     state.creative = state.creative && typeof state.creative === "object" ? state.creative : {};
-    state.creative.sequenceArtisticGoal = refreshSequenceArtisticGoalFromPracticalValidation({
-      priorArtisticGoal: sequenceArtisticGoal,
-      sequencingDesignHandoff,
-      practicalValidation
-    });
-    state.creative.sequenceRevisionObjective = refreshSequenceRevisionObjectiveFromPracticalValidation({
-      priorRevisionObjective: sequenceRevisionObjective,
-      sequenceArtisticGoal: state.creative.sequenceArtisticGoal,
-      sequencingDesignHandoff,
-      practicalValidation
-    });
+    state.creative.sequenceArtisticGoal = renderCritiqueContext
+      ? refreshSequenceArtisticGoalFromRenderCritique({
+          priorArtisticGoal: sequenceArtisticGoal,
+          sequencingDesignHandoff,
+          renderCritiqueContext
+        })
+      : refreshSequenceArtisticGoalFromPracticalValidation({
+          priorArtisticGoal: sequenceArtisticGoal,
+          sequencingDesignHandoff,
+          practicalValidation
+        });
+    state.creative.sequenceRevisionObjective = renderCritiqueContext
+      ? refreshSequenceRevisionObjectiveFromRenderCritique({
+          priorRevisionObjective: sequenceRevisionObjective,
+          sequenceArtisticGoal: state.creative.sequenceArtisticGoal,
+          sequencingDesignHandoff,
+          renderCritiqueContext
+        })
+      : refreshSequenceRevisionObjectiveFromPracticalValidation({
+          priorRevisionObjective: sequenceRevisionObjective,
+          sequenceArtisticGoal: state.creative.sequenceArtisticGoal,
+          sequencingDesignHandoff,
+          practicalValidation
+        });
     applyResult = buildSequenceAgentApplyResult({
       planId: String(planHandoff?.planId || ""),
       status: "applied",
@@ -381,9 +414,6 @@ export async function executeApplyCore({
     }
     setSequenceTimingTrackPoliciesState(timingTrackPolicies);
     setSequenceTimingGeneratedSignaturesState(timingGeneratedSignatures);
-    state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
-      ? state.sequenceAgentRuntime
-      : {};
     state.sequenceAgentRuntime.timingTrackProvenance = timingTrackProvenance;
     state.flags.proposalStale = false;
     if (String(intentHandoffRecord?.producer || "") === "designer_dialog" && state.creative?.proposalBundle && typeof applyAcceptedProposalToDirectorProfile === "function") {

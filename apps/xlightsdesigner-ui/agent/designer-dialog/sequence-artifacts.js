@@ -152,6 +152,33 @@ function collectValidationFailures(practicalValidation = null) {
     .filter((row) => row.kind || row.target || row.detail);
 }
 
+function collectRenderCritiqueFindings(renderCritiqueContext = null) {
+  const context = isPlainObject(renderCritiqueContext) ? renderCritiqueContext : null;
+  if (!context) return [];
+  const comparison = isPlainObject(context.comparison) ? context.comparison : {};
+  const observed = isPlainObject(context.observed) ? context.observed : {};
+  const expected = isPlainObject(context.expected) ? context.expected : {};
+  const findings = [];
+
+  if (!comparison.leadMatchesPrimaryFocus) {
+    findings.push("Rendered lead does not match the intended primary focus.");
+  }
+  if (arr(comparison.missingPrimaryFocusTargets).length) {
+    findings.push(`Bring intended focus targets into the rendered pass: ${arr(comparison.missingPrimaryFocusTargets).join(", ")}.`);
+  }
+  if (comparison.broadCoverageExpected && !comparison.renderUsesBroadScene) {
+    findings.push("Scene breadth is too tight for the intended broad coverage.");
+  }
+  if (!comparison.broadCoverageExpected && comparison.renderUsesBroadScene) {
+    findings.push("Scene spread is broader than the intended focus.");
+  }
+  if (str(observed.breadthRead) === "tight" && arr(expected.supportTargetIds).length) {
+    findings.push("Support targets are not contributing enough to the rendered scene.");
+  }
+
+  return uniqueStrings(findings);
+}
+
 export function refreshSequenceArtisticGoalFromPracticalValidation({
   priorArtisticGoal = null,
   sequencingDesignHandoff = null,
@@ -232,6 +259,86 @@ export function refreshSequenceRevisionObjectiveFromPracticalValidation({
     ...arr(base?.successChecks),
     currentPrompt || "",
     `Validation failure addressed: ${failureText}`
+  ]);
+  return base;
+}
+
+export function refreshSequenceArtisticGoalFromRenderCritique({
+  priorArtisticGoal = null,
+  sequencingDesignHandoff = null,
+  renderCritiqueContext = null
+} = {}) {
+  const base = isPlainObject(priorArtisticGoal)
+    ? structuredClone(priorArtisticGoal)
+    : buildSequenceArtisticGoalFromDesignHandoff({ sequencingDesignHandoff });
+  if (!base) return null;
+
+  const findings = collectRenderCritiqueFindings(renderCritiqueContext);
+  if (!findings.length) return base;
+  const comparisonQuestion = `Does the next pass resolve this rendered composition problem: ${findings[0]}`;
+
+  base.evaluationLens = {
+    ...(isPlainObject(base.evaluationLens) ? base.evaluationLens : {}),
+    mustImprove: uniqueStrings([
+      ...arr(base?.evaluationLens?.mustImprove),
+      ...findings
+    ]),
+    comparisonQuestions: [comparisonQuestion]
+  };
+  base.traceability = {
+    ...(isPlainObject(base.traceability) ? base.traceability : {}),
+    renderCritiqueArtifactId: str(renderCritiqueContext?.source?.renderObservationArtifactId),
+    renderCritiqueLeadModel: str(renderCritiqueContext?.observed?.leadModel),
+    renderCritiqueBreadthRead: str(renderCritiqueContext?.observed?.breadthRead)
+  };
+  return base;
+}
+
+export function refreshSequenceRevisionObjectiveFromRenderCritique({
+  priorRevisionObjective = null,
+  sequenceArtisticGoal = null,
+  sequencingDesignHandoff = null,
+  renderCritiqueContext = null
+} = {}) {
+  const base = isPlainObject(priorRevisionObjective)
+    ? structuredClone(priorRevisionObjective)
+    : buildSequenceRevisionObjectiveFromArtifacts({
+        sequenceArtisticGoal,
+        sequencingDesignHandoff
+      });
+  if (!base) return null;
+
+  const findings = collectRenderCritiqueFindings(renderCritiqueContext);
+  if (!findings.length) return base;
+  const primaryFinding = findings[0];
+  const currentPrompt = str(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions?.[0]);
+
+  base.scope = {
+    ...(isPlainObject(base.scope) ? base.scope : {}),
+    nextOwner: "shared"
+  };
+  base.designerDirection = {
+    ...(isPlainObject(base.designerDirection) ? base.designerDirection : {}),
+    artisticCorrection: currentPrompt || primaryFinding,
+    mustAvoid: uniqueStrings([
+      ...arr(base?.designerDirection?.mustAvoid),
+      ...findings
+    ]),
+    evaluationPrompt: currentPrompt || primaryFinding
+  };
+  base.sequencerDirection = {
+    ...(isPlainObject(base.sequencerDirection) ? base.sequencerDirection : {}),
+    executionObjective: `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`,
+    blockedMoves: uniqueStrings([
+      ...arr(base?.sequencerDirection?.blockedMoves),
+      ...findings
+    ]),
+    revisionBatchShape: `${str(base?.ladderLevel || "section")}_pass`
+  };
+  base.successChecks = uniqueStrings([
+    ...arr(base?.successChecks),
+    currentPrompt || "",
+    `Rendered composition issue addressed: ${primaryFinding}`
   ]);
   return base;
 }
