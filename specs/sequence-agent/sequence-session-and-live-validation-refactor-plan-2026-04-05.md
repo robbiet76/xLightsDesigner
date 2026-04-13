@@ -159,8 +159,9 @@ Reduce coupling between the production app and the live eval framework.
 
 Production app should expose only small stable primitives:
 
-1. open sequence
+1. launch xLights and wait for automation readiness
 2. set show folder
+3. open sequence
 3. set audio path
 4. refresh from xLights
 5. run analysis
@@ -170,6 +171,17 @@ Production app should expose only small stable primitives:
 9. fetch runtime snapshots
 
 Live suites should orchestrate those primitives externally.
+
+### xLights Operating Rule
+
+When automation needs a different show folder or sequence:
+
+1. launch xLights first
+2. wait for automation readiness on the active xLights process
+3. then change show folder
+4. then open sequence if needed
+
+Do not change show folder or open a sequence during app startup. That path can trigger modal prompts and destabilize automation.
 
 ### What Should Move Out Of Desktop Main
 
