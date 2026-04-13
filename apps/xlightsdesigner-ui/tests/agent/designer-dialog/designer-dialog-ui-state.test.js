@@ -49,6 +49,64 @@ test("designer ui-state applies canonical proposal artifacts to app state", () =
   assert.equal(state.creative.runtime.status, "ok");
   assert.match(state.creative.runtime.assistantMessage, /saving the focal push/i);
   assert.deepEqual(state.creative.runtime.warnings, ["Proceeding without full lyric alignment."]);
+  assert.equal(state.creative.sequencingDesignHandoff, null);
+  assert.equal(state.creative.sequenceArtisticGoal, null);
+  assert.equal(state.creative.sequenceRevisionObjective, null);
+});
+
+test("designer ui-state derives artistic goal and revision objective from sequencing design handoff", () => {
+  const state = {
+    creative: {},
+    flags: { creativeBriefReady: false },
+    proposed: []
+  };
+
+  applyDesignerProposalSuccessToState(state, {
+    ok: true,
+    source: "local_runtime",
+    summary: "MegaTree-led chorus with readable roofline support.",
+    proposalBundle: {
+      bundleType: "proposal_bundle_v1",
+      summary: "MegaTree-led chorus with readable roofline support.",
+      lifecycle: {
+        status: "fresh",
+        stale: false,
+        baseRevision: "rev-5",
+        currentRevision: "rev-5",
+        rebasedFrom: null,
+        staleReason: "",
+        updatedAt: new Date().toISOString()
+      }
+    },
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      designSummary: "MegaTree leads while roofline supports the chorus lift.",
+      scope: {
+        sections: ["Chorus 1"],
+        targetIds: ["MegaTree", "Roofline"]
+      },
+      sectionDirectives: [
+        {
+          sectionName: "Chorus 1",
+          motionTarget: "expanding_motion",
+          densityTarget: "moderate",
+          notes: "a clear chorus lift with readable focal hierarchy"
+        }
+      ],
+      focusPlan: {
+        primaryTargets: ["MegaTree"],
+        secondaryTargets: ["Roofline"],
+        balanceRule: "Preserve a readable lead/support/accent hierarchy across the scoped sections."
+      },
+      avoidances: ["no_full_yard_noise_wall"]
+    },
+    proposalLines: ["Chorus / MegaTree / build the chorus lift with restrained roofline support."]
+  });
+
+  assert.equal(state.creative.sequenceArtisticGoal.artifactType, "sequence_artistic_goal_v1");
+  assert.equal(state.creative.sequenceArtisticGoal.artisticIntent.leadTarget, "MegaTree");
+  assert.equal(state.creative.sequenceRevisionObjective.artifactType, "sequence_revision_objective_v1");
+  assert.equal(state.creative.sequenceRevisionObjective.scope.nextOwner, "sequencer");
 });
 
 test("designer ui-state builds concise guided-question chat message", () => {

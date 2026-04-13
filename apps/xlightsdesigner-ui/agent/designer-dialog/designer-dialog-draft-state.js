@@ -47,6 +47,9 @@ export function rebaseDesignerDraft(state, { newBaseRevision = "unknown", preser
 export function clearDesignerDraft(state) {
   state.creative = state.creative || {};
   state.creative.proposalBundle = null;
+  state.creative.sequencingDesignHandoff = null;
+  state.creative.sequenceArtisticGoal = null;
+  state.creative.sequenceRevisionObjective = null;
   state.creative.runtime = null;
   state.proposed = [];
   state.draftSequencePath = "";

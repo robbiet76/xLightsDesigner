@@ -604,6 +604,9 @@ const defaultState = {
     references: [],
     brief: null,
     proposalBundle: null,
+    sequencingDesignHandoff: null,
+    sequenceArtisticGoal: null,
+    sequenceRevisionObjective: null,
     supersededConcepts: [],
     briefUpdatedAt: "",
     runtime: null
@@ -683,6 +686,18 @@ function normalizeDraftState(target) {
   target.creative = target.creative && typeof target.creative === "object"
     ? target.creative
     : structuredClone(defaultState.creative);
+  target.creative.sequencingDesignHandoff =
+    target.creative.sequencingDesignHandoff && typeof target.creative.sequencingDesignHandoff === "object"
+      ? target.creative.sequencingDesignHandoff
+      : null;
+  target.creative.sequenceArtisticGoal =
+    target.creative.sequenceArtisticGoal && typeof target.creative.sequenceArtisticGoal === "object"
+      ? target.creative.sequenceArtisticGoal
+      : null;
+  target.creative.sequenceRevisionObjective =
+    target.creative.sequenceRevisionObjective && typeof target.creative.sequenceRevisionObjective === "object"
+      ? target.creative.sequenceRevisionObjective
+      : null;
   if (!Array.isArray(target.creative.supersededConcepts)) {
     target.creative.supersededConcepts = [];
   }
@@ -6387,6 +6402,9 @@ function onRemoveAllProposed() {
   }
   state.creative.proposalBundle = null;
   state.creative.intentHandoff = null;
+  state.creative.sequencingDesignHandoff = null;
+  state.creative.sequenceArtisticGoal = null;
+  state.creative.sequenceRevisionObjective = null;
   state.creative.supersededConcepts = [];
   state.agentPlan = null;
   clearDesignRevisionTarget();

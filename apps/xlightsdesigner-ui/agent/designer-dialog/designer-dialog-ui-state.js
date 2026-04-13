@@ -1,5 +1,9 @@
 import { deriveDesignerDraftState } from "./designer-dialog-lifecycle.js";
 import { applyDesignerDraftSuccessState } from "./designer-dialog-draft-state.js";
+import {
+  buildSequenceArtisticGoalFromDesignHandoff,
+  buildSequenceRevisionObjectiveFromArtifacts
+} from "./sequence-artifacts.js";
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
@@ -22,6 +26,15 @@ export function applyDesignerProposalSuccessToState(state, orchestration = {}) {
       : null,
     updatedAt: new Date().toISOString()
   };
+  state.creative.sequencingDesignHandoff = orchestration.sequencingDesignHandoff || null;
+  state.creative.sequenceArtisticGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: orchestration.sequencingDesignHandoff || null,
+    proposalBundle: orchestration.proposalBundle || null
+  });
+  state.creative.sequenceRevisionObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: state.creative.sequenceArtisticGoal,
+    sequencingDesignHandoff: state.creative.sequencingDesignHandoff
+  });
   applyDesignerDraftSuccessState(state, {
     proposalBundle: orchestration.proposalBundle || null,
     proposalLines: arr(orchestration.proposalLines),
