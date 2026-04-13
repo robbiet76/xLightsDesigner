@@ -1,0 +1,56 @@
+{
+  "artifactType": "sequence_render_critique_context_v1",
+  "artifactVersion": 1,
+  "source": {
+    "renderObservationArtifactId": "render_observation_v1-f7ae1ecb",
+    "designSceneContextArtifactId": "design_scene_context_v1-0d018c85",
+    "sequencingDesignHandoffArtifactId": ""
+  },
+  "expected": {
+    "primaryFocusTargetIds": [
+      "NorthPoleMatrix"
+    ],
+    "supportTargetIds": [
+      "HiddenTree",
+      "Snowman",
+      "Train_Gondola"
+    ],
+    "preferredVisualFamilies": [],
+    "broadCoverageDomains": [],
+    "detailCoverageDomains": [],
+    "designSummary": "Validate live real-show render feedback against the display hierarchy."
+  },
+  "observed": {
+    "activeModelNames": [
+      "Snowman",
+      "HiddenTree",
+      "NorthPoleMatrix",
+      "Train_Gondola"
+    ],
+    "activeFamilyNames": [
+      "Custom",
+      "Matrix",
+      "Tree"
+    ],
+    "leadModel": "HiddenTree",
+    "leadModelShare": 0.4039,
+    "sampledStartMs": 0,
+    "sampledEndMs": 250,
+    "samplingMode": "targeted",
+    "sampledModelCount": 4,
+    "meanSceneSpreadRatio": 1,
+    "breadthRead": "broad",
+    "maxActiveModelRatio": 1
+  },
+  "comparison": {
+    "observedFocusTargets": [
+      "NorthPoleMatrix"
+    ],
+    "missingPrimaryFocusTargets": [],
+    "leadMatchesPrimaryFocus": false,
+    "leadIsKnownFocalCandidate": true,
+    "broadCoverageExpected": false,
+    "renderUsesBroadScene": true,
+    "renderUsesTightFocus": false
+  }
+}

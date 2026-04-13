@@ -170,3 +170,12 @@ Harness status:
   - designer owns the artistic correction
   - sequencer receives a bounded execution objective
 - The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.
+
+## Real-Show Live Proof
+
+- `preview-scene-geometry-holidayroad-live.json`
+- `render-observation-holidayroad-live.json`
+- `render-critique-context-holidayroad-live.json`
+- `live-render-proof-holidayroad-live.json`
+
+These artifacts were generated from the real show at `/Users/robterry/Desktop/Show/HolidayRoad/` using the owned `sequence.render-samples` API against `HolidayRoad.fseq`, then processed through the app runtime observation and critique builders.
