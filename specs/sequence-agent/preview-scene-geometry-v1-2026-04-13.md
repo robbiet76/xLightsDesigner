@@ -73,6 +73,14 @@ The artifact should normalize xLights source data into a shell-neutral represent
 ### 4. Reusable across checkpoints
 For a fixed layout, this artifact should be reusable across many render checkpoints until the underlying layout changes.
 
+### 5. Layout-scoped cache
+`preview_scene_geometry_v1` is a cached layout artifact, not a per-sequencing-pass artifact.
+
+Normal sequencing flow should:
+- build geometry once for the active layout snapshot
+- reuse it across many sequencing checkpoints
+- rebuild it only when the effective layout changes
+
 ## Artifact Scope
 
 `preview_scene_geometry_v1` should describe the display scene in enough detail to support:
@@ -139,6 +147,8 @@ Recommended fields:
 - `layoutName`
 - `showFolder`
 - `generatedFromCommands[]`
+
+`layoutRevisionToken` should be treated as the primary cache-validation key when available.
 
 ### `scene`
 Portable scene geometry payload.
@@ -291,6 +301,11 @@ The artifact should be regenerated when:
 - node mapping changes
 - group/submodel membership changes
 - camera/view definitions change
+
+Operational cache rule:
+- do not regenerate geometry by default during sequencing
+- compare the cached artifact against the current layout saved-state signal or `layoutRevisionToken`
+- regenerate only when that comparison shows the cached geometry is stale
 
 ## Relationship To Other Artifacts
 

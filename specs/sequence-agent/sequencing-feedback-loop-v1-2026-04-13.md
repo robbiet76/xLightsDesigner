@@ -154,12 +154,13 @@ Contains:
 - sequence revision id
 - render window
 - authoritative output references
-- geometry export reference if needed
+- cached geometry reference if needed
 - provenance about xLights version/API state
 
 Rule:
 - this is the expensive ground-truth step
 - it must happen at controlled checkpoints, not continuously
+- geometry rebuild is not part of the normal checkpoint path unless the cached layout artifact is stale
 
 ## 4. Local reconstruction or prediction
 
@@ -167,6 +168,10 @@ From the authoritative checkpoint, the local system produces:
 - reconstructed preview-scene frames
 - rasterized images or tensors
 - derived render observations
+
+Normal prerequisite:
+- reuse the cached `preview_scene_geometry_v1` artifact for the active layout
+- only rebuild geometry if layout validation shows that cached artifact is stale
 
 Future variant:
 - local surrogate prediction may be used before the next authoritative checkpoint
