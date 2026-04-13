@@ -1,0 +1,15 @@
+{
+  "artifactType": "sequence_revision_gate_v1",
+  "artifactVersion": 1,
+  "source": {
+    "sequenceCritiqueRef": "scripts/sequencer-render-training/proofs/sequence-critique-treeflat_archsingle_composite_macro.json"
+  },
+  "highestFailingLevel": "macro",
+  "decision": "revise_here",
+  "nextOwner": "designer",
+  "nextRevisionLevel": "macro",
+  "blockingReasons": [
+    "Macro instability blocks section, group, model, and effect refinement."
+  ],
+  "recommendedMoves": []
+}

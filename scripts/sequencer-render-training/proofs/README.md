@@ -82,6 +82,12 @@ Harness runner:
   - emits:
     - per-scenario section window / observation / critique / learning record artifacts
     - [sequence-section-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-section-feedback-suite-summary.json)
+- [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
+  - converts a critique artifact into an explicit revision gating decision
+  - current kept gate proofs:
+    - [sequence-revision-gate-treeflat_sparse_macro.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_sparse_macro.json)
+    - [sequence-revision-gate-treeflat_archsingle_composite_macro.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_archsingle_composite_macro.json)
+    - [sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json)
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -143,4 +149,8 @@ Harness status:
   - coherent lead-plus-support composition
 - The current section suite also exposed a real next-layer weakness:
   - a section can be compositionally coherent while still being too flat over time
+- The current gate proofs now turn those critique outcomes into explicit routing:
+  - narrow macro case -> revise at `macro` with `shared` ownership
+  - broad but split macro case -> revise at `macro` with `designer` ownership
+  - coherent but flat section case -> revise at `section` with `shared` ownership
 - The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.

@@ -1,0 +1,18 @@
+{
+  "artifactType": "sequence_revision_gate_v1",
+  "artifactVersion": 1,
+  "source": {
+    "sequenceCritiqueRef": "scripts/sequencer-render-training/proofs/sequence-critique-treeflat_sparse_macro.json"
+  },
+  "highestFailingLevel": "macro",
+  "decision": "revise_here",
+  "nextOwner": "shared",
+  "nextRevisionLevel": "macro",
+  "blockingReasons": [
+    "Macro instability blocks section, group, model, and effect refinement."
+  ],
+  "recommendedMoves": [
+    "Broaden the active footprint with one secondary support family while preserving the lead target.",
+    "Decide whether this section should remain Tree-only or intentionally add a support family."
+  ]
+}
