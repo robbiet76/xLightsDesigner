@@ -75,8 +75,70 @@ def build_single_line_geometry(attrs):
     return {
         "name": attrs.get("name"),
         "displayAs": attrs.get("DisplayAs"),
+        "geometryMode": "xml_single_line_proof",
         "nodeCount": node_count,
         "channelsPerNode": channels_per_node,
+        "nodes": nodes,
+    }
+
+
+def build_matrix_geometry(attrs):
+    rows = int(attrs.get("parm1", "0") or "0")
+    cols = int(attrs.get("parm2", "0") or "0")
+    if rows <= 0 or cols <= 0:
+        raise RuntimeError("matrix model missing parm1/parm2 dimensions")
+
+    origin_x = float(attrs.get("WorldPosX", "0") or "0")
+    origin_y = float(attrs.get("WorldPosY", "0") or "0")
+    origin_z = float(attrs.get("WorldPosZ", "0") or "0")
+    step_x = float(attrs.get("ScaleX", "1") or "1")
+    step_y = float(attrs.get("ScaleY", "1") or "1")
+    start_channel_one = int(attrs.get("StartChannel", "0") or "0")
+    if start_channel_one <= 0:
+        raise RuntimeError("model missing StartChannel")
+
+    channels_per_node = infer_channels_per_node(attrs.get("StringType"))
+    start_side = (attrs.get("StartSide") or "T").strip().upper()
+    direction = (attrs.get("Dir") or "L").strip().upper()
+
+    # Proof-only geometry:
+    # - world position is treated as the top-left anchor for StartSide=T
+    # - rows grow downward
+    # - columns grow rightward
+    # - Dir=L reverses per-row node indexing, which matches a common horizontal matrix winding
+    nodes = []
+    node_index = 0
+    row_iter = range(rows) if start_side == "T" else range(rows - 1, -1, -1)
+    for logical_row in row_iter:
+        col_iter = range(cols - 1, -1, -1) if direction == "L" else range(cols)
+        for logical_col in col_iter:
+            x = origin_x + (logical_col * step_x)
+            y = origin_y + (logical_row * step_y)
+            nodes.append({
+                "nodeId": node_index,
+                "stringIndex": logical_row,
+                "channelStart": start_channel_one + (node_index * channels_per_node),
+                "channelCount": channels_per_node,
+                "screen": {
+                    "x": x,
+                    "y": y,
+                    "z": origin_z,
+                },
+                "grid": {
+                    "row": logical_row,
+                    "col": logical_col,
+                },
+            })
+            node_index += 1
+
+    return {
+        "name": attrs.get("name"),
+        "displayAs": attrs.get("DisplayAs"),
+        "geometryMode": "xml_matrix_proof",
+        "nodeCount": rows * cols,
+        "channelsPerNode": channels_per_node,
+        "rows": rows,
+        "cols": cols,
         "nodes": nodes,
     }
 
@@ -133,6 +195,7 @@ def join_frame(geometry, frame):
             "channelStart": geo_node["channelStart"],
             "channelCount": geo_node["channelCount"],
             "screen": geo_node["screen"],
+            **({"grid": geo_node["grid"]} if "grid" in geo_node else {}),
             "rgb": {"r": rgb[0], "g": rgb[1], "b": rgb[2]},
             "brightness": brightness,
             "active": active,
@@ -182,10 +245,12 @@ def main():
     args = parse_args()
     attrs = load_model(args.show_dir, args.model_name)
     display_as = (attrs.get("DisplayAs") or "").strip().lower()
-    if display_as != "single line":
-        raise RuntimeError("first proof only supports DisplayAs=Single Line")
-
-    geometry = build_single_line_geometry(attrs)
+    if display_as == "single line":
+        geometry = build_single_line_geometry(attrs)
+    elif display_as == "horiz matrix":
+        geometry = build_matrix_geometry(attrs)
+    else:
+        raise RuntimeError(f"proof does not yet support DisplayAs={attrs.get('DisplayAs')}")
     decoded = decode_window(
         build_decoder(),
         args.fseq,
@@ -214,7 +279,7 @@ def main():
             "frameOffset": args.frame_offset,
             "frameIndex": frame["frameIndex"],
             "frameTimeMs": frame["frameTimeMs"],
-            "geometryMode": "xml_single_line_proof",
+            "geometryMode": geometry["geometryMode"],
             "decoderMode": decoded.get("frameMode"),
         },
         "model": {
@@ -222,6 +287,7 @@ def main():
             "displayAs": geometry["displayAs"],
             "nodeCount": geometry["nodeCount"],
             "channelsPerNode": geometry["channelsPerNode"],
+            **({"rows": geometry["rows"], "cols": geometry["cols"]} if "rows" in geometry else {}),
         },
         "frameSummary": compute_frame_summary(joined_nodes),
         "nodes": joined_nodes,
