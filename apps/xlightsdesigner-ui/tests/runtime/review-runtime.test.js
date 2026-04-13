@@ -182,3 +182,162 @@ test("executeApplyCore preserves XD song structure timing writes during live app
   assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.trackName, "XD: Song Structure");
   assert.equal(state.sequenceAgentRuntime.timingTrackProvenance.key.coverageMode, "complete");
 });
+
+test("executeApplyCore refreshes artistic goal and revision objective from practical validation", async () => {
+  const state = {
+    endpoint: "http://127.0.0.1:49914/xlDoAutomation",
+    draftBaseRevision: "rev-1",
+    revision: "rev-1",
+    sequenceSettings: { durationMs: 60000 },
+    displayElements: [],
+    sceneGraph: { groupsById: {}, submodelsById: {} },
+    ui: { metadataSelectionIds: [], metadataSelectedTags: [] },
+    health: { capabilityCommands: [] },
+    creative: {
+      sequencingDesignHandoff: {
+        artifactType: "sequencing_design_handoff_v2",
+        designSummary: "MegaTree leads while roofline supports the chorus lift.",
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree", "Roofline"] },
+        sectionDirectives: [
+          {
+            sectionName: "Chorus 1",
+            motionTarget: "expanding_motion",
+            densityTarget: "moderate",
+            notes: "a clear chorus lift with readable focal hierarchy"
+          }
+        ],
+        focusPlan: {
+          primaryTargets: ["MegaTree"],
+          secondaryTargets: ["Roofline"],
+          balanceRule: "Preserve a readable lead/support/accent hierarchy across the scoped sections."
+        },
+        avoidances: ["no_full_yard_noise_wall"]
+      },
+      sequenceArtisticGoal: {
+        artifactType: "sequence_artistic_goal_v1",
+        scope: { goalLevel: "section" },
+        artisticIntent: {
+          leadTarget: "MegaTree",
+          supportTargets: ["Roofline"]
+        },
+        evaluationLens: {
+          mustPreserve: ["Preserve a readable lead/support/accent hierarchy across the scoped sections."],
+          mustImprove: [],
+          comparisonQuestions: ["Does the rendered result preserve the intended lead/support hierarchy?"]
+        }
+      },
+      sequenceRevisionObjective: {
+        artifactType: "sequence_revision_objective_v1",
+        scope: { nextOwner: "sequencer" },
+        ladderLevel: "section",
+        designerDirection: {
+          artisticCorrection: "Does the rendered result preserve the intended lead/support hierarchy?"
+        },
+        sequencerDirection: {
+          executionObjective: "Translate the current design handoff into a bounded section pass."
+        }
+      },
+      proposalBundle: {},
+      intentHandoff: {}
+    },
+    flags: {},
+    proposed: ["Chorus 1 / MegaTree / add Color Wash"],
+    sequenceAgentRuntime: {
+      timingTrackPolicies: {},
+      timingGeneratedSignatures: {},
+      timingTrackProvenance: {}
+    }
+  };
+
+  await executeApplyCore({
+    state,
+    sourceLines: ["Chorus 1 / MegaTree / add Color Wash"],
+    applyLabel: "proposal",
+    orchestrationRun: { id: "run-refresh" },
+    intentHandoffRecord: {},
+    intentHandoff: { sequencingDesignHandoff: state.creative.sequencingDesignHandoff },
+    planHandoff: {
+      planId: "plan-refresh",
+      metadata: {
+        sequencingDesignHandoff: state.creative.sequencingDesignHandoff,
+        sequencingDesignHandoffSummary: state.creative.sequencingDesignHandoff.designSummary,
+        sequencingSectionDirectiveCount: 1,
+        sequenceSettings: { durationMs: 60000 },
+        scope: { sections: ["Chorus 1"], targetIds: ["MegaTree", "Roofline"] }
+      },
+      commands: []
+    },
+    deps: {
+      currentSequencePathForSidecar: () => "/show/Test.xsq",
+      getDesktopBackupBridge: () => null,
+      getValidHandoff: (kind) => kind === "analysis_handoff_v1"
+        ? { structure: { sections: [{ label: "Chorus 1", startMs: 0, endMs: 1000 }] } }
+        : {},
+      buildSequenceAgentInput: () => ({ ok: true }),
+      currentLayoutMode: () => "sequencer",
+      getSelectedSections: () => ["Chorus 1"],
+      normalizeMetadataSelectionIds: (v = []) => v,
+      normalizeMetadataSelectedTags: (v = []) => v,
+      getSequenceTimingOwnershipRows: () => [],
+      getManualLockedXdTracks: () => [],
+      validateSequenceAgentContractGate: (_kind, payload) => ({ ok: true, stage: "", report: { errors: [], payload } }),
+      filteredProposed: () => ["Chorus 1 / MegaTree / add Color Wash"],
+      arraysEqualOrdered: () => true,
+      validateCommandGraph: () => ({ ok: true, nodeCount: 0, errors: [] }),
+      buildSequenceAgentPlan: () => ({
+        commands: [
+          { id: "song-create", cmd: "timing.createTrack", params: { trackName: "XD: Song Structure", replaceIfExists: true } },
+          { id: "song-insert", cmd: "timing.insertMarks", params: { trackName: "XD: Song Structure", marks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }] } },
+          { id: "effect-1", cmd: "effects.create", params: { modelName: "MegaTree", layerIndex: 0, effectName: "Color Wash", startMs: 0, endMs: 1000 } }
+        ],
+        warnings: []
+      }),
+      emitSequenceAgentStageTelemetry: () => {},
+      evaluateSequencePlanCapabilities: () => ({ ok: true, skipped: false, requiredCapabilities: [] }),
+      isXdTimingTrack: () => true,
+      timingMarksSignature: () => "sig",
+      buildGlobalXdTrackPolicyKey: () => "key",
+      validateAndApplyPlan: async ({ commands }) => ({ ok: true, executedCount: commands.length, currentRevision: "rev-1", nextRevision: "rev-2" }),
+      verifyAppliedPlanReadback: async () => ({
+        checks: [{
+          kind: "timing",
+          target: "XD: Song Structure",
+          ok: true,
+          detail: "mark signature matched",
+          expectedMarks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }],
+          actualMarks: [{ startMs: 0, endMs: 1000, label: "Chorus 1" }]
+        }],
+        expectedMutationsPresent: true,
+        revisionAdvanced: true,
+        lockedTracksUnchanged: true
+      }),
+      buildSequenceAgentApplyResult: () => ({ verification: { revisionAdvanced: true, expectedMutationsPresent: true, lockedTracksUnchanged: true } }),
+      classifyOrchestrationFailureReason: () => "",
+      getSequenceTimingTrackPoliciesState: () => ({}),
+      getSequenceTimingGeneratedSignaturesState: () => ({}),
+      setSequenceTimingTrackPoliciesState: () => {},
+      setSequenceTimingGeneratedSignaturesState: () => {},
+      applyAcceptedProposalToDirectorProfile: () => ({}),
+      buildApplyHistoryEntry: () => ({}),
+      buildChatArtifactCard: () => ({}),
+      getTeamChatSpeakerLabel: () => "Patch",
+      buildEffectiveMetadataAssignments: () => []
+    },
+    callbacks: {
+      pushSequenceAgentContractDiagnostic: () => {},
+      markOrchestrationStage: () => {},
+      endOrchestrationRun: () => {},
+      pushDiagnostic: () => {},
+      upsertJob: () => {},
+      bumpVersion: () => {},
+      setStatusWithDiagnostics: () => {},
+      addStructuredChatMessage: () => {}
+    }
+  });
+
+  assert.equal(state.creative.sequenceArtisticGoal.artifactType, "sequence_artistic_goal_v1");
+  assert.match(state.creative.sequenceArtisticGoal.evaluationLens.comparisonQuestions[0], /timeline coverage too low|active target breadth too low|section placement density too low|multi-layer usage too low/i);
+  assert.equal(state.creative.sequenceRevisionObjective.artifactType, "sequence_revision_objective_v1");
+  assert.equal(state.creative.sequenceRevisionObjective.scope.nextOwner, "shared");
+  assert.match(state.creative.sequenceRevisionObjective.sequencerDirection.executionObjective, /Revise the next pass to resolve/i);
+});

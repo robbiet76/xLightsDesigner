@@ -1,5 +1,9 @@
 import { buildPracticalSequenceValidation } from "../agent/sequence-agent/practical-sequence-validation.js";
 import { buildTimingTrackProvenanceRecord } from "./timing-track-provenance.js";
+import {
+  refreshSequenceArtisticGoalFromPracticalValidation,
+  refreshSequenceRevisionObjectiveFromPracticalValidation
+} from "../agent/designer-dialog/sequence-artifacts.js";
 
 function normalizePlanForLiveApply(rawPlan = [], { analysisHandoff = null } = {}) {
   return Array.isArray(rawPlan) ? rawPlan.map((row) => ({ ...row })) : [];
@@ -284,6 +288,18 @@ export async function executeApplyCore({
     const practicalValidation = buildPracticalSequenceValidation({
       planHandoff,
       verification
+    });
+    state.creative = state.creative && typeof state.creative === "object" ? state.creative : {};
+    state.creative.sequenceArtisticGoal = refreshSequenceArtisticGoalFromPracticalValidation({
+      priorArtisticGoal: sequenceArtisticGoal,
+      sequencingDesignHandoff,
+      practicalValidation
+    });
+    state.creative.sequenceRevisionObjective = refreshSequenceRevisionObjectiveFromPracticalValidation({
+      priorRevisionObjective: sequenceRevisionObjective,
+      sequenceArtisticGoal: state.creative.sequenceArtisticGoal,
+      sequencingDesignHandoff,
+      practicalValidation
     });
     applyResult = buildSequenceAgentApplyResult({
       planId: String(planHandoff?.planId || ""),

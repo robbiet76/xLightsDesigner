@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 
 import {
   buildSequenceArtisticGoalFromDesignHandoff,
-  buildSequenceRevisionObjectiveFromArtifacts
+  buildSequenceRevisionObjectiveFromArtifacts,
+  refreshSequenceArtisticGoalFromPracticalValidation,
+  refreshSequenceRevisionObjectiveFromPracticalValidation
 } from "../../../agent/designer-dialog/sequence-artifacts.js";
 
 function sampleHandoff() {
@@ -66,4 +68,81 @@ test("buildSequenceRevisionObjectiveFromArtifacts derives initial sequencer obje
   assert.match(out.sequencerDirection.executionObjective, /MegaTree/i);
   assert.deepEqual(out.sequencerDirection.blockedMoves, ["no_full_yard_noise_wall"]);
   assert.ok(out.successChecks.some((row) => /dominant visual lead/i.test(String(row))));
+});
+
+test("refreshSequenceArtisticGoalFromPracticalValidation updates the next artistic question from failures", () => {
+  const prior = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const out = refreshSequenceArtisticGoalFromPracticalValidation({
+    priorArtisticGoal: prior,
+    sequencingDesignHandoff: sampleHandoff(),
+    practicalValidation: {
+      status: "applied",
+      overallOk: false,
+      failures: {
+        quality: [
+          {
+            kind: "active_target_scale",
+            target: "sequence",
+            detail: "Whole-song active target breadth too low (3 active targets)."
+          }
+        ]
+      }
+    }
+  });
+
+  assert.match(out.evaluationLens.comparisonQuestions[0], /Whole-song active target breadth too low/i);
+  assert.ok(out.evaluationLens.mustImprove.some((row) => /active target breadth too low/i.test(String(row))));
+});
+
+test("refreshSequenceRevisionObjectiveFromPracticalValidation updates sequencer objective from failures", () => {
+  const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const priorObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+  const refreshedGoal = refreshSequenceArtisticGoalFromPracticalValidation({
+    priorArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    practicalValidation: {
+      status: "applied",
+      overallOk: false,
+      failures: {
+        quality: [
+          {
+            kind: "section_density_scale",
+            target: "sequence",
+            detail: "Whole-song section placement density too low (2.0 placements/section)."
+          }
+        ]
+      }
+    }
+  });
+  const out = refreshSequenceRevisionObjectiveFromPracticalValidation({
+    priorRevisionObjective: priorObjective,
+    sequenceArtisticGoal: refreshedGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    practicalValidation: {
+      status: "applied",
+      overallOk: false,
+      failures: {
+        quality: [
+          {
+            kind: "section_density_scale",
+            target: "sequence",
+            detail: "Whole-song section placement density too low (2.0 placements/section)."
+          }
+        ]
+      }
+    }
+  });
+
+  assert.equal(out.scope.nextOwner, "shared");
+  assert.match(out.sequencerDirection.executionObjective, /section placement density too low/i);
+  assert.ok(out.sequencerDirection.blockedMoves.includes("section_density_scale"));
 });

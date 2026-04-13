@@ -132,3 +132,106 @@ export function buildSequenceRevisionObjectiveFromArtifacts({
     ])
   };
 }
+
+function collectValidationFailures(practicalValidation = null) {
+  const validation = isPlainObject(practicalValidation) ? practicalValidation : null;
+  if (!validation) return [];
+  const failures = validation.failures && typeof validation.failures === "object" ? validation.failures : {};
+  return [
+    ...arr(failures.quality),
+    ...arr(failures.design),
+    ...arr(failures.timing),
+    ...arr(failures.readback),
+    ...arr(failures.metadata)
+  ]
+    .map((row) => ({
+      kind: str(row?.kind),
+      target: str(row?.target),
+      detail: str(row?.detail)
+    }))
+    .filter((row) => row.kind || row.target || row.detail);
+}
+
+export function refreshSequenceArtisticGoalFromPracticalValidation({
+  priorArtisticGoal = null,
+  sequencingDesignHandoff = null,
+  practicalValidation = null
+} = {}) {
+  const base = isPlainObject(priorArtisticGoal)
+    ? structuredClone(priorArtisticGoal)
+    : buildSequenceArtisticGoalFromDesignHandoff({ sequencingDesignHandoff });
+  if (!base) return null;
+
+  const failures = collectValidationFailures(practicalValidation);
+  if (!failures.length) return base;
+  const primaryFailure = failures[0];
+  const comparisonQuestion = primaryFailure.detail
+    ? `Does the next pass resolve this problem: ${primaryFailure.detail}`
+    : "Does the next pass resolve the highest-priority observed validation failure?";
+
+  base.evaluationLens = {
+    ...(isPlainObject(base.evaluationLens) ? base.evaluationLens : {}),
+    mustImprove: uniqueStrings([
+      ...arr(base?.evaluationLens?.mustImprove),
+      ...failures.map((row) => row.detail)
+    ]),
+    comparisonQuestions: [comparisonQuestion]
+  };
+  base.traceability = {
+    ...(isPlainObject(base.traceability) ? base.traceability : {}),
+    practicalValidationStatus: str(practicalValidation?.status),
+    practicalValidationOverallOk: Boolean(practicalValidation?.overallOk),
+    practicalValidationFailureCount: failures.length
+  };
+  return base;
+}
+
+export function refreshSequenceRevisionObjectiveFromPracticalValidation({
+  priorRevisionObjective = null,
+  sequenceArtisticGoal = null,
+  sequencingDesignHandoff = null,
+  practicalValidation = null
+} = {}) {
+  const base = isPlainObject(priorRevisionObjective)
+    ? structuredClone(priorRevisionObjective)
+    : buildSequenceRevisionObjectiveFromArtifacts({
+        sequenceArtisticGoal,
+        sequencingDesignHandoff
+      });
+  if (!base) return null;
+
+  const failures = collectValidationFailures(practicalValidation);
+  if (!failures.length) return base;
+  const primaryFailure = failures[0];
+  const failureText = str(primaryFailure.detail || primaryFailure.kind || "highest-priority validation failure");
+  const currentPrompt = str(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions?.[0]);
+
+  base.scope = {
+    ...(isPlainObject(base.scope) ? base.scope : {}),
+    nextOwner: "shared"
+  };
+  base.designerDirection = {
+    ...(isPlainObject(base.designerDirection) ? base.designerDirection : {}),
+    artisticCorrection: currentPrompt || `Resolve: ${failureText}`,
+    mustAvoid: uniqueStrings([
+      ...arr(base?.designerDirection?.mustAvoid),
+      ...failures.map((row) => row.detail)
+    ]),
+    evaluationPrompt: currentPrompt || `Resolve: ${failureText}`
+  };
+  base.sequencerDirection = {
+    ...(isPlainObject(base.sequencerDirection) ? base.sequencerDirection : {}),
+    executionObjective: `Revise the next pass to resolve: ${failureText}`,
+    blockedMoves: uniqueStrings([
+      ...arr(base?.sequencerDirection?.blockedMoves),
+      ...failures.map((row) => row.kind)
+    ]),
+    revisionBatchShape: `${str(base?.ladderLevel || "section")}_pass`
+  };
+  base.successChecks = uniqueStrings([
+    ...arr(base?.successChecks),
+    currentPrompt || "",
+    `Validation failure addressed: ${failureText}`
+  ]);
+  return base;
+}
