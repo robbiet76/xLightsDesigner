@@ -13,6 +13,17 @@ Current proof:
     - `modelCount = 19`
     - `modelsMissingChannelMapping = 0`
     - `nodesMissingChannelMapping = 0`
+- `preview-scene-geometry-desktop-show-live.json`
+  - Source: live xLights layout export
+  - Show folder: `/Users/robterry/Desktop/Show`
+  - Coverage: full real-world layout
+  - Status: exact geometry and channel mapping from xLights-owned `layout.*` APIs
+  - Notes:
+    - `modelCount = 113`
+    - `customModelCount = 40`
+    - `customModelPct = 35.4%`
+    - `modelsMissingChannelMapping = 0`
+    - `nodesMissingChannelMapping = 0`
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -33,6 +44,7 @@ Current proof:
 What this proves:
 
 - We can export full whole-layout geometry accurately from xLights itself.
+- We can do that on a real custom-heavy show, not just the training fixture.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.
