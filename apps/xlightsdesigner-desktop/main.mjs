@@ -797,6 +797,12 @@ async function processAutomationRequests() {
       if (action === "diagnoseCurrentProposal") {
         return invokeRendererAutomation("diagnoseCurrentProposal", request?.payload || {});
       }
+      if (action === "setRenderObservation") {
+        return invokeRendererAutomation("setRenderObservation", request?.payload || {});
+      }
+      if (action === "getRenderFeedbackSnapshot") {
+        return invokeRendererAutomation("getRenderFeedbackSnapshot", request?.payload || {});
+      }
       if (action === "getAgentRuntimeSnapshot") {
         return invokeRendererAutomation("getAgentRuntimeSnapshot", request?.payload || {});
       }
