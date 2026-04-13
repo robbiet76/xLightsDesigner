@@ -4,6 +4,16 @@ This directory holds small, bounded proof artifacts for preview-scene reconstruc
 
 Current proof:
 
+- `preview-scene-geometry-render-training-live.json`
+  - Source: live xLights layout export
+  - Show folder: `render-training`
+  - Coverage: full render-training layout
+  - Status: exact geometry and channel mapping from xLights-owned `layout.*` APIs
+  - Notes:
+    - `modelCount = 19`
+    - `modelsMissingChannelMapping = 0`
+    - `nodesMissingChannelMapping = 0`
+
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
   - Source render: `singlestrand-singlelinehorizontal-expanded-sweep-v1-chaseSize-registry-v1.20260319T143651Z.fseq`
@@ -22,6 +32,7 @@ Current proof:
 
 What this proves:
 
+- We can export full whole-layout geometry accurately from xLights itself.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.
@@ -31,7 +42,6 @@ What this proves:
 
 What this does not prove yet:
 
-- Full-layout reconstruction
+- Full-layout reconstruction over time from rendered windows
 - Group/submodel handling
-- Live geometry export from the render-training xLights session
 - Preview parity against House Preview output
