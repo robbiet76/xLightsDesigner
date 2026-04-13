@@ -70,6 +70,12 @@ def region_label(x_norm, y_norm):
     return f"{vertical}_{horizontal}"
 
 
+def dominant_bucket(items):
+    if not items:
+        return "unknown"
+    return Counter(items).most_common(1)[0][0]
+
+
 def main():
     args = parse_args()
     with open(args.window, "r", encoding="utf-8") as handle:
@@ -196,6 +202,64 @@ def main():
         },
         "frames": frame_observations,
     }
+
+    if len(frame_observations) >= 6:
+        slices = []
+        n = len(frame_observations)
+        boundaries = [(0, n // 3), (n // 3, (2 * n) // 3), ((2 * n) // 3, n)]
+        model_totals = observation["macro"]["activeModelTotals"]
+        for label, (start, end) in zip(["opening", "middle", "closing"], boundaries):
+            frames = frame_observations[start:end]
+            if not frames:
+                continue
+            family_counter = Counter()
+            region_counter = Counter()
+            spreads = []
+            lead_model_counts = Counter()
+            node_counts = []
+            densities = []
+            model_counts = []
+            for frame in frames:
+                family_counter.update(frame["familyDistribution"])
+                region_counter.update(frame["regionDistribution"])
+                spreads.append(frame["sceneSpreadRatio"])
+                node_counts.append(frame["activeNodeCount"])
+                densities.append(frame["densityBucket"])
+                model_counts.append(frame["activeModelCount"])
+                for model_name in frame.get("familyDistribution", {}):
+                    pass
+                # Use whole-window model totals as a proxy for lead hierarchy until per-frame model totals are added.
+                for model_name, count in model_totals.items():
+                    lead_model_counts[model_name] += count
+            lead_model = None
+            lead_share = 0.0
+            if lead_model_counts:
+                total = sum(lead_model_counts.values())
+                lead_model, lead_count = lead_model_counts.most_common(1)[0]
+                lead_share = lead_count / float(total) if total else 0.0
+            slices.append({
+                "label": label,
+                "frameCount": len(frames),
+                "activeFamilyTotals": dict(family_counter),
+                "dominantDensityBucket": dominant_bucket(densities),
+                "meanSceneSpreadRatio": sum(spreads) / len(spreads),
+                "meanActiveNodeCount": sum(node_counts) / len(node_counts),
+                "meanActiveModelCount": sum(model_counts) / len(model_counts),
+                "regionTotals": dict(region_counter),
+                "leadModel": lead_model,
+                "leadModelShare": lead_share,
+            })
+        spread_values = [s["meanSceneSpreadRatio"] for s in slices]
+        node_values = [s["meanActiveNodeCount"] for s in slices]
+        observation["section"] = {
+            "sliceCount": len(slices),
+            "slices": slices,
+            "contrast": {
+                "spreadRange": (max(spread_values) - min(spread_values)) if spread_values else 0.0,
+                "nodeCountRange": (max(node_values) - min(node_values)) if node_values else 0.0,
+                "densityVaries": len({s["dominantDensityBucket"] for s in slices}) > 1 if slices else False,
+            },
+        }
 
     with open(args.out, "w", encoding="utf-8") as handle:
         json.dump(observation, handle, indent=2)

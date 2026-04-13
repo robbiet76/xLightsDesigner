@@ -1,0 +1,42 @@
+{
+  "artifactType": "sequence_critique_v1",
+  "artifactVersion": 1,
+  "createdAt": null,
+  "source": {
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-treeflat_archsingle_section_split.json"
+  },
+  "ladderLevel": "section",
+  "designerSummary": {
+    "intentRead": "multi-idea section read",
+    "focusRead": "broad_enough",
+    "contrastRead": "moderate",
+    "compositionRead": "split",
+    "strengths": [
+      "The active footprint is broad enough to register at scene scale.",
+      "Density is consistent across the sampled window (moderate).",
+      "The section shows measurable development across the sampled window."
+    ],
+    "weaknesses": [
+      "The scene is split across too many active models to read as one idea."
+    ],
+    "designAdjustmentSuggestions": []
+  },
+  "sequencerSummary": {
+    "executionRead": "stable_sparse_pass",
+    "spreadRead": "acceptable",
+    "densityRead": "moderate",
+    "familyBalanceRead": "multi_family",
+    "motionRead": "moving",
+    "strengths": [
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen.",
+      "Section-level change is visible across the sampled slices."
+    ],
+    "weaknesses": [
+      "Too many models are active at once for this checkpoint."
+    ],
+    "revisionSuggestions": []
+  },
+  "nextMoves": []
+}

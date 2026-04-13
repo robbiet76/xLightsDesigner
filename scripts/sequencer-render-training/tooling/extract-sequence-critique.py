@@ -6,6 +6,7 @@ import json
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--observation", required=True)
+    parser.add_argument("--ladder-level", choices=["macro", "section"], default="macro")
     parser.add_argument("--out", required=True)
     return parser.parse_args()
 
@@ -16,6 +17,7 @@ def main():
         obs = json.load(handle)
 
     macro = obs["macro"]
+    section = obs.get("section")
     active_models = macro.get("activeModelNames", [])
     active_families = macro.get("activeFamilyTotals", {})
     spread = macro.get("meanSceneSpreadRatio", 0.0)
@@ -83,6 +85,35 @@ def main():
     else:
         sequencer_weaknesses.append("Active centroid is static across the sampled frames.")
 
+    ladder_level = args.ladder_level
+    if ladder_level == "section" and not section:
+        raise RuntimeError("section ladder requested but observation has no section data")
+
+    if ladder_level == "section":
+        slices = section["slices"]
+        contrast = section["contrast"]
+        if not contrast["densityVaries"] and contrast["spreadRange"] < 0.005:
+            designer_weaknesses.append("Section development is too flat across opening, middle, and closing slices.")
+            sequencer_weaknesses.append("Section contrast is underdeveloped; the pass is not evolving enough over time.")
+            next_moves.append({
+                "priority": 1,
+                "owner": "designer",
+                "level": "section",
+                "instruction": "Clarify how the section should evolve from opening to closing instead of holding one static treatment."
+            })
+            next_moves.append({
+                "priority": 2,
+                "owner": "sequencer",
+                "level": "section",
+                "instruction": "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window."
+            })
+        else:
+            designer_strengths.append("The section shows measurable development across the sampled window.")
+            sequencer_strengths.append("Section-level change is visible across the sampled slices.")
+        if len(active_models) > 1 and lead_model_share >= 0.7:
+            designer_strengths.append("The section keeps a readable lead target even while support is present.")
+            sequencer_strengths.append("Lead-target hierarchy remains intact across the section.")
+
     critique = {
         "artifactType": "sequence_critique_v1",
         "artifactVersion": 1,
@@ -90,7 +121,7 @@ def main():
         "source": {
             "renderObservationRef": args.observation,
         },
-        "ladderLevel": "macro",
+        "ladderLevel": ladder_level,
         "designerSummary": {
             "intentRead": "single-idea section read" if (len(active_models) == 1 or coherent_support_case) else "multi-idea section read",
             "focusRead": "narrow" if spread < 0.01 else "broad_enough",

@@ -75,6 +75,13 @@ Harness runner:
   - emits:
     - per-scenario window / observation / critique / learning record artifacts
     - [sequence-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-feedback-suite-summary.json)
+- [run-section-feedback-suite.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/run-section-feedback-suite.py)
+  - rebuilds a small section-level suite over longer sampled windows across:
+    - `TreeFlat + ArchSingle` split section case
+    - `ArchSingle + MatrixLowDensity` coherent lead-plus-support case
+  - emits:
+    - per-scenario section window / observation / critique / learning record artifacts
+    - [sequence-section-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-section-feedback-suite-summary.json)
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -131,4 +138,9 @@ Harness status:
   - too narrow / single-family
   - broad but over-split
   - broad and coherent lead-plus-support
+- The current section suite demonstrates two section outcomes:
+  - split section composition
+  - coherent lead-plus-support composition
+- The current section suite also exposed a real next-layer weakness:
+  - a section can be compositionally coherent while still being too flat over time
 - The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.

@@ -1,0 +1,63 @@
+{
+  "artifactType": "sequence_critique_v1",
+  "artifactVersion": 1,
+  "createdAt": null,
+  "source": {
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_matrixlowdensity_section_balanced.json"
+  },
+  "ladderLevel": "section",
+  "designerSummary": {
+    "intentRead": "single-idea section read",
+    "focusRead": "broad_enough",
+    "contrastRead": "moderate",
+    "compositionRead": "concentrated",
+    "strengths": [
+      "The section still reads as one idea with ArchSingle carrying the lead and restrained support around it.",
+      "The active footprint is broad enough to register at scene scale.",
+      "Density is consistent across the sampled window (moderate).",
+      "Multiple families are present, but the support family does not overpower the lead.",
+      "The section keeps a readable lead target even while support is present."
+    ],
+    "weaknesses": [
+      "Section development is too flat across opening, middle, and closing slices."
+    ],
+    "designAdjustmentSuggestions": [
+      "Clarify how the section should evolve from opening to closing instead of holding one static treatment."
+    ]
+  },
+  "sequencerSummary": {
+    "executionRead": "stable_sparse_pass",
+    "spreadRead": "acceptable",
+    "densityRead": "moderate",
+    "familyBalanceRead": "multi_family",
+    "motionRead": "moving",
+    "strengths": [
+      "Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.",
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Family spread is broad enough without losing the lead-target hierarchy.",
+      "Centroid motion indicates the active content is evolving, not frozen.",
+      "Lead-target hierarchy remains intact across the section."
+    ],
+    "weaknesses": [
+      "Section contrast is underdeveloped; the pass is not evolving enough over time."
+    ],
+    "revisionSuggestions": [
+      "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window."
+    ]
+  },
+  "nextMoves": [
+    {
+      "priority": 1,
+      "owner": "designer",
+      "level": "section",
+      "instruction": "Clarify how the section should evolve from opening to closing instead of holding one static treatment."
+    },
+    {
+      "priority": 2,
+      "owner": "sequencer",
+      "level": "section",
+      "instruction": "Introduce a bounded section-level evolution in spread, density, or support role across the sampled window."
+    }
+  ]
+}

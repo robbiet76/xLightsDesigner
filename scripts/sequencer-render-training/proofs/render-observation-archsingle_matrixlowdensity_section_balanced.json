@@ -1,0 +1,484 @@
+{
+  "artifactType": "render_observation_v1",
+  "artifactVersion": 1,
+  "source": {
+    "windowArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_matrixlowdensity_section_balanced.json",
+    "geometryModelCount": 19
+  },
+  "macro": {
+    "frameCount": 9,
+    "activeModelNames": [
+      "ArchSingle",
+      "MatrixLowDensity"
+    ],
+    "activeFamilyTotals": {
+      "Arches": 9,
+      "Matrix": 9
+    },
+    "activeModelTotals": {
+      "ArchSingle": 450,
+      "MatrixLowDensity": 81
+    },
+    "modelContributionShares": {
+      "ArchSingle": 0.847457627118644,
+      "MatrixLowDensity": 0.15254237288135594
+    },
+    "leadModel": "ArchSingle",
+    "leadModelShare": 0.847457627118644,
+    "maxActiveModelCount": 2,
+    "maxActiveModelRatio": 0.10526315789473684,
+    "maxActiveNodeCount": 60,
+    "maxSceneSpreadRatio": 0.01134916563498889,
+    "meanSceneSpreadRatio": 0.01084924993640062,
+    "densityBucketSeries": [
+      "moderate",
+      "moderate",
+      "moderate",
+      "moderate",
+      "moderate",
+      "moderate",
+      "moderate",
+      "moderate",
+      "moderate"
+    ],
+    "sceneBoundsUnion": {
+      "min": {
+        "x": -8,
+        "y": -2,
+        "z": 0
+      },
+      "max": {
+        "x": 99,
+        "y": 49.97431182861328,
+        "z": 0
+      }
+    },
+    "fullSceneBounds": {
+      "min": {
+        "x": -245.64520263671875,
+        "y": -450,
+        "z": -250
+      },
+      "max": {
+        "x": 297,
+        "y": 453.0101318359375,
+        "z": 241.2904052734375
+      }
+    },
+    "regionTotals": {
+      "middle_center": 531
+    },
+    "centroidMotions": [
+      {
+        "dx": -0.798631221925497,
+        "dy": -0.429192099027226,
+        "dz": 0.0,
+        "magnitude": 0.9066519103281085
+      },
+      {
+        "dx": 0.03076923076923066,
+        "dy": -0.007692307692305889,
+        "dz": 0.0,
+        "magnitude": 0.031716197120135306
+      },
+      {
+        "dx": 0.04615384615384244,
+        "dy": -0.007692307692309441,
+        "dz": 0.0,
+        "magnitude": 0.046790481002290614
+      },
+      {
+        "dx": -0.09230769230769198,
+        "dy": -0.01538461538461533,
+        "dz": 0.0,
+        "magnitude": 0.09358096200458765
+      },
+      {
+        "dx": 0.05538461538461803,
+        "dy": -0.00615384615384329,
+        "dz": 0.0,
+        "magnitude": 0.05572544700392488
+      },
+      {
+        "dx": 0.021538461538462172,
+        "dy": -0.00923076923077204,
+        "dz": 0.0,
+        "magnitude": 0.023433148018044483
+      },
+      {
+        "dx": -0.06769230769231172,
+        "dy": -0.013846153846152731,
+        "dz": 0.0,
+        "magnitude": 0.0690938817627287
+      },
+      {
+        "dx": 0.05538461538461803,
+        "dy": -0.0061538461538468425,
+        "dz": 0.0,
+        "magnitude": 0.05572544700392527
+      }
+    ],
+    "centroidMotionMax": 0.9066519103281085,
+    "centroidMotionMean": 0.16033968428046816
+  },
+  "frames": [
+    {
+      "frameOffset": 0,
+      "frameTimeMs": 1000,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 51,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -8,
+          "y": 3.0616168932349032e-15,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.990938813290434,
+        "y": 31.179279229060278,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.010912443522249309,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 51
+      }
+    },
+    {
+      "frameOffset": 8,
+      "frameTimeMs": 1200,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -7,
+          "y": 3.0616168932349032e-15,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.19230759136494,
+        "y": 30.75008713003305,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.010810458068770342,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 16,
+      "frameTimeMs": 1400,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -8,
+          "y": 3.0616168932349032e-15,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.22307682213417,
+        "y": 30.742394822340746,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.010912443522249309,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 24,
+      "frameTimeMs": 1600,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -2,
+          "y": 3.0616168932349032e-15,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.26923066828801,
+        "y": 30.734702514648436,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.010300530801375515,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 32,
+      "frameTimeMs": 1800,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -8,
+          "y": 3.0616168932349032e-15,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.17692297598032,
+        "y": 30.71931789926382,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.010912443522249309,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 40,
+      "frameTimeMs": 2000,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -8,
+          "y": 0,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.232307591364936,
+        "y": 30.713164053109978,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.010912443522249309,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 48,
+      "frameTimeMs": 2200,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -3,
+          "y": 0,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.2538460529034,
+        "y": 30.703933283879206,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.01040251625485448,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 56,
+      "frameTimeMs": 2400,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -8,
+          "y": -1,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.18615374521109,
+        "y": 30.690087130033053,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.011130804578619098,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    },
+    {
+      "frameOffset": 64,
+      "frameTimeMs": 2600,
+      "activeModelCount": 2,
+      "activeModelRatio": 0.10526315789473684,
+      "activeNodeCount": 60,
+      "familyDistribution": {
+        "Arches": 1,
+        "Matrix": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -8,
+          "y": -2,
+          "z": 0
+        },
+        "max": {
+          "x": 99,
+          "y": 49.97431182861328,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": 49.241538360595705,
+        "y": 30.683933283879206,
+        "z": 0.0
+      },
+      "sceneSpreadRatio": 0.01134916563498889,
+      "densityBucket": "moderate",
+      "regionDistribution": {
+        "middle_center": 60
+      }
+    }
+  ],
+  "section": {
+    "sliceCount": 3,
+    "slices": [
+      {
+        "label": "opening",
+        "frameCount": 3,
+        "activeFamilyTotals": {
+          "Arches": 3,
+          "Matrix": 3
+        },
+        "dominantDensityBucket": "moderate",
+        "meanSceneSpreadRatio": 0.010878448371089653,
+        "meanActiveNodeCount": 57.0,
+        "meanActiveModelCount": 2.0,
+        "regionTotals": {
+          "middle_center": 171
+        },
+        "leadModel": "ArchSingle",
+        "leadModelShare": 0.847457627118644
+      },
+      {
+        "label": "middle",
+        "frameCount": 3,
+        "activeFamilyTotals": {
+          "Arches": 3,
+          "Matrix": 3
+        },
+        "dominantDensityBucket": "moderate",
+        "meanSceneSpreadRatio": 0.010708472615291377,
+        "meanActiveNodeCount": 60.0,
+        "meanActiveModelCount": 2.0,
+        "regionTotals": {
+          "middle_center": 180
+        },
+        "leadModel": "ArchSingle",
+        "leadModelShare": 0.847457627118644
+      },
+      {
+        "label": "closing",
+        "frameCount": 3,
+        "activeFamilyTotals": {
+          "Arches": 3,
+          "Matrix": 3
+        },
+        "dominantDensityBucket": "moderate",
+        "meanSceneSpreadRatio": 0.010960828822820822,
+        "meanActiveNodeCount": 60.0,
+        "meanActiveModelCount": 2.0,
+        "regionTotals": {
+          "middle_center": 180
+        },
+        "leadModel": "ArchSingle",
+        "leadModelShare": 0.847457627118644
+      }
+    ],
+    "contrast": {
+      "spreadRange": 0.00025235620752944547,
+      "nodeCountRange": 3.0,
+      "densityVaries": false
+    }
+  }
+}

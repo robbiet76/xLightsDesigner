@@ -1,0 +1,44 @@
+[
+  {
+    "scenarioId": "treeflat_archsingle_section_split",
+    "compositeSources": [
+      {
+        "modelName": "TreeFlat",
+        "fseqPath": "render-training/fseq/singlestrand-treeflat-stage1-coverage-v1-chaseSize-registry-v1.20260319T201838Z.fseq"
+      },
+      {
+        "modelName": "ArchSingle",
+        "fseqPath": "render-training/fseq/colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq"
+      }
+    ],
+    "frameOffsets": "0,8,16,24,32,40,48,56,64",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "designHandoffRef": "design_handoff_v2:proof_tree_arch_section",
+    "revisionGoal": "Evaluate section-level coherence for a broad but potentially split tree-plus-arch treatment.",
+    "sectionScope": "proof_section_tree_arch_split",
+    "targetScope": "TreeFlat,ArchSingle",
+    "effectFamilies": "SingleStrand,ColorWash"
+  },
+  {
+    "scenarioId": "archsingle_matrixlowdensity_section_balanced",
+    "compositeSources": [
+      {
+        "modelName": "ArchSingle",
+        "fseqPath": "render-training/fseq/colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq"
+      },
+      {
+        "modelName": "MatrixLowDensity",
+        "fseqPath": "render-training/fseq/singlestrand-matrixlowdensity-stage1-coverage-v1-chaseSize-registry-v1.20260319T201401Z.fseq"
+      }
+    ],
+    "frameOffsets": "0,8,16,24,32,40,48,56,64",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section",
+    "revisionGoal": "Evaluate section-level coherence for a lead-plus-support arch and matrix treatment.",
+    "sectionScope": "proof_section_arch_matrix_balanced",
+    "targetScope": "ArchSingle,MatrixLowDensity",
+    "effectFamilies": "ColorWash,SingleStrand"
+  }
+]
