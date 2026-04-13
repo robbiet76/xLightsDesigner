@@ -540,6 +540,8 @@ Response `data`:
 - `nodes` array of:
   - `nodeId`
   - `stringIndex` (if available)
+  - `channelStart` (zero-based channel index for this node)
+  - `channelCount`
   - `coords[]`:
     - `buffer` `{ x, y }` when enabled
     - `world` `{ x, y, z }` when enabled
@@ -574,6 +576,11 @@ Response `data`:
 - `views[]`
 - `displayElements[]`
 - `cameras[]` (when requested)
+
+Rules:
+- geometry bootstrap must not require an open sequence
+- when no sequence is open, `displayElements[]` may be empty
+- layout/view/camera/model geometry must still be returned when available
 
 All `layout.*` commands:
 - Idempotency: read-only.
