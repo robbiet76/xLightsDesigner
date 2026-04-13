@@ -917,6 +917,7 @@ export function createAudioAnalysisPipelineRuntime(deps = {}) {
       state.ui.sectionTrackName = out.sectionTrackName || "Analysis: Song Structure";
       state.sectionSuggestions = out.sectionSuggestions;
       state.sectionStartByLabel = out.sectionStartByLabel || {};
+      state.sectionEndByLabel = out.sectionEndByLabel || {};
     }
     return out;
   }

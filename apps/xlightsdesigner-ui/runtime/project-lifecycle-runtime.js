@@ -334,6 +334,7 @@ export function createProjectLifecycleRuntime(deps = {}) {
     state.diagnostics = [];
     state.jobs = [];
     state.sectionStartByLabel = {};
+    state.sectionEndByLabel = {};
     state.metadata = structuredClone(defaultState.metadata);
     resetCreativeState();
 

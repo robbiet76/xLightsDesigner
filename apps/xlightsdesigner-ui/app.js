@@ -604,6 +604,7 @@ const defaultState = {
   timingTracks: [],
   sectionSuggestions: [],
   sectionStartByLabel: {},
+  sectionEndByLabel: {},
   creative: {
     goals: "",
     inspiration: "",
@@ -1044,6 +1045,7 @@ function syncSectionSuggestionsFromAnalysisArtifact(artifact = null) {
   state.ui.sectionTrackName = built.labels.length ? "Analysis: Song Structure" : state.ui.sectionTrackName;
   state.sectionSuggestions = built.labels;
   state.sectionStartByLabel = built.startByLabel;
+  state.sectionEndByLabel = built.endByLabel;
   reconcileSectionSelectionsToAvailable();
 }
 
@@ -3857,14 +3859,22 @@ async function collectPostApplyRenderObservation({
   const sectionStarts = targetState?.sectionStartByLabel && typeof targetState.sectionStartByLabel === "object"
     ? targetState.sectionStartByLabel
     : {};
+  const sectionEnds = targetState?.sectionEndByLabel && typeof targetState.sectionEndByLabel === "object"
+    ? targetState.sectionEndByLabel
+    : {};
   const orderedSectionRows = sectionChoiceLabels
     .map((label, idx) => ({
       label,
       startMs: typeof sectionStarts[label] === "number" ? sectionStarts[label] : null,
+      endMs: typeof sectionEnds[label] === "number" ? sectionEnds[label] : null,
       order: idx
     }))
     .filter((row) => Number.isFinite(Number(row?.startMs)))
-    .map((row) => ({ label: String(row.label || "").trim(), startMs: Number(row.startMs) }))
+    .map((row) => ({
+      label: String(row.label || "").trim(),
+      startMs: Number(row.startMs),
+      endMs: Number.isFinite(Number(row.endMs)) ? Number(row.endMs) : null
+    }))
     .sort((a, b) => a.startMs - b.startMs);
   const sectionBounds = selectedSections
     .map((label) => {
@@ -3872,8 +3882,11 @@ async function collectPostApplyRenderObservation({
       if (idx < 0) return null;
       const startMs = orderedSectionRows[idx].startMs;
       const nextStart = orderedSectionRows[idx + 1]?.startMs;
-      const boundedEnd = Number.isFinite(nextStart)
-        ? nextStart
+      const explicitEnd = orderedSectionRows[idx]?.endMs;
+      const boundedEnd = Number.isFinite(explicitEnd) && explicitEnd > startMs
+        ? explicitEnd
+        : Number.isFinite(nextStart)
+          ? nextStart
         : (Number.isFinite(durationMs) && durationMs > startMs ? durationMs : startMs + 1000);
       return {
         startMs,
@@ -7435,6 +7448,7 @@ function normalizeSectionLabel(label) {
 function buildSectionSuggestions(marks) {
   const labels = [];
   const startByLabel = {};
+  const endByLabel = {};
   for (const mark of marks) {
     const label = normalizeSectionLabel(mark?.label);
     if (!label) continue;
@@ -7446,8 +7460,15 @@ function buildSectionSuggestions(marks) {
     ) {
       startByLabel[label] = mark.startMs;
     }
+    if (
+      typeof mark?.endMs === "number" &&
+      !Number.isNaN(mark.endMs) &&
+      !(label in endByLabel)
+    ) {
+      endByLabel[label] = mark.endMs;
+    }
   }
-  return { labels, startByLabel };
+  return { labels, startByLabel, endByLabel };
 }
 
 function getTimingTrackNames(tracks = state.timingTracks) {
@@ -7494,6 +7515,7 @@ async function fetchSectionSuggestions(options = {}) {
     state.ui.sectionTrackName = "";
     state.sectionSuggestions = [];
     state.sectionStartByLabel = {};
+    state.sectionEndByLabel = {};
     return {
       track: "",
       count: 0,
@@ -7523,6 +7545,7 @@ async function fetchSectionSuggestions(options = {}) {
   const labels = built.labels;
   state.sectionSuggestions = labels;
   state.sectionStartByLabel = built.startByLabel;
+  state.sectionEndByLabel = built.endByLabel;
   reconcileSectionSelectionsToAvailable();
   return { track: preferred, count: state.sectionSuggestions.length, usedDefault: labels.length === 0 };
 }

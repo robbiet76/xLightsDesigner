@@ -67,6 +67,7 @@ export function createAudioAnalysisSessionRuntime(deps = {}) {
     );
     state.sectionSuggestions = [];
     state.sectionStartByLabel = {};
+    state.sectionEndByLabel = {};
     resetAudioAnalysisView(state.audioAnalysis);
     state.audioAnalysis.pipeline = buildPendingAudioAnalysisPipeline();
     setAudioAnalysisProgress(state.audioAnalysis, {
