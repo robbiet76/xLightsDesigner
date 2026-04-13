@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+import argparse
+import json
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--observation", required=True)
+    parser.add_argument("--out", required=True)
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    with open(args.observation, "r", encoding="utf-8") as handle:
+        obs = json.load(handle)
+
+    macro = obs["macro"]
+    active_models = macro.get("activeModelNames", [])
+    active_families = macro.get("activeFamilyTotals", {})
+    spread = macro.get("meanSceneSpreadRatio", 0.0)
+    density_series = macro.get("densityBucketSeries", [])
+    motion = macro.get("centroidMotionMean", 0.0)
+
+    designer_strengths = []
+    designer_weaknesses = []
+    sequencer_strengths = []
+    sequencer_weaknesses = []
+    next_moves = []
+
+    if len(active_models) == 1:
+        designer_strengths.append("The section reads as a single focused idea.")
+        sequencer_strengths.append("Active content is concentrated enough to make the lead target legible.")
+    else:
+        designer_weaknesses.append("The scene is split across too many active models to read as one idea.")
+        sequencer_weaknesses.append("Too many models are active at once for this checkpoint.")
+
+    if spread < 0.01:
+        designer_weaknesses.append("The visual footprint is very narrow relative to the full scene.")
+        sequencer_weaknesses.append("Scene spread is too tight; add restrained support targets before polishing detail.")
+        next_moves.append({
+            "priority": 1,
+            "owner": "sequencer",
+            "level": "group",
+            "instruction": "Broaden the active footprint with one secondary support family while preserving the lead target."
+        })
+    else:
+        designer_strengths.append("The active footprint is broad enough to register at scene scale.")
+        sequencer_strengths.append("Scene spread is large enough to support broader composition.")
+
+    if density_series and len(set(density_series)) == 1:
+        designer_strengths.append(f"Density is consistent across the sampled window ({density_series[0]}).")
+        sequencer_strengths.append("Frame-to-frame density remains stable through the sampled checkpoint.")
+
+    if len(active_families) == 1:
+        family_name = next(iter(active_families))
+        designer_weaknesses.append(f"Only one family is carrying the section ({family_name}).")
+        sequencer_weaknesses.append(f"Family balance is narrow; current output relies entirely on {family_name}.")
+        next_moves.append({
+            "priority": 2,
+            "owner": "designer",
+            "level": "section",
+            "instruction": f"Decide whether this section should remain {family_name}-only or intentionally add a support family."
+        })
+
+    if motion > 0:
+        sequencer_strengths.append("Centroid motion indicates the active content is evolving, not frozen.")
+    else:
+        sequencer_weaknesses.append("Active centroid is static across the sampled frames.")
+
+    critique = {
+        "artifactType": "sequence_critique_v1",
+        "artifactVersion": 1,
+        "createdAt": None,
+        "source": {
+            "renderObservationRef": args.observation,
+        },
+        "ladderLevel": "macro",
+        "designerSummary": {
+            "intentRead": "single-idea section read" if len(active_models) == 1 else "multi-idea section read",
+            "focusRead": "narrow" if spread < 0.01 else "broad_enough",
+            "contrastRead": density_series[0] if density_series else "unknown",
+            "compositionRead": "concentrated",
+            "strengths": designer_strengths,
+            "weaknesses": designer_weaknesses,
+            "designAdjustmentSuggestions": [m["instruction"] for m in next_moves if m["owner"] == "designer"],
+        },
+        "sequencerSummary": {
+            "executionRead": "stable_sparse_pass",
+            "spreadRead": "too_narrow" if spread < 0.01 else "acceptable",
+            "densityRead": density_series[0] if density_series else "unknown",
+            "familyBalanceRead": "single_family" if len(active_families) == 1 else "multi_family",
+            "motionRead": "moving" if motion > 0 else "static",
+            "strengths": sequencer_strengths,
+            "weaknesses": sequencer_weaknesses,
+            "revisionSuggestions": [m["instruction"] for m in next_moves if m["owner"] == "sequencer"],
+        },
+        "nextMoves": next_moves,
+    }
+
+    with open(args.out, "w", encoding="utf-8") as handle:
+        json.dump(critique, handle, indent=2)
+        handle.write("\n")
+
+    print(json.dumps({
+        "ok": True,
+        "out": args.out,
+        "ladderLevel": critique["ladderLevel"],
+        "designerWeaknesses": critique["designerSummary"]["weaknesses"],
+        "sequencerWeaknesses": critique["sequencerSummary"]["weaknesses"],
+    }, indent=2))
+
+
+if __name__ == "__main__":
+    main()

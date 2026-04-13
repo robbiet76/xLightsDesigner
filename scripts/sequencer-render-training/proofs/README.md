@@ -40,6 +40,13 @@ Current proof:
     - `activeFamilyTotals = { Tree: 3 }`
     - `maxSceneSpreadRatio > 0`
     - `regionTotals = { middle_center: 192 }`
+- `sequence-critique-render-training-treeflat.json`
+  - Source observation: `render-observation-render-training-treeflat.json`
+  - Status: first split `sequence_critique_v1` proof
+  - Notes:
+    - `ladderLevel = macro`
+    - separate `designerSummary` and `sequencerSummary`
+    - ordered `nextMoves` for both agents
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -64,6 +71,7 @@ What this proves:
 - We can join authoritative rendered frame windows back onto cached whole-layout geometry.
 - We can derive first-pass macro observation signals from reconstructed whole-layout windows.
 - We can compare active scene bounds against full-layout bounds and track region occupancy over time.
+- We can translate render observations into separate designer-facing and sequencer-facing critique summaries.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.
