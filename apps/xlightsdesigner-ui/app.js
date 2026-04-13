@@ -3827,12 +3827,29 @@ function clampNumber(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function resolveRenderSamplingDetail({
+  sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null
+} = {}) {
+  const ladderLevel = String(sequenceRevisionObjective?.ladderLevel || "").trim().toLowerCase();
+  if (["group", "model", "effect"].includes(ladderLevel)) return "drilldown";
+  if (ladderLevel === "section") return "section";
+  const goalLevel = String(sequenceArtisticGoal?.scope?.goalLevel || "").trim().toLowerCase();
+  if (["group", "model", "effect"].includes(goalLevel)) return "drilldown";
+  if (goalLevel === "section") return "section";
+  return "macro";
+}
+
 function buildRenderSamplingPolicy({
   sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null,
   sectionWindow = null,
   isFallbackFullWindow = false
 } = {}) {
-  const goalLevel = String(sequenceArtisticGoal?.scope?.goalLevel || "").trim().toLowerCase();
+  const samplingDetail = resolveRenderSamplingDetail({
+    sequenceArtisticGoal,
+    sequenceRevisionObjective
+  });
   const startMs = Number(sectionWindow?.startMs || 0);
   const endMs = Number(sectionWindow?.endMs || startMs);
   const durationMs = Math.max(1, endMs - startMs);
@@ -3841,6 +3858,7 @@ function buildRenderSamplingPolicy({
     const targetFrames = clampNumber(Math.round(durationMs / 1500), 3, 6);
     return {
       reviewLevel: "macro",
+      samplingDetail: "macro",
       targetFrames,
       trimStartMs: 0,
       trimEndMs: 0
@@ -3852,9 +3870,20 @@ function buildRenderSamplingPolicy({
   const appliedTrimMs = Math.min(trimMs, maxUsableTrim);
   const bodyDurationMs = Math.max(1, durationMs - (appliedTrimMs * 2));
 
-  if (goalLevel === "section") {
+  if (samplingDetail === "drilldown") {
     return {
       reviewLevel: "section",
+      samplingDetail,
+      targetFrames: clampNumber(Math.round(bodyDurationMs / 150), 6, 12),
+      trimStartMs: appliedTrimMs,
+      trimEndMs: appliedTrimMs
+    };
+  }
+
+  if (samplingDetail === "section") {
+    return {
+      reviewLevel: "section",
+      samplingDetail,
       targetFrames: clampNumber(Math.round(bodyDurationMs / 250), 4, 10),
       trimStartMs: appliedTrimMs,
       trimEndMs: appliedTrimMs
@@ -3863,6 +3892,7 @@ function buildRenderSamplingPolicy({
 
   return {
     reviewLevel: "macro",
+    samplingDetail: "macro",
     targetFrames: clampNumber(Math.round(bodyDurationMs / 500), 3, 6),
     trimStartMs: appliedTrimMs,
     trimEndMs: appliedTrimMs
@@ -3888,6 +3918,9 @@ async function collectPostApplyRenderObservation({
     : null;
   const sequenceArtisticGoal = targetState?.creative?.sequenceArtisticGoal && typeof targetState.creative.sequenceArtisticGoal === "object"
     ? targetState.creative.sequenceArtisticGoal
+    : null;
+  const sequenceRevisionObjective = targetState?.creative?.sequenceRevisionObjective && typeof targetState.creative.sequenceRevisionObjective === "object"
+    ? targetState.creative.sequenceRevisionObjective
     : null;
   const targetScope = Array.from(new Set([
     ...selectedTargets,
@@ -3953,6 +3986,7 @@ async function collectPostApplyRenderObservation({
             if (!bounds) return null;
             const policy = buildRenderSamplingPolicy({
               sequenceArtisticGoal,
+              sequenceRevisionObjective,
               sectionWindow: bounds,
               isFallbackFullWindow: false
             });
@@ -3964,6 +3998,7 @@ async function collectPostApplyRenderObservation({
               endMs: trimmedEndMs,
               maxFrames: policy.targetFrames,
               reviewLevel: policy.reviewLevel,
+              sampleDetail: policy.samplingDetail,
               sourceStartMs: bounds.startMs,
               sourceEndMs: bounds.endMs
             };
@@ -3972,6 +4007,7 @@ async function collectPostApplyRenderObservation({
       : (() => {
           const policy = buildRenderSamplingPolicy({
             sequenceArtisticGoal,
+            sequenceRevisionObjective,
             sectionWindow: { startMs: safeStartMs, endMs: safeEndMs },
             isFallbackFullWindow: true
           });
@@ -3981,6 +4017,7 @@ async function collectPostApplyRenderObservation({
             endMs: safeEndMs,
             maxFrames: policy.targetFrames,
             reviewLevel: policy.reviewLevel,
+            sampleDetail: policy.samplingDetail,
             sourceStartMs: safeStartMs,
             sourceEndMs: safeEndMs
           }];
@@ -3997,6 +4034,7 @@ async function collectPostApplyRenderObservation({
         ...sampleResponse,
         label: window.label,
         reviewLevel: window.reviewLevel,
+        sampleDetail: window.sampleDetail,
         sourceWindow: {
           startMs: window.sourceStartMs,
           endMs: window.sourceEndMs

@@ -342,6 +342,7 @@ export function buildRenderObservationFromSamples({
   const primaryData = isPlainObject(responseRows[0]?.data) ? responseRows[0].data : {};
   const sourceStartMs = windowSummaries.map((row) => toFinite(row?.startMs)).filter((row) => row != null);
   const sourceEndMs = windowSummaries.map((row) => toFinite(row?.endMs)).filter((row) => row != null);
+  const sampleDetails = uniqueStrings(responseRows.map((wrapper) => wrapper?.sampleDetail));
 
   return finalizeArtifact({
     artifactType: "render_observation_v1",
@@ -354,6 +355,7 @@ export function buildRenderObservationFromSamples({
       startMs: sourceStartMs.length ? Math.min(...sourceStartMs) : toFinite(primaryData?.startMs),
       endMs: sourceEndMs.length ? Math.max(...sourceEndMs) : toFinite(primaryData?.endMs),
       samplingMode: str(plan?.samplingMode || "full") || "full",
+      samplingDetail: sampleDetails.length === 1 ? sampleDetails[0] : (sampleDetails.length > 1 ? "mixed" : ""),
       sampledModelCount: models.length,
       availableModelCount: toFinite(plan?.availableModelCount),
       targetMatchedModelCount: toFinite(plan?.targetMatchedModelCount),
@@ -363,6 +365,7 @@ export function buildRenderObservationFromSamples({
         startMs: toFinite(row?.startMs),
         endMs: toFinite(row?.endMs),
         reviewLevel: str(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.reviewLevel || ""),
+        sampleDetail: str(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.sampleDetail || ""),
         sourceStartMs: toFinite(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.sourceWindow?.startMs),
         sourceEndMs: toFinite(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.sourceWindow?.endMs)
       }))

@@ -70,6 +70,7 @@ test("buildRenderObservationFromSamples produces model-level macro observation f
   assert.equal(observation.source.startMs, 0);
   assert.equal(observation.source.endMs, 50);
   assert.equal(observation.source.samplingMode, "full");
+  assert.equal(observation.source.samplingDetail, "");
   assert.equal(observation.source.sampledModelCount, 2);
   assert.deepEqual(observation.macro.activeModelNames, ["MegaTree", "Roofline"]);
   assert.equal(observation.macro.leadModel, "MegaTree");
@@ -128,6 +129,7 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
       {
         label: "Verse",
         reviewLevel: "section",
+        sampleDetail: "section",
         sourceWindow: { startMs: 900, endMs: 1600 },
         data: {
           sequencePath: "/show/Test.xsq",
@@ -145,6 +147,7 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
       {
         label: "Chorus",
         reviewLevel: "section",
+        sampleDetail: "drilldown",
         sourceWindow: { startMs: 1900, endMs: 2600 },
         data: {
           sequencePath: "/show/Test.xsq",
@@ -163,9 +166,10 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
   });
 
   assert.equal(observation.source.windowCount, 2);
+  assert.equal(observation.source.samplingDetail, "mixed");
   assert.deepEqual(observation.source.windows, [
-    { label: "Verse", startMs: 1000, endMs: 1500, reviewLevel: "section", sourceStartMs: 900, sourceEndMs: 1600 },
-    { label: "Chorus", startMs: 2000, endMs: 2500, reviewLevel: "section", sourceStartMs: 1900, sourceEndMs: 2600 }
+    { label: "Verse", startMs: 1000, endMs: 1500, reviewLevel: "section", sampleDetail: "section", sourceStartMs: 900, sourceEndMs: 1600 },
+    { label: "Chorus", startMs: 2000, endMs: 2500, reviewLevel: "section", sampleDetail: "drilldown", sourceStartMs: 1900, sourceEndMs: 2600 }
   ]);
   assert.equal(observation.windows.length, 2);
   assert.equal(observation.windows[0].label, "Verse");
