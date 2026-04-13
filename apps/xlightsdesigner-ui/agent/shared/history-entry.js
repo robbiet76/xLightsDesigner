@@ -17,7 +17,9 @@ export function buildArtifactRefs({
   proposalBundle = null,
   intentHandoff = null,
   planHandoff = null,
-  applyResult = null
+  applyResult = null,
+  renderObservation = null,
+  renderCritiqueContext = null
 } = {}) {
   return {
     analysisArtifactId: ensureString(analysisArtifact?.artifactId, null),
@@ -28,7 +30,9 @@ export function buildArtifactRefs({
     proposalId: ensureString(proposalBundle?.artifactId, null),
     intentHandoffId: ensureString(intentHandoff?.artifactId, null),
     planId: ensureString(planHandoff?.artifactId, null),
-    applyResultId: ensureString(applyResult?.artifactId, null)
+    applyResultId: ensureString(applyResult?.artifactId, null),
+    renderObservationId: ensureString(renderObservation?.artifactId, null),
+    renderCritiqueContextId: ensureString(renderCritiqueContext?.artifactId, null)
   };
 }
 
@@ -128,7 +132,9 @@ export function buildHistoryEntry({
       proposalId: ensureString(artifactRefs?.proposalId, null),
       intentHandoffId: ensureString(artifactRefs?.intentHandoffId, null),
       planId: ensureString(artifactRefs?.planId, null),
-      applyResultId: ensureString(artifactRefs?.applyResultId, null)
+      applyResultId: ensureString(artifactRefs?.applyResultId, null),
+      renderObservationId: ensureString(artifactRefs?.renderObservationId, null),
+      renderCritiqueContextId: ensureString(artifactRefs?.renderCritiqueContextId, null)
     },
     snapshotSummary: snapshotSummary && typeof snapshotSummary === "object" ? snapshotSummary : {},
     applyStage: ensureString(applyStage, null),

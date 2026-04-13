@@ -35,6 +35,8 @@ export function createProjectHistoryRuntime(deps = {}) {
       state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1"),
       planHandoff || getValidHandoff("plan_handoff_v1"),
       applyResult,
+      state.sequenceAgentRuntime?.renderObservation || null,
+      state.sequenceAgentRuntime?.renderCritiqueContext || null,
       historyEntry
     ].filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
     if (!artifacts.length) return { ok: false, reason: "no_artifacts" };
@@ -80,7 +82,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       proposalBundle,
       intentHandoff,
       planHandoff,
-      applyResult
+      applyResult,
+      renderObservation,
+      renderCritiqueContext
     ] = await Promise.all([
       readProjectArtifactById("analysis_artifact_v1", refs.analysisArtifactId),
       readProjectArtifactById("design_scene_context_v1", refs.sceneContextId),
@@ -90,7 +94,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       readProjectArtifactById("proposal_bundle_v1", refs.proposalId),
       readProjectArtifactById("intent_handoff_v1", refs.intentHandoffId),
       readProjectArtifactById("plan_handoff_v1", refs.planId),
-      readProjectArtifactById("apply_result_v1", refs.applyResultId)
+      readProjectArtifactById("apply_result_v1", refs.applyResultId),
+      readProjectArtifactById("render_observation_v1", refs.renderObservationId),
+      readProjectArtifactById("sequence_render_critique_context_v1", refs.renderCritiqueContextId)
     ]);
     return {
       historyEntryId: str(entry.historyEntryId),
@@ -102,7 +108,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       proposalBundle,
       intentHandoff,
       planHandoff,
-      applyResult
+      applyResult,
+      renderObservation,
+      renderCritiqueContext
     };
   }
 
@@ -193,7 +201,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       proposalBundle: state.creative?.proposalBundle || null,
       intentHandoff: state.creative?.intentHandoff || getValidHandoff("intent_handoff_v1"),
       planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
-      applyResult
+      applyResult,
+      renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
+      renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null
     };
     state.ui.selectedHistorySnapshot = state.ui.reviewHistorySnapshot;
   }

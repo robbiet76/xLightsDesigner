@@ -12,7 +12,8 @@ function buildDeps(overrides = {}) {
     chat: [],
     flags: {},
     ui: {},
-    creative: {}
+    creative: {},
+    sequenceAgentRuntime: {}
   };
 
   return {
@@ -146,7 +147,8 @@ test("automation reset clears stale audio path and sequence media state", async 
     chat: [],
     flags: {},
     ui: {},
-    creative: {}
+    creative: {},
+    sequenceAgentRuntime: {}
   };
   const runtime = createAutomationRuntime(buildDeps({ state }));
 
@@ -155,4 +157,54 @@ test("automation reset clears stale audio path and sequence media state", async 
   assert.equal(out.ok, true);
   assert.equal(state.audioPathInput, "");
   assert.equal(state.sequenceMediaFile, "");
+});
+
+test("automation runtime stores render observation artifacts for feedback loop testing", () => {
+  let persisted = false;
+  let rendered = false;
+  const state = {
+    status: null,
+    activeSequence: "",
+    sequencePathInput: "",
+    proposed: [],
+    chat: [],
+    flags: {},
+    ui: {},
+    creative: {},
+    sequenceAgentRuntime: {}
+  };
+  const runtime = createAutomationRuntime(buildDeps({
+    state,
+    persist: () => { persisted = true; },
+    render: () => { rendered = true; }
+  }));
+
+  const out = runtime.setAutomationRenderObservation({
+    renderObservation: {
+      artifactType: "render_observation_v1",
+      artifactId: "render-1"
+    },
+    renderCritiqueContext: {
+      artifactType: "sequence_render_critique_context_v1",
+      artifactId: "critique-1"
+    }
+  });
+
+  assert.equal(out.ok, true);
+  assert.equal(state.sequenceAgentRuntime.renderObservation.artifactId, "render-1");
+  assert.equal(state.sequenceAgentRuntime.renderCritiqueContext.artifactId, "critique-1");
+  assert.equal(persisted, true);
+  assert.equal(rendered, true);
+  assert.equal(runtime.getAutomationRenderFeedbackSnapshot().renderObservation.artifactId, "render-1");
+});
+
+test("automation runtime rejects invalid render observation artifacts", () => {
+  const runtime = createAutomationRuntime(buildDeps());
+  const out = runtime.setAutomationRenderObservation({
+    renderObservation: {
+      artifactType: "wrong_type"
+    }
+  });
+  assert.equal(out.ok, false);
+  assert.match(out.error, /renderObservation must be render_observation_v1/i);
 });

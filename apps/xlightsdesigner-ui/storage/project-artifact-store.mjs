@@ -13,6 +13,8 @@ const ARTIFACT_DIRS = {
   intent_handoff_v1: path.join("artifacts", "intent-handoffs"),
   plan_handoff_v1: path.join("artifacts", "plans"),
   apply_result_v1: path.join("artifacts", "apply-results"),
+  render_observation_v1: path.join("artifacts", "render-observations"),
+  sequence_render_critique_context_v1: path.join("artifacts", "render-critique-contexts"),
   history_entry_v1: "history"
 };
 

@@ -57,7 +57,8 @@ export async function executeApplyCore({
     buildApplyHistoryEntry,
     buildChatArtifactCard,
     getTeamChatSpeakerLabel,
-    buildCurrentDesignSceneContext
+    buildCurrentDesignSceneContext,
+    buildCurrentRenderObservation
   } = deps;
   const {
     pushSequenceAgentContractDiagnostic = () => {},
@@ -299,6 +300,17 @@ export async function executeApplyCore({
     state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
       ? state.sequenceAgentRuntime
       : {};
+    const nextRenderObservation = typeof buildCurrentRenderObservation === "function"
+      ? buildCurrentRenderObservation({
+          practicalValidation,
+          verification,
+          planHandoff,
+          sequencingDesignHandoff
+        })
+      : null;
+    if (nextRenderObservation && typeof nextRenderObservation === "object") {
+      state.sequenceAgentRuntime.renderObservation = nextRenderObservation;
+    }
     const renderObservation = state.sequenceAgentRuntime?.renderObservation
       && typeof state.sequenceAgentRuntime.renderObservation === "object"
       ? state.sequenceAgentRuntime.renderObservation

@@ -49,6 +49,50 @@ export function createAutomationRuntime(deps = {}) {
     getPageStates
   } = deps;
 
+  function setAutomationRenderObservation(payload = {}) {
+    state.sequenceAgentRuntime =
+      state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
+        ? state.sequenceAgentRuntime
+        : {};
+    const renderObservation =
+      payload?.renderObservation && typeof payload.renderObservation === "object" && !Array.isArray(payload.renderObservation)
+        ? payload.renderObservation
+        : null;
+    const renderCritiqueContext =
+      payload?.renderCritiqueContext && typeof payload.renderCritiqueContext === "object" && !Array.isArray(payload.renderCritiqueContext)
+        ? payload.renderCritiqueContext
+        : null;
+    if (renderObservation && String(renderObservation?.artifactType || "").trim() !== "render_observation_v1") {
+      return { ok: false, error: "renderObservation must be render_observation_v1 when provided." };
+    }
+    if (renderCritiqueContext && String(renderCritiqueContext?.artifactType || "").trim() !== "sequence_render_critique_context_v1") {
+      return { ok: false, error: "renderCritiqueContext must be sequence_render_critique_context_v1 when provided." };
+    }
+    state.sequenceAgentRuntime.renderObservation = renderObservation;
+    state.sequenceAgentRuntime.renderCritiqueContext = renderCritiqueContext;
+    persist();
+    render();
+    return {
+      ok: true,
+      renderObservation: state.sequenceAgentRuntime.renderObservation || null,
+      renderCritiqueContext: state.sequenceAgentRuntime.renderCritiqueContext || null
+    };
+  }
+
+  function getAutomationRenderFeedbackSnapshot() {
+    return {
+      ok: true,
+      renderObservation:
+        state.sequenceAgentRuntime?.renderObservation && typeof state.sequenceAgentRuntime.renderObservation === "object"
+          ? state.sequenceAgentRuntime.renderObservation
+          : null,
+      renderCritiqueContext:
+        state.sequenceAgentRuntime?.renderCritiqueContext && typeof state.sequenceAgentRuntime.renderCritiqueContext === "object"
+          ? state.sequenceAgentRuntime.renderCritiqueContext
+          : null
+    };
+  }
+
   async function dispatchAutomationPrompt(prompt = "") {
     const text = String(prompt || "").trim();
     if (!text) {
@@ -894,6 +938,8 @@ export function createAutomationRuntime(deps = {}) {
       defineVisualHint: defineAutomationVisualHint,
       applyCurrentProposal: applyAutomationCurrentProposal,
       diagnoseCurrentProposal: diagnoseAutomationCurrentProposal,
+      setRenderObservation: setAutomationRenderObservation,
+      getRenderFeedbackSnapshot: getAutomationRenderFeedbackSnapshot,
       getComparativeValidationSnapshot: getAutomationComparativeValidationSnapshot,
       getSequencerValidationSnapshot: getAutomationSequencerValidationSnapshot,
       getVisualHintDefinitionsSnapshot: getAutomationVisualHintDefinitionsSnapshot,
@@ -911,6 +957,8 @@ export function createAutomationRuntime(deps = {}) {
     resetAutomationState,
     applyAutomationCurrentProposal,
     diagnoseAutomationCurrentProposal,
+    setAutomationRenderObservation,
+    getAutomationRenderFeedbackSnapshot,
     getAutomationComparativeValidationSnapshot,
     refreshAutomationFromXLights,
     analyzeAutomationAudio,

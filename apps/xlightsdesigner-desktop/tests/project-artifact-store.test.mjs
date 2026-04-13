@@ -25,12 +25,24 @@ test("project artifact store writes and reads immutable artifacts by id", () => 
       artifactId: "history_entry_v1-entry123",
       createdAt: "2026-03-13T12:01:00.000Z",
       summary: "Apply snapshot"
+    },
+    {
+      artifactType: "render_observation_v1",
+      artifactId: "render_observation_v1-render123",
+      createdAt: "2026-03-13T12:01:30.000Z",
+      summary: "Render observation"
+    },
+    {
+      artifactType: "sequence_render_critique_context_v1",
+      artifactId: "sequence_render_critique_context_v1-critique123",
+      createdAt: "2026-03-13T12:01:45.000Z",
+      summary: "Render critique"
     }
   ];
 
   const writeRes = writeProjectArtifacts({ projectFilePath, artifacts });
   assert.equal(writeRes.ok, true);
-  assert.equal(writeRes.rows.length, 2);
+  assert.equal(writeRes.rows.length, 4);
 
   const briefRes = readProjectArtifact({
     projectFilePath,
@@ -47,6 +59,14 @@ test("project artifact store writes and reads immutable artifacts by id", () => 
   });
   assert.equal(historyRes.ok, true);
   assert.match(historyRes.artifactPath, /history\/history_entry_v1-entry123\.json$/);
+
+  const renderRes = readProjectArtifact({
+    projectFilePath,
+    artifactType: "render_observation_v1",
+    artifactId: "render_observation_v1-render123"
+  });
+  assert.equal(renderRes.ok, true);
+  assert.match(renderRes.artifactPath, /artifacts\/render-observations\/render_observation_v1-render123\.json$/);
 
   fs.rmSync(root, { recursive: true, force: true });
 });

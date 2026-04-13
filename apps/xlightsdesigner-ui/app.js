@@ -3802,8 +3802,17 @@ function currentArtifactRefs({ planHandoff = null, applyResult = null } = {}) {
     proposalBundle: state.creative?.proposalBundle || null,
     intentHandoff: state.creative?.intentHandoff || agentRuntimeState.getValidHandoff("intent_handoff_v1"),
     planHandoff: planHandoff || agentRuntimeState.getValidHandoff("plan_handoff_v1"),
-    applyResult
+    applyResult,
+    renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
+    renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null
   });
+}
+
+function buildCurrentRenderObservation() {
+  return state.sequenceAgentRuntime?.renderObservation
+    && typeof state.sequenceAgentRuntime.renderObservation === "object"
+      ? state.sequenceAgentRuntime.renderObservation
+      : null;
 }
 
 function downloadJson(filename, data) {
@@ -7770,6 +7779,7 @@ applyReviewRuntime = createApplyReviewRuntime({
   buildApplyHistoryEntry: (...args) => projectHistoryRuntime.buildApplyHistoryEntry(...args),
   buildChatArtifactCard,
   getTeamChatSpeakerLabel,
+  buildCurrentRenderObservation,
   buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),
   getRevision,
   validateCommands,

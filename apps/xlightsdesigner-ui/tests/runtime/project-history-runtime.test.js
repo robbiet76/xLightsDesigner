@@ -30,6 +30,10 @@ function buildState() {
 test("project history runtime persists available artifacts for history", async () => {
   const writes = [];
   const state = buildState();
+  state.sequenceAgentRuntime = {
+    renderObservation: { artifactId: "render-1" },
+    renderCritiqueContext: { artifactId: "critique-1" }
+  };
   const runtime = createProjectHistoryRuntime({
     state,
     getDesktopProjectArtifactBridge: () => ({
@@ -53,7 +57,7 @@ test("project history runtime persists available artifacts for history", async (
   assert.equal(writes[0].projectFilePath, "/show/project.xdproj");
   assert.deepEqual(
     writes[0].artifacts.map((row) => row.artifactId),
-    ["analysis-1", "scene-1", "music-1", "director-1", "brief-1", "proposal-1", "intent-1", "plan-1", "apply-1", "history-1"]
+    ["analysis-1", "scene-1", "music-1", "director-1", "brief-1", "proposal-1", "intent-1", "plan-1", "apply-1", "render-1", "critique-1", "history-1"]
   );
 });
 
@@ -71,7 +75,9 @@ test("project history runtime loads and selects history snapshots", async () => 
         proposalId: "proposal-1",
         intentHandoffId: "intent-1",
         planId: "plan-1",
-        applyResultId: "apply-1"
+        applyResultId: "apply-1",
+        renderObservationId: "render-1",
+        renderCritiqueContextId: "critique-1"
       }
     }
   ];
@@ -90,4 +96,6 @@ test("project history runtime loads and selects history snapshots", async () => 
   assert.equal(state.ui.selectedHistoryEntry, "h1");
   assert.equal(state.ui.selectedHistorySnapshot.planHandoff.artifactId, "plan-1");
   assert.equal(state.ui.reviewHistorySnapshot.applyResult.artifactId, "apply-1");
+  assert.equal(state.ui.reviewHistorySnapshot.renderObservation.artifactId, "render-1");
+  assert.equal(state.ui.reviewHistorySnapshot.renderCritiqueContext.artifactId, "critique-1");
 });
