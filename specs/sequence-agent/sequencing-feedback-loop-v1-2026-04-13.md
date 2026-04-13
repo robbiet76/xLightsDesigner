@@ -194,6 +194,46 @@ Must be able to answer:
 - what is overdone or underdeveloped
 - what the next revision batch should attempt
 
+### Critique ladder rule
+
+Critique must proceed from broad structure to fine detail.
+
+Required review order:
+1. `macro`
+- whole sequence or whole-scene balance
+- energy arc
+- section contrast
+- focal hierarchy
+- overall clutter/restraint
+
+2. `section`
+- whether each major section expresses the right idea
+- section density and pacing
+- section-level target family emphasis
+- section legibility
+
+3. `group`
+- focal/support/background group relationships
+- family-level balance
+- whether key prop groups are carrying the right role
+
+4. `model`
+- local model conflicts
+- awkward local motion or density
+- repetitive or distracting model behavior
+
+5. `effect`
+- parameter tuning
+- transition polish
+- local color/effect nuance
+
+Rule:
+- the system must always evaluate the highest unresolved level first
+- it must not descend into lower-level refinement while a higher level is still unstable
+- revision batches should target the highest failing level before addressing finer detail
+
+This is the sequencing equivalent of the broad-to-narrow discovery pattern already used in display understanding.
+
 ## 6. Revision learning record
 
 The system stores one joined learning record for the cycle.
@@ -256,6 +296,14 @@ That includes:
 - candidate comparison
 - critique generation
 - revision proposal generation
+
+The local system should also interpret the same render checkpoint at multiple resolutions:
+- macro scene level
+- section level
+- group level
+- model level
+
+This allows one expensive checkpoint to support many critique questions before the next batch is sent back to xLights.
 
 Future extension:
 - local surrogate preview prediction before committing the next batch to xLights
@@ -349,5 +397,6 @@ Proceed with a local-first sequencing feedback loop built around authoritative x
 
 Treat xLights render as expensive truth.
 Treat local reconstruction or prediction as the working iteration layer.
+Validate composition from broad to narrow.
 Keep user preferences separate from general training artifacts.
 Keep all artifact schemas portable for future cloud migration.
