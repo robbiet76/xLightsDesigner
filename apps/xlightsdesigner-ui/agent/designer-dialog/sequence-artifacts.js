@@ -172,6 +172,21 @@ function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   if (!comparison.broadCoverageExpected && comparison.renderUsesBroadScene) {
     findings.push("Scene spread is broader than the intended focus.");
   }
+  if (comparison.renderCoverageTooSparse) {
+    findings.push("Display coverage is too sparse for the intended musical or emotional lift.");
+  }
+  if (comparison.renderCoverageTooBroad) {
+    findings.push("Display coverage is too broad for the intended restrained moment.");
+  }
+  if (comparison.renderHasDisplayGaps) {
+    findings.push(`Visible display gaps remain across the rendered scene: ${arr(observed.coverageGapRegions).join(", ")}.`);
+  }
+  if (comparison.renderIsLeftRightImbalanced) {
+    findings.push("Rendered scene balance is too weighted to one side of the display.");
+  }
+  if (comparison.renderIsTopBottomImbalanced) {
+    findings.push("Rendered scene balance is too weighted vertically and leaves part of the display underused.");
+  }
   if (str(observed.breadthRead) === "tight" && arr(expected.supportTargetIds).length) {
     findings.push("Support targets are not contributing enough to the rendered scene.");
   }

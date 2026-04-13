@@ -20,6 +20,12 @@ test("buildRenderCritiqueContext merges render observation with design and hando
         leadModel: "MegaTree",
         leadModelShare: 0.76,
         meanSceneSpreadRatio: 0.024,
+        activeCoverageRatio: 0.18,
+        coverageGapCount: 2,
+        coverageGapRegions: ["topRight", "bottomRight"],
+        coverageRead: "partial",
+        leftRightBalanceRatio: 0.42,
+        topBottomBalanceRatio: 0.08,
         maxActiveModelRatio: 0.12,
         temporalRead: "modulated",
         energyVariation: 0.11,
@@ -61,11 +67,18 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.observed.samplingMode, "targeted");
   assert.equal(out.observed.sampledModelCount, 2);
   assert.equal(out.observed.windowCount, 2);
+  assert.equal(out.observed.activeCoverageRatio, 0.18);
+  assert.equal(out.observed.coverageRead, "partial");
+  assert.equal(out.observed.leftRightBalanceRead, "imbalanced");
+  assert.equal(out.observed.topBottomBalanceRead, "balanced");
   assert.equal(out.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(out.comparison.leadIsKnownFocalCandidate, true);
   assert.deepEqual(out.comparison.observedFocusTargets, ["MegaTree"]);
   assert.equal(out.observed.breadthRead, "moderate");
   assert.equal(out.observed.temporalRead, "modulated");
+  assert.equal(out.comparison.renderCoverageTooSparse, true);
+  assert.equal(out.comparison.renderHasDisplayGaps, true);
+  assert.equal(out.comparison.renderIsLeftRightImbalanced, true);
   assert.deepEqual(out.comparison.adjacentWindowComparisons, []);
 });
 

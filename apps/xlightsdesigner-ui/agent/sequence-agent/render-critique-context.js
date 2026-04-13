@@ -34,6 +34,14 @@ function inferBreadthRead(spread = 0) {
   return "broad";
 }
 
+function inferBalanceRead(ratio = 0) {
+  if (!Number.isFinite(Number(ratio))) return "unknown";
+  const value = Number(ratio);
+  if (value < 0.15) return "balanced";
+  if (value < 0.35) return "slightly_off";
+  return "imbalanced";
+}
+
 function buildWindowComparisons(windows = []) {
   const rows = arr(windows)
     .map((row) => (isPlainObject(row) ? row : null))
@@ -104,6 +112,11 @@ export function buildRenderCritiqueContext({
   const detailCoverageDomains = uniqueStrings(scene?.coverageDomains?.detail);
   const spreadRatio = Number(macro.meanSceneSpreadRatio || 0);
   const windowComparisons = buildWindowComparisons(observation?.windows);
+  const densityTargets = uniqueStrings(
+    arr(handoff?.sectionDirectives).map((row) => str(row?.densityTarget))
+  ).map((row) => row.toLowerCase());
+  const broadCoverageExpected = broadCoverageDomains.length > 0 || densityTargets.some((row) => ["high", "dense", "full", "broad"].includes(row));
+  const restrainedCoverageExpected = densityTargets.some((row) => ["low", "sparse", "restrained"].includes(row));
 
   return {
     artifactType: "sequence_render_critique_context_v1",
@@ -133,6 +146,14 @@ export function buildRenderCritiqueContext({
       windowCount: Number(source.windowCount || 0),
       meanSceneSpreadRatio: spreadRatio,
       breadthRead: inferBreadthRead(spreadRatio),
+      activeCoverageRatio: Number(macro.activeCoverageRatio || 0),
+      coverageGapCount: Number(macro.coverageGapCount || 0),
+      coverageGapRegions: uniqueStrings(macro.coverageGapRegions),
+      coverageRead: str(macro.coverageRead || "unknown") || "unknown",
+      leftRightBalanceRatio: Number(macro.leftRightBalanceRatio || 0),
+      leftRightBalanceRead: inferBalanceRead(Number(macro.leftRightBalanceRatio || 0)),
+      topBottomBalanceRatio: Number(macro.topBottomBalanceRatio || 0),
+      topBottomBalanceRead: inferBalanceRead(Number(macro.topBottomBalanceRatio || 0)),
       maxActiveModelRatio: Number(macro.maxActiveModelRatio || 0),
       temporalRead: str(macro.temporalRead || "unknown") || "unknown",
       energyVariation: Number(macro.energyVariation || 0),
@@ -144,9 +165,15 @@ export function buildRenderCritiqueContext({
       missingPrimaryFocusTargets: primaryFocusTargetIds.filter((targetId) => !observedModelSet.has(targetId)),
       leadMatchesPrimaryFocus,
       leadIsKnownFocalCandidate,
-      broadCoverageExpected: broadCoverageDomains.length > 0,
+      broadCoverageExpected,
+      restrainedCoverageExpected,
       renderUsesBroadScene: spreadRatio >= 0.03,
       renderUsesTightFocus: spreadRatio < 0.01,
+      renderCoverageTooSparse: broadCoverageExpected && Number(macro.activeCoverageRatio || 0) < 0.2,
+      renderCoverageTooBroad: restrainedCoverageExpected && Number(macro.activeCoverageRatio || 0) > 0.45,
+      renderHasDisplayGaps: Number(macro.coverageGapCount || 0) >= 2,
+      renderIsLeftRightImbalanced: Number(macro.leftRightBalanceRatio || 0) >= 0.35,
+      renderIsTopBottomImbalanced: Number(macro.topBottomBalanceRatio || 0) >= 0.35,
       adjacentWindowComparisons: windowComparisons
     }
   };

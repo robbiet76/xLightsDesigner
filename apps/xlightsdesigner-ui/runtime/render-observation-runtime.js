@@ -103,6 +103,67 @@ function computeSpreadRatio(activeModels = [], sceneBounds = null) {
   return sceneBounds.area > 0 ? Math.max(0, Math.min(1, area / sceneBounds.area)) : 0;
 }
 
+function buildRegionActivitySummary(activeModels = [], sceneBounds = null) {
+  if (!sceneBounds || !activeModels.length) {
+    return {
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      quadrants: {
+        topLeft: 0,
+        topRight: 0,
+        bottomLeft: 0,
+        bottomRight: 0
+      }
+    };
+  }
+  const centerX = sceneBounds.minX + (sceneBounds.width / 2);
+  const centerY = sceneBounds.minY + (sceneBounds.height / 2);
+  const out = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    quadrants: {
+      topLeft: 0,
+      topRight: 0,
+      bottomLeft: 0,
+      bottomRight: 0
+    }
+  };
+  for (const model of activeModels) {
+    const x = toFinite(model?.x);
+    const y = toFinite(model?.y);
+    if (x == null || y == null) continue;
+    const isLeft = x < centerX;
+    const isTop = y < centerY;
+    if (isLeft) out.left += 1;
+    else out.right += 1;
+    if (isTop) out.top += 1;
+    else out.bottom += 1;
+    if (isTop && isLeft) out.quadrants.topLeft += 1;
+    else if (isTop) out.quadrants.topRight += 1;
+    else if (isLeft) out.quadrants.bottomLeft += 1;
+    else out.quadrants.bottomRight += 1;
+  }
+  return out;
+}
+
+function computeBalanceRatio(a = 0, b = 0) {
+  const total = Number(a || 0) + Number(b || 0);
+  if (total <= 0) return 0;
+  return Number((Math.abs(Number(a || 0) - Number(b || 0)) / total).toFixed(4));
+}
+
+function classifyCoverageRead(activeCoverageRatio = 0, gapCount = 0) {
+  const coverage = Number(activeCoverageRatio || 0);
+  const gaps = Number(gapCount || 0);
+  if (coverage < 0.15 || gaps >= 3) return "sparse";
+  if (coverage < 0.35 || gaps >= 2) return "partial";
+  return "balanced";
+}
+
 function summarizeRangeActivity(bytes, offset, count) {
   let sum = 0;
   let peak = 0;
@@ -165,6 +226,19 @@ function summarizeWindow({
   const frameEnergyTotals = [];
   const frameLeadModels = [];
   const activeModelCounts = [];
+  const uniqueActiveModels = new Set();
+  const regionTotals = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    quadrants: {
+      topLeft: 0,
+      topRight: 0,
+      bottomLeft: 0,
+      bottomRight: 0
+    }
+  };
   let maxActiveModelCount = 0;
 
   for (const sample of samples) {
@@ -181,6 +255,7 @@ function summarizeWindow({
       if (!activity.active) continue;
       activeModels.push(model);
       activeModelNames.add(model.id);
+      uniqueActiveModels.add(model.id);
       frameModelEnergies.push({ id: model.id, energy: activity.normalized });
       frameEnergyTotal += activity.normalized;
       modelEnergyTotals.set(model.id, Number(modelEnergyTotals.get(model.id) || 0) + activity.normalized);
@@ -192,6 +267,15 @@ function summarizeWindow({
     frameEnergyTotals.push(Number(frameEnergyTotal.toFixed(6)));
     frameLeadModels.push(str(frameModelEnergies[0]?.id));
     spreadRatios.push(computeSpreadRatio(activeModels, sceneBounds));
+    const regionSummary = buildRegionActivitySummary(activeModels, sceneBounds);
+    regionTotals.left += regionSummary.left;
+    regionTotals.right += regionSummary.right;
+    regionTotals.top += regionSummary.top;
+    regionTotals.bottom += regionSummary.bottom;
+    regionTotals.quadrants.topLeft += regionSummary.quadrants.topLeft;
+    regionTotals.quadrants.topRight += regionSummary.quadrants.topRight;
+    regionTotals.quadrants.bottomLeft += regionSummary.quadrants.bottomLeft;
+    regionTotals.quadrants.bottomRight += regionSummary.quadrants.bottomRight;
   }
 
   const rankedModels = [...modelEnergyTotals.entries()]
@@ -208,6 +292,12 @@ function summarizeWindow({
     activeModelCounts,
     leadModels: frameLeadModels
   });
+  const activeCoverageRatio = models.length ? Number((uniqueActiveModels.size / models.length).toFixed(4)) : 0;
+  const inactiveQuadrants = Object.entries(regionTotals.quadrants)
+    .filter(([, count]) => Number(count || 0) <= 0)
+    .map(([name]) => name);
+  const leftRightBalanceRatio = computeBalanceRatio(regionTotals.left, regionTotals.right);
+  const topBottomBalanceRatio = computeBalanceRatio(regionTotals.top, regionTotals.bottom);
 
   return {
     label: str(label),
@@ -222,6 +312,12 @@ function summarizeWindow({
     maxSceneSpreadRatio: spreadRatios.length ? Number(Math.max(...spreadRatios).toFixed(6)) : 0,
     maxActiveModelCount,
     maxActiveModelRatio: models.length ? Number((maxActiveModelCount / models.length).toFixed(4)) : 0,
+    activeCoverageRatio,
+    coverageGapCount: inactiveQuadrants.length,
+    coverageGapRegions: inactiveQuadrants,
+    coverageRead: classifyCoverageRead(activeCoverageRatio, inactiveQuadrants.length),
+    leftRightBalanceRatio,
+    topBottomBalanceRatio,
     temporalRead: temporal.temporalRead,
     energyVariation: temporal.energyVariation,
     activeModelVariation: temporal.activeModelVariation,
@@ -245,6 +341,12 @@ function combineWindowSummaries(windowSummaries = [], models = []) {
       maxSceneSpreadRatio: Number(row?.maxSceneSpreadRatio || 0),
       maxActiveModelCount: Number(row?.maxActiveModelCount || 0),
       maxActiveModelRatio: Number(row?.maxActiveModelRatio || 0),
+      activeCoverageRatio: Number(row?.activeCoverageRatio || 0),
+      coverageGapCount: Number(row?.coverageGapCount || 0),
+      coverageGapRegions: Array.isArray(row?.coverageGapRegions) ? row.coverageGapRegions : [],
+      coverageRead: str(row?.coverageRead || "unknown") || "unknown",
+      leftRightBalanceRatio: Number(row?.leftRightBalanceRatio || 0),
+      topBottomBalanceRatio: Number(row?.topBottomBalanceRatio || 0),
       temporalRead: str(row?.temporalRead || "unknown") || "unknown",
       energyVariation: Number(row?.energyVariation || 0),
       activeModelVariation: Number(row?.activeModelVariation || 0),
@@ -278,6 +380,10 @@ function combineWindowSummaries(windowSummaries = [], models = []) {
   const energyTotals = rows.map((row) => Number(row?.totalEnergy || 0)).filter((row) => Number.isFinite(row));
   const activeCountSeries = rows.map((row) => Number(row?.maxActiveModelCount || 0)).filter((row) => Number.isFinite(row));
   const leadModelSeries = rows.map((row) => str(row?.leadModel)).filter(Boolean);
+  const coverageRatios = rows.map((row) => Number(row?.activeCoverageRatio || 0)).filter((row) => Number.isFinite(row));
+  const leftRightRatios = rows.map((row) => Number(row?.leftRightBalanceRatio || 0)).filter((row) => Number.isFinite(row));
+  const topBottomRatios = rows.map((row) => Number(row?.topBottomBalanceRatio || 0)).filter((row) => Number.isFinite(row));
+  const coverageGapRegions = uniqueStrings(rows.flatMap((row) => row?.coverageGapRegions));
   const temporal = classifyTemporalRead({
     frameEnergyTotals: energyTotals,
     activeModelCounts: activeCountSeries,
@@ -294,6 +400,15 @@ function combineWindowSummaries(windowSummaries = [], models = []) {
     maxSceneSpreadRatio: spreadValues.length ? Number(Math.max(...spreadValues).toFixed(6)) : 0,
     maxActiveModelCount,
     maxActiveModelRatio: models.length ? Number((maxActiveModelCount / models.length).toFixed(4)) : 0,
+    activeCoverageRatio: coverageRatios.length ? Number((coverageRatios.reduce((sum, row) => sum + row, 0) / coverageRatios.length).toFixed(4)) : 0,
+    coverageGapCount: coverageGapRegions.length,
+    coverageGapRegions,
+    coverageRead: classifyCoverageRead(
+      coverageRatios.length ? coverageRatios.reduce((sum, row) => sum + row, 0) / coverageRatios.length : 0,
+      coverageGapRegions.length
+    ),
+    leftRightBalanceRatio: leftRightRatios.length ? Number((leftRightRatios.reduce((sum, row) => sum + row, 0) / leftRightRatios.length).toFixed(4)) : 0,
+    topBottomBalanceRatio: topBottomRatios.length ? Number((topBottomRatios.reduce((sum, row) => sum + row, 0) / topBottomRatios.length).toFixed(4)) : 0,
     temporalRead: temporal.temporalRead,
     energyVariation: temporal.energyVariation,
     activeModelVariation: temporal.activeModelVariation,
@@ -423,6 +538,12 @@ export function buildRenderObservationFromSamples({
       maxSceneSpreadRatio: Number(row?.maxSceneSpreadRatio || 0),
       maxActiveModelCount: Number(row?.maxActiveModelCount || 0),
       maxActiveModelRatio: Number(row?.maxActiveModelRatio || 0),
+      activeCoverageRatio: Number(row?.activeCoverageRatio || 0),
+      coverageGapCount: Number(row?.coverageGapCount || 0),
+      coverageGapRegions: Array.isArray(row?.coverageGapRegions) ? row.coverageGapRegions : [],
+      coverageRead: str(row?.coverageRead || "unknown") || "unknown",
+      leftRightBalanceRatio: Number(row?.leftRightBalanceRatio || 0),
+      topBottomBalanceRatio: Number(row?.topBottomBalanceRatio || 0),
       temporalRead: str(row?.temporalRead || "unknown") || "unknown",
       energyVariation: Number(row?.energyVariation || 0),
       activeModelVariation: Number(row?.activeModelVariation || 0),

@@ -79,6 +79,12 @@ test("buildRenderObservationFromSamples produces model-level macro observation f
   assert.equal(observation.macro.activeFamilyTotals.Line, 1);
   assert.equal(observation.macro.maxActiveModelCount, 2);
   assert.equal(observation.macro.maxActiveModelRatio, 1);
+  assert.equal(observation.macro.activeCoverageRatio, 1);
+  assert.equal(observation.macro.coverageGapCount, 2);
+  assert.deepEqual(observation.macro.coverageGapRegions, ["bottomLeft", "bottomRight"]);
+  assert.equal(observation.macro.coverageRead, "partial");
+  assert.equal(observation.macro.leftRightBalanceRatio, 0.3333);
+  assert.equal(observation.macro.topBottomBalanceRatio, 1);
   assert.equal(observation.macro.temporalRead, "evolving");
   assert.equal(observation.macro.distinctLeadModelCount, 1);
 });
