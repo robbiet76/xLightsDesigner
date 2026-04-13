@@ -20,6 +20,8 @@ import {
   getSubmodelDetail,
   getSubmodels,
   getSystemVersion,
+  getRenderedSequenceSamples,
+  renderCurrentSequence,
   saveSequence,
   getTimingMarks,
   getTimingTracks,
@@ -160,6 +162,10 @@ import { buildPageStates } from "./app-ui/page-state/index.js";
 import { buildNormalizedTargetMetadataRecords } from "./runtime/target-metadata-runtime.js";
 import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js";
 import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
+import {
+  buildRenderObservationFromSamples,
+  buildRenderSamplingPlan
+} from "./runtime/render-observation-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
 import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
 import { createAudioAnalysisSessionRuntime } from "./runtime/audio-analysis-session-runtime.js";
@@ -3813,6 +3819,41 @@ function buildCurrentRenderObservation() {
     && typeof state.sequenceAgentRuntime.renderObservation === "object"
       ? state.sequenceAgentRuntime.renderObservation
       : null;
+}
+
+async function collectPostApplyRenderObservation({
+  state: targetState = state,
+  designSceneContext = null,
+  applyResult = null
+} = {}) {
+  const endpoint = String(targetState?.endpoint || "").trim();
+  if (!endpoint) return null;
+  const sceneGraph = targetState?.sceneGraph && typeof targetState.sceneGraph === "object"
+    ? targetState.sceneGraph
+    : {};
+  const samplingPlan = buildRenderSamplingPlan(sceneGraph);
+  if (!samplingPlan.modelCount || !samplingPlan.channelRanges.length) return null;
+
+  const durationMs = Number(targetState?.sequenceSettings?.durationMs || 0);
+  const safeEndMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 1000;
+  try {
+    await renderCurrentSequence(endpoint);
+    const sampleResponse = await getRenderedSequenceSamples(endpoint, {
+      startMs: 0,
+      endMs: safeEndMs,
+      maxFrames: 5,
+      channelRanges: samplingPlan.channelRanges
+    });
+    return buildRenderObservationFromSamples({
+      samplingPlan,
+      sampleResponse,
+      sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
+      revisionToken: String(applyResult?.nextRevision || targetState?.revision || "unknown")
+    });
+  } catch (err) {
+    pushDiagnostic("warning", `Render observation capture unavailable: ${String(err?.message || err || "unknown error")}`);
+    return null;
+  }
 }
 
 function downloadJson(filename, data) {
@@ -7780,6 +7821,7 @@ applyReviewRuntime = createApplyReviewRuntime({
   buildChatArtifactCard,
   getTeamChatSpeakerLabel,
   buildCurrentRenderObservation,
+  collectPostApplyRenderObservation,
   buildEffectiveMetadataAssignments: (...args) => metadataRuntime.buildEffectiveMetadataAssignments(...args),
   getRevision,
   validateCommands,

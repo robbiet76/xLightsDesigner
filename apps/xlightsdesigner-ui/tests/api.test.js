@@ -5,6 +5,7 @@ import {
   getDefaultEndpoint,
   getOpenSequence,
   getMediaStatus,
+  renderCurrentSequence,
   getRenderedSequenceSamples,
   openSequence,
   getTimingMarks,
@@ -217,6 +218,45 @@ test("getRenderedSequenceSamples uses owned route and preserves sparse sample pa
     assert.equal(body.data.sampleEncoding, "base64_packed_channel_ranges_v1");
     assert.equal(body.data.samples.length, 2);
     assert.equal(body.data.channelRanges[1].startChannel, 100);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("renderCurrentSequence waits for owned queued job completion", async () => {
+  const calls = [];
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: String(options?.method || "GET") });
+    if (String(url).endsWith("/sequence/render-current")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 202,
+        data: { accepted: true, jobId: "job-render-1", state: "queued" }
+      });
+    }
+    if (String(url).includes("/jobs/get?jobId=job-render-1")) {
+      return jsonResponse({
+        ok: true,
+        statusCode: 200,
+        data: {
+          jobId: "job-render-1",
+          state: "completed",
+          result: {
+            ok: true,
+            statusCode: 200,
+            data: { rendered: true, revisionToken: "rev-4", fseqPath: "/show/Test.fseq" }
+          }
+        }
+      });
+    }
+    throw new Error(`Unexpected fetch ${url}`);
+  };
+  try {
+    const body = await renderCurrentSequence("http://127.0.0.1:49915/xlightsdesigner/api");
+    assert.equal(body.res, 200);
+    assert.equal(body.data.rendered, true);
+    assert.equal(body.data.fseqPath, "/show/Test.fseq");
   } finally {
     global.fetch = originalFetch;
   }

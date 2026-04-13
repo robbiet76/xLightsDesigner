@@ -58,7 +58,8 @@ export async function executeApplyCore({
     buildChatArtifactCard,
     getTeamChatSpeakerLabel,
     buildCurrentDesignSceneContext,
-    buildCurrentRenderObservation
+    buildCurrentRenderObservation,
+    collectPostApplyRenderObservation = async () => null
   } = deps;
   const {
     pushSequenceAgentContractDiagnostic = () => {},
@@ -300,14 +301,26 @@ export async function executeApplyCore({
     state.sequenceAgentRuntime = state.sequenceAgentRuntime && typeof state.sequenceAgentRuntime === "object"
       ? state.sequenceAgentRuntime
       : {};
-    const nextRenderObservation = typeof buildCurrentRenderObservation === "function"
-      ? buildCurrentRenderObservation({
-          practicalValidation,
-          verification,
-          planHandoff,
-          sequencingDesignHandoff
-        })
-      : null;
+    let nextRenderObservation = await collectPostApplyRenderObservation({
+      state,
+      practicalValidation,
+      verification,
+      planHandoff,
+      sequencingDesignHandoff,
+      designSceneContext,
+      applyResult: {
+        currentRevision: String(orchestrated?.currentRevision || state.draftBaseRevision || state.revision || "unknown"),
+        nextRevision: String(orchestrated?.nextRevision || orchestrated?.currentRevision || state.revision || "unknown")
+      }
+    });
+    if (!nextRenderObservation && typeof buildCurrentRenderObservation === "function") {
+      nextRenderObservation = buildCurrentRenderObservation({
+        practicalValidation,
+        verification,
+        planHandoff,
+        sequencingDesignHandoff
+      });
+    }
     if (nextRenderObservation && typeof nextRenderObservation === "object") {
       state.sequenceAgentRuntime.renderObservation = nextRenderObservation;
     }

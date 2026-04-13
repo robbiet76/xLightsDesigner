@@ -302,6 +302,7 @@ export async function pingCapabilities(endpoint) {
           "sequence.getOpen",
           "sequence.getRevision",
           "sequence.getSettings",
+          "sequence.renderCurrent",
           "sequence.getRenderSamples",
           "sequence.open",
           "sequence.create",
@@ -350,6 +351,13 @@ export async function getSequenceSettings(endpoint) {
     return normalizeOwnedCompleted("sequence.getSettings", await readOwnedGet(endpoint, "/sequence/settings"));
   }
   return postCommand(endpoint, "sequence.getSettings", {});
+}
+
+export async function renderCurrentSequence(endpoint) {
+  if (isOwnedEndpoint(endpoint)) {
+    return readOwnedPost(endpoint, "/sequence/render-current", {}, { command: "sequence.renderCurrent", queued: true });
+  }
+  return postCommand(endpoint, "sequence.renderCurrent", {});
 }
 
 export async function getMediaStatus(endpoint) {

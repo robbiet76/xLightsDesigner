@@ -342,6 +342,129 @@ test("executeApplyCore refreshes artistic goal and revision objective from pract
   assert.match(state.creative.sequenceRevisionObjective.sequencerDirection.executionObjective, /Revise the next pass to resolve/i);
 });
 
+test("executeApplyCore prefers collected post-apply render observation when available", async () => {
+  const state = {
+    endpoint: "http://127.0.0.1:49915/xlightsdesigner/api",
+    draftBaseRevision: "rev-1",
+    revision: "rev-1",
+    sequenceSettings: { durationMs: 60000 },
+    displayElements: [],
+    sceneGraph: { groupsById: {}, submodelsById: {} },
+    ui: { metadataSelectionIds: [], metadataSelectedTags: [] },
+    health: { capabilityCommands: [] },
+    creative: {
+      sequencingDesignHandoff: {
+        artifactType: "sequencing_design_handoff_v2",
+        designSummary: "MegaTree leads while roofline supports.",
+        focusPlan: { primaryTargets: ["MegaTree"], secondaryTargets: ["Roofline"] },
+        sectionDirectives: []
+      },
+      sequenceArtisticGoal: {
+        artifactType: "sequence_artistic_goal_v1",
+        evaluationLens: { comparisonQuestions: ["Does the rendered result preserve the intended lead/support hierarchy?"] }
+      },
+      sequenceRevisionObjective: {
+        artifactType: "sequence_revision_objective_v1",
+        sequencerDirection: { executionObjective: "Translate the handoff." }
+      },
+      proposalBundle: {},
+      intentHandoff: {}
+    },
+    flags: {},
+    proposed: ["Chorus 1 / MegaTree / add Color Wash"],
+    sequenceAgentRuntime: {
+      timingTrackPolicies: {},
+      timingGeneratedSignatures: {},
+      timingTrackProvenance: {}
+    }
+  };
+
+  await executeApplyCore({
+    state,
+    sourceLines: ["Chorus 1 / MegaTree / add Color Wash"],
+    applyLabel: "proposal",
+    orchestrationRun: { id: "run-render-refresh" },
+    intentHandoffRecord: {},
+    intentHandoff: { sequencingDesignHandoff: state.creative.sequencingDesignHandoff },
+    planHandoff: { planId: "plan-render" },
+    deps: {
+      currentSequencePathForSidecar: () => "/show/Test.xsq",
+      getDesktopBackupBridge: () => null,
+      getValidHandoff: () => null,
+      buildSequenceAgentInput: () => ({ ok: true }),
+      currentLayoutMode: () => "2d",
+      getSelectedSections: () => [],
+      normalizeMetadataSelectionIds: (v = []) => v,
+      normalizeMetadataSelectedTags: (v = []) => v,
+      getSequenceTimingOwnershipRows: () => [],
+      getManualLockedXdTracks: () => [],
+      validateSequenceAgentContractGate: (_kind, payload) => ({ ok: true, stage: "", report: { errors: [], payload } }),
+      arraysEqualOrdered: () => true,
+      validateCommandGraph: () => ({ ok: true, nodeCount: 1, errors: [] }),
+      buildSequenceAgentPlan: () => ({
+        commands: [{ id: "effect-1", cmd: "effects.create", params: { modelName: "MegaTree", effectName: "Color Wash", startMs: 0, endMs: 1000 } }],
+        warnings: []
+      }),
+      emitSequenceAgentStageTelemetry: () => {},
+      evaluateSequencePlanCapabilities: () => ({ ok: true, skipped: false, requiredCapabilities: [] }),
+      isXdTimingTrack: () => false,
+      timingMarksSignature: () => "",
+      buildGlobalXdTrackPolicyKey: () => "",
+      validateAndApplyPlan: async () => ({ ok: true, executedCount: 1, currentRevision: "rev-1", nextRevision: "rev-2" }),
+      verifyAppliedPlanReadback: async () => ({
+        checks: [],
+        expectedMutationsPresent: true,
+        revisionAdvanced: true,
+        lockedTracksUnchanged: true
+      }),
+      collectPostApplyRenderObservation: async () => ({
+        artifactType: "render_observation_v1",
+        artifactId: "render-1",
+        macro: {
+          activeModelNames: ["MegaTree"],
+          activeFamilyTotals: { Tree: 1 },
+          leadModel: "MegaTree",
+          leadModelShare: 1,
+          meanSceneSpreadRatio: 0.005,
+          maxActiveModelRatio: 0.2
+        }
+      }),
+      buildCurrentDesignSceneContext: () => ({
+        artifactType: "design_scene_context_v1",
+        artifactId: "scene-1",
+        focalCandidates: ["MegaTree"],
+        coverageDomains: { broad: [], detail: [] }
+      }),
+      buildCurrentRenderObservation: () => null,
+      buildSequenceAgentApplyResult: ({ practicalValidation }) => ({ practicalValidation, verification: { revisionAdvanced: true, expectedMutationsPresent: true, lockedTracksUnchanged: true } }),
+      classifyOrchestrationFailureReason: () => "",
+      getSequenceTimingTrackPoliciesState: () => ({}),
+      getSequenceTimingGeneratedSignaturesState: () => ({}),
+      setSequenceTimingTrackPoliciesState: () => {},
+      setSequenceTimingGeneratedSignaturesState: () => {},
+      applyAcceptedProposalToDirectorProfile: () => ({}),
+      buildApplyHistoryEntry: () => ({}),
+      buildChatArtifactCard: () => ({}),
+      getTeamChatSpeakerLabel: () => "Patch",
+      buildEffectiveMetadataAssignments: () => []
+    },
+    callbacks: {
+      pushSequenceAgentContractDiagnostic: () => {},
+      markOrchestrationStage: () => {},
+      endOrchestrationRun: () => {},
+      pushDiagnostic: () => {},
+      upsertJob: () => {},
+      bumpVersion: () => {},
+      setStatusWithDiagnostics: () => {},
+      addStructuredChatMessage: () => {}
+    }
+  });
+
+  assert.equal(state.sequenceAgentRuntime.renderObservation?.artifactId, "render-1");
+  assert.equal(state.sequenceAgentRuntime.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus, true);
+  assert.match(String(state.creative.sequenceArtisticGoal?.traceability?.renderCritiqueArtifactId || ""), /render-1/);
+});
+
 test("executeApplyCore prefers render critique refresh when render observation is available", async () => {
   const state = {
     endpoint: "http://127.0.0.1:49914/xlDoAutomation",
