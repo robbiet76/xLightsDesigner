@@ -143,6 +143,76 @@ def build_matrix_geometry(attrs):
     }
 
 
+def build_tree_flat_geometry(attrs):
+    string_count = int(attrs.get("parm1", "0") or "0")
+    nodes_per_string = int(attrs.get("parm2", "0") or "0")
+    if string_count <= 0 or nodes_per_string <= 0:
+        raise RuntimeError("tree-flat model missing parm1/parm2 structure")
+
+    origin_x = float(attrs.get("WorldPosX", "0") or "0")
+    origin_y = float(attrs.get("WorldPosY", "0") or "0")
+    origin_z = float(attrs.get("WorldPosZ", "0") or "0")
+    scale_x = float(attrs.get("ScaleX", "1") or "1")
+    scale_y = float(attrs.get("ScaleY", "1") or "1")
+    start_channel_one = int(attrs.get("StartChannel", "0") or "0")
+    if start_channel_one <= 0:
+        raise RuntimeError("model missing StartChannel")
+
+    channels_per_node = infer_channels_per_node(attrs.get("StringType"))
+    start_side = (attrs.get("StartSide") or "B").strip().upper()
+    direction = (attrs.get("Dir") or "L").strip().upper()
+
+    # Proof-only geometry:
+    # - world position is treated as the tree center at the base
+    # - strings are distributed horizontally around the center
+    # - each string is a straight line from base to apex
+    # - channel order walks strings, then nodes within each string
+    # - StartSide=B means nodes rise bottom->top on each string
+    # - Dir=L means string order runs right->left
+    string_positions = list(range(string_count - 1, -1, -1)) if direction == "L" else list(range(string_count))
+    half_span = (string_count - 1) / 2.0
+
+    nodes = []
+    node_id = 0
+    for string_offset, logical_string in enumerate(string_positions):
+        x_base = origin_x + ((logical_string - half_span) * scale_x)
+        y_base = origin_y
+        for node_on_string in range(nodes_per_string):
+            t = 0.0 if nodes_per_string == 1 else node_on_string / float(nodes_per_string - 1)
+            if start_side != "B":
+                t = 1.0 - t
+            x = x_base * (1.0 - t) + origin_x * t
+            y = y_base + (t * scale_y * (nodes_per_string - 1))
+            nodes.append({
+                "nodeId": node_id,
+                "stringIndex": string_offset,
+                "channelStart": start_channel_one + (node_id * channels_per_node),
+                "channelCount": channels_per_node,
+                "screen": {
+                    "x": x,
+                    "y": y,
+                    "z": origin_z,
+                },
+                "tree": {
+                    "string": string_offset,
+                    "logicalString": logical_string,
+                    "nodeOnString": node_on_string,
+                },
+            })
+            node_id += 1
+
+    return {
+        "name": attrs.get("name"),
+        "displayAs": attrs.get("DisplayAs"),
+        "geometryMode": "xml_tree_flat_proof",
+        "nodeCount": string_count * nodes_per_string,
+        "channelsPerNode": channels_per_node,
+        "stringCount": string_count,
+        "nodesPerString": nodes_per_string,
+        "nodes": nodes,
+    }
+
+
 def build_decoder():
     result = subprocess.run(
         ["bash", "scripts/sequencer-render-training/tooling/build-fseq-window-decoder.sh"],
@@ -196,6 +266,7 @@ def join_frame(geometry, frame):
             "channelCount": geo_node["channelCount"],
             "screen": geo_node["screen"],
             **({"grid": geo_node["grid"]} if "grid" in geo_node else {}),
+            **({"tree": geo_node["tree"]} if "tree" in geo_node else {}),
             "rgb": {"r": rgb[0], "g": rgb[1], "b": rgb[2]},
             "brightness": brightness,
             "active": active,
@@ -249,6 +320,8 @@ def main():
         geometry = build_single_line_geometry(attrs)
     elif display_as == "horiz matrix":
         geometry = build_matrix_geometry(attrs)
+    elif display_as == "tree flat":
+        geometry = build_tree_flat_geometry(attrs)
     else:
         raise RuntimeError(f"proof does not yet support DisplayAs={attrs.get('DisplayAs')}")
     decoded = decode_window(
@@ -288,6 +361,7 @@ def main():
             "nodeCount": geometry["nodeCount"],
             "channelsPerNode": geometry["channelsPerNode"],
             **({"rows": geometry["rows"], "cols": geometry["cols"]} if "rows" in geometry else {}),
+            **({"stringCount": geometry["stringCount"], "nodesPerString": geometry["nodesPerString"]} if "stringCount" in geometry else {}),
         },
         "frameSummary": compute_frame_summary(joined_nodes),
         "nodes": joined_nodes,
