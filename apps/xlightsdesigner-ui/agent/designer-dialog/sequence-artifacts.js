@@ -323,6 +323,13 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   if (!findings.length) return base;
   const primaryFinding = findings[0];
   const currentPrompt = str(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions?.[0]);
+  const adjacentWindowComparisons = arr(renderCritiqueContext?.comparison?.adjacentWindowComparisons);
+  const needsSectionContrast = adjacentWindowComparisons.some((row) => row?.windowsReadSimilarly)
+    || (adjacentWindowComparisons.length > 0 && adjacentWindowComparisons.every((row) => row?.sameLeadModel));
+
+  if (needsSectionContrast) {
+    base.ladderLevel = "section";
+  }
 
   base.scope = {
     ...(isPlainObject(base.scope) ? base.scope : {}),
@@ -339,7 +346,9 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   };
   base.sequencerDirection = {
     ...(isPlainObject(base.sequencerDirection) ? base.sequencerDirection : {}),
-    executionObjective: `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`,
+    executionObjective: needsSectionContrast
+      ? "Revise the next pass to strengthen contrast and hierarchy between adjacent sampled sections."
+      : `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`,
     blockedMoves: uniqueStrings([
       ...arr(base?.sequencerDirection?.blockedMoves),
       ...findings

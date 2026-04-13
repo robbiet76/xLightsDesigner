@@ -276,3 +276,48 @@ test("refreshSequenceArtisticGoalFromRenderCritique flags adjacent windows that 
   assert.ok(out.evaluationLens.mustImprove.some((row) => /reading too similarly/i.test(String(row))));
   assert.ok(out.evaluationLens.mustImprove.some((row) => /hierarchy is not shifting enough/i.test(String(row))));
 });
+
+test("refreshSequenceRevisionObjectiveFromRenderCritique pins section-level revision for adjacent window contrast failures", () => {
+  const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const priorObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+  const out = refreshSequenceRevisionObjectiveFromRenderCritique({
+    priorRevisionObjective: priorObjective,
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "moderate",
+        temporalRead: "modulated"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        adjacentWindowComparisons: [
+          {
+            fromLabel: "Verse",
+            toLabel: "Chorus",
+            windowsReadSimilarly: true,
+            sameLeadModel: true
+          }
+        ]
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.equal(out.scope.nextOwner, "shared");
+  assert.equal(out.ladderLevel, "section");
+  assert.equal(out.sequencerDirection.revisionBatchShape, "section_pass");
+  assert.match(out.sequencerDirection.executionObjective, /strengthen contrast and hierarchy between adjacent sampled sections/i);
+});
