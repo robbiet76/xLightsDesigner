@@ -176,6 +176,7 @@ def main():
         "geometryReference": {
             "artifactType": geometry["artifactType"],
             "artifactVersion": geometry["artifactVersion"],
+            "artifactPath": os.path.abspath(args.geometry),
             "layoutName": geometry.get("source", {}).get("layoutName"),
             "showFolder": geometry.get("source", {}).get("showFolder"),
             "modelCount": geometry.get("summaries", {}).get("modelCount"),

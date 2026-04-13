@@ -30,6 +30,14 @@ def bounds_union(bounds_list):
     }
 
 
+def bounds_area_2d(bounds):
+    if not bounds:
+        return 0.0
+    width = max(0.0, bounds["max"]["x"] - bounds["min"]["x"])
+    height = max(0.0, bounds["max"]["y"] - bounds["min"]["y"])
+    return width * height
+
+
 def centroid_delta(a, b):
     if not a or not b:
         return None
@@ -56,17 +64,32 @@ def density_bucket(ratio):
     return "very_dense"
 
 
+def region_label(x_norm, y_norm):
+    horizontal = "left" if x_norm < 1.0 / 3.0 else "center" if x_norm < 2.0 / 3.0 else "right"
+    vertical = "bottom" if y_norm < 1.0 / 3.0 else "middle" if y_norm < 2.0 / 3.0 else "top"
+    return f"{vertical}_{horizontal}"
+
+
 def main():
     args = parse_args()
     with open(args.window, "r", encoding="utf-8") as handle:
         window = json.load(handle)
+    geometry_path = window["geometryReference"].get("artifactPath") or window["source"].get("geometryArtifactPath")
+    geometry = None
+    if geometry_path:
+        with open(geometry_path, "r", encoding="utf-8") as handle:
+            geometry = json.load(handle)
 
     geometry_model_count = window["geometryReference"].get("modelCount") or 0
+    geometry_scene_bounds = None
+    if geometry:
+        geometry_scene_bounds = bounds_union([m.get("bounds") for m in geometry["scene"]["models"]])
+    geometry_scene_area = bounds_area_2d(geometry_scene_bounds)
     frame_observations = []
     active_centroids = []
-    density_values = []
     family_counter = Counter()
     active_model_names = set()
+    region_counter = Counter()
 
     for frame in window["frames"]:
         families = Counter(model["displayAs"] for model in frame["models"])
@@ -86,7 +109,25 @@ def main():
             }
         active_centroids.append(weighted_centroid)
         active_model_ratio = 0.0 if geometry_model_count == 0 else frame["activeModelCount"] / float(geometry_model_count)
-        density_values.append(active_model_ratio)
+        active_area = bounds_area_2d(bounds)
+        scene_spread_ratio = 0.0 if geometry_scene_area <= 0 else active_area / geometry_scene_area
+        region_distribution = Counter()
+        if geometry_scene_bounds:
+            min_x = geometry_scene_bounds["min"]["x"]
+            max_x = geometry_scene_bounds["max"]["x"]
+            min_y = geometry_scene_bounds["min"]["y"]
+            max_y = geometry_scene_bounds["max"]["y"]
+            width = max(max_x - min_x, 1e-9)
+            height = max(max_y - min_y, 1e-9)
+            for model in frame["models"]:
+                for node in model["activeNodes"]:
+                    screen = node.get("screen")
+                    if not screen:
+                        continue
+                    x_norm = (screen["x"] - min_x) / width
+                    y_norm = (screen["y"] - min_y) / height
+                    region_distribution[region_label(x_norm, y_norm)] += 1
+        region_counter.update(region_distribution)
         frame_observations.append({
             "frameOffset": frame["frameOffset"],
             "frameTimeMs": frame["frameTimeMs"],
@@ -96,7 +137,9 @@ def main():
             "familyDistribution": dict(families),
             "sceneActiveBounds": bounds,
             "sceneActiveCentroid": weighted_centroid,
+            "sceneSpreadRatio": scene_spread_ratio,
             "densityBucket": density_bucket(active_model_ratio),
+            "regionDistribution": dict(region_distribution),
         })
 
     centroid_motions = []
@@ -119,8 +162,15 @@ def main():
             "maxActiveModelCount": max((f["activeModelCount"] for f in frame_observations), default=0),
             "maxActiveModelRatio": max((f["activeModelRatio"] for f in frame_observations), default=0.0),
             "maxActiveNodeCount": max((f["activeNodeCount"] for f in frame_observations), default=0),
+            "maxSceneSpreadRatio": max((f["sceneSpreadRatio"] for f in frame_observations), default=0.0),
+            "meanSceneSpreadRatio": (
+                sum(f["sceneSpreadRatio"] for f in frame_observations) / len(frame_observations)
+                if frame_observations else 0.0
+            ),
             "densityBucketSeries": [f["densityBucket"] for f in frame_observations],
             "sceneBoundsUnion": bounds_union([f["sceneActiveBounds"] for f in frame_observations]),
+            "fullSceneBounds": geometry_scene_bounds,
+            "regionTotals": dict(region_counter),
             "centroidMotions": centroid_motions,
             "centroidMotionMax": max((m["magnitude"] for m in centroid_motions), default=0.0),
             "centroidMotionMean": (

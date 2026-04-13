@@ -15,6 +15,7 @@
   "geometryReference": {
     "artifactType": "preview_scene_geometry_v1",
     "artifactVersion": 1,
+    "artifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
     "layoutName": null,
     "showFolder": null,
     "modelCount": 19

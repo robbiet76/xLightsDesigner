@@ -16,6 +16,8 @@
     "maxActiveModelCount": 1,
     "maxActiveModelRatio": 0.05263157894736842,
     "maxActiveNodeCount": 64,
+    "maxSceneSpreadRatio": 0.004551097395284491,
+    "meanSceneSpreadRatio": 0.004141280055149803,
     "densityBucketSeries": [
       "sparse",
       "sparse",
@@ -32,6 +34,21 @@
         "y": 50,
         "z": 0
       }
+    },
+    "fullSceneBounds": {
+      "min": {
+        "x": -245.64520263671875,
+        "y": -450,
+        "z": -250
+      },
+      "max": {
+        "x": 297,
+        "y": 453.0101318359375,
+        "z": 241.2904052734375
+      }
+    },
+    "regionTotals": {
+      "middle_center": 192
     },
     "centroidMotions": [
       {
@@ -77,7 +94,11 @@
         "y": -7.142857074737549,
         "z": 0.0
       },
-      "densityBucket": "sparse"
+      "sceneSpreadRatio": 0.004551097395284491,
+      "densityBucket": "sparse",
+      "regionDistribution": {
+        "middle_center": 64
+      }
     },
     {
       "frameOffset": 10,
@@ -105,7 +126,11 @@
         "y": 0.0,
         "z": 0.0
       },
-      "densityBucket": "sparse"
+      "sceneSpreadRatio": 0.0039284582571200615,
+      "densityBucket": "sparse",
+      "regionDistribution": {
+        "middle_center": 64
+      }
     },
     {
       "frameOffset": 12,
@@ -133,7 +158,11 @@
         "y": 7.142857074737549,
         "z": 0.0
       },
-      "densityBucket": "sparse"
+      "sceneSpreadRatio": 0.003944284513044855,
+      "densityBucket": "sparse",
+      "regionDistribution": {
+        "middle_center": 64
+      }
     }
   ]
 }

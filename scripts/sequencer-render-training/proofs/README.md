@@ -38,6 +38,8 @@ Current proof:
     - `maxActiveModelCount = 1`
     - `densityBucketSeries = [sparse, sparse, sparse]`
     - `activeFamilyTotals = { Tree: 3 }`
+    - `maxSceneSpreadRatio > 0`
+    - `regionTotals = { middle_center: 192 }`
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -61,6 +63,7 @@ What this proves:
 - We can do that on a real custom-heavy show, not just the training fixture.
 - We can join authoritative rendered frame windows back onto cached whole-layout geometry.
 - We can derive first-pass macro observation signals from reconstructed whole-layout windows.
+- We can compare active scene bounds against full-layout bounds and track region occupancy over time.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.
