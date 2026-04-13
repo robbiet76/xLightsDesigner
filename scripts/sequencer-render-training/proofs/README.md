@@ -30,6 +30,14 @@ Current proof:
   - Window: `1000ms..5000ms`
   - Frames: offsets `8,10,12`
   - Status: whole-layout sparse dynamic window reconstruction over cached geometry
+- `render-observation-render-training-treeflat.json`
+  - Source window: `preview-scene-window-render-training-treeflat.json`
+  - Status: first macro-level `render_observation_v1` proof
+  - Notes:
+    - `frameCount = 3`
+    - `maxActiveModelCount = 1`
+    - `densityBucketSeries = [sparse, sparse, sparse]`
+    - `activeFamilyTotals = { Tree: 3 }`
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -52,6 +60,7 @@ What this proves:
 - We can export full whole-layout geometry accurately from xLights itself.
 - We can do that on a real custom-heavy show, not just the training fixture.
 - We can join authoritative rendered frame windows back onto cached whole-layout geometry.
+- We can derive first-pass macro observation signals from reconstructed whole-layout windows.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.

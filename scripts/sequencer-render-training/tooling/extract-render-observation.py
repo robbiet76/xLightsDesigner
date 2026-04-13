@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import math
+from collections import Counter
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--window", required=True)
+    parser.add_argument("--out", required=True)
+    return parser.parse_args()
+
+
+def bounds_union(bounds_list):
+    bounds_list = [b for b in bounds_list if b]
+    if not bounds_list:
+        return None
+    return {
+        "min": {
+            "x": min(b["min"]["x"] for b in bounds_list),
+            "y": min(b["min"]["y"] for b in bounds_list),
+            "z": min(b["min"]["z"] for b in bounds_list),
+        },
+        "max": {
+            "x": max(b["max"]["x"] for b in bounds_list),
+            "y": max(b["max"]["y"] for b in bounds_list),
+            "z": max(b["max"]["z"] for b in bounds_list),
+        },
+    }
+
+
+def centroid_delta(a, b):
+    if not a or not b:
+        return None
+    dx = b["x"] - a["x"]
+    dy = b["y"] - a["y"]
+    dz = b["z"] - a["z"]
+    return {
+        "dx": dx,
+        "dy": dy,
+        "dz": dz,
+        "magnitude": math.sqrt((dx * dx) + (dy * dy) + (dz * dz)),
+    }
+
+
+def density_bucket(ratio):
+    if ratio <= 0.02:
+        return "very_sparse"
+    if ratio <= 0.10:
+        return "sparse"
+    if ratio <= 0.30:
+        return "moderate"
+    if ratio <= 0.60:
+        return "dense"
+    return "very_dense"
+
+
+def main():
+    args = parse_args()
+    with open(args.window, "r", encoding="utf-8") as handle:
+        window = json.load(handle)
+
+    geometry_model_count = window["geometryReference"].get("modelCount") or 0
+    frame_observations = []
+    active_centroids = []
+    density_values = []
+    family_counter = Counter()
+    active_model_names = set()
+
+    for frame in window["frames"]:
+        families = Counter(model["displayAs"] for model in frame["models"])
+        family_counter.update(families)
+        active_model_names.update(model["modelName"] for model in frame["models"])
+        bounds = bounds_union([model.get("activeBounds") for model in frame["models"]])
+        weighted_centroid = None
+        total_brightness = sum(
+            model["averageNodeBrightness"] * model["activeNodeCount"]
+            for model in frame["models"]
+        )
+        if total_brightness > 0:
+            weighted_centroid = {
+                "x": sum((model.get("activeCentroid") or {"x": 0})["x"] * model["averageNodeBrightness"] * model["activeNodeCount"] for model in frame["models"]) / total_brightness,
+                "y": sum((model.get("activeCentroid") or {"y": 0})["y"] * model["averageNodeBrightness"] * model["activeNodeCount"] for model in frame["models"]) / total_brightness,
+                "z": sum((model.get("activeCentroid") or {"z": 0})["z"] * model["averageNodeBrightness"] * model["activeNodeCount"] for model in frame["models"]) / total_brightness,
+            }
+        active_centroids.append(weighted_centroid)
+        active_model_ratio = 0.0 if geometry_model_count == 0 else frame["activeModelCount"] / float(geometry_model_count)
+        density_values.append(active_model_ratio)
+        frame_observations.append({
+            "frameOffset": frame["frameOffset"],
+            "frameTimeMs": frame["frameTimeMs"],
+            "activeModelCount": frame["activeModelCount"],
+            "activeModelRatio": active_model_ratio,
+            "activeNodeCount": frame["activeNodeCount"],
+            "familyDistribution": dict(families),
+            "sceneActiveBounds": bounds,
+            "sceneActiveCentroid": weighted_centroid,
+            "densityBucket": density_bucket(active_model_ratio),
+        })
+
+    centroid_motions = []
+    for idx in range(1, len(active_centroids)):
+        delta = centroid_delta(active_centroids[idx - 1], active_centroids[idx])
+        if delta:
+            centroid_motions.append(delta)
+
+    observation = {
+        "artifactType": "render_observation_v1",
+        "artifactVersion": 1,
+        "source": {
+            "windowArtifactPath": args.window,
+            "geometryModelCount": geometry_model_count,
+        },
+        "macro": {
+            "frameCount": len(frame_observations),
+            "activeModelNames": sorted(active_model_names),
+            "activeFamilyTotals": dict(family_counter),
+            "maxActiveModelCount": max((f["activeModelCount"] for f in frame_observations), default=0),
+            "maxActiveModelRatio": max((f["activeModelRatio"] for f in frame_observations), default=0.0),
+            "maxActiveNodeCount": max((f["activeNodeCount"] for f in frame_observations), default=0),
+            "densityBucketSeries": [f["densityBucket"] for f in frame_observations],
+            "sceneBoundsUnion": bounds_union([f["sceneActiveBounds"] for f in frame_observations]),
+            "centroidMotions": centroid_motions,
+            "centroidMotionMax": max((m["magnitude"] for m in centroid_motions), default=0.0),
+            "centroidMotionMean": (
+                sum(m["magnitude"] for m in centroid_motions) / len(centroid_motions)
+                if centroid_motions else 0.0
+            ),
+        },
+        "frames": frame_observations,
+    }
+
+    with open(args.out, "w", encoding="utf-8") as handle:
+        json.dump(observation, handle, indent=2)
+        handle.write("\n")
+
+    print(json.dumps({
+        "ok": True,
+        "out": args.out,
+        "macro": observation["macro"],
+    }, indent=2))
+
+
+if __name__ == "__main__":
+    main()

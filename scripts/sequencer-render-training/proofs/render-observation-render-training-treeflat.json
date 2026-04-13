@@ -1,0 +1,139 @@
+{
+  "artifactType": "render_observation_v1",
+  "artifactVersion": 1,
+  "source": {
+    "windowArtifactPath": "scripts/sequencer-render-training/proofs/preview-scene-window-render-training-treeflat.json",
+    "geometryModelCount": 19
+  },
+  "macro": {
+    "frameCount": 3,
+    "activeModelNames": [
+      "TreeFlat"
+    ],
+    "activeFamilyTotals": {
+      "Tree": 3
+    },
+    "maxActiveModelCount": 1,
+    "maxActiveModelRatio": 0.05263157894736842,
+    "maxActiveNodeCount": 64,
+    "densityBucketSeries": [
+      "sparse",
+      "sparse",
+      "sparse"
+    ],
+    "sceneBoundsUnion": {
+      "min": {
+        "x": -29.0510196685791,
+        "y": -50,
+        "z": 0
+      },
+      "max": {
+        "x": -6.672449111938477,
+        "y": 50,
+        "z": 0
+      }
+    },
+    "centroidMotions": [
+      {
+        "dx": 2.289030581712723,
+        "dy": 7.142857074737549,
+        "dz": 0.0,
+        "magnitude": 7.500671182910523
+      },
+      {
+        "dx": 2.035969354212286,
+        "dy": 7.142857074737549,
+        "dz": 0.0,
+        "magnitude": 7.427353391445694
+      }
+    ],
+    "centroidMotionMax": 7.500671182910523,
+    "centroidMotionMean": 7.464012287178108
+  },
+  "frames": [
+    {
+      "frameOffset": 8,
+      "frameTimeMs": 1200,
+      "activeModelCount": 1,
+      "activeModelRatio": 0.05263157894736842,
+      "activeNodeCount": 64,
+      "familyDistribution": {
+        "Tree": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -29.0510196685791,
+          "y": -50,
+          "z": 0
+        },
+        "max": {
+          "x": -6.75,
+          "y": 50,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": -19.15433669835329,
+        "y": -7.142857074737549,
+        "z": 0.0
+      },
+      "densityBucket": "sparse"
+    },
+    {
+      "frameOffset": 10,
+      "frameTimeMs": 1250,
+      "activeModelCount": 1,
+      "activeModelRatio": 0.05263157894736842,
+      "activeNodeCount": 64,
+      "familyDistribution": {
+        "Tree": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -26,
+          "y": -50,
+          "z": 0
+        },
+        "max": {
+          "x": -6.75,
+          "y": 50,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": -16.865306116640568,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "densityBucket": "sparse"
+    },
+    {
+      "frameOffset": 12,
+      "frameTimeMs": 1300,
+      "activeModelCount": 1,
+      "activeModelRatio": 0.05263157894736842,
+      "activeNodeCount": 64,
+      "familyDistribution": {
+        "Tree": 1
+      },
+      "sceneActiveBounds": {
+        "min": {
+          "x": -26,
+          "y": -50,
+          "z": 0
+        },
+        "max": {
+          "x": -6.672449111938477,
+          "y": 50,
+          "z": 0
+        }
+      },
+      "sceneActiveCentroid": {
+        "x": -14.829336762428282,
+        "y": 7.142857074737549,
+        "z": 0.0
+      },
+      "densityBucket": "sparse"
+    }
+  ]
+}
