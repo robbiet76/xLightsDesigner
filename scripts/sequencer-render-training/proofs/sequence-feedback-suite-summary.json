@@ -3,7 +3,7 @@
   "artifactVersion": 1,
   "suiteId": "render_training_macro_suite_v1",
   "geometryArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
-  "scenarioCount": 3,
+  "scenarioCount": 4,
   "scenarios": [
     {
       "scenarioId": "treeflat_sparse_macro",
@@ -42,6 +42,19 @@
       "maxSceneSpreadRatio": 0.009994574440938618,
       "focusRead": "narrow",
       "familyBalanceRead": "single_family",
+      "cycleOutcome": "usable_with_revision"
+    },
+    {
+      "scenarioId": "treeflat_archsingle_composite_macro",
+      "modelName": "TreeFlat+ArchSingle",
+      "windowArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-treeflat_archsingle_composite_macro.json",
+      "observationArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-treeflat_archsingle_composite_macro.json",
+      "critiqueArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_archsingle_composite_macro.json",
+      "learningRecordArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-learning-record-treeflat_archsingle_composite_macro.json",
+      "maxActiveModelCount": 2,
+      "maxSceneSpreadRatio": 0.02613210834024275,
+      "focusRead": "broad_enough",
+      "familyBalanceRead": "multi_family",
       "cycleOutcome": "usable_with_revision"
     }
   ]

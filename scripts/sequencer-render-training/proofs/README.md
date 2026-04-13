@@ -70,6 +70,7 @@ Harness runner:
     - `TreeFlat`
     - `MatrixLowDensity`
     - `ArchSingle`
+    - `TreeFlat + ArchSingle` composite support case
   - emits:
     - per-scenario window / observation / critique / learning record artifacts
     - [sequence-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-feedback-suite-summary.json)
@@ -123,4 +124,5 @@ Harness status:
   - `Tree`
   - `Matrix`
   - `Arches`
+  - one broader `Tree + Arches` multi-family composite case
 - The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.

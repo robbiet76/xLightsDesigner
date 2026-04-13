@@ -1,0 +1,118 @@
+{
+  "artifactType": "sequence_learning_record_v1",
+  "artifactVersion": 1,
+  "recordId": "slr_treeflat_archsingle_composite_macro_001",
+  "createdAt": null,
+  "updatedAt": null,
+  "scope": {
+    "projectId": "render_training",
+    "projectName": "Render Training Fixture",
+    "sequenceId": "composite:preview-scene-window-treeflat_sparse_macro.json+preview-scene-window-archsingle_sparse_macro.json",
+    "sequenceName": "composite:preview-scene-window-treeflat_sparse_macro.json+preview-scene-window-archsingle_sparse_macro.json",
+    "checkpointId": "chk_treeflat_archsingle_composite_macro_001",
+    "recordScope": "evaluation_run"
+  },
+  "context": {
+    "designHandoffRef": "design_handoff_v2:proof_tree_arch_support",
+    "revisionGoal": "Validate a broader tree-led section with arch support and confirm the macro critique distinguishes it from narrow single-family passes.",
+    "sectionScope": [
+      "proof_window_tree_arch_composite"
+    ],
+    "targetScope": [
+      "TreeFlat",
+      "ArchSingle"
+    ]
+  },
+  "preferences": {
+    "directorProfileRef": null,
+    "projectPreferenceRef": null,
+    "preferenceSignalsUsed": [],
+    "preferenceScope": "none"
+  },
+  "revisionBatch": {
+    "revisionBatchPlanRef": null,
+    "appliedRevisionBatchRef": null,
+    "summary": "Sparse tree-led validation checkpoint.",
+    "changeCategory": "proof_validation",
+    "sectionTargets": [
+      "TreeFlat",
+      "ArchSingle"
+    ],
+    "targetIds": [
+      "TreeFlat",
+      "ArchSingle"
+    ],
+    "effectFamilies": [
+      "SingleStrand",
+      "ColorWash"
+    ],
+    "appliedCommandStats": null,
+    "baseRevision": null,
+    "resultingRevision": null
+  },
+  "prediction": {
+    "mode": "reconstruction",
+    "previewSceneGeometryRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
+    "previewSceneTensorRef": null,
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-treeflat_archsingle_composite_macro.json",
+    "predictedStrengths": [
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "predictedRisks": [
+      "Too many models are active at once for this checkpoint."
+    ],
+    "predictionSummary": "Sparse tree-only checkpoint reconstructed from authoritative render data."
+  },
+  "truth": {
+    "renderTruthCheckpointRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-treeflat_archsingle_composite_macro.json",
+    "xlightsRevision": null,
+    "renderWindow": {
+      "windowStartMs": 1200,
+      "windowEndMs": 1300,
+      "frameOffsets": [
+        8,
+        10,
+        12
+      ]
+    },
+    "truthSummary": "Authoritative xLights frames joined onto cached whole-layout geometry.",
+    "previewParityRef": null
+  },
+  "critique": {
+    "critiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-treeflat_archsingle_composite_macro.json",
+    "strengths": [
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "weaknesses": [
+      "Too many models are active at once for this checkpoint."
+    ],
+    "intentAlignment": "multi-idea section read",
+    "musicAlignment": "moving",
+    "displayUseAssessment": "multi_family",
+    "focusAssessment": "broad_enough",
+    "densityAssessment": "moderate",
+    "coherenceAssessment": "concentrated",
+    "recommendedNextMoves": []
+  },
+  "outcome": {
+    "cycleOutcome": "usable_with_revision",
+    "shouldContinueFromHere": true,
+    "nextRevisionPriority": null,
+    "humanAccepted": null,
+    "checkpointWorthKeeping": true
+  },
+  "provenance": {
+    "appVersion": null,
+    "assistantModel": null,
+    "designerAgentVersion": "proof_v1",
+    "sequenceAgentVersion": "proof_v1",
+    "xlightsApiVersion": 2,
+    "xlightsIntegrationBranch": "api-cleanup",
+    "createdBy": "render_training_proof",
+    "sourceRunId": "render_training_treeflat_archsingle_composite_macro_001"
+  }
+}

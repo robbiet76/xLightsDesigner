@@ -37,5 +37,19 @@
     "sectionScope": "proof_window_archsingle_sparse",
     "targetScope": "ArchSingle",
     "effectFamilies": "ColorWash"
+  },
+  {
+    "scenarioId": "treeflat_archsingle_composite_macro",
+    "mode": "composite",
+    "modelName": "TreeFlat+ArchSingle",
+    "sourceScenarioIds": [
+      "treeflat_sparse_macro",
+      "archsingle_sparse_macro"
+    ],
+    "designHandoffRef": "design_handoff_v2:proof_tree_arch_support",
+    "revisionGoal": "Validate a broader tree-led section with arch support and confirm the macro critique distinguishes it from narrow single-family passes.",
+    "sectionScope": "proof_window_tree_arch_composite",
+    "targetScope": "TreeFlat,ArchSingle",
+    "effectFamilies": "SingleStrand,ColorWash"
   }
 ]

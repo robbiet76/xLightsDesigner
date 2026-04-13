@@ -35,6 +35,21 @@ def main():
     section_scope = [value for value in args.section_scope.split(",") if value]
     target_scope = [value for value in args.target_scope.split(",") if value]
     effect_families = [value for value in args.effect_families.split(",") if value]
+    window_source = window.get("source", {})
+    sequence_name = None
+    if window_source.get("fseqPath"):
+        sequence_name = os.path.basename(window_source["fseqPath"])
+    elif window_source.get("sourceWindowPaths"):
+        sequence_name = "composite:" + "+".join(os.path.basename(path) for path in window_source["sourceWindowPaths"])
+    else:
+        sequence_name = args.record_id
+    frame_offsets = window_source.get("frameOffsets") or [frame.get("frameOffset") for frame in window.get("frames", [])]
+    window_start_ms = window_source.get("windowStartMs")
+    if window_start_ms is None and window.get("frames"):
+        window_start_ms = min(frame.get("frameTimeMs") for frame in window["frames"])
+    window_end_ms = window_source.get("windowEndMs")
+    if window_end_ms is None and window.get("frames"):
+        window_end_ms = max(frame.get("frameTimeMs") for frame in window["frames"])
 
     record = {
         "artifactType": "sequence_learning_record_v1",
@@ -45,8 +60,8 @@ def main():
         "scope": {
             "projectId": args.project_id,
             "projectName": args.project_name,
-            "sequenceId": os.path.basename(window["source"]["fseqPath"]),
-            "sequenceName": os.path.basename(window["source"]["fseqPath"]),
+            "sequenceId": sequence_name,
+            "sequenceName": sequence_name,
             "checkpointId": args.checkpoint_id,
             "recordScope": "evaluation_run",
         },
@@ -87,9 +102,9 @@ def main():
             "renderTruthCheckpointRef": args.window,
             "xlightsRevision": None,
             "renderWindow": {
-                "windowStartMs": window["source"]["windowStartMs"],
-                "windowEndMs": window["source"]["windowEndMs"],
-                "frameOffsets": window["source"]["frameOffsets"],
+                "windowStartMs": window_start_ms,
+                "windowEndMs": window_end_ms,
+                "frameOffsets": frame_offsets,
             },
             "truthSummary": "Authoritative xLights frames joined onto cached whole-layout geometry.",
             "previewParityRef": None,

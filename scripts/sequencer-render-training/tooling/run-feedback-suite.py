@@ -29,6 +29,7 @@ def main():
         "scenarioCount": len(scenarios),
         "scenarios": [],
     }
+    scenario_outputs = {}
 
     for scenario in scenarios:
         scenario_id = scenario["scenarioId"]
@@ -36,17 +37,26 @@ def main():
         observation_path = os.path.join(PROOFS_DIR, f"render-observation-{scenario_id}.json")
         critique_path = os.path.join(PROOFS_DIR, f"sequence-critique-{scenario_id}.json")
         record_path = os.path.join(PROOFS_DIR, f"sequence-learning-record-{scenario_id}.json")
-
-        run([
-            "python3",
-            "scripts/sequencer-render-training/tooling/reconstruct-preview-scene-window.py",
-            "--geometry", GEOMETRY,
-            "--fseq", scenario["fseqPath"],
-            "--window-start-ms", str(scenario["windowStartMs"]),
-            "--window-end-ms", str(scenario["windowEndMs"]),
-            "--frame-offsets", scenario["frameOffsets"],
-            "--out", window_path,
-        ])
+        if scenario.get("mode") == "composite":
+            compose_cmd = [
+                "python3",
+                "scripts/sequencer-render-training/tooling/compose-preview-scene-window.py",
+            ]
+            for source_id in scenario["sourceScenarioIds"]:
+                compose_cmd.extend(["--window", scenario_outputs[source_id]["windowArtifactPath"]])
+            compose_cmd.extend(["--out", window_path])
+            run(compose_cmd)
+        else:
+            run([
+                "python3",
+                "scripts/sequencer-render-training/tooling/reconstruct-preview-scene-window.py",
+                "--geometry", GEOMETRY,
+                "--fseq", scenario["fseqPath"],
+                "--window-start-ms", str(scenario["windowStartMs"]),
+                "--window-end-ms", str(scenario["windowEndMs"]),
+                "--frame-offsets", scenario["frameOffsets"],
+                "--out", window_path,
+            ])
         run([
             "python3",
             "scripts/sequencer-render-training/tooling/extract-render-observation.py",
@@ -93,6 +103,12 @@ def main():
             "familyBalanceRead": critique["sequencerSummary"]["familyBalanceRead"],
             "cycleOutcome": record["outcome"]["cycleOutcome"],
         })
+        scenario_outputs[scenario_id] = {
+            "windowArtifactPath": os.path.abspath(window_path),
+            "observationArtifactPath": os.path.abspath(observation_path),
+            "critiqueArtifactPath": os.path.abspath(critique_path),
+            "learningRecordArtifactPath": os.path.abspath(record_path),
+        }
 
     summary_path = os.path.join(PROOFS_DIR, "sequence-feedback-suite-summary.json")
     with open(summary_path, "w", encoding="utf-8") as handle:
