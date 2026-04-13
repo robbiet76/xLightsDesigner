@@ -318,6 +318,44 @@ test("refreshSequenceRevisionObjectiveFromRenderCritique pins section-level revi
 
   assert.equal(out.scope.nextOwner, "shared");
   assert.equal(out.ladderLevel, "section");
+  assert.deepEqual(out.scope.revisionTargets, ["Verse", "Chorus"]);
+  assert.deepEqual(out.sequencerDirection.focusTargets, ["Verse", "Chorus"]);
   assert.equal(out.sequencerDirection.revisionBatchShape, "section_pass");
   assert.match(out.sequencerDirection.executionObjective, /strengthen contrast and hierarchy between adjacent sampled sections/i);
+});
+
+test("refreshSequenceRevisionObjectiveFromRenderCritique carries render-driven model targets into the next pass", () => {
+  const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const priorObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+  const out = refreshSequenceRevisionObjectiveFromRenderCritique({
+    priorRevisionObjective: priorObjective,
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "Roofline",
+        breadthRead: "tight",
+        temporalRead: "flat"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: false,
+        missingPrimaryFocusTargets: ["MegaTree"],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        adjacentWindowComparisons: []
+      },
+      expected: {
+        supportTargetIds: ["Roofline", "Matrix"]
+      }
+    }
+  });
+
+  assert.deepEqual(out.scope.revisionTargets, ["MegaTree", "Roofline", "Matrix"]);
+  assert.deepEqual(out.sequencerDirection.focusTargets, ["MegaTree", "Roofline", "Matrix"]);
 });

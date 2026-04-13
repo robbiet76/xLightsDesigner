@@ -189,6 +189,23 @@ function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   return uniqueStrings(findings);
 }
 
+function deriveRenderDrivenTargetIds(renderCritiqueContext = null) {
+  const context = isPlainObject(renderCritiqueContext) ? renderCritiqueContext : null;
+  if (!context) return [];
+  const observed = isPlainObject(context.observed) ? context.observed : {};
+  const comparison = isPlainObject(context.comparison) ? context.comparison : {};
+  const expected = isPlainObject(context.expected) ? context.expected : {};
+
+  return uniqueStrings([
+    ...arr(comparison.missingPrimaryFocusTargets),
+    comparison.leadMatchesPrimaryFocus ? "" : str(observed.leadModel),
+    ...(str(observed.breadthRead) === "tight" ? arr(expected.supportTargetIds) : []),
+    ...arr(comparison.adjacentWindowComparisons)
+      .filter((row) => row?.windowsReadSimilarly)
+      .flatMap((row) => [str(row?.fromLabel), str(row?.toLabel)])
+  ]);
+}
+
 export function refreshSequenceArtisticGoalFromPracticalValidation({
   priorArtisticGoal = null,
   sequencingDesignHandoff = null,
@@ -326,6 +343,7 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   const adjacentWindowComparisons = arr(renderCritiqueContext?.comparison?.adjacentWindowComparisons);
   const needsSectionContrast = adjacentWindowComparisons.some((row) => row?.windowsReadSimilarly)
     || (adjacentWindowComparisons.length > 0 && adjacentWindowComparisons.every((row) => row?.sameLeadModel));
+  const renderDrivenTargetIds = deriveRenderDrivenTargetIds(renderCritiqueContext);
 
   if (needsSectionContrast) {
     base.ladderLevel = "section";
@@ -333,7 +351,11 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
 
   base.scope = {
     ...(isPlainObject(base.scope) ? base.scope : {}),
-    nextOwner: "shared"
+    nextOwner: "shared",
+    revisionTargets: uniqueStrings([
+      ...arr(base?.scope?.revisionTargets),
+      ...renderDrivenTargetIds
+    ])
   };
   base.designerDirection = {
     ...(isPlainObject(base.designerDirection) ? base.designerDirection : {}),
@@ -349,6 +371,10 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
     executionObjective: needsSectionContrast
       ? "Revise the next pass to strengthen contrast and hierarchy between adjacent sampled sections."
       : `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`,
+    focusTargets: uniqueStrings([
+      ...arr(base?.sequencerDirection?.focusTargets),
+      ...renderDrivenTargetIds
+    ]),
     blockedMoves: uniqueStrings([
       ...arr(base?.sequencerDirection?.blockedMoves),
       ...findings

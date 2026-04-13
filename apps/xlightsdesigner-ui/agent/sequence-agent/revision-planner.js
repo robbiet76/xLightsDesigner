@@ -26,7 +26,11 @@ export function buildSequencerRevisionBrief({
   const artisticIntent = isPlainObject(artisticGoal?.artisticIntent) ? artisticGoal.artisticIntent : {};
   const scope = isPlainObject(objective?.scope) ? objective.scope : {};
 
-  const targetScope = arr(designHandoff?.scope?.targetIds);
+  const targetScope = [...new Set([
+    ...arr(designHandoff?.scope?.targetIds),
+    ...arr(scope?.revisionTargets),
+    ...arr(sequencerDirection?.focusTargets)
+  ].map((row) => str(row)).filter(Boolean))];
   const sectionScope = arr(designHandoff?.scope?.sections);
 
   const summaryParts = [
@@ -47,6 +51,8 @@ export function buildSequencerRevisionBrief({
     motionCharacter: str(artisticIntent.motionCharacter),
     densityCharacter: str(artisticIntent.densityCharacter),
     targetScope,
+    revisionTargets: arr(scope?.revisionTargets),
+    focusTargets: arr(sequencerDirection?.focusTargets),
     sectionScope,
     blockedMoves: arr(sequencerDirection.blockedMoves),
     successChecks: arr(objective?.successChecks),

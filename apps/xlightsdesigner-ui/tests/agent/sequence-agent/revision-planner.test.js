@@ -26,13 +26,14 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
     sequenceRevisionObjective: {
       artifactType: "sequence_revision_objective_v1",
       ladderLevel: "section",
-      scope: { nextOwner: "shared" },
+      scope: { nextOwner: "shared", revisionTargets: ["MegaTree", "Roofline"] },
       designerDirection: {
         artisticCorrection: "Clarify the section arc without splitting the focal read."
       },
       sequencerDirection: {
         executionObjective: "Introduce restrained support evolution across the middle third.",
-        blockedMoves: ["do_not_add_second_lead"]
+        blockedMoves: ["do_not_add_second_lead"],
+        focusTargets: ["MatrixLowDensity"]
       },
       successChecks: ["section arc reads clearly", "lead target remains dominant"]
     },
@@ -50,7 +51,9 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.equal(out.nextOwner, "shared");
   assert.equal(out.leadTarget, "ArchSingle");
   assert.deepEqual(out.supportTargets, ["MatrixLowDensity"]);
-  assert.deepEqual(out.targetScope, ["ArchSingle", "MatrixLowDensity"]);
+  assert.deepEqual(out.targetScope, ["ArchSingle", "MatrixLowDensity", "MegaTree", "Roofline"]);
+  assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline"]);
+  assert.deepEqual(out.focusTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.sectionScope, ["Chorus 1"]);
   assert.deepEqual(out.blockedMoves, ["do_not_add_second_lead"]);
   assert.deepEqual(out.successChecks, ["section arc reads clearly", "lead target remains dominant"]);
