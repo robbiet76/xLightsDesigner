@@ -1,30 +1,64 @@
 # Designer Dialog Specs
 
+Status: Active
+Date: 2026-03-12
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-13
+
 Active specs for the `designer_dialog` domain.
 
 Scope:
-- user interaction contract
-- guided creative workflow
-- proposal-generation boundaries
+- conversational intent gathering
+- artistic direction
+- display and music context normalization
+- structured handoff into sequencing
 
-Related domains:
-- `audio_analyst` provides analysis metadata/context
-- `sequence_agent` turns approved intent into validated xLights mutation plans
+## Canonical Entry Points
 
-- `designer-sequencer-effect-placement-contract-2026-03-17.md`: placement-first contract for designer-to-sequencer handoff, including effect/layer/render responsibility boundaries.
-- `xlights-effect-support-audit-2026-03-17.md`: full live audit of the current xLights effect catalog, including Tier 1/2/3/4 support boundaries.
+- [designer-interaction-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/designer-interaction-contract.md)
+- [sequencing-design-handoff-v2-spec-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/sequencing-design-handoff-v2-spec-2026-03-19.md)
+- [director-profile-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/director-profile-v1.md)
+- [display-metadata-v1-2026-04-08.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/display-metadata-v1-2026-04-08.md)
+- [design-scene-context-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/design-scene-context-v1.md)
+- [music-design-context-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/music-design-context-v1.md)
 
-- `pre-training-framework-checklist-2026-03-17.md`: framework stabilization checklist to finish before the large designer-training push.
-- `deep-training-next-phase-checklist-2026-03-17.md`: post-stabilization checklist for the large designer-training phase.
-- `pre-training-handoff-freeze-2026-03-17.md`: frozen pre-training handoff/version boundary for deep designer training.
-- `designer-training-rubric-2026-03-17.md`: concept-quality and whole-sequence-quality rubric for the deep training phase.
-- `designer-diagnostics-snapshots-2026-03-17.md`: stable inspection snapshot definitions for concepts, linked sequence rows, and apply results.
-- `synthetic-metadata-fixtures-2026-03-17.md`: synthetic metadata vocabulary and fixture policy for metadata-aware training evals before real project metadata is available.
-- `designer-eval-baseline-2026-03-17.md`: first offline baseline results against the canonical deep-training eval corpus.
-- `training-audit-and-next-checklist-2026-03-17.md`: current training audit plus the operational checklist for the next unattended training runs.
-- `designer-knowledge-input-audit-2026-03-17.md`: current metadata/music input readiness plus allowed lighting/composition vocabulary boundaries for training.
+## Supporting Active Specs
 
-Current role in the app plan:
-- keep designer intent and handoff quality stable
-- do not broaden training scope ahead of reviewed-timing sequencing quality
-- remain the creative contract upstream of `sequence_agent`
+- [getting-to-know-your-display-conversation-2026-04-08.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/getting-to-know-your-display-conversation-2026-04-08.md)
+- [designer-to-sequencer-handoff-audit-and-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/designer-to-sequencer-handoff-audit-and-roadmap-2026-03-19.md)
+- [designer-sequencer-effect-placement-contract-2026-03-17.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/designer-sequencer-effect-placement-contract-2026-03-17.md)
+- [designer-training-rubric-2026-03-17.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/designer-training-rubric-2026-03-17.md)
+- [designer-knowledge-input-audit-2026-03-17.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/designer-knowledge-input-audit-2026-03-17.md)
+- [xlights-effect-support-audit-2026-03-17.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/xlights-effect-support-audit-2026-03-17.md)
+
+## Reference / Training-Phase Material
+
+These remain useful, but they are not the primary entry path for current sequencing work.
+
+- `conversational-training-seed-notes.md`
+- `deep-training-next-phase-checklist-2026-03-17.md`
+- `designer-diagnostics-snapshots-2026-03-17.md`
+- `designer-eval-baseline-2026-03-17.md`
+- `gated-training-checklist-2026-03-15.md`
+- `live-evaluation-script-2026-03-15.md`
+- `pre-training-framework-checklist-2026-03-17.md`
+- `pre-training-handoff-freeze-2026-03-17.md`
+- `stage1-minimum-viable-designer-prompts-2026-03-15.md`
+- `stage2-metadata-aware-prompts-2026-03-15.md`
+- `stage2-scene-aware-prompts-2026-03-15.md`
+- `stage3-music-aware-prompts-2026-03-15.md`
+- `stage4-clarification-discipline-prompts-2026-03-15.md`
+- `stage5-reference-memory-prompts-2026-03-15.md`
+- `stage6-conservative-preference-learning-prompts-2026-03-15.md`
+- `stage7-cloud-first-confidence-2026-03-15.md`
+- `synthetic-metadata-fixtures-2026-03-17.md`
+- `training-audit-and-next-checklist-2026-03-17.md`
+- `training-plan-2026-03-13.md`
+
+## Relationship to Sequencing
+
+The designer remains upstream of `sequence_agent`.
+
+Current rule:
+- designer owns artistic intent and structured handoff quality
+- sequencer owns execution and revision realization

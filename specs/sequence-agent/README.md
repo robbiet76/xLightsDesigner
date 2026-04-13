@@ -1,31 +1,66 @@
 # Sequence Agent Specs
 
-Active `sequence_agent` and xLights sequencing control specifications live here.
+Status: Active
+Date: 2026-03-12
+Owner: xLightsDesigner Team
+Last Reviewed: 2026-04-13
 
-These docs cover:
-- API surface and schemas
-- sequence-agent implementation checklist
-- model/group/submodel/effect/display-element audits
-- training-package architecture and integration harness guidance
-- practical benchmark and next-phase training roadmaps
+Active specifications for `sequence_agent`, xLights control, render-training, and sequencing quality architecture.
 
-Current active roadmap:
-- [sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md)
+## Canonical Entry Points
+
+These are the current operating specs for sequencing work.
+
+- [sequencing-poc-boundary-2026-04-10.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-poc-boundary-2026-04-10.md)
+- [sequencing-feedback-loop-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencing-feedback-loop-v1-2026-04-13.md)
+- [preview-scene-reconstruction-architecture-2026-04-10.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/preview-scene-reconstruction-architecture-2026-04-10.md)
+- [preview-scene-geometry-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/preview-scene-geometry-v1-2026-04-13.md)
+- [sequence-learning-record-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-learning-record-v1-2026-04-13.md)
+- [sequence-critique-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-critique-v1-2026-04-13.md)
+- [sequence-revision-gating-policy-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-revision-gating-policy-v1-2026-04-13.md)
+- [sequence-artistic-goal-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-artistic-goal-v1-2026-04-13.md)
+- [sequence-revision-objective-v1-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-revision-objective-v1-2026-04-13.md)
+- [xlights-upstream-tracking-policy-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-upstream-tracking-policy-2026-04-13.md)
+
+## Supporting Active Specs
+
+These remain active, but they are supporting material rather than the first entry point.
+
+- [preview-scene-geometry-api-gap-2026-04-13.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/preview-scene-geometry-api-gap-2026-04-13.md)
 - [sequence-session-and-live-validation-refactor-plan-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-session-and-live-validation-refactor-plan-2026-04-05.md)
-- [sequence-agent-semantics-architecture-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-agent-semantics-architecture-2026-03-22.md)
+- [sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md)
+- [xlights-rendering-audit-2026-03-18.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-rendering-audit-2026-03-18.md)
+- [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
+- [render-training-stage1-full-coverage-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-stage1-full-coverage-roadmap-2026-03-19.md)
+- [effect-knowledge-architecture-audit-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-knowledge-architecture-audit-2026-03-22.md)
+- [model-metadata-ownership-and-tagging-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-ownership-and-tagging-2026-03-22.md)
+- [model-metadata-record-contract-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-record-contract-2026-03-22.md)
 
-Foundational contract set retained for reference:
+## Foundational Control Contracts
+
+These are still important reference documents for the xLights control surface.
+
 - [xlights-sequencer-control-project-spec.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-project-spec.md)
 - [xlights-sequencer-control-api-surface-contract.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-api-surface-contract.md)
 - [xlights-sequencer-control-agent-orchestration-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-agent-orchestration-architecture.md)
 - [xlights-sequencer-control-training-package-architecture.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/xlights-sequencer-control-training-package-architecture.md)
 
-Upstream timing-track taxonomy:
-- [timing-track-taxonomy-and-sequencing-uses-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md)
+## Reference / Older Planning
 
-Current architecture audit:
-- [effect-knowledge-architecture-audit-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/effect-knowledge-architecture-audit-2026-03-22.md)
-- [sequence-agent-semantics-architecture-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/sequence-agent-semantics-architecture-2026-03-22.md)
-- [model-metadata-ownership-and-tagging-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-ownership-and-tagging-2026-03-22.md)
-- [model-metadata-record-contract-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/model-metadata-record-contract-2026-03-22.md)
-- [custom-model-stage1-breadth-plan-2026-03-22.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/custom-model-stage1-breadth-plan-2026-03-22.md)
+These are still useful, but they are no longer the primary way into the current sequencing work.
+
+- `clean-sequence-validation-plan-2026-03-15.md`
+- `custom-model-stage1-breadth-plan-2026-03-22.md`
+- `render-training-experiment-design-spec-2026-03-19.md`
+- `render-training-registry-planning-spec-2026-03-19.md`
+- `render-training-retention-policy-2026-03-19.md`
+- `sequence-agent-semantics-architecture-2026-03-22.md`
+- `sequencer-training-phase2-roadmap-2026-03-22.md`
+
+## Related Domains
+
+- Audio timing taxonomy lives in:
+  - [timing-track-taxonomy-and-sequencing-uses-2026-04-05.md](/Users/robterry/Projects/xLightsDesigner/specs/audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md)
+- Designer-owned handoff and preference artifacts live in:
+  - [sequencing-design-handoff-v2-spec-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/sequencing-design-handoff-v2-spec-2026-03-19.md)
+  - [director-profile-v1.md](/Users/robterry/Projects/xLightsDesigner/specs/designer-dialog/director-profile-v1.md)

@@ -32,55 +32,36 @@ Primary policy source:
 - `current-app-plan-2026-04-05.md`
 - `repo-structure-governance.md`
 
-## Active Entry Points
+## Root Canonical Entry Points
 - `current-app-plan-2026-04-05.md`
+- `repo-structure-governance.md`
+- `spec-organization-audit-2026-04-13.md`
+
+## Domain Indexes
+- `app-assistant/README.md`
+- `app-ui/README.md`
+- `audio-analyst/README.md`
+- `designer-dialog/README.md`
+- `sequence-agent/README.md`
+
+## Current Cross-Domain Canonical Specs
 - `app-ui/native-cutover-audit-2026-04-10.md`
 - `app-ui/native-app-architecture-diagram-2026-04-10.md`
 - `app-ui/cross-platform-shell-boundary-2026-04-10.md`
-- `app-ui/electron-main-handler-inventory-2026-04-10.md`
-- `app-ui/macos-native-migration-phase-plan-2026-04-06.md`
-- `app-ui/macos-native-design-phase-workstreams-2026-04-06.md`
-- `app-ui/macos-native-wireframe-and-prototype-method-2026-04-06.md`
-- `app-ui/macos-native-information-architecture-2026-04-06.md`
-- `app-ui/macos-native-workflow-contracts-2026-04-06.md`
-- `app-ui/macos-native-audio-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-project-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-sequence-design-review-relationship-2026-04-06.md`
-- `app-ui/macos-native-sequence-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-design-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-review-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-layout-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-history-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-settings-screen-layout-2026-04-06.md`
-- `app-ui/macos-native-interaction-model-2026-04-06.md`
-- `app-ui/macos-native-read-models-and-page-state-contracts-2026-04-06.md`
-- `app-ui/macos-native-shared-backend-and-service-boundaries-2026-04-06.md`
-- `app-ui/macos-native-visual-system-2026-04-06.md`
-- `app-ui/macos-native-design-system-components-2026-04-06.md`
-- `app-ui/macos-native-cutover-plan-2026-04-06.md`
-- `app-ui/macos-native-assistant-surface-2026-04-06.md`
-- `app-ui/macos-native-audio-wireframe-review-package-2026-04-06.md`
-- `app-ui/macos-native-audio-wireframes-v1-2026-04-06.md`
-- `app-ui/macos-native-audio-figma-mockup-package-2026-04-06.md`
-- `app-ui/electron-legacy-removal-manifest-2026-04-06.md`
+- `app-ui/hybrid-cloud-learning-and-billing-2026-04-10.md`
 - `app-assistant/app-assistant-role-and-boundary.md`
-- `app-assistant/implementation-checklist.md`
-- `app-ui/implementation-checklist.md`
-- `app-ui/page-roles-and-flow.md`
-- `audio-analyst/implementation-checklist.md`
-- `audio-analyst/provider-framework.md`
-- `audio-analyst/timing-track-taxonomy-and-sequencing-uses-2026-04-05.md`
-- `audio-analyst/timing-track-workflow-implementation-checklist-2026-04-02.md`
 - `designer-dialog/designer-interaction-contract.md`
-- `designer-dialog/implementation-checklist.md`
-- `sequence-agent/sequencer-quality-and-training-on-reviewed-timing-checklist-2026-04-02.md`
-- `sequence-agent/sequence-session-and-live-validation-refactor-plan-2026-04-05.md`
-- `sequence-agent/xlights-sequencer-control-project-spec.md`
-- `sequence-agent/xlights-sequencer-control-api-surface-contract.md`
-- `repo-structure-governance.md`
+- `designer-dialog/sequencing-design-handoff-v2-spec-2026-03-19.md`
+- `sequence-agent/sequencing-poc-boundary-2026-04-10.md`
+- `sequence-agent/sequencing-feedback-loop-v1-2026-04-13.md`
+- `sequence-agent/sequence-critique-v1-2026-04-13.md`
+- `sequence-agent/sequence-revision-gating-policy-v1-2026-04-13.md`
+- `sequence-agent/sequence-artistic-goal-v1-2026-04-13.md`
+- `sequence-agent/sequence-revision-objective-v1-2026-04-13.md`
 
 ## Consolidation Record
 - `spec-consolidation-audit-2026-03-11.md`
+- `spec-organization-audit-2026-04-13.md`
 - `spec-lifecycle-policy.md`
 - `requirements-traceability-matrix.md`
 - `agent-release-quality-gates.md`
