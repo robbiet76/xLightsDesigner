@@ -88,6 +88,19 @@ Harness runner:
     - [sequence-revision-gate-treeflat_sparse_macro.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_sparse_macro.json)
     - [sequence-revision-gate-treeflat_archsingle_composite_macro.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-treeflat_archsingle_composite_macro.json)
     - [sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json)
+- [build-sequence-artistic-goal.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-sequence-artistic-goal.py)
+  - derives a designer-owned `sequence_artistic_goal_v1` from current critique context
+- [build-sequence-revision-objective.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-sequence-revision-objective.py)
+  - turns:
+    - artistic goal
+    - critique
+    - revision gate
+  - into a split `sequence_revision_objective_v1` with:
+    - `designerDirection`
+    - `sequencerDirection`
+  - kept proof artifacts:
+    - [sequence-artistic-goal-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-archsingle_matrixlowdensity_section_balanced.json)
+    - [sequence-revision-objective-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-objective-archsingle_matrixlowdensity_section_balanced.json)
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -153,4 +166,7 @@ Harness status:
   - narrow macro case -> revise at `macro` with `shared` ownership
   - broad but split macro case -> revise at `macro` with `designer` ownership
   - coherent but flat section case -> revise at `section` with `shared` ownership
+- The current artistic-goal proof now keeps the roles distinct:
+  - designer owns the artistic correction
+  - sequencer receives a bounded execution objective
 - The broader app-assistant/native simulation harness is not yet wired to these sequencing feedback artifacts.
