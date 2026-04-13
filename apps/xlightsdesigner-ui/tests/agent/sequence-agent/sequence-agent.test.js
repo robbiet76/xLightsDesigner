@@ -273,6 +273,54 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
 });
 
+test("sequence_agent uses sequencer revision brief to seed execution lines when explicit lines are absent", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Increase chorus energy on focal props",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        sections: ["Chorus 1"],
+        tagNames: ["focal"]
+      },
+      designSummary: "MegaTree leads while roofline supports the chorus lift."
+    },
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      scope: { goalLevel: "section" },
+      artisticIntent: {
+        leadTarget: "MegaTree",
+        supportTargets: ["Roofline"],
+        sectionArc: "lift",
+        motionCharacter: "expanding_motion",
+        densityCharacter: "moderate"
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: { nextOwner: "shared" },
+      designerDirection: {
+        artisticCorrection: "Clarify the chorus lift while keeping the tree dominant."
+      },
+      sequencerDirection: {
+        executionObjective: "Increase support motion on the roofline without creating a second lead."
+      },
+      successChecks: ["tree remains dominant"]
+    },
+    sourceLines: [],
+    baseRevision: "rev-57",
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.ok(out.executionLines.length > 0);
+  assert.match(out.executionLines[0], /Chorus 1/i);
+  assert.match(out.executionLines[0], /MegaTree \+ Roofline/i);
+  assert.match(out.executionLines[0], /apply Bars effect/i);
+});
+
 test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

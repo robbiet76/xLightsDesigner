@@ -551,7 +551,39 @@ function buildStructuredExecutionLine({
   return `${sectionText} / ${targetText} / apply ${effectText} effect${paletteClause} for the requested duration using the current target timing`;
 }
 
-function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null, metadataAssignments = [] } = {}) {
+function inferRevisionBriefEffectName(brief = {}) {
+  const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
+  const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
+  if (motionCharacter.includes("still")) return "On";
+  if (motionCharacter.includes("restrained")) return "Shimmer";
+  if (motionCharacter.includes("expand")) return "Bars";
+  if (densityCharacter === "sparse") return "On";
+  return "Color Wash";
+}
+
+function buildRevisionBriefExecutionLine({ brief = {}, scope = {}, toneText = "" } = {}) {
+  if (!brief || typeof brief !== "object") return "";
+  const targetIds = normArray(brief?.targetScope).length
+    ? normArray(brief.targetScope)
+    : [
+        normText(brief?.leadTarget),
+        ...normArray(brief?.supportTargets)
+      ].filter(Boolean);
+  const sectionScope = normArray(brief?.sectionScope);
+  const intentBits = [
+    normText(brief?.artisticGoalSummary),
+    normText(brief?.executionObjective)
+  ].filter(Boolean);
+  return buildStructuredExecutionLine({
+    section: sectionScope.length ? sectionScope.join(", ") : (scope?.sectionNames || []).join(", "),
+    targetIds,
+    fallbackTargetIds: scope?.targetIds,
+    intentSummary: `${intentBits.join(" ")}${toneText}`,
+    effectName: inferRevisionBriefEffectName(brief)
+  });
+}
+
+function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, displayElements = [], effectCatalog = null, metadataAssignments = [], sequencerRevisionBrief = null } = {}) {
   const toneHint = normText(analysisHandoff?.briefSeed?.tone);
   const toneText = toneHint ? ` | tone: ${toneHint}` : "";
   const strategySectionPlans = normArray(scope?.executionStrategy?.sectionPlans);
@@ -559,6 +591,11 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
   const sectionDirectiveIndex = buildSectionDirectiveIndex(scope?.sequencingDesignHandoff);
   const availableEffects = buildAvailableEffectSet(effectCatalog);
   const metadataAssignmentIndex = buildMetadataAssignmentIndex(metadataAssignments);
+  const revisionBriefExecutionLine = buildRevisionBriefExecutionLine({
+    brief: sequencerRevisionBrief,
+    scope,
+    toneText
+  });
   const executionSeedLines = strategySectionPlans.length
     ? strategySectionPlans.map((row) => {
         const sectionDirective = sectionDirectiveIndex.get(normText(row?.section)) || null;
@@ -592,13 +629,13 @@ function stageEffectStrategy({ scope = {}, analysisHandoff = {}, timing = {}, di
         const targetText = Array.isArray(scope.targetIds) && scope.targetIds.length
           ? scope.targetIds.slice(0, 8).join(", ")
           : "Whole Show";
-        return `${sectionText} / ${targetText} / ${scope.mode || "create"} from intent: ${scope.goal || "unspecified"}${toneText}`;
+        return revisionBriefExecutionLine || `${sectionText} / ${targetText} / ${scope.mode || "create"} from intent: ${scope.goal || "unspecified"}${toneText}`;
       })()];
   return {
     toneHint,
     effectPlacements,
     executionSeedLines,
-    preferSynthesized: strategySectionPlans.length > 0,
+    preferSynthesized: strategySectionPlans.length > 0 || Boolean(revisionBriefExecutionLine),
     strategy: timing.strategy,
     detail: `seedLines=${executionSeedLines.length} strategy=${timing.strategy}`
   };
@@ -1122,7 +1159,7 @@ export function buildSequenceAgentPlan({
     stageTelemetry,
     fn: () => (typeof stageOverrides.effect_strategy === "function"
       ? stageOverrides.effect_strategy({ scope, analysisHandoff: safeAnalysis, timing })
-      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog, metadataAssignments }))
+      : stageEffectStrategy({ scope, analysisHandoff: safeAnalysis, timing, displayElements, effectCatalog, metadataAssignments, sequencerRevisionBrief }))
   });
 
   const graph = runStage({
