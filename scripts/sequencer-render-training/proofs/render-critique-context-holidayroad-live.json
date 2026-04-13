@@ -2,7 +2,7 @@
   "artifactType": "sequence_render_critique_context_v1",
   "artifactVersion": 1,
   "source": {
-    "renderObservationArtifactId": "render_observation_v1-9a0ac9cb",
+    "renderObservationArtifactId": "render_observation_v1-c3552c88",
     "designSceneContextArtifactId": "design_scene_context_v1-0d018c85",
     "sequencingDesignHandoffArtifactId": ""
   },
@@ -38,6 +38,7 @@
     "sampledEndMs": 250,
     "samplingMode": "targeted",
     "sampledModelCount": 4,
+    "windowCount": 1,
     "meanSceneSpreadRatio": 1,
     "breadthRead": "broad",
     "maxActiveModelRatio": 1,

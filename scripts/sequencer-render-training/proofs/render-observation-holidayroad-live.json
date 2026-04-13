@@ -1,7 +1,7 @@
 {
   "artifactType": "render_observation_v1",
   "artifactVersion": "1.0",
-  "createdAt": "2026-04-13T21:17:31.539Z",
+  "createdAt": "2026-04-13T21:34:41.218Z",
   "source": {
     "sequencePath": "/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq",
     "revisionToken": "/Users/robterry/Desktop/Show/HolidayRoad/HolidayRoad.xsq#2632",
@@ -12,7 +12,15 @@
     "samplingMode": "targeted",
     "sampledModelCount": 4,
     "availableModelCount": 113,
-    "targetMatchedModelCount": 4
+    "targetMatchedModelCount": 4,
+    "windowCount": 1,
+    "windows": [
+      {
+        "label": "window_1",
+        "startMs": 0,
+        "endMs": 250
+      }
+    ]
   },
   "macro": {
     "frameCount": 5,
@@ -38,5 +46,34 @@
     "activeModelVariation": 1,
     "distinctLeadModelCount": 1
   },
-  "artifactId": "render_observation_v1-9a0ac9cb"
+  "windows": [
+    {
+      "label": "window_1",
+      "startMs": 0,
+      "endMs": 250,
+      "frameCount": 5,
+      "activeModelNames": [
+        "Snowman",
+        "HiddenTree",
+        "NorthPoleMatrix",
+        "Train_Gondola"
+      ],
+      "activeFamilyTotals": {
+        "Custom": 9,
+        "Matrix": 5,
+        "Tree": 5
+      },
+      "leadModel": "HiddenTree",
+      "leadModelShare": 0.4039,
+      "meanSceneSpreadRatio": 1,
+      "maxSceneSpreadRatio": 1,
+      "maxActiveModelCount": 4,
+      "maxActiveModelRatio": 1,
+      "temporalRead": "evolving",
+      "energyVariation": 0.6159,
+      "activeModelVariation": 1,
+      "distinctLeadModelCount": 1
+    }
+  ],
+  "artifactId": "render_observation_v1-c3552c88"
 }
