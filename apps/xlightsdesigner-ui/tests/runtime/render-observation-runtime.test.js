@@ -112,3 +112,63 @@ test("buildRenderObservationFromSamples marks stable sampled windows as flat", (
   assert.equal(observation.macro.activeModelVariation, 0);
   assert.equal(observation.macro.distinctLeadModelCount, 1);
 });
+
+test("buildRenderObservationFromSamples preserves separate sampled windows", () => {
+  const plan = buildRenderSamplingPlan({
+    modelsById: {
+      MegaTree: { id: "MegaTree", name: "MegaTree", typeCategory: "Tree", startChannel: 1, endChannel: 3, transform: { position: { x: 0, y: 0 } } },
+      Roofline: { id: "Roofline", name: "Roofline", typeCategory: "Line", startChannel: 4, endChannel: 6, transform: { position: { x: 10, y: 0 } } }
+    }
+  });
+  const treeOnly = Buffer.from([255, 0, 0, 0, 0, 0]).toString("base64");
+  const roofOnly = Buffer.from([0, 0, 0, 255, 255, 255]).toString("base64");
+  const observation = buildRenderObservationFromSamples({
+    samplingPlan: plan,
+    sampleResponses: [
+      {
+        label: "Verse",
+        data: {
+          sequencePath: "/show/Test.xsq",
+          revisionToken: "rev-3",
+          fseqPath: "/show/Test.fseq",
+          sampleEncoding: "base64_packed_channel_ranges_v1",
+          startMs: 1000,
+          endMs: 1500,
+          samples: [
+            { frameIndex: 40, frameTimeMs: 1000, dataBase64: treeOnly },
+            { frameIndex: 60, frameTimeMs: 1500, dataBase64: treeOnly }
+          ]
+        }
+      },
+      {
+        label: "Chorus",
+        data: {
+          sequencePath: "/show/Test.xsq",
+          revisionToken: "rev-3",
+          fseqPath: "/show/Test.fseq",
+          sampleEncoding: "base64_packed_channel_ranges_v1",
+          startMs: 2000,
+          endMs: 2500,
+          samples: [
+            { frameIndex: 80, frameTimeMs: 2000, dataBase64: roofOnly },
+            { frameIndex: 100, frameTimeMs: 2500, dataBase64: roofOnly }
+          ]
+        }
+      }
+    ]
+  });
+
+  assert.equal(observation.source.windowCount, 2);
+  assert.deepEqual(observation.source.windows, [
+    { label: "Verse", startMs: 1000, endMs: 1500 },
+    { label: "Chorus", startMs: 2000, endMs: 2500 }
+  ]);
+  assert.equal(observation.windows.length, 2);
+  assert.equal(observation.windows[0].label, "Verse");
+  assert.deepEqual(observation.windows[0].activeModelNames, ["MegaTree"]);
+  assert.equal(observation.windows[1].label, "Chorus");
+  assert.deepEqual(observation.windows[1].activeModelNames, ["Roofline"]);
+  assert.equal(observation.macro.frameCount, 4);
+  assert.equal(observation.macro.temporalRead, "evolving");
+  assert.equal(observation.macro.distinctLeadModelCount, 2);
+});

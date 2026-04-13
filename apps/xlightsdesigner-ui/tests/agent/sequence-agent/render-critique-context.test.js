@@ -11,7 +11,8 @@ test("buildRenderCritiqueContext merges render observation with design and hando
         startMs: 1000,
         endMs: 4000,
         samplingMode: "targeted",
-        sampledModelCount: 2
+        sampledModelCount: 2,
+        windowCount: 2
       },
       macro: {
         activeModelNames: ["MegaTree", "Roofline"],
@@ -59,6 +60,7 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.observed.sampledEndMs, 4000);
   assert.equal(out.observed.samplingMode, "targeted");
   assert.equal(out.observed.sampledModelCount, 2);
+  assert.equal(out.observed.windowCount, 2);
   assert.equal(out.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(out.comparison.leadIsKnownFocalCandidate, true);
   assert.deepEqual(out.comparison.observedFocusTargets, ["MegaTree"]);

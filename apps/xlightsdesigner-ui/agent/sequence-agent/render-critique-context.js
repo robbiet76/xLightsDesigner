@@ -91,6 +91,7 @@ export function buildRenderCritiqueContext({
       sampledEndMs: Number(source.endMs || 0),
       samplingMode: str(source.samplingMode || "full") || "full",
       sampledModelCount: Number(source.sampledModelCount || 0),
+      windowCount: Number(source.windowCount || 0),
       meanSceneSpreadRatio: spreadRatio,
       breadthRead: inferBreadthRead(spreadRatio),
       maxActiveModelRatio: Number(macro.maxActiveModelRatio || 0),

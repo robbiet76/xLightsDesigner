@@ -3900,15 +3900,35 @@ async function collectPostApplyRenderObservation({
     : (Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 1000);
   try {
     await renderCurrentSequence(endpoint);
-    const sampleResponse = await getRenderedSequenceSamples(endpoint, {
-      startMs: safeStartMs,
-      endMs: safeEndMs,
-      maxFrames: 5,
-      channelRanges: samplingPlan.channelRanges
-    });
+    const sampleWindows = sectionBounds.length
+      ? selectedSections
+          .map((label, idx) => {
+            const bounds = sectionBounds[idx];
+            if (!bounds) return null;
+            return {
+              label: String(label || "").trim(),
+              startMs: bounds.startMs,
+              endMs: bounds.endMs
+            };
+          })
+          .filter(Boolean)
+      : [{ label: "full_sequence_scope", startMs: safeStartMs, endMs: safeEndMs }];
+    const sampleResponses = [];
+    for (const window of sampleWindows) {
+      const sampleResponse = await getRenderedSequenceSamples(endpoint, {
+        startMs: window.startMs,
+        endMs: window.endMs,
+        maxFrames: 5,
+        channelRanges: samplingPlan.channelRanges
+      });
+      sampleResponses.push({
+        ...sampleResponse,
+        label: window.label
+      });
+    }
     return buildRenderObservationFromSamples({
       samplingPlan,
-      sampleResponse,
+      sampleResponses,
       sequencePath: currentSequencePathForSidecar() || selectedSequencePath() || "",
       revisionToken: String(applyResult?.nextRevision || targetState?.revision || "unknown")
     });
