@@ -361,7 +361,10 @@ export function buildRenderObservationFromSamples({
       windows: windowSummaries.map((row) => ({
         label: str(row?.label),
         startMs: toFinite(row?.startMs),
-        endMs: toFinite(row?.endMs)
+        endMs: toFinite(row?.endMs),
+        reviewLevel: str(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.reviewLevel || ""),
+        sourceStartMs: toFinite(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.sourceWindow?.startMs),
+        sourceEndMs: toFinite(responseRows.find((wrapper) => str(wrapper?.label) === str(row?.label))?.sourceWindow?.endMs)
       }))
     },
     macro: aggregate,

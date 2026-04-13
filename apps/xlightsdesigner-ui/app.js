@@ -3823,6 +3823,52 @@ function buildCurrentRenderObservation() {
       : null;
 }
 
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function buildRenderSamplingPolicy({
+  sequenceArtisticGoal = null,
+  sectionWindow = null,
+  isFallbackFullWindow = false
+} = {}) {
+  const goalLevel = String(sequenceArtisticGoal?.scope?.goalLevel || "").trim().toLowerCase();
+  const startMs = Number(sectionWindow?.startMs || 0);
+  const endMs = Number(sectionWindow?.endMs || startMs);
+  const durationMs = Math.max(1, endMs - startMs);
+
+  if (isFallbackFullWindow) {
+    const targetFrames = clampNumber(Math.round(durationMs / 1500), 3, 6);
+    return {
+      reviewLevel: "macro",
+      targetFrames,
+      trimStartMs: 0,
+      trimEndMs: 0
+    };
+  }
+
+  const trimMs = Math.min(500, Math.floor(durationMs * 0.15));
+  const maxUsableTrim = Math.max(0, Math.floor((durationMs - 250) / 2));
+  const appliedTrimMs = Math.min(trimMs, maxUsableTrim);
+  const bodyDurationMs = Math.max(1, durationMs - (appliedTrimMs * 2));
+
+  if (goalLevel === "section") {
+    return {
+      reviewLevel: "section",
+      targetFrames: clampNumber(Math.round(bodyDurationMs / 250), 4, 10),
+      trimStartMs: appliedTrimMs,
+      trimEndMs: appliedTrimMs
+    };
+  }
+
+  return {
+    reviewLevel: "macro",
+    targetFrames: clampNumber(Math.round(bodyDurationMs / 500), 3, 6),
+    trimStartMs: appliedTrimMs,
+    trimEndMs: appliedTrimMs
+  };
+}
+
 async function collectPostApplyRenderObservation({
   state: targetState = state,
   designSceneContext = null,
@@ -3905,25 +3951,56 @@ async function collectPostApplyRenderObservation({
           .map((label, idx) => {
             const bounds = sectionBounds[idx];
             if (!bounds) return null;
+            const policy = buildRenderSamplingPolicy({
+              sequenceArtisticGoal,
+              sectionWindow: bounds,
+              isFallbackFullWindow: false
+            });
+            const trimmedStartMs = Math.min(bounds.endMs - 1, bounds.startMs + policy.trimStartMs);
+            const trimmedEndMs = Math.max(trimmedStartMs + 1, bounds.endMs - policy.trimEndMs);
             return {
               label: String(label || "").trim(),
-              startMs: bounds.startMs,
-              endMs: bounds.endMs
+              startMs: trimmedStartMs,
+              endMs: trimmedEndMs,
+              maxFrames: policy.targetFrames,
+              reviewLevel: policy.reviewLevel,
+              sourceStartMs: bounds.startMs,
+              sourceEndMs: bounds.endMs
             };
           })
           .filter(Boolean)
-      : [{ label: "full_sequence_scope", startMs: safeStartMs, endMs: safeEndMs }];
+      : (() => {
+          const policy = buildRenderSamplingPolicy({
+            sequenceArtisticGoal,
+            sectionWindow: { startMs: safeStartMs, endMs: safeEndMs },
+            isFallbackFullWindow: true
+          });
+          return [{
+            label: "full_sequence_scope",
+            startMs: safeStartMs,
+            endMs: safeEndMs,
+            maxFrames: policy.targetFrames,
+            reviewLevel: policy.reviewLevel,
+            sourceStartMs: safeStartMs,
+            sourceEndMs: safeEndMs
+          }];
+        })();
     const sampleResponses = [];
     for (const window of sampleWindows) {
       const sampleResponse = await getRenderedSequenceSamples(endpoint, {
         startMs: window.startMs,
         endMs: window.endMs,
-        maxFrames: 5,
+        maxFrames: window.maxFrames,
         channelRanges: samplingPlan.channelRanges
       });
       sampleResponses.push({
         ...sampleResponse,
-        label: window.label
+        label: window.label,
+        reviewLevel: window.reviewLevel,
+        sourceWindow: {
+          startMs: window.sourceStartMs,
+          endMs: window.sourceEndMs
+        }
       });
     }
     return buildRenderObservationFromSamples({

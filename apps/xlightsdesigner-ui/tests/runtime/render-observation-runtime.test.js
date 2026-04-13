@@ -127,6 +127,8 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
     sampleResponses: [
       {
         label: "Verse",
+        reviewLevel: "section",
+        sourceWindow: { startMs: 900, endMs: 1600 },
         data: {
           sequencePath: "/show/Test.xsq",
           revisionToken: "rev-3",
@@ -142,6 +144,8 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
       },
       {
         label: "Chorus",
+        reviewLevel: "section",
+        sourceWindow: { startMs: 1900, endMs: 2600 },
         data: {
           sequencePath: "/show/Test.xsq",
           revisionToken: "rev-3",
@@ -160,8 +164,8 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
 
   assert.equal(observation.source.windowCount, 2);
   assert.deepEqual(observation.source.windows, [
-    { label: "Verse", startMs: 1000, endMs: 1500 },
-    { label: "Chorus", startMs: 2000, endMs: 2500 }
+    { label: "Verse", startMs: 1000, endMs: 1500, reviewLevel: "section", sourceStartMs: 900, sourceEndMs: 1600 },
+    { label: "Chorus", startMs: 2000, endMs: 2500, reviewLevel: "section", sourceStartMs: 1900, sourceEndMs: 2600 }
   ]);
   assert.equal(observation.windows.length, 2);
   assert.equal(observation.windows[0].label, "Verse");
