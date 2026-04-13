@@ -164,7 +164,8 @@ import { runDirectSequenceValidation } from "./runtime/clean-sequence-runtime.js
 import { fetchXLightsRevisionState, syncXLightsRevisionState } from "./runtime/xlights-runtime.js";
 import {
   buildRenderObservationFromSamples,
-  buildRenderSamplingPlan
+  buildRenderSamplingPlan,
+  inferRenderSamplingDetail
 } from "./runtime/render-observation-runtime.js";
 import { executeApplyCore } from "./runtime/review-runtime.js";
 import { createAutomationBridgeRuntime } from "./runtime/automation-bridge-runtime.js";
@@ -3827,28 +3828,19 @@ function clampNumber(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function resolveRenderSamplingDetail({
-  sequenceArtisticGoal = null,
-  sequenceRevisionObjective = null
-} = {}) {
-  const ladderLevel = String(sequenceRevisionObjective?.ladderLevel || "").trim().toLowerCase();
-  if (["group", "model", "effect"].includes(ladderLevel)) return "drilldown";
-  if (ladderLevel === "section") return "section";
-  const goalLevel = String(sequenceArtisticGoal?.scope?.goalLevel || "").trim().toLowerCase();
-  if (["group", "model", "effect"].includes(goalLevel)) return "drilldown";
-  if (goalLevel === "section") return "section";
-  return "macro";
-}
-
 function buildRenderSamplingPolicy({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
+  priorRenderObservation = null,
+  priorRenderCritiqueContext = null,
   sectionWindow = null,
   isFallbackFullWindow = false
 } = {}) {
-  const samplingDetail = resolveRenderSamplingDetail({
+  const samplingDetail = inferRenderSamplingDetail({
     sequenceArtisticGoal,
-    sequenceRevisionObjective
+    sequenceRevisionObjective,
+    priorRenderObservation,
+    priorRenderCritiqueContext
   });
   const startMs = Number(sectionWindow?.startMs || 0);
   const endMs = Number(sectionWindow?.endMs || startMs);
@@ -3922,6 +3914,12 @@ async function collectPostApplyRenderObservation({
   const sequenceRevisionObjective = targetState?.creative?.sequenceRevisionObjective && typeof targetState.creative.sequenceRevisionObjective === "object"
     ? targetState.creative.sequenceRevisionObjective
     : null;
+  const priorRenderObservation = targetState?.sequenceAgentRuntime?.renderObservation && typeof targetState.sequenceAgentRuntime.renderObservation === "object"
+    ? targetState.sequenceAgentRuntime.renderObservation
+    : null;
+  const priorRenderCritiqueContext = targetState?.sequenceAgentRuntime?.renderCritiqueContext && typeof targetState.sequenceAgentRuntime.renderCritiqueContext === "object"
+    ? targetState.sequenceAgentRuntime.renderCritiqueContext
+    : null;
   const targetScope = Array.from(new Set([
     ...selectedTargets,
     ...(Array.isArray(sequencingDesignHandoff?.scope?.targetIds) ? sequencingDesignHandoff.scope.targetIds : []),
@@ -3987,6 +3985,8 @@ async function collectPostApplyRenderObservation({
             const policy = buildRenderSamplingPolicy({
               sequenceArtisticGoal,
               sequenceRevisionObjective,
+              priorRenderObservation,
+              priorRenderCritiqueContext,
               sectionWindow: bounds,
               isFallbackFullWindow: false
             });
@@ -4008,6 +4008,8 @@ async function collectPostApplyRenderObservation({
           const policy = buildRenderSamplingPolicy({
             sequenceArtisticGoal,
             sequenceRevisionObjective,
+            priorRenderObservation,
+            priorRenderCritiqueContext,
             sectionWindow: { startMs: safeStartMs, endMs: safeEndMs },
             isFallbackFullWindow: true
           });

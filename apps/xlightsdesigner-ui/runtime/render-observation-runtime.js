@@ -40,6 +40,45 @@ function toFinite(value) {
   return Number.isFinite(num) ? num : null;
 }
 
+function resolveRequestedSamplingDetail({
+  sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null
+} = {}) {
+  const ladderLevel = str(sequenceRevisionObjective?.ladderLevel).toLowerCase();
+  if (["group", "model", "effect"].includes(ladderLevel)) return "drilldown";
+  if (ladderLevel === "section") return "section";
+  const goalLevel = str(sequenceArtisticGoal?.scope?.goalLevel).toLowerCase();
+  if (["group", "model", "effect"].includes(goalLevel)) return "drilldown";
+  if (goalLevel === "section") return "section";
+  return "macro";
+}
+
+export function inferRenderSamplingDetail({
+  sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null,
+  priorRenderObservation = null,
+  priorRenderCritiqueContext = null
+} = {}) {
+  const requested = resolveRequestedSamplingDetail({
+    sequenceArtisticGoal,
+    sequenceRevisionObjective
+  });
+  if (requested !== "section") return requested;
+
+  const priorDetail = str(priorRenderObservation?.source?.samplingDetail).toLowerCase();
+  const adjacentWindowComparisons = Array.isArray(priorRenderCritiqueContext?.comparison?.adjacentWindowComparisons)
+    ? priorRenderCritiqueContext.comparison.adjacentWindowComparisons
+    : [];
+  const windowsReadSimilarly = adjacentWindowComparisons.some((row) => Boolean(row?.windowsReadSimilarly));
+  const temporalRead = str(priorRenderCritiqueContext?.observed?.temporalRead).toLowerCase();
+  const repeatedSectionInstability = windowsReadSimilarly || temporalRead === "flat";
+
+  if (repeatedSectionInstability && ["section", "mixed"].includes(priorDetail)) {
+    return "drilldown";
+  }
+  return requested;
+}
+
 function buildSceneAreaBounds(models = []) {
   const xs = models.map((row) => toFinite(row?.x)).filter((row) => row != null);
   const ys = models.map((row) => toFinite(row?.y)).filter((row) => row != null);

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   buildRenderSamplingPlan,
-  buildRenderObservationFromSamples
+  buildRenderObservationFromSamples,
+  inferRenderSamplingDetail
 } from "../../runtime/render-observation-runtime.js";
 
 test("buildRenderSamplingPlan derives ordered model channel ranges from scene graph", () => {
@@ -179,4 +180,46 @@ test("buildRenderObservationFromSamples preserves separate sampled windows", () 
   assert.equal(observation.macro.frameCount, 4);
   assert.equal(observation.macro.temporalRead, "evolving");
   assert.equal(observation.macro.distinctLeadModelCount, 2);
+});
+
+test("inferRenderSamplingDetail escalates repeated unstable section critique to drilldown", () => {
+  const out = inferRenderSamplingDetail({
+    sequenceArtisticGoal: { scope: { goalLevel: "section" } },
+    sequenceRevisionObjective: { ladderLevel: "section" },
+    priorRenderObservation: {
+      source: {
+        samplingDetail: "section"
+      }
+    },
+    priorRenderCritiqueContext: {
+      observed: { temporalRead: "flat" },
+      comparison: {
+        adjacentWindowComparisons: [
+          { windowsReadSimilarly: true }
+        ]
+      }
+    }
+  });
+
+  assert.equal(out, "drilldown");
+});
+
+test("inferRenderSamplingDetail keeps macro sampling sparse without prior instability", () => {
+  const out = inferRenderSamplingDetail({
+    sequenceArtisticGoal: { scope: { goalLevel: "macro" } },
+    sequenceRevisionObjective: { ladderLevel: "macro" },
+    priorRenderObservation: {
+      source: {
+        samplingDetail: "macro"
+      }
+    },
+    priorRenderCritiqueContext: {
+      observed: { temporalRead: "evolving" },
+      comparison: {
+        adjacentWindowComparisons: []
+      }
+    }
+  });
+
+  assert.equal(out, "macro");
 });
