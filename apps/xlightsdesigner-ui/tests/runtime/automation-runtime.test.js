@@ -196,6 +196,7 @@ test("automation runtime stores render observation artifacts for feedback loop t
   assert.equal(persisted, true);
   assert.equal(rendered, true);
   assert.equal(runtime.getAutomationRenderFeedbackSnapshot().renderObservation.artifactId, "render-1");
+  assert.equal(runtime.getAutomationAgentRuntimeSnapshot().renderFeedback.renderObservation.artifactId, "render-1");
 });
 
 test("automation runtime rejects invalid render observation artifacts", () => {

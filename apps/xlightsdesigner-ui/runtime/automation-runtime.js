@@ -353,7 +353,9 @@ export function createAutomationRuntime(deps = {}) {
       historyAdvanced,
       latestApply: afterLatestApply,
       latestApplyResult: historySnapshot?.applyResult || null,
-      latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null
+      latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null,
+      latestRenderObservation: historySnapshot?.renderObservation || null,
+      latestRenderCritiqueContext: historySnapshot?.renderCritiqueContext || null
     };
   }
 
@@ -839,6 +841,25 @@ export function createAutomationRuntime(deps = {}) {
             goal: String(state.creative.intentHandoff.goal || "")
           }
         : null,
+      renderFeedback: {
+        renderObservation:
+          state.sequenceAgentRuntime?.renderObservation && typeof state.sequenceAgentRuntime.renderObservation === "object"
+            ? {
+                artifactId: String(state.sequenceAgentRuntime.renderObservation.artifactId || ""),
+                artifactType: String(state.sequenceAgentRuntime.renderObservation.artifactType || ""),
+                leadModel: String(state.sequenceAgentRuntime.renderObservation?.macro?.leadModel || "")
+              }
+            : null,
+        renderCritiqueContext:
+          state.sequenceAgentRuntime?.renderCritiqueContext && typeof state.sequenceAgentRuntime.renderCritiqueContext === "object"
+            ? {
+                artifactId: String(state.sequenceAgentRuntime.renderCritiqueContext.artifactId || ""),
+                artifactType: String(state.sequenceAgentRuntime.renderCritiqueContext.artifactType || ""),
+                leadMatchesPrimaryFocus: Boolean(state.sequenceAgentRuntime.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus),
+                breadthRead: String(state.sequenceAgentRuntime.renderCritiqueContext?.observed?.breadthRead || "")
+              }
+            : null
+      },
       handoffs: {
         analysis_handoff_v1: summarizeHandoff("analysis_handoff_v1"),
         intent_handoff_v1: summarizeHandoff("intent_handoff_v1"),
