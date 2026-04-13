@@ -34,6 +34,44 @@ function inferBreadthRead(spread = 0) {
   return "broad";
 }
 
+function buildWindowComparisons(windows = []) {
+  const rows = arr(windows)
+    .map((row) => (isPlainObject(row) ? row : null))
+    .filter(Boolean)
+    .map((row) => ({
+      label: str(row?.label),
+      leadModel: str(row?.leadModel),
+      breadthRead: inferBreadthRead(Number(row?.meanSceneSpreadRatio || 0)),
+      temporalRead: str(row?.temporalRead || "unknown") || "unknown",
+      activeModelNames: uniqueStrings(row?.activeModelNames),
+      startMs: Number(row?.startMs || 0),
+      endMs: Number(row?.endMs || 0)
+    }));
+  const comparisons = [];
+  for (let i = 0; i < rows.length - 1; i += 1) {
+    const current = rows[i];
+    const next = rows[i + 1];
+    const sameLeadModel = Boolean(current.leadModel) && current.leadModel === next.leadModel;
+    const sameBreadthRead = current.breadthRead === next.breadthRead;
+    const sameTemporalRead = current.temporalRead === next.temporalRead;
+    const activeA = new Set(current.activeModelNames);
+    const activeB = new Set(next.activeModelNames);
+    const union = new Set([...activeA, ...activeB]);
+    const intersection = [...activeA].filter((id) => activeB.has(id));
+    const overlapRatio = union.size ? intersection.length / union.size : 1;
+    comparisons.push({
+      fromLabel: current.label || `window_${i + 1}`,
+      toLabel: next.label || `window_${i + 2}`,
+      sameLeadModel,
+      sameBreadthRead,
+      sameTemporalRead,
+      overlapRatio: Number(overlapRatio.toFixed(4)),
+      windowsReadSimilarly: sameLeadModel && sameBreadthRead && sameTemporalRead && overlapRatio >= 0.8
+    });
+  }
+  return comparisons;
+}
+
 export function buildRenderCritiqueContext({
   renderObservation = null,
   designSceneContext = null,
@@ -65,6 +103,7 @@ export function buildRenderCritiqueContext({
   const broadCoverageDomains = uniqueStrings(scene?.coverageDomains?.broad);
   const detailCoverageDomains = uniqueStrings(scene?.coverageDomains?.detail);
   const spreadRatio = Number(macro.meanSceneSpreadRatio || 0);
+  const windowComparisons = buildWindowComparisons(observation?.windows);
 
   return {
     artifactType: "sequence_render_critique_context_v1",
@@ -107,7 +146,8 @@ export function buildRenderCritiqueContext({
       leadIsKnownFocalCandidate,
       broadCoverageExpected: broadCoverageDomains.length > 0,
       renderUsesBroadScene: spreadRatio >= 0.03,
-      renderUsesTightFocus: spreadRatio < 0.01
+      renderUsesTightFocus: spreadRatio < 0.01,
+      adjacentWindowComparisons: windowComparisons
     }
   };
 }

@@ -178,6 +178,13 @@ function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   if (str(observed.temporalRead) === "flat") {
     findings.push("Rendered section development is too flat across the sampled window.");
   }
+  const adjacentWindowComparisons = arr(comparison.adjacentWindowComparisons);
+  if (adjacentWindowComparisons.some((row) => row?.windowsReadSimilarly)) {
+    findings.push("Adjacent sampled sections are reading too similarly and need stronger contrast.");
+  }
+  if (adjacentWindowComparisons.length && adjacentWindowComparisons.every((row) => row?.sameLeadModel)) {
+    findings.push("Section hierarchy is not shifting enough across the sampled windows.");
+  }
 
   return uniqueStrings(findings);
 }

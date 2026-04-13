@@ -238,3 +238,41 @@ test("refreshSequenceRevisionObjectiveFromRenderCritique updates sequencer objec
   assert.match(out.sequencerDirection.executionObjective, /rendered composition problem/i);
   assert.ok(out.sequencerDirection.blockedMoves.some((row) => /Rendered lead does not match the intended primary focus/i.test(String(row))));
 });
+
+test("refreshSequenceArtisticGoalFromRenderCritique flags adjacent windows that read too similarly", () => {
+  const prior = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const out = refreshSequenceArtisticGoalFromRenderCritique({
+    priorArtisticGoal: prior,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "moderate",
+        temporalRead: "modulated"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        adjacentWindowComparisons: [
+          {
+            fromLabel: "Verse",
+            toLabel: "Chorus",
+            windowsReadSimilarly: true,
+            sameLeadModel: true
+          }
+        ]
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.ok(out.evaluationLens.mustImprove.some((row) => /reading too similarly/i.test(String(row))));
+  assert.ok(out.evaluationLens.mustImprove.some((row) => /hierarchy is not shifting enough/i.test(String(row))));
+});

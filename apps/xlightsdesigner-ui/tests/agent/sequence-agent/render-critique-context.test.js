@@ -66,6 +66,7 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.deepEqual(out.comparison.observedFocusTargets, ["MegaTree"]);
   assert.equal(out.observed.breadthRead, "moderate");
   assert.equal(out.observed.temporalRead, "modulated");
+  assert.deepEqual(out.comparison.adjacentWindowComparisons, []);
 });
 
 test("buildRenderCritiqueContext falls back to scene focal candidates when handoff focus is missing", () => {
@@ -91,4 +92,60 @@ test("buildRenderCritiqueContext falls back to scene focal candidates when hando
   assert.equal(out.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(out.comparison.renderUsesTightFocus, true);
   assert.equal(out.observed.breadthRead, "tight");
+});
+
+test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      source: {
+        startMs: 0,
+        endMs: 4000,
+        samplingMode: "targeted",
+        sampledModelCount: 2,
+        windowCount: 2
+      },
+      macro: {
+        activeModelNames: ["MegaTree", "Roofline"],
+        activeFamilyTotals: { Tree: 2, Line: 2 },
+        leadModel: "MegaTree",
+        leadModelShare: 0.7,
+        meanSceneSpreadRatio: 0.02,
+        temporalRead: "evolving"
+      },
+      windows: [
+        {
+          label: "Verse",
+          startMs: 0,
+          endMs: 2000,
+          activeModelNames: ["MegaTree", "Roofline"],
+          leadModel: "MegaTree",
+          meanSceneSpreadRatio: 0.02,
+          temporalRead: "flat"
+        },
+        {
+          label: "Chorus",
+          startMs: 2000,
+          endMs: 4000,
+          activeModelNames: ["MegaTree", "Roofline"],
+          leadModel: "MegaTree",
+          meanSceneSpreadRatio: 0.02,
+          temporalRead: "flat"
+        }
+      ]
+    },
+    designSceneContext: {
+      focalCandidates: ["MegaTree"]
+    },
+    sequencingDesignHandoff: {
+      designSummary: "Verse should build into the chorus.",
+      focusPlan: {
+        primaryTargets: ["MegaTree"]
+      }
+    }
+  });
+
+  assert.equal(out.comparison.adjacentWindowComparisons.length, 1);
+  assert.equal(out.comparison.adjacentWindowComparisons[0].fromLabel, "Verse");
+  assert.equal(out.comparison.adjacentWindowComparisons[0].toLabel, "Chorus");
+  assert.equal(out.comparison.adjacentWindowComparisons[0].windowsReadSimilarly, true);
 });
