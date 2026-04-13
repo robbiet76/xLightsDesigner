@@ -45,6 +45,7 @@ export function buildRenderCritiqueContext({
   const scene = isPlainObject(designSceneContext) ? designSceneContext : null;
   const handoff = isPlainObject(sequencingDesignHandoff) ? sequencingDesignHandoff : null;
   const macro = isPlainObject(observation?.macro) ? observation.macro : {};
+  const source = isPlainObject(observation?.source) ? observation.source : {};
 
   const primaryFocusTargetIds = pickPrimaryFocusTargets(handoff, scene);
   const supportTargetIds = pickSupportTargets(handoff);
@@ -86,6 +87,10 @@ export function buildRenderCritiqueContext({
       activeFamilyNames: observedFamilyNames,
       leadModel: observedLeadModel,
       leadModelShare: Number(macro.leadModelShare || 0),
+      sampledStartMs: Number(source.startMs || 0),
+      sampledEndMs: Number(source.endMs || 0),
+      samplingMode: str(source.samplingMode || "full") || "full",
+      sampledModelCount: Number(source.sampledModelCount || 0),
       meanSceneSpreadRatio: spreadRatio,
       breadthRead: inferBreadthRead(spreadRatio),
       maxActiveModelRatio: Number(macro.maxActiveModelRatio || 0)

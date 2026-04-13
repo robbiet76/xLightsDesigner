@@ -56,6 +56,8 @@ test("buildRenderObservationFromSamples produces model-level macro observation f
         revisionToken: "rev-1",
         fseqPath: "/show/Test.fseq",
         sampleEncoding: "base64_packed_channel_ranges_v1",
+        startMs: 0,
+        endMs: 50,
         samples: [
           { frameIndex: 0, frameTimeMs: 0, dataBase64: frame0 },
           { frameIndex: 1, frameTimeMs: 50, dataBase64: frame1 }
@@ -65,6 +67,10 @@ test("buildRenderObservationFromSamples produces model-level macro observation f
   });
 
   assert.equal(observation.artifactType, "render_observation_v1");
+  assert.equal(observation.source.startMs, 0);
+  assert.equal(observation.source.endMs, 50);
+  assert.equal(observation.source.samplingMode, "full");
+  assert.equal(observation.source.sampledModelCount, 2);
   assert.deepEqual(observation.macro.activeModelNames, ["MegaTree", "Roofline"]);
   assert.equal(observation.macro.leadModel, "MegaTree");
   assert.equal(observation.macro.activeFamilyTotals.Tree, 2);

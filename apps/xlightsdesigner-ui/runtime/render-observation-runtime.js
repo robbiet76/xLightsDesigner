@@ -183,7 +183,13 @@ export function buildRenderObservationFromSamples({
       sequencePath: str(data?.sequencePath || sequencePath),
       revisionToken: str(data?.revisionToken || revisionToken),
       fseqPath: str(data?.fseqPath),
-      sampleEncoding: str(data?.sampleEncoding)
+      sampleEncoding: str(data?.sampleEncoding),
+      startMs: toFinite(data?.startMs),
+      endMs: toFinite(data?.endMs),
+      samplingMode: str(plan?.samplingMode || "full") || "full",
+      sampledModelCount: models.length,
+      availableModelCount: toFinite(plan?.availableModelCount),
+      targetMatchedModelCount: toFinite(plan?.targetMatchedModelCount)
     },
     macro: {
       frameCount: samples.length,

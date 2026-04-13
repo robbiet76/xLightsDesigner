@@ -7,6 +7,12 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   const out = buildRenderCritiqueContext({
     renderObservation: {
       artifactId: "obs-1",
+      source: {
+        startMs: 1000,
+        endMs: 4000,
+        samplingMode: "targeted",
+        sampledModelCount: 2
+      },
       macro: {
         activeModelNames: ["MegaTree", "Roofline"],
         activeFamilyTotals: { Tree: 3, Line: 2 },
@@ -45,6 +51,10 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.deepEqual(out.expected.preferredVisualFamilies, ["spiral_flow", "soft_texture"]);
   assert.deepEqual(out.observed.activeModelNames, ["MegaTree", "Roofline"]);
   assert.equal(out.observed.leadModel, "MegaTree");
+  assert.equal(out.observed.sampledStartMs, 1000);
+  assert.equal(out.observed.sampledEndMs, 4000);
+  assert.equal(out.observed.samplingMode, "targeted");
+  assert.equal(out.observed.sampledModelCount, 2);
   assert.equal(out.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(out.comparison.leadIsKnownFocalCandidate, true);
   assert.deepEqual(out.comparison.observedFocusTargets, ["MegaTree"]);
