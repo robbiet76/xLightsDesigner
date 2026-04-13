@@ -20,6 +20,25 @@ test("buildRenderSamplingPlan derives ordered model channel ranges from scene gr
   ]);
 });
 
+test("buildRenderSamplingPlan narrows to matched target models when scope targets are present", () => {
+  const plan = buildRenderSamplingPlan({
+    modelsById: {
+      MegaTree: { id: "MegaTree", name: "MegaTree", typeCategory: "Tree", startChannel: 1, endChannel: 3, transform: { position: { x: 0, y: 0 } } },
+      Roofline: { id: "Roofline", name: "Roofline", typeCategory: "Line", startChannel: 4, endChannel: 6, transform: { position: { x: 10, y: 0 } } }
+    }
+  }, {
+    targetIds: ["MegaTree"]
+  });
+
+  assert.equal(plan.modelCount, 1);
+  assert.equal(plan.availableModelCount, 2);
+  assert.equal(plan.targetMatchedModelCount, 1);
+  assert.equal(plan.samplingMode, "targeted");
+  assert.deepEqual(plan.channelRanges, [
+    { startChannel: 1, channelCount: 3 }
+  ]);
+});
+
 test("buildRenderObservationFromSamples produces model-level macro observation from sparse bytes", () => {
   const plan = buildRenderSamplingPlan({
     modelsById: {

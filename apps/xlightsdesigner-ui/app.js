@@ -3831,15 +3831,64 @@ async function collectPostApplyRenderObservation({
   const sceneGraph = targetState?.sceneGraph && typeof targetState.sceneGraph === "object"
     ? targetState.sceneGraph
     : {};
-  const samplingPlan = buildRenderSamplingPlan(sceneGraph);
+  const selectedSections = Array.isArray(targetState?.ui?.sectionSelections)
+    ? Array.from(new Set(targetState.ui.sectionSelections.map((row) => normalizeSectionLabel(row)).filter((row) => row && row !== "all")))
+    : [];
+  const selectedTargets = metadataRuntime.normalizeMetadataSelectionIds(targetState?.ui?.metadataSelectionIds || []);
+  const sequencingDesignHandoff = targetState?.creative?.sequencingDesignHandoff && typeof targetState.creative.sequencingDesignHandoff === "object"
+    ? targetState.creative.sequencingDesignHandoff
+    : null;
+  const sequenceArtisticGoal = targetState?.creative?.sequenceArtisticGoal && typeof targetState.creative.sequenceArtisticGoal === "object"
+    ? targetState.creative.sequenceArtisticGoal
+    : null;
+  const targetScope = Array.from(new Set([
+    ...selectedTargets,
+    ...(Array.isArray(sequencingDesignHandoff?.scope?.targetIds) ? sequencingDesignHandoff.scope.targetIds : []),
+    ...(Array.isArray(sequenceArtisticGoal?.artisticIntent?.primaryTargets) ? sequenceArtisticGoal.artisticIntent.primaryTargets : []),
+    ...(Array.isArray(sequenceArtisticGoal?.artisticIntent?.supportTargets) ? sequenceArtisticGoal.artisticIntent.supportTargets : [])
+  ].map((row) => String(row || "").trim()).filter(Boolean)));
+  const samplingPlan = buildRenderSamplingPlan(sceneGraph, { targetIds: targetScope });
   if (!samplingPlan.modelCount || !samplingPlan.channelRanges.length) return null;
 
   const durationMs = Number(targetState?.sequenceSettings?.durationMs || 0);
-  const safeEndMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 1000;
+  const sectionChoiceLabels = Array.isArray(targetState?.sectionSuggestions)
+    ? targetState.sectionSuggestions.map((row) => normalizeSectionLabel(row)).filter(Boolean)
+    : [];
+  const sectionStarts = targetState?.sectionStartByLabel && typeof targetState.sectionStartByLabel === "object"
+    ? targetState.sectionStartByLabel
+    : {};
+  const orderedSectionRows = sectionChoiceLabels
+    .map((label, idx) => ({
+      label,
+      startMs: typeof sectionStarts[label] === "number" ? sectionStarts[label] : null,
+      order: idx
+    }))
+    .filter((row) => Number.isFinite(Number(row?.startMs)))
+    .map((row) => ({ label: String(row.label || "").trim(), startMs: Number(row.startMs) }))
+    .sort((a, b) => a.startMs - b.startMs);
+  const sectionBounds = selectedSections
+    .map((label) => {
+      const idx = orderedSectionRows.findIndex((row) => row.label === label);
+      if (idx < 0) return null;
+      const startMs = orderedSectionRows[idx].startMs;
+      const nextStart = orderedSectionRows[idx + 1]?.startMs;
+      const boundedEnd = Number.isFinite(nextStart)
+        ? nextStart
+        : (Number.isFinite(durationMs) && durationMs > startMs ? durationMs : startMs + 1000);
+      return {
+        startMs,
+        endMs: Math.max(startMs + 1, boundedEnd)
+      };
+    })
+    .filter(Boolean);
+  const safeStartMs = sectionBounds.length ? Math.min(...sectionBounds.map((row) => row.startMs)) : 0;
+  const safeEndMs = sectionBounds.length
+    ? Math.max(...sectionBounds.map((row) => row.endMs))
+    : (Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 1000);
   try {
     await renderCurrentSequence(endpoint);
     const sampleResponse = await getRenderedSequenceSamples(endpoint, {
-      startMs: 0,
+      startMs: safeStartMs,
       endMs: safeEndMs,
       maxFrames: 5,
       channelRanges: samplingPlan.channelRanges

@@ -12,6 +12,14 @@ function uniqueStrings(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => str(row)).filter(Boolean))];
 }
 
+function normalizeLookupKeys(value = "") {
+  const text = str(value);
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const compact = lower.replace(/\s+/g, "");
+  return compact === lower ? [lower] : [lower, compact];
+}
+
 function decodeBase64Bytes(value = "") {
   const text = str(value);
   if (!text) return new Uint8Array();
@@ -71,8 +79,9 @@ function summarizeRangeActivity(bytes, offset, count) {
   };
 }
 
-export function buildRenderSamplingPlan(sceneGraph = {}) {
+export function buildRenderSamplingPlan(sceneGraph = {}, { targetIds = [] } = {}) {
   const modelsById = isPlainObject(sceneGraph?.modelsById) ? sceneGraph.modelsById : {};
+  const targetKeySet = new Set(uniqueStrings(targetIds).flatMap((row) => normalizeLookupKeys(row)));
   const models = Object.values(modelsById)
     .map((row) => {
       const startChannel = toFinite(row?.startChannel);
@@ -88,20 +97,35 @@ export function buildRenderSamplingPlan(sceneGraph = {}) {
         endChannel,
         channelCount: (endChannel - startChannel) + 1,
         x,
-        y
+        y,
+        targetMatched: false
       };
     })
     .filter((row) => row && row.id && row.channelCount > 0)
+    .map((row) => {
+      const matched = targetKeySet.size
+        ? [...new Set([...normalizeLookupKeys(row.id), ...normalizeLookupKeys(row.name)])].some((key) => targetKeySet.has(key))
+        : false;
+      return { ...row, targetMatched: matched };
+    })
     .sort((a, b) => a.startChannel - b.startChannel);
 
+  const prioritizedModels = targetKeySet.size
+    ? models.filter((row) => row.targetMatched)
+    : models;
+  const sampledModels = prioritizedModels.length ? prioritizedModels : models;
+
   return {
-    modelCount: models.length,
-    models,
-    channelRanges: models.map((row) => ({
+    modelCount: sampledModels.length,
+    availableModelCount: models.length,
+    targetMatchedModelCount: models.filter((row) => row.targetMatched).length,
+    models: sampledModels,
+    channelRanges: sampledModels.map((row) => ({
       startChannel: row.startChannel,
       channelCount: row.channelCount
     })),
-    sceneBounds: buildSceneAreaBounds(models)
+    sceneBounds: buildSceneAreaBounds(sampledModels),
+    samplingMode: targetKeySet.size && prioritizedModels.length ? "targeted" : "full"
   };
 }
 
