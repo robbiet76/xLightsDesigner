@@ -24,6 +24,12 @@ Current proof:
     - `customModelPct = 35.4%`
     - `modelsMissingChannelMapping = 0`
     - `nodesMissingChannelMapping = 0`
+- `preview-scene-window-render-training-treeflat.json`
+  - Source geometry: `preview-scene-geometry-render-training-live.json`
+  - Source render: `singlestrand-treeflat-stage1-coverage-v1-chaseSize-registry-v1.20260319T201838Z.fseq`
+  - Window: `1000ms..5000ms`
+  - Frames: offsets `8,10,12`
+  - Status: whole-layout sparse dynamic window reconstruction over cached geometry
 
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
@@ -45,6 +51,7 @@ What this proves:
 
 - We can export full whole-layout geometry accurately from xLights itself.
 - We can do that on a real custom-heavy show, not just the training fixture.
+- We can join authoritative rendered frame windows back onto cached whole-layout geometry.
 - We can derive static node geometry for a canonical training model.
 - We can extend the same join approach from 1D models into 2D matrix layouts.
 - We can extend the join approach into tree-style layouts with per-string/per-node structure.
