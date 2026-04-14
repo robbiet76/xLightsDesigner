@@ -1,7 +1,7 @@
 {
   "manifestVersion": "1.0",
-  "packId": "colorwash-matrix-expanded-sweep-v2-circularPalette-generated",
-  "description": "Registry-generated sweep for Color Wash circularPalette from colorwash-matrix-expanded-sweep-v2.json",
+  "packId": "colorwash-matrix-expanded-sweep-v2-reverseFades-generated",
+  "description": "Registry-generated sweep for Color Wash reverseFades from colorwash-matrix-expanded-sweep-v2.json",
   "fixture": {
     "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
     "modelName": "MatrixHighDensity",
@@ -13,7 +13,7 @@
   },
   "samples": [
     {
-      "sampleId": "color wash-circularpalette-false-generated-v1",
+      "sampleId": "color wash-reversefades-false-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
@@ -25,7 +25,7 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "circular_multi",
+        "paletteProfile": "mono_white",
         "palette": {
           "C_BUTTON_Palette1": "#FFFFFF",
           "C_BUTTON_Palette2": "#FF0000",
@@ -36,16 +36,14 @@
         },
         "paletteActivationMode": "xlights_default",
         "paletteActiveSlots": [
-          2,
-          3,
-          4
+          5
         ]
       },
       "labelHints": [
-        "circularPalette",
-        "circularPalette_false",
         "matrix_fill",
         "range_sample",
+        "reverseFades",
+        "reverseFades_false",
         "steady_wash"
       ],
       "export": {
@@ -53,27 +51,27 @@
         "format": "gif"
       },
       "trainingContext": {
-        "screenedParameterName": "circularPalette",
+        "screenedParameterName": "reverseFades",
         "screeningTarget": "effectSettings",
-        "screeningPhase": "screen",
+        "screeningPhase": "interaction",
         "screeningPriority": "medium",
-        "screeningPaletteMode": "circular_multi"
+        "screeningPaletteMode": "mono_white"
       }
     },
     {
-      "sampleId": "color wash-circularpalette-true-generated-v1",
+      "sampleId": "color wash-reversefades-true-generated-v1",
       "effectName": "Color Wash",
       "effectSettings": {
         "cycles": 1.0,
         "vFade": false,
         "hFade": false,
-        "reverseFades": false,
+        "reverseFades": true,
         "shimmer": false,
-        "circularPalette": true
+        "circularPalette": false
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "circular_multi",
+        "paletteProfile": "mono_white",
         "palette": {
           "C_BUTTON_Palette1": "#FFFFFF",
           "C_BUTTON_Palette2": "#FF0000",
@@ -84,16 +82,14 @@
         },
         "paletteActivationMode": "xlights_default",
         "paletteActiveSlots": [
-          2,
-          3,
-          4
+          5
         ]
       },
       "labelHints": [
-        "circularPalette",
-        "circularPalette_true",
         "matrix_fill",
         "range_sample",
+        "reverseFades",
+        "reverseFades_true",
         "steady_wash"
       ],
       "export": {
@@ -101,25 +97,25 @@
         "format": "gif"
       },
       "trainingContext": {
-        "screenedParameterName": "circularPalette",
+        "screenedParameterName": "reverseFades",
         "screeningTarget": "effectSettings",
-        "screeningPhase": "screen",
+        "screeningPhase": "interaction",
         "screeningPriority": "medium",
-        "screeningPaletteMode": "circular_multi"
+        "screeningPaletteMode": "mono_white"
       }
     }
   ],
   "registryMetadata": {
     "registryVersion": "1.0",
     "effect": "Color Wash",
-    "parameter": "circularPalette",
+    "parameter": "reverseFades",
     "importance": "medium",
-    "phase": "screen",
+    "phase": "interaction",
     "anchors": [
       false,
       true
     ],
     "target": "effectSettings",
-    "screeningPaletteMode": "circular_multi"
+    "screeningPaletteMode": "mono_white"
   }
 }

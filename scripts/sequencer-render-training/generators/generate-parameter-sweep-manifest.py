@@ -6,30 +6,33 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
+XLIGHTS_DEFAULT_PALETTE = {
+    "C_BUTTON_Palette1": "#FFFFFF",
+    "C_BUTTON_Palette2": "#FF0000",
+    "C_BUTTON_Palette3": "#00FF00",
+    "C_BUTTON_Palette4": "#0000FF",
+    "C_BUTTON_Palette5": "#FFFF00",
+    "C_BUTTON_Palette6": "#000000"
+}
+
 PALETTE_PRESETS = {
     "mono_white": {
         "paletteProfile": "mono_white",
-        "palette": {
-            "C_BUTTON_Palette1": "#FFFFFF",
-            "C_BUTTON_Palette2": "#FFFFFF"
-        }
+        "paletteActivationMode": "xlights_default",
+        "palette": XLIGHTS_DEFAULT_PALETTE,
+        "activeSlots": [5]
     },
     "rgb_primary": {
         "paletteProfile": "rgb_primary",
-        "palette": {
-            "C_BUTTON_Palette1": "#FF0000",
-            "C_BUTTON_Palette2": "#00FF00",
-            "C_BUTTON_Palette3": "#0000FF"
-        }
+        "paletteActivationMode": "xlights_default",
+        "palette": XLIGHTS_DEFAULT_PALETTE,
+        "activeSlots": [2, 3, 4]
     },
     "circular_multi": {
         "paletteProfile": "circular_multi",
-        "palette": {
-            "C_BUTTON_Palette1": "#FFFFFF",
-            "C_BUTTON_Palette2": "#FF5A00",
-            "C_BUTTON_Palette3": "#FFD000",
-            "C_BUTTON_Palette4": "#00C2FF"
-        }
+        "paletteActivationMode": "xlights_default",
+        "palette": XLIGHTS_DEFAULT_PALETTE,
+        "activeSlots": [2, 3, 4]
     }
 }
 
@@ -119,6 +122,8 @@ def main() -> int:
                 raise ValueError(f"unknown screeningPaletteMode for {effect} {args.parameter}: {palette_mode}")
             sample["sharedSettings"]["paletteProfile"] = preset["paletteProfile"]
             sample["sharedSettings"]["palette"] = deepcopy(preset["palette"])
+            sample["sharedSettings"]["paletteActivationMode"] = preset.get("paletteActivationMode", "explicit")
+            sample["sharedSettings"]["paletteActiveSlots"] = deepcopy(preset.get("activeSlots", []))
         sample["trainingContext"] = {
             "screenedParameterName": args.parameter,
             "screeningTarget": target,

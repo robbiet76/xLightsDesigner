@@ -71,6 +71,8 @@ shared_settings_json="$(jq -c '.sharedSettings // {}' <<<"${sample_json}")"
 training_context_json="$(jq -c '.trainingContext // {}' <<<"${sample_json}")"
 effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
 palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
+palette_activation_mode="$(jq -r '.sharedSettings.paletteActivationMode // "explicit"' <<<"${sample_json}")"
+palette_active_slots_json="$(jq -c '.sharedSettings.paletteActiveSlots // []' <<<"${sample_json}")"
 export_mode="$(jq -r '.export.mode' <<<"${sample_json}")"
 export_format="$(jq -r '.export.format // "gif"' <<<"${sample_json}")"
 start_ms="$(jq -r --argjson fixture "${fixture_json}" '(.timingWindow.startMs // $fixture.startMs)' <<<"${sample_json}")"
@@ -90,7 +92,34 @@ fi
 
 settings_json="$(settings_json_for_effect "${effect_name}" "${effect_settings_json}" "${shared_settings_json}")"
 settings_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"${settings_json}")"
-palette_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"${palette_json}")"
+palette_string="$(jq -rn   --argjson palette "${palette_json}"   --arg activationMode "${palette_activation_mode}"   --argjson activeSlots "${palette_active_slots_json}" '
+    def defaultPalette:
+      {
+        "C_BUTTON_Palette1": "#FFFFFF",
+        "C_BUTTON_Palette2": "#FF0000",
+        "C_BUTTON_Palette3": "#00FF00",
+        "C_BUTTON_Palette4": "#0000FF",
+        "C_BUTTON_Palette5": "#FFFF00",
+        "C_BUTTON_Palette6": "#000000"
+      };
+    def normalizedPalette:
+      if $activationMode == "xlights_default" then
+        defaultPalette
+      else
+        $palette
+      end;
+    def activeSet:
+      if ($activeSlots | length) > 0 then
+        ($activeSlots | map(tostring))
+      else
+        (normalizedPalette | keys | map(capture("Palette(?<n>[0-9]+)").n))
+      end;
+    (
+      normalizedPalette
+      + (reduce range(1; 7) as $i ({}; . + {("C_CHECKBOX_Palette" + ($i|tostring)): (if (activeSet | index(($i|tostring))) != null then "1" else "0" end)}))
+    )
+    | to_entries | map("\(.key)=\(.value)") | join(",")
+  ')"
 
 artifact_path="${OUT_DIR}/${SAMPLE_ID}.${export_format}"
 staging_dir="${sequence_dir}"

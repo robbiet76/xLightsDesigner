@@ -3,9 +3,10 @@
   "structuralTrainingStandard": {
     "paletteProfile": "rgb_standard",
     "palette": {
-      "C_BUTTON_Palette1": "#FF0000",
-      "C_BUTTON_Palette2": "#00FF00",
-      "C_BUTTON_Palette3": "#0000FF"
+      "C_BUTTON_Palette1": "#FFFFFF",
+      "C_BUTTON_Palette2": "#FF0000",
+      "C_BUTTON_Palette3": "#00FF00",
+      "C_BUTTON_Palette4": "#0000FF"
     },
     "brightnessPolicy": {
       "defaultBrightnessPercent": 100,

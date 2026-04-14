@@ -27,10 +27,19 @@
         "renderStyle": "Default",
         "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FF0000",
-          "C_BUTTON_Palette2": "#00FF00",
-          "C_BUTTON_Palette3": "#0000FF"
-        }
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
       },
       "labelHints": [
         "cycles",
@@ -66,10 +75,19 @@
         "renderStyle": "Default",
         "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FF0000",
-          "C_BUTTON_Palette2": "#00FF00",
-          "C_BUTTON_Palette3": "#0000FF"
-        }
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
       },
       "labelHints": [
         "cycles",
@@ -105,10 +123,19 @@
         "renderStyle": "Default",
         "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FF0000",
-          "C_BUTTON_Palette2": "#00FF00",
-          "C_BUTTON_Palette3": "#0000FF"
-        }
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
       },
       "labelHints": [
         "cycles",
@@ -144,10 +171,19 @@
         "renderStyle": "Default",
         "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FF0000",
-          "C_BUTTON_Palette2": "#00FF00",
-          "C_BUTTON_Palette3": "#0000FF"
-        }
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
       },
       "labelHints": [
         "cycles",
@@ -183,10 +219,19 @@
         "renderStyle": "Default",
         "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FF0000",
-          "C_BUTTON_Palette2": "#00FF00",
-          "C_BUTTON_Palette3": "#0000FF"
-        }
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF0000",
+          "C_BUTTON_Palette3": "#00FF00",
+          "C_BUTTON_Palette4": "#0000FF",
+          "C_BUTTON_Palette5": "#FFFF00",
+          "C_BUTTON_Palette6": "#000000"
+        },
+        "paletteActivationMode": "xlights_default",
+        "paletteActiveSlots": [
+          2,
+          3,
+          4
+        ]
       },
       "labelHints": [
         "cycles",
