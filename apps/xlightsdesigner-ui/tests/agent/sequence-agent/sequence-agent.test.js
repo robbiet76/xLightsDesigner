@@ -481,6 +481,52 @@ test("sequence_agent uses revision roles to bias inferred effect families", () =
   assert.match(out.executionLines[0], /apply On effect/i);
 });
 
+test("sequence_agent prefers direct spiral cue over generic shimmer fallback", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: {
+      trackIdentity: { title: "Track S", artist: "Artist S" },
+      structure: {
+        sections: [
+          { label: "Chorus 1", startMs: 0, endMs: 1000, energy: "high", density: "medium" }
+        ]
+      }
+    },
+    intentHandoff: {
+      goal: "Design a single Chorus 1 concept for SpiralTrees. Keep SpiralTrees as the lead read and use flowing spiral motion rather than a generic segmented fill.",
+      mode: "revise",
+      scope: {
+        targetIds: ["SpiralTrees"],
+        tagNames: [],
+        sections: ["Chorus 1"]
+      },
+      executionStrategy: {
+        sectionPlans: [
+          {
+            section: "Chorus 1",
+            energy: "high",
+            density: "medium",
+            intentSummary: "flowing spiral motion rather than a generic segmented fill",
+            targetIds: ["SpiralTrees"],
+            effectHints: []
+          }
+        ]
+      }
+    },
+    displayElements: [
+      { id: "SpiralTrees", name: "SpiralTrees", type: "group", displayAs: "Tree", geometryProfile: "tree_360_spiral" }
+    ],
+    effectCatalog: buildEffectDefinitionCatalog([
+      { effectName: "Spirals", params: [] },
+      { effectName: "Shimmer", params: [] },
+      { effectName: "Bars", params: [] },
+      { effectName: "Color Wash", params: [] }
+    ])
+  });
+
+  assert.equal(out.metadata.effectStrategy.seedRecommendations[0].effectName, "Spirals");
+  assert.match(out.executionLines[0], /apply Spirals effect/i);
+});
+
 test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

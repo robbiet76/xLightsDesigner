@@ -25,6 +25,7 @@ import {
   selectPreferredEffect,
   chooseSafeFallbackChain,
   resolveSummaryFallbackEffect,
+  resolveDirectCueEffectCandidates,
   firstAvailableEffect,
   recommendEffectsForTargets,
   recommendEffectsForVisualFamilies
@@ -614,14 +615,6 @@ function inferEffectNameFromSectionPlan({
   if (briefPreferred) return briefPreferred;
   const hinted = selectPreferredEffect(effectHints, { availableEffects, effectAvoidances });
   if (hinted) return hinted;
-  const familyDriven = recommendEffectsForVisualFamilies({
-    preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
-    targetIds,
-    displayElements,
-    limit: 1
-  });
-  const familyChosen = selectPreferredEffect(familyDriven.map((row) => row?.effectName), { availableEffects, effectAvoidances });
-  if (familyChosen) return familyChosen;
   const directiveText = [
     normText(sectionDirective?.sectionPurpose),
     normText(sectionDirective?.motionTarget),
@@ -631,6 +624,22 @@ function inferEffectNameFromSectionPlan({
   ].join(" ");
   const hintBehavior = normArray(visualHintBehaviorText).map((row) => normText(row)).filter(Boolean).join(" ");
   const summary = `${normText(intentSummary)} ${normText(section)} ${directiveText} ${hintBehavior}`.toLowerCase();
+  const directCueChosen = selectPreferredEffect(
+    resolveDirectCueEffectCandidates({
+      goalText: summary,
+      smoothBias: /flow|smooth|glow|cinematic/.test(summary)
+    }),
+    { availableEffects, effectAvoidances }
+  );
+  if (directCueChosen) return directCueChosen;
+  const familyDriven = recommendEffectsForVisualFamilies({
+    preferredVisualFamilies: normArray(sectionDirective?.preferredVisualFamilies),
+    targetIds,
+    displayElements,
+    limit: 1
+  });
+  const familyChosen = selectPreferredEffect(familyDriven.map((row) => row?.effectName), { availableEffects, effectAvoidances });
+  if (familyChosen) return familyChosen;
   const normalizedEnergy = normText(energy).toLowerCase();
   const normalizedDensity = normText(density).toLowerCase();
   const explicitStaticCue = /\bon effect\b|\bsolid\b|\bhold\b|\bsteady\b/.test(summary);
