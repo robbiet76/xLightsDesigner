@@ -33,7 +33,7 @@ function str(value = "") {
 }
 
 function usage() {
-  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights");
+  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights");
   process.exit(2);
 }
 
@@ -120,6 +120,10 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
   nativeCall = { method: "GET", path: "/snapshot" };
 } else if (command === "get-agent-runtime-snapshot") {
   nativeCall = { method: "GET", path: "/snapshot" };
+} else if (command === "get-sequencer-validation-snapshot") {
+  nativeCall = { method: "GET", path: "/sequencer-validation-snapshot" };
+} else if (command === "get-render-feedback-snapshot") {
+  nativeCall = { method: "GET", path: "/render-feedback-snapshot" };
 } else if (command === "open-sequence") {
   const first = str(rest[0]);
   const payload = (first === "--payload-file" || first.startsWith("@") || first.startsWith("{"))

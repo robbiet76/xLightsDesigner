@@ -71,6 +71,10 @@ final class NativeAutomationServer: @unchecked Sendable {
             return .json(200, body: healthSnapshot())
         case ("GET", "/snapshot"):
             return .json(200, body: appSnapshot())
+        case ("GET", "/sequencer-validation-snapshot"):
+            return .json(200, body: sequencerValidationSnapshot())
+        case ("GET", "/render-feedback-snapshot"):
+            return .json(200, body: renderFeedbackSnapshot())
         case ("GET", "/assistant-snapshot"):
             return .json(200, body: assistantSnapshot())
         case ("GET", "/xlights-session"):
@@ -564,6 +568,172 @@ final class NativeAutomationServer: @unchecked Sendable {
             "selectedSummary": selectedSummary,
             "banners": screen.banners.map { ["text": $0.text, "state": $0.state.rawValue] }
         ]
+    }
+
+    @MainActor
+    private func sequencerValidationSnapshot() -> [String: Any] {
+        let project = model.workspace.activeProject
+        let snapshot = latestProjectValidationSnapshot(for: project)
+        let latestPlanHandoff = snapshot["latestPlanHandoff"] as? [String: Any]
+        return [
+            "ok": true,
+            "status": [
+                "selectedWorkflow": model.selectedWorkflow.rawValue,
+                "projectName": project?.projectName ?? "",
+                "projectFilePath": project?.projectFilePath ?? ""
+            ],
+            "activeSequence": string(project?.snapshot["activeSequence"]?.value),
+            "sequencePathInput": string(project?.snapshot["sequencePathInput"]?.value),
+            "reviewHistorySnapshotAvailable": bool(snapshot["reviewHistorySnapshotAvailable"]),
+            "latestApply": snapshot["latestApply"] ?? NSNull(),
+            "latestPracticalValidation": snapshot["latestPracticalValidation"] ?? NSNull(),
+            "latestApplyResult": snapshot["latestApplyResult"] ?? NSNull(),
+            "latestPlanHandoff": latestPlanHandoff ?? NSNull(),
+            "latestIntentHandoff": snapshot["latestIntentHandoff"] ?? NSNull(),
+            "latestRenderObservation": snapshot["latestRenderObservation"] ?? NSNull(),
+            "latestRenderCritiqueContext": snapshot["latestRenderCritiqueContext"] ?? NSNull(),
+            "latestSequenceArtisticGoal": snapshot["latestSequenceArtisticGoal"] ?? NSNull(),
+            "latestSequenceRevisionObjective": snapshot["latestSequenceRevisionObjective"] ?? NSNull(),
+            "latestReviewArtifacts": snapshot["latestReviewArtifacts"] ?? NSNull(),
+            "latestGuidanceCoverage": buildPlanGuidanceCoverage(latestPlanHandoff),
+            "recentPersistenceDiagnostics": snapshot["recentPersistenceDiagnostics"] ?? [],
+            "pageStates": [
+                "sequence": sequenceSnapshot(),
+                "review": reviewSnapshot(),
+                "history": historySnapshot()
+            ]
+        ]
+    }
+
+    @MainActor
+    private func renderFeedbackSnapshot() -> [String: Any] {
+        let project = model.workspace.activeProject
+        let snapshot = latestProjectValidationSnapshot(for: project)
+        return [
+            "ok": true,
+            "renderObservation": snapshot["latestRenderObservation"] ?? NSNull(),
+            "renderCritiqueContext": snapshot["latestRenderCritiqueContext"] ?? NSNull(),
+            "sequenceArtisticGoal": snapshot["latestSequenceArtisticGoal"] ?? NSNull(),
+            "sequenceRevisionObjective": snapshot["latestSequenceRevisionObjective"] ?? NSNull()
+        ]
+    }
+
+    @MainActor
+    private func latestProjectValidationSnapshot(for project: ActiveProjectModel?) -> [String: Any] {
+        guard let project else {
+            return [
+                "reviewHistorySnapshotAvailable": false,
+                "recentPersistenceDiagnostics": []
+            ]
+        }
+        let projectDir = URL(fileURLWithPath: project.projectFilePath).deletingLastPathComponent()
+        let historyEntry = readLatestArtifact(in: projectDir.appendingPathComponent("history", isDirectory: true))
+        let latestApplyResult = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/apply-results", isDirectory: true))
+        let latestPlanHandoff = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/plans", isDirectory: true))
+        let latestIntentHandoff = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/intent-handoffs", isDirectory: true))
+        let latestRenderObservation = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/render-observations", isDirectory: true))
+        let latestRenderCritiqueContext = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/render-critique-contexts", isDirectory: true))
+        let latestSequenceArtisticGoal = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/sequence-artistic-goals", isDirectory: true))
+        let latestSequenceRevisionObjective = readLatestArtifact(in: projectDir.appendingPathComponent("artifacts/sequence-revision-objectives", isDirectory: true))
+        return [
+            "reviewHistorySnapshotAvailable": historyEntry != nil || latestApplyResult != nil || latestRenderObservation != nil || latestRenderCritiqueContext != nil,
+            "latestApply": historyEntry != nil ? [
+                "historyEntryId": string(historyEntry?["historyEntryId"]),
+                "summary": string(historyEntry?["summary"]),
+                "status": string(historyEntry?["status"])
+            ] : NSNull(),
+            "latestPracticalValidation": latestApplyResult?["practicalValidation"] ?? NSNull(),
+            "latestApplyResult": latestApplyResult ?? NSNull(),
+            "latestPlanHandoff": latestPlanHandoff ?? NSNull(),
+            "latestIntentHandoff": latestIntentHandoff ?? NSNull(),
+            "latestRenderObservation": latestRenderObservation ?? NSNull(),
+            "latestRenderCritiqueContext": latestRenderCritiqueContext ?? NSNull(),
+            "latestSequenceArtisticGoal": latestSequenceArtisticGoal ?? NSNull(),
+            "latestSequenceRevisionObjective": latestSequenceRevisionObjective ?? NSNull(),
+            "latestReviewArtifacts": [
+                "renderObservation": summarizeValidationArtifact(latestRenderObservation, extra: [
+                    "leadModel": string((latestRenderObservation?["macro"] as? [String: Any])?["leadModel"]),
+                    "samplingMode": string((latestRenderObservation?["source"] as? [String: Any])?["samplingMode"])
+                ]),
+                "renderCritiqueContext": summarizeValidationArtifact(latestRenderCritiqueContext, extra: [
+                    "leadMatchesPrimaryFocus": bool(((latestRenderCritiqueContext?["comparison"] as? [String: Any])?["leadMatchesPrimaryFocus"])),
+                    "breadthRead": string((latestRenderCritiqueContext?["observed"] as? [String: Any])?["breadthRead"])
+                ]),
+                "sequenceArtisticGoal": summarizeValidationArtifact(latestSequenceArtisticGoal, extra: [
+                    "goalLevel": string((latestSequenceArtisticGoal?["scope"] as? [String: Any])?["goalLevel"])
+                ]),
+                "sequenceRevisionObjective": summarizeValidationArtifact(latestSequenceRevisionObjective, extra: [
+                    "ladderLevel": string(latestSequenceRevisionObjective?["ladderLevel"]),
+                    "nextOwner": string(((latestSequenceRevisionObjective?["scope"] as? [String: Any])?["nextOwner"]))
+                ])
+            ],
+            "recentPersistenceDiagnostics": []
+        ]
+    }
+
+    private func buildPlanGuidanceCoverage(_ planHandoff: [String: Any]?) -> [String: Any] {
+        let commands = planHandoff?["commands"] as? [[String: Any]] ?? []
+        let effectCreates = commands.filter { string($0["cmd"]) == "effects.create" }
+        let guidanceRows = effectCreates.map { row -> [String: Any] in
+            let intent = row["intent"] as? [String: Any]
+            let params = row["params"] as? [String: Any]
+            return [
+                "effectName": string(params?["effectName"]),
+                "hasParameterPriorGuidance": intent?["parameterPriorGuidance"] is [String: Any],
+                "hasSharedSettingPriorGuidance": intent?["sharedSettingPriorGuidance"] is [String: Any]
+            ]
+        }
+        let guidedEffects = Array(Set(guidanceRows.compactMap { row in
+            (bool(row["hasParameterPriorGuidance"]) || bool(row["hasSharedSettingPriorGuidance"])) ? string(row["effectName"]) : ""
+        }.filter { !$0.isEmpty })).sorted()
+        return [
+            "effectCreateCount": effectCreates.count,
+            "parameterPriorCommandCount": guidanceRows.filter { bool($0["hasParameterPriorGuidance"]) }.count,
+            "sharedSettingPriorCommandCount": guidanceRows.filter { bool($0["hasSharedSettingPriorGuidance"]) }.count,
+            "guidedEffects": guidedEffects
+        ]
+    }
+
+    private func summarizeValidationArtifact(_ artifact: [String: Any]?, extra: [String: Any] = [:]) -> [String: Any]? {
+        guard let artifact else { return nil }
+        var out: [String: Any] = [
+            "artifactId": string(artifact["artifactId"]),
+            "artifactType": string(artifact["artifactType"])
+        ]
+        for (key, value) in extra {
+            out[key] = value
+        }
+        return out
+    }
+
+    private func readLatestArtifact(in directory: URL) -> [String: Any]? {
+        guard FileManager.default.fileExists(atPath: directory.path) else { return nil }
+        guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles]) else {
+            return nil
+        }
+        let jsonFiles = files.filter { $0.pathExtension == "json" }
+        guard let latest = try? jsonFiles.max(by: { lhs, rhs in
+            let l = try lhs.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate ?? .distantPast
+            let r = try rhs.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate ?? .distantPast
+            return l < r
+        }) else {
+            return nil
+        }
+        guard let data = try? Data(contentsOf: latest),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return object
+    }
+
+    private func string(_ value: Any?) -> String {
+        String(describing: value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func bool(_ value: Any?) -> Bool {
+        if let bool = value as? Bool { return bool }
+        if let number = value as? NSNumber { return number.boolValue }
+        return false
     }
 }
 
