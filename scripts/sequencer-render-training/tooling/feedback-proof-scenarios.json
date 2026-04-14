@@ -8,6 +8,9 @@
     "frameOffsets": "8,10,12",
     "designHandoffRef": "design_handoff_v2:proof_treeflat",
     "revisionGoal": "Validate sparse tree-led section behavior and identify the next broadening move.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_window_treeflat_sparse",
     "targetScope": "TreeFlat",
     "effectFamilies": "SingleStrand"
@@ -21,6 +24,9 @@
     "frameOffsets": "8,10,12",
     "designHandoffRef": "design_handoff_v2:proof_matrixlowdensity",
     "revisionGoal": "Validate sparse matrix-led section behavior and identify the next broadening move.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_window_matrix_sparse",
     "targetScope": "MatrixLowDensity",
     "effectFamilies": "SingleStrand"
@@ -34,6 +40,9 @@
     "frameOffsets": "8,10,12",
     "designHandoffRef": "design_handoff_v2:proof_archsingle",
     "revisionGoal": "Validate single-arch section behavior and identify the next broadening move.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_window_archsingle_sparse",
     "targetScope": "ArchSingle",
     "effectFamilies": "ColorWash"
@@ -48,6 +57,9 @@
     ],
     "designHandoffRef": "design_handoff_v2:proof_tree_arch_support",
     "revisionGoal": "Validate a broader tree-led section with arch support and confirm the macro critique distinguishes it from narrow single-family passes.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_window_tree_arch_composite",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -62,6 +74,9 @@
     ],
     "designHandoffRef": "design_handoff_v2:proof_arch_matrix_support",
     "revisionGoal": "Validate a broader lead-plus-support macro composition and confirm the critique recognizes coherent support instead of over-splitting.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_window_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"

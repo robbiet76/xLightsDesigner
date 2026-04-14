@@ -19,6 +19,17 @@ def load_json(path):
         return json.load(handle)
 
 
+def require_scope_fields(scenario):
+    missing = [
+        key for key in ("requestedScopeMode", "reviewStartLevel", "sectionScopeKind")
+        if not str(scenario.get(key, "")).strip()
+    ]
+    if missing:
+        raise RuntimeError(
+            f"Scenario {scenario.get('scenarioId', '<unknown>')} missing explicit scope fields: {', '.join(missing)}"
+        )
+
+
 def main():
     scenarios = load_json(SCENARIOS)
     suite = {
@@ -31,6 +42,7 @@ def main():
     }
 
     for scenario in scenarios:
+        require_scope_fields(scenario)
         scenario_id = scenario["scenarioId"]
         source_windows = []
         for source in scenario["compositeSources"]:
@@ -88,9 +100,9 @@ def main():
             "--section-scope", scenario["sectionScope"],
             "--target-scope", scenario["targetScope"],
             "--effect-families", scenario["effectFamilies"],
-            "--requested-scope-mode", scenario.get("requestedScopeMode", "section_target_refinement"),
-            "--review-start-level", scenario.get("reviewStartLevel", "section"),
-            "--section-scope-kind", scenario.get("sectionScopeKind", "timing_track_windows"),
+            "--requested-scope-mode", scenario["requestedScopeMode"],
+            "--review-start-level", scenario["reviewStartLevel"],
+            "--section-scope-kind", scenario["sectionScopeKind"],
             "--out", record_path,
         ])
 

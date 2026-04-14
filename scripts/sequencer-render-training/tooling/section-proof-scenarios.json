@@ -16,6 +16,9 @@
     "windowEndMs": 5000,
     "designHandoffRef": "design_handoff_v2:proof_tree_arch_section",
     "revisionGoal": "Evaluate section-level coherence for a broad but potentially split tree-plus-arch treatment.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_section_tree_arch_split",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -37,6 +40,9 @@
     "windowEndMs": 5000,
     "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section",
     "revisionGoal": "Evaluate section-level coherence for a lead-plus-support arch and matrix treatment.",
+    "requestedScopeMode": "section_target_refinement",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
     "sectionScope": "proof_section_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
