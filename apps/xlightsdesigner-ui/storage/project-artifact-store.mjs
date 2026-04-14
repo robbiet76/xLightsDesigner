@@ -15,6 +15,7 @@ const ARTIFACT_DIRS = {
   apply_result_v1: path.join("artifacts", "apply-results"),
   render_observation_v1: path.join("artifacts", "render-observations"),
   sequence_render_critique_context_v1: path.join("artifacts", "render-critique-contexts"),
+  effect_family_outcome_record_v1: path.join("artifacts", "effect-outcomes"),
   history_entry_v1: "history"
 };
 

@@ -189,6 +189,19 @@ The next population pass should add:
 - effect-family outcome evidence by unresolved prior-pass signal
 - effect-family outcome evidence by target/model bucket
 
+The first durable live-learning record type for this is:
+- `effect_family_outcome_record_v1`
+
+That record should capture:
+- chosen effect family
+- request scope
+- revision level
+- revision roles
+- prior unresolved signals
+- post-pass unresolved signals
+- resolved/persisted/new signals
+- coarse rendered outcome reads
+
 Examples:
 - `strengthen_lead` on tree-like focal props: `Bars` improved lead match
 - `reduce_competing_support` on support clusters: `On` reduced spread but also flattened motion
@@ -213,8 +226,14 @@ Those belong in:
 Builder:
 - [build-unified-training-set.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/build-unified-training-set.mjs)
 
+Outcome harvester:
+- [harvest-effect-outcome-records.mjs](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/harvest-effect-outcome-records.mjs)
+
 Initial generated artifact:
 - [sequencer-unified-training-set-v1.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json)
+
+Outcome catalog:
+- [README.md](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-family-outcomes/README.md)
 
 ## Acceptance Standard
 

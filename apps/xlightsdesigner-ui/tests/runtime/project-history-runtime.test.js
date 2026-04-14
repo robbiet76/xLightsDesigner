@@ -44,6 +44,8 @@ test("project history runtime persists available artifacts for history", async (
         return { ok: true };
       }
     }),
+    currentApplyContext: () => ({ projectKey: "proj-1", sequencePath: "/show/Test.xsq", endpoint: "" }),
+    buildEffectFamilyOutcomeRecords: () => [{ artifactId: "outcome-1", artifactType: "effect_family_outcome_record_v1" }],
     buildCurrentDesignSceneContext: () => ({ artifactId: "scene-1" }),
     buildCurrentMusicDesignContext: () => ({ artifactId: "music-1" }),
     getValidHandoff: (contract) => (contract === "plan_handoff_v1" ? { artifactId: "plan-1" } : null)
@@ -59,7 +61,7 @@ test("project history runtime persists available artifacts for history", async (
   assert.equal(writes[0].projectFilePath, "/show/project.xdproj");
   assert.deepEqual(
     writes[0].artifacts.map((row) => row.artifactId),
-    ["analysis-1", "scene-1", "music-1", "director-1", "brief-1", "proposal-1", "intent-1", "plan-1", "apply-1", "render-1", "critique-1", "goal-1", "objective-1", "history-1"]
+    ["analysis-1", "scene-1", "music-1", "director-1", "brief-1", "proposal-1", "intent-1", "plan-1", "apply-1", "render-1", "critique-1", "goal-1", "objective-1", "history-1", "outcome-1"]
   );
 });
 

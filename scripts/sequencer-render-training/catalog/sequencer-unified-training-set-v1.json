@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T12:18:10.330Z",
+  "generatedAt": "2026-04-14T12:22:43.616Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -32,7 +32,8 @@
         "unresolved_signals",
         "rendered_outcome_shift"
       ],
-      "currentPopulation": "not yet harvested into durable general-training records"
+      "currentPopulation": "not yet harvested into durable general-training records",
+      "outcomeRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-family-outcomes"
     }
   },
   "boundaries": {
@@ -195,6 +196,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -350,6 +352,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -489,6 +492,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -646,6 +650,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -823,6 +828,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -984,6 +990,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -1110,6 +1117,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -1283,6 +1291,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -1458,6 +1467,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,
@@ -1589,6 +1599,7 @@
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
+        "outcomeRecordCount": 0,
         "roleOutcomeMemory": {
           "strengthen_lead": {
             "sampleCount": 0,

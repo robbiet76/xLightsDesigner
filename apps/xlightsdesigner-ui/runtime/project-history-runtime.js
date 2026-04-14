@@ -15,6 +15,7 @@ export function createProjectHistoryRuntime(deps = {}) {
     buildHistoryEntry = (value) => value,
     currentArtifactRefs = () => ({}),
     buildHistorySnapshotSummary = () => ({}),
+    buildEffectFamilyOutcomeRecords = () => [],
     getSelectedSections = () => [],
     normalizeMetadataSelectionIds = (values) => values,
     persist = () => {},
@@ -41,6 +42,18 @@ export function createProjectHistoryRuntime(deps = {}) {
       state.creative?.sequenceRevisionObjective || null,
       historyEntry
     ].filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
+    const context = currentApplyContext();
+    const outcomeRecords = arrify(buildEffectFamilyOutcomeRecords({
+      planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
+      applyResult,
+      renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
+      renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null,
+      sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null,
+      historyEntry,
+      projectKey: context.projectKey,
+      sequencePath: context.sequencePath
+    })).filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
+    artifacts.push(...outcomeRecords);
     if (!artifacts.length) return { ok: false, reason: "no_artifacts" };
     try {
       return await bridge.writeProjectArtifacts({
@@ -267,4 +280,8 @@ export function createProjectHistoryRuntime(deps = {}) {
     appendDesktopApplyLog,
     refreshApplyHistoryFromDesktop
   };
+}
+
+function arrify(value) {
+  return Array.isArray(value) ? value : [];
 }

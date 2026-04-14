@@ -216,6 +216,7 @@ import {
   buildSequenceTrackBindingFromArtifact,
   normalizeSequenceTrackBinding
 } from "./runtime/sequence-track-binding-runtime.js";
+import { buildEffectFamilyOutcomeRecords } from "./agent/sequence-agent/effect-outcome-records.js";
 import { buildScreenContent } from "./app-ui/screens.js";
 import { buildAppShell } from "./app-ui/shell.js";
 import { bindTeamChatEvents } from "./app-ui/chat-bindings.js";
@@ -7951,6 +7952,7 @@ projectHistoryRuntime = createProjectHistoryRuntime({
   buildHistoryEntry,
   currentArtifactRefs,
   buildHistorySnapshotSummary,
+  buildEffectFamilyOutcomeRecords,
   getSelectedSections,
   normalizeMetadataSelectionIds: (...args) => metadataRuntime.normalizeMetadataSelectionIds(...args),
   persist,

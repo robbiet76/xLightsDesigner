@@ -1,0 +1,70 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { buildEffectFamilyOutcomeRecords } from "../../../agent/sequence-agent/effect-outcome-records.js";
+
+test("buildEffectFamilyOutcomeRecords emits general-training records per chosen effect family", () => {
+  const records = buildEffectFamilyOutcomeRecords({
+    projectKey: "proj-1",
+    sequencePath: "/show/Test.xsq",
+    historyEntry: { historyEntryId: "history-1" },
+    planHandoff: {
+      metadata: {
+        requestScopeMode: "section_target_refinement",
+        reviewStartLevel: "section",
+        sectionScopeKind: "timing_track_windows",
+        priorPassMemory: {
+          unresolvedSignals: ["lead_mismatch", "weak_section_contrast"]
+        },
+        sequencerRevisionBrief: {
+          requestScopeMode: "section_target_refinement",
+          reviewStartLevel: "section",
+          sectionScopeKind: "timing_track_windows",
+          revisionRoles: ["strengthen_lead", "increase_section_contrast"],
+          targetScope: ["MegaTree"],
+          revisionTargets: ["MegaTree", "Roofline"],
+          focusTargets: ["MegaTree"]
+        }
+      },
+      commands: [
+        { cmd: "effects.create", params: { effectName: "Bars" } },
+        { cmd: "effects.create", params: { effectName: "Bars" } },
+        { cmd: "effects.create", params: { effectName: "Color Wash" } }
+      ]
+    },
+    sequenceRevisionObjective: {
+      ladderLevel: "section",
+      scope: {
+        revisionRoles: ["strengthen_lead"],
+        revisionTargets: ["MegaTree"]
+      }
+    },
+    renderObservation: {
+      leadModel: "MegaTree",
+      breadthRead: "broad",
+      temporalRead: "evolving",
+      coverageRead: "full"
+    },
+    renderCritiqueContext: {
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "broad",
+        temporalRead: "evolving",
+        coverageRead: "full"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        adjacentWindowComparisons: []
+      }
+    },
+    applyResult: { status: "success" }
+  });
+
+  assert.equal(records.length, 2);
+  assert.deepEqual(records.map((row) => row.effectName), ["Bars", "Color Wash"]);
+  assert.equal(records[0].storageClass, "general_training");
+  assert.equal(records[0].requestScope.mode, "section_target_refinement");
+  assert.deepEqual(records[0].revisionRoles, ["strengthen_lead", "increase_section_contrast"]);
+  assert.deepEqual(records[0].resolvedSignals, ["lead_mismatch", "weak_section_contrast"]);
+  assert.equal(records[0].outcome.status, "improved");
+});
