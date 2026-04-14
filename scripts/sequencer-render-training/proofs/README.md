@@ -102,6 +102,38 @@ Harness runner:
     - [sequence-artistic-goal-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-artistic-goal-archsingle_matrixlowdensity_section_balanced.json)
     - [sequence-revision-objective-archsingle_matrixlowdensity_section_balanced.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-revision-objective-archsingle_matrixlowdensity_section_balanced.json)
 
+Request scope vocabulary:
+
+- retained training artifacts now carry the same request-scope summary as the live app:
+  - `mode`
+  - `reviewStartLevel`
+  - `sectionScopeKind`
+- current meanings:
+  - `whole_sequence`
+    - broad generation or broad redesign
+    - review starts at `macro`
+  - `section_selection`
+    - one or more selected timing-track windows
+    - review starts at `section`
+  - `section_target_refinement`
+    - selected timing-track windows plus explicit targets
+    - review starts at `section`
+  - `target_refinement`
+    - local target refinement without explicit section selection
+    - review starts at `group` or `model`
+- `section` remains timing-track agnostic:
+  - phrase
+  - lyric
+  - beat
+  - chord
+  - cue
+  - user-defined timing track windows
+- this keeps offline proofs aligned with:
+  - live history summaries
+  - render critique context
+  - sequencer revision briefs
+  - sequence plan metadata
+
 - `preview-scene-frame-singlelinehorizontal-singlestrand.json`
   - Source model: `SingleLineHorizontal`
   - Source render: `singlestrand-singlelinehorizontal-expanded-sweep-v1-chaseSize-registry-v1.20260319T143651Z.fseq`
