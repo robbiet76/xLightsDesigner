@@ -1275,6 +1275,9 @@ export function buildSequenceAgentPlan({
       sequenceArtisticGoal: sequenceArtisticGoal && typeof sequenceArtisticGoal === "object" ? sequenceArtisticGoal : null,
       sequenceRevisionObjective: sequenceRevisionObjective && typeof sequenceRevisionObjective === "object" ? sequenceRevisionObjective : null,
       sequencerRevisionBrief,
+      requestScopeMode: normText(sequencerRevisionBrief?.requestScopeMode),
+      reviewStartLevel: normText(sequencerRevisionBrief?.reviewStartLevel),
+      sectionScopeKind: normText(sequencerRevisionBrief?.sectionScopeKind),
       designIds: Array.from(new Set(normArray(scope?.executionStrategy?.effectPlacements).map((row) => normText(row?.designId)).filter(Boolean))),
       designAuthors: Array.from(new Set([
         normText(scope?.executionStrategy?.designAuthor),

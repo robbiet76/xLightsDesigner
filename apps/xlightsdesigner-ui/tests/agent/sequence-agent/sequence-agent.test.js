@@ -272,6 +272,9 @@ test("sequence_agent plan metadata carries artistic goal, revision objective, an
   assert.equal(out.metadata.sequencerRevisionBrief.leadTarget, "MegaTree");
   assert.deepEqual(out.metadata.sequencerRevisionBrief.supportTargets, ["Roofline"]);
   assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionTargets, []);
+  assert.equal(out.metadata.requestScopeMode, "section_target_refinement");
+  assert.equal(out.metadata.reviewStartLevel, "section");
+  assert.equal(out.metadata.sectionScopeKind, "timing_track_windows");
 });
 
 test("sequence_agent uses sequencer revision brief to seed execution lines when explicit lines are absent", () => {
