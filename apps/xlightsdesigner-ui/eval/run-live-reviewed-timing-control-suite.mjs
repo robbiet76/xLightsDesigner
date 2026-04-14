@@ -46,6 +46,13 @@ function parseArgs(argv = []) {
   return options;
 }
 
+function assertNativeParityAvailable() {
+  throw new Error(
+    "run-live-reviewed-timing-control-suite.mjs still depends on removed legacy desktop automation actions. " +
+    "Do not run this suite until native automation parity exists for reviewed-timing validation commands."
+  );
+}
+
 function resolveRepoRoot() {
   return path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "..");
 }
@@ -160,6 +167,7 @@ function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResu
 }
 
 async function main() {
+  assertNativeParityAvailable();
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolveRepoRoot();
   const suitePath = options.suitePath

@@ -9,7 +9,6 @@ const UNSUPPORTED_LEGACY_ACTIONS = new Set([
   "set-show-folder",
   "set-audio-path",
   "reset-automation-state",
-  "refresh-from-xlights",
   "analyze-audio",
   "seed-timing-tracks-from-analysis",
   "get-sequencer-validation-snapshot",

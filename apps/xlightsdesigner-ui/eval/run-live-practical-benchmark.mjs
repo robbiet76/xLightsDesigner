@@ -46,6 +46,13 @@ function parseArgs(argv = []) {
   return options;
 }
 
+function assertNativeParityAvailable() {
+  throw new Error(
+    "run-live-practical-benchmark.mjs still depends on removed legacy desktop automation actions. " +
+    "Do not run this benchmark until native automation parity exists for the live suite commands."
+  );
+}
+
 function runCommand(cmd, args, { cwd }) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
@@ -264,6 +271,7 @@ function summarizeTimingValidation(result = {}) {
 }
 
 async function main() {
+  assertNativeParityAvailable();
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolveRepoRoot();
   const automationScript = path.join(repoRoot, "scripts", "desktop", "automation.mjs");
