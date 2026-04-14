@@ -5,15 +5,15 @@
   "type": "module",
   "main": "main.mjs",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "start": "npm run prepare:renderer && env -u ELECTRON_RUN_AS_NODE electron .",
+    "dev": "node scripts/retired-command.mjs dev",
+    "start": "node scripts/retired-command.mjs start",
     "test:agent-ui": "node --test ../xlightsdesigner-ui/tests/agent/*.test.js ../xlightsdesigner-ui/tests/agent/audio-analyst/*.test.js ../xlightsdesigner-ui/tests/agent/designer-dialog/*.test.js ../xlightsdesigner-ui/tests/agent/sequence-agent/*.test.js",
-    "prepare:renderer": "node scripts/prepare-renderer.mjs",
-    "dist:dir": "npm run prepare:renderer && electron-builder --dir",
-    "dist:mac": "npm run prepare:renderer && electron-builder --mac zip && node scripts/install-mac-app.mjs && node scripts/install-launch-agent.mjs",
-    "install:mac-app": "node scripts/install-mac-app.mjs",
-    "install:launch-agent": "node scripts/install-launch-agent.mjs",
-    "verify:bundle": "node scripts/verify-bundle.mjs"
+    "prepare:renderer": "node scripts/retired-command.mjs prepare:renderer",
+    "dist:dir": "node scripts/retired-command.mjs dist:dir",
+    "dist:mac": "node scripts/retired-command.mjs dist:mac",
+    "install:mac-app": "node scripts/retired-command.mjs install:mac-app",
+    "install:launch-agent": "node scripts/retired-command.mjs install:launch-agent",
+    "verify:bundle": "node scripts/retired-command.mjs verify:bundle"
   },
   "devDependencies": {
     "electron": "^31.0.0",

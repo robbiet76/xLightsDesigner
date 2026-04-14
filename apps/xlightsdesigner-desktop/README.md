@@ -4,12 +4,14 @@ Status: Retired
 
 This directory is the retired Electron shell for xLightsDesigner.
 Its executable entrypoints now fail fast on purpose.
+Its Electron packaging/build scripts also fail fast on purpose.
 
 ## Current Role
 
 - cleanup-only shell residue during native cutover
 - not runnable for product work
 - not the active product target
+- not a supported packaging or install path
 
 The active product shell is:
 - `../xlightsdesigner-macos/`
