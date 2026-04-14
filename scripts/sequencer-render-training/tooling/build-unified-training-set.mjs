@@ -130,6 +130,20 @@ function loadOutcomeRecords(recordsDirPath) {
     .filter((row) => row && row.artifactType === "effect_family_outcome_record_v1");
 }
 
+function loadScreeningRecords(recordsDirPath) {
+  if (!existsSync(recordsDirPath)) return [];
+  return readdirSync(recordsDirPath)
+    .filter((name) => name.endsWith(".json"))
+    .map((name) => {
+      try {
+        return JSON.parse(readFileSync(join(recordsDirPath, name), "utf8"));
+      } catch {
+        return null;
+      }
+    })
+    .filter((row) => row && row.recordVersion === "1.0" && String(row?.effectName || "").trim());
+}
+
 function buildSeedRolePriors(effectName = "") {
   return (ROLE_FAMILY_SEED_PRIORS[String(effectName || "").trim()] || []).map((row) => ({
     role: String(row.role || "").trim(),
@@ -207,13 +221,14 @@ function mergeRoleOutcomeMemory(roleOutcomeMemory = {}, outcomeRecords = [], eff
   return next;
 }
 
-function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
+function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], screeningRecords = []) {
   const trained = bundle?.effectsByName?.[effectName] || {};
   const capability = getEffectIntentCapability(effectName) || {};
   const roleOutcomeMemory = mergeRoleOutcomeMemory({}, outcomeRecords, effectName);
   const totalSamples = Object.values(roleOutcomeMemory).reduce((sum, row) => sum + Number(row?.sampleCount || 0), 0);
   const seedRolePriors = buildSeedRolePriors(effectName);
   const retainedParameters = Array.isArray(trained.retainedParameters) ? trained.retainedParameters : [];
+  const relevantScreeningRecords = screeningRecords.filter((row) => String(row?.effectName || "").trim() === effectName);
   return {
     effectName,
     baseline: {
@@ -244,6 +259,15 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
       outcomeRecordCount: outcomeRecords.filter((row) => String(row?.effectName || "").trim() === effectName).length,
       seedRolePriors,
       roleOutcomeMemory
+    },
+    screeningLearning: {
+      status: relevantScreeningRecords.length > 0 ? "populated" : "empty",
+      storageClass: "general_training",
+      screeningRecordCount: relevantScreeningRecords.length,
+      screenedParameterNames: uniqueStrings(relevantScreeningRecords.flatMap((row) => Object.keys(row?.effectSettings || {}))),
+      sampledModelTypes: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.modelType)),
+      sampledGeometryProfiles: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.geometryProfile)),
+      observedLabelHints: uniqueStrings(relevantScreeningRecords.flatMap((row) => row?.observations?.labels || []))
     }
   };
 }
@@ -253,7 +277,11 @@ function buildTrainingSet() {
   const recordsDirPath = process.argv[3]
     ? resolve(process.argv[3])
     : resolve("scripts/sequencer-render-training/catalog/effect-family-outcomes");
+  const screeningRecordsDirPath = process.argv[4]
+    ? resolve(process.argv[4])
+    : resolve("scripts/sequencer-render-training/catalog/effect-screening-records");
   const outcomeRecords = loadOutcomeRecords(recordsDirPath);
+  const screeningRecords = loadScreeningRecords(screeningRecordsDirPath);
   const effectNames = Object.keys(bundle?.effectsByName || {}).sort((a, b) => a.localeCompare(b));
   return {
     artifactType: "sequencer_unified_training_set_v1",
@@ -283,6 +311,19 @@ function buildTrainingSet() {
           : "seed priors loaded; no harvested durable outcome records yet",
         legacyHeuristicSeedSource: "sequence-agent revision-role family routing",
         outcomeRecordDirectory: recordsDirPath
+      },
+      screeningLearning: {
+        status: screeningRecords.length ? "framework_with_screening_records" : "framework_without_screening_records",
+        currentDataShape: [
+          "effect_settings",
+          "artifact_features",
+          "heuristic_observations",
+          "fixture_model_context"
+        ],
+        currentPopulation: screeningRecords.length
+          ? `${screeningRecords.length} durable general-training screening records loaded`
+          : "no harvested screening records yet",
+        screeningRecordDirectory: screeningRecordsDirPath
       }
     },
     boundaries: {
@@ -311,7 +352,7 @@ function buildTrainingSet() {
       requestScopeModes: REQUEST_SCOPE_MODES,
       reviewLevels: REVIEW_LEVELS
     },
-    effects: effectNames.map((effectName) => buildEffectEntry(effectName, bundle, outcomeRecords))
+    effects: effectNames.map((effectName) => buildEffectEntry(effectName, bundle, outcomeRecords, screeningRecords))
   };
 }
 
@@ -326,5 +367,6 @@ console.log(JSON.stringify({
   output: outputPath,
   artifactType: artifact.artifactType,
   effectCount: artifact.effects.length,
-  liveOutcomeRecordCount: Number(artifact?.sources?.liveLearning?.currentPopulation?.split?.(" ")[0] || 0) || 0
+  liveOutcomeRecordCount: Number(artifact?.sources?.liveLearning?.currentPopulation?.split?.(" ")[0] || 0) || 0,
+  screeningRecordCount: Number(artifact?.sources?.screeningLearning?.currentPopulation?.split?.(" ")[0] || 0) || 0
 }, null, 2));

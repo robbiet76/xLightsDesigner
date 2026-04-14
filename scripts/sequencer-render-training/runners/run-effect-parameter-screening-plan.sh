@@ -6,7 +6,8 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DEBUG_APP_DEFAULT="/Users/robterry/Library/Developer/Xcode/DerivedData/xLights-ewiqueswvnjesbbydtiylmstqbkg/Build/Products/Debug/xLights.app"
 
 export XLIGHTS_APP_PATH="${XLIGHTS_APP_PATH:-${DEBUG_APP_DEFAULT}}"
-export XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-1}"
+export XLIGHTS_RECYCLE_BEFORE_SAMPLE="${XLIGHTS_RECYCLE_BEFORE_SAMPLE:-0}"
+export XLIGHTS_CLOSE_BETWEEN_SAMPLES="${XLIGHTS_CLOSE_BETWEEN_SAMPLES:-0}"
 
 PLAN_PATH="${ROOT_DIR}/catalog/effect-parameter-screening-plan-v1.json"
 OUT_DIR=""

@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T12:52:23.989Z",
+  "generatedAt": "2026-04-14T13:29:48.405Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -35,6 +35,17 @@
       "currentPopulation": "seed priors loaded; no harvested durable outcome records yet",
       "legacyHeuristicSeedSource": "sequence-agent revision-role family routing",
       "outcomeRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-family-outcomes"
+    },
+    "screeningLearning": {
+      "status": "framework_with_screening_records",
+      "currentDataShape": [
+        "effect_settings",
+        "artifact_features",
+        "heuristic_observations",
+        "fixture_model_context"
+      ],
+      "currentPopulation": "8 durable general-training screening records loaded",
+      "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
   "boundaries": {
@@ -322,6 +333,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -534,6 +554,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -698,6 +727,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -916,6 +954,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -1149,6 +1196,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -1373,6 +1429,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -1524,6 +1589,50 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "populated",
+        "storageClass": "general_training",
+        "screeningRecordCount": 3,
+        "screenedParameterNames": [
+          "cycles",
+          "centerX",
+          "centerY",
+          "startRadius",
+          "endRadius",
+          "startWidth",
+          "endWidth",
+          "accel",
+          "blendEdges",
+          "scale"
+        ],
+        "sampledModelTypes": [
+          "spinner"
+        ],
+        "sampledGeometryProfiles": [
+          "spinner_standard"
+        ],
+        "observedLabelHints": [
+          "centerX",
+          "centerX_25",
+          "compact_shockwave",
+          "effect:shockwave",
+          "hard_edge_shockwave",
+          "medium_width_shockwave",
+          "model:spinner",
+          "neutral_shockwave",
+          "offset_shockwave",
+          "radial_pattern_fit",
+          "radial_shockwave",
+          "range_sample",
+          "render_style:default",
+          "scaled_shockwave",
+          "shockwave_pattern",
+          "single_shockwave",
+          "spinner_fill",
+          "centerX_50",
+          "centerX_75"
+        ]
       }
     },
     {
@@ -1753,6 +1862,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -1982,6 +2100,15 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "empty",
+        "storageClass": "general_training",
+        "screeningRecordCount": 0,
+        "screenedParameterNames": [],
+        "sampledModelTypes": [],
+        "sampledGeometryProfiles": [],
+        "observedLabelHints": []
       }
     },
     {
@@ -2133,6 +2260,42 @@
             "cautionSignals": []
           }
         }
+      },
+      "screeningLearning": {
+        "status": "populated",
+        "storageClass": "general_training",
+        "screeningRecordCount": 5,
+        "screenedParameterNames": [
+          "style",
+          "count",
+          "steps",
+          "strobe",
+          "reRandomize"
+        ],
+        "sampledModelTypes": [
+          "single_line"
+        ],
+        "sampledGeometryProfiles": [
+          "single_line_horizontal"
+        ],
+        "observedLabelHints": [
+          "count",
+          "count_1",
+          "effect:twinkle",
+          "line_read",
+          "linear_pattern_fit",
+          "medium_cadence_twinkle",
+          "medium_twinkle",
+          "model:single_line",
+          "range_sample",
+          "render_style:default",
+          "soft_twinkle",
+          "twinkle_pattern",
+          "count_3",
+          "count_5",
+          "count_7",
+          "count_9"
+        ]
       }
     }
   ]

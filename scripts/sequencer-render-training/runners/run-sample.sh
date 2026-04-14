@@ -59,6 +59,7 @@ fixture_end_ms="$(jq -r '.endMs' <<<"${fixture_json}")"
 fixture_duration_class="$(jq -r '.durationClass // "short"' <<<"${fixture_json}")"
 sequence_dir="$(cd "$(dirname "${sequence_path}")" && pwd)"
 show_dir="$(resolve_show_dir_for_sequence "${sequence_path}")"
+current_show_dir="$(get_show_folder 2>/dev/null || true)"
 model_metadata_json="$(python3 "${ROOT_DIR}/tooling/get-model-fseq-metadata.py" --show-dir "${show_dir}" --model-name "${model_name}")"
 resolved_model_type="$(jq -r '.resolvedModelType' <<<"${model_metadata_json}")"
 resolved_geometry_profile="$(jq -r '.resolvedGeometryProfile' <<<"${model_metadata_json}")"
@@ -114,15 +115,19 @@ else
   ensure_xlights_ready >/dev/null
 fi
 
-if [[ "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" != "1" ]]; then
+if [[ "${XLIGHTS_CLOSE_BETWEEN_SAMPLES:-0}" == "1" ]]; then
   log_step "close-any-open-sequence sampleId=${SAMPLE_ID}"
   post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
   sleep 1
   ensure_xlights_ready >/dev/null
 fi
 
-log_step "change-show-folder sampleId=${SAMPLE_ID} folder=${show_dir}"
-run_and_require_ok "$(jq -cn --arg folder "${show_dir}" '{cmd:"changeShowFolder",folder:$folder}')" >/dev/null
+if [[ "${current_show_dir}" != "${show_dir}" ]]; then
+  log_step "change-show-folder sampleId=${SAMPLE_ID} folder=${show_dir}"
+  run_and_require_ok "$(jq -cn --arg folder "${show_dir}" '{cmd:"changeShowFolder",folder:$folder}')" >/dev/null
+else
+  log_step "reuse-show-folder sampleId=${SAMPLE_ID} folder=${show_dir}"
+fi
 
 log_step "open-sequence sampleId=${SAMPLE_ID} sequence=${working_sequence_path}"
 open_sequence_payload="$(jq -cn --arg file "${working_sequence_path}" '{apiVersion:2,cmd:"sequence.open",params:{file:$file,force:true,promptIssues:false}}')"
@@ -132,9 +137,11 @@ else
   log_step "open-sequence-retry sampleId=${SAMPLE_ID}"
   if [[ "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" == "1" ]]; then
     restart_xlights_app >/dev/null
-  else
+  elif [[ "${XLIGHTS_CLOSE_BETWEEN_SAMPLES:-0}" == "1" ]]; then
     post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
     sleep 2
+    ensure_xlights_ready >/dev/null
+  else
     ensure_xlights_ready >/dev/null
   fi
   if run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
@@ -183,7 +190,7 @@ bash "${ROOT_DIR}/tooling/extract-observations.sh" \
   --model-type "${resolved_model_type}" \
   --features-json "$(cat "${features_path}")" > "${observations_path}"
 
-if [[ "${opened_sequence}" == "1" && "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" != "1" ]]; then
+if [[ "${opened_sequence}" == "1" && "${XLIGHTS_CLOSE_BETWEEN_SAMPLES:-0}" == "1" ]]; then
   log_step "close-sequence sampleId=${SAMPLE_ID}"
   run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
 fi
