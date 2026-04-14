@@ -61,6 +61,7 @@ def main() -> int:
     template = deepcopy(manifest["samples"][0])
     base_settings = deepcopy(template.get("effectSettings", {}))
     base_shared = deepcopy(template.get("sharedSettings", {}))
+    base_export = deepcopy(template.get("export", {"mode": "model_with_render", "format": "gif"}))
     out = deepcopy(manifest)
     out["samples"] = []
     out["packId"] = args.pack_id or f"{manifest['packId']}-{args.parameter}-generated"
@@ -82,6 +83,7 @@ def main() -> int:
         sample = deepcopy(template)
         sample["effectSettings"] = deepcopy(base_settings)
         sample["sharedSettings"] = deepcopy(base_shared)
+        sample["export"] = deepcopy(base_export)
         if target == "sharedSettings":
             sample["sharedSettings"][args.parameter] = value
         else:

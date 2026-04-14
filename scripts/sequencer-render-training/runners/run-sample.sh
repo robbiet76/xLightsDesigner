@@ -91,7 +91,7 @@ settings_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<
 palette_string="$(jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")' <<<"${palette_json}")"
 
 artifact_path="${OUT_DIR}/${SAMPLE_ID}.${export_format}"
-staging_dir="${sequence_dir}/RenderTraining"
+staging_dir="${sequence_dir}"
 staged_artifact_path="${staging_dir}/${SAMPLE_ID}.${export_format}"
 working_sequence_path="${staging_dir}/${sequence_base_name}.render-training-${SAMPLE_ID}-$$.xsq"
 record_path="${OUT_DIR}/${SAMPLE_ID}.record.json"
@@ -114,20 +114,29 @@ else
   ensure_xlights_ready >/dev/null
 fi
 
-log_step "close-any-open-sequence sampleId=${SAMPLE_ID}"
-post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-sleep 1
-ensure_xlights_ready >/dev/null
+if [[ "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" != "1" ]]; then
+  log_step "close-any-open-sequence sampleId=${SAMPLE_ID}"
+  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+  sleep 1
+  ensure_xlights_ready >/dev/null
+fi
+
+log_step "change-show-folder sampleId=${SAMPLE_ID} folder=${show_dir}"
+run_and_require_ok "$(jq -cn --arg folder "${show_dir}" '{cmd:"changeShowFolder",folder:$folder}')" >/dev/null
 
 log_step "open-sequence sampleId=${SAMPLE_ID} sequence=${working_sequence_path}"
-open_sequence_payload="$(jq -cn --arg seq "${working_sequence_path}" '{cmd:"openSequence",seq:$seq,promptIssues:"false",force:"true"}')"
+open_sequence_payload="$(jq -cn --arg file "${working_sequence_path}" '{apiVersion:2,cmd:"sequence.open",params:{file:$file,force:true,promptIssues:false}}')"
 if run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
   opened_sequence=1
 else
   log_step "open-sequence-retry sampleId=${SAMPLE_ID}"
-  post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
-  sleep 2
-  ensure_xlights_ready >/dev/null
+  if [[ "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" == "1" ]]; then
+    restart_xlights_app >/dev/null
+  else
+    post_cmd '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null 2>&1 || true
+    sleep 2
+    ensure_xlights_ready >/dev/null
+  fi
   if run_allowing_already_open "${open_sequence_payload}" >/dev/null; then
     opened_sequence=1
   else
@@ -174,7 +183,7 @@ bash "${ROOT_DIR}/tooling/extract-observations.sh" \
   --model-type "${resolved_model_type}" \
   --features-json "$(cat "${features_path}")" > "${observations_path}"
 
-if [[ "${opened_sequence}" == "1" ]]; then
+if [[ "${opened_sequence}" == "1" && "${XLIGHTS_RECYCLE_BEFORE_SAMPLE}" != "1" ]]; then
   log_step "close-sequence sampleId=${SAMPLE_ID}"
   run_and_require_ok '{"cmd":"closeSequence","quiet":"true","force":"true"}' >/dev/null
 fi

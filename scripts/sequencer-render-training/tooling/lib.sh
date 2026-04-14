@@ -62,6 +62,7 @@ json_has_res_200() {
      "${body}" == *'"msg":"Sequence Saved."'* || \
      "${body}" == *'"msg":"Sequence batch rendered."'* || \
      "${body}" == *'"msg":"Sequence closed."'* || \
+     "${body}" == *'"msg":"Show folder changed to '* || \
      "${body}" == *'"msg":"Model exported."'* || \
      "${body}" == *'"msg":"Exported"'* ]]
 }
