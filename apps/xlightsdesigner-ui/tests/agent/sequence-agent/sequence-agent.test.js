@@ -371,6 +371,58 @@ test("sequence_agent uses render-driven revision targets to bias effect-strategy
   assert.match(out.executionLines[0], /apply Bars effect/i);
 });
 
+test("sequence_agent uses revision roles to bias inferred effect families", () => {
+  const out = buildSequenceAgentPlan({
+    analysisHandoff: sampleAnalysis(),
+    intentHandoff: sampleIntent(),
+    sequencingDesignHandoff: {
+      artifactType: "sequencing_design_handoff_v2",
+      goal: "Refine the chorus focal read.",
+      scope: {
+        targetIds: ["MegaTree", "Roofline"],
+        sections: ["Chorus 1"],
+        tagNames: ["focal"]
+      },
+      designSummary: "MegaTree leads while roofline supports the chorus."
+    },
+    sequenceArtisticGoal: {
+      artifactType: "sequence_artistic_goal_v1",
+      scope: { goalLevel: "section" },
+      artisticIntent: {
+        leadTarget: "MegaTree",
+        supportTargets: ["Roofline"],
+        sectionArc: "lift",
+        motionCharacter: "steady_motion",
+        densityCharacter: "moderate"
+      },
+      evaluationLens: {
+        comparisonQuestions: ["Does the chorus read more clearly?"]
+      }
+    },
+    sequenceRevisionObjective: {
+      artifactType: "sequence_revision_objective_v1",
+      ladderLevel: "section",
+      scope: {
+        nextOwner: "shared",
+        revisionRoles: ["reduce_competing_support"]
+      },
+      designerDirection: {
+        artisticCorrection: "Keep the chorus readable."
+      },
+      sequencerDirection: {
+        executionObjective: "Refine the current rendered pass."
+      },
+      successChecks: ["chorus reads clearly"]
+    },
+    sourceLines: [],
+    baseRevision: "rev-58",
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.deepEqual(out.metadata.sequencerRevisionBrief.revisionRoles, ["reduce_competing_support"]);
+  assert.match(out.executionLines[0], /apply On effect/i);
+});
+
 test("sequence_agent honors target effect avoidances when choosing inferred effects", () => {
   const out = buildSequenceAgentPlan({
     analysisHandoff: {

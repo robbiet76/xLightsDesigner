@@ -318,7 +318,9 @@ test("refreshSequenceRevisionObjectiveFromRenderCritique pins section-level revi
 
   assert.equal(out.scope.nextOwner, "shared");
   assert.equal(out.ladderLevel, "section");
+  assert.deepEqual(out.scope.revisionRoles, ["increase_section_contrast"]);
   assert.deepEqual(out.scope.revisionTargets, ["Verse", "Chorus"]);
+  assert.deepEqual(out.sequencerDirection.revisionRoles, ["increase_section_contrast"]);
   assert.deepEqual(out.sequencerDirection.focusTargets, ["Verse", "Chorus"]);
   assert.equal(out.sequencerDirection.revisionBatchShape, "section_pass");
   assert.match(out.sequencerDirection.executionObjective, /strengthen contrast and hierarchy between adjacent sampled sections/i);
@@ -358,6 +360,8 @@ test("refreshSequenceRevisionObjectiveFromRenderCritique carries render-driven m
 
   assert.deepEqual(out.scope.revisionTargets, ["MegaTree", "Roofline", "Matrix"]);
   assert.deepEqual(out.sequencerDirection.focusTargets, ["MegaTree", "Roofline", "Matrix"]);
+  assert.deepEqual(out.scope.revisionRoles, ["strengthen_lead", "widen_support", "add_section_development"]);
+  assert.deepEqual(out.sequencerDirection.revisionRoles, ["strengthen_lead", "widen_support", "add_section_development"]);
 });
 
 test("refreshSequenceArtisticGoalFromRenderCritique does not force broader support when localized focus is intended", () => {

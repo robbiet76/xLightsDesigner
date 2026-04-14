@@ -26,7 +26,7 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
     sequenceRevisionObjective: {
       artifactType: "sequence_revision_objective_v1",
       ladderLevel: "section",
-      scope: { nextOwner: "shared", revisionTargets: ["MegaTree", "Roofline"] },
+      scope: { nextOwner: "shared", revisionRoles: ["strengthen_lead"], revisionTargets: ["MegaTree", "Roofline"] },
       designerDirection: {
         artisticCorrection: "Clarify the section arc without splitting the focal read."
       },
@@ -55,6 +55,7 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.equal(out.leadTarget, "ArchSingle");
   assert.deepEqual(out.supportTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.targetScope, ["MatrixLowDensity", "MegaTree", "Roofline", "ArchSingle"]);
+  assert.deepEqual(out.revisionRoles, ["strengthen_lead"]);
   assert.deepEqual(out.revisionTargets, ["MegaTree", "Roofline"]);
   assert.deepEqual(out.focusTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.sectionScope, ["Chorus 1"]);

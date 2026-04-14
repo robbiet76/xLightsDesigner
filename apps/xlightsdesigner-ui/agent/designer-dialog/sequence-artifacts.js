@@ -271,6 +271,39 @@ function deriveRenderDrivenTargetIds(renderCritiqueContext = null) {
   ]);
 }
 
+function deriveRenderDrivenRevisionRoles(renderCritiqueContext = null) {
+  const context = isPlainObject(renderCritiqueContext) ? renderCritiqueContext : null;
+  if (!context) return [];
+  const observed = isPlainObject(context.observed) ? context.observed : {};
+  const comparison = isPlainObject(context.comparison) ? context.comparison : {};
+  const expected = isPlainObject(context.expected) ? context.expected : {};
+  const roles = [];
+
+  if (!comparison.leadMatchesPrimaryFocus || arr(comparison.missingPrimaryFocusTargets).length) {
+    roles.push("strengthen_lead");
+  }
+  if (str(observed.breadthRead) === "tight" && arr(expected.supportTargetIds).length && !comparison.localizedFocusExpected) {
+    roles.push("widen_support");
+  }
+  if (
+    comparison.renderUsesBroadScene
+    || comparison.renderIsLeftRightImbalanced
+    || comparison.renderIsTopBottomImbalanced
+  ) {
+    if (!comparison.localizedFocusExpected) {
+      roles.push("reduce_competing_support");
+    }
+  }
+  if (str(observed.temporalRead) === "flat") {
+    roles.push("add_section_development");
+  }
+  if (arr(comparison.adjacentWindowComparisons).some((row) => row?.windowsReadSimilarly || row?.sameLeadModel)) {
+    roles.push("increase_section_contrast");
+  }
+
+  return uniqueStrings(roles);
+}
+
 export function refreshSequenceArtisticGoalFromPracticalValidation({
   priorArtisticGoal = null,
   sequencingDesignHandoff = null,
@@ -409,6 +442,7 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   const needsSectionContrast = adjacentWindowComparisons.some((row) => row?.windowsReadSimilarly)
     || (adjacentWindowComparisons.length > 0 && adjacentWindowComparisons.every((row) => row?.sameLeadModel));
   const renderDrivenTargetIds = deriveRenderDrivenTargetIds(renderCritiqueContext);
+  const renderDrivenRevisionRoles = deriveRenderDrivenRevisionRoles(renderCritiqueContext);
 
   if (needsSectionContrast) {
     base.ladderLevel = "section";
@@ -417,6 +451,10 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   base.scope = {
     ...(isPlainObject(base.scope) ? base.scope : {}),
     nextOwner: "shared",
+    revisionRoles: uniqueStrings([
+      ...arr(base?.scope?.revisionRoles),
+      ...renderDrivenRevisionRoles
+    ]),
     revisionTargets: uniqueStrings([
       ...arr(base?.scope?.revisionTargets),
       ...renderDrivenTargetIds
@@ -436,6 +474,10 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
     executionObjective: needsSectionContrast
       ? "Revise the next pass to strengthen contrast and hierarchy between adjacent sampled sections."
       : `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`,
+    revisionRoles: uniqueStrings([
+      ...arr(base?.sequencerDirection?.revisionRoles),
+      ...renderDrivenRevisionRoles
+    ]),
     focusTargets: uniqueStrings([
       ...arr(base?.sequencerDirection?.focusTargets),
       ...renderDrivenTargetIds

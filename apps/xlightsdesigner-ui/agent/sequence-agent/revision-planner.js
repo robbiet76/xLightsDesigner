@@ -91,6 +91,7 @@ export function buildSequencerRevisionBrief({
     motionCharacter: str(artisticIntent.motionCharacter),
     densityCharacter: str(artisticIntent.densityCharacter),
     targetScope,
+    revisionRoles: arr(scope?.revisionRoles),
     revisionTargets: arr(scope?.revisionTargets),
     focusTargets: arr(sequencerDirection?.focusTargets),
     sectionScope,

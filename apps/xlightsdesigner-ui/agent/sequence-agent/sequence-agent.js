@@ -580,6 +580,20 @@ function inferRevisionBriefEffectName(brief = {}) {
   const summary = `${normText(brief?.artisticGoalSummary)} ${normText(brief?.executionObjective)}`.toLowerCase();
   const motionCharacter = normText(brief?.motionCharacter).toLowerCase();
   const densityCharacter = normText(brief?.densityCharacter).toLowerCase();
+  const revisionRoles = new Set(normArray(brief?.revisionRoles).map((row) => normText(row)));
+  if (revisionRoles.has("increase_section_contrast")) return "Bars";
+  if (revisionRoles.has("add_section_development")) {
+    return motionCharacter.includes("restrained") ? "Shimmer" : "Bars";
+  }
+  if (revisionRoles.has("reduce_competing_support")) {
+    return motionCharacter.includes("restrained") ? "Shimmer" : "On";
+  }
+  if (revisionRoles.has("widen_support")) {
+    return motionCharacter.includes("restrained") ? "Color Wash" : "Bars";
+  }
+  if (revisionRoles.has("strengthen_lead")) {
+    return motionCharacter.includes("still") ? "On" : "Bars";
+  }
   if (/contrast|hierarchy|differentiat|lift|shift/.test(summary)) return "Bars";
   if (/flat|evolv|develop/.test(summary)) {
     return motionCharacter.includes("restrained") ? "Shimmer" : "Bars";
@@ -602,7 +616,8 @@ function buildRevisionBriefExecutionLine({ brief = {}, scope = {}, toneText = ""
   const sectionScope = normArray(brief?.sectionScope);
   const intentBits = [
     normText(brief?.artisticGoalSummary),
-    normText(brief?.executionObjective)
+    normText(brief?.executionObjective),
+    normArray(brief?.revisionRoles).map((row) => normText(row).replaceAll("_", " ")).join(", ")
   ].filter(Boolean);
   return buildStructuredExecutionLine({
     section: sectionScope.length ? sectionScope.join(", ") : (scope?.sectionNames || []).join(", "),
