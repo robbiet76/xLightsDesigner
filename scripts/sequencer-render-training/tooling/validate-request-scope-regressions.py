@@ -33,6 +33,17 @@ def split_scope_values(raw_value):
     return [value.strip() for value in str(raw_value).split(",") if value.strip()]
 
 
+def in_range(value, bounds):
+    if bounds is None:
+        return True
+    if value is None:
+        return False
+    if not isinstance(bounds, list) or len(bounds) != 2:
+        raise ValueError(f"Invalid range bounds: {bounds}")
+    lower, upper = bounds
+    return lower <= value <= upper
+
+
 def validate_scope_semantics(scenario, record, errors):
     scenario_id = scenario["scenarioId"]
     expected = expected_scope(scenario)
@@ -161,6 +172,18 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
         if expected_max_active_model_count is not None and macro.get("maxActiveModelCount") != expected_max_active_model_count:
             errors.append(
                 f"{row['scenarioId']} maxActiveModelCount mismatch: expected {expected_max_active_model_count}, got {macro.get('maxActiveModelCount')}"
+            )
+
+        expected_spread_range = scenario.get("expectedSpreadRange")
+        if expected_spread_range and not in_range(macro.get("maxSceneSpreadRatio"), expected_spread_range):
+            errors.append(
+                f"{row['scenarioId']} maxSceneSpreadRatio out of range: expected {expected_spread_range}, got {macro.get('maxSceneSpreadRatio')}"
+            )
+
+        expected_motion_range = scenario.get("expectedMotionRange")
+        if expected_motion_range and not in_range(macro.get("centroidMotionMean"), expected_motion_range):
+            errors.append(
+                f"{row['scenarioId']} centroidMotionMean out of range: expected {expected_motion_range}, got {macro.get('centroidMotionMean')}"
             )
 
         record = load_json(row["learningRecordArtifactPath"])

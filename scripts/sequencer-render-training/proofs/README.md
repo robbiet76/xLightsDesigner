@@ -111,6 +111,9 @@ Harness runner:
       - `activeModelNames`
       - `leadModel`
       - `maxActiveModelCount`
+    - coarse numeric tolerance bands for stable macro signals:
+      - `maxSceneSpreadRatio`
+      - `centroidMotionMean`
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
   - current kept gate proofs:
