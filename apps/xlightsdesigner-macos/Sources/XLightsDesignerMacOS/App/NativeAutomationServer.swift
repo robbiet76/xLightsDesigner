@@ -72,9 +72,9 @@ final class NativeAutomationServer: @unchecked Sendable {
         case ("GET", "/snapshot"):
             return .json(200, body: appSnapshot())
         case ("GET", "/sequencer-validation-snapshot"):
-            return .json(200, body: sequencerValidationSnapshot())
+            return .json(200, body: await sequencerValidationSnapshot())
         case ("GET", "/render-feedback-snapshot"):
-            return .json(200, body: renderFeedbackSnapshot())
+            return .json(200, body: await renderFeedbackSnapshot())
         case ("GET", "/assistant-snapshot"):
             return .json(200, body: assistantSnapshot())
         case ("GET", "/xlights-session"):
@@ -571,10 +571,11 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
-    private func sequencerValidationSnapshot() -> [String: Any] {
+    private func sequencerValidationSnapshot() async -> [String: Any] {
         let project = model.workspace.activeProject
         let snapshot = latestProjectValidationSnapshot(for: project)
         let latestPlanHandoff = snapshot["latestPlanHandoff"] as? [String: Any]
+        let feedbackCapabilities = await ownedRenderFeedbackCapabilities()
         return [
             "ok": true,
             "status": [
@@ -596,6 +597,7 @@ final class NativeAutomationServer: @unchecked Sendable {
             "latestSequenceRevisionObjective": snapshot["latestSequenceRevisionObjective"] ?? NSNull(),
             "latestReviewArtifacts": snapshot["latestReviewArtifacts"] ?? NSNull(),
             "latestGuidanceCoverage": buildPlanGuidanceCoverage(latestPlanHandoff),
+            "ownedRenderFeedbackCapabilities": feedbackCapabilities,
             "recentPersistenceDiagnostics": snapshot["recentPersistenceDiagnostics"] ?? [],
             "pageStates": [
                 "sequence": sequenceSnapshot(),
@@ -606,16 +608,95 @@ final class NativeAutomationServer: @unchecked Sendable {
     }
 
     @MainActor
-    private func renderFeedbackSnapshot() -> [String: Any] {
+    private func renderFeedbackSnapshot() async -> [String: Any] {
         let project = model.workspace.activeProject
         let snapshot = latestProjectValidationSnapshot(for: project)
+        let feedbackCapabilities = await ownedRenderFeedbackCapabilities()
         return [
             "ok": true,
+            "ownedRenderFeedbackCapabilities": feedbackCapabilities,
             "renderObservation": snapshot["latestRenderObservation"] ?? NSNull(),
             "renderCritiqueContext": snapshot["latestRenderCritiqueContext"] ?? NSNull(),
             "sequenceArtisticGoal": snapshot["latestSequenceArtisticGoal"] ?? NSNull(),
             "sequenceRevisionObjective": snapshot["latestSequenceRevisionObjective"] ?? NSNull()
         ]
+    }
+
+    private func ownedRenderFeedbackCapabilities() async -> [String: Any] {
+        async let layoutModels = probeOwnedRoute(path: "/layout/models", method: "GET")
+        async let layoutScene = probeOwnedRoute(path: "/layout/scene", method: "GET")
+        async let renderSamples = probeOwnedRoute(
+            path: "/sequence/render-samples",
+            method: "POST",
+            body: [
+                "startMs": 0,
+                "endMs": 1,
+                "maxFrames": 1,
+                "channelRanges": []
+            ]
+        )
+
+        let layoutModelsStatus = await layoutModels
+        let layoutSceneStatus = await layoutScene
+        let renderSamplesStatus = await renderSamples
+        let fullFeedbackReady = layoutModelsStatus["available"] as? Bool == true
+            && layoutSceneStatus["available"] as? Bool == true
+            && renderSamplesStatus["available"] as? Bool == true
+
+        let missingRequirements = [
+            (layoutModelsStatus["available"] as? Bool == true) ? nil : "layout.models",
+            (layoutSceneStatus["available"] as? Bool == true) ? nil : "layout.scene",
+            (renderSamplesStatus["available"] as? Bool == true) ? nil : "sequence.render-samples"
+        ].compactMap { $0 }
+
+        return [
+            "fullFeedbackReady": fullFeedbackReady,
+            "missingRequirements": missingRequirements,
+            "layoutModels": layoutModelsStatus,
+            "layoutScene": layoutSceneStatus,
+            "renderSamples": renderSamplesStatus
+        ]
+    }
+
+    private func probeOwnedRoute(path: String, method: String, body: [String: Any]? = nil) async -> [String: Any] {
+        guard let url = URL(string: AppEnvironment.xlightsOwnedAPIBaseURL + path) else {
+            return [
+                "available": false,
+                "statusCode": 0,
+                "errorCode": "INVALID_URL",
+                "message": "Invalid owned route URL for \(path)."
+            ]
+        }
+
+        do {
+            var request = URLRequest(url: url)
+            request.httpMethod = method
+            if let body {
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            }
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let parsed = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+            let ok = parsed["ok"] as? Bool
+            let error = parsed["error"] as? [String: Any]
+            let errorCode = string(error?["code"])
+            let message = string(error?["message"])
+            return [
+                "available": statusCode != 404,
+                "statusCode": statusCode,
+                "ok": ok ?? false,
+                "errorCode": errorCode,
+                "message": message
+            ]
+        } catch {
+            return [
+                "available": false,
+                "statusCode": 0,
+                "errorCode": "REQUEST_FAILED",
+                "message": error.localizedDescription
+            ]
+        }
     }
 
     @MainActor

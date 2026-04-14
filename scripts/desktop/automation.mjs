@@ -5,6 +5,7 @@ import path from "node:path";
 const argv = process.argv.slice(2);
 
 const NATIVE_BASE_URL = process.env.XLD_NATIVE_AUTOMATION_URL || "http://127.0.0.1:49916";
+const OWNED_BASE_URL = process.env.XLD_OWNED_API_BASE_URL || "http://127.0.0.1:49915/xlightsdesigner/api";
 const UNSUPPORTED_LEGACY_ACTIONS = new Set([
   "set-show-folder",
   "set-audio-path",
@@ -99,6 +100,66 @@ async function request(method, reqPath, body = null) {
   };
 }
 
+async function probeOwnedRoute(pathname, { method = "GET", body = null } = {}) {
+  try {
+    const init = { method, headers: {} };
+    if (body) {
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify(body);
+    }
+    const response = await fetch(`${OWNED_BASE_URL}${pathname}`, init);
+    const text = await response.text();
+    let parsed = {};
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = {};
+    }
+    return {
+      available: response.status !== 404,
+      statusCode: response.status,
+      ok: parsed?.ok === true,
+      errorCode: str(parsed?.error?.code),
+      message: str(parsed?.error?.message)
+    };
+  } catch (err) {
+    return {
+      available: false,
+      statusCode: 0,
+      ok: false,
+      errorCode: "REQUEST_FAILED",
+      message: String(err?.message || err)
+    };
+  }
+}
+
+async function buildOwnedRenderFeedbackCapabilities() {
+  const [layoutModels, layoutScene, renderSamples] = await Promise.all([
+    probeOwnedRoute("/layout/models"),
+    probeOwnedRoute("/layout/scene"),
+    probeOwnedRoute("/sequence/render-samples", {
+      method: "POST",
+      body: {
+        startMs: 0,
+        endMs: 1,
+        maxFrames: 1,
+        channelRanges: []
+      }
+    })
+  ]);
+  return {
+    fullFeedbackReady: layoutModels.available && layoutScene.available && renderSamples.available,
+    missingRequirements: [
+      layoutModels.available ? "" : "layout.models",
+      layoutScene.available ? "" : "layout.scene",
+      renderSamples.available ? "" : "sequence.render-samples"
+    ].filter(Boolean),
+    layoutModels,
+    layoutScene,
+    renderSamples
+  };
+}
+
 function unsupportedLegacy(commandName = "") {
   emit({
     ok: false,
@@ -162,6 +223,17 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
 
 try {
   const out = await request(nativeCall.method, nativeCall.path, nativeCall.body || null);
+  if (
+    out.ok &&
+    (command === "get-sequencer-validation-snapshot" || command === "get-render-feedback-snapshot") &&
+    (!out.result || typeof out.result !== "object" || !("ownedRenderFeedbackCapabilities" in out.result))
+  ) {
+    const capabilities = await buildOwnedRenderFeedbackCapabilities();
+    out.result = {
+      ...(out.result && typeof out.result === "object" ? out.result : {}),
+      ownedRenderFeedbackCapabilities: capabilities
+    };
+  }
   emit(
     {
       ok: out.ok,
