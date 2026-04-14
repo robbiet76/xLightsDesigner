@@ -38,7 +38,7 @@ Current contents:
 - `live-design-validation-suite-extended-v1.json`: slower extended live pack that adds alternate saved-sequence coverage beyond the promoted baseline pack, including additional whole-pass composition checks on alternate saved-sequence families
 - `run-designer-eval.mjs`: offline runner for the current designer runtime/orchestrator
 - `run-section-practical-sequence-validation.mjs`: offline runner for the first sequencer-side practical validation pass
-- `run-live-practical-benchmark.mjs`: one-command runner that executes the promoted section, multi-section, whole-sequence, and revision live suites and emits a combined report
+- `run-live-practical-benchmark.mjs`: native live benchmark that currently validates section-scoped sequencing through prompt -> plan -> apply -> artifact persistence on temporary sequence copies
 - `live-reviewed-timing-control-suite-v1.json`: real-show four-track reviewed-timing control suite using Candy Cane Lane, Christmas Vacation, Grinch, and Christmas Sarajevo
 - `run-live-reviewed-timing-control-suite.mjs`: live runner that opens each real sequence, refreshes/analyzes, and captures current timing-review state snapshots
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`: live runner that restores real control sequences from captured baselines, seeds reviewed timing tracks, runs whole-sequence sequencing validation, and records timing-fidelity baseline output
@@ -61,7 +61,7 @@ Current policy:
 - use the extended live pack for slower alternate-sequence probes and broader cadence checks
 - the desktop automation CLI now scales the live-suite timeout with scenario count so the extended pack can complete without manual timeout overrides
 - the desktop live-suite runner now reuses `refreshFromXLights` and `analyzeAudio` work per `(sequencePath, analyzePrompt)` context instead of repeating that setup for every scenario on the same sequence
-- use `run-live-practical-benchmark.mjs` as the Stage 1 practical gate once the clean `Phase2` baseline is loaded
+- use `run-live-practical-benchmark.mjs` as the current native practical gate for section-scoped sequencing while full render-feedback parity is still incomplete
 - use the revision live suite as part of the promoted Phase 2 practical gate
 - the whole-sequence slot in the practical benchmark now uses apply-level validation, not comparative design preference scoring
 
@@ -147,4 +147,4 @@ Native migration note:
 - `run-live-practical-benchmark.mjs`
 - `run-live-reviewed-timing-control-suite.mjs`
 - `run-live-reviewed-timing-wholesequence-baseline.mjs`
-  currently abort immediately with a native-parity-required error rather than attempting removed legacy actions.
+  currently use native-only automation. The practical benchmark is restored for section-scoped prompt/plan/apply validation; the reviewed-timing runners still abort until native parity exists for their missing actions.

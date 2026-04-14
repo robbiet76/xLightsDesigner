@@ -14,6 +14,10 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
 function resolveRepoRoot() {
   return path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "..");
 }
@@ -22,7 +26,9 @@ function parseArgs(argv = []) {
   const options = {
     channel: "dev",
     outDir: "/tmp/live-practical-benchmark-phase2",
-    pretty: true
+    pretty: true,
+    suitePath: "",
+    workingShowRoot: process.env.XLD_EVAL_SHOW_ROOT || "/Users/robterry/Desktop/Show"
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = str(argv[index]);
@@ -32,6 +38,12 @@ function parseArgs(argv = []) {
     } else if (token === "--out-dir") {
       options.outDir = str(argv[index + 1] || options.outDir) || options.outDir;
       index += 1;
+    } else if (token === "--suite") {
+      options.suitePath = str(argv[index + 1] || "");
+      index += 1;
+    } else if (token === "--working-show-root") {
+      options.workingShowRoot = str(argv[index + 1] || options.workingShowRoot) || options.workingShowRoot;
+      index += 1;
     } else if (token === "--compact") {
       options.pretty = false;
     } else if (token === "--pretty") {
@@ -40,17 +52,13 @@ function parseArgs(argv = []) {
       throw new Error(`Unknown argument: ${token}`);
     }
   }
-  if (!["dev", "packaged"].includes(options.channel)) {
+  if (![
+    "dev",
+    "packaged"
+  ].includes(options.channel)) {
     throw new Error(`Unsupported channel: ${options.channel}`);
   }
   return options;
-}
-
-function assertNativeParityAvailable() {
-  throw new Error(
-    "run-live-practical-benchmark.mjs still depends on removed legacy desktop automation actions. " +
-    "Do not run this benchmark until native automation parity exists for the live suite commands."
-  );
 }
 
 function runCommand(cmd, args, { cwd }) {
@@ -62,12 +70,8 @@ function runCommand(cmd, args, { cwd }) {
     });
     let stdout = "";
     let stderr = "";
-    child.stdout.on("data", (chunk) => {
-      stdout += String(chunk || "");
-    });
-    child.stderr.on("data", (chunk) => {
-      stderr += String(chunk || "");
-    });
+    child.stdout.on("data", (chunk) => { stdout += String(chunk || ""); });
+    child.stderr.on("data", (chunk) => { stderr += String(chunk || ""); });
     child.on("error", reject);
     child.on("close", (code) => {
       if (code !== 0) {
@@ -79,289 +83,270 @@ function runCommand(cmd, args, { cwd }) {
   });
 }
 
-function buildSuiteCatalog(repoRoot) {
-  const evalDir = path.join(repoRoot, "apps", "xlightsdesigner-ui", "eval");
-  return [
-    {
-      key: "section",
-      action: "run-live-section-practical-sequence-validation-suite",
-      suitePath: path.join(evalDir, "live-section-practical-sequence-validation-suite-v2.json"),
-      resultFileName: "live-section-suite.json"
-    },
-    {
-      key: "multisection",
-      action: "run-live-section-practical-sequence-validation-suite",
-      suitePath: path.join(evalDir, "live-multisection-practical-sequence-validation-suite-v2.json"),
-      resultFileName: "live-multisection-suite.json"
-    },
-    {
-      key: "wholesequence",
-      action: "run-live-wholesequence-practical-validation-suite",
-      suitePath: path.join(evalDir, "live-wholesequence-practical-validation-suite-v2.json"),
-      resultFileName: "live-wholesequence-suite.json"
-    },
-    {
-      key: "revision",
-      action: "run-live-revision-practical-sequence-validation-suite",
-      suitePath: path.join(evalDir, "live-revision-practical-sequence-validation-suite-v1.json"),
-      resultFileName: "live-revision-suite.json"
-    }
-  ];
-}
-
-function buildPreflightSuite(repoRoot) {
-  const evalDir = path.join(repoRoot, "apps", "xlightsdesigner-ui", "eval");
-  return {
-    key: "section_canary",
-    action: "run-live-section-practical-sequence-validation-suite",
-    suitePath: path.join(evalDir, "live-section-practical-sequence-validation-canary-v1.json"),
-    resultFileName: "section-canary-suite.json"
-  };
-}
-
-async function runAutomationAction({
-  repoRoot,
-  automationScript,
-  channel,
-  action,
-  payloadFile = "",
-  resultPath
-}) {
-  const args = [
-    automationScript,
-    "--channel", channel,
-    "--result-file", resultPath,
-    action
-  ];
-  if (payloadFile) {
-    args.push("--payload-file", payloadFile);
-  }
-  await runCommand("node", args, { cwd: repoRoot });
+async function runAutomation(repoRoot, channel, resultPath, command, args = []) {
+  const script = path.join(repoRoot, "scripts", "desktop", "automation.mjs");
+  const commandArgs = [script, "--channel", channel, "--result-file", resultPath, command, ...args];
+  await runCommand("node", commandArgs, { cwd: repoRoot });
   return readJson(resultPath);
 }
 
-function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
-function summarizeSuiteResult(key, payload = {}, artifactPath = "") {
-  const result = payload?.result && typeof payload.result === "object" ? payload.result : {};
-  const gapReport = result?.gapReport && typeof result.gapReport === "object" ? result.gapReport : null;
-  const timingSummary = summarizeTimingValidation(result);
-  return {
-    key,
-    ok: payload?.ok === true && result?.ok === true,
-    summary: str(result?.summary || ""),
-    scenarioCount: Number(result?.scenarioCount || 0),
-    failedScenarioCount: Number(result?.failedScenarioCount || 0),
-    failedScenarioNames: arr(result?.failedScenarioNames).map((row) => str(row)).filter(Boolean),
-    gapReport,
-    timingSummary,
-    artifactPath: str(artifactPath)
-  };
-}
-
-function isHealthyRefreshResult(payload = {}) {
-  const result = payload?.result && typeof payload.result === "object" ? payload.result : {};
-  const level = str(result?.status?.level || "").toLowerCase();
-  const text = str(result?.status?.text || "");
-  if (payload?.ok !== true) return false;
-  if (level === "warning" || level === "error") return false;
-  if (/refresh failed/i.test(text)) return false;
-  return true;
-}
-
-function aggregateGapReports(suites = []) {
-  const counts = {
-    designer_gap: 0,
-    sequencer_gap: 0,
-    apply_gap: 0,
-    validation_gap: 0
-  };
-  const issues = [];
-  for (const suite of suites) {
-    const gapReport = suite?.gapReport || null;
-    if (!gapReport) continue;
-    for (const [key, value] of Object.entries(gapReport?.issueCounts || {})) {
-      if (counts[key] != null) counts[key] += Number(value || 0);
-    }
-    for (const issue of arr(gapReport?.issues)) {
-      issues.push({
-        suiteKey: str(suite?.key),
-        ...issue
-      });
-    }
-    const timingSummary = suite?.timingSummary && typeof suite.timingSummary === "object" ? suite.timingSummary : null;
-    if (timingSummary && Number(timingSummary.failureScenarioCount || 0) > 0) {
-      counts.validation_gap += Number(timingSummary.failureScenarioCount || 0);
-      for (const issue of arr(timingSummary?.issues)) {
-        issues.push({
-          suiteKey: str(suite?.key),
-          category: "validation_gap",
-          kind: str(issue?.kind || "timing_validation"),
-          scenarioName: str(issue?.scenarioName),
-          target: str(issue?.target || "sequence"),
-          detail: str(issue?.detail),
-          summary: str(issue?.summary || issue?.detail)
-        });
-      }
-    }
+async function waitFor(fn, { timeoutMs = 60000, intervalMs = 1000 } = {}) {
+  const startedAt = Date.now();
+  let lastValue = null;
+  while ((Date.now() - startedAt) < timeoutMs) {
+    lastValue = await fn();
+    if (lastValue?.ok) return lastValue;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
-  return {
-    artifactType: "sequencer_gap_report_v1",
-    artifactVersion: "1.0",
-    issueCount: issues.length,
-    issueCounts: counts,
-    issues
-  };
+  return lastValue;
 }
 
-function extractPracticalValidation(resultRow = {}) {
-  const direct = resultRow?.practicalValidation;
-  if (direct && typeof direct === "object" && str(direct?.artifactType) === "practical_sequence_validation_v1") return direct;
-  const validation = resultRow?.validation;
-  if (validation && typeof validation === "object") {
-    if (str(validation?.artifactType) === "practical_sequence_validation_v1") return validation;
-    if (validation?.practicalValidation && typeof validation.practicalValidation === "object" && str(validation.practicalValidation?.artifactType) === "practical_sequence_validation_v1") {
-      return validation.practicalValidation;
-    }
+function buildSuiteCatalog(repoRoot, explicitSuitePath = "") {
+  if (explicitSuitePath) {
+    return [{
+      key: path.basename(explicitSuitePath, path.extname(explicitSuitePath)),
+      suitePath: path.resolve(repoRoot, explicitSuitePath)
+    }];
   }
-  return null;
+  const evalDir = path.join(repoRoot, "apps", "xlightsdesigner-ui", "eval");
+  return [
+    {
+      key: "section_canary",
+      suitePath: path.join(evalDir, "live-section-practical-sequence-validation-canary-v1.json")
+    },
+    {
+      key: "section",
+      suitePath: path.join(evalDir, "live-section-practical-sequence-validation-suite-v2.json")
+    }
+  ];
 }
 
-function summarizeTimingValidation(result = {}) {
-  const scenarios = arr(result?.results);
-  const practicalRows = scenarios
+function buildWorkingSequencePath(workingShowRoot, suiteKey, scenarioName, baselinePath, sourcePath) {
+  const ext = path.extname(str(sourcePath) || str(baselinePath) || ".xsq") || ".xsq";
+  const baseName = `${suiteKey}-${scenarioName}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "scenario";
+  return path.join(path.resolve(workingShowRoot), "__xld_eval", `${baseName}${ext}`);
+}
+
+function copyWorkingSequence({ suite, scenario, workingShowRoot }) {
+  const baselinePath = str(scenario?.baselineSequencePath || suite?.baselineSequencePath || scenario?.sequencePath);
+  if (!baselinePath) throw new Error(`Scenario ${str(scenario?.name)} is missing baselineSequencePath/sequencePath.`);
+  const workingSequencePath = buildWorkingSequencePath(workingShowRoot, str(suite?.name || suite?.key || "suite"), str(scenario?.name), baselinePath, str(scenario?.sequencePath));
+  fs.mkdirSync(path.dirname(workingSequencePath), { recursive: true });
+  fs.copyFileSync(baselinePath, workingSequencePath);
+  return { baselinePath, workingSequencePath };
+}
+
+function summarizePlan(plan = {}) {
+  const commands = arr(plan?.commands);
+  const effectCreates = commands
+    .filter((row) => str(row?.cmd) === "effects.create")
     .map((row) => ({
-      name: str(row?.name),
-      practicalValidation: extractPracticalValidation(row)
-    }))
-    .filter((row) => row.practicalValidation);
-  const timingRows = practicalRows.map((row) => ({
-    name: row.name,
-    timingFidelity: row.practicalValidation?.summary?.timingFidelity && typeof row.practicalValidation.summary.timingFidelity === "object"
-      ? row.practicalValidation.summary.timingFidelity
-      : {},
-    timingFailures: arr(row.practicalValidation?.failures?.timing)
-  }));
-  const issues = [];
-  for (const row of timingRows) {
-    for (const failure of row.timingFailures) {
-      issues.push({
-        scenarioName: row.name,
-        kind: str(failure?.kind),
-        target: str(failure?.target || "sequence"),
-        detail: str(failure?.detail),
-        summary: `${row.name}: ${str(failure?.detail || failure?.kind)}`
-      });
-    }
-  }
+      effectName: str(row?.params?.effectName),
+      modelName: str(row?.params?.modelName),
+      startMs: Number(row?.params?.startMs || 0),
+      endMs: Number(row?.params?.endMs || 0)
+    }));
   return {
-    scenarioCount: scenarios.length,
-    scenarioCountWithPracticalValidation: practicalRows.length,
-    scenarioCountWithTimingData: timingRows.filter((row) => row.timingFidelity && Object.keys(row.timingFidelity).length).length,
-    reviewedStructureScenarioCount: timingRows.filter((row) => row.timingFidelity?.structureTrackPresent === true).length,
-    reviewedPhraseScenarioCount: timingRows.filter((row) => row.timingFidelity?.phraseTrackPresent === true).length,
-    timingAwareScenarioCount: timingRows.filter((row) => Number(row.timingFidelity?.timingAwareEffectCount || 0) > 0).length,
-    crossingStructureScenarioCount: timingRows.filter((row) => Number(row.timingFidelity?.crossingStructureCount || 0) > 0).length,
-    timingIgnoredScenarioCount: timingRows.filter((row) => row.timingFailures.some((failure) => str(failure?.kind) === "timing_ignored")).length,
-    failureScenarioCount: timingRows.filter((row) => row.timingFailures.length > 0).length,
+    effectCreates,
+    effectNames: [...new Set(effectCreates.map((row) => row.effectName).filter(Boolean))],
+    modelNames: [...new Set(effectCreates.map((row) => row.modelName).filter(Boolean))]
+  };
+}
+
+function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, workingSequencePath }) {
+  const latestPlan = promptSnapshot?.result?.latestPlanHandoff || null;
+  const latestApplyResult = applySnapshot?.result?.latestApplyResult || null;
+  const latestGuidanceCoverage = promptSnapshot?.result?.latestGuidanceCoverage || null;
+  const planSummary = summarizePlan(latestPlan);
+  const expectedEffects = arr(scenario?.expectedEffects).map((row) => str(row)).filter(Boolean);
+  const forbiddenEffects = arr(scenario?.forbiddenEffects).map((row) => str(row)).filter(Boolean);
+  const requiredTargets = arr(scenario?.requiredObservedTargets || scenario?.targets).map((row) => str(row)).filter(Boolean);
+  const matchedEffects = planSummary.effectNames.filter((name) => expectedEffects.includes(name));
+  const presentForbiddenEffects = planSummary.effectNames.filter((name) => forbiddenEffects.includes(name));
+  const matchedTargets = planSummary.modelNames.filter((name) => requiredTargets.includes(name));
+  const minimumMatchedEffects = Number(scenario?.minimumMatchedEffects || (expectedEffects.length ? 1 : 0));
+  const issues = [];
+  if (!latestPlan) issues.push("missing_plan_handoff");
+  if (!latestApplyResult) issues.push("missing_apply_result");
+  if (expectedEffects.length && matchedEffects.length < minimumMatchedEffects) issues.push("expected_effect_missing");
+  if (presentForbiddenEffects.length) issues.push("forbidden_effect_present");
+  if (requiredTargets.length && !matchedTargets.length) issues.push("required_target_missing");
+  if (Number(latestGuidanceCoverage?.effectCreateCount || 0) <= 0) issues.push("no_effect_create_commands");
+  return {
+    suiteKey,
+    scenarioName: str(scenario?.name),
+    workingSequencePath,
+    expectedEffects,
+    forbiddenEffects,
+    requiredTargets,
+    matchedEffects,
+    presentForbiddenEffects,
+    matchedTargets,
+    guidanceCoverage: latestGuidanceCoverage,
+    renderFeedbackCapabilities: promptSnapshot?.result?.ownedRenderFeedbackCapabilities || null,
+    latestPlanSummary: latestPlan
+      ? {
+          artifactId: str(latestPlan?.artifactId),
+          planId: str(latestPlan?.planId),
+          summary: str(latestPlan?.summary),
+          executionLines: arr(latestPlan?.executionLines),
+          warnings: arr(latestPlan?.warnings),
+          stageTelemetry: arr(latestPlan?.stageTelemetry)
+        }
+      : null,
+    latestApplyResult,
+    reviewHistorySnapshotAvailable: applySnapshot?.result?.reviewHistorySnapshotAvailable === true,
+    ok: issues.length === 0,
     issues
   };
+}
+
+async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenario }) {
+  const prefix = `${suiteKey}-${str(scenario?.name) || "scenario"}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
+  const { workingSequencePath, baselinePath } = copyWorkingSequence({
+    suite: { ...suite, key: suiteKey },
+    scenario,
+    workingShowRoot: suite?.workingShowRoot
+  });
+  const beforeSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-before.json`), "get-sequencer-validation-snapshot");
+  const previousPlanArtifactId = str(beforeSnapshot?.result?.latestPlanHandoff?.artifactId);
+  const previousApplyArtifactId = str(beforeSnapshot?.result?.latestApplyResult?.artifactId);
+
+  const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
+  fs.writeFileSync(openPayloadPath, `${JSON.stringify({ sequencePath: workingSequencePath }, null, 2)}\n`, "utf8");
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence.json`), "select-workflow", ["Sequence"]);
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
+
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-prompt.json`), "dispatch-prompt", [str(scenario?.prompt || scenario?.strongPrompt || scenario?.revisionPrompt)]);
+
+  const promptReady = await waitFor(async () => {
+    const pageStates = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-page-states.json`), "get-page-states-snapshot");
+    const sequencerSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-sequencer-after-prompt.json`), "get-sequencer-validation-snapshot");
+    const reviewPage = pageStates?.result?.pages?.review || {};
+    const latestPlanArtifactId = str(sequencerSnapshot?.result?.latestPlanHandoff?.artifactId);
+    const latestPlanBaseRevision = str(sequencerSnapshot?.result?.latestPlanHandoff?.baseRevision);
+    return {
+      ok: reviewPage?.canApply === true
+        && !!latestPlanArtifactId
+        && latestPlanArtifactId !== previousPlanArtifactId
+        && latestPlanBaseRevision.startsWith(workingSequencePath),
+      pageStates,
+      sequencerSnapshot
+    };
+  }, { timeoutMs: 90000, intervalMs: 1500 });
+
+  if (!promptReady?.ok) {
+    return {
+      suiteKey,
+      scenarioName: str(scenario?.name),
+      workingSequencePath,
+      baselinePath,
+      ok: false,
+      issues: ["review_never_became_applicable"],
+      promptSnapshot: promptReady?.sequencerSnapshot?.result || null
+    };
+  }
+
+  const promptSnapshot = promptReady.sequencerSnapshot;
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-apply.json`), "apply-current-proposal");
+
+  const applyReady = await waitFor(async () => {
+    const pageStates = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-page-states-after-apply.json`), "get-page-states-snapshot");
+    const sequencerSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-sequencer-after-apply.json`), "get-sequencer-validation-snapshot");
+    const reviewPage = pageStates?.result?.pages?.review || {};
+    const latestApplyArtifactId = str(sequencerSnapshot?.result?.latestApplyResult?.artifactId);
+    const latestApplyPlanId = str(sequencerSnapshot?.result?.latestApplyResult?.planId);
+    const latestApplyCurrentRevision = str(sequencerSnapshot?.result?.latestApplyResult?.currentRevision);
+    const latestApplyNextRevision = str(sequencerSnapshot?.result?.latestApplyResult?.nextRevision);
+    const latestPlanArtifactId = str(promptSnapshot?.result?.latestPlanHandoff?.artifactId);
+    return {
+      ok: reviewPage?.isApplying !== true
+        && !!latestApplyArtifactId
+        && latestApplyArtifactId !== previousApplyArtifactId
+        && latestApplyPlanId === latestPlanArtifactId
+        && (latestApplyCurrentRevision.startsWith(workingSequencePath) || latestApplyNextRevision.startsWith(workingSequencePath)),
+      pageStates,
+      sequencerSnapshot
+    };
+  }, { timeoutMs: 90000, intervalMs: 1500 });
+
+  if (!applyReady?.ok) {
+    return {
+      suiteKey,
+      scenarioName: str(scenario?.name),
+      workingSequencePath,
+      baselinePath,
+      ok: false,
+      issues: ["apply_never_completed"],
+      promptSnapshot: promptSnapshot?.result || null,
+      applySnapshot: applyReady?.sequencerSnapshot?.result || null
+    };
+  }
+
+  return evaluateScenario({
+    suiteKey,
+    scenario,
+    promptSnapshot,
+    applySnapshot: applyReady.sequencerSnapshot,
+    workingSequencePath
+  });
 }
 
 async function main() {
-  assertNativeParityAvailable();
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolveRepoRoot();
-  const automationScript = path.join(repoRoot, "scripts", "desktop", "automation.mjs");
   const outDir = path.resolve(options.outDir);
   fs.mkdirSync(outDir, { recursive: true });
 
+  const suites = buildSuiteCatalog(repoRoot, options.suitePath).map((entry) => ({
+    ...entry,
+    suite: readJson(entry.suitePath),
+    workingShowRoot: path.resolve(options.workingShowRoot)
+  }));
   const startedAt = Date.now();
-  const suiteCatalog = buildSuiteCatalog(repoRoot);
-  const preflightSuite = buildPreflightSuite(repoRoot);
-  const suiteResults = [];
+  const initialSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, "00-preflight-sequencer-validation.json"), "get-sequencer-validation-snapshot");
 
-  await runAutomationAction({
-    repoRoot,
-    automationScript,
-    channel: options.channel,
-    action: "reset-automation-state",
-    resultPath: path.join(outDir, "reset-automation-state.json")
-  });
-
-  const postResetRefreshResult = await runAutomationAction({
-    repoRoot,
-    automationScript,
-    channel: options.channel,
-    action: "refresh-from-xlights",
-    resultPath: path.join(outDir, "refresh-from-xlights.json")
-  });
-  if (!isHealthyRefreshResult(postResetRefreshResult)) {
-    throw new Error(
-      `refresh-from-xlights not healthy: ${str(postResetRefreshResult?.result?.status?.text || postResetRefreshResult?.error || postResetRefreshResult?.result?.error || "")}`
-    );
+  const results = [];
+  for (const entry of suites) {
+    for (const scenario of arr(entry.suite?.scenarios)) {
+      results.push(await runScenario({
+        repoRoot,
+        channel: options.channel,
+        outDir,
+        suiteKey: entry.key,
+        suite: { ...entry.suite, workingShowRoot: entry.workingShowRoot },
+        scenario
+      }));
+    }
   }
 
-  const canaryResult = await runAutomationAction({
-    repoRoot,
-    automationScript,
-    channel: options.channel,
-    action: preflightSuite.action,
-    payloadFile: preflightSuite.suitePath,
-    resultPath: path.join(outDir, preflightSuite.resultFileName)
-  });
-  const canarySummary = summarizeSuiteResult(preflightSuite.key, canaryResult);
-  if (!canarySummary.ok) {
-    throw new Error(`section canary failed: ${canarySummary.summary}`);
-  }
-
-  for (const suite of suiteCatalog) {
-    const resultPath = path.join(outDir, suite.resultFileName);
-    const payload = await runAutomationAction({
-      repoRoot,
-      automationScript,
-      channel: options.channel,
-      action: suite.action,
-      payloadFile: suite.suitePath,
-      resultPath
-    });
-    suiteResults.push(summarizeSuiteResult(suite.key, payload, resultPath));
-  }
-
-  const failedSuites = suiteResults.filter((row) => row.ok !== true);
+  const failed = results.filter((row) => row.ok !== true);
   const report = {
-    artifactType: "live_practical_benchmark_run_v1",
-    artifactVersion: "1.0",
+    artifactType: "live_practical_benchmark_run_v2",
+    artifactVersion: "2.0",
     createdAt: nowIso(),
     channel: options.channel,
     outDir,
+    workingShowRoot: path.resolve(options.workingShowRoot),
     totalDurationMs: Date.now() - startedAt,
-    preflight: {
-      refreshFromXLights: {
-        ok: isHealthyRefreshResult(postResetRefreshResult),
-        status: postResetRefreshResult?.result?.status || null
-      },
-      sectionCanary: canarySummary
+    ok: failed.length === 0,
+    failedScenarioCount: failed.length,
+    failedScenarioNames: failed.map((row) => row.scenarioName),
+    supportedSurface: {
+      transport: "native_http",
+      benchmarkMode: "plan_apply_validation_only",
+      renderFeedbackCapabilities: initialSnapshot?.result?.ownedRenderFeedbackCapabilities || null
     },
-    suiteCount: suiteResults.length,
-    failedSuiteCount: failedSuites.length,
-    failedSuiteKeys: failedSuites.map((row) => row.key),
-    ok: failedSuites.length === 0,
-    suites: suiteResults,
-    timingSummary: summarizeTimingValidation({
-      results: suiteResults.flatMap((suite) => {
-        const artifact = str(suite?.artifactPath) && fs.existsSync(str(suite.artifactPath)) ? readJson(str(suite.artifactPath)) : null;
-        const result = artifact?.result && typeof artifact.result === "object" ? artifact.result : {};
-        return arr(result?.results);
-      })
-    }),
-    gapReport: aggregateGapReports(suiteResults)
+    scenarioCount: results.length,
+    results
   };
 
   const reportPath = path.join(outDir, "live-practical-benchmark-report.json");
-  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf8");
+  fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   process.stdout.write(`${JSON.stringify(report, null, options.pretty ? 2 : 0)}\n`);
   if (!report.ok) process.exitCode = 1;
 }

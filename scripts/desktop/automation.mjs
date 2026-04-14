@@ -32,7 +32,7 @@ function str(value = "") {
 }
 
 function usage() {
-  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights");
+  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights");
   process.exit(2);
 }
 
@@ -203,6 +203,15 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
     body: {
       action: "sendAssistantPrompt",
       prompt: rest.join(" ").trim()
+    }
+  };
+} else if (command === "select-workflow") {
+  nativeCall = {
+    method: "POST",
+    path: "/action",
+    body: {
+      action: "selectWorkflow",
+      workflow: rest.join(" ").trim()
     }
   };
 } else if (command === "apply-current-proposal") {
