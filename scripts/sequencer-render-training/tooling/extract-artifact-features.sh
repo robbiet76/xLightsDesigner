@@ -2,12 +2,22 @@
 set -euo pipefail
 
 ARTIFACT_PATH=""
+WINDOW_START_MS=""
+WINDOW_END_MS=""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --artifact)
       ARTIFACT_PATH="$2"
+      shift 2
+      ;;
+    --window-start-ms)
+      WINDOW_START_MS="$2"
+      shift 2
+      ;;
+    --window-end-ms)
+      WINDOW_END_MS="$2"
       shift 2
       ;;
     *)
@@ -37,11 +47,33 @@ derived_features='{}'
 if [[ "${mime_type}" == "image/gif" ]]; then
   tmpdir="$(mktemp -d)"
   trap 'rm -rf "${tmpdir}"' EXIT
+  analysis_artifact_path="${ARTIFACT_PATH}"
+  if [[ -n "${WINDOW_START_MS}" && -n "${WINDOW_END_MS}" ]]; then
+    sliced_gif="${tmpdir}/windowed.gif"
+    swift "${SCRIPT_DIR}/slice-gif-by-time.swift" \
+      --input "${ARTIFACT_PATH}" \
+      --output "${sliced_gif}" \
+      --start-ms "${WINDOW_START_MS}" \
+      --end-ms "${WINDOW_END_MS}" >/dev/null
+    if [[ -f "${sliced_gif}" ]]; then
+      analysis_artifact_path="${sliced_gif}"
+    fi
+  fi
   first_frame_png="${tmpdir}/first-frame.png"
-  if sips -s format png "${ARTIFACT_PATH}" --out "${first_frame_png}" >/dev/null 2>&1 && [[ -f "${first_frame_png}" ]]; then
-    derived_features="$(python3 "${SCRIPT_DIR}/extract-gif-features.py" --gif "${ARTIFACT_PATH}" --first-frame-png "${first_frame_png}")"
-    sampled_frame_features="$(osascript -l JavaScript "${SCRIPT_DIR}/extract-gif-sampled-frame-features.js" "${ARTIFACT_PATH}")"
+  if sips -s format png "${analysis_artifact_path}" --out "${first_frame_png}" >/dev/null 2>&1 && [[ -f "${first_frame_png}" ]]; then
+    derived_features="$(python3 "${SCRIPT_DIR}/extract-gif-features.py" --gif "${analysis_artifact_path}" --first-frame-png "${first_frame_png}")"
+    sampled_frame_features="$(python3 "${SCRIPT_DIR}/extract-gif-temporal-features.py" --gif "${analysis_artifact_path}")"
     derived_features="$(jq -cn --argjson base "${derived_features}" --argjson sampled "${sampled_frame_features}" '$base + $sampled')"
+    derived_features="$(jq -cn \
+      --argjson base "${derived_features}" \
+      --arg analyzedArtifactPath "${analysis_artifact_path}" \
+      --argjson analysisWindowStartMs "${WINDOW_START_MS:-null}" \
+      --argjson analysisWindowEndMs "${WINDOW_END_MS:-null}" \
+      '$base + {
+        analyzedArtifactPath: $analyzedArtifactPath,
+        analysisWindowStartMs: $analysisWindowStartMs,
+        analysisWindowEndMs: $analysisWindowEndMs
+      }')"
   fi
 fi
 

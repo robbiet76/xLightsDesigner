@@ -115,6 +115,10 @@ jq -cn \
     results: $results
   }' > "${summary_path}"
 
+quality_json="$(python3 "${ROOT_DIR}/tooling/evaluate-screening-run.py" --summary "${summary_path}" 2>/dev/null || echo '{}')"
+jq --argjson screeningQuality "${quality_json}" '. + {screeningQuality: $screeningQuality}' "${summary_path}" > "${summary_path}.tmp"
+mv "${summary_path}.tmp" "${summary_path}"
+
 printf '%s\n' "${summary_path}"
 
 if [[ "${failed}" -gt 0 ]]; then

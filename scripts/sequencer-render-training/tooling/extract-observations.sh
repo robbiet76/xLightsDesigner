@@ -81,7 +81,7 @@ jq "${JQ_ARGS[@]}" '
   | (normalized_label_hints($sample.labelHints // [])) as $labelHints
   | ($features.averageActiveNodeRatio // null) as $fseqActiveNodeRatio
   | ($features.averageActiveChannelRatio // null) as $fseqActiveChannelRatio
-  | ($features.temporalChangeMean // null) as $fseqTemporalChangeMean
+  | ($features.temporalMotionMean // $features.temporalChangeMean // null) as $fseqTemporalChangeMean
   | ($features.averageLongestRunRatio // null) as $fseqLongestRunRatio
   | ($features.pixelWidth // 0) as $w
   | ($features.pixelHeight // 0) as $h
@@ -100,6 +100,10 @@ jq "${JQ_ARGS[@]}" '
       // $features.firstFrameUniqueColorCount
       // 0) as $repUniqueColors
   | ($fseqTemporalChangeMean // 0) as $temporalChange
+  | ($features.temporalColorDeltaMean // 0) as $temporalColorDelta
+  | ($features.temporalBrightnessDeltaMean // 0) as $temporalBrightnessDelta
+  | ($features.temporalSignature // "static_or_near_static") as $temporalSignature
+  | ($features.nonBlankSampledFrameRatio // 0) as $nonBlankSampledFrameRatio
   | ($fseqLongestRunRatio // 0) as $longestRunRatio
   | ($features.analysis // {}) as $analysis
   | ($analysis.patternFamily // null) as $patternFamily
@@ -244,6 +248,31 @@ jq "${JQ_ARGS[@]}" '
               if $activeRatio >= 0.95 then ["full_coverage"]
               elif $activeRatio > 0 then ["partial_coverage"]
               else ["blank_sampled_frame"]
+              end
+            )
+          + (
+              if $temporalSignature == "high_motion" then ["high_motion_window"]
+              elif $temporalSignature == "moderate_motion" then ["moderate_motion_window"]
+              elif $temporalSignature == "subtle_motion" then ["subtle_motion_window"]
+              else ["static_window"]
+              end
+            )
+          + (
+              if $temporalColorDelta >= 0.08 then ["color_travel"]
+              elif $temporalColorDelta >= 0.02 then ["subtle_color_travel"]
+              else ["minimal_color_travel"]
+              end
+            )
+          + (
+              if $temporalBrightnessDelta >= 0.08 then ["evolving_brightness"]
+              elif $temporalBrightnessDelta >= 0.02 then ["subtle_brightness_change"]
+              else ["stable_brightness"]
+              end
+            )
+          + (
+              if $nonBlankSampledFrameRatio >= 0.9 then ["sustained_window_coverage"]
+              elif $nonBlankSampledFrameRatio >= 0.3 then ["intermittent_window_coverage"]
+              else ["sparse_window_coverage"]
               end
             )
           + (if ($features.decoded // false) then ["decoded_fseq"] else [] end)

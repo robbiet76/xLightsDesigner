@@ -189,7 +189,10 @@ cp "${staged_artifact_path}" "${artifact_path}"
   exit 1
 }
 
-bash "${ROOT_DIR}/tooling/extract-artifact-features.sh" --artifact "${artifact_path}" > "${features_path}"
+bash "${ROOT_DIR}/tooling/extract-artifact-features.sh" \
+  --artifact "${artifact_path}" \
+  --window-start-ms "${start_ms}" \
+  --window-end-ms "${end_ms}" > "${features_path}"
 bash "${ROOT_DIR}/tooling/extract-observations.sh" \
   --sample-json "${sample_json}" \
   --model-type "${resolved_model_type}" \

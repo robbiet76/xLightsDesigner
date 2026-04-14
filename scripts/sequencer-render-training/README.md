@@ -5,6 +5,11 @@ Internal-only tooling for xLights-backed render sweeps used to train sequencer r
 This tooling does **not** replace xLights rendering.
 It drives xLights as the authoritative renderer, captures the render artifact, and writes a structured training record.
 
+Current capture policy:
+- GIF-based training reads the assigned effect timing window, not the full exported sequence span.
+- Animated effects are evaluated from temporal signatures first, with representative frames kept only as supporting evidence.
+- `run-manifest.sh` now writes `screeningQuality` so collapsed sweeps are flagged instead of silently treated as usable training evidence.
+
 Primary system roadmap:
 - [render-training-system-roadmap-2026-03-19.md](/Users/robterry/Projects/xLightsDesigner/specs/sequence-agent/render-training-system-roadmap-2026-03-19.md)
 
