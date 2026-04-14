@@ -6,6 +6,33 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
+PALETTE_PRESETS = {
+    "mono_white": {
+        "paletteProfile": "mono_white",
+        "palette": {
+            "C_BUTTON_Palette1": "#FFFFFF",
+            "C_BUTTON_Palette2": "#FFFFFF"
+        }
+    },
+    "rgb_primary": {
+        "paletteProfile": "rgb_primary",
+        "palette": {
+            "C_BUTTON_Palette1": "#FF0000",
+            "C_BUTTON_Palette2": "#00FF00",
+            "C_BUTTON_Palette3": "#0000FF"
+        }
+    },
+    "circular_multi": {
+        "paletteProfile": "circular_multi",
+        "palette": {
+            "C_BUTTON_Palette1": "#FFFFFF",
+            "C_BUTTON_Palette2": "#FF5A00",
+            "C_BUTTON_Palette3": "#FFD000",
+            "C_BUTTON_Palette4": "#00C2FF"
+        }
+    }
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -77,6 +104,7 @@ def main() -> int:
         "phase": param_registry.get("phase"),
         "anchors": anchors,
         "target": target,
+        "screeningPaletteMode": param_registry.get("screeningPaletteMode"),
     }
 
     for value in anchors:
@@ -84,11 +112,19 @@ def main() -> int:
         sample["effectSettings"] = deepcopy(base_settings)
         sample["sharedSettings"] = deepcopy(base_shared)
         sample["export"] = deepcopy(base_export)
+        palette_mode = param_registry.get("screeningPaletteMode")
+        if palette_mode:
+            preset = PALETTE_PRESETS.get(palette_mode)
+            if preset is None:
+                raise ValueError(f"unknown screeningPaletteMode for {effect} {args.parameter}: {palette_mode}")
+            sample["sharedSettings"]["paletteProfile"] = preset["paletteProfile"]
+            sample["sharedSettings"]["palette"] = deepcopy(preset["palette"])
         sample["trainingContext"] = {
             "screenedParameterName": args.parameter,
             "screeningTarget": target,
             "screeningPhase": param_registry.get("phase", "screen"),
             "screeningPriority": param_registry.get("practicalPriority", param_registry.get("importance", "medium")),
+            "screeningPaletteMode": palette_mode or "",
         }
         if target == "sharedSettings":
             sample["sharedSettings"][args.parameter] = value

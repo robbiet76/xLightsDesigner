@@ -25,10 +25,12 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "circular_multi",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF5A00",
+          "C_BUTTON_Palette3": "#FFD000",
+          "C_BUTTON_Palette4": "#00C2FF"
         }
       },
       "labelHints": [
@@ -46,7 +48,8 @@
         "screenedParameterName": "circularPalette",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "circular_multi"
       }
     },
     {
@@ -62,10 +65,12 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "circular_multi",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FFFFFF",
+          "C_BUTTON_Palette2": "#FF5A00",
+          "C_BUTTON_Palette3": "#FFD000",
+          "C_BUTTON_Palette4": "#00C2FF"
         }
       },
       "labelHints": [
@@ -83,7 +88,8 @@
         "screenedParameterName": "circularPalette",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "circular_multi"
       }
     }
   ],
@@ -97,6 +103,7 @@
       false,
       true
     ],
-    "target": "effectSettings"
+    "target": "effectSettings",
+    "screeningPaletteMode": "circular_multi"
   }
 }

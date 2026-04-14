@@ -801,6 +801,7 @@
           "anchors": [0.5, 1.0, 2.0, 3.0, 4.0],
           "importance": "medium",
           "phase": "screen",
+          "screeningPaletteMode": "rgb_primary",
           "interactionHypotheses": ["vFade", "hFade", "shimmer", "circularPalette"],
           "stopRule": "stop_if_flat_across_profile"
         },
@@ -823,6 +824,7 @@
           "anchors": [false, true],
           "importance": "medium",
           "phase": "interaction",
+          "screeningPaletteMode": "mono_white",
           "stopRule": "interaction_only"
         },
         "shimmer": {
@@ -830,6 +832,7 @@
           "anchors": [false, true],
           "importance": "medium",
           "phase": "screen",
+          "screeningPaletteMode": "mono_white",
           "stopRule": "all_meaningful_options"
         },
         "circularPalette": {
@@ -837,6 +840,7 @@
           "anchors": [false, true],
           "importance": "medium",
           "phase": "screen",
+          "screeningPaletteMode": "circular_multi",
           "stopRule": "all_meaningful_options"
         }
       }

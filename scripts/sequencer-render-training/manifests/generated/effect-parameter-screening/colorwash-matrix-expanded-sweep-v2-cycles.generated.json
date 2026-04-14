@@ -25,10 +25,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -46,7 +47,8 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
       }
     },
     {
@@ -62,10 +64,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -83,7 +86,8 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
       }
     },
     {
@@ -99,10 +103,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -120,7 +125,8 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
       }
     },
     {
@@ -136,10 +142,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -157,7 +164,8 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
       }
     },
     {
@@ -173,10 +181,11 @@
       },
       "sharedSettings": {
         "renderStyle": "Default",
-        "paletteProfile": "warm_fill",
+        "paletteProfile": "rgb_primary",
         "palette": {
-          "C_BUTTON_Palette1": "#FFD27A",
-          "C_BUTTON_Palette2": "#FFF0D0"
+          "C_BUTTON_Palette1": "#FF0000",
+          "C_BUTTON_Palette2": "#00FF00",
+          "C_BUTTON_Palette3": "#0000FF"
         }
       },
       "labelHints": [
@@ -194,7 +203,8 @@
         "screenedParameterName": "cycles",
         "screeningTarget": "effectSettings",
         "screeningPhase": "screen",
-        "screeningPriority": "medium"
+        "screeningPriority": "medium",
+        "screeningPaletteMode": "rgb_primary"
       }
     }
   ],
@@ -211,6 +221,7 @@
       3.0,
       4.0
     ],
-    "target": "effectSettings"
+    "target": "effectSettings",
+    "screeningPaletteMode": "rgb_primary"
   }
 }
