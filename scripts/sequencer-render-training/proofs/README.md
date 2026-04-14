@@ -85,6 +85,13 @@ Harness runner:
   - emits:
     - per-scenario section window / observation / critique / learning record artifacts
     - [sequence-section-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-section-feedback-suite-summary.json)
+- [validate-request-scope-regressions.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/validate-request-scope-regressions.py)
+  - validates the retained suite summaries and learning records against the declared scenario request scope
+  - fails if a scenario loses its expected:
+    - `requestedScope.mode`
+    - `requestedScope.reviewStartLevel`
+    - `requestedScope.sectionScopeKind`
+    - expected critique ladder level
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
   - current kept gate proofs:
