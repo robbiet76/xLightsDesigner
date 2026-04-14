@@ -94,6 +94,7 @@ Do automate:
 
 The automation loop should produce:
 - `effect_training_automation_plan_v1`
+- `effect_parameter_screening_plan_v1`
 
 That artifact must declare:
 - effect name
@@ -102,6 +103,14 @@ That artifact must declare:
 - readiness class
 - priority
 - next action
+
+The first executable screening artifact must declare:
+- effect name
+- base manifest path
+- parameter name
+- generated manifest path
+- priority
+- phase
 
 ## Acceptance Standard
 

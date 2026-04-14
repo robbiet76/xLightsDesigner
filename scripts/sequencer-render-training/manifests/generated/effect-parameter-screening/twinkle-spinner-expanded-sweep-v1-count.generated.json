@@ -1,0 +1,136 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "twinkle-spinner-expanded-sweep-v1-count-generated",
+  "description": "Registry-generated sweep for Twinkle count from twinkle-spinner-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "Spinner",
+    "modelType": "spinner",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Twinkle sweep on the canonical spinner model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "twinkle-count-1-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 1,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "count",
+        "count_1",
+        "radial_read",
+        "range_sample",
+        "soft_twinkle"
+      ]
+    },
+    {
+      "sampleId": "twinkle-count-3-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "count",
+        "count_3",
+        "radial_read",
+        "range_sample",
+        "soft_twinkle"
+      ]
+    },
+    {
+      "sampleId": "twinkle-count-5-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 5,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "count",
+        "count_5",
+        "radial_read",
+        "range_sample",
+        "soft_twinkle"
+      ]
+    },
+    {
+      "sampleId": "twinkle-count-7-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 7,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "count",
+        "count_7",
+        "radial_read",
+        "range_sample",
+        "soft_twinkle"
+      ]
+    },
+    {
+      "sampleId": "twinkle-count-9-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 9,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "count",
+        "count_9",
+        "radial_read",
+        "range_sample",
+        "soft_twinkle"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Twinkle",
+    "parameter": "count",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      1,
+      3,
+      5,
+      7,
+      9
+    ],
+    "target": "effectSettings"
+  }
+}

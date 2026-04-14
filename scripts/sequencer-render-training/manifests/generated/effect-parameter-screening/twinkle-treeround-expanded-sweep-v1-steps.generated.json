@@ -1,0 +1,136 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "twinkle-treeround-expanded-sweep-v1-steps-generated",
+  "description": "Registry-generated sweep for Twinkle steps from twinkle-treeround-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Twinkle sweep on the canonical round tree model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "twinkle-steps-10-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 10,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "steps",
+        "steps_10",
+        "tree_read"
+      ]
+    },
+    {
+      "sampleId": "twinkle-steps-30-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 30,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "steps",
+        "steps_30",
+        "tree_read"
+      ]
+    },
+    {
+      "sampleId": "twinkle-steps-50-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 50,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "steps",
+        "steps_50",
+        "tree_read"
+      ]
+    },
+    {
+      "sampleId": "twinkle-steps-70-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "steps",
+        "steps_70",
+        "tree_read"
+      ]
+    },
+    {
+      "sampleId": "twinkle-steps-90-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 90,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "steps",
+        "steps_90",
+        "tree_read"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Twinkle",
+    "parameter": "steps",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      10,
+      30,
+      50,
+      70,
+      90
+    ],
+    "target": "effectSettings"
+  }
+}

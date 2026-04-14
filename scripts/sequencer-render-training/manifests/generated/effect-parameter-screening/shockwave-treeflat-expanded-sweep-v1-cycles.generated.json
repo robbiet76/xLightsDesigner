@@ -1,0 +1,161 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shockwave-treeflat-expanded-sweep-v1-cycles-generated",
+  "description": "Registry-generated sweep for Shockwave cycles from shockwave-treeflat-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeFlat",
+    "modelType": "tree_flat",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shockwave sweep on the flat tree using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "shockwave-cycles-1-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_1",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-cycles-2-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 2,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_2",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-cycles-3-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 3,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_3",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-cycles-4-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 4,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_4",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-cycles-5-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 5,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "cycles",
+        "cycles_5",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Shockwave",
+    "parameter": "cycles",
+    "importance": "high",
+    "phase": "baseline",
+    "anchors": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "target": "effectSettings"
+  }
+}

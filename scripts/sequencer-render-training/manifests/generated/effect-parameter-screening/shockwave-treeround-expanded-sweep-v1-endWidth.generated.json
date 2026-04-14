@@ -1,0 +1,134 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shockwave-treeround-expanded-sweep-v1-endWidth-generated",
+  "description": "Registry-generated sweep for Shockwave endWidth from shockwave-treeround-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shockwave sweep on the round tree using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "shockwave-endwidth-2-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 2,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "endWidth",
+        "endWidth_2",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-endwidth-5-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 5,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "endWidth",
+        "endWidth_5",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-endwidth-10-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 10,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "endWidth",
+        "endWidth_10",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-endwidth-20-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 20,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "endWidth",
+        "endWidth_20",
+        "range_sample",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Shockwave",
+    "parameter": "endWidth",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      2,
+      5,
+      10,
+      20
+    ],
+    "target": "effectSettings"
+  }
+}

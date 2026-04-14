@@ -1,0 +1,70 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "twinkle-starsingle-expanded-sweep-v1-strobe-generated",
+  "description": "Registry-generated sweep for Twinkle strobe from twinkle-starsingle-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "StarSingle",
+    "modelType": "star",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Twinkle sweep on the canonical single-layer star model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "twinkle-strobe-false-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "star_read",
+        "strobe",
+        "strobe_false"
+      ]
+    },
+    {
+      "sampleId": "twinkle-strobe-true-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": true,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "soft_twinkle",
+        "star_read",
+        "strobe",
+        "strobe_true"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Twinkle",
+    "parameter": "strobe",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      false,
+      true
+    ],
+    "target": "effectSettings"
+  }
+}

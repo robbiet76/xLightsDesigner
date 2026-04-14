@@ -1,0 +1,80 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "shockwave-treeround-expanded-sweep-v1-scale-generated",
+  "description": "Registry-generated sweep for Shockwave scale from shockwave-treeround-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Shockwave sweep on the round tree using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "shockwave-scale-false-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "scale",
+        "scale_false",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    },
+    {
+      "sampleId": "shockwave-scale-true-generated-v1",
+      "effectName": "Shockwave",
+      "effectSettings": {
+        "cycles": 1,
+        "centerX": 50,
+        "centerY": 50,
+        "startRadius": 1,
+        "endRadius": 45,
+        "startWidth": 5,
+        "endWidth": 12,
+        "accel": 0,
+        "blendEdges": true,
+        "scale": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "scale",
+        "scale_true",
+        "shockwave_ring",
+        "tree_fill"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Shockwave",
+    "parameter": "scale",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      false,
+      true
+    ],
+    "target": "effectSettings"
+  }
+}

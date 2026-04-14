@@ -1,0 +1,765 @@
+{
+  "artifactType": "effect_parameter_screening_plan_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-14T12:52:21.175Z",
+  "summary": {
+    "effectCount": 2,
+    "manifestCount": 75,
+    "runnableEffects": [
+      "Shockwave",
+      "Twinkle"
+    ]
+  },
+  "rows": [
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "centerX",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-centerX.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "centerY",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-centerY.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "cycles",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-cycles.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "endRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-endRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "startRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-startRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "accel",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-accel.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "blendEdges",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-blendEdges.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "endWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-endWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "scale",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-scale.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
+      "parameterName": "startWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-startWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "centerX",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-centerX.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "centerY",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-centerY.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "cycles",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-cycles.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "endRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-endRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "startRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-startRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "accel",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-accel.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "blendEdges",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-blendEdges.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "endWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-endWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "scale",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-scale.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
+      "parameterName": "startWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-startWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "centerX",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-centerX.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "centerY",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-centerY.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "cycles",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-cycles.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "endRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-endRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "startRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-startRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "accel",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-accel.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "blendEdges",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-blendEdges.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "endWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-endWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "scale",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-scale.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
+      "parameterName": "startWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-startWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "centerX",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-centerX.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "centerY",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-centerY.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "cycles",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-cycles.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "endRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-endRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "startRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-startRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "accel",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-accel.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "blendEdges",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-blendEdges.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "endWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-endWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "scale",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-scale.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
+      "parameterName": "startWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-startWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "centerX",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-centerX.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "centerY",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-centerY.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "cycles",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-cycles.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "endRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-endRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "startRadius",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-startRadius.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "accel",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-accel.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "blendEdges",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-blendEdges.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "endWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-endWidth.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "scale",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-scale.generated.json"
+    },
+    {
+      "effectName": "Shockwave",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
+      "parameterName": "startWidth",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-startWidth.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-singlelinehorizontal-expanded-sweep-v1",
+      "parameterName": "count",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-singlelinehorizontal-expanded-sweep-v1-count.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-singlelinehorizontal-expanded-sweep-v1",
+      "parameterName": "steps",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-singlelinehorizontal-expanded-sweep-v1-steps.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-singlelinehorizontal-expanded-sweep-v1",
+      "parameterName": "strobe",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-singlelinehorizontal-expanded-sweep-v1-strobe.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-singlelinehorizontal-expanded-sweep-v1",
+      "parameterName": "style",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-singlelinehorizontal-expanded-sweep-v1-style.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-singlelinehorizontal-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-singlelinehorizontal-expanded-sweep-v1",
+      "parameterName": "reRandomize",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-singlelinehorizontal-expanded-sweep-v1-reRandomize.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-spinner-expanded-sweep-v1",
+      "parameterName": "count",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-spinner-expanded-sweep-v1-count.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-spinner-expanded-sweep-v1",
+      "parameterName": "steps",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-spinner-expanded-sweep-v1-steps.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-spinner-expanded-sweep-v1",
+      "parameterName": "strobe",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-spinner-expanded-sweep-v1-strobe.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-spinner-expanded-sweep-v1",
+      "parameterName": "style",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-spinner-expanded-sweep-v1-style.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-spinner-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-spinner-expanded-sweep-v1",
+      "parameterName": "reRandomize",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-spinner-expanded-sweep-v1-reRandomize.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-starsingle-expanded-sweep-v1",
+      "parameterName": "count",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-starsingle-expanded-sweep-v1-count.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-starsingle-expanded-sweep-v1",
+      "parameterName": "steps",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-starsingle-expanded-sweep-v1-steps.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-starsingle-expanded-sweep-v1",
+      "parameterName": "strobe",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-starsingle-expanded-sweep-v1-strobe.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-starsingle-expanded-sweep-v1",
+      "parameterName": "style",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-starsingle-expanded-sweep-v1-style.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-starsingle-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-starsingle-expanded-sweep-v1",
+      "parameterName": "reRandomize",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-starsingle-expanded-sweep-v1-reRandomize.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treeround-expanded-sweep-v1",
+      "parameterName": "count",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treeround-expanded-sweep-v1-count.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treeround-expanded-sweep-v1",
+      "parameterName": "steps",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treeround-expanded-sweep-v1-steps.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treeround-expanded-sweep-v1",
+      "parameterName": "strobe",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treeround-expanded-sweep-v1-strobe.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treeround-expanded-sweep-v1",
+      "parameterName": "style",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treeround-expanded-sweep-v1-style.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treeround-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treeround-expanded-sweep-v1",
+      "parameterName": "reRandomize",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treeround-expanded-sweep-v1-reRandomize.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treespiral-expanded-sweep-v1",
+      "parameterName": "count",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treespiral-expanded-sweep-v1-count.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treespiral-expanded-sweep-v1",
+      "parameterName": "steps",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treespiral-expanded-sweep-v1-steps.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treespiral-expanded-sweep-v1",
+      "parameterName": "strobe",
+      "practicalPriority": "high",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treespiral-expanded-sweep-v1-strobe.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treespiral-expanded-sweep-v1",
+      "parameterName": "style",
+      "practicalPriority": "high",
+      "phase": "baseline",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treespiral-expanded-sweep-v1-style.generated.json"
+    },
+    {
+      "effectName": "Twinkle",
+      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/twinkle-treespiral-expanded-sweep-v1.json",
+      "baseManifestName": "twinkle-treespiral-expanded-sweep-v1",
+      "parameterName": "reRandomize",
+      "practicalPriority": "medium",
+      "phase": "screen",
+      "target": "effectSettings",
+      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/twinkle-treespiral-expanded-sweep-v1-reRandomize.generated.json"
+    }
+  ]
+}

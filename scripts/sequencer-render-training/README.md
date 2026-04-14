@@ -30,6 +30,7 @@ Primary system roadmap:
 - `runners/run-registry-plan.sh`
 - `runners/run-stage1-coverage-round.sh`
 - `runners/run-effect-training-automation-cycle.sh`
+- `runners/run-effect-parameter-screening-plan.sh`
 
 ## Core Catalogs
 - `catalog/effect-parameter-registry.json`
@@ -40,6 +41,8 @@ Primary system roadmap:
 - `catalog/sequencer-unified-training-set-v1.json`
 - `catalog/effect-family-outcomes/`
 - `catalog/effect-settings-coverage-report-v1.json`
+- `catalog/effect-training-automation-plan-v1.json`
+- `catalog/effect-parameter-screening-plan-v1.json`
 
 ## Common Supporting Tools
 - `generators/generate-parameter-sweep-manifest.py`
@@ -57,6 +60,8 @@ Primary system roadmap:
 - `tooling/build-unified-training-set.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
 - `tooling/build-effect-settings-coverage-report.mjs`
+- `tooling/build-effect-training-automation-plan.mjs`
+- `tooling/build-effect-parameter-screening-plan.mjs`
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 
@@ -131,6 +136,11 @@ node scripts/sequencer-render-training/tooling/harvest-effect-outcome-records.mj
 
 ```bash
 node scripts/sequencer-render-training/tooling/build-effect-settings-coverage-report.mjs
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-effect-parameter-screening-plan.sh \
+  --out-dir /tmp/effect-parameter-screening-generated
 ```
 
 ```bash

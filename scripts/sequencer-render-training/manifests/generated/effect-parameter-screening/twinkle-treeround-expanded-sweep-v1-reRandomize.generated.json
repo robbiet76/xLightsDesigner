@@ -1,0 +1,70 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "twinkle-treeround-expanded-sweep-v1-reRandomize-generated",
+  "description": "Registry-generated sweep for Twinkle reRandomize from twinkle-treeround-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "TreeRound",
+    "modelType": "tree_360",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Twinkle sweep on the canonical round tree model using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "twinkle-rerandomize-false-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "reRandomize",
+        "reRandomize_false",
+        "soft_twinkle",
+        "tree_read"
+      ]
+    },
+    {
+      "sampleId": "twinkle-rerandomize-true-generated-v1",
+      "effectName": "Twinkle",
+      "effectSettings": {
+        "style": "New Render Method",
+        "count": 3,
+        "steps": 70,
+        "strobe": false,
+        "reRandomize": true
+      },
+      "sharedSettings": {
+        "renderStyle": "Default"
+      },
+      "labelHints": [
+        "range_sample",
+        "reRandomize",
+        "reRandomize_true",
+        "soft_twinkle",
+        "tree_read"
+      ]
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Twinkle",
+    "parameter": "reRandomize",
+    "importance": "medium",
+    "phase": "screen",
+    "anchors": [
+      false,
+      true
+    ],
+    "target": "effectSettings"
+  }
+}
