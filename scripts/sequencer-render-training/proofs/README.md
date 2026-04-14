@@ -107,6 +107,10 @@ Harness runner:
         - `compositionRead`
         - `familyBalanceRead`
         - `cycleOutcome`
+    - expected retained render-observation reads:
+      - `activeModelNames`
+      - `leadModel`
+      - `maxActiveModelCount`
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
   - current kept gate proofs:

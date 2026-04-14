@@ -143,6 +143,26 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
                 f"{row['scenarioId']} critique ladder mismatch: expected {expected_ladder_level}, got {critique.get('ladderLevel')}"
             )
 
+        observation = load_json(row["observationArtifactPath"])
+        macro = observation.get("macro", {})
+        expected_active_models = scenario.get("expectedActiveModelNames")
+        if expected_active_models and sorted(macro.get("activeModelNames", [])) != sorted(expected_active_models):
+            errors.append(
+                f"{row['scenarioId']} activeModelNames mismatch: expected {expected_active_models}, got {macro.get('activeModelNames', [])}"
+            )
+
+        expected_lead_model = scenario.get("expectedLeadModel")
+        if expected_lead_model and macro.get("leadModel") != expected_lead_model:
+            errors.append(
+                f"{row['scenarioId']} leadModel mismatch: expected {expected_lead_model}, got {macro.get('leadModel')}"
+            )
+
+        expected_max_active_model_count = scenario.get("expectedMaxActiveModelCount")
+        if expected_max_active_model_count is not None and macro.get("maxActiveModelCount") != expected_max_active_model_count:
+            errors.append(
+                f"{row['scenarioId']} maxActiveModelCount mismatch: expected {expected_max_active_model_count}, got {macro.get('maxActiveModelCount')}"
+            )
+
         record = load_json(row["learningRecordArtifactPath"])
         record_scope = record.get("context", {}).get("requestedScope") or {}
         if record_scope != expected:
