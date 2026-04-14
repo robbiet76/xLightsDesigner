@@ -91,6 +91,23 @@ async function runAutomation(repoRoot, channel, resultPath, command, args = []) 
   return readJson(resultPath);
 }
 
+async function waitForXLightsReady({ repoRoot, channel, outDir, prefix, timeoutMs = 60000, intervalMs = 1500 } = {}) {
+  return waitFor(async () => {
+    const snapshot = await runAutomation(
+      repoRoot,
+      channel,
+      path.join(outDir, `${prefix}-health.json`),
+      "get-automation-health-snapshot"
+    );
+    const xlights = snapshot?.result?.xlights || {};
+    const runtimeState = str(xlights?.runtimeState).toLowerCase();
+    return {
+      ok: runtimeState === "ready",
+      snapshot
+    };
+  }, { timeoutMs, intervalMs });
+}
+
 async function runDirectProposalGenerator(repoRoot, {
   projectFilePath = "",
   prompt = "",
@@ -318,6 +335,19 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   const beforeSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-before.json`), "get-sequencer-validation-snapshot");
   const previousPlanArtifactId = str(beforeSnapshot?.result?.latestPlanHandoff?.artifactId);
   const previousApplyArtifactId = str(beforeSnapshot?.result?.latestApplyResult?.artifactId);
+  const xlightsReadyBeforeOpen = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-pre-open` });
+  if (!xlightsReadyBeforeOpen?.ok) {
+    return {
+      suiteKey,
+      scenarioName: str(scenario?.name),
+      workingSequencePath,
+      clonedProjectFilePath: cloneProjectFilePath,
+      baselinePath,
+      ok: false,
+      issues: ["xlights_not_ready_for_open"],
+      healthSnapshot: xlightsReadyBeforeOpen?.snapshot?.result || null
+    };
+  }
 
   const openPayloadPath = path.join(outDir, `${prefix}-open-payload.json`);
   fs.writeFileSync(openPayloadPath, `${JSON.stringify({ sequencePath: workingSequencePath }, null, 2)}\n`, "utf8");
@@ -370,6 +400,20 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   }
 
   const promptSnapshot = promptReady.sequencerSnapshot;
+  const xlightsReadyBeforeApply = await waitForXLightsReady({ repoRoot, channel, outDir, prefix: `${prefix}-pre-apply` });
+  if (!xlightsReadyBeforeApply?.ok) {
+    return {
+      suiteKey,
+      scenarioName: str(scenario?.name),
+      workingSequencePath,
+      clonedProjectFilePath: cloneProjectFilePath,
+      baselinePath,
+      ok: false,
+      issues: ["xlights_not_ready_for_apply"],
+      promptSnapshot: promptSnapshot?.result || null,
+      healthSnapshot: xlightsReadyBeforeApply?.snapshot?.result || null
+    };
+  }
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-apply.json`), "apply-current-proposal");
 
   const applyReady = await waitFor(async () => {
