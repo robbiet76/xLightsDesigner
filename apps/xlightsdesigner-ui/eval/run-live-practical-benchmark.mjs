@@ -91,6 +91,24 @@ async function runAutomation(repoRoot, channel, resultPath, command, args = []) 
   return readJson(resultPath);
 }
 
+async function runDirectProposalGenerator(repoRoot, {
+  projectFilePath = "",
+  prompt = "",
+  selectedSections = [],
+  selectedTargetIds = []
+} = {}) {
+  const script = path.join(repoRoot, "scripts", "sequencing", "native", "generate-native-direct-proposal.mjs");
+  const commandArgs = [script, "--project-file", projectFilePath, "--prompt", prompt];
+  for (const section of arr(selectedSections).map((row) => str(row)).filter(Boolean)) {
+    commandArgs.push("--selected-section", section);
+  }
+  for (const targetId of arr(selectedTargetIds).map((row) => str(row)).filter(Boolean)) {
+    commandArgs.push("--selected-target", targetId);
+  }
+  const { stdout } = await runCommand("node", commandArgs, { cwd: repoRoot });
+  return JSON.parse(stdout);
+}
+
 async function waitFor(fn, { timeoutMs = 60000, intervalMs = 1000 } = {}) {
   const startedAt = Date.now();
   let lastValue = null;
@@ -194,7 +212,6 @@ function cloneProjectForScenario(baseProjectFilePath, suiteKey, scenarioName) {
     const project = JSON.parse(fs.readFileSync(cloneProjectFilePath, "utf8"));
     const snapshot = { ...(project.snapshot || {}) };
     snapshot.sequencePathInput = "";
-    snapshot.audioPathInput = "";
     snapshot.recentSequences = [];
     delete snapshot.sequenceAgentRuntime;
     project.snapshot = snapshot;
@@ -226,8 +243,23 @@ function buildBenchmarkPrompt(scenario = {}) {
   return [basePrompt, benchmarkDirective].filter(Boolean).join(" ");
 }
 
+function buildSelectedSections(scenario = {}) {
+  return [
+    ...arr(scenario?.selectedSections),
+    str(scenario?.sectionName)
+  ].map((row) => str(row)).filter(Boolean);
+}
+
+function buildSelectedTargetIds(scenario = {}) {
+  return [
+    ...arr(scenario?.primaryFocusTargetIds),
+    ...arr(scenario?.requiredObservedTargets),
+    ...arr(scenario?.targets)
+  ].map((row) => str(row)).filter(Boolean).filter((row, index, rows) => rows.indexOf(row) === index);
+}
+
 function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, workingSequencePath }) {
-  const latestPlan = promptSnapshot?.result?.latestPlanHandoff || null;
+  const latestPlan = promptSnapshot?.result?.latestPlanHandoff || applySnapshot?.result?.latestPlanHandoff || null;
   const latestApplyResult = applySnapshot?.result?.latestApplyResult || null;
   const latestGuidanceCoverage = promptSnapshot?.result?.latestGuidanceCoverage || null;
   const planSummary = summarizePlan(latestPlan);
@@ -293,20 +325,32 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-reset-assistant-memory.json`), "reset-assistant-memory");
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence-post-reset.json`), "select-workflow", ["Sequence"]);
-
-  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-prompt.json`), "dispatch-prompt", [buildBenchmarkPrompt(scenario)]);
+  const promptText = buildBenchmarkPrompt(scenario);
+  const directProposalResult = await runDirectProposalGenerator(repoRoot, {
+    projectFilePath: cloneProjectFilePath,
+    prompt: promptText,
+    selectedSections: buildSelectedSections(scenario),
+    selectedTargetIds: buildSelectedTargetIds(scenario)
+  });
+  fs.writeFileSync(
+    path.join(outDir, `${prefix}-direct-proposal.json`),
+    `${JSON.stringify(directProposalResult, null, 2)}\n`,
+    "utf8"
+  );
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-reload-project.json`), "open-project", [cloneProjectFilePath]);
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence-post-proposal.json`), "select-workflow", ["Sequence"]);
 
   const promptReady = await waitFor(async () => {
     const pageStates = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-page-states.json`), "get-page-states-snapshot");
     const sequencerSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-sequencer-after-prompt.json`), "get-sequencer-validation-snapshot");
     const reviewPage = pageStates?.result?.pages?.review || {};
-    const latestPlanArtifactId = str(sequencerSnapshot?.result?.latestPlanHandoff?.artifactId);
-    const latestPlanBaseRevision = str(sequencerSnapshot?.result?.latestPlanHandoff?.baseRevision);
+    const latestIntentArtifactId = str(sequencerSnapshot?.result?.latestIntentHandoff?.artifactId);
+    const pendingSummary = str(reviewPage?.pendingSummary);
     return {
       ok: reviewPage?.canApply === true
-        && !!latestPlanArtifactId
-        && latestPlanArtifactId !== previousPlanArtifactId
-        && latestPlanBaseRevision.startsWith(workingSequencePath),
+        && !!latestIntentArtifactId
+        && pendingSummary !== "No proposal bundle available."
+        && latestIntentArtifactId !== str(beforeSnapshot?.result?.latestIntentHandoff?.artifactId),
       pageStates,
       sequencerSnapshot
     };
@@ -331,17 +375,19 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   const applyReady = await waitFor(async () => {
     const pageStates = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-page-states-after-apply.json`), "get-page-states-snapshot");
     const sequencerSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-sequencer-after-apply.json`), "get-sequencer-validation-snapshot");
-    const reviewPage = pageStates?.result?.pages?.review || {};
     const latestApplyArtifactId = str(sequencerSnapshot?.result?.latestApplyResult?.artifactId);
     const latestApplyPlanId = str(sequencerSnapshot?.result?.latestApplyResult?.planId);
     const latestApplyCurrentRevision = str(sequencerSnapshot?.result?.latestApplyResult?.currentRevision);
     const latestApplyNextRevision = str(sequencerSnapshot?.result?.latestApplyResult?.nextRevision);
-    const latestPlanArtifactId = str(promptSnapshot?.result?.latestPlanHandoff?.artifactId);
+    const latestPlanArtifactId = str(sequencerSnapshot?.result?.latestPlanHandoff?.artifactId);
+    const latestPlanBaseRevision = str(sequencerSnapshot?.result?.latestPlanHandoff?.baseRevision);
     return {
-      ok: reviewPage?.isApplying !== true
-        && !!latestApplyArtifactId
+      ok: !!latestApplyArtifactId
         && latestApplyArtifactId !== previousApplyArtifactId
+        && !!latestPlanArtifactId
         && latestApplyPlanId === latestPlanArtifactId
+        && latestPlanArtifactId !== previousPlanArtifactId
+        && latestPlanBaseRevision.startsWith(workingSequencePath)
         && (latestApplyCurrentRevision.startsWith(workingSequencePath) || latestApplyNextRevision.startsWith(workingSequencePath)),
       pageStates,
       sequencerSnapshot

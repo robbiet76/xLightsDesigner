@@ -1,0 +1,144 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import { getModels, getDisplayElements, getRevision } from '../../../apps/xlightsdesigner-ui/api.js';
+import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
+import { executeDirectSequenceRequestOrchestration } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/direct-sequence-orchestrator.js';
+import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
+
+const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
+const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
+
+function str(value = '') {
+  return String(value || '').trim();
+}
+
+function readJson(filePath = '') {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function latestJsonFile(dirPath = '') {
+  if (!fs.existsSync(dirPath)) return '';
+  const files = fs.readdirSync(dirPath)
+    .filter((name) => name.endsWith('.json'))
+    .map((name) => path.join(dirPath, name))
+    .sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs);
+  return files.at(-1) || '';
+}
+
+function basenameLower(filePath = '') {
+  return path.basename(str(filePath)).toLowerCase();
+}
+
+function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
+  const libraryDir = path.join(appRoot, 'library', 'tracks');
+  if (!fs.existsSync(libraryDir)) throw new Error(`Track library not found: ${libraryDir}`);
+  const targetPath = str(audioPath);
+  const targetBase = basenameLower(targetPath);
+  const files = fs.readdirSync(libraryDir).filter((name) => name.endsWith('.json')).sort();
+  let basenameMatch = null;
+  for (const fileName of files) {
+    const filePath = path.join(libraryDir, fileName);
+    const record = readJson(filePath);
+    const sourcePath = str(record?.track?.sourceMedia?.path);
+    if (sourcePath && sourcePath === targetPath) {
+      return { record, recordPath: filePath };
+    }
+    if (!basenameMatch && sourcePath && basenameLower(sourcePath) === targetBase) {
+      basenameMatch = { record, recordPath: filePath };
+    }
+  }
+  if (basenameMatch) return basenameMatch;
+  throw new Error(`No shared track metadata found for audio file: ${targetPath}`);
+}
+
+function parseArgs(argv = []) {
+  const out = {
+    projectFile: '',
+    prompt: '',
+    appRoot: DEFAULT_APP_ROOT,
+    endpoint: DEFAULT_ENDPOINT,
+    selectedSections: [],
+    selectedTargetIds: []
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = str(argv[i]);
+    if (token === '--project-file') out.projectFile = path.resolve(str(argv[++i] || out.projectFile));
+    else if (token === '--prompt') out.prompt = str(argv[++i] || out.prompt);
+    else if (token === '--app-root') out.appRoot = path.resolve(str(argv[++i] || out.appRoot));
+    else if (token === '--endpoint') out.endpoint = str(argv[++i] || out.endpoint);
+    else if (token === '--selected-section') out.selectedSections.push(str(argv[++i] || ''));
+    else if (token === '--selected-target') out.selectedTargetIds.push(str(argv[++i] || ''));
+    else throw new Error(`Unknown argument: ${token}`);
+  }
+  if (!out.projectFile) throw new Error('--project-file is required');
+  if (!out.prompt) throw new Error('--prompt is required');
+  out.selectedSections = out.selectedSections.filter(Boolean);
+  out.selectedTargetIds = out.selectedTargetIds.filter(Boolean);
+  return out;
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const projectDoc = readJson(args.projectFile);
+  const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
+  const audioPath = str(snapshot.audioPathInput);
+  if (!audioPath) throw new Error('Project snapshot is missing audioPathInput.');
+
+  const { record: trackRecord } = loadTrackRecordForAudio({ appRoot: args.appRoot, audioPath });
+  const persistedArtifact = trackRecord?.analyses?.profiles?.deep || trackRecord?.analyses?.profiles?.fast || null;
+  if (!persistedArtifact || typeof persistedArtifact !== 'object') {
+    throw new Error('Shared track record has no persisted analysis artifact.');
+  }
+
+  const analysisHandoff = buildAnalysisHandoffFromArtifact({
+    artifact: persistedArtifact,
+    sourceMediaPath: audioPath
+  });
+  const revision = await getRevision(args.endpoint);
+  const modelsRes = await getModels(args.endpoint).catch(() => ({ ok: false, data: { models: [] } }));
+  const displayRes = await getDisplayElements(args.endpoint).catch(() => ({ ok: false, data: { elements: [] } }));
+  const models = Array.isArray(modelsRes?.data?.models) ? modelsRes.data.models : [];
+  const displayElements = Array.isArray(displayRes?.data?.elements) ? displayRes.data.elements : [];
+
+  const orchestration = executeDirectSequenceRequestOrchestration({
+    requestId: `native-benchmark-${Date.now()}`,
+    sequenceRevision: str(revision?.data?.revision || snapshot.sequencePathInput || 'unknown'),
+    promptText: args.prompt,
+    selectedSections: args.selectedSections,
+    selectedTargetIds: args.selectedTargetIds,
+    analysisHandoff,
+    models,
+    submodels: [],
+    displayElements,
+    effectCatalog: null,
+    metadataAssignments: [],
+    existingDesignIds: []
+  });
+
+  if (!orchestration?.ok || !orchestration?.proposalBundle || !orchestration?.intentHandoff) {
+    throw new Error(orchestration?.warnings?.join('\n') || orchestration?.summary || 'Direct sequencing orchestration failed.');
+  }
+
+  const writeResult = writeProjectArtifacts({
+    projectFilePath: args.projectFile,
+    artifacts: [orchestration.intentHandoff, orchestration.proposalBundle]
+  });
+  if (!writeResult?.ok) {
+    throw new Error(writeResult?.error || 'Failed to write project artifacts.');
+  }
+
+  process.stdout.write(`${JSON.stringify({
+    ok: true,
+    projectFile: args.projectFile,
+    summary: orchestration.summary,
+    warnings: orchestration.warnings || [],
+    proposalArtifactId: orchestration.proposalBundle.artifactId,
+    intentArtifactId: orchestration.intentHandoff.artifactId,
+    rows: writeResult.rows || []
+  }, null, 2)}\n`);
+}
+
+await main();
