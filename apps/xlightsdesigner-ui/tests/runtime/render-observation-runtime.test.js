@@ -229,3 +229,28 @@ test("inferRenderSamplingDetail keeps macro sampling sparse without prior instab
 
   assert.equal(out, "macro");
 });
+
+test("inferRenderSamplingDetail honors local requested scope start level", () => {
+  const out = inferRenderSamplingDetail({
+    sequenceArtisticGoal: {
+      scope: {
+        goalLevel: "section",
+        requestedScope: {
+          mode: "target_refinement",
+          reviewStartLevel: "model"
+        }
+      }
+    },
+    sequenceRevisionObjective: {
+      ladderLevel: "section",
+      scope: {
+        requestedScope: {
+          mode: "target_refinement",
+          reviewStartLevel: "model"
+        }
+      }
+    }
+  });
+
+  assert.equal(out, "drilldown");
+});

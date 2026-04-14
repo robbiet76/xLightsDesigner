@@ -125,6 +125,36 @@ Output:
 Purpose:
 - define the next chunk of changes to apply before the next authoritative checkpoint
 
+### Request Scope Rule
+
+The loop must preserve the scope of the user/designer request.
+
+Allowed request scopes:
+1. `whole_sequence`
+- broad generation or broad redesign
+- review entry starts at `macro`
+
+2. `section_selection`
+- one or more selected timing-track windows
+- review entry starts at `section`
+
+3. `section_target_refinement`
+- selected timing-track windows plus explicit model/group targets
+- review entry starts at `section`
+
+4. `target_refinement`
+- local model/group refinement without explicit section selection
+- review entry starts at `group` or `model`
+
+Interpretation rule:
+- `section` means any selected timing-track window
+- it must not be limited to Song Structure markers
+- reviewed phrase, lyric, beat, chord, cue, or user-defined timing tracks are valid section scope inputs
+
+Escalation rule:
+- requested scope sets the starting boundary
+- critique may escalate to a broader level only when the requested scope cannot be solved coherently in isolation
+
 ## 2. Revision batch application
 
 Patch applies a bounded batch of sequence edits into xLights.

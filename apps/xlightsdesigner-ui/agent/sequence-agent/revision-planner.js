@@ -10,6 +10,42 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function uniqueStrings(values = []) {
+  return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
+}
+
+function inferRequestedScope(designHandoff = null) {
+  const sections = uniqueStrings(designHandoff?.scope?.sections);
+  const targetIds = uniqueStrings(designHandoff?.scope?.targetIds);
+  const allowGlobalRewrite = Boolean(designHandoff?.constraints?.allowGlobalRewrite);
+  if (allowGlobalRewrite || (!sections.length && !targetIds.length)) {
+    return {
+      mode: "whole_sequence",
+      reviewStartLevel: "macro",
+      sectionScopeKind: sections.length ? "timing_track_windows" : "full_sequence"
+    };
+  }
+  if (sections.length && targetIds.length) {
+    return {
+      mode: "section_target_refinement",
+      reviewStartLevel: "section",
+      sectionScopeKind: "timing_track_windows"
+    };
+  }
+  if (sections.length) {
+    return {
+      mode: "section_selection",
+      reviewStartLevel: "section",
+      sectionScopeKind: "timing_track_windows"
+    };
+  }
+  return {
+    mode: "target_refinement",
+    reviewStartLevel: targetIds.length === 1 ? "model" : "group",
+    sectionScopeKind: "full_sequence"
+  };
+}
+
 export function buildSequencerRevisionBrief({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null,
@@ -25,6 +61,7 @@ export function buildSequencerRevisionBrief({
   const sequencerDirection = isPlainObject(objective?.sequencerDirection) ? objective.sequencerDirection : {};
   const artisticIntent = isPlainObject(artisticGoal?.artisticIntent) ? artisticGoal.artisticIntent : {};
   const scope = isPlainObject(objective?.scope) ? objective.scope : {};
+  const requestedScope = isPlainObject(scope?.requestedScope) ? scope.requestedScope : inferRequestedScope(designHandoff);
 
   const targetScope = [...new Set([
     ...arr(sequencerDirection?.focusTargets),
@@ -43,6 +80,9 @@ export function buildSequencerRevisionBrief({
     artifactVersion: 1,
     ladderLevel,
     nextOwner: str(scope.nextOwner || "shared"),
+    requestScopeMode: str(requestedScope.mode),
+    reviewStartLevel: str(scope.reviewStartLevel || requestedScope.reviewStartLevel),
+    sectionScopeKind: str(requestedScope.sectionScopeKind),
     artisticGoalSummary: str(designerDirection.artisticCorrection || artisticGoal?.evaluationLens?.comparisonQuestions?.[0]),
     executionObjective: str(sequencerDirection.executionObjective),
     leadTarget: str(artisticIntent.leadTarget),

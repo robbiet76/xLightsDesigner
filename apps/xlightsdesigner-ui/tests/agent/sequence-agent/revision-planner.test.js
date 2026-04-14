@@ -49,6 +49,9 @@ test("buildSequencerRevisionBrief builds a compact sequencer-facing brief", () =
   assert.equal(out.artifactType, "sequencer_revision_brief_v1");
   assert.equal(out.ladderLevel, "section");
   assert.equal(out.nextOwner, "shared");
+  assert.equal(out.requestScopeMode, "section_target_refinement");
+  assert.equal(out.reviewStartLevel, "section");
+  assert.equal(out.sectionScopeKind, "timing_track_windows");
   assert.equal(out.leadTarget, "ArchSingle");
   assert.deepEqual(out.supportTargets, ["MatrixLowDensity"]);
   assert.deepEqual(out.targetScope, ["MatrixLowDensity", "MegaTree", "Roofline", "ArchSingle"]);

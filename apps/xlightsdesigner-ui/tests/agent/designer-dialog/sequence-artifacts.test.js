@@ -393,3 +393,33 @@ test("refreshSequenceArtisticGoalFromRenderCritique does not force broader suppo
   assert.equal(out.evaluationLens.mustImprove.some((row) => /Support targets are not contributing enough/i.test(String(row))), false);
   assert.equal(out.evaluationLens.mustImprove.some((row) => /weighted to one side of the display/i.test(String(row))), false);
 });
+
+test("buildSequenceArtisticGoalFromDesignHandoff marks selected sections as timing-track scoped section work", () => {
+  const out = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff()
+  });
+
+  assert.equal(out.scope.requestedScope.mode, "section_target_refinement");
+  assert.equal(out.scope.requestedScope.reviewStartLevel, "section");
+  assert.equal(out.scope.requestedScope.sectionScopeKind, "timing_track_windows");
+});
+
+test("buildSequenceRevisionObjectiveFromArtifacts marks target-only requests as local refinement", () => {
+  const handoff = sampleHandoff();
+  handoff.scope = {
+    ...handoff.scope,
+    sections: [],
+    targetIds: ["MegaTree"]
+  };
+  const goal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: handoff
+  });
+  const out = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: goal,
+    sequencingDesignHandoff: handoff
+  });
+
+  assert.equal(out.scope.requestedScope.mode, "target_refinement");
+  assert.equal(out.scope.reviewStartLevel, "model");
+  assert.equal(out.ladderLevel, "model");
+});

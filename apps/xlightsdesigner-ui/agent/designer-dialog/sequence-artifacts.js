@@ -14,7 +14,43 @@ function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
 }
 
-function inferGoalLevel(sections = []) {
+function inferRequestedScope({ handoff = null } = {}) {
+  const sections = uniqueStrings(handoff?.scope?.sections);
+  const targetIds = uniqueStrings(handoff?.scope?.targetIds);
+  const allowGlobalRewrite = Boolean(handoff?.constraints?.allowGlobalRewrite);
+  if (allowGlobalRewrite || (!sections.length && !targetIds.length)) {
+    return {
+      mode: "whole_sequence",
+      reviewStartLevel: "macro",
+      sectionScopeKind: sections.length ? "timing_track_windows" : "full_sequence"
+    };
+  }
+  if (sections.length && targetIds.length) {
+    return {
+      mode: "section_target_refinement",
+      reviewStartLevel: "section",
+      sectionScopeKind: "timing_track_windows"
+    };
+  }
+  if (sections.length) {
+    return {
+      mode: "section_selection",
+      reviewStartLevel: "section",
+      sectionScopeKind: "timing_track_windows"
+    };
+  }
+  return {
+    mode: "target_refinement",
+    reviewStartLevel: targetIds.length === 1 ? "model" : "group",
+    sectionScopeKind: "full_sequence"
+  };
+}
+
+function inferGoalLevel(sections = [], requestedScope = null) {
+  const explicitStart = str(requestedScope?.reviewStartLevel).toLowerCase();
+  if (["macro", "section", "group", "model", "effect"].includes(explicitStart)) {
+    return explicitStart;
+  }
   return arr(sections).length > 1 ? "macro" : "section";
 }
 
@@ -36,6 +72,7 @@ export function buildSequenceArtisticGoalFromDesignHandoff({
   if (!handoff) return null;
 
   const sections = uniqueStrings(handoff?.scope?.sections);
+  const requestedScope = inferRequestedScope({ handoff });
   const sectionDirectives = arr(handoff?.sectionDirectives);
   const firstDirective = isPlainObject(sectionDirectives[0]) ? sectionDirectives[0] : {};
   const primaryTargets = pickPrimaryTargets(handoff);
@@ -58,8 +95,9 @@ export function buildSequenceArtisticGoalFromDesignHandoff({
     artifactType: "sequence_artistic_goal_v1",
     artifactVersion: 1,
     scope: {
-      goalLevel: inferGoalLevel(sections),
-      sections
+      goalLevel: inferGoalLevel(sections, requestedScope),
+      sections,
+      requestedScope
     },
     artisticIntent: {
       emotionalTone: str(proposalBundle?.summary || handoff?.goal || "designer_defined"),
@@ -93,6 +131,9 @@ export function buildSequenceRevisionObjectiveFromArtifacts({
   if (!artisticGoal || !handoff) return null;
 
   const sections = uniqueStrings(handoff?.scope?.sections);
+  const requestedScope = isPlainObject(artisticGoal?.scope?.requestedScope)
+    ? artisticGoal.scope.requestedScope
+    : inferRequestedScope({ handoff });
   const primaryTargets = pickPrimaryTargets(handoff);
   const secondaryTargets = pickSecondaryTargets(handoff);
   const firstDirective = isPlainObject(arr(handoff?.sectionDirectives)[0]) ? arr(handoff.sectionDirectives)[0] : {};
@@ -107,9 +148,11 @@ export function buildSequenceRevisionObjectiveFromArtifacts({
     artifactVersion: 1,
     scope: {
       nextOwner: "sequencer",
-      sections
+      sections,
+      requestedScope,
+      reviewStartLevel: str(requestedScope?.reviewStartLevel || "")
     },
-    ladderLevel: str(artisticGoal?.scope?.goalLevel || inferGoalLevel(sections)),
+    ladderLevel: str(artisticGoal?.scope?.goalLevel || inferGoalLevel(sections, requestedScope)),
     designerDirection: {
       artisticCorrection: str(artisticGoal?.evaluationLens?.comparisonQuestions?.[0] || handoff?.designSummary),
       mustPreserve: uniqueStrings(artisticGoal?.evaluationLens?.mustPreserve),

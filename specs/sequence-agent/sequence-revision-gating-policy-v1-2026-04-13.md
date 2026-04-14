@@ -34,6 +34,27 @@ If a higher level is unstable:
 - do not descend
 - do not spend xLights checkpoints on lower-level polish
 
+## Requested Scope Boundary
+
+The gate must respect the requested scope entry level before it decides to broaden.
+
+Examples:
+- `whole_sequence` request:
+  - enter at `macro`
+- `section_selection` request:
+  - enter at `section`
+- `section_target_refinement` request:
+  - enter at `section`
+- `target_refinement` request:
+  - enter at `group` or `model`
+
+Interpretation rule:
+- selected `sections` may come from any timing track, not only Song Structure
+
+Escalation rule:
+- if a requested local or section fix is blocked by a higher-level issue, the gate may escalate upward
+- otherwise it should keep revision inside the requested boundary
+
 ## Decision Output
 
 The gating decision should produce:

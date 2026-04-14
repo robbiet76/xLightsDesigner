@@ -44,6 +44,14 @@ function resolveRequestedSamplingDetail({
   sequenceArtisticGoal = null,
   sequenceRevisionObjective = null
 } = {}) {
+  const reviewStartLevel = str(
+    sequenceRevisionObjective?.scope?.reviewStartLevel ||
+    sequenceRevisionObjective?.scope?.requestedScope?.reviewStartLevel ||
+    sequenceArtisticGoal?.scope?.requestedScope?.reviewStartLevel
+  ).toLowerCase();
+  if (["group", "model", "effect"].includes(reviewStartLevel)) return "drilldown";
+  if (reviewStartLevel === "section") return "section";
+  if (reviewStartLevel === "macro") return "macro";
   const ladderLevel = str(sequenceRevisionObjective?.ladderLevel).toLowerCase();
   if (["group", "model", "effect"].includes(ladderLevel)) return "drilldown";
   if (ladderLevel === "section") return "section";
