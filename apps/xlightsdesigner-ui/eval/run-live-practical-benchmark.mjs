@@ -139,6 +139,32 @@ function copyWorkingSequence({ suite, scenario, workingShowRoot }) {
   return { baselinePath, workingSequencePath };
 }
 
+function buildProjectClonePath(baseProjectFilePath, suiteKey, scenarioName) {
+  const projectDir = path.dirname(baseProjectFilePath);
+  const projectBaseName = path.basename(baseProjectFilePath, path.extname(baseProjectFilePath));
+  const cloneName = `${projectBaseName}-${suiteKey}-${scenarioName}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "benchmark-project";
+  const cloneRoot = path.join("/tmp", "xld_eval_projects", cloneName);
+  return {
+    cloneRoot,
+    cloneProjectFilePath: path.join(cloneRoot, `${cloneName}.xdproj`)
+  };
+}
+
+function cloneProjectForScenario(baseProjectFilePath, suiteKey, scenarioName) {
+  const { cloneRoot, cloneProjectFilePath } = buildProjectClonePath(baseProjectFilePath, suiteKey, scenarioName);
+  fs.rmSync(cloneRoot, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(cloneRoot), { recursive: true });
+  fs.cpSync(path.dirname(baseProjectFilePath), cloneRoot, { recursive: true });
+  const originalProjectFilePath = path.join(cloneRoot, path.basename(baseProjectFilePath));
+  if (originalProjectFilePath !== cloneProjectFilePath && fs.existsSync(originalProjectFilePath)) {
+    fs.renameSync(originalProjectFilePath, cloneProjectFilePath);
+  }
+  return { cloneRoot, cloneProjectFilePath };
+}
+
 function summarizePlan(plan = {}) {
   const commands = arr(plan?.commands);
   const effectCreates = commands
@@ -204,13 +230,15 @@ function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, w
   };
 }
 
-async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenario }) {
+async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenario, baseProjectFilePath }) {
   const prefix = `${suiteKey}-${str(scenario?.name) || "scenario"}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
   const { workingSequencePath, baselinePath } = copyWorkingSequence({
     suite: { ...suite, key: suiteKey },
     scenario,
     workingShowRoot: suite?.workingShowRoot
   });
+  const { cloneProjectFilePath } = cloneProjectForScenario(baseProjectFilePath, suiteKey, str(scenario?.name || "scenario"));
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open-project.json`), "open-project", [cloneProjectFilePath]);
   const beforeSnapshot = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-before.json`), "get-sequencer-validation-snapshot");
   const previousPlanArtifactId = str(beforeSnapshot?.result?.latestPlanHandoff?.artifactId);
   const previousApplyArtifactId = str(beforeSnapshot?.result?.latestApplyResult?.artifactId);
@@ -220,6 +248,9 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence.json`), "select-workflow", ["Sequence"]);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-reset-assistant-memory.json`), "reset-assistant-memory");
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence-post-reset.json`), "select-workflow", ["Sequence"]);
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-refresh-post-reset.json`), "refresh-from-xlights");
 
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-prompt.json`), "dispatch-prompt", [str(scenario?.prompt || scenario?.strongPrompt || scenario?.revisionPrompt)]);
 
@@ -244,6 +275,7 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
       suiteKey,
       scenarioName: str(scenario?.name),
       workingSequencePath,
+      clonedProjectFilePath: cloneProjectFilePath,
       baselinePath,
       ok: false,
       issues: ["review_never_became_applicable"],
@@ -279,6 +311,7 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
       suiteKey,
       scenarioName: str(scenario?.name),
       workingSequencePath,
+      clonedProjectFilePath: cloneProjectFilePath,
       baselinePath,
       ok: false,
       issues: ["apply_never_completed"],
@@ -309,19 +342,28 @@ async function main() {
   }));
   const startedAt = Date.now();
   const initialSnapshot = await runAutomation(repoRoot, options.channel, path.join(outDir, "00-preflight-sequencer-validation.json"), "get-sequencer-validation-snapshot");
+  const originalProjectFilePath = str(initialSnapshot?.result?.status?.projectFilePath || initialSnapshot?.result?.activeProjectFilePath);
+  if (!originalProjectFilePath) {
+    throw new Error("Native benchmark requires an active project file path.");
+  }
 
   const results = [];
-  for (const entry of suites) {
-    for (const scenario of arr(entry.suite?.scenarios)) {
-      results.push(await runScenario({
-        repoRoot,
-        channel: options.channel,
-        outDir,
-        suiteKey: entry.key,
-        suite: { ...entry.suite, workingShowRoot: entry.workingShowRoot },
-        scenario
-      }));
+  try {
+    for (const entry of suites) {
+      for (const scenario of arr(entry.suite?.scenarios)) {
+        results.push(await runScenario({
+          repoRoot,
+          channel: options.channel,
+          outDir,
+          suiteKey: entry.key,
+          suite: { ...entry.suite, workingShowRoot: entry.workingShowRoot },
+          scenario,
+          baseProjectFilePath: originalProjectFilePath
+        }));
+      }
     }
+  } finally {
+    await runAutomation(repoRoot, options.channel, path.join(outDir, "99-restore-project.json"), "open-project", [originalProjectFilePath]);
   }
 
   const failed = results.filter((row) => row.ok !== true);

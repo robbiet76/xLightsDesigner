@@ -3,11 +3,13 @@ import Network
 
 final class NativeAutomationServer: @unchecked Sendable {
     private unowned let model: AppModel
+    private let projectService: ProjectService
     private let queue = DispatchQueue(label: "xlightsdesigner.native-automation")
     private var listener: NWListener?
 
-    init(model: AppModel) {
+    init(model: AppModel, projectService: ProjectService = LocalProjectService()) {
         self.model = model
+        self.projectService = projectService
     }
 
     func start() {
@@ -112,6 +114,24 @@ final class NativeAutomationServer: @unchecked Sendable {
             model.selectedWorkflow = workflow
             refreshCurrentWorkflow()
             return .json(200, body: ["ok": true, "selectedWorkflow": model.selectedWorkflow.rawValue])
+        case "openProject":
+            let filePath = String(payload["filePath"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !filePath.isEmpty else {
+                return .error(statusCode: 400, message: "Missing filePath.")
+            }
+            do {
+                let project = try projectService.openProject(filePath: filePath)
+                model.workspace.setProject(project)
+                model.workspace.projectBanner = ProjectBannerModel(id: "opened", level: .ready, text: "Opened \(project.projectName).")
+                refreshAll()
+                return .json(200, body: [
+                    "ok": true,
+                    "projectName": project.projectName,
+                    "projectFilePath": project.projectFilePath
+                ])
+            } catch {
+                return .error(statusCode: 500, message: error.localizedDescription)
+            }
         case "refreshCurrentWorkflow":
             refreshCurrentWorkflow()
             return .json(200, body: ["ok": true, "selectedWorkflow": model.selectedWorkflow.rawValue])
@@ -144,6 +164,8 @@ final class NativeAutomationServer: @unchecked Sendable {
                 let policy = model.settingsScreenModel.screenModel.safetyConfig.sequenceSwitchUnsavedPolicy
                 let saveBeforeSwitch = model.xlightsSessionModel.shouldSaveBeforeSwitch(policy: policy)
                 let summary = try await model.xlightsSessionModel.openSequence(filePath: filePath, saveBeforeSwitch: saveBeforeSwitch)
+                persistActiveSequencePath(filePath)
+                refreshAll()
                 return .json(200, body: ["ok": true, "summary": summary])
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
@@ -166,6 +188,8 @@ final class NativeAutomationServer: @unchecked Sendable {
                     frameMs: frameMs,
                     saveBeforeSwitch: saveBeforeSwitch
                 )
+                persistActiveSequencePath(filePath)
+                refreshAll()
                 return .json(200, body: ["ok": true, "summary": summary])
             } catch {
                 return .error(statusCode: 500, message: error.localizedDescription)
@@ -244,6 +268,20 @@ final class NativeAutomationServer: @unchecked Sendable {
     @MainActor
     private func refreshAll() {
         model.refreshAll()
+    }
+
+    @MainActor
+    private func persistActiveSequencePath(_ filePath: String) {
+        guard var activeProject = model.workspace.activeProject else { return }
+        let normalizedPath = filePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedPath.isEmpty else { return }
+        activeProject.snapshot["sequencePathInput"] = AnyCodable(normalizedPath)
+        do {
+            let saved = try projectService.saveProject(activeProject)
+            model.workspace.setProject(saved)
+        } catch {
+            print("Native automation failed to persist active sequence path: \(error)")
+        }
     }
 
     @MainActor

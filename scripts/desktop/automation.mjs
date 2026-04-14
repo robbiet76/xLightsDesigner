@@ -32,7 +32,7 @@ function str(value = "") {
 }
 
 function usage() {
-  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights");
+  console.error("usage: automation.mjs [--channel dev|packaged] [--result-file path] ping | open-project <path> | select-workflow <Project|Display|Audio|Design|Sequence|Review|History> | open-sequence <path> | get-automation-health-snapshot | get-agent-runtime-snapshot | get-page-states-snapshot | get-sequencer-validation-snapshot | get-render-feedback-snapshot | apply-current-proposal | dispatch-prompt <prompt> | refresh-from-xlights | reset-assistant-memory");
   process.exit(2);
 }
 
@@ -196,6 +196,15 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
       filePath: str(payload?.sequencePath || payload?.filePath)
     }
   };
+} else if (command === "open-project") {
+  nativeCall = {
+    method: "POST",
+    path: "/action",
+    body: {
+      action: "openProject",
+      filePath: rest.join(" ").trim()
+    }
+  };
 } else if (command === "dispatch-prompt") {
   nativeCall = {
     method: "POST",
@@ -225,6 +234,12 @@ if (command === "ping" || command === "get-automation-health-snapshot") {
     method: "POST",
     path: "/action",
     body: { action: "refreshAll" }
+  };
+} else if (command === "reset-assistant-memory") {
+  nativeCall = {
+    method: "POST",
+    path: "/action",
+    body: { action: "resetAssistantMemory" }
   };
 } else {
   usage();
