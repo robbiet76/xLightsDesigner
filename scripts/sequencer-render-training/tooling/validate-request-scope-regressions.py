@@ -25,6 +25,65 @@ def expected_scope(scenario):
     }
 
 
+def split_scope_values(raw_value):
+    if raw_value is None:
+        return []
+    if isinstance(raw_value, list):
+        return [str(value).strip() for value in raw_value if str(value).strip()]
+    return [value.strip() for value in str(raw_value).split(",") if value.strip()]
+
+
+def validate_scope_semantics(scenario, record, errors):
+    scenario_id = scenario["scenarioId"]
+    expected = expected_scope(scenario)
+    requested_scope = record.get("context", {}).get("requestedScope") or {}
+    section_scope = record.get("context", {}).get("sectionScope") or []
+    target_scope = record.get("context", {}).get("targetScope") or []
+    section_targets = record.get("revisionBatch", {}).get("sectionTargets") or []
+    target_ids = record.get("revisionBatch", {}).get("targetIds") or []
+
+    expected_sections = split_scope_values(scenario.get("sectionScope"))
+    expected_targets = split_scope_values(scenario.get("targetScope"))
+    mode = expected["mode"]
+
+    if requested_scope.get("mode") != mode:
+        errors.append(
+            f"{scenario_id} requested scope mode mismatch during semantic validation: expected {mode}, got {requested_scope.get('mode')}"
+        )
+        return
+
+    if mode == "whole_sequence":
+        if expected["reviewStartLevel"] != "macro":
+            errors.append(f"{scenario_id} whole_sequence must start at macro.")
+        if section_scope or target_scope or section_targets or target_ids:
+            errors.append(f"{scenario_id} whole_sequence should not carry section or target scope.")
+    elif mode == "target_refinement":
+        if expected["reviewStartLevel"] not in ("group", "model"):
+            errors.append(f"{scenario_id} target_refinement must start at group or model.")
+        if section_scope:
+            errors.append(f"{scenario_id} target_refinement should not carry section scope.")
+        if target_scope != expected_targets or target_ids != expected_targets or section_targets != expected_targets:
+            errors.append(
+                f"{scenario_id} target_refinement should preserve only explicit targets: expected {expected_targets}, got targetScope={target_scope}, targetIds={target_ids}, sectionTargets={section_targets}"
+            )
+    elif mode == "section_selection":
+        if expected["reviewStartLevel"] != "section":
+            errors.append(f"{scenario_id} section_selection must start at section.")
+        if section_scope != expected_sections:
+            errors.append(f"{scenario_id} section_selection section scope mismatch: expected {expected_sections}, got {section_scope}")
+        if target_scope or target_ids or section_targets:
+            errors.append(f"{scenario_id} section_selection should not carry explicit target scope.")
+    elif mode == "section_target_refinement":
+        if expected["reviewStartLevel"] != "section":
+            errors.append(f"{scenario_id} section_target_refinement must start at section.")
+        if section_scope != expected_sections:
+            errors.append(f"{scenario_id} section_target_refinement section scope mismatch: expected {expected_sections}, got {section_scope}")
+        if target_scope != expected_targets or target_ids != expected_targets or section_targets != expected_targets:
+            errors.append(
+                f"{scenario_id} section_target_refinement target scope mismatch: expected {expected_targets}, got targetScope={target_scope}, targetIds={target_ids}, sectionTargets={section_targets}"
+            )
+
+
 def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors):
     summary = load_json(summary_path)
     scenarios = {row["scenarioId"]: row for row in load_json(scenarios_path)}
@@ -60,6 +119,7 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
             errors.append(
                 f"{row['scenarioId']} learning record scope mismatch: expected {expected}, got {record_scope}"
             )
+        validate_scope_semantics(scenario, record, errors)
 
 
 def main():

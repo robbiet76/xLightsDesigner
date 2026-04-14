@@ -92,6 +92,11 @@ Harness runner:
     - `requestedScope.reviewStartLevel`
     - `requestedScope.sectionScopeKind`
     - expected critique ladder level
+    - expected scope semantics:
+      - `whole_sequence` keeps empty section and target scope
+      - `section_selection` keeps section scope without explicit targets
+      - `section_target_refinement` keeps both section and target scope
+      - `target_refinement` keeps explicit target scope without section scope
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
   - current kept gate proofs:
