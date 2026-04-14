@@ -7,8 +7,8 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SOURCE=""
 OUT_DIR="${ROOT_DIR}/catalog/effect-family-outcomes"
 TRAINING_SET_PATH="${ROOT_DIR}/catalog/sequencer-unified-training-set-v1.json"
-PARAMETER_BUNDLE_PATH="${ROOT_DIR}/../apps/xlightsdesigner-ui/agent/sequence-agent/generated/derived-parameter-priors-bundle.js"
-SHARED_SETTINGS_BUNDLE_PATH="${ROOT_DIR}/../apps/xlightsdesigner-ui/agent/sequence-agent/generated/cross-effect-shared-settings-bundle.js"
+PARAMETER_BUNDLE_PATH="$(cd "${ROOT_DIR}/../.." && pwd)/apps/xlightsdesigner-ui/agent/sequence-agent/generated/derived-parameter-priors-bundle.js"
+SHARED_SETTINGS_BUNDLE_PATH="$(cd "${ROOT_DIR}/../.." && pwd)/apps/xlightsdesigner-ui/agent/sequence-agent/generated/cross-effect-shared-settings-bundle.js"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
