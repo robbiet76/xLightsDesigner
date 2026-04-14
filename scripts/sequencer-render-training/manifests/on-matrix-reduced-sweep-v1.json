@@ -3,13 +3,13 @@
   "packId": "on-matrix-reduced-sweep-v1",
   "description": "Reduced baseline On sweep on a concrete matrix model using a short standard duration.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
-    "modelName": "NorthPoleMatrix",
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,
     "endMs": 2000,
     "durationClass": "short",
-    "notes": "Reduced On sweep on a concrete 64x128 horizontal matrix model."
+    "notes": "Reduced On sweep on the canonical high-density 64x128 matrix model."
   },
   "samples": [
     {

@@ -3,13 +3,13 @@
   "packId": "colorwash-matrix-cycles-range-v1",
   "description": "Range sampling sweep for Color Wash cycles on a matrix model. Uses a fixed vertical fade profile to isolate speed/cadence changes.",
   "fixture": {
-    "sequencePath": "/Users/robterry/Desktop/Show/Test/RenderTraining/Validation-Clean-Phase1-AnimationOnly.xsq",
-    "modelName": "NorthPoleMatrix",
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "MatrixHighDensity",
     "modelType": "matrix",
     "startMs": 1000,
     "endMs": 5000,
     "durationClass": "long",
-    "notes": "Range sampling sweep for Color Wash cycles on matrix geometry."
+    "notes": "Range sampling sweep for Color Wash cycles on the canonical high-density matrix geometry."
   },
   "samples": [
     {
