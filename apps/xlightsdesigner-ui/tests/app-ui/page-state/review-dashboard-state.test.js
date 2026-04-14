@@ -146,7 +146,23 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
         designSceneContext: { layoutMode: "2d" },
         musicDesignContext: { sectionArc: ["Intro", "Chorus 1"] },
         renderObservation: { artifactType: "render_observation_v1", macro: { leadModel: "MegaTree" } },
-        renderCritiqueContext: { artifactType: "sequence_render_critique_context_v1", comparison: { leadMatchesPrimaryFocus: true } }
+        renderCritiqueContext: {
+          artifactType: "sequence_render_critique_context_v1",
+          expected: {
+            requestedScope: {
+              mode: "section_target_refinement",
+              reviewStartLevel: "section",
+              sectionScopeKind: "timing_track_windows"
+            },
+            musicSections: [{ label: "Chorus 1", energy: "high", density: "dense" }]
+          },
+          comparison: {
+            leadMatchesPrimaryFocus: true,
+            renderHasDisplayGaps: true,
+            renderHasProblematicGaps: false,
+            localizedFocusExpected: true
+          }
+        }
       }
     },
     applyHistory: [
@@ -168,6 +184,7 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.proposalLines[0], "Applied line");
   assert.equal(dashboard.data.lastAppliedSnapshot.renderObservation.macro.leadModel, "MegaTree");
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
+  assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.expected.requestedScope.mode, "section_target_refinement");
 });
 
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {
