@@ -15,6 +15,11 @@
   "context": {
     "designHandoffRef": "design_handoff_v2:proof_arch_matrix_support",
     "revisionGoal": "Validate a broader lead-plus-support macro composition and confirm the critique recognizes coherent support instead of over-splitting.",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
     "sectionScope": [
       "proof_window_arch_matrix_balanced"
     ],

@@ -17,10 +17,48 @@ def parse_args():
     parser.add_argument("--section-scope", default="proof_window")
     parser.add_argument("--target-scope", default="")
     parser.add_argument("--effect-families", default="")
+    parser.add_argument("--requested-scope-mode", default="")
+    parser.add_argument("--review-start-level", default="")
+    parser.add_argument("--section-scope-kind", default="")
     parser.add_argument("--design-handoff-ref", default="design_handoff_v2:proof_treeflat")
     parser.add_argument("--revision-goal", default="Validate sparse tree-led section behavior and identify the next broadening move.")
     parser.add_argument("--out", required=True)
     return parser.parse_args()
+
+
+def infer_requested_scope(mode, review_start_level, section_scope_kind, section_scope, target_scope):
+    normalized_mode = str(mode or "").strip()
+    normalized_start = str(review_start_level or "").strip()
+    normalized_kind = str(section_scope_kind or "").strip()
+
+    if not normalized_mode:
+        if section_scope and target_scope:
+            normalized_mode = "section_target_refinement"
+        elif section_scope:
+            normalized_mode = "section_selection"
+        elif target_scope:
+            normalized_mode = "target_refinement"
+        else:
+            normalized_mode = "whole_sequence"
+
+    if not normalized_start:
+        if normalized_mode == "whole_sequence":
+            normalized_start = "macro"
+        elif normalized_mode in ("section_selection", "section_target_refinement"):
+            normalized_start = "section"
+        elif normalized_mode == "target_refinement":
+            normalized_start = "model" if len(target_scope) == 1 else "group"
+        else:
+            normalized_start = "section"
+
+    if not normalized_kind:
+        normalized_kind = "timing_track_windows" if section_scope else "full_sequence"
+
+    return {
+        "mode": normalized_mode,
+        "reviewStartLevel": normalized_start,
+        "sectionScopeKind": normalized_kind,
+    }
 
 
 def main():
@@ -35,6 +73,13 @@ def main():
     section_scope = [value for value in args.section_scope.split(",") if value]
     target_scope = [value for value in args.target_scope.split(",") if value]
     effect_families = [value for value in args.effect_families.split(",") if value]
+    requested_scope = infer_requested_scope(
+        args.requested_scope_mode,
+        args.review_start_level,
+        args.section_scope_kind,
+        section_scope,
+        target_scope,
+    )
     window_source = window.get("source", {})
     sequence_name = None
     if window_source.get("fseqPath"):
@@ -68,6 +113,7 @@ def main():
         "context": {
             "designHandoffRef": args.design_handoff_ref,
             "revisionGoal": args.revision_goal,
+            "requestedScope": requested_scope,
             "sectionScope": section_scope,
             "targetScope": target_scope,
         },

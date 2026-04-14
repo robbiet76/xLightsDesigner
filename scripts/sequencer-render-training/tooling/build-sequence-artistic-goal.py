@@ -8,14 +8,48 @@ def parse_args():
     parser.add_argument("--critique", required=True)
     parser.add_argument("--goal-id", required=True)
     parser.add_argument("--design-handoff-ref", required=True)
+    parser.add_argument("--requested-scope-mode", default="")
+    parser.add_argument("--review-start-level", default="")
+    parser.add_argument("--section-scope-kind", default="")
     parser.add_argument("--out", required=True)
     return parser.parse_args()
+
+
+def infer_requested_scope(mode, review_start_level, section_scope_kind):
+    normalized_mode = str(mode or "").strip()
+    normalized_start = str(review_start_level or "").strip()
+    normalized_kind = str(section_scope_kind or "").strip()
+
+    if not normalized_mode:
+        normalized_mode = "whole_sequence"
+    if not normalized_start:
+        if normalized_mode == "whole_sequence":
+            normalized_start = "macro"
+        elif normalized_mode in ("section_selection", "section_target_refinement"):
+            normalized_start = "section"
+        elif normalized_mode == "target_refinement":
+            normalized_start = "group"
+        else:
+            normalized_start = "section"
+    if not normalized_kind:
+        normalized_kind = "timing_track_windows" if "section" in normalized_mode else "full_sequence"
+
+    return {
+        "mode": normalized_mode,
+        "reviewStartLevel": normalized_start,
+        "sectionScopeKind": normalized_kind,
+    }
 
 
 def main():
     args = parse_args()
     critique = json.load(open(args.critique, "r", encoding="utf-8"))
     designer = critique["designerSummary"]
+    requested_scope = infer_requested_scope(
+        args.requested_scope_mode,
+        args.review_start_level,
+        args.section_scope_kind,
+    )
 
     artistic_correction = None
     if designer["designAdjustmentSuggestions"]:
@@ -36,6 +70,7 @@ def main():
         },
         "scope": {
             "goalLevel": critique["ladderLevel"],
+            "requestedScope": requested_scope,
         },
         "artisticIntent": {
             "emotionalTone": "proof_inferred",

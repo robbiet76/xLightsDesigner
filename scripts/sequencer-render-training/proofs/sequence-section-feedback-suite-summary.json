@@ -15,6 +15,11 @@
       "intentRead": "multi-idea section read",
       "compositionRead": "split",
       "familyBalanceRead": "multi_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     },
     {
@@ -27,6 +32,11 @@
       "intentRead": "single-idea section read",
       "compositionRead": "concentrated",
       "familyBalanceRead": "multi_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     }
   ]

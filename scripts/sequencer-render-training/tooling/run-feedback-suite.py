@@ -83,6 +83,9 @@ def main():
             "--section-scope", scenario["sectionScope"],
             "--target-scope", scenario["targetScope"],
             "--effect-families", scenario["effectFamilies"],
+            "--requested-scope-mode", scenario.get("requestedScopeMode", "section_target_refinement"),
+            "--review-start-level", scenario.get("reviewStartLevel", "section"),
+            "--section-scope-kind", scenario.get("sectionScopeKind", "timing_track_windows"),
             "--out", record_path,
         ])
 
@@ -101,6 +104,7 @@ def main():
             "maxSceneSpreadRatio": observation["macro"]["maxSceneSpreadRatio"],
             "focusRead": critique["designerSummary"]["focusRead"],
             "familyBalanceRead": critique["sequencerSummary"]["familyBalanceRead"],
+            "requestScope": record["context"].get("requestedScope"),
             "cycleOutcome": record["outcome"]["cycleOutcome"],
         })
         scenario_outputs[scenario_id] = {

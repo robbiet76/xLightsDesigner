@@ -15,6 +15,11 @@
   "context": {
     "designHandoffRef": "design_handoff_v2:proof_archsingle",
     "revisionGoal": "Validate single-arch section behavior and identify the next broadening move.",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
     "sectionScope": [
       "proof_window_archsingle_sparse"
     ],

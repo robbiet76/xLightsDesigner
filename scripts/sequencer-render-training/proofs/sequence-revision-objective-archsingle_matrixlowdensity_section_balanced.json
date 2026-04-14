@@ -9,7 +9,13 @@
     "sequenceRevisionGateRef": "scripts/sequencer-render-training/proofs/sequence-revision-gate-archsingle_matrixlowdensity_section_balanced.json"
   },
   "scope": {
-    "nextOwner": "shared"
+    "nextOwner": "shared",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
+    "reviewStartLevel": "section"
   },
   "ladderLevel": "section",
   "designerDirection": {

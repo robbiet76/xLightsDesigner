@@ -16,6 +16,11 @@
       "maxSceneSpreadRatio": 0.004551097395284491,
       "focusRead": "narrow",
       "familyBalanceRead": "single_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     },
     {
@@ -29,6 +34,11 @@
       "maxSceneSpreadRatio": 0.0,
       "focusRead": "narrow",
       "familyBalanceRead": "single_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     },
     {
@@ -42,6 +52,11 @@
       "maxSceneSpreadRatio": 0.009994574440938618,
       "focusRead": "narrow",
       "familyBalanceRead": "single_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     },
     {
@@ -55,6 +70,11 @@
       "maxSceneSpreadRatio": 0.02613210834024275,
       "focusRead": "broad_enough",
       "familyBalanceRead": "multi_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     },
     {
@@ -68,6 +88,11 @@
       "maxSceneSpreadRatio": 0.010810458068770342,
       "focusRead": "broad_enough",
       "familyBalanceRead": "multi_family",
+      "requestScope": {
+        "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
       "cycleOutcome": "usable_with_revision"
     }
   ]

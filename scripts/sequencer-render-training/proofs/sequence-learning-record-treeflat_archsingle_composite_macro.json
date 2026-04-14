@@ -15,6 +15,11 @@
   "context": {
     "designHandoffRef": "design_handoff_v2:proof_tree_arch_support",
     "revisionGoal": "Validate a broader tree-led section with arch support and confirm the macro critique distinguishes it from narrow single-family passes.",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
     "sectionScope": [
       "proof_window_tree_arch_composite"
     ],

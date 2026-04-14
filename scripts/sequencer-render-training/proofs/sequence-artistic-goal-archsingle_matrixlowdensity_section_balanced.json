@@ -8,7 +8,12 @@
     "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section"
   },
   "scope": {
-    "goalLevel": "section"
+    "goalLevel": "section",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    }
   },
   "artisticIntent": {
     "emotionalTone": "proof_inferred",

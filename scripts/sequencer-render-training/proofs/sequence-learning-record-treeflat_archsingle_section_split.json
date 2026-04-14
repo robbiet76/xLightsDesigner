@@ -15,6 +15,11 @@
   "context": {
     "designHandoffRef": "design_handoff_v2:proof_tree_arch_section",
     "revisionGoal": "Evaluate section-level coherence for a broad but potentially split tree-plus-arch treatment.",
+    "requestedScope": {
+      "mode": "section_target_refinement",
+      "reviewStartLevel": "section",
+      "sectionScopeKind": "timing_track_windows"
+    },
     "sectionScope": [
       "proof_section_tree_arch_split"
     ],
