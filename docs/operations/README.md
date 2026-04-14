@@ -4,6 +4,6 @@ Operational runbooks and evidence logs used to execute and validate release/runt
 
 Current files:
 - `xlightsdesigner-desktop-release-runbook.md`
-  - historical reference for the retired Electron packaging path
+  - historical reference for the removed Electron packaging path
 - `xlightsdesigner-desktop-validation-evidence-log.md`
-  - historical evidence log for the retired Electron packaging path
+  - historical evidence log for the removed Electron packaging path

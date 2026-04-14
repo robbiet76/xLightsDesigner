@@ -7,7 +7,6 @@ This runbook documents the retired Electron packaging path.
 
 Do not use:
 - `/Applications/xLightsDesigner.app`
-- `apps/xlightsdesigner-desktop`
 - `scripts/desktop/validate-nondev-install.sh`
 
 Use the native macOS app instead:
@@ -26,7 +25,6 @@ This runbook defined pre-release validation and release execution for the old st
   - `OPENAI_MODEL` (optional override; default configured in app)
   - `OPENAI_BASE_URL` (optional; defaults to OpenAI public API)
 - Signed/notarized packaging credentials (when signing pipeline is enabled).
-- GitHub Actions workflow: `.github/workflows/xlightsdesigner-desktop-macos.yml`.
 - Repository secrets for signed path:
   - `XLD_CSC_LINK`
   - `XLD_CSC_KEY_PASSWORD`
@@ -35,11 +33,7 @@ This runbook defined pre-release validation and release execution for the old st
   - `XLD_APPLE_TEAM_ID`
 
 ## 3) Build Steps
-1. `cd apps/xlightsdesigner-desktop`
-2. `npm install`
-3. `npm run dist:mac` (zip artifact) or `npm run dist:dir` (unpacked artifact)
-4. `npm run verify:bundle`
-5. Historical note only: this old path previously emitted artifacts under `apps/xlightsdesigner-desktop/dist`.
+Historical only. The Electron build path and its workflow have been removed from the repo.
 
 ## 4) Compatibility Matrix Validation
 Minimum required matrix for promotion:

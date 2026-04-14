@@ -7,7 +7,6 @@ Repository for the **xLights Agent Sequencer** initiative.
 ### `apps/`
 Runtime application code.
 - `apps/xlightsdesigner-ui/`: web UI used by desktop wrapper.
-- `apps/xlightsdesigner-desktop/`: retired Electron shell kept only for bounded legacy cleanup.
 - `apps/xlightsdesigner-macos/`: native macOS SwiftUI shell scaffold.
 - `apps/xlightsdesigner-analysis-service/`: audio analysis backend.
 
@@ -90,11 +89,8 @@ Live endpoint:
 - Jobs panel is available from header and tracks async job ids/status/progress with polling via `jobs.get` and cancel hook via `jobs.cancel`.
 
 ## Desktop Shell
-`apps/xlightsdesigner-desktop/` is retired.
+The Electron desktop shell has been removed.
 
 Rules:
 - do not launch Electron for current development
-- do not add new shell behavior there
 - use `apps/xlightsdesigner-macos/` for the active product shell
-
-The remaining Electron directory exists only so legacy cleanup can proceed in bounded slices without touching shared runtime code blindly.
