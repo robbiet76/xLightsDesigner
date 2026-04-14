@@ -21,7 +21,10 @@ import {
 } from '../../../apps/xlightsdesigner-ui/api.js';
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildSequenceAgentPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js';
+import { buildSequenceAgentApplyResult } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-runtime.js';
+import { buildArtifactRefs, buildHistoryEntry, buildHistorySnapshotSummary } from '../../../apps/xlightsdesigner-ui/agent/shared/history-entry.js';
 import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
+import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 
 const DEFAULT_APP_ROOT = path.join(os.homedir(), 'Documents', 'Lights', 'xLightsDesigner');
 const DEFAULT_ENDPOINT = 'http://127.0.0.1:49915/xlightsdesigner/api';
@@ -243,6 +246,7 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     timingOwnership: [],
     allowTimingWrites: true
   });
+  commandsPlan.artifactType = 'plan_handoff_v1';
 
   const commands = normalizeCommandsForNativeApply(commandsPlan?.commands || []);
   if (!commands.length) {
@@ -275,6 +279,21 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       endpoint,
       initialError: applyRes
     });
+    const applyResult = buildSequenceAgentApplyResult({
+      planId: str(commandsPlan?.artifactId),
+      status: 'applied',
+      failureReason: null,
+      currentRevision: str(revisionRes?.data?.revision || 'unknown'),
+      nextRevision: str(fallback.nextRevision)
+    });
+    await persistNativeReviewArtifacts({
+      projectFile,
+      projectDoc: inputs.projectDoc,
+      intentHandoff: inputs.intentHandoff,
+      proposalBundle: inputs.proposalBundle,
+      planHandoff: commandsPlan,
+      applyResult
+    });
     return {
       ok: true,
       projectName: str(inputs.projectDoc?.projectName),
@@ -285,10 +304,26 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       commandCount: fallback.commandCount,
       nextRevision: fallback.nextRevision,
       applyPath: fallback.applyPath,
-      summary: fallback.summary
+      summary: fallback.summary,
+      applyResultId: str(applyResult?.artifactId)
     };
   }
 
+  const applyResult = buildSequenceAgentApplyResult({
+    planId: str(commandsPlan?.artifactId),
+    status: 'applied',
+    failureReason: null,
+    currentRevision: str(revisionRes?.data?.revision || 'unknown'),
+    nextRevision: str(applyRes?.nextRevision || '')
+  });
+  await persistNativeReviewArtifacts({
+    projectFile,
+    projectDoc: inputs.projectDoc,
+    intentHandoff: inputs.intentHandoff,
+    proposalBundle: inputs.proposalBundle,
+    planHandoff: commandsPlan,
+    applyResult
+  });
   return {
     ok: true,
     projectName: str(inputs.projectDoc?.projectName),
@@ -299,8 +334,62 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     commandCount: commands.length,
     nextRevision: str(applyRes?.nextRevision || ''),
     applyPath: str(applyRes?.applyPath || ''),
-    summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.')
+    summary: str(commandsPlan?.summary || inputs.proposalBundle?.summary || 'Applied pending work.'),
+    applyResultId: str(applyResult?.artifactId)
   };
+}
+
+async function persistNativeReviewArtifacts({
+  projectFile = '',
+  projectDoc = {},
+  intentHandoff = null,
+  proposalBundle = null,
+  planHandoff = null,
+  applyResult = null
+} = {}) {
+  currentStage = 'persist_apply_artifacts';
+  const historyEntry = buildHistoryEntry({
+    projectId: str(projectDoc?.projectId || projectDoc?.projectName || null),
+    projectKey: str(projectDoc?.projectName || null),
+    sequencePath: str(projectDoc?.snapshot?.sequencePathInput || ''),
+    xlightsRevisionBefore: str(applyResult?.currentRevision || null),
+    xlightsRevisionAfter: str(applyResult?.nextRevision || null),
+    status: str(applyResult?.status || 'applied'),
+    summary: str(planHandoff?.summary || proposalBundle?.summary || 'Applied pending work.'),
+    artifactRefs: buildArtifactRefs({
+      proposalBundle,
+      intentHandoff,
+      planHandoff,
+      applyResult
+    }),
+    snapshotSummary: buildHistorySnapshotSummary({
+      proposalBundle,
+      creativeBrief: null,
+      planHandoff,
+      applyResult
+    }),
+    applyStage: 'native_review_apply',
+    commandCount: Array.isArray(planHandoff?.commands) ? planHandoff.commands.length : 0,
+    impactCount: Number.isFinite(planHandoff?.estimatedImpact) ? Number(planHandoff.estimatedImpact) : 0,
+    verification: applyResult?.verification || null
+  });
+  const artifacts = [
+    intentHandoff && typeof intentHandoff === 'object'
+      ? { ...intentHandoff, artifactType: 'intent_handoff_v1' }
+      : null,
+    planHandoff && typeof planHandoff === 'object' ? planHandoff : null,
+    applyResult && typeof applyResult === 'object'
+      ? { ...applyResult, artifactType: 'apply_result_v1' }
+      : null,
+    { ...historyEntry, artifactId: str(historyEntry?.historyEntryId) }
+  ].filter(Boolean);
+  const writeRes = writeProjectArtifacts({
+    projectFilePath: projectFile,
+    artifacts
+  });
+  if (!writeRes?.ok) {
+    throw new Error(`Failed to persist native review artifacts: ${str(writeRes?.error || writeRes?.reason || 'unknown')}`);
+  }
 }
 
 function normalizeCommandsForNativeApply(commands = []) {
