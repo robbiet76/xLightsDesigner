@@ -27,6 +27,71 @@ const REVIEW_LEVELS = [
   "effect"
 ];
 
+const ROLE_FAMILY_SEED_PRIORS = Object.freeze({
+  Bars: [
+    {
+      role: "increase_section_contrast",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["default"]
+    },
+    {
+      role: "add_section_development",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:not_restrained"]
+    },
+    {
+      role: "widen_support",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:not_restrained"]
+    },
+    {
+      role: "strengthen_lead",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:not_still"]
+    }
+  ],
+  Shimmer: [
+    {
+      role: "add_section_development",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:restrained"]
+    },
+    {
+      role: "reduce_competing_support",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:restrained"]
+    }
+  ],
+  On: [
+    {
+      role: "reduce_competing_support",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:not_restrained"]
+    },
+    {
+      role: "strengthen_lead",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:still"]
+    }
+  ],
+  "Color Wash": [
+    {
+      role: "widen_support",
+      priority: "primary",
+      source: "legacy_runtime_heuristic",
+      conditions: ["motion:restrained"]
+    }
+  ]
+});
+
 function buildRoleOutcomeSeed() {
   return Object.fromEntries(
     REVISION_ROLES.map((role) => [
@@ -59,6 +124,15 @@ function loadOutcomeRecords(recordsDirPath) {
       }
     })
     .filter((row) => row && row.artifactType === "effect_family_outcome_record_v1");
+}
+
+function buildSeedRolePriors(effectName = "") {
+  return (ROLE_FAMILY_SEED_PRIORS[String(effectName || "").trim()] || []).map((row) => ({
+    role: String(row.role || "").trim(),
+    priority: String(row.priority || "").trim(),
+    source: String(row.source || "").trim(),
+    conditions: Array.isArray(row.conditions) ? row.conditions.map((item) => String(item || "").trim()).filter(Boolean) : []
+  }));
 }
 
 function mergeRoleOutcomeMemory(roleOutcomeMemory = {}, outcomeRecords = [], effectName = "") {
@@ -102,6 +176,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
   const capability = getEffectIntentCapability(effectName) || {};
   const roleOutcomeMemory = mergeRoleOutcomeMemory({}, outcomeRecords, effectName);
   const totalSamples = Object.values(roleOutcomeMemory).reduce((sum, row) => sum + Number(row?.sampleCount || 0), 0);
+  const seedRolePriors = buildSeedRolePriors(effectName);
   return {
     effectName,
     baseline: {
@@ -125,6 +200,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
       status: totalSamples > 0 ? "populated" : "seeded_empty",
       storageClass: "general_training",
       outcomeRecordCount: outcomeRecords.filter((row) => String(row?.effectName || "").trim() === effectName).length,
+      seedRolePriors,
       roleOutcomeMemory
     }
   };
@@ -152,7 +228,7 @@ function buildTrainingSet() {
         selectorReadyEffects: Array.isArray(bundle?.selectorReadyEffects) ? bundle.selectorReadyEffects : []
       },
       liveLearning: {
-        status: outcomeRecords.length ? "framework_with_outcome_records" : "framework_seed_only",
+        status: outcomeRecords.length ? "framework_with_outcome_records" : "framework_with_seed_priors",
         currentDataShape: [
           "revision_role",
           "request_scope_mode",
@@ -162,7 +238,8 @@ function buildTrainingSet() {
         ],
         currentPopulation: outcomeRecords.length
           ? `${outcomeRecords.length} durable general-training outcome records loaded`
-          : "not yet harvested into durable general-training records",
+          : "seed priors loaded; no harvested durable outcome records yet",
+        legacyHeuristicSeedSource: "sequence-agent revision-role family routing",
         outcomeRecordDirectory: recordsDirPath
       }
     },

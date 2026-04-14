@@ -36,6 +36,8 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
   assert.equal(artifact.sources.liveLearning.status, "framework_with_outcome_records");
   assert.equal(bars.liveOutcomeLearning.status, "populated");
   assert.equal(bars.liveOutcomeLearning.outcomeRecordCount, 1);
+  assert.ok(Array.isArray(bars.liveOutcomeLearning.seedRolePriors));
+  assert.equal(bars.liveOutcomeLearning.seedRolePriors.some((row) => row.role === "strengthen_lead"), true);
   assert.equal(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.sampleCount, 1);
   assert.equal(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.successfulUses, 1);
   assert.deepEqual(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.favoredScopes, ["section_target_refinement"]);

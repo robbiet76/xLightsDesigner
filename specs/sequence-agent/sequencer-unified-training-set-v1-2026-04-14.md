@@ -80,11 +80,12 @@ The artifact must preserve both training eras:
 - revision role vocabulary
 - request scope vocabulary
 - review level vocabulary
+- legacy role-to-family seed priors
 - slots for before/after outcome memory
 
 Important:
-- the first release of this artifact may carry empty live-learning slots
-- that is still correct if the framework is explicit and durable
+- the first release of this artifact may carry seed priors with no harvested outcome records yet
+- that is still correct if the framework is explicit, durable, and clearly distinguished from outcome evidence
 
 ## Boundaries Section
 
@@ -163,12 +164,28 @@ Suggested shape:
     "supportedRenderIntent": []
   },
   "liveOutcomeLearning": {
-    "status": "seeded_empty",
+    "status": "seeded_empty|populated",
     "storageClass": "general_training",
+    "seedRolePriors": [],
     "roleOutcomeMemory": {}
   }
 }
 ```
+
+## Seed Priors
+
+The unified training set may include `seedRolePriors` derived from older runtime routing logic.
+
+These are valid `general_training` inputs when they are:
+- portable
+- effect-family-level
+- not user-taste-specific
+
+They are not the same as harvested outcome evidence.
+
+Required distinction:
+- `seedRolePriors` = legacy general sequencing priors
+- `roleOutcomeMemory` = durable observed outcome evidence
 
 ## Design Intent
 
@@ -178,7 +195,8 @@ It is the next container around it.
 
 Meaning:
 - Stage 1 baseline becomes the trained foundation
-- Phase 3 live outcome memory becomes the evolving layer
+- legacy role-family priors become explicit seed guidance inside the same artifact
+- Phase 3 live outcome memory becomes the evolving evidence layer
 - both live in one explicit general-training artifact
 
 ## What Should Be Stored Here Next
