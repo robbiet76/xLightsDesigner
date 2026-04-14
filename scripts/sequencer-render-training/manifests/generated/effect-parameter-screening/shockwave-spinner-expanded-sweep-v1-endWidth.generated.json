@@ -36,7 +36,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-endwidth-5-generated-v1",
@@ -62,7 +72,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-endwidth-10-generated-v1",
@@ -88,7 +108,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-endwidth-20-generated-v1",
@@ -114,7 +144,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     }
   ],
   "registryMetadata": {

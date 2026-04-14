@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:43:12.903Z",
+  "generatedAt": "2026-04-14T13:46:13.259Z",
   "summary": {
     "effectCount": 20,
     "screenedParameterSubsetCount": 10,
@@ -37,7 +37,10 @@
         "barCount",
         "direction"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "3D",
+        "cycles"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -315,11 +318,15 @@
       "retainedParameterNames": [],
       "screenedParameterNames": [
         "accel",
+        "blendEdges",
         "centerX",
         "centerY",
         "cycles",
         "endRadius",
-        "startRadius"
+        "endWidth",
+        "scale",
+        "startRadius",
+        "startWidth"
       ],
       "exhaustiveSettingCoverage": false
     },

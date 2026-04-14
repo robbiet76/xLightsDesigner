@@ -36,7 +36,17 @@
         "scale",
         "scale_false",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "scale",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-scale-true-generated-v1",
@@ -62,7 +72,17 @@
         "scale",
         "scale_true",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "scale",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     }
   ],
   "registryMetadata": {

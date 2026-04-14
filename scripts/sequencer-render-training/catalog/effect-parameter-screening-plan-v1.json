@@ -1,42 +1,21 @@
 {
   "artifactType": "effect_parameter_screening_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:42:34.645Z",
+  "generatedAt": "2026-04-14T13:45:34.008Z",
   "summary": {
-    "effectCount": 7,
-    "manifestCount": 146,
+    "effectCount": 6,
+    "manifestCount": 110,
     "runnableEffects": [
       "Bars",
       "Color Wash",
       "Marquee",
       "On",
       "Pinwheel",
-      "Shockwave",
       "SingleStrand",
       "Spirals"
     ]
   },
   "rows": [
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archgroup-expanded-sweep-v1.json",
-      "baseManifestName": "bars-archgroup-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archgroup-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archgroup-expanded-sweep-v1.json",
-      "baseManifestName": "bars-archgroup-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archgroup-expanded-sweep-v1-3D.generated.json"
-    },
     {
       "effectName": "Bars",
       "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archgroup-expanded-sweep-v1.json",
@@ -56,26 +35,6 @@
       "phase": "screen",
       "target": "effectSettings",
       "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archgroup-expanded-sweep-v1-highlight.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archsingle-expanded-sweep-v1.json",
-      "baseManifestName": "bars-archsingle-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archsingle-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archsingle-expanded-sweep-v1.json",
-      "baseManifestName": "bars-archsingle-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archsingle-expanded-sweep-v1-3D.generated.json"
     },
     {
       "effectName": "Bars",
@@ -101,26 +60,6 @@
       "effectName": "Bars",
       "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archtriplelayer-expanded-sweep-v1.json",
       "baseManifestName": "bars-archtriplelayer-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archtriplelayer-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archtriplelayer-expanded-sweep-v1.json",
-      "baseManifestName": "bars-archtriplelayer-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archtriplelayer-expanded-sweep-v1-3D.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-archtriplelayer-expanded-sweep-v1.json",
-      "baseManifestName": "bars-archtriplelayer-expanded-sweep-v1",
       "parameterName": "gradient",
       "practicalPriority": "medium",
       "phase": "screen",
@@ -136,26 +75,6 @@
       "phase": "screen",
       "target": "effectSettings",
       "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-archtriplelayer-expanded-sweep-v1-highlight.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-singlelinehorizontal-expanded-sweep-v1.json",
-      "baseManifestName": "bars-singlelinehorizontal-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-singlelinehorizontal-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-singlelinehorizontal-expanded-sweep-v1.json",
-      "baseManifestName": "bars-singlelinehorizontal-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-singlelinehorizontal-expanded-sweep-v1-3D.generated.json"
     },
     {
       "effectName": "Bars",
@@ -181,26 +100,6 @@
       "effectName": "Bars",
       "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-singlelinevertical-expanded-sweep-v1.json",
       "baseManifestName": "bars-singlelinevertical-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-singlelinevertical-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-singlelinevertical-expanded-sweep-v1.json",
-      "baseManifestName": "bars-singlelinevertical-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-singlelinevertical-expanded-sweep-v1-3D.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-singlelinevertical-expanded-sweep-v1.json",
-      "baseManifestName": "bars-singlelinevertical-expanded-sweep-v1",
       "parameterName": "gradient",
       "practicalPriority": "medium",
       "phase": "screen",
@@ -216,26 +115,6 @@
       "phase": "screen",
       "target": "effectSettings",
       "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-singlelinevertical-expanded-sweep-v1-highlight.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "bars-treeflat-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treeflat-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "bars-treeflat-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treeflat-expanded-sweep-v1-3D.generated.json"
     },
     {
       "effectName": "Bars",
@@ -261,26 +140,6 @@
       "effectName": "Bars",
       "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treeround-expanded-sweep-v1.json",
       "baseManifestName": "bars-treeround-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treeround-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "bars-treeround-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treeround-expanded-sweep-v1-3D.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "bars-treeround-expanded-sweep-v1",
       "parameterName": "gradient",
       "practicalPriority": "medium",
       "phase": "screen",
@@ -296,26 +155,6 @@
       "phase": "screen",
       "target": "effectSettings",
       "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treeround-expanded-sweep-v1-highlight.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "bars-treespiral-expanded-sweep-v1",
-      "parameterName": "cycles",
-      "practicalPriority": "high",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treespiral-expanded-sweep-v1-cycles.generated.json"
-    },
-    {
-      "effectName": "Bars",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/bars-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "bars-treespiral-expanded-sweep-v1",
-      "parameterName": "3D",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/bars-treespiral-expanded-sweep-v1-3D.generated.json"
     },
     {
       "effectName": "Bars",
@@ -736,206 +575,6 @@
       "phase": "screen",
       "target": "effectSettings",
       "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/pinwheel-treespiral-expanded-sweep-v1-armSize.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
-      "parameterName": "blendEdges",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-blendEdges.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
-      "parameterName": "endWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-endWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
-      "parameterName": "scale",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-scale.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-spinner-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-spinner-expanded-sweep-v1",
-      "parameterName": "startWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-spinner-expanded-sweep-v1-startWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
-      "parameterName": "blendEdges",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-blendEdges.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
-      "parameterName": "endWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-endWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
-      "parameterName": "scale",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-scale.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-starsingle-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-starsingle-expanded-sweep-v1",
-      "parameterName": "startWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-starsingle-expanded-sweep-v1-startWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
-      "parameterName": "blendEdges",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-blendEdges.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
-      "parameterName": "endWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-endWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
-      "parameterName": "scale",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-scale.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeflat-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeflat-expanded-sweep-v1",
-      "parameterName": "startWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeflat-expanded-sweep-v1-startWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
-      "parameterName": "blendEdges",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-blendEdges.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
-      "parameterName": "endWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-endWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
-      "parameterName": "scale",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-scale.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treeround-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treeround-expanded-sweep-v1",
-      "parameterName": "startWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treeround-expanded-sweep-v1-startWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
-      "parameterName": "blendEdges",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-blendEdges.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
-      "parameterName": "endWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-endWidth.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
-      "parameterName": "scale",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-scale.generated.json"
-    },
-    {
-      "effectName": "Shockwave",
-      "baseManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/shockwave-treespiral-expanded-sweep-v1.json",
-      "baseManifestName": "shockwave-treespiral-expanded-sweep-v1",
-      "parameterName": "startWidth",
-      "practicalPriority": "medium",
-      "phase": "screen",
-      "target": "effectSettings",
-      "generatedManifestPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/manifests/generated/effect-parameter-screening/shockwave-treespiral-expanded-sweep-v1-startWidth.generated.json"
     },
     {
       "effectName": "SingleStrand",

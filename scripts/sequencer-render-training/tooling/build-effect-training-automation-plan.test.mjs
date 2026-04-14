@@ -23,7 +23,7 @@ test("build-effect-training-automation-plan classifies runnable and blocked effe
   const plan = JSON.parse(readFileSync(outFile, "utf8"));
   assert.equal(plan.artifactType, "effect_training_automation_plan_v1");
   assert.ok(plan.summary.runnableLaterCount >= 2);
-  assert.ok(plan.effects.some((row) => row.effectName === "Shockwave" && row.readiness === "ready_for_expansion"));
+  assert.ok(plan.effects.some((row) => row.effectName === "Shockwave" && (row.readiness === "ready_for_expansion" || row.readiness === "screened_current_registry")));
   assert.ok(plan.effects.some((row) => row.effectName === "Twinkle" && (row.readiness === "ready_for_expansion" || row.readiness === "screened_current_registry")));
   assert.ok(plan.effects.some((row) => row.effectName === "Butterfly" && row.readiness === "needs_registry"));
 });

@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:43:13.018Z",
+  "generatedAt": "2026-04-14T13:46:13.330Z",
   "summary": {
     "effectCount": 20,
     "runnableNowCount": 0,
@@ -23,7 +23,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 6,
       "retainedParameterCount": 2,
-      "screenedParameterCount": 0,
+      "screenedParameterCount": 2,
       "outcomeRecordCount": 0
     },
     {
@@ -90,12 +90,12 @@
       "effectName": "Shockwave",
       "family": "compact_shockwave_ring",
       "coverageStatus": "screened_parameter_subset",
-      "readiness": "ready_for_expansion",
+      "readiness": "screened_current_registry",
       "priority": "later",
-      "nextAction": "deepen_screened_subset",
+      "nextAction": "harvest_outcomes_or_add_interactions",
       "registryParameterCount": 10,
       "retainedParameterCount": 0,
-      "screenedParameterCount": 6,
+      "screenedParameterCount": 10,
       "outcomeRecordCount": 0
     },
     {

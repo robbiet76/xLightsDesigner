@@ -36,7 +36,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "blendEdges",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-blendedges-true-generated-v1",
@@ -62,7 +72,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "blendEdges",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     }
   ],
   "registryMetadata": {

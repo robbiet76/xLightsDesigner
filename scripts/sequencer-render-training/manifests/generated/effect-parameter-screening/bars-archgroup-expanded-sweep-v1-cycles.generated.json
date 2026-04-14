@@ -1,0 +1,196 @@
+{
+  "manifestVersion": "1.0",
+  "packId": "bars-archgroup-expanded-sweep-v1-cycles-generated",
+  "description": "Registry-generated sweep for Bars cycles from bars-archgroup-expanded-sweep-v1.json",
+  "fixture": {
+    "sequencePath": "/Users/robterry/Projects/xLightsDesigner/render-training/RenderTraining-AnimationFixture.xsq",
+    "modelName": "ArchGroup",
+    "modelType": "arch",
+    "startMs": 1000,
+    "endMs": 5000,
+    "durationClass": "long",
+    "notes": "Expanded Bars sweep on the grouped arch variant using the 4-second animated standard."
+  },
+  "samples": [
+    {
+      "sampleId": "bars-cycles-2-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 2,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_2",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-5-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 5,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_5",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-10-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 10,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_10",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-15-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 15,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_15",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
+    },
+    {
+      "sampleId": "bars-cycles-20-generated-v1",
+      "effectName": "Bars",
+      "effectSettings": {
+        "direction": "up",
+        "barCount": 1,
+        "cycles": 20,
+        "center": 0,
+        "highlight": false,
+        "gradient": false,
+        "3D": false
+      },
+      "sharedSettings": {
+        "renderStyle": "Single Line"
+      },
+      "labelHints": [
+        "bar_motion",
+        "cycles",
+        "cycles_20",
+        "grouped_arch_read",
+        "range_sample"
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
+    }
+  ],
+  "registryMetadata": {
+    "registryVersion": "1.0",
+    "effect": "Bars",
+    "parameter": "cycles",
+    "importance": "high",
+    "phase": "screen",
+    "anchors": [
+      2,
+      5,
+      10,
+      15,
+      20
+    ],
+    "target": "effectSettings"
+  }
+}

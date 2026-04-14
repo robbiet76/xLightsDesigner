@@ -19,8 +19,10 @@ test("build-effect-parameter-screening-plan skips already screened parameters an
   const plan = JSON.parse(readFileSync(outFile, "utf8"));
   assert.equal(plan.artifactType, "effect_parameter_screening_plan_v1");
   assert.ok(plan.summary.manifestCount > 0);
-  assert.ok(plan.rows.some((row) => row.effectName === "Shockwave"));
-  assert.ok(plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName !== "centerX" && row.parameterName !== "centerY"));
+  assert.ok(!plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName === "centerX"));
+  assert.ok(!plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName === "centerY"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Shockwave" && row.parameterName === "centerX"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Twinkle" && row.parameterName === "count"));
+  assert.ok(!plan.rows.some((row) => row.effectName === "Twinkle"));
+  assert.ok(plan.rows.some((row) => row.effectName === "Bars"));
 });

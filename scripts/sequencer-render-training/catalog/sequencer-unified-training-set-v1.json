@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:43:12.811Z",
+  "generatedAt": "2026-04-14T13:46:13.166Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "38 durable general-training screening records loaded",
+      "currentPopulation": "57 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -252,7 +252,10 @@
         },
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
-        "screenedParameterNames": []
+        "screenedParameterNames": [
+          "3D",
+          "cycles"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -336,13 +339,39 @@
         }
       },
       "screeningLearning": {
-        "status": "empty",
+        "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 0,
-        "screenedParameterNames": [],
-        "sampledModelTypes": [],
-        "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "screeningRecordCount": 7,
+        "screenedParameterNames": [
+          "3D",
+          "cycles"
+        ],
+        "sampledModelTypes": [
+          "arch"
+        ],
+        "sampledGeometryProfiles": [
+          "arch_grouped"
+        ],
+        "observedLabelHints": [
+          "3D",
+          "3D_false",
+          "arch_pattern_fit",
+          "bar_motion",
+          "bar_pattern",
+          "effect:bars",
+          "grouped_arch_read",
+          "model:arch",
+          "range_sample",
+          "render_style:single_line",
+          "single_bar",
+          "3D_true",
+          "cycles",
+          "cycles_10",
+          "cycles_15",
+          "cycles_2",
+          "cycles_20",
+          "cycles_5"
+        ]
       }
     },
     {
@@ -1549,11 +1578,15 @@
         "exhaustiveSettingCoverage": false,
         "screenedParameterNames": [
           "accel",
+          "blendEdges",
           "centerX",
           "centerY",
           "cycles",
           "endRadius",
-          "startRadius"
+          "endWidth",
+          "scale",
+          "startRadius",
+          "startWidth"
         ]
       },
       "liveOutcomeLearning": {
@@ -1607,14 +1640,18 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 22,
+        "screeningRecordCount": 34,
         "screenedParameterNames": [
           "accel",
+          "blendEdges",
           "centerX",
           "centerY",
           "cycles",
           "endRadius",
-          "startRadius"
+          "endWidth",
+          "scale",
+          "startRadius",
+          "startWidth"
         ],
         "sampledModelTypes": [
           "spinner"
@@ -1642,6 +1679,9 @@
           "spinner_fill",
           "accel_0",
           "accel_5",
+          "blendEdges",
+          "blendEdges_false",
+          "blendEdges_true",
           "centerX",
           "centerX_25",
           "centerX_50",
@@ -1661,11 +1701,24 @@
           "endRadius_25",
           "endRadius_50",
           "endRadius_75",
+          "endWidth",
+          "endWidth_10",
+          "endWidth_2",
+          "endWidth_20",
+          "endWidth_5",
+          "scale",
+          "scale_false",
+          "scale_true",
           "startRadius",
           "startRadius_0",
           "startRadius_10",
           "startRadius_25",
-          "startRadius_50"
+          "startRadius_50",
+          "startWidth",
+          "startWidth_10",
+          "startWidth_2",
+          "startWidth_20",
+          "startWidth_5"
         ]
       }
     },

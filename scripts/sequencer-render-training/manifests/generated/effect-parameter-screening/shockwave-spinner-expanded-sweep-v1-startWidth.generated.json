@@ -36,7 +36,17 @@
         "spinner_fill",
         "startWidth",
         "startWidth_2"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-startwidth-5-generated-v1",
@@ -62,7 +72,17 @@
         "spinner_fill",
         "startWidth",
         "startWidth_5"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-startwidth-10-generated-v1",
@@ -88,7 +108,17 @@
         "spinner_fill",
         "startWidth",
         "startWidth_10"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "shockwave-startwidth-20-generated-v1",
@@ -114,7 +144,17 @@
         "spinner_fill",
         "startWidth",
         "startWidth_20"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startWidth",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     }
   ],
   "registryMetadata": {
