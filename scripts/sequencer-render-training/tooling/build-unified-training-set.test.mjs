@@ -31,6 +31,14 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
         temporalSignatureHints: ["moderate_motion"]
       }
     ],
+    appliedSharedSettingGuidance: [
+      { settingName: "layerMethod", appliedValue: "Additive" },
+      { settingName: "effectLayerMix", appliedValue: 60 },
+      { settingName: "bufferStyle", appliedValue: "Overlay - Scaled" },
+      { settingName: "inTransitionType", appliedValue: "Fade" },
+      { settingName: "outTransitionType", appliedValue: "Slide Bars" },
+      { settingName: "layerMorph", appliedValue: true }
+    ],
     resolvedSignals: ["lead_mismatch"],
     persistedSignals: [],
     newSignals: [],
@@ -62,6 +70,11 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
   assert.equal(bars.liveOutcomeLearning.parameterOutcomeMemory.speed[0].parameterValue, 7);
   assert.equal(bars.liveOutcomeLearning.parameterOutcomeMemory.speed[0].successfulUses, 1);
   assert.deepEqual(bars.liveOutcomeLearning.parameterOutcomeMemory.speed[0].behaviorHints, ["forward_motion"]);
+  assert.equal(Array.isArray(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.layerMethod), true);
+  assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.layerMethod[0].appliedValue, "Additive");
+  assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.effectLayerMix[0].appliedValue, 60);
+  assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.inTransitionType[0].appliedValue, "Fade");
+  assert.equal(bars.liveOutcomeLearning.sharedSettingOutcomeMemory.layerMorph[0].appliedValue, true);
   assert.ok(["none", "single_reference_per_geometry", "multi_configuration_sampled"].includes(
     bars.screeningLearning.configurationRepresentativeness.coverageStatus
   ));

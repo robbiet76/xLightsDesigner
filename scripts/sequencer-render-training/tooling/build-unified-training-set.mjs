@@ -510,11 +510,60 @@ function mergeParameterOutcomeMemory(outcomeRecords = [], effectName = "") {
   );
 }
 
+function mergeSharedSettingOutcomeMemory(outcomeRecords = [], effectName = "") {
+  const relevantRecords = outcomeRecords.filter((row) => String(row?.effectName || "").trim() === effectName);
+  const out = {};
+  for (const record of relevantRecords) {
+    const scopeMode = String(record?.requestScope?.mode || "").trim();
+    const positiveSignals = uniqueStrings(record?.resolvedSignals);
+    const cautionSignals = uniqueStrings([...(record?.persistedSignals || []), ...(record?.newSignals || [])]);
+    const status = String(record?.outcome?.status || "").trim();
+    const improved = record?.outcome?.improved === true || positiveSignals.length > 0 || status === "mixed";
+    const regressed = cautionSignals.length > 0 || status === "regressed" || status === "unchanged";
+    for (const row of Array.isArray(record?.appliedSharedSettingGuidance) ? record.appliedSharedSettingGuidance : []) {
+      const settingName = String(row?.settingName || "").trim();
+      if (!settingName) continue;
+      if (!out[settingName]) out[settingName] = {};
+      const key = JSON.stringify({ value: normalizeAnchorValue(row?.appliedValue) });
+      if (!out[settingName][key]) {
+        out[settingName][key] = {
+          appliedValue: normalizeAnchorValue(row?.appliedValue),
+          sampleCount: 0,
+          successfulUses: 0,
+          failedUses: 0,
+          favoredScopes: [],
+          favoredSignals: [],
+          cautionSignals: []
+        };
+      }
+      const target = out[settingName][key];
+      target.sampleCount += 1;
+      if (improved) target.successfulUses += 1;
+      if (regressed) target.failedUses += 1;
+      target.favoredScopes = uniqueStrings([...target.favoredScopes, ...(improved && scopeMode ? [scopeMode] : [])]);
+      target.favoredSignals = uniqueStrings([...target.favoredSignals, ...(improved ? positiveSignals : [])]);
+      target.cautionSignals = uniqueStrings([...target.cautionSignals, ...(regressed ? cautionSignals : [])]);
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(out)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([settingName, entries]) => [
+        settingName,
+        Object.values(entries).sort((a, b) =>
+          b.sampleCount - a.sampleCount ||
+          String(a.appliedValue).localeCompare(String(b.appliedValue))
+        )
+      ])
+  );
+}
+
 function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], screeningRecords = []) {
   const trained = bundle?.effectsByName?.[effectName] || {};
   const capability = getEffectIntentCapability(effectName) || {};
   const roleOutcomeMemory = mergeRoleOutcomeMemory({}, outcomeRecords, effectName);
   const parameterOutcomeMemory = mergeParameterOutcomeMemory(outcomeRecords, effectName);
+  const sharedSettingOutcomeMemory = mergeSharedSettingOutcomeMemory(outcomeRecords, effectName);
   const totalSamples = Object.values(roleOutcomeMemory).reduce((sum, row) => sum + Number(row?.sampleCount || 0), 0);
   const seedRolePriors = buildSeedRolePriors(effectName);
   const retainedParameters = Array.isArray(trained.retainedParameters) ? trained.retainedParameters : [];
@@ -562,7 +611,8 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
       outcomeRecordCount: outcomeRecords.filter((row) => String(row?.effectName || "").trim() === effectName).length,
       seedRolePriors,
       roleOutcomeMemory,
-      parameterOutcomeMemory
+      parameterOutcomeMemory,
+      sharedSettingOutcomeMemory
     },
     screeningLearning: {
       status: relevantScreeningRecords.length > 0 ? "populated" : "empty",

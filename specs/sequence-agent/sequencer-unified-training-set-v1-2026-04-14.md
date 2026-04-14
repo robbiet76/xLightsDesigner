@@ -185,7 +185,9 @@ Suggested shape:
     "status": "seeded_empty|populated",
     "storageClass": "general_training",
     "seedRolePriors": [],
-    "roleOutcomeMemory": {}
+    "roleOutcomeMemory": {},
+    "parameterOutcomeMemory": {},
+    "sharedSettingOutcomeMemory": {}
   }
 }
 ```
@@ -224,6 +226,13 @@ The next population pass should add:
 - effect-family outcome evidence by request scope
 - effect-family outcome evidence by unresolved prior-pass signal
 - effect-family outcome evidence by target/model bucket
+- effect-family outcome evidence by generic shared setting axes such as:
+  - `layerMethod`
+  - `effectLayerMix`
+  - `bufferStyle`
+  - `inTransitionType`
+  - `outTransitionType`
+  - `layerMorph`
 
 The first durable live-learning record type for this is:
 - `effect_family_outcome_record_v1`
@@ -363,6 +372,30 @@ Its purpose is to let the sequencer reason:
 
 not:
 - "search the entire parameter space blindly"
+
+## Shared Setting Outcome Memory
+
+The unified training set should also retain a bounded live-outcome layer for shared render-path settings that are not specific to any one effect family parameter schema.
+
+These are generic portable axes such as:
+- layer method
+- layer mix
+- buffer style
+- in transition type
+- out transition type
+- layer morph enablement
+
+This layer should:
+- store only normalized generic setting names and values
+- remain independent of section labels, target ids, and user-defined model names
+- summarize whether a shared setting choice tended to improve or worsen a pass
+
+This allows the sequencer to learn:
+- when additive or highlight layering tends to help
+- when transition types like fade or slide bars tend to help
+- when non-default buffer styles help or create risk
+
+without turning those settings into hardcoded universal defaults.
 
 ## Acceptance Standard
 

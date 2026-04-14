@@ -98,6 +98,49 @@ function buildAppliedParameterGuidance(planHandoff = null, effectName = "") {
   );
 }
 
+const SHARED_SETTING_EXTRACTORS = Object.freeze([
+  { key: "layerMethod", settingName: "T_CHOICE_LayerMethod" },
+  { key: "effectLayerMix", settingName: "T_SLIDER_EffectLayerMix" },
+  { key: "bufferStyle", settingName: "B_CHOICE_BufferStyle" },
+  { key: "inTransitionType", settingName: "T_CHOICE_In_Transition_Type" },
+  { key: "outTransitionType", settingName: "T_CHOICE_Out_Transition_Type" },
+  { key: "layerMorph", settingName: "T_CHECKBOX_LayerMorph" }
+]);
+
+function normalizeSharedSettingValue(value) {
+  if (typeof value === "boolean") return value;
+  const text = str(value);
+  if (!text) return "";
+  if (text === "1") return true;
+  if (text === "0") return false;
+  return text;
+}
+
+function buildAppliedSharedSettingGuidance(planHandoff = null, effectName = "") {
+  const commands = collectEffectCommands(planHandoff, effectName);
+  const collected = new Map();
+  for (const command of commands) {
+    const settings = command?.params?.settings && typeof command.params.settings === "object"
+      ? command.params.settings
+      : {};
+    for (const extractor of SHARED_SETTING_EXTRACTORS) {
+      if (!Object.prototype.hasOwnProperty.call(settings, extractor.settingName)) continue;
+      const appliedValue = normalizeSharedSettingValue(settings[extractor.settingName]);
+      if (appliedValue === "") continue;
+      const key = `${extractor.key}::${JSON.stringify(appliedValue)}`;
+      if (collected.has(key)) continue;
+      collected.set(key, {
+        settingName: extractor.key,
+        appliedValue
+      });
+    }
+  }
+  return [...collected.values()].sort((a, b) =>
+    a.settingName.localeCompare(b.settingName) ||
+    String(a.appliedValue).localeCompare(String(b.appliedValue))
+  );
+}
+
 export function buildEffectFamilyOutcomeRecords({
   planHandoff = null,
   applyResult = null,
@@ -149,6 +192,7 @@ export function buildEffectFamilyOutcomeRecords({
     revisionRoles,
     targetIds,
     appliedParameterGuidance: buildAppliedParameterGuidance(planHandoff, effectName),
+    appliedSharedSettingGuidance: buildAppliedSharedSettingGuidance(planHandoff, effectName),
     priorSignals,
     postSignals: currentSignals,
     resolvedSignals: outcome.resolvedSignals,

@@ -29,7 +29,17 @@ test("buildEffectFamilyOutcomeRecords emits general-training records per chosen 
       commands: [
         {
           cmd: "effects.create",
-          params: { effectName: "Bars" },
+          params: {
+            effectName: "Bars",
+            settings: {
+              T_CHOICE_LayerMethod: "Additive",
+              T_SLIDER_EffectLayerMix: 60,
+              B_CHOICE_BufferStyle: "Overlay - Scaled",
+              T_CHOICE_In_Transition_Type: "Fade",
+              T_CHOICE_Out_Transition_Type: "Slide Bars",
+              T_CHECKBOX_LayerMorph: "1"
+            }
+          },
           intent: {
             parameterPriorGuidance: {
               recommendationMode: "exact_geometry",
@@ -101,6 +111,14 @@ test("buildEffectFamilyOutcomeRecords emits general-training records per chosen 
       behaviorHints: ["forward_motion"],
       temporalSignatureHints: ["moderate_motion"]
     }
+  ]);
+  assert.deepEqual(records[0].appliedSharedSettingGuidance, [
+    { settingName: "bufferStyle", appliedValue: "Overlay - Scaled" },
+    { settingName: "effectLayerMix", appliedValue: "60" },
+    { settingName: "inTransitionType", appliedValue: "Fade" },
+    { settingName: "layerMethod", appliedValue: "Additive" },
+    { settingName: "layerMorph", appliedValue: true },
+    { settingName: "outTransitionType", appliedValue: "Slide Bars" }
   ]);
   assert.deepEqual(records[0].resolvedSignals, ["lead_mismatch", "weak_section_contrast"]);
   assert.equal(records[0].outcome.status, "improved");
