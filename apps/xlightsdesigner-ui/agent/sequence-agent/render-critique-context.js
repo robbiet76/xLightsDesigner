@@ -96,6 +96,45 @@ function buildWindowComparisons(windows = []) {
   return comparisons;
 }
 
+function deriveDrilldownTargetIds(windows = [], comparisons = []) {
+  const windowMap = new Map(
+    arr(windows)
+      .map((row) => (isPlainObject(row) ? row : null))
+      .filter(Boolean)
+      .map((row) => [str(row.label), row])
+      .filter(([label]) => label)
+  );
+  const targetIds = [];
+
+  for (const comparison of arr(comparisons)) {
+    if (!comparison?.windowsReadSimilarly && !comparison?.sameLeadModel) continue;
+    const fromWindow = windowMap.get(str(comparison?.fromLabel));
+    const toWindow = windowMap.get(str(comparison?.toLabel));
+    const fromModels = new Set(uniqueStrings(fromWindow?.activeModelNames));
+    const toModels = new Set(uniqueStrings(toWindow?.activeModelNames));
+    const sharedModels = [...fromModels].filter((id) => toModels.has(id));
+    if (sharedModels.length) {
+      targetIds.push(...sharedModels);
+      continue;
+    }
+    targetIds.push(
+      str(fromWindow?.leadModel),
+      str(toWindow?.leadModel)
+    );
+  }
+
+  for (const window of arr(windows)) {
+    if (str(window?.sampleDetail).toLowerCase() !== "drilldown") continue;
+    if (str(window?.temporalRead).toLowerCase() !== "flat") continue;
+    targetIds.push(
+      str(window?.leadModel),
+      ...uniqueStrings(window?.activeModelNames).slice(0, 4)
+    );
+  }
+
+  return uniqueStrings(targetIds);
+}
+
 function buildMusicSectionIndex(musicDesignContext = null) {
   const sectionArc = arr(musicDesignContext?.sectionArc);
   const index = new Map();
@@ -196,6 +235,7 @@ export function buildRenderCritiqueContext({
   const detailCoverageDomains = uniqueStrings(scene?.coverageDomains?.detail);
   const spreadRatio = Number(macro.meanSceneSpreadRatio || 0);
   const windowComparisons = buildWindowComparisons(observation?.windows);
+  const drilldownTargetIds = deriveDrilldownTargetIds(observation?.windows, windowComparisons);
   const densityTargets = uniqueStrings(
     arr(handoff?.sectionDirectives).map((row) => str(row?.densityTarget))
   ).map((row) => row.toLowerCase());
@@ -232,7 +272,8 @@ export function buildRenderCritiqueContext({
       renderObservationArtifactId: str(observation?.artifactId),
       designSceneContextArtifactId: str(scene?.artifactId),
       sequencingDesignHandoffArtifactId: str(handoff?.artifactId),
-      musicDesignContextArtifactId: str(musicDesignContext?.artifactId)
+      musicDesignContextArtifactId: str(musicDesignContext?.artifactId),
+      samplingDetail: str(source?.samplingDetail)
     },
     expected: {
       primaryFocusTargetIds,
@@ -290,7 +331,8 @@ export function buildRenderCritiqueContext({
       renderHasProblematicGaps: problematicGapsExpected && Number(macro.coverageGapCount || 0) >= 2,
       renderIsLeftRightImbalanced: Number(macro.leftRightBalanceRatio || 0) >= 0.35,
       renderIsTopBottomImbalanced: Number(macro.topBottomBalanceRatio || 0) >= 0.35,
-      adjacentWindowComparisons: windowComparisons
+      adjacentWindowComparisons: windowComparisons,
+      drilldownTargetIds
     }
   };
 }

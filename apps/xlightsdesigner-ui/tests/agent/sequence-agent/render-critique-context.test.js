@@ -169,7 +169,8 @@ test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
         endMs: 4000,
         samplingMode: "targeted",
         sampledModelCount: 2,
-        windowCount: 2
+        windowCount: 2,
+        samplingDetail: "drilldown"
       },
       macro: {
         activeModelNames: ["MegaTree", "Roofline"],
@@ -184,6 +185,7 @@ test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
           label: "Verse",
           startMs: 0,
           endMs: 2000,
+          sampleDetail: "drilldown",
           activeModelNames: ["MegaTree", "Roofline"],
           leadModel: "MegaTree",
           meanSceneSpreadRatio: 0.02,
@@ -193,6 +195,7 @@ test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
           label: "Chorus",
           startMs: 2000,
           endMs: 4000,
+          sampleDetail: "drilldown",
           activeModelNames: ["MegaTree", "Roofline"],
           leadModel: "MegaTree",
           meanSceneSpreadRatio: 0.02,
@@ -215,6 +218,7 @@ test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
   assert.equal(out.comparison.adjacentWindowComparisons[0].fromLabel, "Verse");
   assert.equal(out.comparison.adjacentWindowComparisons[0].toLabel, "Chorus");
   assert.equal(out.comparison.adjacentWindowComparisons[0].windowsReadSimilarly, true);
+  assert.deepEqual(out.comparison.drilldownTargetIds, ["MegaTree", "Roofline"]);
 });
 
 test("buildRenderCritiqueContext keeps gaps observational for narrow localized scope", () => {

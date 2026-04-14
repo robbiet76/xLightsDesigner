@@ -262,6 +262,7 @@ function deriveRenderDrivenTargetIds(renderCritiqueContext = null) {
   const expected = isPlainObject(context.expected) ? context.expected : {};
 
   return uniqueStrings([
+    ...arr(comparison.drilldownTargetIds),
     ...arr(comparison.missingPrimaryFocusTargets),
     comparison.leadMatchesPrimaryFocus ? "" : str(observed.leadModel),
     ...(str(observed.breadthRead) === "tight" ? arr(expected.supportTargetIds) : []),
@@ -443,8 +444,13 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
     || (adjacentWindowComparisons.length > 0 && adjacentWindowComparisons.every((row) => row?.sameLeadModel));
   const renderDrivenTargetIds = deriveRenderDrivenTargetIds(renderCritiqueContext);
   const renderDrivenRevisionRoles = deriveRenderDrivenRevisionRoles(renderCritiqueContext);
+  const drilldownTargetIds = uniqueStrings(renderCritiqueContext?.comparison?.drilldownTargetIds);
+  const samplingDetail = str(renderCritiqueContext?.source?.samplingDetail).toLowerCase();
+  const hasDrilldownEvidence = drilldownTargetIds.length > 0 && ["drilldown", "mixed"].includes(samplingDetail);
 
-  if (needsSectionContrast) {
+  if (hasDrilldownEvidence) {
+    base.ladderLevel = "group";
+  } else if (needsSectionContrast) {
     base.ladderLevel = "section";
   }
 
@@ -471,9 +477,11 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   };
   base.sequencerDirection = {
     ...(isPlainObject(base.sequencerDirection) ? base.sequencerDirection : {}),
-    executionObjective: needsSectionContrast
-      ? "Revise the next pass to strengthen contrast and hierarchy between adjacent sampled sections."
-      : `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`,
+    executionObjective: hasDrilldownEvidence
+      ? `Revise the next pass by narrowing correction to the implicated rendered models/groups: ${drilldownTargetIds.join(", ")}.`
+      : (needsSectionContrast
+          ? "Revise the next pass to strengthen contrast and hierarchy between adjacent sampled sections."
+          : `Revise the next pass to resolve this rendered composition problem: ${primaryFinding}`),
     revisionRoles: uniqueStrings([
       ...arr(base?.sequencerDirection?.revisionRoles),
       ...renderDrivenRevisionRoles

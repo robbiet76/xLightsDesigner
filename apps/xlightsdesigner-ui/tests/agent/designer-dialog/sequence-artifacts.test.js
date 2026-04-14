@@ -326,6 +326,54 @@ test("refreshSequenceRevisionObjectiveFromRenderCritique pins section-level revi
   assert.match(out.sequencerDirection.executionObjective, /strengthen contrast and hierarchy between adjacent sampled sections/i);
 });
 
+test("refreshSequenceRevisionObjectiveFromRenderCritique escalates to group revision when drilldown evidence identifies implicated models", () => {
+  const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
+    sequencingDesignHandoff: sampleHandoff(),
+    proposalBundle: { summary: "Warm restrained intro with stronger chorus payoff." }
+  });
+  const priorObjective = buildSequenceRevisionObjectiveFromArtifacts({
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff()
+  });
+  const out = refreshSequenceRevisionObjectiveFromRenderCritique({
+    priorRevisionObjective: priorObjective,
+    sequenceArtisticGoal: priorGoal,
+    sequencingDesignHandoff: sampleHandoff(),
+    renderCritiqueContext: {
+      source: {
+        samplingDetail: "drilldown"
+      },
+      observed: {
+        leadModel: "MegaTree",
+        breadthRead: "moderate",
+        temporalRead: "flat"
+      },
+      comparison: {
+        leadMatchesPrimaryFocus: true,
+        missingPrimaryFocusTargets: [],
+        broadCoverageExpected: false,
+        renderUsesBroadScene: false,
+        adjacentWindowComparisons: [
+          {
+            fromLabel: "Verse",
+            toLabel: "Chorus",
+            windowsReadSimilarly: true,
+            sameLeadModel: true
+          }
+        ],
+        drilldownTargetIds: ["MegaTree", "Roofline"]
+      },
+      expected: {
+        supportTargetIds: ["Roofline"]
+      }
+    }
+  });
+
+  assert.equal(out.ladderLevel, "group");
+  assert.deepEqual(out.scope.revisionTargets, ["MegaTree", "Roofline", "Verse", "Chorus"]);
+  assert.match(out.sequencerDirection.executionObjective, /implicated rendered models\/groups: MegaTree, Roofline/i);
+});
+
 test("refreshSequenceRevisionObjectiveFromRenderCritique carries render-driven model targets into the next pass", () => {
   const priorGoal = buildSequenceArtisticGoalFromDesignHandoff({
     sequencingDesignHandoff: sampleHandoff(),
