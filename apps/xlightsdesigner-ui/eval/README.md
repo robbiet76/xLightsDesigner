@@ -139,3 +139,8 @@ node scripts/desktop/automation.mjs \
   run-live-wholesequence-practical-validation-suite \
   --payload-file apps/xlightsdesigner-ui/eval/live-wholesequence-practical-validation-suite-v2.json
 ```
+
+Native migration note:
+- `scripts/desktop/automation.mjs` now targets the native macOS automation server on `127.0.0.1:49916`.
+- The legacy Electron/file-queue transport is intentionally no longer used.
+- Some promoted live suite actions above still require native-server parity before they can run again; unsupported actions now fail fast instead of hanging on dead transport.
