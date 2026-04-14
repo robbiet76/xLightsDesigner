@@ -154,6 +154,15 @@ function inferLocalizedFocusExpected({ handoff = null, broadCoverageExpected = f
   return false;
 }
 
+function inferRequestedScopeMeta(handoff = null) {
+  const requestedScope = isPlainObject(handoff?.scope?.requestedScope) ? handoff.scope.requestedScope : null;
+  return {
+    mode: str(requestedScope?.mode),
+    reviewStartLevel: str(requestedScope?.reviewStartLevel),
+    sectionScopeKind: str(requestedScope?.sectionScopeKind)
+  };
+}
+
 export function buildRenderCritiqueContext({
   renderObservation = null,
   designSceneContext = null,
@@ -209,6 +218,12 @@ export function buildRenderCritiqueContext({
     broadCoverageExpected,
     restrainedCoverageExpected
   });
+  const requestedScope = inferRequestedScopeMeta(handoff);
+  const narrowRequestScope = ["target_refinement", "section_target_refinement"].includes(requestedScope.mode);
+  const problematicGapsExpected =
+    !localizedFocusExpected &&
+    !narrowRequestScope &&
+    (broadCoverageExpected || !restrainedCoverageExpected);
 
   return {
     artifactType: "sequence_render_critique_context_v1",
@@ -226,6 +241,7 @@ export function buildRenderCritiqueContext({
       broadCoverageDomains,
       detailCoverageDomains,
       designSummary: str(handoff?.designSummary),
+      requestedScope,
       musicSections: toExpectedMusicSections(musicExpectation.matchedSections),
       musicEnergyRead: musicExpectation.highestEnergy,
       musicDensityRead: musicExpectation.densityBias
@@ -271,6 +287,7 @@ export function buildRenderCritiqueContext({
       renderCoverageTooSparse: broadCoverageExpected && Number(macro.activeCoverageRatio || 0) < 0.2,
       renderCoverageTooBroad: restrainedCoverageExpected && Number(macro.activeCoverageRatio || 0) > 0.45,
       renderHasDisplayGaps: Number(macro.coverageGapCount || 0) >= 2,
+      renderHasProblematicGaps: problematicGapsExpected && Number(macro.coverageGapCount || 0) >= 2,
       renderIsLeftRightImbalanced: Number(macro.leftRightBalanceRatio || 0) >= 0.35,
       renderIsTopBottomImbalanced: Number(macro.topBottomBalanceRatio || 0) >= 0.35,
       adjacentWindowComparisons: windowComparisons

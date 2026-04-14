@@ -392,6 +392,7 @@ test("refreshSequenceArtisticGoalFromRenderCritique does not force broader suppo
 
   assert.equal(out.evaluationLens.mustImprove.some((row) => /Support targets are not contributing enough/i.test(String(row))), false);
   assert.equal(out.evaluationLens.mustImprove.some((row) => /weighted to one side of the display/i.test(String(row))), false);
+  assert.equal(out.evaluationLens.mustImprove.some((row) => /Visible display gaps remain/i.test(String(row))), false);
 });
 
 test("buildSequenceArtisticGoalFromDesignHandoff marks selected sections as timing-track scoped section work", () => {

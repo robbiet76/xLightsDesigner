@@ -90,6 +90,7 @@ test("buildRenderCritiqueContext merges render observation with design and hando
   assert.equal(out.observed.temporalRead, "modulated");
   assert.equal(out.comparison.renderCoverageTooSparse, true);
   assert.equal(out.comparison.renderHasDisplayGaps, true);
+  assert.equal(out.comparison.renderHasProblematicGaps, true);
   assert.equal(out.comparison.renderIsLeftRightImbalanced, true);
   assert.deepEqual(out.comparison.adjacentWindowComparisons, []);
 });
@@ -214,4 +215,39 @@ test("buildRenderCritiqueContext compares adjacent sampled windows", () => {
   assert.equal(out.comparison.adjacentWindowComparisons[0].fromLabel, "Verse");
   assert.equal(out.comparison.adjacentWindowComparisons[0].toLabel, "Chorus");
   assert.equal(out.comparison.adjacentWindowComparisons[0].windowsReadSimilarly, true);
+});
+
+test("buildRenderCritiqueContext keeps gaps observational for narrow localized scope", () => {
+  const out = buildRenderCritiqueContext({
+    renderObservation: {
+      macro: {
+        activeModelNames: ["WindowRight"],
+        activeFamilyTotals: { Window: 1 },
+        leadModel: "WindowRight",
+        leadModelShare: 1,
+        meanSceneSpreadRatio: 0.004,
+        activeCoverageRatio: 0.08,
+        coverageGapCount: 3,
+        coverageGapRegions: ["topLeft", "bottomLeft", "bottomRight"]
+      }
+    },
+    sequencingDesignHandoff: {
+      scope: {
+        targetIds: ["WindowRight"],
+        requestedScope: {
+          mode: "target_refinement",
+          reviewStartLevel: "model",
+          sectionScopeKind: "full_sequence"
+        }
+      },
+      focusPlan: {
+        primaryTargets: ["WindowRight"]
+      },
+      designSummary: "Refine the right-side window phrase."
+    }
+  });
+
+  assert.equal(out.comparison.renderHasDisplayGaps, true);
+  assert.equal(out.comparison.renderHasProblematicGaps, false);
+  assert.equal(out.comparison.localizedFocusExpected, true);
 });

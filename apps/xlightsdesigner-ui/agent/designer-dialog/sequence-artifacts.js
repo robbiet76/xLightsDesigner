@@ -221,7 +221,7 @@ function collectRenderCritiqueFindings(renderCritiqueContext = null) {
   if (comparison.renderCoverageTooBroad) {
     findings.push("Display coverage is too broad for the intended restrained moment.");
   }
-  if (comparison.renderHasDisplayGaps) {
+  if (comparison.renderHasProblematicGaps) {
     findings.push(`Visible display gaps remain across the rendered scene: ${arr(observed.coverageGapRegions).join(", ")}.`);
   }
   if (comparison.renderIsLeftRightImbalanced && !comparison.localizedFocusExpected) {
