@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T15:44:00.309Z",
+  "generatedAt": "2026-04-14T16:00:46.126Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "160 durable general-training screening records loaded",
+      "currentPopulation": "238 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -773,7 +773,11 @@
         },
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
-        "screenedParameterNames": []
+        "screenedParameterNames": [
+          "speed",
+          "stagger",
+          "thickness"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -824,13 +828,51 @@
         }
       },
       "screeningLearning": {
-        "status": "empty",
+        "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 0,
-        "screenedParameterNames": [],
-        "sampledModelTypes": [],
-        "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "screeningRecordCount": 30,
+        "screenedParameterNames": [
+          "speed",
+          "stagger",
+          "thickness"
+        ],
+        "sampledModelTypes": [
+          "single_line"
+        ],
+        "sampledGeometryProfiles": [
+          "single_line_horizontal"
+        ],
+        "observedLabelHints": [
+          "effect:marquee",
+          "forward_motion",
+          "linear_pattern_fit",
+          "marquee_motion",
+          "marquee_pattern",
+          "model:single_line",
+          "palette_mono_white",
+          "range_sample",
+          "render_style:single_line",
+          "speed",
+          "speed_1",
+          "tight_marquee",
+          "palette_rgb_primary",
+          "speed_3",
+          "speed_5",
+          "speed_7",
+          "speed_9",
+          "stagger",
+          "stagger_0",
+          "stagger_2",
+          "stagger_4",
+          "stagger_6",
+          "stagger_8",
+          "thickness",
+          "thickness_1",
+          "thickness_2",
+          "thickness_4",
+          "thickness_6",
+          "thickness_8"
+        ]
       }
     },
     {
@@ -1244,7 +1286,10 @@
         },
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
-        "screenedParameterNames": []
+        "screenedParameterNames": [
+          "armSize",
+          "speed"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1295,13 +1340,43 @@
         }
       },
       "screeningLearning": {
-        "status": "empty",
+        "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 0,
-        "screenedParameterNames": [],
-        "sampledModelTypes": [],
-        "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "screeningRecordCount": 18,
+        "screenedParameterNames": [
+          "armSize",
+          "speed"
+        ],
+        "sampledModelTypes": [
+          "star"
+        ],
+        "sampledGeometryProfiles": [
+          "star_single_layer"
+        ],
+        "observedLabelHints": [
+          "armSize",
+          "armSize_100",
+          "effect:pinwheel",
+          "few_arm_pinwheel",
+          "model:star",
+          "palette_mono_white",
+          "pinwheel_motion",
+          "pinwheel_pattern",
+          "range_sample",
+          "render_style:default",
+          "star_pattern_fit",
+          "static_pinwheel",
+          "palette_rgb_primary",
+          "armSize_25",
+          "armSize_50",
+          "armSize_75",
+          "speed",
+          "speed_10",
+          "speed_14",
+          "speed_18",
+          "speed_3",
+          "speed_7"
+        ]
       }
     },
     {
@@ -1966,7 +2041,11 @@
         },
         "coverageStatus": "screened_parameter_subset",
         "exhaustiveSettingCoverage": false,
-        "screenedParameterNames": []
+        "screenedParameterNames": [
+          "advances",
+          "intensity",
+          "skipSize"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -2017,13 +2096,52 @@
         }
       },
       "screeningLearning": {
-        "status": "empty",
+        "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 0,
-        "screenedParameterNames": [],
-        "sampledModelTypes": [],
-        "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "screeningRecordCount": 30,
+        "screenedParameterNames": [
+          "advances",
+          "intensity",
+          "skipSize"
+        ],
+        "sampledModelTypes": [
+          "tree_360"
+        ],
+        "sampledGeometryProfiles": [
+          "tree_360_round"
+        ],
+        "observedLabelHints": [
+          "advances",
+          "advances_16",
+          "chase_pattern",
+          "effect:singlestrand",
+          "fragmented_pattern",
+          "model:tree_360",
+          "palette_mono_white",
+          "range_sample",
+          "render_style:single_line",
+          "round_tree_pattern",
+          "single_direction_chase",
+          "sparse_sampled_motion",
+          "tree_pattern_fit",
+          "palette_rgb_primary",
+          "advances_24",
+          "advances_32",
+          "advances_40",
+          "advances_8",
+          "intensity",
+          "intensity_120",
+          "intensity_160",
+          "intensity_200",
+          "intensity_40",
+          "intensity_80",
+          "skipSize",
+          "skipSize_1",
+          "skipSize_3",
+          "skipSize_5",
+          "skipSize_7",
+          "skipSize_9"
+        ]
       }
     },
     {

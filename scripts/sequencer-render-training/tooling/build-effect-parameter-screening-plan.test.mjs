@@ -26,5 +26,6 @@ test("build-effect-parameter-screening-plan skips already screened parameters an
   assert.ok(!plan.rows.some((row) => row.effectName === "Twinkle"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Bars"));
   assert.ok(!plan.rows.some((row) => row.effectName === "Color Wash"));
-  assert.ok(plan.rows.some((row) => row.effectName === "Marquee"));
+  assert.ok(!plan.rows.some((row) => row.effectName === "Marquee"));
+  assert.ok(plan.rows.some((row) => row.effectName === "SingleStrand"));
 });

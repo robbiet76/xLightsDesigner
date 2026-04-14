@@ -1,7 +1,7 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T15:44:00.435Z",
+  "generatedAt": "2026-04-14T16:00:46.230Z",
   "summary": {
     "effectCount": 20,
     "screenedParameterSubsetCount": 10,
@@ -181,7 +181,11 @@
         "reverse",
         "skipSize"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "speed",
+        "stagger",
+        "thickness"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -277,7 +281,10 @@
         "thickness",
         "twist"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "armSize",
+        "speed"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -369,7 +376,11 @@
         "cycles",
         "numberChases"
       ],
-      "screenedParameterNames": [],
+      "screenedParameterNames": [
+        "advances",
+        "intensity",
+        "skipSize"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
