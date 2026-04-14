@@ -1,6 +1,11 @@
-# Desktop Validation Evidence Log
+# Desktop Validation Evidence Log (Retired Electron Path)
 
-Purpose: record concrete execution evidence for final M4 acceptance closure.
+Purpose: preserve historical evidence for the retired Electron packaging path.
+
+Status:
+- historical only
+- do not add new rows for `/Applications/xLightsDesigner.app`
+- active native validation now runs through the macOS app and native automation server
 
 ## Evidence Rows
 | Date | Build SHA | Channel | Machine | macOS | xLights | Install/Launch | Core Flow | Evidence | Notes |
@@ -10,6 +15,8 @@ Purpose: record concrete execution evidence for final M4 acceptance closure.
 | 2026-03-07 | 46c3b1d | preview | Terry-MacBook-Air.local | 15.7.4 | N/A | PASS | FAIL | validate-nondev-install.sh /Applications/xLightsDesigner.app PASS | Packaged app launch verified; full live xLights core flow pending manual run |
 
 ## How To Add Evidence
+Historical only.
+
 Use:
 - `scripts/desktop/record-validation-evidence.sh`
 
@@ -28,6 +35,8 @@ scripts/desktop/record-validation-evidence.sh \
 ```
 
 ## Readiness Check
+Historical only.
+
 Use:
 - `scripts/desktop/check-desktop-readiness.sh`
 
@@ -43,7 +52,4 @@ Use this checklist for agent rollout hardening evidence per build:
 - [ ] Diagnostics export contains `agentRun` section + `applyHistory`
 - [ ] Diagnostics panel shows recent apply history entries
 
-Manual packaged-app smoke still required for stable-channel promotion:
-- Launch packaged desktop app artifact from current candidate build
-- Execute the five rollout checklist items above in a live xLights session
-- Record PASS/PASS row via `scripts/desktop/record-validation-evidence.sh`
+Manual packaged-app smoke for `/Applications/xLightsDesigner.app` is retired.

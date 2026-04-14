@@ -1,10 +1,21 @@
-# Desktop Release Runbook (macOS-first)
+# Desktop Release Runbook (Retired Electron Path)
 
-Status: Draft operational runbook (2026-03-05)
+Status: Historical reference only. Retired after native macOS cutover.
 Owner: xLightsDesigner maintainers
 
+This runbook documents the retired Electron packaging path.
+
+Do not use:
+- `/Applications/xLightsDesigner.app`
+- `apps/xlightsdesigner-desktop`
+- `scripts/desktop/validate-nondev-install.sh`
+
+Use the native macOS app instead:
+- `apps/xlightsdesigner-macos`
+- native automation server on `http://127.0.0.1:49916`
+
 ## 1) Scope
-This runbook defines pre-release validation and release execution for xLightsDesigner standalone desktop builds.
+This runbook defined pre-release validation and release execution for the old standalone Electron desktop build.
 
 ## 2) Inputs Required
 - Candidate commit SHA.
@@ -85,15 +96,11 @@ Promote to target channel only when:
 - No open P0/P1 regressions from this candidate.
 
 ## 8) Post-Release Checks
-- Validate download/install path from user perspective.
-- Run baseline launch validation script on target machine:
-  - `scripts/desktop/validate-nondev-install.sh /Applications/xLightsDesigner.app`
-- Verify update check behavior for the channel.
-- Spot-check connect/open/apply on one live environment.
-- Record evidence row:
-  - `scripts/desktop/record-validation-evidence.sh ...`
-- Run readiness check:
-  - `scripts/desktop/check-desktop-readiness.sh`
+Retired with the Electron packaging path.
+
+Historical notes:
+- packaged install validation against `/Applications/xLightsDesigner.app` is no longer applicable
+- readiness evidence in the companion log is historical only
 
 ## 9) Exit Criteria
 Release is considered complete when:
