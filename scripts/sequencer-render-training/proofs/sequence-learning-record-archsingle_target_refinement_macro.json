@@ -1,0 +1,122 @@
+{
+  "artifactType": "sequence_learning_record_v1",
+  "artifactVersion": 1,
+  "recordId": "slr_archsingle_target_refinement_macro_001",
+  "createdAt": null,
+  "updatedAt": null,
+  "scope": {
+    "projectId": "render_training",
+    "projectName": "Render Training Fixture",
+    "sequenceId": "colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq",
+    "sequenceName": "colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq",
+    "checkpointId": "chk_archsingle_target_refinement_macro_001",
+    "recordScope": "evaluation_run"
+  },
+  "context": {
+    "designHandoffRef": "design_handoff_v2:proof_archsingle_target_refinement",
+    "revisionGoal": "Validate a narrow local target-refinement checkpoint and preserve the distinction between local model refinement and broader section or whole-sequence work.",
+    "requestedScope": {
+      "mode": "target_refinement",
+      "reviewStartLevel": "model",
+      "sectionScopeKind": "full_sequence"
+    },
+    "sectionScope": [],
+    "targetScope": [
+      "ArchSingle"
+    ]
+  },
+  "preferences": {
+    "directorProfileRef": null,
+    "projectPreferenceRef": null,
+    "preferenceSignalsUsed": [],
+    "preferenceScope": "none"
+  },
+  "revisionBatch": {
+    "revisionBatchPlanRef": null,
+    "appliedRevisionBatchRef": null,
+    "summary": "Sparse tree-led validation checkpoint.",
+    "changeCategory": "proof_validation",
+    "sectionTargets": [
+      "ArchSingle"
+    ],
+    "targetIds": [
+      "ArchSingle"
+    ],
+    "effectFamilies": [
+      "ColorWash"
+    ],
+    "appliedCommandStats": null,
+    "baseRevision": null,
+    "resultingRevision": null
+  },
+  "prediction": {
+    "mode": "reconstruction",
+    "previewSceneGeometryRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
+    "previewSceneTensorRef": null,
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_target_refinement_macro.json",
+    "predictedStrengths": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint."
+    ],
+    "predictedRisks": [
+      "Scene spread is too tight; add restrained support targets before polishing detail.",
+      "Family balance is narrow; current output relies entirely on Arches.",
+      "Active centroid is static across the sampled frames."
+    ],
+    "predictionSummary": "Sparse tree-only checkpoint reconstructed from authoritative render data."
+  },
+  "truth": {
+    "renderTruthCheckpointRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_target_refinement_macro.json",
+    "xlightsRevision": null,
+    "renderWindow": {
+      "windowStartMs": 1000,
+      "windowEndMs": 5000,
+      "frameOffsets": [
+        8,
+        10,
+        12
+      ]
+    },
+    "truthSummary": "Authoritative xLights frames joined onto cached whole-layout geometry.",
+    "previewParityRef": null
+  },
+  "critique": {
+    "critiqueRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_target_refinement_macro.json",
+    "strengths": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint."
+    ],
+    "weaknesses": [
+      "Scene spread is too tight; add restrained support targets before polishing detail.",
+      "Family balance is narrow; current output relies entirely on Arches.",
+      "Active centroid is static across the sampled frames."
+    ],
+    "intentAlignment": "single-idea section read",
+    "musicAlignment": "static",
+    "displayUseAssessment": "single_family",
+    "focusAssessment": "narrow",
+    "densityAssessment": "sparse",
+    "coherenceAssessment": "concentrated",
+    "recommendedNextMoves": [
+      "Broaden the active footprint with one secondary support family while preserving the lead target.",
+      "Decide whether this section should remain Arches-only or intentionally add a support family."
+    ]
+  },
+  "outcome": {
+    "cycleOutcome": "usable_with_revision",
+    "shouldContinueFromHere": true,
+    "nextRevisionPriority": "Broaden the active footprint with one secondary support family while preserving the lead target.",
+    "humanAccepted": null,
+    "checkpointWorthKeeping": true
+  },
+  "provenance": {
+    "appVersion": null,
+    "assistantModel": null,
+    "designerAgentVersion": "proof_v1",
+    "sequenceAgentVersion": "proof_v1",
+    "xlightsApiVersion": 2,
+    "xlightsIntegrationBranch": "api-cleanup",
+    "createdBy": "render_training_proof",
+    "sourceRunId": "render_training_archsingle_target_refinement_macro_001"
+  }
+}

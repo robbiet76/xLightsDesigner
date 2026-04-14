@@ -73,6 +73,7 @@ Harness runner:
     - `TreeFlat + ArchSingle` composite support case
     - `ArchSingle + MatrixLowDensity` balanced support case
     - `ArchSingle + MatrixLowDensity` whole-sequence macro case
+    - `ArchSingle` target-refinement macro case
   - emits:
     - per-scenario window / observation / critique / learning record artifacts
     - [sequence-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-feedback-suite-summary.json)
@@ -187,6 +188,7 @@ Harness status:
   - one broader `Tree + Arches` multi-family composite case
   - one broader `Arches + Matrix` lead-plus-support composite case
   - one broader `Arches + Matrix` whole-sequence macro-scope case
+  - one narrow `Arches` local target-refinement case
 - The current suite now demonstrates three macro outcomes:
   - too narrow / single-family
   - broad but over-split

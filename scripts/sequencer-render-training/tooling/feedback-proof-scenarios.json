@@ -97,5 +97,21 @@
     "sectionScope": "",
     "targetScope": "",
     "effectFamilies": "ColorWash,SingleStrand"
+  },
+  {
+    "scenarioId": "archsingle_target_refinement_macro",
+    "modelName": "ArchSingle",
+    "fseqPath": "render-training/fseq/colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "frameOffsets": "8,10,12",
+    "designHandoffRef": "design_handoff_v2:proof_archsingle_target_refinement",
+    "revisionGoal": "Validate a narrow local target-refinement checkpoint and preserve the distinction between local model refinement and broader section or whole-sequence work.",
+    "requestedScopeMode": "target_refinement",
+    "reviewStartLevel": "model",
+    "sectionScopeKind": "full_sequence",
+    "sectionScope": "",
+    "targetScope": "ArchSingle",
+    "effectFamilies": "ColorWash"
   }
 ]

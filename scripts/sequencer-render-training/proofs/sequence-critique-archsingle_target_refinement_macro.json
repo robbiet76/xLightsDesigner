@@ -1,0 +1,59 @@
+{
+  "artifactType": "sequence_critique_v1",
+  "artifactVersion": 1,
+  "createdAt": null,
+  "source": {
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_target_refinement_macro.json"
+  },
+  "ladderLevel": "macro",
+  "designerSummary": {
+    "intentRead": "single-idea section read",
+    "focusRead": "narrow",
+    "contrastRead": "sparse",
+    "compositionRead": "concentrated",
+    "strengths": [
+      "The section reads as a single focused idea.",
+      "Density is consistent across the sampled window (sparse)."
+    ],
+    "weaknesses": [
+      "The visual footprint is very narrow relative to the full scene.",
+      "Only one family is carrying the section (Arches)."
+    ],
+    "designAdjustmentSuggestions": [
+      "Decide whether this section should remain Arches-only or intentionally add a support family."
+    ]
+  },
+  "sequencerSummary": {
+    "executionRead": "stable_sparse_pass",
+    "spreadRead": "too_narrow",
+    "densityRead": "sparse",
+    "familyBalanceRead": "single_family",
+    "motionRead": "static",
+    "strengths": [
+      "Active content is concentrated enough to make the lead target legible.",
+      "Frame-to-frame density remains stable through the sampled checkpoint."
+    ],
+    "weaknesses": [
+      "Scene spread is too tight; add restrained support targets before polishing detail.",
+      "Family balance is narrow; current output relies entirely on Arches.",
+      "Active centroid is static across the sampled frames."
+    ],
+    "revisionSuggestions": [
+      "Broaden the active footprint with one secondary support family while preserving the lead target."
+    ]
+  },
+  "nextMoves": [
+    {
+      "priority": 1,
+      "owner": "sequencer",
+      "level": "group",
+      "instruction": "Broaden the active footprint with one secondary support family while preserving the lead target."
+    },
+    {
+      "priority": 2,
+      "owner": "designer",
+      "level": "section",
+      "instruction": "Decide whether this section should remain Arches-only or intentionally add a support family."
+    }
+  ]
+}
