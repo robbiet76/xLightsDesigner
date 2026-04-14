@@ -117,6 +117,11 @@ function uniqueStrings(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => String(row || "").trim()).filter(Boolean))];
 }
 
+function round6(value = 0) {
+  const num = Number(value || 0);
+  return Number.isFinite(num) ? Number(num.toFixed(6)) : 0;
+}
+
 function slug(value = "") {
   return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
@@ -276,6 +281,130 @@ function summarizeConfigurationProfiles(records = []) {
   };
 }
 
+function toAnchorKey(value) {
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") return String(value);
+  return String(value || "").trim();
+}
+
+function average(values = []) {
+  const nums = (Array.isArray(values) ? values : []).map((row) => Number(row)).filter((row) => Number.isFinite(row));
+  if (!nums.length) return 0;
+  return nums.reduce((sum, row) => sum + row, 0) / nums.length;
+}
+
+function filterBehaviorHints(labels = [], parameterName = "") {
+  const excludedPrefixes = ["effect:", "model:", "palette_", "render_style:"];
+  const excludedExact = new Set([String(parameterName || "").trim(), "range_sample"]);
+  return uniqueStrings(labels).filter((label) => {
+    const value = String(label || "").trim();
+    if (!value || excludedExact.has(value)) return false;
+    return !excludedPrefixes.some((prefix) => value.startsWith(prefix));
+  });
+}
+
+function confidenceForDerivedPrior({ distinctAnchorCount = 0, sampleCount = 0, coverageStatus = "none" } = {}) {
+  if (distinctAnchorCount >= 3 && sampleCount >= 6 && coverageStatus === "multi_configuration_sampled") return "high";
+  if (distinctAnchorCount >= 2 && sampleCount >= 4) return "medium";
+  if (sampleCount > 0) return "low";
+  return "none";
+}
+
+function buildDerivedParameterPriors(records = [], configurationRepresentativeness = { coverageStatus: "none", profiles: [] }) {
+  const groups = new Map();
+  for (const record of records) {
+    const parameterName = String(record?.trainingContext?.screenedParameterName || "").trim();
+    if (!parameterName) continue;
+    const geometryProfile = String(record?.fixture?.geometryProfile || record?.modelMetadata?.resolvedGeometryProfile || "").trim();
+    const paletteMode = String(record?.trainingContext?.screeningPaletteMode || "").trim() || "default";
+    const key = JSON.stringify([parameterName, geometryProfile, paletteMode]);
+    if (!groups.has(key)) {
+      groups.set(key, {
+        parameterName,
+        geometryProfile,
+        paletteMode,
+        records: []
+      });
+    }
+    groups.get(key).records.push(record);
+  }
+
+  const priors = [...groups.values()].map((group) => {
+    const anchorMap = new Map();
+    for (const record of group.records) {
+      const rawValue = record?.effectSettings?.[group.parameterName];
+      const anchorKey = toAnchorKey(rawValue);
+      if (!anchorMap.has(anchorKey)) {
+        anchorMap.set(anchorKey, {
+          parameterValue: rawValue,
+          sampleCount: 0,
+          temporalMotionMean: [],
+          temporalColorDeltaMean: [],
+          temporalBrightnessDeltaMean: [],
+          nonBlankSampledFrameRatio: [],
+          temporalSignatures: [],
+          behaviorHints: [],
+          structuralSignatures: []
+        });
+      }
+      const next = anchorMap.get(anchorKey);
+      next.sampleCount += 1;
+      next.temporalMotionMean.push(record?.features?.temporalMotionMean);
+      next.temporalColorDeltaMean.push(record?.features?.temporalColorDeltaMean);
+      next.temporalBrightnessDeltaMean.push(record?.features?.temporalBrightnessDeltaMean);
+      next.nonBlankSampledFrameRatio.push(record?.features?.nonBlankSampledFrameRatio);
+      next.temporalSignatures.push(String(record?.features?.temporalSignature || "").trim());
+      next.behaviorHints.push(...filterBehaviorHints(record?.observations?.labels || [], group.parameterName));
+      next.structuralSignatures.push(buildConfigurationProfile(record).structuralSignature);
+    }
+    const anchorProfiles = [...anchorMap.values()].map((row) => ({
+      parameterValue: row.parameterValue,
+      sampleCount: row.sampleCount,
+      temporalSignatureHints: uniqueStrings(row.temporalSignatures),
+      meanTemporalMotion: round6(average(row.temporalMotionMean)),
+      meanTemporalColorDelta: round6(average(row.temporalColorDeltaMean)),
+      meanTemporalBrightnessDelta: round6(average(row.temporalBrightnessDeltaMean)),
+      meanNonBlankRatio: round6(average(row.nonBlankSampledFrameRatio)),
+      behaviorHints: uniqueStrings(row.behaviorHints).slice(0, 12),
+      structuralSignatures: uniqueStrings(row.structuralSignatures)
+    })).sort((a, b) =>
+      b.meanTemporalMotion - a.meanTemporalMotion ||
+      b.meanTemporalColorDelta - a.meanTemporalColorDelta ||
+      String(a.parameterValue).localeCompare(String(b.parameterValue))
+    );
+    const geometryProfiles = configurationRepresentativeness?.profiles || [];
+    const matchingProfiles = geometryProfiles.filter((row) => row.geometryProfile === group.geometryProfile);
+    return {
+      parameterName: group.parameterName,
+      geometryProfile: group.geometryProfile,
+      paletteMode: group.paletteMode,
+      sampleCount: group.records.length,
+      distinctAnchorCount: anchorProfiles.length,
+      configurationCoverageStatus: matchingProfiles.length > 1
+        ? "multi_configuration_sampled"
+        : (matchingProfiles.length === 1 ? "single_reference_per_geometry" : "none"),
+      configurationProfileCount: matchingProfiles.length,
+      structuralSignatures: uniqueStrings(matchingProfiles.map((row) => row.structuralSignature)),
+      confidence: confidenceForDerivedPrior({
+        distinctAnchorCount: anchorProfiles.length,
+        sampleCount: group.records.length,
+        coverageStatus: matchingProfiles.length > 1 ? "multi_configuration_sampled" : (matchingProfiles.length === 1 ? "single_reference_per_geometry" : "none")
+      }),
+      anchorProfiles
+    };
+  }).sort((a, b) =>
+    a.parameterName.localeCompare(b.parameterName) ||
+    a.geometryProfile.localeCompare(b.geometryProfile) ||
+    a.paletteMode.localeCompare(b.paletteMode)
+  );
+
+  return {
+    status: priors.length ? "populated" : "empty",
+    priorCount: priors.length,
+    priors
+  };
+}
+
 function mergeRoleOutcomeMemory(roleOutcomeMemory = {}, outcomeRecords = [], effectName = "") {
   const next = buildRoleOutcomeSeed();
   for (const role of Object.keys(roleOutcomeMemory || {})) {
@@ -335,6 +464,8 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
   if (screenedParameterNames.length && parameterLearning.coverageStatus === "registry_defined_not_screened") {
     parameterLearning.coverageStatus = "screened_parameter_subset";
   }
+  const configurationRepresentativeness = summarizeConfigurationProfiles(relevantScreeningRecords);
+  parameterLearning.derivedPriors = buildDerivedParameterPriors(relevantScreeningRecords, configurationRepresentativeness);
   return {
     effectName,
     baseline: {
@@ -370,7 +501,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
       sampledModelTypes: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.modelType)),
       sampledGeometryProfiles: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.geometryProfile)),
       observedLabelHints: uniqueStrings(relevantScreeningRecords.flatMap((row) => row?.observations?.labels || [])),
-      configurationRepresentativeness: summarizeConfigurationProfiles(relevantScreeningRecords)
+      configurationRepresentativeness
     }
   };
 }

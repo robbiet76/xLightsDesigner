@@ -287,6 +287,7 @@ Per-effect screening summaries should expose:
 - sampled geometry profiles
 - configuration profile summaries
 - configuration coverage status
+- derived parameter priors
 
 Configuration profiles should be derived from portable traits such as:
 - model type
@@ -312,6 +313,50 @@ This allows the sequencer to reason:
 - "this prior applies strongly to arch_single reference fixtures"
 - without falsely claiming:
 - "this is universal for every user-defined arch"
+
+## Derived Parameter Priors
+
+The unified training set should expose a bounded parameter-prior layer derived from screened motion-aware evidence.
+
+This layer is not unrestricted auto-tuning.
+
+It should summarize, per:
+- effect
+- geometry profile
+- parameter
+- palette mode
+
+the observed anchor behaviors from screening evidence.
+
+Suggested contents:
+- screened parameter name
+- geometry profile
+- palette mode
+- distinct tested anchor count
+- configuration coverage status
+- confidence
+- anchor profiles
+
+Each anchor profile should summarize:
+- parameter value
+- sample count
+- temporal signature hints
+- mean temporal motion
+- mean temporal color delta
+- mean temporal brightness delta
+- mean nonblank ratio
+- compact behavior hints
+- structural signatures represented
+
+Design rule:
+- this layer may recommend bounded anchor choices
+- it must not act as free-form parameter tuning authority
+
+Its purpose is to let the sequencer reason:
+- "for this geometry and palette mode, these settings produced clearly different animated behavior"
+
+not:
+- "search the entire parameter space blindly"
 
 ## Acceptance Standard
 
