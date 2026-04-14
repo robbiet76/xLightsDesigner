@@ -41,6 +41,10 @@ private struct StubXLightsSessionService: XLightsSessionService, Sendable {
         "Saved xLights sequence: /tmp/HolidayRoad.xsq"
     }
 
+    func closeCurrentSequence() async throws -> String {
+        "Closed xLights sequence: /tmp/HolidayRoad.xsq"
+    }
+
     func renderCurrentSequence() async throws -> String {
         "Rendered xLights sequence: /tmp/HolidayRoad.xsq"
     }

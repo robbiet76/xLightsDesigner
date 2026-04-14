@@ -14,6 +14,7 @@ enum XLightsSessionServiceError: LocalizedError {
 protocol XLightsSessionService: Sendable {
     func loadSession(projectShowFolder: String) async throws -> XLightsSessionSnapshotModel
     func saveCurrentSequence() async throws -> String
+    func closeCurrentSequence() async throws -> String
     func renderCurrentSequence() async throws -> String
     func openSequence(filePath: String, saveBeforeSwitch: Bool) async throws -> String
     func createSequence(filePath: String, mediaFile: String?, durationMs: Int?, frameMs: Int?, saveBeforeSwitch: Bool) async throws -> String
@@ -115,7 +116,7 @@ struct LocalXLightsSessionService: XLightsSessionService {
             renderSupported: true,
             openSupported: true,
             createSupported: true,
-            closeSupported: false,
+            closeSupported: true,
             lastSaveSummary: "",
             lastRenderSummary: ""
         )
@@ -130,6 +131,16 @@ struct LocalXLightsSessionService: XLightsSessionService {
             throw XLightsSessionServiceError.invalidResponse("xLights did not confirm save.")
         }
         return file.isEmpty ? "Saved current xLights sequence." : "Saved xLights sequence: \(file)"
+    }
+
+    func closeCurrentSequence() async throws -> String {
+        let json = try await postQueuedJSON(to: "/sequence/close", body: [:], command: "sequence.close")
+        let data = dictionary(json["data"])
+        let closed = bool(data["closed"]) || !data.isEmpty
+        guard closed else {
+            throw XLightsSessionServiceError.invalidResponse("xLights did not confirm close.")
+        }
+        return "Closed current xLights sequence."
     }
 
     func renderCurrentSequence() async throws -> String {
@@ -151,6 +162,8 @@ struct LocalXLightsSessionService: XLightsSessionService {
         }
         if saveBeforeSwitch {
             _ = try? await saveCurrentSequence()
+        } else {
+            _ = try? await closeCurrentSequence()
         }
         _ = try await postQueuedJSON(to: "/sequence/open", body: [
             "file": normalizedPath,
@@ -169,6 +182,8 @@ struct LocalXLightsSessionService: XLightsSessionService {
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         if saveBeforeSwitch {
             _ = try? await saveCurrentSequence()
+        } else {
+            _ = try? await closeCurrentSequence()
         }
         var body: [String: Any] = ["file": normalizedPath]
         let media = string(mediaFile)
