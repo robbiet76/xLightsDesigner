@@ -1,0 +1,1637 @@
+{
+  "artifactType": "sequencer_unified_training_set_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-14T12:18:10.330Z",
+  "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
+  "sources": {
+    "stage1Bundle": {
+      "artifactType": "sequencer_stage1_training_bundle",
+      "artifactVersion": "1.0",
+      "targetState": "selector_ready_with_evidence",
+      "effectCount": 10,
+      "equalizedCount": 10,
+      "selectorReadyEffects": [
+        "Bars",
+        "Color Wash",
+        "Marquee",
+        "On",
+        "Pinwheel",
+        "Shimmer",
+        "Shockwave",
+        "SingleStrand",
+        "Spirals",
+        "Twinkle"
+      ]
+    },
+    "liveLearning": {
+      "status": "framework_seed_only",
+      "currentDataShape": [
+        "revision_role",
+        "request_scope_mode",
+        "review_level",
+        "unresolved_signals",
+        "rendered_outcome_shift"
+      ],
+      "currentPopulation": "not yet harvested into durable general-training records"
+    }
+  },
+  "boundaries": {
+    "generalTraining": {
+      "purpose": "portable shared sequencing knowledge",
+      "storageRule": "eligible_for_shared_sync",
+      "includes": [
+        "stage1_effect_selection_evidence",
+        "effect_family_outcome_memory",
+        "scope_and_role_conditioned_revision_learning"
+      ]
+    },
+    "preferenceTraining": {
+      "purpose": "user_or_project_taste_bias",
+      "storageRule": "separate_store_required",
+      "excludedFromThisArtifact": true,
+      "includes": [
+        "director_taste",
+        "project_show_preferences",
+        "user_accept_reject_patterns"
+      ]
+    }
+  },
+  "runtimeContracts": {
+    "revisionRoles": [
+      "strengthen_lead",
+      "reduce_competing_support",
+      "widen_support",
+      "increase_section_contrast",
+      "add_section_development"
+    ],
+    "requestScopeModes": [
+      "whole_sequence",
+      "section_selection",
+      "section_target_refinement",
+      "target_refinement"
+    ],
+    "reviewLevels": [
+      "macro",
+      "section",
+      "group",
+      "model",
+      "effect"
+    ]
+  },
+  "effects": [
+    {
+      "effectName": "Bars",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 2,
+          "passedCaseCount": 2,
+          "caseIds": [
+            "select_directional_segmented_clean",
+            "select_arch_compress_motion"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "clean",
+          "directional",
+          "fill",
+          "full",
+          "patterned",
+          "segmented",
+          "steady"
+        ],
+        "patternFamilies": [
+          "compressing_bars",
+          "dense_bars",
+          "expanding_bars",
+          "multi_bars",
+          "single_bar_motion",
+          "tree_bar_bands",
+          "tree_compressing_bars",
+          "tree_dense_bars",
+          "tree_expanding_bars"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "barCount",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "direction",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          }
+        ]
+      },
+      "capability": {
+        "family": "rhythmic",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Color Wash",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 2,
+          "passedCaseCount": 2,
+          "caseIds": [
+            "select_colorwash_spinner_fill",
+            "select_colorwash_tree_fill"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "bold",
+          "busy",
+          "clean",
+          "fill",
+          "full",
+          "partial",
+          "patterned",
+          "restrained",
+          "segmented",
+          "sparse",
+          "steady"
+        ],
+        "patternFamilies": [
+          "radial_fill",
+          "star_fill",
+          "tree_fill",
+          "unclassified"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "hFade",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          },
+          {
+            "parameterName": "vFade",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          }
+        ]
+      },
+      "capability": {
+        "family": "wash",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Marquee",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_clean_fill_steady_competition",
+            "select_wide_clean_motion",
+            "select_arch_segmented_marquee"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "bouncy",
+          "busy",
+          "clean",
+          "directional",
+          "fill",
+          "full",
+          "partial",
+          "patterned",
+          "restrained",
+          "segmented",
+          "steady"
+        ],
+        "patternFamilies": [
+          "marquee_motion",
+          "segmented_marquee",
+          "tree_fill",
+          "wide_marquee"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "bandSize",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "reverse",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          },
+          {
+            "parameterName": "skipSize",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          }
+        ]
+      },
+      "capability": {
+        "family": "marquee_motion",
+        "supportedSettingsIntent": [],
+        "supportedPaletteIntent": [],
+        "supportedLayerIntent": [],
+        "supportedRenderIntent": []
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "On",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_on_ramp_up_line",
+            "select_on_ramp_down_spinner",
+            "select_on_shimmer_tree"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "busy",
+          "clean",
+          "directional",
+          "fill",
+          "full",
+          "partial",
+          "patterned",
+          "restrained",
+          "sparse",
+          "steady"
+        ],
+        "patternFamilies": [
+          "static_fill",
+          "static_hold"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "endLevel",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          },
+          {
+            "parameterName": "shimmer",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          },
+          {
+            "parameterName": "startLevel",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          }
+        ]
+      },
+      "capability": {
+        "family": "hold",
+        "supportedSettingsIntent": [
+          "intensity",
+          "coverage",
+          "motion"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Pinwheel",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 2,
+          "passedCaseCount": 2,
+          "caseIds": [
+            "select_star_directional_restrained",
+            "select_star_dense_pinwheel"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "busy",
+          "directional",
+          "geometry_coupled",
+          "partial",
+          "patterned",
+          "restrained",
+          "sparse",
+          "steady"
+        ],
+        "patternFamilies": [
+          "dense_pinwheel",
+          "helical_pinwheel",
+          "radial_pinwheel",
+          "tree_pinwheel",
+          "tree_pinwheel_rotation"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "3DMode",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "arms",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "rotation",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          },
+          {
+            "parameterName": "style",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          },
+          {
+            "parameterName": "thickness",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "twist",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          }
+        ]
+      },
+      "capability": {
+        "family": "radial_motion",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Shimmer",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_shimmer_spinner_texture",
+            "select_shimmer_linear_texture",
+            "select_shimmer_matrix_texture"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "busy",
+          "clean",
+          "directional",
+          "fill",
+          "full",
+          "partial",
+          "patterned",
+          "restrained",
+          "sparse",
+          "steady",
+          "texture_heavy"
+        ],
+        "patternFamilies": [
+          "radial_sparkle",
+          "shimmer"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "cycles",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "dutyFactor",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "useAllColors",
+            "status": "interaction_suspected",
+            "rationale": "Some semantic change was observed, but the evidence is narrow. This parameter may depend on geometry, render style, or other settings."
+          }
+        ]
+      },
+      "capability": {
+        "family": "sparkle",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Shockwave",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_shockwave_fill_spinner",
+            "select_shockwave_crisp_spinner",
+            "select_shockwave_helical_compact"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "directional",
+          "fill",
+          "geometry_coupled",
+          "patterned",
+          "restrained"
+        ],
+        "patternFamilies": [
+          "compact_shockwave_ring",
+          "crisp_shockwave",
+          "diffuse_shockwave",
+          "helical_compact_shockwave",
+          "helical_crisp_shockwave",
+          "helical_diffuse_shockwave",
+          "helical_shockwave",
+          "offcenter_radial_shockwave",
+          "offcenter_shockwave",
+          "radial_compact_shockwave",
+          "radial_crisp_shockwave",
+          "radial_diffuse_shockwave",
+          "radial_shockwave"
+        ],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "compact_shockwave_ring",
+        "supportedSettingsIntent": [],
+        "supportedPaletteIntent": [],
+        "supportedLayerIntent": [],
+        "supportedRenderIntent": []
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "SingleStrand",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_singlestrand_bounce_vertical",
+            "select_singlestrand_directional_arch",
+            "select_singlestrand_tree_travel"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "bouncy",
+          "busy",
+          "clean",
+          "directional",
+          "fill",
+          "full",
+          "partial",
+          "patterned",
+          "restrained",
+          "segmented",
+          "sparse",
+          "steady"
+        ],
+        "patternFamilies": [
+          "bounce",
+          "directional_chase",
+          "radial_fill",
+          "segmented_chase",
+          "spiral_travel",
+          "star_fill"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "chaseSize",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "chaseType",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "cycles",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "numberChases",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          }
+        ]
+      },
+      "capability": {
+        "family": "strand_pattern",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Spirals",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_helical_clean_fill",
+            "select_round_spiral_rotation",
+            "select_spiral_helical_rotation"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "busy",
+          "clean",
+          "directional",
+          "fill",
+          "full",
+          "geometry_coupled",
+          "partial",
+          "patterned",
+          "restrained",
+          "segmented",
+          "sparse",
+          "steady"
+        ],
+        "patternFamilies": [
+          "helical_spiral_drift",
+          "helical_spiral_flow",
+          "helical_spiral_motion",
+          "helical_spiral_rotation",
+          "spiral_drift",
+          "spiral_flow",
+          "spiral_motion",
+          "spiral_rotation"
+        ],
+        "retainedParameters": [
+          {
+            "parameterName": "count",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "movement",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "rotation",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          },
+          {
+            "parameterName": "thickness",
+            "status": "high_impact_observed",
+            "rationale": "The sampled values split into multiple stable semantic regions in this tested context."
+          }
+        ]
+      },
+      "capability": {
+        "family": "motion_texture",
+        "supportedSettingsIntent": [
+          "intensity",
+          "speed",
+          "density",
+          "coverage",
+          "motion",
+          "direction",
+          "thickness",
+          "variation"
+        ],
+        "supportedPaletteIntent": [
+          "colors",
+          "temperature",
+          "contrast",
+          "brightness",
+          "saturation",
+          "accentUsage"
+        ],
+        "supportedLayerIntent": [
+          "priority",
+          "blendRole",
+          "mixAmount",
+          "overlayPolicy"
+        ],
+        "supportedRenderIntent": [
+          "groupPolicy",
+          "bufferStyle",
+          "expansionPolicy",
+          "riskTolerance"
+        ]
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    },
+    {
+      "effectName": "Twinkle",
+      "baseline": {
+        "currentStage": "selector_ready",
+        "selectorReady": true,
+        "selectorEvidence": {
+          "selectedCaseCount": 3,
+          "passedCaseCount": 3,
+          "caseIds": [
+            "select_twinkle_restrained_line",
+            "select_twinkle_strobe_spinner",
+            "select_twinkle_varied_spinner"
+          ]
+        },
+        "supportedModelTypes": [
+          "arch",
+          "cane",
+          "icicles",
+          "matrix",
+          "single_line",
+          "spinner",
+          "star",
+          "tree_360",
+          "tree_flat"
+        ],
+        "supportedGeometryProfiles": [
+          "arch_grouped",
+          "arch_multi_layer",
+          "arch_single",
+          "cane_grouped",
+          "cane_single",
+          "cane_stick_grouped",
+          "icicles_drop_pattern",
+          "matrix_high_density",
+          "matrix_low_density",
+          "matrix_medium_density",
+          "single_line_horizontal",
+          "single_line_single_node",
+          "single_line_vertical",
+          "spinner_standard",
+          "star_multi_layer",
+          "star_single_layer",
+          "tree_360_round",
+          "tree_360_spiral",
+          "tree_flat_single_layer"
+        ],
+        "intentTags": [
+          "animated",
+          "bold",
+          "busy",
+          "patterned",
+          "restrained",
+          "steady",
+          "varied"
+        ],
+        "patternFamilies": [
+          "classic_random_twinkle",
+          "classic_twinkle",
+          "linear_classic_random_twinkle",
+          "linear_classic_twinkle",
+          "linear_restrained_twinkle",
+          "linear_soft_twinkle",
+          "linear_strobe_twinkle",
+          "linear_surging_twinkle",
+          "radial_classic_random_twinkle",
+          "radial_classic_twinkle",
+          "radial_restrained_twinkle",
+          "radial_soft_twinkle",
+          "radial_strobe_twinkle",
+          "radial_surging_twinkle",
+          "restrained_twinkle",
+          "soft_twinkle",
+          "strobe_twinkle",
+          "surging_twinkle"
+        ],
+        "retainedParameters": []
+      },
+      "capability": {
+        "family": "classic_random_twinkle",
+        "supportedSettingsIntent": [],
+        "supportedPaletteIntent": [],
+        "supportedLayerIntent": [],
+        "supportedRenderIntent": []
+      },
+      "liveOutcomeLearning": {
+        "status": "seeded_empty",
+        "storageClass": "general_training",
+        "roleOutcomeMemory": {
+          "strengthen_lead": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "reduce_competing_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "widen_support": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "increase_section_contrast": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          },
+          "add_section_development": {
+            "sampleCount": 0,
+            "successfulUses": 0,
+            "failedUses": 0,
+            "favoredScopes": [],
+            "favoredSignals": [],
+            "cautionSignals": []
+          }
+        }
+      }
+    }
+  ]
+}
