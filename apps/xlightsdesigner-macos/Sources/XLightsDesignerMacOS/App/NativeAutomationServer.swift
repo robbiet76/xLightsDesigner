@@ -204,21 +204,25 @@ final class NativeAutomationServer: @unchecked Sendable {
                 project: model.workspace.activeProject
             )
             model.assistantModel.draft = prompt
-            await model.assistantModel.sendDraft(
-                context: model.assistantContext(),
-                project: model.workspace.activeProject,
-                onPhaseTransition: { transition in
-                    self.model.transitionToPhase(transition.phaseID, reason: transition.reason)
-                },
-                onActionRequest: { actionRequest in
-                    self.model.applyAssistantActionRequest(actionRequest)
-                },
-                onPhaseStarted: {
-                    self.model.markActivePhaseStarted()
-                }
-            )
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await self.model.assistantModel.sendDraft(
+                    context: self.model.assistantContext(),
+                    project: self.model.workspace.activeProject,
+                    onPhaseTransition: { transition in
+                        self.model.transitionToPhase(transition.phaseID, reason: transition.reason)
+                    },
+                    onActionRequest: { actionRequest in
+                        self.model.applyAssistantActionRequest(actionRequest)
+                    },
+                    onPhaseStarted: {
+                        self.model.markActivePhaseStarted()
+                    }
+                )
+            }
             return .json(200, body: [
                 "ok": true,
+                "accepted": true,
                 "messageCount": model.assistantModel.messages.count,
                 "lastMessage": assistantSnapshot()["lastMessage"] ?? NSNull()
             ])

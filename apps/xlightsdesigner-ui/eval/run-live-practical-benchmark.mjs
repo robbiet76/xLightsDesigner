@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 
 function str(value = "") {
@@ -140,12 +141,23 @@ function copyWorkingSequence({ suite, scenario, workingShowRoot }) {
 }
 
 function buildProjectClonePath(baseProjectFilePath, suiteKey, scenarioName) {
-  const projectDir = path.dirname(baseProjectFilePath);
   const projectBaseName = path.basename(baseProjectFilePath, path.extname(baseProjectFilePath));
-  const cloneName = `${projectBaseName}-${suiteKey}-${scenarioName}`
+  const projectStem = projectBaseName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "benchmark-project";
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24) || "project";
+  const scenarioStem = `${suiteKey}-${scenarioName}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32) || "scenario";
+  const suffix = crypto
+    .createHash("sha1")
+    .update(`${baseProjectFilePath}::${suiteKey}::${scenarioName}`)
+    .digest("hex")
+    .slice(0, 10);
+  const cloneName = `${projectStem}-${scenarioStem}-${suffix}`;
   const cloneRoot = path.join("/tmp", "xld_eval_projects", cloneName);
   return {
     cloneRoot,
@@ -161,6 +173,32 @@ function cloneProjectForScenario(baseProjectFilePath, suiteKey, scenarioName) {
   const originalProjectFilePath = path.join(cloneRoot, path.basename(baseProjectFilePath));
   if (originalProjectFilePath !== cloneProjectFilePath && fs.existsSync(originalProjectFilePath)) {
     fs.renameSync(originalProjectFilePath, cloneProjectFilePath);
+  }
+  const artifactRoot = path.join(cloneRoot, "artifacts");
+  const removableArtifactDirs = [
+    "apply-results",
+    "plans",
+    "proposals",
+    "intent-handoffs",
+    "analysis",
+    "music-context",
+    "briefs",
+    "design-scene"
+  ];
+  for (const relative of removableArtifactDirs) {
+    fs.rmSync(path.join(artifactRoot, relative), { recursive: true, force: true });
+  }
+  fs.rmSync(path.join(cloneRoot, "history"), { recursive: true, force: true });
+  fs.rmSync(path.join(cloneRoot, "assistant"), { recursive: true, force: true });
+  if (fs.existsSync(cloneProjectFilePath)) {
+    const project = JSON.parse(fs.readFileSync(cloneProjectFilePath, "utf8"));
+    const snapshot = { ...(project.snapshot || {}) };
+    snapshot.sequencePathInput = "";
+    snapshot.audioPathInput = "";
+    snapshot.recentSequences = [];
+    delete snapshot.sequenceAgentRuntime;
+    project.snapshot = snapshot;
+    fs.writeFileSync(cloneProjectFilePath, `${JSON.stringify(project, null, 2)}\n`, "utf8");
   }
   return { cloneRoot, cloneProjectFilePath };
 }
@@ -180,6 +218,12 @@ function summarizePlan(plan = {}) {
     effectNames: [...new Set(effectCreates.map((row) => row.effectName).filter(Boolean))],
     modelNames: [...new Set(effectCreates.map((row) => row.modelName).filter(Boolean))]
   };
+}
+
+function buildBenchmarkPrompt(scenario = {}) {
+  const basePrompt = str(scenario?.prompt || scenario?.strongPrompt || scenario?.revisionPrompt);
+  const benchmarkDirective = "Use defaults where needed. Do not ask follow-up questions. Do not answer with a concept summary. Materialize an apply-ready sequencing plan and command handoff now.";
+  return [basePrompt, benchmarkDirective].filter(Boolean).join(" ");
 }
 
 function evaluateScenario({ suiteKey, scenario, promptSnapshot, applySnapshot, workingSequencePath }) {
@@ -247,12 +291,10 @@ async function runScenario({ repoRoot, channel, outDir, suiteKey, suite, scenari
   fs.writeFileSync(openPayloadPath, `${JSON.stringify({ sequencePath: workingSequencePath }, null, 2)}\n`, "utf8");
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence.json`), "select-workflow", ["Sequence"]);
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-open.json`), "open-sequence", ["--payload-file", openPayloadPath]);
-  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-refresh.json`), "refresh-from-xlights");
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-reset-assistant-memory.json`), "reset-assistant-memory");
   await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-workflow-sequence-post-reset.json`), "select-workflow", ["Sequence"]);
-  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-refresh-post-reset.json`), "refresh-from-xlights");
 
-  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-prompt.json`), "dispatch-prompt", [str(scenario?.prompt || scenario?.strongPrompt || scenario?.revisionPrompt)]);
+  await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-prompt.json`), "dispatch-prompt", [buildBenchmarkPrompt(scenario)]);
 
   const promptReady = await waitFor(async () => {
     const pageStates = await runAutomation(repoRoot, channel, path.join(outDir, `${prefix}-page-states.json`), "get-page-states-snapshot");
