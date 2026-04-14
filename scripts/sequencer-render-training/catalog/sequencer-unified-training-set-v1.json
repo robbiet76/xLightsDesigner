@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T16:30:36.930Z",
+  "generatedAt": "2026-04-14T16:34:40.686Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -383,7 +383,40 @@
           "highlight",
           "highlight_false",
           "highlight_true"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 1,
+          "profiles": [
+            {
+              "modelType": "arch",
+              "geometryProfile": "arch_grouped",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "arches",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "grouped",
+                "type:arch"
+              ],
+              "structuralSettings": {
+                "Angle": "0",
+                "Dir": "L",
+                "DisplayAs": "Arches",
+                "Height": "1.000000",
+                "parm1": "3",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "37983f3862ab",
+              "sampleCount": 22
+            }
+          ]
+        }
       }
     },
     {
@@ -656,7 +689,39 @@
           "shimmer_false",
           "shimmer_true",
           "shimmer_wash"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 1,
+          "profiles": [
+            {
+              "modelType": "matrix",
+              "geometryProfile": "matrix_high_density",
+              "analyzerFamily": "matrix",
+              "displayAsNormalized": "horiz_matrix",
+              "stringType": "RGB Nodes",
+              "nodeCount": 8192,
+              "nodeCountBucket": "very_large",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "density_high",
+                "matrix:64x128",
+                "type:matrix"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Horiz Matrix",
+                "parm1": "64",
+                "parm2": "128",
+                "parm3": "1",
+                "StartSide": "T",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "15d958bbb38b",
+              "sampleCount": 22
+            }
+          ]
+        }
       }
     },
     {
@@ -878,7 +943,65 @@
           "linear_pattern_fit",
           "model:single_line",
           "render_style:single_line"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 2,
+          "profiles": [
+            {
+              "modelType": "arch",
+              "geometryProfile": "arch_grouped",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "arches",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "grouped",
+                "type:arch"
+              ],
+              "structuralSettings": {
+                "Angle": "0",
+                "Dir": "L",
+                "DisplayAs": "Arches",
+                "Height": "1.000000",
+                "parm1": "3",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "37983f3862ab",
+              "sampleCount": 30
+            },
+            {
+              "modelType": "single_line",
+              "geometryProfile": "single_line_horizontal",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "single_line",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "horizontal_orientation",
+                "type:single_line"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Single Line",
+                "parm1": "1",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "d64e2ecfe7dc",
+              "sampleCount": 30
+            }
+          ]
+        }
       }
     },
     {
@@ -1106,7 +1229,12 @@
         "screenedParameterNames": [],
         "sampledModelTypes": [],
         "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
       }
     },
     {
@@ -1387,7 +1515,66 @@
           "speed_7",
           "model:star",
           "star_pattern_fit"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 2,
+          "profiles": [
+            {
+              "modelType": "spinner",
+              "geometryProfile": "spinner_standard",
+              "analyzerFamily": "radial",
+              "displayAsNormalized": "spinner",
+              "stringType": "RGB Nodes",
+              "nodeCount": 10,
+              "nodeCountBucket": "very_small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "arms:8",
+                "type:spinner"
+              ],
+              "structuralSettings": {
+                "Alternate": "false",
+                "Arc": "360",
+                "Dir": "L",
+                "DisplayAs": "Spinner",
+                "Hollow": "0",
+                "parm1": "1",
+                "parm2": "10",
+                "parm3": "8",
+                "StartSide": "T",
+                "StringType": "RGB Nodes",
+                "ZigZag": "false"
+              },
+              "structuralSignature": "055dbdc56c9d",
+              "sampleCount": 18
+            },
+            {
+              "modelType": "star",
+              "geometryProfile": "star_single_layer",
+              "analyzerFamily": "star",
+              "displayAsNormalized": "star",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "points:5",
+                "type:star"
+              ],
+              "structuralSettings": {
+                "DisplayAs": "Star",
+                "parm1": "1",
+                "parm2": "50",
+                "parm3": "5",
+                "StarStartLocation": "Bottom Ctr-CW",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "26769477fbf2",
+              "sampleCount": 18
+            }
+          ]
+        }
       }
     },
     {
@@ -1621,7 +1808,12 @@
         "screenedParameterNames": [],
         "sampledModelTypes": [],
         "sampledGeometryProfiles": [],
-        "observedLabelHints": []
+        "observedLabelHints": [],
+        "configurationRepresentativeness": {
+          "coverageStatus": "none",
+          "profileCount": 0,
+          "profiles": []
+        }
       }
     },
     {
@@ -1869,7 +2061,42 @@
           "startWidth_2",
           "startWidth_20",
           "startWidth_5"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 1,
+          "profiles": [
+            {
+              "modelType": "spinner",
+              "geometryProfile": "spinner_standard",
+              "analyzerFamily": "radial",
+              "displayAsNormalized": "spinner",
+              "stringType": "RGB Nodes",
+              "nodeCount": 10,
+              "nodeCountBucket": "very_small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "arms:8",
+                "type:spinner"
+              ],
+              "structuralSettings": {
+                "Alternate": "false",
+                "Arc": "360",
+                "Dir": "L",
+                "DisplayAs": "Spinner",
+                "Hollow": "0",
+                "parm1": "1",
+                "parm2": "10",
+                "parm3": "8",
+                "StartSide": "T",
+                "StringType": "RGB Nodes",
+                "ZigZag": "false"
+              },
+              "structuralSignature": "055dbdc56c9d",
+              "sampleCount": 66
+            }
+          ]
+        }
       }
     },
     {
@@ -2192,7 +2419,173 @@
           "round_tree_pattern",
           "tree_pattern_fit",
           "spiral_tree_pattern"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "multi_configuration_sampled",
+          "profileCount": 6,
+          "profiles": [
+            {
+              "modelType": "single_line",
+              "geometryProfile": "single_line_horizontal",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "single_line",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "horizontal_orientation",
+                "type:single_line"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Single Line",
+                "parm1": "1",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "d64e2ecfe7dc",
+              "sampleCount": 30
+            },
+            {
+              "modelType": "tree_360",
+              "geometryProfile": "tree_360_round",
+              "analyzerFamily": "tree",
+              "displayAsNormalized": "tree_360",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "nodes_per_string:50",
+                "strings:16",
+                "type:tree_360"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Tree 360",
+                "parm1": "16",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "6ed60f188c6c",
+              "sampleCount": 30
+            },
+            {
+              "modelType": "arch",
+              "geometryProfile": "arch_single",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "arches",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "type:arch"
+              ],
+              "structuralSettings": {
+                "Angle": "0",
+                "Dir": "L",
+                "DisplayAs": "Arches",
+                "Height": "1.000000",
+                "parm1": "1",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "4aa25eb93ac3",
+              "sampleCount": 26
+            },
+            {
+              "modelType": "custom",
+              "geometryProfile": "custom",
+              "analyzerFamily": "base",
+              "displayAsNormalized": "custom",
+              "stringType": "RGB Nodes",
+              "nodeCount": 48,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "type:custom"
+              ],
+              "structuralSettings": {
+                "CustomBkgLightness": "0",
+                "Dir": "L",
+                "DisplayAs": "Custom",
+                "parm1": "26",
+                "parm2": "50",
+                "parm3": "1",
+                "PixelCount": "48",
+                "PixelType": "12mm bullet",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "1e4919b9fa54",
+              "sampleCount": 26
+            },
+            {
+              "modelType": "single_line",
+              "geometryProfile": "single_line_horizontal",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "single_line",
+              "stringType": "RGB Nodes",
+              "nodeCount": 30,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "horizontal_orientation",
+                "type:single_line"
+              ],
+              "structuralSettings": {
+                "Dir": "R",
+                "DisplayAs": "Single Line",
+                "parm1": "1",
+                "parm2": "30",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "669624aa98ed",
+              "sampleCount": 26
+            },
+            {
+              "modelType": "tree_360",
+              "geometryProfile": "tree_360_spiral",
+              "analyzerFamily": "tree",
+              "displayAsNormalized": "tree_360",
+              "stringType": "RGB Nodes",
+              "nodeCount": 300,
+              "nodeCountBucket": "medium",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "nodes_per_string:300",
+                "spiral_enabled",
+                "strand_dir:vertical",
+                "strings:1",
+                "type:tree_360"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Tree 360",
+                "parm1": "1",
+                "parm2": "300",
+                "parm3": "1",
+                "StartSide": "B",
+                "StrandDir": "Vertical",
+                "StringType": "RGB Nodes",
+                "TreeRotation": "0.000000",
+                "TreeSpiralRotations": "12.000000"
+              },
+              "structuralSignature": "628d6bbd576e",
+              "sampleCount": 26
+            }
+          ]
+        }
       }
     },
     {
@@ -2476,7 +2869,65 @@
           "shrink_false",
           "shrink_true",
           "model:tree_flat"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 2,
+          "profiles": [
+            {
+              "modelType": "tree_360",
+              "geometryProfile": "tree_360_round",
+              "analyzerFamily": "tree",
+              "displayAsNormalized": "tree_360",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "nodes_per_string:50",
+                "strings:16",
+                "type:tree_360"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Tree 360",
+                "parm1": "16",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "6ed60f188c6c",
+              "sampleCount": 16
+            },
+            {
+              "modelType": "tree_flat",
+              "geometryProfile": "tree_flat_single_layer",
+              "analyzerFamily": "tree",
+              "displayAsNormalized": "tree_flat",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "nodes_per_string:50",
+                "strings:16",
+                "type:tree_flat"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Tree Flat",
+                "parm1": "16",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "c19094507fbd",
+              "sampleCount": 16
+            }
+          ]
+        }
       }
     },
     {
@@ -2688,7 +3139,38 @@
           "style",
           "style_New_Render_Method",
           "style_Old_Render_Method"
-        ]
+        ],
+        "configurationRepresentativeness": {
+          "coverageStatus": "single_reference_per_geometry",
+          "profileCount": 1,
+          "profiles": [
+            {
+              "modelType": "single_line",
+              "geometryProfile": "single_line_horizontal",
+              "analyzerFamily": "linear",
+              "displayAsNormalized": "single_line",
+              "stringType": "RGB Nodes",
+              "nodeCount": 50,
+              "nodeCountBucket": "small",
+              "channelsPerNode": 3,
+              "geometryTraits": [
+                "horizontal_orientation",
+                "type:single_line"
+              ],
+              "structuralSettings": {
+                "Dir": "L",
+                "DisplayAs": "Single Line",
+                "parm1": "1",
+                "parm2": "50",
+                "parm3": "1",
+                "StartSide": "B",
+                "StringType": "RGB Nodes"
+              },
+              "structuralSignature": "d64e2ecfe7dc",
+              "sampleCount": 32
+            }
+          ]
+        }
       }
     }
   ]

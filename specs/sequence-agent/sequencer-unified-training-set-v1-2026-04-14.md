@@ -25,6 +25,18 @@ It explicitly does not absorb:
 
 Those remain separate.
 
+It also must not treat one fixture model as a universal stand-in for every user model of the same type.
+Generalization must be based on:
+- model type
+- geometry profile
+- portable structural traits
+- representative configuration coverage
+
+not:
+- user-defined model names
+- local channel assignments
+- local file paths
+
 ## Core Rule
 
 All sequencer training must be classified as one of:
@@ -233,6 +245,10 @@ Do not store these here:
 - user accepted this because they like cleaner looks
 - this director prefers right-heavy staging
 - this project tends to reject broad-house choruses
+- model names like `George`
+- local sequence paths
+- local working file paths
+- local start/end channel assignments
 
 Those belong in:
 - director profile
@@ -255,6 +271,47 @@ Outcome catalog:
 
 Settings coverage report:
 - [effect-settings-coverage-report-v1.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-settings-coverage-report-v1.json)
+
+## Configuration Representativeness
+
+Shared screening evidence must preserve how representative the sampled fixtures are without leaking user-specific identity.
+
+Required behavior:
+- shared records may keep portable configuration traits
+- shared records must remove user-defined model names
+- shared records must remove local path fields
+- shared records must remove local channel-range identity fields
+
+Per-effect screening summaries should expose:
+- sampled model types
+- sampled geometry profiles
+- configuration profile summaries
+- configuration coverage status
+
+Configuration profiles should be derived from portable traits such as:
+- model type
+- geometry profile
+- analyzer family
+- display style
+- string type
+- node-count bucket
+- channels per node
+- normalized structural settings
+
+Suggested coverage states:
+1. `none`
+- no shared screening evidence yet
+
+2. `single_reference_per_geometry`
+- one portable reference configuration captured for each sampled geometry profile
+
+3. `multi_configuration_sampled`
+- more than one portable configuration captured for at least one geometry profile
+
+This allows the sequencer to reason:
+- "this prior applies strongly to arch_single reference fixtures"
+- without falsely claiming:
+- "this is universal for every user-defined arch"
 
 ## Acceptance Standard
 

@@ -42,4 +42,8 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
   assert.equal(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.successfulUses, 1);
   assert.deepEqual(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.favoredScopes, ["section_target_refinement"]);
   assert.deepEqual(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.favoredSignals, ["lead_mismatch"]);
+  assert.ok(["none", "single_reference_per_geometry", "multi_configuration_sampled"].includes(
+    bars.screeningLearning.configurationRepresentativeness.coverageStatus
+  ));
+  assert.equal(Array.isArray(bars.screeningLearning.configurationRepresentativeness.profiles), true);
 });

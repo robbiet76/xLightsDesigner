@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
+import { createHash } from "node:crypto";
 
 import { getStage1TrainedEffectBundle } from "../../../apps/xlightsdesigner-ui/agent/sequence-agent/trained-effect-knowledge.js";
 import { getEffectIntentCapability } from "../../../apps/xlightsdesigner-ui/agent/sequence-agent/effect-intent-capabilities.js";
@@ -204,6 +205,77 @@ function buildParameterLearningSummary({ effectName = "", capability = {}, retai
   };
 }
 
+function normalizeStructuralSettings(settings = {}) {
+  if (!settings || typeof settings !== "object") return {};
+  const excluded = new Set(["X", "Y", "Z", "X2", "Y2", "Z2", "StartChannel", "StartChannelZero", "EndChannel"]);
+  return Object.fromEntries(
+    Object.entries(settings)
+      .filter(([key]) => !excluded.has(String(key || "").trim()))
+      .map(([key, value]) => [String(key || "").trim(), String(value || "").trim()])
+      .filter(([key, value]) => key && value)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+  );
+}
+
+function nodeCountBucket(nodeCount = 0) {
+  const value = Number(nodeCount || 0);
+  if (value <= 0) return "unknown";
+  if (value <= 25) return "very_small";
+  if (value <= 100) return "small";
+  if (value <= 300) return "medium";
+  if (value <= 900) return "large";
+  return "very_large";
+}
+
+function buildConfigurationProfile(record = {}) {
+  const fixture = record?.fixture || {};
+  const meta = record?.modelMetadata || {};
+  const structuralSettings = normalizeStructuralSettings(meta?.structuralSettings || {});
+  const identity = {
+    modelType: String(fixture?.modelType || meta?.resolvedModelType || "").trim(),
+    geometryProfile: String(fixture?.geometryProfile || meta?.resolvedGeometryProfile || "").trim(),
+    analyzerFamily: String(meta?.analyzerFamily || "").trim(),
+    displayAsNormalized: String(meta?.displayAsNormalized || "").trim(),
+    stringType: String(meta?.stringType || structuralSettings.StringType || "").trim(),
+    nodeCount: Number(meta?.nodeCount || 0),
+    nodeCountBucket: nodeCountBucket(meta?.nodeCount),
+    channelsPerNode: Number(meta?.channelsPerNode || 0),
+    geometryTraits: uniqueStrings(meta?.geometryTraits || []),
+    structuralSettings
+  };
+  const signatureSource = JSON.stringify(identity);
+  return {
+    ...identity,
+    structuralSignature: createHash("sha1").update(signatureSource).digest("hex").slice(0, 12)
+  };
+}
+
+function summarizeConfigurationProfiles(records = []) {
+  const map = new Map();
+  for (const record of records) {
+    const profile = buildConfigurationProfile(record);
+    const key = JSON.stringify(profile);
+    if (!map.has(key)) {
+      map.set(key, { ...profile, sampleCount: 0 });
+    }
+    map.get(key).sampleCount += 1;
+  }
+  const profiles = [...map.values()].sort((a, b) =>
+    b.sampleCount - a.sampleCount ||
+    a.geometryProfile.localeCompare(b.geometryProfile) ||
+    a.structuralSignature.localeCompare(b.structuralSignature)
+  );
+  const distinctGeometryProfiles = new Set(profiles.map((row) => row.geometryProfile).filter(Boolean));
+  let coverageStatus = "none";
+  if (profiles.length > 0 && distinctGeometryProfiles.size === profiles.length) coverageStatus = "single_reference_per_geometry";
+  if (profiles.length > distinctGeometryProfiles.size) coverageStatus = "multi_configuration_sampled";
+  return {
+    coverageStatus,
+    profileCount: profiles.length,
+    profiles
+  };
+}
+
 function mergeRoleOutcomeMemory(roleOutcomeMemory = {}, outcomeRecords = [], effectName = "") {
   const next = buildRoleOutcomeSeed();
   for (const role of Object.keys(roleOutcomeMemory || {})) {
@@ -297,7 +369,8 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
       screenedParameterNames,
       sampledModelTypes: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.modelType)),
       sampledGeometryProfiles: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.geometryProfile)),
-      observedLabelHints: uniqueStrings(relevantScreeningRecords.flatMap((row) => row?.observations?.labels || []))
+      observedLabelHints: uniqueStrings(relevantScreeningRecords.flatMap((row) => row?.observations?.labels || [])),
+      configurationRepresentativeness: summarizeConfigurationProfiles(relevantScreeningRecords)
     }
   };
 }

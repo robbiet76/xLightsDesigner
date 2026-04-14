@@ -59,6 +59,22 @@ function sanitizeRecord(record = {}) {
     delete next.features.artifactPath;
     delete next.features.analyzedArtifactPath;
   }
+  if (next.modelMetadata && typeof next.modelMetadata === "object") {
+    delete next.modelMetadata.modelName;
+    delete next.modelMetadata.startChannel;
+    delete next.modelMetadata.startChannelZero;
+    delete next.modelMetadata.endChannel;
+    const settings = next.modelMetadata.structuralSettings;
+    if (settings && typeof settings === "object") {
+      for (const key of [
+        "X2", "Y2", "Z2", "X", "Y", "Z",
+        "StartChannel", "StartChannelZero", "EndChannel",
+        "ModelChain", "CustomModel", "Locked", "Active"
+      ]) {
+        delete settings[key];
+      }
+    }
+  }
   return next;
 }
 
