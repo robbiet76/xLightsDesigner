@@ -882,6 +882,45 @@ export function createAutomationRuntime(deps = {}) {
     };
   }
 
+  function summarizeValidationArtifact(artifact = null, options = {}) {
+    if (!artifact || typeof artifact !== "object") return null;
+    const extra = options?.extra && typeof options.extra === "object" ? options.extra : {};
+    return {
+      artifactId: String(artifact.artifactId || ""),
+      artifactType: String(artifact.artifactType || ""),
+      ...extra
+    };
+  }
+
+  function buildPlanGuidanceCoverage(planHandoff = null) {
+    const commands = Array.isArray(planHandoff?.commands) ? planHandoff.commands : [];
+    const effectCreates = commands.filter((row) => String(row?.cmd || "").trim() === "effects.create");
+    const guidanceRows = effectCreates.map((row) => ({
+      effectName: String(row?.params?.effectName || "").trim(),
+      hasParameterPriorGuidance: Boolean(row?.intent?.parameterPriorGuidance && typeof row.intent.parameterPriorGuidance === "object"),
+      hasSharedSettingPriorGuidance: Boolean(row?.intent?.sharedSettingPriorGuidance && typeof row.intent.sharedSettingPriorGuidance === "object")
+    }));
+    return {
+      effectCreateCount: effectCreates.length,
+      parameterPriorCommandCount: guidanceRows.filter((row) => row.hasParameterPriorGuidance).length,
+      sharedSettingPriorCommandCount: guidanceRows.filter((row) => row.hasSharedSettingPriorGuidance).length,
+      guidedEffects: Array.from(new Set(guidanceRows.filter((row) => row.hasParameterPriorGuidance || row.hasSharedSettingPriorGuidance).map((row) => row.effectName).filter(Boolean))).sort((a, b) => a.localeCompare(b))
+    };
+  }
+
+  function getRecentPersistenceDiagnostics() {
+    const rows = Array.isArray(state.diagnostics) ? state.diagnostics : [];
+    return rows
+      .filter((row) => /^Project artifact persistence/i.test(String(row?.text || "")))
+      .slice(0, 6)
+      .map((row) => ({
+        ts: String(row?.ts || ""),
+        level: String(row?.level || ""),
+        text: String(row?.text || ""),
+        details: String(row?.details || "")
+      }));
+  }
+
   function getAutomationSequencerValidationSnapshot() {
     const latestApply = Array.isArray(state.applyHistory) && state.applyHistory.length ? state.applyHistory[0] : null;
     const historySnapshot = state.ui?.reviewHistorySnapshot && typeof state.ui.reviewHistorySnapshot === "object"
@@ -889,16 +928,51 @@ export function createAutomationRuntime(deps = {}) {
       : (state.ui?.selectedHistorySnapshot && typeof state.ui.selectedHistorySnapshot === "object"
           ? state.ui.selectedHistorySnapshot
           : null);
+    const latestPlanHandoff = historySnapshot?.planHandoff || getValidHandoff("plan_handoff_v1");
+    const latestIntentHandoff = historySnapshot?.intentHandoff || getValidHandoff("intent_handoff_v1");
     return {
       ok: true,
       status: state.status || null,
       activeSequence: state.activeSequence || "",
       sequencePathInput: state.sequencePathInput || "",
+      reviewHistorySnapshotAvailable: Boolean(historySnapshot),
       latestApply,
       latestPracticalValidation: historySnapshot?.applyResult?.practicalValidation || null,
       latestApplyResult: historySnapshot?.applyResult || null,
-      latestPlanHandoff: historySnapshot?.planHandoff || getValidHandoff("plan_handoff_v1"),
-      latestIntentHandoff: historySnapshot?.intentHandoff || getValidHandoff("intent_handoff_v1"),
+      latestPlanHandoff,
+      latestIntentHandoff,
+      latestRenderObservation: historySnapshot?.renderObservation || null,
+      latestRenderCritiqueContext: historySnapshot?.renderCritiqueContext || null,
+      latestSequenceArtisticGoal: historySnapshot?.sequenceArtisticGoal || null,
+      latestSequenceRevisionObjective: historySnapshot?.sequenceRevisionObjective || null,
+      latestReviewArtifacts: {
+        renderObservation: summarizeValidationArtifact(historySnapshot?.renderObservation, {
+          extra: {
+            leadModel: String(historySnapshot?.renderObservation?.macro?.leadModel || ""),
+            samplingMode: String(historySnapshot?.renderObservation?.source?.samplingMode || "")
+          }
+        }),
+        renderCritiqueContext: summarizeValidationArtifact(historySnapshot?.renderCritiqueContext, {
+          extra: {
+            leadMatchesPrimaryFocus: Boolean(historySnapshot?.renderCritiqueContext?.comparison?.leadMatchesPrimaryFocus),
+            breadthRead: String(historySnapshot?.renderCritiqueContext?.observed?.breadthRead || "")
+          }
+        }),
+        sequenceArtisticGoal: summarizeValidationArtifact(historySnapshot?.sequenceArtisticGoal, {
+          extra: {
+            goalLevel: String(historySnapshot?.sequenceArtisticGoal?.scope?.goalLevel || "")
+          }
+        }),
+        sequenceRevisionObjective: summarizeValidationArtifact(historySnapshot?.sequenceRevisionObjective, {
+          extra: {
+            ladderLevel: String(historySnapshot?.sequenceRevisionObjective?.ladderLevel || ""),
+            nextOwner: String(historySnapshot?.sequenceRevisionObjective?.scope?.nextOwner || "")
+          }
+        })
+      },
+      latestGuidanceCoverage: buildPlanGuidanceCoverage(latestPlanHandoff),
+      recentPersistenceDiagnostics: getRecentPersistenceDiagnostics(),
+      recentDiagnostics: Array.isArray(state.diagnostics) ? state.diagnostics.slice(0, 12) : [],
       pageStates: getPageStates()
     };
   }

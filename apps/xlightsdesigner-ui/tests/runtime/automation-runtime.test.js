@@ -209,3 +209,95 @@ test("automation runtime rejects invalid render observation artifacts", () => {
   assert.equal(out.ok, false);
   assert.match(out.error, /renderObservation must be render_observation_v1/i);
 });
+
+test("automation sequencer validation snapshot exposes review chain guidance and persistence diagnostics", () => {
+  const runtime = createAutomationRuntime(buildDeps({
+    state: {
+      status: { level: "info", text: "ready" },
+      activeSequence: "Christmas 2026",
+      sequencePathInput: "/show/Christmas 2026.xsq",
+      proposed: [],
+      chat: [],
+      flags: {},
+      creative: {},
+      sequenceAgentRuntime: {},
+      applyHistory: [
+        { historyEntryId: "history-1", summary: "Applied revision." }
+      ],
+      diagnostics: [
+        { ts: "2026-04-14T10:00:00.000Z", level: "warning", text: "Project artifact persistence failed.", details: "reason=bridge_rejected outcomes=1" },
+        { ts: "2026-04-14T09:59:59.000Z", level: "info", text: "Other diagnostic", details: "" }
+      ],
+      ui: {
+        reviewHistorySnapshot: {
+          applyResult: {
+            artifactId: "apply-1",
+            practicalValidation: { ok: true, overallOk: true }
+          },
+          intentHandoff: {
+            artifactId: "intent-1"
+          },
+          planHandoff: {
+            artifactId: "plan-1",
+            commands: [
+              {
+                cmd: "effects.create",
+                params: { effectName: "Pinwheel" },
+                intent: {
+                  parameterPriorGuidance: { recommendationMode: "exact_geometry", priors: [] },
+                  sharedSettingPriorGuidance: { recommendationMode: "cross_effect_generic", settings: [] }
+                }
+              },
+              {
+                cmd: "effects.create",
+                params: { effectName: "Color Wash" },
+                intent: {}
+              }
+            ]
+          },
+          renderObservation: {
+            artifactId: "render-1",
+            artifactType: "render_observation_v1",
+            macro: { leadModel: "SpinnerStandard" },
+            source: { samplingMode: "drilldown" }
+          },
+          renderCritiqueContext: {
+            artifactId: "critique-1",
+            artifactType: "sequence_render_critique_context_v1",
+            comparison: { leadMatchesPrimaryFocus: true },
+            observed: { breadthRead: "focused" }
+          },
+          sequenceArtisticGoal: {
+            artifactId: "goal-1",
+            artifactType: "sequence_artistic_goal_v1",
+            scope: { goalLevel: "section" }
+          },
+          sequenceRevisionObjective: {
+            artifactId: "objective-1",
+            artifactType: "sequence_revision_objective_v1",
+            ladderLevel: "group",
+            scope: { nextOwner: "shared" }
+          }
+        }
+      }
+    },
+    getPageStates: () => ({ review: { page: "review" } })
+  }));
+
+  const out = runtime.getAutomationSequencerValidationSnapshot();
+
+  assert.equal(out.ok, true);
+  assert.equal(out.reviewHistorySnapshotAvailable, true);
+  assert.equal(out.latestReviewArtifacts.renderObservation.artifactId, "render-1");
+  assert.equal(out.latestReviewArtifacts.renderObservation.samplingMode, "drilldown");
+  assert.equal(out.latestReviewArtifacts.renderCritiqueContext.leadMatchesPrimaryFocus, true);
+  assert.equal(out.latestReviewArtifacts.sequenceArtisticGoal.goalLevel, "section");
+  assert.equal(out.latestReviewArtifacts.sequenceRevisionObjective.ladderLevel, "group");
+  assert.equal(out.latestGuidanceCoverage.effectCreateCount, 2);
+  assert.equal(out.latestGuidanceCoverage.parameterPriorCommandCount, 1);
+  assert.equal(out.latestGuidanceCoverage.sharedSettingPriorCommandCount, 1);
+  assert.deepEqual(out.latestGuidanceCoverage.guidedEffects, ["Pinwheel"]);
+  assert.equal(out.recentPersistenceDiagnostics.length, 1);
+  assert.match(out.recentPersistenceDiagnostics[0].details, /bridge_rejected/);
+  assert.equal(out.pageStates.review.page, "review");
+});
