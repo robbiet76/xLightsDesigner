@@ -162,6 +162,21 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
             renderHasProblematicGaps: false,
             localizedFocusExpected: true
           }
+        },
+        sequenceArtisticGoal: {
+          artifactType: "sequence_artistic_goal_v1",
+          scope: { goalLevel: "section" },
+          evaluationLens: {
+            comparisonQuestions: ["Does the next pass resolve the rendered focus problem?"],
+            mustImprove: ["Rendered lead does not match the intended primary focus."]
+          }
+        },
+        sequenceRevisionObjective: {
+          artifactType: "sequence_revision_objective_v1",
+          ladderLevel: "section",
+          scope: { nextOwner: "shared", revisionTargets: ["MegaTree"] },
+          designerDirection: { artisticCorrection: "Restore MegaTree as the dominant lead." },
+          sequencerDirection: { executionObjective: "Strengthen MegaTree lead and reduce competing support." }
         }
       }
     },
@@ -185,6 +200,8 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.renderObservation.macro.leadModel, "MegaTree");
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.expected.requestedScope.mode, "section_target_refinement");
+  assert.equal(dashboard.data.lastAppliedSnapshot.sequenceArtisticGoal.scope.goalLevel, "section");
+  assert.equal(dashboard.data.lastAppliedSnapshot.sequenceRevisionObjective.ladderLevel, "section");
 });
 
 test("review dashboard state falls back to intent handoff execution strategy for grouped rows", () => {

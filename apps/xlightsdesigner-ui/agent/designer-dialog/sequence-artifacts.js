@@ -1,3 +1,5 @@
+import { finalizeArtifact } from "../shared/artifact-ids.js";
+
 function str(value = "") {
   return String(value || "").trim();
 }
@@ -12,6 +14,11 @@ function isPlainObject(value) {
 
 function uniqueStrings(values = []) {
   return [...new Set(arr(values).map((row) => str(row)).filter(Boolean))];
+}
+
+function finalizeSequenceArtifact(artifact = null) {
+  if (!isPlainObject(artifact)) return null;
+  return finalizeArtifact(artifact);
 }
 
 function inferRequestedScope({ handoff = null } = {}) {
@@ -91,7 +98,7 @@ export function buildSequenceArtisticGoalFromDesignHandoff({
         ? "Does the rendered result preserve the intended section hierarchy and contrast?"
         : "Does the rendered result preserve the intended lead/support hierarchy?");
 
-  return {
+  return finalizeSequenceArtifact({
     artifactType: "sequence_artistic_goal_v1",
     artifactVersion: 1,
     scope: {
@@ -119,7 +126,7 @@ export function buildSequenceArtisticGoalFromDesignHandoff({
       designSummary: str(handoff?.designSummary),
       proposalSummary: str(proposalBundle?.summary)
     }
-  };
+  });
 }
 
 export function buildSequenceRevisionObjectiveFromArtifacts({
@@ -143,7 +150,7 @@ export function buildSequenceRevisionObjectiveFromArtifacts({
     ? ` while keeping ${secondaryTargets.slice(0, 4).join(", ")} in a support role`
     : "";
 
-  return {
+  return finalizeSequenceArtifact({
     artifactType: "sequence_revision_objective_v1",
     artifactVersion: 1,
     scope: {
@@ -173,7 +180,7 @@ export function buildSequenceRevisionObjectiveFromArtifacts({
       primaryTargets.length ? `${leadTarget} remains the dominant visual lead.` : "",
       secondaryTargets.length ? "Support targets stay in a secondary role." : ""
     ])
-  };
+  });
 }
 
 function collectValidationFailures(practicalValidation = null) {
@@ -275,7 +282,7 @@ export function refreshSequenceArtisticGoalFromPracticalValidation({
   if (!base) return null;
 
   const failures = collectValidationFailures(practicalValidation);
-  if (!failures.length) return base;
+  if (!failures.length) return finalizeSequenceArtifact(base);
   const primaryFailure = failures[0];
   const comparisonQuestion = primaryFailure.detail
     ? `Does the next pass resolve this problem: ${primaryFailure.detail}`
@@ -295,7 +302,7 @@ export function refreshSequenceArtisticGoalFromPracticalValidation({
     practicalValidationOverallOk: Boolean(practicalValidation?.overallOk),
     practicalValidationFailureCount: failures.length
   };
-  return base;
+  return finalizeSequenceArtifact(base);
 }
 
 export function refreshSequenceRevisionObjectiveFromPracticalValidation({
@@ -313,7 +320,7 @@ export function refreshSequenceRevisionObjectiveFromPracticalValidation({
   if (!base) return null;
 
   const failures = collectValidationFailures(practicalValidation);
-  if (!failures.length) return base;
+  if (!failures.length) return finalizeSequenceArtifact(base);
   const primaryFailure = failures[0];
   const failureText = str(primaryFailure.detail || primaryFailure.kind || "highest-priority validation failure");
   const currentPrompt = str(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions?.[0]);
@@ -345,7 +352,7 @@ export function refreshSequenceRevisionObjectiveFromPracticalValidation({
     currentPrompt || "",
     `Validation failure addressed: ${failureText}`
   ]);
-  return base;
+  return finalizeSequenceArtifact(base);
 }
 
 export function refreshSequenceArtisticGoalFromRenderCritique({
@@ -359,7 +366,7 @@ export function refreshSequenceArtisticGoalFromRenderCritique({
   if (!base) return null;
 
   const findings = collectRenderCritiqueFindings(renderCritiqueContext);
-  if (!findings.length) return base;
+  if (!findings.length) return finalizeSequenceArtifact(base);
   const comparisonQuestion = `Does the next pass resolve this rendered composition problem: ${findings[0]}`;
 
   base.evaluationLens = {
@@ -377,7 +384,7 @@ export function refreshSequenceArtisticGoalFromRenderCritique({
     renderCritiqueBreadthRead: str(renderCritiqueContext?.observed?.breadthRead),
     renderCritiqueTemporalRead: str(renderCritiqueContext?.observed?.temporalRead)
   };
-  return base;
+  return finalizeSequenceArtifact(base);
 }
 
 export function refreshSequenceRevisionObjectiveFromRenderCritique({
@@ -395,7 +402,7 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
   if (!base) return null;
 
   const findings = collectRenderCritiqueFindings(renderCritiqueContext);
-  if (!findings.length) return base;
+  if (!findings.length) return finalizeSequenceArtifact(base);
   const primaryFinding = findings[0];
   const currentPrompt = str(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions?.[0]);
   const adjacentWindowComparisons = arr(renderCritiqueContext?.comparison?.adjacentWindowComparisons);
@@ -444,5 +451,5 @@ export function refreshSequenceRevisionObjectiveFromRenderCritique({
     currentPrompt || "",
     `Rendered composition issue addressed: ${primaryFinding}`
   ]);
-  return base;
+  return finalizeSequenceArtifact(base);
 }

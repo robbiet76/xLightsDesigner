@@ -19,7 +19,9 @@ test("buildArtifactRefs captures artifact ids only", () => {
     planHandoff: { artifactId: "plan-1" },
     applyResult: { artifactId: "apply-1" },
     renderObservation: { artifactId: "render-1" },
-    renderCritiqueContext: { artifactId: "critique-1" }
+    renderCritiqueContext: { artifactId: "critique-1" },
+    sequenceArtisticGoal: { artifactId: "goal-1" },
+    sequenceRevisionObjective: { artifactId: "objective-1" }
   });
 
   assert.deepEqual(refs, {
@@ -33,7 +35,9 @@ test("buildArtifactRefs captures artifact ids only", () => {
     planId: "plan-1",
     applyResultId: "apply-1",
     renderObservationId: "render-1",
-    renderCritiqueContextId: "critique-1"
+    renderCritiqueContextId: "critique-1",
+    sequenceArtisticGoalId: "goal-1",
+    sequenceRevisionObjectiveId: "objective-1"
   });
 });
 
@@ -93,7 +97,9 @@ test("buildHistoryEntry produces deterministic history ids from entry content", 
     planId: "plan-1",
     applyResultId: "apply-1",
     renderObservationId: "render-1",
-    renderCritiqueContextId: "critique-1"
+    renderCritiqueContextId: "critique-1",
+    sequenceArtisticGoalId: "goal-1",
+    sequenceRevisionObjectiveId: "objective-1"
   };
   const snapshotSummary = {
     designSummary: { title: "Brief" },

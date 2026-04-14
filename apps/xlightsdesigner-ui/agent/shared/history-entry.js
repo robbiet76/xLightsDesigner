@@ -19,7 +19,9 @@ export function buildArtifactRefs({
   planHandoff = null,
   applyResult = null,
   renderObservation = null,
-  renderCritiqueContext = null
+  renderCritiqueContext = null,
+  sequenceArtisticGoal = null,
+  sequenceRevisionObjective = null
 } = {}) {
   return {
     analysisArtifactId: ensureString(analysisArtifact?.artifactId, null),
@@ -32,7 +34,9 @@ export function buildArtifactRefs({
     planId: ensureString(planHandoff?.artifactId, null),
     applyResultId: ensureString(applyResult?.artifactId, null),
     renderObservationId: ensureString(renderObservation?.artifactId, null),
-    renderCritiqueContextId: ensureString(renderCritiqueContext?.artifactId, null)
+    renderCritiqueContextId: ensureString(renderCritiqueContext?.artifactId, null),
+    sequenceArtisticGoalId: ensureString(sequenceArtisticGoal?.artifactId, null),
+    sequenceRevisionObjectiveId: ensureString(sequenceRevisionObjective?.artifactId, null)
   };
 }
 
@@ -140,7 +144,9 @@ export function buildHistoryEntry({
       planId: ensureString(artifactRefs?.planId, null),
       applyResultId: ensureString(artifactRefs?.applyResultId, null),
       renderObservationId: ensureString(artifactRefs?.renderObservationId, null),
-      renderCritiqueContextId: ensureString(artifactRefs?.renderCritiqueContextId, null)
+      renderCritiqueContextId: ensureString(artifactRefs?.renderCritiqueContextId, null),
+      sequenceArtisticGoalId: ensureString(artifactRefs?.sequenceArtisticGoalId, null),
+      sequenceRevisionObjectiveId: ensureString(artifactRefs?.sequenceRevisionObjectiveId, null)
     },
     snapshotSummary: snapshotSummary && typeof snapshotSummary === "object" ? snapshotSummary : {},
     applyStage: ensureString(applyStage, null),

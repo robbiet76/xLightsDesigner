@@ -37,6 +37,8 @@ export function createProjectHistoryRuntime(deps = {}) {
       applyResult,
       state.sequenceAgentRuntime?.renderObservation || null,
       state.sequenceAgentRuntime?.renderCritiqueContext || null,
+      state.creative?.sequenceArtisticGoal || null,
+      state.creative?.sequenceRevisionObjective || null,
       historyEntry
     ].filter((artifact) => artifact && typeof artifact === "object" && typeof artifact.artifactId === "string");
     if (!artifacts.length) return { ok: false, reason: "no_artifacts" };
@@ -84,7 +86,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       planHandoff,
       applyResult,
       renderObservation,
-      renderCritiqueContext
+      renderCritiqueContext,
+      sequenceArtisticGoal,
+      sequenceRevisionObjective
     ] = await Promise.all([
       readProjectArtifactById("analysis_artifact_v1", refs.analysisArtifactId),
       readProjectArtifactById("design_scene_context_v1", refs.sceneContextId),
@@ -96,7 +100,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       readProjectArtifactById("plan_handoff_v1", refs.planId),
       readProjectArtifactById("apply_result_v1", refs.applyResultId),
       readProjectArtifactById("render_observation_v1", refs.renderObservationId),
-      readProjectArtifactById("sequence_render_critique_context_v1", refs.renderCritiqueContextId)
+      readProjectArtifactById("sequence_render_critique_context_v1", refs.renderCritiqueContextId),
+      readProjectArtifactById("sequence_artistic_goal_v1", refs.sequenceArtisticGoalId),
+      readProjectArtifactById("sequence_revision_objective_v1", refs.sequenceRevisionObjectiveId)
     ]);
     return {
       historyEntryId: str(entry.historyEntryId),
@@ -110,7 +116,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       planHandoff,
       applyResult,
       renderObservation,
-      renderCritiqueContext
+      renderCritiqueContext,
+      sequenceArtisticGoal,
+      sequenceRevisionObjective
     };
   }
 
@@ -203,7 +211,9 @@ export function createProjectHistoryRuntime(deps = {}) {
       planHandoff: planHandoff || getValidHandoff("plan_handoff_v1"),
       applyResult,
       renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
-      renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null
+      renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null,
+      sequenceArtisticGoal: state.creative?.sequenceArtisticGoal || null,
+      sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null
     };
     state.ui.selectedHistorySnapshot = state.ui.reviewHistorySnapshot;
   }

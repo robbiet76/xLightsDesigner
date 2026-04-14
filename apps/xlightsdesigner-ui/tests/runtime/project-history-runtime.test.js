@@ -16,7 +16,9 @@ function buildState() {
     creative: {
       brief: { artifactId: "brief-1" },
       proposalBundle: { artifactId: "proposal-1" },
-      intentHandoff: { artifactId: "intent-1" }
+      intentHandoff: { artifactId: "intent-1" },
+      sequenceArtisticGoal: { artifactId: "goal-1" },
+      sequenceRevisionObjective: { artifactId: "objective-1" }
     },
     ui: {
       selectedHistoryEntry: "",
@@ -57,7 +59,7 @@ test("project history runtime persists available artifacts for history", async (
   assert.equal(writes[0].projectFilePath, "/show/project.xdproj");
   assert.deepEqual(
     writes[0].artifacts.map((row) => row.artifactId),
-    ["analysis-1", "scene-1", "music-1", "director-1", "brief-1", "proposal-1", "intent-1", "plan-1", "apply-1", "render-1", "critique-1", "history-1"]
+    ["analysis-1", "scene-1", "music-1", "director-1", "brief-1", "proposal-1", "intent-1", "plan-1", "apply-1", "render-1", "critique-1", "goal-1", "objective-1", "history-1"]
   );
 });
 
@@ -77,7 +79,9 @@ test("project history runtime loads and selects history snapshots", async () => 
         planId: "plan-1",
         applyResultId: "apply-1",
         renderObservationId: "render-1",
-        renderCritiqueContextId: "critique-1"
+        renderCritiqueContextId: "critique-1",
+        sequenceArtisticGoalId: "goal-1",
+        sequenceRevisionObjectiveId: "objective-1"
       }
     }
   ];
@@ -98,6 +102,8 @@ test("project history runtime loads and selects history snapshots", async () => 
   assert.equal(state.ui.reviewHistorySnapshot.applyResult.artifactId, "apply-1");
   assert.equal(state.ui.reviewHistorySnapshot.renderObservation.artifactId, "render-1");
   assert.equal(state.ui.reviewHistorySnapshot.renderCritiqueContext.artifactId, "critique-1");
+  assert.equal(state.ui.reviewHistorySnapshot.sequenceArtisticGoal.artifactId, "goal-1");
+  assert.equal(state.ui.reviewHistorySnapshot.sequenceRevisionObjective.artifactId, "objective-1");
 });
 
 test("project history runtime carries request scope into compact snapshot summaries", () => {

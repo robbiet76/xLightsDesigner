@@ -419,6 +419,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     musicContext = null,
     renderObservation = null,
     renderCritiqueContext = null,
+    sequenceArtisticGoal = null,
+    sequenceRevisionObjective = null,
     artifactRefs = null,
     emptyText = "No snapshot loaded."
   } = {}) {
@@ -458,6 +460,15 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     const adjacentWindowComparisons = Array.isArray(renderCritiqueContext?.comparison?.adjacentWindowComparisons)
       ? renderCritiqueContext.comparison.adjacentWindowComparisons.filter((row) => row && typeof row === "object").slice(0, 2)
       : [];
+    const artisticGoalQuestions = Array.isArray(sequenceArtisticGoal?.evaluationLens?.comparisonQuestions)
+      ? sequenceArtisticGoal.evaluationLens.comparisonQuestions.filter(Boolean).slice(0, 2)
+      : [];
+    const artisticGoalImprove = Array.isArray(sequenceArtisticGoal?.evaluationLens?.mustImprove)
+      ? sequenceArtisticGoal.evaluationLens.mustImprove.filter(Boolean).slice(0, 2)
+      : [];
+    const revisionTargets = Array.isArray(sequenceRevisionObjective?.scope?.revisionTargets)
+      ? sequenceRevisionObjective.scope.revisionTargets.filter(Boolean).slice(0, 4)
+      : [];
     const hasContent =
       brief ||
       safeProposalLines.length ||
@@ -467,6 +478,8 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       musicContext ||
       renderObservation ||
       renderCritiqueContext ||
+      sequenceArtisticGoal ||
+      sequenceRevisionObjective ||
       safeArtifactRefs.length;
     if (!hasContent) {
       return `
@@ -531,6 +544,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             ${missingFocusTargets.length ? `<p>Missing focus: ${escapeHtml(missingFocusTargets.join(", "))}</p>` : ""}
             ${renderWindows.length ? `<ul>${renderWindows.map((row) => `<li>${escapeHtml(String(row?.label || "window"))}: lead ${escapeHtml(String(row?.leadModel || "none"))} / spread ${escapeHtml(String(row?.meanSceneSpreadRatio || 0))} / temporal ${escapeHtml(String(row?.temporalRead || "unknown"))}</li>`).join("")}</ul>` : ""}
             ${adjacentWindowComparisons.length ? `<ul>${adjacentWindowComparisons.map((row) => `<li>${escapeHtml(String(row?.fromLabel || "window"))} -> ${escapeHtml(String(row?.toLabel || "window"))}: ${row?.windowsReadSimilarly ? "too similar" : "contrast present"}${Number.isFinite(Number(row?.overlapRatio)) ? ` / overlap ${escapeHtml(String(Number(row.overlapRatio).toFixed(2)))}` : ""}</li>`).join("")}</ul>` : ""}
+          </div>
+          <div class="dashboard-panel">
+            <div class="artifact-kicker">Revision Loop</div>
+            <p>${sequenceArtisticGoal ? `Goal level: ${escapeHtml(String(sequenceArtisticGoal?.scope?.goalLevel || "unknown"))}` : "No artistic goal snapshot loaded."}</p>
+            ${artisticGoalQuestions.length ? `<p>Question: ${escapeHtml(artisticGoalQuestions.join(" | "))}</p>` : ""}
+            ${artisticGoalImprove.length ? `<p>Improve: ${escapeHtml(artisticGoalImprove.join(" | "))}</p>` : ""}
+            <p>${sequenceRevisionObjective ? `Next level: ${escapeHtml(String(sequenceRevisionObjective?.ladderLevel || "unknown"))} / owner: ${escapeHtml(String(sequenceRevisionObjective?.scope?.nextOwner || "unknown"))}` : "No revision objective snapshot loaded."}</p>
+            ${sequenceRevisionObjective ? `<p>Designer: ${escapeHtml(String(sequenceRevisionObjective?.designerDirection?.artisticCorrection || "unknown"))}</p>` : ""}
+            ${sequenceRevisionObjective ? `<p>Sequencer: ${escapeHtml(String(sequenceRevisionObjective?.sequencerDirection?.executionObjective || "unknown"))}</p>` : ""}
+            ${revisionTargets.length ? `<p>Targets: ${escapeHtml(revisionTargets.join(", "))}</p>` : ""}
           </div>
         </div>
         ${
@@ -1559,14 +1582,16 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             ? renderSnapshotDashboard({
                 kicker: "Last Applied Snapshot",
                 title: "Most recent implemented design and sequence state.",
-                brief: lastAppliedSnapshot.creativeBrief || null,
-                proposalLines: lastAppliedSnapshot.proposalBundle?.proposalLines || [],
+                brief: lastAppliedSnapshot.brief || null,
+                proposalLines: lastAppliedSnapshot.proposalLines || [],
                 applyResult: lastAppliedSnapshot.applyResult || lastApply || null,
                 analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
-                sceneContext: lastAppliedSnapshot.designSceneContext || null,
-                musicContext: lastAppliedSnapshot.musicDesignContext || null,
+                sceneContext: lastAppliedSnapshot.sceneContext || null,
+                musicContext: lastAppliedSnapshot.musicContext || null,
                 renderObservation: lastAppliedSnapshot.renderObservation || null,
                 renderCritiqueContext: lastAppliedSnapshot.renderCritiqueContext || null,
+                sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
+                sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
                 artifactRefs: lastApply?.artifactRefs || null,
                 emptyText: "No applied snapshot is available yet."
               })

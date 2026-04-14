@@ -3813,7 +3813,9 @@ function currentArtifactRefs({ planHandoff = null, applyResult = null } = {}) {
     planHandoff: planHandoff || agentRuntimeState.getValidHandoff("plan_handoff_v1"),
     applyResult,
     renderObservation: state.sequenceAgentRuntime?.renderObservation || null,
-    renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null
+    renderCritiqueContext: state.sequenceAgentRuntime?.renderCritiqueContext || null,
+    sequenceArtisticGoal: state.creative?.sequenceArtisticGoal || null,
+    sequenceRevisionObjective: state.creative?.sequenceRevisionObjective || null
   });
 }
 

@@ -368,6 +368,8 @@ export function buildReviewDashboardState({
             musicContext: lastAppliedSnapshot.musicDesignContext || null,
             renderObservation: lastAppliedSnapshot.renderObservation || null,
             renderCritiqueContext: lastAppliedSnapshot.renderCritiqueContext || null,
+            sequenceArtisticGoal: lastAppliedSnapshot.sequenceArtisticGoal || null,
+            sequenceRevisionObjective: lastAppliedSnapshot.sequenceRevisionObjective || null,
             artifactRefs: lastApply?.artifactRefs || null
           }
         : null,
