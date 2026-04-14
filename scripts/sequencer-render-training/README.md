@@ -36,6 +36,7 @@ Primary system roadmap:
 - `runners/run-stage1-coverage-round.sh`
 - `runners/run-effect-training-automation-cycle.sh`
 - `runners/run-effect-parameter-screening-plan.sh`
+- `runners/run-live-outcome-harvest-cycle.sh`
 
 ## Core Catalogs
 - `catalog/effect-parameter-registry.json`
@@ -136,6 +137,11 @@ node scripts/sequencer-render-training/tooling/build-unified-training-set.mjs
 
 ```bash
 node scripts/sequencer-render-training/tooling/harvest-effect-outcome-records.mjs \
+  --source /path/to/project.xdproj
+```
+
+```bash
+bash scripts/sequencer-render-training/runners/run-live-outcome-harvest-cycle.sh \
   --source /path/to/project.xdproj
 ```
 
