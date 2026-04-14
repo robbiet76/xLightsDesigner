@@ -414,6 +414,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
     brief = null,
     proposalLines = [],
     applyResult = null,
+    planHandoff = null,
     analysisArtifact = null,
     sceneContext = null,
     musicContext = null,
@@ -468,6 +469,18 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
       : [];
     const revisionTargets = Array.isArray(sequenceRevisionObjective?.scope?.revisionTargets)
       ? sequenceRevisionObjective.scope.revisionTargets.filter(Boolean).slice(0, 4)
+      : [];
+    const revisionRoles = Array.isArray(sequenceRevisionObjective?.scope?.revisionRoles)
+      ? sequenceRevisionObjective.scope.revisionRoles.filter(Boolean).slice(0, 5)
+      : [];
+    const priorPassMemory = planHandoff?.metadata?.priorPassMemory && typeof planHandoff.metadata.priorPassMemory === "object"
+      ? planHandoff.metadata.priorPassMemory
+      : null;
+    const priorSignals = Array.isArray(priorPassMemory?.unresolvedSignals)
+      ? priorPassMemory.unresolvedSignals.filter(Boolean).slice(0, 5)
+      : [];
+    const drilldownTargets = Array.isArray(renderCritiqueContext?.comparison?.drilldownTargetIds)
+      ? renderCritiqueContext.comparison.drilldownTargetIds.filter(Boolean).slice(0, 5)
       : [];
     const hasContent =
       brief ||
@@ -542,6 +555,7 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             ${renderCritiqueContext?.comparison?.renderIsLeftRightImbalanced && renderCritiqueContext?.comparison?.localizedFocusExpected ? `<p>Balance critique suppressed: localized focus is expected for this pass.</p>` : ""}
             <p>${renderFocusTargets.length ? `Expected focus: ${escapeHtml(renderFocusTargets.join(", "))}` : "No expected render focus targets."}</p>
             ${missingFocusTargets.length ? `<p>Missing focus: ${escapeHtml(missingFocusTargets.join(", "))}</p>` : ""}
+            ${drilldownTargets.length ? `<p>Drilldown targets: ${escapeHtml(drilldownTargets.join(", "))}</p>` : ""}
             ${renderWindows.length ? `<ul>${renderWindows.map((row) => `<li>${escapeHtml(String(row?.label || "window"))}: lead ${escapeHtml(String(row?.leadModel || "none"))} / spread ${escapeHtml(String(row?.meanSceneSpreadRatio || 0))} / temporal ${escapeHtml(String(row?.temporalRead || "unknown"))}</li>`).join("")}</ul>` : ""}
             ${adjacentWindowComparisons.length ? `<ul>${adjacentWindowComparisons.map((row) => `<li>${escapeHtml(String(row?.fromLabel || "window"))} -> ${escapeHtml(String(row?.toLabel || "window"))}: ${row?.windowsReadSimilarly ? "too similar" : "contrast present"}${Number.isFinite(Number(row?.overlapRatio)) ? ` / overlap ${escapeHtml(String(Number(row.overlapRatio).toFixed(2)))}` : ""}</li>`).join("")}</ul>` : ""}
           </div>
@@ -553,7 +567,10 @@ export function buildScreenContent({ state, pageStates = {}, helpers }) {
             <p>${sequenceRevisionObjective ? `Next level: ${escapeHtml(String(sequenceRevisionObjective?.ladderLevel || "unknown"))} / owner: ${escapeHtml(String(sequenceRevisionObjective?.scope?.nextOwner || "unknown"))}` : "No revision objective snapshot loaded."}</p>
             ${sequenceRevisionObjective ? `<p>Designer: ${escapeHtml(String(sequenceRevisionObjective?.designerDirection?.artisticCorrection || "unknown"))}</p>` : ""}
             ${sequenceRevisionObjective ? `<p>Sequencer: ${escapeHtml(String(sequenceRevisionObjective?.sequencerDirection?.executionObjective || "unknown"))}</p>` : ""}
+            ${revisionRoles.length ? `<p>Roles: ${escapeHtml(revisionRoles.join(", "))}</p>` : ""}
             ${revisionTargets.length ? `<p>Targets: ${escapeHtml(revisionTargets.join(", "))}</p>` : ""}
+            ${priorPassMemory ? `<p>Prior pass: ${escapeHtml(String(priorPassMemory.previousRevisionLevel || "unknown"))} / ${escapeHtml(String(priorPassMemory.previousOwner || "unknown"))}</p>` : ""}
+            ${priorSignals.length ? `<p>Carry forward: ${escapeHtml(priorSignals.join(", "))}</p>` : ""}
           </div>
         </div>
         ${

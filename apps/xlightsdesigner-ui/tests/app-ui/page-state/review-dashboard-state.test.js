@@ -142,6 +142,7 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
         creativeBrief: { summary: "Applied design" },
         proposalBundle: { proposalLines: ["Applied line"] },
         applyResult: { status: "completed" },
+        planHandoff: { metadata: { priorPassMemory: { unresolvedSignals: ["weak_section_contrast"] } } },
         analysisArtifact: { trackIdentity: { title: "Song" } },
         designSceneContext: { layoutMode: "2d" },
         musicDesignContext: { sectionArc: ["Intro", "Chorus 1"] },
@@ -198,6 +199,7 @@ test("review dashboard state carries last applied snapshot when loaded", () => {
   assert.equal(dashboard.data.lastAppliedSnapshot.brief.summary, "Applied design");
   assert.equal(dashboard.data.lastAppliedSnapshot.proposalLines[0], "Applied line");
   assert.equal(dashboard.data.lastAppliedSnapshot.renderObservation.macro.leadModel, "MegaTree");
+  assert.deepEqual(dashboard.data.lastAppliedSnapshot.planHandoff.metadata.priorPassMemory.unresolvedSignals, ["weak_section_contrast"]);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.comparison.leadMatchesPrimaryFocus, true);
   assert.equal(dashboard.data.lastAppliedSnapshot.renderCritiqueContext.expected.requestedScope.mode, "section_target_refinement");
   assert.equal(dashboard.data.lastAppliedSnapshot.sequenceArtisticGoal.scope.goalLevel, "section");

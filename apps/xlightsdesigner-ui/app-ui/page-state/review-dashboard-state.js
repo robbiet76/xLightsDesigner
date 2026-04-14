@@ -363,6 +363,7 @@ export function buildReviewDashboardState({
             brief: lastAppliedSnapshot.creativeBrief || null,
             proposalLines: lastAppliedSnapshot.proposalBundle?.proposalLines || [],
             applyResult: lastAppliedSnapshot.applyResult || lastApply || null,
+            planHandoff: lastAppliedSnapshot.planHandoff || null,
             analysisArtifact: lastAppliedSnapshot.analysisArtifact || null,
             sceneContext: lastAppliedSnapshot.designSceneContext || null,
             musicContext: lastAppliedSnapshot.musicDesignContext || null,

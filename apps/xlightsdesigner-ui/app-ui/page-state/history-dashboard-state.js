@@ -91,6 +91,7 @@ export function buildHistoryDashboardState({
             musicSummary: str(selectedSnapshot?.musicDesignContext?.summary || "No applied music context summary."),
             brief: selectedSnapshot?.creativeBrief || null,
             applyResult: selectedSnapshot?.applyResult || null,
+            planHandoff: selectedSnapshot?.planHandoff || null,
             analysisArtifact: selectedSnapshot?.analysisArtifact || null,
             sceneContext: selectedSnapshot?.designSceneContext || null,
             musicContext: selectedSnapshot?.musicDesignContext || null,
