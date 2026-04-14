@@ -1007,8 +1007,23 @@ function buildCommandsFromEffectPlacements({
     trackName
   });
   const effectCommands = placements.map((placement, index) => {
+    const placementParameterPriorGuidance = placement?.parameterPriorGuidance && typeof placement.parameterPriorGuidance === "object"
+      ? placement.parameterPriorGuidance
+      : buildParameterPriorGuidance({
+          effectName: placement?.effectName,
+          targetIds: [normText(placement?.targetId)].filter(Boolean),
+          displayElements,
+          intentSummary: [
+            normText(placement?.timingContext?.anchorLabel),
+            normText(placement?.effectName)
+          ].filter(Boolean).join(" "),
+          sequencerRevisionBrief: null
+        });
     const translated = translatePlacementIntentToXlights({
-      placement,
+      placement: {
+        ...placement,
+        parameterPriorGuidance: placementParameterPriorGuidance
+      },
       effectCatalog
     });
     const placementTrackName = normText(placement?.timingContext?.trackName || trackName) || "XD: Sequencer Plan";
@@ -1049,6 +1064,7 @@ function buildCommandsFromEffectPlacements({
         designRevision: Number.isInteger(Number(placement?.designRevision)) ? Number(placement.designRevision) : 0,
         designAuthor: normText(placement?.designAuthor),
         settingsIntent: placement.settingsIntent,
+        parameterPriorGuidance: placementParameterPriorGuidance,
         paletteIntent: placement.paletteIntent,
         layerIntent: placement.layerIntent,
         renderIntent: placement.renderIntent,

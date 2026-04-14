@@ -15,6 +15,13 @@ function sampleCatalog() {
       ]
     },
     {
+      effectName: "Pinwheel",
+      params: [
+        { name: "E_SPEED", type: "int", min: 0, max: 10 },
+        { name: "E_ARMSIZE", type: "int", min: 0, max: 100 }
+      ]
+    },
+    {
       effectName: "Shimmer",
       params: [
         { name: "E_SPEED", type: "int", min: 0, max: 10 },
@@ -177,4 +184,33 @@ test("effect intent translation keeps On effect payload minimal for live apply",
 
   assert.deepEqual(out.settings, {});
   assert.deepEqual(out.palette, {});
+});
+
+test("effect intent translation applies bounded derived prior settings for safe screened axes", () => {
+  const out = translatePlacementIntentToXlights({
+    placement: {
+      effectName: "Pinwheel",
+      parameterPriorGuidance: {
+        priors: [
+          {
+            parameterName: "speed",
+            recommendedAnchors: [{ parameterValue: 7 }]
+          },
+          {
+            parameterName: "armSize",
+            recommendedAnchors: [{ parameterValue: 75 }]
+          },
+          {
+            parameterName: "style",
+            recommendedAnchors: [{ parameterValue: "New Render Method" }]
+          }
+        ]
+      }
+    },
+    effectCatalog: sampleCatalog()
+  });
+
+  assert.equal(out.settings.E_SPEED, 7);
+  assert.equal(out.settings.E_ARMSIZE, 75);
+  assert.equal(Object.prototype.hasOwnProperty.call(out.settings, "E_STYLE"), false);
 });

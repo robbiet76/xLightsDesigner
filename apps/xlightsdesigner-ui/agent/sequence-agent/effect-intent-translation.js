@@ -182,6 +182,70 @@ function writeEffectSpecificSetting(settings, effectDefinition, value, patterns 
   }
 }
 
+function resolveBooleanSetting(value) {
+  if (typeof value === "boolean") return value ? "1" : "0";
+  const text = normText(value).toLowerCase();
+  if (["1", "true", "yes", "on"].includes(text)) return "1";
+  if (["0", "false", "no", "off"].includes(text)) return "0";
+  return null;
+}
+
+function writeDirectPriorSetting(settings, effectDefinition, rawParameterName = "", rawValue = null) {
+  const desiredName = normText(rawParameterName);
+  if (!desiredName || !effectDefinition || !Array.isArray(effectDefinition?.params)) return false;
+  const param = effectDefinition.params.find((row) => normalizeEnumKey(row?.name).includes(normalizeEnumKey(desiredName)));
+  if (!param || Object.prototype.hasOwnProperty.call(settings, param.name)) return false;
+  if (param.type === "int") {
+    const min = Number.isFinite(Number(param.min)) ? Number(param.min) : Number.MIN_SAFE_INTEGER;
+    const max = Number.isFinite(Number(param.max)) ? Number(param.max) : Number.MAX_SAFE_INTEGER;
+    const value = clampInt(rawValue, min, max, null);
+    if (value == null) return false;
+    settings[param.name] = value;
+    return true;
+  }
+  if (param.type === "bool" || param.type === "boolean") {
+    const value = resolveBooleanSetting(rawValue);
+    if (value == null) return false;
+    settings[param.name] = value;
+    return true;
+  }
+  if (param.type === "enum") {
+    const resolved = resolveEnumValue(param, rawValue);
+    if (!resolved) return false;
+    settings[param.name] = resolved;
+    return true;
+  }
+  return false;
+}
+
+const SAFE_DERIVED_PRIOR_PARAMETERS = Object.freeze(new Set([
+  "speed",
+  "cycles",
+  "count",
+  "steps",
+  "thickness",
+  "armsize",
+  "bandsize",
+  "intensity",
+  "skipsize",
+  "advances"
+]));
+
+function buildSettingsFromDerivedPriorGuidance(parameterPriorGuidance = {}, effectDefinition = null) {
+  const out = {};
+  const priors = Array.isArray(parameterPriorGuidance?.priors) ? parameterPriorGuidance.priors : [];
+  for (const prior of priors) {
+    const parameterName = normalizeEnumKey(prior?.parameterName);
+    if (!SAFE_DERIVED_PRIOR_PARAMETERS.has(parameterName)) continue;
+    const anchor = Array.isArray(prior?.recommendedAnchors) && prior.recommendedAnchors.length
+      ? prior.recommendedAnchors[0]
+      : null;
+    if (!anchor) continue;
+    writeDirectPriorSetting(out, effectDefinition, prior?.parameterName, anchor?.parameterValue);
+  }
+  return out;
+}
+
 function buildSharedSettingsFromIntent(settingsIntent = {}, effectDefinition = null, capability = null) {
   const out = {};
   const intensity = mapScale(settingsIntent?.intensity, {
@@ -244,6 +308,7 @@ export function translatePlacementIntentToXlights({
   const capability = getEffectIntentCapability(effectName);
   const translatedSettings = {
     ...buildSharedSettingsFromIntent(asObject(placement?.settingsIntent), effectDefinition, capability),
+    ...buildSettingsFromDerivedPriorGuidance(asObject(placement?.parameterPriorGuidance), effectDefinition),
     ...buildLayerSettingsFromIntent(asObject(placement?.layerIntent)),
     ...buildRenderSettingsFromIntent(asObject(placement?.renderIntent))
   };
