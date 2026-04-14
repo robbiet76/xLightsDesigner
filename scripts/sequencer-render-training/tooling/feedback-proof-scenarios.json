@@ -11,6 +11,9 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedFocusRead": "narrow",
+    "expectedFamilyBalanceRead": "single_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_window_treeflat_sparse",
     "targetScope": "TreeFlat",
     "effectFamilies": "SingleStrand"
@@ -27,6 +30,9 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedFocusRead": "narrow",
+    "expectedFamilyBalanceRead": "single_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_window_matrix_sparse",
     "targetScope": "MatrixLowDensity",
     "effectFamilies": "SingleStrand"
@@ -43,6 +49,9 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedFocusRead": "narrow",
+    "expectedFamilyBalanceRead": "single_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_window_archsingle_sparse",
     "targetScope": "ArchSingle",
     "effectFamilies": "ColorWash"
@@ -60,6 +69,9 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedFocusRead": "broad_enough",
+    "expectedFamilyBalanceRead": "multi_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_window_tree_arch_composite",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -77,6 +89,9 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedFocusRead": "broad_enough",
+    "expectedFamilyBalanceRead": "multi_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_window_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -94,6 +109,9 @@
     "requestedScopeMode": "whole_sequence",
     "reviewStartLevel": "macro",
     "sectionScopeKind": "full_sequence",
+    "expectedFocusRead": "broad_enough",
+    "expectedFamilyBalanceRead": "multi_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "",
     "targetScope": "",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -110,6 +128,9 @@
     "requestedScopeMode": "target_refinement",
     "reviewStartLevel": "model",
     "sectionScopeKind": "full_sequence",
+    "expectedFocusRead": "narrow",
+    "expectedFamilyBalanceRead": "single_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "",
     "targetScope": "ArchSingle",
     "effectFamilies": "ColorWash"

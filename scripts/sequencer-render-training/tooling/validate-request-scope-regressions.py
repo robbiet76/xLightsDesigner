@@ -107,6 +107,36 @@ def validate_summary(summary_path, scenarios_path, expected_ladder_level, errors
                 f"{row['scenarioId']} summary scope mismatch: expected {expected}, got {actual}"
             )
 
+        expected_focus = scenario.get("expectedFocusRead")
+        if expected_focus and row.get("focusRead") != expected_focus:
+            errors.append(
+                f"{row['scenarioId']} focusRead mismatch: expected {expected_focus}, got {row.get('focusRead')}"
+            )
+
+        expected_intent = scenario.get("expectedIntentRead")
+        if expected_intent and row.get("intentRead") != expected_intent:
+            errors.append(
+                f"{row['scenarioId']} intentRead mismatch: expected {expected_intent}, got {row.get('intentRead')}"
+            )
+
+        expected_composition = scenario.get("expectedCompositionRead")
+        if expected_composition and row.get("compositionRead") != expected_composition:
+            errors.append(
+                f"{row['scenarioId']} compositionRead mismatch: expected {expected_composition}, got {row.get('compositionRead')}"
+            )
+
+        expected_family_balance = scenario.get("expectedFamilyBalanceRead")
+        if expected_family_balance and row.get("familyBalanceRead") != expected_family_balance:
+            errors.append(
+                f"{row['scenarioId']} familyBalanceRead mismatch: expected {expected_family_balance}, got {row.get('familyBalanceRead')}"
+            )
+
+        expected_cycle_outcome = scenario.get("expectedCycleOutcome")
+        if expected_cycle_outcome and row.get("cycleOutcome") != expected_cycle_outcome:
+            errors.append(
+                f"{row['scenarioId']} cycleOutcome mismatch: expected {expected_cycle_outcome}, got {row.get('cycleOutcome')}"
+            )
+
         critique = load_json(row["critiqueArtifactPath"])
         if critique.get("ladderLevel") != expected_ladder_level:
             errors.append(

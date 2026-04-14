@@ -97,6 +97,16 @@ Harness runner:
       - `section_selection` keeps section scope without explicit targets
       - `section_target_refinement` keeps both section and target scope
       - `target_refinement` keeps explicit target scope without section scope
+    - expected retained outcome reads:
+      - macro suite:
+        - `focusRead`
+        - `familyBalanceRead`
+        - `cycleOutcome`
+      - section suite:
+        - `intentRead`
+        - `compositionRead`
+        - `familyBalanceRead`
+        - `cycleOutcome`
 - [extract-sequence-revision-gate.py](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/tooling/extract-sequence-revision-gate.py)
   - converts a critique artifact into an explicit revision gating decision
   - current kept gate proofs:

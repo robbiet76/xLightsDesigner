@@ -19,6 +19,10 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedIntentRead": "multi-idea section read",
+    "expectedCompositionRead": "split",
+    "expectedFamilyBalanceRead": "multi_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_section_tree_arch_split",
     "targetScope": "TreeFlat,ArchSingle",
     "effectFamilies": "SingleStrand,ColorWash"
@@ -43,6 +47,10 @@
     "requestedScopeMode": "section_target_refinement",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedIntentRead": "single-idea section read",
+    "expectedCompositionRead": "concentrated",
+    "expectedFamilyBalanceRead": "multi_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_section_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
@@ -67,6 +75,10 @@
     "requestedScopeMode": "section_selection",
     "reviewStartLevel": "section",
     "sectionScopeKind": "timing_track_windows",
+    "expectedIntentRead": "single-idea section read",
+    "expectedCompositionRead": "concentrated",
+    "expectedFamilyBalanceRead": "multi_family",
+    "expectedCycleOutcome": "usable_with_revision",
     "sectionScope": "proof_section_arch_matrix_selection",
     "targetScope": "",
     "effectFamilies": "ColorWash,SingleStrand"
