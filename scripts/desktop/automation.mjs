@@ -11,8 +11,6 @@ const UNSUPPORTED_LEGACY_ACTIONS = new Set([
   "reset-automation-state",
   "analyze-audio",
   "seed-timing-tracks-from-analysis",
-  "get-sequencer-validation-snapshot",
-  "get-render-feedback-snapshot",
   "set-render-observation",
   "generate-proposal",
   "diagnose-current-proposal",
