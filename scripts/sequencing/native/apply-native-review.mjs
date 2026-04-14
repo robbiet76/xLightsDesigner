@@ -2,11 +2,14 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 import {
   getOpenSequence,
   getSequenceSettings,
   getDisplayElements,
+  getModels,
+  getRenderedSequenceSamples,
   getRevision,
   getOwnedHealth,
   getOwnedJob,
@@ -22,7 +25,10 @@ import {
 import { buildAnalysisHandoffFromArtifact } from '../../../apps/xlightsdesigner-ui/agent/audio-analyst/audio-analyst-runtime.js';
 import { buildSequenceAgentPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent.js';
 import { buildSequenceAgentApplyResult } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/sequence-agent-runtime.js';
+import { buildDesignSceneContext } from '../../../apps/xlightsdesigner-ui/agent/designer-dialog/design-scene-context.js';
+import { buildRenderCritiqueContext } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/render-critique-context.js';
 import { buildArtifactRefs, buildHistoryEntry, buildHistorySnapshotSummary } from '../../../apps/xlightsdesigner-ui/agent/shared/history-entry.js';
+import { buildRenderObservationFromSamples, buildRenderSamplingPlan } from '../../../apps/xlightsdesigner-ui/runtime/render-observation-runtime.js';
 import { buildOwnedSequencingBatchPlan, validateAndApplyPlan } from '../../../apps/xlightsdesigner-ui/agent/sequence-agent/orchestrator.js';
 import { writeProjectArtifacts } from '../../../apps/xlightsdesigner-ui/storage/project-artifact-store.mjs';
 
@@ -286,13 +292,23 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
       currentRevision: str(revisionRes?.data?.revision || 'unknown'),
       nextRevision: str(fallback.nextRevision)
     });
+    const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
+      endpoint,
+      showDir: str(inputs.projectDoc?.showFolder || ''),
+      sequencePath: inputs.sequencePath,
+      revisionToken: str(fallback.nextRevision),
+      analysisHandoff,
+      intentHandoff: inputs.intentHandoff
+    });
     await persistNativeReviewArtifacts({
       projectFile,
       projectDoc: inputs.projectDoc,
       intentHandoff: inputs.intentHandoff,
       proposalBundle: inputs.proposalBundle,
       planHandoff: commandsPlan,
-      applyResult
+      applyResult,
+      renderObservation: renderArtifacts.renderObservation,
+      renderCritiqueContext: renderArtifacts.renderCritiqueContext
     });
     return {
       ok: true,
@@ -316,13 +332,23 @@ async function applyReview({ projectFile = '', appRoot = '', endpoint = '' } = {
     currentRevision: str(revisionRes?.data?.revision || 'unknown'),
     nextRevision: str(applyRes?.nextRevision || '')
   });
+  const renderArtifacts = await buildNativeRenderFeedbackArtifacts({
+    endpoint,
+    showDir: str(inputs.projectDoc?.showFolder || ''),
+    sequencePath: inputs.sequencePath,
+    revisionToken: str(applyRes?.nextRevision || ''),
+    analysisHandoff,
+    intentHandoff: inputs.intentHandoff
+  });
   await persistNativeReviewArtifacts({
     projectFile,
     projectDoc: inputs.projectDoc,
     intentHandoff: inputs.intentHandoff,
     proposalBundle: inputs.proposalBundle,
     planHandoff: commandsPlan,
-    applyResult
+    applyResult,
+    renderObservation: renderArtifacts.renderObservation,
+    renderCritiqueContext: renderArtifacts.renderCritiqueContext
   });
   return {
     ok: true,
@@ -345,7 +371,9 @@ async function persistNativeReviewArtifacts({
   intentHandoff = null,
   proposalBundle = null,
   planHandoff = null,
-  applyResult = null
+  applyResult = null,
+  renderObservation = null,
+  renderCritiqueContext = null
 } = {}) {
   currentStage = 'persist_apply_artifacts';
   const historyEntry = buildHistoryEntry({
@@ -360,7 +388,9 @@ async function persistNativeReviewArtifacts({
       proposalBundle,
       intentHandoff,
       planHandoff,
-      applyResult
+      applyResult,
+      renderObservation,
+      renderCritiqueContext
     }),
     snapshotSummary: buildHistorySnapshotSummary({
       proposalBundle,
@@ -381,6 +411,8 @@ async function persistNativeReviewArtifacts({
     applyResult && typeof applyResult === 'object'
       ? { ...applyResult, artifactType: 'apply_result_v1' }
       : null,
+    renderObservation && typeof renderObservation === 'object' ? renderObservation : null,
+    renderCritiqueContext && typeof renderCritiqueContext === 'object' ? renderCritiqueContext : null,
     { ...historyEntry, artifactId: str(historyEntry?.historyEntryId) }
   ].filter(Boolean);
   const writeRes = writeProjectArtifacts({
@@ -389,6 +421,194 @@ async function persistNativeReviewArtifacts({
   });
   if (!writeRes?.ok) {
     throw new Error(`Failed to persist native review artifacts: ${str(writeRes?.error || writeRes?.reason || 'unknown')}`);
+  }
+}
+
+async function buildNativeRenderFeedbackArtifacts({
+  endpoint = '',
+  showDir = '',
+  sequencePath = '',
+  revisionToken = '',
+  analysisHandoff = null,
+  intentHandoff = null
+} = {}) {
+  try {
+    currentStage = 'build_render_feedback';
+    const sceneGraph = await buildNativeSceneGraph({ endpoint, showDir });
+    const targetIds = Array.isArray(intentHandoff?.scope?.targetIds)
+      ? intentHandoff.scope.targetIds.map((row) => str(row)).filter(Boolean)
+      : [];
+    const samplingPlan = buildRenderSamplingPlan(sceneGraph, { targetIds });
+    if (!samplingPlan?.modelCount || !Array.isArray(samplingPlan?.channelRanges) || !samplingPlan.channelRanges.length) {
+      return { renderObservation: null, renderCritiqueContext: null };
+    }
+
+    const windows = buildSamplingWindows({ analysisHandoff, intentHandoff });
+    const sampleResponses = [];
+    for (const window of windows) {
+      const response = await getRenderedSequenceSamples(endpoint, {
+        startMs: window.startMs,
+        endMs: window.endMs,
+        maxFrames: window.maxFrames,
+        channelRanges: samplingPlan.channelRanges
+      });
+      sampleResponses.push({
+        ...response,
+        label: window.label,
+        reviewLevel: window.reviewLevel,
+        sampleDetail: window.sampleDetail,
+        sourceWindow: {
+          startMs: window.sourceStartMs,
+          endMs: window.sourceEndMs
+        }
+      });
+    }
+
+    const renderObservation = buildRenderObservationFromSamples({
+      samplingPlan,
+      sampleResponses,
+      sequencePath,
+      revisionToken
+    });
+    if (!renderObservation) {
+      return { renderObservation: null, renderCritiqueContext: null };
+    }
+
+    const designSceneContext = buildDesignSceneContext({
+      sceneGraph,
+      revision: revisionToken || 'native_apply'
+    });
+    const renderCritiqueContext = buildRenderCritiqueContext({
+      renderObservation,
+      designSceneContext,
+      sequencingDesignHandoff: null,
+      musicDesignContext: null
+    });
+    return { renderObservation, renderCritiqueContext };
+  } catch {
+    return { renderObservation: null, renderCritiqueContext: null };
+  }
+}
+
+async function buildNativeSceneGraph({ endpoint = '', showDir = '' } = {}) {
+  const modelRes = await getModels(endpoint);
+  const sceneModels = Array.isArray(modelRes?.data?.models) ? modelRes.data.models : [];
+  const modelsById = {};
+
+  for (const row of sceneModels) {
+    const id = str(row?.id || row?.name);
+    if (!id) continue;
+    const typeText = str(row?.displayAs || row?.type || 'Model');
+    const lowerType = typeText.toLowerCase();
+    const isGroup = lowerType === 'modelgroup' || lowerType === 'group';
+    const position = {
+      x: toFiniteNumber(row?.positionX),
+      y: toFiniteNumber(row?.positionY),
+      z: toFiniteNumber(row?.positionZ)
+    };
+    const metadata = !isGroup ? readShowModelMetadata({ showDir, modelName: id }) : null;
+    const startChannel = toFiniteNumber(metadata?.startChannel);
+    const endChannel = toFiniteNumber(metadata?.endChannel);
+    const syntheticNodeCount = Math.max(1, Math.min(50, Number(metadata?.nodeCount || row?.nodeCount || 1)));
+    const nodes = Array.from({ length: syntheticNodeCount }, (_, index) => ({
+      id: `${id}:${index}`,
+      coords: {
+        world: position,
+        buffer: null
+      }
+    }));
+    const item = {
+      id,
+      name: str(row?.name || id),
+      type: isGroup ? 'group' : 'model',
+      typeCategory: str(metadata?.resolvedModelType || lowerType || 'unknown'),
+      startChannel,
+      endChannel,
+      transform: {
+        position
+      },
+      nodes
+    };
+    if (!isGroup) {
+      modelsById[id] = item;
+    }
+  }
+
+  return {
+    loaded: true,
+    source: 'layout.getModels+xml_metadata',
+    loadedAt: new Date().toISOString(),
+    modelsById,
+    groupsById: {},
+    submodelsById: {},
+    stats: {
+      modelCount: Object.keys(modelsById).length,
+      groupCount: 0,
+      submodelCount: 0,
+      layoutMode: '2d'
+    }
+  };
+}
+
+function buildSamplingWindows({ analysisHandoff = null, intentHandoff = null } = {}) {
+  const structureSections = Array.isArray(analysisHandoff?.structure?.sections) ? analysisHandoff.structure.sections : [];
+  const requestedSections = new Set(
+    (Array.isArray(intentHandoff?.scope?.sections) ? intentHandoff.scope.sections : [])
+      .map((row) => str(row).toLowerCase())
+      .filter(Boolean)
+  );
+  const matched = structureSections
+    .map((row, index) => ({
+      label: str(typeof row === 'string' ? row : row?.label || row?.name || `window_${index + 1}`),
+      startMs: Number(row?.startMs || 0),
+      endMs: Number(row?.endMs || 0)
+    }))
+    .filter((row) => row.label && Number.isFinite(row.startMs) && Number.isFinite(row.endMs) && row.endMs > row.startMs)
+    .filter((row) => !requestedSections.size || requestedSections.has(row.label.toLowerCase()));
+
+  const rows = matched.length
+    ? matched
+    : [{
+        label: 'full_sequence_scope',
+        startMs: 0,
+        endMs: Number(analysisHandoff?.track?.durationMs || analysisHandoff?.media?.durationMs || 1000)
+      }];
+
+  return rows.slice(0, 6).map((row) => ({
+    ...row,
+    maxFrames: 5,
+    reviewLevel: requestedSections.size ? 'section' : 'macro',
+    sampleDetail: requestedSections.size ? 'section' : 'macro',
+    sourceStartMs: row.startMs,
+    sourceEndMs: row.endMs
+  }));
+}
+
+function toFiniteNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function readShowModelMetadata({ showDir = '', modelName = '' } = {}) {
+  const normalizedShowDir = str(showDir);
+  const normalizedModelName = str(modelName);
+  if (!normalizedShowDir || !normalizedModelName) return null;
+  try {
+    const stdout = execFileSync('python3', [
+      'scripts/sequencer-render-training/tooling/get-model-fseq-metadata.py',
+      '--show-dir',
+      normalizedShowDir,
+      '--model-name',
+      normalizedModelName
+    ], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    const parsed = JSON.parse(stdout);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
   }
 }
 
