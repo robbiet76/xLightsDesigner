@@ -31,7 +31,17 @@
         "soft_twinkle",
         "strobe",
         "strobe_false"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "strobe",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "twinkle-strobe-true-generated-v1",
@@ -52,7 +62,17 @@
         "soft_twinkle",
         "strobe",
         "strobe_true"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "strobe",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     }
   ],
   "registryMetadata": {

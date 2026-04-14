@@ -16,8 +16,14 @@ const unifiedByName = new Map((Array.isArray(unified?.effects) ? unified.effects
 
 function classifyReadiness(row = {}) {
   const status = str(row.coverageStatus);
+  const registryCount = Array.isArray(row.registryParameterNames) ? row.registryParameterNames.length : 0;
+  const coveredCount = new Set([
+    ...(Array.isArray(row.retainedParameterNames) ? row.retainedParameterNames : []),
+    ...(Array.isArray(row.screenedParameterNames) ? row.screenedParameterNames : [])
+  ]).size;
   if (status === "registry_defined_not_screened") return "ready_for_parameter_screening";
-  if (status === "screened_parameter_subset") return "ready_for_expansion";
+  if (status === "screened_parameter_subset" && coveredCount < registryCount) return "ready_for_expansion";
+  if (status === "screened_parameter_subset" && coveredCount >= registryCount && registryCount > 0) return "screened_current_registry";
   return "needs_registry";
 }
 
@@ -25,6 +31,7 @@ function classifyPriority(row = {}) {
   const readiness = classifyReadiness(row);
   if (readiness === "ready_for_parameter_screening") return "now";
   if (readiness === "ready_for_expansion") return "later";
+  if (readiness === "screened_current_registry") return "later";
   return "blocked";
 }
 
@@ -32,6 +39,7 @@ function classifyNextAction(row = {}) {
   const readiness = classifyReadiness(row);
   if (readiness === "ready_for_parameter_screening") return "generate_parameter_sweeps";
   if (readiness === "ready_for_expansion") return "deepen_screened_subset";
+  if (readiness === "screened_current_registry") return "harvest_outcomes_or_add_interactions";
   return "author_registry_and_base_manifests";
 }
 
@@ -47,6 +55,7 @@ const effects = (Array.isArray(coverage?.effects) ? coverage.effects : []).map((
     nextAction: classifyNextAction(row),
     registryParameterCount: Array.isArray(row.registryParameterNames) ? row.registryParameterNames.length : 0,
     retainedParameterCount: Array.isArray(row.retainedParameterNames) ? row.retainedParameterNames.length : 0,
+    screenedParameterCount: Array.isArray(row.screenedParameterNames) ? row.screenedParameterNames.length : 0,
     outcomeRecordCount: Number(unifiedRow?.liveOutcomeLearning?.outcomeRecordCount || 0)
   };
 });

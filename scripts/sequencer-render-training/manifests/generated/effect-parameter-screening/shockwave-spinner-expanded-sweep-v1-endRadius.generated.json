@@ -36,7 +36,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-endradius-25-generated-v1",
@@ -62,7 +72,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-endradius-50-generated-v1",
@@ -88,7 +108,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-endradius-75-generated-v1",
@@ -114,7 +144,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "endRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     }
   ],
   "registryMetadata": {

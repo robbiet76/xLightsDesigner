@@ -68,6 +68,7 @@ sequence_base_name="$(basename "${sequence_path}" .xsq)"
 
 effect_name="$(jq -r '.effectName' <<<"${sample_json}")"
 shared_settings_json="$(jq -c '.sharedSettings // {}' <<<"${sample_json}")"
+training_context_json="$(jq -c '.trainingContext // {}' <<<"${sample_json}")"
 effect_settings_json="$(jq -c '.effectSettings // {}' <<<"${sample_json}")"
 palette_json="$(jq -c '.sharedSettings.palette // {}' <<<"${sample_json}")"
 export_mode="$(jq -r '.export.mode' <<<"${sample_json}")"
@@ -216,6 +217,7 @@ jq -cn \
   --argjson durationMs "${duration_ms}" \
   --arg durationClass "${duration_class}" \
   --argjson sharedSettings "${shared_settings_json}" \
+  --argjson trainingContext "${training_context_json}" \
   --argjson effectSettings "${effect_settings_json}" \
   --argjson observations "$(cat "${observations_path}")" \
   --argjson features "$(cat "${features_path}")" \
@@ -236,6 +238,7 @@ jq -cn \
       durationClass: $durationClass
     },
     sharedSettings: $sharedSettings,
+    trainingContext: $trainingContext,
     effectSettings: $effectSettings,
     artifact: {
       mode: $mode,

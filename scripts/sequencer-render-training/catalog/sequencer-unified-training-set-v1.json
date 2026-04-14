@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T13:29:48.405Z",
+  "generatedAt": "2026-04-14T13:43:12.811Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -44,7 +44,7 @@
         "heuristic_observations",
         "fixture_model_context"
       ],
-      "currentPopulation": "8 durable general-training screening records loaded",
+      "currentPopulation": "38 durable general-training screening records loaded",
       "screeningRecordDirectory": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-screening-records"
     }
   },
@@ -251,7 +251,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -496,7 +497,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -678,7 +680,8 @@
           "render": []
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -888,7 +891,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1147,7 +1151,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1363,7 +1368,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1539,8 +1545,16 @@
           "layer": [],
           "render": []
         },
-        "coverageStatus": "registry_defined_not_screened",
-        "exhaustiveSettingCoverage": false
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [
+          "accel",
+          "centerX",
+          "centerY",
+          "cycles",
+          "endRadius",
+          "startRadius"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1593,18 +1607,14 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 3,
+        "screeningRecordCount": 22,
         "screenedParameterNames": [
-          "cycles",
+          "accel",
           "centerX",
           "centerY",
-          "startRadius",
+          "cycles",
           "endRadius",
-          "startWidth",
-          "endWidth",
-          "accel",
-          "blendEdges",
-          "scale"
+          "startRadius"
         ],
         "sampledModelTypes": [
           "spinner"
@@ -1613,8 +1623,8 @@
           "spinner_standard"
         ],
         "observedLabelHints": [
-          "centerX",
-          "centerX_25",
+          "accel",
+          "accel_-5",
           "compact_shockwave",
           "effect:shockwave",
           "hard_edge_shockwave",
@@ -1630,8 +1640,32 @@
           "shockwave_pattern",
           "single_shockwave",
           "spinner_fill",
+          "accel_0",
+          "accel_5",
+          "centerX",
+          "centerX_25",
           "centerX_50",
-          "centerX_75"
+          "centerX_75",
+          "centerY",
+          "centerY_25",
+          "centerY_50",
+          "centerY_75",
+          "cycles",
+          "cycles_1",
+          "cycles_2",
+          "cycles_3",
+          "cycles_4",
+          "cycles_5",
+          "endRadius",
+          "endRadius_10",
+          "endRadius_25",
+          "endRadius_50",
+          "endRadius_75",
+          "startRadius",
+          "startRadius_0",
+          "startRadius_10",
+          "startRadius_25",
+          "startRadius_50"
         ]
       }
     },
@@ -1813,7 +1847,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -2051,7 +2086,8 @@
           ]
         },
         "coverageStatus": "screened_parameter_subset",
-        "exhaustiveSettingCoverage": false
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": []
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -2210,8 +2246,15 @@
           "layer": [],
           "render": []
         },
-        "coverageStatus": "registry_defined_not_screened",
-        "exhaustiveSettingCoverage": false
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false,
+        "screenedParameterNames": [
+          "count",
+          "reRandomize",
+          "steps",
+          "strobe",
+          "style"
+        ]
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -2264,13 +2307,13 @@
       "screeningLearning": {
         "status": "populated",
         "storageClass": "general_training",
-        "screeningRecordCount": 5,
+        "screeningRecordCount": 16,
         "screenedParameterNames": [
-          "style",
           "count",
+          "reRandomize",
           "steps",
           "strobe",
-          "reRandomize"
+          "style"
         ],
         "sampledModelTypes": [
           "single_line"
@@ -2294,7 +2337,23 @@
           "count_3",
           "count_5",
           "count_7",
-          "count_9"
+          "count_9",
+          "reRandomize",
+          "reRandomize_false",
+          "reRandomize_true",
+          "steps",
+          "steps_10",
+          "steps_30",
+          "steps_50",
+          "steps_70",
+          "steps_90",
+          "strobe",
+          "strobe_false",
+          "strobe_true",
+          "strobe_twinkle",
+          "style",
+          "style_New_Render_Method",
+          "style_Old_Render_Method"
         ]
       }
     }

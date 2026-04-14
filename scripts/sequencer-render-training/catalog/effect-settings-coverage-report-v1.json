@@ -1,11 +1,11 @@
 {
   "artifactType": "effect_settings_coverage_report_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T12:52:24.065Z",
+  "generatedAt": "2026-04-14T13:43:12.903Z",
   "summary": {
     "effectCount": 20,
-    "screenedParameterSubsetCount": 8,
-    "registryDefinedNotScreenedCount": 2,
+    "screenedParameterSubsetCount": 10,
+    "registryDefinedNotScreenedCount": 0,
     "intentTranslatableOnlyCount": 10,
     "familyOnlyCount": 0,
     "exhaustiveSettingCoverage": false
@@ -37,6 +37,7 @@
         "barCount",
         "direction"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -54,6 +55,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -70,6 +72,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -96,6 +99,7 @@
         "hFade",
         "vFade"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -112,6 +116,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -129,6 +134,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -144,6 +150,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -164,6 +171,7 @@
         "reverse",
         "skipSize"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -182,6 +190,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -200,6 +209,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -222,6 +232,7 @@
         "shimmer",
         "startLevel"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -256,6 +267,7 @@
         "thickness",
         "twist"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -280,12 +292,13 @@
         "dutyFactor",
         "useAllColors"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Shockwave",
       "family": "compact_shockwave_ring",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [],
       "registryParameterNames": [
         "accel",
@@ -300,6 +313,14 @@
         "startWidth"
       ],
       "retainedParameterNames": [],
+      "screenedParameterNames": [
+        "accel",
+        "centerX",
+        "centerY",
+        "cycles",
+        "endRadius",
+        "startRadius"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -334,6 +355,7 @@
         "cycles",
         "numberChases"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -350,6 +372,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -382,12 +405,13 @@
         "rotation",
         "thickness"
       ],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
       "effectName": "Twinkle",
       "family": "classic_random_twinkle",
-      "coverageStatus": "registry_defined_not_screened",
+      "coverageStatus": "screened_parameter_subset",
       "supportedSettingsIntent": [],
       "registryParameterNames": [
         "count",
@@ -397,6 +421,13 @@
         "style"
       ],
       "retainedParameterNames": [],
+      "screenedParameterNames": [
+        "count",
+        "reRandomize",
+        "steps",
+        "strobe",
+        "style"
+      ],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -414,6 +445,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     },
     {
@@ -432,6 +464,7 @@
       ],
       "registryParameterNames": [],
       "retainedParameterNames": [],
+      "screenedParameterNames": [],
       "exhaustiveSettingCoverage": false
     }
   ]

@@ -1,11 +1,11 @@
 {
   "artifactType": "effect_training_automation_plan_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T12:52:24.130Z",
+  "generatedAt": "2026-04-14T13:43:13.018Z",
   "summary": {
     "effectCount": 20,
-    "runnableNowCount": 2,
-    "runnableLaterCount": 8,
+    "runnableNowCount": 0,
+    "runnableLaterCount": 10,
     "blockedCount": 10
   },
   "orderingRule": [
@@ -15,28 +15,6 @@
   ],
   "effects": [
     {
-      "effectName": "Shockwave",
-      "family": "compact_shockwave_ring",
-      "coverageStatus": "registry_defined_not_screened",
-      "readiness": "ready_for_parameter_screening",
-      "priority": "now",
-      "nextAction": "generate_parameter_sweeps",
-      "registryParameterCount": 10,
-      "retainedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
-      "effectName": "Twinkle",
-      "family": "classic_random_twinkle",
-      "coverageStatus": "registry_defined_not_screened",
-      "readiness": "ready_for_parameter_screening",
-      "priority": "now",
-      "nextAction": "generate_parameter_sweeps",
-      "registryParameterCount": 5,
-      "retainedParameterCount": 0,
-      "outcomeRecordCount": 0
-    },
-    {
       "effectName": "Bars",
       "family": "rhythmic",
       "coverageStatus": "screened_parameter_subset",
@@ -45,6 +23,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 6,
       "retainedParameterCount": 2,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -56,6 +35,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 6,
       "retainedParameterCount": 2,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -67,6 +47,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 6,
       "retainedParameterCount": 3,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -78,6 +59,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 4,
       "retainedParameterCount": 3,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -89,17 +71,31 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 8,
       "retainedParameterCount": 6,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
       "effectName": "Shimmer",
       "family": "sparkle",
       "coverageStatus": "screened_parameter_subset",
+      "readiness": "screened_current_registry",
+      "priority": "later",
+      "nextAction": "harvest_outcomes_or_add_interactions",
+      "registryParameterCount": 3,
+      "retainedParameterCount": 3,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Shockwave",
+      "family": "compact_shockwave_ring",
+      "coverageStatus": "screened_parameter_subset",
       "readiness": "ready_for_expansion",
       "priority": "later",
       "nextAction": "deepen_screened_subset",
-      "registryParameterCount": 3,
-      "retainedParameterCount": 3,
+      "registryParameterCount": 10,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 6,
       "outcomeRecordCount": 0
     },
     {
@@ -111,6 +107,7 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 10,
       "retainedParameterCount": 4,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -122,6 +119,19 @@
       "nextAction": "deepen_screened_subset",
       "registryParameterCount": 8,
       "retainedParameterCount": 4,
+      "screenedParameterCount": 0,
+      "outcomeRecordCount": 0
+    },
+    {
+      "effectName": "Twinkle",
+      "family": "classic_random_twinkle",
+      "coverageStatus": "screened_parameter_subset",
+      "readiness": "screened_current_registry",
+      "priority": "later",
+      "nextAction": "harvest_outcomes_or_add_interactions",
+      "registryParameterCount": 5,
+      "retainedParameterCount": 0,
+      "screenedParameterCount": 5,
       "outcomeRecordCount": 0
     },
     {
@@ -133,6 +143,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -144,6 +155,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -155,6 +167,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -166,6 +179,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -177,6 +191,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -188,6 +203,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -199,6 +215,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -210,6 +227,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -221,6 +239,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     },
     {
@@ -232,6 +251,7 @@
       "nextAction": "author_registry_and_base_manifests",
       "registryParameterCount": 0,
       "retainedParameterCount": 0,
+      "screenedParameterCount": 0,
       "outcomeRecordCount": 0
     }
   ]

@@ -36,7 +36,17 @@
         "spinner_fill",
         "startRadius",
         "startRadius_0"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-startradius-10-generated-v1",
@@ -62,7 +72,17 @@
         "spinner_fill",
         "startRadius",
         "startRadius_10"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-startradius-25-generated-v1",
@@ -88,7 +108,17 @@
         "spinner_fill",
         "startRadius",
         "startRadius_25"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-startradius-50-generated-v1",
@@ -114,7 +144,17 @@
         "spinner_fill",
         "startRadius",
         "startRadius_50"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "startRadius",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "high"
+      }
     }
   ],
   "registryMetadata": {

@@ -116,6 +116,10 @@ function uniqueStrings(values = []) {
   return [...new Set((Array.isArray(values) ? values : []).map((row) => String(row || "").trim()).filter(Boolean))];
 }
 
+function slug(value = "") {
+  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
 function loadOutcomeRecords(recordsDirPath) {
   if (!existsSync(recordsDirPath)) return [];
   return readdirSync(recordsDirPath)
@@ -167,6 +171,21 @@ function classifyParameterCoverage({ capability = {}, retainedParameters = [], r
     return "intent_translatable_only";
   }
   return "family_only";
+}
+
+function inferScreenedParameterName(record = {}, registryParameters = []) {
+  const explicit = String(record?.trainingContext?.screenedParameterName || "").trim();
+  if (explicit) return explicit;
+  const sampleId = String(record?.sampleId || "").trim().toLowerCase();
+  const labels = uniqueStrings(record?.observations?.labels || []);
+  const labelSlugSet = new Set(labels.map((row) => slug(row)));
+  for (const parameterName of registryParameters) {
+    const parameterSlug = slug(parameterName);
+    if (!parameterSlug) continue;
+    if (sampleId.includes(`-${parameterSlug}-`) || sampleId.includes(`${parameterSlug}_`)) return parameterName;
+    if (labelSlugSet.has(parameterSlug)) return parameterName;
+  }
+  return "";
 }
 
 function buildParameterLearningSummary({ effectName = "", capability = {}, retainedParameters = [] } = {}) {
@@ -229,6 +248,21 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
   const seedRolePriors = buildSeedRolePriors(effectName);
   const retainedParameters = Array.isArray(trained.retainedParameters) ? trained.retainedParameters : [];
   const relevantScreeningRecords = screeningRecords.filter((row) => String(row?.effectName || "").trim() === effectName);
+  const registryParameters = listRegistryParameters(effectName);
+  const screenedParameterNames = uniqueStrings(
+    relevantScreeningRecords
+      .map((row) => inferScreenedParameterName(row, registryParameters))
+      .filter(Boolean)
+  );
+  const parameterLearning = buildParameterLearningSummary({
+    effectName,
+    capability,
+    retainedParameters
+  });
+  parameterLearning.screenedParameterNames = screenedParameterNames;
+  if (screenedParameterNames.length && parameterLearning.coverageStatus === "registry_defined_not_screened") {
+    parameterLearning.coverageStatus = "screened_parameter_subset";
+  }
   return {
     effectName,
     baseline: {
@@ -248,11 +282,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
       supportedLayerIntent: Array.isArray(capability.supportedLayerIntent) ? capability.supportedLayerIntent : [],
       supportedRenderIntent: Array.isArray(capability.supportedRenderIntent) ? capability.supportedRenderIntent : []
     },
-    parameterLearning: buildParameterLearningSummary({
-      effectName,
-      capability,
-      retainedParameters
-    }),
+    parameterLearning,
     liveOutcomeLearning: {
       status: totalSamples > 0 ? "populated" : "seeded_empty",
       storageClass: "general_training",
@@ -264,7 +294,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
       status: relevantScreeningRecords.length > 0 ? "populated" : "empty",
       storageClass: "general_training",
       screeningRecordCount: relevantScreeningRecords.length,
-      screenedParameterNames: uniqueStrings(relevantScreeningRecords.flatMap((row) => Object.keys(row?.effectSettings || {}))),
+      screenedParameterNames,
       sampledModelTypes: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.modelType)),
       sampledGeometryProfiles: uniqueStrings(relevantScreeningRecords.map((row) => row?.fixture?.geometryProfile)),
       observedLabelHints: uniqueStrings(relevantScreeningRecords.flatMap((row) => row?.observations?.labels || []))

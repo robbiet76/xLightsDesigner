@@ -8,6 +8,9 @@ function str(value = "") {
 const automationPlan = JSON.parse(
   readFileSync(resolve("scripts/sequencer-render-training/catalog/effect-training-automation-plan-v1.json"), "utf8")
 );
+const unified = JSON.parse(
+  readFileSync(resolve("scripts/sequencer-render-training/catalog/sequencer-unified-training-set-v1.json"), "utf8")
+);
 const registry = JSON.parse(
   readFileSync(resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json"), "utf8")
 );
@@ -25,10 +28,12 @@ function listExpandedBaseManifests(effectName = "") {
 
 function listRunnableEffects() {
   return (Array.isArray(automationPlan?.effects) ? automationPlan.effects : [])
-    .filter((row) => row?.readiness === "ready_for_parameter_screening")
+    .filter((row) => row?.readiness === "ready_for_parameter_screening" || row?.readiness === "ready_for_expansion")
     .map((row) => str(row.effectName))
     .filter(Boolean);
 }
+
+const unifiedByName = new Map((Array.isArray(unified?.effects) ? unified.effects : []).map((row) => [str(row.effectName), row]));
 
 function listRegistryParameters(effectName = "") {
   const effectRegistry = registry?.effects?.[str(effectName)];
@@ -50,7 +55,13 @@ function buildRows() {
   const rows = [];
   for (const effectName of listRunnableEffects()) {
     const baseManifests = listExpandedBaseManifests(effectName);
-    const parameters = listRegistryParameters(effectName);
+    const effectEntry = unifiedByName.get(effectName) || {};
+    const coveredParameters = new Set([
+      ...(Array.isArray(effectEntry?.parameterLearning?.retainedParameterNames) ? effectEntry.parameterLearning.retainedParameterNames : []),
+      ...(Array.isArray(effectEntry?.parameterLearning?.screenedParameterNames) ? effectEntry.parameterLearning.screenedParameterNames : [])
+    ].map((row) => str(row)));
+    const parameters = listRegistryParameters(effectName)
+      .filter((row) => !coveredParameters.has(str(row.parameterName)));
     for (const baseManifestPath of baseManifests) {
       const baseManifestName = basename(baseManifestPath, ".json");
       for (const parameter of parameters) {

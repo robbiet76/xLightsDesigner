@@ -31,7 +31,17 @@
         "reRandomize",
         "reRandomize_false",
         "soft_twinkle"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "reRandomize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     },
     {
       "sampleId": "twinkle-rerandomize-true-generated-v1",
@@ -52,7 +62,17 @@
         "reRandomize",
         "reRandomize_true",
         "soft_twinkle"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "reRandomize",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "screen",
+        "screeningPriority": "medium"
+      }
     }
   ],
   "registryMetadata": {

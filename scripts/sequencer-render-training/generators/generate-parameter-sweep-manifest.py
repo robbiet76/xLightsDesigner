@@ -84,6 +84,12 @@ def main() -> int:
         sample["effectSettings"] = deepcopy(base_settings)
         sample["sharedSettings"] = deepcopy(base_shared)
         sample["export"] = deepcopy(base_export)
+        sample["trainingContext"] = {
+            "screenedParameterName": args.parameter,
+            "screeningTarget": target,
+            "screeningPhase": param_registry.get("phase", "screen"),
+            "screeningPriority": param_registry.get("practicalPriority", param_registry.get("importance", "medium")),
+        }
         if target == "sharedSettings":
             sample["sharedSettings"][args.parameter] = value
         else:

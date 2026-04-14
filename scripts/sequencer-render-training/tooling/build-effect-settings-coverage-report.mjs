@@ -55,6 +55,7 @@ const effects = effectNames.map((effectName) => {
     supportedSettingsIntent: Array.isArray(capability.supportedSettingsIntent) ? capability.supportedSettingsIntent : [],
     registryParameterNames: Array.isArray(parameterLearning.registryParameterNames) ? parameterLearning.registryParameterNames : [],
     retainedParameterNames: Array.isArray(parameterLearning.retainedParameterNames) ? parameterLearning.retainedParameterNames : [],
+    screenedParameterNames: Array.isArray(parameterLearning.screenedParameterNames) ? parameterLearning.screenedParameterNames : [],
     exhaustiveSettingCoverage: false
   };
 });

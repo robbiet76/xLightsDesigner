@@ -36,7 +36,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-cycles-2-generated-v1",
@@ -62,7 +72,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-cycles-3-generated-v1",
@@ -88,7 +108,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-cycles-4-generated-v1",
@@ -114,7 +144,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "shockwave-cycles-5-generated-v1",
@@ -140,7 +180,17 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "cycles",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     }
   ],
   "registryMetadata": {

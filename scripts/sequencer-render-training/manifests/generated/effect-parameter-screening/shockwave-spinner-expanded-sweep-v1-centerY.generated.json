@@ -36,7 +36,11 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      }
     },
     {
       "sampleId": "shockwave-centery-50-generated-v1",
@@ -62,7 +66,11 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      }
     },
     {
       "sampleId": "shockwave-centery-75-generated-v1",
@@ -88,7 +96,11 @@
         "radial_shockwave",
         "range_sample",
         "spinner_fill"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      }
     }
   ],
   "registryMetadata": {

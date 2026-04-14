@@ -31,7 +31,17 @@
         "soft_twinkle",
         "style",
         "style_Old_Render_Method"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "style",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     },
     {
       "sampleId": "twinkle-style-New_Render_Method-generated-v1",
@@ -52,7 +62,17 @@
         "soft_twinkle",
         "style",
         "style_New_Render_Method"
-      ]
+      ],
+      "export": {
+        "mode": "model_with_render",
+        "format": "gif"
+      },
+      "trainingContext": {
+        "screenedParameterName": "style",
+        "screeningTarget": "effectSettings",
+        "screeningPhase": "baseline",
+        "screeningPriority": "high"
+      }
     }
   ],
   "registryMetadata": {
