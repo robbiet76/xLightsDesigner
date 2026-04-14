@@ -81,6 +81,7 @@ Harness runner:
   - rebuilds a small section-level suite over longer sampled windows across:
     - `TreeFlat + ArchSingle` split section case
     - `ArchSingle + MatrixLowDensity` coherent lead-plus-support case
+    - `ArchSingle + MatrixLowDensity` section-selection case
   - emits:
     - per-scenario section window / observation / critique / learning record artifacts
     - [sequence-section-feedback-suite-summary.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-section-feedback-suite-summary.json)
@@ -196,6 +197,9 @@ Harness status:
 - The current section suite demonstrates two section outcomes:
   - split section composition
   - coherent lead-plus-support composition
+- The retained section suite now also distinguishes:
+  - `section_selection`
+  - from `section_target_refinement`
 - The current section suite also exposed a real next-layer weakness:
   - a section can be compositionally coherent while still being too flat over time
 - The current gate proofs now turn those critique outcomes into explicit routing:

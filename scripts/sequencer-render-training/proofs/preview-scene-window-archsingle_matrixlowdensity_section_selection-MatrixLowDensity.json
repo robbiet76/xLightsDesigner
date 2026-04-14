@@ -1,0 +1,1575 @@
+{
+  "artifactType": "preview_scene_window_v1",
+  "artifactVersion": 1,
+  "source": {
+    "geometryArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
+    "fseqPath": "/Users/robterry/Projects/xLightsDesigner/render-training/fseq/singlestrand-matrixlowdensity-stage1-coverage-v1-chaseSize-registry-v1.20260319T201401Z.fseq",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "frameOffsets": [
+      0,
+      8,
+      16,
+      24,
+      32,
+      40,
+      48,
+      56,
+      64
+    ]
+  },
+  "geometryReference": {
+    "artifactType": "preview_scene_geometry_v1",
+    "artifactVersion": 1,
+    "artifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
+    "layoutName": null,
+    "showFolder": null,
+    "modelCount": 19
+  },
+  "frames": [
+    {
+      "frameOffset": 0,
+      "frameIndex": 40,
+      "frameTimeMs": 1000,
+      "activeModelCount": 1,
+      "activeNodeCount": 1,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 1,
+          "activeNodeRatio": 0.0078125,
+          "averageNodeBrightness": 0.0078125,
+          "centroidPosition": 0.0,
+          "activeBounds": {
+            "min": {
+              "x": -8,
+              "y": 3,
+              "z": 0
+            },
+            "max": {
+              "x": -8,
+              "y": 3,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -8.0,
+            "y": 3.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 1,
+              "stringIndex": 0,
+              "screen": {
+                "x": -8,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 8,
+      "frameIndex": 48,
+      "frameTimeMs": 1200,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.04330708661417323,
+          "activeBounds": {
+            "min": {
+              "x": -7,
+              "y": 3,
+              "z": 0
+            },
+            "max": {
+              "x": 2,
+              "y": 3,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -2.5,
+            "y": 3.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 2,
+              "stringIndex": 0,
+              "screen": {
+                "x": -7,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 3,
+              "stringIndex": 0,
+              "screen": {
+                "x": -6,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 4,
+              "stringIndex": 0,
+              "screen": {
+                "x": -5,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 5,
+              "stringIndex": 0,
+              "screen": {
+                "x": -4,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 6,
+              "stringIndex": 0,
+              "screen": {
+                "x": -3,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": -2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": -1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 0,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 16,
+      "frameIndex": 56,
+      "frameTimeMs": 1400,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.1220472440944882,
+          "activeBounds": {
+            "min": {
+              "x": -8,
+              "y": 2,
+              "z": 0
+            },
+            "max": {
+              "x": 7,
+              "y": 3,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -0.5,
+            "y": 2.5,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 12,
+              "stringIndex": 0,
+              "screen": {
+                "x": 3,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 13,
+              "stringIndex": 0,
+              "screen": {
+                "x": 4,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 14,
+              "stringIndex": 0,
+              "screen": {
+                "x": 5,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 15,
+              "stringIndex": 0,
+              "screen": {
+                "x": 6,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 16,
+              "stringIndex": 0,
+              "screen": {
+                "x": 7,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 17,
+              "stringIndex": 1,
+              "screen": {
+                "x": -8,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 18,
+              "stringIndex": 1,
+              "screen": {
+                "x": -7,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 19,
+              "stringIndex": 1,
+              "screen": {
+                "x": -6,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 20,
+              "stringIndex": 1,
+              "screen": {
+                "x": -5,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 21,
+              "stringIndex": 1,
+              "screen": {
+                "x": -4,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 24,
+      "frameIndex": 64,
+      "frameTimeMs": 1600,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.20866141732283464,
+          "activeBounds": {
+            "min": {
+              "x": -2,
+              "y": 2,
+              "z": 0
+            },
+            "max": {
+              "x": 7,
+              "y": 2,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 2.5,
+            "y": 2.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 23,
+              "stringIndex": 1,
+              "screen": {
+                "x": -2,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 24,
+              "stringIndex": 1,
+              "screen": {
+                "x": -1,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 25,
+              "stringIndex": 1,
+              "screen": {
+                "x": 0,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 26,
+              "stringIndex": 1,
+              "screen": {
+                "x": 1,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 27,
+              "stringIndex": 1,
+              "screen": {
+                "x": 2,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 28,
+              "stringIndex": 1,
+              "screen": {
+                "x": 3,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 29,
+              "stringIndex": 1,
+              "screen": {
+                "x": 4,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 30,
+              "stringIndex": 1,
+              "screen": {
+                "x": 5,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 31,
+              "stringIndex": 1,
+              "screen": {
+                "x": 6,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 32,
+              "stringIndex": 1,
+              "screen": {
+                "x": 7,
+                "y": 2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 32,
+      "frameIndex": 72,
+      "frameTimeMs": 1800,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.2874015748031496,
+          "activeBounds": {
+            "min": {
+              "x": -8,
+              "y": 1,
+              "z": 0
+            },
+            "max": {
+              "x": 1,
+              "y": 1,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -3.5,
+            "y": 1.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 33,
+              "stringIndex": 2,
+              "screen": {
+                "x": -8,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 34,
+              "stringIndex": 2,
+              "screen": {
+                "x": -7,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 35,
+              "stringIndex": 2,
+              "screen": {
+                "x": -6,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 36,
+              "stringIndex": 2,
+              "screen": {
+                "x": -5,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 37,
+              "stringIndex": 2,
+              "screen": {
+                "x": -4,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 38,
+              "stringIndex": 2,
+              "screen": {
+                "x": -3,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 39,
+              "stringIndex": 2,
+              "screen": {
+                "x": -2,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 40,
+              "stringIndex": 2,
+              "screen": {
+                "x": -1,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 41,
+              "stringIndex": 2,
+              "screen": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 42,
+              "stringIndex": 2,
+              "screen": {
+                "x": 1,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 40,
+      "frameIndex": 80,
+      "frameTimeMs": 2000,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.3661417322834646,
+          "activeBounds": {
+            "min": {
+              "x": -8,
+              "y": 0,
+              "z": 0
+            },
+            "max": {
+              "x": 7,
+              "y": 1,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 0.1,
+            "y": 0.6,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 43,
+              "stringIndex": 2,
+              "screen": {
+                "x": 2,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 44,
+              "stringIndex": 2,
+              "screen": {
+                "x": 3,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 45,
+              "stringIndex": 2,
+              "screen": {
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 46,
+              "stringIndex": 2,
+              "screen": {
+                "x": 5,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 47,
+              "stringIndex": 2,
+              "screen": {
+                "x": 6,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 48,
+              "stringIndex": 2,
+              "screen": {
+                "x": 7,
+                "y": 1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 49,
+              "stringIndex": 3,
+              "screen": {
+                "x": -8,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 50,
+              "stringIndex": 3,
+              "screen": {
+                "x": -7,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 51,
+              "stringIndex": 3,
+              "screen": {
+                "x": -6,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 52,
+              "stringIndex": 3,
+              "screen": {
+                "x": -5,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 48,
+      "frameIndex": 88,
+      "frameTimeMs": 2200,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.452755905511811,
+          "activeBounds": {
+            "min": {
+              "x": -3,
+              "y": 0,
+              "z": 0
+            },
+            "max": {
+              "x": 6,
+              "y": 0,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 1.5,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 54,
+              "stringIndex": 3,
+              "screen": {
+                "x": -3,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 55,
+              "stringIndex": 3,
+              "screen": {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 56,
+              "stringIndex": 3,
+              "screen": {
+                "x": -1,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 57,
+              "stringIndex": 3,
+              "screen": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 58,
+              "stringIndex": 3,
+              "screen": {
+                "x": 1,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 59,
+              "stringIndex": 3,
+              "screen": {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 60,
+              "stringIndex": 3,
+              "screen": {
+                "x": 3,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 61,
+              "stringIndex": 3,
+              "screen": {
+                "x": 4,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 62,
+              "stringIndex": 3,
+              "screen": {
+                "x": 5,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 63,
+              "stringIndex": 3,
+              "screen": {
+                "x": 6,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 56,
+      "frameIndex": 96,
+      "frameTimeMs": 2400,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.531496062992126,
+          "activeBounds": {
+            "min": {
+              "x": -8,
+              "y": -1,
+              "z": 0
+            },
+            "max": {
+              "x": 7,
+              "y": 0,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -2.9,
+            "y": -0.9,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 64,
+              "stringIndex": 3,
+              "screen": {
+                "x": 7,
+                "y": 0,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 65,
+              "stringIndex": 4,
+              "screen": {
+                "x": -8,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 66,
+              "stringIndex": 4,
+              "screen": {
+                "x": -7,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 67,
+              "stringIndex": 4,
+              "screen": {
+                "x": -6,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 68,
+              "stringIndex": 4,
+              "screen": {
+                "x": -5,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 69,
+              "stringIndex": 4,
+              "screen": {
+                "x": -4,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 70,
+              "stringIndex": 4,
+              "screen": {
+                "x": -3,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 71,
+              "stringIndex": 4,
+              "screen": {
+                "x": -2,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 72,
+              "stringIndex": 4,
+              "screen": {
+                "x": -1,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 73,
+              "stringIndex": 4,
+              "screen": {
+                "x": 0,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 64,
+      "frameIndex": 104,
+      "frameTimeMs": 2600,
+      "activeModelCount": 1,
+      "activeNodeCount": 10,
+      "models": [
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.610236220472441,
+          "activeBounds": {
+            "min": {
+              "x": -8,
+              "y": -2,
+              "z": 0
+            },
+            "max": {
+              "x": 7,
+              "y": -1,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 0.7,
+            "y": -1.3,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 74,
+              "stringIndex": 4,
+              "screen": {
+                "x": 1,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 75,
+              "stringIndex": 4,
+              "screen": {
+                "x": 2,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 76,
+              "stringIndex": 4,
+              "screen": {
+                "x": 3,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 77,
+              "stringIndex": 4,
+              "screen": {
+                "x": 4,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 78,
+              "stringIndex": 4,
+              "screen": {
+                "x": 5,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 79,
+              "stringIndex": 4,
+              "screen": {
+                "x": 6,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 80,
+              "stringIndex": 4,
+              "screen": {
+                "x": 7,
+                "y": -1,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 81,
+              "stringIndex": 5,
+              "screen": {
+                "x": -8,
+                "y": -2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 82,
+              "stringIndex": 5,
+              "screen": {
+                "x": -7,
+                "y": -2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 83,
+              "stringIndex": 5,
+              "screen": {
+                "x": -6,
+                "y": -2,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "frameCount": 9,
+    "maxActiveModelCount": 1,
+    "maxActiveNodeCount": 10
+  }
+}

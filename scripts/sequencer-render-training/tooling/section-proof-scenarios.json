@@ -46,5 +46,29 @@
     "sectionScope": "proof_section_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
+  },
+  {
+    "scenarioId": "archsingle_matrixlowdensity_section_selection",
+    "compositeSources": [
+      {
+        "modelName": "ArchSingle",
+        "fseqPath": "render-training/fseq/colorwash-archsingle-stage1-coverage-v1-cycles-registry-v1.20260319T202645Z.fseq"
+      },
+      {
+        "modelName": "MatrixLowDensity",
+        "fseqPath": "render-training/fseq/singlestrand-matrixlowdensity-stage1-coverage-v1-chaseSize-registry-v1.20260319T201401Z.fseq"
+      }
+    ],
+    "frameOffsets": "0,8,16,24,32,40,48,56,64",
+    "windowStartMs": 1000,
+    "windowEndMs": 5000,
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_section_selection",
+    "revisionGoal": "Evaluate a section-only review pass without explicit target refinement so the corpus distinguishes section scope from local target scope.",
+    "requestedScopeMode": "section_selection",
+    "reviewStartLevel": "section",
+    "sectionScopeKind": "timing_track_windows",
+    "sectionScope": "proof_section_arch_matrix_selection",
+    "targetScope": "",
+    "effectFamilies": "ColorWash,SingleStrand"
   }
 ]

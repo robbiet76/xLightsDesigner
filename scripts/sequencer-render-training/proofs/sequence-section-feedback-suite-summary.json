@@ -3,7 +3,7 @@
   "artifactVersion": 1,
   "suiteId": "render_training_section_suite_v1",
   "geometryArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
-  "scenarioCount": 2,
+  "scenarioCount": 3,
   "scenarios": [
     {
       "scenarioId": "treeflat_archsingle_section_split",
@@ -34,6 +34,23 @@
       "familyBalanceRead": "multi_family",
       "requestScope": {
         "mode": "section_target_refinement",
+        "reviewStartLevel": "section",
+        "sectionScopeKind": "timing_track_windows"
+      },
+      "cycleOutcome": "usable_with_revision"
+    },
+    {
+      "scenarioId": "archsingle_matrixlowdensity_section_selection",
+      "windowArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_matrixlowdensity_section_selection.json",
+      "observationArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_matrixlowdensity_section_selection.json",
+      "critiqueArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-critique-archsingle_matrixlowdensity_section_selection.json",
+      "learningRecordArtifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/sequence-learning-record-archsingle_matrixlowdensity_section_selection.json",
+      "ladderLevel": "section",
+      "intentRead": "single-idea section read",
+      "compositionRead": "concentrated",
+      "familyBalanceRead": "multi_family",
+      "requestScope": {
+        "mode": "section_selection",
         "reviewStartLevel": "section",
         "sectionScopeKind": "timing_track_windows"
       },
