@@ -38,6 +38,7 @@ Primary system roadmap:
 - `catalog/training-standards.json`
 - `catalog/sequencer-unified-training-set-v1.json`
 - `catalog/effect-family-outcomes/`
+- `catalog/effect-settings-coverage-report-v1.json`
 
 ## Common Supporting Tools
 - `generators/generate-parameter-sweep-manifest.py`
@@ -54,6 +55,7 @@ Primary system roadmap:
 - `tooling/select-priority-effect.py`
 - `tooling/build-unified-training-set.mjs`
 - `tooling/harvest-effect-outcome-records.mjs`
+- `tooling/build-effect-settings-coverage-report.mjs`
 - `tooling/resolve-controlled-designer-term.py`
 - `analysis/analyze_decoded_window.py`
 
@@ -124,6 +126,10 @@ node scripts/sequencer-render-training/tooling/build-unified-training-set.mjs
 ```bash
 node scripts/sequencer-render-training/tooling/harvest-effect-outcome-records.mjs \
   --source /path/to/project.xdproj
+```
+
+```bash
+node scripts/sequencer-render-training/tooling/build-effect-settings-coverage-report.mjs
 ```
 
 ```bash

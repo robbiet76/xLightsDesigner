@@ -1,0 +1,438 @@
+{
+  "artifactType": "effect_settings_coverage_report_v1",
+  "artifactVersion": "1.0",
+  "generatedAt": "2026-04-14T12:44:48.265Z",
+  "summary": {
+    "effectCount": 20,
+    "screenedParameterSubsetCount": 8,
+    "registryDefinedNotScreenedCount": 2,
+    "intentTranslatableOnlyCount": 10,
+    "familyOnlyCount": 0,
+    "exhaustiveSettingCoverage": false
+  },
+  "effects": [
+    {
+      "effectName": "Bars",
+      "family": "rhythmic",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "3D",
+        "barCount",
+        "cycles",
+        "direction",
+        "gradient",
+        "highlight"
+      ],
+      "retainedParameterNames": [
+        "barCount",
+        "direction"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Butterfly",
+      "family": "motion_texture",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Circles",
+      "family": "particle_motion",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Color Wash",
+      "family": "wash",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "circularPalette",
+        "cycles",
+        "hFade",
+        "reverseFades",
+        "shimmer",
+        "vFade"
+      ],
+      "retainedParameterNames": [
+        "hFade",
+        "vFade"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Curtain",
+      "family": "transition_motion",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "coverage",
+        "motion",
+        "direction",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Fan",
+      "family": "radial_motion",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Fire",
+      "family": "organic_texture",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Marquee",
+      "family": "marquee_motion",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [],
+      "registryParameterNames": [
+        "bandSize",
+        "reverse",
+        "skipSize",
+        "speed",
+        "stagger",
+        "thickness"
+      ],
+      "retainedParameterNames": [
+        "bandSize",
+        "reverse",
+        "skipSize"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Meteors",
+      "family": "particle_motion",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Morph",
+      "family": "path_motion",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "On",
+      "family": "hold",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "coverage",
+        "motion"
+      ],
+      "registryParameterNames": [
+        "cycles",
+        "endLevel",
+        "shimmer",
+        "startLevel"
+      ],
+      "retainedParameterNames": [
+        "endLevel",
+        "shimmer",
+        "startLevel"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Pinwheel",
+      "family": "radial_motion",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "3DMode",
+        "arms",
+        "armSize",
+        "rotation",
+        "speed",
+        "style",
+        "thickness",
+        "twist"
+      ],
+      "retainedParameterNames": [
+        "3DMode",
+        "arms",
+        "rotation",
+        "style",
+        "thickness",
+        "twist"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Shimmer",
+      "family": "sparkle",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "cycles",
+        "dutyFactor",
+        "useAllColors"
+      ],
+      "retainedParameterNames": [
+        "cycles",
+        "dutyFactor",
+        "useAllColors"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Shockwave",
+      "family": "compact_shockwave_ring",
+      "coverageStatus": "registry_defined_not_screened",
+      "supportedSettingsIntent": [],
+      "registryParameterNames": [
+        "accel",
+        "blendEdges",
+        "centerX",
+        "centerY",
+        "cycles",
+        "endRadius",
+        "endWidth",
+        "scale",
+        "startRadius",
+        "startWidth"
+      ],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "SingleStrand",
+      "family": "strand_pattern",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "advances",
+        "bandSize",
+        "chaseSize",
+        "chaseType",
+        "cycles",
+        "fadeType",
+        "intensity",
+        "mode",
+        "numberChases",
+        "skipSize"
+      ],
+      "retainedParameterNames": [
+        "chaseSize",
+        "chaseType",
+        "cycles",
+        "numberChases"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Snowflakes",
+      "family": "particle_motion",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Spirals",
+      "family": "motion_texture",
+      "coverageStatus": "screened_parameter_subset",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [
+        "3D",
+        "blend",
+        "count",
+        "grow",
+        "movement",
+        "rotation",
+        "shrink",
+        "thickness"
+      ],
+      "retainedParameterNames": [
+        "count",
+        "movement",
+        "rotation",
+        "thickness"
+      ],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Twinkle",
+      "family": "classic_random_twinkle",
+      "coverageStatus": "registry_defined_not_screened",
+      "supportedSettingsIntent": [],
+      "registryParameterNames": [
+        "count",
+        "reRandomize",
+        "steps",
+        "strobe",
+        "style"
+      ],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "VU Meter",
+      "family": "audio_reactive",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    },
+    {
+      "effectName": "Wave",
+      "family": "motion_texture",
+      "coverageStatus": "intent_translatable_only",
+      "supportedSettingsIntent": [
+        "intensity",
+        "speed",
+        "density",
+        "coverage",
+        "motion",
+        "direction",
+        "thickness",
+        "variation"
+      ],
+      "registryParameterNames": [],
+      "retainedParameterNames": [],
+      "exhaustiveSettingCoverage": false
+    }
+  ]
+}

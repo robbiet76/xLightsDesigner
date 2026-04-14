@@ -27,6 +27,10 @@ const REVIEW_LEVELS = [
   "effect"
 ];
 
+const EFFECT_PARAMETER_REGISTRY = JSON.parse(
+  readFileSync(resolve("scripts/sequencer-render-training/catalog/effect-parameter-registry.json"), "utf8")
+);
+
 const ROLE_FAMILY_SEED_PRIORS = Object.freeze({
   Bars: [
     {
@@ -135,6 +139,38 @@ function buildSeedRolePriors(effectName = "") {
   }));
 }
 
+function listRegistryParameters(effectName = "") {
+  const effectEntry = EFFECT_PARAMETER_REGISTRY?.effects?.[String(effectName || "").trim()];
+  return effectEntry && typeof effectEntry === "object" && effectEntry.parameters && typeof effectEntry.parameters === "object"
+    ? Object.keys(effectEntry.parameters).sort((a, b) => a.localeCompare(b))
+    : [];
+}
+
+function classifyParameterCoverage({ capability = {}, retainedParameters = [], registryParameters = [] } = {}) {
+  if (retainedParameters.length) return "screened_parameter_subset";
+  if (registryParameters.length) return "registry_defined_not_screened";
+  if (Array.isArray(capability?.supportedSettingsIntent) && capability.supportedSettingsIntent.length) {
+    return "intent_translatable_only";
+  }
+  return "family_only";
+}
+
+function buildParameterLearningSummary({ effectName = "", capability = {}, retainedParameters = [] } = {}) {
+  const registryParameters = listRegistryParameters(effectName);
+  return {
+    registryParameterNames: registryParameters,
+    retainedParameterNames: retainedParameters.map((row) => String(row?.parameterName || "").trim()).filter(Boolean),
+    supportedIntentAxes: {
+      settings: Array.isArray(capability?.supportedSettingsIntent) ? capability.supportedSettingsIntent : [],
+      palette: Array.isArray(capability?.supportedPaletteIntent) ? capability.supportedPaletteIntent : [],
+      layer: Array.isArray(capability?.supportedLayerIntent) ? capability.supportedLayerIntent : [],
+      render: Array.isArray(capability?.supportedRenderIntent) ? capability.supportedRenderIntent : []
+    },
+    coverageStatus: classifyParameterCoverage({ capability, retainedParameters, registryParameters }),
+    exhaustiveSettingCoverage: false
+  };
+}
+
 function mergeRoleOutcomeMemory(roleOutcomeMemory = {}, outcomeRecords = [], effectName = "") {
   const next = buildRoleOutcomeSeed();
   for (const role of Object.keys(roleOutcomeMemory || {})) {
@@ -177,6 +213,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
   const roleOutcomeMemory = mergeRoleOutcomeMemory({}, outcomeRecords, effectName);
   const totalSamples = Object.values(roleOutcomeMemory).reduce((sum, row) => sum + Number(row?.sampleCount || 0), 0);
   const seedRolePriors = buildSeedRolePriors(effectName);
+  const retainedParameters = Array.isArray(trained.retainedParameters) ? trained.retainedParameters : [];
   return {
     effectName,
     baseline: {
@@ -187,7 +224,7 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
       supportedGeometryProfiles: Array.isArray(trained.supportedGeometryProfiles) ? trained.supportedGeometryProfiles : [],
       intentTags: Array.isArray(trained.intentTags) ? trained.intentTags : [],
       patternFamilies: Array.isArray(trained.patternFamilies) ? trained.patternFamilies : [],
-      retainedParameters: Array.isArray(trained.retainedParameters) ? trained.retainedParameters : []
+      retainedParameters
     },
     capability: {
       family: String(capability.family || "").trim(),
@@ -196,6 +233,11 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = []) {
       supportedLayerIntent: Array.isArray(capability.supportedLayerIntent) ? capability.supportedLayerIntent : [],
       supportedRenderIntent: Array.isArray(capability.supportedRenderIntent) ? capability.supportedRenderIntent : []
     },
+    parameterLearning: buildParameterLearningSummary({
+      effectName,
+      capability,
+      retainedParameters
+    }),
     liveOutcomeLearning: {
       status: totalSamples > 0 ? "populated" : "seeded_empty",
       storageClass: "general_training",

@@ -253,6 +253,9 @@ Initial generated artifact:
 Outcome catalog:
 - [README.md](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-family-outcomes/README.md)
 
+Settings coverage report:
+- [effect-settings-coverage-report-v1.json](/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/catalog/effect-settings-coverage-report-v1.json)
+
 ## Acceptance Standard
 
 This framework is correct when:
@@ -260,3 +263,4 @@ This framework is correct when:
 - general training and preference learning are explicitly separated
 - runtime vocabulary and training vocabulary are aligned
 - future cloud migration can upload shared training without uploading user taste data
+- parameter coverage is explicitly reported without claiming exhaustive setting control where it does not exist

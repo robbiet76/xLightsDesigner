@@ -1,7 +1,7 @@
 {
   "artifactType": "sequencer_unified_training_set_v1",
   "artifactVersion": "1.0",
-  "generatedAt": "2026-04-14T12:37:49.215Z",
+  "generatedAt": "2026-04-14T12:44:48.308Z",
   "description": "Unified general-training set combining Stage 1 trained effect knowledge with Phase 3 live-learning slots.",
   "sources": {
     "stage1Bundle": {
@@ -194,6 +194,54 @@
           "riskTolerance"
         ]
       },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "3D",
+          "barCount",
+          "cycles",
+          "direction",
+          "gradient",
+          "highlight"
+        ],
+        "retainedParameterNames": [
+          "barCount",
+          "direction"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "thickness",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
+      },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
@@ -384,6 +432,52 @@
           "riskTolerance"
         ]
       },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "circularPalette",
+          "cycles",
+          "hFade",
+          "reverseFades",
+          "shimmer",
+          "vFade"
+        ],
+        "retainedParameterNames": [
+          "hFade",
+          "vFade"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
+      },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
@@ -533,6 +627,29 @@
         "supportedPaletteIntent": [],
         "supportedLayerIntent": [],
         "supportedRenderIntent": []
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "bandSize",
+          "reverse",
+          "skipSize",
+          "speed",
+          "stagger",
+          "thickness"
+        ],
+        "retainedParameterNames": [
+          "bandSize",
+          "reverse",
+          "skipSize"
+        ],
+        "supportedIntentAxes": {
+          "settings": [],
+          "palette": [],
+          "layer": [],
+          "render": []
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -692,6 +809,48 @@
           "expansionPolicy",
           "riskTolerance"
         ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "cycles",
+          "endLevel",
+          "shimmer",
+          "startLevel"
+        ],
+        "retainedParameterNames": [
+          "endLevel",
+          "shimmer",
+          "startLevel"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "coverage",
+            "motion"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -889,6 +1048,60 @@
           "riskTolerance"
         ]
       },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "3DMode",
+          "arms",
+          "armSize",
+          "rotation",
+          "speed",
+          "style",
+          "thickness",
+          "twist"
+        ],
+        "retainedParameterNames": [
+          "3DMode",
+          "arms",
+          "rotation",
+          "style",
+          "thickness",
+          "twist"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "thickness",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
+      },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
@@ -1052,6 +1265,50 @@
           "riskTolerance"
         ]
       },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "cycles",
+          "dutyFactor",
+          "useAllColors"
+        ],
+        "retainedParameterNames": [
+          "cycles",
+          "dutyFactor",
+          "useAllColors"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
+      },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
@@ -1196,6 +1453,29 @@
         "supportedPaletteIntent": [],
         "supportedLayerIntent": [],
         "supportedRenderIntent": []
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "accel",
+          "blendEdges",
+          "centerX",
+          "centerY",
+          "cycles",
+          "endRadius",
+          "endWidth",
+          "scale",
+          "startRadius",
+          "startWidth"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [],
+          "palette": [],
+          "layer": [],
+          "render": []
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1371,6 +1651,60 @@
           "expansionPolicy",
           "riskTolerance"
         ]
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "advances",
+          "bandSize",
+          "chaseSize",
+          "chaseType",
+          "cycles",
+          "fadeType",
+          "intensity",
+          "mode",
+          "numberChases",
+          "skipSize"
+        ],
+        "retainedParameterNames": [
+          "chaseSize",
+          "chaseType",
+          "cycles",
+          "numberChases"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "thickness",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
@@ -1549,6 +1883,58 @@
           "riskTolerance"
         ]
       },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "3D",
+          "blend",
+          "count",
+          "grow",
+          "movement",
+          "rotation",
+          "shrink",
+          "thickness"
+        ],
+        "retainedParameterNames": [
+          "count",
+          "movement",
+          "rotation",
+          "thickness"
+        ],
+        "supportedIntentAxes": {
+          "settings": [
+            "intensity",
+            "speed",
+            "density",
+            "coverage",
+            "motion",
+            "direction",
+            "thickness",
+            "variation"
+          ],
+          "palette": [
+            "colors",
+            "temperature",
+            "contrast",
+            "brightness",
+            "saturation",
+            "accentUsage"
+          ],
+          "layer": [
+            "priority",
+            "blendRole",
+            "mixAmount",
+            "overlayPolicy"
+          ],
+          "render": [
+            "groupPolicy",
+            "bufferStyle",
+            "expansionPolicy",
+            "riskTolerance"
+          ]
+        },
+        "coverageStatus": "screened_parameter_subset",
+        "exhaustiveSettingCoverage": false
+      },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
         "storageClass": "general_training",
@@ -1681,6 +2067,24 @@
         "supportedPaletteIntent": [],
         "supportedLayerIntent": [],
         "supportedRenderIntent": []
+      },
+      "parameterLearning": {
+        "registryParameterNames": [
+          "count",
+          "reRandomize",
+          "steps",
+          "strobe",
+          "style"
+        ],
+        "retainedParameterNames": [],
+        "supportedIntentAxes": {
+          "settings": [],
+          "palette": [],
+          "layer": [],
+          "render": []
+        },
+        "coverageStatus": "registry_defined_not_screened",
+        "exhaustiveSettingCoverage": false
       },
       "liveOutcomeLearning": {
         "status": "seeded_empty",
