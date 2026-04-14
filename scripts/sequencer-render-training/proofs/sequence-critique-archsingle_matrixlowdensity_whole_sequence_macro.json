@@ -1,0 +1,40 @@
+{
+  "artifactType": "sequence_critique_v1",
+  "artifactVersion": 1,
+  "createdAt": null,
+  "source": {
+    "renderObservationRef": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/render-observation-archsingle_matrixlowdensity_whole_sequence_macro.json"
+  },
+  "ladderLevel": "macro",
+  "designerSummary": {
+    "intentRead": "single-idea section read",
+    "focusRead": "broad_enough",
+    "contrastRead": "moderate",
+    "compositionRead": "concentrated",
+    "strengths": [
+      "The section still reads as one idea with ArchSingle carrying the lead and restrained support around it.",
+      "The active footprint is broad enough to register at scene scale.",
+      "Density is consistent across the sampled window (moderate).",
+      "Multiple families are present, but the support family does not overpower the lead."
+    ],
+    "weaknesses": [],
+    "designAdjustmentSuggestions": []
+  },
+  "sequencerSummary": {
+    "executionRead": "stable_sparse_pass",
+    "spreadRead": "acceptable",
+    "densityRead": "moderate",
+    "familyBalanceRead": "multi_family",
+    "motionRead": "moving",
+    "strengths": [
+      "Model balance is weighted enough to preserve a clear lead-plus-support hierarchy.",
+      "Scene spread is large enough to support broader composition.",
+      "Frame-to-frame density remains stable through the sampled checkpoint.",
+      "Family spread is broad enough without losing the lead-target hierarchy.",
+      "Centroid motion indicates the active content is evolving, not frozen."
+    ],
+    "weaknesses": [],
+    "revisionSuggestions": []
+  },
+  "nextMoves": []
+}

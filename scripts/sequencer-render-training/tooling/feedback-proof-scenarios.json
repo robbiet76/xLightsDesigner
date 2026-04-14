@@ -80,5 +80,22 @@
     "sectionScope": "proof_window_arch_matrix_balanced",
     "targetScope": "ArchSingle,MatrixLowDensity",
     "effectFamilies": "ColorWash,SingleStrand"
+  },
+  {
+    "scenarioId": "archsingle_matrixlowdensity_whole_sequence_macro",
+    "mode": "composite",
+    "modelName": "ArchSingle+MatrixLowDensity",
+    "sourceScenarioIds": [
+      "archsingle_sparse_macro",
+      "matrixlowdensity_sparse_macro"
+    ],
+    "designHandoffRef": "design_handoff_v2:proof_arch_matrix_whole_sequence",
+    "revisionGoal": "Validate a broad whole-sequence composition checkpoint and preserve the distinction between macro design scope and local section-target refinement.",
+    "requestedScopeMode": "whole_sequence",
+    "reviewStartLevel": "macro",
+    "sectionScopeKind": "full_sequence",
+    "sectionScope": "",
+    "targetScope": "",
+    "effectFamilies": "ColorWash,SingleStrand"
   }
 ]

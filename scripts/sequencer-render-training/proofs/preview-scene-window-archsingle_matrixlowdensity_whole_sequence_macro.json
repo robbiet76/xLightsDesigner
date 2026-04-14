@@ -1,0 +1,2915 @@
+{
+  "artifactType": "preview_scene_window_v1",
+  "artifactVersion": 1,
+  "source": {
+    "mode": "composite_window_merge",
+    "sourceWindowPaths": [
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-archsingle_sparse_macro.json",
+      "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-window-matrixlowdensity_sparse_macro.json"
+    ]
+  },
+  "geometryReference": {
+    "artifactType": "preview_scene_geometry_v1",
+    "artifactVersion": 1,
+    "artifactPath": "/Users/robterry/Projects/xLightsDesigner/scripts/sequencer-render-training/proofs/preview-scene-geometry-render-training-live.json",
+    "layoutName": null,
+    "showFolder": null,
+    "modelCount": 19
+  },
+  "frames": [
+    {
+      "frameOffset": 8,
+      "frameIndex": 48,
+      "frameTimeMs": 1200,
+      "activeModelCount": 2,
+      "activeNodeCount": 60,
+      "models": [
+        {
+          "modelName": "ArchSingle",
+          "displayAs": "Arches",
+          "activeNodeCount": 50,
+          "activeNodeRatio": 1.0,
+          "averageNodeBrightness": 1.0,
+          "centroidPosition": 0.5,
+          "activeBounds": {
+            "min": {
+              "x": 1,
+              "y": 3.0616168932349032e-15,
+              "z": 0
+            },
+            "max": {
+              "x": 99,
+              "y": 49.97431182861328,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 49.99999989748001,
+            "y": 31.18368224143982,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 1,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3.0616168932349032e-15,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 2,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.1006757020950317,
+                "y": 3.2035109996795654,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 3,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.4022892713546753,
+                "y": 6.393857955932617,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 4,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.9036012887954712,
+                "y": 9.557931900024414,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 5,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2.6025516986846924,
+                "y": 12.68272876739502,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 6,
+              "stringIndex": 0,
+              "screen": {
+                "x": 3.4962685108184814,
+                "y": 15.755411148071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": 4.581079006195068,
+                "y": 18.763349533081055,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": 5.85252571105957,
+                "y": 21.69418716430664,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 7.305383682250977,
+                "y": 24.535877227783203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 8.933682441711426,
+                "y": 27.276744842529297,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 10.730732917785645,
+                "y": 29.905527114868164,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 12,
+              "stringIndex": 0,
+              "screen": {
+                "x": 12.68914794921875,
+                "y": 32.41141891479492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 13,
+              "stringIndex": 0,
+              "screen": {
+                "x": 14.800881385803223,
+                "y": 34.78412628173828,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 14,
+              "stringIndex": 0,
+              "screen": {
+                "x": 17.0572566986084,
+                "y": 37.01390075683594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 15,
+              "stringIndex": 0,
+              "screen": {
+                "x": 19.448999404907227,
+                "y": 39.091575622558594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 16,
+              "stringIndex": 0,
+              "screen": {
+                "x": 21.966283798217773,
+                "y": 41.00861358642578,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 17,
+              "stringIndex": 0,
+              "screen": {
+                "x": 24.598764419555664,
+                "y": 42.757137298583984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 18,
+              "stringIndex": 0,
+              "screen": {
+                "x": 27.33562469482422,
+                "y": 44.32996368408203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 19,
+              "stringIndex": 0,
+              "screen": {
+                "x": 30.165616989135742,
+                "y": 45.72063064575195,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 20,
+              "stringIndex": 0,
+              "screen": {
+                "x": 33.07711410522461,
+                "y": 46.92341995239258,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 21,
+              "stringIndex": 0,
+              "screen": {
+                "x": 36.05814743041992,
+                "y": 47.93339157104492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 22,
+              "stringIndex": 0,
+              "screen": {
+                "x": 39.096473693847656,
+                "y": 48.746395111083984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 23,
+              "stringIndex": 0,
+              "screen": {
+                "x": 42.179603576660156,
+                "y": 49.35908889770508,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 24,
+              "stringIndex": 0,
+              "screen": {
+                "x": 45.29487228393555,
+                "y": 49.76895523071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 25,
+              "stringIndex": 0,
+              "screen": {
+                "x": 48.429473876953125,
+                "y": 49.97431182861328,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 26,
+              "stringIndex": 0,
+              "screen": {
+                "x": 51.570526123046875,
+                "y": 49.97431182861328,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 27,
+              "stringIndex": 0,
+              "screen": {
+                "x": 54.70512771606445,
+                "y": 49.76895523071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 28,
+              "stringIndex": 0,
+              "screen": {
+                "x": 57.820396423339844,
+                "y": 49.35908889770508,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 29,
+              "stringIndex": 0,
+              "screen": {
+                "x": 60.903526306152344,
+                "y": 48.746395111083984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 30,
+              "stringIndex": 0,
+              "screen": {
+                "x": 63.94185256958008,
+                "y": 47.93339157104492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 31,
+              "stringIndex": 0,
+              "screen": {
+                "x": 66.92288970947266,
+                "y": 46.92341995239258,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 32,
+              "stringIndex": 0,
+              "screen": {
+                "x": 69.83438110351562,
+                "y": 45.72063064575195,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 33,
+              "stringIndex": 0,
+              "screen": {
+                "x": 72.66437530517578,
+                "y": 44.32996368408203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 34,
+              "stringIndex": 0,
+              "screen": {
+                "x": 75.40123748779297,
+                "y": 42.757137298583984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 35,
+              "stringIndex": 0,
+              "screen": {
+                "x": 78.0337142944336,
+                "y": 41.00861358642578,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 36,
+              "stringIndex": 0,
+              "screen": {
+                "x": 80.5510025024414,
+                "y": 39.091575622558594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 37,
+              "stringIndex": 0,
+              "screen": {
+                "x": 82.94274139404297,
+                "y": 37.01390075683594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 38,
+              "stringIndex": 0,
+              "screen": {
+                "x": 85.1991195678711,
+                "y": 34.78412628173828,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 39,
+              "stringIndex": 0,
+              "screen": {
+                "x": 87.31085205078125,
+                "y": 32.41141891479492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 40,
+              "stringIndex": 0,
+              "screen": {
+                "x": 89.2692642211914,
+                "y": 29.905527114868164,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 41,
+              "stringIndex": 0,
+              "screen": {
+                "x": 91.06631469726562,
+                "y": 27.276744842529297,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 42,
+              "stringIndex": 0,
+              "screen": {
+                "x": 92.69461822509766,
+                "y": 24.535877227783203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 43,
+              "stringIndex": 0,
+              "screen": {
+                "x": 94.14747619628906,
+                "y": 21.69418716430664,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 44,
+              "stringIndex": 0,
+              "screen": {
+                "x": 95.4189224243164,
+                "y": 18.763349533081055,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 45,
+              "stringIndex": 0,
+              "screen": {
+                "x": 96.50373077392578,
+                "y": 15.755411148071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 46,
+              "stringIndex": 0,
+              "screen": {
+                "x": 97.39744567871094,
+                "y": 12.68272876739502,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 47,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.09639739990234,
+                "y": 9.557931900024414,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 48,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.59770965576172,
+                "y": 6.393857955932617,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 49,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.89932250976562,
+                "y": 3.2035109996795654,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 50,
+              "stringIndex": 0,
+              "screen": {
+                "x": 99,
+                "y": 3.0616168932349032e-15,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        },
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.04330708661417323,
+          "activeBounds": {
+            "min": {
+              "x": -7,
+              "y": 3,
+              "z": 0
+            },
+            "max": {
+              "x": 2,
+              "y": 3,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -2.5,
+            "y": 3.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 2,
+              "stringIndex": 0,
+              "screen": {
+                "x": -7,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 3,
+              "stringIndex": 0,
+              "screen": {
+                "x": -6,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 4,
+              "stringIndex": 0,
+              "screen": {
+                "x": -5,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 5,
+              "stringIndex": 0,
+              "screen": {
+                "x": -4,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 6,
+              "stringIndex": 0,
+              "screen": {
+                "x": -3,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": -2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": -1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 0,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 10,
+      "frameIndex": 50,
+      "frameTimeMs": 1250,
+      "activeModelCount": 2,
+      "activeNodeCount": 60,
+      "models": [
+        {
+          "modelName": "ArchSingle",
+          "displayAs": "Arches",
+          "activeNodeCount": 50,
+          "activeNodeRatio": 1.0,
+          "averageNodeBrightness": 1.0,
+          "centroidPosition": 0.5,
+          "activeBounds": {
+            "min": {
+              "x": 1,
+              "y": 3.0616168932349032e-15,
+              "z": 0
+            },
+            "max": {
+              "x": 99,
+              "y": 49.97431182861328,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 49.99999989748001,
+            "y": 31.18368224143982,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 1,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3.0616168932349032e-15,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 2,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.1006757020950317,
+                "y": 3.2035109996795654,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 3,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.4022892713546753,
+                "y": 6.393857955932617,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 4,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.9036012887954712,
+                "y": 9.557931900024414,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 5,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2.6025516986846924,
+                "y": 12.68272876739502,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 6,
+              "stringIndex": 0,
+              "screen": {
+                "x": 3.4962685108184814,
+                "y": 15.755411148071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": 4.581079006195068,
+                "y": 18.763349533081055,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": 5.85252571105957,
+                "y": 21.69418716430664,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 7.305383682250977,
+                "y": 24.535877227783203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 8.933682441711426,
+                "y": 27.276744842529297,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 10.730732917785645,
+                "y": 29.905527114868164,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 12,
+              "stringIndex": 0,
+              "screen": {
+                "x": 12.68914794921875,
+                "y": 32.41141891479492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 13,
+              "stringIndex": 0,
+              "screen": {
+                "x": 14.800881385803223,
+                "y": 34.78412628173828,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 14,
+              "stringIndex": 0,
+              "screen": {
+                "x": 17.0572566986084,
+                "y": 37.01390075683594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 15,
+              "stringIndex": 0,
+              "screen": {
+                "x": 19.448999404907227,
+                "y": 39.091575622558594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 16,
+              "stringIndex": 0,
+              "screen": {
+                "x": 21.966283798217773,
+                "y": 41.00861358642578,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 17,
+              "stringIndex": 0,
+              "screen": {
+                "x": 24.598764419555664,
+                "y": 42.757137298583984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 18,
+              "stringIndex": 0,
+              "screen": {
+                "x": 27.33562469482422,
+                "y": 44.32996368408203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 19,
+              "stringIndex": 0,
+              "screen": {
+                "x": 30.165616989135742,
+                "y": 45.72063064575195,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 20,
+              "stringIndex": 0,
+              "screen": {
+                "x": 33.07711410522461,
+                "y": 46.92341995239258,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 21,
+              "stringIndex": 0,
+              "screen": {
+                "x": 36.05814743041992,
+                "y": 47.93339157104492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 22,
+              "stringIndex": 0,
+              "screen": {
+                "x": 39.096473693847656,
+                "y": 48.746395111083984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 23,
+              "stringIndex": 0,
+              "screen": {
+                "x": 42.179603576660156,
+                "y": 49.35908889770508,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 24,
+              "stringIndex": 0,
+              "screen": {
+                "x": 45.29487228393555,
+                "y": 49.76895523071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 25,
+              "stringIndex": 0,
+              "screen": {
+                "x": 48.429473876953125,
+                "y": 49.97431182861328,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 26,
+              "stringIndex": 0,
+              "screen": {
+                "x": 51.570526123046875,
+                "y": 49.97431182861328,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 27,
+              "stringIndex": 0,
+              "screen": {
+                "x": 54.70512771606445,
+                "y": 49.76895523071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 28,
+              "stringIndex": 0,
+              "screen": {
+                "x": 57.820396423339844,
+                "y": 49.35908889770508,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 29,
+              "stringIndex": 0,
+              "screen": {
+                "x": 60.903526306152344,
+                "y": 48.746395111083984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 30,
+              "stringIndex": 0,
+              "screen": {
+                "x": 63.94185256958008,
+                "y": 47.93339157104492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 31,
+              "stringIndex": 0,
+              "screen": {
+                "x": 66.92288970947266,
+                "y": 46.92341995239258,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 32,
+              "stringIndex": 0,
+              "screen": {
+                "x": 69.83438110351562,
+                "y": 45.72063064575195,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 33,
+              "stringIndex": 0,
+              "screen": {
+                "x": 72.66437530517578,
+                "y": 44.32996368408203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 34,
+              "stringIndex": 0,
+              "screen": {
+                "x": 75.40123748779297,
+                "y": 42.757137298583984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 35,
+              "stringIndex": 0,
+              "screen": {
+                "x": 78.0337142944336,
+                "y": 41.00861358642578,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 36,
+              "stringIndex": 0,
+              "screen": {
+                "x": 80.5510025024414,
+                "y": 39.091575622558594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 37,
+              "stringIndex": 0,
+              "screen": {
+                "x": 82.94274139404297,
+                "y": 37.01390075683594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 38,
+              "stringIndex": 0,
+              "screen": {
+                "x": 85.1991195678711,
+                "y": 34.78412628173828,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 39,
+              "stringIndex": 0,
+              "screen": {
+                "x": 87.31085205078125,
+                "y": 32.41141891479492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 40,
+              "stringIndex": 0,
+              "screen": {
+                "x": 89.2692642211914,
+                "y": 29.905527114868164,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 41,
+              "stringIndex": 0,
+              "screen": {
+                "x": 91.06631469726562,
+                "y": 27.276744842529297,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 42,
+              "stringIndex": 0,
+              "screen": {
+                "x": 92.69461822509766,
+                "y": 24.535877227783203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 43,
+              "stringIndex": 0,
+              "screen": {
+                "x": 94.14747619628906,
+                "y": 21.69418716430664,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 44,
+              "stringIndex": 0,
+              "screen": {
+                "x": 95.4189224243164,
+                "y": 18.763349533081055,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 45,
+              "stringIndex": 0,
+              "screen": {
+                "x": 96.50373077392578,
+                "y": 15.755411148071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 46,
+              "stringIndex": 0,
+              "screen": {
+                "x": 97.39744567871094,
+                "y": 12.68272876739502,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 47,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.09639739990234,
+                "y": 9.557931900024414,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 48,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.59770965576172,
+                "y": 6.393857955932617,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 49,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.89932250976562,
+                "y": 3.2035109996795654,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 50,
+              "stringIndex": 0,
+              "screen": {
+                "x": 99,
+                "y": 3.0616168932349032e-15,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        },
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.05905511811023622,
+          "activeBounds": {
+            "min": {
+              "x": -5,
+              "y": 3,
+              "z": 0
+            },
+            "max": {
+              "x": 4,
+              "y": 3,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": -0.5,
+            "y": 3.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 4,
+              "stringIndex": 0,
+              "screen": {
+                "x": -5,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 5,
+              "stringIndex": 0,
+              "screen": {
+                "x": -4,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 6,
+              "stringIndex": 0,
+              "screen": {
+                "x": -3,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": -2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": -1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 0,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 12,
+              "stringIndex": 0,
+              "screen": {
+                "x": 3,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 13,
+              "stringIndex": 0,
+              "screen": {
+                "x": 4,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameOffset": 12,
+      "frameIndex": 52,
+      "frameTimeMs": 1300,
+      "activeModelCount": 2,
+      "activeNodeCount": 60,
+      "models": [
+        {
+          "modelName": "ArchSingle",
+          "displayAs": "Arches",
+          "activeNodeCount": 50,
+          "activeNodeRatio": 1.0,
+          "averageNodeBrightness": 1.0,
+          "centroidPosition": 0.5,
+          "activeBounds": {
+            "min": {
+              "x": 1,
+              "y": 3.0616168932349032e-15,
+              "z": 0
+            },
+            "max": {
+              "x": 99,
+              "y": 49.97431182861328,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 49.99999989748001,
+            "y": 31.18368224143982,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 1,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3.0616168932349032e-15,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 2,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.1006757020950317,
+                "y": 3.2035109996795654,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 3,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.4022892713546753,
+                "y": 6.393857955932617,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 4,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1.9036012887954712,
+                "y": 9.557931900024414,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 5,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2.6025516986846924,
+                "y": 12.68272876739502,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 6,
+              "stringIndex": 0,
+              "screen": {
+                "x": 3.4962685108184814,
+                "y": 15.755411148071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": 4.581079006195068,
+                "y": 18.763349533081055,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": 5.85252571105957,
+                "y": 21.69418716430664,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 7.305383682250977,
+                "y": 24.535877227783203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 8.933682441711426,
+                "y": 27.276744842529297,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 10.730732917785645,
+                "y": 29.905527114868164,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 12,
+              "stringIndex": 0,
+              "screen": {
+                "x": 12.68914794921875,
+                "y": 32.41141891479492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 13,
+              "stringIndex": 0,
+              "screen": {
+                "x": 14.800881385803223,
+                "y": 34.78412628173828,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 14,
+              "stringIndex": 0,
+              "screen": {
+                "x": 17.0572566986084,
+                "y": 37.01390075683594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 15,
+              "stringIndex": 0,
+              "screen": {
+                "x": 19.448999404907227,
+                "y": 39.091575622558594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 16,
+              "stringIndex": 0,
+              "screen": {
+                "x": 21.966283798217773,
+                "y": 41.00861358642578,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 17,
+              "stringIndex": 0,
+              "screen": {
+                "x": 24.598764419555664,
+                "y": 42.757137298583984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 18,
+              "stringIndex": 0,
+              "screen": {
+                "x": 27.33562469482422,
+                "y": 44.32996368408203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 19,
+              "stringIndex": 0,
+              "screen": {
+                "x": 30.165616989135742,
+                "y": 45.72063064575195,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 20,
+              "stringIndex": 0,
+              "screen": {
+                "x": 33.07711410522461,
+                "y": 46.92341995239258,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 21,
+              "stringIndex": 0,
+              "screen": {
+                "x": 36.05814743041992,
+                "y": 47.93339157104492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 22,
+              "stringIndex": 0,
+              "screen": {
+                "x": 39.096473693847656,
+                "y": 48.746395111083984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 23,
+              "stringIndex": 0,
+              "screen": {
+                "x": 42.179603576660156,
+                "y": 49.35908889770508,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 24,
+              "stringIndex": 0,
+              "screen": {
+                "x": 45.29487228393555,
+                "y": 49.76895523071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 25,
+              "stringIndex": 0,
+              "screen": {
+                "x": 48.429473876953125,
+                "y": 49.97431182861328,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 26,
+              "stringIndex": 0,
+              "screen": {
+                "x": 51.570526123046875,
+                "y": 49.97431182861328,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 27,
+              "stringIndex": 0,
+              "screen": {
+                "x": 54.70512771606445,
+                "y": 49.76895523071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 28,
+              "stringIndex": 0,
+              "screen": {
+                "x": 57.820396423339844,
+                "y": 49.35908889770508,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 29,
+              "stringIndex": 0,
+              "screen": {
+                "x": 60.903526306152344,
+                "y": 48.746395111083984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 30,
+              "stringIndex": 0,
+              "screen": {
+                "x": 63.94185256958008,
+                "y": 47.93339157104492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 31,
+              "stringIndex": 0,
+              "screen": {
+                "x": 66.92288970947266,
+                "y": 46.92341995239258,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 32,
+              "stringIndex": 0,
+              "screen": {
+                "x": 69.83438110351562,
+                "y": 45.72063064575195,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 33,
+              "stringIndex": 0,
+              "screen": {
+                "x": 72.66437530517578,
+                "y": 44.32996368408203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 34,
+              "stringIndex": 0,
+              "screen": {
+                "x": 75.40123748779297,
+                "y": 42.757137298583984,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 35,
+              "stringIndex": 0,
+              "screen": {
+                "x": 78.0337142944336,
+                "y": 41.00861358642578,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 36,
+              "stringIndex": 0,
+              "screen": {
+                "x": 80.5510025024414,
+                "y": 39.091575622558594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 37,
+              "stringIndex": 0,
+              "screen": {
+                "x": 82.94274139404297,
+                "y": 37.01390075683594,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 38,
+              "stringIndex": 0,
+              "screen": {
+                "x": 85.1991195678711,
+                "y": 34.78412628173828,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 39,
+              "stringIndex": 0,
+              "screen": {
+                "x": 87.31085205078125,
+                "y": 32.41141891479492,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 40,
+              "stringIndex": 0,
+              "screen": {
+                "x": 89.2692642211914,
+                "y": 29.905527114868164,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 41,
+              "stringIndex": 0,
+              "screen": {
+                "x": 91.06631469726562,
+                "y": 27.276744842529297,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 42,
+              "stringIndex": 0,
+              "screen": {
+                "x": 92.69461822509766,
+                "y": 24.535877227783203,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 43,
+              "stringIndex": 0,
+              "screen": {
+                "x": 94.14747619628906,
+                "y": 21.69418716430664,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 44,
+              "stringIndex": 0,
+              "screen": {
+                "x": 95.4189224243164,
+                "y": 18.763349533081055,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 45,
+              "stringIndex": 0,
+              "screen": {
+                "x": 96.50373077392578,
+                "y": 15.755411148071289,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 46,
+              "stringIndex": 0,
+              "screen": {
+                "x": 97.39744567871094,
+                "y": 12.68272876739502,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 47,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.09639739990234,
+                "y": 9.557931900024414,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 48,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.59770965576172,
+                "y": 6.393857955932617,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 49,
+              "stringIndex": 0,
+              "screen": {
+                "x": 98.89932250976562,
+                "y": 3.2035109996795654,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 50,
+              "stringIndex": 0,
+              "screen": {
+                "x": 99,
+                "y": 3.0616168932349032e-15,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        },
+        {
+          "modelName": "MatrixLowDensity",
+          "displayAs": "Matrix",
+          "activeNodeCount": 10,
+          "activeNodeRatio": 0.078125,
+          "averageNodeBrightness": 0.078125,
+          "centroidPosition": 0.08267716535433071,
+          "activeBounds": {
+            "min": {
+              "x": -2,
+              "y": 3,
+              "z": 0
+            },
+            "max": {
+              "x": 7,
+              "y": 3,
+              "z": 0
+            }
+          },
+          "activeCentroid": {
+            "x": 2.5,
+            "y": 3.0,
+            "z": 0.0
+          },
+          "activeNodes": [
+            {
+              "nodeId": 7,
+              "stringIndex": 0,
+              "screen": {
+                "x": -2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 8,
+              "stringIndex": 0,
+              "screen": {
+                "x": -1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 9,
+              "stringIndex": 0,
+              "screen": {
+                "x": 0,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 10,
+              "stringIndex": 0,
+              "screen": {
+                "x": 1,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 11,
+              "stringIndex": 0,
+              "screen": {
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 12,
+              "stringIndex": 0,
+              "screen": {
+                "x": 3,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 13,
+              "stringIndex": 0,
+              "screen": {
+                "x": 4,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 14,
+              "stringIndex": 0,
+              "screen": {
+                "x": 5,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 15,
+              "stringIndex": 0,
+              "screen": {
+                "x": 6,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            },
+            {
+              "nodeId": 16,
+              "stringIndex": 0,
+              "screen": {
+                "x": 7,
+                "y": 3,
+                "z": 0
+              },
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "brightness": 255
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "frameCount": 3,
+    "maxActiveModelCount": 2,
+    "maxActiveNodeCount": 60
+  }
+}
