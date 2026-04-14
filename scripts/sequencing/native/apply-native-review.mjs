@@ -81,22 +81,6 @@ function basenameLower(filePath = '') {
   return path.basename(str(filePath)).toLowerCase();
 }
 
-function readDesktopState() {
-  const statePath = path.join(os.homedir(), 'Library', 'Application Support', 'xlightsdesigner-desktop', 'xlightsdesigner-state.json');
-  if (!fs.existsSync(statePath)) return null;
-  const wrapper = readJson(statePath);
-  const raw = str(wrapper?.localStateRaw);
-  if (!raw) return null;
-  return JSON.parse(raw);
-}
-
-function desktopStateMatchesProjectShow(desktopState = null, projectDoc = {}) {
-  if (!desktopState || typeof desktopState !== 'object') return false;
-  const desktopShow = normalizePath(desktopState?.showFolder);
-  const projectShow = normalizePath(projectDoc?.showFolder);
-  return Boolean(desktopShow && projectShow && desktopShow === projectShow);
-}
-
 function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
   const libraryDir = path.join(appRoot, 'library', 'tracks');
   if (!fs.existsSync(libraryDir)) throw new Error(`Track library not found: ${libraryDir}`);
@@ -122,8 +106,6 @@ function loadTrackRecordForAudio({ appRoot = '', audioPath = '' } = {}) {
 function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
   const projectDoc = readJson(projectFile);
   const snapshot = projectDoc?.snapshot && typeof projectDoc.snapshot === 'object' ? projectDoc.snapshot : {};
-  const desktopState = readDesktopState();
-  const useDesktopState = desktopStateMatchesProjectShow(desktopState, projectDoc);
   const projectDir = path.dirname(projectFile);
   const artifactsDir = path.join(projectDir, 'artifacts');
   const intentPath = latestJsonFile(path.join(artifactsDir, 'intent-handoffs'));
@@ -133,8 +115,8 @@ function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
 
   const intentHandoff = readJson(intentPath);
   const proposalBundle = readJson(proposalPath);
-  const audioPath = str((useDesktopState ? desktopState?.audioPathInput : '') || snapshot.audioPathInput);
-  const sequencePath = str((useDesktopState ? desktopState?.sequencePathInput : '') || snapshot.sequencePathInput || snapshot.savePathInput);
+  const audioPath = str(snapshot.audioPathInput);
+  const sequencePath = str(snapshot.sequencePathInput || snapshot.savePathInput);
   if (!audioPath) throw new Error('Project snapshot is missing audioPathInput.');
   if (!sequencePath) throw new Error('Project snapshot is missing sequencePathInput.');
 
@@ -147,8 +129,6 @@ function loadReviewInputs({ projectFile = '', appRoot = '' } = {}) {
   return {
     projectDoc,
     snapshot,
-    desktopState,
-    useDesktopState,
     intentHandoff,
     reviewIntentHandoff: buildReviewIntentHandoff(intentHandoff, proposalBundle),
     proposalBundle,

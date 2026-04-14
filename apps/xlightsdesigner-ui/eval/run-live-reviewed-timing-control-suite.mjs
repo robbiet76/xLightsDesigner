@@ -46,10 +46,25 @@ function parseArgs(argv = []) {
   return options;
 }
 
-function assertNativeParityAvailable() {
+async function assertNativeParityAvailable(repoRoot, channel, outDir) {
+  const resultPath = path.join(outDir, "_native-parity-preflight.json");
+  const snapshot = await runAutomation(
+    repoRoot,
+    channel,
+    resultPath,
+    "get-sequencer-validation-snapshot"
+  );
+  const caps = snapshot?.result?.ownedRenderFeedbackCapabilities && typeof snapshot.result.ownedRenderFeedbackCapabilities === "object"
+    ? snapshot.result.ownedRenderFeedbackCapabilities
+    : null;
+  const missing = Array.isArray(caps?.missingRequirements) ? caps.missingRequirements.filter(Boolean) : [];
+  const capabilityMessage = missing.length
+    ? ` Missing owned routes: ${missing.join(", ")}.`
+    : "";
   throw new Error(
-    "run-live-reviewed-timing-control-suite.mjs still depends on removed legacy desktop automation actions. " +
-    "Do not run this suite until native automation parity exists for reviewed-timing validation commands."
+    "run-live-reviewed-timing-control-suite.mjs still depends on removed legacy desktop automation actions." +
+    capabilityMessage +
+    " Do not run this suite until native automation parity exists for reviewed-timing validation commands."
   );
 }
 
@@ -167,9 +182,11 @@ function buildScenarioSummary({ scenario, openResult, refreshResult, analyzeResu
 }
 
 async function main() {
-  assertNativeParityAvailable();
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolveRepoRoot();
+  const outDir = path.resolve(options.outDir);
+  fs.mkdirSync(outDir, { recursive: true });
+  await assertNativeParityAvailable(repoRoot, options.channel, outDir);
   const suitePath = options.suitePath
     ? path.resolve(repoRoot, options.suitePath)
     : path.join(repoRoot, "apps", "xlightsdesigner-ui", "eval", "live-reviewed-timing-control-suite-v1.json");
@@ -178,8 +195,6 @@ async function main() {
   if (!scenarios.length) {
     throw new Error("Live reviewed timing control suite requires at least one scenario.");
   }
-  const outDir = path.resolve(options.outDir);
-  fs.mkdirSync(outDir, { recursive: true });
   const results = [];
   for (let index = 0; index < scenarios.length; index += 1) {
     const scenario = scenarios[index];

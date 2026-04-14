@@ -46,10 +46,25 @@ function parseArgs(argv = []) {
   return options;
 }
 
-function assertNativeParityAvailable() {
+async function assertNativeParityAvailable(repoRoot, channel, outDir) {
+  const resultPath = path.join(outDir, "_native-parity-preflight.json");
+  const snapshot = await runAutomation(
+    repoRoot,
+    channel,
+    resultPath,
+    "get-sequencer-validation-snapshot"
+  );
+  const caps = snapshot?.result?.ownedRenderFeedbackCapabilities && typeof snapshot.result.ownedRenderFeedbackCapabilities === "object"
+    ? snapshot.result.ownedRenderFeedbackCapabilities
+    : null;
+  const missing = Array.isArray(caps?.missingRequirements) ? caps.missingRequirements.filter(Boolean) : [];
+  const capabilityMessage = missing.length
+    ? ` Missing owned routes: ${missing.join(", ")}.`
+    : "";
   throw new Error(
-    "run-live-reviewed-timing-wholesequence-baseline.mjs still depends on removed legacy desktop automation actions. " +
-    "Do not run this baseline until native automation parity exists for reviewed-timing whole-sequence commands."
+    "run-live-reviewed-timing-wholesequence-baseline.mjs still depends on removed legacy desktop automation actions." +
+    capabilityMessage +
+    " Do not run this baseline until native automation parity exists for reviewed-timing whole-sequence commands."
   );
 }
 
@@ -160,9 +175,11 @@ function summarizeTimingBaseline(results = []) {
 }
 
 async function main() {
-  assertNativeParityAvailable();
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolveRepoRoot();
+  const outDir = path.resolve(options.outDir);
+  fs.mkdirSync(outDir, { recursive: true });
+  await assertNativeParityAvailable(repoRoot, options.channel, outDir);
   const suitePath = options.suitePath
     ? path.resolve(repoRoot, options.suitePath)
     : path.join(repoRoot, "apps", "xlightsdesigner-ui", "eval", "live-reviewed-timing-wholesequence-baseline-suite-v1.json");
@@ -172,7 +189,6 @@ async function main() {
     throw new Error("Live reviewed timing whole-sequence baseline suite requires at least one scenario.");
   }
 
-  const outDir = path.resolve(options.outDir);
   const baselinesDir = path.join(outDir, "baselines");
   fs.mkdirSync(baselinesDir, { recursive: true });
   fs.mkdirSync(outDir, { recursive: true });
