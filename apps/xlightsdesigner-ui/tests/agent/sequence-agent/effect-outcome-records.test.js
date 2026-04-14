@@ -27,7 +27,31 @@ test("buildEffectFamilyOutcomeRecords emits general-training records per chosen 
         }
       },
       commands: [
-        { cmd: "effects.create", params: { effectName: "Bars" } },
+        {
+          cmd: "effects.create",
+          params: { effectName: "Bars" },
+          intent: {
+            parameterPriorGuidance: {
+              recommendationMode: "exact_geometry",
+              priors: [
+                {
+                  parameterName: "speed",
+                  geometryProfile: "arch_grouped",
+                  modelType: "arch",
+                  paletteMode: "mono_white",
+                  confidence: "medium",
+                  recommendedAnchors: [
+                    {
+                      parameterValue: 7,
+                      behaviorHints: ["forward_motion"],
+                      temporalSignatureHints: ["moderate_motion"]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
         { cmd: "effects.create", params: { effectName: "Bars" } },
         { cmd: "effects.create", params: { effectName: "Color Wash" } }
       ]
@@ -65,6 +89,19 @@ test("buildEffectFamilyOutcomeRecords emits general-training records per chosen 
   assert.equal(records[0].storageClass, "general_training");
   assert.equal(records[0].requestScope.mode, "section_target_refinement");
   assert.deepEqual(records[0].revisionRoles, ["strengthen_lead", "increase_section_contrast"]);
+  assert.deepEqual(records[0].appliedParameterGuidance, [
+    {
+      parameterName: "speed",
+      appliedValue: 7,
+      paletteMode: "mono_white",
+      confidence: "medium",
+      recommendationMode: "exact_geometry",
+      geometryProfile: "arch_grouped",
+      modelType: "arch",
+      behaviorHints: ["forward_motion"],
+      temporalSignatureHints: ["moderate_motion"]
+    }
+  ]);
   assert.deepEqual(records[0].resolvedSignals, ["lead_mismatch", "weak_section_contrast"]);
   assert.equal(records[0].outcome.status, "improved");
 });

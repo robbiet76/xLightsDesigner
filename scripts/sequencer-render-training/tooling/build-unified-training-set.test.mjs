@@ -18,6 +18,19 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
     effectName: "Bars",
     requestScope: { mode: "section_target_refinement" },
     revisionRoles: ["strengthen_lead"],
+    appliedParameterGuidance: [
+      {
+        parameterName: "speed",
+        appliedValue: 7,
+        paletteMode: "mono_white",
+        geometryProfile: "arch_grouped",
+        modelType: "arch",
+        confidence: "medium",
+        recommendationMode: "exact_geometry",
+        behaviorHints: ["forward_motion"],
+        temporalSignatureHints: ["moderate_motion"]
+      }
+    ],
     resolvedSignals: ["lead_mismatch"],
     persistedSignals: [],
     newSignals: [],
@@ -45,6 +58,10 @@ test("build-unified-training-set aggregates harvested outcome records", () => {
   assert.equal(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.successfulUses, 1);
   assert.deepEqual(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.favoredScopes, ["section_target_refinement"]);
   assert.deepEqual(bars.liveOutcomeLearning.roleOutcomeMemory.strengthen_lead.favoredSignals, ["lead_mismatch"]);
+  assert.equal(Array.isArray(bars.liveOutcomeLearning.parameterOutcomeMemory.speed), true);
+  assert.equal(bars.liveOutcomeLearning.parameterOutcomeMemory.speed[0].parameterValue, 7);
+  assert.equal(bars.liveOutcomeLearning.parameterOutcomeMemory.speed[0].successfulUses, 1);
+  assert.deepEqual(bars.liveOutcomeLearning.parameterOutcomeMemory.speed[0].behaviorHints, ["forward_motion"]);
   assert.ok(["none", "single_reference_per_geometry", "multi_configuration_sampled"].includes(
     bars.screeningLearning.configurationRepresentativeness.coverageStatus
   ));

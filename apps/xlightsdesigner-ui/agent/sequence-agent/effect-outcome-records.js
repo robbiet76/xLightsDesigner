@@ -61,6 +61,43 @@ function collectPlannedEffectNames(planHandoff = null) {
   );
 }
 
+function collectEffectCommands(planHandoff = null, effectName = "") {
+  const desired = str(effectName);
+  return arr(planHandoff?.commands).filter((row) =>
+    str(row?.cmd) === "effects.create" && str(row?.params?.effectName) === desired
+  );
+}
+
+function buildAppliedParameterGuidance(planHandoff = null, effectName = "") {
+  const commands = collectEffectCommands(planHandoff, effectName);
+  const collected = new Map();
+  for (const command of commands) {
+    const guidancePriors = arr(command?.intent?.parameterPriorGuidance?.priors);
+    for (const prior of guidancePriors) {
+      const parameterName = str(prior?.parameterName);
+      const recommendedAnchor = arr(prior?.recommendedAnchors)[0] || null;
+      if (!parameterName || !recommendedAnchor) continue;
+      const key = `${parameterName}::${JSON.stringify(recommendedAnchor?.parameterValue)}::${str(prior?.paletteMode)}`;
+      if (collected.has(key)) continue;
+      collected.set(key, {
+        parameterName,
+        appliedValue: recommendedAnchor?.parameterValue,
+        paletteMode: str(prior?.paletteMode),
+        confidence: str(prior?.confidence),
+        recommendationMode: str(command?.intent?.parameterPriorGuidance?.recommendationMode),
+        geometryProfile: str(prior?.geometryProfile),
+        modelType: str(prior?.modelType),
+        behaviorHints: uniqueStrings(recommendedAnchor?.behaviorHints),
+        temporalSignatureHints: uniqueStrings(recommendedAnchor?.temporalSignatureHints)
+      });
+    }
+  }
+  return [...collected.values()].sort((a, b) =>
+    a.parameterName.localeCompare(b.parameterName) ||
+    String(a.appliedValue).localeCompare(String(b.appliedValue))
+  );
+}
+
 export function buildEffectFamilyOutcomeRecords({
   planHandoff = null,
   applyResult = null,
@@ -111,6 +148,7 @@ export function buildEffectFamilyOutcomeRecords({
     revisionLevel: str(sequenceRevisionObjective?.ladderLevel),
     revisionRoles,
     targetIds,
+    appliedParameterGuidance: buildAppliedParameterGuidance(planHandoff, effectName),
     priorSignals,
     postSignals: currentSignals,
     resolvedSignals: outcome.resolvedSignals,

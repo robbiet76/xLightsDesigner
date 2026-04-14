@@ -441,10 +441,80 @@ function mergeRoleOutcomeMemory(roleOutcomeMemory = {}, outcomeRecords = [], eff
   return next;
 }
 
+function normalizeAnchorValue(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return Number.isFinite(value) ? Number(value) : String(value);
+  return String(value ?? "").trim();
+}
+
+function mergeParameterOutcomeMemory(outcomeRecords = [], effectName = "") {
+  const relevantRecords = outcomeRecords.filter((row) => String(row?.effectName || "").trim() === effectName);
+  const out = {};
+  for (const record of relevantRecords) {
+    const scopeMode = String(record?.requestScope?.mode || "").trim();
+    const positiveSignals = uniqueStrings(record?.resolvedSignals);
+    const cautionSignals = uniqueStrings([...(record?.persistedSignals || []), ...(record?.newSignals || [])]);
+    const status = String(record?.outcome?.status || "").trim();
+    const improved = record?.outcome?.improved === true || positiveSignals.length > 0 || status === "mixed";
+    const regressed = cautionSignals.length > 0 || status === "regressed" || status === "unchanged";
+    for (const row of Array.isArray(record?.appliedParameterGuidance) ? record.appliedParameterGuidance : []) {
+      const parameterName = String(row?.parameterName || "").trim();
+      if (!parameterName) continue;
+      if (!out[parameterName]) out[parameterName] = {};
+      const key = JSON.stringify({
+        value: normalizeAnchorValue(row?.appliedValue),
+        paletteMode: String(row?.paletteMode || "").trim(),
+        geometryProfile: String(row?.geometryProfile || "").trim(),
+        modelType: String(row?.modelType || "").trim()
+      });
+      if (!out[parameterName][key]) {
+        out[parameterName][key] = {
+          parameterValue: normalizeAnchorValue(row?.appliedValue),
+          paletteMode: String(row?.paletteMode || "").trim(),
+          geometryProfile: String(row?.geometryProfile || "").trim(),
+          modelType: String(row?.modelType || "").trim(),
+          confidence: String(row?.confidence || "").trim(),
+          recommendationModes: [],
+          behaviorHints: [],
+          temporalSignatureHints: [],
+          sampleCount: 0,
+          successfulUses: 0,
+          failedUses: 0,
+          favoredScopes: [],
+          favoredSignals: [],
+          cautionSignals: []
+        };
+      }
+      const target = out[parameterName][key];
+      target.sampleCount += 1;
+      if (improved) target.successfulUses += 1;
+      if (regressed) target.failedUses += 1;
+      target.recommendationModes = uniqueStrings([...target.recommendationModes, String(row?.recommendationMode || "").trim()]);
+      target.behaviorHints = uniqueStrings([...target.behaviorHints, ...(row?.behaviorHints || [])]);
+      target.temporalSignatureHints = uniqueStrings([...target.temporalSignatureHints, ...(row?.temporalSignatureHints || [])]);
+      target.favoredScopes = uniqueStrings([...target.favoredScopes, ...(improved && scopeMode ? [scopeMode] : [])]);
+      target.favoredSignals = uniqueStrings([...target.favoredSignals, ...(improved ? positiveSignals : [])]);
+      target.cautionSignals = uniqueStrings([...target.cautionSignals, ...(regressed ? cautionSignals : [])]);
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(out)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([parameterName, entries]) => [
+        parameterName,
+        Object.values(entries).sort((a, b) =>
+          b.sampleCount - a.sampleCount ||
+          String(a.parameterValue).localeCompare(String(b.parameterValue))
+        )
+      ])
+  );
+}
+
 function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], screeningRecords = []) {
   const trained = bundle?.effectsByName?.[effectName] || {};
   const capability = getEffectIntentCapability(effectName) || {};
   const roleOutcomeMemory = mergeRoleOutcomeMemory({}, outcomeRecords, effectName);
+  const parameterOutcomeMemory = mergeParameterOutcomeMemory(outcomeRecords, effectName);
   const totalSamples = Object.values(roleOutcomeMemory).reduce((sum, row) => sum + Number(row?.sampleCount || 0), 0);
   const seedRolePriors = buildSeedRolePriors(effectName);
   const retainedParameters = Array.isArray(trained.retainedParameters) ? trained.retainedParameters : [];
@@ -491,7 +561,8 @@ function buildEffectEntry(effectName = "", bundle = null, outcomeRecords = [], s
       storageClass: "general_training",
       outcomeRecordCount: outcomeRecords.filter((row) => String(row?.effectName || "").trim() === effectName).length,
       seedRolePriors,
-      roleOutcomeMemory
+      roleOutcomeMemory,
+      parameterOutcomeMemory
     },
     screeningLearning: {
       status: relevantScreeningRecords.length > 0 ? "populated" : "empty",
